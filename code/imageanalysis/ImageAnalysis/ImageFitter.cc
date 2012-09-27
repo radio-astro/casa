@@ -861,9 +861,15 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 		Bool fitSuccess = False;
 		Angular2DGaussian bestSol(maj, min, pa);
 		Angular2DGaussian bestDecon;
-		Bool isPointSource = ImageUtilities::deconvolveFromBeam(
-			bestDecon, bestSol, fitSuccess, *_getLog(), beam
-		);
+		Bool isPointSource = True;
+		try {
+			isPointSource = beam.deconvolve(bestDecon, bestSol);
+			fitSuccess = True;
+		}
+		catch (const AipsError& x) {
+			fitSuccess = False;
+			Bool isPointSource = True;
+		}
 		size << "Image component size (deconvolved from beam) ---" << endl;
 		Angular2DGaussian decon;
 		if(fitSuccess) {
@@ -874,27 +880,54 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 					pa - epa
 				);
 				size << "    Component is a point source" << endl;
-                Bool isPointSource1 = ImageUtilities::deconvolveFromBeam(
-			        decon, largest, fitSuccess, *_getLog(), beam
-                );
+                Bool isPointSource1 = True;
+                Bool fitSuccess1 = False;
+                try {
+                	isPointSource1 = beam.deconvolve(decon, largest);
+                	fitSuccess = True;
+                }
+                catch (const AipsError& x) {
+                	fitSuccess1 = False;
+                	isPointSource1 = True;
+                }
+                // note that the code is purposefully written in such a way that
+                // fitSuccess* = False => isPointSource* = True and the conditionals
+                // following rely on that fact to make the code a bit clearer
                 Angular2DGaussian lsize;
                 if (! isPointSource1) {
                     lsize = decon;
                 }
                 largest.setPA(pa + epa);
-                Bool isPointSource2 = ImageUtilities::deconvolveFromBeam(
-                    decon, largest, fitSuccess, *_getLog(), beam
-                );
-                if (! isPointSource2) {
-                    if (isPointSource1) {
-                        lsize = decon;
-                    }
-                    else {
-                        Quantity lmaj = max(decon.getMajor(), lsize.getMajor());
-                        Quantity lmin = max(decon.getMinor(), lsize.getMinor());
-                        size << "    It may be as large as " << std::setprecision(2) << lmaj
-                        	<< " x " << lmin << endl;
-                    }
+                Bool isPointSource2 = True;
+                Bool fitSuccess2 = False;
+                try {
+                	isPointSource2 = beam.deconvolve(decon, largest);
+                	fitSuccess2 = True;
+                }
+                catch (const AipsError& x) {
+                	fitSuccess2 = False;
+                	isPointSource2 = True;
+                }
+                if (isPointSource2) {
+                	if (isPointSource1) {
+                		size << "    An upper limit on its size can not be determined" << endl;
+                	}
+                	else {
+                		size << "    It may be as large as " << std::setprecision(2) << lsize.getMajor()
+                	        << " x " << lsize.getMinor() << endl;
+                	}
+                }
+                else {
+                	if (isPointSource1) {
+                		size << "    It may be as large as " << std::setprecision(2) << decon.getMajor()
+                	        << " x " << decon.getMinor() << endl;
+                	}
+                	else {
+                		Quantity lmaj = max(decon.getMajor(), lsize.getMajor());
+                		Quantity lmin = max(decon.getMinor(), lsize.getMinor());
+                		size << "    It may be as large as " << std::setprecision(2) << lmaj
+                		    << " x " << lmin << endl;
+                	}
                 }
 			}
 			else {
@@ -911,9 +944,12 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 						for (uInt k=0; k<2; k++) {
 							sourceIn.setPA(paRange[k]);
 							decon = Angular2DGaussian();
-							isPointSource = ImageUtilities::deconvolveFromBeam(
-								decon, sourceIn, fitSuccess,*_getLog(), beam, False
-							);
+							try {
+								isPointSource = beam.deconvolve(decon, sourceIn);
+							}
+							catch (const AipsError& x) {
+								fitSuccess = False;
+							}
 							if (fitSuccess) {
 								Quantity errMaj = abs(bestDecon.getMajor() - decon.getMajor());
 								errMaj.convert(emaj.getUnit());
