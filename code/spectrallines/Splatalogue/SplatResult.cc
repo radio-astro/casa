@@ -115,9 +115,11 @@ string SplatResult::toLine( string spacer ) const {
 	sprintf( logaStr, numFormatStr.c_str(), _logA );
 	char elStr[NUM_COLUMN_WIDTH];
 	sprintf( elStr, numFormatStr.c_str(), _el.first );
+	char euStr[NUM_COLUMN_WIDTH];
+	sprintf( euStr, numFormatStr.c_str(), _eu.first );
 	os << speciesStr << spacer << chemStr << spacer << freqStr << spacer <<
 			qnsStr<< spacer << intStr<< spacer << spacer << smu2Str<< spacer
-			<< spacer << logaStr<< spacer <<elStr << endl;
+			<< spacer << logaStr<< spacer <<elStr << spacer << euStr << endl;
 	return os.str();
 }
 

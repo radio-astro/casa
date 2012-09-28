@@ -26,7 +26,6 @@
 
 #include <spectrallines/Splatalogue/SQLiteSearch/DatabaseConnector.h>
 #include <sqlite3.h>
-#include <assert.h>
 #include <iostream>
 #include <sstream>
 
@@ -85,7 +84,7 @@ SearcherSQLite::SearcherSQLite( const string& databasePath):
 		cout << "Main table: "<<mainTableInfo << endl;
 		string speciesTableInfo = this->tableInfo( TABLE_SPECIES, errorMsg );
 		cout << "Species table: "<<speciesTableInfo << endl;
-*/
+		*/
 
 		resultColumns[SPECIES_ID_COL] = TABLE_MAIN + PERIOD + SPECIES_ID_COLUMN;
 		resultColumns[SPECIES_NAME_COL] = SPECIES_COLUMN;
@@ -149,39 +148,69 @@ void SearcherSQLite::setSpeciesNames( const vector<string>& species ){
 }
 
 void SearcherSQLite::setFrequencyRange( double minVal, double maxVal ){
-	assert( minVal < maxVal );
-	minValueFreq = minVal;
-	maxValueFreq = maxVal;
+	if ( minVal < maxVal ){
+		minValueFreq = minVal;
+		maxValueFreq = maxVal;
+	}
+	else {
+		minValueFreq = maxVal;
+		maxValueFreq = minVal;
+	}
 }
 
 void SearcherSQLite::setIntensityRange( double minValue, double maxValue ){
-	assert( minValue < maxValue );
-	minValueIntensity = minValue;
-	maxValueIntensity = maxValue;
+	if ( minValue < maxValue ){
+		minValueIntensity = minValue;
+		maxValueIntensity = maxValue;
+	}
+	else {
+		minValueIntensity = maxValue;
+		maxValueIntensity = minValue;
+	}
 }
 
 void SearcherSQLite::setSmu2Range( double minValue, double maxValue ){
-	assert( minValue < maxValue );
-	minValueSmu2 = minValue;
-	maxValueSmu2 = maxValue;
+	if ( minValue < maxValue ){
+		minValueSmu2 = minValue;
+		maxValueSmu2 = maxValue;
+	}
+	else {
+		minValueSmu2 = maxValue;
+		maxValueSmu2 = minValue;
+	}
 }
 
 void SearcherSQLite::setLogaRange( double minValue, double maxValue ){
-	assert( minValue < maxValue );
-	minValueLoga = minValue;
-	maxValueLoga = maxValue;
+	if ( minValue < maxValue ){
+		minValueLoga = minValue;
+		maxValueLoga = maxValue;
+	}
+	else {
+		minValueLoga = maxValue;
+		maxValueLoga = minValue;
+	}
 }
 
 void SearcherSQLite::setElRange( double minValue, double maxValue ){
-	assert( minValue < maxValue );
-	minValueEl = minValue;
-	maxValueEl = maxValue;
+	if ( minValue < maxValue ){
+		minValueEl = minValue;
+		maxValueEl = maxValue;
+	}
+	else {
+		minValueEl = maxValue;
+		maxValueEl = minValue;
+	}
 }
 
 void SearcherSQLite::setEuRange( double minValue, double maxValue ){
-	assert( minValue < maxValue );
-	minValueEu = minValue;
-	maxValueEu = maxValue;
+	if ( minValue < maxValue ){
+		minValueEu = minValue;
+		maxValueEu = maxValue;
+	}
+	else {
+		minValueEu = maxValue;
+		maxValueEu = minValue;
+	}
 }
 
 void SearcherSQLite::setQNS( const vector<string>& qns ){
@@ -303,15 +332,14 @@ vector<SplatResult> SearcherSQLite::doSearch( string& errorMsg, int offset ){
 			double el = sqlite3_column_double( statement, EL_COL );
 			double eu = sqlite3_column_double( statement, EU_COL );
 			string resolvedQNs = reinterpret_cast<const char*>(sqlite3_column_text( statement, RESOLVED_QNS_COL ));
-			int intensity = sqlite3_column_int( statement, INTENSITY_COL );
+			double intensity = sqlite3_column_double( statement, INTENSITY_COL );
 			pair<double,string> freqPair( frequency, "MHz");
 			pair<double,string> elPair( el, "cm-1" );
 			pair<double,string> euPair( eu, "cm-1" );
 			SplatResult result( speciesId, speciesName, chemicalName, resolvedQNs,
 						freqPair, smu2, elPair, euPair, loga, intensity );
-
 			results.push_back( result );
-			//cout << result.toLine() << endl;
+			//cout << result.toLine();
 		}
 	}
 	else {
