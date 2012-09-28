@@ -36,25 +36,27 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         # depends on the time the engines dispatches their sub-MSs
         cont_subMS_list.sort()
         contsub_subMS_list.sort()
-        
-        try:
-            virtualconcat(concatvis=helper._arg['vis'] + ".cont",vis=cont_subMS_list)
-        except Exception, instance:
-            casalog.post("Error concatenating continuum sub-MSs %s: %s" % 
-                         (str(cont_subMS_list),str(instance)),'SEVERE')     
+
+        if want_cont:
+            try:
+                virtualconcat(concatvis=helper._arg['vis'] + ".cont",vis=cont_subMS_list)
+            except Exception, instance:
+                casalog.post("Error concatenating continuum sub-MSs %s: %s" % 
+                             (str(cont_subMS_list),str(instance)),'SEVERE')     
         try:
             virtualconcat(concatvis=helper._arg['vis'] + ".contsub",vis=contsub_subMS_list)
         except Exception, instance:
-            casalog.post("Error concatenating continuum sub-MSs %s: %s" % 
+            casalog.post("Error concatenating continuum-subtracted sub-MSs %s: %s" % 
                          (str(contsub_subMS_list),str(instance)),'SEVERE')     
                 
         # Remove continuum subtraction-SubMSs
-        for subMS in cont_subMS_list:
-            if (os.system("rm -rf " + subMS ) != 0):
-                casalog.post("Problem removing continuum sub-MS %s into working directory" % (subMS),'SEVERE')
+        if want_cont:
+            for subMS in cont_subMS_list:
+                if (os.system("rm -rf " + subMS ) != 0):
+                    casalog.post("Problem removing continuum sub-MS %s into working directory" % (subMS),'SEVERE')
         for subMS in contsub_subMS_list:
             if (os.system("rm -rf " + subMS ) != 0):
-                casalog.post("Problem removing continuum sub-MS %s into working directory" % (subMS),'SEVERE')
+                casalog.post("Problem removing continuum-subtracted sub-MS %s into working directory" % (subMS),'SEVERE')
         
         return True
     

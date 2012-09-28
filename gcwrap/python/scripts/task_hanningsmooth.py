@@ -45,7 +45,8 @@ def hanningsmooth(vis=None, datacolumn=None, outputvis=None):
             newvis = outputvis
             casalog.post('copying '+vis+' to '+newvis , 'INFO')
             tb.open(vis)
-            tb.copy(newvis, deep=True, valuecopy=True)
+            tmptb = tb.copy(newvis, deep=True, valuecopy=True)
+            tmptb.close()
             # note that the resulting copy is writable even if the original was read-only
             tb.close()
         else:

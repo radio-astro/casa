@@ -21,10 +21,11 @@ msname = 'testconcatenated.ms'
 
 def checktable(thename, theexpectation):
     global msname, myname
-    tb.open(msname+"/"+thename)
+    mytb = tbtool()
+    mytb.open(msname+"/"+thename)
     for mycell in theexpectation:
         print myname, ": comparing ", mycell
-        value = tb.getcell(mycell[0], mycell[1])
+        value = mytb.getcell(mycell[0], mycell[1])
         # see if value is array
         try:
             isarray = value.__len__
@@ -49,9 +50,9 @@ def checktable(thename, theexpectation):
             print myname, ":  Error in MS subtable", thename, ":"
             print "     column ", mycell[0], " row ", mycell[1], " contains ", value
             print "     expected value is ", mycell[2]
-            tb.close()
+            mytb.close()
             return False
-    tb.close()
+    mytb.close()
     print myname, ": table ", thename, " as expected."
     return True
 
