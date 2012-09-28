@@ -600,17 +600,17 @@ Bool ImageRegrid<T>::insert (ImageInterface<T>& outImage,
    return True;
 }
 
-
-
-
-
 template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
 	LogIO& os, const CoordinateSystem& cSysTo,
 	const CoordinateSystem& cSysFrom,
-	const IPosition& outPixelAxes
+	const IPosition& outPixelAxes, const IPosition& inShape
 ) {
+	os << LogOrigin("ImageRegrid<T>", __FUNCTION__, WHERE);
 	const uInt nCoordsFrom = cSysFrom.nCoordinates();
 	const uInt nPixelAxesFrom = cSysFrom.nPixelAxes();
+	if (inShape.nelements() > 0 && inShape.nelements() != nPixelAxesFrom) {
+		os << "Inconsistent size and csysFrom" << LogIO::EXCEPTION;
+	}
 
 	// Create output CS.  Copy the output ObsInfo over first.
 
@@ -618,12 +618,9 @@ template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
 
 	// If specified axes are empty, set to all
 
-	IPosition outPixelAxes2;
-	if (outPixelAxes.nelements()==0) {
-		outPixelAxes2 = IPosition::makeAxisPath(nPixelAxesFrom);
-	} else {
-		outPixelAxes2 = outPixelAxes;
-	}
+	IPosition outPixelAxes2 = outPixelAxes.nelements() == 0
+		? IPosition::makeAxisPath(nPixelAxesFrom)
+		: outPixelAxes;
 
 	// Loop over coordinates in the From CS
 
@@ -634,9 +631,14 @@ template<class T> CoordinateSystem ImageRegrid<T>::makeCoordinateSystem(
 		Vector<Int> pixelAxes = cSysFrom.pixelAxes(i);
 		Bool regridIt = False;
 		for (uInt k=0; k<pixelAxes.nelements(); k++) {
-			for (uInt j=0; j<outPixelAxes2.nelements(); j++) {
-				if (pixelAxes[k] == outPixelAxes2(j)) {
-					regridIt = True;
+			if (
+				inShape.nelements() == 0
+				|| (inShape.nelements() > 0 && inShape[pixelAxes[k]] > 1)
+			) {
+				for (uInt j=0; j<outPixelAxes2.nelements(); j++) {
+					if (pixelAxes[k] == outPixelAxes2(j)) {
+						regridIt = True;
+					}
 				}
 			}
 		}
@@ -2041,8 +2043,8 @@ void ImageRegrid<T>::checkAxes(IPosition& outPixelAxes,
 // Otherwise, regridding a one-pixel axis is useless.
 
             if (type!=Coordinate::DIRECTION) {
-              os << LogIO::POST << "Cannot regrid axis " << outPixelAxes(i)+1 <<
-		" because it is of unit length - removing from list" << endl;
+              os << LogIO::WARN << "Cannot regrid zero-based axis " << outPixelAxes(i) <<
+		" because it is of unit length - removing from list" << LogIO::POST;
               ok = False;
             }
          } 
