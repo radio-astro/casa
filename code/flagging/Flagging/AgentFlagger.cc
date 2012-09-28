@@ -1,4 +1,4 @@
-///# TestFlagger.cc: this defines TestFlagger
+///# AgentFlagger.cc: this defines AgentFlagger
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -31,7 +31,7 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/Exceptions/Error.h>
-#include <flagging/Flagging/TestFlagger.h>
+#include <flagging/Flagging/AgentFlagger.h>
 #include <flagging/Flagging/FlagVersion.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
@@ -42,13 +42,13 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = false;
+const bool AgentFlagger::dbg = false;
 
 
 // -----------------------------------------------------------------------
 // Default Constructor
 // -----------------------------------------------------------------------
-TestFlagger::TestFlagger ()
+AgentFlagger::AgentFlagger ()
 {
 	fdh_p = NULL;
 	summaryAgent_p = NULL;
@@ -61,13 +61,13 @@ TestFlagger::TestFlagger ()
 // -----------------------------------------------------------------------
 // Default Destructor
 // -----------------------------------------------------------------------
-TestFlagger::~TestFlagger ()
+AgentFlagger::~AgentFlagger ()
 {
 	done();
 }
 
 void
-TestFlagger::done()
+AgentFlagger::done()
 {
 	if(fdh_p){
 		delete fdh_p;
@@ -126,16 +126,16 @@ TestFlagger::done()
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::open
+// AgentFlagger::open
 // Create a FlagDataHandler object based on the input type:
 // MS or a calibration file. Open the MS or cal table and
 // attach it to the tool.
 // ---------------------------------------------------------------------
 bool
-TestFlagger::open(String msname, Double ntime)
+AgentFlagger::open(String msname, Double ntime)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	if (msname.empty()) {
 		os << LogIO::SEVERE << "No Measurement Set has been parsed"
@@ -183,15 +183,15 @@ TestFlagger::open(String msname, Double ntime)
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::selectData
+// AgentFlagger::selectData
 // Get a record with data selection parameters and
 // Parse it to the FlagDataHandler to select the data
 // ---------------------------------------------------------------------
 bool
-TestFlagger::selectData(Record selrec)
+AgentFlagger::selectData(Record selrec)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 	if (dbg)
 		os << LogIO::NORMAL << "Called from selectData(Record)" << LogIO::POST;
 
@@ -256,17 +256,17 @@ TestFlagger::selectData(Record selrec)
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::selectData
+// AgentFlagger::selectData
 // Create a record with data selection parameters.
 // ---------------------------------------------------------------------
 bool
-TestFlagger::selectData(String field, String spw, String array,
+AgentFlagger::selectData(String field, String spw, String array,
 						String feed, String scan, String antenna,
 						String uvrange,  String timerange, String correlation,
 						String intent, String observation)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	if (dbg)
 		os << LogIO::NORMAL << "Called from selectData(String....)" << LogIO::POST;
@@ -295,15 +295,15 @@ TestFlagger::selectData(String field, String spw, String array,
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseAgentParameters
+// AgentFlagger::parseAgentParameters
 // Create a vector of agents and parameters
 // Each input record contains data selection parameters
 // and agent's specific parameters
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseAgentParameters(Record agent_params)
+AgentFlagger::parseAgentParameters(Record agent_params)
 {
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	if (! fdh_p){
 		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
@@ -464,15 +464,15 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::initAgents
+// AgentFlagger::initAgents
 // Initialize the Agents
 // Call parseAgentParameters and selectData first
 // ---------------------------------------------------------------------
 bool
-TestFlagger::initAgents()
+AgentFlagger::initAgents()
 {
 
-    LogIO os(LogOrigin("TestFlagger",__FUNCTION__));
+    LogIO os(LogOrigin("AgentFlagger",__FUNCTION__));
 
 	if (! fdh_p){
 		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
@@ -656,15 +656,15 @@ TestFlagger::initAgents()
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::run
+// AgentFlagger::run
 // Run the agents
 // It assumes that initAgents has been called first
 // ---------------------------------------------------------------------
 Record
-TestFlagger::run(Bool writeflags, Bool sequential)
+AgentFlagger::run(Bool writeflags, Bool sequential)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	if (! fdh_p){
 		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
@@ -751,12 +751,12 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::isExpressionPolarizationAll
+// AgentFlagger::isExpressionPolarizationAll
 // Returns true if expression contains a polarization ALL
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::isExpressionPolarizationAll(String correlation)
+AgentFlagger::isExpressionPolarizationAll(String correlation)
 {
 
 	if (correlation.find("ALL") == string::npos){
@@ -767,13 +767,13 @@ TestFlagger::isExpressionPolarizationAll(String correlation)
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::getExpressionFunction
+// AgentFlagger::getExpressionFunction
 // Get the unitary function of a polarization expression
 // returns a String with the function name
 //
 // ---------------------------------------------------------------------
 String
-TestFlagger::getExpressionFunction(String expression)
+AgentFlagger::getExpressionFunction(String expression)
 {
 
 	String func;
@@ -808,12 +808,12 @@ TestFlagger::getExpressionFunction(String expression)
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::getMax
+// AgentFlagger::getMax
 // Get the maximum between two values and
 // assign it to the max_p class member.
 // ---------------------------------------------------------------------
 void
-TestFlagger::getMax(Double value)
+AgentFlagger::getMax(Double value)
 {
 	if (value > max_p)
 		max_p = value;
@@ -824,16 +824,16 @@ TestFlagger::getMax(Double value)
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::getFlagVersionList
+// AgentFlagger::getFlagVersionList
 // Get the flag versions list from the file FLAG_VERSION_LIST in the
 // MS directory
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::getFlagVersionList(Vector<String> &verlist)
+AgentFlagger::getFlagVersionList(Vector<String> &verlist)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	try
 	{
@@ -867,15 +867,15 @@ TestFlagger::getFlagVersionList(Vector<String> &verlist)
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::printFlagSelection
+// AgentFlagger::printFlagSelection
 // Print the flag versions list
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::printFlagSelections()
+AgentFlagger::printFlagSelections()
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	// Use the copy of the agent records list because the original
 	// was deallocated in the init() method.
@@ -903,14 +903,14 @@ TestFlagger::printFlagSelections()
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::saveFlagVersion
+// AgentFlagger::saveFlagVersion
 // Save the flag version
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::saveFlagVersion(String versionname, String comment, String merge)
+AgentFlagger::saveFlagVersion(String versionname, String comment, String merge)
 {
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	if (! fdh_p){
 		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
@@ -925,14 +925,14 @@ TestFlagger::saveFlagVersion(String versionname, String comment, String merge)
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::restoreFlagVersion
+// AgentFlagger::restoreFlagVersion
 // Restore the flag version
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::restoreFlagVersion(Vector<String> versionname, String merge)
+AgentFlagger::restoreFlagVersion(Vector<String> versionname, String merge)
 {
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	if (! fdh_p){
 		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
@@ -954,15 +954,15 @@ TestFlagger::restoreFlagVersion(Vector<String> versionname, String merge)
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::deleteFlagVersion
+// AgentFlagger::deleteFlagVersion
 // Delete the flag version
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::deleteFlagVersion(Vector<String> versionname)
+AgentFlagger::deleteFlagVersion(Vector<String> versionname)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__, WHERE));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	if (! fdh_p){
 		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
@@ -984,12 +984,12 @@ TestFlagger::deleteFlagVersion(Vector<String> versionname)
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::isModeValid
+// AgentFlagger::isModeValid
 // Check if mode is valid.
 // Return False if not in the list
 // ---------------------------------------------------------------------
 bool
-TestFlagger::isModeValid(String mode)
+AgentFlagger::isModeValid(String mode)
 {
 	bool ret;
 
@@ -1009,19 +1009,19 @@ TestFlagger::isModeValid(String mode)
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseManualParameters
+// AgentFlagger::parseManualParameters
 // Parse data selection parameters and specific manual parameters
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseManualParameters(String field, String spw, String array,
+AgentFlagger::parseManualParameters(String field, String spw, String array,
 								   String feed, String scan, String antenna,
 								   String uvrange,  String timerange, String correlation,
 								   String intent, String observation, Bool autocorr,
 								   Bool apply)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	// Default values for some parameters
 	String mode = "manual";
@@ -1055,18 +1055,18 @@ TestFlagger::parseManualParameters(String field, String spw, String array,
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseClipParameters
+// AgentFlagger::parseClipParameters
 // Parse data selection parameters and specific clip parameters
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
+AgentFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, String datacolumn,
    	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool clipzeros, Bool apply)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	// Default values for some parameters
 	String mode = "clip";
@@ -1105,18 +1105,18 @@ TestFlagger::parseClipParameters(String field, String spw, String array, String 
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseQuackParameters
+// AgentFlagger::parseQuackParameters
 // Parse data selection parameters and specific quack parameters
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseQuackParameters(String field, String spw, String array, String feed, String scan,
+AgentFlagger::parseQuackParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, String quackmode, Double quackinterval,
    	    Bool quackincrement, Bool apply)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	// Default values for some parameters
 	String mode = "quack";
@@ -1152,17 +1152,17 @@ TestFlagger::parseQuackParameters(String field, String spw, String array, String
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseElevationParameters
+// AgentFlagger::parseElevationParameters
 // Parse data selection parameters and specific elevation parameters
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseElevationParameters(String field, String spw, String array, String feed, String scan,
+AgentFlagger::parseElevationParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange,String correlation,
    	    String intent, String observation, Double lowerlimit, Double upperlimit, Bool apply)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	// Default values for some parameters
 	String mode = "elevation";
@@ -1197,12 +1197,12 @@ TestFlagger::parseElevationParameters(String field, String spw, String array, St
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseTfcropParameters
+// AgentFlagger::parseTfcropParameters
 // Parse data selection parameters and specific tfcrop parameters
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseTfcropParameters(String field, String spw, String array, String feed, String scan,
+AgentFlagger::parseTfcropParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange, String correlation,
    	    String intent, String observation, Double ntime, Bool combinescans,
    	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
@@ -1210,7 +1210,7 @@ TestFlagger::parseTfcropParameters(String field, String spw, String array, Strin
    	    Bool apply)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	// Default values for some parameters
 	String mode = "tfcrop";
@@ -1255,18 +1255,18 @@ TestFlagger::parseTfcropParameters(String field, String spw, String array, Strin
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseExtendParameters
+// AgentFlagger::parseExtendParameters
 // Parse data selection parameters and specific extend parameters
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseExtendParameters(String field, String spw, String array, String feed, String scan,
+AgentFlagger::parseExtendParameters(String field, String spw, String array, String feed, String scan,
    	    String antenna, String uvrange, String timerange, String correlation, String intent,
    	    String observation, Double ntime, Bool combinescans, Bool extendpols, Double growtime,
    	    Double growfreq, Bool growaround, Bool flagneartime, Bool flagnearfreq, Bool apply)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	// Default values for some parameters
 	String mode = "extend";
@@ -1310,19 +1310,19 @@ TestFlagger::parseExtendParameters(String field, String spw, String array, Strin
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseSummaryParameters
+// AgentFlagger::parseSummaryParameters
 // Parse data selection parameters and specific summary parameters
 //
 // ---------------------------------------------------------------------
 bool
-TestFlagger::parseSummaryParameters(String field, String spw, String array,
+AgentFlagger::parseSummaryParameters(String field, String spw, String array,
 								   String feed, String scan, String antenna,
 								   String uvrange,  String timerange, String correlation,
 								   String intent, String observation,
 								   Bool spwchan, Bool spwcorr, Bool basecnt)
 {
 
-	LogIO os(LogOrigin("TestFlagger", __FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	// Default values for some parameters
 	String mode = "summary";
