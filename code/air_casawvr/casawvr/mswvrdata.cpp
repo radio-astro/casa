@@ -20,6 +20,9 @@
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casacore/ms/MeasurementSets/MSProcessor.h>
 #include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/casa/Utilities/GenSort.h>
+
+#include <casa/Arrays/Vector.h>
 
 #include "almawvr/arraydata.hpp"
 #include "casawvr_errs.hpp"
@@ -135,7 +138,8 @@ namespace LibAIR {
 			  std::vector<double> &times,
 			  std::vector<size_t> &states,
 			  std::vector<size_t> &field,
-			  std::vector<size_t> &source)
+			  std::vector<size_t> &source,
+			  const std::vector<size_t>& sortedI)
   {
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
     size_t dsc_id = *dsc_ids.begin();
@@ -158,8 +162,11 @@ namespace LibAIR {
     states.resize(0);
 
     const size_t nrows=c_desc_id.nrow();    
-    for(size_t i=0; i<nrows; ++i)
+    for(size_t ii=0; ii<nrows; ++ii)
     {
+
+      size_t i = sortedI[ii];
+
       if (a1(i)==0 and 
 	  c_desc_id(i)== (int)dsc_id)
       {
@@ -233,19 +240,38 @@ namespace LibAIR {
   }
 			  
 
-  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms)
+  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, std::vector<size_t>& sortedI)
   {
     std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
     AntSet wvrants=WVRAntennas(ms);
     const size_t nWVRs=wvrants.size();
+
+    casa::ROScalarColumn<casa::Double> maintime(ms, 
+						casa::MS::columnName(casa::MS::TIME)); 
+
+    const size_t nrows=maintime.nrow();
+
+    sortedI.resize(nrows);
+
+    {
+      casa::Vector<casa::uInt> sortedIV(nrows);
+      casa::Vector<casa::Double> mainTimesV = maintime.getColumn();
+      casa::GenSortIndirect<casa::Double>::sort(sortedIV,mainTimesV);
+      for(casa::uInt i=0; i<nrows; i++){ // necessary for type conversion 
+	sortedI[i] = (size_t) sortedIV(i); 
+      }
+    }
     
+    std::cout << "Multi-MS (MMS) capable version using time sorted access." << std::endl;
+
     std::vector<double> times, az, el;
     std::vector<size_t> states, fields, source;
     WVRTimeStatePoints(ms,
 		       times,
 		       states,
 		       fields,
-		       source);
+		       source,
+		       sortedI);
 
     if (times.size() == 0)
       throw LibAIR::MSInputDataError("Didn't find any WVR data points");
@@ -274,10 +300,12 @@ namespace LibAIR {
 				       casa::MS::columnName(casa::MS::ANTENNA1));
     casa::ROScalarColumn<casa::Int> a2(ms,
 				       casa::MS::columnName(casa::MS::ANTENNA2));
-    const size_t nrows=indata.nrow();
 
-    for(size_t i=0; i<nrows; ++i)
+
+    for(size_t ii=0; ii<nrows; ++ii)
     {
+      size_t i = sortedI[ii];
+
       if (a1(i)== a2(i) and 
 	  dsc_ids.count(indsc_id(i)) > 0)
       {
