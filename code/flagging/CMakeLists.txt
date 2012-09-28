@@ -22,7 +22,7 @@ casa_add_library( flagging
   Flagging/DDMapper.cc
   Flagging/ExtendFlagger.cc
   Flagging/Flagger.cc
-  Flagging/TestFlagger.cc
+  Flagging/AgentFlagger.cc
   Flagging/RFADiffBase.cc
   Flagging/RFAFlagCubeBase.cc
   Flagging/RFAMedianClip.cc
@@ -110,7 +110,7 @@ install (FILES
 	Flagging/RFFloatLattice.h
 	Flagging/RFRowClipper.h
 	Flagging/SLog.h
-	Flagging/TestFlagger.h
+	Flagging/AgentFlagger.h
 	DESTINATION include/casacode/flagging/Flagging
 	)
 
@@ -130,4 +130,4 @@ casa_add_test( flagging Flagging/test/tAutoflag.cc )
 casa_add_test( flagging Flagging/test/tRFASelector.cc )
 casa_add_test( flagging Flagging/test/tFlagger.cc )
 casa_add_test( flagging Flagging/test/tRFCubeLattice.cc )
-casa_add_test( flagging Flagging/test/tTestFlagger.cc )
+casa_add_test( flagging Flagging/test/tAgentFlagger.cc )

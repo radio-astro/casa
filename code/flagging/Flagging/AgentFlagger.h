@@ -1,4 +1,4 @@
-//# TestFlagger.h: this defines TestFlagger
+//# AgentFlagger.h: this defines AgentFlagger
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -48,7 +48,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// TestFlagger: high-performance automated flagging
+// AgentFlagger: high-performance automated flagging
 // </summary>
 
 // <use visibility=global>
@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// TestFlagger performs automated flagging operations on a measurement set.
+// AgentFlagger performs automated flagging operations on a measurement set.
 // The class is constructed from an MS. After that, the run method may be used
 // to run any number of flagging agents.
 // </synopsis>
@@ -82,8 +82,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // is mandatory to use. By default it will use the FlagDataHandler::SUB_INTEGRATION iteration
 // // approach and 0.0 seconds as the time interval.
 //
-//    TestFlagger *tf = new TestFlagger();
-//    tf->open('my.ms')
+//    AgentFlagger *tf = new AgentFlagger();
+//    af->open('my.ms')
 //
 // // Select the data where to flag. If left blank, the whole MS will be selected. This step
 // // will use the MS Selection class. There are two methods to perform the selection. One takes
@@ -95,10 +95,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    Record selection = Record();
 //    selection.define("spw", spw);
 //    selection.define("scan", scan);
-//    tf->selectData(selection);
+//    af->selectData(selection);
 //
 // // 2) Second method:
-//    tf->selectData(spw=spw, scan=scan);
+//    af->selectData(spw=spw, scan=scan);
 //
 // // Now it is time to build a list of the agents that we want to run to process the data. This
 // // step will create a list of all the agents that will be executed to flag/unflag the data.
@@ -129,24 +129,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     agent_pars.define("mode", "clip");
 //     agent_pars.define("clipzeros", true);
 //     agent_pars.define("apply", true);
-//     tf->parseAgentParameters(agent_pars);
+//     af->parseAgentParameters(agent_pars);
 //
 //     Record agent_pars = Record();
 //     agent_pars.define("mode", "manual");
 //     agent_pars.define("autocorr", true);
-//     tf->parseAgentParameters(agent_pars);
+//     af->parseAgentParameters(agent_pars);
 //
 //     Record agent_pars = Record();
 //     agent_pars.define("mode", "summary");
 //     agent_pars.define("basecnt", true);
-//     tf->parseAgentParameters(agent_pars);
+//     af->parseAgentParameters(agent_pars);
 //
 // // There are convenience functions to parse the agent's parameters, one specific for each agent.
 // // The above calls can be done instead using these functions.
 //
-//     tf->parseClipParameters(clipzeros=true, apply=true);
-//     tf->parseManualParameters(autocorr=true);
-//     tf->parseSummaryParameters(basecnt=true);
+//     af->parseClipParameters(clipzeros=true, apply=true);
+//     af->parseManualParameters(autocorr=true);
+//     af->parseSummaryParameters(basecnt=true);
 //
 // // In either one of the cases, three agents will be created.
 // //
@@ -167,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // added to the FlagAgentList will remain there. A subsequent call to this method can be done to add
 // // more agents to the same FlagAgentList.
 //
-//     tf->initAgents();
+//     af->initAgents();
 //
 // // The next step in the chain is to actually process the flags and write them or
 // // not to the MS. The run method takes two parameters, writeflags and sequential.
@@ -184,11 +184,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // that may contain multiple reports at the same time.
 
 //     Record myReports;
-//     myReports = tf->run();
+//     myReports = af->run();
 //
 // // To destroy the tool, call a method to execute the destructor.
 //
-//     tf->done();
+//     af->done();
 //
 // </srcblock>
 // </example>
@@ -199,7 +199,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 
 
-class TestFlagger
+class AgentFlagger
 {
 protected:
 
@@ -245,10 +245,10 @@ protected:
 
 public:  
 	// default constructor
-	TestFlagger();
+	AgentFlagger();
 
 	// destructor
-	~TestFlagger();
+	~AgentFlagger();
 
 	// reset everything
 	void done();
@@ -328,9 +328,9 @@ public:
 
 private:
 
-	TestFlagger(const TestFlagger &) {};
+	AgentFlagger(const AgentFlagger &) {};
 
-	TestFlagger& operator=(const TestFlagger &)  {return *this;};
+	AgentFlagger& operator=(const AgentFlagger &)  {return *this;};
 
 	// Maximum between two numbers
 	void getMax(Double value);
