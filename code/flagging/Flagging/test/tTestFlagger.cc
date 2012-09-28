@@ -1,4 +1,4 @@
-//# tAgentFlagger.cc This file contains the unit tests of the AgentFlagger class.
+//# tTestFlagger.cc This file contains the unit tests of the TestFlagger class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,7 +20,7 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <flagging/Flagging/AgentFlagger.h>
+#include <flagging/Flagging/TestFlagger.h>
 #include <iostream>
 #include <sstream>
 
@@ -290,7 +290,7 @@ int main(int argc, char **argv)
 //	}
 
 	if (argc < 2) {
-		cout << "usage: tAgentFlagger.cc -targetFile ngc5921.ms <-...>" << endl;
+		cout << "usage: tTestFlagger.cc -targetFile ngc5921.ms <-...>" << endl;
 		cout << "options:"<<endl;
 		cout << "ntime, observation, array, scan, field, antenna, feed, intent, spw, timerange, "
 				"correlation, uvrange" << endl;
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
 
 	if (logLevel >= 3) cout << "Reading command line parameters " << endl;
 
-	// Create a record to configure the AgentFlagger tool
+	// Create a record to configure the TestFlagger tool
 
 	for (unsigned short i=0;i<argc-1;i++)
 	{
@@ -333,7 +333,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	AgentFlagger *tf = new AgentFlagger();
+	TestFlagger *tf = new TestFlagger();
 	if(not tf->open(msname, ntime)) {
 		cout << "ERROR: Failed to open the tool" << endl;
 	}

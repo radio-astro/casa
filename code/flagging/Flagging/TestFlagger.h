@@ -1,4 +1,4 @@
-//# AgentFlagger.h: this defines AgentFlagger
+//# TestFlagger.h: this defines TestFlagger
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -48,7 +48,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// AgentFlagger: high-performance automated flagging
+// TestFlagger: high-performance automated flagging
 // </summary>
 
 // <use visibility=global>
@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// AgentFlagger performs automated flagging operations on a measurement set.
+// TestFlagger performs automated flagging operations on a measurement set.
 // The class is constructed from an MS. After that, the run method may be used
 // to run any number of flagging agents.
 // </synopsis>
@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // is mandatory to use. By default it will use the FlagDataHandler::SUB_INTEGRATION iteration
 // // approach and 0.0 seconds as the time interval.
 //
-//    AgentFlagger *tf = new AgentFlagger();
+//    TestFlagger *tf = new TestFlagger();
 //    tf->open('my.ms')
 //
 // // Select the data where to flag. If left blank, the whole MS will be selected. This step
@@ -199,7 +199,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 
 
-class AgentFlagger
+class TestFlagger
 {
 protected:
 
@@ -245,10 +245,10 @@ protected:
 
 public:  
 	// default constructor
-	AgentFlagger();
+	TestFlagger();
 
 	// destructor
-	~AgentFlagger();
+	~TestFlagger();
 
 	// reset everything
 	void done();
@@ -328,9 +328,9 @@ public:
 
 private:
 
-	AgentFlagger(const AgentFlagger &) {};
+	TestFlagger(const TestFlagger &) {};
 
-	AgentFlagger& operator=(const AgentFlagger &)  {return *this;};
+	TestFlagger& operator=(const TestFlagger &)  {return *this;};
 
 	// Maximum between two numbers
 	void getMax(Double value);
