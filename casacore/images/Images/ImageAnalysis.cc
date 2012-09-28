@@ -3453,7 +3453,7 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	// axes to be regridded and the input image Coordinate for axes not
 	// to be regridded
 	CoordinateSystem cSys = ImageRegrid<Float>::makeCoordinateSystem(
-        *_log, pCSTo, cSysFrom, axes2
+        *_log, pCSTo, cSysFrom, axes2, subImage.shape()
     );
 	if (cSys.nPixelAxes() != outShape.nelements()) {
 		*_log
