@@ -2,6 +2,6 @@ namespace casa {
 	class LogIO;
 	class Record;
 	class RecordInterface;
-	class TestFlagger;
+	class AgentFlagger;
 }
 

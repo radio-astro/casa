@@ -15,7 +15,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Exceptions/Error.h>
-#include <flagging/Flagging/TestFlagger.h>
+#include <flagging/Flagging/AgentFlagger.h>
 #include <flagging/Flagging/RFCommon.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/Record.h>
@@ -35,7 +35,7 @@ testflagger::testflagger()
 	try
 	{
 		logger_p = new LogIO(LogOrigin("testflagger","",WHERE));
-		testflagger_p = new TestFlagger();
+		testflagger_p = new AgentFlagger();
 
 	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -83,7 +83,7 @@ testflagger::open(const std::string& msname, const double ntime)
 	try
 	{
 		if ( !testflagger_p ) {
-			testflagger_p = new TestFlagger();
+			testflagger_p = new AgentFlagger();
 		}
 		if (testflagger_p) {
 			return testflagger_p->open(msname, ntime);

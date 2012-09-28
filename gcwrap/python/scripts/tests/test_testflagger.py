@@ -87,13 +87,13 @@ class test_base(unittest.TestCase):
 
 
 class test_tsys(test_base):
-    """TestFlagger:: Test flagging tool with Tsys-based CalTable """
+    """AgentFlagger:: Test flagging tool with Tsys-based CalTable """
     
     def setUp(self):
          self.setUp_tsys_case()
 
     def test_manual_field_selection_agent_layer_for_tsys_CalTable(self):
-        """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for field """
+        """AgentFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for field """
         tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -113,7 +113,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['field']['J1037-295=QSO']['flagged'], 0)
 
     def test_manual_antenna_selection_agent_layer_for_tsys_CalTable(self):
-        """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
+        """AgentFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
         tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -131,7 +131,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['antenna']['DV10']['flagged'], 0)
 
     def test_manual_antenna_selection_agent_layer_for_tsys_CalTable2(self):
-        """TestFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
+        """AgentFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for antenna"""
 
         # Run the previous test but using the specific parsing functions
         tflocal = casac.testflagger()
@@ -148,7 +148,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['antenna']['DV10']['flagged'], 0)
 
     def test_manual_field_msSelection_layer_for_tsys_CalTable(self):
-        """TestFlagger:: Manually flag a Tsys-based CalTable using MSSelection for field """
+        """AgentFlagger:: Manually flag a Tsys-based CalTable using MSSelection for field """
         tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
@@ -175,7 +175,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['field']['J1037-295=QSO']['flagged'], 0)        
 
     def test_manual_antenna_msSelection_layer_for_tsys_CalTable(self):
-        """TestFlagger:: Manually flag a Tsys-based CalTable using MSSelection for antenna"""
+        """AgentFlagger:: Manually flag a Tsys-based CalTable using MSSelection for antenna"""
         tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
@@ -200,7 +200,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['antenna']['DV10']['flagged'], 0)
         
     def test_clip_minmax_fparm_sol1(self):
-        """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
+        """AgentFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1'
@@ -224,7 +224,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_sol1_2(self):
-        """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
+        """AgentFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range """
 
         # Run the previous test but using the specific parsing functions
         tflocal = casac.testflagger()
@@ -247,7 +247,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512)
 
     def test_clip_minmax_fparm_sol1_extension(self):
-        """TestFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range, and then extend to the other solution """
+        """AgentFlagger:: Test cliping first calibration solution product of FPARAM column using a minmax range, and then extend to the other solution """
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         tflocal.open(self.vis)
@@ -272,7 +272,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512)
 
     def test_clip_minmax_fparm_sol2(self):
-        """TestFlagger:: Test cliping second calibration solution product of FPARAM column using a minmax range """
+        """AgentFlagger:: Test cliping second calibration solution product of FPARAM column using a minmax range """
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol2'
@@ -296,7 +296,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_sol1sol2(self):
-        """TestFlagger:: Test cliping first and second calibration solution products of FPARAM column using a minmax range """
+        """AgentFlagger:: Test cliping first and second calibration solution products of FPARAM column using a minmax range """
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'Sol1,Sol2'
@@ -320,7 +320,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_all(self):
-        """TestFlagger:: Test cliping all calibration solution products of FPARAM column using a minmax range """
+        """AgentFlagger:: Test cliping all calibration solution products of FPARAM column using a minmax range """
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
@@ -344,7 +344,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_zeros_fparm_all(self):
-        """TestFlagger:: Test cliping only zeros in all calibration solution products of FPARAM column"""
+        """AgentFlagger:: Test cliping only zeros in all calibration solution products of FPARAM column"""
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
@@ -368,7 +368,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_nan_and_inf_fparm_all(self):
-        """TestFlagger:: Test cliping only NaNs/Infs in all calibration solution products of FPARAM column"""
+        """AgentFlagger:: Test cliping only NaNs/Infs in all calibration solution products of FPARAM column"""
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ALL'
@@ -392,7 +392,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_fparm_error_case_absall(self):
-        """TestFlagger:: Error case test when a complex operator is used with CalTables """
+        """AgentFlagger:: Error case test when a complex operator is used with CalTables """
         tflocal = casac.testflagger()
         datacolumn = 'FPARAM'
         correlation = 'ABS ALL'
@@ -416,7 +416,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_paramerr_all_for_tsys_CalTable(self):
-        """TestFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for Tsys CalTable"""
+        """AgentFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for Tsys CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
@@ -440,7 +440,7 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_minmax_snr_all_for_tsys_CalTable(self):
-        """TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for Tsys CalTable"""
+        """AgentFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for Tsys CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'SNR'
         correlation = 'ALL'
@@ -465,13 +465,13 @@ class test_tsys(test_base):
 
 
 class test_bpass(test_base):
-    """TestFlagger:: Test flagging tool with Bpass-based CalTable """
+    """AgentFlagger:: Test flagging tool with Bpass-based CalTable """
     
     def setUp(self):
         self.setUp_bpass_case()
 
     def test_manual_field_selection_agent_layer_for_bpass_CalTable(self):
-        """TestFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for field """
+        """AgentFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for field """
         tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -491,7 +491,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['field']['3C286_D']['flagged'], 0)
 
     def test_manual_antenna_selection_agent_layer_for_bpass_CalTable(self):
-        """TestFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for antenna"""
+        """AgentFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for antenna"""
         tflocal = casac.testflagger()
         tflocal.open(self.vis)
         tflocal.selectdata()
@@ -509,7 +509,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['antenna']['ea10']['flagged'], 0.0)
 
     def test_manual_field_msSelection_layer_for_bpass_CalTable(self):
-        """TestFlagger:: Manually flag a bpass-based CalTable using MSSelection for field """
+        """AgentFlagger:: Manually flag a bpass-based CalTable using MSSelection for field """
         tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
@@ -536,7 +536,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['field']['3C286_D']['flagged'], 0)
 
     def test_manual_antenna_msSelection_layer_for_bpass_CalTable(self):
-        """TestFlagger:: Manually flag a bpass-based CalTable using MSSelection for antenna"""
+        """AgentFlagger:: Manually flag a bpass-based CalTable using MSSelection for antenna"""
         tflocal = casac.testflagger()
 
         tflocal.open(self.vis)
@@ -561,7 +561,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['antenna']['ea10']['flagged'], 0.0)
         
     def test_clip_zeros_paramerr_all_for_bpass_CalTable(self):
-        """TestFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
+        """AgentFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
@@ -585,7 +585,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_clip_nan_and_inf_paramerr_all_for_bpass_CalTable(self):
-        """TestFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
+        """AgentFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
@@ -609,7 +609,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_clip_minmax_paramerr_all_for_bpass_CalTable(self):
-        """TestFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for bpass CalTable"""
+        """AgentFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for bpass CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
@@ -633,7 +633,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_rflag_paramerr_all_for_bpass_CalTable(self):
-        """TestFlagger:: Test rflag in all calibration solution products of PARAMERR column for bpass CalTable"""
+        """AgentFlagger:: Test rflag in all calibration solution products of PARAMERR column for bpass CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'ALL'
@@ -657,7 +657,7 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
     def test_tfcrop_paramerr_all_for_bpass_CalTable(self):
-        """TestFlagger:: Test tfcrop in all calibration solution products of PARAMERR column for bpass CalTable"""
+        """AgentFlagger:: Test tfcrop in all calibration solution products of PARAMERR column for bpass CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         correlation = 'REAL ALL'
@@ -681,7 +681,7 @@ class test_bpass(test_base):
         assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 31668.0) <=5
 
     def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable(self):
-        """TestFlagger:: Test tfcrop first calibration solution product of PARAMERR column, and then extend to the other solution for bpass CalTable"""
+        """AgentFlagger:: Test tfcrop first calibration solution product of PARAMERR column, and then extend to the other solution for bpass CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'PARAMERR'
         tflocal.open(self.vis)
@@ -706,7 +706,7 @@ class test_bpass(test_base):
         assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 36017.0) <= 5
 
     def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable2(self):
-        """TestFlagger:: Test tfcrop first calibration solution product of PARAMERR column, 
+        """AgentFlagger:: Test tfcrop first calibration solution product of PARAMERR column, 
         and then extend to the other solution for bpass CalTable"""
 
         # Same as the previous test but using the specific parsing functions
@@ -730,7 +730,7 @@ class test_bpass(test_base):
         self.assertTrue(abs(summary['report0']['correlation']['Sol2']['flagged'] - 36017.0) <= 5)
 
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
-        """TestFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
+        """AgentFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
         tflocal = casac.testflagger()
         datacolumn = 'SNR'
         correlation = 'ALL'
@@ -755,10 +755,10 @@ class test_bpass(test_base):
 
 
 class test_display(test_base):
-    """TestFlagger:: Automatic test to check basic behaviour of display GUI using pause=False option """
+    """AgentFlagger:: Automatic test to check basic behaviour of display GUI using pause=False option """
 
     def test_display_data_single_channel_selection(self):
-        """TestFlagger:: Check nominal behaviour for single spw:chan selection """
+        """AgentFlagger:: Check nominal behaviour for single spw:chan selection """
         self.setUp_4Ants()
         tflocal = casac.testflagger()
         tflocal.open(self.vis)
@@ -776,7 +776,7 @@ class test_display(test_base):
         tflocal.done()
 
     def test_display_data_multiple_channel_selection(self):
-        """TestFlagger:: Check behaviour for multiple spw:chan selection """
+        """AgentFlagger:: Check behaviour for multiple spw:chan selection """
         self.setUp_4Ants()
         tflocal = casac.testflagger()
         tflocal.open(self.vis)
@@ -794,7 +794,7 @@ class test_display(test_base):
         tflocal.done()
 
     def test_display_data_different_corrs_per_spw(self):
-        """TestFlagger:: Check behaviour when the number of correlation products changes between SPWs """
+        """AgentFlagger:: Check behaviour when the number of correlation products changes between SPWs """
         self.setUp_CAS_4052()
         tflocal = casac.testflagger()
         tflocal.open(self.vis)
@@ -822,7 +822,7 @@ class cleanup(test_base):
         os.system('rm -rf TwoSpw.ms*')
 
     def test1(self):
-        '''TestFlagger: Cleanup'''
+        '''AgentFlagger: Cleanup'''
         pass
 
 
