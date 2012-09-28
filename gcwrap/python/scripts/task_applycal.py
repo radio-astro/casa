@@ -187,24 +187,27 @@ def backup_flags(aflocal):
 
 
 def reportflags(rec):
-	if (rec.keys().count('origin')==1 and
-	    rec['origin']=='Calibrater::correct' and
-	    rec.keys().count('VisEquation')==1):
-		casalog.post("Calibration apply flagging statistics:")
-		VE=rec['VisEquation']
-		nterm=len(VE)
-		if nterm>0:
-			casalog.post("  Total selected visibilities = "+str(VE['*1']['ndata']))
-			casalog.post("  Flags:")
-			for iterm in range(nterm):
-				VEi=VE['*'+str(iterm+1)]
-				flstr='   '+VEi['type']
-				flstr+=': '
-				flstr+='In: '+str(VEi['nflagIn'])
-				flstr+=' ('+str(100.*VEi['nflagIn']/VEi['ndata'])+'%) --> '
-				flstr+='Out: '+str(VEi['nflagOut'])
-				flstr+=' ('+str(100.*VEi['nflagOut']/VEi['ndata'])+'%)'
-				if (VEi.keys().count('table')>0):
-					flstr+=' ('+VEi['table']+')'
-				casalog.post(flstr)
-
+	try:
+		if (rec.keys().count('origin')==1 and
+		    rec['origin']=='Calibrater::correct' and
+		    rec.keys().count('VisEquation')==1):
+			casalog.post("Calibration apply flagging statistics:")
+			VE=rec['VisEquation']
+			nterm=len(VE)
+			if nterm>0:
+				casalog.post("  Total selected visibilities = "+str(VE['*1']['ndata']))
+				casalog.post("  Flags:")
+				for iterm in range(nterm):
+					VEi=VE['*'+str(iterm+1)]
+					flstr='   '+VEi['type']
+					flstr+=': '
+					flstr+='In: '+str(VEi['nflagIn'])
+					flstr+=' ('+str(100.*VEi['nflagIn']/VEi['ndata'])+'%) --> '
+					flstr+='Out: '+str(VEi['nflagOut'])
+					flstr+=' ('+str(100.*VEi['nflagOut']/VEi['ndata'])+'%)'
+					if (VEi.has_key('table')):
+						flstr+=' ('+VEi['table']+')'
+					casalog.post(flstr)
+	except Exception, instance:
+		# complain mildly, but don't alarm
+		casalog.post("Error formatting some or all of the applycal flagging log info: "+str(instance))

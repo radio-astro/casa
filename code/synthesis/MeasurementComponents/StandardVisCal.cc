@@ -1679,6 +1679,10 @@ void TOpac::setApply(const Record& applypar) {
     SolvableVisCal::setApply(applypar);
   else {
 
+    // We are applying
+    setSolved(False);
+    setApplied(True);
+
     LogMessage message;
     { ostringstream o;
       o<< "Invoking opacity application without a caltable (e.g., " << endl
