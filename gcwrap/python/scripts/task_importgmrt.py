@@ -134,7 +134,7 @@ def importgmrt( fitsfile, flagfile, vis ):
 
 #    mytb, myms, myfg = gentools(['tb', 'ms', 'fg'])
     mytb, myms = gentools(['tb', 'ms'])
-    tflocal = casac.testflagger()
+    aflocal = casac.agentflagger()
 
     # Write history
     try:
@@ -222,9 +222,9 @@ def importgmrt( fitsfile, flagfile, vis ):
 #    myfg.open( vis )
 #    myfg.saveflagversion( 'none', 'No flagging performed yet' )
 #    myfg.done()
-    tflocal.open( vis )
-    tflocal.saveflagversion( 'none', 'No flagging performed yet' )
-    tflocal.done()
+    aflocal.open( vis )
+    aflocal.saveflagversion( 'none', 'No flagging performed yet' )
+    aflocal.done()
 
     for file in flagfile:
         casalog.post( 'Reading flag file '+file, 'NORMAL2' )
@@ -368,12 +368,12 @@ def importgmrt( fitsfile, flagfile, vis ):
 #                myfg.setmanualflags( baseline=antStr, time=timerange, unflag=False, clipexpr='' )
 #                myfg.run()
 #                myfg.done()
-                tflocal.open(vis)
-                tflocal.selectdata(timerange=timerange)
-                tflocal.parsemanualparameters(antenna=antStr, timerange=timerange)
-                tflocal.init()
-                tflocal.run(True, True)
-                tflocal.done()
+                aflocal.open(vis)
+                aflocal.selectdata(timerange=timerange)
+                aflocal.parsemanualparameters(antenna=antStr, timerange=timerange)
+                aflocal.init()
+                aflocal.run(True, True)
+                aflocal.done()
             except Exception, instance:
                 casalog.post( 'Unable to flag data from flag file '+file\
                               +'.\nAntennas='+antennas+' and timerange='\
@@ -389,9 +389,9 @@ def importgmrt( fitsfile, flagfile, vis ):
 #    myfg.open( vis )
 #    myfg.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
 #    myfg.done()
-    tflocal.open( vis )
-    tflocal.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
-    tflocal.done()
+    aflocal.open( vis )
+    aflocal.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
+    aflocal.done()
 
     retValue = True
     return retValue

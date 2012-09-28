@@ -54,10 +54,10 @@ def applycal(vis=None,
 		if (flagbackup and
 		    (applymode!='calonly' and
 		     applymode!='trial') ):
-			tflocal = casac.testflagger()
-			tflocal.open(vis)
-			backup_flags(tflocal)
-			tflocal.done()
+			aflocal = casac.agentflagger()
+			aflocal.open(vis)
+			backup_flags(aflocal)
+			aflocal.done()
 
 		# Do data selection according to selectdata
 		if (selectdata):
@@ -155,7 +155,7 @@ def applycal(vis=None,
 		raise Exception, instance
 
 
-def backup_flags(tflocal):
+def backup_flags(aflocal):
 
         # Create names like this:
         # before_applycal_1,
@@ -166,7 +166,7 @@ def backup_flags(tflocal):
         # Generally  before_applycal_<i>, where i is the smallest
         # integer giving a name, which does not already exist
        
-        existing = tflocal.getflagversionlist(printflags=False)
+        existing = aflocal.getflagversionlist(printflags=False)
 
 	# remove comments from strings
 	existing = [x[0:x.find(' : ')] for x in existing]
@@ -181,7 +181,7 @@ def backup_flags(tflocal):
 
         time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
 
-        tflocal.saveflagversion(versionname=versionname,
+        aflocal.saveflagversion(versionname=versionname,
                            comment='Flag backup before applycal on ' + time_string,
                            merge='replace')
 

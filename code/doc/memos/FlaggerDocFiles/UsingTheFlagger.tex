@@ -557,15 +557,15 @@ data.
 
 \subsubsection{Ability to easily flag the new Calibration Table format}
 
-The new Calibration Table format can be handled by the TestFlagger tool in a
+The new Calibration Table format can be handled by the AgentFlagger tool in a
 transparent way, just like a Measurement Set Table. There is an open-time check
 that inspects the table type and uses the appropriate FlagDataHandler
 implementation for all the I/O operations:
 
 \begin{verbatim}
 
-CASA <2>: tf.open('X7ef.tsys')
-INFO	TestFlagger::open	Table type is Calibration
+CASA <2>: af.open('X7ef.tsys')
+INFO	AgentFlagger::open	Table type is Calibration
   Out[2]: True
 
 \end{verbatim}
@@ -581,13 +581,13 @@ calibration tables, it only makes sense to use the following flag agent groups:
 
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata()
+af.open('X7ef.tsys')
+af.selectdata()
 agentClip={'mode':'clip','clipzeros':True,'clipminmax':[0.,600.],'datacolumn':'FPARAM'}
-tf.parseagentparameters(agentClip)
-tf.init()
-tf.run()
-tf.done()
+af.parseagentparameters(agentClip)
+af.init()
+af.run()
+af.done()
 
 \end{verbatim}
 
@@ -595,13 +595,13 @@ tf.done()
 
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata()
+af.open('X7ef.tsys')
+af.selectdata()
 agentManual={'mode':'manual','antenna':'DV09'}
-tf.parseagentparameters(agentManual)
-tf.init()
-tf.run()
-tf.done() 
+af.parseagentparameters(agentManual)
+af.init()
+af.run()
+af.done() 
 
 \end{verbatim}
 
@@ -609,13 +609,13 @@ tf.done()
 
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata()
+af.open('X7ef.tsys')
+af.selectdata()
 agentSummary={'mode':'summary'}
-tf.parseagentparameters(agentSummary)
-tf.init()
-summary = tf.run()
-tf.done()
+af.parseagentparameters(agentSummary)
+af.init()
+summary = af.run()
+af.done()
 
 \end{verbatim}
 
@@ -635,8 +635,8 @@ choose the column to operate with, using the 'datacolumn' parameter, being 'FPAR
 \begin{verbatim}
 
 agentClip={'mode':'clip','clipminmax':[0.,6.],'datacolumn':'PARAMERR'}
-tf.parseagentparameters(agentClip)
-tf.init()
+af.parseagentparameters(agentClip)
+af.init()
 ...
 INFO	Clip::setAgentParameters	data column is PARAMERR
 
@@ -647,8 +647,8 @@ But notice that the default datacolumn is FPARAM:
 \begin{verbatim}
 
 agentClip={'mode':'clip','clipminmax':[0.,6.]}
-tf.parseagentparameters(agentClip)
-tf.init()
+af.parseagentparameters(agentClip)
+af.init()
 ...
 INFO	Clip::setAgentParameters	data column is FPARAM
 
@@ -661,14 +661,14 @@ elements or 'ALL' to select all the elements (which is also the default):
 \begin{verbatim}
 
 agentClip={'mode':'clip',clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'Sol1'}
-tf.parseagentparameters(agentClip)
-tf.init()
+af.parseagentparameters(agentClip)
+af.init()
 ...
 INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1
 
 agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'ALL'}
-tf.parseagentparameters(agentClip)
-tf.init()
+af.parseagentparameters(agentClip)
+af.init()
 ...
 INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
 
@@ -679,8 +679,8 @@ Also notice that the default expression is 'ALL':
 \begin{verbatim}
 
 agentClip={'mode':'clip','clipminmax':[0.,6.]}
-tf.parseagentparameters(agentClip)
-tf.init()
+af.parseagentparameters(agentClip)
+af.init()
 ...
 INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
 
@@ -699,17 +699,17 @@ independently or combined together:
 
 \item FlagDataHandler selection (global): Create a sub-table with the selection
 to be used by all the agents. The data selection parameters have to be parsed
-trough the selectdata() method of the TestFlagger tool:
+trough the selectdata() method of the AgentFlagger tool:
 
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata(field='TW Hya')
+af.open('X7ef.tsys')
+af.selectdata(field='TW Hya')
 agentManual={'mode':'manual'}
-tf.parseagentparameters(agentManual)
-tf.init()
-tf.run()
-tf.done() 
+af.parseagentparameters(agentManual)
+af.init()
+af.run()
+af.done() 
 		
 \end{verbatim}
 
@@ -719,13 +719,13 @@ normal agent parameters:
 
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata()
+af.open('X7ef.tsys')
+af.selectdata()
 agentManual={'mode':'manual','antenna':'DV09'}
-tf.parseagentparameters(agentManual)
-tf.init()
-tf.run()
-tf.done() 
+af.parseagentparameters(agentManual)
+af.init()
+af.run()
+af.done() 
 		
 \end{verbatim}
 
@@ -734,13 +734,13 @@ same time have each agent inspecting a particular group of rows for flagging:
 
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata(field='TW Hya')
+af.open('X7ef.tsys')
+af.selectdata(field='TW Hya')
 agentManual={'mode':'manual','antenna':'DV09'}
-tf.parseagentparameters(agentManual)
-tf.init()
-tf.run()
-tf.done() 
+af.parseagentparameters(agentManual)
+af.init()
+af.run()
+af.done() 
 		 
 \end{verbatim}
 
@@ -757,15 +757,15 @@ several flagging agents at the same time, to reduce I/O overhead,  for instance:
 
 \begin{verbatim}
 
-tf.open('cal.fewscans.bpass')
-tf.selectdata()
+af.open('cal.fewscans.bpass')
+af.selectdata()
 agentRflag={'mode':'rflag','datacolumn':'PARAMERR','correlation':'Sol1'}
 agentTfcrop={'mode':'tfcrop','datacolumn':'PARAMERR','correlation':'Sol1'}
-tf.parseagentparameters(agentRflag)
-tf.parseagentparameters(agentTfcrop)
-tf.init()
-tf.run(writeflags=True)
-tf.done()
+af.parseagentparameters(agentRflag)
+af.parseagentparameters(agentTfcrop)
+af.init()
+af.run(writeflags=True)
+af.done()
 
 \end{verbatim}
 
@@ -780,17 +780,17 @@ band-pass calibration table}
 
 \begin{verbatim}
   
-tf.open('X7ef.tsys')
-tf.selectdata()
+af.open('X7ef.tsys')
+af.selectdata()
 agentUnflag={'mode':'unflag'}
 agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'Sol1'}
 agentDisplay={'mode':'display','datadisplay':True}
-tf.parseagentparameters(agentUnflag)
-tf.parseagentparameters(agentClip)
-tf.parseagentparameters(agentDisplay)
-tf.init()
-tf.run(writeflags=True)
-tf.done()
+af.parseagentparameters(agentUnflag)
+af.parseagentparameters(agentClip)
+af.parseagentparameters(agentDisplay)
+af.init()
+af.run(writeflags=True)
+af.done()
 
 \end{verbatim}
 
@@ -804,17 +804,17 @@ Verification data)}
 \item Unflag + Manual Selection (channel edges) + Summary
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata()
+af.open('X7ef.tsys')
+af.selectdata()
 agentUnflag={'mode':'unflag'}
 agentManual={'mode':'manual','spw':'*:0~9;118~127'}
 agentDisplay={'mode':'display','datadisplay':True}
-tf.parseagentparameters(agentUnflag)
-tf.parseagentparameters(agentManual)
-tf.parseagentparameters(agentDisplay)
-tf.init()
-tf.run(writeflags=True)
-tf.done() 
+af.parseagentparameters(agentUnflag)
+af.parseagentparameters(agentManual)
+af.parseagentparameters(agentDisplay)
+af.init()
+af.run(writeflags=True)
+af.done() 
 
 \end{verbatim}
 
@@ -828,17 +828,17 @@ Verification data)}
 \item Unflag + Manual Selection (antenna) + Summary
 \begin{verbatim}
 
-tf.open('X7ef.tsys')
-tf.selectdata()
+af.open('X7ef.tsys')
+af.selectdata()
 agentUnflag={'mode':'unflag'}
 agentManual={'mode':'manual','antenna':'DV09'}
 agentSummary={'mode':'summary'}
-tf.parseagentparameters(agentUnflag)
-tf.parseagentparameters(agentManual)
-tf.parseagentparameters(agentSummary)
-tf.init()
-summary = tf.run(writeflags=True)
-tf.done() 
+af.parseagentparameters(agentUnflag)
+af.parseagentparameters(agentManual)
+af.parseagentparameters(agentSummary)
+af.init()
+summary = af.run(writeflags=True)
+af.done() 
 
 CASA <12>: summary
   Out[12]: 

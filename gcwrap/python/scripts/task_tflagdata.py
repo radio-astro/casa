@@ -127,7 +127,7 @@ def tflagdata(vis,
         return retVar
     
     # Create local tools
-    tflocal = casac.testflagger()
+    aflocal = casac.agentflagger()
     mslocal = casac.ms()
 
     try: 
@@ -164,7 +164,7 @@ def tflagdata(vis,
                 
         # Open the MS and attach it to the tool
         if ((type(vis) == str) & (os.path.exists(vis))):
-            tflocal.open(vis, newtime)
+            aflocal.open(vis, newtime)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -450,14 +450,14 @@ def tflagdata(vis,
         
         # Select the data and parse the agent's parameters
         if mode != 'list':
-            tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
+            aflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
                                antenna=antenna, uvrange=uvrange, time=timerange, \
                                intent=intent, observation=str(observation))   
 
             # CAS-3959 Handle channel selection at the FlagAgent level
             agent_pars['spw'] = spw
             casalog.post('Parsing the parameters for the %s mode'%mode)
-            if (not tflocal.parseagentparameters(agent_pars)):
+            if (not aflocal.parseagentparameters(agent_pars)):
                 casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
                 
             casalog.post('%s'%agent_pars, 'DEBUG')
@@ -489,10 +489,10 @@ def tflagdata(vis,
                 casalog.post('The selected subset of the MS will be: ');
                 casalog.post('%s'%unionpars);
                 
-            tflocal.selectdata(unionpars);
+            aflocal.selectdata(unionpars);
 
             # Parse the parameters for each agent in the list
-            list2save = fh.setupAgent(tflocal, flagcmd, [], apply, writeflags, display)
+            list2save = fh.setupAgent(aflocal, flagcmd, [], apply, writeflags, display)
 
         # Do display if requested
         if display != '':
@@ -514,7 +514,7 @@ def tflagdata(vis,
                 
             # jagonzal: CAS-3966 Add datacolumn to display agent parameters
             agent_pars['datacolumn'] = datacolumn.upper()
-            tflocal.parseagentparameters(agent_pars)
+            aflocal.parseagentparameters(agent_pars)
             
             # Disable saving the parameters to avoid inconsistencies
             if savepars:
@@ -523,18 +523,18 @@ def tflagdata(vis,
                     
         # Initialize the agents
         casalog.post('Initializing the agents')
-        tflocal.init()
+        aflocal.init()
 
         # HPC work: moved the flagbackup to before the cluster
         # initialization.
         # Backup the existing flags before applying new ones
 #        if flagbackup and writeflags:
 #            casalog.post('Backup original flags before applying new flags')
-#            fh.backupFlags(tflocal, 'tflagdata')
+#            fh.backupFlags(aflocal, 'tflagdata')
         
         # Run the tool
-        casalog.post('Running the testflagger tool')
-        summary_stats_list = tflocal.run(writeflags, True)
+        casalog.post('Running the agentflagger tool')
+        summary_stats_list = aflocal.run(writeflags, True)
         
         # Inform the user that end of MS summary was not written to the MS
         if not writeflags:
@@ -564,7 +564,7 @@ def tflagdata(vis,
                 fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
             
         # Destroy the tool
-        tflocal.done()
+        aflocal.done()
 
         # Pull out the 'summary' part of summary_stats_list.
         # (This is the task, and there will be only one such dictionary.)
@@ -604,7 +604,7 @@ def tflagdata(vis,
         return summary_stats;
     
     except Exception, instance:
-        tflocal.done()
+        aflocal.done()
         casalog.post('%s'%instance,'ERROR')
         raise
         

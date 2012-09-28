@@ -312,33 +312,33 @@ class test_flagmanager(test_base):
         '''flagmanager test1m: mode=list, flagbackup=True/False'''
         
         # Create a local copy of the tool
-        tflocal = casac.testflagger()
+        aflocal = casac.agentflagger()
         flagmanager(vis=self.vis, mode='list')
-        tflocal.open(self.vis)
-        self.assertEqual(len(tflocal.getflagversionlist()), 3)
-        tflocal.done()
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        aflocal.done()
 
 
         tflagdata(vis=self.vis, mode='unflag', flagbackup=False)
         flagmanager(vis=self.vis, mode='list')
-        tflocal.open(self.vis)
-        self.assertEqual(len(tflocal.getflagversionlist()), 3)
-        tflocal.done()
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        aflocal.done()
 
         tflagdata(vis=self.vis, mode='unflag', flagbackup=True)
         flagmanager(vis=self.vis, mode='list')
-        tflocal.open(self.vis)
-        self.assertEqual(len(tflocal.getflagversionlist()), 4)
-        tflocal.done()
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        aflocal.done()
         
         newname = 'Ha! The best version ever!'
 
         flagmanager(vis=self.vis, mode='rename', oldname='tflagdata_2', versionname=newname, 
                     comment='This is a *much* better name')
         flagmanager(vis=self.vis, mode='list')
-        tflocal.open(self.vis)
-        self.assertEqual(len(tflocal.getflagversionlist()), 4)
-        tflocal.done()
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        aflocal.done()
         
         self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
                         'Flagversion file does not exist: flags.'+newname)
@@ -383,27 +383,27 @@ class test_flagmanager(test_base):
         """flagmanager: Do not allow flagversion=''"""
         
         # Create a local copy of the tool
-        tflocal = casac.testflagger()
+        aflocal = casac.agentflagger()
         
-        tflocal.open(self.vis)
-        l = len(tflocal.getflagversionlist())
-        tflocal.done()
+        aflocal.open(self.vis)
+        l = len(aflocal.getflagversionlist())
+        aflocal.done()
         
         flagmanager(vis = self.vis,
                     mode = "save",
                     versionname = "non-empty-string")
 
-        tflocal.open(self.vis)
-        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
-        tflocal.done()
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), l+1)
+        aflocal.done()
 
         flagmanager(vis = self.vis,
                     mode = "save",
                     versionname = "non-empty-string")
 
-        tflocal.open(self.vis)
-        self.assertEqual(len(tflocal.getflagversionlist()), l+1)
-        tflocal.done()
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), l+1)
+        aflocal.done()
 
 
 class test_msselection(test_base):

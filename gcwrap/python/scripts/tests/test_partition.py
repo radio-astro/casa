@@ -348,20 +348,20 @@ class partition_test2(test_base):
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
  
          # Check that the number of backups in MMS is correct
-        tflocal = casac.testflagger()
-        tflocal.open(self.mmsfile)
-        nv = tflocal.getflagversionlist()
-        tflocal.done()
+        aflocal = casac.agentflagger()
+        aflocal.open(self.mmsfile)
+        nv = aflocal.getflagversionlist()
+        aflocal.done()
         self.assertEqual(len(nv), 3)
                
         # Run tflagdata on MMS to check if it works well.
         tflagdata(vis=self.mmsfile, mode='unflag', flagbackup=True)
         
         # Check that the number of backups in MMS is correct
-        tflocal = casac.testflagger()
-        tflocal.open(self.mmsfile)
-        nvref = tflocal.getflagversionlist()
-        tflocal.done()
+        aflocal = casac.agentflagger()
+        aflocal.open(self.mmsfile)
+        nvref = aflocal.getflagversionlist()
+        aflocal.done()
         self.assertEqual(len(nvref), 4)
         
     def test_flagsrestore(self):

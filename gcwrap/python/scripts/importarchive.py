@@ -46,7 +46,7 @@ def importarchive(
     vftask = myf['vftask']
     vlafiller = vftask.fill
 #    fg = myf['fg']
-    tflocal = casac.testflagger()
+    aflocal = casac.agentflagger()
         # ##
         # Handle globals or user over-ride of arguments
     function_signature_defaults = \
@@ -125,11 +125,11 @@ def importarchive(
 
         print '*** Error ***'
 
-    ok = tflocal.open(vis)
-    ok = tflocal.saveflagversion('Original',
+    ok = aflocal.open(vis)
+    ok = aflocal.saveflagversion('Original',
                             comment='Original flags at import into CASA'
                             , merge='save')
-    ok = tflocal.done()
+    ok = aflocal.done()
     saveinputs = myf['saveinputs']
     saveinputs('importarchive', 'importarchive.last')
 

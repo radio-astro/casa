@@ -6,31 +6,31 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/tools/xml/casa.xsd">
 
 
-<tool name="testflagger" module="testflagger">
+<tool name="agentflagger" module="agentflagger">
 <code>
-	<include>tools/flagging/testflagger_forward.h</include>
+	<include>tools/flagging/agentflagger_forward.h</include>
 <private>
-	<include>tools/flagging/testflagger_private.h</include>
+	<include>tools/flagging/agentflagger_private.h</include>
 </private>
 </code>
 
         <shortdescription>Tool for manual and automated flagging</shortdescription>
        
 <description>
-The {\tt testflagger} tool performs manual as well as automatic synthesis
-flagging operations within casapy. The {\tt testflagger} tool can operate on
+The {\tt agentflagger} tool performs manual as well as automatic synthesis
+flagging operations within casapy. The {\tt agentflagger} tool can operate on
 one measurement set at a time.
 
  \medskip\noindent\textbf{Open the Measurement Set and Attach it to the Tool}
 
-  The first thing to do is to open the Ms and attach it to the testflagger tool.
-  Use the tf.open method, which requires the MS name and optionally the time interval,
+  The first thing to do is to open the Ms and attach it to the agentflagger tool.
+  Use the af.open method, which requires the MS name and optionally the time interval,
   over which to buffer data before running the algorithm. The time interval is set by
   default to 0.0, which means a 'scan' length. The 'ntime' parameter is important for
   the modes tfcrop, rflag and extend. From version 3.4 on, it is also possible to
   flag CAL tables. Give the CAL table name instead of the MS.
 
-  \t tf.open('uid_X002.ms')
+  \t af.open('uid_X002.ms')
 
 
  \medskip\noindent\textbf{Select the Data}
@@ -43,17 +43,17 @@ one measurement set at a time.
      containing the selection parameters.
 
      Select the whole MS.
-     tf.selectdata()
+     af.selectdata()
 
      Select a portion of the MS using a dictionary.
      myrecord={}
      myrecord['scan']='1~3'
      myrecord['spw']='0:1~10'
-     tf.selectdata(myrecord)
+     af.selectdata(myrecord)
 
    2) Parse the parameters names directly to the function.
 
-     tf.selectdata(scan='1~3', spw='0:1~10')
+     af.selectdata(scan='1~3', spw='0:1~10')
 
 
  \medskip\noindent\textbf{Parse the Parameters for the Flagging Mode(s)}
@@ -65,7 +65,7 @@ one measurement set at a time.
   parameters will take default values as defined in each agent. There are
   two ways of parsing the agent's parameters.
 
-  1) Using the general method tf.parseagentparameters().
+  1) Using the general method af.parseagentparameters().
 
      Construct a dictionary with the parameters for each agent. Each agent's
      parameters should go to a different 'key' of the dictionary. Example:
@@ -73,49 +73,49 @@ one measurement set at a time.
      # Create a shadow agent:
      myagents = {}
      myagents['mode'] = 'shadow'
-     tf.parseagentparameters(myagents)
+     af.parseagentparameters(myagents)
 
      # Add a summary agent to the list.
      myagents = {}
      myagents['mode'] = 'summary
      myagents['spwchan] = True
-     tf.parseagentparameters(myagents)
+     af.parseagentparameters(myagents)
 
      # Add a manual agent to the same internal list of agents.
      myagents = {}
      myagents['mode'] = 'manual'
      myagents['scan'] = '1~3,18~20'
-     tf.parseagentparameters(myagents)
+     af.parseagentparameters(myagents)
 
      # Add a clip agent to flag the zero-value data.
      myagents = {}
      myagents['mode'] = 'clip'
      myagents['clipzeros'] = True
-     tf.parseagentparameters(myagents)
+     af.parseagentparameters(myagents)
      
      # Add another summary agent to the list.
      myagents = {}
      myagents['mode'] = 'summary
      myagents['spwchan] = True
-     tf.parseagentparameters(myagents)
+     af.parseagentparameters(myagents)
 
    2) The other way to parse agent's parameters is to use the convenience functions.
       The above example would become:
 
      # Create a shadow agent:
-     tf.parseshadowparameters()
+     af.parseshadowparameters()
 
      # Add a summary agent to the list.
-     tf.parsesummaryparameters(spwchan=True)
+     af.parsesummaryparameters(spwchan=True)
 
      # Add a manual agent to the same internal list of agents.
-     tf.parsemanualparameters(scan='1~3,18~20')
+     af.parsemanualparameters(scan='1~3,18~20')
 
      # Add a clip agent to flag the zero-value data.
-     tf.parseclipparameters(clipzeros=True)
+     af.parseclipparameters(clipzeros=True)
      
      # Add another summary agent to the list.
-     tf.parsesummaryparameters(spwchan=True)
+     af.parsesummaryparameters(spwchan=True)
      
 
  \medskip\noindent\textbf{Initialize the Agents}
@@ -134,7 +134,7 @@ one measurement set at a time.
   In the same way, if an agent tfcrop, rflag or clip is present, the asyncio mechanism will be switched
   on.
 
-  tf.init()
+  af.init()
 
  \medskip\noindent\textbf{Run the tool}
 
@@ -147,7 +147,7 @@ one measurement set at a time.
   produce reports that can be retrieved from calling the run method. The reports are returned via a Python
   dictionary.
 
-  myreports = tf.run(writeflags=True)
+  myreports = af.run(writeflags=True)
   
   The dictionary returned in 'myreports' will contain four reports from the two summary agents that were
   added previously. The first report is the normal summary for each selection parameter. The second report
@@ -157,24 +157,24 @@ one measurement set at a time.
 
   Do not forget to destroy and close the tool at the end.
   
-  tf.done()
+  af.done()
 
 </description>
 
 
-   <method type="constructor" name="testflagger">
+   <method type="constructor" name="agentflagger">
    <shortdescription>Construct a flag tool</shortdescription>
    
 <description>
-Create a {\tt testflagger} tool, and initializes some variables.
+Create a {\tt agentflagger} tool, and initializes some variables.
 </description>
 <input>
 
 </input>
-<returns type="unknown">testflagger tool</returns>
+<returns type="unknown">agentflagger tool</returns>
 <example>
 
-tf.testflagger()      
+af.agentflagger()      
 
 </example>
 </method>
@@ -186,7 +186,7 @@ tf.testflagger()
    
 <returns type="bool"/>
 <example>
-tf.done()
+af.done()
 
 </example>
 </method>
@@ -209,7 +209,7 @@ tf.done()
 </input>
 
 <example>
-tf.open(msname,ntime)
+af.open(msname,ntime)
 </example>
 <returns type="bool"/> 
 </method>
@@ -295,16 +295,16 @@ All data selection parameters follow the ms-selection syntax.
 </input>
 <example>
 Select the whole MS
-tf.selectdata()
+af.selectdata()
 
 Select a portion of the MS
 myrecord={}
 myrecord['scan']='1~3'
 myrecord['spw']='0:1~10'
-tf.selectdata(myrecord)
+af.selectdata(myrecord)
 
 Another way to select a portion of the MS
-tf.selectdata(scan='3~5', spw='0')
+af.selectdata(scan='3~5', spw='0')
 </example>
 
 <returns type="bool"/> 
@@ -338,7 +338,7 @@ myrecord['mode']='clip'\n
 myrecord['scan']='1~3'\n
 myrecord['clipminmax']=[0.02,0.3]\n
 myrecord['apply']=True\n
-tf.parseAgentParameters(myrecord)\n
+af.parseAgentParameters(myrecord)\n
      
      </description>
      </param>
@@ -350,7 +350,7 @@ myrecord['mode']='clip'
 myrecord['scan']='1~3'
 myrecord['clipminmax']=[0.02,0.3]
 myrecord['apply']=True
-tf.parseAgentParameters(myrecord)
+af.parseAgentParameters(myrecord)
 </example>
 <returns type="bool"/> 
 </method>
@@ -573,7 +573,7 @@ for the manual mode.
      
 </input>
 <example>
-tf.parsemanualparameters(autocorr=True)
+af.parsemanualparameters(autocorr=True)
 </example>
 
 <returns type="bool"/> 
@@ -687,7 +687,7 @@ The correlation parameter can be used with an operator for the clip mode.
 The operator should be written only once and it will affect all the polarizations
 given in the string. See the example below:
 
-tf.parseclipparameters(clipzeros=True, clipminmax=[0.,4.], correlation='ABS_XX,XY')
+af.parseclipparameters(clipzeros=True, clipminmax=[0.,4.], correlation='ABS_XX,XY')
 </example>
 
 <returns type="bool"/> 
@@ -782,7 +782,7 @@ for the quack mode.
      
 </input>
 <example>
-tf.parsequackparameters(scan='1~3', quackmode='beg', quackinterval=1)
+af.parsequackparameters(scan='1~3', quackmode='beg', quackinterval=1)
 </example>
 
 <returns type="bool"/> 
@@ -875,7 +875,7 @@ for the elevation mode.
 </input>
 <example>
 To unflag, set the apply parameter.
-tf.parseelevationparameters(upperlimit=50.,lowerlimit=10.0, apply=False)
+af.parseelevationparameters(upperlimit=50.,lowerlimit=10.0, apply=False)
 </example>
 
 <returns type="bool"/> 
@@ -1006,7 +1006,7 @@ The correlation parameter can be used with an operator for the tfcrop mode.
 The operator should be written only once and it will affect all the polarizations
 given in the string. See the example below:
 
-tf.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='ABS_XX,XY')
+af.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='ABS_XX,XY')
 </example>
 
 <returns type="bool"/> 
@@ -1121,7 +1121,7 @@ for the extend mode.
      
 </input>
 <example>
-tf.parseextendparameters(extendpols=True)
+af.parseextendparameters(extendpols=True)
 </example>
 
 <returns type="bool"/> 
@@ -1212,7 +1212,7 @@ for the summary mode.
      
 </input>
 <example>
-tf.parsesummaryparameters(spwchan=True, basecnt=True)
+af.parsesummaryparameters(spwchan=True, basecnt=True)
 </example>
 
 <returns type="bool"/> 

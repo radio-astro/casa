@@ -862,7 +862,7 @@ def getNumPar(cmddict):
 def compressSelectionList(vis='',dicpars={}):
     """
     - Find a loose union of data-selection parameters, to reduce the MSSelection parsing load.
-    - This compressed selection list is only meant to be used with tf.selectdata(), because
+    - This compressed selection list is only meant to be used with af.selectdata(), because
       further selections are handled internally.
     - Use MSSelection in its 'onlyparse=True' mode to gather a list of fields, spws, antennas
       touched by the selection list. These are the only keys for which MSSelection does not 
@@ -1435,8 +1435,8 @@ def purgeParameter(cmdline, par):
          
     return newstr
 
-def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
-    ''' Setup the parameters of each agent and call the testflagger tool
+def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
+    ''' Setup the parameters of each agent and call the agentflagger tool
     
         myflagcmd --> it is a dictionary coming from readFromTable, readFile, etc.
         myrows --> selected rows to apply/unapply flags
@@ -1609,7 +1609,7 @@ def setupAgent(tflocal, myflagcmd, myrows, apply, writeflags, display=''):
             print modepars
 
         # Parse the dictionary of parameters to the tool
-        if (not tflocal.parseagentparameters(modepars)):
+        if (not aflocal.parseagentparameters(modepars)):
             casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,key), 'WARN')
             continue
                             
@@ -1646,10 +1646,10 @@ def backupFlags(msfile, prename):
         integer giving a name, which does not already exist'''
         
     prefix = prename
-    tftool = casac.testflagger()
-    tftool.open(msfile)
+    aftool = casac.agentflagger()
+    aftool.open(msfile)
     try:
-        existing = tftool.getflagversionlist(printflags=False)
+        existing = aftool.getflagversionlist(printflags=False)
     
         # remove comments from strings
         existing = [x[0:x.find(' : ')] for x in existing]
@@ -1666,10 +1666,10 @@ def backupFlags(msfile, prename):
     
         casalog.post('Saving current flags to ' + versionname, 'DEBUG')
     
-        tftool.saveflagversion(versionname=versionname,
+        aftool.saveflagversion(versionname=versionname,
                                 comment='Flags autosave on ' + time_string, merge='replace')
     finally:
-        tftool.done()
+        aftool.done()
         
     return
 

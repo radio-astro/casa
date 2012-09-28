@@ -62,8 +62,8 @@ qatool = casac.quanta
 qa = casac.qa =  qatool()
 tbtool = casac.table
 fgtool = casac.flagger
-tftool = casac.testflagger
-tf = tftool()
+aftool = casac.agentflagger
+af = aftool()
 metool = casac.measures
 iatool = casac.image
 potool = casac.imagepol

@@ -334,7 +334,7 @@ int main(int argc, char **argv)
 	}
 
 	AgentFlagger *tf = new AgentFlagger();
-	if(not tf->open(msname, ntime)) {
+	if(not af->open(msname, ntime)) {
 		cout << "ERROR: Failed to open the tool" << endl;
 	}
 
@@ -433,7 +433,7 @@ int main(int argc, char **argv)
 	}
 
 	// Parse the data selection parameters
-	if(not tf->selectData(record)) {
+	if(not af->selectData(record)) {
 		cout << "ERROR: Failed to select the data" << endl;
 	}
 
@@ -461,7 +461,7 @@ int main(int argc, char **argv)
 
 
 	// Parse agent data selection parameters
-	if (not tf->parseAgentParameters(arecord)) {
+	if (not af->parseAgentParameters(arecord)) {
 		cout << "ERROR: Failed to parse agent parameters" << endl;
 	}
 
@@ -469,22 +469,22 @@ int main(int argc, char **argv)
 
 
 	// Initialize the agents
-	if (not tf->initAgents()) {
+	if (not af->initAgents()) {
 		cout << "ERROR: Failed to initialize the agents" << endl;
 	}
 
 	if (logLevel >= 3) cout << "Done with initializing the agents "<< endl;
 
 	if (backup){
-		tf->printFlagSelections();
+		af->printFlagSelections();
 	}
 
 	// Run the tool
-	results = tf->run(writeflags=true, sequential=true);
+	results = af->run(writeflags=true, sequential=true);
 
 	if (logLevel >= 3) cout << "Done with running the tool: "<< endl;
 
-	tf->done();
+	af->done();
 
 /*
 	if(mode == "summary"){

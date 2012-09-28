@@ -46,12 +46,12 @@ def importvla(archivefiles,vis,
 
         # write initial flag version
         try:
-                tflocal = casac.testflagger()
-                ok &= tflocal.open(vis);
-                ok &= tflocal.saveflagversion('Original',
+                aflocal = casac.agentflagger()
+                ok &= aflocal.open(vis);
+                ok &= aflocal.saveflagversion('Original',
                                            comment='Original flags at import into CASA',
                                            merge='replace')
-                ok &= tflocal.done();
+                ok &= aflocal.done();
         except Exception, instance:
 		print '*** Error writing initial flag version of %s:' % vis
 		raise Exception, instance

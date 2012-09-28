@@ -196,7 +196,7 @@ AgentFlagger::selectData(Record selrec)
 		os << LogIO::NORMAL << "Called from selectData(Record)" << LogIO::POST;
 
 	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 		return false;
 	}
 
@@ -306,7 +306,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 		return false;
 	}
 
@@ -475,7 +475,7 @@ AgentFlagger::initAgents()
     LogIO os(LogOrigin("AgentFlagger",__FUNCTION__));
 
 	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 		return false;
 	}
 
@@ -667,7 +667,7 @@ AgentFlagger::run(Bool writeflags, Bool sequential)
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
 
 	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 		return Record();
 	}
 
@@ -839,7 +839,7 @@ AgentFlagger::getFlagVersionList(Vector<String> &verlist)
 	{
 
 		if (! fdh_p){
-			os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+			os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 			return false;
 		}
 
@@ -913,7 +913,7 @@ AgentFlagger::saveFlagVersion(String versionname, String comment, String merge)
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 		return false;
 	}
 
@@ -935,7 +935,7 @@ AgentFlagger::restoreFlagVersion(Vector<String> versionname, String merge)
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 		return false;
 	}
 
@@ -965,7 +965,7 @@ AgentFlagger::deleteFlagVersion(Vector<String> versionname)
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
 
 	if (! fdh_p){
-		os << LogIO::SEVERE << "There is no MS attached. Please run tf.open first." << LogIO::POST;
+		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
 		return false;
 	}
 
