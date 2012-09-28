@@ -570,8 +570,6 @@ FlagMSHandler::nextChunk()
 {
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
-	msCounts_p += chunkCounts_p;
-	progressCounts_p += chunkCounts_p;
 	chunkCounts_p = 0;
 	bool moreChunks = false;
 	if (stopIteration_p)
@@ -675,8 +673,6 @@ FlagMSHandler::nextBuffer()
 	// Set new common flag cube
 	if (moreBuffers)
 	{
-		logger_p->origin(LogOrigin("FlagMSHandler::ProgressReport"));
-
 		// Get flag  (WARNING: We have to modify the shape of the cube before re-assigning it)
 		Cube<Bool> curentFlagCube= visibilityBuffer_p->get()->flagCube();
 		modifiedFlagCube_p.resize(curentFlagCube.shape());
@@ -692,34 +688,40 @@ FlagMSHandler::nextBuffer()
 		originalFlagRow_p = curentflagRow;
 
 		// Compute total number of flags per buffer to be used for generating the agents stats
-		chunkCounts_p += curentFlagCube.shape().product();
+		Int64 currentBufferCounts = curentFlagCube.shape().product();
+		chunkCounts_p += currentBufferCounts;
+		progressCounts_p += currentBufferCounts;
+		msCounts_p += currentBufferCounts;
 
 		// Print chunk characteristics
-		if ((bufferNo == 1) and (printChunkSummary_p))
+		if (bufferNo == 1)
 		{
-			String corrs = "[ ";
-			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
-			{
-				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
-			}
-			corrs += "]";
-
-			Double progress  = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
-
-			*logger_p << LogIO::NORMAL <<
-			  "------------------------------------------------------------------------------------ " << LogIO::POST;
-			*logger_p << LogIO::NORMAL <<
-					"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
-					", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
-					", Array = " << visibilityBuffer_p->get()->arrayId() <<
-					", Scan = " << visibilityBuffer_p->get()->scan0() <<
-					", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
-					", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
-					", Channels = " << visibilityBuffer_p->get()->nChannel() <<
-					", Corrs = " << corrs <<
-					", Total Rows = " << roVisibilityIterator_p->nRowChunk() << LogIO::POST;
-
 			processedRows += roVisibilityIterator_p->nRowChunk();
+			if (printChunkSummary_p)
+			{
+				logger_p->origin(LogOrigin("FlagMSHandler",""));
+				String corrs = "[ ";
+				for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
+				{
+					corrs += (*polarizationIndexMap_p)[corr_i] + " ";
+				}
+				corrs += "]";
+
+				Double progress  = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
+
+				*logger_p << LogIO::NORMAL <<
+				  "------------------------------------------------------------------------------------ " << LogIO::POST;
+				*logger_p << LogIO::NORMAL <<
+						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
+						", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
+						", Array = " << visibilityBuffer_p->get()->arrayId() <<
+						", Scan = " << visibilityBuffer_p->get()->scan0() <<
+						", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
+						", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
+						", Channels = " << visibilityBuffer_p->get()->nChannel() <<
+						", Corrs = " << corrs <<
+						", Total Rows = " << roVisibilityIterator_p->nRowChunk() << LogIO::POST;
+			}
 		}
 	}
 
