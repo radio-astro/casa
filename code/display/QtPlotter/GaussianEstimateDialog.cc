@@ -64,7 +64,6 @@ GaussianEstimateDialog::GaussianEstimateDialog(QWidget *parent)
 
 	//Searching was moved to main screen
 	ui.searchButton->setVisible( false );
-	ui.clearButton->setVisible( false );
 }
 
 //--------------------------------------------------------------------------------

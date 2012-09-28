@@ -271,8 +271,8 @@ void VisCal:: initCalFlagCount() {
 
 Record VisCal::actionRec() {
   Record cf;
-  cf.define("type",typeName());
   if (isApplied()) {
+    cf.define("type",typeName());
     cf.define("ndata",ndataIn_);
     cf.define("nflagIn",nflagIn_);
     cf.define("nflagOut",nflagOut_);
