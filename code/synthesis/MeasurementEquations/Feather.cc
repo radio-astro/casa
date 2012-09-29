@@ -41,6 +41,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
+#include <components/ComponentModels/GaussianBeam.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageUtilities.h>
@@ -61,7 +62,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-  void Feather::applyDishDiam(ImageInterface<Complex>& image, Float effDiam, ImageInterface<Float>& fftim, Vector<Quantity>& extraconv){
+  void Feather::applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& fftim, Vector<Quantity>& extraconv){
     /*
     MathFunc<Float> dd(SPHEROIDAL);
     Vector<Float> valsph(31);
@@ -79,11 +80,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       thisScreen.copyData(le);
       }*/
     //////////////////////
-    Quantity halfpb=Quantity(1.22*C::c/1.0e9/effDiam, "rad");
+    
+    Double freq  = worldFreq(image.coordinates(), 0);
+    //cerr << "Freq " << freq << endl;
+    Quantity halfpb=Quantity(1.22*C::c/freq/effDiam, "rad");
     //PBMath1DAiry elpb( Quantity(effDiam,"m"), Quantity(0.01,"m"),
     //				       Quantity(0.8564,"deg"), Quantity(1.0,"GHz"));
-    PBMath1DGauss elpb(halfpb, Quantity(0.8564,"deg"), Quantity(1.0,"GHz"));
+    GaussianBeam newBeam(halfpb, halfpb, Quantity(0.0, "deg"));
+    try {
+      
+      GaussianBeam toBeUsed;
+      //cerr << "beam " << beam.toVector() << endl;
+      //cerr << "newBeam " << newBeam.toVector() << endl;
+      beam.deconvolve(toBeUsed, newBeam);
+      extraconv.resize(3);
+      // use the Major difference
+      extraconv(0) = toBeUsed.getMajor();
+      extraconv(1) = toBeUsed.getMinor();
+      extraconv(2) = toBeUsed.getPA();
+
+    }
+    catch (const AipsError& x) {
+      throw(AipsError("Beam due to new effective diameter may be smaller than the beam of original dish image"));
+    }
+    //////////////////////
+    //1 GHz equivalent   
+    //    halfpb=Quantity(1.22*C::c/1.0e9/effDiam, "rad");
+    //cerr << "halfpb " << halfpb << endl;
+    //PBMath1DGauss elpb(halfpb, Quantity(0.8564,"deg"), Quantity(1.0,"GHz"), True);
     
+    fftim.set(0.0);
+   
+    IPosition center(4, Int((fftim.shape()(0)/4)*2), 
+		     Int((fftim.shape()(1)/4)*2),0,0);
+    fftim.putAt(1.0, center);
+    StokesImageUtil::Convolve(fftim, newBeam, False);
+    StokesImageUtil::From(image, fftim);
+    /*
     TempImage<Complex> elbeamo(image.shape(), image.coordinates());
     elbeamo.set(1.0);
     MDirection wcenter;  
@@ -99,23 +132,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     elpb.applyPB(elbeamo, elbeamo, wcenter, Quantity(0.0, "deg"), 
 			   BeamSquint::NONE);
+    
+   
     StokesImageUtil::To(fftim, elbeamo);
+    */
+    ///////////////////
+    //StokesImageUtil::FitGaussianPSF(fftim, 
+    //    			   beam);
+     //cerr << "To be convolved beam 2 " << beam.toVector() << endl;
+     ////////////////
 
-    GaussianBeam beam;
-
-    StokesImageUtil::FitGaussianPSF(fftim, 
-				   beam);
-
-    extraconv.resize(3);
-    extraconv(0) = beam.getMajor();
-    extraconv(1) = beam.getMinor();
-    extraconv(2) = beam.getPA();
-
-    LatticeFFT::cfft2d(elbeamo);
-    image.copyData((LatticeExpr<Complex>)( image*elbeamo) );
-    elbeamo.copyData(image);
-    LatticeFFT::cfft2d(elbeamo, False);
-    StokesImageUtil::To(fftim, elbeamo);
+    LatticeFFT::cfft2d(image);
+    //image.copyData((LatticeExpr<Complex>)(elbeamo) );
+    //elbeamo.copyData(image);
+    // LatticeFFT::cfft2d(elbeamo, False);
+    //StokesImageUtil::To(fftim, elbeamo);
+    //StokesImageUtil::FitGaussianPSF(fftim, 
+    //				    beam);
     /////////
     /*{
       PagedImage<Float> thisScreen(image.shape(), image.coordinates(), "After_apply.image");
@@ -164,18 +197,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	  Quantity qFreq;
 	  {
-	    Int spectralIndex=low0.coordinates().findCoordinate(Coordinate::SPECTRAL);
-	    AlwaysAssert(spectralIndex>=0, AipsError);
-	    SpectralCoordinate
-	      spectralCoord=
-	      low0.coordinates().spectralCoordinate(spectralIndex);
-	    Vector<String> units(1); units = "Hz";
-	    spectralCoord.setWorldAxisUnits(units);	
-	    Vector<Double> spectralWorld(1);
-	    Vector<Double> spectralPixel(1);
-	    spectralPixel(0) = 0;
-	    spectralCoord.toWorld(spectralWorld, spectralPixel);  
-	    Double freq  = spectralWorld(0);
+	    Double freq  = worldFreq(low0.coordinates(), 0);
 	    qFreq = Quantity( freq, "Hz" );
 	  }
 	  String band;
@@ -310,9 +332,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LatticeFFT::cfft2d( cweight );
       if(effDiam >0.0){
 	//cerr << "in effdiam" << effDiam << endl;
-	applyDishDiam(cweight, effDiam, lowpsf0, extraconv);
+	applyDishDiam(cweight, lBeam, effDiam, lowpsf0, extraconv);
 	lowpsf0.copyData((LatticeExpr<Float>)(lowpsf0/max(lowpsf0)));
 	StokesImageUtil::FitGaussianPSF(lowpsf0, lBeam);
+	
 	Int directionIndex=
 	  cweight.coordinates().findCoordinate(Coordinate::DIRECTION);
 	Image2DConvolver<Float>::convolve(
@@ -327,18 +350,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //Plotting part
       if(doPlot){
 	CoordinateSystem ftCoords(cweight.coordinates());
-	///freq part
-	Int spectralIndex=ftCoords.findCoordinate(Coordinate::SPECTRAL);
-	SpectralCoordinate
-	  spectralCoord=
-	  ftCoords.spectralCoordinate(spectralIndex);
-	Vector<String> units(1); units = "Hz";
-	spectralCoord.setWorldAxisUnits(units);	
-	Vector<Double> spectralWorld(1);
-	Vector<Double> spectralPixel(1);
-	spectralPixel(0) = 0;
-	spectralCoord.toWorld(spectralWorld, spectralPixel);  
-	Double freq  = spectralWorld(0);
+	Double freq=worldFreq(ftCoords, 0);
 	////
 	Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
 	Array<Complex> tmpval;
@@ -382,6 +394,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pix.row(0)=xpix;
 	ftdc->toWorldMany(world, pix, failures);
 	xpix=world.row(0);
+	//cerr << "xpix " << xpix << endl;
 	xpix=fabs(xpix)*(C::c)/freq;
 	Vector<Double> ypix(y.nelements());
 	indgen(ypix);
@@ -531,6 +544,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  Double Feather::worldFreq(const CoordinateSystem& cs, Int spectralpix){
+    ///freq part
+    Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate
+      spectralCoord=
+      cs.spectralCoordinate(spectralIndex);
+    Vector<String> units(1); units = "Hz";
+    spectralCoord.setWorldAxisUnits(units);	
+    Vector<Double> spectralWorld(1);
+    Vector<Double> spectralPixel(1);
+    spectralPixel(0) = spectralpix;
+    spectralCoord.toWorld(spectralWorld, spectralPixel);  
+    Double freq  = spectralWorld(0);
+    return freq;
+  }
 
 
 
