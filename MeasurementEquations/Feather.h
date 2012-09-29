@@ -36,6 +36,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //Forward declaration
   template<class T> class ImageInterface;
   template<class T> class Vector;
+  class GaussianBeam;
+  class CoordinateSystem;
   // <summary> Class that contains functions needed for feathering</summary>
 
   class Feather{
@@ -43,9 +45,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     static void feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low, const Float& sdScale=1.0, const String& lowPSF="", const Bool useDefault=True, const String& vpTable="" , Float effSDDiam=-1.0, const Bool doPlot=False);
 
+    static Double worldFreq(const CoordinateSystem& cs, Int spectralpix=0);
   private:
     
-    static void applyDishDiam(ImageInterface<Complex>& image, Float effDiam, ImageInterface<Float>& newbeam, Vector<Quantity>& extraconv);
+    static void applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& newbeam, Vector<Quantity>& extraconv);
 
 
   };
