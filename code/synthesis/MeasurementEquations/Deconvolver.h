@@ -38,8 +38,6 @@
 #include <lattices/Lattices/LatticeCleaner.h>
 #include <components/ComponentModels/GaussianBeam.h>
 
-#include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
-
 #include <casa/namespace.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 template<class T> class Lattice;
@@ -276,39 +274,7 @@ public:
   // Make a Gaussian -- you might want to use it for convolution, etc
   Bool makegaussian(const String& gaussianimage, GaussianBeam& mbeam, Bool normalizeVolume);
 
-  // ------------------  Multi-Term Deconvolver functions - START ----------------------
-  // Initialize the Multi-Term Matrix Cleaners and compute Hessian elements.
-  Bool mtopen(const Int nTaylor,
-	      const Vector<Float>& userScaleSizes,
-	      const Vector<String>& psfs);
-
-  // Do component-finding iterations
-  Bool mtclean(const Vector<String>& residuals,
-	       const Vector<String>& models,
-	       const Int niter,
-	       const Float gain, 
-	       const Quantity& threshold, 
-	       const Bool displayProgress,
-	       const String& mask, 
-	       Float& maxResidual, Int& iterationsDone);
-
-  // Restore the output images
-  Bool mtrestore(const Vector<String>& models,
-		 const Vector<String>& residuals,
-		 const Vector<String>& images,
-		 GaussianBeam& mbeam);
-
-  // Calculate alpha and beta from restored images.
-  Bool mtcalcpowerlaw(const Vector<String>& images,
-                      const Vector<String>& residuals,
-                      const String& alphaname,
-                      const String& betaname,
-                      const Quantity& threshold,
-                      const Bool calcerror);
-
-
-  // ------------------  Multi-Term Deconvolver functions - END ----------------------
-
+  
 
 private:
   
@@ -336,9 +302,6 @@ private:
 		       const Int niter, const Float gain, const Quantity& threshold, 
 		       const Bool displayProgress);
 
-  // Embed a mask into an image. A convenience function.
-  Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
-
   PagedImage<Float>* dirty_p;
   PagedImage<Float>* psf_p;
 
@@ -363,10 +326,7 @@ private:
   Float itsTotalFlux;
   Vector<Float> scaleSizes_p;
 
-  // Multi-Term private variables
-  Int mt_nterms_p;
-  MultiTermMatrixCleaner mt_cleaner_p;
-  Bool mt_valid_p;
+
 
   // Set the defaults
   void defaults();

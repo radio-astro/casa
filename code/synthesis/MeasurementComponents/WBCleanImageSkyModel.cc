@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: WBCleanImageSkyModel.cc 13615 2010-12-20 14:04:00 UrvashiRV$
-//# v2.6 : Added psf-patch support to reduce memory footprint.
+
 
 #include <casa/Arrays/ArrayMath.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
@@ -120,7 +120,6 @@ void WBCleanImageSkyModel::initVars()
   modified_p=True;
   memoryMB_p = Double(HostInfo::memoryTotal(true)/1024)/(2.0);
   donePSF_p=False;
-  doneMTMCinit_p=False;
 
   numbermajorcycles_p=0;
   nfields_p=1;
@@ -138,7 +137,6 @@ void WBCleanImageSkyModel::initVars()
 WBCleanImageSkyModel::~WBCleanImageSkyModel()
 {
   lc_p.resize(0);
-  ///cout << "WBCleanImageSkyModel destructor " << endl;
 };
 
 /*************************************
@@ -146,7 +144,7 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
  *************************************/
 Bool WBCleanImageSkyModel::solve(SkyEquation& se) 
 {
-	os << "MSMFS algorithm (v2.6) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
+	os << "MSMFS algorithm (v2.5) with " << ntaylor_p << " Taylor coefficients and Reference Frequency of " << refFrequency_p  << " Hz" << LogIO::POST;
 	Int stopflag=0;
 	Int nchan=0,npol=0;
 
@@ -207,6 +205,28 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    }
 	}
 
+	/* Initialize the MultiTermMatrixCleaners */
+	if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
+	if(lc_p.nelements()==0)
+	{
+		lc_p.resize(nfields_p);
+                Bool state=True;
+		for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+		{
+			lc_p[thismodel].setscales(scaleSizes_p);
+			lc_p[thismodel].setntaylorterms(ntaylor_p);
+			nx = image(thismodel).shape()(0);
+			ny = image(thismodel).shape()(1);
+                        state &= lc_p[thismodel].initialise(nx,ny); // allocates memory once....
+                }
+                if( !state ) // initialise will return False if there is any internal inconsistency with settings so far.
+		{
+		  lc_p.resize(0);
+		  //                  os << "Could not initialize MS-MFS minor cycle" << LogIO::EXCEPTION;
+                  os << LogIO::SEVERE << "Could not initialize MS-MFS minor cycle" << LogIO::POST;
+                  return False;
+		}
+	}
 
 	/* Create the Point Spread Functions */
 	if(!donePSF_p)
@@ -220,7 +240,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    {
 	      /* Make the 2N-1 PSFs */
 	      os << "Calculating spectral PSFs..." << LogIO::POST;
-              makeSpectralPSFs(se, numberIterations()<0?True:False);
+              makeSpectralPSFs(se);
 	    }
 	    catch(AipsError &x)
 	    {
@@ -230,46 +250,21 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	      os << "Could not make PSFs. Please check image co-ordinate system : " << x.getMesg() << LogIO::EXCEPTION;
 	    }
 
-	    if(adbg) cout << "Shape of lc_p : " << lc_p.nelements() << endl;
-	    /* Initialize MTMC, allocate memory, and send in all 2N-1 psfs */
-	    if(lc_p.nelements()==0 && numberIterations()>=0)
+	    /* Send all 2N-1 PSFs into the MultiTermLatticeCleaner */
+	    for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+	    {
+	      for (Int order=0;order<2*ntaylor_p-1;order++)
 	      {
-		lc_p.resize(nfields_p);
-                Bool state=True;
-		/* Initialize the MultiTermMatrixCleaners */
-		for(Int thismodel=0;thismodel<nfields_p;thismodel++)
-		  {
-		    lc_p[thismodel].setscales(scaleSizes_p);
-		    lc_p[thismodel].setntaylorterms(ntaylor_p);
-		    nx = image(thismodel).shape()(0);
-		    ny = image(thismodel).shape()(1);
-		    state &= lc_p[thismodel].initialise(nx,ny); // allocates memory once....
-		  }
-                if( !state ) // initialise will return False if there is any internal inconsistency with settings so far.
-		  {
-		    lc_p.resize(0);
-		    //                  os << "Could not initialize MS-MFS minor cycle" << LogIO::EXCEPTION;
-		    os << LogIO::SEVERE << "Could not initialize MS-MFS minor cycle" << LogIO::POST;
-		    return False;
-		  }
-		
-		/* Send all 2N-1 PSFs into the MultiTermLatticeCleaner */
-		for(Int thismodel=0;thismodel<nfields_p;thismodel++)
-		  {
-		    for (Int order=0;order<2*ntaylor_p-1;order++)
-		      {
-			// This should be doing a reference only. Make sure of this.
-			Matrix<Float> tempMat;
-			Array<Float> tempArr;
-			(PSF(getModelIndex(thismodel,order))).get(tempArr,True);
-			tempMat.reference(tempArr);
-			
-			lc_p[thismodel].setpsf( order , tempMat ); 
-		      }
-		  }
-		doneMTMCinit_p = True;
+	        // This should be doing a reference only. Make sure of this.
+	        Matrix<Float> tempMat;
+	        Array<Float> tempArr;
+                (PSF(getModelIndex(thismodel,order))).get(tempArr,True);
+                tempMat.reference(tempArr);
+  
+	        lc_p[thismodel].setpsf( order , tempMat ); 
 	      }
-	    
+	    }
+	  
 	    /* Resize the work arrays to normal size - for residual comps, etc. */
 	    nmodels_p = original_nmodels;
 	    resizeWorkArrays(nmodels_p);
@@ -277,7 +272,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 	    donePSF_p=True;
 	}
-
+	
 	/* Return if niter=0 */
 	/* Check if this is an interactive-clean run, or if niter=0 */
 	if(adbg) cout << "NumberIterations - before any cycles: " << numberIterations() << endl;
@@ -285,12 +280,6 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	{
 		return True;
 	}
-
-	/* Check that lc_p's have been initialized by now.. */
-	if(doneMTMCinit_p == False)
-	  {
-	    os << LogIO::SEVERE << "MultiTermMatrixCleaners are un-initialized, perhaps because of a previous im.clean(niter=-1) call. Please close imager, re-open it, and run with niter>=0" << LogIO::POST;
-	  }
 
 	/* Set up the Mask image */
 	for(Int thismodel=0;thismodel<nfields_p;thismodel++)
@@ -621,35 +610,8 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
   for(Int field=0;field<nfields_p;field++)
     {
       Int baseindex = getModelIndex(field,0);
-
       
-      // Send in the final residuals
-      for (Int order=0;order<ntaylor_p;order++)
-	{
-	  Int index = getModelIndex(field,order);
-	  Matrix<Float> tempMat;
-	  Array<Float> tempArr;
-	  (residual(index)).get(tempArr,True);
-	  tempMat.reference(tempArr);
-	  lc_p[baseindex].setresidual(order,tempMat); 
-	}      
-      
-      // Compute principal solution in-place.
-      lc_p[baseindex].computeprincipalsolution();
-
-      // Get the new residuals
-      for (Int order=0;order<ntaylor_p;order++)
-	{
-	  Int index = getModelIndex(field,order);
-	  Matrix<Float> tempMod;
-	  lc_p[baseindex].getresidual(order,tempMod);
-	  residual(index).put(tempMod);
-	}
-
-      
-      /*
-
-      //Apply Inverse Hessian to the residuals 
+      /* Apply Inverse Hessian to the residuals */
       IPosition gip(4,image(baseindex).shape()[0],image(baseindex).shape()[1],1,1);
       Matrix<Double> invhessian;
       lc_p[field].getinvhessian(invhessian);
@@ -663,7 +625,7 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
 	  coeffresiduals[taylor1] = new TempLattice<Float>(gip,memoryMB_p);
 	}
       
-      //Apply the inverse Hessian to the residuals 
+      /* Apply the inverse Hessian to the residuals */
       for(Int taylor1=0;taylor1<ntaylor_p;taylor1++)
 	{
 	  len_p = LatticeExprNode(0.0);
@@ -675,7 +637,7 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
 	  (*coeffresiduals[taylor1]).copyData(LatticeExpr<Float>(len_p));
 	}
 
-      //Fill in the residual images with these coefficient residuals 
+      /* Fill in the residual images with these coefficient residuals */
       for(Int taylor=0;taylor<ntaylor_p;taylor++)
 	{
           tindex = getModelIndex(field,taylor);
@@ -686,8 +648,6 @@ Bool WBCleanImageSkyModel::calculateCoeffResiduals()
 	{
 	  if(coeffresiduals[i]) delete coeffresiduals[i];
 	}
-      */
-
 
     }//end of field loop
   os << "Converting final residuals to 'coefficient residuals', for restoration" << LogIO::POST;
@@ -888,7 +848,6 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  residual(index).copyData(le);
 	  
 	  //storeAsImg(String("Weight.")+String::toString(thismodel)+String(".")+String::toString(taylor),ggS(index));
-	  //storeAsImg(String("TstResidual.")+String::toString(thismodel)+String(".")+String::toString(taylor),residual(index));
 	}
     }
   modified_p=False;
@@ -900,7 +859,7 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
  *************************************/
 // The normalization ignores that done in makeSimplePSFs in the Sky Eqn
 // and recalculates it from gS and ggS.
-Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se, Bool writeToDisk) 
+Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se) 
 {
   LogIO os(LogOrigin("WBCleanImageSkyModel", "makeSpectralPSFs"));
   if(!donePSF_p)
@@ -941,15 +900,8 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se, Bool writeToDisk)
 	  LatticeExprNode maxPSF2=max(PSF(index));
 	  Float maxpsf=maxPSF2.getFloat();
 	  if(adbg) os << "Psf for Model " << thismodel << " and Taylor " << taylor << " has peak " << maxpsf << LogIO::POST;
-
-	  if(writeToDisk)
-	    {
-	      //need unique name as multiple processes can be running in the 
-	      //same workingdir
-	      String tmpName=image_p[thismodel]->name();
-	      tmpName.del(String(".model.tt0"), 0);
-	      storeAsImg(tmpName+String(".TempPsf.")+String::toString(taylor),PSF(index));
-	    }
+	  
+	  ///	  storeAsImg(String("TstPsf.")+String::toString(thismodel)+String(".")+String::toString(taylor),PSF(index));
 	}
       
       //     index = getModelIndex(thismodel,0);
