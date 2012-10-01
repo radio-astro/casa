@@ -1146,6 +1146,8 @@ The task will flag a subset of data based on the following modes of operation:
                    default: 'none'
                    options: 'none', 'data', 'report', 'both'
 
+                     'none' --> It will not display anything.
+
                      'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
 
                       This option opens a GUI to show the 2D time-freq planes of
@@ -1183,6 +1185,10 @@ The task will flag a subset of data based on the following modes of operation:
                  
 
     savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
+                Note that when display is set to anything other than 'none', savepars
+                will be disabled. This is done because in an interactive mode, the user
+                may skip data which may invalidate the initial input parameters and there
+                is no way to save the interactive commands.
                 default: False
                 options: True/False
 
