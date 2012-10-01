@@ -403,6 +403,37 @@ class imregrid_test(unittest.TestCase):
         myib.done()
         self.assertTrue(len(tb.showcache()) == 0)
         
+    def test_CAS_4262(self):
+        """ Test degenerate axes are not relabeled to template"""
+        myia = self._myia
+        myia.fromshape("", [10, 10, 1, 10])
+        csys = myia.coordsys()
+        refvals = csys.referencevalue()["numeric"]
+        refvals[3] *= 10
+        csys.setreferencevalue(refvals)
+        regridded = myia.regrid("", myia.shape(), csys.torecord())
+        self.assertTrue((regridded.getchunk(getmask=True) == False).all())
+        self.assertTrue(
+            (
+             regridded.coordsys().referencevalue()["numeric"] == refvals
+            ).all()
+        )
+        # test degenerate spectral exis is not regridded nor relabeled in output
+        myia.fromshape("", [10, 10, 1, 1])
+        csys = myia.coordsys()
+        refvals = csys.referencevalue()["numeric"]
+        refvals[3] *= 10
+        csys.setreferencevalue(refvals)
+        regridded = myia.regrid("", myia.shape(), csys.torecord())
+        self.assertTrue(regridded.getchunk(getmask=True).all())
+        self.assertTrue(
+            (
+             regridded.coordsys().referencevalue()["numeric"]
+             == myia.coordsys().referencevalue()["numeric"]
+            ).all()
+        )
+        
+        
             
 def suite():
     return [imregrid_test]

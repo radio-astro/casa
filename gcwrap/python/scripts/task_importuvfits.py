@@ -58,12 +58,12 @@ def importuvfits(fitsfile, vis, antnamescheme=None):
     #sleep(1)
     # save original flagversion
     #try:
-        #tflocal = tftool()
-        #ok &= tflocal.open(vis)
-        #ok &= tflocal.saveflagversion('Original',
+        #aflocal = aftool()
+        #ok &= aflocal.open(vis)
+        #ok &= aflocal.saveflagversion('Original',
                        #comment='Original flags at import into CASA',
                        #merge='replace')
-        #ok &= tflocal.done()
+        #ok &= aflocal.done()
     #except Exception, instance: 
         #casalog.post('Failed to save original flags', 'WARN')
         #raise Exception #, instance

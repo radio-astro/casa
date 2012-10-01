@@ -12,34 +12,34 @@ def flagmanager(
     ):
 
     casalog.origin('flagmanager')
-    tflocal = casac.testflagger()
+    aflocal = casac.agentflagger()
 
     try:
         if type(vis) == str and os.path.exists(vis):
             if mode != 'rename':
-                tflocal.open(vis)
+                aflocal.open(vis)
         else:
             raise Exception, \
                 'Visibility data set not found - please verify the name'
         if mode == 'list':
-            tflocal.getflagversionlist()
+            aflocal.getflagversionlist()
             print 'See logger for flag versions for this MS'
         elif mode == 'save':
             if versionname == '':
                 raise Exception("Illegal versionname: ''")
             casalog.post('Save current flagversion in ' + versionname)
-            tflocal.saveflagversion(versionname=versionname,
+            aflocal.saveflagversion(versionname=versionname,
                                     comment=comment, merge=merge)
         elif mode == 'restore':
             if versionname == '':
                 raise Exception("Illegal versionname: ''")
             casalog.post('Restore flagversion ' + versionname)
-            tflocal.restoreflagversion(versionname=versionname,
+            aflocal.restoreflagversion(versionname=versionname,
                     merge=merge)
         elif mode == 'delete':
             if versionname == '':
                 raise Exception("Illegal versionname: ''")
-            tflocal.deleteflagversion(versionname=versionname)
+            aflocal.deleteflagversion(versionname=versionname)
         elif mode == 'rename':
             if versionname == '':
                 raise Exception("Illegal versionname: ''")
@@ -80,7 +80,7 @@ def flagmanager(
         else:
             raise Exception, 'Unknown mode' + str(mode)
         
-        tflocal.done()
+        aflocal.done()
     except Exception, instance:
         print '*** Error ***', instance
 

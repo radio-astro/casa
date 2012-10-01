@@ -31,6 +31,7 @@ def toolhelp():
     """ List all tools with one-line description: """
     print ' '
     print 'Available tools: \n'
+    print ' af : Agent flagger utilities'
     print ' at : Juan Pardo ATM library'
     print ' ca : Calibration analysis utilities'
     print ' cb : Calibration utilities'
@@ -52,7 +53,6 @@ def toolhelp():
     print ' sl : Spectral line import and search'
     print ' sm : Simulation utilities'
     print ' tb : Table utilities (selection, extraction, etc)'
-    print ' tf : Test flagger utilities'
     print ' tp : Table plotting utilities'
     print ' vp : Voltage pattern/primary beam utilties'
     print ' ---'

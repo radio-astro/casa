@@ -330,7 +330,7 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
             </param>
 
 
-            <!-- APPLYFLAGS parameters -->
+            <!-- ACTION parameters -->
             <param type="string" name="action">
                     <description>Action to perform in MS and/or in inpfile (none/apply/calculate)</description>
                     <value>apply</value>
@@ -699,6 +699,13 @@ The task will flag a subset of data based on the following modes of operation:
                   
                 For optimization, the task will create a union of the data selection parameters
                 present in the list and select only that portion of the MS.
+
+                NOTE: the flag commands will be applied only when action='apply'. If
+                      action='calculate' the flags will be calculated, but not applied.
+                      This is useful if display is set to something other than 'none'. If
+                      action='' or 'none', the flag commands will not be applied either.
+                      An empty action is useful only to save the parameters of the list
+                      to a file or to the FLAG_CMD sub-table.
                   
                inpfile -- Input ASCII file or a Python list of command strings.
                   default: ''
@@ -1139,6 +1146,8 @@ The task will flag a subset of data based on the following modes of operation:
                    default: 'none'
                    options: 'none', 'data', 'report', 'both'
 
+                     'none' --> It will not display anything.
+
                      'data' --> display data and flags per-chunk at run-time, within an interactive GUI.
 
                       This option opens a GUI to show the 2D time-freq planes of
@@ -1176,6 +1185,10 @@ The task will flag a subset of data based on the following modes of operation:
                  
 
     savepars -- Save the current parameters to the FLAG_CMD table of the MS or to an output text file.
+                Note that when display is set to anything other than 'none', savepars
+                will be disabled. This is done because in an interactive mode, the user
+                may skip data which may invalidate the initial input parameters and there
+                is no way to save the interactive commands.
                 default: False
                 options: True/False
 

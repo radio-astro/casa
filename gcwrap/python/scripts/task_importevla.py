@@ -56,11 +56,11 @@ def importevla(
     # Vers8.4 (3.2.0) STM 2011-03-24 fix casalog.post line-length bug
     # Vers8.5 (3.4.0) STM 2011-12-08 new readflagxml for new Flag.xml format
     # Vers8.6 (3.4.0) STM 2011-02-22 full handling of new Flag.xml ant+spw+pol flags
-    # Vers9.0 (3.4.0) SMC 2012-03-13 ported to use the new flagger tool (testflagger)
+    # Vers9.0 (3.4.0) SMC 2012-03-13 ported to use the new flagger tool (agentflagger)
     #
 
     # Create local versions of the flagger and ms tools
-    tflocal = casac.testflagger()
+    aflocal = casac.agentflagger()
     mslocal = casac.ms()
 
     #
@@ -129,10 +129,10 @@ def importevla(
             visover = viso
             viso = visover.replace('.ms','.compressed.ms')
         if flagbackup:
-            ok = tf.open(viso)
-            ok = tf.saveflagversion('Original',
+            ok = af.open(viso)
+            ok = af.saveflagversion('Original',
                     comment='Original flags on import', merge='save')
-            ok = tf.done()
+            ok = af.done()
             print 'Backed up original flag column to ' + viso \
                 + '.flagversions'
             casalog.post('Backed up original flag column to ' + viso
@@ -282,7 +282,7 @@ def importevla(
             if nflags > 0:
 
                 # Open the MS and attach the tool
-                tflocal.open(viso)
+                aflocal.open(viso)
                 
                 # Create a loose union
 #                flaglist = []
@@ -293,25 +293,25 @@ def importevla(
 #                unionpars = fh.getUnion(mslocal, viso, allflags)
                 
                 # Select the data
-                tflocal.selectdata()
+                aflocal.selectdata()
 
                 # Setup the agent's parameters
-                saved_list = fh.setupAgent(tflocal, allflags, [], True, True)
+                saved_list = fh.setupAgent(aflocal, allflags, [], True, True)
 
                 # Initialize the agents
-                tflocal.init()
+                aflocal.init()
 
                 # Backup the flags
                 if flagbackup:
                     fh.backupFlags(viso, 'importevla')
 
                 # Run the tool
-                stats = tflocal.run(True, True)
+                stats = aflocal.run(True, True)
                 
                 casalog.post('Applied %s flag commands to data'%str(nflags))
 
                 # Destroy the tool
-                tflocal.done()
+                aflocal.done()
                 
                 # Save the flags to FLAG_CMD and update the APPLIED column
                 fh.writeFlagCmd(viso, allflags, allkeys, True, '', '')

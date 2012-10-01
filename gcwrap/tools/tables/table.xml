@@ -1694,10 +1694,12 @@ getcol or getcolslice on the original table.
 
      <param type="record" name="tab">
      <description>Table to which the row numbers refer</description>
+     <value></value>
      </param>
 
      <param type="int" name="nbytes">
      <description>Maximum cache size in bytes</description>
+     <value>0</value>
      </param>
 </input>
 <returns type="intArray"/>
