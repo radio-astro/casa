@@ -41,8 +41,8 @@ using namespace std;
 namespace casa {
 
 const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="MHz";
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = 84000;
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = 90000;
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = /*84000*/-1;
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = /*90000*/-1;
 
 QString SearchMoleculesWidget::initialReferenceStr = "LSRK";
 
@@ -293,28 +293,28 @@ void SearchMoleculesWidget::setAstronomicalFilters( Searcher* searcher ){
 	if ( filterIndex > 0 ){
 		switch( filterIndex ){
 		case TOP_20:
-			searcher->setAstroFilterTop20();
+			searcher->setFilterTop20();
 			break;
 		case PLANETARY_ATMOSPHERE:
-			searcher->setAstroFilterPlanetaryAtmosphere();
+			searcher->setFilterPlanetaryAtmosphere();
 			break;
 		case HOT_CORES:
-			searcher->setAstroFilterHotCores();
+			searcher->setFilterHotCores();
 			break;
 		case DARK_CLOUDS:
-			searcher->setAstroFilterDarkClouds();
+			searcher->setFilterDarkClouds();
 			break;
 		case DIFFUSE_CLOUDS:
-			searcher->setAstroFilterDiffuseClouds();
+			searcher->setFilterDiffuseClouds();
 			break;
 		case COMETS:
-			searcher->setAstroFilterComets();
+			searcher->setFilterComets();
 			break;
 		case AGB_PPN_PN:
-			searcher->setAstroFilterAgbPpnPn();
+			searcher->setFilterAgbPpnPn();
 			break;
 		case EXTRAGALACTIC:
-			searcher->setAstroFilterExtragalactic();
+			searcher->setFilterExtragalactic();
 			break;
 		default:
 			assert( false );
@@ -341,6 +341,9 @@ void SearchMoleculesWidget::search(){
 			Util::showUserMessage( msg, this );
 			return;
 		}
+	}
+	else {
+		searcher->reset();
 	}
 
 	//Get the search parameters
@@ -369,7 +372,7 @@ void SearchMoleculesWidget::search(){
 		minValue = maxValue;
 		maxValue = tmp;
 	}
-	searcher->setSearchRangeFrequency( minValue, maxValue );
+	searcher->setFrequencyRange( minValue, maxValue );
 
 	//Set any astronomical filters for the search
 	setAstronomicalFilters( searcher );
@@ -378,12 +381,14 @@ void SearchMoleculesWidget::search(){
 	delete searchThread;
 	searchThread = NULL;
 	startSearchThread();
+	//searchFinished();
 }
 
 void SearchMoleculesWidget::startSearchThread(){
 	searchThread = new SearchThread( searcher, searchResultOffset );
 	connect( searchThread, SIGNAL( finished() ), this, SLOT(searchFinished()));
 	searchThread->start();
+	//searchThread->run();
 	progressBar.show();
 }
 

@@ -526,10 +526,18 @@ namespace casa {
 	    }
 	}
 
-	void QtRegionState::state_change( int ) { emit refreshCanvas( ); }
+	void QtRegionState::state_change( int ) {
+	    emit refreshCanvas( );
+	    // type of state change could be made specific (when needed)
+	    // with QObject::sender( ) as in color_state_change...
+	    emit regionChange( region_, "state" );
+	}
 	void QtRegionState::color_state_change( int index ) {
 	    emit refreshCanvas( );
 	    region_->colorIndex( ) = index;
+
+	    QObject *sender = QObject::sender( );
+	    emit regionChange( region_, sender == line_color ? "state: line color" : sender == text_color ? "state: text color" : "state" );
 	}
 	void QtRegionState::state_change( bool ) { emit refreshCanvas( ); }
 	void QtRegionState::state_change( const QString & ) { emit refreshCanvas( ); }

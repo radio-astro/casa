@@ -3480,6 +3480,11 @@ void SolvableVisCal::storeNCT() {
 
   if (prtlev()>3) cout << " SVC::storeNCT()" << endl;
 
+  // Escape from attempt to write to an empty name,
+  //  because this may delete more than one wants
+  if (calTableName().empty())
+    throw(AipsError("Empty string provided for caltable name; this is not allowed."));
+
   // If append=T and the specified table exists...
   if (append() && Table::isReadable(calTableName())) {
 
@@ -3566,7 +3571,7 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
     //    mss.reset(cti,MSSelection::PARSE_LATE,"","",field);
     mss.setFieldExpr(field);
     TableExprNode ten=mss.toTableExprNode(&cti);
-    cout << "Selected field list: " << mss.getFieldList() << endl;
+    //cout << "Selected field list: " << mss.getFieldList() << endl;
 
     // Apply selection to table
     try {
@@ -4445,6 +4450,13 @@ void SolvableVisJones::differentiate(VisBuffer& vb,
   dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
   dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
 
+  // Inform Jones matrices if data is scalar
+  Bool scalar(vt==VisVector::One);
+  J1().setScalarData(scalar);
+  J2().setScalarData(scalar);
+  dJ1().setScalarData(scalar);
+  dJ2().setScalarData(scalar);
+
   // VisBuffer indices
   Double* time=  vb.time().data();
   Int*    a1=    vb.antenna1().data();
@@ -4604,6 +4616,13 @@ void SolvableVisJones::diffSrc(VisBuffer& vb,
   // Nominal synchronization of dJs
   dJ1().sync(diffJElem()(IPosition(4,0,0,0,0)));
   dJ2().sync(diffJElem()(IPosition(4,0,0,0,0)));
+
+  // Inform Jones matrices if data is scalar
+  Bool scalar(vt==VisVector::One);
+  J1().setScalarData(scalar);
+  J2().setScalarData(scalar);
+  dJ1().setScalarData(scalar);
+  dJ2().setScalarData(scalar);
 
   // VisBuffer indices
   Double* time=  vb.time().data();
@@ -6067,7 +6086,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	if (nPA>0) {
 	  //	  cout << "mgTspw = " << mgTspw << endl;
 	  scaleOK(ispw,tranidx)=True;
-	  mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
+	  //mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
+	  mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
 	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
 	  mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
 
@@ -6153,8 +6173,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
 		  
     } // iTran
     // max 3 coefficients
-    Matrix<Double> spidx(nTran,3,0.0);
-    Matrix<Double> spidxerr(nTran,3,0.0);
+    //Matrix<Double> spidx(nTran,3,0.0);
+    //Matrix<Double> spidxerr(nTran,3,0.0);
+    Matrix<Double> spidx(nFld,3,0.0);
+    Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
 
     for (Int iTran=0; iTran<nTran; iTran++) {
@@ -6179,20 +6201,19 @@ void SolvableVisJones::fluxscale(const String& outfile,
         Polynomial< AutoDiff<Double> > bp(fitorder);
         fitter.setFunction(bp);
         // need the way to mask some spw
-      
-        Vector<Double> log_solFreq=log10(solFreq);
+        //Vector<Double> log_solFreq=log10(solFreq);
+        Vector<Double> log_relsolFreq=log10(solFreq)-mean(log10(solFreq));
         Vector<Double> log_fd=log10(fd.column(tranidx));
 
         //Vector<Double> soln=fitter.fit(log10(solFreq), log10(fd.column(tranidx)), fderr.column(tranidx)/solFreq);
-        Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        //Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        Vector<Double> soln=fitter.fit(log_relsolFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
         Vector<Double> errs=fitter.errors();
         covar=fitter.compuCovariance();
 
         for (Int i=0; i<soln.nelements(); i++) {
-           //cout<<"soln("<<i<<")="<<soln(i)<<endl;
-           //cout<<"errs("<<i<<")="<<errs(i)<<endl;
-           spidx(iTran,i) = soln(i);
-           spidxerr(iTran,i) = errs(i);
+           spidx(tranidx,i) = soln(i);
+           spidxerr(tranidx,i) = errs(i);
         } 
         oFitMsg =" Fitted spectral index for ";
 	oFitMsg += fldNames(tranidx);

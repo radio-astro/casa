@@ -52,6 +52,9 @@ public:
 signals:
 	void goTo(int frame);
 	void frameNumberEdited( int frame );
+	void channelSelect( int channel );
+	void movieChannels( int currentFrame, bool direction, int frameCount );
+	void stopMovie();
 	void setRate(int frame);
 	void toStart();
 	void revStep();
@@ -83,14 +86,22 @@ private slots:
 	void fwdStepImage();
 	void fwdPlayImage();
 	void toEndImage();
-	void imageModeChange();
-	void channelModeChange();
+	void modeChange();
 
 private:
-	void modeChanged( bool mode );
+	enum Mode {CHANNEL_MODE, IMAGE_MODE, CHANNEL_IMAGES_MODE, END_MODE };
+	void modeChanged(Mode mode );
 	void changePalette( QGroupBox* box, QColor color );
+	void emitMovieChannels( bool direction );
 	void setSelected( bool mode );
-	bool previousMode;
+
+	//Because the user can switch between image and channel mode by
+	//just pressing the play button, there must be a way to turn a previous
+	//play off if one was running.  The following two methods do that.
+	void stopImagePlay();
+	void stopChannelPlay();
+
+	Mode previousMode;
     Ui::AnimatorHolder ui;
     AnimatorWidget* animatorChannel;
     AnimatorWidget* animatorImage;

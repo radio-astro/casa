@@ -46,8 +46,10 @@ public:
     void setRateInformation( int minr, int maxr, int rate );
     void setModeEnabled( bool enable );
     void setPlaying( int play );
+    bool isPlaying() const;
     int getRate() const;
     int getFrame() const;
+    int getFrameCount() const;
     ~AnimatorWidget();
 
 signals:
@@ -67,7 +69,8 @@ private slots:
 
 private:
 	void blockSignals( bool block );
-
+	int frameCount;
+	int play;
     Ui::AnimatorWidget ui;
     bool rateNotSet;
 };

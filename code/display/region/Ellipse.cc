@@ -1,3 +1,29 @@
+//# Ellipse.cc: non-GUI elliptical region
+//# Copyright (C) 2012
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id$
 #include <display/region/Ellipse.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
@@ -88,7 +114,7 @@ namespace casa {
 	    if(pc==0) return;
 
 	    double center_x, center_y;
-	    regionCenter( center_x, center_y );
+	    linearCenter( center_x, center_y );
 
 	    int x1, y1, x2, y2;
 	    int cx, cy;
@@ -111,9 +137,10 @@ namespace casa {
 		Int h = y2 - y1;
 
 		Int s = 0;		// handle size
-		if (w>=35 && h>=35) s = 6;
-		else if (w>=20 && h>=20) s = 4;
-		else if (w>= 9 && h>= 9) s = 3;
+		if (w>=18 && h>=18) s = 6;
+		else if (w>=15 && h>=15) s = 5;
+		else if (w>=12 && h>=12) s = 4;
+		else if (w>=9 && h>=9) s = 3;
 
 		double xdx, ydy;
 		try { screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy ); } catch(...) { return; }
@@ -130,7 +157,12 @@ namespace casa {
 		int hy3 = y2;	// set handle coordinates
 		if (s) {
 		    pushDrawingEnv( Region::SolidLine);
-		    if ( marked( ) ) {
+		    if ( weaklySelected( ) ) {
+			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+		    } else if ( marked( ) ) {
 			pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
 			pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
 			pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
@@ -194,7 +226,7 @@ namespace casa {
 		if ( ! wc_->linToWorld(blc, lin)) return region_centers;
 
 		double center_x, center_y;
-		regionCenter( center_x, center_y );
+		linearCenter( center_x, center_y );
 		lin(0) = center_x;
 		lin(1) = center_y;
 		if ( ! wc_->linToWorld(center, lin)) return region_centers;
@@ -322,7 +354,7 @@ namespace casa {
 	    if ( ! wc_->linToWorld(blc, lin)) return region_statistics;
 
 	    double center_x, center_y;
-	    regionCenter( center_x, center_y );
+	    linearCenter( center_x, center_y );
 	    lin(0) = center_x;
 	    lin(1) = center_y;
 	    if ( ! wc_->linToWorld(center, lin)) return region_statistics;

@@ -2167,6 +2167,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
 		se_p->getCoverageImage(thismodel, cover);
               else
 		cover.copyData(nomemory ? (*tempfluximage[thismodel]) : sm_p->fluxScale(thismodel));
+	     
 	      if(scaleType_p=="NONE"){
 		if(dorestore){
 		  LatticeExpr<Float> le(iif(cover < minPB_p, 
@@ -2687,6 +2688,7 @@ Bool Imager::createFTMachine()
 	    throw(err);
 	  }
       }
+    
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();
     AlwaysAssert(cft_p, AipsError);
@@ -2988,7 +2990,7 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
     
   }
-
+  ft_p->setnumthreads(numthreads_p);
   ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
   ft_p->setFreqInterpolation(freqInterpMethod_p);
   if(doTrackSource_p){
@@ -4302,6 +4304,7 @@ void Imager::savePSF(const Vector<String>& psf){
 	else{
 	  psfimage.copyData(sm_p->PSF(whichmodel));
 	}
+	//sm_p->PSF(whichmodel).clearCache();
       }
     }
 

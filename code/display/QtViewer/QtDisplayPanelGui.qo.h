@@ -103,6 +103,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   
   // access to graphics panel 'base'....
   QtDisplayPanel* displayPanel() { return qdp_;  }
+
+  typedef std::list<viewer::QtRegion*> region_list_t;
+  region_list_t regions( ) { return regionDock_ ? regionDock_->regions( ) : std::list<viewer::QtRegion*>( ); }
   
   // public toolbars, for inserting custom buttons.
   QToolBar* customToolBar;	//# limited room
@@ -188,8 +191,11 @@ class QtDisplayPanelGui : public QtPanelBase {
 
   // load casa (or DS9?) region files...
   void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+  // zero length string indicates OK!
+  std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format, std::string ds9_csys="pixel" );
 
   bool useNewRegions( ) const { return use_new_regions; }
+
 
  public slots:
  
@@ -246,7 +252,10 @@ class QtDisplayPanelGui : public QtPanelBase {
   //Increments the channel in the images from the start channel
   //to the end channel.
   void movieChannels( int startChannel, int endChannel );
-
+  void movieChannels( int startChannel, bool forward, int maxChannels );
+  void movieStop();
+  void registerAllDDs();
+  void unregisterAllDDs();
   virtual void showStats(const String&);
   virtual void hideStats();
   //</group>
@@ -272,6 +281,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void showSpecFitImageProfile();
 
  signals:
+
+    void regionChange( viewer::QtRegion *, std::string );
 
     void axisToolUpdate( QtDisplayData *controlling_dd );
 
@@ -484,13 +495,16 @@ class QtDisplayPanelGui : public QtPanelBase {
 
  private:
   bool use_new_regions;
+  bool movieForward;
   int movieChannel;
   int movieChannelEnd;
+  int movieLast;
   QTimer movieTimer;
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
+  void connectRegionSignals(PanelDisplay* ppd);
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
   void updateFrameInformation();

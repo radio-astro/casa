@@ -157,6 +157,7 @@ public:
     virtual FrequencySelection * clone () const = 0;
     void filterByWindow (Int windowId = -1) const;
     Int getFrameOfReference () const;
+    virtual set<int> getSelectedWindows () const = 0;
     virtual String toString () const = 0;
 
     static String frameName (Int referenceFrame);
@@ -167,7 +168,7 @@ public:
 
 protected:
 
-    FrequencySelection (Int referenceFrame);
+    FrequencySelection (Int referenceFrame) : referenceFrame_p (referenceFrame) {}
     Int filterWindow() const;
 
 private:
@@ -254,13 +255,14 @@ public:
     typedef std::vector<Element> Elements;
     typedef Elements::const_iterator const_iterator;
 
-    FrequencySelectionUsingChannels ();
+    FrequencySelectionUsingChannels () : FrequencySelection (ByChannel) {}
 
     void add (Int spectralWindow, Int firstChannel, Int nChannels, Int increment = 1);
     void add (const MSSelection & msSelection);
     const_iterator begin () const;
     FrequencySelection * clone () const;
     const_iterator end () const;
+    set<int> getSelectedWindows () const;
     String toString () const;
 
 //**********************************************************************
@@ -323,6 +325,7 @@ public:
     const_iterator begin () const;
     FrequencySelection * clone () const;
     const_iterator end () const;
+    set<int> getSelectedWindows () const;
     String toString () const;
 
 private:

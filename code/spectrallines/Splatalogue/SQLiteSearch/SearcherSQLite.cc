@@ -22,52 +22,91 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 #include "SearcherSQLite.h"
-#include <spectrallines/Splatalogue/SearchEngine.h>
-#include <spectrallines/Splatalogue/SplatalogueTable.h>
+
 
 #include <spectrallines/Splatalogue/SQLiteSearch/DatabaseConnector.h>
 #include <sqlite3.h>
-
 #include <iostream>
-using namespace std;
+#include <sstream>
 
 using namespace std;
 
 namespace casa {
+const std::string SearcherSQLite::TABLE_SPECIES = "species";
+const std::string SearcherSQLite::TABLE_MAIN = "main";
 
-const std::string SearcherSQLite::DB_NAME = "splat";
 const std::string SearcherSQLite::SPECIES_ID_COLUMN = "species_id"; //Type 1
 const std::string SearcherSQLite::FREQUENCY_COLUMN = "orderedfreq"; //Type 2
 const std::string SearcherSQLite::SPECIES_COLUMN = "s_name"; //Type 3
-const std::string SearcherSQLite::RECOMMENDED_COLUMN = "";
+const std::string SearcherSQLite::SMU2_COLUMN = "sijmu2";
+const std::string SearcherSQLite::LOGA_COLUMN = "aij";
+const std::string SearcherSQLite::EL_COLUMN = "lower_state_energy";
+const std::string SearcherSQLite::EU_COLUMN = "upper_state_energy";
 const std::string SearcherSQLite::RESOLVED_QNS_COLUMN = "resolved_QNs"; //Type 3
 const std::string SearcherSQLite::INTENSITY_COLUMN = "intintensity"; //Type 5
 const std::string SearcherSQLite::CHEMICAL_NAME_COLUMN = "chemical_name";
 
+std::vector<string> SearcherSQLite::resultColumns(END_COL);
 
-const std::string FILTER_KNOWN_AST_COLUMN = "";
-const std::string FILTER_PLANET_COLUMN = "";
-const std::string FILTER_HOTCORE_COLUMN = "";
-const std::string FILTER_DIFFUSECLOUD_COLUMN = "";
-const std::string FILTER_DARKCLOUD_COLUMN = "";
-const std::string FILTER_COMET_COLUMN = "";
-const std::string FILTER_EXTRAGALACTIC_COLUMN = "";
-const std::string FILTER_AGB_PPN_PN_COLUMN = "";
-const std::string FILTER_TOP20_COLUMN = "";
+const std::string SearcherSQLite::FILTER_KNOWN_AST_COLUMN = "known_ast_molecules";
+const std::string SearcherSQLite::FILTER_PLANET_COLUMN = "planet";
+const std::string SearcherSQLite::FILTER_HOTCORE_COLUMN = "ism_hotcore";
+const std::string SearcherSQLite::FILTER_DIFFUSECLOUD_COLUMN = "ism_diffusecloud";
+const std::string SearcherSQLite::FILTER_DARKCLOUD_COLUMN = "ism_darkcloud";
+const std::string SearcherSQLite::FILTER_COMET_COLUMN = "comet";
+const std::string SearcherSQLite::FILTER_EXTRAGALACTIC_COLUMN = "extragalactic";
+const std::string SearcherSQLite::FILTER_AGB_PPN_PN_COLUMN = "AGB_PPN_PN";
+const std::string SearcherSQLite::FILTER_TOP20_COLUMN = "Top20";
+
+std::vector<string> SearcherSQLite::filterNames( END_FILTERS );
 
 const std::string SearcherSQLite::AND = " AND ";
 const std::string SearcherSQLite::OPEN_PAREN = "(";
 const std::string SearcherSQLite::CLOSE_PAREN = ")";
 const std::string SearcherSQLite::SINGLE_QUOTE = "'";
 const std::string SearcherSQLite::COMMA = ", ";
+const std::string SearcherSQLite::PERIOD = ".";
 const std::string SearcherSQLite::EQUALS = " = ";
 const std::string SearcherSQLite::IN = " IN ";
 const std::string SearcherSQLite::SELECT = "SELECT ";
 const std::string SearcherSQLite::FROM = " FROM ";
+const std::string SearcherSQLite::BETWEEN = " BETWEEN ";
 
+const int SearcherSQLite::DEFAULT_VALUE = -1;
 
-SearcherSQLite::SearcherSQLite( const string& databasePath): rowLimit(500){
+SearcherSQLite::SearcherSQLite( const string& databasePath):
+		filters(END_FILTERS),
+		rowLimit(500){
 	db = DatabaseConnector::getDatabase(databasePath);
+	if ( db != NULL ){
+		/*string errorMsg;
+		string mainTableInfo = this->tableInfo( TABLE_MAIN, errorMsg );
+		cout << "Main table: "<<mainTableInfo << endl;
+		string speciesTableInfo = this->tableInfo( TABLE_SPECIES, errorMsg );
+		cout << "Species table: "<<speciesTableInfo << endl;
+		*/
+
+		resultColumns[SPECIES_ID_COL] = TABLE_MAIN + PERIOD + SPECIES_ID_COLUMN;
+		resultColumns[SPECIES_NAME_COL] = SPECIES_COLUMN;
+		resultColumns[CHEMICAL_NAME_COL] = CHEMICAL_NAME_COLUMN;
+		resultColumns[FREQUENCY_COL] = FREQUENCY_COLUMN;
+		resultColumns[RESOLVED_QNS_COL] = RESOLVED_QNS_COLUMN;
+		resultColumns[INTENSITY_COL] = INTENSITY_COLUMN;
+		resultColumns[SMU2_COL] = SMU2_COLUMN;
+		resultColumns[LOGA_COL] = LOGA_COLUMN;
+		resultColumns[EL_COL] = EL_COLUMN;
+		resultColumns[EU_COL] = EU_COLUMN;
+
+		filterNames[FILTER_TOP_20] = FILTER_TOP20_COLUMN;
+		filterNames[FILTER_PLANETARY_ATMOSPHERE] = FILTER_PLANET_COLUMN;
+		filterNames[FILTER_HOT_CORES] = FILTER_HOTCORE_COLUMN;
+		filterNames[FILTER_DARK_CLOUDS] = FILTER_DARKCLOUD_COLUMN;
+		filterNames[FILTER_DIFFUSE_CLOUDS] = FILTER_DIFFUSECLOUD_COLUMN;
+		filterNames[FILTER_COMETS]=FILTER_COMET_COLUMN;
+		filterNames[FILTER_AGB_PPN_PN] = FILTER_AGB_PPN_PN_COLUMN;
+		filterNames[FILTER_EXTRAGALACTIC] = FILTER_EXTRAGALACTIC_COLUMN;
+	}
+	reset();
 }
 
 void SearcherSQLite::setSearchResultLimit( int limit ){
@@ -79,46 +118,132 @@ void SearcherSQLite::setSearchResultLimit( int limit ){
 //                    Search Parameters
 //*********************************************************************
 
-void SearcherSQLite::setChemicalNames( const vector<string>& chemNames ){
-	chemicalNames = chemNames;
+void SearcherSQLite::reset(){
+	chemicalNames.clear();
+	speciesNames.clear();
+	qns.clear();
+	for ( int i = 0; i < static_cast<int>(filters.size()); i++ ){
+		filters[i] = false;
+	}
+	minValueFreq = DEFAULT_VALUE;
+	maxValueFreq = DEFAULT_VALUE;
+	minValueIntensity = DEFAULT_VALUE;
+	maxValueIntensity = DEFAULT_VALUE;
+	minValueSmu2 = DEFAULT_VALUE;
+	maxValueSmu2 = DEFAULT_VALUE;
+	minValueLoga = DEFAULT_VALUE;
+	maxValueLoga = DEFAULT_VALUE;
+	minValueEl = DEFAULT_VALUE;
+	maxValueEl = DEFAULT_VALUE;
+	minValueEu = DEFAULT_VALUE;
+	maxValueEu = DEFAULT_VALUE;
 }
 
-void SearcherSQLite::setRecommendedOnly( bool recommended ){
-	recommendedOnly = recommended;
+void SearcherSQLite::setChemicalNames( const vector<string>& chemNames ){
+	chemicalNames = chemNames;
 }
 
 void SearcherSQLite::setSpeciesNames( const vector<string>& species ){
 	speciesNames = species;
 }
 
-void SearcherSQLite::setSearchRangeFrequency( double minVal, double maxVal ){
-	minValueFreq = minVal;
-	maxValueFreq = maxVal;
+void SearcherSQLite::setFrequencyRange( double minVal, double maxVal ){
+	if ( minVal < maxVal ){
+		minValueFreq = minVal;
+		maxValueFreq = maxVal;
+	}
+	else {
+		minValueFreq = maxVal;
+		maxValueFreq = minVal;
+	}
 }
 
-void SearcherSQLite::setAstroFilterTop20( bool filter ){
-	filterTop20 = filter;
+void SearcherSQLite::setIntensityRange( double minValue, double maxValue ){
+	if ( minValue < maxValue ){
+		minValueIntensity = minValue;
+		maxValueIntensity = maxValue;
+	}
+	else {
+		minValueIntensity = maxValue;
+		maxValueIntensity = minValue;
+	}
 }
-void SearcherSQLite::setAstroFilterPlanetaryAtmosphere( bool filter ){
-	filterPlanetaryAtmosphere = filter;
+
+void SearcherSQLite::setSmu2Range( double minValue, double maxValue ){
+	if ( minValue < maxValue ){
+		minValueSmu2 = minValue;
+		maxValueSmu2 = maxValue;
+	}
+	else {
+		minValueSmu2 = maxValue;
+		maxValueSmu2 = minValue;
+	}
 }
-void SearcherSQLite::setAstroFilterHotCores( bool filter ){
-	filterHotCores = filter;
+
+void SearcherSQLite::setLogaRange( double minValue, double maxValue ){
+	if ( minValue < maxValue ){
+		minValueLoga = minValue;
+		maxValueLoga = maxValue;
+	}
+	else {
+		minValueLoga = maxValue;
+		maxValueLoga = minValue;
+	}
 }
-void SearcherSQLite::setAstroFilterDarkClouds( bool filter ){
-	filterDarkClouds = filter;
+
+void SearcherSQLite::setElRange( double minValue, double maxValue ){
+	if ( minValue < maxValue ){
+		minValueEl = minValue;
+		maxValueEl = maxValue;
+	}
+	else {
+		minValueEl = maxValue;
+		maxValueEl = minValue;
+	}
 }
-void SearcherSQLite::setAstroFilterDiffuseClouds( bool filter ){
-	filterDiffuseClouds = filter;
+
+void SearcherSQLite::setEuRange( double minValue, double maxValue ){
+	if ( minValue < maxValue ){
+		minValueEu = minValue;
+		maxValueEu = maxValue;
+	}
+	else {
+		minValueEu = maxValue;
+		maxValueEu = minValue;
+	}
 }
-void SearcherSQLite::setAstroFilterComets( bool filter ){
-	filterComets = filter;
+
+void SearcherSQLite::setQNS( const vector<string>& qns ){
+	this->qns = qns;
 }
-void SearcherSQLite::setAstroFilterAgbPpnPn( bool filter ){
-	filterAgbPpnPn = filter;
+
+//*********************************************************************
+//                     Filters
+//*********************************************************************
+
+void SearcherSQLite::setFilterTop20( bool filter ){
+	filters[FILTER_TOP_20] = filter;
 }
-void SearcherSQLite::setAstroFilterExtragalactic( bool filter ){
-	filterExtragalactic = filter;
+void SearcherSQLite::setFilterPlanetaryAtmosphere( bool filter ){
+	filters[FILTER_PLANETARY_ATMOSPHERE] = filter;
+}
+void SearcherSQLite::setFilterHotCores( bool filter ){
+	filters[FILTER_HOT_CORES] = filter;
+}
+void SearcherSQLite::setFilterDarkClouds( bool filter ){
+	filters[FILTER_DARK_CLOUDS] = filter;
+}
+void SearcherSQLite::setFilterDiffuseClouds( bool filter ){
+	filters[FILTER_DIFFUSE_CLOUDS] = filter;
+}
+void SearcherSQLite::setFilterComets( bool filter ){
+	filters[FILTER_COMETS] = filter;
+}
+void SearcherSQLite::setFilterAgbPpnPn( bool filter ){
+	filters[FILTER_AGB_PPN_PN] = filter;
+}
+void SearcherSQLite::setFilterExtragalactic( bool filter ){
+	filters[FILTER_EXTRAGALACTIC] = filter;
 }
 
 
@@ -126,12 +251,12 @@ void SearcherSQLite::setAstroFilterExtragalactic( bool filter ){
 //                  Database Information
 //**********************************************************************
 
-string SearcherSQLite::tableInfo( string& errorMsg ) const{
+string SearcherSQLite::tableInfo( const string& tableName, string& errorMsg ) const{
 	string query;
 	query.append( SELECT );
 	query.append( "*");
 	query.append( FROM );
-	query.append( DB_NAME );
+	query.append( tableName );
 	query.append(" LIMIT 1" );
 	sqlite3_stmt* statement = NULL;
 	bool successfulQuery = executeQuery( statement, query, errorMsg );
@@ -161,11 +286,12 @@ string SearcherSQLite::tableInfo( string& errorMsg ) const{
 string SearcherSQLite::getCreatedDate() const {
 	return DatabaseConnector::getCreatedDate();
 }
+
+
+
 //************************************************************************
 //                    Querying the Database
 //************************************************************************
-
-
 
 long SearcherSQLite::doSearchCount( string& errorMsg ){
 	string query = prepareQuery( true, 0 );
@@ -184,6 +310,7 @@ long SearcherSQLite::doSearchCount( string& errorMsg ){
 		errorMsg = sqlite3_errmsg( db );
 		//cout << "Error was " << errorMsg << endl;
 	}
+	//cout << "Result count="<<resultCount<<endl;
 	sqlite3_finalize(statement);
 	return resultCount;
 }
@@ -195,27 +322,24 @@ vector<SplatResult> SearcherSQLite::doSearch( string& errorMsg, int offset ){
 	bool success =  executeQuery( statement, query, errorMsg );
 	if ( success ){
 		while( sqlite3_step( statement ) == SQLITE_ROW ){
+
 			int speciesId = sqlite3_column_int( statement, SPECIES_ID_COL);
 			string chemicalName = reinterpret_cast<const char*>(sqlite3_column_text( statement, CHEMICAL_NAME_COL ));
 			string speciesName = reinterpret_cast<const char*>(sqlite3_column_text( statement, SPECIES_NAME_COL ));
 			double frequency = sqlite3_column_double( statement, FREQUENCY_COL );
 			double smu2 = sqlite3_column_double( statement, SMU2_COL );
+			double loga = sqlite3_column_double( statement, LOGA_COL );
 			double el = sqlite3_column_double( statement, EL_COL );
 			double eu = sqlite3_column_double( statement, EU_COL );
 			string resolvedQNs = reinterpret_cast<const char*>(sqlite3_column_text( statement, RESOLVED_QNS_COL ));
-			int intensity = sqlite3_column_int( statement, INTENSITY_COL );
-			pair<double,string> emptyPair( -1, "");
-			pair<double,string> freqPair( frequency, "");
-			pair<double,string> elPair( el, "K" );
-			pair<double,string> euPair( eu, "K" );
-			pair<double,string> smu2Pair( smu2, "");
-			SplatResult result( speciesId, speciesName, chemicalName, resolvedQNs, ""/*catalogueName*/, false,
-						-1/*molecularType*/, freqPair, smu2Pair, elPair, euPair,
-						-1/*loga*/, -1/*wavelength*/, intensity );
-
+			double intensity = sqlite3_column_double( statement, INTENSITY_COL );
+			pair<double,string> freqPair( frequency, "MHz");
+			pair<double,string> elPair( el, "cm-1" );
+			pair<double,string> euPair( eu, "cm-1" );
+			SplatResult result( speciesId, speciesName, chemicalName, resolvedQNs,
+						freqPair, smu2, elPair, euPair, loga, intensity );
 			results.push_back( result );
-			//cout << result.toString() << endl;
-
+			//cout << result.toLine();
 		}
 	}
 	else {
@@ -238,137 +362,92 @@ bool SearcherSQLite:: executeQuery( sqlite3_stmt*& statement, const string& quer
 }
 
 string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
-	//bool includeRRLs = true;
-	//bool onlyRRLs = false;
-
 	std::string query;
 	query.append( SELECT );
 	if ( countOnly ){
 		query.append( "Count()");
 	}
 	else {
-		query.append( "*");
+		int resultColumnCount = resultColumns.size();
+		for ( int i = 0; i < resultColumnCount; i++ ){
+			query.append( resultColumns[i]);
+			if ( i != resultColumnCount - 1 ){
+				query.append( COMMA );
+			}
+		}
 	}
 	query.append( FROM );
-	query.append( DB_NAME );
+	query.append( TABLE_MAIN );
+	query.append( COMMA );
+	query.append( TABLE_SPECIES );
 	query.append( " WHERE ");
 
+	//Join the two tables together based on the species id
+	query.append( TABLE_MAIN );
+	query.append( PERIOD );
+	query.append( SPECIES_ID_COLUMN );
+	query.append( " == " );
+	query.append( TABLE_SPECIES );
+	query.append( PERIOD );
+	query.append( SPECIES_ID_COLUMN );
+
 	//Frequency
-	query.append( OPEN_PAREN );
-	query.append( FREQUENCY_COLUMN );
-	query.append( " BETWEEN ");
-	query.append( numToString( minValueFreq ) );
-	query.append( AND );
-	query.append( numToString( maxValueFreq ) );
-	query.append( CLOSE_PAREN );
+	if ( minValueFreq >= 0 && maxValueFreq >= 0 && minValueFreq < maxValueFreq ){
+		query.append( getBetweenClause( FREQUENCY_COLUMN, minValueFreq, maxValueFreq ) );
+	}
 
 	//Species
 	if (speciesNames.size() > 0) {
-		query.append( AND );
-		query.append( OPEN_PAREN );
-		query.append( SPECIES_COLUMN );
-		query.append( IN );
-		query.append( OPEN_PAREN );
-		for (uInt i=0; i<speciesNames.size(); i++) {
-			query.append( SINGLE_QUOTE );
-			query.append( speciesNames[i] );
-			query.append( SINGLE_QUOTE );
-			if (i != speciesNames.size() - 1) {
-				query.append( ", ");
-			}
-		}
-		query.append( CLOSE_PAREN );
-		query.append( CLOSE_PAREN );
+		query.append( getInClause( SPECIES_COLUMN, speciesNames ) );
 	}
-
-	//TODO:  Recommended is not supported by the current database.
-	/*if (recommendedOnly) {
-		query.append( AND );
-		query.append( OPEN_PAREN );
-		query.append( RECOMMENDED_COLUMN );
-		query.append( EQUALS );
-		query.append( getTrue() );
-		query.append( CLOSE_PAREN );
-
-	}*/
 
 	//Chemical Names
 	if (chemicalNames.size() > 0) {
-		query.append( AND );
-		query.append( OPEN_PAREN );
-		query.append( CHEMICAL_NAME_COLUMN );
-		query.append( IN );
-		query.append( OPEN_PAREN );
-		for (uInt i=0; i<chemicalNames.size(); i++) {
-			query.append( SINGLE_QUOTE );
-			query.append( chemicalNames[i] );
-			query.append( SINGLE_QUOTE );
-			if (i != chemicalNames.size() - 1) {
-				query.append(COMMA);
-			}
-		}
-		query.append( CLOSE_PAREN );
-		query.append( CLOSE_PAREN );
+		query.append( getInClause( CHEMICAL_NAME_COLUMN, chemicalNames ));
 	}
 
-	//*****************************************************************
-	//TODO:  Put in query for astronomical filters
-	//*****************************************************************
+	//Resolved Quantum Numbers
+	if (qns.size() > 0) {
+		query.append( getInClause( RESOLVED_QNS_COLUMN, qns ));
+	}
 
-	/*	if (qns.size() > 0) {
-			query << " AND (" << SplatalogueTable::QUANTUM_NUMBERS << " IN (";
-			for (uInt i=0; i<qns.size(); i++) {
-				query << "'" << qns[i] << "'";
-				if (i != qns.size() - 1) {
-					query << ", ";
-				}
-			}
-			query << "))";
+	//Intensity
+	if (minValueIntensity < maxValueIntensity) {
+		query.append( getBetweenClause( INTENSITY_COLUMN, minValueIntensity, maxValueIntensity));
+	}
+
+	//SMU2
+	if ( minValueSmu2 < maxValueSmu2 ) {
+		query.append( getBetweenClause( SMU2_COLUMN, minValueSmu2, maxValueSmu2));
+	}
+
+	//LOGA
+	if ( minValueLoga < maxValueLoga ) {
+		query.append( getBetweenClause( LOGA_COLUMN, minValueLoga, maxValueLoga ) );
+	}
+
+	//EL
+	if ( minValueEl < maxValueEl ) {
+		query.append( getBetweenClause( EL_COLUMN, minValueEl, maxValueEl ));
+	}
+
+	//EU
+	if ( minValueEu < maxValueEu ) {
+		query.append( getBetweenClause( EU_COLUMN, minValueEu, maxValueEu ));
+	}
+
+	//Astronomical Filters
+	for ( int i = 0; i < static_cast<int>(filters.size()); i++ ){
+		if ( filters[i] ){
+			query.append( AND );
+			query.append( filterNames[i]);
+			query.append( EQUALS );
+			query.append( getTrue());
 		}
-		String rrlPortion = (includeRRLs || onlyRRLs)
-			? "LINELIST = 'Recomb'"
-			: "";
-		ostringstream nonRRLPortion;
-		if (! onlyRRLs) {
-			nonRRLPortion << "(LINELIST != 'Recomb')";
-			if (intensityLow < intensityHigh) {
-				nonRRLPortion << " AND " << _getBetweenClause(
-					SplatalogueTable::INTENSITY, intensityLow, intensityHigh
-				);
-			}
-			if (smu2Low < smu2High) {
-				nonRRLPortion << " AND " << _getBetweenClause(
-					SplatalogueTable::SMU2, smu2Low, smu2High
-				);
-			}
-			if (logaLow < logaHigh) {
-				nonRRLPortion << " AND " << _getBetweenClause(
-					SplatalogueTable::LOGA, logaLow, logaHigh
-				);
-			}
-			if (elLow < elHigh) {
-				nonRRLPortion << " AND " << _getBetweenClause(
-					SplatalogueTable::EL, elLow, elHigh
-				);
-			}
-			if (euLow < euHigh) {
-				nonRRLPortion << " AND " << _getBetweenClause(
-					SplatalogueTable::EU, euLow, euHigh
-				);
-			}
-		}
-		if (onlyRRLs) {
-			query << " AND " << rrlPortion;
-		}
-		else if (includeRRLs) {
-			query << " AND ((" << rrlPortion << ") OR (" << nonRRLPortion.str() << "))";
-		}
-		else {
-			query << " AND " << nonRRLPortion.str();
-		}*/
+	}
+
+
 	if ( !countOnly ){
-		query.append(" ORDER BY ");
-		query.append(FREQUENCY_COLUMN);
 		if ( rowLimit > 0 ){
 			query.append( " LIMIT ");
 			query.append( numToString(rowLimit) );
@@ -378,6 +457,7 @@ string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
 			}
 		}
 	}
+	//cout << "Query: "<<query.c_str()<<endl;
 	return query;
 }
 
@@ -393,6 +473,8 @@ string SearcherSQLite::numToString( double number ) const {
 	result = convert.str();
 	return result;
 }
+
+
 std::string numToString( float val ){
 	std::stringstream stream;
 	std::string str;
@@ -401,9 +483,44 @@ std::string numToString( float val ){
 	return str;
 }
 
-//TODO:: Check this, the boolean columns may be coded differently.
+
 std::string SearcherSQLite::getTrue() const {
 	return "1";
+}
+
+string SearcherSQLite::getBetweenClause( const string& columnName,
+		double low, double high) const {
+	string betweenClause;
+	betweenClause.append( AND );
+	betweenClause.append( OPEN_PAREN );
+	betweenClause.append( columnName );
+	betweenClause.append( BETWEEN );
+	betweenClause.append( numToString( low ) );
+	betweenClause.append( AND );
+	betweenClause.append( numToString( high ) );
+	betweenClause.append( CLOSE_PAREN );
+	return betweenClause;
+}
+
+string SearcherSQLite::getInClause( const string& columnName, const vector<string>& values ) const {
+	string inClause;
+	inClause.append( AND );
+	inClause.append( OPEN_PAREN );
+	inClause.append( columnName );
+	inClause.append( IN );
+	inClause.append( OPEN_PAREN );
+	int valueCount = values.size();
+	for (int i=0; i<valueCount; i++) {
+		inClause.append( SINGLE_QUOTE );
+		inClause.append( values[i] );
+		inClause.append( SINGLE_QUOTE );
+		if (i != valueCount - 1) {
+			inClause.append( ", ");
+		}
+	}
+	inClause.append( CLOSE_PAREN );
+	inClause.append( CLOSE_PAREN );
+	return inClause;
 }
 
 
@@ -411,4 +528,4 @@ SearcherSQLite::~SearcherSQLite() {
 	// TODO Auto-generated destructor stub
 }
 
-} /* namespace casa */
+}

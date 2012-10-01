@@ -56,7 +56,7 @@ StandardTsys::StandardTsys(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
   BJones(vs),              // immediate parent
-  sysCalTabName_(vs.msName()+"/SYSCAL")
+  sysCalTabName_(vs.sysCalTableName())
 {
   if (prtlev()>2) cout << "StandardTsys::StandardTsys(vs)" << endl;
 
@@ -420,8 +420,8 @@ EVLAGainTsys::EVLAGainTsys(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
   GJones(vs),              // immediate parent
-  sysPowTabName_(vs.msName()+"/SYSPOWER"),
-  calDevTabName_(vs.msName()+"/CALDEVICE"),
+  sysPowTabName_(vs.syspowerTableName()),
+  calDevTabName_(vs.caldeviceTableName()),
   correff_(Float(0.932)),     // EVLA-specific net corr efficiency (4bit)
   frgrotscale_(Float(1.176)), // EVLA-specific fringe rotation mean _scale_
   nyquist_(1.0),

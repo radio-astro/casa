@@ -292,7 +292,8 @@ void printExpectedPerf(const LibAIR::ArrayGains &g,
  */
 void statTimeMask(const casa::MeasurementSet &ms,
 		  const boost::program_options::variables_map &vm,
-		  std::vector<std::pair<double, double> > &tmask)
+		  std::vector<std::pair<double, double> > &tmask,
+		  const std::vector<size_t> &sortedI)
 {
   std::vector<int> flds;
   std::vector<double> time;
@@ -300,9 +301,10 @@ void statTimeMask(const casa::MeasurementSet &ms,
   LibAIR::fieldIDs(ms, 
 		   time,
 		   flds,
-		   src);
+		   src,
+		   sortedI);
   std::vector<size_t> spws;
-  LibAIR::dataSPWs(ms, spws);
+  LibAIR::dataSPWs(ms, spws, sortedI);
 
   if (vm.count("statfield") == 0 && vm.count("statsource") == 0)
   {
@@ -650,14 +652,18 @@ int main(int argc,  char* argv[])
   std::string fnameout=vm["output"].as<std::string>();
 
   std::set<size_t> useID=LibAIR::skyStateIDs(ms);
-  boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms));
+
+  std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
+
+  boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI));
+
   d->offsetTime(vm["toffset"].as<double>());
 
   if (vm.count("smooth"))
   {
     smoothWVR(*d, vm["smooth"].as<int>());
   }
-  
+
   d.reset(LibAIR::filterState(*d, useID));
 
   std::set<int> wvrflag;
@@ -674,8 +680,6 @@ int main(int argc,  char* argv[])
   flagInterp(ms,
              interpwvrs,
              *d);
-
-
 
   LibAIR::ArrayGains g(d->g_time(), 
 		       d->g_el(),
@@ -706,7 +710,8 @@ int main(int argc,  char* argv[])
       LibAIR::fieldIDs(ms, 
 		       time,
 		       flds,
-		       src);
+		       src,
+		       sortedI);
       std::vector<std::set<size_t> >  tiedi=tiedIDs(tied, ms);
       printTied(tied, tiedi);
       LibAIR::fieldSegmentsTied(time,
@@ -714,10 +719,39 @@ int main(int argc,  char* argv[])
 				tiedi,
 				fb);
       //printFieldSegments(fb, time[0]);
+
+//       { // debugging output
+// 	std::vector<double> tt(d->g_time());
+// 	std::vector<double> te(d->g_el());
+// 	std::vector<size_t> ts(d->g_state());
+// 	std::vector<size_t> tf(d->g_field());
+// 	std::vector<size_t> tsou(d->g_source());
+// 	for(uint i=0; i<tt.size(); i++){
+// 	  std::cerr << "i time el state field source " << i << " " << tt[i] << " ";
+// 	  std::cerr << te[i] << " ";
+// 	  std::cerr << ts[i] << " ";
+// 	  std::cerr << tf[i] << " ";
+// 	  std::cerr << tsou[i] << std::endl;
+// 	}
+// 	std::cerr << "nWVRs " << d->nWVRs << std::endl;
+// 	for(uint i=0; i<time.size(); i++){
+// 	  std::cerr << "i time  " << i << " " << time[i] << std::endl;
+// 	}
+// 	for(uint i=0; i<fb.size(); i++){
+// 	  std::cerr << "i fb  " << i << " " << fb[i].first << " " << fb[i].second  << std::endl;
+// 	}
+// 	for(std::set<size_t>::iterator it = useID.begin(); it != useID.end(); it++){
+// 	  std::cerr << "useID " << *it << std::endl;
+// 	}
+//       }
+
       inp=FieldMidPointI(*d,
 			 time,
 			 fb,
 			 useID);
+
+//      std::cerr << inp << std::endl;
+
     }
     else
     {
@@ -754,7 +788,9 @@ int main(int argc,  char* argv[])
       LibAIR::fieldIDs(ms, 
 		       time,
 		       flds,
-		       src);
+		       src,
+		       sortedI);
+
       coeffs.reset(LibAIR::SimpleMultiple(*d, 
 					  time,
 					  fb,
@@ -784,7 +820,7 @@ int main(int argc,  char* argv[])
   
 
   std::vector<std::pair<double, double> > tmask;
-  statTimeMask(ms, vm, tmask);
+  statTimeMask(ms, vm, tmask, sortedI);
 
   std::vector<double> pathRMS;
   g.pathRMSAnt(tmask, pathRMS);

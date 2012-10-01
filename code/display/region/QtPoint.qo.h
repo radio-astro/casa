@@ -1,5 +1,5 @@
 //# QtPoint.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Copyright (C) 2011,2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -86,7 +86,8 @@ namespace casa {
 		int zIndex( ) const { return Region::zIndex( ); }
 
 		bool regionVisible( ) const { return Region::regionVisible( ); }
-		void regionCenter( double &x, double &y ) const { Point::regionCenter( x, y ); }
+		void linearCenter( double &x, double &y ) const { Point::linearCenter( x, y ); }
+		void pixelCenter( double &x, double &y ) const { Point::pixelCenter( x, y ); }
 
 		QtPoint( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, bool hold_signals=false );
 
@@ -96,6 +97,8 @@ namespace casa {
 
 		// indicates that the user has selected this point...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
+		// is this region weakly or temporarily selected?
+		bool weaklySelected( ) const { return QtRegion::weaklySelected( ); }
 
 		// indicates that region movement requires that the statistcs be updated...
 		void updateStateInfo( bool region_modified, Region::RegionChanges change ) { QtRegion::updateStateInfo( region_modified, change ); }
@@ -129,6 +132,10 @@ namespace casa {
 		void output( ds9writer &out ) const;
 
 		void emitUpdate( ) { QtRegion::emitUpdate( ); }
+
+
+	    public slots:
+	   	    void adjustCorners( double, double, double, double );
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Point::generate_dds_statistics( ); }

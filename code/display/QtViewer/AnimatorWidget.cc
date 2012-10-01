@@ -62,6 +62,7 @@ void AnimatorWidget::blockSignals( bool block ){
 }
 
 void AnimatorWidget::setFrameInformation( int frm, int len ){
+	frameCount = len;
 	blockSignals( true );
 	ui.frameEdit_->setText(QString::number(frm));
 	ui.nFrmsLbl_ ->setText(QString::number(len));
@@ -77,6 +78,10 @@ void AnimatorWidget::setFrameInformation( int frm, int len ){
 		multiframe = true;
 	}
 	setModeEnabled( multiframe );
+}
+
+int AnimatorWidget::getFrameCount() const {
+	return frameCount;
 }
 
 void AnimatorWidget::setModeEnabled( bool multiframe ){
@@ -112,10 +117,19 @@ int AnimatorWidget::getFrame() const {
 }
 void AnimatorWidget::setPlaying( int play ){
 	blockSignals( true );
+	this->play = play;
 	ui.revTB_ ->setChecked(play<0);
 	ui.stopTB_->setChecked(play==0);
 	ui.playTB_->setChecked(play>0);
 	blockSignals( false );
+}
+
+bool AnimatorWidget::isPlaying() const{
+	bool playing = false;
+	if ( play < 0 || play > 0 ){
+		playing = true;
+	}
+	return playing;
 }
 
 void AnimatorWidget::frameNumberEdited(){

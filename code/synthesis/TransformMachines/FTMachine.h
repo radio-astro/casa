@@ -263,6 +263,9 @@ public:
   // work.  Finally removed the VB interface.
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) = 0;
   //virtual void ComputeResiduals(VBStore& vb)=0;
+  //get and set numthreads
+  void setnumthreads(Int n);
+  Int getnumthreads();
 protected:
 
   friend class VisModelData;
@@ -379,6 +382,7 @@ protected:
   CountedPtr<ConvolutionFunction> convFuncCtor_p;
   Bool canComputeResiduals_p;
   Bool toVis_p;
+  Int numthreads_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

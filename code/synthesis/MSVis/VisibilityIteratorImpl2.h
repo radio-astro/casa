@@ -516,7 +516,7 @@ public:
     // get back the selected spectral windows and spectral channels for
     // current ms
 
-    virtual const SpectralWindowChannels & getSpectralWindowChannels (Int msId, Int spectralWindowId);
+    virtual const SpectralWindowChannels & getSpectralWindowChannels (Int msId, Int spectralWindowId) const;
 
     //assign a VisImagingWeight object to this iterator
     virtual void useImagingWeight (const VisImagingWeight & imWgt);
@@ -581,7 +581,14 @@ protected:
     void getColumnRows (const ROArrayColumn<T> & column, Array<T> & array) const;
 
     template <typename T>
+    void
+    getColumnRowsMatrix (const ROArrayColumn<T> & column, Matrix<T> & array) const;
+
+    template <typename T>
     void getColumnRows (const ROScalarColumn<T> & column, Vector<T> & array) const;
+
+    Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
+    Vector<Int> getChannels (Double time, Int frameOfReference) const;
 
     Int getReportingFrameOfReference () const;
 
@@ -619,6 +626,9 @@ protected:
     vi::ChannelSelector *
     makeChannelSelectorF (const FrequencySelection & selection,
                           Double time, Int msId, Int spectralWindowId);
+
+    MFrequency::Convert makeFrequencyConverter (Double time, Int otherFrameOfReference,
+                                                Bool toObservedFrame) const;
 
     // Method to reset the VI back to the start.  Unlike the public version
     // there is a parameter to allow forcing the rewind even if the
@@ -764,8 +774,8 @@ protected:
     };
 
     mutable Cache                 cache_p; // general copllection of cached values
-    ChannelSelectorCache *        channelSelectorCache_p; // [own] cache of recently used channel selectors
     const ChannelSelector *       channelSelector_p; // [use] current channel selector for this MS & Spw
+    ChannelSelectorCache *        channelSelectorCache_p; // [own] cache of recently used channel selectors
     Columns                       columns_p; // The main columns for the current MS
     Bool                          floatDataFound_p; // True if a float data column was found
     FrequencySelections *         frequencySelections_p; // [own] Current frequency selection
@@ -784,7 +794,7 @@ protected:
     ROVisibilityIterator2 *       rovi_p; // [use] Containing VI
     RowBounds                     rowBounds_p; // Subchunk row management object (see above)
     Block<Int>                    sortColumns_p; // sort columns specified when creating VI
-    SpectralWindowChannelsCache * spectralWindowChannelsCache_p; // [own] Info about spectral windows
+    mutable SpectralWindowChannelsCache * spectralWindowChannelsCache_p; // [own] Info about spectral windows
     SubChunkPair2                 subchunk_p; // (chunkN #, subchunk #) pair
     SubtableColumns *             subtableColumns_p; // [own] Allows const access to MS's subtable columns
     Vector<Bool>                  tileCacheIsSet_p; // Flags indicating whether tile cache set for this column

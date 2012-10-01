@@ -36,21 +36,30 @@ class Searcher {
 public:
 	Searcher();
 
+	//Set all search parameters back to their defaults.
+	virtual void reset() = 0;
+
 	//Search Parameters
 	virtual void setChemicalNames( const vector<string>& chemNames ) = 0;
 	virtual void setSpeciesNames( const vector<string>& speciesNames ) = 0;
-	virtual void setSearchRangeFrequency( double minValue, double maxValue ) = 0;
-	virtual void setRecommendedOnly( bool recommeded ) = 0;
+	virtual void setFrequencyRange( double minValue, double maxValue ) = 0;
+	virtual void setIntensityRange( double minValue, double maxValue ) = 0;
+	virtual void setSmu2Range( double minValue, double maxValue ) = 0;
+	virtual void setLogaRange( double minValue, double maxValue ) = 0;
+	virtual void setElRange( double minValue, double maxValue ) = 0;
+	virtual void setEuRange( double minValue, double maxValue ) = 0;
+	virtual void setQNS( const vector<string>& qns ) = 0;
+
 
 	//Filters
-	virtual void setAstroFilterTop20( bool filter = true) = 0;
-	virtual void setAstroFilterPlanetaryAtmosphere( bool filter = true ) = 0;
-	virtual void setAstroFilterHotCores(bool filter = true) = 0;
-	virtual void setAstroFilterDarkClouds(bool filter = true) = 0;
-	virtual void setAstroFilterDiffuseClouds( bool filter = true) = 0;
-	virtual void setAstroFilterComets(bool filter = true) = 0;
-	virtual void setAstroFilterAgbPpnPn(bool filter = true) = 0;
-	virtual void setAstroFilterExtragalactic(bool filter = true) = 0;
+	virtual void setFilterTop20( bool filter = true) = 0;
+	virtual void setFilterPlanetaryAtmosphere( bool filter = true ) = 0;
+	virtual void setFilterHotCores(bool filter = true) = 0;
+	virtual void setFilterDarkClouds(bool filter = true) = 0;
+	virtual void setFilterDiffuseClouds( bool filter = true) = 0;
+	virtual void setFilterComets(bool filter = true) = 0;
+	virtual void setFilterAgbPpnPn(bool filter = true) = 0;
+	virtual void setFilterExtragalactic(bool filter = true) = 0;
 
 	//Support for scolling
 	virtual void setSearchResultLimit( int limit ) = 0;
@@ -61,7 +70,7 @@ public:
 
 	//Information about the database
 	virtual string getCreatedDate() const = 0;
-	virtual string tableInfo( string& errorMessage ) const= 0;
+	virtual string tableInfo( const string& tableName, string& errorMessage ) const= 0;
 
 	virtual ~Searcher();
 };

@@ -27,13 +27,10 @@
 
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
-
 #include <casa/Containers/HashMap.h>
 #include <casa/Containers/HashMapIter.h>
-
 #include <casa/IO/FilebufIO.h>
 #include <casa/IO/FiledesIO.h>
-
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/UnitMap.h>
@@ -167,17 +164,16 @@ ComponentList ImageFitter::fit() {
 		_setIncludeExclude(fitter);
 		Array<Float> pixels, curResidPixels, curModelPixels;
 		Array<Bool> pixelMask;
+		_curResults = ComponentList();
 		try {
-			_curResults = _fitsky(
-				fitter, pixels,
-				pixelMask, converged,
+			_fitsky(
+				fitter, pixels, pixelMask, converged,
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
-				_curChan,
-				models, estimatesRecord,
+				_curChan, models, estimatesRecord,
 				fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
 		}
-		catch (AipsError err) {
+		catch (const AipsError& err) {
 			*_getLog() << origin << LogIO::WARN << "Fit failed to converge because of exception: "
 				<< err.getMesg() << LogIO::POST;
 			converged = false;
@@ -270,7 +266,7 @@ ComponentList ImageFitter::fit() {
 				*_getLog(), completePixelMask->get(False)
 			);
 		}
-		catch (AipsError x) {
+		catch (const AipsError& x) {
 			*_getLog() << LogIO::WARN << "Error writing residual image. The reported error is "
 				<< x.getMesg() << LogIO::POST;
 		}
@@ -292,7 +288,6 @@ ComponentList ImageFitter::fit() {
 	}
 	FluxRep<Double>::clearAllowedUnits();
 	FluxRep<Float>::clearAllowedUnits();
-
 	if (converged && ! _newEstimatesFileName.empty()) {
 		_writeNewEstimatesFile();
 	}
@@ -455,6 +450,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
         ? "I" : String(_getStokes());
 	// </todo>
 	if(estimatesFilename.empty()) {
+		_fixed.resize(1);
 		*_getLog() << LogIO::NORMAL
 			<< "No estimates file specified, so will attempt to find and fit one gaussian."
 			<< LogIO::POST;
@@ -552,8 +548,13 @@ String ImageFitter::_resultsToString() {
 		}
 		summary << _statisticsToString() << endl;
 		if (_doZeroLevel) {
+			String units = _getImage()->units().getName();
+			if (units.empty()) {
+				units = "Jy/pixel";
+			}
 			summary << "Zero level offset fit: " << _zeroLevelOffsetSolution[relChan]
-				<< " +/- " << _zeroLevelOffsetError[relChan] << endl;
+				<< " +/- " << _zeroLevelOffsetError[relChan] << " "
+				<< units << endl;
 		}
 		for (uInt i = 0; i < _curResults.nelements(); i++) {
 			summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;
@@ -604,7 +605,6 @@ void ImageFitter::_setFluxes() {
 	);
 	ImageMetaData md(*_getImage());
 	Quantity resArea;
-	// Bool found = False;
 	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
     	? Quantity(1.0, "beam")
     	: Quantity(1.0, "pixel");
@@ -613,7 +613,6 @@ void ImageFitter::_setFluxes() {
 		*_getLog() << LogIO::EXCEPTION
 			<< "Pixel area could not be determined";
 	}
- 
     if (intensityToFluxConversion.getUnit() == "beam") {
         try {
             Unit unit = resArea.getUnit();
@@ -624,7 +623,7 @@ void ImageFitter::_setFluxes() {
                 unit
             );
         }
-        catch (AipsError) {
+        catch (const AipsError&) {
 			*_getLog() << LogIO::WARN
 				<< "Image units are per beam but beam area could not "
 				<< "be determined. Assume beam area is pixel area."
@@ -635,13 +634,22 @@ void ImageFitter::_setFluxes() {
 	uInt polNum = 0;
 	for(uInt i=0; i<ncomps; i++) {
 		_curResults.getFlux(fluxQuant, i);
+		Bool fluxIsFixed = _fixed[i].contains("f")
+			&& _fixed[i].contains("a")
+			&& _fixed[i].contains("b");
 		// TODO there is probably a better way to get the flux component we want...
 		Vector<String> polarization = _curResults.getStokes(i);
 		for (uInt j=0; j<polarization.size(); j++) {
 			if (polarization[j] == _kludgedStokes) {
 				_fluxDensities[i] = fluxQuant[j];
-				std::complex<double> error = _curResults.component(i).flux().errors()[j];
-				_fluxDensityErrors[i].setValue(sqrt(error.real()*error.real() + error.imag()*error.imag()));
+				if (fluxIsFixed) {
+					_fluxDensityErrors[i] = 0;
+				}
+				else {
+					std::complex<double> error = _curResults.component(i).flux().errors()[j];
+					_fluxDensityErrors[i].setValue(sqrt(error.real()*error.real()
+						+ error.imag()*error.imag()));
+				}
 				_fluxDensityErrors[i].setUnit(_fluxDensities[i].getUnit());
 				polNum = j;
 				break;
@@ -661,14 +669,22 @@ void ImageFitter::_setFluxes() {
 		Double peakErrorFromFluxErrorValue = (
 				_peakIntensities[i]*_fluxDensityErrors[i]/_fluxDensities[i]
 		).getValue();
-		_peakIntensityErrors[i].setValue(
-			max(
-				rmsPeakErrorValue,
-				peakErrorFromFluxErrorValue
-			)
-		);
+		if (_fixed[i].contains("f")) {
+			_peakIntensityErrors[i].setValue(0);
+		}
+		else {
+			_peakIntensityErrors[i].setValue(
+				max(
+					rmsPeakErrorValue,
+					peakErrorFromFluxErrorValue
+				)
+			);
+		}
 		_peakIntensityErrors[i].setUnit(_bUnit);
-		if (rmsPeakErrorValue > peakErrorFromFluxErrorValue) {
+		if (
+			! fluxIsFixed
+			&& rmsPeakErrorValue > peakErrorFromFluxErrorValue
+		) {
 			const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
 			Quantity compArea = gaussShape->getArea();
 			Quantity rmsFluxError = rmsPeakError*compArea/resArea;
@@ -688,18 +704,12 @@ void ImageFitter::_setFluxes() {
 
 void ImageFitter::_setSizes() {
 	uInt ncomps = _curResults.nelements();
-
 	_positionAngles.resize(ncomps);
 	_majorAxisErrors.resize(ncomps);
 	_minorAxisErrors.resize(ncomps);
 	_positionAngleErrors.resize(ncomps);
 	Double rmsPeak = Vector<Double>(_residStats.asArrayDouble("rms"))[0];
-
-	Quantity rmsPeakError(
-			rmsPeak,
-			_bUnit
-	);
-
+	Quantity rmsPeakError(rmsPeak, _bUnit);
 
 	Quantity xBeam;
 	Quantity yBeam;
@@ -720,7 +730,6 @@ void ImageFitter::_setSizes() {
 		yBeam = Quantity(pixInc[1], "rad");
 		paBeam = Quantity(0, "rad");
 	}
-
 	for(uInt i=0; i<_curResults.nelements(); i++) {
 		const ComponentShape* compShape = _curResults.getShape(i);
 		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
@@ -742,43 +751,47 @@ void ImageFitter::_setSizes() {
 		Double sinPA = sin(paRelToBeam.getValue());
 
 		// angles are measured from north (y direction).
-		_majorAxisErrors[i].setValue(
-			max(
-				_majorAxisErrors[i].getValue(),
-				sqrt(
-					(
-						xBeamVal*sinPA * xBeamVal*sinPA
-						+ yBeamVal*cosPA * yBeamVal*cosPA
-					)
-				)/signalToNoise
-			)
-		);
-		_minorAxisErrors[i].setValue(
-			max(
-				_minorAxisErrors[i].getValue(),
-				sqrt(
-					(
-						xBeamVal*cosPA * xBeamVal*cosPA
-						+ yBeamVal*sinPA * yBeamVal*sinPA
-					)
-				)/signalToNoise
-			)
-		);
-		Double posAngleRad = _positionAngles[i].getValue(Unit("rad"));
-		Quantity posAngErrorFromSN = _positionAngles[i] * sqrt(
-				_majorAxisErrors[i]/_majorAxes[i] * _majorAxisErrors[i]/_majorAxes[i]
-				+ _minorAxisErrors[i]/_minorAxes[i] * _minorAxisErrors[i]/_minorAxes[i]
-		);
-		posAngErrorFromSN *= 1/(1 + posAngleRad*posAngleRad);
-		posAngErrorFromSN.convert(_positionAngleErrors[i].getUnit());
-		_positionAngleErrors[i].setValue(
-			max(_positionAngleErrors[i].getValue(), posAngErrorFromSN.getValue())
-		);
-
+		if (! _fixed[i].contains("a")) {
+			_majorAxisErrors[i].setValue(
+				max(
+					_majorAxisErrors[i].getValue(),
+					sqrt(
+						(
+							xBeamVal*sinPA * xBeamVal*sinPA
+							+ yBeamVal*cosPA * yBeamVal*cosPA
+						)
+					)/signalToNoise
+				)
+			);
+		}
+		if (! _fixed[i].contains("b")) {
+			_minorAxisErrors[i].setValue(
+				max(
+					_minorAxisErrors[i].getValue(),
+					sqrt(
+						(
+							xBeamVal*cosPA * xBeamVal*cosPA
+							+ yBeamVal*sinPA * yBeamVal*sinPA
+						)
+					)/signalToNoise
+				)
+			);
+		}
+		if (! _fixed[i].contains("p")) {
+			Double posAngleRad = _positionAngles[i].getValue(Unit("rad"));
+			Quantity posAngErrorFromSN = _positionAngles[i] * sqrt(
+					_majorAxisErrors[i]/_majorAxes[i] * _majorAxisErrors[i]/_majorAxes[i]
+					+ _minorAxisErrors[i]/_minorAxes[i] * _minorAxisErrors[i]/_minorAxes[i]
+			);
+			posAngErrorFromSN *= 1/(1 + posAngleRad*posAngleRad);
+			posAngErrorFromSN.convert(_positionAngleErrors[i].getUnit());
+			_positionAngleErrors[i].setValue(
+					max(_positionAngleErrors[i].getValue(), posAngErrorFromSN.getValue())
+				);
+		}
 		_majorAxisErrors[i].convert(_majorAxes[i].getUnit());
 		_minorAxisErrors[i].convert(_minorAxes[i].getUnit());
 		_positionAngleErrors[i].convert(_positionAngles[i].getUnit());
-
 		GaussianShape* newShape = dynamic_cast<GaussianShape *>(compShape->clone());
 
 		newShape->setErrors(
@@ -795,23 +808,25 @@ void ImageFitter::_setSizes() {
 		Double cosPaBeam = cos(paBeam.getValue());
 		Double sinPaBeam = sin(paBeam.getValue());
 
-		Quantity longErrorFromSN = sqrt(
-			xBeam*sinPaBeam*xBeam*sinPaBeam + yBeam*cosPaBeam*yBeam*cosPaBeam
-		)/(2*signalToNoise);
-		Quantity latErrorFromSN = sqrt(
-			xBeam*cosPaBeam*xBeam*cosPaBeam + yBeam*sinPaBeam*yBeam*sinPaBeam
-		)/(2*signalToNoise);
-
-		longErrorFromSN.convert(longError.getUnit());
-		latErrorFromSN.convert(latError.getUnit());
-		longError.setValue(
-			max(longError.getValue(), longErrorFromSN.getValue())
-		);
-		latError.setValue(
-			max(latError.getValue(), latErrorFromSN.getValue())
-		);
+		if (! _fixed[i].contains("x")) {
+			Quantity longErrorFromSN = sqrt(
+					xBeam*sinPaBeam*xBeam*sinPaBeam + yBeam*cosPaBeam*yBeam*cosPaBeam
+				)/(2*signalToNoise);
+			longErrorFromSN.convert(longError.getUnit());
+			longError.setValue(
+					max(longError.getValue(), longErrorFromSN.getValue())
+				);
+		}
+		if (! _fixed[i].contains("y")) {
+			Quantity latErrorFromSN = sqrt(
+					xBeam*cosPaBeam*xBeam*cosPaBeam + yBeam*sinPaBeam*yBeam*sinPaBeam
+				)/(2*signalToNoise);
+			latErrorFromSN.convert(latError.getUnit());
+			latError.setValue(
+					max(latError.getValue(), latErrorFromSN.getValue())
+				);
+		}
 		newShape->setRefDirectionError(latError, longError);
-
 		Vector<Int> index(1, i);
 		_curResults.setShape(index, *newShape);
 	}
@@ -845,12 +860,16 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			) << endl;
 		Bool fitSuccess = False;
 		Angular2DGaussian bestSol(maj, min, pa);
-
-
 		Angular2DGaussian bestDecon;
-		Bool isPointSource = ImageUtilities::deconvolveFromBeam(
-			bestDecon, bestSol, fitSuccess, *_getLog(), beam
-		);
+		Bool isPointSource = True;
+		try {
+			isPointSource = beam.deconvolve(bestDecon, bestSol);
+			fitSuccess = True;
+		}
+		catch (const AipsError& x) {
+			fitSuccess = False;
+			Bool isPointSource = True;
+		}
 		size << "Image component size (deconvolved from beam) ---" << endl;
 		Angular2DGaussian decon;
 		if(fitSuccess) {
@@ -861,27 +880,54 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 					pa - epa
 				);
 				size << "    Component is a point source" << endl;
-                Bool isPointSource1 = ImageUtilities::deconvolveFromBeam(
-			        decon, largest, fitSuccess, *_getLog(), beam
-                );
+                Bool isPointSource1 = True;
+                Bool fitSuccess1 = False;
+                try {
+                	isPointSource1 = beam.deconvolve(decon, largest);
+                	fitSuccess = True;
+                }
+                catch (const AipsError& x) {
+                	fitSuccess1 = False;
+                	isPointSource1 = True;
+                }
+                // note that the code is purposefully written in such a way that
+                // fitSuccess* = False => isPointSource* = True and the conditionals
+                // following rely on that fact to make the code a bit clearer
                 Angular2DGaussian lsize;
                 if (! isPointSource1) {
                     lsize = decon;
                 }
                 largest.setPA(pa + epa);
-                Bool isPointSource2 = ImageUtilities::deconvolveFromBeam(
-                    decon, largest, fitSuccess, *_getLog(), beam
-                );
-                if (! isPointSource2) {
-                    if (isPointSource1) {
-                        lsize = decon;
-                    }
-                    else {
-                        Quantity lmaj = max(decon.getMajor(), lsize.getMajor());
-                        Quantity lmin = max(decon.getMinor(), lsize.getMinor());
-                        size << "    It may be as large as " << std::setprecision(2) << lmaj
-                        	<< " x " << lmin << endl;
-                    }
+                Bool isPointSource2 = True;
+                Bool fitSuccess2 = False;
+                try {
+                	isPointSource2 = beam.deconvolve(decon, largest);
+                	fitSuccess2 = True;
+                }
+                catch (const AipsError& x) {
+                	fitSuccess2 = False;
+                	isPointSource2 = True;
+                }
+                if (isPointSource2) {
+                	if (isPointSource1) {
+                		size << "    An upper limit on its size can not be determined" << endl;
+                	}
+                	else {
+                		size << "    It may be as large as " << std::setprecision(2) << lsize.getMajor()
+                	        << " x " << lsize.getMinor() << endl;
+                	}
+                }
+                else {
+                	if (isPointSource1) {
+                		size << "    It may be as large as " << std::setprecision(2) << decon.getMajor()
+                	        << " x " << decon.getMinor() << endl;
+                	}
+                	else {
+                		Quantity lmaj = max(decon.getMajor(), lsize.getMajor());
+                		Quantity lmin = max(decon.getMinor(), lsize.getMinor());
+                		size << "    It may be as large as " << std::setprecision(2) << lmaj
+                		    << " x " << lmin << endl;
+                	}
                 }
 			}
 			else {
@@ -898,9 +944,12 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 						for (uInt k=0; k<2; k++) {
 							sourceIn.setPA(paRange[k]);
 							decon = Angular2DGaussian();
-							isPointSource = ImageUtilities::deconvolveFromBeam(
-								decon, sourceIn, fitSuccess,*_getLog(), beam, False
-							);
+							try {
+								isPointSource = beam.deconvolve(decon, sourceIn);
+							}
+							catch (const AipsError& x) {
+								fitSuccess = False;
+							}
 							if (fitSuccess) {
 								Quantity errMaj = abs(bestDecon.getMajor() - decon.getMajor());
 								errMaj.convert(emaj.getUnit());
@@ -924,7 +973,8 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			}
 		}
 		else {
-			size << "    Could not deconvolve source from beam. Source may be (only marginally) resolved in only one direction.";
+			size << "    Could not deconvolve source from beam. "
+				<< "Source may be (only marginally) resolved in only one direction.";
 		}
 	}
 	return size.str();
@@ -975,9 +1025,17 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	if (! _noBeam) {
 		precision = precisionForValueErrorPairs(fd, Vector<Double>());
 		fluxes << std::fixed << setprecision(precision);
-		fluxes << "       --- Integrated:   " << fluxDensity.getValue()
-							<< " +/- " << fluxDensityError.getValue() << " "
-							<< fluxDensity.getUnit() << endl;
+		fluxes << "       --- Integrated:   " << fluxDensity.getValue();
+		if (
+			_fixed[compNumber].contains("f") && _fixed[compNumber].contains("a")
+			&& _fixed[compNumber].contains("b")
+		) {
+			fluxes << " " << fluxDensity.getUnit() << " (fixed)" << endl;
+		}
+		else {
+			fluxes << " +/- " << fluxDensityError.getValue() << " "
+				<< fluxDensity.getUnit() << endl;
+		}
 	}
 
 	for (uInt i=0; i<unitPrefix.size(); i++) {
@@ -988,7 +1046,10 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 			break;
 		}
 	}
-	peakIntensity = Quantity(tmpFlux.getValue(), tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit());
+	peakIntensity = Quantity(
+		tmpFlux.getValue(),
+		tmpFlux.getUnit() + "/" + intensityToFluxConversion.getUnit()
+	);
 	peakIntensityError = Quantity(tmpFluxError.getValue(), peakIntensity.getUnit());
 
 	Vector<Double> pi(2);
@@ -996,9 +1057,14 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	pi[1] = peakIntensityError.getValue();
 	precision = precisionForValueErrorPairs(pi, Vector<Double>());
 	fluxes << std::fixed << setprecision(precision);
-	fluxes << "       --- Peak:         " << peakIntensity.getValue()
- 					<< " +/- " << peakIntensityError.getValue() << " "
- 					<< peakIntensity.getUnit() << endl;
+	fluxes << "       --- Peak:         " << peakIntensity.getValue();
+	if (_fixed[compNumber].contains("f")) {
+		fluxes << " " << peakIntensity.getUnit() << " (fixed)" << endl;
+	}
+	else {
+		fluxes << " +/- " << peakIntensityError.getValue() << " "
+			<< peakIntensity.getUnit() << endl;
+	}
 	fluxes << "       --- Polarization: " << _getStokes() << endl;
 	return fluxes.str();
 }
@@ -1137,20 +1203,16 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 // TODO From here until the end of the file is code extracted directly
 // from ImageAnalysis. It is in great need of attention.
 
-ComponentList ImageFitter::_fitsky(
-	Fit2D& fitter, Array<Float>& pixels,
-    Array<Bool>& pixelMask, Bool& converged,
-    Double& zeroLevelOffsetSolution,
-   	Double& zeroLevelOffsetError,
-    const uInt& chan,
+void ImageFitter::_fitsky(
+	Fit2D& fitter, Array<Float>& pixels, Array<Bool>& pixelMask,
+	Bool& converged, Double& zeroLevelOffsetSolution,
+   	Double& zeroLevelOffsetError, const uInt& chan,
 	const Vector<String>& models, Record& inputEstimate,
-	const Bool fitIt,
-	const Bool deconvolveIt, const Bool list,
+	const Bool fitIt, const Bool deconvolveIt, const Bool list,
 	const Double zeroLevelEstimate
 ) {
 	LogOrigin origin(_class, __FUNCTION__);
 	*_getLog() << origin;
-
 	String error;
 	Vector<SkyComponent> estimate;
 	ComponentList compList;
@@ -1232,7 +1294,6 @@ ComponentList ImageFitter::_fitsky(
 
 	// What Stokes type does this plane hold ?
 	Stokes::StokesTypes stokes = Stokes::type(_kludgedStokes);
-
 	// Form masked array and find min/max
 	MaskedArray<Float> maskedPixels(pixels, pixelMask, True);
 	Float minVal, maxVal;
@@ -1241,7 +1302,6 @@ ComponentList ImageFitter::_fitsky(
     // Recover just single component estimate if desired and bug out
 	// Must use subImage in calls as converting positions to absolute
 	// pixel and vice versa
-    ComponentList cl;
     if (!fitIt) {
 		Vector<Double> parameters;
 		parameters = _singleParameterEstimate(
@@ -1258,8 +1318,7 @@ ComponentList ImageFitter::_fitsky(
 			deconvolveIt,
 			_getImage()->imageInfo().restoringBeam(_chanPixNumber, _stokesPixNumber)
 		);
-		cl.add(result(0));
-		return cl;
+		_curResults.add(result(0));
 	}
 	// For ease of use, make each model have a mask string
 	Vector<String> fixedParameters(_fixed.copy());
@@ -1271,7 +1330,6 @@ ComponentList ImageFitter::_fitsky(
 	}
 	// Add models
 	Vector<String> modelTypes(models.copy());
-
 	if (nEstimates == 0 && nGauss > 1) {
 		*_getLog() << "Can only auto estimate for a gaussian model"
 			<< LogIO::EXCEPTION;
@@ -1290,7 +1348,6 @@ ComponentList ImageFitter::_fitsky(
 			fixedParameters(i),
 			modelType
 		);
-
 		Vector<Double> parameters;
 		if (nEstimates == 0 && modelType == Fit2D::GAUSSIAN) {
 			// Auto estimate
@@ -1298,6 +1355,7 @@ ComponentList ImageFitter::_fitsky(
 				fitter, modelType, maskedPixels,
 				minVal, maxVal, minPos, maxPos
 			);
+			*_getLog() << origin;
 		}
 		else if (modelType == Fit2D::LEVEL) {
 			parameters.resize(1);
@@ -1342,7 +1400,6 @@ ComponentList ImageFitter::_fitsky(
 		converged = False;
 		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
-		return cl;
 	}
 	Vector<SkyComponent> result(_doZeroLevel ? nModels - 1 : nModels);
 	Double facToJy;
@@ -1358,12 +1415,17 @@ ComponentList ImageFitter::_fitsky(
 			);
 			Vector<Double> solution = fitter.availableSolution(i);
 			Vector<Double> errors = fitter.availableErrors(i);
+			if (anyLT(errors, 0.0)) {
+				throw AipsError(
+					"At least one calculated error is less than zero"
+				);
+			}
 			result(j) = ImageUtilities::encodeSkyComponent(
 				*_getLog(), facToJy, allAxesSubImage, modelType,
 				solution, stokes, xIsLong, deconvolveIt,
 				_getImage()->imageInfo().restoringBeam(_chanPixNumber, _stokesPixNumber)
 			);
-			// debug
+
 			String error;
 			Record r;
 			result(j).flux().toRecord(error, r);
@@ -1371,11 +1433,10 @@ ComponentList ImageFitter::_fitsky(
 				*_getLog(), result(j), facToJy, allAxesSubImage,
 				solution, errors, stokes, xIsLong
 			);
-			cl.add(result(j));
+			_curResults.add(result(j));
 			j++;
 		}
 	}
-	return cl;
 }
 
 Vector<Double> ImageFitter::_singleParameterEstimate(
@@ -1482,7 +1543,6 @@ void ImageFitter::_encodeSkyComponentError(
 		Double facToJy, const ImageInterface<Float>& subIm,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong) const
-//
 // Input
 //   facToJy = conversion factor to Jy
 //   pars(0) = peak flux  image units
@@ -1505,7 +1565,6 @@ void ImageFitter::_encodeSkyComponentError(
 	Vector<Double> valueInt;
 	flux.value(valueInt);
 	Vector<Double> tmp(4, 0.0);
-	//
 	if (errors(0) > 0.0) {
 		Double rat = (errors(0) / parameters(0)) * facToJy;
 		if (stokes == Stokes::I) {
@@ -1522,7 +1581,6 @@ void ImageFitter::_encodeSkyComponentError(
 		}
 		flux.setErrors(tmp(0), tmp(1), tmp(2), tmp(3));
 	}
-
 	// Shape.  Only TwoSided shapes have something for me to do
 	IPosition pixelAxes(2);
 	pixelAxes(0) = 0;
@@ -1531,103 +1589,71 @@ void ImageFitter::_encodeSkyComponentError(
 		pixelAxes(1) = 0;
 		pixelAxes(0) = 1;
 	}
-	//
 	ComponentShape& shape = sky.shape();
 	TwoSidedShape* pS = dynamic_cast<TwoSidedShape*> (&shape);
 	Vector<Double> dParameters(5);
 	GaussianBeam wParameters;
 	const CoordinateSystem& cSys = subIm.coordinates();
+	static const Quantity qzero(0, "deg");
 	if (pS) {
 		if (errors(3) > 0.0 || errors(4) > 0.0 || errors(5) > 0.0) {
 			dParameters(0) = parameters(1); // x
 			dParameters(1) = parameters(2); // y
-
 			// Use the pixel to world converter by pretending the width
 			// errors are widths.  The minor error may be greater than major
 			// error so beware as the widths converted will flip them about.
 			// The error in p.a. is just the input error value as its
 			// already angular.
-			if (errors(3) > 0.0) {
-				dParameters(2) = errors(3); // Major
-			} else {
-				dParameters(2) = 0.1 * parameters(3); // Fudge
-			}
-			if (errors(4) > 0.0) {
-				dParameters(3) = errors(4); // Minor
-			} else {
-				dParameters(3) = 0.1 * parameters(4); // Fudge
-			}
-			dParameters(4) = parameters(5); // PA
-
+			// Major
+			dParameters(2) = errors(3) == 0 ? 5e-14 : errors(3);
+			// Minor
+			dParameters(3) = errors(4) == 0 ? 5e-14 : errors(4);
+			// PA
+			dParameters(4) = parameters(5);
 			// If flipped, it means pixel major axis morphed into world minor
 			// Put back any zero errors as well.
-
 			Bool flipped = ImageUtilities::pixelWidthsToWorld(os, wParameters,
 					dParameters, cSys, pixelAxes, False);
 			Quantum<Double> paErr(errors(5), Unit(String("rad")));
 			if (flipped) {
-				if (errors(3) <= 0.0) {
-					wParameters.setMajorMinor(
-						wParameters.getMajor(),
-						Quantity(0, wParameters.getMinor().getUnit())
-					);
-				}
-				if (errors(4) <= 0.0) {
-					wParameters.setMajorMinor(
-						Quantity(0, wParameters.getMajor().getUnit()),
-						wParameters.getMinor()
-					);
-				}
 				pS->setErrors(
-					wParameters.getMinor(),
-					wParameters.getMajor(), paErr
+					errors(4) == 0 ? qzero : wParameters.getMinor(),
+					errors(3) == 0 ? qzero : wParameters.getMajor(),
+					paErr
 				);
 			}
 			else {
-				if (errors(3) <= 0.0) {
-					wParameters.setMajorMinor(
-						Quantity(0, wParameters.getMajor().getUnit()),
-						wParameters.getMinor()
-					);
-
-				}
-				if (errors(4) <= 0.0) {
-					wParameters.setMajorMinor(
-						wParameters.getMajor(),
-						Quantity(0, wParameters.getMinor().getUnit())
-					);
-				}
 				pS->setErrors(
-					wParameters.getMajor(), wParameters.getMinor(), paErr
+					errors(3) == 0 ? qzero : wParameters.getMajor(),
+					errors(4) == 0 ? qzero : wParameters.getMinor(),
+					paErr
 				);
 			}
 		}
 	}
-
 	// Position.  Use the pixel to world widths converter again.
 	// Or do something simpler ?
-	{
-		if (errors(1) > 0.0 || errors(2) > 0.0) {
-			// Use arbitrary position error of 1 pixel if none
-			if (errors(1) > 0.0) {
-				dParameters(2) = errors(1); // X
-			} else {
-				dParameters(2) = 1.0;
-			}
-			if (errors(2) > 0.0) {
-				dParameters(3) = errors(2); // Y
-			} else {
-				dParameters(3) = 1.0;
-			}
-			dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
-			Bool flipped = ImageUtilities::pixelWidthsToWorld(os, wParameters,
-					dParameters, cSys, pixelAxes, False);
-			if (flipped) {
-				pS->setRefDirectionError(wParameters.getMinor(), wParameters.getMajor()); // TSS::setRefDirErr interface has lat first
-			} else {
-				pS->setRefDirectionError(wParameters.getMajor(), wParameters.getMinor()); // TSS::setRefDirErr interface has lat first
-			}
-		}
+	// X
+	dParameters(2) = errors(1) == 0 ? 1e-12 : errors(1);
+	// Y
+	dParameters(3) = errors(2) == 0 ? 1e-12 : errors(2);
+	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
+	Bool flipped = ImageUtilities::pixelWidthsToWorld(
+			os, wParameters, dParameters,
+			cSys, pixelAxes, False
+		);
+	// TSS::setRefDirErr interface has lat first
+	if (flipped) {
+		pS->setRefDirectionError(
+				errors(2) == 0 ? qzero : wParameters.getMinor(),
+				errors(1) == 0 ? qzero : wParameters.getMajor()
+			);
+	}
+	else {
+		pS->setRefDirectionError(
+				errors(2) == 0 ? qzero : wParameters.getMajor(),
+				errors(1) == 0 ? qzero : wParameters.getMinor()
+			);
 	}
 }
 

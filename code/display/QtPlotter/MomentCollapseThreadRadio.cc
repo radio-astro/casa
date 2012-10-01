@@ -25,7 +25,7 @@
 #include "MomentCollapseThreadRadio.h"
 #include <images/Images/ImageAnalysis.h>
 #include <display/Display/Options.h>
-#include <synthesis/MSVis/UtilJ.h>
+//#include <synthesis/MSVis/UtilJ.h>
 //using namespace casa::utilj;
 #include <QFile>
 #include <QDebug>

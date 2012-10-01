@@ -263,7 +263,7 @@ private:
 
    Int scaleAxis();
    void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
-
+   void initializeSolidAngle() const;
    //Conversion
    QString getRaDec(double x, double y);
 
@@ -346,8 +346,6 @@ private:
 
 
    private slots:
-   	   void regionUpdatesStarting();
-   	   void regionUpdatesEnding();
    	   void changeTopAxis();
    	   void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
    	   void setDisplayYUnits( const QString& unitStr );

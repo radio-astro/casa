@@ -50,12 +50,17 @@ public:
 	SearchThread( Searcher* searcher, int offset ){
 		this->searcher= searcher;
 		this->offset = offset;
+		countNeeded = true;
 	}
 	String getErrorMessage() const {
 		return errorMsg;
 	}
 	String getErrorMessageCount() const {
 		return errorMsgCount;
+	}
+
+	void setCountNeeded( bool needed ){
+		countNeeded = needed;
 	}
 
 	long getResultsCount() const {
@@ -65,10 +70,15 @@ public:
 		return searchResults;
 	}
 	void run(){
-		if ( offset == 0 ){
+		if ( offset == 0 && countNeeded ){
 			searchResultsCount = searcher->doSearchCount( errorMsgCount );
 		}
-		searchResults = searcher->doSearch( errorMsg, offset );
+		else {
+			searchResultsCount = 1;
+		}
+		if ( searchResultsCount > 0 ){
+			searchResults = searcher->doSearch( errorMsg, offset );
+		}
 	}
 	~SearchThread(){
 	}
@@ -76,6 +86,7 @@ private:
 	Searcher* searcher;
 	int searchResultsCount;
 	int offset;
+	bool countNeeded;
 	vector<SplatResult> searchResults;
 	string errorMsg;
 	string errorMsgCount;

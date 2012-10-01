@@ -111,7 +111,7 @@ Simulator::Simulator():
 }
 
 
-Simulator::Simulator(String& msname) 
+Simulator::Simulator(const String& msname)
   : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111), 
     ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0), 
     nSpw(0),
@@ -135,6 +135,12 @@ Simulator::Simulator(String& msname)
 			    Table::Update);
   AlwaysAssert(ms_p, AipsError);
 
+}
+
+MeasurementSet *
+Simulator::getMs () const
+{
+    return ms_p;
 }
 
 

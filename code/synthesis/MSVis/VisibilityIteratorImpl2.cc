@@ -160,6 +160,45 @@ public:
         slicerFlagCategories_p (fcNDims - 1) = Vector<Slice> ();
     }
 
+    Vector<Int>
+    getChannels () const {
+
+        Vector<Int> frequencies (nFrequencies_p); // create result of appropriate size
+
+        const Vector<Slice> & channelSlices = slicer_p (1); // get channel axis of slicer
+
+        // Iterator over all of the slices contained in the channel portion of the slicer.
+        // For each slice, use each channel number to fill in the appropriate index
+        // of the result.  The result will be that frequencies [x] will contain the
+        // actual channel number that resulted from the frequency selection process.
+
+        int k = 0;
+
+        for (int i = 0; i < (int) channelSlices.nelements (); i ++){
+
+            Int channel = channelSlices [i].start();
+            Int increment = channelSlices [i].inc();
+            Int nChannels = channelSlices [i].length();
+
+            assert (k + nChannels - 1 <= nFrequencies_p);
+
+            for (int j = 0; j < (int) nChannels; j ++){
+
+                frequencies [k ++] = channel;
+                channel += increment;
+            }
+
+        }
+
+        return frequencies;
+    }
+
+    Int
+    getNFrequencies () const
+    {
+        return nFrequencies_p;
+    }
+
     const ChannelSlicer &
     getSlicer () const
     {
@@ -170,12 +209,6 @@ public:
     getSlicerForFlagCategories () const
     {
         return slicerFlagCategories_p;
-    }
-
-    Int
-    getNFrequencies () const
-    {
-        return nFrequencies_p;
     }
 
 private:
@@ -439,6 +472,16 @@ VisibilityIteratorReadImpl2::getColumnRows (const ROArrayColumn<T> & column,
 
 template <typename T>
 void
+VisibilityIteratorReadImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
+                                                  Matrix<T> & array) const
+{
+    column.getColumnCells (rowBounds_p.subchunkRows_p, array, True);
+}
+
+
+
+template <typename T>
+void
 VisibilityIteratorReadImpl2::getColumnRows (const ROScalarColumn<T> & column,
                                             Vector<T> & array) const
 {
@@ -490,18 +533,23 @@ VisibilityIteratorReadImpl2::VisibilityIteratorReadImpl2 (ROVisibilityIterator2 
                                                           Double timeInterval,
                                                           Bool createVb)
 : channelSelector_p (0),
+  channelSelectorCache_p (new ChannelSelectorCache ()),
   floatDataFound_p (False),
   frequencySelections_p (0),
+  more_p (False),
+  msIndex_p (0),
   msIterAtOrigin_p (False),
   msIter_p (mss, sortColumns, timeInterval, addDefaultSort),
+  nPolarizations_p (-1),
   nRowBlocking_p (0),
   reportingFrame_p (VisBuffer2::FrameNotSpecified),
-  rovi_p (NULL),
+  rovi_p (0),
   sortColumns_p (sortColumns),
   spectralWindowChannelsCache_p (new SpectralWindowChannelsCache ()),
   subtableColumns_p (new SubtableColumns (msIter_p)),
   tileCacheIsSet_p (0),
-  timeInterval_p (timeInterval)
+  timeInterval_p (timeInterval),
+  vb_p (0)
 {
     // Make sure the pointer to the containing ROVI (rovi_p) is NULL when calling initialize
     // otherwise the call back to the VI can result in it trying to use an uninitialized pointer
@@ -530,6 +578,11 @@ VisibilityIteratorReadImpl2::initialize (const Block<MeasurementSet> &mss)
 
         measurementSets_p.push_back (mss [k]);
     }
+
+    // Install default frequency selections.  This will select all
+    // channels in all windows.
+
+    frequencySelections_p = new FrequencySelections ();
 }
 
 VisibilityIteratorReadImpl2::~VisibilityIteratorReadImpl2 ()
@@ -623,6 +676,74 @@ VisibilityIteratorReadImpl2::getBeamOffsets () const
 {
     return msIter_p.getBeamOffsets ();
 }
+
+Vector<Double>
+VisibilityIteratorReadImpl2::getFrequencies (Double time, Int frameOfReference) const
+{
+    // Get the channel information object (basically contains info from the
+    // spectral window subtable).
+
+    Int msId = this->msId ();
+    Int spectralWindowId = spectralWindow();
+
+    const SpectralWindowChannels & spectralWindowChannels =
+        getSpectralWindowChannels (msId, spectralWindowId);
+
+    // Get the channel numbers selected for this time (the spectral window and MS index are
+    // assumed to be the same as those currently pointed to by the MSIter).
+
+    Vector<Int> channels = getChannels (time, frameOfReference);
+
+    Vector<Double> frequencies (channels.nelements());
+    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
+
+    if (frameOfReference == observatoryFrequencyType){
+
+        // Since the observed frequency is being asked for, no conversion is necessary.
+        // Just copy each selected channel's observed frequency over to the result.
+
+        for (Int i = 0; i < (int) channels.nelements(); i ++){
+
+            Int channelNumber = channels [i];
+
+            frequencies [i] = spectralWindowChannels [channelNumber].getFrequency ();
+        }
+
+        return frequencies;
+    }
+
+    // Get the converter from the observed to the requested frame.
+
+    MFrequency::Convert fromObserved = makeFrequencyConverter (time, frameOfReference, False);
+
+    // For each selected channel, get its observed frequency and convert it into
+    // the frequency in the requested frame.  Put the result into the
+    // corresponding slot of "frequencies".
+
+    for (Int i = 0; i < (int) channels.nelements(); i ++){
+
+        Int channelNumber = channels [i];
+
+        Double fO = spectralWindowChannels [channelNumber].getFrequency ();
+            // Observed frequency
+
+        Double fF = fromObserved (Quantity (fO, "Hz")).get ("Hz").getValue();
+            // Frame frequency
+
+        frequencies [i] = fF;
+    }
+
+    return frequencies;
+}
+
+Vector<Int>
+VisibilityIteratorReadImpl2::getChannels (Double /*time*/, Int /*frameOfReference*/) const
+{
+    assert (channelSelector_p != 0);
+
+    return channelSelector_p->getChannels ();
+}
+
 
 Double
 VisibilityIteratorReadImpl2::getInterval () const
@@ -1144,41 +1265,13 @@ VisibilityIteratorReadImpl2::configureNewSubchunk ()
 }
 
 const ChannelSelector *
-VisibilityIteratorReadImpl2::createDefaultChannelSelector (Double time, Int msId, Int spectralWindowId)
-{
-
-    Int nFrequencies = subtableColumns_p->spectralWindow ().chanFreq ()(spectralWindowId).nelements();
-
-    ChannelSlicer slicer (2); // all polarizations, all channels);
-
-    // Replace the slicer for the frequency axis with one that select all frequencies in the spectral
-    // window.
-
-    Vector<Slice> frequencies (1); // One frequency slice
-    frequencies (0) = Slice (0, nFrequencies, 1);
-
-    slicer (1) = frequencies; // install it into the slicer
-
-    // Now create a slicer, install it into the cache and thenreturn it.
-
-    ChannelSelector * selector = new ChannelSelector (time, msId, spectralWindowId, slicer);
-
-    channelSelectorCache_p->add (selector, time, msId, FrequencySelection::ByChannel, spectralWindowId);
-
-    return selector;
-}
-
-const ChannelSelector *
 VisibilityIteratorReadImpl2::determineChannelSelection (Double time)
 {
 // --> The channels selected will need to be identical for all members of the
 //     subchunk; otherwise the underlying fetch method won't work since it
 //     takes a single Vector<Vector <Slice> > to specify the channels.
 
-    if (frequencySelections_p == 0){
-        return createDefaultChannelSelector (time, msId(), spectralWindow ());
-            // selects all channels by channel
-    }
+    assert (frequencySelections_p != 0);
 
     Int spectralWindowId = spectralWindow ();
     const FrequencySelection & selection = frequencySelections_p->get (msId ());
@@ -1245,6 +1338,14 @@ VisibilityIteratorReadImpl2::makeChannelSelectorC (const FrequencySelection & se
         frequencySlices.push_back (i->getSlice());
     }
 
+    if (frequencySlices.empty()){
+
+        // And empty selection implies all channels
+
+        Int nChannels = subtableColumns_p->spectralWindow().numChan()(spectralWindowId);
+        frequencySlices.push_back (Slice (0, nChannels, 1));
+    }
+
     // Convert the Slice collection built above into the needed
     // Vector<Vector<Slice> > structure.
 
@@ -1262,10 +1363,12 @@ VisibilityIteratorReadImpl2::makeChannelSelectorC (const FrequencySelection & se
     return result;
 }
 
-vi::ChannelSelector *
+ChannelSelector *
 VisibilityIteratorReadImpl2::makeChannelSelectorF (const FrequencySelection & selectionIn,
                                                    Double time, Int msId, Int spectralWindowId)
 {
+    // Make a ChannelSelector from a frame-based frequency selection.
+
     const FrequencySelectionUsingFrame & selection =
         dynamic_cast<const FrequencySelectionUsingFrame &> (selectionIn);
 
@@ -1276,18 +1379,8 @@ VisibilityIteratorReadImpl2::makeChannelSelectorF (const FrequencySelection & se
     // Set up frequency converter so that we can convert to the
     // measured frequency
 
-    MEpoch epoch (MVEpoch (Quantity (time, "s")));
-
-    MPosition position = getObservatoryPosition ();
-    MDirection direction = phaseCenter();
-
-    MeasFrame measFrame (epoch, position, direction);
-    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
-    MFrequency::Ref observedFrame (observatoryFrequencyType, measFrame);
-
-    MFrequency::Types selectionFrame =
-        static_cast<MFrequency::Types> (selection.getFrameOfReference());
-    MFrequency::Convert convertToObservedFrame (selectionFrame, observedFrame);
+    MFrequency::Convert convertToObservedFrame =
+        makeFrequencyConverter (time, selection.getFrameOfReference(), True);
 
     // Convert each frequency selection into a Slice (interval) of channels.
 
@@ -1326,6 +1419,41 @@ VisibilityIteratorReadImpl2::makeChannelSelectorF (const FrequencySelection & se
     // Package up result and return it.
 
     ChannelSelector * result = new ChannelSelector (time, msId, spectralWindowId, slices);
+
+    return result;
+}
+
+MFrequency::Convert
+VisibilityIteratorReadImpl2::makeFrequencyConverter (Double time, Int otherFrameOfReference,
+                                                     Bool toObservedFrame) const
+{
+    MFrequency::Types observatoryFrequencyType = getObservatoryFrequencyType ();
+
+    // Set up frequency converter so that we can convert to the
+    // measured frequency
+
+    MEpoch epoch (MVEpoch (Quantity (time, "s")));
+
+    MPosition position = getObservatoryPosition ();
+    MDirection direction = phaseCenter();
+
+    MeasFrame measFrame (epoch, position, direction);
+
+    MFrequency::Ref observedFrame (observatoryFrequencyType, measFrame);
+
+    MFrequency::Types selectionFrame =
+        static_cast<MFrequency::Types> (otherFrameOfReference);
+
+    MFrequency::Convert result;
+
+    if (toObservedFrame){
+
+        result = MFrequency::Convert (selectionFrame, observedFrame);
+    }
+    else{
+
+        result = MFrequency::Convert (observedFrame, selectionFrame);
+    }
 
     return result;
 }
@@ -1423,7 +1551,7 @@ VisibilityIteratorReadImpl2::getObservatoryPosition () const
 }
 
 const SpectralWindowChannels &
-VisibilityIteratorReadImpl2::getSpectralWindowChannels (Int msId, Int spectralWindowId)
+VisibilityIteratorReadImpl2::getSpectralWindowChannels (Int msId, Int spectralWindowId) const
 {
     const SpectralWindowChannels * cached =
             spectralWindowChannelsCache_p->find (msId, spectralWindowId);
@@ -2077,7 +2205,7 @@ VisibilityIteratorReadImpl2::getVisibilityAsStokes (Matrix<CStokesVector> & visi
 
         //  Assume XX,YY or RR,LL are provided.  Set cross terms to zero.
 
-        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row++) {
+        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
             for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
 
                 CStokesVector & stokesVector = visibilityStokes (frequency, row);
@@ -2094,7 +2222,7 @@ VisibilityIteratorReadImpl2::getVisibilityAsStokes (Matrix<CStokesVector> & visi
         // Assume provided polarization is an estimate of Stokes I (one of RR,LL,XX,YY).
         // Cross terms are then zero.
 
-        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row++) {
+        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
             for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
 
                 CStokesVector & stokesVector = visibilityStokes (frequency, row);
@@ -2116,7 +2244,7 @@ VisibilityIteratorReadImpl2::getVisibilityAsStokes (Matrix<CStokesVector> & visi
 void
 VisibilityIteratorReadImpl2::uvw (Matrix<Double> & uvwmat) const
 {
-    getColumnRows (columns_p.uvw_p, uvwmat);
+    getColumnRowsMatrix (columns_p.uvw_p, uvwmat);
 }
 
 // Fill in parallactic angle.
@@ -2416,7 +2544,7 @@ VisibilityIteratorReadImpl2::sigma (Vector<Float> & sigmaVector) const
 void
 VisibilityIteratorReadImpl2::sigmaMat (Matrix<Float> & sigmat) const
 {
-    getColumnRows (columns_p.sigma_p, sigmat);
+    getColumnRowsMatrix (columns_p.sigma_p, sigmat);
 }
 
 void
@@ -2438,7 +2566,7 @@ VisibilityIteratorReadImpl2::weight (Vector<Float> & wt) const
 void
 VisibilityIteratorReadImpl2::weightMat (Matrix<Float> & wtmat) const
 {
-    getColumnRows (columns_p.weight_p, wtmat);
+    getColumnRowsMatrix (columns_p.weight_p, wtmat);
 }
 
 Bool

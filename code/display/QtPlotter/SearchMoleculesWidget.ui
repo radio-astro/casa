@@ -61,8 +61,8 @@
            </property>
            <property name="toolTip">
             <string>Enter an (optional) chemical name for the search
-such as ammonia, carbon monoxide, methane,
-water, etc.</string>
+such as Ammonia, Carbon Monoxide, Methane,
+water, etc.  Names are case sensitive.</string>
            </property>
            <property name="text">
             <string/>

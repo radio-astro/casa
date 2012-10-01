@@ -162,13 +162,6 @@ public:
 
     virtual void writeChangesBack ();
 
-    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
-    virtual void dirtyComponentsAdd (VisBufferComponent2 component);
-    virtual void dirtyComponentsClear ();
-    virtual VisBufferComponents2 dirtyComponentsGet () const;
-    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
-    virtual void dirtyComponentsSet (VisBufferComponent2 component);
-
     //--> This needs to be removed: virtual Bool fetch(const asyncio::PrefetchColumns *pfc);
 
     // feed1_pa() and feed2_pa() return an array of parallactic angles
@@ -225,7 +218,6 @@ public:
     virtual Bool areCorrelationsSorted() const;
     virtual VisModelData getVisModelData() const;
 
-
     //////////////////////////////////////////////////////////////////////
     //
     //  Data accessors and setters (where appropriate)
@@ -237,10 +229,10 @@ public:
 
     virtual const Vector<Int> & antenna1 () const;
     virtual const Vector<Int> & antenna2 () const;
-    virtual Int arrayId (Int row = -1) const;
+    virtual Int arrayId () const;
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
-    virtual const Vector<Int> & correlationTypes (Int row = -1) const;
-    virtual Int dataDescriptionId (Int row = -1) const;
+    virtual const Vector<Int> & correlationTypes () const;
+    virtual Int dataDescriptionId () const;
     virtual const Vector<MDirection> & direction1 () const;
     virtual const Vector<MDirection> & direction2 () const;
     virtual const Vector<Double> & exposure () const;
@@ -248,7 +240,7 @@ public:
     virtual const Vector<Float> & feed1_pa () const;
     virtual const Vector<Int> & feed2 () const;
     virtual const Vector<Float> & feed2_pa () const;
-    virtual Int fieldId (Int row = -1) const;
+    virtual Int fieldId () const;
     virtual const Matrix<Bool> & flag () const;
     virtual void setFlag (const Matrix<Bool>&);
     virtual const Array<Bool> & flagCategory () const;
@@ -259,17 +251,17 @@ public:
     virtual void setFlagRow (const Vector<Bool>&);
     virtual const Matrix<Float> & imagingWeight () const;
     virtual Int nChannels () const;
-    virtual Int nCorrelations (Int row = -1) const;
+    virtual Int nCorrelations () const;
     virtual Int nRows () const;
     virtual const Vector<Int> & observationId () const;
-    virtual const MDirection& phaseCenter (Int row = -1) const;
-    virtual Int polarizationFrame (Int row = -1) const;
+    virtual const MDirection& phaseCenter () const;
+    virtual Int polarizationFrame () const;
     virtual const Vector<Int> & processorId () const;
     virtual const Vector<uInt> & rowIds () const;
     virtual const Vector<Int> & scan () const;
     virtual const Vector<Float> & sigma () const;
     virtual const Matrix<Float> & sigmaMat () const;
-    virtual Int spectralWindow (Int row = -1) const;
+    virtual Int spectralWindow () const;
     virtual const Vector<Int> & stateId () const;
     virtual const Vector<Double> & time () const;
     virtual const Vector<Double> & timeCentroid () const;
@@ -335,6 +327,14 @@ protected:
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const SubChunkPair2 & subchunk);
+
+    //virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
+    //virtual void dirtyComponentsAdd (VisBufferComponent2 component);
+    virtual void dirtyComponentsClear ();
+    virtual VisBufferComponents2 dirtyComponentsGet () const;
+    //virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
+    //virtual void dirtyComponentsSet (VisBufferComponent2 component);
+
     virtual void sortCorrelationsAux (Bool makeSorted);
     virtual ROVisibilityIterator2 * getViP () const; // protected, non-const access to VI
     void registerCacheItem (VbCacheItemBase *);

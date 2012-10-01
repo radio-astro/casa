@@ -1,5 +1,5 @@
 //# QtRegion.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Copyright (C) 2011,2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -63,6 +63,12 @@ namespace casa {
 			  QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
 		virtual ~QtRegion( );
 
+		// needed for writing out a list of regions (CASA or DS9 format) because the
+		// output is based upon QtRegionState pointers (because that is what is available
+		// to the QtRegionDock... this should be rectified to use a list of QtRegion
+		// pointers for region output...
+		QtRegionState *state( ) { return mystate; }
+
 		const std::string name( ) const { return name_.toStdString( ); }
 		virtual QtMouseToolNames::PointRegionSymbols marker( ) const
 				{ return QtMouseToolNames::SYM_UNKNOWN; }
@@ -98,13 +104,20 @@ namespace casa {
 		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(Region::zIndex,0);
 		virtual bool regionVisible( ) const DISPLAY_PURE_VIRTUAL(Region::regionVisible,true);
 
-		virtual void regionCenter( double &/*x*/, double &/*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
+		virtual void linearCenter( double &/*x*/, double &/*y*/ ) const = 0;
+		  // DISPLAY_PURE_VIRTUAL(Region::linearCenter,);
+		virtual void pixelCenter( double &/*x*/, double &/*y*/ ) const = 0;
+		  // DISPLAY_PURE_VIRTUAL(Region::pixelCenter,);
 
 		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(Region::refresh,);
 		virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( );
+		// is this region weakly or temporarily selected?
+		static void setWeakSelection(QtRegionState*s) { weak_selection = s; }
+		static QtRegionState *getWeakSelection( ) { return weak_selection; }
+		bool weaklySelected( ) const { return mystate == weak_selection; }
 
 		// indicates that region movement requires the update of state information...
 		void updateStateInfo( bool region_modified, Region::RegionChanges );
@@ -127,9 +140,9 @@ namespace casa {
 
 		// functions added with the introduction of RegionToolManager and the
 		// unified selection and manipulation of the various region types...
-		void mark( bool set=true ) { mystate->mark( set ); }
+		void mark( bool set=true );
 		bool marked( ) const { return mystate->marked( ); }
-		bool mark_toggle( ) { return mystate->mark_toggle( ); }
+		bool mark_toggle( );
 
 		bool markCenter( ) const { return mystate->markCenter( ); }
 
@@ -157,6 +170,7 @@ namespace casa {
 		/* void name( const QString &newname ); */
 		/* void color( const QString &newcolor ); */
 	    signals:
+		void regionChange( viewer::QtRegion *, std::string );
 		void regionCreated( int, const QString &shape, const QString &name,
 				    const QList<double> &world_x, const QList<double> &world_y,
 				    const QList<int> &pixel_x, const QList<int> &pixel_y,
@@ -168,6 +182,8 @@ namespace casa {
 					   const QList<double> &world_x, const QList<double> &world_y,
 					   const QList<int> &pixel_x, const QList<int> &pixel_y,
 					   const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+
+		void selectionChanged(viewer::QtRegion*,bool);
 
 		/* void updated( ); */
 		/* void deleted( const QtRegion * ); */
@@ -220,6 +236,11 @@ namespace casa {
 		QtRegionState *mystate;
 		QString name_;
 		QString color_;
+
+		// used to indicate that a region is weakly selected e.g. by
+		// entering (and/or scrolling through) the region stack...
+		static QtRegionState *weak_selection;
+
 	    private:
 		std::map<Region::RegionChanges,bool> held_signals;
 		void fetch_details( Region::RegionTypes &type, QList<int> &pixelx, QList<int> &pixely, QList<double> &worldx, QList<double> &worldy );

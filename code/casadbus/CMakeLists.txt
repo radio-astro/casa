@@ -44,6 +44,7 @@ casa_add_library( casadbus
   types/nullptr.cc
   utilities/BusAccess.cc
   utilities/Conversion.cc
+  utilities/Diagnostic.cc
   viewer/ViewerProxy.cc
  
 plotserver/PlotServerProxy.dbusproxy.h
@@ -70,6 +71,7 @@ install (FILES
 install (FILES
 	utilities/BusAccess.h
 	utilities/Conversion.h
+	utilities/Diagnostic.h
 	DESTINATION include/casacode/casadbus/utilities
 	)
 install (FILES

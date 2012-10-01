@@ -144,6 +144,11 @@ Bool Calibrater::initialize(MeasurementSet& inputMS,
     }
     historytab_p=Table(ms_p->historyTableName(),
 		       TableLock(TableLock::UserNoReadLocking), Table::Update);
+    // jagonzal (CAS-4110): When the selectvis method throws an exception the initialize method
+    // is called again to leave the calibrater in a proper state, and since there was a previous
+    // initialization the history handler was already created, and has to be destroyed before
+    // creating a new one to avoid leaveing the HISTORY table opened.
+    if (hist_p) delete hist_p;
     hist_p= new MSHistoryHandler(*ms_p, "calibrater");
 
 
@@ -413,7 +418,7 @@ void Calibrater::selectvis(const String& time,
 	      << LogIO::POST;
     // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty
     initialize(*ms_p,False,False,False);
-    throw(AipsError("Error in data selection specification."));
+    throw(AipsError("Error in data selection specification: " + x.getMesg()));
   } 
   catch (AipsError x) {
     // Re-initialize with the existing MS
@@ -422,7 +427,7 @@ void Calibrater::selectvis(const String& time,
 	      << LogIO::POST;
     // jagonzal (CAS-4110): I guess it is not necessary to create these columns when the selection is empty.
     initialize(*ms_p,False,False,False);
-    throw(AipsError("Error in Calibrater::selectvis()"));
+    throw(AipsError("Error in Calibrater::selectvis(): " + x.getMesg()));
   } 
 };
 
@@ -2693,8 +2698,10 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("TSYS",*vs_p);
     else if (utype.contains("EVLAGAIN"))
       cal_ = createSolvableVisCal("EVLAGAIN",*vs_p);
-//    else if (utype.contains("OPAC"))
-//      cal_ = createSolvableVisCal("TOPAC",*vs_p);
+    else if (utype.contains("OPAC"))
+      cal_ = createSolvableVisCal("TOPAC",*vs_p);
+    else if (utype.contains("GC") || utype.contains("EFF"))
+      cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 

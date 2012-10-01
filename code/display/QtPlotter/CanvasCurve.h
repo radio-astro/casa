@@ -31,6 +31,10 @@
 #include <QColor>
 #include <QString>
 
+/**
+ * Represents a curve drawn on the QtCanvas.
+ */
+
 namespace casa {
 
 typedef std::vector<double> CurveData;
@@ -45,36 +49,36 @@ public:
 	void setColor( QColor color );
 	QString getLegend() const;
 	void setLegend( const QString& legend );
-	double convertValue( double value, const QString& oldUnits, const QString& newUnits ) const;
-	void scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay );
 	int getCurveType() const;
 	CurveData getCurveData();
 	Vector<float> getXValues() const;
 	Vector<float> getYValues() const;
 	CurveData getErrorData();
-	void storeData( const QString& oldUnits );
+
 	QString getToolTip( double x, double y , const double X_ERROR,
 			const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const;
 	void getMinMax(Double& xmin, Double& xmax, Double& ymin,
 			Double& ymax, bool plotError ) const;
+
+	void scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits );
+	double convertValue( double value, double freqValue, const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits);
 	virtual ~CanvasCurve();
 
 private:
-	double getMax() const;
-	void scaleYValuesCurve( const QString& oldUnits, const QString& newUnits );
-	void scaleYValuesError( const QString& oldUnits, const QString& newUnits );
-	double percentToValue( double yValue ) const;
-	double valueToPercent( double yValue ) const;
-	double convert( double yValue, const QString oldUnits, const QString newUnits ) const;
+	Vector<float> getErrorValues() const;
+	double getMaxY() const;
+	double getMaxError() const;
+	void storeData( const QString& oldUnits );
+	void setYValues( const Vector<float>& yValues );
+	void setErrorValues( const Vector<float>& errorValues );
 
-	static const QString FRACTION_OF_PEAK;
-	static const QString JY_BEAM;
 	QColor curveColor;
 	QString legend;
 	CurveData curveData;
 	ErrorData errorData;
-	QString storedUnits;
-	double storedMax;
+	QString maxUnits;
+	double maxValue;
+	double maxErrorValue;
 	int curveType;
 };
 

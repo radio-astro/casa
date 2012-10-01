@@ -166,12 +166,12 @@ public:
 
     virtual void writeChangesBack () = 0;
 
-    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) = 0;
-    virtual void dirtyComponentsAdd (VisBufferComponent2 component) = 0;
+//    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) = 0;
+//    virtual void dirtyComponentsAdd (VisBufferComponent2 component) = 0;
     virtual void dirtyComponentsClear () = 0;
     virtual casa::vi::VisBufferComponents2 dirtyComponentsGet () const = 0;
-    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents) = 0;
-    virtual void dirtyComponentsSet (VisBufferComponent2 component) = 0;
+//    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents) = 0;
+//    virtual void dirtyComponentsSet (VisBufferComponent2 component) = 0;
 
     // This method returns the imaging weights associated with the VisBuffer.
     // If an imaging weight generator has not been supplied to the associated
@@ -281,14 +281,14 @@ public:
 
     virtual const Vector<Int> & antenna1 () const = 0; // [nR]
     virtual const Vector<Int> & antenna2 () const = 0; // [nR]
-    virtual Int arrayId (Int row = -1) const = 0;
-    virtual Int dataDescriptionId (Int row = -1) const = 0;
+    virtual Int arrayId () const = 0;
+    virtual Int dataDescriptionId () const = 0;
     virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
     virtual const Vector<MDirection> & direction2 () const = 0; // [nR]
     virtual const Vector<Double> & exposure () const = 0; // [nR]
     virtual const Vector<Int> & feed1 () const = 0; // [nR]
     virtual const Vector<Int> & feed2 () const = 0; // [nR]
-    virtual Int fieldId (Int row = -1) const = 0;
+    virtual Int fieldId () const = 0;
     virtual const Matrix<Bool> & flag () const = 0; // [nF,nR]
     virtual void setFlag (const Matrix<Bool>&) = 0; // [nF,nR]
     virtual const Array<Bool> & flagCategory () const = 0; // [nC,nF,nCategories,nR]
@@ -302,11 +302,11 @@ public:
     virtual const Vector<Int> & scan () const = 0; // [nR]
     virtual const Vector<Float> & sigma () const = 0; // [nR]
     virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
-    virtual const Vector<Int> & stateId (Int row = -1) const = 0; // [nR]
+    virtual const Vector<Int> & stateId () const = 0; // [nR]
     virtual const Vector<Double> & time () const = 0; // [nR]
     virtual const Vector<Double> & timeCentroid () const = 0; // [nR]
     virtual const Vector<Double> & timeInterval () const = 0; // [nR]
-    virtual const Matrix<Double> & uvw () const = 0; // [nR,3]
+    virtual const Matrix<Double> & uvw () const = 0; // [3,nR]
     virtual const Vector<Float> & weight () const = 0; // [nR]
     virtual void setWeight (const Vector<Float>&) = 0; // [nR]
     virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
@@ -360,7 +360,7 @@ public:
     // Returns the correlation type of each correlation in the
     // VisCube.
 
-    virtual const Vector<Int> & correlationTypes (Int row = -1) const = 0; // [nC]
+    virtual const Vector<Int> & correlationTypes () const = 0; // [nC]
 
     // Calcuates the parallactic angle for the first receptor of
     // each antenna at the specified time.
@@ -384,7 +384,7 @@ public:
     // Returns the number of correlations along the visCube
     // correlation axis.
 
-    virtual Int nCorrelations (Int row = -1) const = 0;
+    virtual Int nCorrelations () const = 0;
 
     // Returns the number of rows in this VisBuffer
 
@@ -403,11 +403,11 @@ public:
     // Returns the phase center of the array for the specified
     // row.
 
-    virtual const MDirection& phaseCenter (Int row = -1) const = 0;
+    virtual const MDirection& phaseCenter () const = 0;
 
     // Returns the polarization frame for the specified row.
 
-    virtual Int polarizationFrame (Int row = -1) const = 0;
+    virtual Int polarizationFrame () const = 0;
 
     // The returned Vector serves as a map between the rows in
     // the VisBuffer and the row IDs in the underlying MS main
@@ -417,7 +417,7 @@ public:
 
     // Returns the spectral window ID for the specified row.
 
-    virtual Int spectralWindow (Int row = -1) const = 0;
+    virtual Int spectralWindow () const = 0;
 
 protected:
 

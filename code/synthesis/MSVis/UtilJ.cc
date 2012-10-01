@@ -225,7 +225,13 @@ split (const String & string, const String & splitter, Bool ignoreConsecutiveSpl
 
             // No match: put rest of string into the result
 
-            result.push_back (string.substr (start));
+            String text = string.substr (start);
+
+            if (! text.empty()){
+
+                result.push_back (string.substr (start));
+            }
+
             break;
         }
 

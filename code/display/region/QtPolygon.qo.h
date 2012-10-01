@@ -1,5 +1,5 @@
 //# QtPolygon.h: base class for statistical regions
-//# Copyright (C) 2011
+//# Copyright (C) 2011, 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -93,7 +93,8 @@ namespace casa {
 		QtPolygon( QtRegionSourceKernel *factory, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals=false );
 
 		bool regionVisible( ) const { return Region::regionVisible( ); }
-		void regionCenter( double &x, double &y ) const { Polygon::regionCenter( x, y ); }
+		void linearCenter( double &x, double &y ) const { Polygon::linearCenter( x, y ); }
+		void pixelCenter( double &x, double &y ) const { Polygon::pixelCenter( x, y ); }
 
 		// qt-event -> QtRegion -> QtPolygon -> Region::refresh( )
 		void refresh( ) { Polygon::refresh( ); }
@@ -104,6 +105,8 @@ namespace casa {
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
+		// is this region weakly or temporarily selected?
+		bool weaklySelected( ) const { return QtRegion::weaklySelected( ); }
 
 		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
 		void setLabelPosition( TextPosition pos ) { QtRegion::setLabelPosition(pos); }

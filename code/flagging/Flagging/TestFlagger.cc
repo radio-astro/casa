@@ -711,7 +711,11 @@ TestFlagger::run(Bool writeflags, Bool sequential)
 		}
 
 		// Print the chunk summary stats
-		agents_list_p.chunkSummary();
+		if (fdh_p->summarySignal())
+		{
+			agents_list_p.chunkSummary();
+			fdh_p->progressCounts_p = 0;
+		}
 	}
 
 	// Print the MS summary stats

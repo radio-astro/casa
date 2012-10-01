@@ -48,15 +48,7 @@ const QList<QString> Converter::WAVELENGTH_UNITS =
 	"10um" << "100um" << "mm" << "cm" << "dm"<<"m";
 const QList<QString> Converter::VELOCITY_UNITS =
 	QList<QString>() << "m/s" << "10m/s" << "100m/s" << "km/s";
-const QList<QString> Converter::BEAM_UNITS =
-	QList<QString>() << "pJy/beam" <<"10pJy/beam"<<"100pJy/beam"<<
-		"nJy/beam"<<"10nJy/beam"<<"100nJy/beam"<<
-		"uJy/beam"<<"10uJy/beam"<<"100uJy/beam"<<
-		"mJy/beam"<<"10mJy/beam"<<"100mJy/beam"<<
-		"Jy/beam"<<"10Jy/beam"<<"100Jy/beam"<<
-		"kJy/beam"<<"10kJy/beam"<<"100kJy/beam"<<
-		"MJy/beam"<<"10MJy/beam"<<"100MJybeam"<<
-		"GJy/beam";
+
 
 SpectralCoordinate Converter::spectralCoordinate;
 void Converter::setSpectralCoordinate( SpectralCoordinate coordinate ){
@@ -124,14 +116,7 @@ Converter::UnitType Converter::getUnitType( const QString& unit ){
 	return unitType;
 }
 
-double Converter::convertJyBeams( const QString& oldUnits, const QString& newUnits, double value ){
-	int sourceIndex = Converter::BEAM_UNITS.indexOf( oldUnits );
-	int destIndex = Converter::BEAM_UNITS.indexOf( newUnits );
-	Vector<double> resultValues(1);
-	resultValues[0] = value;
-	Converter::convert( resultValues, sourceIndex, destIndex );
-	return resultValues[0];
-}
+
 
 Converter::Converter( const QString& oldUnitsStr, const QString& newUnitsStr):
 		oldUnits( oldUnitsStr), newUnits( newUnitsStr ){

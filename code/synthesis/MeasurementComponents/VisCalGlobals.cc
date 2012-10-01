@@ -48,15 +48,6 @@ VisCal* createVisCal(const String& type, VisSet& vs) {
   if (uptype=="P" || uptype=="P JONES") 
     return new PJones(vs);
 
-  else if (uptype=="TFOPAC")  // Not yet solvable (even though an SVJ)
-    return new TfOpac(vs);
-
-  else if (uptype=="TOPAC")  // Not yet solvable (even though an SVJ)
-    return new TOpac(vs);
-
-  else if (uptype=="GAINCURVE")  // Not yet solvable (even though an SVJ)
-    return new EGainCurve(vs);
-  
   else
     // Try request as a solvable type
     return createSolvableVisCal(type,vs);
@@ -181,6 +172,15 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("EVLAGAIN"))
     return new EVLAGainTsys(vs);
 
+  else if (uptype=="TFOPAC")  // Not yet solvable (even though an SVJ)
+    return new TfOpac(vs);
+
+  else if (uptype=="TOPAC")  // Not yet solvable (even though an SVJ)
+    return new TOpac(vs);
+
+  else if (uptype.contains("GAINCURVE"))  // Not yet solvable (even though an SVJ)
+    return new EGainCurve(vs);
+  
   else {
     cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));

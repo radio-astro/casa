@@ -191,12 +191,6 @@ public:
 
 	enum TaskMode {UNKNOWN_MODE, SPECTRAL_LINE_MODE, LINE_OVERLAY_MODE, MODE_COUNT };
 
-	//Put in to solve the measles problem - the canvas cycling through
-	//lots of refreshes when multiple regions are defined and new data
-	//is loaded.
-	void regionUpdatesStarting();
-	void regionUpdatesEnding();
-
 
 	//Units we will be displaying the y-axis in which may be different
 	//from the intrinsic image units.
@@ -452,9 +446,6 @@ private:
 
 	//Indicates the current work focus of the profiler
 	TaskMode taskMode;
-
-	//Stop canvas refreshes if lots of updates are coming in at once.
-	bool refreshCanvas;
 
 	float channelSelectValue;
 

@@ -39,6 +39,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Memory.h>
 #include <casa/System/Aipsrc.h>
+#include <scimath/Functionals/ScalarSampledFunctional.h>
+#include <scimath/Functionals/Interpolate1D.h>
 
 #include <casa/sstream.h>
 
@@ -57,14 +59,80 @@ EGainCurve::EGainCurve(VisSet& vs) :
   VisMueller(vs),
   SolvableVisJones(vs),
   za_(),
+  eff_(nSpw(),1.0),
   spwOK_()
 {
   if (prtlev()>2) cout << "EGainCurve::EGainCurve(vs)" << endl;
+}
 
-  // Get some information from the VisSet to help us find
+EGainCurve::~EGainCurve() {
+  if (prtlev()>2) cout << "EGainCurve::~EGainCurve()" << endl;
+}
+
+void EGainCurve::setApply(const Record& applypar) {
+
+  LogMessage message;
+
+  // Extract user's table name
+  String usertab("");
+  if (applypar.isDefined("table")) {
+    usertab=applypar.asString("table");
+  }
+
+  if (usertab=="") {
+
+    { ostringstream o;
+      o<< "Invoking gaincurve application without a caltable (e.g., " << endl
+       << " via gaincurve=T in calibration tasks) will soon be disabled." << endl
+       << " Please begin using gencal to generate a gaincurve caltable, " << endl
+       << " and then supply that table in the standard manner." << endl;
+      message.message(o);
+      message.priority(LogMessage::WARN);
+      logSink().post(message);
+    }
+
+    String tempname="temporary.gaincurve";
+
+    // Generate automatically via specify mechanism
+    Record specpar;
+    specpar.define("caltable",tempname);
+    specpar.define("caltype","gc");
+    setSpecify(specpar);
+    specify(specpar);
+    storeNCT();
+    delete ct_; ct_=NULL;  // so we can form it in the standard way...
+
+    // Load the caltable for standard apply
+    Record newapplypar=applypar;
+    newapplypar.define("table",tempname);
+    SolvableVisCal::setApply(newapplypar);
+
+    // Delete the temporary gaincurve disk table (in-mem copy still ok)
+    if (calTableName()==tempname &&
+	Table::canDeleteTable(calTableName()) ) {
+      Table::deleteTable(calTableName());
+    }
+
+    // Revise name that will appear in log messages, etc.
+    calTableName()="<"+tempname+">";
+
+  }
+  else
+    // Standard apply via table
+    SolvableVisCal::setApply(applypar);
+
+  // Resize za()
+  za().resize(nAnt());
+
+}
+
+void EGainCurve::setSpecify(const Record& specify) {
+
+  // Get some information from the MS to help us find
   //  the right gain curves
 
-  const ROMSColumns& mscol(vs.iter().msColumns());
+  MeasurementSet ms(msName());
+  ROMSColumns mscol(ms);
 
   // The antenna names
   const ROMSAntennaColumns& antcol(mscol.antenna());
@@ -75,7 +143,10 @@ EGainCurve::EGainCurve(VisSet& vs) :
 
   String telescope(obscol.telescopeName()(0));
   if (telescope.contains("VLA")) {
-    calTableName()=Aipsrc::aipsRoot() + "/data/nrao/VLA/GainCurves";
+    gainCurveSrc_=Aipsrc::aipsRoot() + "/data/nrao/VLA/GainCurves";
+    if ( !Table::isReadable(gainCurveSrc_) )
+      throw(AipsError("Gain curve table "+calTableName()+" is unreadable or absent."));
+
     // Strip any ea/va baloney from the MS antenna names so 
     //  they match the integers (as strings) in the GainCurves table
     for (uInt iant=0;iant<antnames_.nelements();++iant) {
@@ -88,7 +159,6 @@ EGainCurve::EGainCurve(VisSet& vs) :
   Vector<Double> timerange(obscol.timeRange()(0));
   obstime_ = timerange(0);
 
-
   const ROMSSpWindowColumns& spwcol(mscol.spectralWindow());
   spwfreqs_.resize(nSpw(),0.0);
   for (Int ispw=0;ispw<nSpw();++ispw) {
@@ -97,29 +167,93 @@ EGainCurve::EGainCurve(VisSet& vs) :
   }
   //  cout << "spwfreqs_ = " << spwfreqs_ << endl;
 
+  // Neither applying nor solving in specify context
+  setSolved(False);
+  setApplied(False);
+
+  // Collect Cal table parameters
+  if (specify.isDefined("caltable")) {
+    calTableName()=specify.asString("caltable");
+
+    if (Table::isReadable(calTableName()))
+      logSink() << "FYI: We are going to overwrite an existing CalTable: "
+                << calTableName()
+                << LogIO::POST;
+  }
+
+  // Create a new caltable to fill
+  createMemCalTable();
+
+  // Setup shape of solveAllRPar
+  initSolvePar();
+
+  /* From AIPS TYAPL (2012Sep14):
+
+      DATA TF / 1.0,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,
+     *    1.9,  2.0,  2.0,  2.3,  2.7,  3.0,  3.5,  3.7,  4.0,  4.0,
+     *    5.0,  6.0,  7.0,  8.0,  8.0, 12.0, 12.0, 13.0, 14.0, 15.0,
+     *   16.0, 17.0, 18.0, 19.0, 24.0, 26.0, 26.5, 28.0, 33.0, 38.0,
+     *   40.0, 43.0, 48.0/
+C                                       Rick Perley efficiencies
+      DATA TE /0.45, 0.48, 0.48, 0.45, 0.46, 0.45, 0.43, 0.44, 0.44,
+     *   0.49, 0.48, 0.52, 0.52, 0.51, 0.53, 0.55, 0.53, 0.54, 0.55,
+     *   0.54, 0.56, 0.62, 0.64, 0.60, 0.60, 0.65, 0.65, 0.62, 0.58,
+     *   0.59, 0.60, 0.60, 0.57, 0.52, 0.48, 0.50, 0.49, 0.42, 0.35,
+     *   0.29, 0.28, 0.26/
+  */
+
+
+  Double Efffrq[] = {1.0,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,
+		     1.9,  2.0,  2.000001,  2.3,  2.7,  3.0,  3.5,  3.7,  4.0,  4.000001,
+		     5.0,  6.0,  7.0,  8.0,  8.000001, 12.0, 12.000001, 13.0, 14.0, 15.0,
+		     16.0, 17.0, 18.0, 19.0, 24.0, 26.0, 26.5, 28.0, 33.0, 38.0,
+		     40.0, 43.0, 48.0};
+  Double Eff[] = {0.45, 0.48, 0.48, 0.45, 0.46, 0.45, 0.43, 0.44, 0.44,
+		  0.49, 0.48, 0.52, 0.52, 0.51, 0.53, 0.55, 0.53, 0.54, 0.55,
+		  0.54, 0.56, 0.62, 0.64, 0.60, 0.60, 0.65, 0.65, 0.62, 0.58,
+		  0.59, 0.60, 0.60, 0.57, 0.52, 0.48, 0.50, 0.49, 0.42, 0.35,
+		  0.29, 0.28, 0.26};
+
+  Vector<Double> f,ef;
+
+  f.takeStorage(IPosition(1,42),Efffrq);
+  ef.takeStorage(IPosition(1,42),Eff);
+
+  // Fractional -> K/Jy (for 25m)
+  ef/=Double(5.622);
+
+  // convert to voltagey units
+  ef=sqrt(ef);
+  
+  
+  ScalarSampledFunctional<Double> fx(f);
+  ScalarSampledFunctional<Double> fy(ef);
+  Interpolate1D<Double,Double> eff(fx,fy);
+  eff.setMethod(Interpolate1D<Double,Double>::cubic);
+  for (Int ispw=0;ispw<nSpw();++ispw)
+    eff_(ispw)=eff(spwfreqs_(ispw)/1.e9);
+
+  //  cout << "spwfreqs_ = " << spwfreqs_ << endl;
+  //  cout << "eff_      = " << eff_ << endl;
+
 
 }
 
-EGainCurve::~EGainCurve() {
-  if (prtlev()>2) cout << "EGainCurve::~EGainCurve()" << endl;
-}
-
-void EGainCurve::setApply(const Record& applypar) {
+void EGainCurve::specify(const Record& specify) {
 
   LogMessage message;
 
-  // Extract user's table name
-  if (applypar.isDefined("table")) {
-    String usertab=applypar.asString("table");
-    if (Table::isReadable(usertab) )
-      calTableName()=usertab;
+  Bool doeff(False);
+  Bool dogc(False);
+  if (specify.isDefined("caltype")) {
+    String caltype=specify.asString("caltype");
+    //cout << "caltype=" << caltype  << endl;
+    doeff = (caltype.contains("eff"));
+    dogc = (caltype.contains("gc"));
   }
 
-  if ( !Table::isReadable(calTableName()) )
-    throw(AipsError("Gain curve table "+calTableName()+" is unreadable or absent."));
-
-  // Open raw gain table
-  Table rawgaintab(calTableName());
+  // Open raw gain curve source table
+  Table rawgaintab(gainCurveSrc_);
 
   // Select on Time
   Table timegaintab = rawgaintab(rawgaintab.col("BTIME") <= obstime_
@@ -133,86 +267,103 @@ void EGainCurve::setApply(const Record& applypar) {
 
     currSpw()=ispw;
 
-    // Select on freq:
-    Table freqgaintab = timegaintab(timegaintab.col("BFREQ") <= spwfreqs_(ispw)
+
+    if (dogc) {
+
+      // Select on freq:
+      Table freqgaintab = timegaintab(timegaintab.col("BFREQ") <= spwfreqs_(ispw)
                                     && timegaintab.col("EFREQ") > spwfreqs_(ispw));
 
-    if (freqgaintab.nrow() > 0) {
-    /*
-      { ostringstream o;
-      o<< "  Found the following gain curve coefficient data" << endl
-       << "  for spectral window = "  << ispw << " (ref freq="
-       << spwfreqs_(ispw) << "):";
-      message.message(o);
-      logSink().post(message);
+      if (freqgaintab.nrow() > 0) {
+
+     /*	
+	{ ostringstream o;
+	  o<< "EGainCurve::specify:"
+	   << "  Found the following gain curve coefficient data" << endl
+	   << "  for spectral window = "  << ispw << " (ref freq="
+	   << spwfreqs_(ispw) << "):";
+	  message.message(o);
+	  logSink().post(message);
+	}
+     */
+	// Find nominal gain curve
+	//  Nominal antenna is named "0" (this is a VLA convention)
+	Matrix<Float> nomgain(4,2,0.0);
+	{
+	  Table nomgaintab = freqgaintab(freqgaintab.col("ANTENNA")=="0");
+	  if (nomgaintab.nrow() > 0) {
+	    ROArrayColumn<Float> gain(nomgaintab,"GAIN");
+	    nomgain=gain(0);
+	  } else {
+	    // nominal gain is unity
+	    nomgain(0,0)=1.0;
+	    nomgain(0,1)=1.0;
+	  }
+	}
+
+	solveAllParOK()=True;
+	
+	ArrayIterator<Float> piter(solveAllRPar(),1);
+	
+	for (Int iant=0; iant<nAnt(); iant++,piter.next()) {
+	  
+	  // Select antenna by name
+	  Table antgaintab = freqgaintab(freqgaintab.col("ANTENNA")==antnames_(iant));
+	  if (antgaintab.nrow() > 0) {
+	    ROArrayColumn<Float> gain(antgaintab,"GAIN");
+	    piter.array().nonDegenerate().reform(gain(0).shape())=gain(0);
+	  } else {
+	    piter.array().nonDegenerate().reform(nomgain.shape())=nomgain;
+	  }
+
+  /*
+	  { ostringstream o;
+	    o<< "   Antenna=" << antnames_(iant) << ": "
+	     << piter.array().nonDegenerate();
+	    message.message(o);
+	    logSink().post(message);
+	  }
+  */
+	}
+	
+	spwOK_(currSpw())=True;
+	
       }
-    */
-      // Find nominal gain curve
-      //  Nominal antenna is named "0" (this is a VLA convention)
-      Matrix<Float> nomgain(4,2,0.0);
-      {
-        Table nomgaintab = freqgaintab(freqgaintab.col("ANTENNA")=="0");
-        if (nomgaintab.nrow() > 0) {
-          ROArrayColumn<Float> gain(nomgaintab,"GAIN");
-          nomgain=gain(0);
-        } else {
-          // nominal gain is unity
-          nomgain(0,0)=1.0;
-          nomgain(0,1)=1.0;
-        }
+      else {
+     /*
+	ostringstream o;
+	o<< "Could not find gain curve data for Spw="
+	 << ispw << " (reffreq=" << spwfreqs_(ispw)/1.0e9 << " GHz) "
+	 << "Using unit gaincurve.";
+	message.message(o);
+	logSink().post(message);
+     */
+	// We used to punt here
+	//throw(AipsError(o.str()));
+	
+	// Use unity
+	solveAllParOK()=True;
+	solveAllRPar().set(0.0);
+	solveAllRPar()(Slice(0,1,1),Slice(),Slice()).set(1.0);
+	solveAllRPar()(Slice(4,1,1),Slice(),Slice()).set(1.0);
+	
       }
-
-      currRPar().resize(nPar(),1,nAnt());
-      currParOK().resize(nPar(),1,nAnt());
-      currParOK()=True;
-
-      ArrayIterator<Float> piter(currRPar(),1);
-
-      for (Int iant=0; iant<nAnt(); iant++,piter.next()) {
-
-	// Select antenna by name
-        Table antgaintab = freqgaintab(freqgaintab.col("ANTENNA")==antnames_(iant));
-        if (antgaintab.nrow() > 0) {
-          ROArrayColumn<Float> gain(antgaintab,"GAIN");
-	  piter.array().nonDegenerate().reform(gain(0).shape())=gain(0);
-        } else {
-	  piter.array().nonDegenerate().reform(nomgain.shape())=nomgain;
-        }
-
-	/*
-        { ostringstream o;
-          o<< "   Antenna=" << antnames_(iant) << ": "
-           << piter.array().nonDegenerate();
-          message.message(o);
-          logSink().post(message);
-        }
-	*/
-      }
-
-      spwOK_(currSpw())=True;
-
     }
     else {
-
-      ostringstream o;
-      o<< "Could not find gain curve data for Spw="
-       << ispw << " (reffreq=" << spwfreqs_(ispw)/1.0e9 << " GHz) "
-       << "Using unit gaincurve.";
-      message.message(o);
-      logSink().post(message);
-
-      // We used to punt here
-      //throw(AipsError(o.str()));
-
       // Use unity
-      currRPar().resize(nPar(),1,nAnt());
-      currRPar().set(0.0);
-      currRPar()(Slice(0,1,1),Slice(),Slice()).set(1.0);
-      currRPar()(Slice(4,1,1),Slice(),Slice()).set(1.0);
-      currParOK().resize(nPar(),1,nAnt());
-      currParOK()=True;
-
+      solveAllParOK()=True;
+      solveAllRPar().set(0.0);
+      solveAllRPar()(Slice(0,1,1),Slice(),Slice()).set(1.0);
+      solveAllRPar()(Slice(4,1,1),Slice(),Slice()).set(1.0);
+      spwOK_(currSpw())=True;
     }
+
+    if (doeff) {
+      solveAllRPar()*=Float(eff_(ispw));
+    }
+
+    // Record in the memory caltable
+    keepNCT();
 
   } // ispw
 
@@ -228,6 +379,7 @@ void EGainCurve::setApply(const Record& applypar) {
 
 }
 
+
 void EGainCurve::guessPar(VisBuffer&) {
 
   throw(AipsError("Spurious attempt to guess EGainCurve for solving!"));
@@ -238,9 +390,13 @@ void EGainCurve::calcPar() {
 
   if (prtlev()>6) cout << "      EGainCurve::calcPar()" << endl;
 
-  // NB: z.a. calc here because it is needed only 
-  //   if we have a new timestamp...
+  // Could do the following in setApply, so it only happens once?
+  if (ci_)
+    SolvableVisCal::calcPar();
+  else
+    throw(AipsError("Problem in EGainCurve::calcPar()"));
 
+  // za changes with time, so recalculate it
   za().resize(nAnt());
   Vector<MDirection> antazel(vb().azel(currTime()));
   Double* a=za().data();
@@ -289,100 +445,5 @@ void EGainCurve::calcAllJones() {
   
 }
 
-
-// **********************************************************
-//  EPJones
-//
-/*
-EPJones::EPJones(VisSet& vs) :
-  VisCal(vs), 
-  VisMueller(vs),
-  SolvableVisJones(vs),
-  pointPar_()
-{
-  if (prtlev()>2) cout << "EP::EP(vs)" << endl;
-}
-
-EPJones::~EPJones() {
-  if (prtlev()>2) cout << "EP::~EP()" << endl;
-}
-
-Matrix<Float>& EPJones::pointPar() {
-
-  // Local reference to reshaped currpar()
-  pointPar_.reference(currRPar().nonDegenerate(1));
-  return pointPar_;
-
-}
-		      
-
-
-// Specialized setapply extracts image info
-void EPJones::setApply(const Record& applypar) {
-
-  // Call generic
-  SolvableVisCal::setApply(applypar);
-
-  // Extract image or complist to predict from
-
-  // TBD
-
-}
-
-void EPJones::applyCal(VisBuffer& vb,
-		       Cube<Complex>& Mout) {
-
-  // Inflate model data in VB, Mout references it
-  //  (In this type, model data is always re-calc'd from scratch)
-  vb.modelVisCube(True);
-  Mout.reference(vb.modelVisCube());
-
-  // Call predict:
-  //  TBD
-
-  // At this point Mout (and thus vb.modelVisibility) contain
-  //  pointing-corrupted visibilities
-
-}
-
-
-void EPJones::differentiate(VisBuffer& vb,
-		   Cube<Complex>& Mout,
-		   Array<Complex>& dMout,
-		   Matrix<Bool>& Mflg) {
-
-  Int nCorr(2); // TBD
-
-  // Size differentiated model
-  dMout.resize(IPosition(5,nCorr,nPar(),1,vb.nRow(),2));
-  IPosition blc(dMout.shape()); blc=0;
-  IPosition trc(dMout.shape()); trc-=1;
-  
-  // Model vis shape must match visibility
-  vb.modelVisCube(False);
-  Mout.reference(vb.modelVisCube());
-
-  // Since predict likes to fill the VisBuffer,
-  //  we will fill modelVisibility() for each type of
-  //  predict, and copy out the result (morphing shape)
-  //  as needed
-
-  // Predict w/ derivatives w.r.t. FIRST par (az?)
-  // TBD!
-
-  // Copy to dMout
-  blc(1)=trc(1)=0;   // deriv w.r.t. FIRST par
-  //  blc(4)=trc(4)=; // ???   (which ant in each baseline?)
-  //  dMout(blc,trc)=;
-  blc(1)=trc(1)=1;   // deriv w.r.t SECOND par
-  //  blc(4)=trc(4)=; // ???   (which ant in each baseline?)
-  //  dMout(blc,trc)=;
-
-
-  // Mflg just references vb.flag()?
-  Mflg.reference(vb.flag());
-
-}
-*/
 
 } //# NAMESPACE CASA - END

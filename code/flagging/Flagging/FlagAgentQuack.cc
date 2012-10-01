@@ -54,10 +54,15 @@ FlagAgentQuack::setAgentParameters(Record config)
 	        }
 		
 		quackinterval_p = config.asDouble("quackinterval");
+
+		if (quackinterval_p <= 0)
+		{
+			throw( AipsError ( "Parameter 'quackinterval' must be greater than zero." ) );
+		}
 	}
 	else
 	{
-		quackinterval_p = 0.0;
+		quackinterval_p = 1.0;
 	}
 
 	*logger_p << logLevel_p << " quackinterval is " << quackinterval_p << LogIO::POST;

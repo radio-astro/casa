@@ -93,6 +93,9 @@ FrequencySelections::FrequencySelections (const FrequencySelections & other)
          s != other.selections_p.end(); s++){
         selections_p.push_back ((* s)->clone());
     }
+
+    filterWindow_p = other.filterWindow_p;
+    selectedWindows_p = other.selectedWindows_p;
 }
 
 FrequencySelections::~FrequencySelections ()
@@ -118,6 +121,13 @@ FrequencySelections::add (const FrequencySelection & selection)
     }
 
     selections_p.push_back (selection.clone());
+    Int msIndex = selections_p.size() - 1;
+    set<int> windows = selection.getSelectedWindows();
+
+    for (set<int>::const_iterator w = windows.begin(); w != windows.end(); w++){
+        selectedWindows_p.insert (make_pair (msIndex, * w));
+    }
+
 }
 
 FrequencySelections *
@@ -129,6 +139,10 @@ FrequencySelections::clone () const
 const FrequencySelection &
 FrequencySelections::get (Int msIndex) const
 {
+    if (selections_p.empty()){
+        return FrequencySelectionUsingChannels ();
+    }
+
     ThrowIf (msIndex < 0 || msIndex >= (int) selections_p.size(),
              String::format ("MS index, %d, out of bounds [0,%d]", msIndex, selections_p.size() - 1));
 
@@ -139,14 +153,23 @@ FrequencySelections::get (Int msIndex) const
 Int
 FrequencySelections::getFrameOfReference () const
 {
-    ThrowIf (selections_p.empty(), "FrequencySelections collection is empty.");
-
-    return selections_p.front()->getFrameOfReference();
+    if (selections_p.empty()){
+        return FrequencySelection::ByChannel;
+    }
+    else {
+        return selections_p.front()->getFrameOfReference();
+    }
 }
 
 Bool
 FrequencySelections::isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const
 {
+    // Empty selections means everything is selected
+
+    if (selections_p.empty()){
+        return True;
+    }
+
     SelectedWindows::const_iterator swi =
         selectedWindows_p.find (make_pair (msIndex, spectralWindowId));
 
@@ -158,6 +181,18 @@ Int
 FrequencySelections::size () const
 {
     return (Int) selections_p.size();
+}
+
+void
+FrequencySelectionUsingChannels::add (Int spectralWindow, Int firstChannel,
+                                      Int nChannels, Int increment)
+{
+    Assert (spectralWindow >= 0);
+    Assert (firstChannel >= 0);
+    Assert (nChannels > 0);
+    Assert (increment != 0 || nChannels == 1);
+
+    elements_p.push_back (Element (spectralWindow, firstChannel, nChannels, increment));
 }
 
 FrequencySelectionUsingChannels::const_iterator
@@ -186,6 +221,22 @@ FrequencySelectionUsingChannels::end () const
 {
     return filtered_p.end();
 }
+
+set<int>
+FrequencySelectionUsingChannels::getSelectedWindows () const
+{
+    set <int> result;
+    for (Elements::const_iterator i = elements_p.begin();
+         i != elements_p.end();
+         i ++){
+
+        result.insert (i->spectralWindow_p);
+
+    }
+
+    return result;
+}
+
 
 String
 FrequencySelectionUsingChannels::toString () const
@@ -231,6 +282,21 @@ FrequencySelectionUsingFrame::const_iterator
 FrequencySelectionUsingFrame::end () const
 {
     return elements_p.end();
+}
+
+set<int>
+FrequencySelectionUsingFrame::getSelectedWindows () const
+{
+    set<int> result;
+    for (Elements::const_iterator i = elements_p.begin();
+         i != elements_p.end();
+         i ++){
+
+        result.insert (i->spectralWindow_p);
+
+    }
+
+    return result;
 }
 
 Double
@@ -310,28 +376,23 @@ ROVisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
                                   Double timeInterval,
                                   Bool writable)
 {
-    if (readImpl_p == NULL) {
 
-        // Factory didn't create the read implementation so decide whether to create a
-        // synchronous or asynchronous read implementation.
+    // Factory didn't create the read implementation so decide whether to create a
+    // synchronous or asynchronous read implementation.
 
-        Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
+    Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
 
-        if (createAsAsynchronous){
-//            readImpl_p = new ViReadImplAsync2 (mss, * prefetchColumns, sortColumns,
-//                                               addDefaultSortCols, timeInterval, writable);
-        }
-        else{
-            readImpl_p = new VisibilityIteratorReadImpl2 (this, mss, sortColumns,
-                                                          addDefaultSortCols, timeInterval);
-        }
+    if (createAsAsynchronous){
+        //            readImpl_p = new ViReadImplAsync2 (mss, * prefetchColumns, sortColumns,
+        //                                               addDefaultSortCols, timeInterval, writable);
+    }
+    else{
+        readImpl_p = new VisibilityIteratorReadImpl2 (this, mss, sortColumns,
+                                                      addDefaultSortCols, timeInterval);
     }
 
     nMS_p = mss.nelements();
 
-    if (! writable){
-        readImpl_p->originChunks();
-    }
 }
 
 ROVisibilityIterator2::~ROVisibilityIterator2 ()
@@ -528,8 +589,6 @@ ROVisibilityIterator2::feed_paCalculate(Double time, MSDerivedValues & msd,
     return VisibilityIteratorReadImpl2::feed_paCalculate (time, msd, nAntennas, mEpoch0, receptor0Angle);
 }
 
-
-
 void
 ROVisibilityIterator2::feed1 (Vector<Int>& fd1) const
 {
@@ -606,113 +665,6 @@ ROVisibilityIterator2::getBeamOffsets () const
     CheckImplementationPointerR ();
     return readImpl_p->getBeamOffsets ();
 }
-
-//ROArrayColumn
-//<Double> &
-//ROVisibilityIterator2::getChannelFrequency () const
-//{
-//    CheckImplementationPointerR ();
-//    return readImpl_p->getChannelFrequency ();
-//}
-//
-//Block<Int>
-//ROVisibilityIterator2::getChannelGroupNumber () const
-//{
-//    CheckImplementationPointerR ();
-//    return readImpl_p->getChannelGroupNumber ();
-//}
-//
-//Block<Int>
-//ROVisibilityIterator2::getChannelIncrement () const
-//{
-//    CheckImplementationPointerR ();
-//    return readImpl_p->getChannelIncrement ();
-//}
-
-//void
-//ROVisibilityIterator2::getCol (const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, slicer, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, slicer, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getCol (const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize ) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getCol (column, slicer, array, resize);
-//}
-//
-//void
-//ROVisibilityIterator2::getDataColumn (DataColumn whichOne, const Slicer& slicer,
-//                                     Cube<Complex>& data) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getDataColumn (whichOne, slicer, data);
-//}
-//
-//void
-//ROVisibilityIterator2::getDataColumn (DataColumn whichOne, Cube<Complex>& data) const
-//{
-//    CheckImplementationPointerR ();
-//    readImpl_p->getDataColumn (whichOne, data);
-//}
 
 Int
 ROVisibilityIterator2::getDataDescriptionId () const
@@ -855,12 +807,15 @@ ROVisibilityIterator2::hourangCalculate (Double time, MSDerivedValues & msd, con
 Vector<Double>
 ROVisibilityIterator2::getFrequencies (Double time, Int frameOfReference) const
 {
-
+    CheckImplementationPointerR ();
+    return readImpl_p->getFrequencies (time, frameOfReference);
 }
 
 Vector<Int>
 ROVisibilityIterator2::getChannels (Double time, Int frameOfReference) const
 {
+    CheckImplementationPointerR ();
+    return readImpl_p->getChannels (time, frameOfReference);
 }
 
 

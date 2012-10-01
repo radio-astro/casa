@@ -196,6 +196,16 @@ FlagMSHandler::open()
 		}
 	}
 
+	// Read reference frequencies per SPW
+	ROMSSpWindowColumns *spwSubTable = new ROMSSpWindowColumns(originalMeasurementSet_p->spectralWindow());
+	ROScalarColumn<Double> refFrequencies = spwSubTable->refFrequency();
+	lambdaMap_p = new lambdaMap();
+	for (uInt spwidx=0;spwidx<refFrequencies.nrow();spwidx++)
+	{
+		(*lambdaMap_p)[spwidx]=C::c/refFrequencies(spwidx);
+		*logger_p << LogIO::DEBUG1 << " spwidx: " << spwidx << " lambda: " << (*lambdaMap_p)[spwidx] << LogIO::POST;
+	}
+
 	return true;
 }
 
@@ -560,7 +570,6 @@ FlagMSHandler::nextChunk()
 {
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
-	msCounts_p += chunkCounts_p;
 	chunkCounts_p = 0;
 	bool moreChunks = false;
 	if (stopIteration_p)
@@ -664,8 +673,6 @@ FlagMSHandler::nextBuffer()
 	// Set new common flag cube
 	if (moreBuffers)
 	{
-		logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
-
 		// Get flag  (WARNING: We have to modify the shape of the cube before re-assigning it)
 		Cube<Bool> curentFlagCube= visibilityBuffer_p->get()->flagCube();
 		modifiedFlagCube_p.resize(curentFlagCube.shape());
@@ -681,33 +688,40 @@ FlagMSHandler::nextBuffer()
 		originalFlagRow_p = curentflagRow;
 
 		// Compute total number of flags per buffer to be used for generating the agents stats
-		chunkCounts_p += curentFlagCube.shape().product();
+		Int64 currentBufferCounts = curentFlagCube.shape().product();
+		chunkCounts_p += currentBufferCounts;
+		progressCounts_p += currentBufferCounts;
+		msCounts_p += currentBufferCounts;
 
 		// Print chunk characteristics
 		if (bufferNo == 1)
 		{
-			String corrs = "[ ";
-			for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
-			{
-				corrs += (*polarizationIndexMap_p)[corr_i] + " ";
-			}
-			corrs += "]";
-
-			Double progress  = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
-
-			*logger_p << LogIO::NORMAL << 
-			  "------------------------------------------------------------------------------------ " << LogIO::POST;
-			*logger_p << "Chunk = " << chunkNo << " [" << progress << "%]"
-					", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
-					", Array = " << visibilityBuffer_p->get()->arrayId() <<
-					", Scan = " << visibilityBuffer_p->get()->scan0() <<
-					", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
-					", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
-					", Channels = " << visibilityBuffer_p->get()->nChannel() <<
-					", Corrs = " << corrs <<
-					", Total Rows = " << roVisibilityIterator_p->nRowChunk() << LogIO::POST;
-
 			processedRows += roVisibilityIterator_p->nRowChunk();
+			if (printChunkSummary_p)
+			{
+				logger_p->origin(LogOrigin("FlagMSHandler",""));
+				String corrs = "[ ";
+				for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
+				{
+					corrs += (*polarizationIndexMap_p)[corr_i] + " ";
+				}
+				corrs += "]";
+
+				Double progress  = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
+
+				*logger_p << LogIO::NORMAL <<
+				  "------------------------------------------------------------------------------------ " << LogIO::POST;
+				*logger_p << LogIO::NORMAL <<
+						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
+						", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
+						", Array = " << visibilityBuffer_p->get()->arrayId() <<
+						", Scan = " << visibilityBuffer_p->get()->scan0() <<
+						", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
+						", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
+						", Channels = " << visibilityBuffer_p->get()->nChannel() <<
+						", Corrs = " << corrs <<
+						", Total Rows = " << roVisibilityIterator_p->nRowChunk() << LogIO::POST;
+			}
 		}
 	}
 
@@ -867,6 +881,27 @@ FlagMSHandler::checkIfColumnExists(String column)
 {
 	return originalMeasurementSet_p->tableDesc().isColumn(column);
 }
+
+// -----------------------------------------------------------------------
+// Signal true when a progress summary has to be printed
+// -----------------------------------------------------------------------
+bool
+FlagMSHandler::summarySignal()
+{
+	Double progress = 100.0* ((Double) processedRows / (Double) selectedMeasurementSet_p->nrow());
+	if ((progress >= summaryThreshold_p) or (logger_p->priority() >= LogIO::DEBUG1))
+	{
+		summaryThreshold_p += 10;
+		printChunkSummary_p = true;
+		return true;
+	}
+	else
+	{
+		printChunkSummary_p = false;
+		return false;
+	}
+}
+
 
 } //# NAMESPACE CASA - END
 

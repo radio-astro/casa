@@ -39,7 +39,6 @@
 #include <imageanalysis/Annotations/AnnSymbol.h>
 #include <imageanalysis/Annotations/AnnPolygon.h>
 #include <measures/Measures/MCDirection.h>
-#include <QDebug>
 
 namespace casa {
     namespace viewer {
@@ -198,7 +197,8 @@ namespace casa {
 							   const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
 		     this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
 							 const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
-
+	    connect( this, SIGNAL( newCorners( double, double, double, double)),
+	   	    		result, SLOT( adjustCorners( double, double, double, double)));
 	    result->releaseSignals( );
 	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
@@ -215,9 +215,7 @@ namespace casa {
 	int QtRegionSourceKernel::numFrames( ) const { return panel_->numFrames( ); }
 
 	void QtRegionSourceKernel::updateRegionState(QtDisplayData*) {
-		emit regionUpdatesStarting();
 	    generateExistingRegionUpdates( );
-		emit regionUpdatesEnding();
 	}
 
 	void QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ) {

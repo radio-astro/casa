@@ -31,8 +31,8 @@ class sqlite3;
 class sqlite3_stmt;
 
 using namespace std;
-namespace casa {
 
+namespace casa {
 /**
  * Searches a local sqlite database for molecular lines meeting the specified
  * search criteria.
@@ -46,30 +46,40 @@ public:
 	 * Returns a string containing (columnName, columnType) information
 	 * for all the columns in the table.
 	 */
-	string tableInfo( string& errorMsg ) const;
+	string tableInfo( const string& tableName, string& errorMsg ) const;
 
 	/**
 	 * Returns the date the database file was installed.
 	 */
 	string getCreatedDate() const;
 
+	//Set all the search parameters back to their defaults.
+	virtual void reset();
+
 	//Search Paramaters
-	virtual void setRecommendedOnly( bool recomended );
 	virtual void setChemicalNames( const vector<string>& chemNames );
 	virtual void setSpeciesNames( const vector<string>& speciesNames );
+	/**
+	 * Units are assumed to be MHz.
+	 */
+	virtual void setFrequencyRange( double minValue, double maxValue );
+	virtual void setIntensityRange( double minValue, double maxValue );
+	virtual void setSmu2Range( double minValue, double maxValue );
+	virtual void setLogaRange( double minValue, double maxValue );
+	virtual void setElRange( double minValue, double maxValue );
+	virtual void setEuRange( double minValue, double maxValue );
+	virtual void setQNS( const vector<string>& qns );
 
-	//virtual void setResultFile( const string& name );
-	virtual void setSearchRangeFrequency( double minValue, double maxValue );
 
 	//Astronomical Filters
-	virtual void setAstroFilterTop20( bool filter = true );
-	virtual void setAstroFilterPlanetaryAtmosphere( bool filter = true );
-	virtual void setAstroFilterHotCores( bool filter = true );
-	virtual void setAstroFilterDarkClouds( bool filter = true );
-	virtual void setAstroFilterDiffuseClouds( bool filter = true );
-	virtual void setAstroFilterComets( bool filter = true );
-	virtual void setAstroFilterAgbPpnPn( bool filter = true );
-	virtual void setAstroFilterExtragalactic( bool filter = true );
+	virtual void setFilterTop20( bool filter = true );
+	virtual void setFilterPlanetaryAtmosphere( bool filter = true );
+	virtual void setFilterHotCores( bool filter = true );
+	virtual void setFilterDarkClouds( bool filter = true );
+	virtual void setFilterDiffuseClouds( bool filter = true );
+	virtual void setFilterComets( bool filter = true );
+	virtual void setFilterAgbPpnPn( bool filter = true );
+	virtual void setFilterExtragalactic( bool filter = true );
 
 	//Performing the Search
 	/**
@@ -104,6 +114,8 @@ private:
 	string prepareQuery( bool countOnly, int offset ) const;
 	std::string getTrue() const;
 	string numToString( double number ) const;
+	string getBetweenClause( const string& columnName, double low, double high) const;
+	string getInClause( const string& columnName, const vector<string>& values ) const;
 
 	//Set-up
 	sqlite3* db;
@@ -111,28 +123,49 @@ private:
 	//Search parameters
 	double minValueFreq;
 	double maxValueFreq;
+	double minValueIntensity;
+	double maxValueIntensity;
+	double minValueSmu2;
+	double maxValueSmu2;
+	double minValueLoga;
+	double maxValueLoga;
+	double minValueEl;
+	double maxValueEl;
+	double minValueEu;
+	double maxValueEu;
 	bool recommendedOnly;
-	std::vector<std::string> speciesNames;
-	std::vector<std::string> chemicalNames;
+	vector<string> speciesNames;
+	vector<string> chemicalNames;
+	vector<string> qns;
 
-	bool filterTop20;
-	bool filterPlanetaryAtmosphere;
-	bool filterHotCores;
-	bool filterDarkClouds;
-	bool filterDiffuseClouds;
-	bool filterComets;
-	bool filterAgbPpnPn;
-	bool filterExtragalactic;
 
-	//Database Name
-	const static std::string DB_NAME;
+	enum FILTER_LIST { FILTER_TOP_20, FILTER_PLANETARY_ATMOSPHERE, FILTER_HOT_CORES,
+		FILTER_DARK_CLOUDS, FILTER_DIFFUSE_CLOUDS, FILTER_COMETS, FILTER_AGB_PPN_PN,
+		FILTER_EXTRAGALACTIC, END_FILTERS };
+	vector<bool> filters;
+	static vector<string> filterNames;
+
+	//Table Names
+	const static std::string TABLE_MAIN;
+	const static std::string TABLE_SPECIES;
 
 	//Table columns
 	const static std::string FREQUENCY_COLUMN;
 	const static std::string SPECIES_ID_COLUMN;
 	const static std::string SPECIES_COLUMN;
-	const static std::string RECOMMENDED_COLUMN;
+	const static std::string SMU2_COLUMN;
+	const static std::string EL_COLUMN;
+	const static std::string EU_COLUMN;
+	const static std::string LOGA_COLUMN;
+	const static std::string INTENSITY_COLUMN;
+	const static std::string RESOLVED_QNS_COLUMN;
 	const static std::string CHEMICAL_NAME_COLUMN;
+	enum TableColumns { SPECIES_ID_COL, SPECIES_NAME_COL, CHEMICAL_NAME_COL,
+		FREQUENCY_COL, RESOLVED_QNS_COL, INTENSITY_COL, SMU2_COL, LOGA_COL, EL_COL,
+		EU_COL, END_COL };
+	static std::vector<string> resultColumns;
+
+
 	const static std::string FILTER_KNOWN_AST_COLUMN;
 	const static std::string FILTER_PLANET_COLUMN;
 	const static std::string FILTER_HOTCORE_COLUMN;
@@ -142,26 +175,25 @@ private:
 	const static std::string FILTER_EXTRAGALACTIC_COLUMN;
 	const static std::string FILTER_AGB_PPN_PN_COLUMN;
 	const static std::string FILTER_TOP20_COLUMN;
-	const static std::string INTENSITY_COLUMN;
-	const static std::string RESOLVED_QNS_COLUMN;
-	enum TableColumns { SPECIES_ID_COL, SPECIES_NAME_COL, CHEMICAL_NAME_COL,
-		FREQUENCY_COL, RESOLVED_QNS_COL, INTENSITY_COL, SMU2_COL, EL_COL,
-		EU_COL, END_COL };
+
 
 	//SQL Constants
 	const static std::string FROM;
 	const static std::string SELECT;
+	const static std::string BETWEEN;
 	const static std::string AND;
 	const static std::string OPEN_PAREN;
 	const static std::string CLOSE_PAREN;
 	const static std::string SINGLE_QUOTE;
 	const static std::string COMMA;
+	const static std::string PERIOD;
 	const static std::string EQUALS;
 	const static std::string IN;
+
+	const static int DEFAULT_VALUE;
 
 	//Limiting the number of rows returned by a search.
 	int rowLimit;
 };
-
-} /* namespace casa */
+}
 #endif /* SEARCHLOCAL_H_ */

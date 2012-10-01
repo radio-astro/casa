@@ -99,7 +99,7 @@ public:
  
   Simulator();
   // Construct from string
-  Simulator(String& msname);
+  Simulator(const String& msname);
 
   // "newsimulator" ctor
   Simulator(MeasurementSet &thems);
@@ -114,6 +114,8 @@ public:
   ~Simulator();
   
   Bool close();
+
+  MeasurementSet * getMs () const;
 
 
   // Select the data to be predicted or corrupted

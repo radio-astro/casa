@@ -234,9 +234,18 @@ namespace casa {
 		invalidateCenterInfo();
 	}
 
-	void Rectangle::regionCenter( double &x, double &y ) const {
+	void Rectangle::linearCenter( double &x, double &y ) const {
 	    x = linear_average(blc_x,trc_x);
 	    y = linear_average(blc_y,trc_y);
+	}
+
+	void Rectangle::pixelCenter( double &x, double &y ) const {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+
+	    double lx = linear_average(blc_x,trc_x);
+	    double ly = linear_average(blc_y,trc_y);
+
+	    try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
 	}
 
 	AnnotationBase *Rectangle::annotation( ) const {
@@ -329,9 +338,10 @@ namespace casa {
 		Int h = y2 - y1;
 
 		Int s = 0;		// handle size
-		if (w>=35 && h>=35) s = 6;
-		else if (w>=20 && h>=20) s = 4;
-		else if (w>= 9 && h>= 9) s = 3;
+		if (w>=18 && h>=18) s = 6;
+		else if (w>=15 && h>=15) s = 5;
+		else if (w>=12 && h>=12) s = 4;
+		else if (w>=9 && h>=9) s = 3;
 
 		double xdx, ydy;
 		screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
@@ -348,7 +358,12 @@ namespace casa {
 		int hy3 = y2;	// set handle coordinates
 		if (s) {
 		    pushDrawingEnv( Region::SolidLine);
-		    if ( marked( ) ) {
+		    if ( weaklySelected( ) ) {
+			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+		    } else if ( marked( ) ) {
 			pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
 			pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
 			pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
@@ -390,7 +405,7 @@ namespace casa {
 	    if ( visible_ == false ) return result;
 
 	    //if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
-	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y || within_vertex_handle( x, y )) {
+	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
 		result |= MouseSelected;
 		result |= MouseRefresh;
 		selected_ = true;

@@ -405,6 +405,7 @@ install (FILES
 	)
 install (FILES
 	MSVis/AsynchronousInterface.h
+	MSVis/AsynchronousInterface2.h
 	MSVis/AsynchronousTools.h
 	MSVis/CalVisBuffer.h
 	MSVis/GroupProcessor.h
@@ -413,6 +414,7 @@ install (FILES
 	MSVis/MSCalEnums.h
 	MSVis/MSContinuumSubtractor.h
 	MSVis/MSMoments.h
+	MSVis/MSMoments.tcc
 	MSVis/MSUVWGenerator.h
 	MSVis/MSUtil.h
 	MSVis/Partition.h
@@ -432,10 +434,17 @@ install (FILES
 	MSVis/VisBuffGroup.h
 	MSVis/VisBuffGroupAcc.h
 	MSVis/VisBuffer.h
+	MSVis/VisBuffer.h
+	MSVis/VisBuffer.tcc
+	MSVis/VisBuffer2.h
 	MSVis/VisBufferAsync.h
+	MSVis/VisBufferAsync2.h
 	MSVis/VisBufferAsyncWrapper.h
+	MSVis/VisBufferAsyncWrapper2.h
+	MSVis/VisBufferBase2.h
 	MSVis/VisBufferComponents.h
 	MSVis/VisBufferComponents2.h
+	MSVis/VisBufferImpl2.h
 	MSVis/VisBufferUtil.h
 	MSVis/VisChunkAverager.h
 	MSVis/VisImagingWeight.h
@@ -443,12 +452,13 @@ install (FILES
 	MSVis/VisSet.h
 	MSVis/VisSetUtil.h
 	MSVis/VisibilityIterator.h
-	MSVis/VisibilityIteratorImpl.h
-	MSVis/VisibilityIteratorImplAsync.h
-	MSVis/VisibilityProcessing.h
-	MSVis/MSMoments.tcc
-	MSVis/VisBuffer.tcc
 	MSVis/VisibilityIterator.tcc
+	MSVis/VisibilityIterator2.h
+	MSVis/VisibilityIteratorImpl.h
+	MSVis/VisibilityIteratorImpl2.h
+	MSVis/VisibilityIteratorImplAsync.h
+	MSVis/VisibilityIteratorImplAsync2.h
+	MSVis/VisibilityProcessing.h
 	DESTINATION include/casacode/synthesis/MSVis
 	)
 install (FILES

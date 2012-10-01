@@ -45,6 +45,7 @@ Jones::Jones() :
   ok_(NULL),
   oki_(NULL),
   cOne_(1.0),
+  cZero_(0.0),
   scalardata_(False),
   vtmp_(VisVector::Four,True)
 {}
@@ -74,6 +75,25 @@ void Jones::invert() {
   }
 
 }
+
+// Set matrix elements according to ok flag
+//   (so we don't have to check ok flags atomically in apply)
+void Jones::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0] ||
+      !ok_[1] ||
+      !ok_[2] ||
+      !ok_[3]) {
+    j_[0]=j_[3]=cOne_;
+    j_[1]=j_[2]=cZero_;
+  }
+
+}
+
+
 
 // In-place multipication with another Jones
 void Jones::operator*=(const Jones& other) {
@@ -123,8 +143,7 @@ void Jones::applyRight(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of Jones::applyRight(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyRight(v);
-  else v.zero();
+  applyRight(v);
   
 }
 
@@ -168,8 +187,7 @@ void Jones::applyLeft(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of Jones::applyLeft(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyLeft(v);
-  else v.zero();
+  applyLeft(v);
 
 }
 
@@ -206,6 +224,21 @@ void JonesGenLin::invert() {
   }
 
 }
+
+// Set matrix elements according to ok flag
+//   (so we don't have to check ok flags atomically in apply)
+void JonesGenLin::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0] ||
+      !ok_[1]) {
+    j_[0]=j_[1]=cOne_;
+  }
+
+}
+
 
 // In-place multipication with another Jones
 void JonesGenLin::operator*=(const Jones& other) {
@@ -244,8 +277,7 @@ void JonesGenLin::applyRight(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of JonesGenLin::applyRight(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyRight(v);
-  else v.zero();
+  applyRight(v);
   
 }
 
@@ -277,8 +309,7 @@ void JonesGenLin::applyLeft(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of JonesGenLin::applyLeft(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyLeft(v);
-  else v.zero();
+  applyLeft(v);
 
 }
 
@@ -311,11 +342,24 @@ void JonesDiag::invert() {
     if ((*oki_) && abs(*ji_)>0.0)
       (*ji_)=cOne_/(*ji_);
     else {
-      (*ji_)=Complex(0.0);
+      (*ji_)=cZero_;
       (*oki_)=False;
     }
 
 }
+
+// Set matrix elements according to ok flag
+//   (so we don't have to check ok flags atomically in apply)
+void JonesDiag::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0]) j_[0]=cOne_;
+  if (!ok_[1]) j_[1]=cOne_;
+
+}
+
 
 // In-place multipication with another Jones
 void JonesDiag::operator*=(const Jones& other) {
@@ -370,8 +414,7 @@ void JonesDiag::applyRight(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of JonesDiag::applyRight(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyRight(v);
-  else v.zero();
+  applyRight(v);
 
 }
 
@@ -408,8 +451,7 @@ void JonesDiag::applyLeft(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of JonesDiag::applyLeft(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyLeft(v);
-  else v.zero();
+  applyLeft(v);
 }
 
 
@@ -442,11 +484,24 @@ void JonesScal::invert() {
   if ((*ok_) && abs(*j_)>0.0)
     (*j_)=cOne_/(*j_);
   else {
-    (*j_)=Complex(0.0);
+    (*j_)=cZero_;
     (*ok_)=False;
   }
 
 }
+
+
+// Set matrix elements according to ok flag
+//   (so we don't have to check ok flags atomically in apply)
+void JonesScal::setMatByOk() {
+
+  // Not needed if ok_ not set
+  if (!ok_) return;
+
+  if (!ok_[0]) j_[0]=cOne_;
+
+}
+
 
 // In-place multipication with another Jones
 void JonesScal::operator*=(const Jones& other) {
@@ -480,8 +535,7 @@ void JonesScal::applyRight(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of JonesScal::applyRight(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyRight(v);
-  else v.zero();
+  applyRight(v);
 }
 
 // Apply leftward (transposed) to a VisVector 
@@ -497,8 +551,8 @@ void JonesScal::applyLeft(VisVector& v, Bool& vflag) const {
   if (!ok_) throw(AipsError("Illegal use of JonesScal::applyLeft(v,vflag)"));
 
   applyFlag(vflag);
-  if (!vflag) applyLeft(v);
-  else v.zero();
+  applyLeft(v);
+
 }
 
 // Set flags according to solution flags

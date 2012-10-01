@@ -75,6 +75,10 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 			ui.momentList->setCurrentItem( listItem );
 		}
 	}
+	int columnWidth = ui.momentList->sizeHintForColumn(0);
+	
+	ui.momentList->setMinimumWidth( 2*columnWidth/3 );
+	ui.momentList->setMaximumWidth( columnWidth );
 
 	//Right now, there is not a clear need for the moment map, but if some
 	//moments are no longer used in the display, it will be needed.
@@ -310,7 +314,9 @@ void MomentSettingsWidgetRadio::collapseImage(){
 	previousCount = 0;
     cycleCount = 0;
 	progressBar.show();
+//#warning "Revert to THREADING"
 	collapseThread->start();
+	//collapseThread->run();
 }
 
 void MomentSettingsWidgetRadio::collapseDone(){

@@ -40,6 +40,8 @@
 namespace casa {
     namespace viewer {
 
+	QtRegionState *QtRegion::weak_selection = 0;
+
 	QtRegion::QtRegion( QtRegionSourceKernel *factory ) :
 			source_(factory), dock_(factory->dock( )), name_(""), hold_signals(0),
 			z_index_within_range(true), id_(QtId::get_id( )) {
@@ -52,7 +54,7 @@ namespace casa {
 	    if ( dock_ == 0 )
 		throw internal_error( "no dock widget is available" );
 
-	    dock_->addRegion(mystate);
+	    dock_->addRegion(this,mystate);
 	}
 
       QtRegion::QtRegion( const QString &nme, QtRegionSourceKernel *factory, bool hold_signals_,
@@ -70,6 +72,8 @@ namespace casa {
 
 	    mystate = new QtRegionState( name_, this, sym );
 
+	    connect( mystate, SIGNAL(regionChange(viewer::QtRegion*,std::string)), SIGNAL(regionChange(viewer::QtRegion*,std::string)) );
+
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
@@ -85,13 +89,26 @@ namespace casa {
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, RegionTextList &)), SLOT(output(std::list<QtRegionState*>, RegionTextList &)) );
 	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, ds9writer &)), SLOT(output(std::list<QtRegionState*>, ds9writer &)) );
 
-	    dock_->addRegion(mystate);
+	    dock_->addRegion(this,mystate);
 	    signal_region_change( Region::RegionChangeCreate );
 	}
 
 	QtRegion::~QtRegion( ) {
 	    dock_->removeRegion(mystate);
 	    disconnect(mystate, 0, 0, 0);
+	}
+
+	void QtRegion::mark(bool set) {
+	    if ( set != mystate->marked( ) ) {
+		mystate->mark(set);
+		emit selectionChanged(this,set);
+	    }
+	}
+
+	bool QtRegion::mark_toggle( ) {
+	    bool result = mystate->mark_toggle( );
+	    emit selectionChanged(this,result);
+	    return result;
 	}
 
 	void QtRegion::setLabel( const std::string &l ) {  mystate->setTextValue(l); }
