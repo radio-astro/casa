@@ -29,7 +29,6 @@ def pclean(vis=None,
            robust=None,
            npixels=None,
            mode=None,
-           nterms=None,
            start=None,
            nchan=None,
            width=None,
@@ -40,9 +39,9 @@ def pclean(vis=None,
            overwrite=None,
            uvtaper=None, 
            outertaper=None,
-           selectdata=None,
            timerange=None,
            uvrange=None, antenna=None, scan=None, observation=None, pbcorr=None,
+           minpb=None,
            clusterdef=None):
               
 
@@ -53,6 +52,8 @@ def pclean(vis=None,
     """
     #Python script    
 
+    ###removing multiterm from interface
+    nterms=1
 ####checking section
     if( (mode=='channel') or (mode=='frequency') or (mode=='velocity')):
         mode='cube'
@@ -174,7 +175,7 @@ def pclean(vis=None,
                       timerange=timerange,
                       uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
                       visinmem=False, maskimage=mask, interactive=interactive, 
-                      numthreads=1, pbcorr=pbcorr, savemodel=True)
+                      numthreads=1, pbcorr=pbcorr, minpb=minpb, savemodel=True)
         else:
             if(ftmachine != 'ft'):
                 raise ValueError, "ftmachine %s is not supported yet with multiterm MFS" % ftmachine
@@ -192,7 +193,7 @@ def pclean(vis=None,
                       timerange=timerange,
                       uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
                       visinmem=False, maskimage=mask, interactive=interactive, 
-                      numthreads=1, pbcorr=pbcorr, savemodel=True, nterms=nterms)
+                      numthreads=1, pbcorr=pbcorr, minpb=minpb, savemodel=True, nterms=nterms)
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
@@ -219,7 +220,8 @@ def pclean(vis=None,
                   uvtaper=uvtaper, outertaper=outertaper,
                   timerange=timerange,
                   uvrange=uvrange, baselines=antenna, scan=scan, observation=scan,
-                  contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcorr, interactive=interactive, savemodel=True)
+                  contclean=(not overwrite), visinmem=False, numthreads=1, pbcorr=pbcorr,
+                  minpb=minpb, interactive=interactive, savemodel=True)
             
 #parallel_clean=pclean
     
