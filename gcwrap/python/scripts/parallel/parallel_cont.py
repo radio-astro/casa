@@ -6,7 +6,7 @@ import numpy as np
 from cleanhelper import *
 from casac import casac
 class imagecont():
-    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False, cyclefactor=1.5):
+    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False, minpb=0.2, cyclefactor=1.5):
         self.im=casac.imager()
         self.imperms={}
         self.dc=casac.deconvolver()
@@ -47,13 +47,14 @@ class imagecont():
         self.scan=scan
         self.observation=observation
         self.pbcorr=pbcorr
+        self.minpb=minpb
 
     def setextraoptions(self, im, cyclefactor=1.5, fluxscaleimage='', scaletype='SAULT'):
         im.setmfcontrol(scaletype=scaletype, fluxscale=[fluxscaleimage], 
-                        cyclefactor=cyclefactor)
+                        cyclefactor=cyclefactor, minpb=self.minpb)
         if(self.pbcorr):
             im.setvp(True)
-            im.setmfcontrol(scaletype='NONE', cyclefactor=cyclefactor, fluxscale=[fluxscaleimage])
+            im.setmfcontrol(scaletype='NONE', cyclefactor=cyclefactor, minpb=self.minpb, fluxscale=[fluxscaleimage])
             
     def setparamcont(self, im, freq, band, singleprec=False):
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], 

@@ -41,6 +41,7 @@ class pimager():
         self.scan=''
         self.observation=''
         self.pbcorr=False
+        self.minpb=0.2
         self.cyclefactor=1.5
         self.c=cluster
         if self.c == '' :
@@ -492,7 +493,7 @@ class pimager():
                           imsize=[512, 512], pixsize=['1arcsec', '1arcsec'], weight='natural',
                           robust=0.0, npixels=0, gain=0.1,  uvtaper=False, outertaper=[], 
                           timerange='', uvrange='', baselines='', scan='', observation='', 
-                          visinmem=False, pbcorr=False, numthreads=1, cyclefactor=1.5):
+                          visinmem=False, pbcorr=False, minpb=0.2, numthreads=1, cyclefactor=1.5):
         self.spw=spw
         self.field=field
         self.phasecenter=phasecenter
@@ -515,13 +516,14 @@ class pimager():
         self.observation=observation
         self.visinmem=visinmem
         self.pbcorr=pbcorr
+        self.minpb=minpb
         self.numthreads=numthreads
         self.cyclefactor=cyclefactor
     
     def pcontmt(self, msname=None, imagename=None, imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
-              majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
+              majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=1, savemodel=False, nterms=2):
         if(nterms==1):
@@ -531,7 +533,7 @@ class pimager():
               threshold=threshold, alg=alg, scales=scales, weight=weight, robust=robust, 
               npixels=npixels,  uvtaper=uvtaper, outertaper=outertaper, 
               timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
-              observation=observation, pbcorr=pbcorr, contclean=contclean, 
+              observation=observation, pbcorr=pbcorr, minpb=minpb, contclean=contclean, 
               visinmem=visinmem, interactive=interactive, maskimage=maskimage,
               numthreads=numthreads, savemodel=savemodel)
         else:
@@ -541,7 +543,7 @@ class pimager():
                                    robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
                                    outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
                                    baselines=baselines, scan=scan, observation=observation, 
-                                   visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads, 
+                                   visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
                                    cyclefactor=cyclefactor)
             dc=casac.deconvolver()
             ia=casac.image()
@@ -802,7 +804,7 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='',  
-              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False,
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=1, savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -858,7 +860,7 @@ class pimager():
                                robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
                                outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
                                baselines=baselines, scan=scan, observation=observation, 
-                               visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads, 
+                               visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
                                cyclefactor=cyclefactor)
         
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
@@ -1357,7 +1359,7 @@ class pimager():
               hostnames='', 
               numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
-              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
+              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  minpb=0.2,
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,  savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -1373,7 +1375,7 @@ class pimager():
               numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
               mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
               robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
-                  observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                  observation=observation,  pbcorr=pbcorr, minpb=minpb, imagetilevol=imagetilevol,
               contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=savemodel,
               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
             return
@@ -1384,7 +1386,7 @@ class pimager():
               numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=cyclefactor, niter=0, gain=gain, threshold=threshold, alg=alg, scales=scales,
               mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
               robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
-                  observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                  observation=observation,  pbcorr=pbcorr, minpb=minpb, imagetilevol=imagetilevol,
               contclean=contclean, chanchunk=chanchunk, visinmem=visinmem, maskimage='', numthreads=numthreads,  savemodel=False,
               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
         if(maskimage==''):
@@ -1430,7 +1432,7 @@ class pimager():
                            numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
                            mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
                            robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
-                           observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                           observation=observation,  pbcorr=pbcorr, minpb=minpb, imagetilevol=imagetilevol,
                            contclean=True, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=False,
                            painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
                 ####Here we should extract the remainder iterations
@@ -1452,7 +1454,7 @@ class pimager():
                            numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=0, niter=npercycle, gain=gain, threshold=threshold, alg=alg, scales=scales,
                            mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
                            robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
-                           observation=observation,  pbcorr=pbcorr, imagetilevol=imagetilevol,
+                           observation=observation,  pbcorr=pbcorr, minpb=minpb, imagetilevol=imagetilevol,
                            contclean=True, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=False,
                            painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
         if(savemodel):
@@ -1471,7 +1473,7 @@ class pimager():
               hostnames='', 
               numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
-              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  
+              robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  minpb=0.2, 
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,  savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -1530,7 +1532,8 @@ class pimager():
                                robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
                                outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
                                baselines=baselines, scan=scan, observation=observation, 
-                               visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads, 
+                               visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, 
+                               numthreads=numthreads, 
                                cyclefactor=cyclefactor)
              
         self.setupcluster(hostnames,numcpuperhost, 0)
@@ -2557,7 +2560,7 @@ class pimager():
         spwlaunch='"'+self.spw+'"' if (type(self.spw)==str) else str(self.spw)
         fieldlaunch='"'+self.field+'"' if (type(self.field) == str) else str(self.field)
         pslaunch='"'+self.phasecenter+'"' if (type(self.phasecenter) == str) else str(self.phasecenter)
-        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+', cyclefactor='+str(self.cyclefactor)+')'
+        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+', minpb='+str(self.minpb)+', cyclefactor='+str(self.cyclefactor)+')'
         print 'launch command', launchcomm
         self.c.pgc(launchcomm);
         self.c.pgc('a.visInMem='+str(self.visinmem));
