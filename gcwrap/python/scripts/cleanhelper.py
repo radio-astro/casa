@@ -3197,9 +3197,12 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
     if ((mode == 'mfs') and (nterms > 1)): 
         alg = 'msmfs';
         if(imagermode == 'mosaic'): 
-               raise Exception, 'msmfs (nterms>1) not allowed with imagermode=' + imagermode + '. For now, msmfs automatically performs cs-clean type iterations';
+            ##print 'Multi-Term MFS with a mosaic is experimental'
+            raise Exception, 'msmfs (nterms>1) not allowed with imagermode=' + imagermode + '. For now, msmfs automatically performs cs-clean type iterations';
         if (multifield): 
 		addMultiField = True;
+        if facets > 1:
+            raise Exception, 'msmfs (nterms>1) with facets>1 is not yet available'
     if( (mode=='mfs') and (nterms<1) ):
          raise Exception, 'nterms must be > 0';
 
