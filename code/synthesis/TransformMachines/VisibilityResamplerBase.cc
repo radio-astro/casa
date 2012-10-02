@@ -78,7 +78,7 @@ namespace casa{
 				      const Double&  freq, 
 				      const Double* __restrict__ scale, 
 				      const Double* __restrict__ offset,
-				      const Float* __restrict__ sampling) __restrict__ 
+				      const Float* __restrict__ sampling) // __restrict__ 
 				  // const Vector<Double>& __restrict__ scale, 
 				  // const Vector<Double>& __restrict__ offset,
 				  // const Vector<Float>& __restrict__ sampling) __restrict__ 
