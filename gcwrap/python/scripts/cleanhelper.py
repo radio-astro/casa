@@ -3200,6 +3200,8 @@ def getAlgorithm(psfmode, imagermode, gridmode, mode,
                raise Exception, 'msmfs (nterms>1) not allowed with imagermode=' + imagermode + '. For now, msmfs automatically performs cs-clean type iterations';
         if (multifield): 
 		addMultiField = True;
+        if facets > 1:
+            raise Exception, 'msmfs (nterms>1) with facets>1 is not yet available'
     if( (mode=='mfs') and (nterms<1) ):
          raise Exception, 'nterms must be > 0';
 
