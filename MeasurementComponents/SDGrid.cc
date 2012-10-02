@@ -159,7 +159,7 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
   return *this;
 };
 
-String SDGrid::name(){
+String SDGrid::name() const{
     return String("SDGrid");
 }
 

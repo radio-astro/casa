@@ -45,12 +45,12 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
-#include <synthesis/MeasurementComponents/EVLAAperture.h>
+#include <synthesis/TransformMachines/EVLAAperture.h>
 #include <synthesis/TransformMachines/BeamSquint.h>
 #include <synthesis/MeasurementComponents/WFCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/ClarkCleanImageSkyModel.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <synthesis/MeasurementComponents/ATerm.h>
+#include <synthesis/TransformMachines/ATerm.h>
 #include <graphics/GenericPlotter/SimplePlotter.h>
 
 
@@ -696,6 +696,7 @@ protected:
   //TT
   Cube<Int> spwchansels_p;
   Matrix<Double> freqrange_p;
+  Matrix<Double> mssFreqSel_p;
 
   Int numMS_p;
 

@@ -210,6 +210,8 @@ public:
   // Is this model empty
   virtual Bool isEmpty(Int model=0) = 0;
 
+  virtual Int getModelIndex(uInt field=0, uInt taylor=0) = 0;
+
   //set Algorithm (e.g clean, mem, nnls)
   void setAlgorithm(const String& alg) {itsAlgorithm = alg;}
     
@@ -228,6 +230,7 @@ public:
   // use the default shape
   void unsetImageRegion() { imageRegion_p = 0; }
   // </group>
+
   
 protected:
   String itsAlgorithm;

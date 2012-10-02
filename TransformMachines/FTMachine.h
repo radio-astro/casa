@@ -44,7 +44,15 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <synthesis/TransformMachines/CFCache.h>
+#include <synthesis/TransformMachines/CFStore2.h>
+
 #include <synthesis/TransformMachines/ConvolutionFunction.h>
+#include <synthesis/TransformMachines/PolOuterProduct.h>
+
+#include <images/Images/ImageInterface.h>
+#include <images/Images/SubImage.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -133,24 +141,47 @@ public:
   // Initialize transform to Visibility plane
   virtual void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb) = 0;
 
-  // Intialize transform with a real image model
-  // needed if this is a stand alone machine to predict visibilities
-  // cannot be overloaded
-  void initToVis(const ImageInterface<Float>& image, const VisBuffer& vb);
+  // Vectorized InitializeToVis
+  virtual void initializeToVis(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
+			       PtrBlock<SubImage<Float> *> & modelImageVec, 
+			       PtrBlock<SubImage<Float> *>& weightImageVec, 
+			       PtrBlock<SubImage<Float> *>& fluxScaleVec, 
+			       Block<Matrix<Float> >& weightsVec,
+			       const VisBuffer& vb);
 
-  
-
+  //-------------------------------------------------------------------------------------
   // Finalize transform to Visibility plane
+  // This is mostly a no-op, and is not-even called from CubeSkyEquation.
   virtual void finalizeToVis() = 0;
 
+  // Note : No vectorized form of finalizeToVis yet.....
+
+  //-------------------------------------------------------------------------------------
   // Initialize transform to Sky plane
   virtual void initializeToSky(ImageInterface<Complex>& image,
 			       Matrix<Float>& weight, const VisBuffer& vb) = 0;
-  
+
+  // Vectorized InitializeToSky
+  virtual void initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
+			       Block<Matrix<Float> >& weightsVec, 
+			       const VisBuffer& vb, 
+			       const Bool dopsf);
+
+  //-------------------------------------------------------------------------------------
   // Finalize transform to Sky plane
   virtual void finalizeToSky() = 0;
 
   virtual void finalizeToSky(ImageInterface<Complex>& iimage){(void)iimage;};
+
+  // Vectorized finalizeToSky
+  virtual void finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, 
+			     PtrBlock<SubImage<Float> *> & resImageVec, 
+			     PtrBlock<SubImage<Float> *>& weightImageVec, 
+			     PtrBlock<SubImage<Float> *>& fluxScaleVec, 
+			     Bool dopsf, 
+			     Block<Matrix<Float> >& weightsVec);
+
+  //-------------------------------------------------------------------------------------
 
   // Get actual coherence from grid
   virtual void get(VisBuffer& vb, Int row=-1) = 0;
@@ -166,15 +197,39 @@ public:
   	           FTMachine::Type type= FTMachine::OBSERVED)
                     {put((const VisBuffer&)vb,row,dopsf,type);};
 
+  //-------------------------------------------------------------------------------------
+  virtual void correlationToStokes(ImageInterface<Complex>& compImage, 
+				   ImageInterface<Float>& resImage, 
+				   const Bool dopsf);
+ 
+  virtual void stokesToCorrelation(ImageInterface<Float>& modelImage,
+				   ImageInterface<Complex>& compImage);
+
+  /*
+  virtual void normalizeSumWeight(ImageInterface<Float>& inOutImage, 
+			       ImageInterface<Float>& weightImage, 
+			       const Bool dopsf);
+  */
+
+  virtual void normalizeImage(Lattice<Complex>&,//skyImage,
+			      const Matrix<Double>&,// sumOfWts,
+			      Lattice<Float>&,// sensitivityImage,
+			      Bool /*fftNorm*/){return;};
+
+  virtual void normalizeImage(ImageInterface<Float>& skyImage,
+			      Matrix<Float>& sumOfWts,
+			      ImageInterface<Float>& sensitivityImage,
+			      Bool dopsf, Float pblimit, Int normtype);
+
+  //-------------------------------------------------------------------------------------
+
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
-  virtual void normalizeImage(Lattice<Complex>& skyImage,
-			      const Matrix<Double>& sumOfWts,
-			      Lattice<Float>& sensitivityImage,
-			      Bool fftNorm) = 0;
 
+  virtual void findConvFunction(const ImageInterface<Complex>&,// image,
+				const VisBuffer& /*vb*/) {};
   // Get the final weights image
-  virtual void getWeightImage(ImageInterface<Float>&, Matrix<Float>&) = 0;
+  virtual void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights) = 0;
 
   // Get a flux (divide by this to get a flux density correct image) 
   // image if there is one
@@ -190,6 +245,9 @@ public:
 			 ROVisibilityIterator& vi,
 			 ImageInterface<Complex>& image,
 			 Matrix<Float>& weight);
+
+  //-------------------------------------------------------------------------------------
+
   // Rotate the uvw from the observed phase center to the
   // desired phase center.
   void rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
@@ -226,7 +284,7 @@ public:
   
   // Return the name of the machine
 
-  virtual String name(){ return "None";};
+  virtual String name() const =0;// { return "None";};
  
   // set and get the location used for frame 
   void setLocation(const MPosition& loc);
@@ -250,6 +308,7 @@ public:
   virtual String getPointingDirColumnInUse();
 
   virtual void setSpwChanSelection(const Cube<Int>& spwchansels);
+  virtual void setSpwFreqSelection(const Matrix<Double>& spwfreqs);
 
   // set the order of the Taylor term for MFS this is to tell
   // A-Projection to qualify the accumulated avgPB for each Taylor
@@ -375,11 +434,16 @@ protected:
   InterpolateArray1D<Double,Complex>::InterpolationMethod freqInterpMethod_p;
   String pointingDirCol_p;
   Cube<Int> spwChanSelFlag_p;
+  Matrix<Double> spwFreqSel_p, expandedSpwFreqSel_p,expandedSpwConjFreqSel_p;
   Vector<Int> cfStokes_p;
   Int polInUse_p;
   CountedPtr<CFCache> cfCache_p;
   CFStore cfs_p, cfwts_p;
+  CFStore2 cfs2_p, cfwts2_p;
+
   CountedPtr<ConvolutionFunction> convFuncCtor_p;
+  CountedPtr<PolOuterProduct> pop_p;
+
   Bool canComputeResiduals_p;
   Bool toVis_p;
   Int numthreads_p;

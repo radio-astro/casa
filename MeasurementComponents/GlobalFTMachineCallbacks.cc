@@ -1,5 +1,5 @@
 #include <synthesis/MeasurementComponents/GlobalFTMachineCallbacks.h>
-#include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
+#include <synthesis/TransformMachines/IlluminationConvFunc.h>
 
 using namespace casa;
 

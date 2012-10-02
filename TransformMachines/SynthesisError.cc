@@ -54,11 +54,17 @@ SynthesisFTMachineError::SynthesisFTMachineError (const String& str,Category c)
 SynthesisFTMachineError::~SynthesisFTMachineError () throw()
 {}
 
-  PSFZero::PSFZero(const String& str, Category c)
-    :SynthesisFTMachineError(str,c) 
-  {}
-  PSFZero::~PSFZero() throw()
-  {};
+PSFZero::PSFZero(const String& str, Category c)
+  :SynthesisFTMachineError(str,c) 
+{}
+PSFZero::~PSFZero() throw()
+{};
+
+CFNotCached::CFNotCached(const String& str, Category c)
+  :SynthesisError(str,c) 
+{}
+CFNotCached::~CFNotCached() throw()
+{};
 
 } //# NAMESPACE CASA - END
 

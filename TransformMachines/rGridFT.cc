@@ -1373,7 +1373,7 @@ void rGridFT::makeImage(FTMachine::Type type,
   getImage(weight, True);
 }
 
-String rGridFT::name(){
+String rGridFT::name() const{
 
   return machineName_p;
 

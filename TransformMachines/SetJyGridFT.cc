@@ -162,7 +162,7 @@ void SetJyGridFT::setScale(const Vector<Double>& freq, const Vector<Double>& sca
   scale_p=scale;
 
 }
-String SetJyGridFT::name(){
+String SetJyGridFT::name() const{
 
 	return String("SetJyGridFT");
 }

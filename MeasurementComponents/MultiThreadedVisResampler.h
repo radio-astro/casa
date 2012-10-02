@@ -29,12 +29,12 @@
 #ifndef SYNTHESIS_MULTITHREADEDVISIBILITYRESAMPLER_H
 #define SYNTHESIS_MULTITHREADEDVISIBILITYRESAMPLER_H
 
-#include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
+#include <synthesis/TransformMachines/VisibilityResamplerBase.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
 #include <synthesis/TransformMachines/CFStore.h>
-#include <synthesis/MeasurementComponents/VBStore.h>
+#include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
-//#include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -89,6 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MultiThreadedVisibilityResampler& operator=(const MultiThreadedVisibilityResampler& other);
 
     void cleanup();
+    void releaseBuffers();
 
     void copy(const MultiThreadedVisibilityResampler& other);
 
@@ -98,6 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void setMaps(const Vector<Int>& chanMap, const Vector<Int>& polMap);
     virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap);
+    virtual void setFreqMaps(const Matrix<Double>& spwChanFreqs, const Matrix<Double>& spwChanConjFreqs);
 
     virtual void setConvFunc(const CFStore& cfs);
     void init(const Bool& doublePrecision);
@@ -113,13 +115,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void DataToGrid(Array<DComplex>& griddedData,  
 			    VBStore& vbs, 
 			    Matrix<Double>& sumwt,
-			    const Bool& dopsf)
+			    const Bool& dopsf,Bool useConjFreqCF=False)
     {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf);}
 
     virtual void DataToGrid(Array<Complex>& griddedData, 
 			    VBStore& vbs, 
     			    Matrix<Double>& sumwt,
-			    const Bool& dopsf)
+			    const Bool& dopsf,Bool useConjFreqCF=False)
     {
       DataToGridImpl_p(griddedData, vbs, sumwt,dopsf);
     }
@@ -151,7 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   private:
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
-			  Matrix<Double>& sumwt,const Bool& dopsf);
+			  Matrix<Double>& sumwt,const Bool& dopsf,Bool useConjFreqCF=False);
     // template <class T>
     // void GatherGrids_p(const Array<T>& griddedData, 
     // 		       const Matrix<Double>& sumwt);
@@ -178,9 +180,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     CountedPtr<ThreadCoordinator<Int> > threadClerk_p;
     Bool threadStarted_p;
-     // DT tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
-     // DT tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
-     // Timers t4G_p,t4DG_p;
+    casa::utilj::DeltaThreadTimes tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
+    casa::utilj::DeltaThreadTimes tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
+    casa::utilj::ThreadTimes t4G_p,t4DG_p;
     //    async::Mutex *mutexForResamplers_p;
     CountedPtr<VisibilityResamplerBase> visResamplerCtor_p;
     Int whoLoadedVB_p;
