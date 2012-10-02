@@ -303,7 +303,12 @@ Bool ImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool incremental,
   if(numberOfModels()>0) {
     for(Int thismodel=0;thismodel<nmodels_p;thismodel++) {
       if(isSolveable(thismodel)) {
+	//UUU	
 	LatticeExpr<Float> le(iif(ggS(thismodel)>(0.0), -gS(thismodel)/ggS(thismodel), 0.0));
+	// os << "WARNING!!! Skipping le(iif(ggS(thismodel)>(0.0), -gS(thismodel)/ggS(thismodel), 0.0)) in "
+	//   "ImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool incremental, Bool modelToMS):~294" 
+	//    << LogIO::WARN << LogIO::POST;
+	// LatticeExpr<Float> le(iif(ggS(thismodel)>(0.0), gS(thismodel)/ggS(thismodel), 0.0));
 	residual(thismodel).copyData(le);
       }
     }
@@ -737,7 +742,8 @@ ComponentList& ImageSkyModel::componentList()
 
 Long ImageSkyModel::cacheSize(Int model){
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
-  Long cachesize=min((image_p[model]->shape()[0])*(image_p[model]->shape()[1])/4, 1000000);
+  //  Long cachesize=(image_p[model]->shape()[0])*(image_p[model]->shape()[1])/4;
+  Long cachesize=(image_p[model]->shape().product());
   // return Long((HostInfo::memoryFree()/(sizeof(Float)*16)*1024));
 
   return cachesize;

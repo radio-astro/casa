@@ -1519,7 +1519,7 @@ void WProjectFT::makeImage(FTMachine::Type type,
 }
 
 
-String WProjectFT::name(){
+String WProjectFT::name() const {
 
   return machineName_p;
 

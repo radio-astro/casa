@@ -45,7 +45,7 @@
 #include <synthesis/TransformMachines/PBMathInterface.h>
 #include <synthesis/TransformMachines/PBMath.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
-#include <synthesis/MeasurementComponents/ALMACalcIlluminationConvFunc.h>
+#include <synthesis/TransformMachines/ALMACalcIlluminationConvFunc.h>
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
@@ -1238,7 +1238,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 MVFrequency(refFreqHz), 
 				 rotAngOffset.radian(), // the parallactic angle offset
 				 True); // doSquint
-
 		} // endif exists
 	      } catch (AipsError x) {
 		os << LogIO::SEVERE

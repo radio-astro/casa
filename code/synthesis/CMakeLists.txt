@@ -23,8 +23,19 @@ casa_add_library( synthesis
   TransformMachines/BeamSquint.cc
   TransformMachines/CFCache.cc
   TransformMachines/CFStore.cc
+  TransformMachines/CFStore2.cc
+  TransformMachines/CFBuffer.cc
+  TransformMachines/CFCell.cc
+  TransformMachines/PolOuterProduct.cc
   TransformMachines/ComponentFTMachine.cc
   TransformMachines/ConvolutionFunction.cc
+  TransformMachines/AWConvFunc.cc
+  TransformMachines/AWConvFuncEPJones.cc
+  TransformMachines/AWProjectFT.cc
+  TransformMachines/AWProjectWBFT.cc
+  TransformMachines/AWVisResampler.cc
+  TransformMachines/BeamCalc.cc
+  TransformMachines/BeamCalcParams.cc
   TransformMachines/DBeamSkyJones.cc
   TransformMachines/FTMachine.cc
   TransformMachines/GridFT.cc
@@ -56,6 +67,9 @@ casa_add_library( synthesis
   TransformMachines/VPSkyJones.cc
   TransformMachines/WProjectFT.cc
   TransformMachines/WPConvFunc.cc
+  TransformMachines/EVLAConvFunc.cc
+  TransformMachines/EVLAAperture.cc
+  TransformMachines/AzElAperture.cc
   fortran/fgridft.f		
   fortran/fmosaic.f
   fortran/wprojgrid.f
@@ -185,16 +199,7 @@ casa_add_library( synthesis
  DataSampling/SDDataSampling.cc
  DataSampling/SynDataSampling.cc
  IDL/IDL.cc
- MeasurementComponents/ALMAAperture.cc
- MeasurementComponents/ALMABeamCalcParams.cc
- MeasurementComponents/ALMACalcIlluminationConvFunc.cc
  MeasurementComponents/AMueller.cc
- MeasurementComponents/AWConvFunc.cc
- MeasurementComponents/AWProjectFT.cc
- MeasurementComponents/AWProjectWBFT.cc
- MeasurementComponents/AWVisResampler.cc
- MeasurementComponents/BeamCalc.cc
- MeasurementComponents/BeamCalcParams.cc
  MeasurementComponents/BPoly.cc
  MeasurementComponents/CalCorruptor.cc
  MeasurementComponents/Calibrater.cc
@@ -205,15 +210,13 @@ casa_add_library( synthesis
  MeasurementComponents/ConvFuncDiskCache.cc
  MeasurementComponents/CSCleanImageSkyModel.cc
  MeasurementComponents/DJones.cc
- MeasurementComponents/EVLAConvFunc.cc
- MeasurementComponents/EVLAAperture.cc
  MeasurementComponents/EJones.cc
  MeasurementComponents/EPJones.cc
  MeasurementComponents/GlobalFTMachineCallbacks.cc
  MeasurementComponents/GridBoth.cc
  MeasurementComponents/GSpline.cc
  MeasurementComponents/HogbomCleanImageSkyModel.cc
- MeasurementComponents/IlluminationConvFunc.cc
+ TransformMachines/IlluminationConvFunc.cc
  MeasurementComponents/ImageSkyModel.cc
  MeasurementComponents/Jones.cc
  MeasurementComponents/KJones.cc
@@ -231,7 +234,7 @@ casa_add_library( synthesis
  MeasurementComponents/PClarkCleanImageSkyModel.cc
  MeasurementComponents/PixelatedConvFunc.cc
  MeasurementComponents/PredictAlgorithm.cc
- MeasurementComponents/PSTerm.cc
+ TransformMachines/PSTerm.cc
  MeasurementComponents/PWFCleanImageSkyModel.cc
  MeasurementComponents/ReadMSAlgorithm.cc
  MeasurementComponents/ResidualAlgorithm.cc
@@ -248,14 +251,14 @@ casa_add_library( synthesis
  MeasurementComponents/VisCalGlobals.cc
  MeasurementComponents/VisCalSolver.cc
  MeasurementComponents/VisVector.cc
- MeasurementComponents/VisibilityResamplerBase.cc
- MeasurementComponents/VisibilityResampler.cc
- MeasurementComponents/VLACalcIlluminationConvFunc.cc
- MeasurementComponents/VLAIlluminationConvFunc.cc
+ TransformMachines/VisibilityResamplerBase.cc
+ TransformMachines/VisibilityResampler.cc
+ TransformMachines/VLACalcIlluminationConvFunc.cc
+ TransformMachines/VLAIlluminationConvFunc.cc
  MeasurementComponents/WBCleanImageSkyModel.cc
  MeasurementComponents/WFCleanImageSkyModel.cc
- MeasurementComponents/WOnlyConvFunc.cc
- MeasurementComponents/WTerm.cc
+ TransformMachines/WOnlyConvFunc.cc
+ TransformMachines/WTerm.cc
  MeasurementEquations/CCList.cc
  MeasurementEquations/CEMemModel.cc
  MeasurementEquations/CEMemProgress.cc
@@ -283,6 +286,9 @@ casa_add_library( synthesis
  MeasurementEquations/StokesUtil2.cc
  MeasurementEquations/VisEquation.cc
  MeasurementEquations/VPManager.cc
+ TransformMachines/ALMAAperture.cc
+ TransformMachines/ALMABeamCalcParams.cc
+ TransformMachines/ALMACalcIlluminationConvFunc.cc
  Parallel/Applicator.cc
  Parallel/MPIError.cc
  Parallel/MPITransport.cc
@@ -445,22 +451,13 @@ install (FILES
 	)
 install (FILES
 	MeasurementComponents/ACoh.h
-	MeasurementComponents/ALMAAperture.h
-	MeasurementComponents/ALMACalcIlluminationConvFunc.h
 	MeasurementComponents/AMueller.h
-	MeasurementComponents/ATerm.h
-	MeasurementComponents/AWConvFunc.h
-	MeasurementComponents/AWProjectFT.h
-	MeasurementComponents/AWProjectWBFT.h
-	MeasurementComponents/AWVisResampler.h
-	MeasurementComponents/AzElAperture.h
 	MeasurementComponents/BPoly.h
-	MeasurementComponents/BeamCalc.h
+	TransformMachines/BeamCalc.h
 	MeasurementComponents/CEMemImageSkyModel.h
 	MeasurementComponents/CExp.h
 	MeasurementComponents/CExp.new3.h
 	MeasurementComponents/CFDefs.h
-	MeasurementComponents/CFTerms.h
 	MeasurementComponents/CSCleanImageSkyModel.h
 	MeasurementComponents/CalCorruptor.h
 	MeasurementComponents/Calibrater.h
@@ -470,14 +467,11 @@ install (FILES
 	MeasurementComponents/ConvFuncDiskCache.h
 	MeasurementComponents/EJones.h
 	MeasurementComponents/EPJones.h
-	MeasurementComponents/EVLAAperture.h
-	MeasurementComponents/EVLAConvFunc.h
 	MeasurementComponents/ExpCache.h
 	MeasurementComponents/GSpline.h
 	MeasurementComponents/GlobalFTMachineCallbacks.h
 	MeasurementComponents/GridBoth.h
 	MeasurementComponents/HogbomCleanImageSkyModel.h
-	MeasurementComponents/IlluminationConvFunc.h
 	MeasurementComponents/ImageSkyModel.h
 	MeasurementComponents/Jones.h
 	MeasurementComponents/KJones.h
@@ -493,7 +487,6 @@ install (FILES
 	MeasurementComponents/NNLSImageSkyModel.h
 	MeasurementComponents/PBMosaicFT.h
 	MeasurementComponents/PClarkCleanImageSkyModel.h
-	MeasurementComponents/PSTerm.h
 	MeasurementComponents/PWFCleanImageSkyModel.h
 	MeasurementComponents/PixelatedConvFunc.h
 	MeasurementComponents/PredictAlgorithm.h
@@ -510,20 +503,13 @@ install (FILES
 	MeasurementComponents/TabulatedConvFunc.h
 	MeasurementComponents/TsysGainCal.h
 	MeasurementComponents/UVMod.h
-	MeasurementComponents/VBStore.h
-	MeasurementComponents/VLACalcIlluminationConvFunc.h
-	MeasurementComponents/VLAIlluminationConvFunc.h
 	MeasurementComponents/VisCal.h
 	MeasurementComponents/VisCalGlobals.h
 	MeasurementComponents/VisCalSolver.h
 	MeasurementComponents/VisVector.h
-	MeasurementComponents/VisibilityResampler.h
-	MeasurementComponents/VisibilityResamplerBase.h
 	MeasurementComponents/WBCleanImageSkyModel.h
 	MeasurementComponents/WFCleanImageSkyModel.h
-	MeasurementComponents/WOnlyConvFunc.h
 	MeasurementComponents/WOnlyProjectFT.h
-	MeasurementComponents/WTerm.h
 	MeasurementComponents/XCorr.h
 	MeasurementComponents/nPBWProjectFT.h
 	MeasurementComponents/rGridFT.h
@@ -588,9 +574,16 @@ install (FILES
 	TransformMachines/CFCache.h
 	TransformMachines/CFDefs.h
 	TransformMachines/CFStore.h
+	TransformMachines/CFStore2.h
+	TransformMachines/CFBuffer.h
+	TransformMachines/CFCell.h
+	TransformMachines/PolOuterProduct.h
 	TransformMachines/ComponentFTMachine.h
 	TransformMachines/ConvolutionFunction.h
 	TransformMachines/DBeamSkyJones.h
+	TransformMachines/CFTerms.h
+	TransformMachines/PSTerm.h
+	TransformMachines/WTerm.h
 	TransformMachines/FTMachine.h
 	TransformMachines/GridFT.h
 	TransformMachines/HetArrayConvFunc.h
@@ -619,6 +612,24 @@ install (FILES
 	TransformMachines/VisModelData.h
 	TransformMachines/WPConvFunc.h
 	TransformMachines/WProjectFT.h
+        TransformMachines/ATerm.h
+        TransformMachines/AWConvFunc.h
+        TransformMachines/AWConvFuncEPJones.h
+        TransformMachines/AWProjectFT.h
+        TransformMachines/AWProjectWBFT.h
+	TransformMachines/AWVisResampler.h
+	TransformMachines/AzElAperture.h
+	TransformMachines/EVLAAperture.h
+	TransformMachines/EVLAConvFunc.h
+	TransformMachines/IlluminationConvFunc.h
+	TransformMachines/VBStore.h
+	TransformMachines/VLACalcIlluminationConvFunc.h
+	TransformMachines/VLAIlluminationConvFunc.h
+	TransformMachines/VisibilityResampler.h
+	TransformMachines/VisibilityResamplerBase.h
+	TransformMachines/WOnlyConvFunc.h
+	TransformMachines/ALMAAperture.h
+	TransformMachines/ALMACalcIlluminationConvFunc.h
 	DESTINATION include/casacode/synthesis/TransformMachines
 	)
 install (FILES

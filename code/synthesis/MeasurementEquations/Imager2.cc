@@ -126,13 +126,14 @@
 #include <synthesis/TransformMachines/VPSkyJones.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/HetArrayConvFunc.h>
-#include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
+#include <synthesis/TransformMachines/VisibilityResamplerBase.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
 #include <synthesis/DataSampling/SDDataSampling.h>
 #include <synthesis/DataSampling/ImageDataSampling.h>
 #include <synthesis/DataSampling/PixonProcessor.h>
 
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <lattices/Lattices/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
@@ -189,10 +190,11 @@
 #include <unistd.h>
 #include <limits>
 
-#include <synthesis/MeasurementComponents/AWProjectFT.h>
-#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+#include <synthesis/TransformMachines/AWProjectFT.h>
+#include <synthesis/TransformMachines/AWProjectWBFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
-#include <synthesis/MeasurementComponents/AWConvFunc.h>
+#include <synthesis/TransformMachines/AWConvFunc.h>
+#include <synthesis/TransformMachines/AWConvFuncEPJones.h>
 
 using namespace std;
 
@@ -2782,7 +2784,59 @@ Bool Imager::createFTMachine()
   //===============================================================
   // A-Projection FTMachine code start here
   //===============================================================
-  else if (ftmachine_p == "wbawp"){
+  else if (ftmachine_p == "awproject"){
+    if (wprojPlanes_p<=1)
+      {
+	os << LogIO::NORMAL
+	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+    if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+      {
+	os << LogIO::WARN
+	   << "No. of w-planes set too low for W projection - recommend at least 128"
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+
+    useDoublePrecGrid=False;
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+    CountedPtr<PSTerm> psTerm = new PSTerm();
+    CountedPtr<WTerm> wTerm = new WTerm();
+    //    psTerm->setOpCode(CFTerms::NOOP);
+    CountedPtr<ConvolutionFunction> awConvFunc;
+    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,False);
+    CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+    //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
+    CountedPtr<CFCache> cfcache = new CFCache();
+
+    cfcache->setCacheDir(cfCacheDirName_p.data());
+    cerr << "cfcache->initCache2()" << endl;
+    cfcache->initCache2();
+
+    ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
+			     cfcache, awConvFunc, 
+			     //			     mthVisResampler,
+			     visResampler,
+			     /*True */doPointing, doPBCorr, 
+			     tile_p, paStep_p, pbLimit_p, True);
+      
+    ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
+    //
+    // Explicit type casting of ft_p does not look good.  It does not
+    // pick up the setPAIncrement() method of PBWProjectFT without
+    // this
+    //
+    // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
+    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+    AlwaysAssert(ft_p, AipsError);
+    cft_p = new SimpleComponentFTMachine();
+    AlwaysAssert(cft_p, AipsError);
+
+  }
+  else if ((ftmachine_p == "wbawp") || (ftmachine_p == "wbmosaic")){
 
     if (wprojPlanes_p<=1)
       {
@@ -2808,17 +2862,31 @@ Bool Imager::createFTMachine()
     //   }
     useDoublePrecGrid=False;
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
-    CountedPtr<ConvolutionFunction> awConvFunc = new AWConvFunc(apertureFunction);
+    CountedPtr<PSTerm> psTerm = new PSTerm();
+    CountedPtr<WTerm> wTerm = new WTerm();
+    //    psTerm->setOpCode(CFTerms::NOOP);
+    CountedPtr<ConvolutionFunction> awConvFunc;
+    if (ftmachine_p=="wbawp") awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm);
+    else                      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm);
+
     CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
-    CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
-     											       visResampler);
+
+    //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
+
+    // CountedPtr<VisibilityResamplerBase> mthVisResampler = 
+    //   new MultiThreadedVisibilityResampler(useDoublePrecGrid, visResampler);
     CountedPtr<CFCache> cfcache = new CFCache();
     cfcache->setCacheDir(cfCacheDirName_p.data());
-    cfcache->initCache();
+    cerr << "cfcache->initCache2()" << endl;
+    cfcache->initCache2();
+
     ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
-			     cfcache, awConvFunc, mthVisResampler,//visResampler,
+			     cfcache, awConvFunc, 
+			     //			     mthVisResampler,
+			     visResampler,
 			     /*True */doPointing, doPBCorr, 
 			     tile_p, paStep_p, pbLimit_p, True);
+      
     ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
     //
     // Explicit type casting of ft_p does not look good.  It does not
@@ -2891,15 +2959,21 @@ Bool Imager::createFTMachine()
       //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
       useDoublePrecGrid=False;
       CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
-      CountedPtr<ConvolutionFunction> awConvFunc=new AWConvFunc(apertureFunction);
+      CountedPtr<PSTerm> psTerm = new PSTerm();
+      CountedPtr<WTerm> wTerm = new WTerm();
+      psTerm->setOpCode(CFTerms::NOOP);
+      CountedPtr<ConvolutionFunction> awConvFunc=new AWConvFunc(apertureFunction,psTerm,wTerm);
       CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
-      CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
-												 visResampler);
+      //      CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
+      // CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+      // 												 visResampler);
       CountedPtr<CFCache> cfcache=new CFCache();
       cfcache->setCacheDir(cfCacheDirName_p.data());
-      cfcache->initCache();
+      cfcache->initCache2();
       ft_p = new AWProjectFT(wprojPlanes_p, cache_p/2,
-			     cfcache, awConvFunc, mthVisResampler,
+			     cfcache, awConvFunc, 
+			     //			     mthVisResampler,
+			     visResampler,
 			     doPointing, doPBCorr,
 			     tile_p, pbLimit_p, True);
       ((AWProjectFT *)ft_p)->setObservatoryLocation(mLocation_p);
@@ -2911,7 +2985,7 @@ Bool Imager::createFTMachine()
       Quantity paInc(paStep_p,"deg");
       // os << LogIO::NORMAL << "Setting PA increment to " 
       // 	 << paInc.getValue("deg") << " deg" << endl;
-      ((AWProjectFT *)ft_p)->setPAIncrement(paInc);
+      ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
 
       if (doPointing) 
 	{
@@ -2997,6 +3071,7 @@ Bool Imager::createFTMachine()
     ft_p->setMovingSource(trackDir_p);
   }
   ft_p->setSpwChanSelection(spwchansels_p);
+  ft_p->setSpwFreqSelection(mssFreqSel_p);
 
   /******* Start MTFT code ********/
   // MultiTermFT is a container for an FTMachine of any type.

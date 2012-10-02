@@ -76,8 +76,8 @@
 #include <casa/OS/HostInfo.h>
 #include <casa/sstream.h>
 
-#include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
+#include <synthesis/TransformMachines/VLACalcIlluminationConvFunc.h>
+#include <synthesis/TransformMachines/IlluminationConvFunc.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <synthesis/MeasurementComponents/CExp.h>
 #include <synthesis/TransformMachines/Utils.h>
@@ -351,6 +351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     sigma = 1.0/(HPBW*HPBW);
     nwEij.setSigma(sigma);
     Int bandID = BeamCalc::Instance()->getBandID(Freq,telescopeNames(0));
+    //    Int bandID = getVLABandID(Freq,telescopeNames(0));
     return bandID;
   }
   //

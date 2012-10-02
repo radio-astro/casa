@@ -47,8 +47,8 @@
 #include <measures/Measures/MPosition.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/TransformMachines/VPSkyJones.h>
-#include <synthesis/MeasurementComponents/VLACalcIlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/VLAIlluminationConvFunc.h>
+#include <synthesis/TransformMachines/VLACalcIlluminationConvFunc.h>
+#include <synthesis/TransformMachines/VLAIlluminationConvFunc.h>
 #include <synthesis/TransformMachines/Utils.h>
 
 //#include <synthesis/MeasurementComponents/EPJones.h>
@@ -329,7 +329,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void setPAIncrement(const Quantity &paIncrement);
 
     Vector<Int>& getPolMap() {return polMap;};
-    virtual String name(){ return "PBWProjectFT";};
+    virtual String name() const { return "PBWProjectFT";};
     virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Float>& sky)
     {return verifyShapes(pb.shape(),sky.shape());}
     virtual Bool verifyAvgPB(ImageInterface<Float>& pb, ImageInterface<Complex>& sky)

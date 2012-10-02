@@ -119,7 +119,7 @@ public:
 
   virtual void setScale(const Vector<Double>& freq, const Vector<Double>& scale);
 
-  virtual String name();
+  virtual String name() const;
 
 
 protected:

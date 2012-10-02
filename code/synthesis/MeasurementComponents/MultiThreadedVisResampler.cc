@@ -28,26 +28,28 @@
 
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
-//#include <synthesis/MSVis/UtilJ.h>
+//#include <msvis/MSVis/UtilJ.h>
 #include <synthesis/TransformMachines/Utils.h>
-#include <synthesis/MeasurementComponents/VisibilityResampler.h>
+#include <synthesis/TransformMachines/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
-#include <synthesis/MeasurementComponents/AWVisResampler.h>
+#include <synthesis/TransformMachines/AWVisResampler.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
 #include <fstream>
 
 namespace casa{
   template 
   void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<Complex>& griddedData,  
-  						      VBStore& vbs, 
-  						      Matrix<Double>& sumwt,
-  						      const Bool& dopsf);
+							  VBStore& vbs, 
+							  Matrix<Double>& sumwt,
+							  const Bool& dopsf,
+							  Bool useConjFreqCF);
   template 
   void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<DComplex>& griddedData,  
-						      VBStore& vbs, 
-						      Matrix<Double>& sumwt,
-						      const Bool& dopsf);
+							  VBStore& vbs, 
+							  Matrix<Double>& sumwt,
+							  const Bool& dopsf,
+							  Bool useConjFreqCF);
   //
   //---------------------------------------------------------------------------------------
   //
@@ -143,6 +145,26 @@ namespace casa{
 	currentVBS_p=0;
 	//    delete mutexForResamplers_p;
       }
+  }
+  //
+  //---------------------------------------------------------------------------------------
+  //
+  void MultiThreadedVisibilityResampler::releaseBuffers()
+  {
+    // for (Int i=0;i<nelements();i++)
+    //   {
+    // 	//	if (!resamplers_p[i].null()) delete &(*resamplers_p[i]);
+    // 	//	if (!gridderWorklets_p[i].null()) delete &(*gridderWorklets_p[i]);
+    // 	if (doublePrecision_p)
+    // 	  if (!doubleGriddedData_p[i].null()) delete &(*doubleGriddedData_p[i]);
+    // 	  else if (!singleGriddedData_p[i].null()) delete &(*singleGriddedData_p[i]);
+    // 	if (!sumwt_p[i].null()) delete &(*sumwt_p[i]);
+    //   }
+    // resamplers_p.resize(0);
+    // gridderWorklets_p.resize(0);
+    doubleGriddedData_p.resize(0);
+    singleGriddedData_p.resize(0);
+    sumwt_p.resize(0);
   }
   //
   //---------------------------------------------------------------------------------------
@@ -279,6 +301,11 @@ namespace casa{
   //
   //---------------------------------------------------------------------------------------
   //
+  void MultiThreadedVisibilityResampler::setFreqMaps(const Matrix<Double>& spwChanFreqs, const Matrix<Double>& spwChanConjFreqs)
+  {for (Int i=0;i < nelements(); i++) resamplers_p[i]->setFreqMaps(spwChanFreqs,spwChanConjFreqs);}
+  //
+  //---------------------------------------------------------------------------------------
+  //
   void MultiThreadedVisibilityResampler::scatter(Matrix<VBStore>& vbStores,const VBStore& vbs)
   {
     Int nRows=vbs.nRow_p, nr,br=0;
@@ -315,12 +342,12 @@ namespace casa{
 	    sumwt += *(sumwt_p[i]);
 	  }
       }
-    // log_p << "Gridder timing: " 
-    //  	  << "Setup = " << tSetupG.formatAverage().c_str() << " " 
-    //  	  << "SendData = " << tSendDataG.formatAverage().c_str() << " " 
-    //  	  << "WaitForWork = " << tWaitForWorkG.formatAverage().c_str() 
-    //  	  << "Outside = " << tOutsideG.formatAverage().c_str() 
-    //  	  << LogIO::POST;
+    log_p << "Gridder timing: " 
+     	  << "Setup = " << tSetupG.formatAverage().c_str() << " " 
+     	  << "SendData = " << tSendDataG.formatAverage().c_str() << " " 
+     	  << "WaitForWork = " << tWaitForWorkG.formatAverage().c_str() 
+     	  << "Outside = " << tOutsideG.formatAverage().c_str() 
+     	  << LogIO::POST;
     //  log_p << "DGridder timing: "
     //  	  << "Setup = " << tSetupDG.formatAverage().c_str() << " " 
     //  	  << "SendData = " << tSendDataDG.formatAverage().c_str() << " " 
@@ -344,6 +371,12 @@ namespace casa{
 	    sumwt += *(sumwt_p[i]);
 	  }
       }
+    log_p << "Gridder timing: " 
+     	  << "Setup = " << tSetupG.formatAverage().c_str() << " " 
+     	  << "SendData = " << tSendDataG.formatAverage().c_str() << " " 
+     	  << "WaitForWork = " << tWaitForWorkG.formatAverage().c_str() 
+     	  << "Outside = " << tOutsideG.formatAverage().c_str() 
+     	  << LogIO::POST;
   }
   //
   //---------------------------------------------------------------------------------------
@@ -416,10 +449,11 @@ namespace casa{
   //
   // Make the following four methods via templated implementation.
   template <class T>
-  void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<T>& /*griddedData*/,
+  void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<T>& griddedData,  
 							  VBStore& vbs, 
-							  Matrix<Double>& /*sumwt*/,
-							  const Bool& dopsf)
+							  Matrix<Double>& sumwt,
+							  const Bool& dopsf,
+							  Bool useConjFreqCF)
   {
     //    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "DataToGridImpl_p"));
     if (whoLoadedVB_p == MThWorkID::DATATOGRID)  {/*scatter(vbsVec_p,vbs); */whoLoadedVB_p = MThWorkID::DATATOGRID;}
@@ -432,7 +466,7 @@ namespace casa{
       {
 	//	Int workRequestDataToGrid=1;
 	Int workRequestDataToGrid=MThWorkID::DATATOGRID;
-	//	Timers t1=Timers::getTime();
+	casa::utilj::ThreadTimes t1=casa::utilj::ThreadTimes::getTime();
 	for(Int i=0; i < nelements(); i++) 
 	  {
 	    vbsVec_p(i,currentVBS_p).dopsf_p = dopsf;
@@ -454,19 +488,19 @@ namespace casa{
 	      }
 	  }
 
-	//	Timers t2=Timers::getTime();
+	casa::utilj::ThreadTimes t2=casa::utilj::ThreadTimes::getTime();
 	//	threadClerk_p->getToWork(&workRequestDataToGrid);
 	threadClerk_p->giveWorkToWorkers(&workRequestDataToGrid);
-	//	Timers t3=Timers::getTime();
+	casa::utilj::ThreadTimes t3=casa::utilj::ThreadTimes::getTime();
 	threadClerk_p->waitForWorkersToFinishTask();
-	//	Timers t4=Timers::getTime();
-
-	// tSetupG       += t2-t1;
-	// tSendDataG    += t3-t2;
-	// tWaitForWorkG += t4-t3;
-	// tOutsideG     += t1-t4G_p;
+	casa::utilj::ThreadTimes t4=casa::utilj::ThreadTimes::getTime();
+	
+	 tSetupG       += t2-t1;
+	 tSendDataG    += t3-t2;
+	 tWaitForWorkG += t4-t3;
+	 tOutsideG     += t1-t4G_p;
       }
-      //      t4G_p = Timers::getTime();
+      t4G_p = casa::utilj::ThreadTimes::getTime();
   }
   //
   //------------------------------------------------------------------------------

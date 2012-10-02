@@ -58,7 +58,7 @@ class CubeSkyEquation : public SkyEquation {
   virtual void putSlice(VisBuffer& vb, Bool dopsf, 
 			FTMachine::Type col,Int cubeSlice=0, 
 			Int nCubeSlice=1);
-  virtual void finalizePutSlice(const VisBuffer& vb,  
+  virtual void finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 				Int cubeSlice=0, Int nCubeSlice=1);
   void initializeGetSlice(const VisBuffer& vb, Int row,
 			  Bool incremental, Int cubeSlice=0, 

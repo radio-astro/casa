@@ -38,6 +38,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #         chaniter, flatnoise, allowchunk]
     #print paralist
 
+    if (spw==''):
+        spw='*';
     if allowchunk and (mode=='velocity' or mode=='frequency' or mode=='channel') \
        and not interactive:
 

@@ -45,6 +45,7 @@
 #include <scimath/Mathematics/RigidVector.h>
 #include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
@@ -89,6 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     isIOnly=False;
     spwChanSelFlag_p=0;
     polInUse_p=0;
+    pop_p = new PolOuterProduct;
   }
   
   FTMachine::FTMachine(CountedPtr<CFCache>& cfcache,CountedPtr<ConvolutionFunction>& cf):
@@ -106,6 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     isIOnly=False;
     spwChanSelFlag_p=0;
     polInUse_p=0;
+    pop_p = new PolOuterProduct;
   }
   
   LogIO& FTMachine::logIO() {return logIO_p;};
@@ -176,7 +179,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfs_p = other.cfs_p;
       cfwts_p = other.cfwts_p;
       canComputeResiduals_p = other.canComputeResiduals_p;
-      toVis_p=other.toVis_p;
+
+      pop_p = other.pop_p;
+      toVis_p = other.toVis_p;
+      spwFreqSel_p = other.spwFreqSel_p;
+      expandedSpwFreqSel_p = other.expandedSpwFreqSel_p;
+      expandedSpwConjFreqSel_p = other.expandedSpwConjFreqSel_p;
       cmplxImage_p=other.cmplxImage_p;
       numthreads_p=other.numthreads_p;
     };
@@ -425,8 +433,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //	    << LogIO::POST;
     
     initPolInfo(vb);
-    //cerr<<"spwchanselflag_p shape="<<spwChanSelFlag_p.shape()<<endl;
-    /* STOKESDBG */ //cout << "FtMachine::initPolMaps - polMap : " << polMap << "   vispolmap : " << visPolMap << endl;
+    pop_p->initCFMaps(visPolMap, polMap);
   }
   
   FTMachine::~FTMachine() 
@@ -1555,6 +1562,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     spwChanSelFlag_p=spwchansels;
   }
   
+  void FTMachine::setSpwFreqSelection(const Matrix<Double>& spwFreqs) 
+  {
+    spwFreqSel_p.assign(spwFreqs);
+    SynthesisUtils::expandFreqSelection(spwFreqs,expandedSpwFreqSel_p, expandedSpwConjFreqSel_p);
+  }
+
   void FTMachine::setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube){
     
     modflagcube.resize(vb.flagCube().shape());
@@ -1576,22 +1589,230 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
-  void FTMachine::initToVis(const ImageInterface<Float>& image, const VisBuffer& vb){
+  //-----------------------------------------------------------------------------------------------------------------
+  //------------  Vectorized versions of initializeToVis, initializeToSky, finalizeToSky  
+  //------------  that are called from CubeSkyEquation.
+  //------------  They call getImage,getWeightImage, which are implemented in all FTMs
+  //------------  Also, Correlation / Stokes conversions and gS/ggS normalizations.
+ 
+  // Vectorized InitializeToVis
+  void FTMachine::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
+				  PtrBlock<SubImage<Float> *> & modelImageVec, 
+				  PtrBlock<SubImage<Float> *>& weightImageVec, 
+				  PtrBlock<SubImage<Float> *>& fluxScaleVec, 
+				  Block<Matrix<Float> >& weightsVec,
+				  const VisBuffer& vb)
+  {
+    AlwaysAssert(compImageVec.nelements()==1, AipsError);
+    AlwaysAssert(modelImageVec.nelements()==1, AipsError);
+    AlwaysAssert(weightImageVec.nelements()==1, AipsError);
+    AlwaysAssert(fluxScaleVec.nelements()==1, AipsError);
+    AlwaysAssert(weightsVec.nelements()==1, AipsError);
+    Matrix<Float> tempWts;
 
-    cmplxImage_p= new TempImage<Complex>(image.shape(), image.coordinates());
-    cmplxImage_p->set(Complex(0.0, 0.0));
-    if(vb.polFrame()==MSIter::Linear) {
-      StokesImageUtil::changeCStokesRep(*cmplxImage_p,
-					StokesImageUtil::LINEAR);
+    // Convert from Stokes planes to Correlation planes
+    stokesToCorrelation(*(modelImageVec[0]), *(compImageVec[0]));
+
+    // Call initializeToVis
+    initializeToVis(*(compImageVec[0]), vb); // Pure virtual
+    
+  };
+  
+  // Vectorized finalizeToVis is not implemented because it does nothing and is never called.
+  
+  // Vectorized InitializeToSky
+  void FTMachine::initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
+				  Block<Matrix<Float> >& weightsVec, 
+				  const VisBuffer& vb, 
+				  const Bool dopsf)
+    
+  {
+    AlwaysAssert(compImageVec.nelements()==1, AipsError);
+    AlwaysAssert(weightsVec.nelements()==1, AipsError);
+    (void)dopsf;
+    initializeToSky(*(compImageVec[0]) , weightsVec[0] , vb);
+  };
+  
+  // Vectorized finalizeToSky
+  void FTMachine::finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, 
+				PtrBlock<SubImage<Float> *> & resImageVec, 
+				PtrBlock<SubImage<Float> *>& weightImageVec, 
+				PtrBlock<SubImage<Float> *>& fluxScaleVec, 
+				Bool dopsf, 
+				Block<Matrix<Float> >& weightsVec)
+  {
+    // Call default finalizeToSky
+    finalizeToSky();  // Pure virtual
+
+    // Check vector lengths. 
+    AlwaysAssert(compImageVec.nelements()==1, AipsError);
+    AlwaysAssert(resImageVec.nelements()==1, AipsError);
+    AlwaysAssert(weightImageVec.nelements()==1, AipsError);
+    AlwaysAssert(fluxScaleVec.nelements()==1, AipsError);
+    AlwaysAssert(weightsVec.nelements()==1, AipsError);
+
+    // Get the gridded image
+    (*(compImageVec[0])).copyData(getImage(weightsVec[0],False)); // getImage is Pure virtual
+    // Convert from correlation (complex) to Stokes (float)
+    correlationToStokes(*(compImageVec[0]), *(resImageVec[0]), dopsf);
+    
+    // Get the sum of weights and sensitivity Image
+    getWeightImage(*(weightImageVec[0]), weightsVec[0]); // Pure virtual
+
+    // ForSB // 
+    // For FTM, normalizeImage should get called with normtype=0 (only sumwt normalization)
+    // For AWP, call getWeightImage, and then normalizeImage with normtype=2 (sumwt and pb)
+    //               Currently, both call it with normtype=2 because for GridFT, "pb" is filled with ones.
+    
+    // Normalize the output image by the sum of wts and sensitivity image
+    // cerr << "FTM::finalizeToSky: Weights = " << weightsVec[0] << endl;
+    // storeImg(String("wt.im"),*(weightImageVec[0]));
+    //    storeImg(String("stokes.im"),*(resImageVec[0]));
+    normalizeImage( *(resImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , dopsf, 
+		    (Float)1e-03,
+		    (Int)2);
+    //storeImg(String("stokes1.im"),*(resImageVec[0]));
+
+    return;
+  };
+  
+  // Convert complex correlation planes to float Stokes planes
+  void FTMachine::correlationToStokes(ImageInterface<Complex>& compImage, 
+				      ImageInterface<Float>& resImage, 
+				      const Bool dopsf)
+  {
+    // Convert correlation image to IQUV format
+    AlwaysAssert(compImage.shape()[0]==resImage.shape()[0], AipsError);
+    AlwaysAssert(compImage.shape()[1]==resImage.shape()[1], AipsError);
+    AlwaysAssert(compImage.shape()[3]==resImage.shape()[3], AipsError);
+    
+    if(dopsf) 
+      { 
+	// For the PSF, choose only those stokes planes that have a valid PSF
+	StokesImageUtil::ToStokesPSF(resImage,compImage);
+      }
+    else 
+      {
+	StokesImageUtil::To(resImage,compImage);
+      }
+  };
+  
+  // Convert float Stokes planes to complex correlation planes
+  void FTMachine::stokesToCorrelation(ImageInterface<Float>& modelImage,
+				      ImageInterface<Complex>& compImage)
+  {
+    //Pol axis need not be same
+    AlwaysAssert(modelImage.shape()[0]==compImage.shape()[0], AipsError);
+    AlwaysAssert(modelImage.shape()[1]==compImage.shape()[1], AipsError);
+    AlwaysAssert(modelImage.shape()[3]==compImage.shape()[3], AipsError);
+    // Convert from Stokes to Complex
+    StokesImageUtil::From(compImage, modelImage);
+  };
+  
+  //------------------------------------------------------------------------------------------------------------------
+  
+  void FTMachine::normalizeImage(ImageInterface<Float>& skyImage,
+				 Matrix<Float>& sumOfWts,
+				 ImageInterface<Float>& sensitivityImage,
+				 Bool dopsf, Float pblimit, Int normtype)
+  {
+    
+    //Normalize the sky Image
+    Int nXX=(skyImage).shape()(0);
+    Int nYY=(skyImage).shape()(1);
+    Int npola= (skyImage).shape()(2);
+    Int nchana= (skyImage).shape()(3);
+    
+      IPosition pcentre(4,nXX/2,nYY/2,0,0);
+    // IPosition psource(4,nXX/2+22,nYY/2,0,0);
+    
+    //    storeImg(String("norm_resimage.im") , skyImage);
+    //    storeImg(String("norm_sensitivity.im"), sensitivityImage);
+   
+      /////    cout << "FTM::norm : pblimit : " << pblimit << endl; 
+    
+    // Note : This is needed because initial prediction has no info about sumwt.
+    // Not a clean solution.  // ForSB -- if you see a better way, go for it.
+    if(sumOfWts.shape() != IPosition(2,npola,nchana))
+      {
+	cout << "Empty SumWt.... resizing and filling with 1.0" << endl;
+	sumOfWts.resize(IPosition(2,npola,nchana));
+	sumOfWts=1.0;
+      }
+    
+    //    if(dopsf)  cout << "*** FTM::normalizeImage : Image Center : " << skyImage.getAt(pcentre) << "  and weightImage : " << sensitivityImage.getAt(pcentre) << "  SumWt : " << sumOfWts[0,0];  
+    //    else  cout << "*** FTM::normalizeImage : Source Loc : " << skyImage.getAt(psource) << "  and weightImage : " << sensitivityImage.getAt(psource) << "  SumWt : " << sumOfWts[0,0]; 
+    
+    
+    
+    IPosition blc(4,nXX, nYY, npola, nchana);
+    IPosition trc(4, nXX, nYY, npola, nchana);
+    blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1;
+    //max weights per plane
+    for (Int pol=0; pol < npola; ++pol){
+      for (Int chan=0; chan < nchana ; ++chan){
+	
+	blc(2)=pol; trc(2)=pol;
+	blc(3)=chan; trc(3)=chan;
+	Slicer sl(blc, trc, Slicer::endIsLast);
+	SubImage<Float> subSkyImage(skyImage, sl, False);
+	SubImage<Float> subSensitivityImage(sensitivityImage, sl, False);
+	SubImage<Float> subOutput(skyImage, sl, True);
+	Float sumWt = sumOfWts(pol,chan);
+	if(sumWt > 0.0){
+	  switch(normtype)
+	    {
+	    case 0: // only sum Of Weights - FTM only (ForSB)
+	      subOutput.copyData( (LatticeExpr<Float>) 
+				  ((dopsf?1.0:-1.0)*subSkyImage/(sumWt)));
+	      break;
+	      
+	    case 1: // only sensitivityImage   Ic/avgPB  (ForSB)
+	      subOutput.copyData( (LatticeExpr<Float>) 
+				  (iif(subSensitivityImage > (pblimit), 
+				       (subSkyImage/(subSensitivityImage)),
+				       (subSkyImage))));
+				       // 0.0)));
+	      break;
+	      
+	    case 2: // sum of Weights and sensitivityImage  IGridded/(SoW*avgPB) and PSF --> Id (ForSB)
+	      subOutput.copyData( (LatticeExpr<Float>) 
+				  (iif(subSensitivityImage > (pblimit), 
+				       ((dopsf?1.0:-1.0)*subSkyImage/(subSensitivityImage*sumWt)),
+				       //((dopsf?1.0:-1.0)*subSkyImage))));
+				       0.0)));
+	      break;
+	      
+  	    case 3: // MULTIPLY by the sensitivityImage  avgPB
+	      subOutput.copyData( (LatticeExpr<Float>) (subSkyImage * subSensitivityImage) );
+	      break;
+	      
+  	    case 4: // DIVIDE by sqrt of sensitivityImage 
+	      subOutput.copyData( (LatticeExpr<Float>) 
+				  (iif(sqrt(subSensitivityImage) > (pblimit), 
+				       (subSkyImage/(sqrt(subSensitivityImage))),
+				       (subSkyImage))));
+				       //0.0)));
+	      break;
+	      
+  	    case 5: // MULTIPLY by sqrt of sensitivityImage 
+	      subOutput.copyData( (LatticeExpr<Float>) (subSkyImage * sqrt(subSensitivityImage)) );
+	      break;
+	      
+	    default:
+	      throw(AipsError("Unrecognized norm-type in FTM::normalizeImage : "+String::toString(normtype)));
+	    }
+	}
+	else{
+	  subOutput.set(0.0);
+	}
+      }
     }
-    else {
-      StokesImageUtil::changeCStokesRep(*cmplxImage_p,
-					StokesImageUtil::CIRCULAR);
-    }
-    StokesImageUtil::From(*cmplxImage_p, image);
-    initializeToVis(*cmplxImage_p, vb);
+    
+    //if(dopsf)  cout << " Normalized (" << normtype << ") Image Center : " << skyImage.getAt(pcentre) << endl; 
+     //     else  cout << " Normalized (" << normtype << ") Source Loc : " << skyImage.getAt(psource) << endl; 
+    
   }
-
  
 } //# NAMESPACE CASA - END
 

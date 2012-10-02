@@ -213,7 +213,7 @@ public:
 
   virtual void setNoPadding(Bool nopad){noPadding_p=nopad;};
 
-  virtual String name();
+  virtual String name() const;
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&/*vb*/, Bool /*useCorrected*/) {};
 

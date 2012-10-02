@@ -210,7 +210,7 @@ public:
 
   // Return name of this machine
 
-  String name();
+  virtual String name() const;
 
   // Copy convolution function etc to another FT machine
   // necessary if ft and ift are distinct but can share convfunctions

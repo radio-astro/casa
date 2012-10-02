@@ -162,8 +162,8 @@ GridFT& GridFT::operator=(const GridFT& other)
     convType=other.convType;
     uvScale.resize();
     uvOffset.resize();
-    uvScale=other.uvScale;
-    uvOffset=other.uvOffset;
+    uvScale.assign(other.uvScale);
+    uvOffset.assign(other.uvOffset);
     if(other.gridder==0)
       gridder=0;
     else{  
@@ -1447,7 +1447,7 @@ void GridFT::makeImage(FTMachine::Type type,
   getImage(weight, True);
 }
 
-String GridFT::name(){
+String GridFT::name() const {
 
   return machineName_p;
 

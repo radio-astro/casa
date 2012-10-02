@@ -98,6 +98,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     NoSenPattern(const String& message, Category c=GENERAL);
     ~NoSenPattern() throw();
   };
+
+  class CFNotCached: public SynthesisError{
+  public:
+    CFNotCached(const String& message, Category c=GENERAL);
+    ~CFNotCached() throw();
+  };
 } //# NAMESPACE CASA - END
 
 #endif

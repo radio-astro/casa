@@ -31,6 +31,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MeasTable.h>
 #include <synthesis/TransformMachines/Utils.h>
+#include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -41,6 +42,7 @@
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeStepper.h> 
+#include <lattices/Lattices/LatticeFFT.h>
 #include <casa/System/Aipsrc.h>
 namespace casa{
   //
@@ -172,7 +174,7 @@ namespace casa{
   void makeStokesAxis(Int npol_p, Vector<String>& polType, Vector<Int>& whichStokes)
   {
     //    Vector<String> polType=msc.feed().polarizationType()(0);
-    String polRep="LINEAR";
+    StokesImageUtil::PolRep polRep_p;
     LogIO os(LogOrigin("Utils", "makeStokesAxis", WHERE));
 
     if (polType(0)!="X" && polType(0)!="Y" &&
@@ -185,12 +187,12 @@ namespace casa{
   
     if (polType(0)=="X" || polType(0)=="Y") 
       {
-	polRep="LINEAR";
+	polRep_p=StokesImageUtil::LINEAR;
 	os << "Preferred polarization representation is linear" << LogIO::POST;
       }
     else 
       {
-	polRep="CIRCULAR";
+	polRep_p=StokesImageUtil::CIRCULAR;
 	os << "Preferred polarization representation is circular" << LogIO::POST;
       }
 
@@ -205,7 +207,7 @@ namespace casa{
       case 2:
 	whichStokes.resize(2);
 	whichStokes(0)=Stokes::I;
-	if (polRep=="LINEAR") 
+	if (polRep_p==StokesImageUtil::LINEAR) 
 	  {
 	    whichStokes(1)=Stokes::Q;
 	    os <<  "Image polarization = Stokes I,Q" << LogIO::POST;
@@ -527,9 +529,15 @@ namespace casa{
     //
     // If no rotation required, just copy the inArray to outArray.
     //
-    if (dAngleRad==0.0) 
+    //    if (abs(dAngleRad) < 0.1)
+    
+    // IPosition tt;
+    // inCS.list(logio,MDoppler::RADIO,tt,tt);
+
+    if (abs(dAngleRad) == 0.0)
       {
 	outArray.reference(inArray);
+	//	outArray.assign(inArray);
 	return;
       }
     //
@@ -542,8 +550,8 @@ namespace casa{
 
     if(modifyInCS){
       Vector<Double> refPix = inCS.referencePixel();
-      refPix(0) = (inArray.shape()(0)+1)/2;
-      refPix(1) = (inArray.shape()(1)+1)/2;
+      refPix(0) = (Int)((inArray.shape()(0))/2.0);
+      refPix(1) = (Int)((inArray.shape()(1))/2.0);
       inCS.setReferencePixel(refPix);
     }
 
@@ -752,4 +760,183 @@ namespace casa{
   }
   template 
   Int SynthesisUtils::getenv(const char *name, const Int defaultVal);
+
+  Float SynthesisUtils::libreSpheroidal(Float nu) 
+  {
+    Double top, bot, nuend, delnusq;
+    uInt part;
+    if (nu <= 0) return 1.0;
+    else 
+      if (nu >= 1.0) 
+	return 0.0;
+      else 
+	{
+	  uInt np = 5;
+	  uInt nq = 3;
+	  Matrix<Double> p(np, 2);
+	  Matrix<Double> q(nq, 2);
+	  p(0,0) = 8.203343e-2;
+	  p(1,0) = -3.644705e-1;
+	  p(2,0) =  6.278660e-1;
+	  p(3,0) = -5.335581e-1; 
+	  p(4,0) =  2.312756e-1;
+	  p(0,1) =  4.028559e-3;
+	  p(1,1) = -3.697768e-2; 
+	  p(2,1) = 1.021332e-1;
+	  p(3,1) = -1.201436e-1;
+	  p(4,1) = 6.412774e-2;
+	  q(0,0) = 1.0000000e0;
+	  q(1,0) = 8.212018e-1;
+	  q(2,0) = 2.078043e-1;
+	  q(0,1) = 1.0000000e0;
+	  q(1,1) = 9.599102e-1;
+	  q(2,1) = 2.918724e-1;
+
+	  part = 0;
+	  nuend = 0.0;
+	  if ((nu >= 0.0) && (nu < 0.75)) 
+	    {
+	      part = 0;
+	      nuend = 0.75;
+	    } 
+	  else if ((nu >= 0.75) && (nu <= 1.00)) 
+	    {
+	      part = 1;
+	      nuend = 1.0;
+	    }
+	  
+	  top = p(0,part);
+	  delnusq = pow(nu,2.0) - pow(nuend,2.0);
+	  for (uInt k=1; k<np; k++) 
+	    top += p(k, part) * pow(delnusq, (Double)k);
+
+	  bot = q(0, part);
+	  for (uInt k=1; k<nq; k++) 
+	    bot += q(k,part) * pow(delnusq, (Double)k);
+	  
+	  if (bot != 0.0) return (top/bot);
+	  else            return 0.0;
+	}
+  }
+
+  Double SynthesisUtils::getRefFreq(const VisBuffer& vb)
+  {return max(vb.msColumns().spectralWindow().chanFreq().getColumn());}
+  
+  void SynthesisUtils::makeFTCoordSys(const CoordinateSystem& coords,
+				      const Int& convSize,
+				      const Vector<Double>& ftRef,
+				      CoordinateSystem& ftCoords)
+  {
+    Int directionIndex;
+
+    ftCoords = coords;
+    directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+    //  The following line follows the (lame) logic that if a
+    //  DIRECTION axis was not found, the coordinate system must be of
+    //  the FT domain already
+    if (directionIndex == -1) return;
+
+    DirectionCoordinate dc;//=coords.directionCoordinate(directionIndex);
+    //	AlwaysAssert(directionIndex>=0, AipsError);
+    dc=coords.directionCoordinate(directionIndex);
+    Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
+    Vector<Int> shape(2,convSize);
+
+    Vector<Double>ref(4);
+    ref(0)=ref(1)=ref(2)=ref(3)=0;
+    dc.setReferencePixel(ref);
+    Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
+    Vector<Double> refVal;
+    refVal=ftdc->referenceValue();
+    //    refVal(0)=refVal(1)=0;
+    //    ftdc->setReferenceValue(refVal);
+    ref(0)=ftRef(0);
+    ref(1)=ftRef(1);
+    ftdc->setReferencePixel(ref);
+
+    ftCoords.replaceCoordinate(*ftdc, directionIndex);
+    // LogIO logio;
+    // IPosition tt;
+    // coords.list(logio,MDoppler::RADIO,tt,tt);
+    // ftCoords.list(logio,MDoppler::RADIO,tt,tt);
+
+    delete ftdc; ftdc=0;
+  }
+
+  //
+  // Given a list of Spw,MinFreq,MaxFreq,FreqStep (the output product
+  // of MSSelection), expand the list to a list of channel freqs. and
+  // conjugate freqs. per SPW.
+  //
+  void SynthesisUtils::expandFreqSelection(const Matrix<Double>& freqSelection, 
+					   Matrix<Double>& expandedFreqList,
+					   Matrix<Double>& expandedConjFreqList)
+  {
+    Int nSpw = freqSelection.shape()(0), maxSlots=0;
+    Double freq;
+
+    for (Int s=0;s<nSpw;s++)
+	maxSlots=max(maxSlots,SynthesisUtils::nint((freqSelection(s,2)-freqSelection(s,1))/freqSelection(s,3))+1);
+
+    expandedFreqList.resize(nSpw,maxSlots);
+    expandedConjFreqList.resize(nSpw,maxSlots);
+
+    for (Int s=0,cs=(nSpw-1);s<nSpw;s++,cs--)
+      for (Int i=0,ci=(maxSlots-1);i<maxSlots;i++,ci--)
+	{
+	  freq = freqSelection(s,1)+i*freqSelection(s,3);
+	  expandedFreqList(s,i) = (freq <= freqSelection(s,2)) ? freq : 0;
+	  freq = freqSelection(cs,2) - ci*freqSelection(cs,3);
+	  expandedConjFreqList(s,ci) = (freq >= freqSelection(cs,1)) ? freq : 0;
+	}
+  }
+
+  //
+  // The result will be in-place in c1
+  //
+  template
+  void SynthesisUtils::libreConvolver(Array<Complex>& c1, const Array<Complex>& c2);
+  
+
+  template <class T>
+  void SynthesisUtils::libreConvolver(Array<T>& c1, const Array<T>& c2)
+  {
+    Array<T> c2tmp;
+    c2tmp.assign(c2);
+
+    if (c1.shape().product() > c2tmp.shape().product())
+      c2tmp.resize(c1.shape(),True);
+    else
+      c1.resize(c2tmp.shape(),True);
+
+
+    ArrayLattice<T> c2tmp_lat(c2tmp), c1_lat(c1);
+
+    LatticeFFT::cfft2d(c1_lat,False);
+    LatticeFFT::cfft2d(c2tmp_lat,False);
+    cerr << "########## " << c1.shape() << " " << c2tmp.shape() << endl;
+    c1 = sqrt(c1);
+    c2tmp=sqrt(c2tmp);
+    c1 *= conj(c2tmp);
+    LatticeFFT::cfft2d(c1_lat);
+  }
+
+  Double SynthesisUtils::nearestValue(const Vector<Double>& list, const Double& val, Int& index)
+  {
+    // The algorithm below has a N*log(N) cost.
+    Vector<Double> diff = fabs(list - val);
+    Bool dummy;
+    Sort sorter(diff.getStorage(dummy), sizeof(Double));
+    sorter.sortKey((uInt)0,TpDouble);
+    Int nch=list.nelements();
+    Vector<uInt> sortIndx;
+    sorter.sort(sortIndx, nch);
+    
+    index=sortIndx(0);
+    return list(index);
+    // Int ndx=min(freqValues_p.nelements()-1,max(0,SynthesisUtils::nint((freqVal-freqValues_p[0])/freqValIncr_p)));
+    // return ndx;
+  }
+
+
 } // namespace casa
