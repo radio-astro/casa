@@ -1066,6 +1066,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Double> freqList_l;
     freqList_l.resize(chanList_l.shape());
     
+    if (chanList_l.shape()(0) == 0) return freqList_l;
+
     const ROMSSpWindowColumns msSpwSubTable(ms_p->spectralWindow());
     if (msSpwSubTable.nrow() <= (uInt)max(chanList_l.column(0)))
 	throw(MSSelectionError(String("MSS::getChanFreqList:: Internal error:  Selected list of SPW IDs > "
