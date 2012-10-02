@@ -1153,7 +1153,7 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
       Float mag = 1.21;  // half-squint magnitude in arcmin at 1 GHz)
       Float ang = 82.0*C::pi/180.0;    // squint orientation, rads, North of +AZ axis
       pb_pointer_p = new PBMath1DAiry( Quantity(25.0,"m"), Quantity(2.36,"m"),
-				       Quantity(8*0.8564,"deg"), Quantity(1.0,"GHz"),
+				       Quantity(0.8564,"deg"), Quantity(1.0,"GHz"),
 				       BeamSquint(MDirection(Quantity((mag*cos(ang)), "'"),
 							     Quantity((mag*sin(ang)), "'"),
 							     MDirection::Ref(MDirection::AZEL)),
