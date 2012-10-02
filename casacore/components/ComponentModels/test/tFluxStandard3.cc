@@ -69,14 +69,10 @@ int main() {
       for(Int srcInd = srcNames.nelements(); srcInd--;)
         expfds[scNum][srcInd].resize(2);
     }
-    //expfds[0][0][0] = 10.5213241;       // Perley-Butler 2013, 3C196, 2.0 GHz
-    expfds[0][0][0] = 10.4697005;       // Perley-Butler 2013, 3C196, 2.0 GHz(Oct1st,2012)
-    //expfds[0][0][1] = 0.85778257;       // Perley-Butler 2013, 3C196, 20.0 GHz
-    expfds[0][0][1] = 0.85275018;       // Perley-Butler 2013, 3C196, 20.0 GHz(Oct1st,2012)
-    //expfds[0][1][0] = 12.6024607;       // Perley-Butler 2013, 3C286, 2.0 GHz
-    expfds[0][1][0] = 12.5386591;       // Perley-Butler 2013, 3C286, 2.0 GHz(Oct1st,2012)
-    //expfds[0][1][1] = 2.74100521;       // Perley-Butler 2013, 3C286, 20.0 GHz
-    expfds[0][1][1] = 2.72945558;       // Perley-Butler 2013, 3C286, 20.0 GHz(Oct1st,2012)
+    expfds[0][0][0] = 10.5213241;       // Perley-Butler 2013, 3C196, 2.0 GHz
+    expfds[0][0][1] = 0.85778257;       // Perley-Butler 2013, 3C196, 20.0 GHz
+    expfds[0][1][0] = 12.6024607;       // Perley-Butler 2013, 3C286, 2.0 GHz
+    expfds[0][1][1] = 2.74100521;       // Perley-Butler 2013, 3C286, 20.0 GHz
 
     Vector<Double> fluxUsed(4);
 
