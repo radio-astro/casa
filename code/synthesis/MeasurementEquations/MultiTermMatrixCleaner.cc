@@ -146,15 +146,28 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   /* Calculate PSF/scale support - after verifying scale sizes and before allocating memory  */
 
   // PSF support : main lobe width x how many times this width the patch should cover
-  Int psupport = 4 * 10;  
+  //Int psupport = 4 * 10;  
   // If it's larger than the inner quarter, force to inner quarter.
-  if (psupport > MIN(nx_p/2, ny_p/2) ) psupport = MIN(nx_p/2, ny_p/2);
+  //if (psupport > MIN(nx_p/2, ny_p/2) ) psupport = MIN(nx_p/2, ny_p/2);
   // Increase according to the largest scale size ( add in quadrature, use twice the HPBW )
   Float maxscalesize = scaleSizes_p[nscales_p-1];
-  psupport = (Int) sqrt( psupport*psupport + 4*maxscalesize*maxscalesize );
+
+  //// 10 times the size of the main lobe of the PSF at the max scale size
+  Float psfbeam = 4.0;
+  Int psupport = (Int) ( sqrt( psfbeam*psfbeam + maxscalesize*maxscalesize ) * 15  );
+
+  //  psupport = (Int) sqrt( psupport*psupport + 4*maxscalesize*maxscalesize );
+
+  // At least this big...
+  if(psupport < 50) psupport = 50;
+
+  // Not too big...
+  if(psupport > nx_p || psupport > ny_p)   psupport = MIN(nx_p,ny_p);
+
   // Make it even.
-  if (psupport%2 != 0) psupport += 1;
-  
+  if (psupport%2 != 0) psupport -= 1;
+
+
   //UUU
 
   // Full image
@@ -1378,7 +1391,8 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     }
     else
     {
-      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
+      if(1)
+	//      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
