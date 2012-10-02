@@ -1377,7 +1377,15 @@ void QtDisplayPanelGui::showImageProfile() {
 						if (profileDD_ != pdd) {
 							// [Re-]orient pre-existing profiler to pdd
 							profile_->resetProfile(img, pdd->name().c_str());
+							disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
+																						profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+							disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
+																						profile_, SLOT(changeSpectrum(String, String, String )));
 							profileDD_ = pdd;
+							connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
+															profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+							connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
+															profile_, SLOT(changeSpectrum(String, String, String )));
 						}
 						else {
 							pdd->checkAxis();
