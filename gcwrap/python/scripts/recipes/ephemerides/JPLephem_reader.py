@@ -53,15 +53,18 @@ cols = {
              'comment': 'Illuminated fraction',
              'pat':    r'(?P<illu>[0-9.]+)',
              'unit': r'%'},
-    #'DiskLong': {'header': r'Ob-lon',
-    'Obs_Long': {'header': r'Ob-lon',
+    # put back to original heading...
+    'DiskLong': {'header': r'Ob-lon',
+    #'Obs_Long': {'header': r'Ob-lon',
                'comment': 'Sub-observer longitude',
-               'pat':    r'(?P<Obs_Long>[0-9.]+|n\.a\.)',
+    #           'pat':    r'(?P<Obs_Long>[0-9.]+|n\.a\.)',
+               'pat':    r'(?P<DiskLong>[0-9.]+|n\.a\.)',
                'unit': 'deg'},
-    #'DiskLat': {'header': r'Ob-lat',
-    'Obs_Lat': {'header': r'Ob-lat',
+    'DiskLat': {'header': r'Ob-lat',
+    #'Obs_Lat': {'header': r'Ob-lat',
                'comment': 'Sub-observer latitude',
-               'pat':    r'(?P<Obs_Lat>[-+0-9.]+|n\.a\.)',
+    #           'pat':    r'(?P<Obs_Lat>[-+0-9.]+|n\.a\.)',
+               'pat':    r'(?P<DiskLat>[-+0-9.]+|n\.a\.)',
                'unit': 'deg'},
     'Sl_lon': {'header': r'Sl-lon',
                'comment': 'Sub-Solar longitude',
@@ -642,7 +645,8 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
         #                   'DiskLong', 'DiskLat', 'sl_lon', 'sl_lat', 'r',
         #                   'ang_sep', 'obs_code']
         put_these_first = ['MJD', 'RA', 'DEC', 'Rho', 'RadVel', 'NP_ang', 'NP_dist',
-                           'Obs_Long', 'Obs_Lat', 'Sl_lon', 'Sl_lat', 'r','rdot']
+        #                   'Obs_Long', 'Obs_Lat', 'Sl_lon', 'Sl_lat', 'r','rdot']
+                           'DiskLong', 'DiskLat', 'Sl_lon', 'Sl_lat', 'r','rdot']
         # Like l.sort(), reverse() acts on its instance instead of returning a value.
         put_these_first.reverse()
         for c in put_these_first:

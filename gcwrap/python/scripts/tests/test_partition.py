@@ -354,8 +354,8 @@ class partition_test2(test_base):
         aflocal.done()
         self.assertEqual(len(nv), 3)
                
-        # Run tflagdata on MMS to check if it works well.
-        tflagdata(vis=self.mmsfile, mode='unflag', flagbackup=True)
+        # Run flagdata on MMS to check if it works well.
+        flagdata(vis=self.mmsfile, mode='unflag', flagbackup=True)
         
         # Check that the number of backups in MMS is correct
         aflocal = casac.agentflagger()
@@ -371,23 +371,23 @@ class partition_test2(test_base):
             shutil.rmtree(self.msfile+'.flagversions')
             
         # Unflag the MS
-        tflagdata(vis=self.msfile, mode='unflag', flagbackup=False)
+        flagdata(vis=self.msfile, mode='unflag', flagbackup=False)
         
         # Run partition and create the .flagversions
         partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True)
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
         
         # Flag spw=9 and then spw=7 in the MMS
-        tflagdata(vis=self.mmsfile, mode='manual', spw='9', flagbackup=True)
-        tflagdata(vis=self.mmsfile, mode='manual', spw='7', flagbackup=True)
+        flagdata(vis=self.mmsfile, mode='manual', spw='9', flagbackup=True)
+        flagdata(vis=self.mmsfile, mode='manual', spw='7', flagbackup=True)
         
         # There should be flags in spw=7 and 9 in MMS
-        res = tflagdata(vis=self.mmsfile, mode='summary')
+        res = flagdata(vis=self.mmsfile, mode='summary')
         self.assertEqual(res['flagged'],549888)
         
         # Restore the original flags (there should be none)
         flagmanager(vis=self.mmsfile, mode='restore', versionname='partition_1')
-        res = tflagdata(vis=self.mmsfile, mode='summary')
+        res = flagdata(vis=self.mmsfile, mode='summary')
         self.assertEqual(res['flagged'],0)
         
           

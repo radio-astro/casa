@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="flagdata" category="editing">
+        <shortdescription>\n ******* THIS TASK IS OBSOLETE AND WILL BE DEPRECATED *******\n</shortdescription>
+        <shortdescription>*******            USE THE TASK tflagdata            *******\n</shortdescription>
+        <shortdescription> All purpose flagging task based on selections</shortdescription>
+        <description>
+        The task will select a subset of data explicitly for flagging,
+        quacking, clipping, autocorrelation flagging, or flagging
+        of shadowed antennas. Unflagging is also available.
+
+        In a dual polarization data set, each polarization can be flagged
+        separately.  However, at present the calibration and imaging will
+        only use data with both parallel hands unflagged.
+
+        There is a vector mode of operation, which executes several flagging
+        options in one go.
+
+        The current flags are automatically backed up before applying new flags.
+        Previous flag versions can be recovered using the flagmanager task.
+
+        </description>
+        <input>
+                <param type="string" name="vis" mustexist="true">
+                        <description>Name of file to flag</description>
+                        <value></value>
+                </param>
+
+                <param type="bool" name="flagbackup">
+                        <description>Automatically back up the state of flags before the run?</description>
+                        <value>True</value>
+                </param>
+
+
+                <param type="string" name="mode">
+                        <description>Mode (manualflag,shadow,quack,summary)</description>
+                        <value>manualflag</value>
+                        <allowed kind="enum">
+                        <value>manualflag</value>
+                        <value>summary</value>
+                        <value>quack</value>
+                        <value>shadow</value>
+                        </allowed>
+                </param>
+
+                <param type="any" name="spw">
+                        <description>spectral-window/frequency/channel</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="field">
+                        <description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="bool" name="selectdata">
+                        <description>More data selection parameters (antenna, timerange etc)</description>
+                        <value>True</value>
+                </param>
+
+                <param type="any" name="antenna" subparam="true">
+                        <description>antenna/baselines: \'\'==>all, antenna = \'3,VA04\'</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="uvrange" subparam="true">
+                        <description>uv range: \'\'==>all; uvrange = \'0~100klambda\', default units=meters</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="timerange" subparam="true">
+                        <description>time range: \'\'==>all, timerange=\'09:14:0~09:54:0\'</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="correlation" subparam="true">
+                        <description>Select data based on correlation</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="scan" subparam="true">
+                        <description>scan numbers: \'\'==>all</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="intent" subparam="true">
+                        <description>Select data based on observing intent: \'\'==>all</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="feed" subparam="true">
+                        <description>multi-feed numbers: Not yet implemented</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="array" subparam="true">
+                        <description>(sub)array numbers: \'\'==>all</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="observation" subparam="true">
+                        <description>Select data based on observation ID: \'\'==>all</description>
+                        <any type="variant" limittypes="string int"/>
+                        <value type="string"></value>
+                </param>
+
+                <param type="any" name="clipexpr" subparam="true">
+                        <description>Expression to clip on</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string">ABS RR</value>
+                </param>
+
+                <param type="any" name="clipminmax" subparam="true">
+                        <description>Range to use for clipping</description>
+                        <any type="variant" limittypes="doubleArray doubleArrayArray"/>
+                        <value type="doubleArray"></value>
+                </param>
+
+                <param type="any" name="clipcolumn" subparam="true">
+                        <description>Data column to use for clipping</description>
+                        <any type="variant" limittypes="string stringArray"/>
+                        <value type="string">DATA</value>
+                         <!-- <allowed kind="enum">
+                           <value>'DATA'</value>
+                           <value>'CORRECTED'</value>
+                           <value>'MODEL'</value>
+                        </allowed> -->
+                </param>
+
+                <param type="any" name="clipoutside" subparam="true">
+                        <description>Clip outside the range, or within it</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">True</value>
+                </param>
+
+                <param type="any" name="channelavg" subparam="true">
+                        <description>Average over channels (scalar average)</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">False</value>
+                </param>
+
+                <param type="any" name="quackinterval" subparam="true">
+                        <description>Quack n seconds from scan beginning/end</description>
+                        <any type="variant" limittypes="double doubleArray"/>
+                        <value type="double">0.0</value>
+                </param>
+
+                <param type="any" name="quackmode" subparam="true">
+                       <description>Quack mode. \'beg\' ==> beginning of scan. \'endb\' ==> end of scan. \'end\' ==> all but end of scan. \'tail\' ==> all but beginning of scan</description>
+                       <any type="variant" limittypes="string stringArray"/>
+                       <value type="string">beg</value>
+                </param>
+
+                <param type="any" name="quackincrement" subparam="true">
+                       <description>Flag incrementally in time?</description>
+                       <any type="variant" limittypes="bool boolArray"/>
+                       <value type="bool">False</value>
+                </param>
+
+                <param type="any" name="autocorr" subparam="true">
+                        <description>Flag autocorrelations</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">False</value>
+                </param>
+
+                <param type="any" name="unflag" subparam="true">
+                        <description>Unflag the data specified</description>
+                        <any type="variant" limittypes="bool boolArray"/>
+                        <value type="bool">False</value>
+                </param>
+
+                <param type="double" name="diameter" subparam="true">
+                        <description>Effective diameter (m) to use. -1 ==>antenna diameter</description>
+                        <value>-1.0</value>
+                </param>
+
+                <param type="double" name="minrel" subparam="true">
+                        <description>minimum number of flags (relative)</description>
+                        <value type="double">0.0</value>
+                </param>
+                <param type="double" name="maxrel" subparam="true">
+                        <description>maximum number of flags (relative)</description>
+                        <value type="double">1.0</value>
+                </param>
+                <param type="int" name="minabs" subparam="true">
+                        <description>minimum number of flags (absolute)</description>
+                        <value type="int">0</value>
+                </param>
+                <param type="int" name="maxabs" subparam="true">
+                        <description>maximum number of flags (absolute). Use a negative value to indicate infinity.</description>
+                        <value type="int">-1</value>
+                </param>
+
+                <constraints>
+                        <when param="mode">
+                                <equals value="manualflag">
+                                        <default param="autocorr"><value type="bool">False</value></default>
+                                        <default param="unflag"><value type="bool">False</value></default>
+                                        <default param="clipexpr"><value type="string">ABS RR</value></default>
+                                        <default param="clipminmax"><value type="doubleArray"></value></default>
+                                        <default param="clipcolumn"><value type="string">DATA</value></default>
+                                        <default param="clipoutside"><value type="bool">True</value></default>
+                                        <default param="channelavg"><value type="bool">False</value></default>
+                                </equals>
+                                <equals value="quack">
+                                        <default param="autocorr"><value type="bool">False</value></default>
+                                        <default param="unflag"><value type="bool">False</value></default>
+                                        <default param="quackinterval"><value type="double">0.0</value></default>
+                                        <default param="quackmode"><value type="string">beg</value></default>
+                                        <default param="quackincrement"><value type="bool">False</value></default>
+                                </equals>
+                                <equals value="summary">
+                                        <default param="minrel"><value type="double">0.0</value></default>
+                                        <default param="maxrel"><value type="double">1.0</value></default>
+                                        <default param="minabs"><value type="int">0</value></default>
+                                        <default param="maxabs"><value type="int">-1</value></default>
+                                </equals>
+                                <equals value="shadow">
+                                        <default param="diameter"><value type="double">-1.0</value></default>
+                                </equals>
+                        </when>
+                        <when param="selectdata">
+                                <equals type="bool" value="True">
+                                        <default param="antenna"><value type="string"></value></default>
+                                        <default param="timerange"><value type="string"></value></default>
+                                        <default param="correlation"><value type="string"></value></default>
+                                        <default param="scan"><value type="string"></value></default>
+                                        <default param="intent"><value type="string"></value></default>
+                                        <default param="feed"><value type="string"></value></default>
+                                        <default param="array"><value type="string"></value></default>
+                                        <default param="uvrange"><value type="string"></value></default>
+                                        <default param="observation"><value type="string"></value></default>
+                                </equals>
+                                <equals type="bool" value="False"/>
+                        </when>
+                </constraints>
+        </input>
+<returns type="void"/>
+
+<example>
+
+        The task will flag a subset of data explicitly with the modes:
+            manualflag = flagging based on specific selection parameter
+                         plus clipping and flagging autcorrelations
+            summary    = report the amount of flagged data
+            quack      = remove/keep specific time range at scan beginning/end
+            shadow     = remove antenna-shadowed data
+            
+            NOTE: Please use testautoflag for RFI detection and autoflagging.
+
+        Unflagging is also available with options manualflag and quack.
+
+        The flags stored in the MS are automatically backed up before each run,
+        unless flagbackup = False.
+
+        Keyword arguments:
+        vis -- Name of input visibility file
+                default: none example: vis='ngc5921.ms'
+
+        flagbackup -- Automatically backup flags?
+                default: True
+                options: True,False
+
+        mode -- Mode of operation.
+                options: 'manualflag','autoflag','summary','quack','shadow'
+                default: 'manualflag'
+
+        manualflag --  option does data-selected flagging.
+               If autocorr = F; clipminmax = [], then
+                  flagging or unflagging [unflag=F, unflag=T] is specified by
+                  the data selection parameters.
+                     
+           Other flagging options, with the appropriate data selection
+           parameters, that are available are:
+
+              autocorr -- Flag autocorrelations 
+                  default: False
+                  options: True,False
+
+              clipexpr -- Clip using the following:
+                default: 'ABS RR'; example: clipexpr='RE XX'
+                options: Any of 'ABS', 'ARG', 'RE', 'IM', 'NORM' followed by
+                         any of 'I', 'XX', 'YY', 'RR', 'LL'
+              channelavg -- Average data over (selected) channels? Channel
+                            selections are taken into account. Flagged channels
+                            are excluded from the average. The average is done
+                            after applying the specified clipexpr, i.e. scalar
+                            averaging.
+                default: False
+                options: True,False
+              clipminmax -- Range of data (Jy) that will NOT be flagged
+                default: [] means do not use clip option
+                example: [0.0,1.5]
+              clipcolumn -- Column to use for clipping.
+                default: 'DATA'
+                options: 'DATA','CORRECTED','MODEL'
+              clipoutside -- Clip OUTSIDE the range ?
+                default: True
+                example: False -&gt; flag data WITHIN the range.
+              unflag -- Unflag the specified data
+                default: False (i.e. flag); example: unflag=True
+              
+        quack: option to remove specified part of scan beginning
+           quackinterval -- Time in seconds from scan beginning/end to flag
+                Make time slightly smaller than the desired time
+           quackmode -- Quack mode
+                default: 'beg'
+                    'beg'  ==> beginning of scan
+                    'endb' ==> end of scan. 
+                    'tail' ==> all but beginning of scan
+                    'end'  ==> all but end of scan.
+           quackincrement -- Quack incrementally in time?
+                default: False
+                    False  ==> the quack interval is counted from the
+                               beginning of the scan
+                    True   ==> the quack interval is counted from the
+                               first unflagged data in the scan
+           unflag -- Unflag the data
+                default =&gt; False (quack as indicated)
+                           True (unquack)
+           autocorr -- Flag autocorrelations (independent option)
+                default =&gt; False
+
+        shadow: option to flag data of shadowed antennas
+           diameter -- effective diameter to use when determining if an antenna
+                    is shadowed at a given time stamp. The given value is used
+                    for all antennas. If this is set to a negative number
+                    (default), the actual antenna diameters are used.
+
+        summary: lists number of rows and data points flagged
+           minrel -- Minimum number of flags (relative) to include in histogram
+               default: 0.0
+           maxrel -- Maximum number of flags (relative) to include in histogram
+               default: 1.0
+           minabs -- Minimum number of flags (absolute, inclusive) to include in histogram
+               default: 0
+           maxabs -- Maximum number of flags (absolute, inclusive) to include in histogram
+               To indicate infinity, use any negative number
+               default: -1
+
+           In this mode, the task returns a dictionary of flagging statistics.
+           Example:
+
+               s = flagdata(...)
+
+           Then s will be a dictionary which contains
+
+               s['total']                  : total number of data
+               s['flagged']                : amount of flagged data
+
+           In addition histogram statistics is available, as function of 
+           antenna, baseline, spw, channel, fieldId, correlation and scan number.
+           For example,
+
+               s['antenna']['2']           : amount of flagged data for antenna named '2'
+               s['baseline']['2&amp;&amp;7']       : amount of flagged data for baseline between
+                                             antenna names '2' and '7'
+
+           The parameters minrel, maxrel, minabs and maxabs can be used to limit
+           which histogram values are returned. For example,
+
+               minrel = 0.8
+               maxrel = 1.0
+               minabs = 0
+               maxabs = 3000
+
+           would report only antennas/baselines/... with more than 80% flagged
+           data and at the same time less than or equal to 3000 flagged values.
+ 
+        selectdata -- Other data selection parameters
+                default: True
+        antenna -- Select data based on baseline
+                default: '' (all); example: antenna='5&amp;6' baseline 5-6
+                antenna='5&amp;6;7&amp;8' #baseline 5-6 and 7-8
+                antenna='5' # all baselines with antenna 5
+                antenna='5,6' # all baselines with antennas 5 and 6
+        spw -- Select data based on spectral window and channels
+                default: '' (all); example: spw='1'
+                spw='&lt;2' #spectral windows less than 2
+                spw='&gt;1' #spectral windows greater than 1
+                spw='0:0~10' # first 10 channels from spw 0
+                spw='0:0~5;56~60' # multiple separated channel chunks.
+        correlation -- Correlation types
+                default: '' (all);
+                example: correlation='RR LL'
+        field -- Select data based on field id(s) or name(s)
+                default: '' (all); example: field='1'
+                field='0~2' # field ids inclusive from 0 to 2
+                field='3C*' # all field names starting with 3C
+        uvrange -- Select data within uvrange (default units meters)
+                default: '' (all); example:
+                uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lamgda
+                uvrange='&gt;4klamda';uvranges greater than 4 kilo-lambda
+                uvrange='0~1000km'; uvrange in kilometers
+        timerange  -- Select data based on time range:
+                default = '' (all); example,
+                timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                Note: YYYY/MM/DD can be dropped as needed:
+                timerange='09:14:0~09:54:0' # this time range
+                timerange='09:44:00' # data within one integration of time
+                timerange='&gt;10:24:00' # data after this time
+                timerange='09:44:00+00:13:00' #data 13 minutes after time
+        scan -- Select data based on scan number
+                default: '' (all); example: scan='&gt;3'
+        intent -- Select data based on observing intent
+                default: '' (all); example: intent='*CAL*,*BAND*'
+        feed -- Selection based on the feed - NOT IMPLEMENTED YET
+        array -- Selection based on the antenna array
+        observation -- Selection based on the observation ID
+                default: '' (all); example: observation='1' or observation=1
+
+        -- Vector mode --
+
+        For reasons of performance (in order to reduce the number loops through
+        the MS), several flagdata task invocations can be combined into a single
+        flagdata() run by giving vectors of parameters.
+
+        This is possible for the modes 'manualflag' and 'quack', only.
+
+        For example, the following three flagdata runs:
+
+            vis = 'my.ms'
+            mode = 'manualflag'
+            selectdata = True
+            flagdata(vis='my.ms', mode='manualflag', field='3', autocorr=True)
+            flagdata(vis='my.ms', mode='manualflag', field='3', timerange = '6:0:0~6:23:00')
+            flagdata(vis='my.ms', mode='manualflag', field='3', scan='0', spw='0:60;62;64')
+
+        can be combined into a single run by:
+
+            vis = 'my.ms'
+            mode = 'manualflag'
+            selectdata = True
+
+            field     = '3'
+            spw       = [ ''   , ''            , '0:60;62:64' ]
+            autocorr  = [ True , False         , False        ]
+            timerange = [ ''   , '6:0:0~6:23:0', ''           ]
+            scan      = [ ''   , ''            , '0'          ]
+
+            flagdata()
+
+        Note that field='3' is equivalent to field=['3','3','3']
+
+
+        Another example of vector mode is
+
+            vis = 'my.ms'
+            mode = 'manualflag'
+            clipminmax = [0.0, 0.7]
+            clipexpr = ['ABS RR', 'ABS LL', 'ABS LR']
+
+        which will flag all data where either of the clipping expressions
+        (ABS RR, ABS LL or ABS LR) is outside the clipping range.
+ </example>
+ </task>
+ </casaxml>

@@ -229,7 +229,7 @@ class importevla_test(unittest.TestCase):
                     shadow=True,flagzero=True,flagbackup=False, savecmds=True)
         
         # Check flags
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],2446080)
         
         # Check output file existence
@@ -253,7 +253,7 @@ class importevla_test(unittest.TestCase):
                     applyflags=True, savecmds=False, flagbackup=False)
         
         # Check flags only in RR and LL
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],2446080)
         self.assertEqual(res['scan']['2']['flagged'],2446080)
         
@@ -272,7 +272,7 @@ class importevla_test(unittest.TestCase):
                     shadow=False,flagzero=True,flagpol=False, flagbackup=False, savecmds=True)
         
         # Check flags
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0,'There are no zeros in this data set')
         self.assertEqual(res['scan']['2']['flagged'],0,'No flags should have been applied')
         self.assertEqual(res['scan']['13']['flagged'],0,'No flags should have been applied')
@@ -304,7 +304,7 @@ class importevla_test(unittest.TestCase):
                     applyflags=False,savecmds=True, flagbackup=False)
 
         # No flags were applied
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0)
         
         # Apply only row 213 using flagcmd
@@ -314,7 +314,7 @@ class importevla_test(unittest.TestCase):
         flagcmd(vis=msname, action='apply', tablerows=213)
         
         # Check flags. RR should no be flagged
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['correlation']['RR']['flagged'],0,'RR should not be flagged')
         self.assertEqual(res['correlation']['LL']['flagged'],29440)
         self.assertEqual(res['correlation']['LR']['flagged'],29440)
@@ -333,7 +333,7 @@ class importevla_test(unittest.TestCase):
         ff.close()
         self.assertEqual(ncmds, 214, 'Only Online cmds should have been saved to file')
         
-        # Unapply row 213 and apply it in tflagdata using the file
+        # Unapply row 213 and apply it in flagdata using the file
         # TO DO : after row selection is available in file
 
     def test_apply5(self):
@@ -343,7 +343,7 @@ class importevla_test(unittest.TestCase):
                     applyflags=True,savecmds=False, flagbackup=False)
         
         # This data set doesn't have shadow. Maybe change later!
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0,'There are shadowed antenna in this data set')
 
 
@@ -361,7 +361,7 @@ class importevla_test(unittest.TestCase):
                     applyflags=False,flagbackup=False)
         
         # Check flags
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],0,'No flags should have been applied')
 
         # Check output file existence
@@ -374,10 +374,10 @@ class importevla_test(unittest.TestCase):
         ff.close()
         self.assertEqual(ncmds, 216, 'Online, shadow and clip zeros should be saved to file')
         
-        # Apply flags using tflagdata
-        tflagdata(vis=msname, mode='list', inpfile=cmdfile)
+        # Apply flags using flagdata
+        flagdata(vis=msname, mode='list', inpfile=cmdfile)
         
-        res = tflagdata(vis=msname, mode='summary')
+        res = flagdata(vis=msname, mode='summary')
         self.assertEqual(res['flagged'],6090624)
                 
 

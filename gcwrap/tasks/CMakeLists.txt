@@ -28,7 +28,6 @@ fixplanets.xml
 fixvis.xml
 flagcmd.xml
 flagdata.xml
-tflagdata.xml
 flagmanager.xml
 fluxscale.xml
 ft.xml

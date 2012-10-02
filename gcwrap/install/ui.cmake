@@ -151,6 +151,9 @@ macro( casa_add_tasks module _target )
     COMMAND for x in ${_out_taskinfo} \; do grep -E "\"^from\"" $$x >> ${_tasks} \; done
     DEPENDS ${_out_taskinfo}
     COMMAND echo >> ${_tasks}
+    
+    # Create an alias to tflagdata pointing to flagdata
+    COMMAND echo "from flagdata_cli import  flagdata_cli as tflagdata" >> ${_tasks}
     COMMAND echo "from tget import *" >> ${_tasks}
     COMMAND echo "from taskmanager import tm" >> ${_tasks}
     DEPENDS ${_out_taskinfo}

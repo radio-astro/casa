@@ -10,7 +10,7 @@
         <description>
         The flagcmd task allows several batch-operations using flag commands.
 
-        Flag commands follow the mode and parameter names from the tflagdata task
+        Flag commands follow the mode and parameter names from the flagdata task
         (also explained below).  The available modes are: manual, clip, shadow, quack, 
         elevation,  tfcrop, rflag, extend and unflag.
 
@@ -159,7 +159,7 @@
 
 <example>
 
-    Flag commands follow the mode and parameter names from the tflagdata task
+    Flag commands follow the mode and parameter names from the flagdata task
     (also explained below).  The available modes are: manual, clip, shadow, quack, 
     elevation,  tfcrop, rflag, extend and unflag.
 
@@ -493,7 +493,7 @@
           mode='quack' quackmode='end' quackinterval=1.0
           mode='shadow'
 
-        Any other mode can also use selection (see the help of tflagdata):
+        Any other mode can also use selection (see the help of flagdata):
 
           mode='shadow' antenna='ea01,ea02,ea03'
           mode='quack' quackmode='end' quackinterval=1.0 antenna='ea22'
@@ -576,7 +576,7 @@
 
      ------- FLAG COMMAND SYNTAX -------
 
-        The command syntax is based on the tflagdata parameters.
+        The command syntax is based on the flagdata parameters.
 
         Basic Syntax Rules
         
@@ -614,7 +614,7 @@
           
         
         2. Modes specific parameters with default values (for further details and updated
-           default values, refer to the task tflagdata).
+           default values, refer to the task flagdata).
           
           2.1 Mode manual.
               autocorr=False
