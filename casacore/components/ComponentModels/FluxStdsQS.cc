@@ -185,15 +185,20 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
   Bool found = true;
   setFreqUnit("GHz");
   FCQS::Source srcEnum = getSrcEnum();
-  Vector<Float> coeffs(5), coefferrs(5);
+  //Vector<Float> coeffs(5), coefferrs(5);
 
   // four sources: 3C123,3C196,3C286,3C295
-  // this coefficients are as of 2013.09.13 given by Bryan Butler (CAS-4489)
+  // this coefficients are as of 2012.09.13 given by Bryan Butler (CAS-4489)
+  // revised coefficients Oct 1, 2012 (TT) 
+  //
   if(srcEnum == FCQS::THREEC286)
-    fill_coeffs(RVF4(1.2553, -0.4689, -0.1597, 0.0286), RVF4(0.0006, 0.0006, 0.0002, 0.0003));
-  //else if(srcEnum == FCQS::THREEC48)
-    //fill_coeffs(RVF4(1.3197, -0.7253, -0.2023, 0.0540));
+    //2012.09.13 values
+    //fill_coeffs(RVF4(1.2553, -0.4689, -0.1597, 0.0286), RVF4(0.0006, 0.0006, 0.0002, 0.0003));
+    //3C286 revised values as of Oct 1, 2012.
+    fill_coeffs(RVF4(1.2515, -0.4605, -0.1715, 0.0336), RVF4(0.0006, 0.0006, 0.0002, 0.0003));
   else if(srcEnum == FCQS::THREEC123) {
+    
+    /*** 2012.09.13 values
     coeffs(0)=1.8070;
     coefferrs(0)=0.0007;
     coeffs(1)=-0.7367;
@@ -205,24 +210,18 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
     coeffs(4)=-0.0672;
     coeffs(4)=0.0013;
     fill_coeffs(RVF5(coeffs),RVF5(coefferrs));
+    ***/
+    //3C123 revised values as of Oct 1, 2012 
+    // now only given to 2nd order
+    fill_coeffs(RVF3(1.8077, -0.8018, -0.1157),RVF3(0.0007, 0.0014, 0.0039));
   }
-  /***
-  else if(srcEnum == FCQS::THREEC147)
-    fill_coeffs(RVF4(1.4428, -0.6300, -0.3142, 0.1032));
-  else if(srcEnum == FCQS::THREEC138)
-    fill_coeffs(RVF4(1.0053, -0.4384, -0.1855, 0.0511));
-  else if(srcEnum == FCQS::NINETEEN34M638){
-    // The broken polynomial is smooth enough to be 1st-order differentiable.
-    //
-    // The coefficients have been shifted to use GHz instead of MHz.
-    fill_lohi_coeffs(RVF4(1.170418, 0.248618, -1.649694, 0.605334),  // Low
-                     MFrequency(Quantity(10.0, "GHz")),              // break
-                     RVF4(-2.5739, 10.0707, -10.0595, 2.9372));      // High
-  }
-  ***/
   else if(srcEnum == FCQS::THREEC295)
-    fill_coeffs(RVF4(1.4832, -0.7749, -0.3529, 0.0767),RVF4(0.0007, 0.0006, 0.0003, 0.0003)); 
+    // 2012.09.13 values  
+    //fill_coeffs(RVF4(1.4832, -0.7749, -0.3529, 0.0767),RVF4(0.0007, 0.0006, 0.0003, 0.0003)); 
+    // 3C295 Oct 1, 2012 
+    fill_coeffs(RVF4(1.4866, -0.7871, -0.3440, 0.0749),RVF4(0.0007, 0.0006, 0.0003, 0.0003)); 
   else if(srcEnum == FCQS::THREEC196) {
+    /*** 2012.09.13 values
     coeffs(0)=1.2892;
     coefferrs(0)=0.0007;
     coeffs(1)=-0.7973;
@@ -234,6 +233,9 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
     coeffs(4)=-0.0452;
     coefferrs(4)=0.0009;
     fill_coeffs(RVF5(coeffs),RVF5(coefferrs));
+    ***/
+    // 3C196 Oct 1 2012 values has less terms
+    fill_coeffs(RVF4(1.2969, -0.8690, -0.1788, 0.0305), RVF4(0.0007, 0.0017, 0.0036, 0.0028));
   } 
   else
     found = false;
