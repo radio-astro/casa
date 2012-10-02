@@ -60,7 +60,7 @@ class pcasa_test(unittest.TestCase):
 
         listobs(vis)
 
-        tflagdata(vis,
+        flagdata(vis,
                   scan = "3",
                   antenna = "8",
                   mode='unflag',

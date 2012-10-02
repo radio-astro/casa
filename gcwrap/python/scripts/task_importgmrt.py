@@ -356,7 +356,7 @@ def importgmrt( fitsfile, flagfile, vis ):
             try:
 #                casalog.post( "flagdata( "+vis+", mode='manualflag', antenna='"
 #                              +antStr+"', timerange='"+timerange+"' )", 'NORMAL')
-                casalog.post( "tflagdata( "+vis+", mode='manual', antenna='"
+                casalog.post( "flagdata( "+vis+", mode='manual', antenna='"
                               +antStr+"', timerange='"+timerange+"' )", 'NORMAL')
                 #flagdata( vis, mode='manualflag', selectdata=True, \
                 #            antenna=antStr, timerange=timerange, \

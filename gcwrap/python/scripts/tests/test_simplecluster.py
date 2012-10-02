@@ -190,7 +190,7 @@ class test_simplecluster(unittest.TestCase):
         self.stopCluster()
 
 
-class test_tflagdata_mms(test_simplecluster):
+class test_flagdata_mms(test_simplecluster):
 
     def setUp(self):
         # Prepare MMS
@@ -233,20 +233,20 @@ class test_tflagdata_mms(test_simplecluster):
     
         return
     
-    def test1_tflagdata_list_return(self):
-        """Test 1: Test support for MMS using tflagdata in unflag+clip mode"""
+    def test1_flagdata_list_return(self):
+        """Test 1: Test support for MMS using flagdata in unflag+clip mode"""
 
         # Create list file
         text = "mode='unflag'\n"\
                "mode='clip' clipminmax=[0,0.1]"
-        filename = 'list_tflagdata.txt'
+        filename = 'list_flagdata.txt'
         self.create_input(text, filename)
 
         # step 1: Do unflag+clip
-        tflagdata(vis=self.vis, mode='list', inpfile=filename)
+        flagdata(vis=self.vis, mode='list', inpfile=filename)
 
         # step 2: Now do summary
-        ret_dict = tflagdata(vis=self.vis, mode='summary')
+        ret_dict = flagdata(vis=self.vis, mode='summary')
 
         # Print summary (note: the first 16 jobs correspond to the step 1)
         self.assertTrue(ret_dict['name']=='Summary')
@@ -707,7 +707,7 @@ class testJobQueueManager(unittest.TestCase):
         cluster.remove_record()
 
 def suite():
-    return [test_simplecluster,test_tflagdata_mms,test_setjy_mms,test_applycal_mms,test_uvcont_mms]
+    return [test_simplecluster,test_flagdata_mms,test_setjy_mms,test_applycal_mms,test_uvcont_mms]
      
 if __name__ == '__main__':
     testSuite = []
