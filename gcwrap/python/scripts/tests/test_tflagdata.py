@@ -333,7 +333,7 @@ class test_flagmanager(test_base):
         
         newname = 'Ha! The best version ever!'
 
-        flagmanager(vis=self.vis, mode='rename', oldname='tflagdata_2', versionname=newname, 
+        flagmanager(vis=self.vis, mode='rename', oldname='flagdata_2', versionname=newname, 
                     comment='This is a *much* better name')
         flagmanager(vis=self.vis, mode='list')
         aflocal.open(self.vis)
@@ -372,7 +372,7 @@ class test_flagmanager(test_base):
 
         print "After flagging antenna 2 and 3 there were", ant3, "flags"
 
-        flagmanager(vis=self.vis, mode='restore', versionname='tflagdata_3')
+        flagmanager(vis=self.vis, mode='restore', versionname='flagdata_3')
         restore2 = tflagdata(vis=self.vis, mode='summary')['flagged']
 
         print "After restoring pre-antenna 3 flagging, there are", restore2, "flags; should be", ant2
