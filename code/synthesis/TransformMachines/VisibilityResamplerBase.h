@@ -232,37 +232,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]] += (nvalue*Complex(wt));}
 
 
+    inline Complex getFrom4DArray(const Complex* __restrict__& store, 
+				  const Int* __restrict__& iPos, 
+				  const Vector<Int>& inc) 
+    //  __restrict__ 
+    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
+
+    inline Complex getFrom4DArray(const Complex* __restrict__& store, 
+				  const Vector<Int> iPos, const Vector<Int>& inc) 
+    //  __restrict__ 
+    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
+
+    inline DComplex getFrom4DArray(const DComplex* __restrict__& store, 
+		                   const Int* __restrict__& iPos, 
+				   const Vector<Int>& inc) 
+    //  __restrict__ 
+    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
+
+    inline DComplex getFrom4DArray(const DComplex* __restrict__& store, 
+				  const Vector<Int> iPos, const Vector<Int>& inc) 
+    //  __restrict__ 
+    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
+
+
     // The following two methods are called in the innermost loop.
     inline Complex getFrom4DArray(const Complex* __restrict__& store, const Int* __restrict__& iPos) 
-      __restrict__ 
+    //  __restrict__ 
     {return getFrom4DArray(store, iPos, inc_p);}
 
     inline DComplex getFrom4DArray(const DComplex* __restrict__& store, const Int* __restrict__& iPos) 
-      __restrict__ 
+    //  __restrict__ 
     {return getFrom4DArray(store, iPos, inc_p);}
-
-    inline Complex getFrom4DArray(const Complex* __restrict__& store, 
-				  const Int* __restrict__& iPos, 
-				  const Vector<Int>& inc) 
-      __restrict__ 
-    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
-
-    inline Complex getFrom4DArray(const Complex* __restrict__& store, 
-				  const Vector<Int> iPos, const Vector<Int>& inc) 
-      __restrict__ 
-    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
-
-    inline DComplex getFrom4DArray(const DComplex* __restrict__& store, 
-				  const Int* __restrict__& iPos, 
-				  const Vector<Int>& inc) 
-      __restrict__ 
-    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
-
-    inline DComplex getFrom4DArray(const DComplex* __restrict__& store, 
-				  const Vector<Int> iPos, const Vector<Int>& inc) 
-      __restrict__ 
-    {return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];};
-
 
   };
 }; //# NAMESPACE CASA - END
