@@ -78,11 +78,11 @@ namespace casa{
   template
   void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
 					     const Bool& dopsf,  Matrix<Double>& sumwt,
-					     Bool useConjFreqCF) __restrict__;
+					     Bool useConjFreqCF); // __restrict__;
   template
   void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
   					     const Bool& dopsf,  Matrix<Double>& sumwt,
-					     Bool useConjFreqCF) __restrict__;
+					     Bool useConjFreqCF); // __restrict__;
 
   // template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
   // template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
