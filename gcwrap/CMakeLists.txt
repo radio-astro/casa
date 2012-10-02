@@ -723,8 +723,8 @@ endif()
 # setting python_path unilaterally prevents the user from configuring
 # the location of python...
 #
-if ( NOT CMAKE_SYSTEM MATCHES ^Darwin-12 )
-    if( APPLE )
+if( APPLE )
+    if ( NOT CMAKE_SYSTEM MATCHES ^Darwin-12 )
        set( python_prefix ${casa_packages} )
     endif()
 endif()
