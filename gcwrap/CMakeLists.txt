@@ -173,7 +173,8 @@ if( APPLE )
         	set( arch darwin )
         endif()
     elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
-		CMAKE_SYSTEM MATCHES ^Darwin-11 )
+		CMAKE_SYSTEM MATCHES ^Darwin-11 OR
+		CMAKE_SYSTEM MATCHES ^Darwin-12 )
         if( NOT arch )
         	set( arch darwin64 )
         endif()
@@ -717,10 +718,15 @@ else()
 endif()
 
 #
-# For some unknown reason cmake sets the /usr for Lion
+# For some unknown reason cmake sets the /usr for Lion...
+# some people do not use the version of python in ${casa_packages}...
+# setting python_path unilaterally prevents the user from configuring
+# the location of python...
 #
-if( APPLE )
-   set( python_prefix ${casa_packages} )
+if ( NOT CMAKE_SYSTEM MATCHES ^Darwin-12 )
+    if( APPLE )
+       set( python_prefix ${casa_packages} )
+    endif()
 endif()
 
 
