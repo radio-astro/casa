@@ -49,11 +49,11 @@ namespace casa{
   template
   void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
 					Matrix<Double>& sumwt,const Bool& dopsf,
-					Bool useConjFreqCF); // __restrict__;
+					Bool useConjFreqCF) __restrict__;
   template
   void AWVisResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
 					Matrix<Double>& sumwt,const Bool& dopsf,
-					Bool useConjFreqCF); // __restrict__;
+					Bool useConjFreqCF) __restrict__;
 
   template
   Double AWVisResampler::accumulateOnGrid(Array<DComplex>& grid, Complex* __restrict__& convFuncV, 
