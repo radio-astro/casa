@@ -2834,10 +2834,11 @@ Bool LatticeStatistics<T>::someGoodPoints ()
          pStoreLattice_p->getSlice(stats, pos, shape, IPosition(1,1));
    
          pos(0) = NPTS;
-         // this needs to be Int64, not Int as it was, to support > 2.1 Gpixel images
-         // of course it will still fail for > 9.1 Epixel images, but hopefully we
-         // won't have to worry about those for a few more Moore timescales.
-         someGoodPointsValue_p = Int64(real(stats(pos))+0.1) > 0;
+         if (Int(real(stats(pos))+0.1) > 0) {
+            someGoodPointsValue_p = True;
+         } else {
+            someGoodPointsValue_p = False;
+         }
          return someGoodPointsValue_p;
       } else {
 
