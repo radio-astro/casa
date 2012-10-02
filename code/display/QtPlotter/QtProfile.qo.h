@@ -343,7 +343,7 @@ private:
    QtCanvas* pixelCanvas;
    QtProfilePrefs* profilePrefs;
    int frameIndex;
-
+   bool newOverplots;
 
    private slots:
    	   void changeTopAxis();

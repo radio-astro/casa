@@ -241,6 +241,7 @@ void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &erro
                                     const QString& lbl, ColorCategory level ){
 	QString curveLabel = lbl;
 	bool dupeCurve = duplicateCurve( curveLabel );
+
 	if ( !dupeCurve ){
 		QColor curveColor = getDiscreteColor( level, id );
 		CanvasCurve curve( data, error, curveLabel, curveColor, level );

@@ -9,7 +9,7 @@ summarize the CASA flagger infrastructure and user-options.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{Single flag mode (tflagdata)}
+\subsection{Single flag mode (flagdata)}
 
 All the following flagging modes operate on user-specified subsets of the data.
 The dataset is iterated-through in chunks consisting of one field, one spw, and a
@@ -271,13 +271,13 @@ Below are some examples.
                              Specify scale-factor for time-analysis thresholds, use default for frequency.
 
 \begin{verbatim}
-   tflagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
+   flagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
 \end{verbatim}
  
 \item  Supply noise-estimates to be used with default scale-factors. 
   
 \begin{verbatim}
-   tflagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, writeflags=True);
+   flagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, writeflags=True);
 \end{verbatim}
 
 \item Two-passes. This replicates the usage pattern in AIPS.
@@ -290,8 +290,8 @@ Below are some examples.
                              -- The second pass applies these commands (writeflags=True).
 
 \begin{verbatim}
-  tflagdata(vis='my.ms', mode='rflag', spw='9,10',                                               timedev='tdevfile.txt', freqdev='fdevfile.txt', writeflags=False);
-  tflagdata(vis='my.ms', mode='rflag', spw='9,10', 
+  flagdata(vis='my.ms', mode='rflag', spw='9,10',                                               timedev='tdevfile.txt', freqdev='fdevfile.txt', writeflags=False);
+  flagdata(vis='my.ms', mode='rflag', spw='9,10', 
             timedev='tdevfile.txt', freqdev='fdevfile.txt', writeflags=True);
 \end{verbatim}
             
@@ -327,22 +327,23 @@ it is easier to detect than in other correlations.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\subsection{List of flag commands (tflagdata, flagcmd)}
+\subsection{List of flag commands (flagdata, flagcmd)}
 \label{Sec:FlagCmdLists}
-There are two flagging tasks in version 3.4 of CASA. The main task tflagdata is
+There are two flagging tasks in version 3.4 of CASA. The main task flagdata is
 a replacement for the old flagdata/flagdata2/testautoflag/flagautocorr. This
 task can take parameters input from the interface as well as input from an
-external text file. This is the so-called list mode. All the flagging commands
+external text file or a list of strings. This is the so-called list mode. All the flagging commands
 that apply to an MS can be combined into one single text file and read in for
-processing. Only the summary mode is not allowed in list mode to avoid
+processing. Similarly, the flagging commands can be written in a Python list of strings
+and passed in the command line to the task. Only the summary mode is not allowed in list mode to avoid
 confusion when several summaries are present in the list. The user can run
-tflagdata separated to get the summary of the list. 
+flagdata separated to get the summary of the list. 
 
 The other task, flagcmd is a replacement for the previous version of flagcmd. It
 has a re-factored interface and it can do much more than the previous version.
-All the flagging modes available in tflagdata are also allowed in flagcmd
+All the flagging modes available in flagdata are also allowed in flagcmd
 (except again for the summary mode). Several input modes are available: table,
-file, xml and cmd. Actions to perform on the input are: apply, unapply, list,
+list and xml. Actions to perform on the input are: apply, unapply, list,
 clear, plot and extract.
 
 \subsubsection{Apply/ un-apply}
@@ -357,13 +358,11 @@ Flag commands can be given as input to the flagcmd task in several ways. The
 default is the 'table' which will have the flag commands inside the FLAG\_CMD
 sub-table of the MS in a column called COMMAND.
 
-The other input, as already detailed above is the 'file' mode, which will have
-the flag commands in a text file.
+The other input, as already detailed above is the 'list' mode, which will have
+the flag commands in a text file or from a list of strings.
 
 The 'xml' input is meant to be used for the online flags from the Flag.xml file
 in the MS. It also assumes that the Antenna.xml file is present.
-
-The last input mode will input the flag commands from a list of Python strings.
 
 For all the input modes, the action='list' can be used to list the flags
 commands on the screen and optionally to save them to an external output file
@@ -405,15 +404,15 @@ therefore it is not necessary to specify inpmode='table' and action='apply'.
  mode='extend' extendpols=True
 
 # Pass the input to the task
-  flagcmd(vis='uid.ms', inpmode='file', inpfile='flags.txt', action='apply')
+  flagcmd(vis='uid.ms', inpmode='list', inpfile='flags.txt', action='apply')
  
 \end{verbatim}
 
 \item Input commands via a list of strings.
 \begin{verbatim}
-# Create a Python string called mycmd.
-  flagcmd(vis='uid.ms', inpmode='cmd',
-          command=["mode='manual' autocorr=True",
+# Give the flagging commands in the command line as a list of strings.
+  flagcmd(vis='uid.ms', inpmode='list',
+          inpfile=["mode='manual' autocorr=True",
                    "mode='shadow'",
                    "mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'", 
                    "mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0",
@@ -423,12 +422,12 @@ therefore it is not necessary to specify inpmode='table' and action='apply'.
 \end{verbatim}
 \end{enumerate}
 
-\subsubsection{Using flag-commands in the tflagdata task}
+\subsubsection{Using flag-commands in the flagdata task}
 
 \paragraph{Examples}
 
 \begin{enumerate}
-\item Run tflagdata in list mode, using a flag-command file.
+\item Run flagdata in list mode, using a flag-command file.
 
 \begin{verbatim}
 # Create an input text file with all the flag commands to apply to the MS.
@@ -440,12 +439,32 @@ therefore it is not necessary to specify inpmode='table' and action='apply'.
  mode='extend' extendpols=True
 
 # Pass the input to the task
-  tflagdata(vis='uid.ms', mode='list', inpfile='flags.txt')
+  flagdata(vis='uid.ms', mode='list', inpfile='flags.txt')
  
 # Get a summary
-  tflagdata(vis='uid.ms', mode='summary')
+  flagdata(vis='uid.ms', mode='summary')
 
 \end{verbatim}
+
+\item Run flagdata in list mode, using a Python list of strings.
+
+\begin{verbatim}
+# Create an input list with all the flag commands to apply to the MS.
+
+ cmds = ["mode='manual' autocorr=True",
+         "scan='1~3' mode='manual'",
+         "mode='clip' clipminmax=[0,2] clipzeros=True correlation='ABS_ALL'",
+         "mode='tfcrop' spw='9' correlation='ABS_YY' ntime=51.0",
+         "mode='extend' extendpols=True"]
+
+# Pass the input to the task
+  flagdata(vis='uid.ms', mode='list', inpfile=cmds)
+ 
+# Get a summary
+  flagdata(vis='uid.ms', mode='summary')
+
+\end{verbatim}
+
 
 \item Select by reason in list mode.
 
@@ -464,13 +483,13 @@ input file contains the following flag commands.
  first step we only want to flag the bad antennas, so we will select the cmds
  by the reason given in the file.
  
-   tflagdata(vis='uid1.ms', inpmode='list', inpfile='flags.txt',
+   flagdata(vis='uid1.ms', inpmode='list', inpfile='flags.txt',
              reason='BAD_ANT')
 
-   tflagdata(vis='uid2.ms', inpmode='list', inpfile='flags.txt',
+   flagdata(vis='uid2.ms', inpmode='list', inpfile='flags.txt',
              reason='BAD_ANT')
 
-   tflagdata(vis='uid3.ms', inpmode='list', inpfile='flags.txt',
+   flagdata(vis='uid3.ms', inpmode='list', inpfile='flags.txt',
              reason='BAD_ANT')
       
 \end{verbatim}
@@ -482,7 +501,7 @@ input file contains the following flag commands.
 parameters to a file. It may also be useful to write along a reason for those
 flags.
 
-  tflagdata(vis='uid1.ms', mode='clip', clipzeros=True, savepars=True,
+  flagdata(vis='uid1.ms', mode='clip', clipzeros=True, savepars=True,
             outfile='myflagcmd.txt', cmdreason='CLIPZEROS')
   
 # This will flag all the zeros in the MS and save the parameters to
@@ -509,7 +528,7 @@ future.
 
 Keeping the state of the flags stored in the FLAG\_CMD sub-table is also not
 guaranteed. The state can get out-of-sync very easily with the interchangeable
-use of all flagging tasks such as tflagdata, flagcmd, and interactive
+use of all flagging tasks such as flagdata, flagcmd, and interactive
 flagging using plotms. Note that plotms does not write to the FLAG\_CMD
 sub-table.
 
@@ -577,7 +596,7 @@ calibration tables, it only makes sense to use the following flag agent groups:
 
 \begin{enumerate}
 
-\item Autoflagging (outliers detection) agents: clip, tfcrop, rflag:
+\item Auto-flagging (outliers detection) agents: clip, tfcrop, rflag:
 
 \begin{verbatim}
 
@@ -591,7 +610,7 @@ af.done()
 
 \end{verbatim}
 
-\item Manualflagging (meta-data selections like antenna/time-range):
+\item Manual flagging (meta-data selections like antenna/time-range):
 
 \begin{verbatim}
 
@@ -622,7 +641,7 @@ af.done()
 \end{enumerate}
 
 Notice that the parameters names and types are the same as described in the
-tflagdata command-line help.
+flagdata command-line help.
 
 \subsubsection{Supported columns and expressions}
 
