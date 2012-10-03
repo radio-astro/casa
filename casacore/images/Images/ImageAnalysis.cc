@@ -1582,13 +1582,11 @@ Record ImageAnalysis::deconvolvecomponentlist(
 		<< "This image does not contain a DirectionCoordinate - cannot deconvolve"
 		<< LogIO::EXCEPTION;
 	}
-	DirectionCoordinate dirCoord = cSys.directionCoordinate(dirCoordinate);
-
 	// Loop over components and deconvolve
 	n = list.nelements();
 	ComponentList outCL;
 	for (uInt i = 0; i < n; ++i) {
-		outCL.add(ImageUtilities::deconvolveSkyComponent(*_log, list(i), beam, dirCoord));
+		outCL.add(ImageUtilities::deconvolveSkyComponent(*_log, list(i), beam));
 	}
 	if (outCL.nelements() > 0) {
 		if (!outCL.toRecord(error, retval)) {
@@ -3455,7 +3453,7 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	// axes to be regridded and the input image Coordinate for axes not
 	// to be regridded
 	CoordinateSystem cSys = ImageRegrid<Float>::makeCoordinateSystem(
-        *_log, pCSTo, cSysFrom, axes2
+        *_log, pCSTo, cSysFrom, axes2, subImage.shape()
     );
 	if (cSys.nPixelAxes() != outShape.nelements()) {
 		*_log

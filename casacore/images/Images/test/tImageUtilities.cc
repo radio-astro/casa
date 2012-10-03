@@ -31,6 +31,12 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/MaskedArray.h>
+#include <casa/Quanta/QLogical.h>
+#include <components/ComponentModels/Flux.h>
+#include <components/ComponentModels/GaussianShape.h>
+#include <components/ComponentModels/SkyComponent.h>
+#include <components/ComponentModels/ConstantSpectrum.h>
+
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -90,7 +96,7 @@ void doOpens()
 
 void doTypes()
 {
-   LogIO os(LogOrigin("tImageUtilities", "doTypes()", WHERE));
+   LogIO os(LogOrigin("tImageUtilities", __FUNCTION__, WHERE));
    os << "Image Type test" << LogIO::POST;
 //
    Directory dir("tImageUtilities_tmp");
@@ -254,7 +260,7 @@ void doConversions()
 
 void doBin()
 {
-   LogOrigin lor("tImageUtilities", "doBins()", WHERE);
+   LogOrigin lor("tImageUtilities", __FUNCTION__, WHERE);
    LogIO os(lor);
    os << "Binning Tests" << LogIO::POST;
 //
@@ -280,8 +286,9 @@ void doBin()
    AlwaysAssert(allEQ(maOut.getMask(),True), AipsError);
 }
 
+/*
 void doDeconvolveFromBeam() {
-	LogOrigin lor("tImageUtilities", "doDeconvolveFromBeam()", WHERE);
+	LogOrigin lor("tImageUtilities", __FUNCTION__, WHERE);
 	LogIO os(lor);
 	Angular2DGaussian convolved(
 		Quantity(5, "arcsec"),
@@ -307,12 +314,40 @@ void doDeconvolveFromBeam() {
 	AlwaysAssert(fitSuccess, AipsError);
 	AlwaysAssert(deconvolved == exp, AipsError);
 
+	convolved = Angular2DGaussian(
+		Quantity(10, "arcsec"),
+		Quantity(5, "arcsec"),
+		Quantity(20, "deg")
+	);
+	fitSuccess = False;
+	beam = GaussianBeam(
+		Quantity(8, "arcsec"), Quantity(4, "arcsec"),
+		Quantity(20, "deg")
+	);
+
+	isPointSource = ImageUtilities::deconvolveFromBeam(
+		deconvolved, convolved, fitSuccess, os, beam
+	);
+	exp = Angular2DGaussian(
+		Quantity(6, "arcsec"),
+		Quantity(3, "arcsec"),
+		Quantity(20, "deg")
+	);
+	AlwaysAssert(! isPointSource, AipsError);
+	AlwaysAssert(fitSuccess, AipsError);
+	AlwaysAssert(near(deconvolved, exp, 1e-7, Quantity(1, "uas")), AipsError);
+
+
 	// make beam larger than the source so the fit fails
 	beam = GaussianBeam(
 		Quantity(6, "arcsec"), Quantity(6, "arcsec"),
 		Quantity(0, "deg")
 	);
-
+	convolved = Angular2DGaussian(
+		Quantity(5, "arcsec"),
+		Quantity(5, "arcsec"),
+		Quantity(20, "deg")
+	);
 	isPointSource = ImageUtilities::deconvolveFromBeam(
 		deconvolved, convolved, fitSuccess, os, beam
 	);
@@ -321,16 +356,71 @@ void doDeconvolveFromBeam() {
 	// TODO test for point source, I can't figure out how to actually set parameters so the method
 	// returns true
 }
-  
+  */
 int main()
 {
   try {
     doBin();
     doTypes();
     doOpens();
-    doDeconvolveFromBeam();
+    //doDeconvolveFromBeam();
 //    doConversions();
-  } catch (AipsError& x) {
+
+    {
+    	cout << "*** test deconvolve sky component" << endl;
+    	LogIO mylog;
+    	GaussianShape gauss(
+    		MDirection(), Quantity(10, "arcsec"),
+    		Quantity(5, "arcsec"), Quantity(20, "deg")
+    	);
+    	Flux<Double> flux(1.0);
+    	SkyComponent convolved(flux, gauss, ConstantSpectrum());
+    	GaussianBeam beam(
+    		Quantity(8, "arcsec"), Quantity(4, "arcsec"),
+    		Quantity(20, "deg")
+    	);
+    	SkyComponent deconvolved = ImageUtilities::deconvolveSkyComponent(
+    		mylog, convolved, beam
+    	);
+
+    	GaussianShape got = dynamic_cast<GaussianShape&>(deconvolved.shape());
+    	AlwaysAssert(got.majorAxis() == Quantity(6, "arcsec"), AipsError);
+    	AlwaysAssert(near(got.minorAxis(), Quantity(3, "arcsec"), 1e-7), AipsError);
+    	AlwaysAssert(
+    		nearAbs(
+    			got.positionAngle(), Quantity(20, "deg"), Quantity(1, "uas")
+    		),
+    		AipsError
+    	);
+    	gauss = GaussianShape(
+    		MDirection(), Quantity(4, "arcsec"),
+    		Quantity(3, "arcsec"),
+    		Quantity(20, "deg")
+    	);
+    	convolved = SkyComponent(flux, gauss, ConstantSpectrum());
+    	beam = GaussianBeam(
+    		Quantity(3, "arcsec"), Quantity(2, "arcsec"),
+    		Quantity(50, "deg")
+    	);
+    	deconvolved = ImageUtilities::deconvolveSkyComponent(
+    		mylog, convolved, beam
+    	);
+
+    	got = dynamic_cast<GaussianShape&>(deconvolved.shape());
+    	AlwaysAssert(near(got.majorAxis(), Quantity(3.0203474964295665, "arcsec"), 1e-7), AipsError);
+    	AlwaysAssert(near(got.minorAxis(), Quantity(1.6963198403637358, "arcsec"), 1e-7), AipsError);
+    	cout << "** pa " << got.positionAngle() << endl;
+    	AlwaysAssert(
+    		nearAbs(
+    			got.positionAngle(), Quantity(-1.9489431240069859 + 180, "deg"), Quantity(1, "uas")
+    		),
+    		AipsError
+    	);
+
+
+    }
+  }
+  catch (const AipsError& x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
     return 1;
   }
