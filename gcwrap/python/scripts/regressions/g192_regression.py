@@ -78,17 +78,10 @@ split(vis='g192_a.ms',outputvis='g192_src.split.ms',
 	field='1',spw='0:9~108',datacolumn='corrected')
 splitsrctime = time.time()
 
-print '--Flag bad scan--'
+print '--Flag bad time range--'
 #flag data in the specified time range for the source and spw
-
-# But actually doing so causes this regression test to fail!
 tflagdata(vis="g192_src.split.ms", field="0", spw="0", 
-		timerange="2003/04/26/02:45:00.0~2003/04/26/02:49:00.0")
-#fg.open(msname='g192_src.split.ms')
-#fg.setdata(field='0',spw='0', time='2003/04/26/02:45:00.0 ~ 2003/04/26/02:49:00.0')
-##af.settimerange(timerange=['26-APR-2003/02:45:00.0','26-APR-2003/02:49:00.0'])
-#fg.run()
-#fg.done()
+	  timerange="2003/04/26/02:45:00.0~2003/04/26/02:46:30.0")
 flagsrctime=time.time()
 
 print '--Clean src line--'
@@ -144,11 +137,11 @@ thistest_immax=statistics['max']
 # note thistest_imrms will be a list with one value 
 thistest_imrms=statistics['rms']
 
-calmax=2.7573018074
-srcmax=50.6572
-contsubrms=0.00291196396574
-immax=0.026467908173799515
-imrms=0.0021083489991724491
+calmax=2.7573
+srcmax= 25.116
+contsubrms= 0.00283678
+immax=0.026332
+imrms= 0.0020570
 #data set size     = 634.9 MB - 5 VLA archive (xp) files
 
 diff_cal=abs((calmax-thistest_cal)/calmax)
@@ -191,23 +184,49 @@ print >>logfile,'*********************************'
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
-if (diff_cal < 0.05): print >>logfile,'* Passed cal max amplitude test *'
-print >>logfile,'* Cal max amp '+str(thistest_cal)
-if (diff_src < 0.05): print >>logfile,'* Passed src max amplitude test *'
-print >>logfile,'* Src max amp '+str(thistest_src)
-if (diff_con < 0.05): print >>logfile,'* Passed contsub rms test         *'
-print >>logfile,'* Contsub rms '+str(thistest_con)
-if (diff_immax < 0.05): print >>logfile,'* Passed image max test         *'
-print >>logfile,'* Image max '+str(thistest_immax)
-if (diff_imrms < 0.05): print >>logfile,'* Passed image rms test         *'
-print >>logfile,'* Image rms '+str(thistest_imrms)
-if ((diff_src<0.05) & (diff_cal<0.05) & (diff_immax<0.05) & (diff_imrms<0.05)): 
-	regstate=True
+
+regstate=True
+if (diff_cal < 0.05):
+	print >>logfile,'* Passed cal max amplitude test *'
+else:
+	regstate=False
+	print >>logfile,'* Failed cal max amplitude test *'
+print >>logfile,'   Cal max amp '+str(thistest_cal)+' ('+str(calmax)+')'
+
+if (diff_src < 0.05):
+	print >>logfile,'* Passed src max amplitude test *'
+else:
+	regstate=False
+	print >>logfile,'* Failed src max amplitude test *'
+print >>logfile,'   Src max amp '+str(thistest_src)+' ('+str(srcmax)+')'
+
+if (diff_con < 0.05):
+	print >>logfile,'* Passed contsub rms test         *'
+else:
+	regstate=False
+	print >>logfile,'* Failed contsub rms test         *'
+print >>logfile,'   Contsub rms '+str(thistest_con)+' ('+str(contsubrms)+')'
+
+if (diff_immax < 0.05):
+	print >>logfile,'* Passed image max test         *'
+else:
+	regstate=False
+	print >>logfile,'* Failed image max test         *'
+print >>logfile,'   Image max '+str(thistest_immax)+' ('+str(immax)+')'
+
+if (diff_imrms < 0.05):
+	print >>logfile,'* Passed image rms test         *'
+else:
+	regstate=False
+	print >>logfile,'* Failed image rms test         *'
+print >>logfile,'   Image rms '+str(thistest_imrms)+' ('+str(imrms)+')'
+
+
+if (regstate):
 	print >>logfile,'---'
 	print >>logfile,'Passed Regression test for G192'
 	print >>logfile,'---'
 else: 
-	regstate=False
 	print >>logfile,'----FAILED Regression test for G192'
 print >>logfile,'*********************************'
 

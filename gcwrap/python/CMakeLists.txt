@@ -94,7 +94,6 @@ scripts/task_fixplanets.py
 scripts/task_fixvis.py
 scripts/task_flagcmd.py
 scripts/task_flagdata.py
-scripts/task_flagdata2.py
 scripts/task_flagmanager.py
 scripts/task_fluxscale.py
 scripts/task_ft.py
@@ -175,7 +174,6 @@ scripts/task_splattotable.py
 scripts/task_split.py
 scripts/task_statwt.py
 scripts/task_testconcat.py
-scripts/task_tflagdata.py
 scripts/task_uvcontsub.py
 scripts/task_uvcontsub2.py
 scripts/task_uvcontsub3.py

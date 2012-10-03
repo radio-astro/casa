@@ -97,7 +97,7 @@ class ia_deconvolvecomponentlist_test(unittest.TestCase):
         mycs.setunits(["deg","deg",""])
         mycs.setdirection(
             refcode="J2000", refval=[30,40],
-            incr=[1.0/36000,1.0/36000]
+            incr=[-1.0/36000,1.0/36000]
         )
         myia.setcoordsys(mycs.torecord())
         myia.setrestoringbeam(
@@ -119,7 +119,7 @@ class ia_deconvolvecomponentlist_test(unittest.TestCase):
         ]
         epa = [
             qa.quantity({'unit': 'deg', 'value': 20}),
-            qa.quantity({'unit': 'deg', 'value': 41.948943124031587})
+            qa.quantity({'unit': 'deg', 'value': -1.948943124031587 + 180})
         ]
         tol = 1e-10
         for i in [0, 1]:
@@ -129,6 +129,7 @@ class ia_deconvolvecomponentlist_test(unittest.TestCase):
             bb.done()
             self.assertTrue(_near(shape["majoraxis"], emaj[i], tol))
             self.assertTrue(_near(shape["minoraxis"], emin[i], tol))
+            print "*** pa " + str(shape["positionangle"])
             self.assertTrue(_near(shape["positionangle"], epa[i], tol))
         
 def suite():

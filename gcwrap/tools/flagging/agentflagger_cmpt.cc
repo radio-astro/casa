@@ -10,12 +10,12 @@
  ***/
 
 #include <iostream>
-#include <testflagger_cmpt.h>
+#include <agentflagger_cmpt.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Exceptions/Error.h>
-#include <flagging/Flagging/TestFlagger.h>
+#include <flagging/Flagging/AgentFlagger.h>
 #include <flagging/Flagging/RFCommon.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/Record.h>
@@ -30,12 +30,12 @@ using namespace casa;
 
 namespace casac {
 
-testflagger::testflagger()
+agentflagger::agentflagger()
 {
 	try
 	{
-		logger_p = new LogIO(LogOrigin("testflagger","",WHERE));
-		testflagger_p = new TestFlagger();
+		logger_p = new LogIO(LogOrigin("agentflagger","",WHERE));
+		agentflagger_p = new AgentFlagger();
 
 	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -44,7 +44,7 @@ testflagger::testflagger()
 
 }
 
-testflagger::~testflagger()
+agentflagger::~agentflagger()
 {
 	try
 	{
@@ -60,13 +60,13 @@ testflagger::~testflagger()
 }
 
 bool
-testflagger::done()
+agentflagger::done()
 {
 	try
 	{
-		if (testflagger_p) {
-			delete testflagger_p;
-			testflagger_p = NULL;
+		if (agentflagger_p) {
+			delete agentflagger_p;
+			agentflagger_p = NULL;
 		}
 
 		return true;
@@ -78,15 +78,15 @@ testflagger::done()
 }
 
 bool
-testflagger::open(const std::string& msname, const double ntime)
+agentflagger::open(const std::string& msname, const double ntime)
 {
 	try
 	{
-		if ( !testflagger_p ) {
-			testflagger_p = new TestFlagger();
+		if ( !agentflagger_p ) {
+			agentflagger_p = new AgentFlagger();
 		}
-		if (testflagger_p) {
-			return testflagger_p->open(msname, ntime);
+		if (agentflagger_p) {
+			return agentflagger_p->open(msname, ntime);
 		}
 
 		return false;
@@ -99,7 +99,7 @@ testflagger::open(const std::string& msname, const double ntime)
 
 
 bool
-testflagger::selectdata(
+agentflagger::selectdata(
 		const ::casac::record& selconfig,
 		const std::string& field,
 		const std::string& spw,
@@ -116,17 +116,17 @@ testflagger::selectdata(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			if (! selconfig.empty()) {
 				Record config = *toRecord(selconfig);
 				// Select based on the record
-				return testflagger_p->selectData(config);
+				return agentflagger_p->selectData(config);
 			}
 			else {
 
 				// Select based on the parameters
-				return testflagger_p->selectData(
+				return agentflagger_p->selectData(
 						String(field),String(spw),String(array),
 						String(feed),String(scan),String(antenna),
 						String(uvrange),String(timerange),String(correlation),
@@ -143,15 +143,15 @@ testflagger::selectdata(
 
 
 bool
-testflagger::parseagentparameters(const ::casac::record& aparams)
+agentflagger::parseagentparameters(const ::casac::record& aparams)
 {
 	try
 	{
 
 		Record agent_params = *toRecord(aparams);
 
-		if(testflagger_p){
-			return testflagger_p->parseAgentParameters(agent_params);
+		if(agentflagger_p){
+			return agentflagger_p->parseAgentParameters(agent_params);
 		}
 
 		return false;
@@ -162,12 +162,12 @@ testflagger::parseagentparameters(const ::casac::record& aparams)
 }
 
 bool
-testflagger::init()
+agentflagger::init()
 {
 	try
 	{
-		if(testflagger_p){
-			return testflagger_p->initAgents();
+		if(agentflagger_p){
+			return agentflagger_p->initAgents();
 		}
 
 		return false;
@@ -178,13 +178,13 @@ testflagger::init()
 }
 
 ::casac::record*
- testflagger::run(bool writeflags, bool sequential)
+ agentflagger::run(bool writeflags, bool sequential)
 {
 	casac::record *rstat(0);
 	try
 	{
-		if(testflagger_p){
-			rstat =  fromRecord(testflagger_p->run(writeflags, sequential));
+		if(agentflagger_p){
+			rstat =  fromRecord(agentflagger_p->run(writeflags, sequential));
 		}
 		else{
 			rstat = fromRecord(Record());
@@ -202,16 +202,16 @@ testflagger::init()
  * Methods to deal with flag backup
  */
 std::vector<std::string>
-testflagger::getflagversionlist(const bool printflags)
+agentflagger::getflagversionlist(const bool printflags)
 {
 	try
 	{
 		std::vector<std::string> result;
 
-		if(testflagger_p)
+		if(agentflagger_p)
 		{
 			Vector<String> versionlist(0);
-			testflagger_p->getFlagVersionList(versionlist);
+			agentflagger_p->getFlagVersionList(versionlist);
 			for(uInt i = 0; i < versionlist.nelements(); i++) {
 				if (printflags) *logger_p << versionlist[i] << LogIO::POST;
 				result.push_back(versionlist[i]);
@@ -226,13 +226,13 @@ testflagger::getflagversionlist(const bool printflags)
 }
 
 bool
-testflagger::printflagselection()
+agentflagger::printflagselection()
 {
 	try
 	{
-		if(testflagger_p)
+		if(agentflagger_p)
 		{
-			return testflagger_p->printFlagSelections();
+			return agentflagger_p->printFlagSelections();
 		}
 		return false;
 	} catch (AipsError x) {
@@ -242,14 +242,14 @@ testflagger::printflagselection()
 }
 
 bool
-testflagger::saveflagversion(const std::string& versionname, const std::string& comment,
+agentflagger::saveflagversion(const std::string& versionname, const std::string& comment,
 		const std::string& merge)
 {
 	try
 	{
-		if(testflagger_p)
+		if(agentflagger_p)
 		{
-			return testflagger_p->saveFlagVersion(String(versionname), String(comment),String(merge));
+			return agentflagger_p->saveFlagVersion(String(versionname), String(comment),String(merge));
 		}
 		return False;
 	} catch (AipsError x) {
@@ -259,17 +259,17 @@ testflagger::saveflagversion(const std::string& versionname, const std::string& 
 }
 
 bool
-testflagger::restoreflagversion(const std::vector<std::string>& versionname,
+agentflagger::restoreflagversion(const std::vector<std::string>& versionname,
 		const std::string& merge)
 {
     try
     {
-        if(testflagger_p)
+        if(agentflagger_p)
         {
         	Vector<String> verlist;
         	verlist.resize(0);
         	verlist = toVectorString(versionname);
-            return testflagger_p->restoreFlagVersion(verlist, String(merge));
+            return agentflagger_p->restoreFlagVersion(verlist, String(merge));
         }
         return False;
     } catch (AipsError x) {
@@ -279,16 +279,16 @@ testflagger::restoreflagversion(const std::vector<std::string>& versionname,
 }
 
 bool
-testflagger::deleteflagversion(const std::vector<std::string>& versionname)
+agentflagger::deleteflagversion(const std::vector<std::string>& versionname)
 {
     try
     {
-        if(testflagger_p)
+        if(agentflagger_p)
         {
         	Vector<String> verlist;
         	verlist.resize(0);
         	verlist = toVectorString(versionname);
-            return testflagger_p->deleteFlagVersion(verlist);
+            return agentflagger_p->deleteFlagVersion(verlist);
         }
         return False;
     } catch (AipsError x) {
@@ -299,7 +299,7 @@ testflagger::deleteflagversion(const std::vector<std::string>& versionname)
 
 
 bool
-testflagger::parsemanualparameters(
+agentflagger::parsemanualparameters(
 		const std::string& field,
 		const std::string& spw,
 		const std::string& array,
@@ -317,10 +317,10 @@ testflagger::parsemanualparameters(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			// Parse the manual parameters
-			return testflagger_p->parseManualParameters(
+			return agentflagger_p->parseManualParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
@@ -336,7 +336,7 @@ testflagger::parsemanualparameters(
 }
 
 bool
-testflagger::parseclipparameters(
+agentflagger::parseclipparameters(
 		const std::string& field,
 		const std::string& spw,
 		const std::string& array,
@@ -358,10 +358,10 @@ testflagger::parseclipparameters(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			// Parse the clip parameters
-			return testflagger_p->parseClipParameters(
+			return agentflagger_p->parseClipParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
@@ -379,7 +379,7 @@ testflagger::parseclipparameters(
 }
 
 bool
-testflagger::parsequackparameters(
+agentflagger::parsequackparameters(
 		const std::string& field,
 		const std::string& spw,
 		const std::string& array,
@@ -399,10 +399,10 @@ testflagger::parsequackparameters(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			// Parse the quack parameters
-			return testflagger_p->parseQuackParameters(
+			return agentflagger_p->parseQuackParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
@@ -419,7 +419,7 @@ testflagger::parsequackparameters(
 }
 
 bool
-testflagger::parseelevationparameters(
+agentflagger::parseelevationparameters(
 		const std::string& field,
 		const std::string& spw,
 		const std::string& array,
@@ -438,10 +438,10 @@ testflagger::parseelevationparameters(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			// Parse the elevation parameters
-			return testflagger_p->parseElevationParameters(
+			return agentflagger_p->parseElevationParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
@@ -458,7 +458,7 @@ testflagger::parseelevationparameters(
 }
 
 bool
-testflagger::parsetfcropparameters(
+agentflagger::parsetfcropparameters(
 		const std::string& field,
 		const std::string& spw,
 		const std::string& array,
@@ -486,10 +486,10 @@ testflagger::parsetfcropparameters(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			// Parse the tfcrop parameters
-			return testflagger_p->parseTfcropParameters(
+			return agentflagger_p->parseTfcropParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
@@ -508,7 +508,7 @@ testflagger::parsetfcropparameters(
 }
 
 bool
-testflagger::parseextendparameters(
+agentflagger::parseextendparameters(
 		const std::string& field,
 		const std::string& spw,
 		const std::string& array,
@@ -533,10 +533,10 @@ testflagger::parseextendparameters(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			// Parse the extend parameters
-			return testflagger_p->parseExtendParameters(
+			return agentflagger_p->parseExtendParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),
@@ -555,7 +555,7 @@ testflagger::parseextendparameters(
 
 
 bool
-testflagger::parsesummaryparameters(
+agentflagger::parsesummaryparameters(
 		const std::string& field,
 		const std::string& spw,
 		const std::string& array,
@@ -574,10 +574,10 @@ testflagger::parsesummaryparameters(
 
 	try {
 
-		if (testflagger_p) {
+		if (agentflagger_p) {
 
 			// Parse the summary parameters
-			return testflagger_p->parseSummaryParameters(
+			return agentflagger_p->parseSummaryParameters(
 					String(field),String(spw),String(array),
 					String(feed),String(scan),String(antenna),
 					String(uvrange),String(timerange),String(correlation),

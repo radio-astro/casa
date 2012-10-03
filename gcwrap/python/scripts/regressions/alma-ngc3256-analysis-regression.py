@@ -181,10 +181,10 @@ if(mystep in thesteps):
     for name in basename:
         #flagmanager(vis = name+'.ms', mode = 'restore', versionname = 'Original')
 
-	flagdata(vis=name+'.ms', flagbackup = F, mode = 'shadow')
-	flagautocorr(vis=name+'.ms')
-        flagdata(vis=name+'.ms', mode='manualflag', flagbackup = F, intent='*POINTING*')
-        flagdata(vis=name+'.ms', mode='manualflag', flagbackup = F, intent='*ATMOSPHERE*')
+	tflagdata(vis=name+'.ms', flagbackup = F, mode = 'shadow')
+	tflagdata(vis=name+'.ms',mode='manual', autocorr=True)
+        tflagdata(vis=name+'.ms', mode='manual', flagbackup = F, intent='*POINTING*')
+        tflagdata(vis=name+'.ms', mode='manual', flagbackup = F, intent='*ATMOSPHERE*')
 
         flagmanager(vis = name+'.ms', mode = 'save', versionname = 'Apriori')
 
@@ -235,7 +235,7 @@ if(mystep in thesteps):
 
     flagmanager(vis ='uid___A002_X1d54a1_X174_K_WVR.ms', mode = 'restore', versionname = 'Original')
        
-    flagdata(vis='uid___A002_X1d54a1_X174_K_WVR.ms', mode='manualflag',
+    tflagdata(vis='uid___A002_X1d54a1_X174_K_WVR.ms', mode='manual',
              antenna='DV04', flagbackup = T, scan='4,5,9', spw='7')
             
     for name in basename:
@@ -275,31 +275,31 @@ if(mystep in thesteps):
 
     flagmanager(vis ='ngc3256_line.ms', mode = 'restore', versionname = 'Original')
 
-    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw=['*:0~16','*:125~127'])
+    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='*:0~16,*:125~127')
 
-    flagdata(vis = 'ngc3256_line.ms', flagbackup = T,
+    tflagdata(vis = 'ngc3256_line.ms', flagbackup = T,
 	timerange='>2011/04/16/12:00:00', field='Titan')
 
     fixplanets(vis='ngc3256_line.ms', field='Titan', fixuvw=True)
 
-    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
-             correlation='YY', mode='manualflag', selectdata=T,
+    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
+             correlation='YY', mode='manual',
              antenna='DV07', timerange='')
 
-    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
-             correlation='YY', mode='manualflag', selectdata=T,
+    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
+             correlation='YY', mode='manual',
              antenna='DV08', timerange='>2011/04/17/03:00:00')
 
-    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='0',
-             correlation='', mode='manualflag', selectdata=T,
+    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='0',
+             correlation='', mode='manual',
              antenna='PM03', timerange='2011/04/17/02:15:00~02:15:50')
 
-    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='2,3', 
-             correlation='', mode='manualflag', selectdata=T,
+    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='2,3', 
+             correlation='', mode='manual',
              antenna='PM03', timerange='2011/04/16/04:13:50~04:18:00')
 
-    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='',
-             correlation='', mode='manualflag', selectdata=T,
+    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='',
+             correlation='', mode='manual',
              antenna='PM03&DV10', timerange='>2011/04/16/15:00:00')
 
     timing()
@@ -412,15 +412,19 @@ if(mystep in thesteps):
 
     flagmanager(vis = name+'.ms', mode = 'restore', versionname = 'step12')
     
-    flagdata(vis='ngc3256_line.ms', mode='manualflag',
+    tflagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:13:35~04:13:45', flagbackup = T)
-    flagdata(vis='ngc3256_line.ms', mode='manualflag',
+    
+    tflagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/05:21:13~05:21:19', flagbackup = T)
-    flagdata(vis='ngc3256_line.ms', mode='manualflag',
+    
+    tflagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:16:40~04:16:49', flagbackup = T)
-    flagdata(vis='ngc3256_line.ms', mode='manualflag',
+    
+    tflagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:14:00~04:17:10', antenna='PM03', flagbackup = T)
-    flagdata(vis='ngc3256_line.ms', mode='manualflag',
+    
+    tflagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/17/00:35:30~01:20:20', antenna='DV04', spw='3', flagbackup = T)
 
     flagmanager(vis = name+'.ms', mode = 'save', versionname = 'step13')

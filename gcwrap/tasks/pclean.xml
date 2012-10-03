@@ -232,39 +232,40 @@
 		    <value></value>
 		  </value>
 		</param>
+<!--
 		<param type="bool" name="selectdata">
 		  <description>Other data selection parameters</description>
 		  <value>True</value>
 		</param>
-
-		<param type="any" name="timerange" subparam="true">
+-->
+		<param type="any" name="timerange">
 		  <description>Range of time to select from data</description>
 		  <any type="variant" limittypes="string stringArray"/>
 		  <value type="string"></value>
 		</param>
 		
     
-		<param type="any" name="uvrange" subparam="true">
+		<param type="any" name="uvrange">
 		  <description>Select data within uvrange </description>
 		  <any type="variant" limittypes="string stringArray"/>
 		  <value type="string"></value>
 		</param>
 		
     
-		<param type="any" name="antenna" subparam="true">
+		<param type="any" name="antenna">
 		  <description>Select data based on antenna/baseline</description>
 		  <any type="variant" limittypes="string stringArray"/>
 		  <value type="string"></value>
 		</param>
 
     
-		<param type="any" name="scan" subparam="true">
+		<param type="any" name="scan">
 		  <description>Scan number range</description>
 		  <any type="variant" limittypes="string stringArray"/>
 		  <value type="string"></value>
 		</param>
     
-		<param type="any" name="observation" subparam="true">
+		<param type="any" name="observation">
 		  <description>Observation ID range</description>
 		  <any type="variant" limittypes="string int"/>
 		  <value type="string"></value>
@@ -272,6 +273,10 @@
 		<param type="boolean" name="pbcorr">
 			<description>Correct for the primary beam post deconvolution</description>
 			<value>False</value>
+		</param>
+		<param type="double" name="minpb">
+			<description>Fractional of peak of pb coverage where to stop the  pb correction</description>
+			<value>0.2</value>
 		</param>
 		<param type="string" name="clusterdef">
 			<description>File that contains cluster definition</description>
@@ -327,7 +332,7 @@
                      <equals value="mosaic"/>
 		     <equals value="sd"/>                     
                  </when>
-
+<!--
 		 <when param="selectdata">
 		   <equals type="bool" value="False"/>
 		   <equals type="bool" value="True">
@@ -343,6 +348,7 @@
 		     </default>
 		   </equals>
 		 </when>
+-->
 		 <when param="alg">
 		   <equals type="string" value="clark"/>
 		   <equals type="string" value="hogbom"/>
@@ -457,7 +463,16 @@
                Options: 'clark', 'hogbom', 'multiscale'
                default: 'clark'
 
-        majorcycles -- integer number of CS major cycles to do 
+	 cyclefactor -- Controls the threshhold at which the
+                   deconvolution cycle will pause to degrid and subtract the
+                   model from the visibilities (Cotton-Schwab (CS) major cycle).
+                   With poor PSFs, reconcile often (cyclefactor=4 or 5) for
+                   reliability. 
+                   With good PSFs, use cyclefactor = 1.5 to 2.0 for speed. 
+                   Note: threshold = cyclefactor * max sidelobe * max residual
+ 		   default: 1.5; example: cyclefactor=4
+		   cyclefactor=0 allows the user to control number of CS major cycle 
+         &gt;&gt;&gt;  majorcycles -- integer number of CS major cycles to do 
                default: 1; 
                example: majorcycles=10
     
@@ -490,8 +505,9 @@
                  mode='cube'; Use with nchan, start, step to specify
                         output image cube.
                NOTE: mode='velocity' or 'channel' or 'frequency'
-               is aliased to mode='cube' for backward comaptibility to 
-               people to feel comfy
+               are aliased to mode='cube' for backward compatibility 
+	       and comfort.
+
   &gt;&gt;&gt; mode='cube' expandable parame
 ters
            nchan -- Total number of channels in the output image.
@@ -504,7 +520,8 @@ ters
 	      if start is in units of velocity or frequency it will take it as such
               
 	      If the user use the the ms channel as starting pclean will assign 
-	      the first channel of the image to the data channel frequency of the first 
+	      the first channel of the image to the data channel frequency in LSRK 
+              of the first 
 	      spw selected at the first time seen in the data and the direction of the 
 	      source selected. 
 	      If the data is not in the LSRK frame the user should be aware that the 
@@ -512,7 +529,7 @@ ters
 
               example:start=5
              start can be in units of frequency or velocity too
-	     When velocity units is used it is obvious then that it is refering to the line
+	     When velocity units is used it is obvious then that it is referring to the line
 	     whose restfrequency is provided by the user or is default one for the source 
 	     in the MS/SOURCE table.
 	     examples: start='5.0km/s', or start='22.3GHz'.
@@ -536,9 +553,69 @@ ters
                 The viewer will open with the image displayed. Select the
         	region for the mask and double click in the middle of it.
 
+	pbcor -- Output primary beam-corrected image
+                If pbcor=False, the final output image is NOT corrected for
+                the PB pattern (particularly important for mosaics), and
+                therefore is not "flux correct". Correction can also be
+                done after the  fact using immath to divide
+                &lt;imagename&gt;.image by the &lt;imagename&gt;.flux image. 
+ 	       default: pbcor=False; output un-corrected image 
+ 	       example: pbcor=True; output pb-corrected image (masked outside
+                        minpb) 
+
+       &gt;&gt;&gt; minpb -- Minimum PB level to use for pb-correction and pb-based masking.
+                    default=0.2;
+                    example: minpb=0.01 
+               When ftmachine is *not* 'mosaic' :
+                  minpb is applied to the flux image (sensitivity-weighted pb).
+               When ftmachine='mosaic' :
+	          minpb is applied to the flux.pbcoverage image 
+ 
         overwrite -- If False use existing model image of same name to continue clean 
-               if True the imagename.model is deleted if it is exists
+               if True the imagename.model and other associated images are overwitten 
+               if they exist
                default: True
+
+
+         timerange  -- Select data based on time range:
+	         default: '' (all); examples,
+		 timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+		   Note: if YYYY/MM/DD is missing date defaults to first 
+		   day in data set
+		   timerange='09:14:0~09:54:0' picks 40 min on first day
+		   timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 
+		   30min on NEXT day
+		   timerange='09:44:00' pick data within one integration 
+		   of time
+		   timerange='&gt;10:24:00' data after this time
+		   For multiple MS input, a list of timerange strings can be
+		 used:
+          uvrange -- Select data within uvrange (default units meters)
+                   default: '' (all); example:
+                   uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+                   uvrange='&gt;4klambda';uvranges greater than 4 kilo lambda
+          antenna -- Select data based on antenna/baseline
+                   default: '' (all)
+                   If antenna string is a non-negative integer, it is 
+ 		   assumed to be an antenna index, otherwise, it is
+ 		   considered an antenna name.
+                   antenna='5&amp;6'; baseline between antenna index 5 and 
+ 				 index 6.
+                   antenna='VA05&amp;VA06'; baseline between VLA antenna 5 
+ 				       and 6.
+                   antenna='5&amp;6;7&amp;8'; baselines 5-6 and 7-8
+                   antenna='5'; all baselines with antenna index 5
+                   antenna='05'; all baselines with antenna number 05 
+ 				(VLA old name)
+                   antenna='5,6,9'; all baselines with antennas 5,6,9 
+ 				   index number
+               scan -- Scan number range.
+                   default: '' (all)
+                   example: scan='1~5
+               observation -- Observation ID range.
+                   default: '' (all)
+                   example: observation='1~5'
+
 
 	clusterdef -- Name of a file that contains the cluster definition.
                        If clusterdef='' (the default) then all the cores of the machine on 

@@ -7,7 +7,7 @@ from taskinit import *
 from __main__ import default
 
 #
-# Test of flagcmd task. It uses tflagdata to unflag and summary
+# Test of flagcmd task. It uses flagdata to unflag and summary
 #
 
 def test_eq(result, total, flagged):
@@ -58,7 +58,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
         default(flagcmd)
 
     def setUp_multi(self):
@@ -71,7 +71,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
         default(flagcmd)
 
     def setUp_flagdatatest_alma(self):
@@ -84,7 +84,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
         default(flagcmd)
 
         
@@ -98,7 +98,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
         default(flagcmd)
         
     def setUp_shadowdata(self):
@@ -111,7 +111,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
         default(flagcmd)
         
     def setUp_data4rflag(self):
@@ -124,8 +124,8 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        default(tflagdata)
-        tflagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(flagdata)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
 
         
 class test_manual(test_base):
@@ -139,20 +139,20 @@ class test_manual(test_base):
         filename = create_input(input)
         
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
 
     def test_compatibility(self):
         input = "observation='1' mode='manualflag'"
         filename = create_input(input)
         
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
-        test_eq(tflagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
         
     def test_autocorr(self):
         '''flagcmd: autocorr=True'''
         self.setUp_ngc5921()
         flagcmd(vis=self.vis, inpmode='list', inpfile=['autocorr=True'], action='apply')
-        res = tflagdata(vis=self.vis, mode='summary')
+        res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 203994, 'Should flag only the auto-correlations')
         
 
@@ -171,8 +171,8 @@ class test_alma(test_base):
         
         # flag POINTING CALIBRATION scans and ignore comment line
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
-        test_eq(tflagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
-        res = tflagdata(vis=self.vis,mode='summary')
+        test_eq(flagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
+        res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
         self.assertEqual(res['scan']['4']['flagged'], 0, 'Scan 4 should not be flagged')
         
@@ -183,7 +183,7 @@ class test_alma(test_base):
         flagcmd(vis=self.vis, inpmode='list', 
                  inpfile=["intent='CAL*POINT*' field=''","scan='3,4' antenna=''","scan='5'"], 
                  action='apply', savepars=False)
-        res = tflagdata(vis=self.vis,mode='summary')
+        res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184)
         self.assertEqual(res['scan']['4']['flagged'], 48132)
         self.assertEqual(res['flagged'], 160392)
@@ -203,7 +203,7 @@ class test_alma(test_base):
         
         # Apply to clip only WVR
         flagcmd(vis=self.vis, inpmode='list', inpfile=[res[0]['command']], savepars=False, action='apply')
-        ret = tflagdata(vis=self.vis, mode='summary')
+        ret = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(ret['flagged'], 22752)
         self.assertEqual(ret['correlation']['I']['flagged'], 22752)
         self.assertEqual(ret['correlation']['XX']['flagged'], 0)
@@ -232,14 +232,14 @@ class test_unapply(test_base):
         input = "scan=4 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(input)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
-        res = tflagdata(vis=self.vis,mode='summary')
+        res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
         #self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
         self.assertTrue(res['scan']['4']['flagged']>= 1200 and res['scan']['4']['flagged']<= 1204, 'scan=4 should be partially flagged')
         
         # Unapply only the tfcrop line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=False)
-        result = tflagdata(vis=self.vis,mode='summary',scan='4')
+        result = flagdata(vis=self.vis,mode='summary',scan='4')
         self.assertEqual(result['flagged'], 0, 'Expected 0 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 95256,'Expected total 95256, found %s'%result['total'])
 
@@ -260,7 +260,7 @@ class test_unapply(test_base):
         
         # Unapply only the quack line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=True)
-        result = tflagdata(vis=self.vis,mode='summary',scan='1')
+        result = flagdata(vis=self.vis,mode='summary',scan='1')
         
         # Only the manual flags should be there
         self.assertEqual(result['flagged'], 568134, 'Expected 568134 flags, found %s'%result['flagged'])
@@ -283,7 +283,7 @@ class test_unapply(test_base):
         
         # Unapply only the manual line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
-        result = tflagdata(vis=self.vis,mode='summary',scan='1')
+        result = flagdata(vis=self.vis,mode='summary',scan='1')
         
         # Only the quack flags should be left
         self.assertEqual(result['flagged'], 44226, 'Expected 44226 flags, found %s'%result['flagged'])
@@ -296,11 +296,11 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag several scans and save them to FLAG_CMD with APPLIED=True
-        tflagdata(vis=self.vis, scan='7', savepars=True)
-        tflagdata(vis=self.vis, scan='1', savepars=True)
-        tflagdata(vis=self.vis, scan='2', savepars=True)
-        tflagdata(vis=self.vis, scan='3', savepars=True)
-        tflagdata(vis=self.vis, scan='4', savepars=True)
+        flagdata(vis=self.vis, scan='7', savepars=True)
+        flagdata(vis=self.vis, scan='1', savepars=True)
+        flagdata(vis=self.vis, scan='2', savepars=True)
+        flagdata(vis=self.vis, scan='3', savepars=True)
+        flagdata(vis=self.vis, scan='4', savepars=True)
         
         # There should be 5 cmds in FLAG_CMD. Unapply row=1 and set APPLIED to False
         flagcmd(vis=self.vis, action='unapply', tablerows=1, savepars=False)
@@ -309,7 +309,7 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='unapply', tablerows=[2,3], savepars=False)
         
         # We should have left only scans 4 and 7 flagged.
-        res = tflagdata(vis=self.vis, mode='summary')
+        res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 0, "It should not re-apply tablerows=1")
         self.assertEqual(res['scan']['4']['flagged'], 95256, "It should not unapply tablerows=4")
         self.assertEqual(res['scan']['7']['flagged'], 190512, "It should not unapply tablerows=7")
@@ -360,7 +360,7 @@ class test_savepars(test_base):
         flagcmd(vis=self.vis, action='apply', savepars=False)
         
         # scans=1~3 should be fully flagged
-        res = tflagdata(vis=self.vis, mode='summary')
+        res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['1']['total'], 568134)
         self.assertEqual(res['scan']['2']['flagged'], 238140)
@@ -410,7 +410,7 @@ class test_XML(test_base):
         
         # Apply the shadow command
         flagcmd(vis=self.vis, action='apply', reason='SHADOW')
-        res = tflagdata(vis=self.vis, mode='summary')
+        res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 240640)
         
     def test_missing_corr(self):
@@ -422,7 +422,7 @@ class test_XML(test_base):
         
         flagcmd(vis=self.vis, action='apply')
         
-        res = tflagdata(vis=self.vis, mode='summary')
+        res = flagdata(vis=self.vis, mode='summary')
         
         self.assertEqual(res['flagged'], 208000+208000, 'Should only flag RR and RL and not fail')
 
@@ -467,7 +467,7 @@ class test_shadow(test_base):
         flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=input)
         
         # Check flags
-        res = tflagdata(vis=self.vis, mode='summary')
+        res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
         self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
@@ -484,28 +484,28 @@ class test_rflag(test_base):
         """flagcmd:: Test of rflag threshold-inputs of both types (file and inline)
         """
 
-        # (1) and (2) are the same as test_tflagdata[test_rflag3].
+        # (1) and (2) are the same as test_flagdata[test_rflag3].
         # -- (3),(4),(5) should produce the same answers as (1) and (2)
         #
         # (1) Test input/output files, through the task, mode='rflag'
-        #tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+        #flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
         #              freqdev='fdevfile.txt', action='calculate');
-        #tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
+        #flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
         #              freqdev='fdevfile.txt', action='apply');
-        #res1 = tflagdata(vis=self.vis, mode='summary')
-        #print "(1) Finished tflagdata : test 1 : ", res1['flagged']
+        #res1 = flagdata(vis=self.vis, mode='summary')
+        #print "(1) Finished flagdata : test 1 : ", res1['flagged']
 
 
         # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
         #      and then read back in via list mode. 
         #      Also test the 'savepars' when timedev and freqdev are specified differently...
-        #tflagdata(vis=self.vis,mode='unflag');
-        #tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
+        #flagdata(vis=self.vis,mode='unflag');
+        #flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
         #              freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
         #os.system('cat outcmd.txt')
-        #tflagdata(vis=self.vis, mode='list', inpfile='outcmd.txt');
-        #res2 = tflagdata(vis=self.vis, mode='summary')
-        #print "(2) Finished tflagdata : test 2 : ", res2['flagged']
+        #flagdata(vis=self.vis, mode='list', inpfile='outcmd.txt');
+        #res2 = flagdata(vis=self.vis, mode='summary')
+        #print "(2) Finished flagdata : test 2 : ", res2['flagged']
 
 
         # (3) flagcmd : Send in the same text files produces/used in (1)
@@ -516,9 +516,9 @@ class test_rflag(test_base):
 
         commlist=['mode=rflag spw=9,10 timedev='+filename1+' freqdev='+filename2]
 
-        tflagdata(vis=self.vis,mode='unflag');
+        flagdata(vis=self.vis,mode='unflag');
         flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply')
-        res3 = tflagdata(vis=self.vis, mode='summary')
+        res3 = flagdata(vis=self.vis, mode='summary')
         print "(3) Finished flagcmd test : using tdevfile, fdevfile in the cmd (test 1)) : ", res3['flagged']
 
 
@@ -526,21 +526,21 @@ class test_rflag(test_base):
         commlist=['mode=rflag spw=9,10 timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
                           freqdev=[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]']
 
-        tflagdata(vis=self.vis,mode='unflag');
+        flagdata(vis=self.vis,mode='unflag');
         flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply')
-        res4 = tflagdata(vis=self.vis, mode='summary')
+        res4 = flagdata(vis=self.vis, mode='summary')
 
         print "(4) Finished flagcmd test : using cmd arrays : ", res4['flagged']
 
 
         # (5) Use the outcmd.txt file generated by (2). 
         #       i.e. re-run the threshold-generation of (2) with savepars=True
-        tflagdata(vis=self.vis,mode='unflag');
-        tflagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
+        flagdata(vis=self.vis,mode='unflag');
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
                       freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
         flagcmd(vis=self.vis, inpmode='list', inpfile='outcmd.txt');
-        res5 = tflagdata(vis=self.vis, mode='summary')
-        print "(5) Finished flagcmd test : using outcmd.txt from tflagdata (test 2) : ", res5['flagged']
+        res5 = flagdata(vis=self.vis, mode='summary')
+        print "(5) Finished flagcmd test : using outcmd.txt from flagdata (test 2) : ", res5['flagged']
 
         self.assertEqual(res3['flagged'],res4['flagged']);
         self.assertEqual(res3['flagged'],res5['flagged']);
@@ -549,17 +549,17 @@ class test_rflag(test_base):
     def test_rflagauto(self):
         """flagcmd:: Test of rflag with defaults
         """
-        # (6) flagcmd AUTO. Should give same answers as test_tflagdata[test_rflag1]
-        tflagdata(vis=self.vis,mode='unflag');
+        # (6) flagcmd AUTO. Should give same answers as test_flagdata[test_rflag1]
+        flagdata(vis=self.vis,mode='unflag');
         flagcmd(vis=self.vis, inpmode='list', inpfile=['mode=rflag spw=9,10'], action='apply')
-        res6 = tflagdata(vis=self.vis, mode='summary')
+        res6 = flagdata(vis=self.vis, mode='summary')
         print "(6) Finished flagcmd test : auto : ", res6['flagged']
 
-        #(7) tflagdata AUTO (same as test_tflagdata[test_rflag1])
-        #tflagdata(vis=self.vis,mode='unflag');
-        #tflagdata(vis=self.vis, mode='rflag', spw='9,10');
-        #res7 = tflagdata(vis=self.vis, mode='summary')
-        #print "\n---------------------- Finished tflagdata test : auto : ", res7['flagged']
+        #(7) flagdata AUTO (same as test_flagdata[test_rflag1])
+        #flagdata(vis=self.vis,mode='unflag');
+        #flagdata(vis=self.vis, mode='rflag', spw='9,10');
+        #res7 = flagdata(vis=self.vis, mode='summary')
+        #print "\n---------------------- Finished flagdata test : auto : ", res7['flagged']
 
         self.assertEqual(res6['flagged'], 42728.0)
 
@@ -604,7 +604,7 @@ class test_actions(test_base):
          # Apply the flags
          flagcmd(vis=self.vis)
          
-         res=tflagdata(vis=self.vis, mode='summary')
+         res=flagdata(vis=self.vis, mode='summary')
          self.assertEqual(res['flagged'],1099776)  
         
     def test_list2(self):
@@ -618,7 +618,7 @@ class test_actions(test_base):
          # Apply the flags
          flagcmd(vis=self.vis)
          
-         res=tflagdata(vis=self.vis, mode='summary')
+         res=flagdata(vis=self.vis, mode='summary')
          self.assertEqual(res['flagged'],1099776)  
         
 #################################################

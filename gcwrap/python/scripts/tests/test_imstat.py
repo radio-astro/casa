@@ -388,6 +388,13 @@ class imstat_test(unittest.TestCase):
             abs(1 - qa.getvalue(nmajor)*exp["flux"][1][1]/(qa.getvalue(major)*exp["flux"][0][0]))
             < 1e-7
         )        
+        
+    def test_CAS4545(self):
+        """verify CAS-4545 fix: full support for >2Gpixel images"""
+        myia = self._myia
+        myia.fromshape("", [1290, 1290, 1290])
+        stats = myia.statistics()
+        self.assertTrue(stats['npts'][0] == myia.shape().prod())
  
 def suite():
     return [imstat_test]

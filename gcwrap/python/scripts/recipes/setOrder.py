@@ -69,7 +69,8 @@ def setToCasaOrder(inputMS='',outputMS=''):
   ## into the data in the desired order.
   print "Making reference table.";
   tb.open(inputMS);
-  tb.query(name='tmpreftable.tab', query='DATA_DESC_ID>-1',sortlist='ARRAY_ID,FIELD_ID,DATA_DESC_ID,TIME,ANTENNA1,ANTENNA2');
+  tmptb = tb.query(name='tmpreftable.tab', query='DATA_DESC_ID>-1',sortlist='ARRAY_ID,FIELD_ID,DATA_DESC_ID,TIME,ANTENNA1,ANTENNA2');
+  tmptb.close()
   tb.close();
 
   ## Save a new table with the sort-order
@@ -77,7 +78,8 @@ def setToCasaOrder(inputMS='',outputMS=''):
   ## reference table.
   print "Making deep-copy of ref-table";
   tb.open('tmpreftable.tab');
-  tb.copy(outputMS,deep=True);
+  tmptb = tb.copy(outputMS,deep=True);
+  tmptb.close()
   tb.close();
 
   ## Remove the reference table

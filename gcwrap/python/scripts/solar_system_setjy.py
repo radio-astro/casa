@@ -1,6 +1,6 @@
 #!/usr/bin/python -u
 #
-# bjb
+# bryan butler
 # nrao
 # spring 2012
 #
@@ -8,7 +8,8 @@
 # bodies.  the flux density depends on the geometry (distance, size of
 # body, subearth latitude), and on the model brightness temperature.
 # uncertainties on the flux density can also be returned, but are all
-# set to 0.0 for now.
+# set to 0.0 for now, because i don't have uncertainties on the model
+# brightness temperatures.
 #
 # the model brightness temperatures for the various bodies are taken
 # from a combination of modern models and historical observations.  see
@@ -21,16 +22,20 @@
 # model calculations should be in the code (for those bodies that have
 # proper models) but for now, just live with the tabulated versions.
 #
-# fix for NaN value issue - 2012.05.17
+# version 1.0
+# last edited: 2012Sep26
+#
 
 from numpy import searchsorted
 from scipy import array
 from scipy.interpolate import interp1d
-from math import exp, pi, cos, sin,sqrt, isnan
-from os import environ, listdir
-from taskinit import gentools 
+from math import exp, pi, cos, sin, isnan, sqrt
+#from os import environ, listdir
+import os
+from taskinit import gentools
 
-def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
+(tb,me)=gentools(['tb','me'])
+def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
     '''
     find flux density for solar system bodies:
         Venus - Butler et al. 2001
@@ -38,11 +43,11 @@ def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
         Jupiter - Orton et al. 2012
         Uranus - Orton & Hofstadter 2012 (modified ESA4)
         Neptune - Orton & Hofstadter 2012 (modified ESA3)
-        Io - Moullet et al. 2012
-        Europa - Gurwell et al. 2012
-        Ganymede - Gurwell et al. 2012
+        Io - Butler et al. 2012
+        Europa - Butler et al. 2012
+        Ganymede - Butler et al. 2012
         Titan - Gurwell et al. 2012
-        Callisto - Gurwell et al. 2012
+        Callisto - Butler et al. 2012
         Ceres - ?
         Juno - ?
         Pallas - ?
@@ -58,6 +63,7 @@ def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
                       example:
                       [ [ 224.234567e9, 224.236567e9 ],
                         [ 224.236567e9, 224.238567e9 ] ]
+        observatory = observatory name string.  example: "ALMA"
 
     returned is a list, first element is the return status:
         0 -> success
@@ -67,6 +73,7 @@ def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
         4 -> Error: ephemeris table not found, or time out of range
              (note - the case where the MJD times span two ephemeris
               files is not supported)
+        5 -> Error: unknown observatory
     second element is a list of flux densities, one per time and
         frequency range, frequency changes fastest.
     third element is list of uncertainties (if known; 0 if unknown),
@@ -75,26 +82,27 @@ def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
         asec and deg, one per MJD time.
     fifth element is a list of CASA directions, one per MJD time.
 
-    NOTE: haven't put in the background term yet - need to subtract
-          it from the model before calculating the flux density.
-
     bjb
     nrao
-    spring 2012
+    spring/summer/fall 2012
     '''
-    (tb,me)=gentools(['tb','me'])
+
+    RAD2ASEC = 2.0626480624710e5
+    AU = 1.4959787066e11
     SUPPORTED_BODIES = [ 'Venus', 'Mars', 'Jupiter', 'Uranus', 'Neptune',
                          'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan',
                          'Ceres', 'Juno', 'Pallas', 'Vesta' ]
+
     capitalized_source_name = source_name.capitalize()
-#
-# check that body is supported
-#
     statuses = []
     fds = []
     dfds = []
     Rhats = []
     directions = []
+
+#
+# check that body is supported
+#
     if (not capitalized_source_name in SUPPORTED_BODIES):
         for MJD in MJDs:
             estatuses = []
@@ -112,54 +120,67 @@ def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
         return [ statuses, fds, dfds, Rhats, directions ]
 
 #
-# first, calculate model brightness temperatures
+# check that observatory is known
 #
-    if (capitalized_source_name != 'Mars'):
-# Mars is special, because the model is a function of time, so it has
-# to be done in the loop over time below.  for all other bodies we
-# can just calculate the model once.
-        Tbs = []
-        dTbs = []
-        pstatuses = []
-        for frequency in frequencies:
-# not optimally efficient, as we're calculating the interpolated
-# Tb at the edge frequencies twice in the called function (since
-# in most cases the frequencies will be contiguous ranges), but
-# oh well
-            [status,Tb,dTb] = Tb_planet_int (capitalized_source_name, frequency)
-            pstatuses.append(status)
-            Tbs.append(Tb)
-            dTbs.append(dTb)
+    if not observatory in me.obslist():
+        for MJD in MJDs:
+            estatuses = []
+            efds = []
+            edfds = []
+            for frequency in frequencies:
+                estatuses.append(5)
+                efds.append(0)
+                edfds.append(0)
+            statuses.append(estatuses)
+            fds.append(efds)
+            dfds.append(edfds)
+            Rhats.append([0.0, 0.0, 0.0])
+            directions.append(me.direction('J2000',0.0,0.0))
+        return [ statuses, fds, dfds, Rhats, directions ]
+
 #
-# before calculating the model for mars, since it is time-dependent,
-# be sure that we have the ephemeris information.  otherwise don't
-# waste our time calculating the model.
+# before calculating the models be sure that we have the ephemeris 
+# information.  otherwise don't waste our time calculating the model.
+# only really important for mars, but do it for them all.
 #
-    sorted_MJDs = sorted (MJDs)
-    ephemeris_path = environ['CASAPATH'].split()[0]+'/data/ephemerides/JPL-Horizons/'
-    file_list = listdir(ephemeris_path)
+    ephemeris_path = os.environ['CASAPATH'].split()[0]+'/data/ephemerides/JPL-Horizons/'
+#
+# for testing only...
+#
+#    ephemeris_path = '/home/rishi/ttsutsum/casatest/fluxCal/ephem/'
+    file_list = os.listdir(ephemeris_path)
     files = []
-    for file in file_list:
-        if file.split('_')[0] == capitalized_source_name:
-            files.append(file)
+    for efile in file_list:
+        if (efile.split('_')[0] == capitalized_source_name and 'J2000' in efile):
+            files.append(efile)
     file_OK = 0
+#
 # ephemeris tables have the following keywords:
 # GeoDist, GeoLat, GeoLong, MJD0, NAME, VS_CREATE, VS_DATE, VS_TYPE,
 # VS_VERSION, dMJD, earliest, latest, meanrad, obsloc, radii, rot_per
 # and columns:
-# RA, DEC, Rho (geodist), r (heliodist), phang, RadVel, illu, NP_DEC, NP_RA
-    for file in files:
-        ephemeris_file = ephemeris_path + file
+# MJD, RA, DEC, Rho (geodist), RadVel, NP_ang, NP_dist, DiskLong (Ob-long),
+# DiskLat(Ob-lat), Sl_lon, Sl_lat, r (heliodist), rdot, phang
+# Note by TT:
+# The column names, Obs_lon and Obs_lat have been changed to DiskLong and
+# DiskLat respectively to be consistent with what column names assumed for
+# ephemeris tables by casacore's MeasComet class.
+
+    for efile in files:
+        ephemeris_file = ephemeris_path + efile
         tb.open(ephemeris_file)
         table_source_name = tb.getkeyword('NAME').capitalize()
         if (table_source_name != capitalized_source_name):
             continue
         first_time = tb.getkeyword('earliest')['m0']['value']
         last_time = tb.getkeyword('latest')['m0']['value']
-        if (first_time < sorted_MJDs[0] and last_time > sorted_MJDs[-1]):
+        if (first_time < MJDs[0] and last_time > MJDs[-1]):
             file_OK = 1
             break
         tb.close()
+#
+# if we didn't find an ephemeris file, set the statuses and return.
+#
     if (file_OK == 0):
         for MJD in MJDs:
             estatuses = []
@@ -176,87 +197,162 @@ def solar_system_fd (source_name, MJDs, frequencies, casalog=None):
             directions.append(me.direction('J2000',0.0,0.0))
         return [ statuses, fds, dfds, Rhats, directions ]
 
-    keys=tb.getkeywords()
-    if keys.has_key('radii'):
-       Req = 1000.0 * (tb.getkeyword('radii')['value'][0] + tb.getkeyword('radii')['value'][1]) / 2
-       Rp = 1000.0 * tb.getkeyword('radii')['value'][2]
-    else:
-       if keys.has_key('meanrad'):
-           Req = 1000.0 * tb.getkeyword('meanrad')['value']
-           Rp = Req     
-           casalog.post("No triaxial radii in the ephemeris table, using the mean radius instead", "INFO")
-       else:
-           casalog.post("Cannot find the radius of "+source_name+" in the ephemeris table","SEVERE")
-    distances = tb.getcol('Rho').tolist()
+    Req = 1000.0 * (tb.getkeyword('radii')['value'][0] + tb.getkeyword('radii')['value'][1]) / 2
+    Rp = 1000.0 * tb.getkeyword('radii')['value'][2]
     times = tb.getcol('MJD').tolist()
     RAs = tb.getcol('RA').tolist()
     DECs = tb.getcol('DEC').tolist()
-    selats = []
-    NPangs = []
-    fds = []
-    dfds = []
-    RAD2ASEC = 2.0626480624710e5
-    #print "get ephemris info"
-# the ephemeris information is there, so go ahead and calculate the model
-    if (capitalized_source_name == 'Mars'):
-        [mstatuses,Tbs,dTbs] = Tb_Mars_int (sorted_MJDs, frequencies)
+    distances = tb.getcol('Rho').tolist()
+    RadVels = tb.getcol('RadVel').tolist()
+    column_names = tb.colnames()
+    if ('DiskLat' in column_names):
+        selats = tb.getcol('DiskLat').tolist()
+        has_selats = 1
+    else:
+        has_selats = 0
+        selat = 0.0
+    if ('NP_ang' in column_names):
+        NPangs = tb.getcol('NP_ang').tolist()
+        has_NPangs= 1
+    else:
+        has_NPangs = 0
+        NPang = 0.0
+    tb.close()
+    MJD_shifted_frequencies = []
+    DDs = []
+    Rmeans = []
+
     for ii in range(len(MJDs)):
         MJD = MJDs[ii]
+        DDs.append(1.4959787066e11 * interpolate_list (times, distances, MJD)[1])
+        if (has_selats):
+            selat = interpolate_list (times, selats, MJD)[1]
+            if (selat == -999.0):
+                selat = 0.0
+# apparent polar radius
+        Rpap = sqrt (Req*Req * sin(selat)**2.0 +
+                     Rp*Rp * cos(selat)**2.0)
+        Rmean = sqrt (Rpap * Req)
+        Rmeans.append(Rmean)
+#
+# need to check that the convention for NP angle is the
+# same as what is needed in the component list.
+#
+        if (has_NPangs):
+            NPang = interpolate_list (times, NPangs, MJD)[1]
+            if (NPang == -999.0):
+                NPang = 0.0
+        Rhats.append([2*RAD2ASEC*Req/DDs[-1], 2*RAD2ASEC*Rpap/DDs[-1], NPang])
         RA = interpolate_list (times, RAs, MJD)[1]
         RAstr=str(RA)+'deg'
         DEC = interpolate_list (times, DECs, MJD)[1]
         DECstr=str(DEC)+'deg'
         directions.append(me.direction('J2000',RAstr,DECstr))
-        DD = 1.4959787066e11 * interpolate_list (times, distances, MJD)[1]
-# there is no subearth latitude in the ephemeris tables currently, so punt
-        selats.append(0.0)
-# there is no NP angle in the ephemeris tables currently, so punt
-        NPangs.append(0.0)
-# apparent polar radius
-        Rpap = sqrt (Req*Req * sin(selats[-1])**2.0 +
-                     Rp*Rp * cos(selats[-1])**2.0)
-        Rmean = sqrt (Rpap * Req)
-# sure wish we had proper subearth lats and NP angles.  sigh.
-# when we have proper NP angles, be sure the convention is the
-# same as what is needed in the component list.
-        Rhats.append([2*RAD2ASEC*Req/DD, 2*RAD2ASEC*Rpap/DD, NPangs[-1]])
-        #print "Rpap=",Rpap," Rmean=",Rmean," Rhats=",Rhats
-        estatuses = []
-        efds = []
-        edfds = []
-        for jj in range(len(frequencies)):
-            if (capitalized_source_name != 'Mars'):
-                estatuses.append(pstatuses[jj])
-                Tb = Tbs[jj]
-                dTb = dTbs[jj]
-            else:
-                estatuses.append(mstatuses[ii][jj])
-                Tb = Tbs[ii][jj]
-                dTb = dTbs[ii][jj]
-            if (estatuses[-1] == 0):
-                #casalog.post('Tb=%s for Freq=%s' % (Tb,frequencies[jj]))
-                flux_density = Tb * 1.0e26 * pi * Req * Rpap / (DD*DD)
+#
+# now get the doppler shift
+#
+# NOTE: this is not exactly right, because it doesn't include the
+# distance to the body in any of these calls.  the distance will matter
+# because it will change the line-of-sight vector from the observatory
+# to the body, which will change the doppler shift.  jeff thinks using
+# the comet measures calls might fix this, but i haven't been able to
+# figure them out yet.  i thought i had it figured out, with the
+# call to me.framecomet(), but that doesn't give the right answer,
+# unfortunately.  i spot-checked the error introduced because of this,
+# and it looks to be of order 1 m/s for these bodies, so i'm not going
+# to worry about it.
+#
+        me.doframe(me.observatory(observatory))
+        me.doframe(me.epoch('utc',str(MJD)+'d'))
+        me.doframe(directions[-1])
+#
+# instead of the call to me.doframe() in the line above, i thought the
+# following call to me.framecomet() would be right, but it doesn't give
+# the right answer :/.
+#       me.framecomet(ephemeris_file)
+#
+# RadVel is currently in AU/day.  we want it in km/s.
+#
+        RadVel = interpolate_list (times, RadVels, MJD)[1] * AU / 86400000.0
+        rv = me.radialvelocity('geo',str(RadVel)+'km/s')
+        shifted_frequencies = []
+        for frequency in frequencies:
+#
+# the measure for radial velocity could be obtained via:
+# me.measure(rv,'topo')['m0']['value']
+# but what we really want is a frequency shift.  i could do it by
+# hand, but i'd rather do it with casa toolkit calls.  unfortunately,
+# it's a bit convoluted in casa...
+#
+            newfreq0 = me.tofrequency('topo',me.todoppler('optical',me.measure(rv,'topo')),me.frequency('topo',str(frequency[0])+'Hz'))['m0']['value']
+            newfreq1 = me.tofrequency('topo',me.todoppler('optical',me.measure(rv,'topo')),me.frequency('topo',str(frequency[1])+'Hz'))['m0']['value']
+#
+# should check units to be sure frequencies are in Hz
+#
+# now, we want to calculate the model shifted in the opposite direction
+# as the doppler shift, so take that into account.
+#
+            delta_frequency0 = frequency[0] - newfreq0
+            newfreq0 += delta_frequency0
+            delta_frequency1 = frequency[1] - newfreq1
+            newfreq1 += delta_frequency1
+            shifted_frequencies.append([newfreq0,newfreq1])
+            average_delta_frequency = (delta_frequency0 + delta_frequency1)/2
+#
+# should we print this to the log?
+#
+#           print 'MJD, geo & topo velocities (km/s), and shift (MHz) = %7.1f  %5.1f  %5.1f  %6.3f' % \
+#                 (MJD, RadVel, me.measure(rv,'topo')['m0']['value']/1000, average_delta_frequency/1.0e6)
+            msg='MJD, geo & topo velocities (km/s), and shift (MHz) = %7.1f  %5.1f  %5.1f  %6.3f' % \
+                 (MJD, RadVel, me.measure(rv,'topo')['m0']['value']/1000, average_delta_frequency/1.0e6)
+            casalog.post(msg, 'INFO2')
+        MJD_shifted_frequencies.append(shifted_frequencies)
+#       me.done()
+
+    for ii in range(len(MJDs)):
+        shifted_frequencies = MJD_shifted_frequencies[ii]
+        if (capitalized_source_name == 'Mars'):
+            [tstatuses,brightnesses,dbrightnesses] = brightness_Mars_int ([MJDs[ii]], shifted_frequencies)
+        else:
+            tstatuses = []
+            brightnesses = []
+            dbrightnesses = []
+            for shifted_frequency in shifted_frequencies:
+                [status,brightness,dbrightness] = brightness_planet_int (capitalized_source_name, shifted_frequency)
+                tstatuses.append(status)
+                brightnesses.append(brightness)
+                dbrightnesses.append(dbrightness)
+        tfds = []
+        tdfds = []
+        for jj in range (len(tstatuses)):
+             if not tstatuses[jj]:
+                flux_density = brightnesses[jj] * 1.0e26 * pi * Rmeans[ii]*Rmeans[ii]/ (DDs[ii]*DDs[ii])
+#
 # mean apparent planet radius, in arcseconds (used if we ever
 # calculate the primary beam reduction)
-                psize = (Rmean / DD) * 2.0626480624710e5
+#
+                psize = (Rmeans[ii] / DDs[ii]) * RAD2ASEC
+#
 # primary beam reduction factor (should call a function, but
 # just set to 1.0 for now...
+#
                 pbfactor = 1.0
                 flux_density *= pbfactor
-                efds.append(flux_density)
-                edfds.append(0.0)
-            else:
-                efds.append(0.0)
-                edfds.append(0.0)
-        statuses.append(estatuses)
-        fds.append(efds)
-        dfds.append(edfds)
+                tfds.append(flux_density)
+                tdfds.append(0.0)
+             else:
+                tfds.append(0.0)
+                tdfds.append(0.0)
+        statuses.append(tstatuses)
+        fds.append(tfds)
+        dfds.append(tdfds)
+
     return [ statuses, fds, dfds, Rhats, directions ]
 
 
-def Tb_Mars_int (MJDs, frequencies):
+def brightness_Mars_int (MJDs, frequencies):
     '''
-    brightness temperature for Mars.  this one is different because
+    Planck brightness for Mars.  this one is different because
     the model is tabulated vs. frequency *and* time.
     inputs:
         MJDs = list of MJD times
@@ -277,9 +373,9 @@ def Tb_Mars_int (MJDs, frequencies):
     Tbs = []
     dTbs = []
     try:
-        # path for the Mars model
-        #ff = open('/users/bbutler/python/Mars_Tb.dat')
-        ff = open(environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/Mars_Tb.dat')
+        model_data_path = os.environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/'
+        model_data_filename = model_data_path + 'Mars_Tb.dat'
+        ff = open(model_data_filename)
     except:
         for MJD in MJDs:
             estatuses = []
@@ -323,19 +419,19 @@ def Tb_Mars_int (MJDs, frequencies):
             for jj in range(nind-10, nind+10):
                 lMJD.append(modelMJDs[jj])
                 lTb.append(modelTbs[jj][ii])
-        # background subtraction from model requested change
-        # from Bryan - 2012.05.17
-	#== old code
-        #    mTbs.append(interpolate_list(lMJD, lTb, MJD)[1])
-        #    mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
-        #                (1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)))
-	    mTbs.append(interpolate_list(lMJD, lTb, MJD)[1])
-        # note: here, when we have the planck results, get a proper
-        # estimate of the background temperature.
-	    Tbg = 2.72
-	    mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
-	           ((1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)) - \
-		   (1.0 / (exp(HH * freqs[ii] / (KK * Tbg)) - 1.0))))
+            mTbs.append(interpolate_list(lMJD, lTb, MJD)[1])
+#
+# note: here, when we have the planck results, get a proper
+# estimate of the background temperature.
+#
+# note also that we want to do this here because the integral
+# needs to be done on the brightness, not on the brightness
+# *temperature*.
+#
+            Tbg = 2.725
+            mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
+                        ((1.0 / (exp(HH * freqs[ii] / (KK * mTbs[-1])) - 1.0)) - \
+                         (1.0 / (exp(HH * freqs[ii] / (KK * Tbg)) - 1.0))))
         estatuses = []
         eTbs = []
         edTbs = []
@@ -346,6 +442,13 @@ def Tb_Mars_int (MJDs, frequencies):
                 edTbs.append(0.0)
             else:
                 [estatus, eTb, edTb] = integrate_Tb (freqs, mfds, frequency)
+#
+# should we print out the Tb we found?  not sure.  i have a
+# vague recollection that crystal requested it, but i'm not
+# sure if it's really needed.  we'd have to back out the 
+# planck correction (along with the background), so it wouldn't
+# be trivial.
+#
                 estatuses.append(estatus)
                 eTbs.append(eTb)
                 edTbs.append(edTb)
@@ -355,7 +458,7 @@ def Tb_Mars_int (MJDs, frequencies):
     return [statuses, Tbs, dTbs ]
 
 
-def Tb_planet_int (source_name, frequency):
+def brightness_planet_int (source_name, frequency):
     '''
     brightness temperature for supported planets.  integrates over
     a tabulated model.  inputs:
@@ -374,8 +477,9 @@ def Tb_planet_int (source_name, frequency):
     CC = 2.99792458e8
 
     try:
-        #ff = open('/users/bbutler/python/' + source_name + '_Tb.dat')
-        ff = open(environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/' + source_name + '_Tb.dat')
+        model_data_path = os.environ['CASAPATH'].split()[0]+'/data/alma/SolarSystemModels/'
+        model_data_filename = model_data_path + source_name + '_Tb.dat'
+        ff = open(model_data_filename)
     except:
         return [ 3, 0.0, 0.0 ]
     fds = []
@@ -383,23 +487,32 @@ def Tb_planet_int (source_name, frequency):
     freqs = []
     for line in ff:
         [freq,Tb] = line[:-1].split()
-        #Tbs.append(float(Tb))
-        #freqs.append(1.0e9*float(freq))
-        #fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
-        #            (1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)))
         Tbs.append(float(Tb))
-	freqs.append(1.0e9*float(freq))
-    # note: here, when we have the planck results, get a proper
-    # estimate of the background temperature.
-        Tbg = 2.72
-	fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
-	     ((1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)) - \
-             (1.0 / (exp(HH * freqs[-1] / (KK * Tbg)) - 1.0))))
+        freqs.append(1.0e9*float(freq))
+#
+# note: here, when we have the planck results, get a proper
+# estimate of the background temperature.
+#
+# note also that we want to do this here because the integral
+# needs to be done on the brightness, not on the brightness
+# *temperature*.
+#
+        Tbg = 2.725
+        fds.append((2.0 * HH * freqs[-1]**3.0 / CC**2.0) * \
+                    ((1.0 / (exp(HH * freqs[-1] / (KK * Tbs[-1])) - 1.0)) - \
+                     (1.0 / (exp(HH * freqs[-1] / (KK * Tbg)) - 1.0))))
     ff.close()
-    #print "next freqs=",freqs, " frequency=",frequency
     if (frequency[0] < freqs[0] or frequency[1] > freqs[-1]):
         return [ 2, 0.0, 0.0 ]
     else:
+#
+# should we print out the Tb we found?  not sure.  i have a
+# vague recollection that crystal requested it, but i'm not
+# sure if it's really needed.  we'd have to back out the 
+# planck correction (along with the background), so it wouldn't
+# be trivial.  and here, we'd have to return a variable and
+# work on that.
+#
         return integrate_Tb (freqs, fds, frequency)
 
 
@@ -429,7 +542,7 @@ def interpolate_list (freqs, Tbs, frequency):
     afreqs = array(freqs[low:high])
     func = interp1d (afreqs, aTbs, kind='cubic')
     if isnan(func(frequency)):
-        func = interp1d(afreqs, aTbs, kind='linear')
+       func = interp1d (afreqs, aTbs, kind='linear')
     return [ 0, float(func(frequency)), 0.0 ]
 
 
@@ -439,6 +552,7 @@ def integrate_Tb (freqs, Tbs, frequency):
     if (frequency[0] > freqs[low_index]):
         low_index = low_index + 1
 
+    [status,hi_Tb,hi_dTb] = interpolate_list (freqs, Tbs, frequency[1])
     [status,hi_Tb,hi_dTb] = interpolate_list (freqs, Tbs, frequency[1])
     hi_index = nearest_index (freqs, frequency[1])
     if (frequency[1] < freqs[hi_index]):
@@ -452,7 +566,7 @@ def integrate_Tb (freqs, Tbs, frequency):
         ii = low_index
         while (ii < hi_index):
            Tb += (freqs[ii+1] - freqs[ii]) * (Tbs[ii+1] + Tbs[ii]) / 2
-           ii+=1
+           ii += 1
     Tb /= (frequency[1] - frequency[0])
     return [ 0, Tb, 0.0 ]
 

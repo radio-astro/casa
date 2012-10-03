@@ -247,7 +247,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         specunit -- units for spectral axis
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
                 default: '' (=current)
-                example: this will be the units for masklist
+                example: this will be the units for maskline
             &gt;&gt;&gt; specunit expandable parameters
                  restfreq -- rest frequency
                          available type includes float, int, string, list of float, 

@@ -29,6 +29,7 @@ TASKLIST = [
             'listvis', # shared with fixplanets
             'plotms',
             'split',
+            'uvcontsub',
             'vishead',
             'wvrgcal',
             'concat' # shared with virtualconcat

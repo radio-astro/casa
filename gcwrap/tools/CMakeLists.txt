@@ -77,7 +77,7 @@ casa_add_library( tools
  components/componentlist_cmpt.cc
  flagging/flagger_cmpt.cc
  flagging/lightflagger_cmpt.cc
- flagging/testflagger_cmpt.cc
+ flagging/agentflagger_cmpt.cc
  images/coordsys_cmpt.cc
  images/image_cmpt.cc
  images/imagepol_cmpt.cc
@@ -134,7 +134,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  components/componentlist.xml
  flagging/flagger.xml
  flagging/lightflagger.xml
- flagging/testflagger.xml
+ flagging/agentflagger.xml
  images/coordsys.xml
  images/imagepol.xml
  images/image.xml

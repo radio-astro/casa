@@ -310,13 +310,13 @@ flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions
             importevla(asdm='CLowTest_000',scans='1~3,5,7,9',online=True,flagzero=True,shadow=True,
                                 applyflags=False, savecmds=True)
                 
-                You can use either tflagdata or flagcmd to apply the flags later with the following commands:
+                You can use either flagdata or flagcmd to apply the flags later with the following commands:
                 
-                Apply all the flags in the file using tflagdata
-                tflagdata('CLowTest_000.ms', mode='list', inpfile='CLowTest_000_cmd.txt')
+                Apply all the flags in the file using flagdata
+                flagdata('CLowTest_000.ms', mode='list', inpfile='CLowTest_000_cmd.txt')
 
                 Select by reason on the file
-                tflagdata('CLowTest_000.ms',mode='list', inpfile='CLowTest_000_cmd.txt', 
+                flagdata('CLowTest_000.ms',mode='list', inpfile='CLowTest_000_cmd.txt', 
                            reason=['ANTENNA_NOT_POINTING','CORRELATOR_DATA_INVALID'])
                 
                 Apply all the flags in the file using flagcmd

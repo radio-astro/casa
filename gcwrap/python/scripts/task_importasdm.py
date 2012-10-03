@@ -138,8 +138,8 @@ def importasdm(
 
     # Python script
 
-    # make testflagger tool local
-    tflocal = casac.testflagger()
+    # make agentflagger tool local
+    aflocal = casac.agentflagger()
 
     try:
         casalog.origin('importasdm')
@@ -327,19 +327,19 @@ def importasdm(
 
         if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
             if os.path.exists(viso):
-                tflocal.open(viso)
-                tflocal.saveflagversion('Original',
+                aflocal.open(viso)
+                aflocal.saveflagversion('Original',
                         comment='Original flags at import into CASA',
                         merge='save')
-                tflocal.done()
+                aflocal.done()
         elif wvr_corrected_data == 'yes' or wvr_corrected_data \
             == 'both':
             if os.path.exists(visoc):
-                tflocal.open(visoc)
-                tflocal.saveflagversion('Original',
+                aflocal.open(visoc)
+                aflocal.saveflagversion('Original',
                         comment='Original flags at import into CASA',
                         merge='save')
-                tflocal.done()
+                aflocal.done()
                 
                 
         # Importasdm Flag Parsing
@@ -377,24 +377,24 @@ def importasdm(
                     if applyflags:
                         
                         # Open the MS and attach it to the tool
-                        tflocal.open(viso)
+                        aflocal.open(viso)
                         
                         # Select the data
-                        tflocal.selectdata()
+                        aflocal.selectdata()
                         
                         # Setup the agent's parameters
-                        saved_list = fh.setupAgent(tflocal, flagcmds, [], True, True)
+                        saved_list = fh.setupAgent(aflocal, flagcmds, [], True, True)
                         
                         # Initialize the agents
-                        tflocal.init()
+                        aflocal.init()
                         
                         # Run the tool
-                        tflocal.run(True, True)
+                        aflocal.run(True, True)
     
                         casalog.post('Applied %s flag commands to data'%str(nflags))
                         
                         # Destroy the tool and de-attach the MS
-                        tflocal.done()
+                        aflocal.done()
                         
                         # Save to FLAG_CMD table. APPLIED is set to True.
                         fh.writeFlagCmd(viso, flagcmds, onlinekeys, True, '', '')       

@@ -37,7 +37,7 @@ def flagcmd(
 
     casalog.origin('flagcmd')
 
-    tflocal = casac.testflagger()
+    aflocal = casac.agentflagger()
     mslocal = casac.ms()
     mslocal2 = casac.ms()
 
@@ -49,7 +49,7 @@ def flagcmd(
 
         # Open the MS and attach it to the tool
         if (type(vis) == str) & os.path.exists(vis):
-            tflocal.open(vis, ntime)
+            aflocal.open(vis, ntime)
         else:
             raise Exception, \
                 'Visibility data set not found - please verify the name'
@@ -281,27 +281,27 @@ def flagcmd(
                 casalog.post('The selected subset of the MS will be: ')
                 casalog.post('%s' % unionpars)
 
-            tflocal.selectdata(unionpars)
+            aflocal.selectdata(unionpars)
 
             # Parse the agents parameters
             if action == 'unapply':
                 apply = False
                 preserve_order = False
 
-            list2save = fh.setupAgent(tflocal, myflagcmd, tablerows,
+            list2save = fh.setupAgent(aflocal, myflagcmd, tablerows,
                     apply, True)
 
             # Initialize the Agents
-            tflocal.init()
+            aflocal.init()
 
             # Backup the flags before running
             if flagbackup:
                 fh.backupFlags(vis, 'flagcmd')
 
             # Run the tool
-            stats = tflocal.run(True, preserve_order)
+            stats = aflocal.run(True, preserve_order)
 
-            tflocal.done()
+            aflocal.done()
 
             # Update the APPLIED column
             valid_rows = list2save.keys()
@@ -371,7 +371,7 @@ def flagcmd(
             return myflagcmd
     except Exception, instance:
 
-        tflocal.done()
+        aflocal.done()
         casalog.post('%s' % instance, 'ERROR')
         raise
 

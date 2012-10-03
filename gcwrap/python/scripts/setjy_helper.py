@@ -16,8 +16,11 @@ class ss_setjy_helper:
 
     def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan, useephemdir):
 	"""
-	set flux density of a solar system object using Bryan Butler's new
+	Set flux density of a solar system object using Bryan Butler's new
 	python model calculation code.
+        A single time stamp (frist time stamp of MS after selections are applied) is
+        currently used per execution. For flux observation done in a long time span
+        may need to run multiple setjy with selections by time range (or scans). 
 	"""
 	retval = True 
 	cleanupcomps = False # leave genenerated cl files 
@@ -41,15 +44,23 @@ class ss_setjy_helper:
 	sel['observation']=str(observation)
 	sel['scan']=scan
 
-	
 	measframes=['REST','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB']
 	myms.open(self.vis)
 	myms.msselect(sel,False)
 	scansummary=myms.getscansummary()
 	nscan=len(scansummary.keys())
 	fieldids=myms.msselectedindices()['field']
+        obsids=myms.msselectedindices()['observationid']
 	myms.close()
 	  
+        mytb.open(self.vis+'/OBSERVATION')
+        if len(obsids)==0:
+          getrow=0
+        else:
+          getrow=obsids[0]
+        observatory=mytb.getcell('TELESCOPE_NAME',getrow)
+        mytb.close()
+ 
 	mytb.open(self.vis+'/FIELD')
 	if len(fieldids)==0:
 	  fieldids = range(mytb.nrows())
@@ -65,14 +76,13 @@ class ss_setjy_helper:
                 fieldref=phdir_info['TabRefTypes'][fieldrefind]
         else:
           fieldref=''
-	#srcnames=[]
 	srcnames={}
-        fieldirs={}
+        fielddirs={}
         ftimes={}
 	for fid in fieldids:
 	  #srcnames.append(mytb.getcell('NAME',int(fid)))
 	  srcnames[fid]=(mytb.getcell('NAME',int(fid)))
-          fieldirs[fid]=(mytb.getcell('PHASE_DIR',int(fid)))
+          fielddirs[fid]=(mytb.getcell('PHASE_DIR',int(fid)))
           ftimes[fid]=(mytb.getcell('TIME',int(fid)))
 	mytb.close() 
 	# need to get a list of time
@@ -119,11 +129,13 @@ class ss_setjy_helper:
             inparams[srcnames[fid]]['mjds'][0].append([myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']])
           else:
             inparams[srcnames[fid]]['mjds']=[myme.epoch('utc',qa.quantity(tc,'s'))['m0']['value']]
+
           # somehow it gives you duplicated ids .... so need to uniquify
 	  selspws= list(set(myms.msselectedindices()['spw']))
           # make sure it is int rather than numpy.int32, etc.
           selspws = [int(ispw) for ispw in selspws]
 	  inparams[srcnames[fid]]['spwids']= selspws if len(selspws)!=0 else range(nspw) 
+
 	  #create a list of freq ranges with selected spws
 	  # should worry about freq order???
 	  freqlist=[]
@@ -136,15 +148,14 @@ class ss_setjy_helper:
 	    #if scalebychan=T, this has to be min, max determined from
 	    # chan_freq(channel center)+/- chan width.
 	    if scalebychan:
+              # pack into list of list of list (freqlist[nf][nspw])
 	      perspwfreqlist=[]
 	      for nf in range(len(freqs)):
 		fl = freqs[nf][0]-freqws[nf][0]/2.
 		fh = freqs[nf][0]+freqws[nf][0]/2.
 		perspwfreqlist.append([fl,fh])
 	      freqlist.append(perspwfreqlist)
-	      #  freqlist.append([float(fl),float(fh)])
 	    else:
-	      #print "freqs=",freqs
 	      if (len(freqs)==1): 
 		fl = freqs[0][0]-freqws[0][0]/2.
 		fh = freqs[0][0]+freqws[0][0]/2.
@@ -153,11 +164,11 @@ class ss_setjy_helper:
 		freqlist.append([float(min(freqs)),float(max(freqs))])   
 	 
 	    framelist.append(measframes[fmeasref])
-	  #print "freqlist=",freqlist
 	  inparams[srcnames[fid]]['freqlist']=freqlist
 	  inparams[srcnames[fid]]['framelist']=framelist
 	  inparams[srcnames[fid]]['reffreqs']=reffreqs
           myms.close()
+
 	# call Bryan's code
 	# errcode: list of list - inner list - each values for range of freqs
 	# flluxes: list of list 
@@ -169,22 +180,31 @@ class ss_setjy_helper:
 	#for src in srcnames:
 	for vfid in validfids:
           src=srcnames[vfid]
-	  #print "srcnames=", src 
-	  #print "mjd=",inparams[src]['mjds'] 
-	  #print "freq=",inparams[src]['freqlist']
 	  mjds=inparams[src]['mjds']
 	  fluxes=[]
-	  for i in range(len(freqlist)): # corresponds to n spw
+          # call solar_system_fd() per spw (for scalebychan freqlist has an extra dimention)
+          nspwused=len(inparams[src]['freqlist'])
+	  for i in range(nspwused): # corresponds to n spw
 	    if type(freqlist[0][0])==list:
 	      infreqs=inparams[src]['freqlist'][i]
 	    else:
 	      infreqs=[inparams[src]['freqlist'][i]]
-            self._casalog.post("Calling solar_system_fd: %s for spw%s freqs=%s" % (src, i,freqlist[i]),'INFO2')
+            self._casalog.post("Calling solar_system_fd: %s for spw%s freqs=%s" % (src, i,freqlist[i]),'DEBUG1')
 	    (errcodes, subfluxes, fluxerrs, sizes, dirs)=\
-               ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, casalog=self._casalog)
-            self._casalog.post("ss_fd returns fluxes=%s" % subfluxes, 'INFO2')
+               ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, observatory=observatory, casalog=self._casalog)
+            # for old code
+	    #(errcodes, subfluxes, fluxerrs, sizes, dirs)=\
+            #   ss_setjy.solar_system_fd(source_name=src, MJDs=mjds, frequencies=infreqs, casalog=self._casalog)
+          # for nf freq ranges, nt mjds
+          # errcodes[nf][nt], subfluxes[nf][nt], fluxerrs[nf][nt], sizes[nt],  dirs[nt]
+            self._casalog.post("+++++ solar_system_fd() returned values +++++", 'DEBUG1')
+            self._casalog.post(" fluxes(fds)=%s" % subfluxes, 'DEBUG1')
+            self._casalog.post(" sizes=%s" % sizes, 'DEBUG1')
+            self._casalog.post(" directions=%s\n" % dirs, 'DEBUG1')
+
+          # packed fluxes for all spws 
 	    fluxes.append(subfluxes)    
-            #print "fluxes=",fluxes 
+          # fluxes has fluxes[nf][nt][nspw]
 
 	  # ------------------------------------------------------------------------
 	  # For testing with hardcoded values without calling solar_system_fd()...
@@ -194,6 +214,7 @@ class ss_setjy_helper:
 	  #sizes=[[3.6228991032674371,3.6228991032674371,0.0]]
 	  #dirs=[{'m0': {'unit': 'rad', 'value': 0.0}, 'm1': {'unit': 'rad', 'value': 0.0}, 'refer': 'J2000', 'type': 'direction'}]
 	  # ------------------------------------------------------------------------
+          # local params for selected src
 	  framelist=inparams[src]['framelist']
 	  freqlist=inparams[src]['freqlist']
 	  reffreqs=inparams[src]['reffreqs']
@@ -201,9 +222,8 @@ class ss_setjy_helper:
 
 	  clrecs=odict.odict()
 	  labels = []
-	  # loop for multiple sources
-	  for i in range(len(dirs)):
-	   
+	  # loop for over for multiple directions (=multiple  MJDs) for a given src
+	  for i in range(len(dirs)):  # this is currently only length of 1 since no mutliple timpstamps were used
 	    # check errcode - error code would be there per flux per time (dir)  
 	    reterr=testerrs(errcodes[i],src) 
 	    if reterr == 2: 
@@ -213,22 +233,23 @@ class ss_setjy_helper:
             if useephemdir:
 	        dirstring = [dirs[i]['refer'],qa.tos(dirs[i]['m0']),qa.tos(dirs[i]['m1'])]
             else:
-                #dirstring = [fieldref, str(fieldirs[fieldids[0]][0][0])+'rad', str(fieldirs[fieldids[0]][1][0])+'rad']
-                dirstring = [fieldref, "%.18frad" % (fieldirs[fieldids[0]][0][0]), "%.18frad" % (fieldirs[fieldids[0]][1][0])]
-
+                #dirstring = [fieldref, str(fielddirs[fieldids[0]][0][0])+'rad', str(fielddirs[fieldids[0]][1][0])+'rad']
+                # extract field direction of first id of the selected field ids
+                dirstring = [fieldref, "%.18frad" % (fielddirs[fieldids[0]][0][0]), "%.18frad" % (fielddirs[fieldids[0]][1][0])]
+            #print "dirstring=",dirstring
 
 	    # setup componentlists
 	    # need to set per dir
 	    # if scalebychan=F, len(freqs) corresponds to nspw selected
+            # Need to put in for-loop to create cl for each time stamp? or scan?
 
 	    clpath='/tmp/'
 	    #clpath='./'
-	    for j in range(len(freqlist)):
+	    for j in range(len(freqlist)): # loop over nspw
 	      freqlabel = '%.3fGHz' % (reffreqs[int(spwids[j])]/1.e9)
 	      tmlabel = '%.1fd' % (tc/86400.)
 	      clabel = src+'_spw'+str(spwids[j])+'_'+freqlabel+'_'+tmlabel
 	      clname = clpath+clabel+'.cl'
-	      #clname = clpath+inlabel+'_dir'+'.cl' 
 	      
 	      if(os.path.exists(clname)):
 		shutil.rmtree(clname)
@@ -239,17 +260,25 @@ class ss_setjy_helper:
 	      else:
 		index= 0.0
 		sptype = 'constant'
+              # adjust to change in returned flux shape. An extra [] now seems to be gone. 2012-09-27
+              iflux=fluxes[j][i][0]
               self._casalog.post("addcomponent with flux=%s at frequency=%s" %\
-                                  (fluxes[j][i][0],str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
-	      mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirstring,
+              #                    (fluxes[j][i][0],str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
+                                  (iflux,str(reffreqs[int(spwids[j])]/1.e9)+'GHz'), 'INFO1')
+              #print "addcomponent with flux=%s at frequency=%s" %\
+              #                    (iflux,str(reffreqs[int(spwids[j])]/1.e9)+'GHz')
+              # i - time stamps = 0 for now, j = a freq range
+              infreq=freqlist[j][0][0] if type(freqlist[j][0])==list else freqlist[j][0]
+              
+	      #mycl.addcomponent(flux=fluxes[j][i][0],fluxunit='Jy', polarization="Stokes", dir=dirstring,
+	      mycl.addcomponent(iflux,fluxunit='Jy', polarization="Stokes", dir=dirstring,
 			 shape='disk', majoraxis=str(sizes[i][0])+'arcsec', minoraxis=str(sizes[i][1])+'arcsec', 
        # 		 positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(reffreqs[int(spwids[j])])+'Hz'], 
 #			 positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str((freqlist[j][0]+freqlist[j][1])/2)+'Hz'], 
-		         positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(freqlist[j][0])+'Hz'], 
+		         positionangle=str(sizes[i][2])+'deg', freq=[framelist[j],str(infreq)+'Hz'], 
 			 spectrumtype=sptype, index=index, label=clabel)
               # if it's list of fluxes try to put in tabular form
 	      if type(fluxes[j][i]) ==list and len(fluxes[j][i])> 1:
-		#print "fluxes[j][0]=",fluxes[j][0]
 	        #print "framelist[j]=",framelist[j]
 		if type(freqlist[j][0])==list and len(freqlist[j][0])>1:
 		  freqs=[]
@@ -259,23 +288,25 @@ class ss_setjy_helper:
 		  freqs=freqlist[j]
                 clind = mycl.length() - 1
 		mycl.setspectrum(which=clind, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
-	#	mycl.setspectrum(which=i, type='tabular', tabularfreqs=freqs, tabularflux=fluxes[j][0],
 			   tabularframe=framelist[j])
 	      mycl.rename(clname)
 	      #put in a record for log output
 	      clrecs[clabel] = mycl.torecord()
+              mycl.close(False) # False for not to send a warning message
 	      mycl.done()
 
 	      # finally, put the componentlist as model
 	      self.im.selectvis(spw=spwids[j],field=field,observation=observation,time=timerange)
 	      self.im.ft(complist=clname)
+
               #debug: set locally saved 2010-version component list instead
               #cl2010='mod_setjy_spw0_Titan_230.543GHz55674.1d.cl'
               #print "Using complist=",cl2010
 	      #self.im.ft(complist=cl2010)
+
 	      if cleanupcomps:          
 		  shutil.rmtree(clname)
-		 
+          # end of for loop over fields		 
 	  msg="Using channel dependent " if scalebychan else "Using spw dependent "
        
 	  self._casalog.post(msg+" flux densities")
@@ -293,19 +324,21 @@ class ss_setjy_helper:
 	    comp = clrecs[ky]['component0']
 	    srcn = ky.split('_')[0]
 	    ispw = ky.split('_')[1]
-            casalog.post(" direction set in the componentlist: RA=%s rad, Dec%s rad" %
-                (float('%.5g' % comp['shape']['direction']['m0']['value']),
-                 float('%.5g' % comp['shape']['direction']['m1']['value'])),'INFO1')
+            msg=" direction set in the componentlist: RA=%s rad, Dec%s rad" %\
+                (float('%.6g' % comp['shape']['direction']['m0']['value']),
+                 float('%.6g' % comp['shape']['direction']['m1']['value']))
+            casalog.post(msg,'INFO2')
 
-	    casalog.post(" %s: %s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy" % 
-		(srcn, ispw, float('%.5g' % comp['flux']['value'][0]), 
-		 float('%.5g' % comp['flux']['value'][1]),
-		 float('%.5g' % comp['flux']['value'][2]), 
-		 float('%.5g' % comp['flux']['value'][3]), 
-		 float('%.5g' % comp['flux']['error'][0]), 
-		 float('%.5g' % comp['flux']['error'][1]),
-		 float('%.5g' % comp['flux']['error'][2]),
-		 float('%.5g' % comp['flux']['error'][3])))
+            msg=" %s: %s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy" %\
+                (srcn, ispw, float('%.5g' % comp['flux']['value'][0]),
+                float('%.5g' % comp['flux']['value'][1]),
+                 float('%.5g' % comp['flux']['value'][2]),
+                 float('%.5g' % comp['flux']['value'][3]),
+                 float('%.5g' % comp['flux']['error'][0]),
+                 float('%.5g' % comp['flux']['error'][1]),
+                 float('%.5g' % comp['flux']['error'][2]),
+                 float('%.5g' % comp['flux']['error'][3]))
+	    casalog.post(msg, 'INFO')
 
     def _updateHistory(self,clrecs,vis):
 	"""
@@ -356,6 +389,8 @@ def testerrs(errcode,srcname):
     """
     from taskinit import casalog 
     errcount = 0
+    if type(errcode)!=list: 
+      errcode=[errcode]
     for ec in errcode:
       if ec != 0:
         errcount += 1

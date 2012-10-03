@@ -20,6 +20,7 @@
 
 casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   __init__.py
+  test_agentflagger.py
   test_bandpass.py
   test_boxit.py
   test_caltabconvert.py
@@ -40,7 +41,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_fixvis.py
   test_flagcmd.py
   test_flagdata.py
-  test_flagdata2.py
   test_fluxscale.py
   test_gaincal.py
   test_getchunk.py
@@ -148,8 +148,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_split.py
   test_statwt.py
   test_testconcat.py
-  test_tflagdata.py
-  test_testflagger.py
   test_uvcontsub.py
   test_uvcontsub3.py
   test_viewer.py

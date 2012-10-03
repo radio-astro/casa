@@ -13,7 +13,7 @@ from sdcal import sdcal
 from sdsmooth import sdsmooth
 from sdbaseline import sdbaseline
 
-def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 
         a=inspect.stack()
         stacklevel=0
@@ -135,7 +135,7 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame
             if blfunc != 'none':
               tmpoutfile = sdbaselineout
               #sdbaseline.defaults()
-              sdbaseline(infile=tmpinfile, antenna=antenna, masklist=masklist, maskmode=maskmode, thresh=thresh, avg_limit=avg_limit, edge=edge, blfunc=blfunc, order=order, npiece=npiece, applyfft=applyfft, fftmethod=fftmethod, fftthresh=fftthresh, addwn=addwn, rejwn=rejwn, clipthresh=clipthresh, clipniter=clipniter, verify=verifybl, verbose=verbosebl, showprogress=showprogress, minnrow=minnrow, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+              sdbaseline(infile=tmpinfile, antenna=antenna, masklist=masklist, maskmode=maskmode, thresh=thresh, avg_limit=avg_limit, edge=edge, blfunc=blfunc, order=order, npiece=npiece, applyfft=applyfft, fftmethod=fftmethod, fftthresh=fftthresh, addwn=addwn, rejwn=rejwn, clipthresh=clipthresh, clipniter=clipniter, verify=verifybl, verbose=verbosebl, bloutput=bloutput, blformat=blformat, showprogress=showprogress, minnrow=minnrow, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
             else:
               #print "No baseline subtraction was applied..."
               #print ""
@@ -166,7 +166,7 @@ def _reset_inputs(param=None):
         internal function to recover inputs of sdreduce (containing other tasks) with global task parameter settin
 g
         '''
-        arg_names=['infile','antenna','fluxunit','telescopeparm','specunit','restfreq','frame','doppler','calmode','scanlist','field','iflist','pollist','channelrange','average','scanaverage','timeaverage','tweight','averageall','polaverage','pweight','tau','kernel','kwidth','blfunc','order','npiece','applyfft','fftmethod','fftthresh','addwn','rejwn','clipthresh','clipniter','masklist','maskmode','thresh','avg_limit','edge','verifycal','verifysm','verifybl','verbosebl','showprogress','minnrow','outfile','outform','overwrite','plotlevel']
+        arg_names=['infile','antenna','fluxunit','telescopeparm','specunit','restfreq','frame','doppler','calmode','scanlist','field','iflist','pollist','channelrange','average','scanaverage','timeaverage','tweight','averageall','polaverage','pweight','tau','kernel','kwidth','blfunc','order','npiece','applyfft','fftmethod','fftthresh','addwn','rejwn','clipthresh','clipniter','masklist','maskmode','thresh','avg_limit','edge','verifycal','verifysm','verifybl','verbosebl','bloutput','blformat','showprogress','minnrow','outfile','outform','overwrite','plotlevel']
         a=inspect.stack()
         stacklevel=0
         for k in range(len(a)):

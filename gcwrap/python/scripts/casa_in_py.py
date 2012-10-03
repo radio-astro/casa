@@ -131,7 +131,7 @@ msplot = casac.msplot()
 calplot = casac.calplot()
 table = casac.table()
 flagger = casac.flagger()
-testflagger = casac.testflagger()
+agentflagger = casac.agentflagger()
 image = casac.image()
 imagepol = casac.imagepol()
 simulator = casac.simulator()
@@ -150,8 +150,7 @@ cu = casac.utils()
 
 from imstat_pg import imstat_pg as imstat
 from flagdata_pg import flagdata_pg as flagdata
-from flagdata2_pg import flagdata2_pg as flagdata2
-from tflagdata_pg import tflagdata_pg as tflagdata
+#from tflagdata_pg import tflagdata_pg as tflagdata
 from flagcmd_pg import flagcmd_pg as flagcmd
 from importevla_pg import importevla_pg as importevla
 from split_pg import split_pg as split
