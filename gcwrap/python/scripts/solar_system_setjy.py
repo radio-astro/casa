@@ -22,8 +22,8 @@
 # model calculations should be in the code (for those bodies that have
 # proper models) but for now, just live with the tabulated versions.
 #
-# version 1.0
-# last edited: 2012Sep26
+# version 1.1
+# last edited: 2012Oct02
 #
 
 from numpy import searchsorted
@@ -33,8 +33,8 @@ from math import exp, pi, cos, sin, isnan, sqrt
 #from os import environ, listdir
 import os
 from taskinit import gentools
-
 (tb,me)=gentools(['tb','me'])
+
 def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
     '''
     find flux density for solar system bodies:
@@ -48,10 +48,11 @@ def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
         Ganymede - Butler et al. 2012
         Titan - Gurwell et al. 2012
         Callisto - Butler et al. 2012
-        Ceres - ?
+        Ceres - Keihm et al. 2012
         Juno - ?
-        Pallas - ?
-        Vesta - ?
+        Pallas - Keihm et al. 2012
+        Vesta - Keihm et al. 2012
+        Hygeia - Keihm et al. 2012
 
     inputs:
         source_name = source name string.  example: "Venus"
@@ -91,7 +92,7 @@ def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
     AU = 1.4959787066e11
     SUPPORTED_BODIES = [ 'Venus', 'Mars', 'Jupiter', 'Uranus', 'Neptune',
                          'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan',
-                         'Ceres', 'Juno', 'Pallas', 'Vesta' ]
+                         'Ceres', 'Juno', 'Pallas', 'Vesta', 'Hygeia' ]
 
     capitalized_source_name = source_name.capitalize()
     statuses = []
@@ -293,9 +294,9 @@ def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
 # as the doppler shift, so take that into account.
 #
             delta_frequency0 = frequency[0] - newfreq0
-            newfreq0 += delta_frequency0
+            newfreq0 = frequency[0] + delta_frequency0
             delta_frequency1 = frequency[1] - newfreq1
-            newfreq1 += delta_frequency1
+            newfreq1 = frequency[1] + delta_frequency1
             shifted_frequencies.append([newfreq0,newfreq1])
             average_delta_frequency = (delta_frequency0 + delta_frequency1)/2
 #
@@ -540,8 +541,13 @@ def interpolate_list (freqs, Tbs, frequency):
             low = high - 11
     aTbs = array(Tbs[low:high])
     afreqs = array(freqs[low:high])
+#
+# cubic interpolation is still blowing up for some reason, so check
+# that it's at least within the range of the tabulated values as well
+# as if it's a NaN
+#
     func = interp1d (afreqs, aTbs, kind='cubic')
-    if isnan(func(frequency)):
+    if isnan(func(frequency)) or func(frequency) < min(aTbs) or func(frequency) > max(aTbs):
        func = interp1d (afreqs, aTbs, kind='linear')
     return [ 0, float(func(frequency)), 0.0 ]
 
@@ -552,7 +558,6 @@ def integrate_Tb (freqs, Tbs, frequency):
     if (frequency[0] > freqs[low_index]):
         low_index = low_index + 1
 
-    [status,hi_Tb,hi_dTb] = interpolate_list (freqs, Tbs, frequency[1])
     [status,hi_Tb,hi_dTb] = interpolate_list (freqs, Tbs, frequency[1])
     hi_index = nearest_index (freqs, frequency[1])
     if (frequency[1] < freqs[hi_index]):
