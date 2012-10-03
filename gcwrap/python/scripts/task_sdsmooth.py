@@ -114,7 +114,7 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                             # text() actually displays on the plot...
                             sd.plotter.text(0.0, 1.0,'',coords='relative')
                             sd.plotter.text(0.0, 1.0,'Raw spectra', coords='relative')
-                            if ( plotlevel < -1 ):
+                            if ( plotlevel < 0 ):
                                     # Hardcopy - currently no way w/o screen displayfirst
                                     pltfile=project+'_rawspec.eps'
                                     sd.plotter.save(pltfile)
