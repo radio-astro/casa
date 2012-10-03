@@ -73,19 +73,22 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
                 casalog.post("Problem removing continuum-subtracted sub-MS %s into working directory" % (subMS),'SEVERE')
 
         if(pnrows>0): # put back the POINTING table
+            casalog.post("Restoring the POINTING table ...",'NORMAL')
             try:
                 if want_cont:
-                    shutil.copytree(auxfile, os.path.realpath(helper._arg['vis'] + ".cont/POINTING"))
-                shutil.copytree(auxfile, os.path.realpath(helper._arg['vis'] + ".contsub/POINTING"))
-                shutil.rmtree(auxfile, ignore_errors=True)
+                    theptab = os.path.realpath(helper._arg['vis'] + ".cont/POINTING")
+                    os.system('rm -rf '+theptab)
+                    shutil.copytree(auxfile, theptab)
+                theptab = os.path.realpath(helper._arg['vis'] + ".contsub/POINTING")
+                os.system('rm -rf '+theptab)
+                os.system('mv '+auxfile+' '+theptab)
             except Exception, instance:
-                casalog.post("Error handling axiliary table %s: %s" % 
+                casalog.post("Error restoring pointing table from %s: %s" % 
                              (auxfile,str(instance)),'SEVERE')
-       
         
         return True
     
-    # Normal run code
+    # Run normal code
     try:
         casalog.origin('uvcontsub')
 
