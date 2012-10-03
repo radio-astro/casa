@@ -190,7 +190,7 @@ public:
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer& /*vb*/, Bool /*useCorrected*/) {};
 
-  virtual String name();
+  virtual String name() const;
 
 private:
 

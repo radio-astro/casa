@@ -113,15 +113,18 @@ namespace LibAIR {
   }
 
   void dataSPWs(const casa::MeasurementSet &ms,
-		std::vector<size_t> &spw)
+		std::vector<size_t> &spw,
+		const std::vector<size_t> &sortedI)
   {
     std::map<size_t, size_t> map=DataDescSPWMap(ms);
     const casa::ROMSMainColumns cols(ms);
     const casa::ROScalarColumn<casa::Int> &dd=cols.dataDescId();
     const size_t nrows=dd.nrow();          
     spw.resize(nrows);
-    for(size_t i=0; i<nrows; ++i)
+    for(size_t ii=0; ii<nrows; ++ii)
     {
+      size_t i = sortedI[ii];
+
       spw[i]=map[dd(i)];
     }
   }

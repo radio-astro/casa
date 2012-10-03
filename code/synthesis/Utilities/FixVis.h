@@ -140,6 +140,7 @@ public:
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&, Bool //useCorrected
                                 ) {}
+  virtual String name() const { return "FixVis";};
 
 private:
   // Interpret field indices (MSSelection)

@@ -27,8 +27,8 @@
 //# $Id$
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/CFCache.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <lattices/Lattices/LatticeExpr.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Directory.h>
 #include <fstream>
@@ -114,6 +114,47 @@ namespace casa{
 				      +x.getMesg()));
       }
   }
+
+  void CFCache::initCache2()
+  {
+    LogOrigin logOrigin("CFCache", "initCache2");
+    LogIO log_l(logOrigin);
+
+    ostringstream name;
+    String line;
+    Directory dirObj(Dir);
+
+    if (Dir.length() == 0) 
+      throw(SynthesisFTMachineError(LogMessage("Got null string for disk cache dir. ",
+					       logOrigin).message()));
+    //
+    // If the directory does not exist, create it
+    //
+    if (!dirObj.exists()) dirObj.create();
+    else if ((!dirObj.isWritable()) || (!dirObj.isReadable()))
+      {
+	throw(SynthesisFTMachineError(String("Directory \"")+Dir+String("\"")+
+				      String(" for convolution function cache"
+					     " exists but is unreadable/unwriteable")));
+      }
+
+    try
+      {
+	Regex regex(Regex::fromPattern(String("CF*")));
+	Vector<String> fileNames(dirObj.find(regex));
+	for (uInt i=0; i < fileNames.nelements(); i++)
+	  {
+	    PagedImage<Complex> thisCF(Dir+'/'+fileNames[i]);
+	    TableRecord miscinfo = thisCF.miscInfo();
+	    miscinfo.print(cerr);
+	  }
+      }
+    catch(AipsError& x)
+      {
+	throw(SynthesisFTMachineError(String("Error while initializing CF disk cache: ")
+				      +x.getMesg()));
+      }
+  }
   //
   //-----------------------------------------------------------------------
   //
@@ -167,14 +208,16 @@ namespace casa{
     Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
     Vector<Int> shape(2,convSize);
 
+    cerr << "CFC: " << shape << endl;
+
     Vector<Double>ref(4);
     ref(0)=ref(1)=ref(2)=ref(3)=0;
     dc.setReferencePixel(ref);
     Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
     Vector<Double> refVal;
     refVal=ftdc->referenceValue();
-    refVal(0)=refVal(1)=0;
-    ftdc->setReferenceValue(refVal);
+    // refVal(0)=refVal(1)=0;
+    // ftdc->setReferenceValue(refVal);
     ref(0)=ftRef(0);
     ref(1)=ftRef(1);
     ftdc->setReferencePixel(ref);
@@ -483,7 +526,7 @@ namespace casa{
   //
   // Return TRUE if loaded from disk and FLASE if found in the mem. cache.
   //
-  Int CFCache::loadFromDisk(Int where, Float /*pa*/, Float /*dPA*/,
+  Int CFCache::loadFromDisk(Int where, Float pa, Float dPA,
 			    Int Nw, CFStoreCacheType &convFuncCache,
 			    CFStore& cfs, String nameQualifier)
   {
@@ -616,7 +659,7 @@ namespace casa{
   Int CFCache::locateConvFunction(CFStore& cfs, 
 				  const Int Nw, const Float pa, const Float dPA,
 				  const String& nameQualifier,
-				  const Int /*mosXPos*/, const Int /*mosYPos*/)
+				  const Int mosXPos, const Int mosYPos)
   {
     LogIO log_l(LogOrigin("CFCache", "locatedConvFunction"));
 

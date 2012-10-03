@@ -34,42 +34,32 @@ class SplatResult {
 public:
 	SplatResult( int speciesId, const string& species,
 			const string& chemicalName,
-			const string& quantumNumbers, const string& catalogueName,
-			bool recommended, long molecularType, const pair<double,string>& frequency,
-			const pair<double,string>& smu2, const pair<double,string>& el,
-			const pair<double,string>& eu, double logA, double wavelength,
-			double intensity  );
+			const string& quantumNumbers, const pair<double,string>& frequency,
+			double smu2, const pair<double,string>& el,
+			const pair<double,string>& eu, double logA, double intensity  );
 	int getSpeciesId() const;
 	std::string getSpecies() const;
 	std::string getChemicalName() const;
 	std::string getQuantumNumbers() const;
-	std::string getCatalogueName() const;
-	bool isRecommended() const;
-	long getMolecularType() const;
 	pair<double,std::string> getFrequency() const;
-	pair<double,std::string> getSmu2() const;
 	pair<double,std::string> getEL() const;
 	pair<double,std::string> getEU() const;
 	double getLogA() const;
-	double getWavelength() const;
+	double getSmu2() const;
 	double getIntensity() const;
 	string toString() const;
+	string toLine(string spacer = " ") const;
 	virtual ~SplatResult();
 private:
 	std::string _species;
 	std::string _chemicalName;
 	std::string _quantumNumbers;
-	std::string _catalogueName;
-	bool _recommended;
-	long _molecularType;
 	int _speciesId;
-
 	pair<double,std::string> _frequency;
-	pair<double,std::string> _smu2;
 	pair<double,std::string> _el;
 	pair<double,std::string> _eu;
+	double _smu2;
 	double _logA;
-	double _wavelength;
 	double _intensity;
 };
 

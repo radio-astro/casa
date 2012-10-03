@@ -157,6 +157,9 @@ public:
 	// Provide table name (for flag version)
 	String getTableName();
 
+	// Signal true when a progress summary has to be printed
+	bool summarySignal();
+
 private:
 
 	// Mapping functions

@@ -91,6 +91,23 @@ namespace casa
 
     template <class T>
     T getenv(const char *name, const T defaultVal);
+    Float libreSpheroidal(Float nu);
+    Double getRefFreq(const VisBuffer& vb);
+    void makeFTCoordSys(const CoordinateSystem& coords,
+			const Int& convSize,
+			const Vector<Double>& ftRef,
+			CoordinateSystem& ftCoords);
+
+    void expandFreqSelection(const Matrix<Double>& freqSelection,
+			     Matrix<Double>& expandedFreqList,
+			     Matrix<Double>& expandedConjFreqList);
+
+    template <class T>
+    void libreConvolver(Array<T>& c1, const Array<T>& c2);
+    inline Double conjFreq(const Double& freq, const Double& refFreq) 
+    {return sqrt(2*refFreq*refFreq - freq*freq);};
+
+    Double nearestValue(const Vector<Double>& list, const Double& val, Int& index);
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);

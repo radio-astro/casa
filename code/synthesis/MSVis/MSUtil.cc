@@ -185,21 +185,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if(freqEndObs < (chanfreq[ichan]+fabs(chanwid[ichan]))) freqEndObs=chanfreq[ichan]+fabs(chanwid[ichan]);    
       }
       obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(spw[ispw]));
-      MFrequency::Convert toframe(obsMFreqType,
-				  MFrequency::Ref(freqframe, frame));
-      for (uInt j=0; j< nTimes; ++j){
-	if((fldId[elindx[uniqIndx[j]]] ==fieldId) && anyEQ(ddOfSpw, ddId[elindx[uniqIndx[j]]])){
-	  timeCol.get(elindx[uniqIndx[j]], ep);
-	  frame.resetEpoch(ep);
-	  Double freqTmp=toframe(Quantity(freqStartObs, "Hz")).get("Hz").getValue();
-	  if(freqStart > freqTmp)  freqStart=freqTmp;
-	  if(freqEnd < freqTmp)  freqEnd=freqTmp;
-	  freqTmp=toframe(Quantity(freqEndObs, "Hz")).get("Hz").getValue();
-	  if(freqStart > freqTmp)  freqStart=freqTmp;
-	  if(freqEnd < freqTmp)  freqEnd=freqTmp;
+      if((obsMFreqType==MFrequency::REST) || (obsMFreqType==freqframe && obsMFreqType != MFrequency::TOPO)){
+	if(freqStart > freqStartObs)  freqStart=freqStartObs;
+	if(freqEnd < freqStartObs)  freqEnd=freqStartObs;
+	if(freqStart > freqEndObs)  freqStart=freqEndObs;
+	if(freqEnd < freqEndObs)  freqEnd=freqEndObs;
+      }
+      else{
+	MFrequency::Convert toframe(obsMFreqType,
+				    MFrequency::Ref(freqframe, frame));
+	for (uInt j=0; j< nTimes; ++j){
+	  if((fldId[elindx[uniqIndx[j]]] ==fieldId) && anyEQ(ddOfSpw, ddId[elindx[uniqIndx[j]]])){
+	    timeCol.get(elindx[uniqIndx[j]], ep);
+	    frame.resetEpoch(ep);
+	    Double freqTmp=toframe(Quantity(freqStartObs, "Hz")).get("Hz").getValue();
+	    if(freqStart > freqTmp)  freqStart=freqTmp;
+	    if(freqEnd < freqTmp)  freqEnd=freqTmp;
+	    freqTmp=toframe(Quantity(freqEndObs, "Hz")).get("Hz").getValue();
+	    if(freqStart > freqTmp)  freqStart=freqTmp;
+	    if(freqEnd < freqTmp)  freqEnd=freqTmp;
+	  }
 	}
       }
-
     }
   }
   void MSUtil::rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval, Vector<Int>& indx){

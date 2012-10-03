@@ -162,7 +162,7 @@ void SearchRedshiftDialog::findRedshift(){
 		//Range for the search should be everything.
 		Double minValue = getTargetFrequency();
 		Double maxValue = numeric_limits<double>::max();
-		searcher->setSearchRangeFrequency( minValue, maxValue );
+		searcher->setFrequencyRange( minValue, maxValue );
 
 		//Start the background thread that will do the search
 		delete searchThread;

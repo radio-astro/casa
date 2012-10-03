@@ -62,13 +62,8 @@ namespace LibAIR {
   /** \brief Return the SPW of each row in main table
    */
   void dataSPWs(const casa::MeasurementSet &ms,
-		std::vector<size_t> &spw);
-
-  
-
-
-  
-
+		std::vector<size_t> &spw,
+		const std::vector<size_t> &sortedI);
 
 }
 

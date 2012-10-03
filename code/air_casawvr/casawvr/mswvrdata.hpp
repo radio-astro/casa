@@ -81,7 +81,8 @@ namespace LibAIR {
   /** Load all WVR data from a measurment set
       
    */
-  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms);
+  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, 
+			       std::vector<size_t> &sortedI);
 
 }
 

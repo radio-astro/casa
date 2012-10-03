@@ -199,7 +199,8 @@ Imager::Imager()
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
+     mssFreqSel_p()
 {
   ms_p=0;
   mssel_p=0;
@@ -302,6 +303,7 @@ traceEvent(1,"Entering imager::defaults",25);
   flatnoise_p=True;
   freqrange_p.resize();
   numthreads_p=-1;
+  mssFreqSel_p.resize();
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -313,7 +315,8 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
+    mssFreqSel_p()
 {
 
   mssel_p=0;
@@ -333,8 +336,9 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 
 Imager::Imager(MeasurementSet& theMS, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
-    sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
+     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
+     mssFreqSel_p()
 {
   mssel_p=0;
   ms_p=0;
@@ -419,6 +423,7 @@ Imager &Imager::operator=(const Imager & other)
     }
     imageTileVol_p=other.imageTileVol_p;
     flatnoise_p=other.flatnoise_p;
+    mssFreqSel_p.assign(other.mssFreqSel_p);
   }
   return *this;
 }
@@ -1327,7 +1332,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
      << " fieldids=" << fieldids << " msselect=" << msSelect;
 
   nullSelect_p=False;
-
+  String local_spwstring(spwstring);
+  if (local_spwstring  == "") local_spwstring="*";
   try {
     
     this->lock();
@@ -1344,7 +1350,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     //MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
     //MSSelection thisSelection (sorted, MSSelection::PARSE_NOW,timerng,antnames,
-    //			       fieldnames, spwstring,uvdist, msSelect,"",
+    //			       fieldnames, local_spwstring,uvdist, msSelect,"",
     //			       scan, obs); 
 
     datafieldids_p.resize(fieldids.nelements());
@@ -1367,11 +1373,11 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
          << "Selecting on spectral windows" << LogIO::POST;
     }
-    else if(spwstring != ""){
+    else if(local_spwstring != ""){
       os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
-         << "Selecting on spectral windows expression : " << spwstring
+         << "Selecting on spectral windows expression : " << local_spwstring
 	 << LogIO::POST;
-      thisSelection.setSpwExpr(spwstring);
+      thisSelection.setSpwExpr(local_spwstring);
     }
     
     if(antIndex.nelements() >0){
@@ -1475,6 +1481,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     // TT: Added sorting option in getChanList call 
     //     to accomodate changes related CAS-2521
     Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
+    mssFreqSel_p.resize();
+    mssFreqSel_p=thisSelection.getChanFreqList(NULL, True);
     //cout<<"chansels="<<chansels<<endl;
     //convert the selection into flag
     uInt nms = 1;
@@ -1661,8 +1669,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     // NOTE : This code is replicated in ImagerMultiMS.cc.
     Vector<Int> chancounts(dataspectralwindowids_p.nelements());
     chancounts=0;
-    //    if( spwstring == "" ) os << "Selected all spws and channels" << LogIO::POST;
-    //else os << "Channel selection : " << spwstring << LogIO::POST;
+    //    if( local_spwstring == "" ) os << "Selected all spws and channels" << LogIO::POST;
+    //else os << "Channel selection : " << local_spwstring << LogIO::POST;
     os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL) << "Selected:";
     for(uInt k=0;k<dataspectralwindowids_p.nelements();k++)
       {

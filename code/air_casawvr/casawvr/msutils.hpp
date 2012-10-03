@@ -36,7 +36,9 @@ namespace LibAIR {
   void fieldIDs(const casa::MeasurementSet &ms,
 		std::vector<double> &time,
 		std::vector<int> &fieldID,
-		std::vector<int> &sourceID);
+		std::vector<int> &sourceID,
+		const std::vector<size_t> &sortedI
+		);
 
   /** \brief Connection between state_id and the ScanIntent (or
       ObsMode) 

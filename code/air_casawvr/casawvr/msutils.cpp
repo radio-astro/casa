@@ -50,7 +50,8 @@ namespace LibAIR {
   void fieldIDs(const casa::MeasurementSet &ms,
 		std::vector<double> &time,
 		std::vector<int> &fieldID,
-		std::vector<int> &sourceID)
+		std::vector<int> &sourceID,
+		const std::vector<size_t> &sortedI)
   {
     const casa::ROMSMainColumns cols(ms);
     const casa::ROScalarColumn<casa::Int> &f= cols.fieldId();
@@ -60,22 +61,28 @@ namespace LibAIR {
 
     const size_t nrows=f.nrow();    
 
+    if(sortedI.size()!= nrows){
+      throw std::runtime_error("Time-sorted row vector must have same size as MS.");
+    }
+
     time.resize(nrows);
     fieldID.resize(nrows);
     sourceID.resize(nrows);
-    for(size_t i=0; i<nrows; ++i)
+    for(size_t ii=0; ii<nrows; ++ii)
     {
-      time[i]=t(i);
-      fieldID[i]=f(i);
+      size_t i = sortedI[ii];
+
+      time[ii]=t(i);
+      fieldID[ii]=f(i);
       if (srcmap.count(f(i)) == 0)
       {
 	throw std::runtime_error("Encountered data without associated source");
       }
       /**checking if compiler version has map::at*/
 #if __GNUC__ <= 4 and __GNUC_MINOR__ < 1
-      sourceID[i]=srcmap[(f(i))];
+      sourceID[ii]=srcmap[(f(i))];
 #else
-      sourceID[i]=srcmap.at(f(i));
+      sourceID[ii]=srcmap.at(f(i));
 #endif
 
     }

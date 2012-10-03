@@ -35,12 +35,21 @@ namespace casa {
 	class Diagnostic {
 	    public:
 		friend class init_diagnostic_object_t;
-		void argv( int argc_, const char *argv_[] ) { if ( kernel_->do_log( ) ) kernel_->argv(argc_,argv_); }
-		void argv( int argc_, char *argv_[] )       { if ( kernel_->do_log( ) ) kernel_->argv(argc_,argv_); }
+		void argv( int argc_, const char *argv_[] ) {
+		    kernel_t &k = lock_kernel( );
+		    if ( k.do_log( ) ) k.argv(argc_,argv_);
+		    release_kernel( );
+		}
+		void argv( int argc_, char *argv_[] ) {
+		    kernel_t &k = lock_kernel( );
+		    if ( k.do_log( ) ) k.argv(argc_,argv_);
+		    release_kernel( );
+		}
 		Diagnostic( ) { }
 		virtual ~Diagnostic( ) { }
 	    private:
 		struct kernel_t {
+		    kernel_t( );
 		    kernel_t( FILE *f );
 		    bool do_log( ) const { return fptr != 0; }
 		    ~kernel_t( ) { if ( fptr ) fclose(fptr); }
@@ -50,18 +59,19 @@ namespace casa {
 		    pid_t pid;
 		    std::string name;  /**** any non-argv messages should include 'name' ****/
 		};
-		kernel_t *kernel_;
+		kernel_t &lock_kernel( );
+		void release_kernel( ) { }
+		void output_prologue( );
+		void output_epilogue( );
 	};
 
 	Diagnostic diagnostic;
 
 	static class init_diagnostic_object_t {
 	    public:
-		init_diagnostic_object_t( ) { if ( count++ == 0 ) { do_initialize( ); } }
-		~init_diagnostic_object_t( ) { if ( --count == 0 ) { do_finalize( ); } }
+		init_diagnostic_object_t( ) { if ( count++ == 0 ) diagnostic.output_prologue( ); }
+		~init_diagnostic_object_t( ) { if ( --count == 0 ) { diagnostic.output_epilogue( ); } }
 	    private:
-		void do_initialize( );
-		void do_finalize( );
 		static unsigned long count;
 	} init_diagnostic_object_;
 

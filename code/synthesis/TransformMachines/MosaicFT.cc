@@ -1615,7 +1615,7 @@ void MosaicFT::addBeamCoverage(ImageInterface<Complex>& pbImage){
 
 }
 
-String MosaicFT::name(){
+String MosaicFT::name() const {
   return machineName_p;
 }
 

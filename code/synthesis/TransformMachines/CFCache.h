@@ -30,7 +30,6 @@
 
 #include <casa/Arrays/Matrix.h>
 #include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/TransformMachines/Utils.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
@@ -42,8 +41,10 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <synthesis/TransformMachines/VPSkyJones.h>
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/CFDefs.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace CFDefs;
@@ -124,10 +125,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Method to set the disk cache directory name
     //
     void setCacheDir(const char *dir) {Dir = dir;}
+    String getCacheDir() {return Dir;};
     //
     // Method to initialize the internal memory cache.
     //
     void initCache();
+    void initCache2();
     //
     // Compute the size of the memory cache in bytes
     //

@@ -95,7 +95,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
  z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
  itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0),
  current_region_id(0),
- colorSummaryWidget( NULL ), legendPreferencesDialog( NULL )
+ colorSummaryWidget( NULL ), legendPreferencesDialog( NULL ),newOverplots( false )
 {
 	setupUi(this);
 	initPlotterResource();
@@ -142,14 +142,6 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 	pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 
 
-	QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
-	for ( int i = 0; i < yUnitsList.size(); i++ ){
-		yAxisCombo->addItem( yUnitsList[i] );
-	}
-	yAxisCombo->setCurrentIndex( 0 );
-	setDisplayYUnits( yAxisCombo->currentText() );
-	initializeSolidAngle();
-	connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
 
 	// get reference frame info for freq axis label
 	MFrequency::Types freqtype = determineRefFrame(img);
@@ -183,6 +175,17 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
 	yUnit = QString(img->units().getName().chars());
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+	QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
+	for ( int i = 0; i < yUnitsList.size(); i++ ){
+		yAxisCombo->addItem( yUnitsList[i] );
+	}
+	yAxisCombo->setCurrentIndex( 0 );
+	setDisplayYUnits( yAxisCombo->currentText() );
+	initializeSolidAngle();
+	connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
+
+
+
 
 	pixelCanvas->setAutoScaleX(true);
 	pixelCanvas->setAutoScaleY(true);
@@ -462,20 +465,12 @@ void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMPr
 
 }
 
-void QtProfile::setPlotError(int st)
-{
+void QtProfile::setPlotError(int st){
 	pixelCanvas->setPlotError(st);
 }
 
 void QtProfile::changeCoordinate(const QString &text) {
-
 	coordinate = String(text.toStdString());
-
-	//Double x1, y1;
-	//getProfileRange(x1, y1, coordinate.chars());
-	//qDebug() << "coordinate:" << QString(coordinate.chars())
-	//           << "profile Range:" << x1 << y1;
-
 	emit coordinateChange(coordinate);
 }
 
@@ -483,7 +478,6 @@ void QtProfile::changeCoordinate(const QString &text) {
 void QtProfile::changeFrame(const QString &text) {
 	//qDebug() << "In change frame with input: " << text <<" coordinateType: " << coordinateType.c_str();
 	spcRefFrame=String(text.toStdString());
-	//changeCoordinateType(QString(coordinateType.c_str()));
 	changeCoordinateType(QString(ctypeUnit.c_str()));
 }
 
@@ -553,6 +547,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 		*itsLog << LogIO::WARN << message << LogIO::POST;
 	}
 
+	newOverplots = false;
 	fileName = name;
 	setWindowTitle(QString("Spectral Profile - ").append(name));
 
@@ -597,6 +592,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 
 	yUnit = QString(img->units().getName().chars());
+
 	yUnitPrefix = "";
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
 
@@ -1018,17 +1014,8 @@ void QtProfile::setCollapseRange(float xmin, float xmax){
 
 void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 
-	// re-set the images
-	// that are overplotted
+	// re-set the images that are overplotted
 	if (over) {
-		// TODO: put that in to avoid memory loss
-		//QHashIterator<QString, ImageAnalysis*> ih(*over);
-		//while (ih.hasNext()) {
-		//	ih.next();
-		//	cout << ih.key() << ": " << ih.value() << endl;
-		//	delete ih.value();
-		//	qDebug() << "the frame: " << (QString)ih.key();
-		//}
 		delete over;
 		over = 0;
 	}
@@ -1037,26 +1024,29 @@ void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 	QHashIterator<QString, ImageInterface<float>*> i(hash);
 	while (i.hasNext()) {
 		i.next();
-		//qDebug() << "overplot key="<<i.key() << ": " << i.value();
 		QString ky = i.key();
 		ImageAnalysis* ana = new ImageAnalysis(i.value());
 		(*over)[ky] = ana;
 	}
+	newOverplots = true;
 }
 
 
-void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*/,
+void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
 		const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
-		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
+		const QString &/*linecolor*/, const QString & text, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 	if (!isVisible()) return;
 	if (!analysis) return;
 
 	//Only treat it as a new region if we haven't already registered
 	//it in the map.  This method executing multiple times was causing
-	//images with many regions to be slow to load.
+	//images with many regions to be slow to load.  However, if new Overplots
+	//have been added since the last time this method was called for the
+	//region, we need to execute in order to add the overplots to the
+	//graph.
 	int occurances = spectra_info_map.count( id_ );
-	if ( occurances >= 1 ){
+	if ( occurances >= 1 && !newOverplots ){
 		return;
 	}
 	spectra_info_map[id_] = shape;
@@ -1132,6 +1122,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 	momentSettingsWidget->setCollapseVals( z_xval );
 	specFitSettingsWidget->setCollapseVals( z_xval );
 	positioningWidget->updateRegion( pxv, pyv, wxv, wyv );
+	newOverplots = false;
 }
 
 
@@ -1140,6 +1131,7 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 
 	if (!isVisible()) return;
 	if (!analysis) return;
+
 
 	if ( type == viewer::Region::RegionChangeFocus )
 		current_region_id = id_;			// viewer region focus has changed
@@ -1161,8 +1153,12 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 
 	for ( uint x=0; x < px.nelements(); ++x ) px[x] = pixel_x[x];
 	for ( uint x=0; x < py.nelements(); ++x ) py[x] = pixel_y[x];
-	for ( uint x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
-	for ( uint x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
+	for ( uint x=0; x < wx.nelements(); ++x ) {
+		wx[x] = world_x[x];
+	}
+	for ( uint x=0; x < wy.nelements(); ++x ) {
+		wy[x] = world_y[x];
+	}
 
 	*itsLog << LogOrigin("QtProfile", "updateRegion");
 
@@ -2018,13 +2014,20 @@ Int QtProfile::scaleAxis(){
 }
 
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
+	//It doesn't make sense to change the y-axis units if they
+	//are dimensionless astronomical data units.
+	if ( yUnit ==ConverterIntensity::ADU ){
+		this->yAxisCombo->setVisible( false );
+		this->leftLabel->setVisible( false );
+	}
 	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
 	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 }
 
 
 
-void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM ){
+void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv,
+		Int ordersOfM ){
 	bool ok = true;
 	if ( over != NULL ){
 		QHashIterator<QString, ImageAnalysis*> i(*over);
@@ -2158,6 +2161,7 @@ void QtProfile::adjustTopAxisSettings(){
 void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
 		const QString& label ){
 	specFitSettingsWidget->addCurveName( label );
+	//qDebug() << "Adding polyline label="<<label;
 	pixelCanvas->addPolyLine(xVals, yVals, label );
 	adjustTopAxisSettings();
 }
@@ -2316,8 +2320,13 @@ void QtProfile::initializeSolidAngle() const {
 }
 
 void QtProfile::setDisplayYUnits( const QString& unitStr ){
-	pixelCanvas->setDisplayYUnits( unitStr );
-	this->specFitSettingsWidget->setDisplayYUnits( unitStr );
+	QString displayUnit = unitStr;
+	//ADU units are dimensionless
+	if ( yUnit == ConverterIntensity::ADU ){
+		displayUnit = "";
+	}
+	pixelCanvas->setDisplayYUnits( displayUnit );
+	this->specFitSettingsWidget->setDisplayYUnits( displayUnit );
 }
 
 

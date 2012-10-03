@@ -60,8 +60,6 @@ QtCanvas::QtCanvas(QWidget *parent)
           lineOverlayContextMenu(this), gaussianContextMenu( this ),
           frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
 {    
-
-
     setMouseTracking(true);
     setAttribute(Qt::WA_NoBackground);
     setBackgroundRole(QPalette::Dark);
@@ -101,7 +99,6 @@ void QtCanvas::initLineOverlayContextMenu(){
 	findRedshiftAction->setStatusTip( "Specify a line and get the redshift back.");
 	connect( findRedshiftAction, SIGNAL(triggered()), this, SLOT(findRedshift()));
 	lineOverlayContextMenu.addAction( findRedshiftAction );
-
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
@@ -244,6 +241,7 @@ void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &erro
                                     const QString& lbl, ColorCategory level ){
 	QString curveLabel = lbl;
 	bool dupeCurve = duplicateCurve( curveLabel );
+
 	if ( !dupeCurve ){
 		QColor curveColor = getDiscreteColor( level, id );
 		CanvasCurve curve( data, error, curveLabel, curveColor, level );

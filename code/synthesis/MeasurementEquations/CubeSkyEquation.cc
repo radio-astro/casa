@@ -52,14 +52,15 @@
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
-#include <synthesis/MeasurementComponents/AWProjectFT.h>
-#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+#include <synthesis/TransformMachines/AWProjectFT.h>
+#include <synthesis/TransformMachines/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <synthesis/TransformMachines/WPConvFunc.h>
 #include <synthesis/TransformMachines/SimplePBConvFunc.h>
 #include <synthesis/TransformMachines/ComponentFTMachine.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <synthesis/TransformMachines/Utils.h>
 
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
@@ -559,7 +560,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
 
             }
         }
-        finalizePutSlice(* vb, cubeSlice, nCubeSlice);
+        finalizePutSlice(* vb, doPSF, cubeSlice, nCubeSlice);
     }
 
     //Don't need these for now
@@ -850,7 +851,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         finalizeGetSlice();
         if(!incremental&&!initialized) initialized=True;
         //	Timers tFinalizePutSlice=Timers::getTime();
-        finalizePutSlice(* vb, cubeSlice, nCubeSlice);
+        finalizePutSlice(* vb, False, cubeSlice, nCubeSlice);
         //	Timers tDoneFinalizePutSlice=Timers::getTime();
 
         // aFinalizeGetSlice += tFinalizePutSlice - tFinalizeGetSlice;
@@ -864,14 +865,15 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
       sm_->ggS(model).clearCache();
       sm_->work(model).clearCache();
       
-        ft_=&(*ftm_p[model]);
-        unScaleImage(model);
+      ft_=&(*ftm_p[model]);
+      unScaleImage(model);
 
     }
     ft_=&(*ftm_p[0]);
 
     this->fixImageScale();
     //lets return original selection back to iterator
+    //	storeImg(String("stokesNormed.im"),sm_->gS(0));
     if(changedVI)
         rvi_p->selectChannel(blockNumChanGroup_p, blockChanStart_p,
                              blockChanWidth_p, blockChanInc_p, blockSpw_p);
@@ -1108,8 +1110,8 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
             if(IFTChanged||changedSkyJones(vb,row)) {
                 // Need to apply the SkyJones from the previous row
                 // and finish off before starting with this row
-                finalizePutSlice(* vb_p, cubeSlice, nCubeSlice);
-                initializePutSlice(vb, cubeSlice, nCubeSlice);
+	      finalizePutSlice(* vb_p, dopsf, cubeSlice, nCubeSlice);
+	      initializePutSlice(vb, cubeSlice, nCubeSlice);
             }
 
             for (Int model=0; model<sm_->numberOfModels(); ++model){
@@ -1123,7 +1125,7 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
             firstOneChangesGet_p=False;
 
         if(!isBeginingOfSkyJonesCache_p){
-            finalizePutSlice(*vb_p,  cubeSlice, nCubeSlice);
+	  finalizePutSlice(*vb_p, dopsf, cubeSlice, nCubeSlice);
         }
         initializePutSlice(vb, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;
@@ -1141,8 +1143,60 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
 
 }
 
-void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  
-				       Int cubeSlice, Int nCubeSlice) {
+void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
+				       Int cubeSlice, Int nCubeSlice) 
+{
+  //============================================================================
+  // NEW CODE BEGINS
+  // Iterate across fields
+  // LogIO os(LogOrigin("CubeSkyEquation", "finalizePutSlice"));
+  // os << "WARNING!!!  NEW R&D CODE IN USE...DISABLE IT BEFORE CHECK-IN" << LogIO::WARN << LogIO::POST;
+  // for (Int field=0; field < sm_->numberOfModels(); ++field)
+  //   {
+  //     ft_=&(*ftm_p[field]);
+  //     ift_=&(*iftm_p[field]);
+
+  //     // Number of Taylor terms per field
+  //     Int ntaylors = sm_->numberOfTaylorTerms();
+  //     if(dopsf) ntaylors = 2 * sm_->numberOfTaylorTerms() - 1;
+
+  //     // Build a list of reference images to send into FTMachine
+  //     PtrBlock<SubImage<Float> *> gSSliceVec(ntaylors);
+  //     PtrBlock<SubImage<Float> *> ggSSliceVec(ntaylors);
+  //     PtrBlock<SubImage<Float> *> fluxScaleVec(ntaylors);
+  //     Block<CountedPtr<ImageInterface<Complex> > > imPutSliceVec(ntaylors);
+  //     Block<Matrix<Float> > weightSliceVec(ntaylors); // this is by value
+  //     for (Int taylor=0; taylor < ntaylors; ++taylor)
+  // 	{
+  // 	  Int model = sm_->getModelIndex(field,taylor);
+  // 	  sliceCube(gSSliceVec[taylor], sm_->gS(model), cubeSlice, nCubeSlice);
+  // 	  sliceCube(ggSSliceVec[taylor], sm_->ggS(model), cubeSlice, nCubeSlice);
+  // 	  sliceCube(fluxScaleVec[taylor], sm_->fluxScale(model), cubeSlice, nCubeSlice);
+  // 	  imPutSliceVec[taylor] = imPutSlice_p[model];
+  // 	  weightSliceVec[taylor] = weightSlice_p[model];
+  // 	}// end of taylor
+
+  //     // Call finalizeToSky for this field.
+  //     // -- calls getImage, getWeightImage, does Stokes conversion, and gS/ggS normalization
+  //     //U// cout << "CubeSkyEqn :: calling new finalizeToSky with dopsf " << dopsf << endl;
+  //     iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
+  //     //      storeImg(String("stokesNormed0.im"), *(gSSliceVec[0]));
+  //     // Clean up temporary reference images      
+  //     for (Int taylor=0; taylor < ntaylors; ++taylor)
+  // 	{
+  // 	  Int model = sm_->getModelIndex(field,taylor);
+  // 	  weightSlice_p[model] = weightSliceVec[taylor]; // because this is by value...
+  // 	  delete gSSliceVec[taylor]; 
+  // 	  delete ggSSliceVec[taylor];
+  // 	  delete fluxScaleVec[taylor];
+  // 	}
+  // }// end of field
+  // ft_=&(*ftm_p[0]);
+  // ift_=&(*iftm_p[0]);
+  // // 4. Finally, we add the statistics
+  // sm_->addStatistics(sumwt, chisq);
+  // NEW CODE ENDS
+  //============================================================================
 
   for (Int model=0; model < sm_->numberOfModels(); ++model){
     //the different apply...jones use ft_ and ift_
@@ -1155,6 +1209,7 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     Matrix<Float> delta;
     //imPutSlice_p[model]->copyData(iftm_p[model]->getImage(delta, False));
     iftm_p[model]->getImage(delta, False);
+    //iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
     weightSlice_p[model]+=delta;
 
     // 2. Apply the SkyJones and add to grad chisquared
@@ -1164,14 +1219,14 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,
     sliceCube(gSSlice, sm_->gS(model), cubeSlice, nCubeSlice);
 
     applySkyJonesInv(vb, -1, *(imPutSlice_p[model]), *workSlice,
-		     *gSSlice);
+  		     *gSSlice);
     SubImage<Float> *ggSSlice;
     sliceCube(ggSSlice, sm_->ggS(model), cubeSlice, nCubeSlice);
   
     
     // 3. Apply the square of the SkyJones and add this to gradgrad chisquared
     applySkyJonesSquare(vb, -1, weightSlice_p[model], *workSlice,
-			*ggSSlice);
+  			*ggSSlice);
   
     (imPutSlice_p[model])->clearCache();
     //imPutSlice_p[model]->tempClose();
