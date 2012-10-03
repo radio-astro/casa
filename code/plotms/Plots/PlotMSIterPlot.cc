@@ -32,6 +32,8 @@
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/PlotMSCache2.h>
 
+#include <casaqt/QwtPlotter/QPOptions.h>
+
 namespace casa {
 
 //////////////////////////////////
@@ -575,37 +577,45 @@ bool PlotMSIterPlot::updateDisplay() {
         if(h == NULL || a == NULL || d == NULL) return false;
         
         // Set symbols.
-        PlotSymbolPtr symbolUnmasked = d->unflaggedSymbol();
+        // Hack to get a new PlotSymbol rather than a reference to the existing
+        // one.  We don't want to modify the internal state of the GUI, just
+        // modify what is passed to the plot.
+        PlotSymbolPtr symbolUnmasked =
+            PlotSymbolPtr(new QPSymbol(*d->unflaggedSymbol()));
         if(symbolUnmasked->symbol() == PlotSymbol::AUTOSCALING) {
             uInt data_size = itsCache2_.indexer(iter_).sizeUnmasked();
             if(data_size > pixelThreshold) {
-                //symbolUnmasked->setSymbol(PlotSymbol::PIXEL);
+                symbolUnmasked->setSymbol(PlotSymbol::PIXEL);
                 symbolUnmasked->setSize(1, 1);
             } else if(data_size > mediumThreshold) {
-                //symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
                 symbolUnmasked->setSize(2, 2);
             } else if(data_size > largeThreshold) {
-                //symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
                 symbolUnmasked->setSize(4, 4);
             } else {
-                //symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolUnmasked->setSymbol(PlotSymbol::CIRCLE);
                 symbolUnmasked->setSize(6, 6);
             }
         }
-        PlotSymbolPtr symbolMasked = d->flaggedSymbol();
+        // Hack to get a new PlotSymbol rather than a reference to the existing
+        // one.  We don't want to modify the internal state of the GUI, just
+        // modify what is passed to the plot.
+        PlotSymbolPtr symbolMasked =
+            PlotSymbolPtr(new QPSymbol(*d->flaggedSymbol()));
         if(symbolMasked->symbol() == PlotSymbol::AUTOSCALING) {
             uInt data_size = itsCache2_.indexer(iter_).sizeMasked();
             if(data_size > pixelThreshold) {
                 symbolMasked->setSymbol(PlotSymbol::PIXEL);
                 symbolMasked->setSize(1, 1);
             } else if(data_size > mediumThreshold) {
-                //symbolMasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolMasked->setSymbol(PlotSymbol::CIRCLE);
                 symbolMasked->setSize(2, 2);
             } else if(data_size > largeThreshold) {
-                //symbolMasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolMasked->setSymbol(PlotSymbol::CIRCLE);
                 symbolMasked->setSize(4, 4);
             } else {
-                //symbolMasked->setSymbol(PlotSymbol::CIRCLE);
+                symbolMasked->setSymbol(PlotSymbol::CIRCLE);
                 symbolMasked->setSize(6, 6);
             }
         }
