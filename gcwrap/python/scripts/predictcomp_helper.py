@@ -35,8 +35,9 @@ def predictSolarObjectCompList(objname, epoch, freqs, prefix):
 
     import solar_system_setjy as ss_setjy
     #print "sending objname=",objname, " epochv=",epochv, " freqlist=",freqlist
+    observatory='ALMA'
     (errcodes, fluxes, fluxerrs, sizes, dirs)=\
-       ss_setjy.solar_system_fd(source_name=objname, MJDs=[epochv], frequencies=freqlist, casalog=casalog)
+       ss_setjy.solar_system_fd(source_name=objname, MJDs=[epochv], frequencies=freqlist, observatory=observatory, casalog=casalog)
   
     #print "fluxes from ss_setjy=",fluxes
     #if errcodes[0][0] > 0:
