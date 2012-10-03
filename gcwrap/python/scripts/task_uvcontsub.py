@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import time
 import tempfile
 
 # shutil.copytree is useless with directories created by tempfile
@@ -10,7 +11,6 @@ from distutils.dir_util import copy_tree
 from taskinit import *
 from update_spw import *
 
-# jagonzal (CAS-4113): Take care of the trivial parallelization
 from parallel.parallel_task_helper import ParallelTaskHelper
 from virtualconcat_cli import  virtualconcat_cli as virtualconcat
 
@@ -18,12 +18,11 @@ mycb, myms, mytb = gentools(['cb', 'ms', 'tb'])
 
 def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
     
-    # jagonzal (CAS-4113): Take care of the trivial parallelization
     if ParallelTaskHelper.isParallelMS(vis):
         helper = ParallelTaskHelper('uvcontsub', locals())
         helper._consolidateOutput = False
         retVar = helper.go()
-        
+
         # Gather the list of continuum subtraction-SubMSs 
         cont_subMS_list = []
         contsub_subMS_list = []
@@ -31,24 +30,39 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             if retVar[subMS]:
                 cont_subMS_list.append(subMS + ".cont")
                 contsub_subMS_list.append(subMS + ".contsub")
-                
-        # jagonzal: We have to sort the list because otherwise it  
+
+        # We have to sort the list because otherwise it  
         # depends on the time the engines dispatches their sub-MSs
         cont_subMS_list.sort()
         contsub_subMS_list.sort()
 
+        # deal with the pointing table
+        auxfile = "uvcontsub_aux2_"+str(time.time())
+        pnrows = 0
+        try:
+            mytb.open(vis+'/POINTING')
+            pnrows = mytb.nrows()
+            mytb.close()
+            if(pnrows>0): 
+                shutil.copytree(os.path.realpath(vis+'/POINTING'), auxfile)
+        except Exception, instance:
+            casalog.post("Error handling POINTING table %s: %s" %
+                         (vis+'/POINTING',str(instance)),'SEVERE')
+
         if want_cont:
             try:
-                virtualconcat(concatvis=helper._arg['vis'] + ".cont",vis=cont_subMS_list)
+                virtualconcat(concatvis=helper._arg['vis'] + ".cont",vis=cont_subMS_list,
+                              copypointing=False)
             except Exception, instance:
                 casalog.post("Error concatenating continuum sub-MSs %s: %s" % 
                              (str(cont_subMS_list),str(instance)),'SEVERE')     
         try:
-            virtualconcat(concatvis=helper._arg['vis'] + ".contsub",vis=contsub_subMS_list)
+            virtualconcat(concatvis=helper._arg['vis'] + ".contsub",vis=contsub_subMS_list,
+                          copypointing=False)
         except Exception, instance:
-            casalog.post("Error concatenating continuum-subtracted sub-MSs %s: %s" % 
-                         (str(contsub_subMS_list),str(instance)),'SEVERE')     
-                
+            casalog.post("Error concatenating continuum-subtracted sub-MSs %s: %s" %
+                         (str(contsub_subMS_list),str(instance)),'SEVERE')
+
         # Remove continuum subtraction-SubMSs
         if want_cont:
             for subMS in cont_subMS_list:
@@ -57,10 +71,24 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         for subMS in contsub_subMS_list:
             if (os.system("rm -rf " + subMS ) != 0):
                 casalog.post("Problem removing continuum-subtracted sub-MS %s into working directory" % (subMS),'SEVERE')
+
+        if(pnrows>0): # put back the POINTING table
+            casalog.post("Restoring the POINTING table ...",'NORMAL')
+            try:
+                if want_cont:
+                    theptab = os.path.realpath(helper._arg['vis'] + ".cont/POINTING")
+                    os.system('rm -rf '+theptab)
+                    shutil.copytree(auxfile, theptab)
+                theptab = os.path.realpath(helper._arg['vis'] + ".contsub/POINTING")
+                os.system('rm -rf '+theptab)
+                os.system('mv '+auxfile+' '+theptab)
+            except Exception, instance:
+                casalog.post("Error restoring pointing table from %s: %s" % 
+                             (auxfile,str(instance)),'SEVERE')
         
         return True
     
-    # Normal run code
+    # Run normal code
     try:
         casalog.origin('uvcontsub')
 

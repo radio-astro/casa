@@ -18,9 +18,17 @@ Features tested:
   4. It gets the right answer for a known line + 0th order continuum,
      even when fitorder = 4.
 '''
-datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
-uvcdatadir = 'unittest/uvcontsub/' 
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest'
+uvcdatadir = 'uvcontsub' 
 
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR
+        
 #Commented out for refactoring (eliminated test_split dependence)
 #class UVContChecker(SplitChecker):
 #    """
@@ -60,15 +68,21 @@ class UVContsubUnitTestBase(unittest.TestCase):
         """
         initialize 
         """
-        self.inpms = inpms
-        if not os.path.exists('unittest/uvcontsub'):
-            os.system('mkdir -p unittest/uvcontsub')
+
+        global testmms
+
+        if testmms:
+            print "Testing on MMSs."
+        
+        self.inpms = uvcdatadir+'/'+inpms
+        if not os.path.exists(uvcdatadir):
+            os.system('mkdir '+ uvcdatadir)
 
         if not os.path.exists(self.inpms):
             try:
-                shutil.copytree(datapath + inpms, inpms)
+                shutil.copytree(datapath + '/' + self.inpms, self.inpms)
             except Exception, e:
-                raise Exception, "Missing input MS: " + datapath + inpms 
+                raise Exception, "Missing input MS: " + datapath + '/' + self.inpms 
 
 
     def cleanup(self):
@@ -108,10 +122,8 @@ class UVContsubUnitTestBase(unittest.TestCase):
 class zeroth(UVContsubUnitTestBase):
     """Test zeroth order fit"""
 
-    #inpms = uvcdatadir + 'known0.ms' 
-    #corrsels = [0]                    # fitorder, not corr selection.
     def setUp(self):
-        self.initialize(uvcdatadir+'known0.ms')
+        self.initialize('known0.ms')
 
     def tearDown(self):
         self.cleanup()
@@ -119,6 +131,7 @@ class zeroth(UVContsubUnitTestBase):
     def test_zeroth(self):
 
         record = {}
+        pnrows = {}
         try:
             print "\nRunning uvcontsub"
             uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
@@ -133,6 +146,9 @@ class zeroth(UVContsubUnitTestBase):
             specms = self.inpms + '.' + spec
             tb.open(specms)
             record[spec] = tb.getcell('DATA', 52)
+            tb.close()
+            tb.open(self.inpms+'.'+spec+'/POINTING')
+            pnrows[spec] = tb.nrows()
             tb.close()
             shutil.rmtree(specms)
         #self.__class__.records[corrsel] = record
@@ -154,12 +170,16 @@ class zeroth(UVContsubUnitTestBase):
         print "Continuum-subtracted data in line region"
         self.check_eq(record['contsub'][:,9],   # RR, LL
                  numpy.array([87.+26.j, 31.+20.j]), 0.0001)
+
+        print "Non-empty pointing table (for MMS case)"
+        self.assertEqual(pnrows['cont'], 1)
+        self.assertEqual(pnrows['contsub'], 1)
         
 #class fourth(UVContChecker):
 class fourth(UVContsubUnitTestBase):
 
     def setUp(self):
-        self.initialize(uvcdatadir+'known4.ms')
+        self.initialize('known4.ms')
 
     def tearDown(self):
         self.cleanup()
@@ -248,7 +268,7 @@ class fourth(UVContsubUnitTestBase):
 class combspw(UVContsubUnitTestBase):
 
     def setUp(self):
-        self.initialize(uvcdatadir+'combspw.ms')
+        self.initialize('combspw.ms')
     
     def tearDown(self):
         self.cleanup()
