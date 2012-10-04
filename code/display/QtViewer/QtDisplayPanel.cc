@@ -1999,6 +1999,7 @@ void QtDisplayPanel::setMode(bool modez, bool channelCubes) {
 
 	
     modeZ_ = modez;
+    pd_->setBlinkMode( !modez );
   
     hold();
   
