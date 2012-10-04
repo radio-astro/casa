@@ -131,7 +131,27 @@ class pimager():
         return True
   
     @staticmethod
-    def findchansel(msname='', spw='*', numpartition=1, freqrange=[0, 1e12]):
+    def findchansel(msname='', spw='*', field='*', numpartition=1, freqrange=[0, 1e12]):
+        im,ms=gentools(['im', 'ms'])
+        if(field==''):
+            field='*'
+        fieldid=0
+        fieldids=[]
+        if(type(field)==str):
+            fieldids=ms.msseltoindex(vis=msname, field=field)['field']
+        elif(type(field)==int):
+            fieldids=[field]
+        elif(type(field)==list):
+            fieldids=field
+        a={}
+        a['freqstart']=1.7977e308
+        fid=0
+        while((a['freqstart']> 1.0e100) and (fid < len(fieldids))):
+            a=im.advisechansel(msname=msname, getfreqrange=True, fieldid=fieldids[fid], spwselection=spw)
+            fid+=1
+                         
+        freqrange[0]=a['freqstart']
+        freqrange[1]=a['freqend']
         thesel=ms.msseltoindex(msname, spw=spw)
         spwids=thesel['spw']
         nchans=np.sum(thesel['channel'][:,2]-thesel['channel'][:,1]+1)
@@ -185,8 +205,8 @@ class pimager():
                 sel[k]=(sel[k]+','+str(spwsel)+':'+str(startch)+'~'+str(endch)) if(sel[k] != '-1') else (str(spwsel)+':'+str(startch)+'~'+str(endch))
             if(startch==endch):
                 nextstart=nextstart-1
-        freqrange[0]=beginfreq
-        freqrange[1]=endfreq
+        #freqrange[0]=beginfreq
+        #freqrange[1]=endfreq
         #print  'FREQRANGE', freqrange
 
         return sel
@@ -596,7 +616,7 @@ class pimager():
 
             #print 'SPWSEL ', spwsel, startsel, nchansel
             freqrange=[0.0, 0.0]
-            spwsel=self.findchansel(msname, spw, numcpu, freqrange=freqrange)
+            spwsel=self.findchansel(msname, spw, field, numcpu, freqrange=freqrange)
             minfreq=freqrange[0]
             maxfreq=freqrange[1]
 
@@ -896,7 +916,7 @@ class pimager():
 
         #print 'SPWSEL ', spwsel, startsel, nchansel
         freqrange=[0.0, 0.0]
-        spwsel=self.findchansel(msname, spw, numcpu, freqrange=freqrange)
+        spwsel=self.findchansel(msname, spw, field, numcpu, freqrange=freqrange)
         minfreq=freqrange[0]
         maxfreq=freqrange[1]
 

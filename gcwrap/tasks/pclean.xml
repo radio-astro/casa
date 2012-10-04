@@ -270,7 +270,7 @@
 		  <any type="variant" limittypes="string int"/>
 		  <value type="string"></value>
 		</param>
-		<param type="boolean" name="pbcorr">
+		<param type="boolean" name="pbcor">
 			<description>Correct for the primary beam post deconvolution</description>
 			<value>False</value>
 		</param>
@@ -640,7 +640,7 @@ ters
 	  ftmachine="ft",alg="hogbom",majorcycles=2, niter=6000,gain=0.1,
 	  threshold="8mJy",weighting="briggs",robust=0.5,npixels=0,mode="cube",
 	  start=5,nchan=46,width=1,interactive=True,overwrite=True,uvtaper=False,
-	  outertaper=[''],pbcorr=True)              
+	  outertaper=[''],pbcor=True)              
 		       
 	  Example of a continuum run:
 
