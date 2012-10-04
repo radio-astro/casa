@@ -206,28 +206,15 @@ namespace casa {
 
 	    std::ostringstream buf;
 	    ImageInfo ii = image->imageInfo();
-//<<<<<<< .daves
-	    GaussianBeam beam = ii.restoringBeam();
-	    /*
-	    std::string imageUnits = image->units().getName();
-	    std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
-	    Int afterCoord = -1;
-	    Int dC = cs.findCoordinate(Coordinate::DIRECTION, afterCoord);
-	    // use contains() not == so moment maps are dealt with nicely
-	    if ( ! beam.isNull() && dC!=-1 && imageUnits.find("JY/BEAM") != std::string::npos ) {
-		DirectionCoordinate dCoord = cs.directionCoordinate(dC);
-		Vector<String> units(2);
-		units(0) = units(1) = "rad";
-		dCoord.setWorldAxisUnits(units);
-		Vector<Double> deltas = dCoord.increment();
-=======
+	    GaussianBeam beam;
+	    bool multipleBeams = ii.hasMultipleBeams();
+	    if ( !multipleBeams ){
+	    	beam = ii.restoringBeam();
+	    }
+	    else {
+	    	beam = ii.restoringBeam( 0, 0 );
+	    }
 
-	    beam_vec = ii.restoringBeam();
-	    if ( beam_vec.size( ) == 3 &&
-		 beam_vec[0].isConform("arcsec") &&
-		 beam_vec[1].isConform("arcsec") &&
-		 beam_vec[2].isConform("deg") ) {
-		 */
 	    if (! beam.isNull()) {
 		char buf[512];
 		// sprintf( buf,"%.2f\"", beam_vec[0].getValue("arcsec") );
@@ -240,15 +227,7 @@ namespace casa {
 		sprintf( buf,"%.2f%c", beam.getPA("deg", True), 0x00B0 );
 		beam_string_vec.push_back(buf);
 	    }
-	    /*
->>>>>>> .r20298
 
-<<<<<<< .daves
-		beam_area = beam.getArea("rad2") / abs(deltas(0) * deltas(1));
-	    }
-=======
->>>>>>> .r20298
-*/
 	    delete image;
 	}
 

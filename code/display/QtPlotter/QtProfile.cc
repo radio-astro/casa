@@ -1032,10 +1032,10 @@ void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 }
 
 
-void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
+void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*/,
 		const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
-		const QString &/*linecolor*/, const QString & text, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
+		const QString &/*linecolor*/, const QString & /*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 	if (!isVisible()) return;
 	if (!analysis) return;
 
@@ -2290,7 +2290,14 @@ void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
 void QtProfile::initializeSolidAngle() const {
 	//Get the major and minor axis beam widths.
 	ImageInfo information = this->image->imageInfo();
-	GaussianBeam beam = information.restoringBeam();
+	GaussianBeam beam;
+	bool multipleBeams = information.hasMultipleBeams();
+	if ( !multipleBeams ){
+		beam = information.restoringBeam();
+	}
+	else {
+		beam = information.restoringBeam( 0, -1 );
+	}
 	Quantity majorQuantity = beam.getMajor();
 	Quantity minorQuantity = beam.getMinor();
 
