@@ -56,7 +56,7 @@ FluxCalcQS::FluxCalcQS() :
                                   "J0521+1638").vector();          // Jhhmm+ddmm, CAS-2020
   directions_p[FCQS::THREEC138] = MDirection(MVDirection(1.401346673041897, 0.2904130912582342),
 					     MDirection::J2000);
-  names_p[FCQS::NINETEEN34M638] = RigidVector<String, 1>("1934-638").vector();
+  names_p[FCQS::NINETEEN34M638] = RigidVector<String, 2>("1934-638","J1939-6342").vector();
   directions_p[FCQS::NINETEEN34M638] = MDirection(MVDirection(5.146176021557448, -1.1119977478136984),
 						  MDirection::J2000);
   names_p[FCQS::THREEC295] = RVS4("3C295", "1409+524", "1411+522",
