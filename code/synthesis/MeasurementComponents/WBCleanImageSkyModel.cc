@@ -222,9 +222,8 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
                 if( !state ) // initialise will return False if there is any internal inconsistency with settings so far.
 		{
 		  lc_p.resize(0);
-		  //                  os << "Could not initialize MS-MFS minor cycle" << LogIO::EXCEPTION;
-                  os << LogIO::SEVERE << "Could not initialize MS-MFS minor cycle" << LogIO::POST;
-                  return False;
+                  os << LogIO::WARN << "Could not initialize MS-MFS minor cycle" << LogIO::EXCEPTION;
+                  return False;//redundant
 		}
 	}
 
