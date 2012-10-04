@@ -138,7 +138,7 @@ void WBCleanImageSkyModel::initVars()
 WBCleanImageSkyModel::~WBCleanImageSkyModel()
 {
   lc_p.resize(0);
-  ///cout << "WBCleanImageSkyModel destructor " << endl;
+  //cout << "WBCleanImageSkyModel destructor " << endl;
 };
 
 /*************************************
@@ -248,9 +248,10 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
                 if( !state ) // initialise will return False if there is any internal inconsistency with settings so far.
 		  {
 		    lc_p.resize(0);
-		    //                  os << "Could not initialize MS-MFS minor cycle" << LogIO::EXCEPTION;
-		    os << LogIO::SEVERE << "Could not initialize MS-MFS minor cycle" << LogIO::POST;
-		    return False;
+		    nmodels_p = original_nmodels;
+		    resizeWorkArrays(nmodels_p);
+		    os << LogIO::SEVERE << "Could not initialize MS-MFS minor cycle" << LogIO::EXCEPTION;
+		    return False; // redundant
 		  }
 		
 		/* Send all 2N-1 PSFs into the MultiTermLatticeCleaner */
