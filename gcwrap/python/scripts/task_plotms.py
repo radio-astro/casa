@@ -226,23 +226,23 @@ def plotms(vis=None,
         pm.setColorAxis(coloraxis,False)
 
         # Set custom symbol
-        if not customsymbol:
-            symbolshape = 'autoscaling'
-            symbolsize  = 2
-            symbolcolor = '0000ff'
-            symbolfill  = 'fill'
-            symboloutline = False
+        #if not customsymbol:
+        symbolshape = symbolshape or 'autoscaling'
+        symbolsize = symbolsize or 2
+        symbolcolor = symbolcolor or '0000ff'
+        symbolfill = symbolfill or 'fill'
+        symboloutline = symboloutline or False
         #if customsymbol:
         pm.setSymbol(symbolshape, symbolsize, symbolcolor,
                      symbolfill, symboloutline)
 
         # Set custom flagged symbol
-        if not customflaggedsymbol:
-            flaggedsymbolshape = 'nosymbol'
-            flaggedsymbolsize  = 2
-            flaggedsymbolcolor = 'ff0000'
-            flaggedsymbolfill  = 'fill'
-            flaggedsymboloutline = False
+        #if not customflaggedsymbol:
+        flaggedsymbolshape = flaggedsymbolshape or 'nosymbol'
+        flaggedsymbolsize = flaggedsymbolsize or 2
+        flaggedsymbolcolor = flaggedsymbolcolor or 'ff0000'
+        flaggedsymbolfill = flaggedsymbolfill or 'fill'
+        flaggedsymboloutline = flaggedsymboloutline or False
         #if customflaggedsymbol:
         pm.setFlaggedSymbol(flaggedsymbolshape, flaggedsymbolsize,
                             flaggedsymbolcolor, flaggedsymbolfill,

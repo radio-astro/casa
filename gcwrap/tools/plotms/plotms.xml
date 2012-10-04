@@ -1466,8 +1466,7 @@ PlotMSFlagging::toRecord()).
   <shortdescription>Locates points in a specified region.</shortdescription>
 
   <description>
-Locates points in a specified region and returns their meta
-information as a record (see PlotMSFlagging::toRecord()).
+Locates points in all selected plot regions and returns their meta information as a record (see PlotMSFlagging::toRecord()).  If there are no selections, all plotted points are returned.
   </description>
 
   <input />
