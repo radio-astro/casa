@@ -94,7 +94,7 @@
          <height>16777215</height>
         </size>
        </property>
-       <widget class="QWidget" name="the_god_damn_frame" native="true">
+       <widget class="QWidget" name="darn_frame" native="true">
         <property name="geometry">
          <rect>
           <x>0</x>
