@@ -67,6 +67,11 @@ FluxCalcQS::FluxCalcQS() :
                                   "J0813+4813").vector();          // Jhhmm+ddmm, CAS-2020
   directions_p[FCQS::THREEC196] = MDirection(MVDirection(2.1537362969610023, 0.8415541320803659),
 					     MDirection::J2000);
+  // added for Perley-Butler 2013 4h 37m 4.375301s 29d 40' 13.819008" CAS-4489 (other alias:B0433+2934)
+  names_p[FCQS::THREEC123] = RVS4("3C123", "0433+295", "0437+296",
+                                  "J0437+2940").vector();
+  directions_p[FCQS::THREEC123] = MDirection(MVDirection(1.2089586878736391, 0.51784800786636209),
+					     MDirection::J2000);
   directions_p[FCQS::UNKNOWN_SOURCE] = MDirection();	// Default.
 }
 
