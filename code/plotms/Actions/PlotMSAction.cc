@@ -629,7 +629,7 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        }
 	    }
 
-            if(form == "TEXT") {
+            if(t == PlotExportFormat::TEXT) {
                 Record r;
                 PlotMSAction action(PlotMSAction::SEL_INFO);
                 bool success = action.doActionWithResponse(plotms, r);
