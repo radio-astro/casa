@@ -569,20 +569,20 @@ def interpolate_list (freqs, Tbs, frequency):
 # so check that it doesn't fail completely (put it in a try/catch), and
 # also that it's not a NaN and within the range of the tabulated values
 #
+    range = max(aTbs) - min(aTbs)
     try:
         func = interp1d (afreqs, aTbs, kind='cubic')
-        if isnan(func(frequency)) or func(frequency) < min(aTbs) or func(frequency) > max(aTbs):
-            func = interp1d (afreqs, aTbs, kind='linear')
+        if isnan(func(frequency)) or func(frequency) < min(aTbs)-range/2 or func(frequency) > max(aTbs)+range/2:            func = interp1d (afreqs, aTbs, kind='linear')
     except:
         func = interp1d (afreqs, aTbs, kind='linear')
 #
 # if it still failed, even with the linear interpolation, just take the
 # nearest tabulated point.
 #
-    if isnan(func(frequency)) or func(frequency) < min(aTbs) or func(frequency) > max(aTbs):
-        brightness = float(func(frequency))
-    else:
+    if isnan(func(frequency)) or func(frequency) < min(aTbs)-range/2 or func(frequency) > max(aTbs)+range/2:
         brightness = Tbs[ind]
+    else:
+        brightness = float(func(frequency))
     return [ 0, brightness, 0.0 ]
 
 
