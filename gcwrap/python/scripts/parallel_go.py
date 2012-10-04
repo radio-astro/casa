@@ -44,6 +44,7 @@ class cluster(object):
    if(os.environ.has_key('IPYTHONDIR')):
       __ipythondir=os.environ['IPYTHONDIR']
    __homepath=os.environ['HOME'] 
+   __start_controller_file='start_controller.sh'   
    __start_engine_file='start_engine.sh'
    __stop_node_file='stop_node.sh'
    __stop_engine_file='stop_engine.sh'
@@ -239,7 +240,7 @@ class cluster(object):
       self.__new_engs=[]
       self.__init_now=True
 
-   def __start_controller(self):
+   def _start_controller(self):
       '''(Internal) Start the controller.
     
       A user does not need to call this function directly. When a user runs either start_cluster or start_engine, it will check the existence of a valid controller. If the controller does not exist, this function will be called auto matically. All engines will connect to the valid controller. 
@@ -293,6 +294,54 @@ class cluster(object):
       #self.__client.activate()
 
       return True
+  
+   def __start_controller(self):
+      '''
+      '''
+       
+      # if there is already a controller, use it
+      if (self.__controller!=None):
+         return True
+     
+      # First of all write bashrc file which is needed by other cluster files
+      self.__write_bashrc()     
+
+      # Generate time stamp and write start controller file
+      from time import strftime
+      timestamp=strftime("%Y%m%d%H%M%S")
+      self.__write_start_controller(timestamp) 
+      
+      # Start controller in a detached terminal
+      cmd = 'bash ' + self.__ipythondir + '/' + self.__start_controller_file
+      self.__controller=Popen(cmd,shell=True).pid
+      if (self.__controller==None):
+         return False
+      self.__timestamp=timestamp
+      print "controller %s started" % self.__controller  
+      
+      # Now write the rest of the cluster files
+      self.__write_start_engine()
+      self.__write_stop_controller()
+      self.__write_stop_node()          
+      
+      # Wait for controller files to exist
+      info=self.__ipythondir+'/log/casacontroller-'+str(self.__timestamp)+'-'+str(self.__controller)+'.log'
+      meng=self.__ipythondir+'/security/casacontroller-mec-'+self.__timestamp+'.furl'
+
+      for i in range(1, 15):
+         if os.path.exists(info):
+            break
+         time.sleep(1)
+
+      for i in range(1, 15):
+         if os.path.exists(meng):
+            break
+         time.sleep(1)
+
+      # Start-up client
+      self.__client=client.MultiEngineClient(meng)
+
+      return True
 
    def __write_start_engine(self):
       '''(Internal) Create script for starting engines.
@@ -310,6 +359,28 @@ class cluster(object):
       ef.write('export contrid=%s\n' % self.__controller)
       ef.write('export stamp=%s\n' % self.__timestamp)
       ef.write(cmd+' --furl-file='+self.__ipythondir+'/security/casacontroller-engine-'+self.__timestamp+'.furl --logfile='+self.__ipythondir+'/log/casaengine-'+self.__timestamp+'-'+str(self.__controller)+'- 2>&1 | grep -v NullSelection &\n')
+      ef.close()
+      
+   def __write_start_controller(self,timestamp):
+      '''
+
+      '''
+
+      ef=open(self.__ipythondir+'/'+self.__start_controller_file, 'w')
+      bash=commands.getoutput("which bash")
+      ef.write('#!%s\n' % bash)
+      ef.write('. %s/%s\n' % (self.__ipythondir, self.__cluster_rc_file))
+      lfile=self.__ipythondir+'/log/casacontroller-'+timestamp+'-'
+      ffile=self.__ipythondir+'/security/casacontroller-engine-'+timestamp+'.furl'
+      efile=self.__ipythondir+'/security/casacontroller-mec-'+timestamp+'.furl'
+      tfile=self.__ipythondir+'/security/casacontroller-tc-'+timestamp+'.furl'
+      cmd = commands.getoutput("which ipcontroller")
+      cmd += ' --engine-furl-file=' + ffile
+      cmd += ' --multiengine-furl-file=' + efile
+      cmd += ' --task-furl-file=' + tfile
+      cmd += ' --logfile=' + lfile
+      cmd += ' &\n'
+      ef.write(cmd)
       ef.close()
 
    def __write_stop_node(self):
@@ -526,10 +597,14 @@ class cluster(object):
              del self.__client
          except:
              traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
+         # Reset state before doing anything else, otherwise we may try to use one method from the client object
+         self.__client=None
+         self.__controller=None             
          # Update cluster info
          self.__engines=self.__update_cluster_info(len(self.__engines))
          # Remove initialization/shut-down scripts
          try:
+             os.remove(self.__ipythondir+'/'+self.__start_controller_file)             
              os.remove(self.__ipythondir+'/'+self.__cluster_rc_file)
              os.remove(self.__ipythondir+'/'+self.__start_engine_file)
              os.remove(self.__ipythondir+'/'+self.__stop_node_file)
@@ -538,10 +613,7 @@ class cluster(object):
              os.remove(self.__prefix+self.__cluster_rc_file)
              os.remove(self.__prefix+self.__start_engine_file)            
          except:
-             traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))
-         # Reset state
-         self.__client=None
-         self.__controller=None             
+             traceback.print_exception((sys.exc_info()[0]), (sys.exc_info()[1]), (sys.exc_info()[2]))             
          # jagonzal (CAS-4370): Remove all the ipcontroller/ipengine files because
          # otherwise it might confuse future cluster/MultiEngineClient instances
          self.wash_logs()
