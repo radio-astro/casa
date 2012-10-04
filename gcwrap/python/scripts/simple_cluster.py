@@ -17,6 +17,13 @@ import scipy as sp
 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
 import traceback
 
+def getstatusoutput(cmd):
+    pipe = os.popen('{ ' + cmd + '; } 2>&1', 'r')
+    text = pipe.read()
+    sts = pipe.close()
+    if sts is None: sts = 0
+    if text[-1:] == '\n': text = text[:-1]
+    return sts, text
 
 class simple_cluster:
     '''The simple_cluster creates and maintains an ipcluster environment
@@ -1110,7 +1117,6 @@ class simple_cluster:
         self._rsrc = result
         
         return result
-
 
     def get_return_list(self):
 		"""
