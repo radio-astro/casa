@@ -40,7 +40,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -75,7 +75,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -110,7 +110,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -145,7 +145,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -180,7 +180,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -215,7 +215,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -250,7 +250,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -285,7 +285,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -320,7 +320,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -355,7 +355,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -390,7 +390,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -425,7 +425,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -460,7 +460,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -495,7 +495,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -530,7 +530,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
@@ -565,7 +565,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>0</height>
+       <height>45</height>
       </size>
      </property>
      <property name="title">
