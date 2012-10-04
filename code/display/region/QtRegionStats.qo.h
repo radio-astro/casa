@@ -3,6 +3,7 @@
 
 #include <QtGui/QGroupBox>
 #include <QtGui/QPushButton>
+#include <QtGui/QLabel>
 #include <QVBoxLayout>
 #include <casa/BasicSL/String.h>
 #include <display/region/QtImageRegionStats.ui.h>
@@ -18,7 +19,7 @@ namespace casa {
 
 	namespace qt {
 
-	    typedef std::list<std::pair<QGroupBox*,QLineEdit*> > statfield_list_t;
+	    typedef std::list<std::pair<QGroupBox*,QLabel*> > statfield_list_t;
 
 	    class stats_t : public QGroupBox {
 		Q_OBJECT

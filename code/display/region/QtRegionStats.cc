@@ -40,17 +40,18 @@ namespace casa {
 		fields.push_back(statfield_list_t::value_type(box12,text12));
 		fields.push_back(statfield_list_t::value_type(box13,text13));
 		fields.push_back(statfield_list_t::value_type(box14,text14));
-		fields.push_back(statfield_list_t::value_type(box15,text15));
 		fields.push_back(statfield_list_t::value_type(box21,text21));
 		fields.push_back(statfield_list_t::value_type(box22,text22));
 		fields.push_back(statfield_list_t::value_type(box23,text23));
 		fields.push_back(statfield_list_t::value_type(box24,text24));
-		fields.push_back(statfield_list_t::value_type(box25,text25));
 		fields.push_back(statfield_list_t::value_type(box31,text31));
 		fields.push_back(statfield_list_t::value_type(box32,text32));
 		fields.push_back(statfield_list_t::value_type(box33,text33));
 		fields.push_back(statfield_list_t::value_type(box34,text34));
-		fields.push_back(statfield_list_t::value_type(box35,text35));
+		fields.push_back(statfield_list_t::value_type(box41,text41));
+		fields.push_back(statfield_list_t::value_type(box42,text42));
+		fields.push_back(statfield_list_t::value_type(box43,text43));
+		fields.push_back(statfield_list_t::value_type(box44,text44));
 	    }
 
 	    ms_stats_t::ms_stats_t( statfield_list_t &fields, QWidget *parent ) : stats_t(parent) {
@@ -82,22 +83,27 @@ namespace casa {
 	    std::list<std::pair<String,String> >::iterator siter = (*stats.list()).begin( );
 
 #if defined(__APPLE__)
+	    QFont stat_box_font( "Lucida Grande", 11 );
 	    QFont stat_field_font( "Lucida Grande", 10 );
 #else
-	    QFont stat_field_font( "Sans Serif", 10 );
+	    QFont stat_box_font( "Sans Serif", 9 );
+	    QFont stat_field_font( "Sans Serif", 8 );
 #endif
 	    while ( fiter != fields.end( ) && siter != (*stats.list()).end( ) ) {
+		(*fiter).first->show( );
+		(*fiter).first->setFont( stat_box_font );
 		(*fiter).first->setTitle( QString::fromStdString((*siter).first) );
 		(*fiter).second->setFont( stat_field_font );
 		(*fiter).second->setText( QString::fromStdString((*siter).second) );
-		(*fiter).second->setCursorPosition(0);
+		// (*fiter).second->setCursorPosition(0);
 		++fiter;
 		++siter;
 	    }
 	    // clear out unused fields
 	    while ( fiter != fields.end( ) ) {
-		(*fiter).first->setTitle( "" );
-		(*fiter).second->setText( "" );
+		(*fiter).first->hide( );
+		// (*fiter).first->setTitle( "" );
+		// (*fiter).second->setText( "" );
 		++fiter;
 	    }
 	      
