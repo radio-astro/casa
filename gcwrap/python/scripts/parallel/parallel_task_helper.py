@@ -13,6 +13,9 @@ class ParallelTaskHelper:
     a task parallel is to use this rather than the TaskHelper method
     above
     '''
+    
+    __bypass_mms_processing=False
+    
     def __init__(self, task_name, args = {}):
         self._arg = args
         self._arguser = {}
@@ -224,11 +227,21 @@ class ParallelTaskHelper:
         return True
 
     @staticmethod
+    def bypassMMSProcessing(switch=True):
+        
+        ParallelTaskHelper.__bypass_mms_processing = switch
+    
+    @staticmethod
     def isParallelMS(vis):
         '''
         This method will let us know if we can do the simple form
-        of parallelization by invoking on many refernced mss.
+        of parallelization by invoking on many referenced mss.
         '''
+        
+        # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+        if (ParallelTaskHelper.__bypass_mms_processing):
+            return False
+        
         msTool = mstool()
         if not msTool.open(vis):
             raise ValueError, "Unable to open MS %s," % vis
