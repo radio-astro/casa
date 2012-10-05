@@ -6445,11 +6445,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 
   //  return;
 
-  if (  // typeName().contains("KAntPos") ||
-      //  typeName().contains("EGainCurve") ||
-      typeName().contains("BPOLY") ||
+  if (typeName().contains("BPOLY") ||
       typeName().contains("GSPLINE"))
-    //      typeName().contains("Opac"))
     throw(AipsError(typeName()+" not yet supported."));
 
     char cfill = cout.fill(' '); // Set fill character for terminal output
@@ -6750,23 +6747,12 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 	      fparam4.reference(fparam.reform(sh));
 	      sok4.reference(sok.reform(sh));
 
-	      if (nPar()>10) {
-		// klugey, but we must have pairs of Floats per pol
-		npar/=2;
-		IPosition blc0(4,0,0,0,0),blc1(4,1,0,0,0),trc(sh-1),str(4,2,1,1,1);
-		
-		v1.reference(fparam4(blc0,trc,str));
-		v2.reference(fparam4(blc1,trc,str));
-		vok.reference(sok4(blc0,trc,str));
-	      }
-	      else {
-		// only one par per pol
-		sh.append(IPosition(1,NTIME));
-		sh(2)=NANT;
-		v1.reference(fparam4);
-		v2.resize();
-		vok.reference(sok4);
-	      }
+	      // only one val per par
+	      sh.append(IPosition(1,NTIME));
+	      sh(2)=NANT;
+	      v1.reference(fparam4);
+	      v2.resize();
+	      vok.reference(sok4);
 	    }
 
             IPosition gidx(4,0,0,0,0); // 4-element IPosition, all zeros
