@@ -7,12 +7,12 @@ import shutil
 import partitionhelper as ph
 
 class ParallelTaskHelper:
-    '''
+    """
     This is the extension of the TaskHelper to allow for parallel
     operation.  For simple tasks all that should be required to make
     a task parallel is to use this rather than the TaskHelper method
     above
-    '''
+    """
     
     __bypass_mms_processing=False
     
@@ -33,20 +33,22 @@ class ParallelTaskHelper:
         self._arguser[arg] = value
 
     def initialize(self):
-        '''
+        """
         This is the setup portion.
         Currently it:
            * Finds the full path for the input vis.
-        '''
+        """
         self._arg['vis'] = os.path.abspath(self._arg['vis'])
-        casalog.origin("ParallelTaskHelper")
 
     def generateJobs(self):
-        '''
+        """
         This is the method which generates all of the actual jobs to be
         done.  The default is to asume the input vis is a reference ms and
         build one job for each referenced ms.
-        '''
+        """
+        
+        casalog.origin("ParallelTaskHelper")
+        
         try:
             msTool = mstool()
             if not msTool.open(self._arg['vis']):
@@ -70,7 +72,7 @@ class ParallelTaskHelper:
             msTool.close()
             return True
         except Exception, instance:
-            casalog.post("Error handling MMS %s: %s" % (self._arg['vis'],instance),'WARN')
+            casalog.post("Error handling MMS %s: %s" % (self._arg['vis'],instance),"WARN","generateJobs")
             msTool.close()
             return False
 
@@ -81,30 +83,22 @@ class ParallelTaskHelper:
         self._jobQueue.addJob(self._executionList)
         self._jobQueue.executeQueue()
 
-    def postExecution(self):      
+    def postExecution(self):   
+        
+        casalog.origin("ParallelTaskHelper")
+           
         ret_list = {}
         if (self._cluster != None):
             ret_list =  self._cluster.get_return_list()
         else:
             return None
         
-        # jagonzal (CAS-4376): Consolidate list of return variables from the different engines into one single value 
-        #try:
-        #    msTool = mstool()
-        #    msTool.open(self._arg['vis'])
-        #    subMS_list = msTool.getreferencedtables()
-        #    msTool.close()
-        #except Exception, instance:
-        #    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
-        #    msTool.close()
-        #    return False
-        
         index = 0
         if isinstance(ret_list.values()[0],bool) and self._consolidateOutput:
             retval = True
             for subMs in ret_list:
                 if not ret_list[subMs]:
-                    casalog.post("%s failed for sub-MS %s" % (self._taskName,subMs),'WARN')
+                    casalog.post("%s failed for sub-MS %s" % (self._taskName,subMs),"WARN","postExecution")
                     retval = False
                 index += 1
             return retval
@@ -115,7 +109,7 @@ class ParallelTaskHelper:
                 try:
                     ret_dict = self.sum_dictionaries(dict_i,ret_dict)
                 except Exception, instance:
-                    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
+                    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),"WARN","postExecution")
             return ret_dict     
         elif (ret_list.values()[0]==None) and self._consolidateOutput:
              return None      
@@ -140,20 +134,28 @@ class ParallelTaskHelper:
         return ret_dict   
             
     def go(self):
+        
+        casalog.origin("ParallelTaskHelper")
+        
         self.initialize()
         if (self.generateJobs()):
             self.executeJobs()
             try:
                 retVar = self.postExecution()
             except Exception, instance:
-                casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),'WARN')
+                casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),"WARN","go")
                 return False
         else:
             retVar = False
+            
+        # Restore casalog origin
+        casalog.origin(self._taskName)
+        
         return retVar
 
     @staticmethod
     def getReferencedMSs(vis):
+        
         msTool = mstool()
         if not msTool.open(vis):
             raise ValueError, "Unable to open MS %s." % vis
@@ -171,14 +173,14 @@ class ParallelTaskHelper:
 
     @staticmethod
     def restoreSubtableAgreement(vis, mastersubms='', subtables=[]):
-        '''
+        """
         Tidy up the MMS vis by replacing the subtables of all SubMSs
         by the subtables from the SubMS given by "mastersubms".
         If specified, only the subtables in the list "subtables"
         are replaced, otherwise all.
         If "mastersubms" is not given, the first SubMS of the MMS
         will be used as master.
-        '''
+        """
 
         msTool = mstool();
         msTool.open(vis)
@@ -221,7 +223,6 @@ class ParallelTaskHelper:
                             os.chdir(origpath)
                     else:    
                         shutil.rmtree(theSubTab, ignore_errors=True)
-                        #print "Copying from "+mastersubms+'/'+s+" to "+ theSubTab
                         shutil.copytree(mastersubms+'/'+s, theSubTab)
 
         return True
@@ -233,10 +234,10 @@ class ParallelTaskHelper:
     
     @staticmethod
     def isParallelMS(vis):
-        '''
+        """
         This method will let us know if we can do the simple form
         of parallelization by invoking on many referenced mss.
-        '''
+        """
         
         # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
         if (ParallelTaskHelper.__bypass_mms_processing):
@@ -258,8 +259,8 @@ class ParallelTaskHelper:
 
         if isinstance(input, list):
             rtnValue = []
-            for file in input:
-                rtnValue.append(os.path.abspath(file))
+            for file_i in input:
+                rtnValue.append(os.path.abspath(file_i))
             return rtnValue
 
         # Your on your own, don't know what to do
@@ -267,10 +268,10 @@ class ParallelTaskHelper:
 
     @staticmethod
     def listToCasaString(inputList):
-        '''
+        """
         This Method will take a list of integers and try to express them as a 
         compact set using the CASA notation.
-        '''
+        """
         if inputList is None or len(inputList) == 0:
             return ''
         
