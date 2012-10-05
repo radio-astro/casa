@@ -54,9 +54,11 @@ int main() {
     Vector<String> qsScNames(1);          Vector<FluxStandard::FluxScale> qsScEnums(1);
     qsScNames[0] = "Perley-Butler 2013";  qsScEnums[0] = FluxStandard::PERLEY_BUTLER_2013;
 
-    Vector<String> srcNames(2);
+    //Vector<String> srcNames(2);
+    Vector<String> srcNames(3);
     srcNames[0] = "3C196"; // model with 5th order
     srcNames[1] = "3C286";    
+    srcNames[2] = "3C123";    
 
     Vector<MFrequency> freqs(2);
     freqs[0] = MFrequency(Quantity(2.0, "GHz"));
@@ -65,7 +67,7 @@ int main() {
     // Expected flux densities for qsScNames with srcNames at freqs.
     Vector<Vector<Vector<Float> > > expfds(1);
     for(Int scNum = qsScNames.nelements(); scNum--;){
-      expfds[scNum].resize(2);
+      expfds[scNum].resize(3);
       for(Int srcInd = srcNames.nelements(); srcInd--;)
         expfds[scNum][srcInd].resize(2);
     }
@@ -77,6 +79,8 @@ int main() {
     expfds[0][1][0] = 12.5386591;       // Perley-Butler 2013, 3C286, 2.0 GHz(Oct1st,2012)
     //expfds[0][1][1] = 2.74100521;       // Perley-Butler 2013, 3C286, 20.0 GHz
     expfds[0][1][1] = 2.72945558;       // Perley-Butler 2013, 3C286, 20.0 GHz(Oct1st,2012)
+    expfds[0][2][0] = 35.9624710;       // Perley-Butler 2013, 3C123, 2.0 GHz(Oct4st,2012)
+    expfds[0][2][1] = 3.70417233;       // Perley-Butler 2013, 3C123, 20.0 GHz(Oct4st,2012)
 
     Vector<Double> fluxUsed(4);
 
