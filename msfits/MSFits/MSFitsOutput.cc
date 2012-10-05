@@ -492,6 +492,10 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                 selChans(j) = freqs(k);
             }
             //cout << "selChans.nelements()=" << selChans.nelements() << endl;
+            //for (uInt j = 0; j < selChans.nelements(); j++) {
+            //    cout << selChans(j) << " ";
+            //}
+            //cout << endl;
             delta = selChans(1) - selChans(0);
             for (uInt j = 1; j < selChans.nelements(); j++) {
                 if (!near(delta, selChans(j) - selChans(j - 1), 1.0e-5)) {
@@ -501,15 +505,6 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                     return 0;
                 }
             }
-            /*
-             for (uInt j=1; j<freqs.nelements(); j++) {
-             if (!near(delta, freqs(j) - freqs(j-1), 1.0e-5)) {
-             os << LogIO::SEVERE << "Channel width varies across the band"
-             << LogIO::POST;
-             return 0;
-             }
-             }
-             */
             if (measFreq(s) != measFreq0) {
                 os << LogIO::SEVERE << "Frequency frame varies in the MS"
                         << LogIO::POST;
