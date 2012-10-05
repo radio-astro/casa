@@ -684,7 +684,8 @@ class pimager():
                     over=overone
                 self.combineimages(rootnames=imlist, nterms=nterms, outputrootname=imagename)
                 if((maskimage == '') or (maskimage==[])):
-                    maskimage='lala.mask'
+                    maskimage=imagename+'.mask'
+                    ia.removefile(maskimage)
                 if (interactive and (intmask==0)):
                     if(maj==0):
                         ia.removefile(maskimage)
@@ -1019,7 +1020,8 @@ class pimager():
                 coverims[k]=imlist[k]+'.flux.pbcoverage'
             self.weightedaverimages(residual, residuals, weightims)
             if((maskimage == '') or (maskimage==[])):
-                maskimage='lala.mask'
+                maskimage=imagename+'.mask'
+                ia.removefile(maskimage)
             if (interactive and (intmask==0)):
                 if(maj==0):
                     ia.removefile(maskimage)

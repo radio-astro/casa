@@ -84,8 +84,8 @@ print '--Single Dish as Model (multi-scale)--'
 shutil.rmtree('orion_tsdms.model', True)
 shutil.rmtree('orion_tsdms.mask', True)
 default('clean')
-clean('orion.ms',
-      'orion_tsdms',
+clean(vis='orion.ms',
+      imagename='orion_tsdms',
       field='2~10',
       spw='0,1',
       mode='mfs',
@@ -143,13 +143,15 @@ def joint_deconvolve(datapath):
 	print '--Joint deconvolution --'
 
 	#Regrid GBT image onto synth imaging coordinates
-	ia.open('orion_tsdmem.image')
+	ia.open('orion_tsdms.image')
 	csys = ia.coordsys()
 	ia.close()
 	ia.open(datapath+'orion.gbt.im')
-	ia.regrid(outfile='orion_tgbt_regrid.im',shape=[300,300,1,1],
+	ib=ia.regrid(outfile='orion_tgbt_regrid.im',shape=[300,300,1,1], axes=[0,1],
 		  csys=csys.torecord(),overwrite=True)
+	ib.setcoordsys(csys.torecord())
 	ia.close()
+	ib.done()
 
 	#Deconvolve GBT image
 	# Sigh.  dc.open will warn about the lack of a PSF, but I can't seem to
