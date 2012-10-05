@@ -115,6 +115,7 @@ scripts/task_importfitsidi.py
 scripts/task_importgmrt.py
 scripts/task_importuvfits.py
 scripts/task_importvla.py
+scripts/task_imreframe.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
 scripts/task_imstat.py

@@ -48,6 +48,7 @@ importfitsidi.xml
 importgmrt.xml
 importuvfits.xml
 importvla.xml
+imreframe.xml
 imregrid.xml
 imsmooth.xml
 imstat.xml
