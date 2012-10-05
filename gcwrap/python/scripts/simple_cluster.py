@@ -17,13 +17,6 @@ import scipy as sp
 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
 import traceback
 
-def getstatusoutput(cmd):
-    pipe = os.popen('{ ' + cmd + '; } 2>&1', 'r')
-    text = pipe.read()
-    sts = pipe.close()
-    if sts is None: sts = 0
-    if text[-1:] == '\n': text = text[:-1]
-    return sts, text
 
 class simple_cluster:
     '''The simple_cluster creates and maintains an ipcluster environment
@@ -45,9 +38,34 @@ class simple_cluster:
         self._cluster=cluster()
         self._JobQueueManager=None
         self._enginesRWoffsets={}
+        self.__localCluster = False
         # jagonzal: This is basically the destructor (i.e. for graceful finalization)
         atexit.register(simple_cluster.stop_cluster,self)
 
+    # jagonzal (CAS-4372): By-pass ssh redirection when deploying engines in localhost 
+    def shell(self, hostname):
+      """Creates the command line to execute the give command on the given host.
+      If and only if the host is not localhost, ssh is used."""
+
+      if self.uniqueIP(hostname) == self.uniqueIP("localhost"):
+         return "eval "
+      else:
+         # f: Requests ssh to go to background just before command execution.
+         # q: Quiet mode.  Causes all warning and diagnostic messages to be suppressed.
+         # x: Disables X11 forwarding.
+         return "ssh -fqx " + hostname
+        
+    def uniqueIP(self, hostname):
+      """Returns a unique IP address of the given hostname,
+      i.e. not 127.0.0.1 for localhost but localhost's global IP"""
+      
+      ip = socket.gethostbyname(hostname)
+      
+      if ip == "127.0.0.1":
+         ip = socket.gethostbyname(socket.getfqdn())
+         
+      return ip
+  
     ####################################################################
     # Static method that returns whatever the current definition of a
     # cluster is.  If none is defined the default cluster is created,
@@ -210,10 +228,10 @@ class simple_cluster:
         ncores = 0
         memory = 0.
         cached_memory = 0.
-        cmd_os = "ssh -q " + hostname + " 'uname -s'"
+        cmd_os = self.shell(hostname) + " 'uname -s'"
         os = commands.getoutput(cmd_os)
         if (os == "Linux"):
-            cmd_ncores = "ssh -q " + hostname + " 'cat /proc/cpuinfo' "           
+            cmd_ncores = self.shell(hostname) + " 'cat /proc/cpuinfo' "           
             res_ncores = commands.getoutput(cmd_ncores)
             str_ncores = res_ncores.count("processor")
             
@@ -228,7 +246,7 @@ class simple_cluster:
                             'Buffers',
                             'Cached' # "Cached" has a the problem that there can also be "SwapCached"
                             ]:
-                cmd_memory = "ssh -q " + hostname + " 'cat /proc/meminfo | grep -v SwapCached | grep "+memtype+"'"
+                cmd_memory = self.shell(hostname) + " 'cat /proc/meminfo | grep -v SwapCached | grep "+memtype+"'"
                 str_memory = commands.getoutput(cmd_memory)
                 str_memory = string.replace(str_memory,memtype+':','')
                 str_memory = string.replace(str_memory,"kB","")
@@ -240,7 +258,7 @@ class simple_cluster:
                     casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
                     break
             
-            cmd_cpu = "ssh -q " + hostname + " 'top -b -n 1 | grep Cpu' "
+            cmd_cpu = self.shell(hostname) + " 'top -b -n 1 | grep Cpu' "
             str_cpu = commands.getoutput(cmd_cpu)
             list_cpu = string.split(str_cpu,',')
             str_cpu = "100"
@@ -255,7 +273,7 @@ class simple_cluster:
                 casalog.post("Problem converting available cpu into numerical format at node %s: %s" % (hostname,str_cpu),'WARNING')
             
         else: # Mac OSX
-            cmd_ncores = "ssh -q " + hostname + " '/usr/sbin/sysctl -n hw.ncpu'"
+            cmd_ncores = self.shell(hostname) + " '/usr/sbin/sysctl -n hw.ncpu'"
             res_ncores = commands.getoutput(cmd_ncores)
             str_ncores = res_ncores
             
@@ -265,7 +283,7 @@ class simple_cluster:
                 casalog.post("Problem converting number of cores into numerical format at node %s: %s" % (hostname,str_ncores),'WARNING')
                 pass            
             
-            cmd_memory = "ssh -q " + hostname + " 'top -l 1 | grep PhysMem: | cut -d , -f5 ' "
+            cmd_memory = self.shell(hostname) + " 'top -l 1 | grep PhysMem: | cut -d , -f5 ' "
             str_memory = commands.getoutput(cmd_memory)
             str_memory = string.replace(str_memory,"M free.","")
             str_memory = string.replace(str_memory," ","")
@@ -276,7 +294,7 @@ class simple_cluster:
                 casalog.post("Problem converting memory into numerical format at node %s: %s" % (hostname,str_memory),'WARNING')
                 pass
             
-            cmd_cpu = "ssh -q " + hostname + " 'top -l1 | grep usage' "
+            cmd_cpu = self.shell(hostname) + " 'top -l1 | grep usage' "
             str_cpu = commands.getoutput(cmd_cpu)
             list_cpu = string.split(str_cpu,',')
             str_cpu = "100"
@@ -648,7 +666,8 @@ class simple_cluster:
         # jagonzal (CAS-4292): Stop the cluster via parallel_go before using brute-force killall
         self.stop_cluster()
         for i in range(len(self._hosts)):
-            cmd="ssh -q "+self._hosts[i][0]+' "killall -9 ipengine"'
+            hostname = self._hosts[i][0]
+            cmd=self.shell(hostname) + ' "killall -9 ipengine"'
             os.system(cmd)
             
     #   jagonzal (CAS-4292): Method for gracefull finalization (e.g.: when closing casa)
@@ -903,15 +922,16 @@ class simple_cluster:
         result = {}
         engines_list = self._cluster.get_engines()
         for engine in engines_list:
+            hostname = str(engine[1])            
             # First of all get operating system
-            cms_os = "ssh -q " + str(engine[1]) + " 'uname -s'"
+            cms_os = self.shell(hostname) + " 'uname -s'"
             os = commands.getoutput(cms_os)
             # Get read/write activity
             read_bytes = 0.0
             write_bytes = 0.0
             if (os == "Linux"):
                 # Get read activity
-                cmd_read_bytes = "ssh -q " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep read_bytes'"
+                cmd_read_bytes = self.shell(hostname) + " 'cat /proc/" + str(engine[2]) + "/io | grep read_bytes'"
                 read_bytes=commands.getoutput(cmd_read_bytes)
                 read_bytes = read_bytes.split(":")
                 try:
@@ -922,7 +942,7 @@ class simple_cluster:
                         print "read_bytes: [" +  str(read_bytes) + "]"
                     read_bytes = 0
                 # Get write activity
-                cmd_write_bytes = "ssh -q " + str(engine[1]) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
+                cmd_write_bytes = self.shell(hostname) + " 'cat /proc/" + str(engine[2]) + "/io | grep write_bytes | head -1'"
                 write_bytes=commands.getoutput(cmd_write_bytes)
                 write_bytes = write_bytes.split(":")
                 try:
@@ -933,7 +953,7 @@ class simple_cluster:
                         print "write_bytes: [" +  str(write_bytes) + "]"
                     write_bytes = 0.0
             # Get resources usage (cpu, mem, elapsed time since start)
-            cmd_resources = "ssh -q " + str(engine[1]) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
+            cmd_resources = self.shell(hostname) + " 'ps -p " + str(engine[2]) + " -o %cpu,%mem,etime' | tail -1"
             resources=commands.getoutput(cmd_resources)
             resources = resources.split(" ")
             for space in range(resources.count('')):
@@ -2283,6 +2303,7 @@ class simple_cluster:
             f=open(clusterfile, 'w')
             f.write(msg)
             f.close()
+            self.__localCluster = True
     
         self.config_cluster(clusterfile, True)
         if not self._configdone:
