@@ -1,4 +1,4 @@
-//# NewMSSimulator.cc:  this defines NewMSSimulator, which simulates a MeasurementSet
+ //# NewMSSimulator.cc:  this defines NewMSSimulator, which simulates a MeasurementSet
 //# Copyright (C) 1995-2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -694,6 +694,11 @@ void NewMSSimulator::initFields(const String& sourceName,
 
 }
 
+MeasurementSet *
+NewMSSimulator::getMs () const
+{
+    return ms_p;
+}
 
 
 void NewMSSimulator::initSpWindows(const String& spWindowName,

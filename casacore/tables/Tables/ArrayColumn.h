@@ -216,6 +216,17 @@ public:
                    Array<T>& arr, Bool resize = False) const;
     Array<T> getSlice (uInt rownr,
                        const Vector<Vector<Slice> >& arraySlices) const;
+
+    // Similar to getSlice (rownr, arraySlices, arr, resize) except it
+    // gets one slice per row.  The resulting array will be of shape
+    // [s1, s2, ..., nR] where sI are the sum of lengths of the slice elements
+    // for that axis as contained in arraySlices [i].  nR is the number
+    // of rows in the RefRows object rows.
+    void getSliceForRows (const RefRows & rows,
+                          const Vector<Vector<Slice> > & arraySlices,
+                          Array<T>& destination) const;
+
+
     // </group>
 
     // Get the array of all values in a column.
@@ -539,6 +550,11 @@ public:
 
     void putSlice (uInt rownr, const Vector<Vector<Slice> >& arraySlices,
                    const Array<T>& arr);
+
+    void putSliceFromRows (const RefRows & rows,
+                           const Vector<Vector<Slice> >& arraySlices,
+                           const Array<T>& source);
+
 
     // Put the array of all values in the column.
     // If the column contains n-dim arrays, the source array must be (n+1)-dim
