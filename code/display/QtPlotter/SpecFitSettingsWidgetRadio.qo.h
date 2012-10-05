@@ -29,7 +29,6 @@
 #include <QProgressDialog>
 #include <display/QtPlotter/SpecFitSettingsWidgetRadio.ui.h>
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
-#include <display/QtPlotter/SpecFitPlotDialog.qo.h>
 #include <display/QtPlotter/GaussianEstimateDialog.qo.h>
 #include <casa/Containers/Record.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -70,10 +69,8 @@ private slots:
 	void specFitEstimateSpecified(double xValue,double yValue, bool centerPeak);
 	void fitDone();
 	void cancelFit();
-	void showPlots();
 	void specifyGaussianEstimates();
 	void gaussianEstimatesChanged();
-	//void gaussEstimateUnitsChanged( QString unitStr );
 
 private:
 	/**
@@ -112,7 +109,6 @@ private:
     ImageProfileFitter* fitter;
     SpecFitThread* specFitThread;
     QProgressDialog progressDialog;
-    SpecFitPlotDialog plotDialog;
     GaussianEstimateDialog gaussEstimateDialog;
 
 

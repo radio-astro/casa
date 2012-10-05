@@ -52,7 +52,6 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/GaussianEstimateDialog.qo.h
   QtPlotter/MomentSettingsWidgetOptical.qo.h
   QtPlotter/MomentSettingsWidgetRadio.qo.h
-  QtPlotter/SpecFitPlotDialog.qo.h
   QtPlotter/SpecFitLogDialog.qo.h
   QtPlotter/SettingsWidget.qo.h
   QtPlotter/SearchMoleculesWidget.qo.h
@@ -68,8 +67,9 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/ThresholdingBinPlotDialog.qo.h
   QtPlotter/LegendPreferences.qo.h
   QtPlotter/CanvasHolder.qo.h
-  QtPlotter/SelectEstimateDialog.qo.h
   QtPlotter/SpectralPositioningWidget.qo.h
+  QtPlotter/annotations/AnnotationEditor.qo.h
+  QtPlotter/annotations/AnnotationEditorText.qo.h
   QtViewer/AnimatorWidget.qo.h
   QtViewer/AnimatorHolder.qo.h
   QtViewer/FileBox.qo.h
@@ -141,7 +141,6 @@ casa_qt4_wrap_ui( outfiles_ui
   QtPlotter/GaussianEstimateDialog.ui
   QtPlotter/GaussianEstimateWidget.ui
   QtPlotter/SpecFitLogDialog.ui
-  QtPlotter/SpecFitPlotDialog.ui
   QtPlotter/MomentSettingsWidgetOptical.ui
   QtPlotter/MomentSettingsWidgetRadio.ui
   QtPlotter/SettingsWidget.ui
@@ -157,8 +156,9 @@ casa_qt4_wrap_ui( outfiles_ui
   QtPlotter/SpecFitSettingsFixedTableCell.ui
   QtPlotter/ThresholdingBinPlotDialog.ui
   QtPlotter/LegendPreferences.ui
-  QtPlotter/SelectEstimateDialog.ui
   QtPlotter/SpectralPositioningWidget.ui
+  QtPlotter/annotations/AnnotationEditor.ui
+  QtPlotter/annotations/AnnotationEditorText.ui
   RegionShapes/QtDS9WriteOptions.ui
   RegionShapes/QtEditRegionShape.ui
   RegionShapes/QtNewRegionShape.ui
@@ -395,7 +395,6 @@ casa_add_library( display
   QtPlotter/ProfileFitMarker.cc
   QtPlotter/WorldCanvasTranslator.cc
   QtPlotter/SpecFitLogDialog.cc
-  QtPlotter/SpecFitPlotDialog.cc
   QtPlotter/GaussianEstimateWidget.cc
   QtPlotter/GaussianEstimateDialog.cc
   QtPlotter/SearchMoleculesWidget.cc
@@ -431,7 +430,18 @@ casa_add_library( display
   QtPlotter/conversion/ConverterWavelengthVelocity.cc
   QtPlotter/conversion/ConverterChannel.cc
   QtPlotter/conversion/ConverterIntensity.cc
-  QtPlotter/SelectEstimateDialog.cc
+  QtPlotter/annotations/Annotation.cc
+  QtPlotter/annotations/AnnotationText.cc
+  QtPlotter/annotations/AnnotationEditor.cc
+  QtPlotter/annotations/AnnotationEditorText.cc
+  QtPlotter/annotations/PropertyListener.cc
+  QtPlotter/canvasMode/CanvasMode.cc
+  QtPlotter/canvasMode/CanvasModeAnnotation.cc
+  QtPlotter/canvasMode/CanvasModeChannel.cc
+  QtPlotter/canvasMode/CanvasModeContextMenu.cc
+  QtPlotter/canvasMode/CanvasModeRangeSelection.cc
+  QtPlotter/canvasMode/CanvasModeZoom.cc
+  QtPlotter/canvasMode/CanvasModeFactory.cc
   QtViewer/AnimatorWidget.cc
   QtViewer/AnimatorHolder.cc
   QtViewer/QtOptions.cc

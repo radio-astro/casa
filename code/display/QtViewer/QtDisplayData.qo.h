@@ -453,7 +453,7 @@ class QtDisplayData : public QObject {
   DParameterRange<Float>* colorBarCharSizeOpt_;  
 
   viewer::ImageProperties image_properties;
-
+  void setPlotTitle();
 };
 
 

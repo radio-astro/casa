@@ -546,16 +546,6 @@ to the profile.</string>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="plotButton">
-           <property name="toolTip">
-            <string>Visualize and analyze the output from the previous fit..</string>
-           </property>
-           <property name="text">
-            <string>View...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="viewButton">
            <property name="toolTip">
             <string>See the output results from the last fit that
@@ -563,17 +553,6 @@ was performed.</string>
            </property>
            <property name="text">
             <string>Results..</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="loadButton">
-           <property name="toolTip">
-            <string>Read in a .last file from a previously run fit or
-the output results from a fit to visualize it.</string>
-           </property>
-           <property name="text">
-            <string>Load...</string>
            </property>
           </widget>
          </item>

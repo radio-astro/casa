@@ -286,12 +286,15 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 
 
    init();
-   Record record;
-   Record outRecord;
-   record.define( WCAxisLabeller::PLOT_TITLE, name());
-   dd_->setOptions( record, outRecord );
+   setPlotTitle();
 }
 
+void QtDisplayData::setPlotTitle(){
+	 Record record;
+	 Record outRecord;
+	 record.define( WCAxisLabeller::PLOT_TITLE, name());
+	 dd_->setOptions( record, outRecord );
+}
 
 void QtDisplayData::setImage( ImageInterface<Float>* img ){
 	im_=img;

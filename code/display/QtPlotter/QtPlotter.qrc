@@ -24,5 +24,8 @@
     <file>images/open.png</file>
     <file>images/colorWheel.png</file>
     <file>images/legend.png</file>
+    <file>images/annotationText.png</file>
+    <file>images/rangeSelection.png</file>
+    <file>images/channelSelection.png</file>
 </qresource>
 </RCC>

@@ -51,6 +51,7 @@ private slots:
 	void addColorFitSummary();
 	void channelLineColorChanged();
 	void molecularLineColorChanged();
+	void zoomRectColorChanged();
 	void initialGaussianEstimateColorChanged();
 
 	//Methods to remove colors in various categories
@@ -99,6 +100,7 @@ private:
     QList<QString> customFitList;
     QList<QString> customFitSummaryList;
     QColor channelLineColor;
+    QColor zoomRectColor;
     QColor molecularLineColor;
     QColor initialGaussianEstimateColor;
     enum ColorCategory {MAIN_COLOR, FIT_COLOR, SUMMARY_FIT_COLOR, END_COLOR_CATEGORY };
@@ -114,6 +116,7 @@ private:
     static const QString CHANNEL_LINE_COLOR;
     static const QString INITIAL_GAUSSIAN_ESTIMATE_COLOR;
     static const QString MOLECULAR_LINE_COLOR;
+    static const QString ZOOM_RECT_COLOR;
 
     bool traditionalChange;
     bool alternativeChange;

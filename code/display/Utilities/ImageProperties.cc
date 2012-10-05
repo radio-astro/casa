@@ -207,7 +207,15 @@ namespace casa {
 	    std::ostringstream buf;
 	    ImageInfo ii = image->imageInfo();
 //<<<<<<< .daves
-	    GaussianBeam beam = ii.restoringBeam();
+	   // GaussianBeam beam = ii.restoringBeam();
+	    GaussianBeam beam;
+	  	    bool multipleBeams = ii.hasMultipleBeams();
+	  	    if ( !multipleBeams ){
+	  	    	beam = ii.restoringBeam();
+	  	    }
+	  	    else {
+	  	    	beam = ii.restoringBeam( 0, 0 );
+	  	    }
 	    /*
 	    std::string imageUnits = image->units().getName();
 	    std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );

@@ -22,32 +22,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef SELECTESTIMATEDIALOG_QO_H
-#define SELECTESTIMATEDIALOG_QO_H
 
-#include <QDialog>
-#include <QList>
-#include <display/QtPlotter/SelectEstimateDialog.ui.h>
-
+#ifndef CANVASMODERANGESELECTION_H_
+#define CANVASMODERANGESELECTION_H_
+#include <display/QtPlotter/canvasMode/CanvasMode.h>
 namespace casa {
-class SelectEstimateDialog : public QDialog
-{
-    Q_OBJECT
 
+class CanvasModeRangeSelection : public CanvasMode {
 public:
-    SelectEstimateDialog(QWidget *parent = 0);
-    void setEstimateCount( int count );
-    QList<int> getSelectedEstimates();
-    ~SelectEstimateDialog();
-
-private slots:
-	void selectAll();
-	void deselectAll();
-
-private:
-    void initList();
-    Ui::SelectEstimateDialogClass ui;
-    int estimateCount;
+	CanvasModeRangeSelection( );
+	virtual bool isMode( ModeIndex mode ) const;
+	virtual void mousePressEventSpecific( QMouseEvent* event );
+	virtual void mouseMoveEvent( QMouseEvent* event );
+	virtual void mouseReleaseEventSpecific( QMouseEvent* event );
+	virtual ~CanvasModeRangeSelection();
 };
-}
-#endif // SELECTESTIMATEDIALOG_H
+
+} /* namespace casa */
+#endif /* CANVASMODERANGESELECTION_H_ */

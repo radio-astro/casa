@@ -33,8 +33,8 @@
 
 namespace casa {
 GaussianEstimateDialog::GaussianEstimateDialog(QWidget *parent)
-    : QDialog(parent), searchDialog( this ), plotsCoordinated( false ),
-      selectEstimateDialog( this ), clearPlotDialog( this )
+    : QDialog(parent),/* searchDialog( this ),*/ plotsCoordinated( false )
+     /* selectEstimateDialog( this ),*//* clearPlotDialog( this )*/
 {
 	ui.setupUi(this);
 	this->setWindowTitle( "Initial Gaussian Estimates");
@@ -53,18 +53,18 @@ GaussianEstimateDialog::GaussianEstimateDialog(QWidget *parent)
 	connect( ui.axisUnitsComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(unitsChanged(int)));
 
 	//Signals/slots
-	connect( ui.searchButton, SIGNAL(clicked()), this, SLOT(searchMolecules()));
+	//connect( ui.searchButton, SIGNAL(clicked()), this, SLOT(searchMolecules()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
-	connect( ui.clearButton, SIGNAL(clicked()), this, SLOT(clearGraphs()));
+	//connect( ui.clearButton, SIGNAL(clicked()), this, SLOT(clearGraphs()));
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
-	connect(&searchDialog, SIGNAL(moleculesSelected()), this, SLOT(molecularLinesChanged()));
+	//connect(&searchDialog, SIGNAL(moleculesSelected()), this, SLOT(molecularLinesChanged()));
 	connect( ui.coordinateCheckBox, SIGNAL(stateChanged(int)), this, SLOT(plotsCoordinatedChanged(int)));
-	connect(&selectEstimateDialog, SIGNAL(accepted()), this, SLOT(updateMolecularLines()));
-	connect(&clearPlotDialog, SIGNAL(accepted()), this, SLOT(clearSelectedPlots()));
+	//connect(&selectEstimateDialog, SIGNAL(accepted()), this, SLOT(updateMolecularLines()));
+	//connect(&clearPlotDialog, SIGNAL(accepted()), this, SLOT(clearSelectedPlots()));
 
 	//Searching was moved to main screen
-	ui.searchButton->setVisible( false );
-	ui.clearButton->setVisible( false );
+	//ui.searchButton->setVisible( false );
+	//ui.clearButton->setVisible( false );
 }
 
 //--------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ void GaussianEstimateDialog::setCurveData(){
 		plots[i]->setRangeY( yMin, yMax );
 	}
 
-	searchDialog.setRange( xMin, xMax, ui.axisUnitsComboBox->currentText());
+	//searchDialog.setRange( xMin, xMax, ui.axisUnitsComboBox->currentText());
 }
 
 void GaussianEstimateDialog::setCurveColor( QColor color ){
@@ -249,14 +249,14 @@ QString GaussianEstimateDialog::getUnits() const {
 //                         Spectral Line Search
 //------------------------------------------------------------------------
 
-void GaussianEstimateDialog::searchMolecules(){
+/*void GaussianEstimateDialog::searchMolecules(){
 	if ( ! searchDialog.isVisible() ){
 		searchDialog.updateReferenceFrame();
 		searchDialog.show();
 	}
-}
+}*/
 
-void GaussianEstimateDialog::molecularLinesChanged(){
+/*void GaussianEstimateDialog::molecularLinesChanged(){
 	if ( plots.size() > 1 ){
 		selectEstimateDialog.setEstimateCount(plots.size());
 		selectEstimateDialog.show();
@@ -264,9 +264,9 @@ void GaussianEstimateDialog::molecularLinesChanged(){
 	else {
 		updateMolecularLines();
 	}
-}
+}*/
 
-void GaussianEstimateDialog::updateMolecularLines( ){
+/*void GaussianEstimateDialog::updateMolecularLines( ){
 	QList<int> estimates;
 	if ( plots.size() > 1 ){
 		estimates = selectEstimateDialog.getSelectedEstimates();
@@ -304,7 +304,7 @@ void GaussianEstimateDialog::updateMolecularLines( ){
 		}
 	}
 	delete converter;
-}
+}*/
 
 //-------------------------------------------------------------------
 //                     Slots
@@ -347,7 +347,7 @@ void GaussianEstimateDialog::unitsChanged( int /*index*/ ){
 }
 
 
-void GaussianEstimateDialog::clearGraphs() {
+/*void GaussianEstimateDialog::clearGraphs() {
 	if ( plots.size() > 1 ){
 		clearPlotDialog.setEstimateCount( plots.size() );
 		clearPlotDialog.show();
@@ -355,9 +355,9 @@ void GaussianEstimateDialog::clearGraphs() {
 	else {
 		clearSelectedPlots();
 	}
-}
+}*/
 
-void GaussianEstimateDialog::clearSelectedPlots(){
+/*void GaussianEstimateDialog::clearSelectedPlots(){
 	QList<int> estimates;
 	if ( plots.size() > 1 ){
 			estimates = selectEstimateDialog.getSelectedEstimates();
@@ -368,7 +368,7 @@ void GaussianEstimateDialog::clearSelectedPlots(){
 	for( int j = 0; j < static_cast<int>(estimates.size()); j++ ){
 		plots[estimates[j]]->clearMolecularLines();
 	}
-}
+}*/
 
 //--------------------------------------------------------------------------------------
 //                     Utility Methods
