@@ -12,6 +12,9 @@ import pylab as pl
 from sdcal import sdcal
 from sdsmooth import sdsmooth
 from sdbaseline import sdbaseline
+import task_sdcal
+import task_sdsmooth
+import task_sdbaseline
 
 def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 
@@ -21,6 +24,8 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame
           if (string.find(a[k][1], 'ipython console') > 0):
                 stacklevel=k
         myf=sys._getframe(stacklevel).f_globals
+
+        restorer = None
 
         saveinputs=myf['saveinputs']
         saveinputs('sdreduce','sdreduce.tmp')       
@@ -36,127 +41,106 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame
             sdcalout=''
             sdsmoothout=''
             sdbaselineout=''
-            if outfile=='':
-                    outfile=infile.rstrip('/')+'_cal'
-            outfilename = os.path.expandvars(outfile)
-            outfilename = os.path.expanduser(outfilename)
-            if not overwrite and  (outform!='ascii' and outform!='ASCII'):
-                if os.path.exists(outfilename):
-                    s = "Output file '%s' exist." % (outfilename)
-                    raise Exception, s
+            project = sdutil.get_default_outfile_name(infile,
+                                                            outfile,
+                                                            '_cal')
+            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
+                                                              outform,
+                                                              overwrite)
 
+            # instantiate scantable
+            s = sd.scantable(infile, average=False, antenna=antenna)
 
-            if calmode != 'none' or average: 
-              if kernel =='none' and blfunc=='none':
-                sdcalout = outfile
-              else:
-                sdcalout = 'sdcalout.tmp'
-                tmpfilelist+=sdcalout+' '
-                if kernel !='none':
-                  if blfunc !='none':
-                    sdsmoothout = 'sdsmoothout.tmp'
-                    sdbaselineout = outfile
-                    tmpfilelist+=sdsmoothout+' '
-                  else:
-                    sdsmoothout = outfile
-                else:
-                  if blfunc != 'none':
-                    sdbaselineout = outfile
-            else:
-              if kernel != 'none':
-                sdcalout = 'sdcalout_noncal.tmp'
-                tmpfilelist+=sdcalout+' '
-                if blfunc == 'none':
-                  sdsmoothout = outfile
-                else:
-                  sdsmoothout = 'sdsmoothout.tmp'
-                  tmpfilelist+=sdsmoothout+' '
-                  sdbaselineout = outfile
-              else:
-                if blfunc != 'none':
-                  sdbaselineout = outfile
-                  sdcalout = 'sdcalout_noncal.tmp'
-                  tmpfilelist+=sdcalout+' '
-                else:
-                  sdcalout = outfile 
+            # restorer
+            restorer = sdutil.scantable_restore_factory(s,
+                                                        infile,
+                                                        fluxunit,
+                                                        specunit,
+                                                        frame,
+                                                        doppler,
+                                                        restfreq)
             
-            if average:
-              if scanaverage == False and timeaverage == False and polaverage == False:
-                 raise Exception, 'Specify type(s) of averaging'
-              if timeaverage == True and tweight == 'none':
-                 raise Exception, 'Specify weighting type of time average'
-              if polaverage == True and pweight == 'none':
-                 raise Exception, 'Specify weighting type of polarization average'
-                   
-            #print "*** sdcal stage ***";
+            # apply input parameters to scantable
+            sdutil.set_spectral_unit(s, specunit)
+            sdutil.set_doppler(s, doppler)
+            sdutil.set_freqframe(s, frame)
+            
+            # apply data selection to scantable
+            sel = sdutil.get_selector(scanlist, iflist, pollist,
+                                      field)
+            s.set_selection(sel)
+            del sel
+
+            # calibration stage
             casalog.post( "*** sdcal stage ***" )
-            if calmode != 'none':
-              tmpoutfile = sdcalout
-              sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verifycal, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
-            else:
-              plevel = plotlevel
-              if not average:
-                # still need to call sdcal for unit conversion, etc.
-                plevel = 0
-                casalog.post( "Neither calibrated nor averaged..." )
-              tmpoutfile = sdcalout
-              sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plevel)
+            task_sdcal.prior_plot(s, plotlevel)
+            scal = task_sdcal.docalibration(s, calmode, fraction,
+                                            noff, width, elongated,
+                                            markonly, plotpointings,
+                                            verifycal)
 
-            #reset data selection
-            tmpinfile=tmpoutfile
-            if not os.path.exists(tmpinfile):
-              m = "No output file found. Error occurred at sdcal stage"
-              raise Exception, m
-            
-            # scanlist, iflist needed to be reset since created scantable (calibration reduces scans,
-            # also generated scantable renumbered scan numbers, etc.)
-            #print ""
-            #print "*** sdsmooth stage ***";
+            # convert flux
+            sdutil.set_fluxunit(scal, fluxunit, telescopeparm, insitu=True)
+
+            # delete original scantable instance
+            s.set_selection()
+            del s
+
+
+            # opacity correction
+            sdutil.doopacity(scal, tau)
+
+            # channel splitting
+            sdutil.dochannelrange(scal, channelrange)
+
+            # averaging stage
+            if average:
+                    sout = sdutil.doaverage(scal, scanaverage, timeaverage,
+                                            tweight, polaverage, pweight,
+                                            averageall)
+            else:
+                    casalog.post( "No averaging was applied..." )
+                    sout = scal
+            task_sdcal.posterior_plot(sout, project, plotlevel)
+
+
+            # smoothing stage
             casalog.post( "" )
             casalog.post( "*** sdsmooth stage ***" )
             if kernel != 'none':
-              #sdsmooth.defaults()
-              tmpoutfile = sdsmoothout 
-              #sdsmooth(infile=tmpinfile, kernel=kernel, kwidth=kwidth, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
-              sdsmooth(infile=tmpinfile, antenna=antenna, kernel=kernel, kwidth=kwidth, chanwidth=chanwidth, verify=verifysm, outfile=tmpoutfile, overwrite=True, plotlevel=plotlevel)
-              tmpinfile = tmpoutfile
-              #tmpfilelist+=tmpoutfile+' '
-              if not os.path.exists(tmpinfile):
-                m = "No output file found. Error occurred at sdsmooth stage"
-                raise Exception, m
+                    task_sdsmooth.prior_plot(sout, project, plotlevel)
+                    task_sdsmooth.dosmooth(sout, kernel, kwidth, chanwidth,
+                                           verifysm)
+                    task_sdsmooth.posterior_plot(sout, project, plotlevel)
             else:
-              #print "No smoothing was applied..."
-              casalog.post( "No smoothing was applied..." )
+                    casalog.post( "No smoothing was applied..." )
 
-            #print ""
-            #print "*** sdbaseline stage ***";
+            # baseline stage
             casalog.post( "" )
             casalog.post( "*** sdbaseline stage ***")
             if blfunc != 'none':
-              tmpoutfile = sdbaselineout
-              #sdbaseline.defaults()
-              sdbaseline(infile=tmpinfile, antenna=antenna, masklist=masklist, maskmode=maskmode, thresh=thresh, avg_limit=avg_limit, edge=edge, blfunc=blfunc, order=order, npiece=npiece, applyfft=applyfft, fftmethod=fftmethod, fftthresh=fftthresh, addwn=addwn, rejwn=rejwn, clipthresh=clipthresh, clipniter=clipniter, verify=verifybl, verbose=verbosebl, bloutput=bloutput, blformat=blformat, showprogress=showprogress, minnrow=minnrow, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)
+                    task_sdbaseline.prior_plot(sout, plotlevel)
+                    blfile = task_sdbaseline.init_blfile(sout, infile, project, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, bloutput, blformat)
+                    task_sdbaseline.dobaseline(sout, blfile, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifybl, verbosebl, blformat, showprogress, minnrow)
+                    task_sdbaseline.posterior_plot(sout, project, plotlevel)
             else:
-              #print "No baseline subtraction was applied..."
-              #print ""
-              casalog.post( "No baseline subtraction was applied..." )
-              casalog.post( "" )
-            # to restore original input paramters
-            _reset_inputs()
-            # clean up tmp files
-            if len(tmpfilelist)!=0:
-              #print ""
-              #print "Deleting the temporary files, %s ..." % tmpfilelist
-              casalog.post( "" )
-              casalog.post( "Deleting the temporary files, %s ..." % (tmpfilelist) )
-              cmd='rm -rf '+tmpfilelist 
-              os.system(cmd) 
+                    casalog.post( "No baseline subtraction was applied..." )
+                    
+            # write result on disk
+            sdutil.save(sout, project, outform, overwrite)
+            del scal
+            del sout
 
         except Exception, instance:
                 #print '***Error***',instance
                 casalog.post( str(instance), priority = 'ERROR' )
                 raise Exception, instance
                 return
+        finally:
+                # restore
+                if restorer is not None:
+                        restorer.restore()
+                        del restorer
 
 
 
