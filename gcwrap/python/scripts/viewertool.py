@@ -140,6 +140,10 @@ class viewertool(object):
                 and type(myf['casa']['files']) == dict and myf['casa']['files'].has_key('logfile'):
             args += [ '--casalogfile=' + myf['casa']['files']['logfile'] ]
 
+        if  type(myf) == dict and myf.has_key('casa') and type(myf['casa']) == dict and myf['casa'].has_key('flags') \
+                 and type(myf['casa']['flags']) == dict and myf['casa']['flags'].has_key('--rcdir'):
+            args += [ "--rcdir=" + myf['casa']['flags']['--rcdir'] ]
+
 	if (os.uname()[0]=='Darwin'):
 		vwrpid=os.spawnvp( os.P_NOWAIT, viewer_path, args )
 	elif (os.uname()[0]=='Linux'):
