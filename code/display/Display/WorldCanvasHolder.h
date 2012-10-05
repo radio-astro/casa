@@ -113,18 +113,33 @@ class WorldCanvasHolder : public WCRefreshEH,
   // WorldCanvasHolder which DisplayData must match in order that they
   // be allowed to draw themselves.
   // <group>
-  void setRestriction(const Attribute& restriction) { itsWorldCanvas->setRestriction(restriction); }
-  void setRestrictions(const AttributeBuffer& resBuff) { itsWorldCanvas->setRestrictions(resBuff); } 
+  void setRestriction(const Attribute& restriction) {
+	  itsWorldCanvas->setRestriction(restriction);
+  }
+  void setRestrictions(const AttributeBuffer& resBuff) {
+	  itsWorldCanvas->setRestrictions(resBuff);
+  }
   // </group>
 
   // Check if a named restriction exists.
-  const Bool existRestriction(const String& name) const { return itsWorldCanvas->existRestriction(name); }
+  const Bool existRestriction(const String& name) const {
+	  return itsWorldCanvas->existRestriction(name);
+  }
   
+  //Set whether or not the viewer is in blink mode
+  void setBlinkMode( bool mode ){
+	  blinkMode = mode;
+  }
+
   // Remove the named restriction, or all restrictions, from the
   // WorldCanvasHolder.
   // <group>
-  void removeRestriction(const String& restrictionName) { itsWorldCanvas->removeRestriction(restrictionName); }
-  void removeRestrictions() { itsWorldCanvas->removeRestrictions( ); }
+  void removeRestriction(const String& restrictionName) {
+	  itsWorldCanvas->removeRestriction(restrictionName);
+  }
+  void removeRestrictions() {
+	  itsWorldCanvas->removeRestrictions( );
+  }
   // </group>
   
   // Determine whether the restrictions installed on the
@@ -227,7 +242,13 @@ class WorldCanvasHolder : public WCRefreshEH,
    * of the data currently being displayed.
    */
   Float getDrawUnit() const;
+
+
+  const static String BLINK_MODE;
+
 private: 
+  //True if the viewer is in blink mode.
+  bool blinkMode;
 
   // The WorldCanvas that is held by this WorldCanvasHolder.
   WorldCanvas *itsWorldCanvas;

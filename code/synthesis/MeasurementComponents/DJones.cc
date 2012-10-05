@@ -1174,8 +1174,6 @@ XJones::XJones(VisSet& vs) :
 {
   if (prtlev()>2) cout << "X::X(vs)" << endl;
 
-  cout << "NB: You are using an EXPERIMENTAL antenna-based X calibration." << endl;
-
 }
 
 XJones::XJones(const Int& nAnt) :
@@ -1314,13 +1312,17 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
       // solve for the R-L phase term in the current VB
       solveOneVB(svb);
 
-      if (solveParOK()(0,0,0))
-	logSink() << "Position angle offset solution for " 
+      if (ntrue(solveParOK())>0) {
+	Float ang=arg(sum(solveCPar()(solveParOK()))/Float(ntrue(solveParOK())))*90.0/C::pi;
+
+
+	logSink() << "Mean position angle offset solution for " 
 		  << msfldcol.name()(currField())
 		  << " (spw = " << currSpw() << ") = "
-		  << arg(solveCPar()(0,0,0))*180.0/C::pi/2.0
+		  << ang
 		  << " deg."
 		  << LogIO::POST;
+      }
       else
 	logSink() << "Position angle offset solution for " 
 		  << msfldcol.name()(currField())
@@ -1517,10 +1519,6 @@ XfJones::XfJones(VisSet& vs) :
   XJones(vs)              // immediate parent
 {
   if (prtlev()>2) cout << "Xf::Xf(vs)" << endl;
-
-  cout << "nPar() = " << this->nPar() << endl;
-
-  cout << "NB: You are using an EXPERIMENTAL antenna-based and CHANNEL-DEPENDENT X calibration." << endl;
 
 }
 
