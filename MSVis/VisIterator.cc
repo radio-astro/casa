@@ -913,28 +913,21 @@ Vector<Int>&
 ROVisIteratorImpl::corrType(Vector<Int>& corrTypes) const
 {
 
-  // TBD:  Use corrIds instead of mask
-
   // Get the nominal corrType list
   Int polId = msIter_p.polarizationId();
   Vector<Int> nomCorrTypes;
   msIter_p.msColumns().polarization().corrType().get(polId,nomCorrTypes,True);
 
-  if (corrSlices_p(polId).nelements() > 0) {
-    Vector<Bool> corrmask(nomCorrTypes.nelements(),False);
-    Vector<Slice> corrsel(corrSlices_p(polId));
-    for (uInt i=0;i<corrsel.nelements();++i)
-      corrmask(corrsel(i).start())=True;
-    
-    // Reference the selected subset
-    corrTypes.reference(nomCorrTypes(corrmask).getCompressedArray());
+  // Get the 0-based corr indices
+  Vector<Int> corrids;
+  corrIds(corrids);
 
-  }
-  else
-    corrTypes.reference(nomCorrTypes);
+  // Set the corrType values by the corrids
+  Int nCor=corrids.nelements();
+  corrTypes.resize(nCor);
+  for (Int icor=0;icor<nCor;++icor)
+    corrTypes[icor]=nomCorrTypes[corrids[icor]];
 
-  //    cout << "corrTypes = " << corrTypes << endl;
-	
   return corrTypes;
 }
 
