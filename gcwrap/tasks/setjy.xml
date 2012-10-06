@@ -394,33 +394,22 @@
              
                <!-- this for the 2010 one  
 	       Planets: Venus*, Mars, Jupiter, Uranus, Neptune, Pluto** -->
-	       Planets: Venus*, Mars, Jupiter, Uranus, Neptune
+	       Planets: Venus, Mars, Jupiter, Uranus, Neptune
 	       
 	       Moons: Jupiter: Io, Europa, Ganymede, Callisto
-                   Saturn:  Titan <!-- Mimas, Enceladus, Tethys, Dione,  
-		                     Hyperion, Iapetus, Phoebe, Janus, Epimetheus, Helene, 
-                                  Telesto, Calypso, Atlas,Prometheus, Pandora, Pan -->
-                   <!-- Uranus moons:  Ariel, Umbriel, Titania, Oberon, Miranda, Cordelia,
-                                  Ophelia, Bianca, Cressida, Desdemona, Juliet, Portia, 
-                                  Rosalind, Belinda, Puck -->
-                   <!-- for the 2010 
-                   Neptune: Triton -->
-                   <!-- Pluto moon:    Charon -->
-	       
-            Asteroids: Ceres, Pallas**, Vesta**, Juno**<!-- only in the 2010 , Victoria***,
+                   Saturn:  Titan 
+
+               Asteroids: Ceres, Pallas**, Vesta**, Juno**<!-- only in the 2010 , Victoria***,
 	               Davida*** -->
 
-            * Venus (and Jupiter and Earth, for that matter) is probably too
-              resolved for most (sub)mm observations with interferometers.
-              CASA has a disk-averaged Venus model for 0.303 to 350 GHz, but it
-              may not capture the details of spectral lines (like day-night
-              differences).
-
-           <!-- for the 2010 standard 
-            ** Pluto alone.  No allowance is made for the possibility of Charon
-              being in the field.  It is in the planet category for historical
-              reasons.
-            -->
+            * Venus: model for ~300MHz to 350GHz, no atmospheric lines (CO,H2O,HDO, etc)
+            * Mars: tabulated as a function of time and frequency (30 - 1000GHz) based on 
+               Rudy el tal (1988), no atmopheric lines (CO, H20, H2O2, HDO, etc)
+            * Jupiter: model for 30-1020GHz, does not include synchrotron emission
+            * Uranus: model for 60-1800GHz, contains no rings or synchrotron.
+            * Neptune: model for 2-2000GHz, the broad CO absorption line
+               is included, but contains no rings or syncrotron. 
+            * Titan: model for 53.3-1024.1GHz, include many spectral lines
 
             **  not recommended (The temperature is not yet adjusted for
                 varying distance from the Sun.  The model data can be scaled
@@ -430,9 +419,10 @@
 	       in vis (as shown by listobs).
 
             Flux density calculation with Solar System objects depends on
-            ephemerides.  setjy looks, in order, in
+            ephemerides. The setjy task looks for the data in  
+            <!--setjy looks, in order, in
             '.',
-            user.ephemerides.directory (a ~/.casarc option), and
+            user.ephemerides.directory (a ~/.casarc option), and-->
             os.getenv('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons'.
 
             If no ephemeris for the right object at the right time is
