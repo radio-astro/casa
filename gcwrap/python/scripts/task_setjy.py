@@ -74,6 +74,7 @@ def setjy_core(vis=None, field=None, spw=None,
   """Fills the model column for flux density calibrators."""
 
   retval = True
+  clnamelist=[]
   try:
     # Here we only list the models available, but don't perform any operation
     if listmodels:
@@ -187,18 +188,26 @@ def setjy_core(vis=None, field=None, spw=None,
         setjyutil=ss_setjy_helper(myim,vis,casalog)
         setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
                          timerange=timerange,observation=str(observation), scan=scan, useephemdir=useephemdir)
+        clnamelist=setjyutil.getclnamelist()
       else:
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
                  standard=standard, scalebychan=scalebychan, time=timerange,
                  observation=str(observation), scan=scan)
-        myim.close()
+      myim.close()
 
   # This block should catch errors mainly from the actual operation mode 
   except Exception, instance:
     casalog.post('%s' % instance,'SEVERE')
     retval=False
     raise instance
+
+  finally:
+    if standard=='Butler-JPL-Horizons 2012':
+        for cln in clnamelist:
+            if os.path.isdir(cln):
+                shutil.rmtree(cln) 
+
 
   return retval
 
