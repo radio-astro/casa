@@ -217,16 +217,6 @@ namespace casa {
 	    	beam = ii.restoringBeam( 0, 0 );
 	    }
 
-	    GaussianBeam beam;
-
-  	    bool multipleBeams = ii.hasMultipleBeams();
-  	    if ( !multipleBeams ){
-  	    	beam = ii.restoringBeam();
-  	    }
-  	    else {
-  	    	beam = ii.restoringBeam( 0, 0 );
-  	    }
-
 	    if (! beam.isNull()) {
 		char buf[512];
 		// sprintf( buf,"%.2f\"", beam_vec[0].getValue("arcsec") );
