@@ -469,7 +469,6 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 
   //Normal mode
   if ( !blinkMode ){
-	  cout << "World canvas normal mode"<<endl;
 	  for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
 			  iter != itsDisplayList.rend(); ++iter, ++dd ) {
 		  if ( conforms[dd] && (*iter)->isDisplayable( )){

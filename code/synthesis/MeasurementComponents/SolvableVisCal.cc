@@ -6445,7 +6445,9 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 
   //  return;
 
-
+  if (typeName().contains("BPOLY") ||
+      typeName().contains("GSPLINE"))
+    throw(AipsError(typeName()+" not yet supported."));
 
     char cfill = cout.fill(' '); // Set fill character for terminal output
     
@@ -6624,22 +6626,31 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
             // For multiple channels, I think I will need to write a method that 
             // looks through all spws to determine the necessary order for the 
             // Amplitude and Phase.
+
+	    if (ct_->isComplex()) {
+	      oAmp = 1;
+	      precAmp = 3; 
+	      oPhase = 4;
+	      precPhase = 1; 
+	    }
+	    else {
+	      // only "amp" column matters (and may have -ve sign)
+	      oAmp = 4;
+	      precAmp = 5; 
+	      oPhase = 0;
+	      precPhase = 0; 
+	    }
             
             // set width of amplitude column
-            //oAmp = (uInt)max(1,(Int)rint(log10(max())+0.5));
-            oAmp = 1;
-            precAmp = 3; 
             wAmp_p = oAmp + precAmp + 1; // order + precision + decimal point
             
             // set width of phase column
-            //oPhase = (uInt)max(1,(Int)rint(abs(log10(max())+0.5)));
-            oPhase = 4;
-            precPhase = 1; 
             wPhase_p = oPhase + precPhase + 1; // order + precision + decimal point
             
             wFlag_p=1;
             wPol_p = wAmp_p + 1 + wPhase_p + 1 + wFlag_p + 1; 
-            wAntCol_p = wPol_p*2; 
+	    wAntCol_p = wPol_p*nPar();
+	    //cerr << "wAntCol_p = " <<wAntCol_p << endl;
             
             logSink() << LogIO::DEBUG1 << "oAmp = " << oAmp 
                 << ", precAmp = " << precAmp 
@@ -6649,14 +6660,17 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                 << ", wPhase_p = " << wPhase_p
                 << LogIO::POST;
             
-            uInt numAntCols = 4; // Number of antenna columns
+            //uInt numAntCols = 4; // Number of antenna columns
+            uInt numAntCols = 8/nPar(); // Number of antenna columns
             wTotal_p = wPreAnt_p + 1 + wAntCol_p*numAntCols;
+
+	    //cerr << "wTotal_p = " << wTotal_p << endl;
             
             // Construct the horizontal separator
             String hSeparator=replicate('-',wTotal_p); 
             uInt colPos=0;
             colPos+=wPreAnt_p; hSeparator[colPos]='|'; colPos++;
-            for(uInt iPol=0; iPol<numAntCols*2; iPol++) {
+            for(uInt iPol=0; iPol<numAntCols*nPar(); iPol++) {
                 colPos+=wPol_p-1;
                 hSeparator[colPos]='|';
                 colPos++;
@@ -6675,7 +6689,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                               "CalTable = " + calTableName() + " (" + typeName() + "), " +
                               "MS name = " + msName();
             cout.setf(ios::left,ios::adjustfield);
-            cout << setw(wTotal_p) << headLine << endl
+	    //            cout << setw(wTotal_p) << headLine << endl
+            cout << headLine << endl
                  << replicate('-',wTotal_p) << endl;
             scrRows+=2;
             
@@ -6699,7 +6714,6 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 	    }
 	    timelist.resize(NTIME,True);
 	    fieldlist.resize(NTIME,True);
-	               
 
 	    Array<Float> v1,v2;
 	    Array<Bool> vok;
@@ -6733,23 +6747,12 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 	      fparam4.reference(fparam.reform(sh));
 	      sok4.reference(sok.reform(sh));
 
-	      if (nPar()>2) {
-		// klugey, but we must have pairs of Floats per pol
-		npar/=2;
-		IPosition blc0(4,0,0,0,0),blc1(4,1,0,0,0),trc(sh-1),str(4,2,1,1,1);
-		
-		v1.reference(fparam4(blc0,trc,str));
-		v2.reference(fparam4(blc1,trc,str));
-		vok.reference(sok4(blc0,trc,str));
-	      }
-	      else {
-		// only one par per pol
-		sh.append(IPosition(1,NTIME));
-		sh(2)=NANT;
-		v1.reference(fparam4);
-		v2.resize();
-		vok.reference(sok4);
-	      }
+	      // only one val per par
+	      sh.append(IPosition(1,NTIME));
+	      sh(2)=NANT;
+	      v1.reference(fparam4);
+	      v2.resize();
+	      vok.reference(sok4);
 	    }
 
             IPosition gidx(4,0,0,0,0); // 4-element IPosition, all zeros
@@ -6769,7 +6772,6 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                 pAntids = uantids;
             }
             
-
             // loop over antenna elements
             for (uInt iElem=0;iElem<numAnts;iElem+=numAntCols) { 
                 gidx(2)=pAntids(iElem);
@@ -6778,7 +6780,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                 
                 // If antenna element is among selected antennas, print it
                 if (uantids.nelements()==0 || anyEQ(uantids,pAntids(iElem))) {
-                    
+
                     // Begin loop over time
                     for (Int itime=0;itime<NTIME;++itime) { 
                         gidx(3)=itime;
@@ -6790,7 +6792,9 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                         String dateStr=dateTimeStr.substr(0,10);
                         String timeStr=dateTimeStr.substr(11,10);
                         // Get field string
-                        String fldStr=(fldname(fldid));
+			String fldStr="";
+			if (fldid>-1)
+			  fldStr=(fldname(fldid));
                         
                         String tmp_timestr = timeStr; // tmp_ variables get reset during the loop
                         String tmp_fldstr = fldStr; //
@@ -6827,12 +6831,11 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                                 cout << setw(wTime_p) << timeStr << " "
                                      << setw(wField_p) << fldStr << " "
                                      << setw(wChan_p) << msCalStartChan + iChan << "|";
-                                
+
                                 // Write data for each antenna column
                                 for (uInt kelem=iElem; (kelem<iElem+numAntCols) and (kelem<=numAnts-1); 
                                      kelem++) {
                                     gidx(2)=pAntids(kelem);
-                                    
                                     // Loop over polarization
                                     for (Int ipar=0;ipar<npar;++ipar) {
                                         gidx(0)=ipar; 
@@ -6845,7 +6848,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
                                              // phase
 					  cout<< setprecision(precPhase) << setw(wPhase_p) << v2(gidx) << " ";
 					else
-					  cout<< setprecision(precPhase) << setw(wPhase_p) << "      " << " ";
+					  cout<< setprecision(precPhase) << setw(wPhase_p) << replicate(" ",wPhase_p) << " ";
 					// flag
 					cout << flagstr(Int(vok(gidx))) << " ";
                                     } // end ipar loop
@@ -6912,24 +6915,56 @@ int SolvableVisJones::writeHeader(const uInt numAntCols,
          << setw(wChan_p) << "Chn" << "|";
     
     // Write Amp and Phase headings for each antenna column
-    String v1h("Amp "), v2h("Phs ");
+    Int nh(2);
+    Vector<String> vh(nh);
+    vh[0]="Amp ";
+    vh[1]="Phs ";
     if (this->typeName().contains("EVLAGAIN")) {
-      v1h="swpG";
-      v2h="Tsys";
+      nh=8;
+      vh.resize(nh);
+      vh[0]=vh[4]="Gain";
+      vh[2]=vh[6]="Tsys";
+      vh[1]=vh[3]=vh[5]=vh[7]=" ";
     }
     else if (this->typeName()=="K Jones") {
-      v1h="Del ";
-      v2h="    ";
+      vh[0]="Delay ";
+      vh[1]=" ";
+    }
+    else if (this->typeName().contains("Opac")) {
+      vh[0]="Opac ";
+      vh[1]=" ";
+    }
+    else if (this->typeName().contains("KAntPos")) {
+      nh=6;
+      vh.resize(nh);
+      vh[0]="dX m";
+      vh[2]="dY m";
+      vh[4]="dZ m";
+      vh[1]=vh[3]=vh[5]=" ";
+    }
+    else if (this->typeName().contains("EGainCurve")) {
+      nh=8;
+      vh.resize(nh);
+      vh[0]="c[0]";
+      vh[2]="c[1]";
+      vh[4]="c[2]";
+      vh[6]="c[3]";
+      vh[1]=vh[3]=vh[5]=vh[7]=" ";
+    }
+    else if (this->typeName().contains("TSYS")) {
+      vh[0]="Tsys";
+      vh[1]=" ";
     }
 
     cout.setf(ios::right, ios::adjustfield);
     for(uInt k=0; (k<numAntCols) and (iElem+k<=numAnts-1); k++) {
-      cout << setw(wAmp_p)   << v1h << " " 
-	   << setw(wPhase_p) << v2h << " " 
-	   << "F" << " "
-	   << setw(wAmp_p)   << v1h << " " 
-	   << setw(wPhase_p) << v2h << " " 
-	   << "F" << "|";
+      for (Int ip=0;ip<nPar();++ip) {
+	if (ip>0) cout << " ";
+	cout << setw(wAmp_p)   << vh[(2*ip)%nh] << " " 
+	     << setw(wPhase_p) << vh[(2*ip+1)%nh] << " " 
+	     << "F";
+      }
+      cout << "|";
     }
     cout << endl;    lineCount++;
     // Construct the horizontal separator
@@ -6938,7 +6973,7 @@ int SolvableVisJones::writeHeader(const uInt numAntCols,
     colPos+=wTime_p; hSeparator[colPos]='|'; colPos++;
     colPos+=wField_p; hSeparator[colPos]='|'; colPos++;
     colPos+=wChan_p; hSeparator[colPos]='|'; colPos++;
-    for(uInt iPol=0; iPol<numAntCols*2; iPol++) {
+    for(uInt iPol=0; iPol<numAntCols*nPar(); iPol++) {
         colPos+=wPol_p-1;
         hSeparator[colPos]='|';
         colPos++;

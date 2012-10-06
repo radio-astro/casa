@@ -208,13 +208,24 @@ namespace casa {
 	    ImageInfo ii = image->imageInfo();
 
 	    GaussianBeam beam;
-	  	    bool multipleBeams = ii.hasMultipleBeams();
-	  	    if ( !multipleBeams ){
-	  	    	beam = ii.restoringBeam();
-	  	    }
-	  	    else {
-	  	    	beam = ii.restoringBeam( 0, 0 );
-	  	    }
+
+	    bool multipleBeams = ii.hasMultipleBeams();
+	    if ( !multipleBeams ){
+	    	beam = ii.restoringBeam();
+	    }
+	    else {
+	    	beam = ii.restoringBeam( 0, 0 );
+	    }
+
+	    GaussianBeam beam;
+
+  	    bool multipleBeams = ii.hasMultipleBeams();
+  	    if ( !multipleBeams ){
+  	    	beam = ii.restoringBeam();
+  	    }
+  	    else {
+  	    	beam = ii.restoringBeam( 0, 0 );
+  	    }
 
 	    if (! beam.isNull()) {
 		char buf[512];
