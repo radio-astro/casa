@@ -1106,7 +1106,6 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                 rowFlag = inrowflag(rownr);
                 indataflag.get(rownr, inflagtmp); // FLAG
 
-
                 // WEIGHT_SPECTRUM (defaults to WEIGHT)
                 Bool getwt = True;
                 if (hasWeightArray) {
@@ -1157,7 +1156,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
             imagcorrf.set(0);
             wgtaverf.set(0);
             Int chancounter = 0;
-            Int flagcounter = 0;
+            Vector<Int> flagcounter(numcorr0);
+            flagcounter.set(0);
             //cout << "chanstart=" << chanstart << " nchan=" << nchan 
             //     << " chanstep=" << chanstep << " avgchan=" << avgchan << endl;
             for (Int k = chanstart; k < (nchan * chanstep + chanstart); k += chanstep) {
@@ -1174,6 +1174,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                 //   << inwttmp.shape()  << " "
                 //   << inflagtmp.shape()  << " "
                 //   << endl;
+                /*
                 if (chancounter != avgchan) {
                     for (Int j = 0; j < numcorr0; j++) {
                         Int offset = indptr[j] + k * numcorr0;
@@ -1201,7 +1202,7 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                         if (wgtaver[j] > 0) {
                             outptr[0] = realcorr[j] / wgtaver[j];
                             outptr[1] = imagcorr[j] / wgtaver[j];
-                            outptr[2] = wgtaver[j] / flagcounter;
+                            outptr[2] = wgtaver[j] / flagcounter * numcorr0;
                         } 
                         else if (wgtaverf[j] > 0) {
                             outptr[0] = realcorrf[j] / wgtaverf[j];
@@ -1228,6 +1229,62 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                     wgtaverf.set(0);
                     chancounter = 0;
                     flagcounter = 0;
+                }
+                */
+                if (chancounter != avgchan) {
+                    for (Int j = 0; j < numcorr0; j++) {
+                        Int offset = indptr[j] + k * numcorr0;
+                        //cout << "j=" << j << " real=" << iptr[offset].real()
+                        //     << " imag=" << iptr[offset].imag() << endl;
+                        if (!fptr[offset]) {
+                            realcorr[j] += iptr[offset].real();
+                            imagcorr[j] += iptr[offset].imag();
+                            wgtaver[j] += wptr[offset];
+                            flagcounter[j]++;
+                        }
+                        else {
+                            realcorrf[j] += iptr[offset].real();
+                            imagcorrf[j] += iptr[offset].imag();
+                            wgtaverf[j] += wptr[offset];
+                        }
+                        //cout << "j=" << j << " k=" << k 
+                        //     << " real=" << realcorr[j] << " image=" << imagcorr[j] 
+                        //     << " offset=" << offset << " chancounter=" << chancounter << endl; 
+                    }
+                    ++chancounter;
+                }
+                if (chancounter == avgchan) {
+                    for (Int j = 0; j < numcorr0; j++) {
+                        if (flagcounter[j] > 0) {
+                            outptr[0] = realcorr[j] / flagcounter[j];
+                            outptr[1] = imagcorr[j] / flagcounter[j];
+                            outptr[2] = wgtaver[j] / flagcounter[j];
+                        } 
+                        else if (wgtaverf[j] > 0) {
+                            outptr[0] = realcorrf[j] / avgchan;
+                            outptr[1] = imagcorrf[j] / avgchan;
+                            outptr[2] = -wgtaverf[j] / avgchan;
+                        }
+                        else {
+                            outptr[0] = realcorrf[j] / avgchan;
+                            outptr[1] = imagcorrf[j] / avgchan;
+                            outptr[2] = 0;
+                        }
+                        if (rowFlag) {
+                            //calculate the average even if row flagged, just in case
+                            //unflag the row and it has some reasonable data there
+                            outptr[2] = -abs(outptr[2]);
+                        }
+                        outptr += 3;
+                    }
+                    realcorr.set(0);
+                    imagcorr.set(0);
+                    wgtaver.set(0);
+                    realcorrf.set(0);
+                    imagcorrf.set(0);
+                    wgtaverf.set(0);
+                    chancounter = 0;
+                    flagcounter.set(0);
                 }
             }
 
