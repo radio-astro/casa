@@ -338,7 +338,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   virtual void ddRegChange_() {
     //hideImageMenus();
     updateDDMenus_();
-    arrangeTrackBoxes_();  
+    arrangeTrackBoxes_();
+    updateFrameInformation();
   }
 
   // Respond to registration/close menu clicks.
