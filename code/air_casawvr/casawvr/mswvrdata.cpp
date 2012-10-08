@@ -193,6 +193,10 @@ namespace LibAIR {
     const casa::ROScalarColumn<casa::Double> &ptime=ptablecols.time();
 
     const size_t n=ptime.nrow();
+    if(n==0){
+      throw LibAIR::MSInputDataError("Didn't find any POINTING data points");
+    }
+
     time.resize(n); 
     az.resize(n); 
     el.resize(n);
