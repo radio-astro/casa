@@ -200,9 +200,12 @@ FrequencySelectionUsingChannels::begin () const
 {
     filtered_p.clear();
 
-    for (Int i = 0; i < (int) elements_p.size(); i++){
-        if (filterWindow () < 0 || filterWindow() == i){
-            filtered_p.push_back (elements_p [i]);
+    for (Elements::const_iterator i = elements_p.begin();
+         i != elements_p.end();
+         i ++){
+
+        if (filterWindow () < 0 || i->spectralWindow_p == filterWindow()){
+            filtered_p.push_back (* i);
         }
     }
 
@@ -258,14 +261,36 @@ FrequencySelectionUsingChannels::toString () const
     return s;
 }
 
+FrequencySelectionUsingFrame::FrequencySelectionUsingFrame (MFrequency::Types frameOfReference)
+: FrequencySelection (frameOfReference)
+{}
+
+void
+FrequencySelectionUsingFrame::add (Int spectralWindow, Double bottomFrequency,
+                                   Double topFrequency)
+{
+    elements_p.push_back (Element (spectralWindow, bottomFrequency, topFrequency));
+}
+
+//void
+//FrequencySelectionUsingFrame::add (Int spectralWindow, Double bottomFrequency,
+//                                   Double topFrequency, Double increment)
+//{
+//    elements_p.push_back (Elements (spectralWindow, bottomFrequency, topFrequency, increment));
+//}
+
+
 FrequencySelectionUsingFrame::const_iterator
 FrequencySelectionUsingFrame::begin () const
 {
     filtered_p.clear();
 
-    for (Int i = 0; i < (int) elements_p.size(); i++){
-        if (filterWindow () < 0 || filterWindow() == i){
-            filtered_p.push_back (elements_p [i]);
+    for (Elements::const_iterator i = elements_p.begin();
+         i != elements_p.end();
+         i ++){
+
+        if (filterWindow () < 0 || i->spectralWindow_p == filterWindow()){
+            filtered_p.push_back (* i);
         }
     }
 
@@ -281,7 +306,7 @@ FrequencySelectionUsingFrame::clone () const
 FrequencySelectionUsingFrame::const_iterator
 FrequencySelectionUsingFrame::end () const
 {
-    return elements_p.end();
+    return filtered_p.end();
 }
 
 set<int>
@@ -388,7 +413,7 @@ ROVisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
     }
     else{
         readImpl_p = new VisibilityIteratorReadImpl2 (this, mss, sortColumns,
-                                                      addDefaultSortCols, timeInterval);
+                                                      addDefaultSortCols, timeInterval, True, writable);
     }
 
     nMS_p = mss.nelements();

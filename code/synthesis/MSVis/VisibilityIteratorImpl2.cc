@@ -531,7 +531,8 @@ VisibilityIteratorReadImpl2::VisibilityIteratorReadImpl2 (ROVisibilityIterator2 
                                                           const Block<Int> & sortColumns,
                                                           Bool addDefaultSort,
                                                           Double timeInterval,
-                                                          Bool createVb)
+                                                          Bool createVb,
+                                                          Bool isWritable)
 : channelSelector_p (0),
   channelSelectorCache_p (new ChannelSelectorCache ()),
   floatDataFound_p (False),
@@ -560,7 +561,8 @@ VisibilityIteratorReadImpl2::VisibilityIteratorReadImpl2 (ROVisibilityIterator2 
     rovi_p = rovi;
 
     if (createVb){
-        vb_p = VisBuffer2::factory (rovi, VisBuffer2::Plain);
+
+        vb_p = VisBuffer2::factory (rovi, VisBuffer2::Plain, isWritable);
     }
 }
 
@@ -923,20 +925,20 @@ VisibilityIteratorReadImpl2::existsColumn (VisBufferComponent2 id) const
     Bool result;
     switch (id){
 
-    case Corrected:
-    case CorrectedCube:
+    case VisibilityCorrected:
+    case VisibilityCubeCorrected:
 
         result = ! columns_p.corrVis_p.isNull();
         break;
 
-    case Model:
-    case ModelCube:
+    case VisibilityModel:
+    case VisibilityCubeModel:
 
         result = ! columns_p.modelVis_p.isNull();
         break;
 
-    case Observed:
-    case ObservedCube:
+    case VisibilityObserved:
+    case VisibilityCubeObserved:
 
         result = ! (columns_p.vis_p.isNull() && columns_p.floatVis_p.isNull());
         break;
@@ -1235,6 +1237,7 @@ VisibilityIteratorReadImpl2::configureNewSubchunk ()
         // same timestamp as the first row.
 
         Double subchunkTime = rowBounds_p.times_p (rowBounds_p.subchunkBegin_p);
+        channelSelector_p = determineChannelSelection (subchunkTime);
 
         for (Int i = rowBounds_p.subchunkBegin_p;
              i < rowBounds_p.chunkNRows_p;
@@ -1245,9 +1248,6 @@ VisibilityIteratorReadImpl2::configureNewSubchunk ()
             }
 
             rowBounds_p.subchunkEnd_p = i;
-
-            channelSelector_p = determineChannelSelection (subchunkTime);
-
         }
     }
 
@@ -1469,7 +1469,7 @@ VisibilityIteratorReadImpl2::findChannelsInRange (Double lowerFrequency, Double 
     typedef SpectralWindowChannels::const_iterator Iterator;
 
     Iterator first = spectralWindowChannels.begin();
-    Iterator last = spectralWindowChannels.begin();
+    Iterator last = spectralWindowChannels.end() - 1;
 
     if (first->getFrequency() - 0.5 * first->getWidth() > upperFrequency ||
         last->getFrequency() + 0.5 * last->getWidth() < lowerFrequency){
@@ -1516,7 +1516,7 @@ VisibilityIteratorReadImpl2::findChannelsInRange (Double lowerFrequency, Double 
     Iterator next = upper + 1;
     if (next != spectralWindowChannels.end()){
 
-        if (next->getFrequency() - 0.5 * next->getWidth() > upperFrequency){
+        if (next->getFrequency() - 0.5 * next->getWidth() < upperFrequency){
 
             upper = next;
 
@@ -3072,7 +3072,7 @@ VisibilityIteratorWriteImpl2::writeWeight (const Vector<Float> & weight)
     // one value per row.  Spread the provided value acroos all correlations.
 
     for (Int i = 0; i < nPolarizations; i++) {
-        Vector<Float> r = weightMatrix.column (i);
+        Vector<Float> r = weightMatrix.row (i);
         r = weight;
     }
 
@@ -3114,7 +3114,7 @@ VisibilityIteratorWriteImpl2::writeSigma (const Vector<Float> & sigma)
     // one value per row.  Spread the provided value acroos all correlations.
 
     for (Int i = 0; i < nPolarizations; i++) {
-        Vector<Float> r = sigmaMatrix.column (i);
+        Vector<Float> r = sigmaMatrix.row (i);
         r = sigma;
     }
 
@@ -3199,21 +3199,23 @@ VisibilityIteratorWriteImpl2::initializeBackWriters ()
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeWeight, & VisBuffer2::weight);
     backWriters_p [WeightMat] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeWeightMat, & VisBuffer2::weightMat);
+    backWriters_p [WeightSpectrum] =
+        makeBackWriter (& VisibilityIteratorWriteImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 
     // Now do the visibilities.
 
-    backWriters_p [Observed] =
+    backWriters_p [VisibilityObserved] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeVisObserved, & VisBuffer2::vis);
-    backWriters_p [Corrected] =
+    backWriters_p [VisibilityCorrected] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeVisCorrected, & VisBuffer2::visCorrected);
-    backWriters_p [Model] =
+    backWriters_p [VisibilityModel] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeVisModel, & VisBuffer2::visModel);
 
-    backWriters_p [ObservedCube] =
+    backWriters_p [VisibilityCubeObserved] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeVisObserved, & VisBuffer2::visCube);
-    backWriters_p [CorrectedCube] =
+    backWriters_p [VisibilityCubeCorrected] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeVisCorrected, & VisBuffer2::visCubeCorrected);
-    backWriters_p [ModelCube] =
+    backWriters_p [VisibilityCubeModel] =
         makeBackWriter (& VisibilityIteratorWriteImpl2::writeVisModel, & VisBuffer2::visCubeModel);
 
 }

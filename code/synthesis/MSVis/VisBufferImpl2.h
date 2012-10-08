@@ -125,7 +125,7 @@ public:
     // Copy construct, looses synchronization with iterator: only use buffer for
     // current iteration (or reattach).
 
-    VisBufferImpl2(ROVisibilityIterator2 * iter);
+    VisBufferImpl2(ROVisibilityIterator2 * iter, Bool isWritable);
 
     // Destructor (detaches from VisIter)
 
@@ -191,7 +191,7 @@ public:
     // Normalize the visCube by the modelVisCube
     //   (and optionally also divide visCube_p by its normalized amp)
 
-    virtual void normalize(Bool phaseOnly);
+    virtual void normalize ();
 
     // Fill weightMat according to sigma column
     virtual void resetWeightsUsingSigma ();//virtual void resetWeightMat();
@@ -225,7 +225,10 @@ public:
     //  There are the methods that allows access to the items cached in the
     //  VisBuffer.  The straight accessors provide read-only access to the
     //  item.  Where the item is allowed to be modified, one or more set
-    //  methods are provided.
+    //  methods are provided.  N.B.: the VB usually caches the information
+    //  in the representation requested so that using a setter to modify
+    //  a value (e.g., weight vs. weightMat) will not modify the cached value
+    //  in a different representation.
 
     virtual const Vector<Int> & antenna1 () const;
     virtual const Vector<Int> & antenna2 () const;
@@ -260,6 +263,7 @@ public:
     virtual const Vector<uInt> & rowIds () const;
     virtual const Vector<Int> & scan () const;
     virtual const Vector<Float> & sigma () const;
+    virtual void setSigma (const Vector<Float> &);
     virtual const Matrix<Float> & sigmaMat () const;
     virtual Int spectralWindow () const;
     virtual const Vector<Int> & stateId () const;
@@ -328,12 +332,16 @@ protected:
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const SubChunkPair2 & subchunk);
 
-    //virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
-    //virtual void dirtyComponentsAdd (VisBufferComponent2 component);
+    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
+    virtual void dirtyComponentsAdd (VisBufferComponent2 component);
     virtual void dirtyComponentsClear ();
     virtual VisBufferComponents2 dirtyComponentsGet () const;
-    //virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
-    //virtual void dirtyComponentsSet (VisBufferComponent2 component);
+    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
+    virtual void dirtyComponentsSet (VisBufferComponent2 component);
+
+    void normalizeRow (Int row, Int nCorrelations, const Matrix<Bool> & flagged,
+                       Cube<Complex> & visCube, Cube<Complex> & modelCube,
+                        Matrix<Float> & weightMat);
 
     virtual void sortCorrelationsAux (Bool makeSorted);
     virtual ROVisibilityIterator2 * getViP () const; // protected, non-const access to VI

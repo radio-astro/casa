@@ -206,11 +206,12 @@ public:
                                  const Block<Int> & sortColumns,
                                  Bool addDefaultSortCols,
                                  Double timeInterval,
-                                 Bool createVb = True);
+                                 Bool createVb,
+                                 Bool isWritable);
 
     // Copy construct. This calls the assigment operator.
     VisibilityIteratorReadImpl2 (const VisibilityIteratorReadImpl2 & other,
-                                ROVisibilityIterator2 * rovi);
+                                  ROVisibilityIterator2 * rovi);
 
     // Destructor
     virtual ~VisibilityIteratorReadImpl2 ();

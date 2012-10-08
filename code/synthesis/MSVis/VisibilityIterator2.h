@@ -321,7 +321,7 @@ public:
     FrequencySelectionUsingFrame (MFrequency::Types frameOfReference);
 
     void add (Int spectralWindow, Double bottomFrequency, Double topFrequency);
-    void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
+    //void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
     const_iterator begin () const;
     FrequencySelection * clone () const;
     const_iterator end () const;

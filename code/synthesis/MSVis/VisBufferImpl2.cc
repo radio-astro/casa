@@ -66,6 +66,7 @@ public:
     }
     virtual Bool isDirty () const = 0;
     virtual Bool isPresent () const = 0;
+    virtual void setDirty () = 0;
 
 protected:
 
@@ -149,8 +150,14 @@ public:
         if (! isPresent_p){
             fill ();
             isPresent_p = True;
-            isDirty_p = False;
         }
+
+        // Caller is getting a modifiabled reference to the
+        // datum (otherwise they would use "get"): assume
+        // that it will be used to modify the datum and mark
+        // it as dirty.
+
+        isDirty_p = True;
 
         return item_p;
     }
@@ -195,6 +202,13 @@ public:
         isPresent_p = True;
         isDirty_p = True;
     }
+
+    virtual void
+    setDirty ()
+    {
+        isDirty_p = True;
+    }
+
 
 protected:
 
@@ -515,11 +529,12 @@ VisBufferImpl2::VisBufferImpl2 ()
     construct (0);
 }
 
-VisBufferImpl2::VisBufferImpl2(ROVisibilityIterator2 * iter)
+VisBufferImpl2::VisBufferImpl2(ROVisibilityIterator2 * iter, Bool isWritable)
 : cache_p (0),
   state_p (0)
 {
   construct ( iter);
+  state_p->isWritable_p = isWritable;
 }
 
 VisBufferImpl2::~VisBufferImpl2 ()
@@ -665,6 +680,29 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent)
     }
 }
 
+void
+VisBufferImpl2::dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents)
+{
+    // Loop through all of the cached VB components and mark them dirty if
+    // they're in the set of addition dirty components
+
+    for (CacheRegistry::iterator i = state_p->cacheRegistry_p.begin();
+         i != state_p->cacheRegistry_p.end();
+         i++){
+
+        if (additionalDirtyComponents.contains ((* i)->getComponent())){
+
+            (* i)->setDirty ();
+        }
+    }
+}
+
+void
+VisBufferImpl2::dirtyComponentsAdd (VisBufferComponent2 component)
+{
+    dirtyComponentsAdd (VisBufferComponents2::singleton (component));
+}
+
 
 void
 VisBufferImpl2::dirtyComponentsClear ()
@@ -699,6 +737,25 @@ VisBufferImpl2::dirtyComponentsGet () const
 
     return dirtyComponents;
 }
+
+void
+VisBufferImpl2::dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents)
+{
+    // Clear the dirty state for the cache
+
+    cacheClear ();
+
+    // Add in the specified components to the newly cleared cache.
+
+    dirtyComponentsAdd (dirtyComponents);
+}
+
+void
+VisBufferImpl2::dirtyComponentsSet (VisBufferComponent2 component)
+{
+    dirtyComponentsSet (VisBufferComponents2::singleton (component));
+}
+
 
 Bool
 VisBufferImpl2::isAttached () const
@@ -847,25 +904,23 @@ VisBufferImpl2::isWritable () const
 }
 
 void
-VisBufferImpl2::normalize(const Bool /* phaseOnly */)
+VisBufferImpl2::normalize()
 {
-#warning "*** Carefully go over recode of this method (VisBufferImpl2::normalize)"
-
-    // NB: phase-only now handled by SolvableVisCal
-    //   (we will remove phaseOnly parameter later)
     // NB: Handles pol-dep weights in chan-indep way
-    // TBD: Handle channel-dep weights?
 
-    Bool dataMissing = ! cache_p->visCube_p.isPresent() ||
-                       ! cache_p->modelVisCube_p.isPresent () ||
-                       ! cache_p->weightMat_p.isPresent();
+    // Check for missing data
 
-    ThrowIf (dataMissing, "Failed to normalize data by model!");
+    ThrowIf (! cache_p->visCube_p.isPresent(),
+             "Cannot normalize; visCube is missing.");
+    ThrowIf (! cache_p->modelVisCube_p.isPresent (),
+             "Cannot normalize; modelVisCube is missing.");
+    ThrowIf (! cache_p->weightMat_p.isPresent(),
+             "Cannot normalize; weightMap is missing.");
 
-    Int nCor = nCorrelations ();
-    Float amp(1.0);
-    Vector<Float> ampCorr(nCor);
-    Vector<Int> count (nCor);
+    // Get references to the cached values to be used in the
+    // normalization.
+
+    Int nCorrelations = this->nCorrelations ();
 
     const Vector<Bool> & rowFlagged = cache_p->flagRow_p.get ();
     const Matrix<Bool> & flagged = cache_p->flag_p.get ();
@@ -874,52 +929,77 @@ VisBufferImpl2::normalize(const Bool /* phaseOnly */)
     Cube<Complex> & modelCube = cache_p->modelVisCube_p.getRef();
     Matrix<Float> & weightMat = cache_p->weightMat_p.getRef();
 
+    // Normalize each row.
+
     for (Int row = 0; row < nRows (); row++) {
 
         if (rowFlagged (row)){
+
             weightMat.column(row) = 0.0f; // Zero weight on this flagged row
             continue;
         }
 
-        ampCorr = 0.0f;
-        count = 0;
+        normalizeRow (row, nCorrelations, flagged, visCube,
+                      modelCube, weightMat);
 
-        for (Int channel = 0; channel < nChannels (); channel ++) {
+    }
+}
 
-            if (flagged (channel, row)){
-                continue;  // data is flagged so skip over it
-            }
+void
+VisBufferImpl2::normalizeRow (Int row, Int nCorrelations, const Matrix<Bool> & flagged,
+                              Cube<Complex> & visCube, Cube<Complex> & modelCube,
+                              Matrix<Float> & weightMat)
+{
+    Vector<Float> amplitudeSum = Vector<Float> (nCorrelations, 0.0f);
+    Vector<Int> count = Vector<Int> (nCorrelations, 0);
 
-            for (Int correlation = 0; correlation < nCor; correlation ++) {
+    for (Int channel = 0; channel < nChannels (); channel ++) {
 
-                amp = abs(visCube(correlation, channel, row));
-                if (amp > 0.0f) {
-
-                    // Normalize visibility datum by corresponding model data point.
-
-
-                    DComplex vis = visCube(correlation, channel, row);
-                    DComplex mod = modelCube(correlation, channel, row);
-
-                    visCube (correlation, channel, row) = Complex (vis / mod);
-                    modelCube (correlation, channel, row) = Complex(1.0);
-
-                    ampCorr(correlation) += amp;
-                    count (correlation)++;
-                }
-                else { // zero data if model is zero
-                    visCube (correlation, channel, row) = 0.0;
-                }
-            }
+        if (flagged (channel, row)){
+            continue;  // data is flagged so skip over it
         }
 
-        for (Int correlation = 0; correlation < nCor; correlation++) {
-            if (count (correlation) > 0) {
-                weightMat(correlation, row) *= square (ampCorr(correlation) / count (correlation));
+        for (Int correlation = 0; correlation < nCorrelations; correlation ++) {
+
+            // If the model amplitude is zero, zero out the observed value.
+            // Otherwise divide the observed value by the model value and
+            // set the model value to 1.0.
+
+            Float amplitude = abs (modelCube(correlation, channel, row));
+
+            if (amplitude <= 0.0f) { // zero data if model is zero
+
+                visCube (correlation, channel, row) = 0.0;
+                continue;
             }
-            else {
-                weightMat(correlation, row) = 0.0f;
-            }
+
+            // Normalize visibility datum by corresponding model data point.
+
+            DComplex vis = visCube(correlation, channel, row);
+            DComplex mod = modelCube(correlation, channel, row);
+
+            visCube (correlation, channel, row) = Complex (vis / mod);
+            modelCube (correlation, channel, row) = Complex(1.0);
+
+            // Count and sum up the nonzero model amplitudes for this correlation.
+
+            amplitudeSum (correlation) += amplitude;
+            count (correlation) ++;
+        }
+    }
+
+    // Adjust the weight matrix entries for this row appropriately
+
+    for (Int correlation = 0; correlation < nCorrelations; correlation++) {
+
+        if (count (correlation) > 0) {
+
+            weightMat (correlation, row) *= square (amplitudeSum (correlation) /
+                                                    count (correlation));
+        }
+        else {
+
+            weightMat (correlation, row) = 0.0f;
         }
     }
 }
@@ -1030,10 +1110,11 @@ VisBufferImpl2::sortCorrelationsAux (bool makeSorted)
     //     temporary, and that we will run unSortCorr
     // NB: This method does nothing if no sort required
 
-    // If nominal order is non-canonical (only for nCorr=4)
-    //   and data not yet sorted
+    // Sort if nominal order is non-canonical (only for nCorr=4).
+    // Also do not sort or unsort if that is the current sort state.
 
-    if (! areCorrelationsInCanonicalOrder() && ! state_p->areCorrelationsSorted_p) {
+    if (! areCorrelationsInCanonicalOrder() &&
+        (state_p->areCorrelationsSorted_p != makeSorted)) {
 
         // First sort the weights
 
@@ -1041,7 +1122,9 @@ VisBufferImpl2::sortCorrelationsAux (bool makeSorted)
 
         Vector<Float> wtmp(nRows ());
         Vector<Float> w1, w2, w3;
-        IPosition wblc(1, 0, 0), wtrc(3, 0, nRows () - 1), vec(1, nRows ());
+        IPosition wblc (1, 0, 0);
+        IPosition wtrc (2, 0, nRows () - 1);
+        IPosition vec (1, nRows ());
 
         VisBufferCache::sortCorrelationItem (cache_p->weightMat_p, wblc, wtrc, vec, wtmp, makeSorted);
 
@@ -1078,7 +1161,7 @@ VisBufferImpl2::sortCorrelationsAux (bool makeSorted)
 void
 VisBufferImpl2::sortCorr()
 {
-    sortCorrelationsAux (False);
+    sortCorrelationsAux (True);
 }
 
 
@@ -1110,8 +1193,6 @@ VisBufferImpl2::unSortCorr()
 {
     sortCorrelationsAux (False);
 }
-
-
 
 void
 VisBufferImpl2::validate ()
@@ -1389,6 +1470,13 @@ VisBufferImpl2::sigma () const
 {
     return cache_p->sigma_p.get ();
 }
+
+void
+VisBufferImpl2::setSigma (const Vector<Float> & sigma)
+{
+    cache_p->sigma_p.set (sigma);
+}
+
 
 const Matrix<Float> &
 VisBufferImpl2::sigmaMat () const

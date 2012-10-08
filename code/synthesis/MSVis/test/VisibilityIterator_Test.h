@@ -8,6 +8,7 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
+#include <boost/tuple/tuple.hpp>
 
 #include <map>
 #include <set>
@@ -467,9 +468,9 @@ public:
 
     virtual ~TestWidget () {}
 
-    String name () const { return name_p;}
+    virtual String name () const = 0;
 
-    virtual std::pair<MeasurementSet *, Int> createMs () = 0;
+    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs () = 0;
 
     virtual void endOfChunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
     virtual void nextChunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
@@ -490,17 +491,24 @@ public:
     ~BasicChannelSelection ();
 
 
-    std::pair<MeasurementSet *, Int> createMs ();
-    void nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
-    Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
-    void startOfData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
+    virtual String name () const { return "BasicChannelSelection";}
+    virtual void nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
+    virtual void startOfData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+
+protected:
+
+    void setFactor (Int newFactor) { factor_p = newFactor;}
 
 private:
 
 
     void checkChannelAndFrequency (Int rowId, Int row, Int channel, Int channelIncrement, Int channelOffset,
                                    Int spectralWindow, const VisBuffer2 * vb);
-    void checkRowScalar (Double value, Double offset, Int rowId, const char * name);
+    void checkFlagCube (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
+                        Int channelOffset, Int channelIncrement, VisBuffer2 * vb);
+    void checkRowScalar (Double value, Double offset, Int rowId, const char * name, Int factor = 1);
     void checkRowScalars (VisBuffer2 * vb);
     void checkVisCube (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
                        const Cube<Complex> & cube, const String & tag,
@@ -509,10 +517,40 @@ private:
                               Int correlation, Int channelOffset, Int channelIncrement,
                               const VisBuffer2 * vb);
 
+    Int factor_p;
     MsFactory * msf_p;
     const Int nAntennas_p;
     const Int nFlagCategories_p;
     Int nSweeps_p;
+
+};
+
+class FrequencyChannelSelection : public BasicChannelSelection {
+
+public:
+
+    FrequencyChannelSelection () {}
+
+    virtual String name () const { return "FrequencyChannelSelection";}
+    virtual void startOfData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed);
+};
+
+class BasicMutation : public BasicChannelSelection
+{
+public:
+
+    BasicMutation ();
+    ~BasicMutation ();
+
+    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
+    virtual String name () const { return "BasicMutation";}
+    virtual void nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
+
+private:
+
+    Bool firstPass_p;
 
 };
 

@@ -203,7 +203,7 @@ MsFactory::addSpectralWindows (int nSpectralWindows)
                            10 + i,
                            1e9 * (i + 1),
                            1e6 * (i + 1),
-                           "RR LL RL LR");
+                           "LL RR RL LR");
     }
 }
 
@@ -730,32 +730,34 @@ Tester::sweepMs (TestWidget & tester)
     try {
 
         Int nRows;
-        boost::tie (ms, nRows) = tester.createMs ();
+        Bool writableVi;
+        boost::tie (ms, nRows, writableVi) = tester.createMs ();
 
         do {
 
             Block<Int> noSortColumns;
-            ROVisibilityIterator2 vi (* ms, noSortColumns);
-            VisBuffer2 * vb = vi.getVisBuffer ();
+            auto_ptr <ROVisibilityIterator2> vi (writableVi ? new VisibilityIterator2 (* ms, noSortColumns)
+                                                            : new ROVisibilityIterator2 (* ms, noSortColumns));
+            VisBuffer2 * vb = vi->getVisBuffer ();
             Int nRowsProcessed = 0;
 
-            tester.startOfData (vi, vb);
+            tester.startOfData (* vi, vb);
 
-            for (vi.originChunks (); vi.moreChunks(); vi.nextChunk()){
+            for (vi->originChunks (); vi->moreChunks(); vi->nextChunk()){
 
-                tester.nextChunk (vi, vb);
+                tester.nextChunk (* vi, vb);
 
-                for (vi.origin(); vi.more (); vi ++){
+                for (vi->origin(); vi->more (); (* vi) ++){
 
                     nRowsProcessed += vb->nRows();
 
-                    tester.nextSubchunk (vi, vb);
+                    tester.nextSubchunk (* vi, vb);
 
                 }
-                tester.endOfChunk (vi, vb);
+                tester.endOfChunk (* vi, vb);
             }
 
-            moreSweeps = tester.noMoreData (vi, vb, nRowsProcessed);
+            moreSweeps = tester.noMoreData (* vi, vb, nRowsProcessed);
 
         } while (moreSweeps);
 
@@ -825,6 +827,10 @@ Tester::doTests ()
     try {
 
         doTest<BasicChannelSelection> ();
+
+        doTest<BasicMutation> ();
+
+        doTest<FrequencyChannelSelection> ();
     }
     catch (TestError & e){
 
@@ -848,6 +854,7 @@ Tester::doTests ()
 
 BasicChannelSelection::BasicChannelSelection ()
 : TestWidget ("BasicChannelSelection"),
+  factor_p (1),
   msf_p (0),
   nAntennas_p (4),
   nFlagCategories_p (3),
@@ -923,6 +930,9 @@ BasicChannelSelection::checkRowScalars (VisBuffer2 * vb)
         }
 
         Bool flagRowExpected = (rowId % 3 == 0) || (rowId % 5 == 0);
+        if (factor_p != 1){
+            flagRowExpected = ! flagRowExpected;
+        }
 
         TestErrorIf (vb->flagRow () (row) != flagRowExpected,
                       String::format ("Bad flag row value for msRow=%d; expected %d, got %d",
@@ -933,29 +943,33 @@ BasicChannelSelection::checkRowScalars (VisBuffer2 * vb)
         checkRowScalar (vb->scan() (row), 5, rowId, "scan");
         checkRowScalar (vb->timeCentroid ()(row), 1, rowId, "timeCentroid");
         checkRowScalar (vb->timeInterval () (row), 2, rowId, "timeInterval");
-        checkRowScalar (vb->sigma () (row), 3, rowId, "sigma");
-        checkRowScalar (vb->weight () (row), 4, rowId, "weight");
-
-
+        checkRowScalar (vb->sigma () (row), 3, rowId, "sigma", factor_p);
+        checkRowScalar (vb->weight () (row), 4, rowId, "weight", factor_p);
     }
 }
 
 void
-BasicChannelSelection::checkRowScalar (Double value, Double offset, Int rowId, const char * name)
+BasicChannelSelection::checkRowScalar (Double value, Double offset, Int rowId, const char * name,
+                                       Int factor)
 {
     Double expected = rowId * 100 + offset;
+    expected *= factor;
+
     ThrowIf (value != expected,
                  String::format ("Expected %d for %s (%d); got %d",
                                    expected, name, rowId, value));
 }
 
 
-pair<MeasurementSet *, Int>
+boost::tuple <MeasurementSet *, Int, Bool>
 BasicChannelSelection::createMs ()
 {
+    system ("rm -r BasicChannelSelection.ms");
+
     msf_p = new MsFactory ("BasicChannelSelection.ms");
 
-    return msf_p->createMs ();
+    pair<MeasurementSet *, Int> p = msf_p->createMs ();
+    return boost::make_tuple (p.first, p.second, False);
 }
 
 
@@ -1063,6 +1077,9 @@ BasicChannelSelection::nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 
                 checkVisCube (rowIds (row), spectralWindow, row, channel, correlation,
                                      visibilityModel, "model", channelOffset, channelIncrement, 2);
 
+                checkFlagCube (rowIds (row), spectralWindow, row, channel, correlation,
+                               channelOffset, channelIncrement, vb);
+
                 checkWeightSpectrum (rowIds (row), spectralWindow, row, channel, correlation,
                                      channelOffset, channelIncrement, vb);
 
@@ -1080,6 +1097,9 @@ BasicChannelSelection::nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 
                 // Now check out the flag categories array [nC, nF, nCat, nR]
 
                 Bool expected = (rowIds (row) % 2) ^ (channels [channel] % 2) ^ (correlation % 2);
+                if (factor_p != 1){
+                    expected = ! expected;
+                }
 
                 for (int category = 0; category < nFlagCategories_p; category ++){
 
@@ -1137,12 +1157,11 @@ BasicChannelSelection::checkVisCube (Int rowId, Int spectralWindow, Int row, Int
                                      const Cube<Complex> & cube, const String & tag,
                                      Int channelOffset, Int channelIncrement, Int cubeDelta)
 {
-    {{}};
-
     Float real = 10 * rowId + spectralWindow;
     Int expectedChannelNumber = channel * channelIncrement + channelOffset;
     Float imag = 100 * (expectedChannelNumber) + correlation * 10 + cubeDelta;
     Complex z0 (real, imag);
+    z0 *= factor_p;
     Complex z = cube (correlation, channel, row);
 
     TestErrorIf (z != z0,
@@ -1160,6 +1179,31 @@ BasicChannelSelection::checkVisCube (Int rowId, Int spectralWindow, Int row, Int
 }
 
 void
+BasicChannelSelection::checkFlagCube (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
+                                      Int channelOffset, Int channelIncrement, VisBuffer2 * vb)
+{
+    Int expectedChannelNumber = channel * channelIncrement + channelOffset;
+
+    Bool expectedValue = (expectedChannelNumber % 2 == 0) == (correlation % 2 == 0);
+    if (factor_p != 1){
+        expectedValue = ! expectedValue;
+    }
+
+    Bool value = vb->flagCube ()(correlation, channel, row);
+
+    TestErrorIf (expectedValue != value,
+                 String::format("Expected %d, got %d for flag cube at "
+                         "spw=%d, vbRow=%d, msRow=%d, ch=%d, corr=%d",
+                         expectedValue,
+                         value,
+                         spectralWindow,
+                         row,
+                         rowId,
+                         channel,
+                         correlation));
+}
+
+void
 BasicChannelSelection::checkWeightSpectrum (Int rowId, Int spectralWindow, Int row, Int channel,
                                             Int correlation, Int channelOffset, Int channelIncrement,
                                             const VisBuffer2 * vb)
@@ -1167,6 +1211,7 @@ BasicChannelSelection::checkWeightSpectrum (Int rowId, Int spectralWindow, Int r
     Int expectedChannelNumber = channel * channelIncrement + channelOffset;
 
     Float expectedValue = rowId * 1000 + spectralWindow * 100 + expectedChannelNumber * 10 + correlation;
+    expectedValue *= factor_p;
 
     Float actualValue = vb->weightSpectrum() (correlation, channel, row);
 
@@ -1208,6 +1253,131 @@ BasicChannelSelection::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 * /*v
     vi.setFrequencySelection (selection);
 }
 
+BasicMutation::BasicMutation ()
+: BasicChannelSelection (),
+  firstPass_p (True)
+{
+}
+
+BasicMutation::~BasicMutation ()
+{
+}
+
+boost::tuple <MeasurementSet *, Int, Bool>
+BasicMutation::createMs ()
+{
+    MeasurementSet * ms;
+    Int nRows;
+    Bool toss;
+
+    boost::tie (ms, nRows, toss) = BasicChannelSelection::createMs ();
+
+    return boost::make_tuple (ms, nRows, True);
+}
+
+class LogicalNot {
+public:
+
+    Bool operator() (Bool b) { return ! b;}
+};
+
+
+void
+BasicMutation::nextSubchunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
+{
+    // Perform the standard value check
+
+    BasicChannelSelection::nextSubchunk (vi, vb);
+
+    // On the first pass through, toggle the data: (x -> - x and b -> ~b)
+
+    if (firstPass_p){
+
+        Cube<Complex> cube;
+
+        cube = vb->visCube();
+        cube = - cube;
+        vb->setVisCube (cube);
+
+        cube = vb->visCubeCorrected();
+        cube = - cube;
+        vb->setVisCubeCorrected (cube);
+
+        cube = vb->visCubeModel();
+        cube = - cube;
+        vb->setVisCubeModel (cube);
+
+        Cube<Float> cubeF;
+
+        cubeF = vb->weightSpectrum ();
+        cubeF = - cubeF;
+        vb->setWeightSpectrum (cubeF);
+
+        Cube<Bool> cubeB;
+
+        cubeB = vb->flagCube();
+        cubeB = arrayTransformResult (cubeB, LogicalNot());
+        vb->setFlagCube (cubeB);
+
+        Array<Bool> flagCategory = vb->flagCategory();
+        flagCategory = arrayTransformResult (flagCategory, LogicalNot());
+        vb->setFlagCategory (flagCategory);
+
+        Vector<Float> v;
+
+        v = vb->weight();
+        v = - v;
+        vb->setWeight (v);
+
+        v = vb->sigma();
+        v = - v;
+        vb->setSigma (v);
+
+        Vector<Bool> vB;
+        vB = vb->flagRow();
+        vB = arrayTransformResult (vB, LogicalNot());
+        vb->setFlagRow (vB);
+
+        vb->writeChangesBack();
+    }
+}
+
+Bool
+BasicMutation::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows)
+{
+    Bool moreSweeps = firstPass_p;
+    firstPass_p = False;
+    setFactor (-1);
+
+    return moreSweeps;
+}
+
+
+void
+FrequencyChannelSelection::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
+{
+    // Apply channel selections
+
+    FrequencySelectionUsingFrame selection (MFrequency::TOPO);
+
+    selection.add (0, 1e9, 1.0043e9);
+    selection.add (1, 2.012E9, 2.0203e9);
+    selection.add (2, 3.009e9, 3.024e9);
+
+    vi.setFrequencySelection (selection);
+}
+
+Bool
+FrequencyChannelSelection::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed)
+{
+    TestErrorIf (nRowsProcessed != 270,
+                 String::format ("Expected to process 270 rows, but did %d instead.",
+                                 nRowsProcessed));
+
+    return False;
+}
+
+
 
 ////////////////  Template for new TestWidget Subclasses //////////////////
 
@@ -1243,9 +1413,6 @@ TheWidget::noMoreData (ROVisibilityIterator2 & vi, VisBuffer2 * vb, int nRows)
 TheWidget::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
 {
 }*/
-
-
-
 
 } // end namespace casa
 } // end namespace vi

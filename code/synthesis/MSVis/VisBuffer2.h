@@ -163,15 +163,20 @@ public:
     //    reaches an write-to-disk node then the modified portions of the
     //    VisBuffer will be written out.  The user can also explicitly direct
     //    that the changes be written out using the writeChangesBack method.
+    //
+    //    Using a setter on a VisBuffer component will also set the dirty flag for
+    //    that component.  Normally the user should not need to use these methods;
+    //    however, they are available in case unexpected situations should arise
+    //    in the future.
 
     virtual void writeChangesBack () = 0;
 
-//    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) = 0;
-//    virtual void dirtyComponentsAdd (VisBufferComponent2 component) = 0;
+    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) = 0;
+    virtual void dirtyComponentsAdd (VisBufferComponent2 component) = 0;
     virtual void dirtyComponentsClear () = 0;
-    virtual casa::vi::VisBufferComponents2 dirtyComponentsGet () const = 0;
-//    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents) = 0;
-//    virtual void dirtyComponentsSet (VisBufferComponent2 component) = 0;
+    virtual VisBufferComponents2 dirtyComponentsGet () const = 0;
+    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents) = 0;
+    virtual void dirtyComponentsSet (VisBufferComponent2 component) = 0;
 
     // This method returns the imaging weights associated with the VisBuffer.
     // If an imaging weight generator has not been supplied to the associated
@@ -209,13 +214,20 @@ public:
 
     // Sort/unsort the correlations, if necessary
     //  (Rudimentary handling of non-canonically sorted correlations--use with care!)
+    //
+    // The sorting functionality is a horrible kluge that puts the VisBuffer into a
+    // somewhat incoherent state (e.g., after sorting the correlation types array
+    // does not correspond to the data) and appears to serve the needs
+    // of a tiny piece of code.  As such, this refactor is initially not going to
+    // support this functionality since it is probably better implemented in the one
+    // place that actually needs it. (jjacobs 10/3/12)
 
-    virtual void sortCorr () = 0;
-    virtual void unSortCorr() = 0;
+    //virtual void sortCorr () = 0;
+    //virtual void unSortCorr() = 0;
 
     // Normalize the visCube by the modelVisCube.
 
-    virtual void normalize(Bool phaseOnly = False) = 0;
+    virtual void normalize() = 0;
 
     // Set the weight cube using the sigma cube.  Each weight will be
     // the reciprocal of the square of the corresponding element in the model
@@ -278,6 +290,12 @@ public:
     //
     // Accessors for data contained in the main MeasurementSet main table
     // The actual visibility data are at the end.
+    //
+    //  *** N.B.: the VB usually caches the information
+    //  in the representation requested so that using a setter to modify
+    //  one value type (e.g., weight or visibility) will not modify the
+    //  cached value in a different representation (e.g., weightMat or
+    //  visCube).  This should not be a problem in normal usage.
 
     virtual const Vector<Int> & antenna1 () const = 0; // [nR]
     virtual const Vector<Int> & antenna2 () const = 0; // [nR]
@@ -301,6 +319,7 @@ public:
     virtual const Vector<Int> & processorId () const = 0; // [nR]
     virtual const Vector<Int> & scan () const = 0; // [nR]
     virtual const Vector<Float> & sigma () const = 0; // [nR]
+    virtual void setSigma (const Vector<Float> &) = 0; // [nR]
     virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
     virtual const Vector<Int> & stateId () const = 0; // [nR]
     virtual const Vector<Double> & time () const = 0; // [nR]
@@ -421,7 +440,7 @@ public:
 
 protected:
 
-    static VisBuffer2 * factory (ROVisibilityIterator2 * vi, Type t);
+    static VisBuffer2 * factory (ROVisibilityIterator2 * vi, Type t, Bool isWritable);
 
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,

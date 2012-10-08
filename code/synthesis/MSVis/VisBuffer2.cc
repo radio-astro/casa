@@ -17,16 +17,16 @@ namespace vi {
 VisBuffer2 *
 VisBuffer2:: factory (Type t)
 {
-    return factory (0, t);
+    return factory (0, t, False);
 }
 
 VisBuffer2 *
-VisBuffer2::factory (ROVisibilityIterator2 * vi, Type t)
+VisBuffer2::factory (ROVisibilityIterator2 * vi, Type t, Bool isWritable)
 {
     VisBuffer2 * result = NULL;
 
     if (t == Plain){
-        result = new vi::VisBufferImpl2 (vi);
+        result = new vi::VisBufferImpl2 (vi, isWritable);
     }
     else{
         ThrowIf (true, utilj::format ("Unknown VisBuffer2 type: id=%d", t));
