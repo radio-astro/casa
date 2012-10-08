@@ -82,6 +82,7 @@ public:
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 	void setFrameMarker( float framePositionX );
+	void setZoomRectColor( QColor color );
 
 	CurveData getCurveData(int);
 	ErrorData getCurveError(int id);
@@ -108,7 +109,7 @@ public:
 	template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&);
 	void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
 			const QString& lb="");
-	enum ColorCategory { TITLE_COLOR, CURVE_COLOR, ZOOM_COLOR, REGION_COLOR,
+	enum ColorCategory { TITLE_COLOR, CURVE_COLOR,
 					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL };
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 			const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
@@ -448,7 +449,7 @@ private:
 	TaskMode taskMode;
 
 	float channelSelectValue;
-
+	QColor zoomRectColor;
 };
 
 }

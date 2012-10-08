@@ -478,7 +478,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	dpOptsAct_ ->setToolTip("Panel Display Options");
 	dpSaveAct_ ->setToolTip("Save Display Panel State to File");
 	profileAct_->setToolTip("Open the Spectrum Profiler");
-	profileAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
+	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");
 	if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");

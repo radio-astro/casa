@@ -58,7 +58,8 @@ QtCanvas::QtCanvas(QWidget *parent)
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
           lineOverlayContextMenu(this), gaussianContextMenu( this ),
-          frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 )
+          frameMarkerColor( Qt::magenta), showLegend( true ), legendPosition( 0 ),
+          zoomRectColor( Qt::yellow )
 {    
     setMouseTracking(true);
     setAttribute(Qt::WA_NoBackground);
@@ -479,7 +480,7 @@ void QtCanvas::paintEvent(QPaintEvent *event)
 	 //painter.drawPixmap(0, 0, pixmap);
     if (rubberBandIsShown)
     {
-        painter.setPen(Qt::yellow);
+        painter.setPen( zoomRectColor );
         painter.fillRect(rubberBandRect, Qt::transparent);
         painter.drawRect(rubberBandRect.normalized());
     }
@@ -1199,12 +1200,7 @@ QColor QtCanvas::getDiscreteColor(ColorCategory colorCategory, int id ) {
 		}
 		curveCount++;
 	}
-	else if ( colorCategory == ZOOM_COLOR ){
-		color = Qt::darkYellow;
-	}
-	else if ( colorCategory == REGION_COLOR ){
-		color = Qt::lightGray;
-	}
+
 	else if ( colorCategory == CURVE_COLOR_SECONDARY ){
 		int summaryColorCount = fitSummaryCurveColorList.size();
 		if ( summaryColorCount > 0 ){
@@ -1677,6 +1673,10 @@ void QtCanvas::setLegendPosition( int position ){
 	if ( oldPosition != legendPosition ){
 		refreshPixmap();
 	}
+}
+
+void QtCanvas::setZoomRectColor( QColor color ){
+	zoomRectColor = color;
 }
 
 bool QtCanvas::isShowChannelLine(){

@@ -2015,25 +2015,18 @@ Int QtProfile::scaleAxis(){
 }
 
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
-	bool unitsAcceptable = checkYUnitConversion( yUnit );
-	if ( !unitsAcceptable ){
-		yAxisCombo->setVisible( false );
-		leftLabel->setVisible( false );
-	}
+	bool unitsAcceptable = ConverterIntensity::isSupportedUnits( yUnit );
+	setYUnitConversionVisibility( unitsAcceptable );
 	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
 	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 }
 
-bool QtProfile::checkYUnitConversion( const QString& yUnit ) const {
-	//It doesn't make sense to change the y-axis units if we are not supporting
-	//them in the yUnit combobox.
-	int unitIndex = yAxisCombo->findText( yUnit);
-	bool acceptable = true;
-	if ( unitIndex == -1 ){
-		acceptable = false;
-	}
-	return acceptable;
+void QtProfile::setYUnitConversionVisibility( bool visible ){
+	yAxisCombo->setVisible( visible );
+	leftLabel->setVisible( visible );
 }
+
+
 
 void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv,
 		Int ordersOfM ){
@@ -2339,7 +2332,7 @@ void QtProfile::setDisplayYUnits( const QString& unitStr ){
 	QString displayUnit = unitStr;
 	//Right now optical units are not being supported as far as changing
 	//them on the y-axis.
-	bool convertableUnits = checkYUnitConversion( yUnit );
+	bool convertableUnits = ConverterIntensity::isSupportedUnits( yUnit );
 	if ( !convertableUnits ){
 		displayUnit = "";
 	}

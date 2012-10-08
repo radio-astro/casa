@@ -44,6 +44,7 @@ const QString ColorSummaryWidget::COLOR_SCHEME_PREFERENCE = "Color Scheme Prefer
 const QString ColorSummaryWidget::CHANNEL_LINE_COLOR = "Channel Line Color";
 const QString ColorSummaryWidget::MOLECULAR_LINE_COLOR = "Molecular Line Color";
 const QString ColorSummaryWidget::INITIAL_GAUSSIAN_ESTIMATE_COLOR = "Initial Gaussian Estimate Color";
+const QString ColorSummaryWidget::ZOOM_RECT_COLOR = "Zoom Rectangle Color";
 
 ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
     : QDialog(parent), traditionalChange( false ), alternativeChange( false ){
@@ -61,7 +62,6 @@ ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
 	connect( ui.deleteFitCurveButton, SIGNAL(clicked()), this, SLOT(removeColorFit()));
 	connect( ui.deleteSummaryFitCurveButton, SIGNAL(clicked()), this, SLOT(removeColorFitSummary()));
 
-
 	connect( ui.traditionalRadioButton, SIGNAL(clicked()), this, SLOT(colorSchemeChanged()));
 	connect( ui.alternativeRadioButton, SIGNAL(clicked()), this, SLOT(colorSchemeChanged()));
 	connect( ui.customRadioButton, SIGNAL(clicked()), this, SLOT(colorSchemeChanged()));
@@ -69,6 +69,7 @@ ColorSummaryWidget::ColorSummaryWidget(QWidget *parent)
 	connect( ui.channelLineColorButton, SIGNAL(clicked()), this, SLOT(channelLineColorChanged()));
 	connect (ui.molecularLineColorButton, SIGNAL(clicked()), this, SLOT(molecularLineColorChanged()));
 	connect( ui.initialGaussianEstimateColorButton, SIGNAL(clicked()), this, SLOT(initialGaussianEstimateColorChanged()));
+	connect( ui.zoomRectColorButton, SIGNAL(clicked()), this, SLOT(zoomRectColorChanged()));
 
 	//Initialize properties of the list
 	ui.profileCurveList->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -104,9 +105,10 @@ void ColorSummaryWidget::initializePresetColors(){
 	 traditionalCurveColorList << "red" << "blue" << "green" << "cyan" << "lightGray" <<
 	      		"magenta" << "yellow" << "darkRed" << "darkBlue" << "darkGreen" <<
 	      		"darkCyan" << "darkGray" << "darkMagenta" << "gold" << "gray";
-	 channelLineColor = Qt::magenta;
+	 channelLineColor = Qt::cyan;
 	 molecularLineColor = "#00957B";
 	 initialGaussianEstimateColor = "#CA5F00";
+	 zoomRectColor = Qt::yellow;
 }
 
 void ColorSummaryWidget::initializeUserColors(){
@@ -140,7 +142,6 @@ void ColorSummaryWidget::initializeUserColors(){
 	else {
 		ui.traditionalRadioButton->setChecked( true );
 	}
-	//QColor basicColor = Qt::magenta;
 	QString channelLineColorStr = settings.value( CHANNEL_LINE_COLOR, channelLineColor.name()).toString();
 	channelLineColor.setNamedColor( channelLineColorStr );
 	setLabelColor( ui.channelLineColorLabel, channelLineColorStr );
@@ -152,6 +153,10 @@ void ColorSummaryWidget::initializeUserColors(){
 	QString initialGaussianColorStr = settings.value( INITIAL_GAUSSIAN_ESTIMATE_COLOR, initialGaussianEstimateColor.name()).toString();
 	initialGaussianEstimateColor.setNamedColor( initialGaussianColorStr );
 	setLabelColor( ui.initialGaussianEstimateColorLabel, initialGaussianColorStr );
+
+	QString zoomRectColorStr = settings.value( ZOOM_RECT_COLOR, zoomRectColor.name()).toString();
+	zoomRectColor.setNamedColor( zoomRectColorStr );
+	setLabelColor( ui.zoomRectColorLabel, zoomRectColorStr );
 }
 
 void ColorSummaryWidget::readCustomColor( QSettings& settings,
@@ -267,6 +272,14 @@ void ColorSummaryWidget::channelLineColorChanged(){
 	}
 }
 
+void ColorSummaryWidget::zoomRectColorChanged(){
+	QColor selectedColor = QColorDialog::getColor( zoomRectColor, this );
+	if ( selectedColor.isValid() ){
+		zoomRectColor = selectedColor;
+		setLabelColor( ui.zoomRectColorLabel, selectedColor.name() );
+	}
+}
+
 void ColorSummaryWidget::molecularLineColorChanged(){
 	QColor selectedColor = QColorDialog::getColor( molecularLineColor, this );
 	if ( selectedColor.isValid() ){
@@ -370,6 +383,7 @@ void ColorSummaryWidget::pixelCanvasColorChange(){
 	pixelCanvas->setTraditionalColors( traditionalColors );
 
 	pixelCanvas->setChannelLineColor( channelLineColor );
+	pixelCanvas->setZoomRectColor( zoomRectColor );
 	GaussianEstimateWidget::setEstimateColor( initialGaussianEstimateColor );
 	MolecularLine::setMolecularLineColor( molecularLineColor );
 	pixelCanvas->curveColorsChanged();
@@ -439,6 +453,7 @@ void ColorSummaryWidget::persist(){
 	}
 	settings.setValue( CHANNEL_LINE_COLOR, channelLineColor.name());
 	settings.setValue( MOLECULAR_LINE_COLOR, molecularLineColor.name());
+	settings.setValue( ZOOM_RECT_COLOR, zoomRectColor.name());
 	settings.setValue( INITIAL_GAUSSIAN_ESTIMATE_COLOR, initialGaussianEstimateColor.name());
 }
 
@@ -464,3 +479,4 @@ void ColorSummaryWidget::reject(){
 ColorSummaryWidget::~ColorSummaryWidget(){
 }
 }
+
