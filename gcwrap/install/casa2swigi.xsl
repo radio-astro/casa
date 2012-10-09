@@ -66,7 +66,7 @@ Summary
 <xsl:text>
 
 Description
-	</xsl:text> <xsl:value-of select="replace(., '&quot;', $singlequote)"/>
+	</xsl:text> <xsl:value-of disable-output-escaping="yes" select="replace(., '&quot;', $singlequote)"/>
 </xsl:template>
 
 
@@ -82,11 +82,11 @@ Input Parameters:
 	<xsl:for-each select="aps:input/aps:param">
 	   <xsl:choose>
 	<xsl:when test="string-length(@name) &lt; 8">
-	<xsl:value-of select="@name"/><xsl:text>		</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	<xsl:value-of select="@name"/><xsl:text>		</xsl:text><xsl:value-of disable-output-escaping="yes" select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
 	</xsl:text>
               </xsl:when>
 	      <xsl:otherwise>
-	<xsl:value-of select="@name"/><xsl:text>	</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	<xsl:value-of select="@name"/><xsl:text>	</xsl:text><xsl:value-of disable-output-escaping="yes" select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
 	</xsl:text>
 	      </xsl:otherwise>
 	</xsl:choose>
@@ -101,11 +101,11 @@ Output Parameters:
 	<xsl:for-each select="aps:output/aps:param">
 	   <xsl:choose>
 	      <xsl:when test="string-length(@name) &lt; 8">
-	<xsl:value-of select="@name"/><xsl:text>		</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	<xsl:value-of select="@name"/><xsl:text>		</xsl:text><xsl:value-of disable-output-escaping="yes" select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
 	</xsl:text>
               </xsl:when>
 	      <xsl:otherwise>
-	<xsl:value-of select="@name"/><xsl:text>	</xsl:text><xsl:value-of select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
+	<xsl:value-of select="@name"/><xsl:text>	</xsl:text><xsl:value-of disable-output-escaping="yes" select="replace(aps:description, '&quot;', $singlequote)"/><xsl:text>
 	</xsl:text>
 	      </xsl:otherwise>
 	</xsl:choose>
