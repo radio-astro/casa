@@ -201,6 +201,14 @@ namespace casa {
 	    current_dd = dd;
 	}
 
+	void QtRegionDock::updateRegionStats( ) {
+	    QWidget *widget = region_stack->currentWidget( );
+	    QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
+	    if ( state != 0 ) {
+		state->reloadStatistics( );
+	    }
+	}
+
 	void QtRegionDock::stack_changed( int index ) {
 
 	    static int last_index = -1;

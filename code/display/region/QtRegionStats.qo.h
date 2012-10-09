@@ -53,6 +53,7 @@ namespace casa {
 		QtRegionStats( QWidget *parent=0 );
 		~QtRegionStats( );
 
+		void disableNextButton( );
 		void reset( );
 #if OLDSTUFF
 		void addstats( std::list<std::pair<String,String> > *stats );

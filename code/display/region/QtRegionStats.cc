@@ -122,6 +122,11 @@ namespace casa {
 		}
 	}
 
+	void QtRegionStats::disableNextButton( ) {
+	    stats_box_->next( )->setDisabled(true);
+	    disconnect(stats_box_->next(), 0, 0, 0);
+	}
+
 	void QtRegionStats::reset( ) {
 
 	    // Statistics update clears fields that are not filled...
@@ -133,10 +138,7 @@ namespace casa {
 	    // 	(*iter).second->setText("");
 	    // }
 
-	    if ( stats_box_ ) {
-		stats_box_->next( )->setDisabled(true);
-		disconnect(stats_box_->next(), 0, 0, 0);
-	    }
+	    if ( stats_box_ ) disableNextButton( );
 
 	    // zero next state
 	    container_ = 0;

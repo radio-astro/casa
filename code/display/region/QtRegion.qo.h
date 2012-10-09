@@ -190,6 +190,7 @@ namespace casa {
 
 	    protected slots:
 		void refresh_canvas_event( );
+		void reload_statistics_event( );
 		void refresh_statistics_event( bool );
 		void refresh_position_event( bool );
 

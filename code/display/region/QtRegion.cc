@@ -76,6 +76,7 @@ namespace casa {
 
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
+	    connect( mystate, SIGNAL(collectStatistics( )), SLOT(reload_statistics_event( )) );
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
 
 	    connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
@@ -203,11 +204,7 @@ namespace casa {
 	    if ( statistics_visible == false ) {
 		if ( region_modified ) statistics_update_needed = true;
 	    } else if ( (statistics_update_needed || region_modified) && regionVisible( ) ) {
-		statistics_update_needed = false;
-		std::list<RegionInfo> *rl = generate_dds_statistics( );
-		// send statistics to region state object...
-		mystate->updateStatistics(rl);
-		delete rl;
+		reload_statistics_event( );
 	    }
 
 	    // update position, when needed...
@@ -250,6 +247,14 @@ namespace casa {
 		return;
 	    }
 	    updateStateInfo( false, Region::RegionChangeFocus );
+	}
+
+	void QtRegion::reload_statistics_event( ) {
+	    statistics_update_needed = false;
+	    std::list<RegionInfo> *rl = generate_dds_statistics( );
+	    // send statistics to region state object...
+	    mystate->updateStatistics(rl);
+	    delete rl;
 	}
 
 	void QtRegion::refresh_position_event( bool visible ) {

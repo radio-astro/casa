@@ -298,10 +298,14 @@ class QtDisplayPanelGui : public QtPanelBase {
   
     // The DD now exists, and is on QtViewerBase's list.
     // autoregister tells DPs whether they are to register the DD.
+    // ***** dd is added to the world canvas holder during *****
+    // ***** the processing of this event...               *****
     void ddCreated(QtDisplayData*, Bool autoRegister);
   
     // The DD is no longer on QtViewerBase's list, but is not
     // destroyed until after the signal.
+    // ***** dd is removed from the world canvas holder    *****
+    // ***** during the processing of this event...        *****
     void ddRemoved(QtDisplayData*);
 
     void closed( const QtDisplayPanelGui * );

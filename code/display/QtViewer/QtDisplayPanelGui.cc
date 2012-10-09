@@ -683,6 +683,8 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 
 	emit ddCreated(qdd, autoRegister);
 	updateFrameInformation();
+	if ( regionDock_ )
+	    regionDock_->updateRegionStats( );
 	return qdd;
 }
 
@@ -782,6 +784,8 @@ void QtDisplayPanelGui::removeAllDDs() {
 
 		qdds.removeRight();
 		emit ddRemoved(qdd);
+		if ( regionDock_ )
+		    regionDock_->updateRegionStats( );
 		qdd->done();
 		delete qdd;
 	}
@@ -796,6 +800,8 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
 
 			qdds.removeRight();
 			emit ddRemoved(qdd);
+			if ( regionDock_ )
+			    regionDock_->updateRegionStats( );
 			qdd->done();
 			delete qdd;
 			return True;
@@ -2232,6 +2238,8 @@ void QtDisplayPanelGui::ddRegClicked_() {
 
 	qdp_->registerDD(dd);
 	updateFrameInformation();
+	if ( regionDock_ )
+	    regionDock_->updateRegionStats( );
 }
 
 
@@ -2242,6 +2250,8 @@ void QtDisplayPanelGui::ddUnregClicked_() {
 
 	qdp_->unregisterDD(dd);
 	updateFrameInformation();
+	if ( regionDock_ )
+	    regionDock_->updateRegionStats( );
 }
 
 
