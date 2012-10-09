@@ -1233,7 +1233,7 @@ void RegionTextParser::_setInitialGlobals() {
 		_currentGlobals[AnnotationBase::VELTYPE] = veltype;
 
 		ParamValue restfreq;
-		restfreq.doubleVal = spectral.restFrequency();
+		restfreq.stringVal = String::toString(spectral.restFrequency()) + "Hz";
 		_currentGlobals[AnnotationBase::RESTFREQ] = restfreq;
 	}
 	ParamValue linewidth;
