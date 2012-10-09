@@ -119,7 +119,7 @@ test_sdstat                     kana.sugi@nao.ac.jp
 test_sdtpimaging                takeshi.nakazato@nao.ac.jp
 test_setjy			ttsutsum@nrao.edu
 test_simobserve                 kana.sugi@ezweb.ne.jp
-#test_simplecluster              hye@nrao.edu
+#test_simplecluster              jagonzal@eso.org
 test_smoothcal                  scastro@eso.org
 test_specfit                    dmehring@nrao.edu
 test_splattotable               dmehring@nrao.edu
@@ -128,6 +128,7 @@ test_statwt                     ttsutsum@nrao.edu
 test_uvcontsub			ttsutsum@nrao.edu
 test_uvcontsub3			ttsutsum@nrao.edu
 #test_testconcat                 dpetry@eso.org
+test_virtualconcat		dpetry@eso.org
 test_vishead                    jkern@nrao.edu
 test_visstat                    jkern@nrao.edu
 test_vpmanager                  dpetry@eso.org
