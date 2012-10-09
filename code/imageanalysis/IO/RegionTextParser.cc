@@ -621,7 +621,6 @@ RegionTextParser::_getCurrentParamSet(
 							<< paramValue.stringVal << " to quantity"
 							<< LogIO::EXCEPTION;
 					}
-					paramValue.doubleVal = qRestfreq.getValue("Hz");
 				}
 			}
 			else if (keyword == "linewidth") {
