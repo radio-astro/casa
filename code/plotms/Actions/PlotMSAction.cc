@@ -641,11 +641,13 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                 String yunit = r.asString("yaxis");
                 r.removeField("xaxis");
                 r.removeField("yaxis");
-                csv_file << "x, y, chan, scan, field, ant1, ant2, time, freq, "
-                         << "spw, corr, offset, currchunk, irel" << endl;
-                csv_file << xunit << ", " << yunit
-                         << ", None, None, None, None, None, MJD(seconds), GHz, "
-                         << "None, None, None, None, None" << endl;
+                csv_file << "# x y chan scan field ant1 ant2 ant1name "
+                         << "ant2name time freq spw corr offset currchunk irel"
+                         << endl;
+                csv_file << "# " << xunit << " " << yunit
+                         << " None None None None None None None "
+                         << "MJD(seconds) GHz None None None None None"
+                         << endl;
                 for(int _field = 0; _field < r.nfields(); ++_field) {
                     ostringstream fs;
                     fs << _field;
@@ -657,6 +659,10 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                     Int field = r.subRecord(field_str).asInt("field");
                     Int ant1 = r.subRecord(field_str).asInt("ant1");
                     Int ant2 = r.subRecord(field_str).asInt("ant2");
+                    String ant1name =
+                        r.subRecord(field_str).asString("ant1name");
+                    String ant2name =
+                        r.subRecord(field_str).asString("ant2name");
                     //String time = r.subRecord(field_str).asString("time");
                     Double time = r.subRecord(field_str).asDouble("time");
                     Int spw = r.subRecord(field_str).asInt("spw");
@@ -665,18 +671,44 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                     Int offset = r.subRecord(field_str).asInt("offset");
                     Int currchunk = r.subRecord(field_str).asInt("currchunk");
                     Int irel = r.subRecord(field_str).asInt("irel");
-                    csv_file << x << ", " << y << ", " << chan << ", " 
-                             << scan << ", " << field << ", " << ant1 << ", "
-                             << ant2 << ", ";
                     int precision = csv_file.precision();
+                    if(xunit == "Time") {
+                        csv_file << std::setprecision(3) << std::fixed
+                                 << x << " ";
+                        csv_file.unsetf(ios_base::fixed);
+                        csv_file.precision(precision);
+                    } else if(xunit == "Frequency") {
+                        csv_file << std::setprecision(9) << std::fixed
+                                 << x << " ";
+                        csv_file.unsetf(ios_base::fixed);
+                        csv_file.precision(precision);
+                    } else {
+                        csv_file << x << " ";
+                    }
+                    if(yunit == "Time") {
+                        csv_file << std::setprecision(3) << std::fixed
+                                 << y << " ";
+                        csv_file.unsetf(ios_base::fixed);
+                        csv_file.precision(precision);
+                    } else if(yunit == "Frequency") {
+                        csv_file << std::setprecision(9) << std::fixed
+                                 << y << " ";
+                        csv_file.unsetf(ios_base::fixed);
+                        csv_file.precision(precision);
+                    } else {
+                        csv_file << y << " ";
+                    }
+                    csv_file << chan << " " << scan << " " << field << " "
+                             << ant1 << " " << ant2 << " " << ant1name << " "
+                             << ant2name << " ";
                     csv_file << std::setprecision(3) << std::fixed
-                             << time << ", ";
+                             << time << " ";
                     csv_file << std::setprecision(9) << std::fixed
-                             << freq << ", ";
+                             << freq << " ";
                     csv_file.unsetf(ios_base::fixed);
                     csv_file.precision(precision);
-                    csv_file << spw << ", " << corr << ", " << offset << ", "
-                             << currchunk << ", " << irel << endl;
+                    csv_file << spw << " " << corr << " " << offset << " "
+                             << currchunk << " " << irel << endl;
                 }
                 csv_file.close();
                 return success;
