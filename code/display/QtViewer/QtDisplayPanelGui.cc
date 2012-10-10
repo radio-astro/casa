@@ -171,7 +171,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// rgnMgrAct_    = new QAction("Region Manager...", 0);
 	// rgnMgrAct_->setEnabled(False);
 
-	if ( ! use_new_regions || true ) {
+	if ( ! use_new_regions ) {
 		shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
 		connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
 	}
