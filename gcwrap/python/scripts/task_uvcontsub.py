@@ -86,6 +86,9 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
                 casalog.post("Error restoring pointing table from %s: %s" % 
                              (auxfile,str(instance)),'SEVERE')
         
+        # Restore origin (otherwise gcwrap shows virtualconcat)
+        casalog.origin('uvcontsub')
+        
         return True
     
     # Run normal code
