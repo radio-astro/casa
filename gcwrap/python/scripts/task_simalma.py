@@ -55,7 +55,11 @@ def simalma(
 
     try:
         casalog.origin('simalma')
-        if verbose: casalog.filter(level="DEBUG2")
+        if verbose:
+            casalog.filter(level="DEBUG2")
+            t_priority = "WARN"
+        else:
+            t_priority = "INFO"
     
         a = inspect.stack()
         stacklevel = 0
@@ -246,7 +250,7 @@ def simalma(
         mapsize_bl = mapsize
         
         taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_bl+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+totaltime+"', antennalist='"+antennalist+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-        msg(taskstr, origin="simalma", priority="DEBUGGING")
+        msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
         simobserve(project=project,
                    skymodel=skymodel, inbright=inbright,
@@ -291,7 +295,7 @@ def simalma(
             #ptgfile_aca = ptgfile_bl
 
             taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_aca+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_aca+"', antennalist='"+antlist_aca+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-            msg(taskstr, origin="simalma", priority="DEBUGGING")
+            msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
             
             simobserve(project=project,
                        skymodel=skymodel, inbright=inbright,
@@ -347,7 +351,7 @@ def simalma(
                 mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                 # number of pointings to map vicinity of each pointings
                 npts_multi = npts * int(2./pbgridratio_tp)**2
-                msg("Number of pointings to map vicinity of each direction = %d" % npts_multi, origin="simalma", priority="DEBUGGING")
+                msg("Number of pointings to map vicinity of each direction = %d" % npts_multi, origin="simalma", priority="DEBUG2")
 
             grid_tp = qa.mul(PB12ot, pbgridratio_tp)
             pbunit = PB12ot['unit']
@@ -356,7 +360,7 @@ def simalma(
                             / qa.convert(grid_tp, pbunit)['value']) \
                         * int(qa.convert(mapy, pbunit)['value'] \
                               / qa.convert(grid_tp, pbunit)['value'])
-            msg("Number of pointings to map a rect region = %d" % npts_rect, origin="simalma", priority="DEBUGGING")
+            msg("Number of pointings to map a rect region = %d" % npts_rect, origin="simalma", priority="DEBUG2")
 
             if rectmode:
                 dir_tp = direction
@@ -392,7 +396,7 @@ def simalma(
                        / qa.convert(integration, 's')['value'])
             msg("Max number of dump in %s (integration %s): %d" % \
                 (tottime_tp, integration, ndump), origin="simalma", \
-                priority="DEBUGGING")
+                priority="DEBUG2")
             
             if ndump < npts_tp:
                 t_scale = float(ndump)/float(npts_tp)
@@ -407,7 +411,7 @@ def simalma(
                 #tottime_tp = qa.tos(qa.quantity(totsec, "s"))
             
             taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(True)+", ptgfile='$project.ptg.txt', integration='"+integration_tp+"', direction='"+str(dir_tp)+"', mapsize="+str(mapsize_tp)+", maptype='"+maptype_tp+"', pointingspacing='"+ptgspacing_tp+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_sd+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_tp+"', antennalist='', sdantlist='"+antlist_tp+"', sdant="+str(tpantid)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-            msg(taskstr, origin="simalma", priority="DEBUGGING")
+            msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
             simobserve(project=project,
                        skymodel=skymodel, inbright=inbright,
@@ -454,7 +458,7 @@ def simalma(
                 imsize_aca = 0
 
                 taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_aca+"', modelimage='', cell='"+str(cell_aca)+"', imsize="+str(imsize_aca)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
-                msg(taskstr, origin="simalma", priority="DEBUGGING")
+                msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
                 simanalyze(project=project, image=image,
                            vis=vis_aca, modelimage="",
@@ -490,7 +494,7 @@ def simalma(
                     % msname_bl, origin="simalma", priority="error")
 
             taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_bl+"', modelimage='"+ modelimage+"', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
-            msg(taskstr, origin="simalma", priority="DEBUGGING")
+            msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
             simanalyze(project=project, image=image,
                        vis=vis_bl, modelimage=modelimage,
