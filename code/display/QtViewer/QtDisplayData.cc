@@ -137,13 +137,12 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	} else {
 		List<QtDisplayData*> dds_ = panel_->registeredDDs();
 		method = ddo["regrid"];
+		name_ = Path(path_).baseName();
 		if ( dds_.len( ) > 0 && method != "" &&
 				(method == "N" || method == "L" || method == "C") ) {
 			ListIter<QtDisplayData*> dds(dds_);
 			dds.toStart( );
 			regrid_to = dds.getRight( );
-		} else {
-			name_ = Path(path_).baseName();
 		}
 	}
 
