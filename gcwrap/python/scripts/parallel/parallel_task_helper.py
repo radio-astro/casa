@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 from taskinit import *
-import simple_cluster
 import os
 import copy
 import shutil
+import simple_cluster
 import partitionhelper as ph
 
 class ParallelTaskHelper:
@@ -14,7 +14,7 @@ class ParallelTaskHelper:
     above
     """
     
-    __bypass_mms_processing=False
+    __bypass_parallel_processing=0
     
     def __init__(self, task_name, args = {}):
         self._arg = args
@@ -28,6 +28,8 @@ class ParallelTaskHelper:
         self._cluster = None
         # jagonzal: To inhibit return values consolidation
         self._consolidateOutput = True
+        # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+        self._sequential_return_list = {}
         
     def override_arg(self,arg,value):
         self._arguser[arg] = value
@@ -78,10 +80,23 @@ class ParallelTaskHelper:
 
 
     def executeJobs(self):
-        self._cluster = simple_cluster.simple_cluster.getCluster()
-        self._jobQueue = simple_cluster.JobQueueManager(self._cluster)
-        self._jobQueue.addJob(self._executionList)
-        self._jobQueue.executeQueue()
+        
+        casalog.origin("ParallelTaskHelper")
+        
+        # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+        if (self.__bypass_parallel_processing == 1):
+            for job in self._executionList:
+                try:
+                    exec("from taskinit import *; from tasks import *; " + job.getCommandLine())
+                    self._sequential_return_list[job.getCommandArguments()['vis']] = returnVar0
+                except Exception, instance:
+                    casalog.post("Error running task sequentially %s: %s" % (job.getCommandLine(),instance),"WARN","executeJobs")
+            self._executionList = []
+        else:
+            self._cluster = simple_cluster.simple_cluster.getCluster()
+            self._jobQueue = simple_cluster.JobQueueManager(self._cluster)
+            self._jobQueue.addJob(self._executionList)
+            self._jobQueue.executeQueue()
 
     def postExecution(self):   
         
@@ -90,6 +105,9 @@ class ParallelTaskHelper:
         ret_list = {}
         if (self._cluster != None):
             ret_list =  self._cluster.get_return_list()
+        elif (self.__bypass_parallel_processing==1):
+            ret_list = self._sequential_return_list
+            self._sequential_return_list = {}
         else:
             return None
         
@@ -106,10 +124,12 @@ class ParallelTaskHelper:
             ret_dict = {}
             for subMs in ret_list:
                 dict_i = ret_list[subMs]
-                try:
-                    ret_dict = self.sum_dictionaries(dict_i,ret_dict)
-                except Exception, instance:
-                    casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),"WARN","postExecution")
+                # jagonzal (CAS-4119): Neglectable NullSelection errors may cause flagdata to return None
+                if isinstance(dict_i,dict):
+                    try:
+                        ret_dict = self.sum_dictionaries(dict_i,ret_dict)
+                    except Exception, instance:
+                        casalog.post("Error post processing MMS results %s: %s" % (subMs,instance),"WARN","postExecution")
             return ret_dict     
         elif (ret_list.values()[0]==None) and self._consolidateOutput:
              return None      
@@ -228,9 +248,13 @@ class ParallelTaskHelper:
         return True
 
     @staticmethod
-    def bypassMMSProcessing(switch=True):
-        
-        ParallelTaskHelper.__bypass_mms_processing = switch
+    def bypassParallelProcessing(switch=1):
+        """
+        # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+        switch=1 => Process each sub-Ms sequentially
+        switch=2 => Process the MMS as a normal MS
+        """        
+        ParallelTaskHelper.__bypass_parallel_processing = switch
     
     @staticmethod
     def isParallelMS(vis):
@@ -240,7 +264,7 @@ class ParallelTaskHelper:
         """
         
         # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
-        if (ParallelTaskHelper.__bypass_mms_processing):
+        if (ParallelTaskHelper.__bypass_parallel_processing == 2):
             return False
         
         msTool = mstool()

@@ -10,6 +10,7 @@ from simple_cluster import *
 import glob
 import multiprocessing
 import testhelper
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 class test_simplecluster(unittest.TestCase):
 
@@ -22,6 +23,17 @@ class test_simplecluster(unittest.TestCase):
     host=os.uname()[1]
     cwd=os.getcwd()
     ncpu=multiprocessing.cpu_count()
+    
+    # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+    if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
+        ParallelTaskHelper.bypassParallelProcessing(1)
+        bypassParallelProcessing = True
+    else:
+        bypassParallelProcessing = False
+        
+    vis = ""
+    ref = ""
+    aux = ""
 
     def stopCluster(self):
         # Stop thread services and cluster
@@ -51,12 +63,12 @@ class test_simplecluster(unittest.TestCase):
         # Create cluster configuration file
         self.createClusterFile(max_engines,max_memory,memory_per_engine)
         # Initialize cluster object
-        self.cluster.init_cluster(self.clusterfile, self.projectname)
-        # Wait unit cluster is producing monitoring info
-        if (len(userMonitorFile) > 0):
-            self.waitForFile(userMonitorFile, 20)
-        else:
-            self.waitForFile('monitoring.log', 20)
+        if (self.cluster.init_cluster(self.clusterfile, self.projectname)):
+            # Wait unit cluster is producing monitoring info
+            if (len(userMonitorFile) > 0):
+                self.waitForFile(userMonitorFile, 20)
+            else:
+                self.waitForFile('monitoring.log', 20)
 
     def createClusterFile(self,max_engines=0.,max_memory=0.,memory_per_engine=512.):
             
@@ -71,6 +83,52 @@ class test_simplecluster(unittest.TestCase):
             if (os.path.isfile(file)):
                 return
             time.sleep(1)
+            
+    def setUpFile(self,file,type_file):
+        
+        if type(file) is list:
+            for file_i in file:
+                self.setUpFileCore(file_i,type_file)
+        else:
+            self.setUpFileCore(file,type_file)
+                
+        if type_file=='vis':
+            self.vis = file
+        elif type_file =='ref':
+            self.ref = file
+        elif type_file=='aux':
+            self.aux = file
+                
+    def setUpFileCore(self,file,type_file):
+        
+        if os.path.exists(file):
+             print "%s file %s is already in the working area, deleting ..." % (type_file,file)
+             os.system('rm -rf ' + file)
+        print "Copy %s file %s into the working area..." % (type_file,file)
+        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+                  '/data/regression/unittest/simplecluster/' + file + ' ' + file)
+    
+    def create_input(self,str_text, filename):
+        """Save the string in a text file"""
+    
+        inp = filename
+        cmd = str_text
+    
+        # remove file first
+        if os.path.exists(inp):
+            os.system('rm -f '+ inp)
+        
+        # save to a file    
+        fid = open(inp, 'w')
+        fid.write(cmd)
+        
+        # close file
+        fid.close()
+
+        # wait until file is visible for the filesystem
+        self.waitForFile(filename, 10)
+    
+        return
 
     def test1_defaultCluster(self):
         """Test 1: Create a default cluster"""
@@ -112,10 +170,10 @@ class test_simplecluster(unittest.TestCase):
         self.stopCluster()    
         
     def test3_halfMemoryCluster(self):
-        """Test 3: Create a custom cluster to use half of available CPU capacity"""
+        """Test 3: Create a custom cluster to use half of available RAM memory"""
 
         # Create cluster file
-        self.initCluster(max_engines=1.,max_memory=0.5,memory_per_engine=1536.)
+        self.initCluster(max_engines=1.,max_memory=0.5,memory_per_engine=512.)
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
@@ -188,50 +246,66 @@ class test_simplecluster(unittest.TestCase):
             self.assertTrue(state[self.host][engine].has_key('WriteRate'))
 
         self.stopCluster()
+        
+    def test7_bypassParallelProcessing(self):
+        """Test 7: Bypass Parallel Processing mode """        
+        
+        # Try to start cluster
+        self.initCluster(max_engines=1.,max_memory=1.,memory_per_engine=33554432.)
+        
+        # Prepare MMS
+        self.setUpFile("Four_ants_3C286.mms",'vis')
+        
+        # Create list file
+        text = "mode='unflag'\n"\
+               "mode='clip' clipminmax=[0,0.1]"
+        filename = 'list_flagdata.txt'
+        self.create_input(text, filename)
+
+        # step 1: Do unflag+clip
+        flagdata(vis=self.vis, mode='list', inpfile=filename)
+
+        # step 2: Now do summary
+        ret_dict = flagdata(vis=self.vis, mode='summary')
+
+        # Print summary (note: the first 16 jobs correspond to the step 1)
+        self.assertTrue(ret_dict['name']=='Summary')
+        self.assertTrue(ret_dict['spw']['15']['flagged'] == 96284.0)
+        self.assertTrue(ret_dict['spw']['0']['flagged'] == 129711.0)
+        self.assertTrue(ret_dict['spw']['1']['flagged'] == 128551.0)
+        self.assertTrue(ret_dict['spw']['2']['flagged'] == 125686.0)
+        self.assertTrue(ret_dict['spw']['3']['flagged'] == 122862.0)
+        self.assertTrue(ret_dict['spw']['4']['flagged'] == 109317.0)
+        self.assertTrue(ret_dict['spw']['5']['flagged'] == 24481.0)
+        self.assertTrue(ret_dict['spw']['6']['flagged'] == 0)
+        self.assertTrue(ret_dict['spw']['7']['flagged'] == 0)
+        self.assertTrue(ret_dict['spw']['8']['flagged'] == 0)
+        self.assertTrue(ret_dict['spw']['9']['flagged'] == 27422.0)
+        self.assertTrue(ret_dict['spw']['10']['flagged'] == 124638.0)
+        self.assertTrue(ret_dict['spw']['11']['flagged'] == 137813.0)
+        self.assertTrue(ret_dict['spw']['12']['flagged'] == 131896.0)
+        self.assertTrue(ret_dict['spw']['13']['flagged'] == 125074.0)
+        self.assertTrue(ret_dict['spw']['14']['flagged'] == 118039.0)    
+        
+        self.stopCluster()    
 
 
 class test_flagdata_mms(test_simplecluster):
 
     def setUp(self):
         # Prepare MMS
-        self.vis = "Four_ants_3C286.mms"
-        if os.path.exists(self.vis):
-            print "The MMS is already in the working area, deleting ..."
-            os.system('rm -rf ' + self.vis)
-
-        print "Copy MMS into the working area..."
-        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
-                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)
+        self.setUpFile("Four_ants_3C286.mms",'vis')
+        
         # Startup cluster
-        self.initCluster()
+        if not self.bypassParallelProcessing:            
+            self.initCluster()
 
     def tearDown(self):
         # Stop cluster
-        self.stopCluster()
+        if not self.bypassParallelProcessing:
+            self.stopCluster()
         # Remove MMS
         os.system('rm -rf ' + self.vis)
-
-    def create_input(self,str_text, filename):
-        """Save the string in a text file"""
-    
-        inp = filename
-        cmd = str_text
-    
-        # remove file first
-        if os.path.exists(inp):
-            os.system('rm -f '+ inp)
-        
-        # save to a file    
-        fid = open(inp, 'w')
-        fid.write(cmd)
-        
-        # close file
-        fid.close()
-
-        # wait until file is visible for the filesystem
-        self.waitForFile(filename, 10)
-    
-        return
     
     def test1_flagdata_list_return(self):
         """Test 1: Test support for MMS using flagdata in unflag+clip mode"""
@@ -271,20 +345,17 @@ class test_flagdata_mms(test_simplecluster):
 class test_setjy_mms(test_simplecluster):
 
     def setUp(self):
-        self.vis = "ngc5921.applycal.mms"
-        if os.path.exists(self.vis):
-            print "The MMS is already in the working area, deleting ..."
-            os.system('rm -rf ' + self.vis)
-
-        print "Copy MMS into the working area..."
-        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
-                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)
+        # Prepare MMS
+        self.setUpFile("ngc5921.applycal.mms",'vis')
+        
         # Startup cluster
-        self.initCluster()
+        if not self.bypassParallelProcessing:            
+            self.initCluster()
 
     def tearDown(self):
         # Stop cluster
-        self.stopCluster()
+        if not self.bypassParallelProcessing:
+            self.stopCluster()
         # Remove MMS
         os.system('rm -rf ' + self.vis)
 
@@ -418,43 +489,23 @@ class test_setjy_mms(test_simplecluster):
 class test_applycal_mms(test_simplecluster):
 
     def setUp(self):
-        self.vis = "ngc5921.applycal.mms"
-        self.ref = "ngc5921.split.mms"
-        self.aux = ["ngc5921.fluxscale", "ngc5921.gcal", "ngc5921.bcal"]
+        # Set-up MMS
+        self.setUpFile("ngc5921.applycal.mms",'vis')
+        # Set-up reference MMS
+        self.setUpFile("ngc5921.split.mms",'ref')
+        # Set-up auxiliary files
+        self.setUpFile(["ngc5921.fluxscale", "ngc5921.gcal", "ngc5921.bcal"],'aux')
         
-        if os.path.exists(self.vis):
-            print "The MMS is already in the working area, deleting ..."
-            os.system('rm -rf ' + self.vis)
-
-        print "Copy MMS into the working area..."
-        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
-                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)
-        
-        if os.path.exists(self.ref):
-            print "The ref MMS is already in the working area, deleting ..."
-            os.system('rm -rf ' + self.ref)
-
-        print "Copy ref MMS into the working area..."
-        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
-                  '/data/regression/unittest/simplecluster/' + self.ref + ' ' + self.ref)       
-        
-        for file in  self.aux:
-            if os.path.exists(file):
-                print "Aux file %s is already in the working area, deleting ..." % file
-                os.system('rm -rf ' + file)
-                
-            print "Copy aux file %s into the working area..." % file
-            os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
-                      '/data/regression/unittest/simplecluster/' + file + ' ' + file)       
-            
         # Startup cluster
-        self.initCluster()
+        if not self.bypassParallelProcessing:            
+            self.initCluster()
 
     def tearDown(self):
         # Stop cluster
-        self.stopCluster()
+        if not self.bypassParallelProcessing:
+            self.stopCluster()
         # Remove MMS
-        os.system('rm -rf ' + self.vis)   
+        os.system('rm -rf ' + self.vis) 
         # Remove ref MMS
         os.system('rm -rf ' + self.ref) 
         # Remove aux files
@@ -474,35 +525,22 @@ class test_applycal_mms(test_simplecluster):
         
 class test_uvcont_mms(test_simplecluster):
 
-    def setUp(self):
-        self.vis = "ngc5921.uvcont.mms"
-        self.ref = ["ngc5921.mms.cont", "ngc5921.mms.contsub"]
+    def setUp(self):           
+        # Set-up MMS
+        self.setUpFile("ngc5921.uvcont.mms",'vis')
+        # Set-up reference MMS
+        self.setUpFile(["ngc5921.mms.cont", "ngc5921.mms.contsub"],'ref')      
         
-        if os.path.exists(self.vis):
-            print "The MMS is already in the working area, deleting ..."
-            os.system('rm -rf ' + self.vis)
-
-        print "Copy MMS into the working area..."
-        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
-                  '/data/regression/unittest/simplecluster/' + self.vis + ' ' + self.vis)    
-        
-        for file in  self.ref:
-            if os.path.exists(file):
-                print "Ref file %s is already in the working area, deleting ..." % file
-                os.system('rm -rf ' + file)
-                
-            print "Copy ref file %s into the working area..." % file
-            os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
-                      '/data/regression/unittest/simplecluster/' + file + ' ' + file)       
-            
         # Startup cluster
-        self.initCluster()
+        if not self.bypassParallelProcessing:            
+            self.initCluster()
 
     def tearDown(self):
         # Stop cluster
-        self.stopCluster()
+        if not self.bypassParallelProcessing:
+            self.stopCluster()
         # Remove MMS
-        os.system('rm -rf ' + self.vis)   
+        os.system('rm -rf ' + self.vis)
         # Remove ref MMS
         for file in self.ref:
             os.system('rm -rf ' + file) 
