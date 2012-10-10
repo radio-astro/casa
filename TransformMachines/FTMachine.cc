@@ -1671,10 +1671,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // cerr << "FTM::finalizeToSky: Weights = " << weightsVec[0] << endl;
     // storeImg(String("wt.im"),*(weightImageVec[0]));
     // storeImg(String("stokes.im"),*(resImageVec[0]));
+
     normalizeImage( *(resImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , dopsf, 
-		    //		    (Float)1e-03,
-		    (Float)pbLimit_p,
-		    (Int)2);
+    		    //		    (Float)1e-03,
+    		    (Float)pbLimit_p,
+    		    (Int)0); // Normalize by sum-of-wts.
+		    // (Int)2); // Normalize by (sum-of-wts*avgPB)
+
+
     // storeImg(String("stokes1.im"),*(resImageVec[0]));
 
     return;

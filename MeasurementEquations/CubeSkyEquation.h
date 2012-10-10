@@ -83,7 +83,7 @@ class CubeSkyEquation : public SkyEquation {
 
   //get the weight image from the ftmachines
   virtual void getWeightImage(const Int model, ImageInterface<Float>& weightim);
-  void tmpWBNormalizeImage(Bool& dopsf);
+  void tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit);
 
  protected:
 

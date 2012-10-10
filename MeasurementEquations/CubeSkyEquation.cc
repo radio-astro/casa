@@ -1230,6 +1230,7 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 	  // -- calls getImage, getWeightImage, does Stokes conversion, and gS/ggS normalization
 	  //U// cout << "CubeSkyEqn :: calling new finalizeToSky with dopsf " << dopsf << endl;
 	  iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
+	  tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
 	  //      storeImg(String("stokesNormed0.im"), *(gSSliceVec[0]));
 	  // Clean up temporary reference images      
 	  for (Int taylor=0; taylor < ntaylors; ++taylor)
@@ -1698,7 +1699,7 @@ void CubeSkyEquation::fixImageScale()
   }
 }
 
-void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf)
+void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 {
   LogIO os(LogOrigin("CubeSkyEquation", "tmpNormalizeImage"));
 
@@ -1709,13 +1710,9 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf)
   Int ntaylors = sm_->numberOfTaylorTerms();
   isLargeCube(sm_->cImage(0), nCubeSlice);
 
+  //  if (!sm_->isImageNormalized()) return;
   // PSFs are normalized in makeApproxPSF()
-  if (!sm_->isImageNormalized()) return;
-  if(dopsf) 
-    {
-      ntaylors = 2 * sm_->numberOfTaylorTerms() - 1;
-      // return;
-    }
+  if(dopsf) ntaylors = 2 * sm_->numberOfTaylorTerms() - 1;
 
   Int nfields = sm_->numberOfModels()/ntaylors;
 
@@ -1731,7 +1728,7 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf)
 	      
 	      sliceCube(gSSliceVec, sm_->gS(index), cubeSlice, nCubeSlice);
 	      
-	      LatticeExpr<Float> le(iif((*ggSSliceVec)>(0.0), -(*gSSliceVec)/(*ggSSliceVec), 0.0));
+	      LatticeExpr<Float> le(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
 	      gSSliceVec->copyData(le);
 
 	      // if (dopsf) 
