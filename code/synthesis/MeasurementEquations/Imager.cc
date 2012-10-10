@@ -3581,7 +3581,7 @@ Record Imager::clean(const String& algorithm,
     else {
       /* For msmfs, the one input mask PER FIELD must be replicated for all 
 	 Taylor-planes PER FIELD */
-      if(algorithm=="msmfs" && Int(mask.nelements())>0){
+      if(algorithm=="msmfs" && (Int(mask.nelements())>=(nmodels/ntaylor_p))){
        for(Int tay=0;tay<nmodels;tay++)
 	 {
 	   maskNames[tay] = mask[ tay%(nmodels/ntaylor_p)  ];
