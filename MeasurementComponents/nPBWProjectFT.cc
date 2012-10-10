@@ -3619,6 +3619,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      
 	      if(weights(pol, chan)>0.0) 
 		{
+		  /*
 		  Int iy=lix.position()(1);
 		  gridder->correctX1D(correction,iy);
 		  
@@ -3647,7 +3648,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 	      else if (!makingPSF)
  		      	lix.rwVectorCursor()(i) /= sincConv(i)*sincConv(iy);
 		    }
-
+		  */
 		  if(normalize) 
 		    {
 		      Complex rnorm(Float(inx)*Float(iny)/weights(pol,chan));
@@ -3707,11 +3708,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition axisPath(4, 0, 1, 2, 3);
     LatticeStepper lsx(latticeShape, cursorShape, axisPath);
     LatticeIterator<Float> lix(weightImage, lsx);
+    LatticeIterator<Float> liy(avgPB,lsx);
     for(lix.reset();!lix.atEnd();lix++) 
       {
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
-	lix.rwCursor()=weights(pol,chan);
+	//	lix.rwCursor()=weights(pol,chan);
+	lix.rwCursor()=liy.rwCursor();
       }
   }
   //

@@ -321,6 +321,7 @@ public:
   // Make the VB and VBStore interefaces for the interim re-factoring
   // work.  Finally removed the VB interface.
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) = 0;
+  virtual Float getPBLimit() {return pbLimit_p;};
   //virtual void ComputeResiduals(VBStore& vb)=0;
   //get and set numthreads
   void setnumthreads(Int n);
@@ -447,6 +448,9 @@ protected:
   Bool canComputeResiduals_p;
   Bool toVis_p;
   Int numthreads_p;
+
+  Float pbLimit_p;
+
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 
@@ -457,8 +461,6 @@ protected:
   void convUVW(Double& dphase, Vector<Double>& thisrow);
   //A holder for the complex image if nobody else is keeping it
   CountedPtr<ImageInterface<Complex> > cmplxImage_p;
-
-
 };
 
 } //# NAMESPACE CASA - END

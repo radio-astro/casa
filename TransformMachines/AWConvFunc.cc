@@ -246,8 +246,10 @@ namespace casa{
 		    //		    Int inner = cfBufMat.shape()(0)/aTerm.getOversampling();
 		    //		    Float inner = 2.0*aTerm.getOversampling()/cfBufMat.shape()(0);
 
-		    psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
-		    psTerm.applySky(cfWtBufMat, False); // Assign
+		    // psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
+		    // psTerm.applySky(cfWtBufMat, False); // Assign
+		    cfBufMat = cfWtBufMat = 1.0;
+
 		    // WBAWP CODE BEGIN  -- make PS*PS for Weights
 		    // psTerm.applySky(cfWtBufMat, True);  // Multiply
 		    // WBAWP CODE END

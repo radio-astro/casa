@@ -885,9 +885,11 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  index = getModelIndex(thismodel,taylor);
 	  //cout << "Normalizing image " << index << " with " << baseindex << endl;
 	  //cout << "Shapes : " << ggS(index).shape() << gS(baseindex).shape() << endl;
+	  
+	  // UUU
 	  LatticeExpr<Float> le(iif(ggS(baseindex)>(0.0), -gS(index)/ggS(baseindex), 0.0));
 	  residual(index).copyData(le);
-	  
+
 	  //storeAsImg(String("Weight.")+String::toString(thismodel)+String(".")+String::toString(taylor),ggS(index));
 	  //storeAsImg(String("TstResidual.")+String::toString(thismodel)+String(".")+String::toString(taylor),residual(index));
 	}

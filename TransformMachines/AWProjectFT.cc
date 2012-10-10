@@ -1329,7 +1329,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Do the Grid-correction
     //
-    if(0) //UUU
+    //    if(0) //UUU
+    if(cfCache_p->avgPBReady()) //SB
     {
       //      normalizeAvgPB();
       
