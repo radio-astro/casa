@@ -5,6 +5,7 @@ import filecmp
 from tasks import *
 from taskinit import *
 from __main__ import default
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 #
 # Test of flagdata modes
@@ -49,6 +50,10 @@ if os.environ.has_key('TEST_DATADIR'):
         datapath = DATADIR
 
 print 'flagdata tests will use data from '+datapath         
+
+# jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
+    ParallelTaskHelper.bypassParallelProcessing(1)
 
 # Base class which defines setUp functions
 # for importing different data sets

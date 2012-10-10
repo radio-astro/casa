@@ -117,14 +117,62 @@ def flagdata(vis,
     casalog.origin('flagdata')
 
     # Take care of the trivial parallelization
-    if ParallelTaskHelper.isParallelMS(vis):
+    # jagonzal (CAS-4119): If flags are not going to be applied is better to run in sequential mode
+    if ParallelTaskHelper.isParallelMS(vis) and action != '' and action != 'none':
         # Set flagbackup to False because only the controller
         # should create a backup
         flagbackup = False
         # To be safe convert file names to absolute paths.
         helper = ParallelTaskHelper('flagdata', locals())
+        # jagonzal (CAS-4119): Override summary minabs,maxabs,minrel,maxrel 
+        # so that it is done after consolidating the summaries
+        
+        # By-pass options to filter summary
+        filterSummary = False
+        if ((mode == 'summary') and ((minrel != 0.0) or (maxrel != 1.0) or (minabs != 0) or (maxabs != -1))):
+            filterSummary = True
+            
+            myms = mstool()
+            myms.open(vis)
+            subMS_list = myms.getreferencedtables()
+            myms.close()
+            
+            if (minrel != 0.0):
+                minreal_dict = create_arg_dict(subMS_list,0.0)
+                helper.override_arg('minrel',minreal_dict)
+            if (maxrel != 1.0):
+                maxrel_dict = create_arg_dict(subMS_list,1.0)
+                helper.override_arg('maxrel',maxrel_dict)
+            if (minabs != 0):
+                minabs_dict = create_arg_dict(subMS_list,0)
+                helper.override_arg('minabs',minabs_dict)
+            if (maxabs != -1):
+                maxabs_dict = create_arg_dict(subMS_list,-1)
+                helper.override_arg('maxabs',maxabs_dict)
+                
+        # By-pass options to filter summary
+        if savepars:  
+            
+            myms = mstool()
+            myms.open(vis)
+            subMS_list = myms.getreferencedtables()
+            myms.close()
+            
+            savepars_dict = create_arg_dict(subMS_list,False)
+            helper.override_arg('savepars',savepars_dict)
+            
         retVar = helper.go()
-        return retVar
+        
+        # Filter summary at MMS level
+        if (mode == 'summary'):
+            if filterSummary:
+                retVar = filter_summary(retVar,minrel,maxrel,minabs,maxabs)
+            return retVar
+        # Save parameters at MMS level
+        elif savepars:
+            action = 'none'
+        else:
+            return retVar
     
     # Create local tools
     aflocal = casac.agentflagger()
@@ -583,19 +631,7 @@ def flagdata(vis,
         
            # Filter out baselines/antennas/fields/spws/... from summary_stats
            # which do not fall within limits
-           if type(summary_stats) is dict:
-               for x in summary_stats.keys():
-                   if type(summary_stats[x]) is dict:
-                       for xx in summary_stats[x].keys():
-                           flagged = summary_stats[x][xx]
-                           assert type(flagged) is dict
-                           assert flagged.has_key('flagged')
-                           assert flagged.has_key('total')
-                           if flagged['flagged'] < minabs or \
-                              (flagged['flagged'] > maxabs and maxabs >= 0) or \
-                              flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
-                              flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
-                                   del summary_stats[x][xx]
+           summary_stats = filter_summary(summary_stats,minrel,maxrel,minabs,maxabs)
         
         # if (need to return the reports/views as well as summary_stats) :
         #      return summary_stats , summary_stats_list;
@@ -635,4 +671,30 @@ def delspace(word, replace):
         newword = word.replace(' ', replace)
     
     return newword
+
+def filter_summary(summary_stats,minrel,maxrel,minabs,maxabs):
+    
+    if type(summary_stats) is dict:
+        for x in summary_stats.keys():
+            if type(summary_stats[x]) is dict:
+                for xx in summary_stats[x].keys():
+                    flagged = summary_stats[x][xx]
+                    assert type(flagged) is dict
+                    assert flagged.has_key('flagged')
+                    assert flagged.has_key('total')
+                    if flagged['flagged'] < minabs or \
+                       (flagged['flagged'] > maxabs and maxabs >= 0) or \
+                       flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
+                       flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
+                        del summary_stats[x][xx]
+                        
+    return summary_stats
+
+def create_arg_dict(subMS_list,value):
+    
+    ret_dict = []
+    for subMS in subMS_list:
+        ret_dict.append(value)
+        
+    return ret_dict
     
