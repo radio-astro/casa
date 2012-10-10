@@ -451,13 +451,18 @@
                 the solar system object. 
                 default: False -use the direction information in the MS(i.e. Field table) 
 
-        usescratch  -- If True: the model visibility will be evaluated and saved on 
-	disk in the MODEL_DATA column. This will increase your ms in size 
-	by a factor of 1.5 (w.r.t. the case where you only have the DATA and 
-        the CORRECTED_DATA column). If False: the model is saved in the header 
-        and model visibilities are evaluated when calculating calibration or 
-        plotting in plotms.
-        Use True if you need to interact with the MODEL_DATA in python, say.
+        usescratch  -- If False: 'virtual' model is created. The model is saved in the header 
+        and model visibilities are evaluated when calculating calibration or plotting in plotms.
+        If True: the model visibility will be evaluated and saved on disk in the MODEL_DATA 
+        column.  This will increase your ms in size by a factor of 1.5 (w.r.t. the case where 
+        you only have the DATA and the CORRECTED_DATA column).  Use True if you need to interact 
+        with the MODEL_DATA in python, say.
+
+        *By running usescratch=T, it will remove the existing virtual model from previous runs.
+        usescratch=F will not remove the existing MODEL_DATA but in subsequent process
+        the virtual model with matching field and spw combination will be used if it exists
+        regardless of the presence of the MODEL_DATA column.
+         
         default: False        
             
 </example>
