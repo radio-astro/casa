@@ -86,14 +86,14 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 				modeZ_(True),
 				zLen_(1), bLen_(1),
 				zIndex_(0), bIndex_(0),
-				zStart_(0), zEnd_(1), zStep_(1),
-				bStart_(0), bEnd_(1), bStep_(1),
 				animRate_(10), minRate_(1), maxRate_(50), animating_(0),
 				blankCBPanel_(0), mainPanelSize_(1.),
 				hasRgn_(False), rgnExtent_(0), qsm_(0),
 				lastMotionEvent_(0), bkgdClrOpt_(0),
 				extChan_(""), extPol_("")  ,
-				printStats(True), useRegion(False),PGP_MARGIN_UNIT(65){
+				printStats(True), useRegion(False),PGP_MARGIN_UNIT(65),
+				zStart_(0), zEnd_(1), zStep_(1),
+				bStart_(0), bEnd_(1), bStep_(1){
 
 	setWindowTitle("Viewer Display Panel");
 
@@ -681,7 +681,6 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
 	// pd_, for obscure reasons: sometimes a frame setting may be
 	// used from another Panel where dd is registered).
 
-
 	pd_->addDisplayData(*dd);
 	// Maintain registration relation between the
 	// wrapped classes.
@@ -689,9 +688,7 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
 
 	// Reset animator in accordance with new set of registered DDs
 	// (This code comes mostly from GTkPD::add()).
-
 	Record animrec;
-
 	if(pd_->isCSmaster(dd) && ddHasPreferredZIndex) {
 		// New dd has become CS master: pass along its opinions
 		// on animator frame number setting, if any.
@@ -699,7 +696,6 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
 	}
 
 	// Blink index or length may also change when DD added.
-
 	if(pd_->isBlinkDD(dd)) {
 		animrec.define("blength", pd_->bLength());
 		animrec.define("bindex",  pd_->bIndex());
@@ -1898,9 +1894,8 @@ void QtDisplayPanel::setAnimator_(Record sarec) {
 	// (Assures blink restriction is set onto any new panels, if nec.).
 
 
-	emit animatorChange();  }
-
-
+	emit animatorChange();
+}
 
 
 void QtDisplayPanel::setZlen_(Int len) {
@@ -1936,11 +1931,35 @@ void QtDisplayPanel::setBlen_(Int len) {
 
 	bStart_=0;
 	bEnd_=bLen_;
-	bStep_=1;  }
+	bStep_=1;
+}
 
-
-
-
+void QtDisplayPanel::lowerBoundAnimatorImageChanged( int bound ){
+	assert ( bound <= bLen_ );
+	bStart_= max(0, bound);
+}
+void QtDisplayPanel::upperBoundAnimatorImageChanged(int bound ){
+	assert ( bound >= 0 );
+	bEnd_ = min( bLen_, bound+1);
+}
+void QtDisplayPanel::stepSizeAnimatorImageChanged(int step ){
+	assert ( step > 0 );
+	assert ( step <= bLen_ );
+	bStep_ = step;
+}
+void QtDisplayPanel::lowerBoundAnimatorChannelChanged( int bound ){
+	assert ( bound <= zLen_ );
+	zStart_= max(0, bound);
+}
+void QtDisplayPanel::upperBoundAnimatorChannelChanged(int bound ){
+	assert ( bound >= 0 );
+	zEnd_ = min( zLen_, bound+1);
+}
+void QtDisplayPanel::stepSizeAnimatorChannelChanged(int step ){
+	assert ( step > 0 );
+	assert ( step <= zLen_ );
+	zStep_ = step;
+}
 void QtDisplayPanel::goToZ(int frm) {
 	// Connected from text box and slider; also usable by scripts.
 	stop_();
@@ -1953,7 +1972,6 @@ void QtDisplayPanel::goToZ(int frm) {
 void QtDisplayPanel::goToZ_(Int frm) {
 	// Internal part: doesn't send signals, but does set the restrictions
 	// (which requests refresh).
-
 	frm = max(0, min(nZFrames()-1,  frm));
 	// Assure value is in range, if caller didn't do this himself.
 
@@ -1992,7 +2010,9 @@ void QtDisplayPanel::goToB(int frm) {
 
 
 void QtDisplayPanel::goToB_(Int frm) {
+
 	frm = max(0, min(nBFrames()-1, frm));
+
 	// Assure within range.  If changing number of frames also,
 	// do that first.
 	bStart_ = min(bStart_, frm);
@@ -2027,7 +2047,6 @@ void QtDisplayPanel::setMode(bool modez, bool channelCubes) {
 		pd_->setBlinkMode( !modez );
 
 		hold();
-
 		goToZ_(zIndex());	// (Sets proper multi-panel zIndex increment
 		//  in accordance with new mode, primarily).
 		if(mode()=="Blink" || channelCubes ){
@@ -2045,37 +2064,29 @@ void QtDisplayPanel::setMode(bool modez, bool channelCubes) {
 	emit animatorChange();
 }
 
-
-
-
-
-
-
 void QtDisplayPanel::prev_() { 
 	Int newframe = frame() - step();
 	if(newframe<startFrame()) newframe = lastFrame();
 	goTo_(newframe);
-	emit animatorChange();  }
+	emit animatorChange();
+}
 
 void QtDisplayPanel::next_() {
 	Int newframe = frame() + step();
-	if(newframe>lastFrame()) newframe = startFrame();
+	if(newframe>lastFrame()){
+		newframe = startFrame();
+	}
 	goTo_(newframe);
-	emit animatorChange();  }
-
-
-//#dk Limiting animation range not really supported yet.
-//    (Remember, these should call goToX_(), if necessary
-//     to put current frame within new range).
-void QtDisplayPanel::setEndZFrame(Int /*frm*/) {  }
-void QtDisplayPanel::setEndBFrame(Int /*frm*/) {  }
+	emit animatorChange();
+}
 
 
 
 void QtDisplayPanel::revPlay() { 
 	animating_ = -1;
 	tmr_.start();
-	emit animatorChange();  }
+	emit animatorChange();
+}
 
 void QtDisplayPanel::stop() { stop_();  emit animatorChange();  }
 
@@ -2085,21 +2096,17 @@ void QtDisplayPanel::stop_() { animating_ = 0; tmr_.stop();  }
 void QtDisplayPanel::fwdPlay() {
 	animating_ = 1;
 	tmr_.start();
-	emit animatorChange();  }
+	emit animatorChange();
+}
 
 void QtDisplayPanel::setRate(int rate) {
 	animRate_ = max(minRate(), min(maxRate(),  rate  ));
 	tmr_.setInterval(1000/animRate_);
-	emit animatorChange();  }
-
-
-
+	emit animatorChange();
+}
 
 
 // SAVE - RESTORE METHODS/SLOTS
-
-
-
 String QtDisplayPanel::dpState(String restorefilename) {
 	// Returns an xml String of display panel state.  This includes registered
 	// DDs and their options, panel options, animation and zoom state, etc.

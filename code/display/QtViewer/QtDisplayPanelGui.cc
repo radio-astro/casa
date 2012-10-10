@@ -272,8 +272,14 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
 	connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
 	connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
-	connect(animationHolder, SIGNAL(movieChannels(int,bool,int)), this, SLOT(movieChannels(int,bool,int)));
+	connect(animationHolder, SIGNAL(movieChannels(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
 	connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
+	connect(animationHolder, SIGNAL(lowerBoundAnimatorImageChanged(int)), qdp_, SLOT(lowerBoundAnimatorImageChanged(int)));
+	connect(animationHolder, SIGNAL(upperBoundAnimatorImageChanged(int)), qdp_, SLOT(upperBoundAnimatorImageChanged(int)));
+	connect(animationHolder, SIGNAL(stepSizeAnimatorImageChanged(int)), qdp_, SLOT(stepSizeAnimatorImageChanged(int)));
+	connect(animationHolder, SIGNAL(lowerBoundAnimatorChannelChanged(int)), qdp_, SLOT(lowerBoundAnimatorChannelChanged(int)));
+	connect(animationHolder, SIGNAL(upperBoundAnimatorChannelChanged(int)), qdp_, SLOT(upperBoundAnimatorChannelChanged(int)));
+	connect(animationHolder, SIGNAL(stepSizeAnimatorChannelChanged(int)), qdp_, SLOT(stepSizeAnimatorChannelChanged(int)));
 	animDockWidget_->setWidget(animationHolder);
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
@@ -723,19 +729,14 @@ void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
 
 void QtDisplayPanelGui::incrementMovieChannel(){
 
-	//Increment the channel
-	if ( movieChannel < movieChannelEnd || movieForward ){
-		movieChannel++;
-	}
-	else {
-		movieChannel--;
-	}
+	//Increment/Decrement the channel
+	movieChannel = movieChannel + movieStep;
 
 	//Take care of wrap around in either direction.
 	if ( movieChannel > movieLast ){
-		movieChannel = 0;
+		movieChannel = movieStart;
 	}
-	if ( movieChannel < 0 ){
+	if ( movieChannel < movieStart ){
 		movieChannel = movieLast;
 	}
 
@@ -752,25 +753,43 @@ void QtDisplayPanelGui::movieChannels( int startChannel, int endChannel ){
 	//Make sure it is not currently playing
 	//before we start a new one.
 	movieTimer.stop();
-	movieForward = false;
-	movieLast = endChannel+1;
+	movieLast = endChannel + 1;
+	movieStart = startChannel - 1;
+	if ( startChannel < endChannel ){
+		movieStep = 1;
+	}
+	else {
+		movieStep = -1;
+	}
 
 	//Start a new movie.
-	int animationRate = animationHolder->getRate( AnimatorHolder::NORMAL_MODE );
-	movieTimer.setInterval( 1000/ animationRate );
+	setAnimationRate();
 	movieChannel = startChannel;
 	movieChannelEnd = endChannel;
 	movieTimer.start();
 }
 
+void QtDisplayPanelGui::setAnimationRate(){
+	int animationRate = animationHolder->getRate( AnimatorHolder::NORMAL_MODE );
+	movieTimer.setInterval( 1000/ animationRate );
+}
+
 void QtDisplayPanelGui::movieChannels( int startChannel, bool forward,
-		int maxChannels ){
+		int stepSize, int channelMin, int channelMax ){
 	movieTimer.stop();
 
-	movieForward = forward;
-	movieLast = maxChannels;
+	movieLast = channelMax;
 	movieChannelEnd = -1;
+	movieStart = channelMin;
+
+	if ( forward ){
+		movieStep = stepSize;
+	}
+	else {
+		movieStep = -1 * stepSize;
+	}
 	movieChannel = startChannel;
+	setAnimationRate();
 	movieTimer.start();
 }
 

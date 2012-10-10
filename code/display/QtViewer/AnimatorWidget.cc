@@ -23,12 +23,11 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "AnimatorWidget.qo.h"
-
+#include <QDebug>
 namespace casa {
 
 AnimatorWidget::AnimatorWidget(QWidget *parent)
-    : QWidget(parent)
-{
+    : QWidget(parent) {
 	ui.setupUi(this);
 
 	ui.revTB_ ->setCheckable(true);
@@ -49,6 +48,16 @@ AnimatorWidget::AnimatorWidget(QWidget *parent)
 	connect(ui.toEndTB_, SIGNAL(clicked()), this, SIGNAL(toEnd()));
 
 	rateNotSet = true;
+
+	//Start and end limits
+	ui.endSpinBox->setMinimum( 0 );
+	ui.startSpinBox->setMinimum( 0 );
+	connect( ui.startSpinBox, SIGNAL(valueChanged(int)), this, SLOT(movieLimitLowerChanged(int)));
+	connect( ui.endSpinBox,   SIGNAL(valueChanged(int)), this, SLOT(movieLimitUpperChanged(int)));
+	connect( ui.frameSlider_, SIGNAL(actionTriggered(int)), this, SLOT(sliderControl(int)));
+
+	//Jump
+	connect( ui.endToEndCheckBox, SIGNAL(toggled(bool)), this, SLOT(endToEndMode(bool)));
 }
 
 
@@ -64,10 +73,21 @@ void AnimatorWidget::blockSignals( bool block ){
 void AnimatorWidget::setFrameInformation( int frm, int len ){
 	frameCount = len;
 	blockSignals( true );
+
+	//If we are changing the number of frames, we need to reset
+	//the properties that depend on the number of frames.
+	int oldMax = ui.endSpinBox->maximum();
+	if ( oldMax + 1 != len ){
+		int maxValue = len - 1;
+		ui.endSpinBox->setMaximum( maxValue );
+		ui.endSpinBox->setValue( maxValue );
+		ui.startSpinBox->setMaximum( maxValue );
+		ui.startSpinBox->setValue( 0 );
+		ui.frameSlider_->setMinimum(0);
+		ui.frameSlider_->setMaximum( maxValue );
+		ui.nFrmsLbl_ ->setText(QString::number(len));
+	}
 	ui.frameEdit_->setText(QString::number(frm));
-	ui.nFrmsLbl_ ->setText(QString::number(len));
-	ui.frameSlider_->setMinimum(0);
-	ui.frameSlider_->setMaximum(len-1);
 	ui.frameSlider_->setValue(frm);
 	blockSignals( false );
 
@@ -90,13 +110,16 @@ void AnimatorWidget::setModeEnabled( bool multiframe ){
 	ui.toStartTB_->setEnabled(multiframe);
 	ui.revStepTB_->setEnabled(multiframe);
 	ui.revTB_->setEnabled(multiframe);
-	ui.stopTB_->setEnabled(multiframe);	// Tape deck controls.
-	ui.playTB_->setEnabled(multiframe);	//
-	ui.fwdStep_->setEnabled(multiframe);	//
-	ui.toEndTB_->setEnabled(multiframe);	//
-	ui.frameEdit_->setEnabled(multiframe);	// Frame number entry.
-	ui.nFrmsLbl_->setEnabled(multiframe);	// Total frames label.
-	ui.frameSlider_->setEnabled(multiframe);	// Frame number slider.*/
+	ui.stopTB_->setEnabled(multiframe);
+	ui.playTB_->setEnabled(multiframe);
+	ui.fwdStep_->setEnabled(multiframe);
+	ui.toEndTB_->setEnabled(multiframe);
+	ui.frameEdit_->setEnabled(multiframe);
+	ui.nFrmsLbl_->setEnabled(multiframe);
+	ui.frameSlider_->setEnabled(multiframe);
+	ui.endSpinBox->setEnabled(multiframe);
+	ui.startSpinBox->setEnabled( multiframe );
+	ui.endToEndCheckBox->setEnabled( multiframe );
 }
 
 void AnimatorWidget::setRateInformation( int minr, int maxr, int rate ){
@@ -115,6 +138,25 @@ int AnimatorWidget::getRate() const {
 int AnimatorWidget::getFrame() const {
 	return ui.frameSlider_->value();
 }
+
+int AnimatorWidget::getFrameStart() const {
+	return ui.startSpinBox->value();
+}
+
+int AnimatorWidget::getFrameEnd() const {
+	return ui.endSpinBox->value();
+}
+
+int AnimatorWidget::getStepSize() const {
+	int stepSize = 1;
+	if ( ui.endToEndCheckBox->isChecked() ){
+		int max = ui.endSpinBox->value();
+		int min = ui.startSpinBox->value();
+		stepSize = max - min;
+	}
+	return stepSize;
+}
+
 void AnimatorWidget::setPlaying( int play ){
 	blockSignals( true );
 	this->play = play;
@@ -137,8 +179,61 @@ void AnimatorWidget::frameNumberEdited(){
 	emit frameNumberEdited( frameNumber );
 }
 
-AnimatorWidget::~AnimatorWidget()
-{
+int AnimatorWidget::resetFrameBounded( int frameNumber ) const {
+	int adjustedFrameNumber = frameNumber;
+	int lowerBound = ui.startSpinBox->value();
+	int upperBound = ui.endSpinBox->value();
+	if ( frameNumber < lowerBound ){
+		adjustedFrameNumber = lowerBound;
+	}
+	else if ( frameNumber > upperBound ){
+		adjustedFrameNumber = upperBound;
+	}
+	return adjustedFrameNumber;
+}
+
+void AnimatorWidget::sliderControl( int /*action*/ ){
+	int value = ui.frameSlider_->sliderPosition();
+	value = resetFrameBounded( value );
+	ui.frameSlider_->setSliderPosition( value );
+}
+
+void AnimatorWidget::movieLimitLowerChanged( int limit ){
+	ui.endSpinBox->setMinimum( limit );
+	emit lowerBoundChanged( limit );
+	int sliderValue = ui.frameSlider_->value();
+	if ( sliderValue < limit ){
+		ui.frameSlider_->setValue( limit );
+	}
+	//Recalculate the step size based on the new lower bound
+	if ( ui.endToEndCheckBox->isChecked() ){
+		endToEndMode( true );
+	}
+}
+
+void AnimatorWidget::movieLimitUpperChanged( int limit ){
+	ui.startSpinBox->setMaximum( limit );
+	emit upperBoundChanged( limit );
+	int sliderValue = ui.frameSlider_->value();
+	if ( sliderValue > limit ){
+		ui.frameSlider_->setValue( limit );
+	}
+	//Recalculate the step size based on the new upper bound
+	if ( ui.endToEndCheckBox->isChecked() ){
+		endToEndMode( true );
+	}
+}
+
+void AnimatorWidget::endToEndMode( bool endToEnd ){
+	int stepSize = 1;
+	if ( endToEnd ){
+		stepSize = ui.endSpinBox->value() - ui.startSpinBox->value();
+	}
+	emit goTo( ui.startSpinBox->value() );
+	emit stepSizeChanged( stepSize );
+}
+
+AnimatorWidget::~AnimatorWidget(){
 
 }
 }

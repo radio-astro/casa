@@ -252,7 +252,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   //Increments the channel in the images from the start channel
   //to the end channel.
   void movieChannels( int startChannel, int endChannel );
-  void movieChannels( int startChannel, bool forward, int maxChannels );
+  void movieChannels( int channel, bool forward, int stepSize, int channelStart, int channelEnd  );
   void movieStop();
   void registerAllDDs();
   void unregisterAllDDs();
@@ -500,11 +500,16 @@ class QtDisplayPanelGui : public QtPanelBase {
 
  private:
   bool use_new_regions;
-  bool movieForward;
+
+  //Animating the channel
   int movieChannel;
   int movieChannelEnd;
   int movieLast;
+  int movieStart;
+  int movieStep;
   QTimer movieTimer;
+  void setAnimationRate();
+
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,

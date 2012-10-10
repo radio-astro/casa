@@ -20,15 +20,24 @@
    <string>AnimatorWidget</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="margin">
+    <number>1</number>
+   </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <property name="spacing">
+      <number>2</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item>
         <widget class="QToolButton" name="toStartTB_">
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>30</height>
           </size>
          </property>
@@ -54,7 +63,7 @@
         <widget class="QToolButton" name="revStepTB_">
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>30</height>
           </size>
          </property>
@@ -80,7 +89,7 @@
         <widget class="QToolButton" name="revTB_">
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>30</height>
           </size>
          </property>
@@ -106,7 +115,7 @@
         <widget class="QToolButton" name="stopTB_">
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>30</height>
           </size>
          </property>
@@ -132,7 +141,7 @@
         <widget class="QToolButton" name="playTB_">
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>30</height>
           </size>
          </property>
@@ -158,7 +167,7 @@
         <widget class="QToolButton" name="fwdStep_">
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>30</height>
           </size>
          </property>
@@ -184,7 +193,7 @@
         <widget class="QToolButton" name="toEndTB_">
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>30</height>
           </size>
          </property>
@@ -207,6 +216,58 @@
         </widget>
        </item>
       </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="rateLbl_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Rate:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="rateEdit_">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Select the animation rate.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="endToEndCheckBox">
+       <property name="minimumSize">
+        <size>
+         <width>40</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>If this box is checked, the movie controls will jump from end to end instead of changing one unit at a time.</string>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="text">
+        <string>Jump</string>
+       </property>
+      </widget>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -271,78 +332,77 @@
        </item>
       </layout>
      </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLabel" name="rateLbl_">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Rate:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="rateEdit_">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="toolTip">
-          <string>Select the animation rate.</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
     </layout>
    </item>
    <item>
-    <widget class="QSlider" name="frameSlider_">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <property name="spacing">
+      <number>6</number>
      </property>
-     <property name="minimumSize">
-      <size>
-       <width>170</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>16777215</width>
-       <height>16777215</height>
-      </size>
-     </property>
-     <property name="toolTip">
-      <string>Select the current animation frame.</string>
-     </property>
-     <property name="minimum">
-      <number>1</number>
-     </property>
-     <property name="pageStep">
-      <number>1</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
+     <item>
+      <widget class="QSpinBox" name="startSpinBox">
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Set the lower animation limit.</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="frameSlider_">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>170</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Select the current animation frame.</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="pageStep">
+        <number>1</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="endSpinBox">
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Set the upper animation limit.</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
  <resources>
   <include location="QtViewer.qrc"/>
  </resources>

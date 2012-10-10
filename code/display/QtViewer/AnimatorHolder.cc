@@ -44,7 +44,8 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	animatorChannel->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
 	animatorChannel->setModeEnabled( false );
 	QHBoxLayout* layoutChannel = new QHBoxLayout();
-	layoutChannel->setContentsMargins( 2,2,2,2 );
+	layoutChannel->setContentsMargins( 1,1,1,1 );
+	layoutChannel->setSpacing( 1 );
 	layoutChannel->addWidget( animatorChannel );
 	ui.channelGroupBox->setLayout( layoutChannel );
 	ui.channelGroupBox->setAutoFillBackground( true );
@@ -54,7 +55,8 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	animatorImage->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
 	animatorImage->setModeEnabled( false );
 	QHBoxLayout* layoutImage = new QHBoxLayout();
-	layoutImage->setContentsMargins( 2,2,2,2 );
+	layoutImage->setContentsMargins( 1,1,1,1 );
+	layoutImage->setSpacing( 1 );
 	layoutImage->addWidget( animatorImage );
 	ui.imageGroupBox->setLayout( layoutImage );
 	ui.imageGroupBox->setAutoFillBackground( true );
@@ -73,6 +75,9 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	connect(animatorChannel, SIGNAL(fwdPlay()), this, SLOT(fwdPlayChannel()));
 	connect(animatorChannel, SIGNAL(fwdStep()), this, SLOT(fwdStepChannel()));
 	connect(animatorChannel, SIGNAL(toEnd()), this, SLOT(toEndChannel()));
+	connect(animatorChannel, SIGNAL(lowerBoundChanged(int)), this, SLOT(lowerBoundChangedChannel(int)));
+	connect(animatorChannel, SIGNAL(upperBoundChanged(int)), this, SLOT(upperBoundChangedChannel(int)));
+	connect(animatorChannel, SIGNAL(stepSizeChanged(int)), this, SLOT(stepSizeChangedChannel(int)));
 
 	connect(animatorImage, SIGNAL(goTo(int)), this, SLOT(goToImage(int)));
 	connect(animatorImage, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedImage(int)));
@@ -84,6 +89,9 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	connect(animatorImage, SIGNAL(fwdPlay()), this, SLOT(fwdPlayImage()));
 	connect(animatorImage, SIGNAL(fwdStep()), this, SLOT(fwdStepImage()));
 	connect(animatorImage, SIGNAL(toEnd()), this, SLOT(toEndImage()));
+	connect(animatorImage, SIGNAL(lowerBoundChanged(int)), this, SLOT(lowerBoundChangedImage(int)));
+	connect(animatorImage, SIGNAL(upperBoundChanged(int)), this, SLOT(upperBoundChangedImage(int)));
+	connect(animatorImage, SIGNAL(stepSizeChanged(int)), this, SLOT(stepSizeChangedImage(int)));
 }
 
 
@@ -210,7 +218,8 @@ void AnimatorHolder::toStartChannel(){
 		emit toStart();
 	}
 	else {
-		emit channelSelect(0);
+		int startFrame = animatorChannel->getFrameStart();
+		emit channelSelect(startFrame);
 	}
 }
 void AnimatorHolder::revStepChannel(){
@@ -220,10 +229,13 @@ void AnimatorHolder::revStepChannel(){
 	}
 	else {
 		int currentFrame = this->animatorChannel->getFrame();
-		currentFrame = currentFrame-1;
-		if ( currentFrame < 0 ){
-			int frameCount = animatorChannel->getFrameCount();
-			currentFrame = frameCount;
+		int stepSize = animatorChannel->getStepSize();
+		int minFrame = animatorChannel->getFrameStart();
+		currentFrame = currentFrame-stepSize;
+		if ( currentFrame < minFrame ){
+			int diff = minFrame - currentFrame;
+			int maxFrame = animatorChannel->getFrameEnd();
+			currentFrame = maxFrame - diff;
 		}
 		emit channelSelect( currentFrame );
 	}
@@ -248,7 +260,6 @@ void AnimatorHolder::fwdPlayChannel(){
 	else {
 		animatorChannel->setPlaying( 1 );
 		emitMovieChannels( true );
-
 	}
 }
 void AnimatorHolder::stopChannel(){
@@ -268,7 +279,14 @@ void AnimatorHolder::fwdStepChannel(){
 	}
 	else {
 		int currentFrame = animatorChannel->getFrame();
-		currentFrame++;
+		int stepSize = animatorChannel->getStepSize();
+		currentFrame = currentFrame + stepSize;
+		int maxFrame = animatorChannel->getFrameEnd();
+		if ( currentFrame > maxFrame ){
+			int diff = currentFrame - maxFrame;
+			int minFrame = animatorChannel->getFrameStart();
+			currentFrame = minFrame + diff;
+		}
 		emit channelSelect( currentFrame );
 	}
 }
@@ -278,9 +296,21 @@ void AnimatorHolder::toEndChannel(){
 		emit toEnd();
 	}
 	else {
-		int frameCount = this->animatorChannel->getFrameCount();
-		emit channelSelect( frameCount );
+		int lastFrame = this->animatorChannel->getFrameEnd();
+		emit channelSelect( lastFrame );
 	}
+}
+
+void AnimatorHolder::lowerBoundChangedChannel(int bound ){
+	emit lowerBoundAnimatorChannelChanged( bound );
+}
+
+void AnimatorHolder::upperBoundChangedChannel(int bound ){
+	emit upperBoundAnimatorChannelChanged( bound );
+}
+
+void AnimatorHolder::stepSizeChangedChannel(int size ){
+	emit stepSizeAnimatorChannelChanged( size );
 }
 
 //Images
@@ -329,9 +359,11 @@ void AnimatorHolder::toEndImage(){
 }
 
 void AnimatorHolder::emitMovieChannels( bool direction ){
-	int currentFrame = animatorChannel->getFrame();
-	int frameCount = animatorChannel->getFrameCount();
-	emit movieChannels( currentFrame, direction, frameCount );
+	int frameStart = animatorChannel->getFrameStart();
+	int currentFrame = frameStart;
+	int frameEnd = animatorChannel->getFrameEnd();
+	int stepSize = animatorChannel->getStepSize();
+	emit movieChannels( currentFrame, direction, stepSize, frameStart, frameEnd );
 }
 
 void AnimatorHolder::stopImagePlay(){
@@ -346,6 +378,18 @@ void AnimatorHolder::stopChannelPlay(){
 		emit stop();
 		animatorChannel->setPlaying( 0 );
 	}
+}
+
+void AnimatorHolder::lowerBoundChangedImage(int bound ){
+	emit lowerBoundAnimatorImageChanged( bound );
+}
+
+void AnimatorHolder::upperBoundChangedImage(int bound ){
+	emit upperBoundAnimatorImageChanged( bound );
+}
+
+void AnimatorHolder::stepSizeChangedImage(int size ){
+	emit stepSizeAnimatorImageChanged( size );
 }
 
 //----------------------------------------------------------------

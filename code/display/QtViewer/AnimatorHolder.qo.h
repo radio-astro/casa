@@ -53,7 +53,7 @@ signals:
 	void goTo(int frame);
 	void frameNumberEdited( int frame );
 	void channelSelect( int channel );
-	void movieChannels( int currentFrame, bool direction, int frameCount );
+	void movieChannels( int currentFrame, bool direction, int stepSize, int frameStart, int frameEnd );
 	void stopMovie();
 	void setRate(int frame);
 	void toStart();
@@ -64,6 +64,12 @@ signals:
 	void fwdPlay();
 	void toEnd();
 	void setMode( bool mode );
+	void lowerBoundAnimatorImageChanged( int );
+	void upperBoundAnimatorImageChanged(int);
+	void stepSizeAnimatorImageChanged(int);
+	void lowerBoundAnimatorChannelChanged( int );
+	void upperBoundAnimatorChannelChanged(int);
+	void stepSizeAnimatorChannelChanged(int);
 
 private slots:
 	void goToChannel(int frame);
@@ -76,6 +82,9 @@ private slots:
 	void stopChannel();
 	void fwdStepChannel();
 	void toEndChannel();
+	void upperBoundChangedChannel(int);
+	void lowerBoundChangedChannel(int);
+	void stepSizeChangedChannel(int);
 	void goToImage(int frame);
 	void setRateImage(int frame);
 	void toStartImage();
@@ -86,6 +95,9 @@ private slots:
 	void fwdStepImage();
 	void fwdPlayImage();
 	void toEndImage();
+	void lowerBoundChangedImage(int);
+	void upperBoundChangedImage(int);
+	void stepSizeChangedImage(int);
 	void modeChange();
 
 private:
