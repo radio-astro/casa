@@ -50,16 +50,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nchan.resize();
     Vector<Double> t;
     ROScalarColumn<Double> (ms,MS::columnName(MS::TIME)).getColumn(t);
-    Vector<Int> ddId;
-    Vector<Int> fldId;
-    ROScalarColumn<Int> (ms,MS::columnName(MS::DATA_DESC_ID)).getColumn(ddId);
-    ROScalarColumn<Int> (ms,MS::columnName(MS::FIELD_ID)).getColumn(fldId);
+    //Vector<Int> ddId;
+    //Vector<Int> fldId;
+    
     ROMSFieldColumns fieldCol(ms.field());
     ROMSDataDescColumns ddCol(ms.dataDescription());
     ROMSSpWindowColumns spwCol(ms.spectralWindow());
     ROScalarMeasColumn<MEpoch> timeCol(ms, MS::columnName(MS::TIME));
     Vector<uInt>  uniqIndx;
     uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
+
+    t.resize(0);
+    //ROScalarColumn<Int> (ms,MS::columnName(MS::DATA_DESC_ID)).getColumn(ddId);
+    //ROScalarColumn<Int> (ms,MS::columnName(MS::FIELD_ID)).getColumn(fldId);
+    ROScalarColumn<Int> ddId(ms,MS::columnName(MS::DATA_DESC_ID));
+    ROScalarColumn<Int> fldId(ms,MS::columnName(MS::FIELD_ID));
     //now need to do the conversion to data frame from requested frame
     //Get the epoch mesasures of the first row
     MEpoch ep;
@@ -77,10 +82,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       obsPos=msc.antenna().positionMeas()(0);
     }
     //////
-    Int oldDD=ddId[0];
+    Int oldDD=ddId(0);
+    Int newDD=oldDD;
     //For now we will assume that the field is not moving very far from polynome 0
     MDirection dir =fieldCol.phaseDirMeas(fieldId);
-    MFrequency::Types obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(ddId[0])));
+    MFrequency::Types obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(ddId(0))));
     //cout << "nTimes " << nTimes << endl;
     //cout << " obsframe " << obsMFreqType << " reqFrame " << freqframe << endl; 
     MeasFrame frame(ep, obsPos, dir);
@@ -93,12 +99,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       freqStartMin=C::dbl_max;
     }
     for (uInt j=0; j< nTimes; ++j){
-      if(fldId[uniqIndx[j]] ==fieldId){
+      if(fldId(uniqIndx[j]) ==fieldId){
 	timeCol.get(uniqIndx[j], ep);
-	if(oldDD != ddId[uniqIndx[j]]){
-	  oldDD=ddId[uniqIndx[j]];
-	  if(spwCol.measFreqRef()(ddCol.spectralWindowId()(ddId[uniqIndx[j]])) != obsMFreqType){
-	    obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(ddId[uniqIndx[j]])));
+	newDD=ddId(uniqIndx[j]);
+	if(oldDD != newDD){
+	  oldDD=newDD;
+	  if(spwCol.measFreqRef()(ddCol.spectralWindowId()(newDD)) != obsMFreqType){
+	    obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(newDD)));
 	    toObs.setOut(MFrequency::Ref(obsMFreqType, frame));
 	  }
 	}
