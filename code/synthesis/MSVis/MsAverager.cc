@@ -1254,6 +1254,7 @@ Bool MsAverager::hasColumn(casa::String const& col) {
     //LogIO os(LogOrigin("MsAverager", "hasColumn"));
     //os << LogIO::WARN << String("No column '") + col + "' in the MS"
     //   << LogIO::POST;
+
     return False;
 }
 
