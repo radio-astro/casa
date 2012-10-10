@@ -11,7 +11,6 @@ from parallel_go import *
 # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
 import traceback
 
-
 class simple_cluster:
     """The simple_cluster creates and maintains an ipcluster environment
     for controlling parallel execution of casa tasks (tools and scripts)
@@ -88,17 +87,85 @@ class simple_cluster:
         force -- whether or not to reconfigure if a configured cluster exists
 
         A configuration file is an ASCII text file. Each line defines a node
-        (also called host) with comma separated entries of host_name,
-        number_of_engines and work_dir. A line that starts with # is ignored.
-        The following is the contents of a configuration file:
-        ############################################
-        casa-dev-07, 4, /home/casa-dev-07/hye/ptest
-        #casa-dev-08, 4, /home/casa-dev-08/hye/ptest
-        casa-dev-10, 4, /home/casa-dev-10/hye/ptest
-        ############################################
+        (also called host) with one line per host to be used, and the following 
+        format: 
+        
+        - <hostname>, <number of engines>, <work directory>
+        - <hostname>, <number of engines>, <work directory>, <fraction of total RAM>
+        - <hostname>, <number of engines>, <work directory>, <fraction of total RAM>, <RAM per engine>
+        
+        where the interpretation of the parameters is as follows: 
+        
+        - hostname: Hostname of the target node where the cluster is deployed 
+        
+          NOTE: The hostname has to be provided w/o quotes
+        
+        - number of engines: Supports in turns 3 different formats 
+        
+            * If provided as an integer >1: It is interpreted as 
+              the actual user-specified maximum number of engines
+              
+            * If provided as an integer =0: It will deploy as maximum 
+              engines as possible, according to the idle CPU capacity 
+              available at the target node
+              
+            * If provided as a float between 0 and 1: It is interpreted 
+              as the percentage of idle CPU capacity that the cluster 
+              can use in total at the target node
 
-        Normally, one does not call this function directly. The init_cluster
-        function will trigger this function.
+        - work directory: Area in which the cluster will put intermediate 
+          files such as log files, configuration files, and monitoring files
+        
+          NOTE1: This area has to be accessible from the controller (user) machine, 
+                 and mounted in the same path of the filesystem 
+                 
+          NOTE2: The path name has to be provided w/o quotes
+        
+        - fraction of total RAM: Supports in turns 3 different formats:
+        
+            * If provided as an integer >1: It is interpreted as the actual 
+              user-specified maximum amount of RAM to be used in total at 
+              the target node
+              
+            * If provided as an integer =0: It will deploy as maximum engines 
+              as possible, according to the free RAM available at target node
+              
+            * If provided as a float between 0 and 1: It is interpreted as 
+              the percentage of free RAM that the cluster can use in total 
+              at the target node
+            
+        - RAM per engine: Integer, which is interpreted as the required memory 
+          per engine in MB (default is 512MB) 
+          
+        It is also possible to add comments, by using the # character at the 
+        beginning of the line. Example:
+        
+        #####################################################
+        
+        # CASA cluster configuration file for expert user
+        orion, 10, /home/jdoe/test/myclusterhome1
+        m42, 4, /home/jdoe/test/myclusterhome2, 0.6, 1024
+        antares, 0.6, /home/jdoe/test/myclusterhome3, 0, 2048
+        
+        #####################################################
+        
+        - At host ``orion'': It will deploy up to 10 engines, with working 
+          directory /home/jdoe/test/myclusterhome1, and using as much free 
+          RAM available as possible (up to 90% by default), taking into 
+          account that each engine can use up to 512 MB (the default and minimum)
+          
+        - At host ``m42'': It will deploy up to 4 engines, with working directory 
+          /home/jdoe/test/myclusterhome2, and using at the most 60% of the free RAM 
+          available, taking into account that each engine can use up to 1024 MB.   
+          
+        - At host ``antares'': It will deploy as many engines as possible, with 
+          working directory /home/jdoe/test/myclusterhome3, using up to 60% of the 
+          idle CPU capacity / cores, and as much free RAM available as possible 
+          (up to 90% by default), taking into account that each engine can use up 
+          to 2048 MB.  
+ 
+        Normally, one does not call this function directly. 
+        The init_cluster function will trigger this function.
 
         """
         
@@ -316,6 +383,15 @@ class simple_cluster:
         """
         
         casalog.origin("simple_cluster")
+        
+        # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+        if (len(self._hosts)==1):
+            if (self._hosts[0][1] == 1):
+                if (self.uniqueIP(self._hosts[0][0]) == self.uniqueIP("localhost")):
+                    casalog.post("Only one engine can be deployed at localhost, disabling cluster mode","WARN","validate_hosts")
+                    from parallel.parallel_task_helper import ParallelTaskHelper
+                    ParallelTaskHelper.bypassParallelProcessing(1)
+                    return False
         
         uhost=set()
         for i in range(len(self._hosts)):
@@ -2286,23 +2362,87 @@ class simple_cluster:
         project -- the name of project (default: 'proj'+timestamp).  
 
         A configuration file is an ASCII text file. Each line defines a node
-        (also called host) with comma separated entries of host_name,
-        number_of_engines and work_dir. A line that starts with # is ignored.
-        The following is the contents of a configuration file:
-        ############################################
-        casa-dev-07, 4, /home/casa-dev-07/hye/ptest
-        #casa-dev-08, 4, /home/casa-dev-08/hye/ptest
-        casa-dev-10, 4, /home/casa-dev-10/hye/ptest
-        ############################################
+        (also called host) with one line per host to be used, and the following 
+        format: 
+        
+        - <hostname>, <number of engines>, <work directory>
+        - <hostname>, <number of engines>, <work directory>, <fraction of total RAM>
+        - <hostname>, <number of engines>, <work directory>, <fraction of total RAM>, <RAM per engine>
+        
+        where the interpretation of the parameters is as follows: 
+        
+        - hostname: Hostname of the target node where the cluster is deployed 
+        
+          NOTE: The hostname has to be provided w/o quotes
+        
+        - number of engines: Supports in turns 3 different formats 
+        
+            * If provided as an integer >1: It is interpreted as 
+              the actual user-specified maximum number of engines
+              
+            * If provided as an integer =0: It will deploy as maximum 
+              engines as possible, according to the idle CPU capacity 
+              available at the target node
+              
+            * If provided as a float between 0 and 1: It is interpreted 
+              as the percentage of idle CPU capacity that the cluster 
+              can use in total at the target node
 
-        A project maintains a subdirectory under each node's work_dir. All 
-        output files of an engine hosted on that node will by default store
-        under the subdirectory.
+        - work directory: Area in which the cluster will put intermediate 
+          files such as log files, configuration files, and monitoring files
+        
+          NOTE1: This area has to be accessible from the controller (user) machine, 
+                 and mounted in the same path of the filesystem 
+                 
+          NOTE2: The path name has to be provided w/o quotes
+        
+        - fraction of total RAM: Supports in turns 3 different formats:
+        
+            * If provided as an integer >1: It is interpreted as the actual 
+              user-specified maximum amount of RAM to be used in total at 
+              the target node
+              
+            * If provided as an integer =0: It will deploy as maximum engines 
+              as possible, according to the free RAM available at target node
+              
+            * If provided as a float between 0 and 1: It is interpreted as 
+              the percentage of free RAM that the cluster can use in total 
+              at the target node
+            
+        - RAM per engine: Integer, which is interpreted as the required memory 
+          per engine in MB (default is 512MB) 
+          
+        It is also possible to add comments, by using the # character at the 
+        beginning of the line. Example:
+        
+        #####################################################
+        
+        # CASA cluster configuration file for expert user
+        orion, 10, /home/jdoe/test/myclusterhome1
+        m42, 4, /home/jdoe/test/myclusterhome2, 0.6, 1024
+        antares, 0.6, /home/jdoe/test/myclusterhome3, 0, 2048
+        
+        #####################################################
+        
+        - At host ``orion'': It will deploy up to 10 engines, with working 
+          directory /home/jdoe/test/myclusterhome1, and using as much free 
+          RAM available as possible (up to 90% by default), taking into 
+          account that each engine can use up to 512 MB (the default and minimum)
+          
+        - At host ``m42'': It will deploy up to 4 engines, with working directory 
+          /home/jdoe/test/myclusterhome2, and using at the most 60% of the free RAM 
+          available, taking into account that each engine can use up to 1024 MB.   
+          
+        - At host ``antares'': It will deploy as many engines as possible, with 
+          working directory /home/jdoe/test/myclusterhome3, using up to 60% of the 
+          idle CPU capacity / cores, and as much free RAM available as possible 
+          (up to 90% by default), taking into account that each engine can use up 
+          to 2048 MB.  
 
         Example:
         CASA <15>: from simple_cluster import *
         CASA <16>: sl=simple_cluster()
-        CASA <17>: sl.init_cluster('my_cluster', 'aProj')
+        CASA <17>: sl.init_cluster('cluster-config.txt', 'ProjectName')
 
         """
         
@@ -2331,13 +2471,16 @@ class simple_cluster:
     
         self.config_cluster(clusterfile, True)
         if not self._configdone:
-            return
+            return False
+        
         self.create_project(project)
         
         self.start_cluster()
 
         # Put the cluster object into the global namespace
         sys._getframe(len(inspect.stack())-1).f_globals['procCluster'] = self
+        
+        return True
         
     
     ###########################################################################
