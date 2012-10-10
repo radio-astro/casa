@@ -3621,6 +3621,13 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
     const Bool dropdeg, const Bool overwrite,
     const Bool force, const Bool extendMask
 ) const {
+	if (
+		csysTemplate.spectralCoordinate().frequencySystem(True)
+		!= _image->coordinates().spectralCoordinate().frequencySystem(True)
+	) {
+		*_log << "Image to be regridded has different frequency system from template."
+			<< LogIO::EXCEPTION;
+	}
 	std::auto_ptr<CoordinateSystem> csys(
 		dynamic_cast<CoordinateSystem *>(csysTemplate.clone())
 	);
@@ -3645,6 +3652,26 @@ ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
 		// we can regrid by velocity.
 		Int specCoordNum = cs->spectralCoordinateNumber();
 		SpectralCoordinate specCoord = cs->spectralCoordinate();
+		if (
+			specCoord.frequencySystem(False) != specCoord.frequencySystem(True)
+		) {
+			// the underlying conversion system is different from the overlying one, so this
+			// is pretty confusing. We want the underlying one also be the overlying one before
+			// we regrid.
+			Vector<Double> newRefVal;
+			Double newRefPix = specCoord.referencePixel()[0];
+			specCoord.toWorld(newRefVal, Vector<Double>(1, newRefPix));
+			Vector<Double> newVal;
+			specCoord.toWorld(newVal, Vector<Double>(1, newRefPix+1));
+
+			specCoord = SpectralCoordinate(
+				specCoord.frequencySystem(True), newRefVal[0],
+				newVal[0] - newRefVal[0], newRefPix, specCoord.restFrequency()
+			);
+			if (cs == coordClone.get()) {
+				newSpecCoord = specCoord;
+			}
+		}
 		Double freqRefVal = specCoord.referenceValue()[0];
 		Double velRefVal;
 		if (! specCoord.frequencyToVelocity(velRefVal, freqRefVal)) {
