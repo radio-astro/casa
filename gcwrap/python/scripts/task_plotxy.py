@@ -280,8 +280,8 @@ def plotxy(vis=None,xaxis=None,yaxis=None,datacolumn=None,iteration=None,
             #again, we put this back, because some external
             #people want to use interval devel. They want this.
             #casalog.post('Adding scratch columns, if necessary.')
-            cb.open(vis)
-            cb.close()
+            #cb.open(vis)
+            #cb.close()
 
             mp.open(vis, doVel, restfreq, frame, doppler)
         else:
