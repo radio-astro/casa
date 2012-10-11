@@ -230,7 +230,48 @@ namespace casa {
 	    }
 
 	    if ( ev.keystate() ) {
-		if ( ev.key( ) == Display::K_Escape ) {
+
+		// find which buttons are bound to region keys...
+		std::set<Display::KeySym> region_buttons;
+		for ( tool_map::iterator it = tools.begin( ); it != tools.end( ); ++it ) {
+		    Display::KeySym sym = (*it).second->getKey( );
+		    if ( sym != Display::K_None )
+			region_buttons.insert(sym);
+		}
+
+		// allow region buttons to move and resize any regions... but only if there
+		// is one bound region button, this extra condition allows for using multiple
+		// buttons to disentangle (and move) overlapping regions...
+		if ( region_buttons.size( ) == 1 && region_buttons.find(ev.key( )) != region_buttons.end( ) ) {
+
+		    if ( ev.modifiers( ) & Display::KM_Shift ) {
+			// shift-click within a region
+			if ( add_mark_select( state ) ) return;
+			else return clear_mark_select( state );
+
+		    } else if ( ev.modifiers( ) & Display::KM_Double_Click ) {
+			if ( process_double_click( state ) ) return;
+		    } else {
+			region_list_type &handles = state.regions( viewer::Region::PointHandle );
+			if ( handles.size( ) > 0 ) {
+			    moving_handle = true;
+			    moving_handle_info = state.state(*handles.begin());
+			    moving_handle_region = *handles.begin();
+			    return;
+			} else {
+
+			    if ( setup_moving_regions( state ) ) {
+				return;
+			    } else {
+				// click outside of all regions...
+				if ( marked_regions.size( ) > 0 ) {
+				    clear_mark_select(state);
+				    return;
+				}	// go on to (perhaps) create a new region if no regions are marked...
+			    }
+			}
+		    }
+		} else if ( ev.key( ) == Display::K_Escape ) {
 		    if ( marked_regions.size( ) > 0 ) {
 			// escape clears marked regions...
 			clear_mark_select(state);
