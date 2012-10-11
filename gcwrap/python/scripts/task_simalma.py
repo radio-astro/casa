@@ -60,7 +60,7 @@ def simalma(
             t_priority = "WARN"
         else:
             t_priority = "INFO"
-    
+
         a = inspect.stack()
         stacklevel = 0
         for k in range(len(a)):
@@ -140,7 +140,7 @@ def simalma(
             msg("Cycle-1 ALMA simulation", origin="simalma", priority="warn")
         else:
             msg("Full Science ALMA simulation", origin="simalma", priority="warn")
-            
+
         # antennalist of ACA and TP
         antlist_tp = "aca.tp.cfg"
 
@@ -180,11 +180,13 @@ def simalma(
             msname_tp = pref_tp+".sd.ms"
             imagename_aca = pref_aca+".image"
 
+        simana_file = project+".simanalyze.last"
+
         # Either skymodel or complist should exists
         if type(skymodel) in arraytype:
             skymodel = skymodel[0]
         skymodel = skymodel.replace('$project',pref_bl)
-    
+
         if type(complist) in arraytype:
             complist = complist[0]
 
@@ -231,7 +233,7 @@ def simalma(
         nyqpbratio = nyquist/1.2   # OT Nyquist spacing in unit of simulator PB
         pointingspacing = str(nyqpbratio)+"PB"
         #msg("Setting Nyquist pointing spacing %s" % pointingspacing, origin="simalma", priority="warn")
-        
+
         ############################################################
         # ALMA-BL simulation
         step = 1
@@ -248,7 +250,7 @@ def simalma(
         #else:
         #    mapsize_bl = mapsize
         mapsize_bl = mapsize
-        
+
         taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_bl+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+totaltime+"', antennalist='"+antennalist+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
         msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
@@ -296,7 +298,7 @@ def simalma(
 
             taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_aca+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_aca+"', antennalist='"+antlist_aca+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
             msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
-            
+
             simobserve(project=project,
                        skymodel=skymodel, inbright=inbright,
                        indirection=indirection, incell=incell,
@@ -376,6 +378,7 @@ def simalma(
                         dir_tp += myutil.calc_pointings2(qa.tos(grid_tp),
                                                          qa.tos(locsize),
                                                          "square", dir)
+
                     mapsize_tp = ["", ""]
                     npts_tp = npts_multi
                     msg("Multi-pointing mode: The total power antenna observes +-1PB of each point", origin="simalma", priority='warn')
@@ -386,7 +389,7 @@ def simalma(
                     msg("Multi-pointing mode: The total power antenna maps a region that covers all pointings", origin="simalma", priority='warn')
                     msg("- Center of poinings: %s" % center, origin="simalma", priority='warn')
                     msg("- Map size: [%s, %s]" % (mapsize_tp[0], mapsize_tp[1]), origin="simalma", priority='warn')
-            
+
             ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12sim['value'])+"PB"
 
             # Scale integration time of TP (assure >= 1 visit per direction)
@@ -397,7 +400,7 @@ def simalma(
             msg("Max number of dump in %s (integration %s): %d" % \
                 (tottime_tp, integration, ndump), origin="simalma", \
                 priority="DEBUG2")
-            
+
             if ndump < npts_tp:
                 t_scale = float(ndump)/float(npts_tp)
                 integration_tp = qa.tos(qa.mul(integration, t_scale))
@@ -409,7 +412,7 @@ def simalma(
                 #totsec = intsec['value']*npts_tp#+0.000000001)
                 ##tottime_tp = qa.tos(qa.convert(qa.quantity(totsec, "s"), iunit))
                 #tottime_tp = qa.tos(qa.quantity(totsec, "s"))
-            
+
             taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(True)+", ptgfile='$project.ptg.txt', integration='"+integration_tp+"', direction='"+str(dir_tp)+"', mapsize="+str(mapsize_tp)+", maptype='"+maptype_tp+"', pointingspacing='"+ptgspacing_tp+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_sd+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_tp+"', antennalist='', sdantlist='"+antlist_tp+"', sdant="+str(tpantid)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
             msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
@@ -453,6 +456,7 @@ def simalma(
                 else:
                     msg("ACA is requested but total power MS '%s' is not found" \
                         % msname_tp, origin="simalma", priority="error")
+
                 cell_aca = cell
 
                 imsize_aca = 0
@@ -473,6 +477,14 @@ def simalma(
                            #showfidelity=None,
                            graphics=graphics, verbose=verbose,
                            overwrite=overwrite)#, async=False)
+
+                # Back up simanalyze.last file
+                if os.path.exists(fileroot+"/"+simana_file):
+                    simana_new = imagename_aca.replace(".image",".simanalyze.last")
+                    msg("Back up input parameter set to '%s'" % simana_new, \
+                        origin="simalma", priority=t_priority)
+                    shutil.move(fileroot+"/"+simana_file, fileroot+"/"+simana_new)
+
                 if not os.path.exists(fileroot+"/"+imagename_aca):
                     msg("ACA model image '%s' is not found" \
                         % imagename_aca, origin="simalma", priority="error")
@@ -508,7 +520,7 @@ def simalma(
                        #showfidelity=None,
                        graphics=graphics, verbose=verbose,
                        overwrite=overwrite)#, async=False)
-            
+
 
     except TypeError, e:
         finalize_tools()
