@@ -38,7 +38,7 @@ class SpwMap:
         
 class SpwInfo:
     def __init__(self,msfile,spwId) :
-        self.tb = taskinit.tbtool.create()
+        self.tb = taskinit.tbtool()
         self.setTableAndSpwId(msfile,spwId)
 
     def setTableAndSpwId(self,msfile,spwId) :
@@ -98,7 +98,7 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False) :
      spw list to use in applycal spwmap parameter for the Tsys caltable
     
     """
-    localTb = taskinit.tbtool.create()
+    localTb = taskinit.tbtool()
     spwMaps = []
     # Get the spectral windows with entries in the solution table
     localTb.open(tsystable)
