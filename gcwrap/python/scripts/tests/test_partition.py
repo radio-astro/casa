@@ -7,9 +7,14 @@ import partitionhelper as ph
 from tasks import *
 from taskinit import *
 from __main__ import default
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 
 ''' Unit Tests for task partition'''
+
+# jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
+    ParallelTaskHelper.bypassParallelProcessing(1)
 
     
 class test_base(unittest.TestCase):

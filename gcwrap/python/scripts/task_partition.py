@@ -360,7 +360,12 @@ class PartitionHelper(ParallelTaskHelper):
                 os.system('rm -rf '+self.stab) # remove empty copy
                 os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
             
-            outputList = self._jobQueue.getOutputJobs()
+            # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+                outputList = self._sequential_return_list
+                self._sequential_return_list = {}
+            else:
+                outputList = self._jobQueue.getOutputJobs()
             # We created a data directory and many SubMSs,
             # now build the reference MS
             if self._arg['calmsselection'] in ['auto','manual']:
@@ -370,11 +375,15 @@ class PartitionHelper(ParallelTaskHelper):
                     raise ValueError, "Output MS already exists"
                 self._msTool.createmultims(self._arg['calmsname'],
                          [self.dataDir +'/%s.cal.ms'%self.outputBase])
-                
+            
             subMSList = []
-            for job in outputList:
-                if job.status == 'done':
-                    subMSList.append(job.getCommandArguments()['outputvis'])
+            if (ParallelTaskHelper.getBypassParallelProcessing()==1):
+                for subMS in outputList:
+                    subMSList.append(subMS)
+            else:
+                for job in outputList:
+                    if job.status == 'done':
+                        subMSList.append(job.getCommandArguments()['outputvis'])
             subMSList.sort()
 
             if len(subMSList) == 0:

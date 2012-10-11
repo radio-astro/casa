@@ -6,6 +6,9 @@ import shutil
 import simple_cluster
 import partitionhelper as ph
 
+# jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+import traceback
+
 class ParallelTaskHelper:
     """
     This is the extension of the TaskHelper to allow for parallel
@@ -87,10 +90,16 @@ class ParallelTaskHelper:
         if (self.__bypass_parallel_processing == 1):
             for job in self._executionList:
                 try:
+                    parameters = job.getCommandArguments()
                     exec("from taskinit import *; from tasks import *; " + job.getCommandLine())
-                    self._sequential_return_list[job.getCommandArguments()['vis']] = returnVar0
+                    # jagonzal: Special case for partition
+                    if (parameters.has_key('outputvis')):
+                        self._sequential_return_list[parameters['outputvis']] = returnVar0
+                    else:
+                        self._sequential_return_list[parameters['vis']] = returnVar0
                 except Exception, instance:
                     casalog.post("Error running task sequentially %s: %s" % (job.getCommandLine(),instance),"WARN","executeJobs")
+                    traceback.print_tb(sys.exc_info()[2])
             self._executionList = []
         else:
             self._cluster = simple_cluster.simple_cluster.getCluster()
@@ -103,11 +112,11 @@ class ParallelTaskHelper:
         casalog.origin("ParallelTaskHelper")
            
         ret_list = {}
-        if (self._cluster != None):
-            ret_list =  self._cluster.get_return_list()
-        elif (self.__bypass_parallel_processing==1):
+        if (self.__bypass_parallel_processing==1):
             ret_list = self._sequential_return_list
-            self._sequential_return_list = {}
+            self._sequential_return_list = {}        
+        elif (self._cluster != None):
+            ret_list =  self._cluster.get_return_list()
         else:
             return None
         
@@ -164,6 +173,7 @@ class ParallelTaskHelper:
                 retVar = self.postExecution()
             except Exception, instance:
                 casalog.post("Error post processing MMS results %s: %s" % (self._arg['vis'],instance),"WARN","go")
+                traceback.print_tb(sys.exc_info()[2])
                 return False
         else:
             retVar = False
@@ -255,6 +265,15 @@ class ParallelTaskHelper:
         switch=2 => Process the MMS as a normal MS
         """        
         ParallelTaskHelper.__bypass_parallel_processing = switch
+        
+    @staticmethod
+    def getBypassParallelProcessing():
+        """
+        # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+        switch=1 => Process each sub-Ms sequentially
+        switch=2 => Process the MMS as a normal MS
+        """        
+        return ParallelTaskHelper.__bypass_parallel_processing        
     
     @staticmethod
     def isParallelMS(vis):
