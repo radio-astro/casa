@@ -55,9 +55,27 @@ void ConverterIntensity::setSolidAngle( double angleMeasure ){
 	beamSolidAngle = angleMeasure;
 }
 
+bool ConverterIntensity::isSupportedUnits( const QString& yUnit ){
+	bool acceptable = false;
+	if ( yUnit.contains( JY_BEAM) || yUnit.contains( KELVIN )||
+			yUnit.contains( FRACTION_OF_PEAK) || yUnit.contains("Jy/arcsec^2") ||
+			yUnit.contains( "MJy/sr" ) ){
+		acceptable = true;
+	}
+	return acceptable;
+}
+
 void ConverterIntensity::convert( Vector<float>& values, const Vector<float> hertzValues,
 		const QString& oldUnits, const QString& newUnits,
 		double maxValue, const QString& maxUnits ){
+
+	bool supportedUnits = isSupportedUnits( oldUnits );
+	if ( supportedUnits ){
+		supportedUnits = isSupportedUnits( newUnits );
+	}
+	if ( !supportedUnits ){
+		return;
+	}
 
 	//Change fraction of peak back to the original units before converting.  We don't
 	//want the current values in fraction of peak going forward.
@@ -120,14 +138,14 @@ double ConverterIntensity::convertQuantity( double yValue, double frequencyValue
 		Quantity quantity( yValue, oldUnitStr );
 		//qDebug() << "Converting oldUnits="<<oldUnits<<" new units="<<newUnits;
 		Unit newUnitVal( newUnitStr );
-		bool compatible = quantity.isConform(newUnitVal );
-		if ( compatible ){
+		//bool compatible = quantity.isConform(newUnitVal );
+		//if ( compatible ){
 			quantity.convert( newUnitStr );
 			convertedYValue = quantity.getValue();
-		}
+		/*}
 		else {
 			//qDebug()<<"Converting from oldUnits="<<oldUnits<<" to new units="<< newUnits<<" is not supported value="<<yValue;
-		}
+		}*/
 	}
 	else if ( oldUnits == KELVIN && newUnits != KELVIN ) {
 		if ( beamSolidAngle > 0 ){
