@@ -140,12 +140,17 @@ namespace graphpad {
 		return result;
 	    }
 
-	    const std::vector<int> shape( ) {
+	    const std::vector<int> shape( ) const {
 		std::vector<int> result(2);
 		result[0] = imgShape_[axisPath_[0]];
 		result[1] = imgShape_[axisPath_[1]];
 		return result;
 	    }
+
+	    const int planes( ) const {
+		return imgShape_[axisPath_[2]];
+	    }
+
 	    std::pair<Value,Value> getMinMax( ) {
 		if ( minmax_initialized_ == false ) {
 		    casa::LatticeStatistics<Value> stats(*image_);
@@ -157,6 +162,24 @@ namespace graphpad {
 		    minmax_initialized_ = true;
 		}
 		return minmax_;
+	    }
+
+	    std::pair<std::vector<double>,std::vector<double> > getWorldRange( ) {
+		const casa::CoordinateSystem &csys = image_->coordinates( );
+		std::pair<std::vector<double>,std::vector<double> > result;
+		casa::IPosition minp(imgShape_.size(),0);
+		casa::IPosition maxp(imgShape_.size(),0);
+		maxp[axisPath_[0]] = imgShape_[axisPath_[0]];
+		maxp[axisPath_[1]] = imgShape_[axisPath_[1]];
+		casa::Vector<double> minw;
+		if ( csys.toWorld( minw, minp ) == false ) return result;
+		casa::Vector<double> maxw;
+		if ( csys.toWorld( maxw, maxp ) == false ) return result;
+		result.first.push_back(minw[axisPath_[0]]);
+		result.first.push_back(minw[axisPath_[1]]);
+		result.second.push_back(maxw[axisPath_[0]]);
+		result.second.push_back(maxw[axisPath_[1]]);
+		return result;
 	    }
 
 	private:
