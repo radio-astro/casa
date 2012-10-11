@@ -604,10 +604,11 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	spcRef->setCurrentIndex(frameindex);
 	lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 
+	//YUnits
 	yUnit = QString(img->units().getName().chars());
-
 	yUnitPrefix = "";
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+	setDisplayYUnits( yAxisCombo->currentText());
 
 	xpos = "";
 	ypos = "";
@@ -2027,17 +2028,25 @@ Int QtProfile::scaleAxis(){
 }
 
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
-	//It doesn't make sense to change the y-axis units if they
-	//are dimensionless astronomical data units.
-	if ( yUnit ==ConverterIntensity::ADU ){
-		this->yAxisCombo->setVisible( false );
-		this->leftLabel->setVisible( false );
+	bool unitsAcceptable = checkYUnitConversion( yUnit );
+	if ( !unitsAcceptable ){
+		yAxisCombo->setVisible( false );
+		leftLabel->setVisible( false );
 	}
 	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
 	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 }
 
-
+bool QtProfile::checkYUnitConversion( const QString& yUnit ) const {
+	//It doesn't make sense to change the y-axis units if we are not supporting
+	//them in the yUnit combobox.
+	int unitIndex = yAxisCombo->findText( yUnit);
+	bool acceptable = true;
+	if ( unitIndex == -1 ){
+		acceptable = false;
+	}
+	return acceptable;
+}
 
 void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv,
 		Int ordersOfM ){
@@ -2341,8 +2350,10 @@ void QtProfile::initializeSolidAngle() const {
 
 void QtProfile::setDisplayYUnits( const QString& unitStr ){
 	QString displayUnit = unitStr;
-	//ADU units are dimensionless
-	if ( yUnit == ConverterIntensity::ADU ){
+	//Right now optical units are not being supported as far as changing
+	//them on the y-axis.
+	bool convertableUnits = checkYUnitConversion( yUnit );
+	if ( !convertableUnits ){
 		displayUnit = "";
 	}
 	pixelCanvas->setDisplayYUnits( displayUnit );

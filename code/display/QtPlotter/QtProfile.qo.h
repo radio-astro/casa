@@ -232,7 +232,7 @@ private:
    bool exportFITSSpectrum(QString &fn);
    void messageFromProfile(QString &msg);
    void setUnitsText( String unitStr );
-
+   bool checkYUnitConversion( const QString& yUnit ) const;
 
    /**
     * Returns false if first vector value is greater than the last
