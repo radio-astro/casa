@@ -52,6 +52,9 @@ def simanalyze(
     saveinputs('simanalyze',fileroot+"/"+project+".simanalyze.last",
                myparams=in_params)
 
+    if (not image) and (not analyze):
+        casalog.post("No operation to be done. Exiting from task.", "WARN")
+        return True
 
     grscreen = False
     grfile = False
@@ -598,9 +601,15 @@ def simanalyze(
 #                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
 #                msfile = sdmsfile
             # psf is not available for SD only sim
-            if util.ismstp(msfile,halt=False):
+            if os.path.exists(msfile) and util.ismstp(msfile,halt=False):
                 if showpsf: msg("single dish simulation -- psf will not be plotted",priority='warn')
                 showpsf = False
+            if (not image) and (not os.path.exists(msfile)):
+                if showpsf or showuv:
+                    msg("No image is generated in this run. Default MS, '%s', does not exists -- uv and psf will not be plotted" % msfile,priority='warn')
+                showpsf = False
+                showuv = False
+            
 
             # if the order in the task input changes, change it here too
             figs = [showuv,showpsf,showmodel,showconvolved,showclean,showresidual,showdifference,showfidelity]
