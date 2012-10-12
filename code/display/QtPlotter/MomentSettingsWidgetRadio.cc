@@ -113,6 +113,7 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 	connect( ui.graphThresholdButton, SIGNAL(clicked()), this, SLOT( graphicalThreshold()));
 	connect( ui.symmetricIntervalCheckBox, SIGNAL(stateChanged(int)), this, SLOT(symmetricThresholdChanged(int)));
 	connect( ui.maxThresholdLineEdit, SIGNAL(textChanged( const QString&)), this, SLOT(thresholdTextChanged( const QString&)));
+	connect( thresholdingBinDialog, SIGNAL(accepted()), this, SLOT(thresholdSpecified()));
 
 	thresholdingChanged();
 	ui.channelIntervalCountSpinBox->setValue( 1 );
@@ -463,9 +464,6 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 		ui.minThresholdLineEdit->clear();
 		ui.maxThresholdLineEdit->clear();
 	}
-	//Until we get to qwt6
-	ui.graphThresholdButton->setEnabled( false );
-	ui.graphThresholdButton->setVisible( false );
 }
 
 
@@ -520,6 +518,10 @@ void MomentSettingsWidgetRadio::thresholdTextChanged( const QString& text ){
 			}
 		}
 	}
+}
+
+void MomentSettingsWidgetRadio::thresholdSpecified(){
+	qDebug() << "Threshold specified";
 }
 
 void MomentSettingsWidgetRadio::graphicalThreshold(){

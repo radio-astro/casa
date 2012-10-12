@@ -484,15 +484,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QToolButton *ddRegBtn_, *ddCloseBtn_;
 
   QtMouseToolBar* mouseToolBar_;
-  
-  QDockWidget*  animDockWidget_;
-  //QFrame*       animWidget_;  // Ui::QtAnimatorGui populates this.
-  viewer::QtRegionDock  *regionDock_;
-  
-  QDockWidget*  trkgDockWidget_;
-  QWidget*    trkgWidget_;
-  
-     
+
   // connection to rc file
   Casarc &rc;
   // rc id for this panel type
@@ -518,9 +510,17 @@ class QtDisplayPanelGui : public QtPanelBase {
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
   void updateFrameInformation();
+  void initAnimationHolder();
 
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
+
+  //Docking/Dock Widgets
+  string addAnimationDockWidget();
+  QDockWidget*  animDockWidget_;
+  viewer::QtRegionDock  *regionDock_;
+  QDockWidget*  trkgDockWidget_;
+  QWidget*    trkgWidget_;
 
  private slots:
   void incrementMovieChannel();

@@ -28,7 +28,7 @@
 #include <images/Images/ImageInterface.h>
 #include <display/QtPlotter/Util.h>
 #include <QDebug>
-//#include <qwt_plot_histogram.h>
+#include <qwt_plot_curve.h>
 
 namespace casa {
 
@@ -60,28 +60,23 @@ void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
 		bool success = histogramMaker->getHistograms( values, counts );
 		if ( success ){
 			//put the data into the qwt plot
-			/*qDebug() << "Number of points in histogram is " << values.size();
-			vector<Float> valuesVec;
-			vector<Float> countsVec;
-			values.tovector( valuesVec );
-			counts.tovector( countsVec );
-			for ( int i = 0; i < values.size(); i++ ){
-
-				qDebug() << "value="<<valuesVec[i]<<" count="<<countsVec[i];
+			qDebug() << "Number of points in histogram is " << values.size();
+			vector<float> xVector;
+			vector<float> yVector;
+			values.tovector( xVector );
+			counts.tovector( yVector );
+			for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
+				QVector<double> xValues(2);
+				QVector<double> yValues(2);
+				xValues[0] = xVector[i];
+				xValues[1] = xVector[i];
+				yValues[0] = 0;
+				yValues[1] = yVector[i];
+				QwtPlotCurve* curve  = new QwtPlotCurve();
+				curve->setData( xValues, yValues );
+				curve->attach(&binPlot);
 			}
-			QwtPlotHistogram *histogram = new QwtPlotHistogram();
-			histogram->setStyle( QwtPlotHistogram::Columns);
-			histogram->setPen( QPen( Qt::black));
-			histogram->setBrush( QBrush( Qt::gray ));
-			QwtArray<QwtIntervalSample> samples( values.size());
-			for ( int i = 0; i < samples.size(); i++ ){
-				samples[i].interval= QwtFloatInterval( valuesVec[i], valuesVec[i]);
-				samples[i].value = countsVec[i];
-			}
-			histogram->setData( QwtIntervalSeriesData( samples ));
-			histogram->attach( &binPlot );*/
-			QString msg( "Need to migrate to qwt6 for this to work");
-			Util::showUserMessage( msg, this );
+			binPlot.replot();
 		}
 		else {
 			QString msg( "Could not make a histogram from the image.");
