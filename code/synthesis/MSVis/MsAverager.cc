@@ -172,21 +172,21 @@ void MsAverager::setAverager(
     //showColumnNames();
     LogIO os(LogOrigin("MsAverager", "setAverager"));
     if (upcase(col)=="MODEL")
-    if (!hasColumn("MODEL")) {
+    if (!hasColumn("MODEL_DATA")) {
        os << LogIO::WARN << "The MS does not have MODEL_DATA column" << LogIO::POST;
        return;
     }
     if (upcase(col)=="CORRECTED")
-    if (!hasColumn("CORRECTED")) {
+    if (!hasColumn("CORRECTED_DATA")) {
        os << LogIO::WARN << "The MS does not have CORRECTED_DATA column" << LogIO::POST;
        return;
     }
     if (upcase(col)=="RESIDUAL") {
-    if (!hasColumn("CORRECTED")) {
+    if (!hasColumn("CORRECTED_DATA")) {
        os << LogIO::WARN << "The MS does not have CORRECTED_DATA column" << LogIO::POST;
        return;
     }
-    if (!hasColumn("MODEL")) {
+    if (!hasColumn("MODEL_DATA")) {
        os << LogIO::WARN << "The MS does not have MODEL_DATA column" << LogIO::POST;
        return;
     }
@@ -1251,10 +1251,9 @@ Bool MsAverager::hasColumn(casa::String const& col) {
        if (cols(i) == col)
           return True;
     } 
-
-    //LogIO os(LogOrigin("MsAverager", "hasColumn"));
-    //os << LogIO::WARN << String("No column '") + col + "' in the MS"
-    //   << LogIO::POST;
+    LogIO os(LogOrigin("MsAverager", "hasColumn"));
+    os << LogIO::WARN << String("No column '") + col + "' in the MS"
+       << LogIO::POST;
 
     return False;
 }
