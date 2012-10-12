@@ -768,12 +768,15 @@ def simanalyze(
 
     except TypeError, e:
         msg("task_simanalyze -- TypeError: %s" % e,priority="error")
+        raise TypeError, e
         return
     except ValueError, e:
         print "task_simanalyze -- OptionError: ", e
+        raise ValueError, e
         return
     except Exception, instance:
         print '***Error***',instance
+        raise Exception, instance
         return
 
 
