@@ -200,6 +200,7 @@ def simobserve(
             # calculate model parameters from the component list:
 
             compdirs = []
+            cl.done()
             cl.open(complist)
 
             for i in range(cl.length()):
