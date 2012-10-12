@@ -249,9 +249,8 @@ class test_simplecluster(unittest.TestCase):
         
     def test7_bypassParallelProcessing(self):
         """Test 7: Bypass Parallel Processing mode """        
-        
-        # Try to start cluster
-        self.initCluster(max_engines=1.,max_memory=1.,memory_per_engine=33554432.)
+               
+        simple_cluster.setDefaults(default_mem_per_engine=33554432)
         
         # Prepare MMS
         self.setUpFile("Four_ants_3C286.mms",'vis')
@@ -268,7 +267,7 @@ class test_simplecluster(unittest.TestCase):
         # step 2: Now do summary
         ret_dict = flagdata(vis=self.vis, mode='summary')
 
-        # Print summary (note: the first 16 jobs correspond to the step 1)
+        # Check summary
         self.assertTrue(ret_dict['name']=='Summary')
         self.assertTrue(ret_dict['spw']['15']['flagged'] == 96284.0)
         self.assertTrue(ret_dict['spw']['0']['flagged'] == 129711.0)
@@ -287,7 +286,42 @@ class test_simplecluster(unittest.TestCase):
         self.assertTrue(ret_dict['spw']['13']['flagged'] == 125074.0)
         self.assertTrue(ret_dict['spw']['14']['flagged'] == 118039.0)    
         
-        self.stopCluster()    
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)        
+        
+        # Restore default values
+        simple_cluster.setDefaults(default_mem_per_engine=512)
+        if not self.bypassParallelProcessing:
+            ParallelTaskHelper.bypassParallelProcessing(0)
+            
+    def test8_IgnoreNullSelectionError(self):
+        """Test 8: Check that NullSelection errors happening for some sub-MSs are ignored  """
+        """Note: In this test we also check simple_cluster initialization via ParallelTaskHelper  """
+        
+        # Prepare MMS
+        self.setUpFile("Four_ants_3C286.mms",'vis')          
+        
+        # Unflag entire MMS
+        flagdata(vis=self.vis, mode='unflag')
+        
+        # Manually flag scan 30
+        flagdata(vis=self.vis, mode='manual', scan='30')
+
+        # step 2: Now do summary
+        ret_dict = flagdata(vis=self.vis, mode='summary')
+
+        # Check summary
+        self.assertTrue(ret_dict['scan']['30']['flagged'] == 2187264.0)
+        self.assertTrue(ret_dict['scan']['31']['flagged'] == 0)  
+        
+        # Stop cluster if it was started
+        self.cluster = simple_cluster.getCluster()
+        if (self.cluster != None):
+            self.stopCluster()
+            
+        # Remove MMS
+        os.system('rm -rf ' + self.vis)
+        
 
 
 class test_flagdata_mms(test_simplecluster):
@@ -322,7 +356,7 @@ class test_flagdata_mms(test_simplecluster):
         # step 2: Now do summary
         ret_dict = flagdata(vis=self.vis, mode='summary')
 
-        # Print summary (note: the first 16 jobs correspond to the step 1)
+        # Check summary
         self.assertTrue(ret_dict['name']=='Summary')
         self.assertTrue(ret_dict['spw']['15']['flagged'] == 96284.0)
         self.assertTrue(ret_dict['spw']['0']['flagged'] == 129711.0)
