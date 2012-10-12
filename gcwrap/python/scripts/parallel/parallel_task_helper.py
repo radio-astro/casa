@@ -17,7 +17,7 @@ class ParallelTaskHelper:
     above
     """
     
-    __bypass_parallel_processing=0
+    __bypass_parallel_processing = 0
     
     def __init__(self, task_name, args = {}):
         self._arg = args
@@ -28,7 +28,10 @@ class ParallelTaskHelper:
         # Cache the initial inputs
         self.__originalParams = args
         # jagonzal: Add reference to cluster object
-        self._cluster = None
+        if (self.__bypass_parallel_processing == 0):
+            self._cluster = simple_cluster.simple_cluster.getCluster()
+        else:
+            self._cluster = None
         # jagonzal: To inhibit return values consolidation
         self._consolidateOutput = True
         # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
@@ -89,8 +92,8 @@ class ParallelTaskHelper:
         # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
         if (self.__bypass_parallel_processing == 1):
             for job in self._executionList:
+                parameters = job.getCommandArguments()
                 try:
-                    parameters = job.getCommandArguments()
                     exec("from taskinit import *; from tasks import *; " + job.getCommandLine())
                     # jagonzal: Special case for partition
                     if (parameters.has_key('outputvis')):
@@ -98,11 +101,14 @@ class ParallelTaskHelper:
                     else:
                         self._sequential_return_list[parameters['vis']] = returnVar0
                 except Exception, instance:
-                    casalog.post("Error running task sequentially %s: %s" % (job.getCommandLine(),instance),"WARN","executeJobs")
-                    traceback.print_tb(sys.exc_info()[2])
+                    str_instance = str(instance)
+                    if (string.find(str_instance,"NullSelection") == 0):
+                        casalog.post("Error running task sequentially %s: %s" % (job.getCommandLine(),str_instance),"WARN","executeJobs")
+                        traceback.print_tb(sys.exc_info()[2])
+                    else:
+                        casalog.post("Ignoring NullSelection error from %s" % (parameters['vis']),"INFO","executeJobs")
             self._executionList = []
         else:
-            self._cluster = simple_cluster.simple_cluster.getCluster()
             self._jobQueue = simple_cluster.JobQueueManager(self._cluster)
             self._jobQueue.addJob(self._executionList)
             self._jobQueue.executeQueue()

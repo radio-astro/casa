@@ -15,7 +15,14 @@ class simple_cluster:
     """The simple_cluster creates and maintains an ipcluster environment
     for controlling parallel execution of casa tasks (tools and scripts)
     """
+    
+    __default_mem_per_engine = 512
+    __default_mem_fraction = 0.9
+    __default_cpu_fraction = 0.9
+    
+    
     def __init__(self,monitoringFile='monitoring.log',verbose=False):
+        
         self._project=""
         self._hosts=[]
         self._jobs={}
@@ -32,6 +39,7 @@ class simple_cluster:
         self._JobQueueManager=None
         self._enginesRWoffsets={}
         self.__localCluster = False
+        self.__running = False
         # jagonzal: This is basically the destructor (i.e. for graceful finalization)
         atexit.register(simple_cluster.stop_cluster,self)
 
@@ -73,8 +81,29 @@ class simple_cluster:
         myf = sys._getframe(len(inspect.stack())-1).f_globals
         if not 'procCluster' in myf.keys():
             sc = simple_cluster()
-            sc.init_cluster()
-        return myf['procCluster']
+            if (sc.init_cluster()):
+                return myf['procCluster']
+            else:
+                return None
+        else:
+            sc = myf['procCluster']
+            if not sc.isClusterRunning():
+                if (sc.init_cluster()):
+                    return myf['procCluster']
+                else:
+                    return None
+            else:
+                return myf['procCluster']
+    
+    @staticmethod 
+    def setDefaults(default_mem_per_engine=512,default_mem_fraction=0.9,default_cpu_fraction=0.9):
+        
+        simple_cluster.__default_mem_per_engine = default_mem_per_engine
+        simple_cluster.__default_mem_fraction = default_mem_fraction
+        simple_cluster.__default_cpu_fraction = default_cpu_fraction
+        
+    def isClusterRunning(self):
+        return self.__running
     
     ###########################################################################
     ###   cluster verifiction
@@ -213,7 +242,7 @@ class simple_cluster:
             # Determine maximum number of engines that can be deployed at target node
             max_engines_user = b
             if (max_engines_user<=0):
-                max_engines = int(0.9*(cpu_available/100.0)*ncores_available)
+                max_engines = int(self.__default_cpu_fraction*(cpu_available/100.0)*ncores_available)
                 if (max_engines < 2):
                     casalog.post("CPU free capacity available %s of %s cores would not support cluster mode at node %s, starting only 1 engine" 
                                  %(str(cpu_available),str(ncores_available),hostname),"WARN","config_cluster")
@@ -229,22 +258,22 @@ class simple_cluster:
             if len(xyzd)>=4:
                 max_mem_user = float(xyzd[3])
                 if (max_mem_user<=0):
-                    max_mem = int(round(0.9*memory_available))
+                    max_mem = int(round(self.__default_mem_fraction*memory_available))
                 elif (max_mem_user<=1):
                     max_mem = int(round(max_mem_user*memory_available))
                 else:
                     max_mem = int(max_mem_user)
             else:
-                max_mem = int(round(0.9*memory_available))
+                max_mem = int(round(self.__default_mem_fraction*memory_available))
                     
                     
             casalog.post("Will use up to %sMB of memory at node %s" % (str(max_mem),hostname), "INFO","config_cluster")
             
             # User can provide an estimation of the amount of RAM memory necessary per engine        
-            mem_per_engine = 512
+            mem_per_engine = self.__default_mem_per_engine
             if len(xyzd)>=5:
                 mem_per_engine_user = float(xyzd[4])
-                if (mem_per_engine_user>512):
+                if (mem_per_engine_user>self.__default_mem_per_engine):
                     mem_per_engine = mem_per_engine_user
             
             # Apply heuristics: If memory limits number of engines then we can increase the number of openMP threads
@@ -275,7 +304,7 @@ class simple_cluster:
         self._configdone=self.validate_hosts()
 
         if not self._configdone:
-            casalog.post("Failed to configure the cluster", "SEVERE","config_cluster")
+            casalog.post("Failed to configure the cluster", "WARN","config_cluster")
 
     def check_host_resources(self,hostname):
         """
@@ -761,6 +790,7 @@ class simple_cluster:
         # Now we can stop the cluster w/o problems
         # jagonzal (CAS-4292): Stop the cluster w/o using brute-force killall as in cold_start
         self._cluster.stop_cluster()            
+        self.__running = False
     
     def stop_nodes(self):
         """Stop all engines on all hosts of current cluster.
@@ -2471,6 +2501,7 @@ class simple_cluster:
     
         self.config_cluster(clusterfile, True)
         if not self._configdone:
+            self.__running = False
             return False
         
         self.create_project(project)
@@ -2479,6 +2510,9 @@ class simple_cluster:
 
         # Put the cluster object into the global namespace
         sys._getframe(len(inspect.stack())-1).f_globals['procCluster'] = self
+        
+        # Set running status
+        self.__running = True
         
         return True
         
@@ -2820,7 +2854,7 @@ class JobQueueManager:
 
         # jagonzal (CAS-): When there are 0 engines available an error must have happened
         if (len(engineList) < 1):
-            casalog.post("There are 0 engines available, check the status of the cluster","SEVERE","executeQueue")
+            casalog.post("There are 0 engines available, check the status of the cluster","WARN","executeQueue")
             return
 
         casalog.post("Executing %d jobs on %d engines" %
