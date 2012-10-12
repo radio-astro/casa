@@ -89,6 +89,16 @@ private slots:
 	void modeChange();
 
 private:
+	void initChannel();
+	void initImage();
+	void addChannelGroupBox();
+	void addImageGroupBox();
+	void removeChannelGroupBox();
+	bool removeImageGroupBox();
+	void setHeightFixed();
+	int getAnimationCount() const;
+	void addRemoveChannelAnimatorBasedOnFrameCount();
+
 	enum Mode {CHANNEL_MODE, IMAGE_MODE, CHANNEL_IMAGES_MODE, END_MODE };
 	void modeChanged(Mode mode );
 	void changePalette( QGroupBox* box, QColor color );

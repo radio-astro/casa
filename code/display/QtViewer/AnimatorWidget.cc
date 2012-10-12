@@ -51,8 +51,6 @@ AnimatorWidget::AnimatorWidget(QWidget *parent)
 	rateNotSet = true;
 }
 
-
-
 void AnimatorWidget::blockSignals( bool block ){
 	ui.frameSlider_->blockSignals(block);
 	ui.frameEdit_->blockSignals( block );

@@ -62,12 +62,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   profile_(0), savedTool_(QtMouseToolNames::NONE),
 								   profileDD_(0),
 								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
-								   regionDock_(0), rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
+								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
-								   controlling_dd(0), preferences(0), autoDDOptionsShow(True) {
+								   controlling_dd(0), preferences(0),  regionDock_(0), autoDDOptionsShow(True) {
 
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
+	animationHolder = NULL;
 
 	setWindowTitle("Viewer Display Panel");
 	use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
@@ -250,31 +251,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	customToolBar2->toggleViewAction()->setVisible(False);
 
 	//Animation
-	std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
-	std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
 	animDockWidget_  = new QDockWidget();
 	animDockWidget_->setObjectName("Animator");
 	animDockWidget_->setWindowTitle("Animator");
-	addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
-			animloc == "left" ? Qt::LeftDockWidgetArea :
-					animloc == "top" ? Qt::TopDockWidgetArea :
-							Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
-	animationHolder = new AnimatorHolder( this );
-	connect(animationHolder, SIGNAL(goTo(int)), qdp_, SLOT(goTo(int)));
-	connect(animationHolder, SIGNAL(frameNumberEdited(int)), qdp_, SLOT(goTo(int)));
-	connect(animationHolder,  SIGNAL(setRate(int)), qdp_, SLOT(setRate(int)));
-	connect(animationHolder, SIGNAL(toStart()), qdp_, SLOT(toStart()));
-	connect(animationHolder, SIGNAL(revStep()), qdp_, SLOT(revStep()));
-	connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
-	connect(animationHolder, SIGNAL(stop()), qdp_, SLOT(stop()));
-	connect(animationHolder, SIGNAL(fwdPlay()),SLOT(fwdPlay_()));
-	connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
-	connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
-	connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
-	connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
-	connect(animationHolder, SIGNAL(movieChannels(int,bool,int)), this, SLOT(movieChannels(int,bool,int)));
-	connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
-	animDockWidget_->setWidget(animationHolder);
+	initAnimationHolder();
+	string animloc = addAnimationDockWidget();
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 	std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
@@ -399,47 +380,16 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// on the widget itself (not needed).
 
 	trkgDockWidget_->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum);
-
 	trkgWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
-
 	trkgWidget_->layout()->setMargin(0);
-
-
 
 	//######################################
 	//## Animation
 	//######################################
-
 	animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea |
 			Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
-
 	animDockWidget_->toggleViewAction()->setText("Animator");
-
-	//animDockWidget_->setSizePolicy( QSizePolicy::Minimum,	  // (horizontal)
-	//		QSizePolicy::Minimum);	  // (vertical)
-	animationHolder->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Fixed );
-	//animWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-	//#dk  For bug submission, was 'min,fixed' 4 dockWidg; notSet 4 animWidg.
-	//# Main problem seems to be that dockWidget itself won't do 'fixed'
-	//# correctly -- won't size down (or, sometimes, up) to contained
-	//# widget's desired size (Qt task 94288, issue N93095).
-
-	// Set interface according to the initial state of underlying animator.
-
-	updateAnimUi_();
-
-
-
-	// Trying to make dock area give back space anim. doesn't need.
-	// Halleluia, this actually worked (Qt-4.1.3).
-	// (Also needed: setFixedHeight() (or fixed size policies throughout)
-	// in underlying widget(s)).
-	// (Un-hallelujia, the Trolls broke it again in Qt-4.2.0.  Awaiting
-	// further fixes...).		dk 11/06
-	// See   http://www.trolltech.com/developer/task-tracker
-	//             /index_html?method=entry&id=102107
-	animDockWidget_->setSizePolicy( QSizePolicy::Minimum,
-			QSizePolicy::Fixed);	  // (needed)
+	animDockWidget_->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum);
 
 	// menus / toolbars
 
@@ -537,28 +487,19 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect( mouseToolBar_, SIGNAL(topLevelChanged(bool)), SLOT(mousetoolbarMoved(bool)) );
 #endif
 
-
-
-
 	// Reaction to signals from the basic graphics panel, qdp_.
 	// (qdp_ doesn't know about, and needn't necessarily use, this gui).
 
 	// For tracking
-
-	connect( qdp_, SIGNAL(trackingInfo(Record)),
-			SLOT(displayTrackingData_(Record)) );
-
-	connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
-			SLOT(deleteTrackBox_(QtDisplayData*)) );
+	connect( qdp_, SIGNAL(trackingInfo(Record)), SLOT(displayTrackingData_(Record)) );
+	connect( this, SIGNAL(ddRemoved(QtDisplayData*)), SLOT(deleteTrackBox_(QtDisplayData*)) );
 
 
 	// From animator
-
 	connect( qdp_, SIGNAL(animatorChange()),  SLOT(updateAnimUi_()) );
 
 
 	// From registration
-
 	connect( qdp_, SIGNAL(registrationChange()),  SLOT(ddRegChange_()), Qt::QueuedConnection );
 	// (Important to queue this one, since the slot alters
 	//  menus that may have triggered the signal).
@@ -621,6 +562,39 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect( &movieTimer, SIGNAL(timeout()), this, SLOT(incrementMovieChannel()));
 }
 
+string QtDisplayPanelGui::addAnimationDockWidget(){
+	std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
+	std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
+	addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
+		animloc == "left" ? Qt::LeftDockWidgetArea :
+		animloc == "top" ? Qt::TopDockWidgetArea :
+		Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
+	animDockWidget_->setWidget(animationHolder);
+	return animloc;
+}
+
+void QtDisplayPanelGui::initAnimationHolder(){
+	if ( animationHolder == NULL ){
+		animationHolder = new AnimatorHolder( this );
+		connect(animationHolder, SIGNAL(goTo(int)), qdp_, SLOT(goTo(int)));
+		connect(animationHolder, SIGNAL(frameNumberEdited(int)), qdp_, SLOT(goTo(int)));
+		connect(animationHolder,  SIGNAL(setRate(int)), qdp_, SLOT(setRate(int)));
+		connect(animationHolder, SIGNAL(toStart()), qdp_, SLOT(toStart()));
+		connect(animationHolder, SIGNAL(revStep()), qdp_, SLOT(revStep()));
+		connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
+		connect(animationHolder, SIGNAL(stop()), qdp_, SLOT(stop()));
+		connect(animationHolder, SIGNAL(fwdPlay()),SLOT(fwdPlay_()));
+		connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
+		connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
+		connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
+		connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
+		connect(animationHolder, SIGNAL(movieChannels(int,bool,int)), this, SLOT(movieChannels(int,bool,int)));
+		connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
+
+		// Set interface according to the initial state of underlying animator.
+		updateAnimUi_();
+	}
+}
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {
 
@@ -925,11 +899,12 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	Bool modez = qdp_->modeZ();
 
 	emit frameChanged( frm );
-	//modeGB_->setEnabled( True );
 
-	animationHolder->setFrameInformation( modez, frm, len );
-	animationHolder->setRateInformation( modez, minr, maxr, rate );
-	animationHolder->setPlaying( modez, play );
+	if ( animationHolder != NULL ){
+		animationHolder->setFrameInformation( modez, frm, len );
+		animationHolder->setRateInformation( modez, minr, maxr, rate );
+		animationHolder->setPlaying( modez, play );
+	}
 }
 // Public slots: may be safely operated programmatically (i.e.,
 // scripted, when available), or via gui actions.

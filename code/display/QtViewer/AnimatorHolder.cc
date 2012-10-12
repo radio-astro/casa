@@ -40,51 +40,145 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 	QPalette pal( palette());
 	backgroundColor = pal.color( QPalette::Background );
 
-	animatorChannel = new AnimatorWidget( ui.channelGroupBox );
-	animatorChannel->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
-	animatorChannel->setModeEnabled( false );
-	QHBoxLayout* layoutChannel = new QHBoxLayout();
-	layoutChannel->setContentsMargins( 2,2,2,2 );
-	layoutChannel->addWidget( animatorChannel );
-	ui.channelGroupBox->setLayout( layoutChannel );
-	ui.channelGroupBox->setAutoFillBackground( true );
-	connect( ui.channelGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
+	//Initialize the channel and image animators so they
+	//are ready to go.
+	initChannel();
+	initImage();
 
-	animatorImage = new AnimatorWidget( ui.imageGroupBox );
-	animatorImage->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
-	animatorImage->setModeEnabled( false );
-	QHBoxLayout* layoutImage = new QHBoxLayout();
-	layoutImage->setContentsMargins( 2,2,2,2 );
-	layoutImage->addWidget( animatorImage );
-	ui.imageGroupBox->setLayout( layoutImage );
-	ui.imageGroupBox->setAutoFillBackground( true );
-	connect( ui.imageGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
+	//Initially there are no images so we should not show
+	//the animator.
+	removeImageGroupBox();
+	removeChannelGroupBox();
 
 	previousMode = CHANNEL_MODE;
-	setModeEnabled( 0 );
-
-	connect(animatorChannel, SIGNAL(goTo(int)), this, SLOT(goToChannel(int)));
-	connect(animatorChannel, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedChannel(int)));
-	connect(animatorChannel, SIGNAL(setRate(int)), this, SLOT(setRateChannel(int)));
-	connect(animatorChannel, SIGNAL(toStart()),  this, SLOT(toStartChannel()));
-	connect(animatorChannel, SIGNAL(revStep()),  this, SLOT(revStepChannel()));
-	connect(animatorChannel, SIGNAL(revPlay()), this, SLOT(revPlayChannel()));
-	connect(animatorChannel, SIGNAL(stop()), this, SLOT(stopChannel()));
-	connect(animatorChannel, SIGNAL(fwdPlay()), this, SLOT(fwdPlayChannel()));
-	connect(animatorChannel, SIGNAL(fwdStep()), this, SLOT(fwdStepChannel()));
-	connect(animatorChannel, SIGNAL(toEnd()), this, SLOT(toEndChannel()));
-
-	connect(animatorImage, SIGNAL(goTo(int)), this, SLOT(goToImage(int)));
-	connect(animatorImage, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedImage(int)));
-	connect(animatorImage,  SIGNAL(setRate(int)), this, SLOT(setRateImage(int)));
-	connect(animatorImage, SIGNAL(toStart()), this, SLOT(toStartImage()));
-	connect(animatorImage, SIGNAL(revStep()), this, SLOT(revStepImage()));
-	connect(animatorImage, SIGNAL(revPlay()), this, SLOT(revPlayImage()));
-	connect(animatorImage, SIGNAL(stop()), this, SLOT(stopImage()));
-	connect(animatorImage, SIGNAL(fwdPlay()), this, SLOT(fwdPlayImage()));
-	connect(animatorImage, SIGNAL(fwdStep()), this, SLOT(fwdStepImage()));
-	connect(animatorImage, SIGNAL(toEnd()), this, SLOT(toEndImage()));
 }
+
+int AnimatorHolder::getAnimationCount() const {
+	int count = 0;
+	QLayout* layoutBase = this->layout();
+	int channelIndex = layoutBase->indexOf( ui.channelGroupBox );
+	int imageIndex = layoutBase->indexOf( ui.imageGroupBox );
+	if ( channelIndex >= 0 ){
+		count++;
+	}
+	if ( imageIndex >= 0 ){
+		count++;
+	}
+	return count;
+}
+
+void AnimatorHolder::setHeightFixed() {
+	int boxCount = getAnimationCount();
+	const int BASE_HEIGHT = 83;
+	int height = 20 + BASE_HEIGHT * boxCount;
+	setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+	setFixedHeight( height );
+}
+
+
+void AnimatorHolder::addChannelGroupBox(){
+	QLayout* layout = this->layout();
+	int channelGroupIndex = layout->indexOf( ui.channelGroupBox );
+	if ( channelGroupIndex == -1 ){
+		ui.channelGroupBox->setParent( this );
+		//We want the channel group box to always be first
+		//so we may need to remove the image group box and put it
+		//in later if it is there.
+		bool removedImage = removeImageGroupBox();
+		layout->addWidget( ui.channelGroupBox );
+		if ( removedImage ){
+			addImageGroupBox();
+		}
+		setHeightFixed();
+	}
+}
+
+void AnimatorHolder::addImageGroupBox(){
+	QLayout* layout = this->layout();
+	int imageGroupIndex = layout->indexOf( ui.imageGroupBox );
+	if ( imageGroupIndex == -1 ){
+		ui.imageGroupBox->setParent( this );
+		layout->addWidget( ui.imageGroupBox );
+		setHeightFixed();
+	}
+}
+
+void AnimatorHolder::removeChannelGroupBox(){
+	QLayout* layout = this->layout();
+	int channelGroupIndex = layout->indexOf( ui.channelGroupBox );
+	if ( channelGroupIndex >= 0 ){
+		layout->removeWidget( ui.channelGroupBox );
+		ui.channelGroupBox->setParent( NULL );
+		setHeightFixed();
+	}
+}
+
+bool AnimatorHolder::removeImageGroupBox(){
+	QLayout* layout = this->layout();
+	int imageGroupIndex = layout->indexOf( ui.imageGroupBox );
+	bool removed = false;
+	if ( imageGroupIndex >= 0 ){
+		layout->removeWidget( ui.imageGroupBox );
+		ui.imageGroupBox->setParent( NULL );
+		setHeightFixed();
+		removed = true;
+	}
+	return removed;
+}
+
+void AnimatorHolder::initChannel(){
+	if ( animatorChannel == NULL ){
+		animatorChannel = new AnimatorWidget( ui.channelGroupBox );
+		animatorChannel->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
+		animatorChannel->setModeEnabled( false );
+		QHBoxLayout* layoutChannel = new QHBoxLayout();
+		layoutChannel->setContentsMargins( 2,2,2,2 );
+		layoutChannel->addWidget( animatorChannel );
+		ui.channelGroupBox->setLayout( layoutChannel );
+		ui.channelGroupBox->setAutoFillBackground( true );
+		connect( ui.channelGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
+
+		connect(animatorChannel, SIGNAL(goTo(int)), this, SLOT(goToChannel(int)));
+		connect(animatorChannel, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedChannel(int)));
+		connect(animatorChannel, SIGNAL(setRate(int)), this, SLOT(setRateChannel(int)));
+		connect(animatorChannel, SIGNAL(toStart()),  this, SLOT(toStartChannel()));
+		connect(animatorChannel, SIGNAL(revStep()),  this, SLOT(revStepChannel()));
+		connect(animatorChannel, SIGNAL(revPlay()), this, SLOT(revPlayChannel()));
+		connect(animatorChannel, SIGNAL(stop()), this, SLOT(stopChannel()));
+		connect(animatorChannel, SIGNAL(fwdPlay()), this, SLOT(fwdPlayChannel()));
+		connect(animatorChannel, SIGNAL(fwdStep()), this, SLOT(fwdStepChannel()));
+		connect(animatorChannel, SIGNAL(toEnd()), this, SLOT(toEndChannel()));
+	}
+	ui.channelGroupBox->setVisible( true );
+}
+
+void AnimatorHolder::initImage(){
+	if ( animatorImage == NULL ){
+		animatorImage = new AnimatorWidget( ui.imageGroupBox );
+		animatorImage->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
+		animatorImage->setModeEnabled( false );
+		QHBoxLayout* layoutImage = new QHBoxLayout();
+		layoutImage->setContentsMargins( 2,2,2,2 );
+		layoutImage->addWidget( animatorImage );
+		ui.imageGroupBox->setLayout( layoutImage );
+		ui.imageGroupBox->setAutoFillBackground( true );
+
+		connect( ui.imageGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
+
+		connect(animatorImage, SIGNAL(goTo(int)), this, SLOT(goToImage(int)));
+		connect(animatorImage, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedImage(int)));
+		connect(animatorImage,  SIGNAL(setRate(int)), this, SLOT(setRateImage(int)));
+		connect(animatorImage, SIGNAL(toStart()), this, SLOT(toStartImage()));
+		connect(animatorImage, SIGNAL(revStep()), this, SLOT(revStepImage()));
+		connect(animatorImage, SIGNAL(revPlay()), this, SLOT(revPlayImage()));
+		connect(animatorImage, SIGNAL(stop()), this, SLOT(stopImage()));
+		connect(animatorImage, SIGNAL(fwdPlay()), this, SLOT(fwdPlayImage()));
+		connect(animatorImage, SIGNAL(fwdStep()), this, SLOT(fwdStepImage()));
+		connect(animatorImage, SIGNAL(toEnd()), this, SLOT(toEndImage()));
+	}
+	ui.imageGroupBox->setVisible( true );
+}
+
 
 
 //-----------------------------------------------------------------------
@@ -92,34 +186,53 @@ AnimatorHolder::AnimatorHolder(QWidget *parent)
 //-----------------------------------------------------------------------
 
 void AnimatorHolder::setModeEnabled( int imageCount ){
+	int animationCount = getAnimationCount();
+	bool modeChanged = false;
+
 	if ( imageCount <= 0 ){
-		animatorImage->setModeEnabled( false );
-		animatorChannel->setModeEnabled( false );
-		ui.channelGroupBox->setCheckable( false );
-		ui.imageGroupBox->setCheckable( false );
-		changePalette(ui.channelGroupBox, backgroundColor );
-		changePalette(ui.imageGroupBox, backgroundColor );
+		if ( animationCount != 0 ){
+			modeChanged = true;
+			removeImageGroupBox();
+			removeChannelGroupBox();
+			animatorImage->setModeEnabled( false );
+			animatorChannel->setModeEnabled( false );
+		}
 	}
 	else if ( imageCount == 1 ){
-		animatorImage->setModeEnabled( false );
-		animatorChannel->setModeEnabled( true );
-		ui.imageGroupBox->setCheckable( false );
-		ui.channelGroupBox->setCheckable( true );
-		changePalette( ui.channelGroupBox, selectedColor );
-		changePalette( ui.imageGroupBox, backgroundColor );
+		bool imageEnabled = ui.imageGroupBox->isCheckable();
+		if ( imageEnabled ){
+			modeChanged = true;
+			removeImageGroupBox();
+		}
+		addRemoveChannelAnimatorBasedOnFrameCount();
 	}
 	else {
+		addImageGroupBox();
 		bool imageEnabled = ui.imageGroupBox->isCheckable();
 		//Image mode is coming up after having been unavailable
 		if ( !imageEnabled ){
+			modeChanged = true;
 			animatorImage->setModeEnabled( true );
 			ui.imageGroupBox->setCheckable( true );
 			ui.imageGroupBox->setChecked( false );
 		}
-		animatorChannel->setModeEnabled( true );
-		ui.channelGroupBox->setCheckable( true );
+		addRemoveChannelAnimatorBasedOnFrameCount();
 	}
-	modeChange();
+	if ( modeChanged ){
+		modeChange();
+	}
+}
+
+void AnimatorHolder::addRemoveChannelAnimatorBasedOnFrameCount(){
+	if ( animatorChannel->getFrameCount() > 1 ){
+			addChannelGroupBox();
+			animatorChannel->setModeEnabled( true );
+			ui.channelGroupBox->setCheckable( true );
+			changePalette( ui.channelGroupBox, selectedColor );
+	}
+	else {
+		removeChannelGroupBox();
+	}
 }
 
 void AnimatorHolder::setFrameInformation( bool mode, int frm, int len ){
@@ -131,6 +244,7 @@ void AnimatorHolder::setFrameInformation( bool mode, int frm, int len ){
 	}
 	else if ( mode == NORMAL_MODE ){
 		animatorChannel->setFrameInformation( frm, len );
+		addRemoveChannelAnimatorBasedOnFrameCount();
 	}
 	else {
 		animatorImage->setFrameInformation( frm, len );
@@ -141,10 +255,10 @@ void AnimatorHolder::setFrameInformation( bool mode, int frm, int len ){
 void AnimatorHolder::setRateInformation( bool mode, int minr, int maxr, int rate ){
 	if ( previousMode != CHANNEL_IMAGES_MODE ){
 		if ( mode == NORMAL_MODE ){
-	 		animatorChannel->setRateInformation( minr, maxr, rate );
+			animatorChannel->setRateInformation( minr, maxr, rate );
 		}
 		else {
-	 		animatorImage->setRateInformation( minr, maxr, rate );
+			animatorImage->setRateInformation( minr, maxr, rate );
 		}
 	}
 }
@@ -335,16 +449,20 @@ void AnimatorHolder::emitMovieChannels( bool direction ){
 }
 
 void AnimatorHolder::stopImagePlay(){
-	if ( animatorImage->isPlaying()){
-		emit stop();
-		animatorImage->setPlaying( 0 );
+	if ( animatorImage != NULL ){
+		if ( animatorImage->isPlaying()){
+			emit stop();
+			animatorImage->setPlaying( 0 );
+		}
 	}
 }
 
 void AnimatorHolder::stopChannelPlay(){
-	if ( animatorChannel->isPlaying()){
-		emit stop();
-		animatorChannel->setPlaying( 0 );
+	if ( animatorChannel != NULL ){
+		if ( animatorChannel->isPlaying()){
+			emit stop();
+			animatorChannel->setPlaying( 0 );
+		}
 	}
 }
 
@@ -366,9 +484,13 @@ void AnimatorHolder::modeChanged( Mode mode ){
 			channelMode = BLINK_MODE;
 		}
 		else if ( mode == CHANNEL_MODE  ){
-			animatorImage->setPlaying( false );
-			rate = animatorChannel->getRate();
-			frame = animatorChannel->getFrame();
+			if ( animatorImage != NULL ){
+				animatorImage->setPlaying( false );
+			}
+			if ( animatorChannel != NULL ){
+				rate = animatorChannel->getRate();
+				frame = animatorChannel->getFrame();
+			}
 		}
 		else if ( mode == CHANNEL_IMAGES_MODE ){
 			channelImages = true;
