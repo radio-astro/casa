@@ -424,6 +424,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	region_list_t regions = panel_->regions( );
 
 	
+	for ( region_map_t::iterator it=region_to_treeitem.begin( ); it != region_to_treeitem.end( ); ++it )
+	    disconnect( it->first, 0, this, 0 );
+
 	treeitem_to_region.clear( );
 	region_to_treeitem.clear( );
 	ts.dtree( )->clear( );
@@ -445,7 +448,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    treeitem_to_region.insert(treeitem_map_t::value_type(item,*it));
 	    region_to_treeitem.insert(region_map_t::value_type(*it,item));
-	    connect(*it,        SIGNAL(selectionChanged(viewer::QtRegion*,bool)),  SLOT(region_selection_change(viewer::QtRegion*,bool)));
+	    // connect(*it,        SIGNAL(selectionChanged(viewer::QtRegion*,bool)),  this, SLOT(region_selection_change(viewer::QtRegion*,bool)));
 	}
 	ts.dtree( )->resizeColumnToContents(0);
     }
@@ -461,6 +464,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     void QtDataManager::region_item_state_change( QTreeWidgetItem *item, int col ) {
+#if 0
 	if ( item && col > 0 && item->isSelected( ) ) {
 	    item->setSelected(false);
 	    if ( item->checkState(0) == Qt::Checked )
@@ -469,6 +473,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		item->setCheckState(0,Qt::Checked);
 // 	    return;
 	}
+#endif
 	treeitem_map_t::iterator it = treeitem_to_region.find(item);
 	if ( it != treeitem_to_region.end( ) ) {
 	    if ( item->checkState(0) == Qt::Checked )
@@ -476,7 +481,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    else
 		it->second->mark( false );
 	}
+#if 0
  	region_output_target_changed( );
+#endif
     }
 
 
@@ -575,7 +582,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     }
 
-
     void QtDataManager::region_tab_notify( const std::string &value, tab_state &ts ) {
 	if ( value == "building" ) {
 	    if ( ts.tree( )->columnCount( ) == 1 ) {
@@ -592,7 +598,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ts.dtree( )->setColumnCount(3);
 		ts.dtree( )->setHeaderLabels(lbl);
 		update_region_list( ts );
-		connect(ts.dtree( ),SIGNAL(itemChanged(QTreeWidgetItem*,int)), SLOT(region_item_state_change(QTreeWidgetItem*,int)));
 		connect(ts.dtree( ),SIGNAL(itemClicked(QTreeWidgetItem*,int)), SLOT(region_item_state_change(QTreeWidgetItem*,int)));
 	    }
 	} else if ( value == "selection" ) {

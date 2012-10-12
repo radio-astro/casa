@@ -394,12 +394,13 @@ namespace casa {
 
 			if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
 
-			if ( change == Region::RegionChangeCreate )
+			if ( change == Region::RegionChangeCreate ) {
+			    dock_->emitCreate( this );
 			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" :
 							      type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
 						QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
 						QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
-			else
+			} else
 			    emit regionUpdate( id_, change, worldx, worldy, pixelx, pixely );
 		    }
 		    break;
