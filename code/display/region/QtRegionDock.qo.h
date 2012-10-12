@@ -75,6 +75,7 @@ namespace casa {
 					   std::string format, std::string ds9_csys="pixel" );
 
 		void updateRegionStats( );
+		void emitCreate( QtRegion * );
 
 	    signals:
 		// triggers deletion elsewhere of QtRegion containing this QtRegionState
