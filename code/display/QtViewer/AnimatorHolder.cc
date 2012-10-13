@@ -337,7 +337,7 @@ void AnimatorHolder::revStepChannel(){
 		currentFrame = currentFrame-1;
 		if ( currentFrame < 0 ){
 			int frameCount = animatorChannel->getFrameCount();
-			currentFrame = frameCount;
+			currentFrame = frameCount-1;
 		}
 		emit channelSelect( currentFrame );
 	}
@@ -382,7 +382,11 @@ void AnimatorHolder::fwdStepChannel(){
 	}
 	else {
 		int currentFrame = animatorChannel->getFrame();
+		int frameCount = animatorChannel->getFrameCount();
 		currentFrame++;
+		if ( currentFrame > frameCount - 1 ){
+			currentFrame = 0;
+		}
 		emit channelSelect( currentFrame );
 	}
 }
@@ -393,7 +397,7 @@ void AnimatorHolder::toEndChannel(){
 	}
 	else {
 		int frameCount = this->animatorChannel->getFrameCount();
-		emit channelSelect( frameCount );
+		emit channelSelect( frameCount-1 );
 	}
 }
 
@@ -445,7 +449,7 @@ void AnimatorHolder::toEndImage(){
 void AnimatorHolder::emitMovieChannels( bool direction ){
 	int currentFrame = animatorChannel->getFrame();
 	int frameCount = animatorChannel->getFrameCount();
-	emit movieChannels( currentFrame, direction, frameCount );
+	emit movieChannels( currentFrame, direction, frameCount-1 );
 }
 
 void AnimatorHolder::stopImagePlay(){
