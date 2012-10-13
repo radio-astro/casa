@@ -273,6 +273,7 @@ casa_add_library( synthesis
  MeasurementEquations/Imager.cc
  MeasurementEquations/Imager2.cc
  MeasurementEquations/ImagerMultiMS.cc
+ MeasurementEquations/SynthesisImager.cc
  MeasurementEquations/ImageMSCleaner.cc
  MeasurementEquations/IncCEMemModel.cc
  MeasurementEquations/IncEntropy.cc
@@ -533,6 +534,7 @@ install (FILES
 	MeasurementEquations/ImageMSCleaner.h
 	MeasurementEquations/Imager.h
 	MeasurementEquations/ImagerMultiMS.h
+	MeasurementEquations/SynthesisImager.h
 	MeasurementEquations/IncCEMemModel.h
 	MeasurementEquations/IncEntropy.h
 	MeasurementEquations/Iterate.h
