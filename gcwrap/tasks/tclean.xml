@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="tclean" category="imaging" visibility="experimental">
+
+  <shortdescription>Construct and deconvolve images</shortdescription>
+
+  <description>Form images from visibilities. Handles continuum and spectral line cubes.</description>
+
+  <input>
+
+<!--============================================== -->
+<!--                            Data Selection Parameters                                            -->
+<!--============================================== -->
+
+    <param type="any" name="vis" kind="ms" mustexist="true">
+    <description>Name of input visibility file(s)</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="field">
+      <description>field(s) to select</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="spw">
+      <description>spw(s) to select</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Image Definition Parameters                                         -->
+<!--============================================== -->
+
+    <param type="any" name="imagename">
+      <description>Pre-name of output images</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+    </param>
+
+
+<!--============================================== -->
+<!--                            Imaging/Gridding Parameters                                                      -->
+<!--============================================== -->
+
+    <param type="string" name="startmodel">
+            <description>Name of starting model image</description>
+	    <value type="string"></value>
+    </param>
+
+<!--============================================== -->
+<!--                            Deconvolution Parameters                                            -->
+<!--============================================== -->
+
+
+<!--============================================== -->
+<!--                            Iteration Control Parameters                                         -->
+<!--============================================== -->
+
+    <param type="int" name="niter">
+      <description>Maximum number of iterations</description>
+      <value type="int">500</value>
+    </param>
+
+<!--============================================== -->
+<!--                            Other Operational Parameters                                       -->
+<!--============================================== -->
+    <param type="bool" name="usescratch">
+	    <description>True if to save model visibilities in MODEL_DATA column</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="string" name="clusterdef">
+            <description>Name of a file that contains the cluster definition</description>
+	    <value type="string"></value>
+    </param>
+<!--=============================================== -->
+
+   <constraints>
+   </constraints>
+
+  </input>
+  
+  <returns type="void"/>
+
+  <example>
+
+       This is an empty task. 
+       It is meant only to build/test/maintain the interface for the refactored imaging code. 
+       When ready, it will be offered to users for testing.
+
+  </example>
+
+</task>
+
+</casaxml>
