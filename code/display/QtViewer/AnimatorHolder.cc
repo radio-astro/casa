@@ -348,7 +348,7 @@ void AnimatorHolder::revStepChannel(){
 		int minFrame = animatorChannel->getFrameStart();
 		currentFrame = currentFrame-stepSize;
 		if ( currentFrame < minFrame ){
-			int diff = minFrame - currentFrame;
+			int diff = minFrame - currentFrame -1;
 			int maxFrame = animatorChannel->getFrameEnd();
 			currentFrame = maxFrame - diff;
 		}
@@ -397,8 +397,8 @@ void AnimatorHolder::fwdStepChannel(){
 		int stepSize = animatorChannel->getStepSize();
 		currentFrame = currentFrame + stepSize;
 		int maxFrame = animatorChannel->getFrameEnd();
-		if ( currentFrame > maxFrame ){
-			int diff = currentFrame - maxFrame;
+		if ( currentFrame > maxFrame  ){
+			int diff = currentFrame - maxFrame - 1;
 			int minFrame = animatorChannel->getFrameStart();
 			currentFrame = minFrame + diff;
 		}

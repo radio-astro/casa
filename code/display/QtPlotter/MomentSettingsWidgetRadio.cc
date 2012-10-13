@@ -113,7 +113,6 @@ MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
 	connect( ui.graphThresholdButton, SIGNAL(clicked()), this, SLOT( graphicalThreshold()));
 	connect( ui.symmetricIntervalCheckBox, SIGNAL(stateChanged(int)), this, SLOT(symmetricThresholdChanged(int)));
 	connect( ui.maxThresholdLineEdit, SIGNAL(textChanged( const QString&)), this, SLOT(thresholdTextChanged( const QString&)));
-	connect( thresholdingBinDialog, SIGNAL(accepted()), this, SLOT(thresholdSpecified()));
 
 	thresholdingChanged();
 	ui.channelIntervalCountSpinBox->setValue( 1 );
@@ -464,6 +463,7 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 		ui.minThresholdLineEdit->clear();
 		ui.maxThresholdLineEdit->clear();
 	}
+	ui.graphThresholdButton->setEnabled( enabled );
 }
 
 
@@ -521,16 +521,17 @@ void MomentSettingsWidgetRadio::thresholdTextChanged( const QString& text ){
 }
 
 void MomentSettingsWidgetRadio::thresholdSpecified(){
-	qDebug() << "Threshold specified";
+	//qDebug() << "Threshold specified";
 }
 
 void MomentSettingsWidgetRadio::graphicalThreshold(){
 	if ( thresholdingBinDialog == NULL ){
-		thresholdingBinDialog = new ThresholdingBinPlotDialog( this );
+		QString yUnits = this->getYUnit();
+		thresholdingBinDialog = new ThresholdingBinPlotDialog( yUnits, this );
+		connect( thresholdingBinDialog, SIGNAL(accepted()), this, SLOT(thresholdSpecified()));
 	}
 	ImageInterface<Float>* image = const_cast<ImageInterface<Float>* >(taskMonitor->getImage());
 	thresholdingBinDialog->setImage( image );
-
 	thresholdingBinDialog->show();
 }
 

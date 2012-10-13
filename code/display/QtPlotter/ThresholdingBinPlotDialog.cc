@@ -29,21 +29,35 @@
 #include <display/QtPlotter/Util.h>
 #include <QDebug>
 #include <qwt_plot_curve.h>
+#include <qwt_plot_picker.h>
+#include <qwt_picker.h>
 
 namespace casa {
 
-ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QWidget *parent)
+ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent)
     : QDialog(parent), histogramMaker( NULL ),  binPlot( this )
 {
 	ui.setupUi(this);
+	setWindowTitle( "Graphical Collapse/Moments Threshold Specification");
 
 	//Add the plot to the dialog
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidget);
 	layout->addWidget( &binPlot );
+	binPlot.setAxisTitle( QwtPlot::yLeft, "Count" );
+	binPlot.setAxisTitle( QwtPlot::xBottom, yAxisUnits );
+	binPlot.setCanvasBackground( Qt::white );
 	ui.plotWidget->setLayout( layout );
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+
+	//rangeTool = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
+	 //       QwtPicker::RectSelectionType, QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
+	//        binPlot.canvas());
+	//rangeTool->setStateMachine(new QwtPickerDragPointMachine());
+	//rangeTool->setRubberBandPen(QColor(Qt::green));
+	//rangeTool->setRubberBand(QwtPicker::CrossRubberBand);
+	//rangeTool->setTrackerPen(QColor(Qt::green));
 }
 
 void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
@@ -60,7 +74,7 @@ void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
 		bool success = histogramMaker->getHistograms( values, counts );
 		if ( success ){
 			//put the data into the qwt plot
-			qDebug() << "Number of points in histogram is " << values.size();
+			//qDebug() << "Number of points in histogram is " << values.size();
 			vector<float> xVector;
 			vector<float> yVector;
 			values.tovector( xVector );

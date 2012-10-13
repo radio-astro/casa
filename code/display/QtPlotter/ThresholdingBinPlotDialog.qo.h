@@ -30,6 +30,8 @@
 #include <display/QtPlotter/ThresholdingBinPlotDialog.ui.h>
 #include <casa/aips.h>
 
+class QwtPlotPicker;
+
 namespace casa {
 
 template <class T> class ImageInterface;
@@ -45,7 +47,7 @@ class ThresholdingBinPlotDialog : public QDialog
     Q_OBJECT
 
 public:
-    ThresholdingBinPlotDialog(QWidget *parent = 0);
+    ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
     void setImage( ImageInterface<Float>* img );
     ~ThresholdingBinPlotDialog();
 
@@ -53,6 +55,7 @@ private:
     Ui::ThresholdingBinPlotDialogClass ui;
     ImageHistograms<Float>* histogramMaker;
     QwtPlot binPlot;
+    QwtPlotPicker* rangeTool;
 };
 }
 #endif // THRESHOLDINGBINPLOTDIALOG_H
