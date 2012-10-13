@@ -254,13 +254,20 @@ Float CleanImageSkyModel::maxField(Vector<Float>& imagemax,
       }
       
       Cube<Float> weight(sqrt(ggSli.cursor().nonDegenerate(3)/maxggS));
-      Cube<Float>resid(imageli.cursor().nonDegenerate(3));
+      // resid=(imageli.cursor().nonDegenerate(3)) does not make a
+      // copy.  This is a bug in LatticeIterator.cursor().
+      //
+      // As a result resid gets modified for the rest of the code
+      // (residual image is multipled by sqrt(ggS)!!
+      //
+      // For now, using Cube::assign() to force a copy.
+      Cube<Float>resid;resid.assign(imageli.cursor().nonDegenerate(3));
       for (Int pol=0;pol<npol;pol++) {
-	for (Int iy=0;iy<ny;iy++) {
-	  for (Int ix=0;ix<nx;ix++) {
-	    resid(ix,iy,pol)*=weight(ix,iy,pol);
-	  }
-	}
+      	for (Int iy=0;iy<ny;iy++) {
+      	  for (Int ix=0;ix<nx;ix++) {
+      	    resid(ix,iy,pol)*=weight(ix,iy,pol);
+      	  }
+      	}
       }
       const Float* limage_data=resid.getStorage(delete_its);
       const Float* lmask_data=maskArray.getStorage(delete_its2);
