@@ -385,6 +385,8 @@ mosaic simulation task:
     only ALMA can be done easily).  New functionality is actively 
     being added, so if you have changed versions of CASA, check 
     the inputs carefully.
+    More information and examples are availible at 
+     http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA
     Please contact CASA experts with any questions, especially 
     about features noted below as *experimental*    
     -------------------------------

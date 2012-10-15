@@ -29,6 +29,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>True</value>
     </param>    
 
+    <param type="string" name="imagename" subparam='true'>
+      <description>image to analyze (default = first $project/*.image found)</description>
+      <value>default</value>
+    </param>
+
     <param type="string" name="vis" subparam='true'>
       <description>Measurement Set(s) to image</description>
       <value>default</value>
@@ -229,7 +234,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	  <default param="outertaper"><value type="vector"><value></value></value></default>
 	  <default param="stokes"><value type="string">I</value></default>
 	</equals>
-	<equals type="bool" value="False"/>
+	<equals type="bool" value="False">
+	  <default param="imagename"><value type="string">default</value></default>
+	</equals>
       </when>
       <!-- **********************************************************  -->
       <when param="analyze">
@@ -261,6 +268,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     simobserve or simalma.  New functionality is actively 
     being added, so if you have changed versions of CASA, check 
     the inputs carefully.
+    More information and examples are availible at 
+     http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA
     Please contact CASA experts with any questions.
     -------------------------------
     project -- root filename for all output files.

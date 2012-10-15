@@ -8,6 +8,7 @@ import pdb
 def simanalyze(
     project=None,
     image=None,
+    imagename=None,
     vis=None, modelimage=None, cell=None, imsize=None, imdirection=None,
     niter=None, threshold=None,
     weighting=None, mask=None, outertaper=None, stokes=None,
@@ -84,7 +85,7 @@ def simanalyze(
         if nmodels>1:
             msg("Found %i sky model images:" % nmodels)
             for ff in skymodels:
-                msg("   "+ff)
+                msg("   "+ff)            
             msg("Using "+skymodels[0])
         if nmodels>=1:
             skymodel=skymodels[0]
@@ -136,6 +137,21 @@ def simanalyze(
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
         #####################################################################
+        if (not image):
+            user_imagename=imagename
+            if user_imagename=="default" or len(user_imagename)<=0:
+                images= glob.glob(fileroot+"/*image")
+                if len(images)<1:
+                    msg("can't find any image in project directory",priority="error")
+                    return False
+                if len(images)>1:
+                    msg("found multiple images in project directory")
+                    msg("using  "+images[0])
+                imagename=images[0]
+            # trim .image suffix:
+            imagename= imagename.replace(".image","")
+
+
         beam_current = False
         if image:
 
@@ -262,8 +278,16 @@ def simanalyze(
 
 
 
-
-
+            # more than one to image?
+            if len(mstoimage) > 1:
+                msg("Multiple interferometric ms found:",priority="warn")
+                for i in range(len(mstoimage)):
+                    msg(" "+mstoimage[i],priority="warn")
+                msg(" will be concated and simultaneously deconvolved; if something else is desired, please specify vis, or image manually and use image=F",priority="warn")
+                concatms=project+"/"+project+".concat.ms"
+                from concat import concat
+                concat(mstoimage,concatms)
+                mstoimage=[concatms]
 
             if len(mstoimage) == 0:
                 if tpmstoimage:
@@ -275,6 +299,7 @@ def simanalyze(
                 sd_only = False
                 # get some quantities from the interferometric ms
                 maxbase=0.
+                # TODO make work better for multiple MS
                 for msfile in mstoimage:
                     tb.open(msfile)
                     rawdata = tb.getcol("UVW")
@@ -289,7 +314,7 @@ def simanalyze(
 
             # Do single dish imaging first if tpmstoimage exists.
             if tpmstoimage and os.path.exists(tpmstoimage):
-                msg('creating image from generated ms: '+tpmstoimage)
+                msg('creating image from ms: '+tpmstoimage)
                 if len(mstoimage):
                     tpimage = project + '.sd.image'
                 else:
@@ -371,6 +396,7 @@ def simanalyze(
             imagename = fileroot + "/" + project
 
             # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
+            # TODO make work better for multiple mstoimage (figures below)
             tb.open(mstoimage[0]+"/SOURCE")
             code = tb.getcol("CODE")
             sourcefieldlist = pl.where(code=='OBJ')[0]
@@ -489,8 +515,9 @@ def simanalyze(
 
         if analyze:
 
-            if not image:
-                imagename = fileroot + "/" + project
+# set above            
+#            if not image:
+#                imagename = fileroot + "/" + project
 
             if not os.path.exists(imagename+".image"):
                 msg("Can't find a simulated image - expecting "+imagename,priority="error")
