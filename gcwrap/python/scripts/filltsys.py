@@ -627,9 +627,9 @@ class TsysFiller( TsysFillerBase ):
             idx += 1
         if idx == n:
             idx = -1
-            print 'Index not found, return -1'
-        else:
-            print 'found index %s: time[%s] = %s, target = %s'%(idx,idx,tcol[idx],t)
+            #print 'Index not found, return -1'
+        #else:
+            #print 'found index %s: time[%s] = %s, target = %s'%(idx,idx,tcol[idx],t)
 
         return idx
 
