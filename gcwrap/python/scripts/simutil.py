@@ -336,7 +336,7 @@ class simutil:
 
     ###########################################################
 
-    def calc_pointings2(self, spacing, size, maptype="hex", direction=None, relmargin=0.5):
+    def calc_pointings2(self, spacing, size, maptype="hex", direction=None, relmargin=0.5, beam=0.):   
         """
         If direction is a list, simply returns direction and the number of
         pointings in it.
@@ -461,13 +461,19 @@ class simutil:
             spacing  = qa.quantity(spacing)
             xsize = qa.quantity(size[0])
             ysize = qa.quantity(size[1])
-            angle = 0. # do we have to worry about rotation?
 
             spacing_asec=qa.convert(spacing,'arcsec')['value']
             xsize_asec=qa.convert(xsize,'arcsec')['value']
             ysize_asec=qa.convert(ysize,'arcsec')['value']
+            angle = 0. # deg
 
-            x,y = self.getTrianglePoints(xsize_asec, ysize_asec, angle, spacing_asec)
+            if str.upper(maptype[0:8]) == 'ALMA2012':
+                x,y = self.getTrianglePoints(xsize_asec, ysize_asec, angle, spacing_asec)
+            else:
+                if beam<=0: 
+                    beam=spacing_asec*1.2*sqrt(3) # ASSUMES Nyquist and arcsec
+                x,y = self.getTriangularTiling(xsize_asec, ysize_asec, angle, spacing_asec, beam)
+
             pointings = []
             nx=len(x)
             for i in range(nx):
@@ -2968,10 +2974,13 @@ class simutil:
     def isEven(self, num):
         return (num % 2) == 0
 
-
-    def getTrianglePoints(self, width, height, angle, spacing):
-        tcos = pl.cos(angle)
-        tsin = pl.sin(angle)
+    # this was the only algorithm in Cycle 0 - for Cycle 1 it was 
+    # recast as BaseTriangularTiling.getPointings(), the width>height 
+    # case statement was removed, and BaseTriangularTiling was supplemented by
+    # ShiftTriangularTiling.getPointings()
+    def getTrianglePoints(self, width, height, angle, spacing):        
+        tcos = pl.cos(angle*pl.pi/180)
+        tsin = pl.sin(angle*pl.pi/180)
 
         xx=[]
         yy=[]
@@ -3014,4 +3023,105 @@ class simutil:
                         x,y = self.applyRotate(iw*wSpacing, (ih+0.5)*hSpacing, tcos, tsin)
                         xx.append(x)
                         yy.append(y)          
+        return xx,yy
+
+
+
+    def getTriangularTiling(self, longlength, latlength, angle, spacing, pb):
+
+        # OT if isLandscape, shortside=Latlength
+        # else isLandscape=false, shortside=Longlength
+
+        if longlength > latlength: # OT isLandscape=True (OT uses >= )
+            width=longlength # arcsec
+            height=latlength # arcsec
+            shortside=height
+        else:
+            width=latlength
+            height=longlength
+            shortside=height
+            angle=angle+90
+        
+        # which tiling? Base or Shifted (OT getTiling)
+        vSpacing = (pl.sqrt(3) / 2) * spacing
+        n = pl.ceil(shortside / vSpacing)
+
+        if n % 2 == 0:
+            return self.getShiftTriangularTiling(width, height, angle, spacing, pb)
+        else:
+            return self.getBaseTriangularTiling(width, height, angle, spacing, pb)
+
+    def needsFiller(self, length, spacing, bs, npoints):
+        if length > spacing * (npoints - 1) + bs:
+            return 1
+        else:
+            return 0
+
+    def getBaseTriangularTiling(self, width, height, angle, spacing, pb):
+        tcos = pl.cos(angle*pl.pi/180)
+        tsin = pl.sin(angle*pl.pi/180)
+
+        xx=[]
+        yy=[]
+
+        wSpacing = spacing
+        hSpacing = (pl.sqrt(3.) / 2) * spacing
+      
+        nwEven = int(pl.floor((width / 2) / wSpacing))
+        nwEven += self.needsFiller(width, wSpacing, pb, nwEven*2+1)
+
+        nwOdd  = int(pl.floor((width / 2) / wSpacing + 0.5))
+        nwOdd += self.needsFiller(width, wSpacing, pb, nwOdd*2)
+
+        nh     = int(pl.floor((height / 2) / hSpacing))
+        nh += self.needsFiller(height, hSpacing, pb, nh*2+1)
+
+        for ih in pl.array(range(nh*2+1))-nh:
+            if (self.isEven(ih)):
+                for iw in pl.array(range(nwEven*2+1))-nwEven:
+                    x,y = self.applyRotate(iw*wSpacing, ih*hSpacing, tcos, tsin)
+                    xx.append(x)
+                    yy.append(-y) # will require additional testing @ angle>0
+            else:
+                for iw in pl.array(range(nwOdd*2))-nwOdd:
+                    x,y = self.applyRotate((iw+0.5)*wSpacing, ih*hSpacing, tcos, tsin)
+                    xx.append(x)
+                    yy.append(-y)
+        
+        return xx,yy
+
+
+
+
+    def getShiftTriangularTiling(self, width, height, angle, spacing, pb):
+        tcos = pl.cos(angle*pl.pi/180)
+        tsin = pl.sin(angle*pl.pi/180)
+
+        xx=[]
+        yy=[]
+
+        wSpacing = spacing
+        hSpacing = (pl.sqrt(3.) / 2) * spacing
+      
+        nwEven = int(pl.floor((width / 2) / wSpacing + 0.5))
+        nwEven += self.needsFiller(width, wSpacing, pb, nwEven*2)
+
+        nwOdd  = int(pl.floor((width / 2) / wSpacing ))
+        nwOdd += self.needsFiller(width, wSpacing, pb, nwOdd*2+1)
+
+        nh     = int(pl.floor((height - hSpacing) / 2 / hSpacing +1))
+        nh += self.needsFiller(height, hSpacing, pb, nh*2)
+
+        for ih in pl.array(range(nh*2))-nh:
+            if (self.isEven(ih)):
+                for iw in pl.array(range(nwEven*2))-nwEven:
+                    x,y = self.applyRotate((iw+0.5)*wSpacing, (ih+0.5)*hSpacing, tcos, tsin)
+                    xx.append(x)
+                    yy.append(-y)          
+            else:
+                for iw in pl.array(range(nwOdd*2+1))-nwOdd:
+                    x,y = self.applyRotate(iw*wSpacing, (ih+0.5)*hSpacing, tcos, tsin)
+                    xx.append(x)
+                    yy.append(-y)
+        
         return xx,yy

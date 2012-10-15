@@ -341,7 +341,7 @@ def simobserve(
             # TODO use max ant = min PB instead?
             # (set back to simdata - there must be an automatic way to do this)
             casalog.origin('simobserve')
-            pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
+            pb = 1.2*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
             # PSF size
             if uvmode:
@@ -502,7 +502,9 @@ def simobserve(
             if verbose: util.msg("calculating map pointings centered at "+str(dir0))
 
             if len(pointingspacing) < 1:
-                pointingspacing = "0.5PB"
+                pointingspacing = "Nyquist"
+            if str.upper(pointingspacing)=="NYQUIST":
+                pointingspacing="0.48113PB"
             q = re.compile('(\d+.?\d+)\s*PB')
             qq = q.match(pointingspacing.upper())
             if qq:
@@ -512,7 +514,9 @@ def simobserve(
                     return False
                 pointingspacing = "%farcsec" % (float(z[0])*pb)
                 # todo make more robust to nonconforming z[0] strings
-            pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
+            if verbose:
+                msg("pointing spacing in mosaic = "+pointingspacing)
+            pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir, beam=pb)
             nfld=len(pointings)
             etime = qa.convert(qa.mul(qa.quantity(integration),scanlength),"s")['value']
             # etime is an array of scan lengths - here they're all the same.
@@ -560,9 +564,9 @@ def simobserve(
         # model is centered at model_refdir, and has model_size; this is the offset in 
         # angular arcsec from the model center to the imcenter:        
         mepoch, mra, mdec = util.direction_splitter(model_refdir)
-        if ra['value'] >= 359.999:
+        if ra['value'] >= 360.:
             ra['value'] = ra['value'] - 360.
-        if mra['value'] >= 359.999:
+        if mra['value'] >= 360.:
             mra['value'] = mra['value'] - 360.
         # XXX put in real angular mod-360 diff here for obs near RA=0
         shift = [ (qa.convert(ra,'deg')['value'] - 

@@ -169,12 +169,14 @@ class ss_setjy_helper:
 	  inparams[srcnames[fid]]['reffreqs']=reffreqs
           myms.close()
 
+             
 	# call Bryan's code
 	# errcode: list of list - inner list - each values for range of freqs
 	# flluxes: list of list 
 	# fluxerrs:
 	# size: [majoraxis, minoraxis, pa]
 	# direction: direction for each time stamp
+        # 
 	import solar_system_setjy as ss_setjy
 	retdict={}
 	#for src in srcnames:
@@ -184,6 +186,16 @@ class ss_setjy_helper:
 	  fluxes=[]
           # call solar_system_fd() per spw (for scalebychan freqlist has an extra dimention)
           nspwused=len(inparams[src]['freqlist'])
+          # warning for many channels but it is really depends on the source
+          if scalebychan:
+            maxnf=0
+            for ispw in range(nspwused):
+              nf = inparams[src]['freqlist'][ispw]
+              maxnf = max(nf,maxnf)
+            if maxnf >= 3840 and src.upper()!="MARS": # mars shoulde be ok
+              self._casalog.post("Processing %s spw(s) with at least some of them are a few 1000 channels or more. This may takes \
+                            many minutes (>3min per spw for 3840 channels) in some cases. Please be patient." % nspwused,"WARN")
+              
 	  for i in range(nspwused): # corresponds to n spw
 	    if type(freqlist[0][0])==list:
 	      infreqs=inparams[src]['freqlist'][i]

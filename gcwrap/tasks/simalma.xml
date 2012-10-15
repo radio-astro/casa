@@ -5,9 +5,9 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
-<task type="function" name="simalma" category="simulation">
+<task type="function" name="simalma" category="simulation" visibility="experimental">
 
-  <shortdescription>simple simulation task for ALMA:</shortdescription>
+  <shortdescription>(Experimental) simple simulation task for ALMA </shortdescription>
   <description>
     This task will simulate ALMA 12-m, ACA-7m and total power array data, 
    and image and analyze them. Please contact CASA helpdesk with questions.
@@ -272,7 +272,7 @@ it'll do them for the same amount of time -->
 <!--  IMAGE   -->    
 
     <param type="bool" name="image">
-      <description>(re)image $project.*.ms to $project.image</description>
+      <description>image simulated data</description>
       <value>True</value>
     </param>    
 
@@ -523,9 +523,9 @@ it'll do them for the same amount of time -->
 <example>
 ALMA simulation task:
 
-    ##### WARNING: This task is very EXPERIMENTAL #####
+    ##### WARNING: This task is EXPERIMENTAL #####
     This task simulates ALMA observation including 12-m, ACA 7-m and total
-    power arrays, and images and analyses simulated data.
+    power arrays, and images and analyzes simulated data.
     New functionality is actively being added, so if you have changed
     versions of CASA, check the inputs carefully.
     Please contact CASA experts with any questions, especially 
@@ -577,7 +577,7 @@ ALMA simulation task:
        * set to "" to span the model image
     -------------------------------
     antennalist -- ascii file containing antenna positions.
-         In this task, it should be an ALMA configuration.
+       * NOTE: In this task, it should be an ALMA configuration.
        * standard arrays are found in your CASA data repository, 
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
        * a string of the form "alma;0.5arcsec" will be parsed into a full 12m ALMA
@@ -601,7 +601,7 @@ ALMA simulation task:
     pwv -- precipitable water vapor if constructing an atmospheric model.
          Set 0 for noise-free simulation.
     -------------------------------
-    image -- invert and deconvolve the measurement set(s)
+    image -- invert and deconvolve the simulated measurement set(s)
        * NOTE: interactive clean or more parameters than the subset visible
          here are available by simply running the clean task directly, 
          then returning to simdata to run "analyze" if desired.
@@ -626,17 +626,20 @@ ALMA simulation task:
     What does this task do:
     -------------------------------
     simalma is a task to simulate ALMA observation with simple interface. 
-    It simulates ALMA 12-m observation and optionally ACA 7m and Total power
-    observations when acaratio > 0. When image=True, simulated data are imaged
-    and analyzed.
-    Note this task is very experimental, so far, and may not exactly reproduce
-    actual ALMA data.
+    It simulates ALMA 12m observation and optionally ACA 7m and Total power
+    observations when acaratio > 0. 
+    When image=True, simulated data are imaged and analyzed. CLEAN is used
+    to generate image(s) from simulated data. ALMA 12m and ACA data are
+    combined (if both geneareted) by taking ACA image as an initial model
+    in CLEAN of ALMA 12m data.
+    NOTE this task is very experimental and may not exactly reproduce
+    actual ALMA products.
 
-    Some assuption are made to make the interface simple:
+    The following assuptions are made to make the interface simple:
     * This task is intended to be run only once with a set of parameters.
       Therefore, it always sets up input model and pointings, and invokes simulation.
       You can stop before imaging step and reduce data manually with the other tasks,
-      e.g, simanalyze and clean.
+      e.g, simanalyze, clean, and feather.
     * acaratio controls whether or not ACA observation is simulated. if acaratio > 0,
       ACA observation is simulated with total observation time = acaratio * totaltime
       for both ACA 7m and Total power array.
