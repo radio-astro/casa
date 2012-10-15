@@ -1134,10 +1134,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	(*it).second->setCursorPosition(0);
 	++it;
 
-	std::vector<std::string> beamvec = image_properties.restoringBeamAsStr( );
+	std::vector<std::string> beamvec = image_properties.medianRestoringBeamAsStr( );
 	if ( beamvec.size( ) == 3 ) {
 	    (*it).first->show( );
-	    (*it).first->setTitle("restoring beam");
+	    if ( image_properties.nBeams( ) > 1 )
+		(*it).first->setTitle("median restoring beam");
+	    else
+		(*it).first->setTitle("restoring beam");
 	    std::string beam = beamvec[0] + ", " + beamvec[1] + ", " + beamvec[2];
 	    (*it).second->setText(QString::fromStdString(beam));
 	    (*it).second->setCursorPosition(0);

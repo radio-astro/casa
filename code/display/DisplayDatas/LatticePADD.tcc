@@ -46,6 +46,7 @@
 #include <lattices/Lattices/LatticeLocker.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <images/Images/ImageInterface.h>
+#include <display/Utilities/ImageProperties.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
@@ -78,10 +79,9 @@ LatticePADisplayData<T>::LatticePADisplayData(Array<T> *array,
   itsRegionPtr(0),
   itsMaskPtr(0),
   itsDataUnit("_"),
-  itsComplexToRealMethod(Display::Magnitude),
-  hasBeam_(False)
+  itsComplexToRealMethod(Display::Magnitude)
 {
-  
+
   itsBaseArrayPtr = new Array<T>;
   *itsBaseArrayPtr = array->copy();
   itsMaskedLatticePtr = new SubLattice<T>(ArrayLattice<T>(*itsBaseArrayPtr));
@@ -109,7 +109,7 @@ LatticePADisplayData<T>::LatticePADisplayData(Array<T> *array,
   setup(fixedPos);
   getMinAndMax();
 
-  
+
 }
 
 // 2d array-based ctor
@@ -126,8 +126,7 @@ LatticePADisplayData<T>::LatticePADisplayData(Array<T> *array,
   itsRegionPtr(0),
   itsMaskPtr(0),
   itsDataUnit("_"),
-  itsComplexToRealMethod(Display::Magnitude),
-  hasBeam_(False) {
+  itsComplexToRealMethod(Display::Magnitude) {
 
   itsBaseArrayPtr = new Array<T>;
   *itsBaseArrayPtr = array->copy();
@@ -176,9 +175,8 @@ LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
   itsRegionPtr(0),
   itsMaskPtr(0),
   itsDataUnit(image->units()),
-  itsComplexToRealMethod(Display::Magnitude),
-  hasBeam_(False) {
-  
+  itsComplexToRealMethod(Display::Magnitude) {
+
   itsBaseImagePtr = image->cloneII();
   itsMaskedLatticePtr = itsBaseImagePtr;
   updateLatticeStatistics();
@@ -190,8 +188,8 @@ LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
   // call base class setup:
   setup(fixedPos);
   getMinAndMax();
-  
-  SetUpBeamData_(); 
+
+  SetUpBeamData_();
 }
 
 
@@ -209,8 +207,7 @@ LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
   itsRegionPtr(0),
   itsMaskPtr(0),
   itsDataUnit(image->units()),
-  itsComplexToRealMethod(Display::Magnitude),
-  hasBeam_(False) 
+  itsComplexToRealMethod(Display::Magnitude)
 {
   itsBaseImagePtr = image->cloneII();
   itsMaskedLatticePtr = itsBaseImagePtr;
@@ -224,14 +221,14 @@ LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
   // call base class setup
   setup(fixedPos);
   getMinAndMax();
- 
-  SetUpBeamData_(); 
+
+  SetUpBeamData_();
 }
 
 
 
 // Destructor
-template <class T> 
+template <class T>
 LatticePADisplayData<T>::~LatticePADisplayData() {
 
   if (delTmpData_)
@@ -252,12 +249,12 @@ LatticePADisplayData<T>::~LatticePADisplayData() {
   if (itsResampleHandler) {
     delete itsResampleHandler;
   }
-  
-  if(hasBeam_) {
+
+  if( beams_.size( ) > 0 ) {
     delete beamOnOff_;      delete beamStyle_;    delete beamColor_;
     delete beamLineWidth_;  delete beamXCenter_;  delete beamYCenter_;  }
 
-} 
+}
 
 
 
@@ -293,7 +290,7 @@ const T LatticePADisplayData<T>::dataValue(IPosition pos) {
 		    "no such position in lattice"));
   }
   return itsMaskedLatticePtr->operator()(pos);
-  
+
 }
 
 template <class T>
@@ -367,11 +364,11 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
 
   ImageInterface<T>* pImage = 0;
   DataType dtype;
-  
+
   Bool error;
   if(readOptionRecord(itsResample, error, rec, "resample")) {
-    ret = True;    
-    
+    ret = True;
+
     //newHistNeeded = True;
 	//#dk -- commented out 12/05
 	// This is unnecessary, I believe: display resampling
@@ -391,11 +388,11 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
       itsResample = "nearest";
     }
   }
-  //  
+  //
   Bool fillRecOut = False;
   T typetester;
   dtype = whatType(&typetester);
- 
+
   if ((dtype == TpComplex) || (dtype == TpDComplex)) {
     if (readOptionRecord(itsComplexMode, error, rec, "complexmode")) {
       ret = True;
@@ -434,10 +431,10 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
       } else {
 	LogIO os(LogOrigin("LatticePADisplayData", "setOptions", WHERE));
 	os << LogIO::SEVERE << "Couldn't lock image." << LogIO::POST;
-      }       
+      }
     }
   }
-  
+
   if (rec.isDefined("newdata")) {
     newHistNeeded = True;
     DataType indtype = rec.dataType("newdata");
@@ -445,7 +442,7 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
       // we were built from an image, and we've been given a string -
       // assume it's an image name...
 
-    } else if (!itsBaseImagePtr && 
+    } else if (!itsBaseImagePtr &&
 	       (((indtype == TpArrayFloat) && (dtype == TpFloat)) ||
 		((indtype == TpArrayComplex) && (dtype == TpComplex)))) {
       // we were built from an array of Float/Complex, and we've been given
@@ -483,7 +480,7 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
   if (itsBaseImagePtr && (rec.isDefined("region") || rec.isDefined("mask"))) {
     String resetString("resetCoordinates");
     Attribute resetAtt(resetString, True);
-    
+
 // If the region is unset, the returned pointer is null
 
     ImageRegion* pRegion = 0;
@@ -497,7 +494,7 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
       if (regionChanged) {
 	newHistNeeded = True;
       }
-    
+
     }
 
 // If the mask is unset, the returned pointer is null
@@ -730,11 +727,11 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
       }
     }
   }
-  
-  
+
+
   // Set Beam ellipse user interface parameters, if applicable.
-  
-  if(hasBeam_) { 
+
+  if( beams_.size( ) > 0 ) {
   Bool  needsRefresh = beamOnOff_->fromRecord(rec);
         needsRefresh = beamStyle_->fromRecord(rec)     || needsRefresh;
         needsRefresh = beamColor_->fromRecord(rec)     || needsRefresh;
@@ -742,7 +739,7 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
         needsRefresh = beamXCenter_->fromRecord(rec)   || needsRefresh;
         needsRefresh = beamYCenter_->fromRecord(rec)   || needsRefresh;
 	ret = ret                                      || needsRefresh;  }
-  
+
 
   return ret;
 }
@@ -822,18 +819,19 @@ Record LatticePADisplayData<T>::getOptions() {
      rec.defineRecord("mask", mask);
   }
 
-  
+
   // Send beam ellipse user interface parameters, if applicable.
-  
-  if(hasBeam_) {  
+
+  if( beams_.size( ) > 0 ) {
     beamOnOff_->toRecord(rec);
     beamStyle_->toRecord(rec);
     beamColor_->toRecord(rec);
     beamLineWidth_->toRecord(rec);
     beamXCenter_->toRecord(rec);
-    beamYCenter_->toRecord(rec);  }
+    beamYCenter_->toRecord(rec);
+  }
 
-   
+
   return rec;
 }
 
@@ -867,7 +865,7 @@ WCLELMask* LatticePADisplayData<T>::makeMask (const RecordInterface& mask)
       Record rec = mask.asRecord("mask");
       if (rec.isDefined("i_am_unset")) {
       } else {
-         os << LogIO::SEVERE << "Mask is illegal record" << LogIO::POST;      
+         os << LogIO::SEVERE << "Mask is illegal record" << LogIO::POST;
       }
    } else if (mask.dataType("mask") == TpString) {
       maskPtr = new WCLELMask(mask.asString("mask"));
@@ -876,10 +874,10 @@ WCLELMask* LatticePADisplayData<T>::makeMask (const RecordInterface& mask)
       }
    } else {
       os << LogIO::SEVERE << "Mask is illegal record type" << LogIO::POST;
-   }       
+   }
 //
    return maskPtr;
-}   
+}
 
 
 template<class T>
@@ -899,10 +897,10 @@ ImageRegion* LatticePADisplayData<T>::makeRegion (const RecordInterface& region)
       }
    } else {
       os << LogIO::SEVERE << "Region is illegal record type" << LogIO::POST;
-   }       
+   }
 //
    return regionPtr;
-} 
+}
 
 
 
@@ -927,7 +925,7 @@ Bool LatticePADisplayData<T>::isRegionDifferent (ImageRegion*& pRegion)
    }
 //
    return !same;
-} 
+}
 
 template<class T>
 Bool LatticePADisplayData<T>::isMaskDifferent (WCLELMask*& pMask)
@@ -950,14 +948,14 @@ Bool LatticePADisplayData<T>::isMaskDifferent (WCLELMask*& pMask)
    }
 //
    return !same;
-} 
+}
 
 
 
 template<class T>
-Bool LatticePADisplayData<T>::insertFloat(Record& into, Float from, const String field) 
+Bool LatticePADisplayData<T>::insertFloat(Record& into, Float from, const String field)
 {
-  Record tempSub;  
+  Record tempSub;
   if (!into.isDefined(field)) {
     tempSub = getOptions().subRecord(field);
     tempSub.define("value", from);
@@ -980,9 +978,9 @@ Bool LatticePADisplayData<T>::insertFloat(Record& into, Float from, const String
 }
 
 template<class T>
-Bool LatticePADisplayData<T>::insertArray(Record& into, Vector<Float> from, const String field) 
+Bool LatticePADisplayData<T>::insertArray(Record& into, Vector<Float> from, const String field)
 {
-  Record tempSub;  
+  Record tempSub;
   if (!into.isDefined(field)) {
     tempSub = getOptions().subRecord(field);
     tempSub.define("value", from);
@@ -1011,9 +1009,9 @@ Bool LatticePADisplayData<T>::transferPreferences (CoordinateSystem& cSysInOut,
    if (cSysIn.nCoordinates()!=cSysInOut.nCoordinates()) return False;
    if (cSysIn.nWorldAxes()!=cSysInOut.nWorldAxes()) return False;
    if (cSysIn.nPixelAxes()!=cSysInOut.nPixelAxes()) return False;
-// 
+//
    Int after = -1;
-   Int cIn = cSysIn.findCoordinate (Coordinate::SPECTRAL, after);   
+   Int cIn = cSysIn.findCoordinate (Coordinate::SPECTRAL, after);
    after = -1;
    Int cInOut = cSysInOut.findCoordinate (Coordinate::SPECTRAL, after);
 //
@@ -1027,7 +1025,7 @@ Bool LatticePADisplayData<T>::transferPreferences (CoordinateSystem& cSysInOut,
       scInOut2.setVelocity (velUnit, velDoppler);
 //
       String formatUnit = scIn.formatUnit();
-      scInOut2.setFormatUnit(formatUnit);      
+      scInOut2.setFormatUnit(formatUnit);
 //
       cSysInOut.replaceCoordinate(scInOut2, cInOut);
    }
@@ -1061,27 +1059,27 @@ Bool LatticePADisplayData<T>::useStriding(
   // The idea is to sample using no more than maxPixels elements from the
   // original Lattice or Array.  Histograms needn't be more accurate for
   // their purpose (which is to set color scaling).
-  
-  
+
+
   maxPixels = max(1u, maxPixels);  minPerAxis = max(1u, minPerAxis);
 		// (safety: insure against improper input parameter use).
 
   uInt nAxes = shape.nelements();
-  
+
   stride.resize(nAxes);
   stride=1;	// Initial stride on all axes.
-    
+
   uInt latticeSize = 1;
   for(uInt axis=0; axis<nAxes; axis++) latticeSize *= shape[axis];
-  
+
   if(latticeSize <= maxPixels) return False;
 		// No striding needed.
 
-  
+
   Double reduceFctr = Double(latticeSize)/maxPixels;
 	// We want striding to reduce the data examined by at least
 	// this factor.  (reduceFctr > 1).
-  
+
   // Strided sampling would be poor on the Stokes axis, or even
   // on a frequency axis.  This code makes a lame attempt at
   // avoiding this, by assuming that sky coordinates are on the
@@ -1089,25 +1087,25 @@ Bool LatticePADisplayData<T>::useStriding(
   // In no case, however, is a stride greater than 1 set for an axis
   // which would cause fewer than minPerAxis elements to be used on
   // that axis.
-  
+
   // After determining a stride for the shorter of the first two axes,
   // other axes will be given strides (up to their maximum) in axisOrder,
   // until reduceFctr (or maximum striding on all axes) is reached.
   // The longer of the first two axes will be the next one strided,
   // after the shortest; then the rest, as necessary.
-  
+
   Int shortAxis=0, longAxis=1;
   IPosition axisOrder(nAxes);
   for (uInt i=1; i<nAxes; i++) axisOrder[i]=i;
-  
+
   if(nAxes>1 && shape[1]<shape[0])  {
     shortAxis = 1;
     axisOrder[1] = longAxis = 0;  }
-    
+
   Int shortMaxStride = max(1u, shape[shortAxis]/minPerAxis);
   Int longMaxStride  = max(1u, shape[longAxis]/minPerAxis);
 	// maximum usable stride on short, long axes.
-  
+
   Int sqrtStride = Int(ceil(sqrt(reduceFctr)));
 	// This stride on first two axes, if usable, would achieve
 	// the needed reduceFctr...
@@ -1116,22 +1114,22 @@ Bool LatticePADisplayData<T>::useStriding(
   Int shortStride = sqrtStride-1;
   if(shortStride*min(sqrtStride,longMaxStride) < reduceFctr) shortStride++;
 		// (No, not enough: use full sqrtStride, if possible...).
-  
+
   stride[shortAxis] = min(shortMaxStride, shortStride);
 		// ...but no more than shortMaxStride, in any case.
-  
-  
+
+
   reduceFctr /= stride[shortAxis];
 	// remaining reduction factor to be achieved.
 	// (slightly inaccurate, but not enough to matter...).
-  
+
   // Compute stride on remaining axes (starting with the
   // longest of the first two).
-  
+
   for (uInt i=1; i<nAxes; i++) {
-    
+
     if(reduceFctr<=1.) break;	// reduceFctr achieved -- done.
-    
+
     Int strideAxis = axisOrder[i];
 	// Next axis -- the one to stride now.
     Int maxStride = max(1u, shape[strideAxis]/minPerAxis);
@@ -1141,120 +1139,97 @@ Bool LatticePADisplayData<T>::useStriding(
     reduceFctr /= stride[strideAxis];  }
 	// reduction factor still to be achieved on remaining
 	// axes, in possible.
-    
+
   return True;  }
 
- 
+
 
 template<class T>
 void LatticePADisplayData<T>::SetUpBeamData_() {
-  // Called by constructors: set up data for beam drawing, if applicable.
+    // Called by constructors: set up data for beam drawing, if applicable.
 
-  if(itsBaseImagePtr==0) return;
-  
-  try {  
-    
-    ImageInfo info = itsBaseImagePtr->imageInfo();
-    String error;
-    Record inforec;
-    if(!info.toRecord(error, inforec)) return;
+    if(itsBaseImagePtr==0) return;
 
-    // We need to find fields like these in inforec; try will fail otherwise:
-    //
-    // [ restoringbeam=[
-    //     major=[         value=3.89567 (Double),  unit="arcsec" ]
-    //     minor=[         value=3.15677 (Double),  unit="arcsec" ]
-    //     positionangle=[ value=90.1845 (Double),  unit="deg" ]
-    //  (, ...) ]
-    
-    Record beamrec     = inforec.subRecord("restoringbeam");
-    Record majorrec    = beamrec.subRecord("major");
-    Record minorrec    = beamrec.subRecord("minor");
-    Record posanglerec = beamrec.subRecord("positionangle");
-    
-    majoraxis_   = majorrec.asDouble("value");
-    minoraxis_   = minorrec.asDouble("value");
-    posangle_ = posanglerec.asDouble("value");
-    
-    majorunit_ = majorrec.asString("unit");
-    minorunit_ = minorrec.asString("unit");
-    paunit_ = posanglerec.asString("unit");
-   
-  
-    // Set up parameters for user interface.
-        
-    Vector<String> yesNo(2);         yesNo[0]="Yes";
-                                     yesNo[1]="No";
-    
-    Vector<String> outlnFill(2); outlnFill[0]="Outline";
-                                 outlnFill[1]="Filled";
-    Vector<String> bmClr(11);
-    bmClr(0) = "foreground"; bmClr(1) = "background";
-    bmClr(2) = "black"; bmClr(3) = "white";
-    bmClr(4) = "red"; bmClr(5) = "green";
-    bmClr(6) = "blue"; bmClr(7) = "cyan";
-    bmClr(8) = "magenta"; bmClr(9) = "yellow";
-    bmClr(10) = "gray";
+    viewer::ImageProperties info(itsBaseImagePtr);
+    beams_ = info.restoringBeams( );
 
-    
-    beamOnOff_ = new DParameterChoice("beam", "draw beam?",
+
+    if ( beams_.size( ) > 0 ) {
+
+	majorunit_ = "arcsec";
+	minorunit_ = "arcsec";
+	paunit_    = "deg";
+
+
+	// Set up parameters for user interface.
+
+	Vector<String> yesNo(2);         yesNo[0]="Yes";
+	                                 yesNo[1]="No";
+
+	Vector<String> outlnFill(2); outlnFill[0]="Outline";
+	                             outlnFill[1]="Filled";
+	Vector<String> bmClr(11);
+	bmClr(0) = "foreground"; bmClr(1) = "background";
+	bmClr(2) = "black"; bmClr(3) = "white";
+	bmClr(4) = "red"; bmClr(5) = "green";
+	bmClr(6) = "blue"; bmClr(7) = "cyan";
+	bmClr(8) = "magenta"; bmClr(9) = "yellow";
+	bmClr(10) = "gray";
+
+
+	beamOnOff_ = new DParameterChoice("beam", "draw beam?",
                  "Should the image's restoring beam ellipse be drawn?",
                  yesNo, yesNo[0], yesNo[0], "beam_ellipse");
-    
-    beamStyle_ = new DParameterChoice("beamoutline", "beam style",
+
+	beamStyle_ = new DParameterChoice("beamoutline", "beam style",
                  "whether the ellipse will be drawn in outline or filled",
                  outlnFill, outlnFill[0], outlnFill[0], "beam_ellipse");
-    
-    beamColor_ = new DParameterChoice("beamcolor", "color",
+
+	beamColor_ = new DParameterChoice("beamcolor", "color",
                  "beam ellipse's color",
                  bmClr, bmClr[0], bmClr[0], "beam_ellipse");
-    
-    beamLineWidth_ = new DParameterRange<Int>("beamlinewidth", "line width",
+
+	beamLineWidth_ = new DParameterRange<Int>("beamlinewidth", "line width",
                      "width of the line used to draw the ellipse",
 		     1, 7,  1,  1, 1, "beam_ellipse");
-    
-    beamXCenter_ = new DParameterRange<Float>("beamxcenter", "x center",
+
+	beamXCenter_ = new DParameterRange<Float>("beamxcenter", "x center",
               "relative horizontal position of the beam's center within\n"
 	      "the image drawing area:  0 = left edge, 1 = right edge",
 	      0., 1.,  .02,  .1, .1, "beam_ellipse");
-    
-    beamYCenter_ = new DParameterRange<Float>("beamycenter", "y center",
+
+	beamYCenter_ = new DParameterRange<Float>("beamycenter", "y center",
               "relative vertical position of the beam's center within\n"
 	      "the image drawing area:  0 = bottom edge, 1 = top edge",
 	      0., 1.,  .02,  .1, .1, "beam_ellipse");
 
-        
-    // The major and minor axes must both be positive
-    if ( majoraxis_ <= 0.0 || minoraxis_ <= 0.0 )
-      hasBeam_ = False;
-    else	
-      hasBeam_ = True;		// (Setup completed successfully; we
-				//  should be able to draw the beam).
+    }
 
-  } catch (...) {  }		// (Usually just means some beam fields were
-				// not found; hasBeam_ will remain False).
 }
 
 
 template<class T>
 void LatticePADisplayData<T>::drawBeamEllipse_(WorldCanvas* wc) {
-  // Will draw the beam ellipse if applicable (i.e., the LatticePADD
-  // has an image with beam data, beam drawing is turned on, and the
-  // WC's CoordinateSystem is set to sky coordinates).
-  
-  if(!hasBeam_ || beamOnOff_->value()=="No") return;
-  
-  wc->setColor(beamColor_->value());
-  wc->setLineWidth(beamLineWidth_->value());
-  
-  
-  wc->drawBeamEllipse(majoraxis_, minoraxis_,  posangle_,
-                      majorunit_, minorunit_,  paunit_,
-		      beamXCenter_->value(),   beamYCenter_->value(),
-		      (beamStyle_->value()=="Outline") );   }
+    // Will draw the beam ellipse if applicable (i.e., the LatticePADD
+    // has an image with beam data, beam drawing is turned on, and the
+    // WC's CoordinateSystem is set to sky coordinates).
+
+    if( beams_.size( ) == 0 || beamOnOff_->value()=="No" ) return;
+
+    vector<double> beam = beams_.size( ) > activeZIndex_ ? beams_[activeZIndex_] : beams_[0];
+    // The major and minor axes must both be positive
+    if ( beam[0] <= 0.0 || beam[1] <= 0.0 ) return;
+
+    wc->setColor(beamColor_->value());
+    wc->setLineWidth(beamLineWidth_->value());
+
+    wc->drawBeamEllipse( beam[0], beam[1],  beam[2],
+			 majorunit_, minorunit_,  paunit_,
+			 beamXCenter_->value(),   beamYCenter_->value(),
+			 (beamStyle_->value()=="Outline") );
+}
 
 
 
 
 } //# NAMESPACE CASA - END
-
