@@ -256,9 +256,7 @@ private:
 		const Vector<AxisType>& axisTypes
 	);
 
-	static Array<Double> _getAreas(
-		String& areaUnit, const Array<GaussianBeam>& beams
-	);
+	void _calculateAreas();
 
 	GaussianBeam _getBeamForPol(
 		IPosition& pos, const vector<IPosition>& map,

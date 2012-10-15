@@ -46,15 +46,11 @@ ImageBeamSet::ImageBeamSet(
 	const Array<GaussianBeam>& beams,
 	const Vector<AxisType>& axes
 ) : _beams(beams), _axes(axes),
-	_areas(_getAreas(_areaUnit, beams)),
 	_maxStokesMap(0), _minStokesMap(0),
 	_medianStokesMap(0), _axesMap(_setAxesMap(axes)) {
 	_checkForDups(axes);
 	_checkAxisTypeSize(axes);
-	Double minArea, maxArea;
-	minMax(minArea, maxArea, _minBeamPos, _maxBeamPos, _areas);
-	_minBeam = _beams(_minBeamPos);
-	_maxBeam = _beams(_maxBeamPos);
+	_calculateAreas();
 	_makeStokesMaps(False);
 }
 
@@ -275,12 +271,12 @@ void ImageBeamSet::_checkForDups(const Vector<AxisType>& axes) {
 
 void ImageBeamSet::resize(const IPosition& pos) {
 	if (pos.nelements() != _beams.ndim()) {
-		throw AipsError("An ImageBeamSet object cannot be resized to a different dimensionality.");
+		throw AipsError(
+			"An ImageBeamSet object cannot be resized to a different dimensionality."
+		);
 	}
-	// _recalculateStats = True;
 	_beams.resize(pos);
-	_areas = _getAreas(_areaUnit, _beams);
-
+	_calculateAreas();
 }
 
 size_t ImageBeamSet::size() const {
@@ -298,7 +294,7 @@ void ImageBeamSet::setBeams(const Array<GaussianBeam>& beams) {
 		);
 	}
 	_beams.assign(beams);
-	_areas.assign(_getAreas(_areaUnit, _beams));
+	_calculateAreas();
 	_makeStokesMaps(False);
 }
 
@@ -307,11 +303,10 @@ void ImageBeamSet::setBeams(
 	const Array<GaussianBeam>& beams
 ) {
 	_beams(begin, end) = beams;
-	_areas.assign(_getAreas(_areaUnit, _beams));
+	_calculateAreas();
 	// FIXME there is a more efficient way to make the stokes
 	// maps in this case
 	_makeStokesMaps(False);
-
 }
 
 size_t ImageBeamSet::nelements() const {
@@ -531,22 +526,21 @@ ImageBeamSet::AxesMap ImageBeamSet::_setAxesMap(
 }
 
 
-Array<Double> ImageBeamSet::_getAreas(
-	String& areaUnit, const Array<GaussianBeam>& beams
-) {
-	areaUnit = beams.begin()->getMajor().getUnit();
-	areaUnit = Quantity(Quantity(1, areaUnit)*Quantity(1,areaUnit)).getUnit();
-	Array<Double> areas(beams.shape());
-	Array<Double>::iterator iareas = areas.begin();
-	areaUnit = beams.begin()->getMajor().getUnit();
-	areaUnit = Quantity(Quantity(1, areaUnit)*Quantity(1,areaUnit)).getUnit();
+void ImageBeamSet::_calculateAreas() {
+	_areaUnit = _beams.begin()->getMajor().getUnit();
+	_areaUnit = Quantity(Quantity(1, _areaUnit)*Quantity(1, _areaUnit)).getUnit();
+	_areas.resize(_beams.shape());
+	Array<Double>::iterator iareas = _areas.begin();
 	for (
-		Array<GaussianBeam>::const_iterator ibeams=beams.begin();
-		ibeams!=beams.end(); ibeams++, iareas++
+		Array<GaussianBeam>::const_iterator ibeam=_beams.begin();
+		ibeam!=_beams.end(); ibeam++, iareas++
 	) {
-		*iareas = ibeams->getArea(areaUnit);
+		*iareas = ibeam->getArea(_areaUnit);
 	}
-	return areas;
+	Double minArea, maxArea;
+	minMax(minArea, maxArea, _minBeamPos, _maxBeamPos, _areas);
+	_minBeam = _beams(_minBeamPos);
+	_maxBeam = _beams(_maxBeamPos);
 }
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet) {
