@@ -23,7 +23,7 @@ class ss_setjy_helper:
         may need to run multiple setjy with selections by time range (or scans). 
 	"""
 	retval = True 
-	cleanupcomps = False # leave genenerated cl files 
+	cleanupcomps = True # leave genenerated cl files 
 
         #from taskinit import * 
         from taskinit import gentools 
@@ -243,8 +243,9 @@ class ss_setjy_helper:
 	    # if scalebychan=F, len(freqs) corresponds to nspw selected
             # Need to put in for-loop to create cl for each time stamp? or scan?
 
-	    clpath='/tmp/'
-	    #clpath='./'
+	    #clpath='/tmp/'
+	    clpath='./'
+            self.clnamelist=[]
 	    for j in range(len(freqlist)): # loop over nspw
 	      freqlabel = '%.3fGHz' % (reffreqs[int(spwids[j])]/1.e9)
 	      tmlabel = '%.1fd' % (tc/86400.)
@@ -298,21 +299,25 @@ class ss_setjy_helper:
 	      # finally, put the componentlist as model
 	      self.im.selectvis(spw=spwids[j],field=field,observation=observation,time=timerange)
 	      self.im.ft(complist=clname)
-
               #debug: set locally saved 2010-version component list instead
               #cl2010='mod_setjy_spw0_Titan_230.543GHz55674.1d.cl'
               #print "Using complist=",cl2010
 	      #self.im.ft(complist=cl2010)
 
-	      if cleanupcomps:          
-		  shutil.rmtree(clname)
+	      #if cleanupcomps:          
+              # 		  shutil.rmtree(clname)
+              self.clnamelist.append(clname)
           # end of for loop over fields		 
 	  msg="Using channel dependent " if scalebychan else "Using spw dependent "
        
 	  self._casalog.post(msg+" flux densities")
 	  self._reportoLog(clrecs,self._casalog)
 	  self._updateHistory(clrecs,self.vis)
+          
 	return retval
+
+    def getclnamelist(self):
+        return self.clnamelist
 
     def _reportoLog(self,clrecs,casalog):
 	"""

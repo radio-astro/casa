@@ -314,6 +314,10 @@ def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
         shifted_frequencies = MJD_shifted_frequencies[ii]
         if (capitalized_source_name == 'Mars'):
             [tstatuses,brightnesses,dbrightnesses] = brightness_Mars_int ([MJDs[ii]], shifted_frequencies)
+            # modified by TT: take out an extra dimension (for times), to match the rest of the operation 
+            tstatuses=tstatuses[0] 
+            brightnesses=brightnesses[0]
+            dbrightnesses=dbrightnesses[0]
         else:
             tstatuses = []
             brightnesses = []

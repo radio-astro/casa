@@ -55,7 +55,11 @@ def simalma(
 
     try:
         casalog.origin('simalma')
-        if verbose: casalog.filter(level="DEBUG2")
+        if verbose:
+            casalog.filter(level="DEBUG2")
+            t_priority = "WARN"
+        else:
+            t_priority = "INFO"
     
         a = inspect.stack()
         stacklevel = 0
@@ -135,7 +139,7 @@ def simalma(
         if isC1:
             msg("Cycle-1 ALMA simulation", origin="simalma", priority="warn")
         else:
-            msg("FS ALMA simulation", origin="simalma", priority="warn")
+            msg("Full Science ALMA simulation", origin="simalma", priority="warn")
             
         # antennalist of ACA and TP
         antlist_tp = "aca.tp.cfg"
@@ -146,7 +150,7 @@ def simalma(
             else:
                 acaconfig = "i"
 
-        warnmsg = "You are simulating Cycle1 observation but requested FS configuration for ACA. Assuming you know what you want and using config '%s'."
+        warnmsg = "You are simulating Cycle1 observation but requested Full Science configuration for ACA. Assuming you know what you want and using config '%s'."
         if acaconfig.upper().startswith("I"):
             antlist_aca = "aca.i.cfg"
             if isC1:
@@ -223,7 +227,7 @@ def simalma(
         # Definition of PB in OT and simulator differs.
         PB12ot = qa.quantity(pbval, "arcsec")
         PB12sim = qa.quantity(pbval*1.2, "arcsec")
-        msg("PB size - OT: %s, simulator: %s" % (qa.tos(PB12ot), qa.tos(PB12sim)), priority='warn')
+        msg("PB size - OT: %s, simulator: %s" % (qa.tos(PB12ot), qa.tos(PB12sim)), origin="simalma", priority='DEBUG2')
         nyqpbratio = nyquist/1.2   # OT Nyquist spacing in unit of simulator PB
         pointingspacing = str(nyqpbratio)+"PB"
         #msg("Setting Nyquist pointing spacing %s" % pointingspacing, origin="simalma", priority="warn")
@@ -231,7 +235,9 @@ def simalma(
         ############################################################
         # ALMA-BL simulation
         step = 1
-        msg("### Step %d: running BL simulation. ###" % step, origin="simalma", priority="warn")
+        msg("="*60, origin="simalma", priority="warn")
+        msg(" Step %d: simulating ALMA 12-m array observation." % step, origin="simalma", priority="warn")
+        msg("="*60, origin="simalma", priority="warn")
 
         obsmode_int = 'int'            
         # BL mapsize should be 1 PB smaller than skymodel when using ACA
@@ -243,7 +249,8 @@ def simalma(
         #    mapsize_bl = mapsize
         mapsize_bl = mapsize
         
-        print "simobserve(project='",project,"', skymodel='",skymodel,"', inbright='",inbright,"', indirection='",indirection,"', incell='",incell,"', incenter='",incenter,"', inwidth='",inwidth,"', complist='",complist,"', compwidth='",compwidth,"', setpointings=",setpointings,", ptgfile='",ptgfile,"', integration='",integration,"', direction='",direction,"', mapsize=",mapsize_bl,", maptype='",maptype_bl,"', pointingspacing='",pointingspacing,"', caldirection='",caldirection,"', calflux='",calflux,"',  obsmode='",obsmode_int,"', refdate='",refdate,"', hourangle='",hourangle,"', totaltime='",totaltime,"', antennalist='",antennalist,"', sdantlist='', sdant=",0,", thermalnoise='",thermalnoise,"', user_pwv=",pwv,", t_ground=",t_ground,", leakage=",leakage,", graphics='",graphics,"', verbose=",verbose,", overwrite=",overwrite,")"
+        taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_bl+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+totaltime+"', antennalist='"+antennalist+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+        msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
         simobserve(project=project,
                    skymodel=skymodel, inbright=inbright,
@@ -269,7 +276,9 @@ def simalma(
             ########################################################
             # ACA-7m simulation
             step += 1
-            msg("### Step %d: Running ACA simulation. ###" % step, origin="simalma", priority="warn")
+            msg("="*60, origin="simalma", priority="warn")
+            msg(" Step %d: simulating ACA 7-m array observation." % step, origin="simalma", priority="warn")
+            msg("="*60, origin="simalma", priority="warn")
             # Calculate total time for ACA and TP
             if qa.compare(totaltime,'s'):
                 tottime_aca = qa.tos(qa.mul(totaltime, acaratio))
@@ -280,12 +289,13 @@ def simalma(
                 else:
                     tottime_aca = qa.tos(qa.mul(integration, ntps*acaratio))
                 del npts, pointings, time
-            msg("Total observing time of ACA = %s" % tottime_aca, priority='warn')
+            msg("Total observing time of ACA = %s" % tottime_aca, origin="simalma", priority='warn')
 
             # Same pointings as BL
             #ptgfile_aca = ptgfile_bl
 
-            print "simobserve(project='",project,"', skymodel='",skymodel,"', inbright='",inbright,"', indirection='",indirection,"', incell='",incell,"', incenter='",incenter,"', inwidth='",inwidth,"', complist='",complist,"', compwidth='",compwidth,"', setpointings=",setpointings,", ptgfile='",ptgfile,"', integration='",integration,"', direction='",direction,"', mapsize=",mapsize_bl,", maptype='",maptype_aca,"', pointingspacing='",pointingspacing,"', caldirection='",caldirection,"', calflux='",calflux,"',  obsmode='",obsmode_int,"', refdate='",refdate,"', hourangle='",hourangle,"', totaltime='",tottime_aca,"', antennalist='",antlist_aca,"', sdantlist='', sdant=",0,", thermalnoise='",thermalnoise,"', user_pwv=",pwv,", t_ground=",t_ground,", leakage=",leakage,", graphics='",graphics,"', verbose=",verbose,", overwrite=",overwrite,")"
+            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_aca+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_aca+"', antennalist='"+antlist_aca+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+            msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
             
             simobserve(project=project,
                        skymodel=skymodel, inbright=inbright,
@@ -311,7 +321,9 @@ def simalma(
             ########################################################
             # ACA-TP  simulation
             step += 1
-            msg("### Step %d: Running TP simulation. ###" % step, origin="simalma", priority="warn")
+            msg("="*60, origin="simalma", priority="warn")
+            msg(" Step %d: simulating ACA total power observation." % step, origin="simalma", priority="warn")
+            msg("="*60, origin="simalma", priority="warn")
             obsmode_sd = "sd"
             # Resolve mapsize of TP. Add 1 PB to pointing extent of BL
             if rectmode:
@@ -320,13 +332,13 @@ def simalma(
                     mapx = qa.add(PB12ot,model_size[0])   # in the unit same as PB
                     mapy = qa.add(PB12ot,model_size[1])   # in the unit same as PB
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
-                    msg("Full skymodel mapped by BL and ACA. TP observes 1PB larger extent.", priority='warn')
+                    msg("Full skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
                 else:
                     # mapsize is defined. Add 1 PB to mapsize.
                     mapx = qa.add(qa.quantity(mapsize[0]), PB12ot)
                     mapy = qa.add(qa.quantity(mapsize[1]), PB12ot)
                     mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
-                    msg("A part of skymodel mapped by BL and ACA. TP observes 1PB larger extent.", priority='warn')
+                    msg("A part of skymodel mapped by ALMA 12-m and ACA 7-m arrays. The total power antenna observes 1PB larger extent.", origin="simalma", priority='warn')
             else:
                 # multi-pointing mode
                 npts, pointings, time = myutil.read_pointings(ptgfile_bl)
@@ -339,7 +351,7 @@ def simalma(
                 mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                 # number of pointings to map vicinity of each pointings
                 npts_multi = npts * int(2./pbgridratio_tp)**2
-                print "Number of pointings to map vicinity of each direction =", npts_multi
+                msg("Number of pointings to map vicinity of each direction = %d" % npts_multi, origin="simalma", priority="DEBUG2")
 
             grid_tp = qa.mul(PB12ot, pbgridratio_tp)
             pbunit = PB12ot['unit']
@@ -348,12 +360,12 @@ def simalma(
                             / qa.convert(grid_tp, pbunit)['value']) \
                         * int(qa.convert(mapy, pbunit)['value'] \
                               / qa.convert(grid_tp, pbunit)['value'])
-            print "Number of pointings to map a rect region =", npts_rect
+            msg("Number of pointings to map a rect region = %d" % npts_rect, origin="simalma", priority="DEBUG2")
 
             if rectmode:
                 dir_tp = direction
                 npts_tp = npts_rect
-                msg("Rectangle mode: TP observes 1PB larger region compared to BL and ACA", priority='warn')
+                msg("Rectangle mode: The total power antenna observes 1PB larger region compared to ALMA 12-m and ACA 7-m arrays", origin="simalma", priority='warn')
             else:
                 if npts_multi < npts_rect:
                     # Map +-1PB extent of each direction
@@ -366,14 +378,14 @@ def simalma(
                                                          "square", dir)
                     mapsize_tp = ["", ""]
                     npts_tp = npts_multi
-                    msg("Multi-pointing mode: TP observes +-1PB of each point", priority='warn')
+                    msg("Multi-pointing mode: The total power antenna observes +-1PB of each point", origin="simalma", priority='warn')
                 else:
                     # Map a region that covers all directions
                     dir_tp = center
                     npts_tp = npts_rect
-                    msg("Multi-pointing mode: TP maps a region that covers all pointings", priority='warn')
-                    msg("- Center of poinings: %s" % center, priority='warn')
-                    msg("- Map size: [%s, %s]" % (mapsize_tp[0], mapsize_tp[1]), priority='warn')
+                    msg("Multi-pointing mode: The total power antenna maps a region that covers all pointings", origin="simalma", priority='warn')
+                    msg("- Center of poinings: %s" % center, origin="simalma", priority='warn')
+                    msg("- Map size: [%s, %s]" % (mapsize_tp[0], mapsize_tp[1]), origin="simalma", priority='warn')
             
             ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12sim['value'])+"PB"
 
@@ -382,14 +394,15 @@ def simalma(
             integration_tp = integration
             ndump = int(qa.convert(tottime_tp, 's')['value']
                        / qa.convert(integration, 's')['value'])
-            print "Max number of dump in %s (integration %s): %d" % \
-                  (tottime_tp, integration, ndump)
+            msg("Max number of dump in %s (integration %s): %d" % \
+                (tottime_tp, integration, ndump), origin="simalma", \
+                priority="DEBUG2")
             
             if ndump < npts_tp:
                 t_scale = float(ndump)/float(npts_tp)
                 integration_tp = qa.tos(qa.mul(integration, t_scale))
-                msg("Integration time is scaled to cover all pointings in observation time.", priority='warn')
-                msg("- Scaled TP integration time: %s" % integration_tp, priority='warn')
+                msg("Integration time is scaled to cover all pointings in observation time.", origin="simalma", priority='warn')
+                msg("- Scaled total power integration time: %s" % integration_tp, origin="simalma", priority='warn')
                 ## Sometimes necessary to avoid the effect of round-off error
                 #iunit = qa.quantity(integration_tp)['unit']
                 #intsec = qa.convert(integration_tp,"s")
@@ -397,7 +410,8 @@ def simalma(
                 ##tottime_tp = qa.tos(qa.convert(qa.quantity(totsec, "s"), iunit))
                 #tottime_tp = qa.tos(qa.quantity(totsec, "s"))
             
-            print "simobserve(project='",project,"', skymodel='",skymodel,"', inbright='",inbright,"', indirection='",indirection,"', incell='",incell,"', incenter='",incenter,"', inwidth='",inwidth,"', complist='",complist,"', compwidth='",compwidth,"', setpointings=",True,", ptgfile='$project.ptg.txt', integration='",integration_tp,"', direction='",dir_tp,"', mapsize=",mapsize_tp,", maptype='",maptype_tp,"', pointingspacing='",ptgspacing_tp,"', caldirection='",caldirection,"', calflux='",calflux,"',  obsmode='",obsmode_sd,"', refdate='",refdate,"', hourangle='",hourangle,"', totaltime='",tottime_tp,"', antennalist='', sdantlist='",antlist_tp,"', sdant=",tpantid,", thermalnoise='",thermalnoise,"', user_pwv=",pwv,", t_ground=",t_ground,", leakage=",leakage,", graphics='",graphics,"', verbose=",verbose,", overwrite=",overwrite,")"
+            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(True)+", ptgfile='$project.ptg.txt', integration='"+integration_tp+"', direction='"+str(dir_tp)+"', mapsize="+str(mapsize_tp)+", maptype='"+maptype_tp+"', pointingspacing='"+ptgspacing_tp+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_sd+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_tp+"', antennalist='', sdantlist='"+antlist_tp+"', sdant="+str(tpantid)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+            msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
             simobserve(project=project,
                        skymodel=skymodel, inbright=inbright,
@@ -426,22 +440,25 @@ def simalma(
                 ########################################################
                 # Image ACA-7m + ACA-TP
                 step += 1
-                msg("### Step %d: generating ACA + TP image. ###" % step, origin="simalma", priority="warn")
+                msg("="*60, origin="simalma", priority="warn")
+                msg(" Step %d: generating ACA 7-m array + total power image. " % step, origin="simalma", priority="warn")
+                msg("="*60, origin="simalma", priority="warn")
                 if os.path.exists(fileroot+"/"+msname_aca):
                     vis_aca = msname_aca+","
                 else:
-                    msg("ACA is requested but ACA MS '%s' is not found" \
+                    msg("ACA is requested but ACA 7-m MS '%s' is not found" \
                         % msname_aca, origin="simalma", priority="error")
                 if os.path.exists(fileroot+"/"+msname_tp):
                     vis_aca += msname_tp
                 else:
-                    msg("ACA is requested but TP MS '%s' is not found" \
+                    msg("ACA is requested but total power MS '%s' is not found" \
                         % msname_tp, origin="simalma", priority="error")
                 cell_aca = cell
 
                 imsize_aca = 0
 
-                print "simanalyze(project='",project,"', image=",image,", vis='",vis_aca,"', modelimage='', cell='",cell_aca,"', imsize=",imsize_aca,", imdirection='",imdirection,"', niter=",niter,", threshold='",threshold,"', weighting='",weighting,"', mask=",[],", outertaper=",[],", stokes='I', analyze=",True,", graphics='",graphics,"', verbose=",verbose,", overwrite=",overwrite,")"
+                taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_aca+"', modelimage='', cell='"+str(cell_aca)+"', imsize="+str(imsize_aca)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+                msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
                 simanalyze(project=project, image=image,
                            vis=vis_aca, modelimage="",
@@ -463,10 +480,12 @@ def simalma(
             ############################################################
             # Image ALMA-BL
             step += 1
+            msg("="*60, origin="simalma", priority="warn")
             if acaratio > 0:
-                msg("### Step %d: generating BL + ACA image. ###" % step, origin="simalma", priority="warn")
+                msg(" Step %d: generating ALMA 12-m + ACA image." % step, origin="simalma", priority="warn")
             else:
-                msg("### Step %d: generating BL image. ###" % step, origin="simalma", priority="warn")
+                msg(" Step %d: generating ALMA 12-m array image." % step, origin="simalma", priority="warn")
+            msg("="*60, origin="simalma", priority="warn")
 
             if os.path.exists(fileroot+"/"+msname_bl):
                 vis_bl = msname_bl
@@ -474,7 +493,8 @@ def simalma(
                 msg("Could not find MS to image, '%s'" \
                     % msname_bl, origin="simalma", priority="error")
 
-            print "simanalyze(project='", project,"', image=", image,", vis='", vis_bl,"', modelimage='", modelimage,"', cell='", cell,"', imsize=", imsize,", imdirection='", imdirection,"', niter=", niter,", threshold='", threshold,"', weighting='", weighting,"', mask=", [],", outertaper=", [],", stokes='I', analyze=", True,", graphics='", graphics,"', verbose=", verbose,", overwrite=", overwrite, ")"
+            taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_bl+"', modelimage='"+ modelimage+"', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
+            msg("Executing: "+taskstr, origin="simalma", priority=t_priority)
 
             simanalyze(project=project, image=image,
                        vis=vis_bl, modelimage=modelimage,

@@ -424,6 +424,7 @@
         mask -- mask image to be used for CLEANing. As long as the image has
                the same shape (size), mask images from a previous
                interactive session can be used for a new execution.
+               Only an image mask is allowed at this stage. Text formats not allowed yet.
 
         field -- Select fields in MS.  Use field id(s) or field name(s).
                     ['go listobs' to obtain the list id's or names]
