@@ -138,6 +138,9 @@ public:
 	 String convType="BOX", Int userSupport=-1);
   SDGrid(MPosition& ml, Int cachesize, Int tilesize,
 	 String convType="BOX", Int userSupport=-1);
+  SDGrid(MPosition& ml, Int cachesize, Int tilesize,
+	 String convType="TGAUSS", Float truncate=-1.0, 
+         Float gwidth=0.0, Float jwidth=0.0);
   // </group>
 
   // Copy constructor
@@ -257,6 +260,10 @@ private:
   Int convSize;
   Int convSupport;
   Int userSetSupport_p;
+  
+  Float truncate_p;
+  Float gwidth_p;
+  Float jwidth_p;
 
   Int lastIndex_p;
 

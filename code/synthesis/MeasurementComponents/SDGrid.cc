@@ -83,7 +83,8 @@ SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
   : FTMachine(), sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
-    pointingToImage(0), userSetSupport_p(userSupport)
+    pointingToImage(0), userSetSupport_p(userSupport),
+    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
 {
   lastIndex_p=0;
 }
@@ -93,7 +94,8 @@ SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize
   : FTMachine(),  sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
-    pointingToImage(0), userSetSupport_p(userSupport)
+    pointingToImage(0), userSetSupport_p(userSupport),
+    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -104,7 +106,8 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
-    pointingToImage(0), userSetSupport_p(userSupport)
+    pointingToImage(0), userSetSupport_p(userSupport),
+    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
 {
   lastIndex_p=0;
 }
@@ -114,7 +117,20 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
-    pointingToImage(0), userSetSupport_p(userSupport)
+    pointingToImage(0), userSetSupport_p(userSupport),
+    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
+{
+  mLocation_p=mLocation;
+  lastIndex_p=0;
+}
+
+SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
+	       String iconvType, Float truncate, Float gwidth, Float jwidth)
+  : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
+  cachesize(icachesize), tilesize(itilesize),
+  isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
+    pointingToImage(0), userSetSupport_p(-1),
+    gwidth_p(gwidth), jwidth_p(jwidth), truncate_p(truncate)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -178,10 +194,14 @@ SDGrid::SDGrid(const SDGrid& other)
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
 #define grdsf grdsf_
+#define grdgauss grdgauss_
+#define grdjinc1 grdjinc1_
 #endif
 
 extern "C" { 
    void grdsf(Double*, Double*);
+   void grdgauss(Double*, Double*, Double*);
+   void grdjinc1(Double*, Double*, Int*, Double*);
 }
 
 //----------------------------------------------------------------------
@@ -214,7 +234,7 @@ void SDGrid::init() {
   if(imageCache) delete imageCache; imageCache=0;
 
   convType=downcase(convType);
-  logIO() << "Convolution function : " << convType << LogIO::DEBUG1;
+  logIO() << "Convolution function : " << convType << LogIO::DEBUG1 << LogIO::POST;
   if(convType=="pb") {
   }
   else if(convType=="box") {
@@ -242,6 +262,79 @@ void SDGrid::init() {
       grdsf(&nu, &val);
       convFunc(i)=(1.0-nu*nu)*val;
     }
+  }
+  else if(convType=="gauss") {
+    // default is b=1.0 (Mangum et al. 2007)
+    Double hwhm=(gwidth_p > 0.0) ? Double(gwidth_p) : sqrt(log(2.0));
+    Float truncate=(truncate_p >= 0.0) ? truncate_p : 3.0*hwhm; 
+    convSampling=100;
+    Int itruncate=(Int)(truncate*Double(convSampling)+0.5);
+    logIO() << LogIO::DEBUG1 << "hwhm=" << hwhm << LogIO::POST;
+    logIO() << LogIO::DEBUG1 << "itruncate=" << itruncate << LogIO::POST;
+    convSupport=(Int)(truncate+0.5);
+    convSize=convSampling*(2*convSupport+2);
+    convFunc.resize(convSize);
+    convFunc=0.0;
+    Double val, x;
+    for (Int i = 0 ; i <= itruncate ; i++) {
+      x = Double(i)/Double(convSampling);
+      grdgauss(&hwhm, &x, &val);
+      convFunc(i)=val;
+    }
+
+//     String outfile = convType + ".dat";
+//     ofstream ofs(outfile.c_str());
+//     for (Int i = 0 ; i < convSize ; i++) {
+//       ofs << i << " " << convFunc[i] << endl; 
+//     }
+//     ofs.close();
+  }
+  else if (convType=="gjinc") {
+    // default is b=2.52, c=1.55 (Mangum et al. 2007)
+    Double hwhm = (gwidth_p > 0.0) ? Double(gwidth_p) : sqrt(log(2.0))*2.52;
+    Double c = (jwidth_p > 0.0) ? Double(jwidth_p) : 1.55;
+    //Float truncate = truncate_p;
+    convSampling = 100;
+    Int itruncate=(Int)(truncate_p*Double(convSampling)+0.5);
+    logIO() << LogIO::DEBUG1 << "hwhm=" << hwhm << LogIO::POST;
+    logIO() << LogIO::DEBUG1 << "c=" << c << LogIO::POST;
+    logIO() << LogIO::DEBUG1 << "itruncate=" << itruncate << LogIO::POST;
+    convSupport=(truncate_p >= 0.0) ? (Int)(truncate_p+0.5) : (Int)(2*c+0.5);
+    convSize=convSampling*(2*convSupport+2);
+    convFunc.resize(convSize);
+    convFunc=0.0;
+    Double r, x, val1, val2;
+    Int normalize = 1;
+    if (itruncate >= 0) {
+      for (Int i = 0 ; i < itruncate ; i++) {
+        x = Double(i) / Double(convSampling);
+        //r = Double(i) / (Double(hwhm)*Double(convSampling));
+        grdgauss(&hwhm, &x, &val1);
+        grdjinc1(&c, &x, &normalize, &val2);
+        convFunc(i) = val1 * val2;
+      }
+    }
+    else { 
+      // default is to truncate at first null
+      for (Int i=0;i<convSize;i++) {
+        x = Double(i) / Double(convSampling);
+        //r = Double(i) / (Double(hwhm)*Double(convSampling));
+        grdjinc1(&c, &x, &normalize, &val2);
+        if (val2 <= 0.0) {
+          logIO() << LogIO::DEBUG1 << "convFunc is automatically truncated at radius " << x << LogIO::POST;
+          break;
+        }
+        grdgauss(&hwhm, &x, &val1);
+        convFunc(i) = val1 * val2;
+      }
+    }
+
+    String outfile = convType + ".dat";
+    ofstream ofs(outfile.c_str());
+    for (Int i = 0 ; i < convSize ; i++) {
+      ofs << i << " " << convFunc[i] << endl; 
+    }
+    ofs.close();
   }
   else {
     logIO_p << "Unknown convolution function " << convType << LogIO::EXCEPTION;
