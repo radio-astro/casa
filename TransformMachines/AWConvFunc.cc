@@ -230,10 +230,6 @@ namespace casa{
 		    cfWtBuf.resize(pbshp);
 		    cfBuf.resize(pbshp);
 
-    		    // if (iw==0) cfBuf = cfWtBuf = 1.0;
-		    // else cfBuf = cfWtBuf = 0.0;
-		    // cfWtBuf=1.0;
-		    cfWtBuf = cfBuf = 0.0;
 		    const Vector<Double> sampling_l(2,sampling);
 		    //		    Double wval = wValues[iw];
 		    Matrix<Complex> cfBufMat(cfBuf.nonDegenerate()), 
@@ -246,9 +242,13 @@ namespace casa{
 		    //		    Int inner = cfBufMat.shape()(0)/aTerm.getOversampling();
 		    //		    Float inner = 2.0*aTerm.getOversampling()/cfBufMat.shape()(0);
 
-		    // psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
-		    // psTerm.applySky(cfWtBufMat, False); // Assign
-		    cfBufMat = cfWtBufMat = 1.0;
+		    if (psTerm.isNoOp())
+		      cfBufMat = cfWtBufMat = 1.0;
+		    else
+		      {
+			psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
+			psTerm.applySky(cfWtBufMat, False); // Assign
+		      }
 
 		    // WBAWP CODE BEGIN  -- make PS*PS for Weights
 		    // psTerm.applySky(cfWtBufMat, True);  // Multiply
