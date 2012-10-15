@@ -408,7 +408,7 @@ Display Parameters
 ###############################################################################
 -->
 
-    <param type="bool" name="customsymbol" subparam="false">
+    <param type="bool" name="customsymbol">
         <description>set a custom symbol for unflagged points</description>
         <value>False</value>
     </param>
@@ -469,12 +469,12 @@ Display Parameters
         </allowed>
     </param>
 
-    <param type="bool" name="customflaggedsymbol" subparam="false">
+    <param type="bool" name="customflaggedsymbol">
         <description>set a custom plot symbol for flagged points</description>
         <value>False</value>
     </param>
 
-    <param type="string" name="flaggedshape" subparam="true">
+    <param type="string" name="flaggedsymbolshape" subparam="true">
         <description>shape of plotted flagged symbols</description>
         <value>nosymbol</value>
         <allowed kind="enum">
@@ -487,17 +487,17 @@ Display Parameters
         </allowed>
     </param>
 
-    <param type="int" name="flaggedsize" subparam="true">
+    <param type="int" name="flaggedsymbolsize" subparam="true">
         <description>size of plotted flagged symbols</description>
         <value>2</value>
     </param>
 
-    <param type="string" name="flaggedcolor" subparam="true">
+    <param type="string" name="flaggedsymbolcolor" subparam="true">
         <description>color of plotted flagged symbols</description>
         <value>ff0000</value>
     </param>
 
-    <param type="string" name="flaggedfill" subparam="true">
+    <param type="string" name="flaggedsymbolfill" subparam="true">
         <description>fill type of plotted flagged symbols</description>
         <value>fill</value>
         <allowed kind="enum">
@@ -509,7 +509,7 @@ Display Parameters
         </allowed>
     </param>
 
-    <param type="bool" name="flaggedoutline" subparam="true">
+    <param type="bool" name="flaggedsymboloutline" subparam="true">
         <description>selects outlining plotted flagged points</description>
         <value>False</value>
     </param>
@@ -624,14 +624,15 @@ Export plot as image Parameters
     <param type="string" name="plotfile">
       <description>Name of plot file to save automatically.</description>
     </param>
-    <param type="string" name="format" subparam="true">
-        <description>Format type (jpg, png, ps, pdf), if not provided, plotfile extension will be used.</description>
+    <param type="string" name="expformat" subparam="true">
+        <description>Export format type (jpg, png, ps, pdf, txt), if not provided, plotfile extension will be used.</description>
         <allowed kind="enum">
             <value />
             <value>jpg</value>
             <value>png</value>
             <value>pdf</value>
             <value>ps</value>
+            <value>txt</value>
         </allowed>
      </param>
      <param type="bool" name="highres" subparam="true">
@@ -976,7 +977,7 @@ Constraints
         </notequals>
     </when>
 
-<!--    <when param="customsymbol">
+    <when param="customsymbol">
         <equals type="bool" value="False" />
         <equals type="bool" value="True">
             <default param="symbolshape">
@@ -1001,13 +1002,13 @@ Constraints
         <equals type="bool" value="False" />
         <equals type="bool" value="True">
             <default param="flaggedsymbolshape">
-                <value type="string">autoscaling</value>
+                <value type="string">nosymbol</value>
             </default>
             <default param="flaggedsymbolsize">
                 <value type="int">2</value>
             </default>
             <default param="flaggedsymbolcolor">
-                <value type="string">0000ff</value>
+                <value type="string">ff0000</value>
             </default>
             <default param="flaggedsymbolfill">
                 <value type="string">fill</value>
@@ -1017,11 +1018,10 @@ Constraints
             </default>
         </equals>
     </when>
--->
 
     <when param="plotfile">
         <notequals type="string" value="">
-            <default param="format"><value type="string"/></default>
+            <default param="expformat"><value type="string"/></default>
             <default param="highres"><value type="bool">False</value></default>
             <default param="interactive"><value type="bool">False</value></default>
             <default param="overwrite"><value type="bool">False</value></default>
@@ -1283,12 +1283,44 @@ Constraints
         xselfscale -- If true, self-scale each iterated plot on the x axis
         yselfscale -- If true, self-scale each iterated plot on the y axis
                       default: false, which will scale all plots globally
-    
+
+    customsymbol -- If true, use a custom symbol for drawing unflagged points
+                    default: False
+      &gt;&gt;&gt; customsymbol expandable parameters
+        symbolshape -- If true, use a custom shape to draw unflagged symbols
+                       default: 'autoscaling' (ignores symbolsize)
+                       options: 'autoscaling', 'circle', 'square', 'diamond', 'pixel', 'nosymbol'
+        symbolsize -- size of the unflagged symbols in pixels
+                      default: 2
+        symbolcolor -- color to use for unflagged symbols; can be a RGB hex code or a color name
+                       default: '0000ff'
+                       example: 'purple'
+        symbolfill -- type of fill to use for unflagged symbols
+                      default: 'fill'
+                      options: 'fill', 'mesh1', 'mesh2', 'mesh3', 'nofill'
+        symboloutline -- If true, outline unflagged symbols in black
+
     coloraxis -- axis upon which to colorize the plotted points
-                options (= indicates synonyms): 
+                options (= indicates synonyms):
                     'scan',  'field',  'spw',  'antenna1'='ant1',  'antenna2'='ant2',
                     'baseline',  'channel'='chan',  'corr'='correlation'
                 default: ''  (use a single color for all points)
+
+    customflaggedsymbol -- If true, use a custom symbol for drawing flagged points
+                           default: False
+      &gt;&gt;&gt; customflaggedsymbol expandable parameters
+        symbolshape -- If true, use a custom shape to draw flagged symbols
+                       default: 'nosymbol'
+                       options: 'autoscaling', 'circle', 'square', 'diamond', 'pixel', 'nosymbol'
+        symbolsize -- size of the flagged symbols in pixels
+                      default: 2
+        symbolcolor -- color to use for flagged symbols; can be a RGB hex code or a color name
+                       default: '0000ff'
+                       example: 'purple'
+        symbolfill -- type of fill to use for flagged symbols
+                      default: 'fill'
+                      options: 'fill', 'mesh1', 'mesh2', 'mesh3', 'nofill'
+        symboloutline -- If true, outline flagged symbols in black
 
     plotrange -- manual plot axis ranges: [xmin,xmax,ymin,ymax]
                  Does not affect data selection.
@@ -1320,15 +1352,16 @@ Constraints
 
     plotfile -- name of plot file to save automatically
                 default: ''  (i.e., draw an interactive plot in the gui)
-      &gt;&gt;&gt; plotfile expandable parameters 
-        format -- format type ('jpg', 'png', 'ps', 'pdf'), 
-                  default:  ''   (plotfile extension will be used)
+      &gt;&gt;&gt; plotfile expandable parameters
+        expformat -- export format type; if 'txt' is used an ASCII dump of the plotted points is generated (also available in the export tab)
+                     default:  ''   (plotfile extension will be used)
+                     options: 'jpg', 'png', 'ps', 'pdf', 'txt'
         highres -- use high resolution? Always true for jpg and png.
-                  default: false
+                   default: false
         interactive  -- interactive mode? (pop up confirmation window)
-                  default: false (e.g., for automated scripts to prevent blocking).
+                        default: false (e.g., for automated scripts to prevent blocking).
         overwrite -- Overwrite plot file if it already exists?
-                  default: false
+                     default: false
 <!--
     
     showgui - Whether or not to display the plotting GUI

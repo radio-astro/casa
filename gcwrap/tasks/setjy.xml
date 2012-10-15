@@ -362,10 +362,32 @@
     standard -- Flux density standard, used if fluxdensity[0] &lt; 0.0
             default: 'Perley-Butler 2010'; example: standard='Baars'
             Options: 'Baars','Perley 90','Perley-Taylor 95',
-               'Perley-Taylor 99', 'Perley-Butler 2010',
-               and 'Butler-JPL-Horizons 2012'. 
+               'Perley-Taylor 99', 'Perley-Butler 2010', 'Perley-Butler 2013',
+               'Butler-JPL-Horizons 2010', and 'Butler-JPL-Horizons 2012'. 
             All but the last two are for extragalactic calibrators,
             and the final two are for Solar System objects.  
+
+            Extragalactic calibrators:
+            Following source names and their common aliases are recognized.
+            The last column shows which standards support for each source.
+            Note that the task does not do exact matching of the name and
+            it recognizes as long as the field name  contains the string 
+            listed below (e.g. 'PKS 1934-638' works). 
+            -----------------------------------------------------------
+            3C Name B1950 Name J2000 Name Alt. J2000 Name  standards*
+            3C48    0134+329   0137+331   J0137+3309       1,3,4,5,6
+            3C123   0433+295   0437+296   J0437+2940       2 
+            3C138   0518+165   0521+166   J0521+1638       1,3,4,5,6
+            3C147   0538+498   0542+498   J0542+4951       1,3,4,5,6
+            3C196   0809+483   0813+482   J0813+4813       1,2 
+            3C286   1328+307   1331+305   J1331+3030       1,2,3,4,5,6
+            3C295   1409+524   1411+522   J1411+5212       1,2,3,4,5,6
+              -     1934-638      -       J1939-6342       1,3,4,5,6
+            ----------------------------------------------------------- 
+            * supported in: 1 - Perley-Butler 2010, 2 - Perley-Butler 2013,
+            3 - Perley-Taylor 99, 4 - Perley-Taylor 95, 5 - Perley 90, 6 - Baars 
+
+            Solar system objects:
             The 'Butler-JPL-Horizons 2012' standard is recommended over 
             'Butler-JPL-Horizons 2010' as the former uses updated models.
             Recognized Solar System objects (for 'Butler-JPL-Horizons 2012') are: 

@@ -263,6 +263,9 @@ class test_SingleObservation(SetjyUnitTestBase):
     def test3_SingleObservationNewModel(self):
         """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2012 model"""
 
+        # print out some values for debugging
+        debug=False
+
         os.system("mv " + self.inpms + " " + self.inpms + ".test3")
         self.inpms += ".test3"
         record = {}
@@ -302,20 +305,26 @@ class test_SingleObservation(SetjyUnitTestBase):
             tblocal.close()
             raise e
 
+        if debug:
+          print "self.result['history']=",self.result['history']
+          print "self.result['wvr']=",self.result['wvr']
+          print "self.result['auto3']=",self.result['auto3']
+          print "self.result['auto4']=",self.result['auto4']
+
         """Flux density in HISTORY (Uranus)?"""
         self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
         """WVR spw"""
         #self.check_eq(self.result['wvr'], numpy.array([[ 25.33798409+0.j,25.33798409+0.j]]),0.0001)
-        # new value after code and ephemeris data update 2012-10-01
-        self.check_eq(self.result['wvr'], numpy.array([[ 25.33743286+0.j,  25.33743286+0.j]]),0.0001)
+        # new value after code and ephemeris data update 2012-10-03
+        self.check_eq(self.result['wvr'], numpy.array([[ 25.33490372+0.j, 25.33490372+0.j]]),0.0001)
         """Zero spacing of spw 3"""
 	#self.check_eq(self.result['auto3'], numpy.array([[ 66.72530365+0.j],[ 66.72530365+0.j]]),0.0001)
-        # new value after code and ephemeris data update 2012-10-01
-	self.check_eq(self.result['auto3'], numpy.array([[ 66.72493744+0.j], [ 66.72493744+0.j]]),0.0001)
+        # new value after code and ephemeris data update 2012-10-03
+	self.check_eq(self.result['auto3'], numpy.array([[ 66.71941376+0.j], [ 66.71941376+0.j]]),0.0001)
         """Zero spacing of spw 4"""
         #self.check_eq(self.result['auto4'], numpy.array([[ 70.40153503+0.j],[ 70.40153503+0.j]]),0.0001)
-        # new value after code and ephemeris data update 2012-10-01
-        self.check_eq(self.result['auto4'], numpy.array([[ 70.40119934+0.j], [ 70.40119934+0.j]]),0.0001)
+        # new value after code and ephemeris data update 2012-10-03
+        self.check_eq(self.result['auto4'], numpy.array([[ 70.39561462+0.j], [ 70.39561462+0.j]]), 0.0001)
 
         return sjran
 

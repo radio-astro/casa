@@ -22,8 +22,8 @@
 # model calculations should be in the code (for those bodies that have
 # proper models) but for now, just live with the tabulated versions.
 #
-# version 1.0
-# last edited: 2012Sep26
+# version 1.1
+# last edited: 2012Oct03
 #
 
 from numpy import searchsorted
@@ -33,8 +33,8 @@ from math import exp, pi, cos, sin, isnan, sqrt
 #from os import environ, listdir
 import os
 from taskinit import gentools
-
 (tb,me)=gentools(['tb','me'])
+
 def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
     '''
     find flux density for solar system bodies:
@@ -48,10 +48,11 @@ def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
         Ganymede - Butler et al. 2012
         Titan - Gurwell et al. 2012
         Callisto - Butler et al. 2012
-        Ceres - ?
+        Ceres - Keihm et al. 2012
         Juno - ?
-        Pallas - ?
-        Vesta - ?
+        Pallas - Keihm et al. 2012
+        Vesta - Keihm et al. 2012
+        Hygeia - Keihm et al. 2012
 
     inputs:
         source_name = source name string.  example: "Venus"
@@ -91,7 +92,7 @@ def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
     AU = 1.4959787066e11
     SUPPORTED_BODIES = [ 'Venus', 'Mars', 'Jupiter', 'Uranus', 'Neptune',
                          'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan',
-                         'Ceres', 'Juno', 'Pallas', 'Vesta' ]
+                         'Ceres', 'Juno', 'Pallas', 'Vesta', 'Hygeia' ]
 
     capitalized_source_name = source_name.capitalize()
     statuses = []
@@ -293,9 +294,9 @@ def solar_system_fd (source_name, MJDs, frequencies, observatory, casalog=None):
 # as the doppler shift, so take that into account.
 #
             delta_frequency0 = frequency[0] - newfreq0
-            newfreq0 += delta_frequency0
+            newfreq0 = frequency[0] + delta_frequency0
             delta_frequency1 = frequency[1] - newfreq1
-            newfreq1 += delta_frequency1
+            newfreq1 = frequency[1] + delta_frequency1
             shifted_frequencies.append([newfreq0,newfreq1])
             average_delta_frequency = (delta_frequency0 + delta_frequency1)/2
 #
@@ -421,12 +422,11 @@ def brightness_Mars_int (MJDs, frequencies):
                 lTb.append(modelTbs[jj][ii])
             mTbs.append(interpolate_list(lMJD, lTb, MJD)[1])
 #
-# note: here, when we have the planck results, get a proper
-# estimate of the background temperature.
+# note: here, when we have the planck results, get a proper estimate of
+# the background temperature.
 #
-# note also that we want to do this here because the integral
-# needs to be done on the brightness, not on the brightness
-# *temperature*.
+# note also that we want to do this here because the integral needs to
+# be done on the brightness, not on the brightness *temperature*.
 #
             Tbg = 2.725
             mfds.append((2.0 * HH * freqs[ii]**3.0 / CC**2.0) * \
@@ -538,12 +538,52 @@ def interpolate_list (freqs, Tbs, frequency):
         high = min(len(freqs),ind+6)
         if (high == len(freqs)):
             low = high - 11
+#
+# i wanted to put in a check for tabulated values that change
+# derivative, since that confuses the interpolator.  benign cases are
+# fine, like radial velocity, but for the model Tbs, where there are
+# sharp spectral lines, then the fitting won't be sensible when you're
+# right at the center of the line, because the inflection is so severe.
+# i thought if i just only took values that had the same derivative as
+# the location where the desired value is that would work, but it
+# doesn't :/.  i'm either not doing it right or there's something
+# deeper.
+#
+#   if freqs[ind] < frequency:
+#       deriv = Tbs[ind+1] - Tbs[ind]
+#   else:
+#       deriv = Tbs[ind] - Tbs[ind-1]
+#   tTbs = []
+#   tfreqs = []
+#   for ii in range(low,high):
+#       nderiv = Tbs[ii+1] - Tbs[ii]
+#       if (nderiv >= 0.0 and deriv >= 0.0) or (nderiv < 0.0 and deriv < 0.0):
+#           tTbs.append(Tbs[ii])
+#           tfreqs.append(freqs[ii])
+#   aTbs = array(tTbs)
+#   afreqs = array(tfreqs)
     aTbs = array(Tbs[low:high])
     afreqs = array(freqs[low:high])
-    func = interp1d (afreqs, aTbs, kind='cubic')
-    if isnan(func(frequency)):
-       func = interp1d (afreqs, aTbs, kind='linear')
-    return [ 0, float(func(frequency)), 0.0 ]
+#
+# cubic interpolation blows up near line centers (see above comment),
+# so check that it doesn't fail completely (put it in a try/catch), and
+# also that it's not a NaN and within the range of the tabulated values
+#
+    range = max(aTbs) - min(aTbs)
+    try:
+        func = interp1d (afreqs, aTbs, kind='cubic')
+        if isnan(func(frequency)) or func(frequency) < min(aTbs)-range/2 or func(frequency) > max(aTbs)+range/2:            func = interp1d (afreqs, aTbs, kind='linear')
+    except:
+        func = interp1d (afreqs, aTbs, kind='linear')
+#
+# if it still failed, even with the linear interpolation, just take the
+# nearest tabulated point.
+#
+    if isnan(func(frequency)) or func(frequency) < min(aTbs)-range/2 or func(frequency) > max(aTbs)+range/2:
+        brightness = Tbs[ind]
+    else:
+        brightness = float(func(frequency))
+    return [ 0, brightness, 0.0 ]
 
 
 def integrate_Tb (freqs, Tbs, frequency):
@@ -552,7 +592,6 @@ def integrate_Tb (freqs, Tbs, frequency):
     if (frequency[0] > freqs[low_index]):
         low_index = low_index + 1
 
-    [status,hi_Tb,hi_dTb] = interpolate_list (freqs, Tbs, frequency[1])
     [status,hi_Tb,hi_dTb] = interpolate_list (freqs, Tbs, frequency[1])
     hi_index = nearest_index (freqs, frequency[1])
     if (frequency[1] < freqs[hi_index]):
@@ -569,4 +608,5 @@ def integrate_Tb (freqs, Tbs, frequency):
            ii += 1
     Tb /= (frequency[1] - frequency[0])
     return [ 0, Tb, 0.0 ]
+
 

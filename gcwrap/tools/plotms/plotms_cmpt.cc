@@ -371,7 +371,7 @@ void plotms::setFlaggedSymbol(
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName(),
         PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);
-}        
+}
 
 string plotms::getColorAxis(const int plotIndex) 
 {
