@@ -805,14 +805,24 @@ if(mystep in thesteps):
     refpeakcontsc33 = 0.00976239796728
 
     # reference values obtained with this script using CASA stable r19569 (10 May 2012, DP)
-    refrmspcal    = 0.000612945703324
-    refpeakpcal   = 1.86513638496
-    refrmstitan   = 0.00491443555802
-    refpeaktitan  = 0.361274629831
-    refrmscont    = 0.00032463966636
-    refpeakcont   = 0.00699360202998
-    refrmscontsc  = 7.81473427196e-05
-    refpeakcontsc = 0.00983608141541 
+    #refrmspcal    = 0.000612945703324
+    #refpeakpcal   = 1.86513638496
+    #refrmstitan   = 0.00491443555802
+    #refpeaktitan  = 0.361274629831
+    #refrmscont    = 0.00032463966636
+    #refpeakcont   = 0.00699360202998
+    #refrmscontsc  = 7.81473427196e-05
+    #refpeakcontsc = 0.00983608141541 
+
+    # reference values obtained with this script using CASA stable r21621 (15 Oct 2012, DP)
+    refrmspcal    =  0.000963084050454
+    refpeakpcal   =  1.87274956703    
+    refrmstitan   =  0.00491269072518 
+    refpeaktitan  =  0.361274719238   
+    refrmscont    =  0.000305994151859
+    refpeakcont   =  0.00709502119571 
+    refrmscontsc  =  7.5960662798e-05 
+    refpeakcontsc =  0.00963686406612 
 
     devrmspcal = abs(rmspcal-refrmspcal)/refrmspcal*100.
     devpeakpcal = abs(peakpcal-refpeakpcal)/refpeakpcal*100.
