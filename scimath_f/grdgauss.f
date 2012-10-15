@@ -28,7 +28,7 @@
 *-----------------------------------------------------------------------
       SUBROUTINE GRDGAUSS (HWHM, VAL, OUT)
 C
-C     Gaussian function with a radious of half-maximum, HWHM, which 
+C     Gaussian function with a radius of half-maximum, HWHM, which 
 C     is written as,
 C
 C        OUT = exp( -ln(2.0)*(VAL/RHM)**2 )
