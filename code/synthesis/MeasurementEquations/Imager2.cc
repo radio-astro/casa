@@ -2820,7 +2820,7 @@ Bool Imager::createFTMachine()
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
-    //    psTerm->setOpCode(CFTerms::NOOP);
+    psTerm->setOpCode(CFTerms::NOOP);
     CountedPtr<ConvolutionFunction> awConvFunc;
     awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,False);
     CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
