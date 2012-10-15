@@ -585,7 +585,7 @@ class simutil:
         
         """
         f=open(filename,"write")
-        f.write('#Epoch     RA          DEC      TIME\n')
+        f.write('#Epoch     RA          DEC      TIME[sec]\n')
         if type(pointings)!=type([]):
             pointings=[pointings]
         npos=len(pointings)

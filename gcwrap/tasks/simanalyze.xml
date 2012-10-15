@@ -258,7 +258,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
 
     This task is for imaging and analyzing datasets created with 
-    simobserve or simdata.  New functionality is actively 
+    simobserve or simalma.  New functionality is actively 
     being added, so if you have changed versions of CASA, check 
     the inputs carefully.
     Please contact CASA experts with any questions.
@@ -270,7 +270,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     image -- invert and deconvolve the measurement set(s)
        * NOTE: interactive clean or more parameters than the subset visible
          here are available by simply running the clean task directly, 
-         then returning to simdata to run "analyze" if desired.
+         then returning to simanalyze to run "analyze" if desired.
        * NOTE: the channelization of the output image cube will be the 
          same as that in the simulated Measurement Set.
        * if graphics turned on, display the clean image and residual image
@@ -347,7 +347,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     project.[cfg].fidelity = fidelity image
     project.[cfg].analysis.png = diagnostic figure of difference and fidelity
 	    
-    project.[cfg].simanalyze.last = saved input parameters for simdata task
+    project.[cfg].simanalyze.last = saved input parameters for simanalyze task
 
 </example>
 </task>

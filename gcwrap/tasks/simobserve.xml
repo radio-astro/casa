@@ -7,7 +7,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
 <task type="function" name="simobserve" category="simulation">
 
-  <shortdescription>mosaic simulation task:</shortdescription>
+  <shortdescription>mosaic simulation task</shortdescription>
   <description>
     This task will simulate interferometric data.  
     Please contact CASA helpdesk with questions.
@@ -390,8 +390,8 @@ mosaic simulation task:
     -------------------------------
     project -- root filename for all output files.
     -------------------------------
-    skymodel -- image model of the sky, 
-         with optional parameters that can be overriden
+    skymodel -- image model of the sky in FITS or CASA image, 
+         with optional parameters that can be overridden
     inbright -- peak brightness in Jy/pixel, or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
@@ -412,14 +412,14 @@ mosaic simulation task:
     -------------------------------
     setpointings -- calculate a map of pointings, or if false, provide ptgfile
        * if graphics are on, display the pointings shown on the model image
-    ptgfile -- a text file specifying directions in the same 
-         format as the example, and optional integration times, e.g.
+    ptgfile -- a text file specifying directions in the following
+         format, with optional integration times, e.g.
          #Epoch     RA          DEC      TIME(optional)
          J2000 23h59m28.10 -019d52m12.35 10.0
        * if the time column is not present in the file, it will use
          "integration" for all pointings.
        * NOTE: at this time the file should contain only science pointings:
-         simdata will observe these, then optionally the calibrator, 
+         simobserve will observe these, then optionally the calibrator, 
          then the list of science pointings again, etc, until totaltime
          is used up. 
     integration --- Time interval for each integration e.g '10s'
@@ -429,7 +429,7 @@ mosaic simulation task:
          the parameter integration time.
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
        * can optionally be a list of pointings
-       * otherwise simdata will pack mapsize according to maptype
+       * otherwise simobserve will pack mapsize according to maptype
     mapsize -- angular size of map 
        * set to "" to span the model image
     maptype -- hexagonal, square (rectangular raster), 
@@ -453,7 +453,7 @@ mosaic simulation task:
          so simulations from a componentlist only will be continuum (1 chan)
     refdate -- date of simulated observation eg: '2014/05/21'
     hourangle -- hour angle of observation e.g. '-3h'
-    totaltime --- total time of observation e.g '7200s' or if an number without
+    totaltime --- total time of observation e.g '7200s' or if a number without
          units, interpreted as the number of times to repeat the map
     antennalist -- ascii file containing antenna positions.
          each row has x y z coordinates and antenna diameter; 
@@ -525,18 +525,18 @@ mosaic simulation task:
     -------------------------------
     How to specify a model image:
     -------------------------------
-    * simdata requires a CASA or fits image. If you merely have a grid of 
+    * simobserve requires a CASA or fits image. If you merely have a grid of 
       numbers, you will need to write them out as fits or write a CASA script to
       read them in and use the ia tool to create an image and insert the data.
     
-    * simdata does NOT require a coordinate system in the header. If the
+    * simobserve does NOT require a coordinate system in the header. If the
       coordinate information is incomplete, missing, or you would like to
       override it, set the appropriate "in" paremeters.  
-      In the absence of other information, simdata will assume that the axes of 
+      In the absence of other information, simobserve will assume that the axes of 
       your input correspond to RA, Dec, and (optionally) frequency and 
       (optionally) Stokes parameter.  
 
-    * If you have a proper Coordinate System, simdata will so its best to
+    * If you have a proper Coordinate System, simobserve will do its best to
       generate visibilities from that, and then create a synthesis image
       according to the specified user parameters.  Regridding the
       spectral dimension may not have complete flexibility yet.
@@ -545,7 +545,7 @@ mosaic simulation task:
       delve deeper with the ia and cs tools.  If you use the tools, you should
       be aware that a CoordinateSystem in CASA can exist independently of an
       Image.  Once the CoordinateSystem is detached from the image, it is the
-      users responsibility to do any manipulation e.g. axis reordering on
+      user's responsibility to do any manipulation e.g. axis reordering on
       both. Example:
         ia.open("myimage_filename")
         ia.summary() # see header as attached to the image
@@ -580,7 +580,7 @@ mosaic simulation task:
     project.[cfg].observe.png = diagnostic figure of uv coverage and 
          visibilities
 	    
-    project.[cfg].simobserve.last = saved input parameters for simdata task
+    project.[cfg].simobserve.last = saved input parameters for simobserve task
 
 </example>
 </task>

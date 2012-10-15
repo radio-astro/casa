@@ -200,6 +200,7 @@ def simobserve(
             # calculate model parameters from the component list:
 
             compdirs = []
+            cl.done()
             cl.open(complist)
 
             for i in range(cl.length()):
@@ -1180,16 +1181,19 @@ def simobserve(
     except TypeError, e:
         finalize_tools()
         msg("task_simobserve -- TypeError: %s" % e,priority="error")
+        raise TypeError, e
         return False
     except ValueError, e:
         finalize_tools()
         #print "task_simobserve -- OptionError: ", e
         msg("task_simobserve -- OptionError: %s" % e,priority="error")
+        raise ValueError, e
         return False
     except Exception, instance:
         finalize_tools()
         #print '***Error***',instance
         msg("task_simobserve -- Exception: %s" % instance,priority="error")
+        raise Exception, instance
         return False
     return True
 

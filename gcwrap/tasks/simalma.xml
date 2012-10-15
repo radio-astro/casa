@@ -533,8 +533,8 @@ ALMA simulation task:
     -------------------------------
     project -- root filename for all output files.
     -------------------------------
-    skymodel -- image model of the sky, 
-         with optional parameters that can be overriden
+    skymodel -- image model of the sky in FITS or CASA image, 
+         with optional parameters that can be overridden
     inbright -- peak brightness in Jy/pixel, or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
@@ -562,9 +562,7 @@ ALMA simulation task:
        * if the time column is not present in the file, it will use
          "integration" for all pointings.
        * NOTE: at this time the file should contain only science pointings:
-         simdata will observe these, then optionally the calibrator, 
-         then the list of science pointings again, etc, until totaltime
-         is used up. 
+         simalma will observe these until totaltime is used up. 
     integration --- Time interval for each integration e.g '10s'
        * NOTE: to simulate a "scan" longer than one integration, use 
          setpointings to generate a pointing file, and then edit the 
@@ -572,7 +570,8 @@ ALMA simulation task:
          the parameter integration time.
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
        * can optionally be a list of pointings
-       * otherwise simdata will pack mapsize according to maptype
+       * otherwise simalma will pack mapsize with grids proper for the
+         array (see below).
     mapsize -- angular size of map 
        * set to "" to span the model image
     -------------------------------
@@ -584,7 +583,7 @@ ALMA simulation task:
          configuration.  This only works for full ALMA and may fail to find the 
          standard configuration files on some systems - see casaguides.nrao.edu
     hourangle -- hour angle of observation e.g. '-3h'
-    totaltime --- total time of observation e.g '7200s' or if an number without
+    totaltime --- total time of observation e.g '7200s' or if a number without
          units, interpreted as the number of times to repeat the map
     acaratio  --- ratio of the total observation time of ACA relative to 
          that of 12m array. Set 0 for no ACA observation. 
@@ -599,12 +598,19 @@ ALMA simulation task:
                Uses 'aca.ns.cfg'.
     -------------------------------
     pwv -- precipitable water vapor if constructing an atmospheric model.
-         Set 0 for noise-free simulation.
+         Set 0 for noise-free simulation. When pwv > 0, thermal noise is
+         applied to the simulated data.
+       * J. Pardo's ATM library will be used to construct anatmospheric
+         profile for the ALMA site:
+         altitude 5000m, ground pressure 650mbar, relhum=20%, 
+         a water layer of user_pwv at altitude of 2km,
+         the sky brightness temperature returned by ATM, and internally
+         tabulated receiver temperatures.
+       See the documents of simobserve for more details.
     -------------------------------
     image -- invert and deconvolve the simulated measurement set(s)
        * NOTE: interactive clean or more parameters than the subset visible
-         here are available by simply running the clean task directly, 
-         then returning to simdata to run "analyze" if desired.
+         here are available by simply running the clean task directly.
        * NOTE: the channelization of the output image cube will be the 
          same as that in the simulated Measurement Set.
        * if graphics turned on, display the clean image and residual image
@@ -635,7 +641,7 @@ ALMA simulation task:
     NOTE this task is very experimental and may not exactly reproduce
     actual ALMA products.
 
-    The following assuptions are made to make the interface simple:
+    The following assumptions are made to make the interface simple:
     * This task is intended to be run only once with a set of parameters.
       Therefore, it always sets up input model and pointings, and invokes simulation.
       You can stop before imaging step and reduce data manually with the other tasks,
@@ -646,13 +652,36 @@ ALMA simulation task:
     * pwv controls whether or not thermal noise is applied to simulated data.
       When pwv > 0, the thermal noise is applied to simulated data. J. Pardo's ATM
       library is used to construct an atmospheric profile of the ALMA site.
-    * ALMA 12m array does Nyquist sampling for mosaic if a list of directions are 
-      not specified.
+    * if a list of directions is not specified, ALMA 12m and ACA 7m arrays will
+      pack mapsize with the same hex algorithm as the ALMA OT in Nyquist sampling
     * Total power array maps slightly (+1 PB) larger area compared to 12m array for
-      later combined imaging.
+      later combined imaging. It samples the region with lattice grids of spacing, 
+      0.36 lamba/d.
+
+    -------------------------------
+    How to specify a model image:
+    -------------------------------
+    * simalma requires a CASA or fits image. If you merely have a grid of 
+      numbers, you will need to write them out as fits or write a CASA script to
+      read them in and use the ia tool to create an image and insert the data.
+    
+    * simalma does NOT require a coordinate system in the header. If the
+      coordinate information is incomplete, missing, or you would like to
+      override it, set the appropriate "in" paremeters.  
+      In the absence of other information, simalma will assume that the axes of 
+      your input correspond to RA, Dec, and (optionally) frequency and 
+      (optionally) Stokes parameter.  
+
+    * If you have a proper Coordinate System, simalma will do its best to
+      generate visibilities from that, and then create a synthesis image
+      according to the specified user parameters.  Regridding the
+      spectral dimension may not have complete flexibility yet.
+
+    * You can manipulate an image header with the "imhead" task.
+
 
     Please see the documents of simobserve and simanalyze for
-    how to specify a model image, and list of outputs produced.
+    the list of outputs produced.
 
 </example>
 </task>

@@ -410,7 +410,7 @@ Display Parameters
 
     <param type="bool" name="customsymbol">
         <description>set a custom symbol for unflagged points</description>
-        <value>False</value>
+        <value>True</value>
     </param>
 
     <param type="string" name="symbolshape" subparam="true">
@@ -978,7 +978,6 @@ Constraints
     </when>
 
     <when param="customsymbol">
-        <equals type="bool" value="False" />
         <equals type="bool" value="True">
             <default param="symbolshape">
                 <value type="string">autoscaling</value>
@@ -996,6 +995,7 @@ Constraints
                 <value type="bool">False</value>
             </default>
         </equals>
+        <equals type="bool" value="False" />
     </when>
 
     <when param="customflaggedsymbol">
@@ -1285,7 +1285,7 @@ Constraints
                       default: false, which will scale all plots globally
 
     customsymbol -- If true, use a custom symbol for drawing unflagged points
-                    default: False
+                    default: True
       &gt;&gt;&gt; customsymbol expandable parameters
         symbolshape -- If true, use a custom shape to draw unflagged symbols
                        default: 'autoscaling' (ignores symbolsize)
