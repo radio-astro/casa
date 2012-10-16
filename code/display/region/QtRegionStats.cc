@@ -123,7 +123,7 @@ namespace casa {
 	}
 
 	void QtRegionStats::disableNextButton( ) {
-	    if ( stats_box_ ) {
+	    if ( stats_box_ && stats_box_->next( ) ) {
 		stats_box_->next( )->setDisabled(true);
 		disconnect(stats_box_->next(), 0, 0, 0);
 	    }
