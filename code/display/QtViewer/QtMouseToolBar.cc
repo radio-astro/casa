@@ -67,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void QtPointToolButton::mousePressEvent( QMouseEvent *event ) {
 	popup_menu_pos = event->globalPos( );
-	timer->start( 1000 );  // popup menu in one second
+	timer->start( 750 );	// popup menu in 3/4 of a second
 	QtMouseToolButton::mousePressEvent(event);
     }
 
