@@ -1156,6 +1156,7 @@ Bool CubeSkyEquation::isNewFTM(FTMachine* ftm)
 	  (ftm->name() == "AWProjectFT")
 	  || (ftm->name() == "AWProjectWBFT")
 	  || (ftm->name() == "PBWProjectFT")
+	  || (ftm->name() == "MultiTermFT")
 	  //	  || (ftm->name() == "GridFT")
 	  );
 }
@@ -1230,8 +1231,9 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 	  // -- calls getImage, getWeightImage, does Stokes conversion, and gS/ggS normalization
 	  //U// cout << "CubeSkyEqn :: calling new finalizeToSky with dopsf " << dopsf << endl;
 	  iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
+	  //	  storeImg(String("stokesNormed1.im"), *(gSSliceVec[0]));
 	  tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
-	  //      storeImg(String("stokesNormed0.im"), *(gSSliceVec[0]));
+	  //	  storeImg(String("stokesNormed2.im"), *(gSSliceVec[0]));
 	  // Clean up temporary reference images      
 	  for (Int taylor=0; taylor < ntaylors; ++taylor)
 	    {

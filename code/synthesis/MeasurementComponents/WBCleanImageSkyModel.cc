@@ -876,6 +876,7 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
   se.gradientsChiSquared(incremental, modelToMS);
   
   Int index=0,baseindex=0;
+  LatticeExpr<Float> le;
   for(Int thismodel=0;thismodel<nfields_p;thismodel++) 
     {
       baseindex = getModelIndex(thismodel,0);
@@ -887,7 +888,10 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  //cout << "Shapes : " << ggS(index).shape() << gS(baseindex).shape() << endl;
 	  
 	  // UUU
-	  LatticeExpr<Float> le(iif(ggS(baseindex)>(0.0), -gS(index)/ggS(baseindex), 0.0));
+	  //	  LatticeExpr<Float> le(iif(ggS(baseindex)>(0.0), -gS(index)/ggS(baseindex), 0.0));
+	  if (isImageNormalized()) le = LatticeExpr<Float>(gS(index));
+	  else                   le = LatticeExpr<Float>(iif(ggS(baseindex)>(0.0), 
+							     -gS(index)/ggS(baseindex), 0.0));
 	  residual(index).copyData(le);
 
 	  //storeAsImg(String("Weight.")+String::toString(thismodel)+String(".")+String::toString(taylor),ggS(index));
@@ -921,6 +925,7 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se, Bool writeToDisk)
   // Normalize
   Float normfactor=1.0;
   Int index=0,baseindex=0;
+  LatticeExpr<Float> le;
   for (Int thismodel=0;thismodel<nfields_p;thismodel++) 
     {
       normfactor=1.0;
@@ -931,7 +936,10 @@ Int WBCleanImageSkyModel::makeSpectralPSFs(SkyEquation& se, Bool writeToDisk)
 	  index = getModelIndex(thismodel,taylor);
 	  //cout << "Normalizing PSF " << index << " with " << baseindex << endl;
 	  //cout << "Shapes : " << ggS(index).shape() << gS(baseindex).shape() << endl;
-	  LatticeExpr<Float> le(iif(ggS(baseindex)>(0.0), gS(index)/ggS(baseindex), 0.0));
+	  //le = LatticeExpr<Float>(iif(ggS(baseindex)>(0.0), gS(index)/ggS(baseindex), 0.0));
+	  if (isImageNormalized()) le = LatticeExpr<Float>(gS(index));
+	  else                   le = LatticeExpr<Float>(iif(ggS(baseindex)>(0.0), 
+							     gS(index)/ggS(baseindex), 0.0));
 	  PSF(index).copyData(le);
 	  if(taylor==0)
 	    { 
