@@ -44,7 +44,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <param type="string" name="region" subparam="true">
         <description>Region specification. See help par.region. Default is to not use a region.</description>
-        <value>""</value>
+        <value/>
         <example>region="my.rgn"</example>
     </param>
     <param type="string" name="chans">

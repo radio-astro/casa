@@ -562,22 +562,43 @@ def simobserve(
         imcenter , offsets = util.median_direction(pointings)        
         epoch, ra, dec = util.direction_splitter(imcenter)
 
-        # model is centered at model_refdir, and has model_size; this is the offset in 
-        # angular arcsec from the model center to the imcenter:        
+        # model is centered at model_refdir, and has model_size;         
         mepoch, mra, mdec = util.direction_splitter(model_refdir)
-        if ra['value'] >= 360.:
-            ra['value'] = ra['value'] - 360.
-        if mra['value'] >= 360.:
-            mra['value'] = mra['value'] - 360.
-        # XXX put in real angular mod-360 diff here for obs near RA=0
+        # ra/mra should be in degrees, but just in case
+        ra=qa.convert(ra,'deg')
+        mra=qa.convert(mra,'deg')
+        dec=qa.convert(dec,'deg')
+        mdec=qa.convert(mdec,'deg')
+
+        # observation near ra=0:
+        if abs(mra['value'])<10 or abs(mra['value']-360.)<10 or abs(ra['value'])<10 or abs(mra['value']-360.)<10:
+            nearzero=True
+        else:
+            nearzero=False
+
+        # fix wraps
+        if nearzero: # put break at 180
+           if ra['value'] >= 180.:
+               ra['value'] = ra['value'] - 360.
+           if mra['value'] >= 180.:
+               mra['value'] = mra['value'] - 360.
+        else:
+           if ra['value'] >= 360.:
+               ra['value'] = ra['value'] - 360.
+           if mra['value'] >= 360.:
+               mra['value'] = mra['value'] - 360.
+
+        # shift is the offset from the model to imcenter
         shift = [ (qa.convert(ra,'deg')['value'] - 
                    qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(dec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
+
         xmax = qa.convert(model_size[0],'deg')['value']*0.5
         ymax = qa.convert(model_size[1],'deg')['value']*0.5
         overlap = False        
+        # wrapang in median_direction should make offsets always small, not >360
         for i in xrange(offsets.shape[1]):
             xc = pl.absolute(offsets[0,i]+shift[0])  # offsets and shift are in degrees
             yc = pl.absolute(offsets[1,i]+shift[1])
