@@ -46,15 +46,11 @@ ImageBeamSet::ImageBeamSet(
 	const Array<GaussianBeam>& beams,
 	const Vector<AxisType>& axes
 ) : _beams(beams), _axes(axes),
-	_areas(_getAreas(_areaUnit, beams)),
 	_maxStokesMap(0), _minStokesMap(0),
 	_medianStokesMap(0), _axesMap(_setAxesMap(axes)) {
 	_checkForDups(axes);
 	_checkAxisTypeSize(axes);
-	Double minArea, maxArea;
-	minMax(minArea, maxArea, _minBeamPos, _maxBeamPos, _areas);
-	_minBeam = _beams(_minBeamPos);
-	_maxBeam = _beams(_maxBeamPos);
+	_calculateAreas();
 	_makeStokesMaps(False);
 }
 
@@ -275,12 +271,12 @@ void ImageBeamSet::_checkForDups(const Vector<AxisType>& axes) {
 
 void ImageBeamSet::resize(const IPosition& pos) {
 	if (pos.nelements() != _beams.ndim()) {
-		throw AipsError("An ImageBeamSet object cannot be resized to a different dimensionality.");
+		throw AipsError(
+			"An ImageBeamSet object cannot be resized to a different dimensionality."
+		);
 	}
-	// _recalculateStats = True;
 	_beams.resize(pos);
-	_areas = _getAreas(_areaUnit, _beams);
-
+	_calculateAreas();
 }
 
 size_t ImageBeamSet::size() const {
@@ -298,7 +294,7 @@ void ImageBeamSet::setBeams(const Array<GaussianBeam>& beams) {
 		);
 	}
 	_beams.assign(beams);
-	_areas.assign(_getAreas(_areaUnit, _beams));
+	_calculateAreas();
 	_makeStokesMaps(False);
 }
 
@@ -307,11 +303,10 @@ void ImageBeamSet::setBeams(
 	const Array<GaussianBeam>& beams
 ) {
 	_beams(begin, end) = beams;
-	_areas.assign(_getAreas(_areaUnit, _beams));
+	_calculateAreas();
 	// FIXME there is a more efficient way to make the stokes
 	// maps in this case
 	_makeStokesMaps(False);
-
 }
 
 size_t ImageBeamSet::nelements() const {
@@ -375,22 +370,22 @@ IPosition ImageBeamSet::getMinAreaBeamPosition() const {
 }
 
 GaussianBeam ImageBeamSet::getMaxAreaBeamForPol(
-	IPosition& pos, const uInt polarization
+	IPosition& pos, const Int polarization
 ) const {
 	return _getBeamForPol(pos, _maxStokesMap, polarization);
 
 }
 
 GaussianBeam ImageBeamSet::getMinAreaBeamForPol(
-	IPosition& pos, const uInt polarization
+	IPosition& pos, const Int polarization
 ) const {
 	return _getBeamForPol(pos, _minStokesMap, polarization);
 }
 
 GaussianBeam ImageBeamSet::getMedianAreaBeamForPol(
-	IPosition& pos, const uInt polarization
+	IPosition& pos, const Int polarization
 ) const {
-	return _getBeamForPol(pos, _medianStokesMap, polarization);
+		return _getBeamForPol(pos, _medianStokesMap, polarization);
 }
 
 Int ImageBeamSet::getAxis(const AxisType type) const {
@@ -400,16 +395,17 @@ Int ImageBeamSet::getAxis(const AxisType type) const {
 
 GaussianBeam ImageBeamSet::_getBeamForPol(
 	IPosition& pos, const vector<IPosition>& map,
-	const uInt polarization
+	const Int polarization
 ) const {
 	uInt nStokes = _nStokes();
-	if (nStokes == 0) {
+	uInt mypol = nStokes == 0 && polarization < 0 ? 0 : polarization;
+	if (nStokes == 0 && polarization >= 0) {
 		throw AipsError(
 			className() + "::" + __FUNCTION__
 			+ ": This beam set has no polarization axis"
 		);
 	}
-	if (polarization >= nStokes) {
+	if (mypol != 0 && mypol >= nStokes) {
 		throw AipsError(
 			className() + "::" + __FUNCTION__
 			+ ": polarization=" + String::toString(polarization)
@@ -417,7 +413,7 @@ GaussianBeam ImageBeamSet::_getBeamForPol(
 			+ String::toString(nStokes)
 		);
 	}
-	pos = map[polarization];
+	pos = map[mypol];
 	return _beams(pos);
 }
 
@@ -437,9 +433,11 @@ void ImageBeamSet::_makeStokesMaps(
 ) {
 	uInt nStokes = _nStokes();
 	if (nStokes == 0) {
-		return;
+		_maxStokesMap.resize(1);
+		_minStokesMap.resize(1);
+		_medianStokesMap.resize(1);
 	}
-	if (_maxStokesMap.size() != nStokes) {
+	else if (_maxStokesMap.size() != nStokes) {
 		_maxStokesMap.resize(nStokes);
 		_minStokesMap.resize(nStokes);
 		_medianStokesMap.resize(nStokes);
@@ -466,7 +464,22 @@ void ImageBeamSet::_makeStokesMaps(
 			}
 		}
 	}
+	else if (nStokes == 0) {
+		// we still need the maps even if there are no stokes
+		IPosition pos(1);
+		IPosition minPos, maxPos;
+		_minStokesMap[0] = _minBeamPos;
+		_maxStokesMap[0] = _maxBeamPos;
+		// get the median
+		Vector<uInt> indices;
+		GenSortIndirect<Double>::sort(indices, _areas);
+		uInt nChan = _beams.size();
+		uInt k = nChan % 2 == 0
+			? nChan/2 - 1 : nChan/2;
+		_medianStokesMap[0] = IPosition(1, indices[k]);
+	}
 	else {
+		// nStokes and nChannels both > 0
 		uInt spectralAxis = _axesMap.find(SPECTRAL)->second;
 		uInt stokesAxis = _axesMap.find(POLARIZATION)->second;
 		uInt nChan = _beams.shape()[spectralAxis];
@@ -530,23 +543,21 @@ ImageBeamSet::AxesMap ImageBeamSet::_setAxesMap(
 	return mymap;
 }
 
-
-Array<Double> ImageBeamSet::_getAreas(
-	String& areaUnit, const Array<GaussianBeam>& beams
-) {
-	areaUnit = beams.begin()->getMajor().getUnit();
-	areaUnit = Quantity(Quantity(1, areaUnit)*Quantity(1,areaUnit)).getUnit();
-	Array<Double> areas(beams.shape());
-	Array<Double>::iterator iareas = areas.begin();
-	areaUnit = beams.begin()->getMajor().getUnit();
-	areaUnit = Quantity(Quantity(1, areaUnit)*Quantity(1,areaUnit)).getUnit();
+void ImageBeamSet::_calculateAreas() {
+	_areaUnit = _beams.begin()->getMajor().getUnit();
+	_areaUnit = Quantity(Quantity(1, _areaUnit)*Quantity(1, _areaUnit)).getUnit();
+	_areas.resize(_beams.shape());
+	Array<Double>::iterator iareas = _areas.begin();
 	for (
-		Array<GaussianBeam>::const_iterator ibeams=beams.begin();
-		ibeams!=beams.end(); ibeams++, iareas++
+		Array<GaussianBeam>::const_iterator ibeam=_beams.begin();
+		ibeam!=_beams.end(); ibeam++, iareas++
 	) {
-		*iareas = ibeams->getArea(areaUnit);
+		*iareas = ibeam->getArea(_areaUnit);
 	}
-	return areas;
+	Double minArea, maxArea;
+	minMax(minArea, maxArea, _minBeamPos, _maxBeamPos, _areas);
+	_minBeam = _beams(_minBeamPos);
+	_maxBeam = _beams(_maxBeamPos);
 }
 
 ostream &operator<<(ostream &os, const ImageBeamSet& beamSet) {

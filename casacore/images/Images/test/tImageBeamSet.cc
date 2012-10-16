@@ -155,8 +155,19 @@ int main() {
 				Vector<ImageBeamSet::AxisType> types(1);
 				types[0] = ImageBeamSet::SPECTRAL;
 				ImageBeamSet x(init, shape, types);
-				Array<GaussianBeam> beams(IPosition(1, 5));
+				GaussianBeam beam2(
+					Quantity(10, "arcsec"), Quantity(5, "arcsec"),
+					Quantity(70, "deg")
+				);
+				GaussianBeam beam3(
+					Quantity(11, "arcsec"), Quantity(5, "arcsec"),
+					Quantity(70, "deg")
+				);
+				Array<GaussianBeam> beams(IPosition(1, 5), beam2);
+				beams(IPosition(1, 3)) = beam3;
 				x.setBeams(beams);
+				AlwaysAssert(x.getBeams().shape() == IPosition(1, 5), AipsError);
+				AlwaysAssert(x.getMaxAreaBeam() == beam3, AipsError);
 			}
 		}
         {
