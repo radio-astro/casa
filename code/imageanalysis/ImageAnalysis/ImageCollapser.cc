@@ -89,12 +89,13 @@ ImageCollapser::ImageCollapser(
 ImageCollapser::~ImageCollapser() {}
 
 ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*clone, *_getRegion(), _getMask(), _getLog().get(),
 		False, AxesSpecifier(), _getStretch()
 	);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+
 	if (! anyTrue(subImage.getMask())) {
 		*_getLog() << "All selected pixels are masked" << LogIO::EXCEPTION;
 	}
