@@ -56,6 +56,8 @@ thermalnoise="tsys-atm"
 #t_sky=0.
 user_pwv=0.5
 
+maptype="ALMA2012"
+
 verbose=True
 if not l.has_key('interactive'): interactive=False
 if interactive:
