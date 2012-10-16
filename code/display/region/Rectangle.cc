@@ -596,7 +596,7 @@ namespace casa {
 
 		    if ( image == 0 ) continue;
 
-		    String full_image_name = image->name(true);
+		    String full_image_name = image->name(false);
 		    std::map<String,bool>::iterator repeat = processed.find(full_image_name);
 		    if (repeat != processed.end()) continue;
 		    processed.insert(std::map<String,bool>::value_type(full_image_name,true));
@@ -655,7 +655,7 @@ namespace casa {
 		    WCBox box(blcq, trcq, cs, Vector<Int>());
 		    ImageRegion *imageregion = new ImageRegion(box);
 
-		    region_statistics->push_back(ImageRegionInfo(full_image_name,getLayerStats(padd,image,*imageregion)));
+		    region_statistics->push_back(ImageRegionInfo(image->name(true),getLayerStats(padd,image,*imageregion)));
 		    delete imageregion;
 
 		} catch (const casa::AipsError& err) {
