@@ -96,8 +96,8 @@ class PartitionHelper(ParallelTaskHelper):
                     
 
             if not self.syscalisempty:
-                if os.access(os.path.dirname(self.ptab), os.W_OK) \
-                       and not os.path.islink(self.ptab):
+                if os.access(os.path.dirname(self.stab), os.W_OK) \
+                       and not os.path.islink(self.stab):
                     # move to datadir
                     os.system('mv '+self.stab+' '+self.dataDir)
                     # create empty copy in original place so partition does not need to deal with it
