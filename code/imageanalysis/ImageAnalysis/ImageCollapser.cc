@@ -95,6 +95,9 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		*clone, *_getRegion(), _getMask(), _getLog().get(),
 		False, AxesSpecifier(), _getStretch()
 	);
+	if (! anyTrue(subImage.getMask())) {
+		*_getLog() << "All selected pixels are masked" << LogIO::EXCEPTION;
+	}
 	clone.reset(0);
 	IPosition inShape = subImage.shape();
 	// Set the compressed axis reference pixel and reference value
