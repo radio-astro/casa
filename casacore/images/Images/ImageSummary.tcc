@@ -560,17 +560,19 @@ void ImageSummary<T>::_listMultiBeam(
 				switch (j) {
 					case 0: {
 						aggType = "Max";
-						beam = beamSet.getMaxAreaBeamForPol(pos, i);
+						beam = beamSet.getMaxAreaBeamForPol(pos, hasStokes? i : -1);
 						break;
 					}
 					case 1: {
 						aggType = "Min";
-						beam = beamSet.getMinAreaBeamForPol(pos, i);
+						beam = beamSet.getMinAreaBeamForPol(pos, hasStokes ? i : -1);
 						break;
 					}
 					case 2: {
 						aggType = "Median";
-						beam = beamSet.getMedianAreaBeamForPol(pos, i);
+						beam = beamSet.getMedianAreaBeamForPol(
+							pos, hasStokes ? i : -1
+						);
 						break;
 					}
 					default: {
