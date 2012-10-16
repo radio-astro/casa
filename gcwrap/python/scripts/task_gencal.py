@@ -33,15 +33,25 @@ def gencal(vis=None,caltable=None,caltype=None,
                        antenna = antenna_offsets[1]
                        parameter = antenna_offsets[2] 
                 else:
-                   raise Exception, 'No offsets found. No caltable created.'
-              
+                   #raise Exception, 'No offsets found. No caltable created.'
+                   import warnings
+                   warnings.simplefilter('error',UserWarning)
+                   warnings.warn('No offsets found. No caltable created.')
+
               cb.specifycal(caltable=caltable,time="",spw=spw,antenna=antenna,pol=pol,
                             caltype=caltype,parameter=parameter)
 
-              cb.close()
+              #cb.close()
+       
+       except UserWarning, instance:
+              print '*** Warning ***',instance
+              #cb.close()
+              raise Exception, instance
 
        except Exception, instance:
               print '*** Error ***',instance
-              cb.close()
+              #cb.close()
               raise Exception, instance
 
+       finally:
+              cb.close()
