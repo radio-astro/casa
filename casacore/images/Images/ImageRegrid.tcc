@@ -2043,7 +2043,7 @@ void ImageRegrid<T>::checkAxes(IPosition& outPixelAxes,
 // Otherwise, regridding a one-pixel axis is useless.
 
             if (type!=Coordinate::DIRECTION) {
-              os << LogIO::WARN << "Cannot regrid zero-based axis " << outPixelAxes(i) <<
+              os << "Cannot regrid zero-based axis " << outPixelAxes(i) <<
 		" because it is of unit length - removing from list" << LogIO::POST;
               ok = False;
             }

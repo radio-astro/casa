@@ -21,6 +21,8 @@ grd2d.f
 grd2dwts.f
 grdde2d.f
 grdsf.f
+grdgauss.f
+grdjinc1.f
 hclean.f
 lawson.f
 maxabs.f

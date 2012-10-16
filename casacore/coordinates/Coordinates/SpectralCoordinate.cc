@@ -2438,5 +2438,36 @@ void SpectralCoordinate::_setTabulatedFrequencies(const Vector<Double>& freqs) {
 	_tabular.reset(new TabularCoordinate(channels, freqs, "Hz", "Frequency"));
 }
 
+ostream& SpectralCoordinate::print(ostream& os) const {
+	os << "tabular " << _tabular.get() << endl;
+	os << "to_hz_p " <<  to_hz_p << endl;
+    os << "to_m_p " << to_m_p << endl;
+    os << "type_p " << MFrequency::showType(type_p) << endl;
+    os << "conversionType_p " << MFrequency::showType(conversionType_p) << endl;
+    os << "restfreqs_p " << restfreqs_p << endl;
+    os << "restfreqIdx_p " << restfreqIdx_p << endl;
+    os << "pConversionMachineTo_p " << pConversionMachineTo_p << endl;
+    os << "pConversionMachineFrom_p " << pConversionMachineFrom_p << endl;
+    os << "pVelocityMachine_p " <<  pVelocityMachine_p << endl;
+    os << "velType_p " << velType_p << endl;
+    os << "velUnit_p " << velUnit_p << endl;
+    os << "waveUnit_p " << waveUnit_p << endl;
+    os << "nativeType_p " << nativeType_p << endl;
+    os << "unit_p " << unit_p.getName() << endl;
+    os << "axisName_p " << axisName_p << endl;
+    os << "formatUnit_p " << formatUnit_p << endl;
+    os << "direction_p " <<  direction_p << endl;
+    os << "position_p " << position_p << endl;
+    os << "epoch_p " << epoch_p << endl;
+    return os;
+
+}
+
+
+ostream &operator<<(ostream &os, const SpectralCoordinate& spcoord) {
+	return spcoord.print(os);
+}
+
+
 } //# NAMESPACE CASA - END
 

@@ -208,6 +208,8 @@ public:
 	       const String& observername,
 	       const String& projectname);
 
+  MeasurementSet * getMs () const;
+
 
 private:
 

@@ -197,21 +197,24 @@ public:
 	IPosition getMinAreaBeamPosition() const;
 
 	// get maximal area beam and its position in the _beams array for
-	// the given polarization.
+	// the given polarization. Use polarization=-1 if the image has no
+	// polarization axis to do stats over all the beams.
 	GaussianBeam getMaxAreaBeamForPol(
-		IPosition& pos, const uInt polarization
+		IPosition& pos, const Int polarization
 	) const;
 
 	// get minimal area beam and its position in the _beams array for
-	// the given polarization.
+	// the given polarization. Use polarization=-1 if the image has no
+	// polarization axis to do stats over all the beams.
 	GaussianBeam getMinAreaBeamForPol(
-		IPosition& pos, const uInt polarization
+		IPosition& pos, const Int polarization
 	) const;
 
 	// get median area beam and its position in the _beams array for
-	// the given polarization.
+	// the given polarization. Use polarization=-1 if the image has no
+	// polarization axis to do stats over all the beams.
 	GaussianBeam getMedianAreaBeamForPol(
-		IPosition& pos, const uInt polarization
+		IPosition& pos, const Int polarization
 	) const;
 
 	// get the axis number for the specified type. Return -1 if there is no such axis
@@ -256,13 +259,11 @@ private:
 		const Vector<AxisType>& axisTypes
 	);
 
-	static Array<Double> _getAreas(
-		String& areaUnit, const Array<GaussianBeam>& beams
-	);
+	void _calculateAreas();
 
 	GaussianBeam _getBeamForPol(
 		IPosition& pos, const vector<IPosition>& map,
-		const uInt polarization
+		const Int polarization
 	) const;
 
 };

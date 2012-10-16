@@ -1336,6 +1336,7 @@ void MSFitsInput::fillMSMainTableColWise(Int& nField, Int& nSpW) {
                     if (wt <= 0.0) {
                         weightSpec(pol, chan, row) = abs(wt);
                         flag(pol, chan, row) = True;
+                        weight(pol, row) += abs(wt);
                     } else {
                         weightSpec(pol, chan, row) = wt;
                         flag(pol, chan, row) = False;
@@ -1642,6 +1643,7 @@ void MSFitsInput::fillMSMainTable(Int& nField, Int& nSpW) {
                     if (wt <= 0.0) {
                         weightSpec(pol, chan) = abs(wt);
                         flag(pol, chan) = True;
+                        weight(pol) += abs(wt);
                     } else {
                         weightSpec(pol, chan) = wt;
                         flag(pol, chan) = False;
@@ -3150,6 +3152,7 @@ void MSFitsInput::fillMSMainTable(BinaryTable& bt) {
                         if (wt <= 0.0) {
                             weightSpec(pol, chan) = abs(wt);
                             flag(pol, chan) = True;
+                            weight(pol) += abs(wt);
                         } else {
                             weightSpec(pol, chan) = wt;
                             flag(pol, chan) = False;

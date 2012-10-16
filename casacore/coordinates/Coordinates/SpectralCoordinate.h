@@ -577,6 +577,8 @@ public:
     // delete.
     virtual Coordinate* clone() const;
 
+    ostream& print(ostream& os) const;
+
 private:
 
     std::auto_ptr<TabularCoordinate> _tabular;                     // Tabular coordinate OR
@@ -683,6 +685,8 @@ private:
    void _setTabulatedFrequencies(const Vector<Double>& freqs);
 
 };
+
+ostream &operator<<(ostream &os, const SpectralCoordinate& spcoord);
 
 } //# NAMESPACE CASA - END
 
