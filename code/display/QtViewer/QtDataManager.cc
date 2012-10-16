@@ -463,7 +463,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     }
 
-    void QtDataManager::region_item_state_change( QTreeWidgetItem *item, int col ) {
+    void QtDataManager::region_item_state_change( QTreeWidgetItem *item, int /*col*/ ) {
 #if 0
 	if ( item && col > 0 && item->isSelected( ) ) {
 	    item->setSelected(false);
@@ -662,6 +662,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ts.tree( )->insertTopLevelItem (1, dirItem );
 
 
+	QTreeWidgetItem *selection = 0;
+	QtDisplayData *dd = panel_->dd( );
+	QString ddpath;
+	if ( dd ) {
+	    QFileInfo path(QString::fromStdString(dd->path( )));
+	    ddpath = path.canonicalFilePath( );
+	}
+
 	for (int i = 0; i < entryList.size(); i++) {
 	    QString it = entryList.at(i);
 	    if (it.compare(".") > 0) {
@@ -682,6 +690,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			childItem->setText(1, "");
 			childItem->setTextColor(1, getDirColor(dType));
 		    }
+		    if ( selection == 0 && dd && ddpath == QFileInfo(path).canonicalFilePath( ) )
+			selection = dirItem;
 		}
 	    }
 	}
@@ -692,6 +702,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	ts.tree( )->resizeColumnToContents(0);
 	// load_tree_widget_->setColumnWidth(0, 200);   // (only suppotted in Qt 4.2+)
+
+	if ( selection ) {
+	    ts.tree( )->setCurrentItem(selection);
+	    changeItemSelection( );
+	    ts.tree( )->scrollToItem(selection,QAbstractItemView::PositionAtCenter);
+	}
 
     }
 
@@ -1118,10 +1134,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	(*it).second->setCursorPosition(0);
 	++it;
 
-	std::vector<std::string> beamvec = image_properties.restoringBeamAsStr( );
+	std::vector<std::string> beamvec = image_properties.medianRestoringBeamAsStr( );
 	if ( beamvec.size( ) == 3 ) {
 	    (*it).first->show( );
-	    (*it).first->setTitle("restoring beam");
+	    if ( image_properties.nBeams( ) > 1 )
+		(*it).first->setTitle("median restoring beam");
+	    else
+		(*it).first->setTitle("restoring beam");
 	    std::string beam = beamvec[0] + ", " + beamvec[1] + ", " + beamvec[2];
 	    (*it).second->setText(QString::fromStdString(beam));
 	    (*it).second->setCursorPosition(0);

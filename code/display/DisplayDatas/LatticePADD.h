@@ -221,13 +221,10 @@ template <class T> class LatticePADisplayData : public PrincipalAxesDD {
 
   // beam-drawing state
   // </group>
-  Bool hasBeam_;	//# means the following data were found in the Image.
-  
-  Double majoraxis_;	//# (Full) ellipse axis sizes.
-  Double minoraxis_;
+
+  std::vector<std::vector<double> > beams_;
   String majorunit_;	//# units of above (should be angular
   String minorunit_;	//# (relative world sky coordinates).
-  Double posangle_;	//# (0 is CS "North", 90(deg) is CS "East").
   String paunit_;	//# angular units of posangle_.
   
   DParameterChoice* beamOnOff_;		//# User-selectable parameters.
