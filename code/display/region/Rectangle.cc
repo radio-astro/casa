@@ -655,7 +655,7 @@ namespace casa {
 		    WCBox box(blcq, trcq, cs, Vector<Int>());
 		    ImageRegion *imageregion = new ImageRegion(box);
 
-		    region_statistics->push_back(ImageRegionInfo(full_image_name,getLayerStats(padd,image,*imageregion)));
+		    region_statistics->push_back(ImageRegionInfo(image->name(true),getLayerStats(padd,image,*imageregion)));
 		    delete imageregion;
 
 		} catch (const casa::AipsError& err) {

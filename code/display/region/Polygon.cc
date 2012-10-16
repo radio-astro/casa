@@ -808,7 +808,7 @@ namespace casa {
 
 				if ( image == 0 ) continue;
 
-				String full_image_name = image->name(false);
+				String full_image_name = image->name(true);
 				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
 				if (repeat != processed.end()) continue;
 				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
@@ -990,7 +990,7 @@ namespace casa {
 		    WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
 		    ImageRegion *imageregion = new ImageRegion(poly);
 
-		    region_statistics->push_back(ImageRegionInfo(full_image_name,getLayerStats(padd,image,*imageregion)));
+		    region_statistics->push_back(ImageRegionInfo(image->name(true),getLayerStats(padd,image,*imageregion)));
 		    delete imageregion;
 
 		} catch (const casa::AipsError& err) {
