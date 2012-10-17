@@ -84,7 +84,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   freqFrameValid_p(False), 
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
-			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False), cmplxImage_p(NULL), numthreads_p(-1)
+			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False), 
+			   cmplxImage_p(NULL), numthreads_p(-1), pbLimit_p(0.05)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -102,7 +103,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
-    convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), cmplxImage_p(NULL), numthreads_p(-1)
+    convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), cmplxImage_p(NULL), numthreads_p(-1),
+    pbLimit_p(0.05)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -187,6 +189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       expandedSpwConjFreqSel_p = other.expandedSpwConjFreqSel_p;
       cmplxImage_p=other.cmplxImage_p;
       numthreads_p=other.numthreads_p;
+      pbLimit_p=other.pbLimit_p;
     };
     return *this;
   };
@@ -1667,11 +1670,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Normalize the output image by the sum of wts and sensitivity image
     // cerr << "FTM::finalizeToSky: Weights = " << weightsVec[0] << endl;
     // storeImg(String("wt.im"),*(weightImageVec[0]));
-    //    storeImg(String("stokes.im"),*(resImageVec[0]));
+    // storeImg(String("stokes.im"),*(resImageVec[0]));
+
     normalizeImage( *(resImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , dopsf, 
-		    (Float)1e-03,
-		    (Int)2);
-    //storeImg(String("stokes1.im"),*(resImageVec[0]));
+    		    //		    (Float)1e-03,
+    		    (Float)pbLimit_p,
+    		    (Int)0); // Normalize by sum-of-wts.
+		    // (Int)2); // Normalize by (sum-of-wts*avgPB)
+
+
+    // storeImg(String("stokes1.im"),*(resImageVec[0]));
 
     return;
   };
@@ -1780,7 +1788,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  (iif(subSensitivityImage > (pblimit), 
 				       ((dopsf?1.0:-1.0)*subSkyImage/(subSensitivityImage*sumWt)),
 				       //((dopsf?1.0:-1.0)*subSkyImage))));
-				       0.0)));
+				       0.0)));		
 	      break;
 	      
   	    case 3: // MULTIPLY by the sensitivityImage  avgPB

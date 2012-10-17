@@ -411,6 +411,7 @@ namespace casa{
 	  for(uInt ipol = start(1); ipol < last(1); ipol++)
 	    for(uInt irow = start(2); irow < last(2); irow++)
 	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
+	//	      vbs.modelCube_p(ichan,ipol,irow) =  vbs.visCube_p(ichan,ipol,irow) - vbs.modelCube_p(ichan,ipol,irow);
       }
     else
       {
@@ -418,6 +419,7 @@ namespace casa{
 	  for(uInt ipol = start(1); ipol < last(1); ipol++)
 	    for(uInt irow = start(2); irow < last(2); irow++)
 	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
+	//vbs.modelCube_p(ichan,ipol,irow) = vbs.correctedCube_p(ichan,ipol,irow) - vbs.modelCube_p(ichan,ipol,irow);
       }
       
     // Slicer mySlice(start,last,Slicer::endIsLast);

@@ -28,22 +28,36 @@
 #include <images/Images/ImageInterface.h>
 #include <display/QtPlotter/Util.h>
 #include <QDebug>
-//#include <qwt_plot_histogram.h>
+#include <qwt_plot_curve.h>
+#include <qwt_plot_picker.h>
+#include <qwt_picker.h>
 
 namespace casa {
 
-ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QWidget *parent)
+ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent)
     : QDialog(parent), histogramMaker( NULL ),  binPlot( this )
 {
 	ui.setupUi(this);
+	setWindowTitle( "Graphical Collapse/Moments Threshold Specification");
 
 	//Add the plot to the dialog
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidget);
 	layout->addWidget( &binPlot );
+	binPlot.setAxisTitle( QwtPlot::yLeft, "Count" );
+	binPlot.setAxisTitle( QwtPlot::xBottom, yAxisUnits );
+	binPlot.setCanvasBackground( Qt::white );
 	ui.plotWidget->setLayout( layout );
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+
+	//rangeTool = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
+	 //       QwtPicker::RectSelectionType, QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
+	//        binPlot.canvas());
+	//rangeTool->setStateMachine(new QwtPickerDragPointMachine());
+	//rangeTool->setRubberBandPen(QColor(Qt::green));
+	//rangeTool->setRubberBand(QwtPicker::CrossRubberBand);
+	//rangeTool->setTrackerPen(QColor(Qt::green));
 }
 
 void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
@@ -60,28 +74,23 @@ void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
 		bool success = histogramMaker->getHistograms( values, counts );
 		if ( success ){
 			//put the data into the qwt plot
-			/*qDebug() << "Number of points in histogram is " << values.size();
-			vector<Float> valuesVec;
-			vector<Float> countsVec;
-			values.tovector( valuesVec );
-			counts.tovector( countsVec );
-			for ( int i = 0; i < values.size(); i++ ){
-
-				qDebug() << "value="<<valuesVec[i]<<" count="<<countsVec[i];
+			//qDebug() << "Number of points in histogram is " << values.size();
+			vector<float> xVector;
+			vector<float> yVector;
+			values.tovector( xVector );
+			counts.tovector( yVector );
+			for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
+				QVector<double> xValues(2);
+				QVector<double> yValues(2);
+				xValues[0] = xVector[i];
+				xValues[1] = xVector[i];
+				yValues[0] = 0;
+				yValues[1] = yVector[i];
+				QwtPlotCurve* curve  = new QwtPlotCurve();
+				curve->setData( xValues, yValues );
+				curve->attach(&binPlot);
 			}
-			QwtPlotHistogram *histogram = new QwtPlotHistogram();
-			histogram->setStyle( QwtPlotHistogram::Columns);
-			histogram->setPen( QPen( Qt::black));
-			histogram->setBrush( QBrush( Qt::gray ));
-			QwtArray<QwtIntervalSample> samples( values.size());
-			for ( int i = 0; i < samples.size(); i++ ){
-				samples[i].interval= QwtFloatInterval( valuesVec[i], valuesVec[i]);
-				samples[i].value = countsVec[i];
-			}
-			histogram->setData( QwtIntervalSeriesData( samples ));
-			histogram->attach( &binPlot );*/
-			QString msg( "Need to migrate to qwt6 for this to work");
-			Util::showUserMessage( msg, this );
+			binPlot.replot();
 		}
 		else {
 			QString msg( "Could not make a histogram from the image.");

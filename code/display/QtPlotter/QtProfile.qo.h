@@ -36,6 +36,7 @@
 #include <casa/Inputs/Input.h>
 #include <casa/Arrays/IPosition.h>
 #include <display/QtPlotter/ProfileTaskMonitor.h>
+#include <display/QtPlotter/canvasMode/CanvasMode.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
 
@@ -174,6 +175,7 @@ public slots:
 			bool displayStepFunction, bool opticalFitter, bool showChannelLine );
 	void curveColorPreferences();
 	void legendPreferences();
+	void togglePalette( int modeIndex );
 
 	void setPlotError(int);
 	void changeCoordinate(const QString &text);
@@ -210,6 +212,7 @@ public slots:
 			   const QList<double> &world_x, const QList<double> &world_y,
 			   const QList<int> &pixel_x, const QList<int> &pixel_y );
 	void pixelsChanged(int, int );
+	void clearPaletteModes();
 
 signals:
    void hideProfile();
@@ -229,7 +232,6 @@ private:
    bool exportFITSSpectrum(QString &fn);
    void messageFromProfile(QString &msg);
    void setUnitsText( String unitStr );
-
 
    /**
     * Returns false if first vector value is greater than the last
@@ -260,7 +262,7 @@ private:
    			const QString& label );
    void adjustTopAxisSettings();
    void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
-
+   void toggleAction( QAction* action );
    Int scaleAxis();
    void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
    void initializeSolidAngle() const;
@@ -271,6 +273,7 @@ private:
    int findNearestChannel( float xval ) const;
    void initPreferences();
    void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
+   void setYUnitConversionVisibility( bool visible );
    ImageAnalysis* analysis;
    ImageInterface<Float>* image;
 

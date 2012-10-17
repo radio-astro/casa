@@ -54,6 +54,7 @@ namespace casa {
 
 		void updateCoord( );
 		void updateStatistics( std::list<RegionInfo> *stats );
+		void reloadStatistics( );
 		void updateCenters( std::list<RegionInfo> *centers );
 		void setCenterBackground(QString background);
 		void clearStatistics( );
@@ -131,6 +132,7 @@ namespace casa {
 		void regionChange( viewer::QtRegion *, std::string );
 		void refreshCanvas( );
 		void statisticsVisible( bool );
+		void collectStatistics( );
 		void positionVisible( bool );
 		void translateX( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
 		void translateY( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
@@ -189,7 +191,7 @@ namespace casa {
 
 	    private:
 		unsigned int setting_combo_box;
-
+		int pre_dd_change_statistics_count;
 	};
     }
 }

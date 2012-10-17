@@ -1329,7 +1329,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Do the Grid-correction
     //
-    if(0) //UUU
+    //    if(0) //UUU
+    if(cfCache_p->avgPBReady()) //SB
     {
       //      normalizeAvgPB();
       
@@ -1849,7 +1850,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     const IPosition latticeShape = weightImage.shape();
     const IPosition avgpbShape = avgPB_p->shape();
-    cout << "AWP::getWeightImage : weightimage shape : " << latticeShape << "  and avgpb shape : " << avgpbShape << " " << sumWeight << endl;
+    //    cout << "AWP::getWeightImage : weightimage shape : " << latticeShape << "  and avgpb shape : " << avgpbShape << " " << sumWeight << endl;
     
     Int nx=latticeShape(0);
     Int ny=latticeShape(1);

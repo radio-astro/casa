@@ -516,9 +516,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	n++;
       }
     //    tmp = tmp/n;
-    //    tmp = fabs(tmp);  // fabs(Array<Complex>&) returns a complex array
-    tmp = (sqrt(fabs(tmp)));  // fabs(Array<Complex>&) returns a complex array
-    //    tmp = fabs(tmp);  // fabs(Array<Complex>&) returns a complex array
+    tmp = fabs(tmp);  // fabs(Array<Complex>&) returns a complex array
+    //    tmp = (sqrt(fabs(tmp)));  // fabs(Array<Complex>&) returns a complex array
     for(senImIter.reset(); !senImIter.atEnd(); senImIter++)
       senImIter.rwMatrixCursor() = real(tmp);
 

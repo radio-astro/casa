@@ -43,6 +43,9 @@
 #include <tables/Tables/TiledColumnStMan.h>
 #include <tables/Tables/TiledStManAccessor.h>
 #include <synthesis/MSVis/VisibilityIteratorImpl.h>
+#include <cmath>
+
+using std::ceil;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -582,10 +585,25 @@ ROVisIteratorImpl::setTileCache()
             endTile = ids[ids.nelements() - 1] / tileShape[0];
             cachesize *= endTile - startTile + 1;
 
-            // Safer until I know which of correlations and channels varies faster on
-            // disk.
+            // The cache needs to hold enough tiles to provide the data
+            // for a single row for all channels and all correlations.
+            // Determine the number of tiles in the 0 and 1 directions,
+            // round them up to the nearest integer and take the product
+            // of the two to yield the number of tiles needed.
+            //
+            // This could be reduced a little bit if necessary by using the
+            // actual frequency selection since the current calculation uses
+            // all of the channels in the row, thus reserves space in the cache
+            // for tiles which contain no selected data (however the logic doesn't
+            // appear to read those into the cache so there is no performance
+            // penalty).
+
             const IPosition hShape(tacc.hypercubeShape(startrow));
-            cachesize = hShape[0] * hShape[1] / (tileShape[0] * tileShape[1]);
+
+            float nTiles0 = hShape [0] / (float) (tileShape [0]);
+            float nTiles1 = hShape [1] / (float) (tileShape [1]);
+
+            cachesize = (uInt) (ceil (nTiles0) * ceil (nTiles1));
 
             tacc.setCacheSize(startrow, cachesize);
           }
@@ -895,28 +913,21 @@ Vector<Int>&
 ROVisIteratorImpl::corrType(Vector<Int>& corrTypes) const
 {
 
-  // TBD:  Use corrIds instead of mask
-
   // Get the nominal corrType list
   Int polId = msIter_p.polarizationId();
   Vector<Int> nomCorrTypes;
   msIter_p.msColumns().polarization().corrType().get(polId,nomCorrTypes,True);
 
-  if (corrSlices_p(polId).nelements() > 0) {
-    Vector<Bool> corrmask(nomCorrTypes.nelements(),False);
-    Vector<Slice> corrsel(corrSlices_p(polId));
-    for (uInt i=0;i<corrsel.nelements();++i)
-      corrmask(corrsel(i).start())=True;
-    
-    // Reference the selected subset
-    corrTypes.reference(nomCorrTypes(corrmask).getCompressedArray());
+  // Get the 0-based corr indices
+  Vector<Int> corrids;
+  corrIds(corrids);
 
-  }
-  else
-    corrTypes.reference(nomCorrTypes);
+  // Set the corrType values by the corrids
+  Int nCor=corrids.nelements();
+  corrTypes.resize(nCor);
+  for (Int icor=0;icor<nCor;++icor)
+    corrTypes[icor]=nomCorrTypes[corrids[icor]];
 
-  //    cout << "corrTypes = " << corrTypes << endl;
-	
   return corrTypes;
 }
 

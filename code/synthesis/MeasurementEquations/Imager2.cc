@@ -1,30 +1,21 @@
-//All helper functions of imager moved here for readability
-//# Imager.cc: Implementation of Imager.h
-//# Copyright (C) 1997-2008
-//# Associated Universities, Inc. Washington DC, USA.
-//#
-//# This program is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU General Public License as published by the Free
-//# Software Foundation; either version 2 of the License, or (at your option)
-//# any later version.
-//#
-//# This program is distributed in the hope that it will be useful, but WITHOUT
-//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-//# more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with this program; if not, write to the Free Software Foundation, Inc.,
-//# 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
-//#
-//# $Id$
+//All helper functions of imager moved here for readability #
+//Imager.cc: Implementation of Imager.h # Copyright (C) 1997-2008 #
+//Associated Universities, Inc. Washington DC, USA.  # # This program
+//is free software; you can redistribute it and/or modify it # under
+//the terms of the GNU General Public License as published by the Free
+//# Software Foundation; either version 2 of the License, or (at your
+//option) # any later version.  # # This program is distributed in the
+//hope that it will be useful, but WITHOUT # ANY WARRANTY; without
+//even the implied warranty of MERCHANTABILITY or # FITNESS FOR A
+//PARTICULAR PURPOSE.  See the GNU General Public License for # more
+//details.  # # You should have received a copy of the GNU General
+//Public License along # with this program; if not, write to the Free
+//Software Foundation, Inc., # 675 Massachusetts Ave, Cambridge, MA
+//02139, USA.  # # Correspondence concerning AIPS++ should be
+//addressed as follows: # Internet email: aips2-request@nrao.edu.  #
+//Postal address: AIPS++ Project Office # National Radio Astronomy
+//Observatory # 520 Edgemont Road # Charlottesville, VA 22903-2475 USA
+//# # $Id$
 
 
 #include <casa/Exceptions/Error.h>
@@ -2500,6 +2491,31 @@ Bool Imager::createFTMachine()
       ft_p = new SDGrid(mLocation_p, *gvp_p, cache_p/2, tile_p, gridfunction_p,
                         sdConvSupport_p);
     }
+    else if (gridfunction_p=="gauss" || gridfunction_p=="gjinc") {
+      if (mcellx_p != mcelly_p && 
+          ((!qtruncate_p.getUnit().empty()||qtruncate_p.getUnit()=="pixel")
+           || (!qgwidth_p.getUnit().empty()||qgwidth_p.getUnit()=="pixel")
+           || (!qjwidth_p.getUnit().empty()||qjwidth_p.getUnit()=="pixel"))) {
+        os << LogIO::WARN 
+           << "The " << gridfunction_p << " gridding doesn't support non-square grid." << endl
+           << "Result may be wrong." << LogIO::POST;
+      } 
+      Float truncate, gwidth, jwidth;
+      if (qtruncate_p.getUnit().empty() || qtruncate_p.getUnit()=="pixel")
+        truncate = qtruncate_p.getValue();
+      else
+        truncate = qtruncate_p.getValue("rad")/mcelly_p.getValue("rad");
+      if (qgwidth_p.getUnit().empty() || qgwidth_p.getUnit()=="pixel")
+        gwidth = qgwidth_p.getValue();
+      else
+        gwidth = qgwidth_p.getValue("rad")/mcelly_p.getValue("rad");
+      if (qjwidth_p.getUnit().empty() || qjwidth_p.getUnit()=="pixel")
+        jwidth = qjwidth_p.getValue();
+      else
+        jwidth = qjwidth_p.getValue("rad")/mcelly_p.getValue("rad");
+      ft_p = new SDGrid(mLocation_p, cache_p/2, tile_p, gridfunction_p,
+                        truncate, gwidth, jwidth);
+    }
     else {
       ft_p = new SDGrid(mLocation_p, cache_p/2, tile_p, gridfunction_p,
                         sdConvSupport_p);
@@ -2804,7 +2820,7 @@ Bool Imager::createFTMachine()
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
-    //    psTerm->setOpCode(CFTerms::NOOP);
+    psTerm->setOpCode(CFTerms::NOOP);
     CountedPtr<ConvolutionFunction> awConvFunc;
     awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,False);
     CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();

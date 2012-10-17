@@ -331,7 +331,7 @@ void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
 
     blockSignals(true);
     bool changed = itsSymbol_.null() || *itsSymbol_ != *symbol;
-    
+
     if(itsSymbol_->symbol() == PlotSymbol::NOSYMBOL)
         noneButton->setChecked(true);
     else if(*itsSymbol_ == *itsDefault_) defaultButton->setChecked(true);
@@ -343,10 +343,12 @@ void PlotSymbolWidget::setSymbol(PlotSymbolPtr symbol) {
     if(itsMinSizes_.find(itsSymbol_->symbol()) != itsMinSizes_.end())
         SymbolWidget::size->setMinimum(itsMinSizes_[itsSymbol_->symbol()]);
     else SymbolWidget::size->setMinimum(1);
-    
+
     SymbolWidget::size->setValue((int)(itsSymbol_->size().first + 0.5));
-    SymbolWidget::size->setEnabled(itsSymbol_->symbol() != PlotSymbol::PIXEL);
-    
+    SymbolWidget::size->setEnabled(
+        itsSymbol_->symbol() != PlotSymbol::PIXEL &&
+        itsSymbol_->symbol() != PlotSymbol::AUTOSCALING);
+
     PlotSymbol::Symbol s = itsSymbol_->symbol();
     int index = 0;
     if(s == PlotSymbol::SQUARE)    index = 1;
@@ -400,15 +402,20 @@ void PlotSymbolWidget::symbolChanged(bool check) {
     if(itsMinSizes_.find(currSymbol->symbol()) != itsMinSizes_.end())
         SymbolWidget::size->setMinimum(itsMinSizes_[currSymbol->symbol()]);
     else SymbolWidget::size->setMinimum(1);
-    
+
     if(currSymbol->symbol() == PlotSymbol::PIXEL) {
         currSymbol->setSize(1, 1);
         SymbolWidget::size->setValue(1);
+    } else if(currSymbol->symbol() == PlotSymbol::AUTOSCALING) {
+        currSymbol->setSize(2, 2);
+        SymbolWidget::size->setValue(2);
     }
-    
+
     charEdit->setEnabled(currSymbol->symbol() == PlotSymbol::CHARACTER);
-    SymbolWidget::size->setEnabled(currSymbol->symbol() != PlotSymbol::PIXEL);
-    
+    SymbolWidget::size->setEnabled(
+        currSymbol->symbol() != PlotSymbol::PIXEL &&
+        currSymbol->symbol() != PlotSymbol::AUTOSCALING);
+
     emit changed();
     if(*currSymbol != *itsSymbol_) emit differentFromSet();
 }

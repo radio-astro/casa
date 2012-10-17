@@ -50,6 +50,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const String WorldCanvasHolder::BLINK_MODE = "bIndex";
+
 // Constructors and destructors:
 WorldCanvasHolder::WorldCanvasHolder(WorldCanvas *wCanvas) :
   itsWorldCanvas(wCanvas), itsLastCSmaster(0) {
@@ -62,6 +64,7 @@ WorldCanvasHolder::WorldCanvasHolder(WorldCanvas *wCanvas) :
   Attribute unZoom("resetCoordinates", True);	// Will cause unzoom on new
   itsWorldCanvas->setAttribute(unZoom);		// canvas (unless someone adds
 						// a zoom order to override).
+  blinkMode = false;
 }
 
 WorldCanvasHolder::~WorldCanvasHolder() {
@@ -92,6 +95,7 @@ void WorldCanvasHolder::addDisplayData(DisplayData *dData) {
   worldCanvas()->hold();
   // Notify DisplayData
   dData->notifyRegister(this);
+
   // and add the new displayData
   itsDisplayList.push_back(dData);
 
@@ -107,6 +111,7 @@ void WorldCanvasHolder::removeDisplayData(DisplayData &dData,
   std::list <DisplayData*>::iterator pos = find( itsDisplayList.begin(), itsDisplayList.end(), &dData );
   if ( pos != itsDisplayList.end() ) {
     if(worldCanvas()->isCSmaster(&dData)) worldCanvas()->csMaster() = 0;		// CS master removed.
+
     itsDisplayList.erase(pos);
     // Notify DisplayData
     dData.notifyUnregister(*this, ignoreRefresh);
@@ -259,15 +264,13 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
   
   // Give current CS master (if any) the chance to remain master
   // (it will probably do so).
-  Bool masterFound = worldCanvas()->csMaster() !=0 && 
-	worldCanvas()->csMaster()->sizeControl(*this, sizeControlAtts);
+  Bool masterFound = worldCanvas()->csMaster() !=0 &&
+		 worldCanvas()->csMaster()->sizeControl(*this, sizeControlAtts);
 
   // Even if master role is already taken, all sizeControl routines are still
   // executed, to give give the DDs a chance to do minor adjustments (to
   // maximum zoom extents, for example).  (At present (6/04), no non-master
   // DD is making any such adjustments, however).
-  
-
   for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
 	iter != itsDisplayList.end(); ++iter ) {
     if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
@@ -461,14 +464,30 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   //
   // (10/07 dk: imperfect attempts have been made to correct the above.  Image
   // DDs now use WC CS for labelling, though still (wastefully) using a
-  // private CS as well sometimes....  First conforming DD that wants to will
-  // now label.  (This may not be CSMaster, in blink mode, e.g.; that should
-  // eliminate the 'wrong title' bug...).
+  // private CS as well sometimes....
   dd = 0;
-  for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-	iter != itsDisplayList.end(); ++iter, ++dd ) {
-	if ( conforms[dd] && (*iter)->isDisplayable( ) && (*iter)->labelAxes(ev) )
-	    break;
+
+  //Normal mode
+  if ( !blinkMode ){
+	  for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
+			  iter != itsDisplayList.rend(); ++iter, ++dd ) {
+		  if ( conforms[dd] && (*iter)->isDisplayable( )){
+			  if ((*iter)->labelAxes(ev) ){
+				  break;
+			  }
+		  }
+	  }
+  }
+  //blink mode
+  else {
+	 for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	 			  iter != itsDisplayList.end(); ++iter, ++dd ) {
+	 	if ( conforms[dd] && (*iter)->isDisplayable( )){
+	 		if ( (*iter)->labelAxes(ev)){
+	 			break;
+	 		}
+	 	}
+	  }
   }
 
     

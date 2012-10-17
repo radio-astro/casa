@@ -76,6 +76,7 @@ namespace casa {
 
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
+	    connect( mystate, SIGNAL(collectStatistics( )), SLOT(reload_statistics_event( )) );
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
 
 	    connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
@@ -203,11 +204,7 @@ namespace casa {
 	    if ( statistics_visible == false ) {
 		if ( region_modified ) statistics_update_needed = true;
 	    } else if ( (statistics_update_needed || region_modified) && regionVisible( ) ) {
-		statistics_update_needed = false;
-		std::list<RegionInfo> *rl = generate_dds_statistics( );
-		// send statistics to region state object...
-		mystate->updateStatistics(rl);
-		delete rl;
+		reload_statistics_event( );
 	    }
 
 	    // update position, when needed...
@@ -250,6 +247,14 @@ namespace casa {
 		return;
 	    }
 	    updateStateInfo( false, Region::RegionChangeFocus );
+	}
+
+	void QtRegion::reload_statistics_event( ) {
+	    statistics_update_needed = false;
+	    std::list<RegionInfo> *rl = generate_dds_statistics( );
+	    // send statistics to region state object...
+	    mystate->updateStatistics(rl);
+	    delete rl;
 	}
 
 	void QtRegion::refresh_position_event( bool visible ) {
@@ -394,12 +399,13 @@ namespace casa {
 
 			if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
 
-			if ( change == Region::RegionChangeCreate )
+			if ( change == Region::RegionChangeCreate ) {
+			    dock_->emitCreate( this );
 			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" :
 							      type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
 						QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
 						QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
-			else
+			} else
 			    emit regionUpdate( id_, change, worldx, worldy, pixelx, pixely );
 		    }
 		    break;

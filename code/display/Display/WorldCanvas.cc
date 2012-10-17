@@ -1440,7 +1440,7 @@ Bool WorldCanvas::drawColormappedEllipses(const Matrix<Double> &centres,
 }
 
 // Draw contour map.
-void WorldCanvas::drawContourMap(const Vector<Double> &blc,
+bool WorldCanvas::drawContourMap(const Vector<Double> &blc,
 				 const Vector<Double> &trc,
 				 const Matrix<Float> &data,
 				 const Vector<Float> &levels,
@@ -1455,11 +1455,11 @@ void WorldCanvas::drawContourMap(const Vector<Double> &blc,
   Vector<Double> linBlc(2), linTrc(2);
 
   if (!worldToLin(linBlc, actWorldBlc)) {
-     throw (AipsError("Failed to convert world blc to linear coordinate"));
+	return false;
   }
 
   if (!worldToLin(linTrc, actWorldTrc)) {
-     throw (AipsError("Failed to convert world trc to linear coordinate"));
+	return false;
   }
 //
   Matrix<Float> tr(3,2);
@@ -1478,31 +1478,28 @@ void WorldCanvas::drawContourMap(const Vector<Double> &blc,
 // draw the contours
 
   itsPGFilter->cont(sampledImage, levels, tr);
+  return true;
 }
 
-void WorldCanvas::drawContourMap(const Vector<Double> &blc,
+bool WorldCanvas::drawContourMap(const Vector<Double> &blc,
 				 const Vector<Double> &trc,
 				 const Matrix<Complex> &data,
 				 const Vector<Float> &levels,
 				 const Bool usePixelEdges) {
   switch (itsComplexToRealMethod) {
   case Display::Phase:
-    drawContourMap(blc, trc, phase(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, phase(data), levels, usePixelEdges);
   case Display::Real:
-    drawContourMap(blc, trc, real(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, real(data), levels, usePixelEdges);
   case Display::Imaginary:
-    drawContourMap(blc, trc, imag(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, imag(data), levels, usePixelEdges);
   default:
-    drawContourMap(blc, trc, amplitude(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, amplitude(data), levels, usePixelEdges);
   }
 }
 
 // Draw contour map.
-void WorldCanvas::drawContourMap(const Vector<Double> &blc,
+bool WorldCanvas::drawContourMap(const Vector<Double> &blc,
 				 const Vector<Double> &trc,
 				 const Matrix<Float> &data,
 				 const Matrix<Bool> &mask,
@@ -1525,10 +1522,10 @@ void WorldCanvas::drawContourMap(const Vector<Double> &blc,
 
   Vector<Double> linBlc(2), linTrc(2);
   if (!worldToLin(linBlc, actWorldBlc)) {
-     throw (AipsError("Failed to convert world blc to linear coordinate"));
+	return false;
   }
   if (!worldToLin(linTrc, actWorldTrc)) {
-     throw (AipsError("Failed to convert world trc to linear coordinate"));
+	return false;
   }
 //
   Matrix<Float> tr(3,2);
@@ -1548,9 +1545,10 @@ void WorldCanvas::drawContourMap(const Vector<Double> &blc,
 // draw the contours
 
   itsPGFilter->conb(sampledImage, levels, tr, blank);
+  return true;
 }
 
-void WorldCanvas::drawContourMap(const Vector<Double> &blc,
+bool WorldCanvas::drawContourMap(const Vector<Double> &blc,
 				 const Vector<Double> &trc,
 				 const Matrix<Complex> &data,
 				 const Matrix<Bool> &/*mask*/,
@@ -1558,17 +1556,13 @@ void WorldCanvas::drawContourMap(const Vector<Double> &blc,
 				 const Bool usePixelEdges) {
   switch (itsComplexToRealMethod) {
   case Display::Phase:
-    drawContourMap(blc, trc, phase(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, phase(data), levels, usePixelEdges);
   case Display::Real:
-    drawContourMap(blc, trc, real(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, real(data), levels, usePixelEdges);
   case Display::Imaginary:
-    drawContourMap(blc, trc, imag(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, imag(data), levels, usePixelEdges);
   default:
-    drawContourMap(blc, trc, amplitude(data), levels, usePixelEdges);
-    break;
+    return drawContourMap(blc, trc, amplitude(data), levels, usePixelEdges);
   }
 }
 
@@ -1965,7 +1959,7 @@ void WorldCanvas::drawImage(const Vector<Double> &blc,
 }
 
 
-void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
+bool WorldCanvas::drawVectorMap(const Vector<Double>& blc,
                                 const Vector<Double>& trc,
                                 const Matrix<Complex>& data,
                                 const Matrix<Bool>& mask,
@@ -1982,13 +1976,13 @@ void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
    Matrix<Float> p(phase(data));
 //
    angleConversionFactor = 1.0;
-   drawVectorMap(blc, trc, a, p, mask, angleConversionFactor,
-                 phasePolarity, debias,
-                 variance, xPixelInc, yPixelInc, scale, arrow,
-                 barb, rotation, xWorldInc, yWorldInc, usePixelEdges);
+   return drawVectorMap(blc, trc, a, p, mask, angleConversionFactor,
+			phasePolarity, debias,
+			variance, xPixelInc, yPixelInc, scale, arrow,
+			barb, rotation, xWorldInc, yWorldInc, usePixelEdges);
 }
 
-void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
+bool WorldCanvas::drawVectorMap(const Vector<Double>& blc,
                                 const Vector<Double>& trc,
                                 const Matrix<Float>& data,
                                 const Matrix<Bool>& mask,
@@ -2002,13 +1996,13 @@ void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
                                 const Bool usePixelEdges) 
 {
    Matrix<Float> amp;
-   drawVectorMap(blc, trc, amp, data, mask, angleConversionFactor,
-                 phasePolarity, debias,
-                 variance, xPixelInc, yPixelInc, scale, arrow,
-                 barb, rotation, xWorldInc, yWorldInc, usePixelEdges);
+   return drawVectorMap(blc, trc, amp, data, mask, angleConversionFactor,
+			phasePolarity, debias,
+			variance, xPixelInc, yPixelInc, scale, arrow,
+			barb, rotation, xWorldInc, yWorldInc, usePixelEdges);
 }
 
-void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
+bool WorldCanvas::drawVectorMap(const Vector<Double>& blc,
                                 const Vector<Double>& trc,
                                 const Matrix<Float>& amp,
                                 const Matrix<Float>& posang,
@@ -2036,11 +2030,11 @@ void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
 //
    Vector<Double> linBlc(2), linTrc(2);
    if (!worldToLin(linBlc, blc)) {
-      throw(AipsError("Failed to convert world blc to linear coordinate"));
+	return false;
    }
 //
    if (!worldToLin(linTrc, trc)) {
-      throw(AipsError("Failed to convert world trc to linear coordinate"));
+	return false;
    }
 
 // Find maximum amplitude in array
@@ -2135,7 +2129,7 @@ void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
 // Convert to world coordinate.  
 
              if (!linToWorld(worldPos, linPos)) {
-                throw(AipsError("Failed to convert linear position to world"));
+		return false;
              }
 
 // Work out vector start and end in world coordinates.  This ensures
@@ -2153,10 +2147,10 @@ void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
 // Convert back to linear
 
              if (!worldToLin(linHead, worldHead)) {
-                throw(AipsError("Failed to convert linear head position to world"));
+		return false;
              }
              if (!worldToLin(linTail, worldTail)) {
-                throw(AipsError("Failed to convert linear tail position to world"));
+		return false;
              }
 
 // Draw
@@ -2178,10 +2172,11 @@ void WorldCanvas::drawVectorMap(const Vector<Double>& blc,
        os << "This happened for " << countFail << " pixels, for which the undebiased amplitude was subsituted" << endl;
        os.post();
     }
+    return true;
 }
 
 
-void WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
+bool WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
                                 const Vector<Double>& trc,
                                 const Matrix<Complex>& data,
                                 const Matrix<Bool>& mask,
@@ -2191,27 +2186,27 @@ void WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
 {
   switch (itsComplexToRealMethod) {
   case Display::Phase:
-    drawMarkerMap(blc, trc, phase(data), mask, xPixelInc, yPixelInc, 
-                  scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
+    return drawMarkerMap(blc, trc, phase(data), mask, xPixelInc, yPixelInc, 
+			 scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
     break;
   case Display::Real:
-    drawMarkerMap(blc, trc, real(data), mask, xPixelInc, yPixelInc, 
-                  scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
+    return drawMarkerMap(blc, trc, real(data), mask, xPixelInc, yPixelInc, 
+			 scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
 
     break;
   case Display::Imaginary:
-    drawMarkerMap(blc, trc, imag(data), mask, xPixelInc, yPixelInc, 
-                  scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
+    return drawMarkerMap(blc, trc, imag(data), mask, xPixelInc, yPixelInc, 
+			 scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
 
     break;
   default:
-    drawMarkerMap(blc, trc, amplitude(data), mask, xPixelInc, yPixelInc, 
-                  scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
+    return drawMarkerMap(blc, trc, amplitude(data), mask, xPixelInc, yPixelInc, 
+			 scale, xWorldInc, yWorldInc, markerType, usePixelEdges);
     break;
   }
 }
 
-void WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
+bool WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
                                 const Vector<Double>& trc,
                                 const Matrix<Float>& data,
                                 const Matrix<Bool>& mask,
@@ -2224,11 +2219,11 @@ void WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
 //
    Vector<Double> linBlc(2), linTrc(2);
    if (!worldToLin(linBlc, blc)) {
-      throw(AipsError("Failed to convert world blc to linear coordinate"));
+	return false;
    }
 //
    if (!worldToLin(linTrc, trc)) {
-      throw(AipsError("Failed to convert world trc to linear coordinate"));
+	return false;
    }
 
 
@@ -2324,6 +2319,7 @@ void WorldCanvas::drawMarkerMap(const Vector<Double>& blc,
           }
        }
     }  
+    return true;
 }
 
 

@@ -529,6 +529,10 @@
    <addaction name="actionZoomNeutral"/>
    <addaction name="actionZoomIn"/>
    <addaction name="actionZoomOut"/>
+   <addaction name="separator"/>
+   <addaction name="actionRangeXSelection"/>
+   <addaction name="actionChannelPositioning"/>
+   <addaction name="actionAnnotationText"/>
   </widget>
   <widget class="QStatusBar" name="profileStatus"/>
   <action name="actionExport">
@@ -589,6 +593,42 @@
    </property>
    <property name="toolTip">
     <string>Open legend preferences.</string>
+   </property>
+  </action>
+  <action name="actionRangeXSelection">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/rangeSelection.png</normaloff>:/images/rangeSelection.png</iconset>
+   </property>
+   <property name="text">
+    <string>Select a range of values on the x-axis</string>
+   </property>
+   <property name="toolTip">
+    <string>Select a range of values on the x-axis (Shift+click the left mouse button and drag)</string>
+   </property>
+  </action>
+  <action name="actionChannelPositioning">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/channelSelection.png</normaloff>:/images/channelSelection.png</iconset>
+   </property>
+   <property name="text">
+    <string>Specify a new channel position in the viewer or movie the viewer through a range of channels.</string>
+   </property>
+   <property name="toolTip">
+    <string></string>
+   </property>
+  </action>
+  <action name="actionAnnotationText">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/annotationText.png</normaloff>:/images/annotationText.png</iconset>
+   </property>
+   <property name="text">
+    <string>Textual Annotation</string>
+   </property>
+   <property name="toolTip">
+    <string>Add/Edit a plot label (Ctrl+click the left mouse button and drag)</string>
    </property>
   </action>
   <action name="actionMoveLeft">

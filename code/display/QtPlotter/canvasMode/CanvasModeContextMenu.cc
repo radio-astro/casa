@@ -22,38 +22,39 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef SPECFITPLOTDIALOG_QO_H
-#define SPECFITPLOTDIALOG_QO_H
 
-#include <QtGui/QWidget>
-#include <QList>
-#include <casa/Arrays/Vector.h>
-#include <display/QtPlotter/SpecFitPlotDialog.ui.h>
-
-class QwtPlot;
+#include "CanvasModeContextMenu.h"
+#include <display/QtPlotter/QtCanvas.qo.h>
+#include <QMouseEvent>
 namespace casa {
 
-class SpecFitPlotDialog : public QDialog
-{
-    Q_OBJECT
+CanvasModeContextMenu::CanvasModeContextMenu():
+	CanvasMode(Qt::ArrowCursor){
+}
 
-public:
-    SpecFitPlotDialog(QWidget *parent = 0);
-    void setData( Vector<Float> xValues, Vector<Float> yValues );
-    void setFitCount( int count );
-    void addPlots();
-    ~SpecFitPlotDialog();
+bool CanvasModeContextMenu::isMode( ModeIndex mode ) const {
+	bool matchingMode = false;
+	if ( mode == MODE_CONTEXTMENU ){
+		matchingMode = true;
+	}
+	return matchingMode;
+}
 
-private:
-    static void toDoubleVectors( const Vector<Float>& sourceXValues, const Vector<Float>& sourceYValues,
-    		QVector<double>& destXValues, QVector<double>& destYValues );
-    Ui::SpecFitPlotDialogClass ui;
-    int fitCount;
-    QVector<double> xVals;
-    QVector<double> yVals;
-    QList<QwtPlot*> plots;
-    QwtPlot* summaryPlot;
-};
+
+void CanvasModeContextMenu::mousePressEventSpecific( QMouseEvent* event ){
+	receiver->showContextMenu( event );
+}
+
+void CanvasModeContextMenu::mouseMoveEvent( QMouseEvent* /*event*/ ){
 
 }
-#endif // SPECFITPLOTDIALOG_QO_H
+
+void CanvasModeContextMenu::mouseReleaseEventSpecific( QMouseEvent* /*event*/ ){
+
+}
+
+CanvasModeContextMenu::~CanvasModeContextMenu() {
+	// TODO Auto-generated destructor stub
+}
+
+} /* namespace casa */

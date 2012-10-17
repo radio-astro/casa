@@ -89,12 +89,16 @@ ImageCollapser::ImageCollapser(
 ImageCollapser::~ImageCollapser() {}
 
 ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*clone, *_getRegion(), _getMask(), _getLog().get(),
 		False, AxesSpecifier(), _getStretch()
 	);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+
+	if (! anyTrue(subImage.getMask())) {
+		*_getLog() << "All selected pixels are masked" << LogIO::EXCEPTION;
+	}
 	clone.reset(0);
 	IPosition inShape = subImage.shape();
 	// Set the compressed axis reference pixel and reference value
@@ -241,7 +245,12 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	if (subImage.imageInfo().hasMultipleBeams()) {
 		*_getLog() << LogIO::WARN << "Input image has per plane beams. "
 			<< "The output image will arbitrarily have a single beam which "
-			<< "is the first beam available in the subimage." << LogIO::POST;
+			<< "is the first beam available in the subimage."
+			<< "Thus, the image planes will not be convolved to a common "
+			<< "restoring beam before collapsing. If, however, this is desired, "
+			<< "then run the task imsmooth or the tool method ia.convolve2d() first, "
+			<< "and use the output image of that as the input for collapsing."
+			<< LogIO::POST;
 		ImageUtilities::copyMiscellaneous(*outImage, subImage, False);
 		ImageInfo info = subImage.imageInfo();
 		vector<Vector<Quantity> > out;

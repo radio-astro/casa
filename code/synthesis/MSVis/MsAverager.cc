@@ -169,6 +169,28 @@ void MsAverager::setAverager(
        aMS.removeRow(i);
     }
     //cout << "aMS rows=" << aMS.nrow() << endl;
+    //showColumnNames();
+    LogIO os(LogOrigin("MsAverager", "setAverager"));
+    if (upcase(col)=="MODEL")
+    if (!hasColumn("MODEL_DATA")) {
+       os << LogIO::WARN << "The MS does not have MODEL_DATA column" << LogIO::POST;
+       return;
+    }
+    if (upcase(col)=="CORRECTED")
+    if (!hasColumn("CORRECTED_DATA")) {
+       os << LogIO::WARN << "The MS does not have CORRECTED_DATA column" << LogIO::POST;
+       return;
+    }
+    if (upcase(col)=="RESIDUAL") {
+    if (!hasColumn("CORRECTED_DATA")) {
+       os << LogIO::WARN << "The MS does not have CORRECTED_DATA column" << LogIO::POST;
+       return;
+    }
+    if (!hasColumn("MODEL_DATA")) {
+       os << LogIO::WARN << "The MS does not have MODEL_DATA column" << LogIO::POST;
+       return;
+    }
+    }
        
     column = col;
     if (column == "CORRECTED") {
@@ -248,9 +270,7 @@ void MsAverager::setAverager(
 
     //showColumnNames();
     //if (!hasColumn(upcase(col))) {
-    //   SLog::slog()->out(String("The MS does not have '") 
-    //             + col + "' column",
-    //            fnname, clname, LogMessage::WARN); 
+    //   cout << "The MS does not have '" + col + "' column" << endl;
     //   return;
     //}
 
@@ -302,9 +322,6 @@ void MsAverager::setAverager(
        }
        //cout << "after checking the shape" << endl;
        if (chanChange > 1 || corrChange > 1) {
-          //SLog::slog()->out("Average over variable shape of "
-                   //"channel/polarization is not supported", 
-                   //fnname, clname, LogMessage::WARN); 
 	  LogIO os(LogOrigin("MsAverager", "setAverager"));
 	  os << LogIO::WARN << "Average over variable shape of "
              << "channel/polarization is not supported" 
@@ -376,7 +393,6 @@ void MsAverager::setAverager(
 
        //timer for the total averaging time
        Timer tmr3;
-
        vi.origin();
        for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 #if LOG2
@@ -417,8 +433,8 @@ void MsAverager::setAverager(
                vc = vb.correctedVisCube() - vb.modelVisCube();
             }
             Int i1, i2, i3;
-            //cout << "i1=" << i1 << " i2=" << i2 << " i3=" << i3 << endl;
             vc.shape(i1, i2, i3);
+            //cout << "i1=" << i1 << " i2=" << i2 << " i3=" << i3 << endl;
             Cube<Complex> aveV(i1, nAveChan, 1); 
             Cube<Bool> aveF(i1, nAveChan, 1); 
             
@@ -428,7 +444,6 @@ void MsAverager::setAverager(
             Vector<uInt> rowNumber = vb.rowIds();
             //cout << "rowIds=" << rowNumber << endl;
             for (int row = 0; row < nRow; row++) {
-
                //skip flagged rows when selecting good data
                //this is done to make sure for good data average
                //each timebin start with good data
@@ -997,8 +1012,8 @@ void MsAverager::putAveTable(Double bufTime, Int bufField, Int bufScan,
             blU(pol, chn, 0) = sxsave(chn);
          }
       }
-      msc->modelData().put(tRow, blV.xyPlane(0));
-      msc->correctedData().put(tRow, blU.xyPlane(0));
+      //msc->modelData().put(tRow, blV.xyPlane(0));
+      //msc->correctedData().put(tRow, blU.xyPlane(0));
    
       if (timeShift > 0.) {
          //cout << " bufTime=" << std::setprecision(12) 
@@ -1083,7 +1098,7 @@ void MsAverager::putAveTable(Double bufTime, Int bufField, Int bufScan,
          msc->feed1().put(tRow, aveBuff.feed1()(row)); 
          msc->dataDescId().put(tRow, bufDesc);
          //msc->feed2().put(tRow, aveBuff.feed2()(row)); 
-         msc->modelData().put(tRow, aveBuff.visCube().xyPlane(row));
+         //msc->modelData().put(tRow, aveBuff.visCube().xyPlane(row));
    
          if (timeShift > 0.) {
             //cout << " bufTime=" << std::setprecision(12) 
@@ -1105,9 +1120,8 @@ void MsAverager::putAveTable(Double bufTime, Int bufField, Int bufScan,
          //        << " flagCube=" << aveBuff.flagCube().xyPlane(row) 
          //        << " visCube=" << aveBuff.visCube().xyPlane(row)
          //        << endl; 
-   
-         msc->modelData().put(tRow, aveBuff.modelVisCube().xyPlane(row));
-         msc->correctedData().put(tRow, aveBuff.correctedVisCube().xyPlane(row));
+         //msc->modelData().put(tRow, aveBuff.modelVisCube().xyPlane(row));
+         //msc->correctedData().put(tRow, aveBuff.correctedVisCube().xyPlane(row));
       }
       
    }
@@ -1237,11 +1251,10 @@ Bool MsAverager::hasColumn(casa::String const& col) {
        if (cols(i) == col)
           return True;
     } 
-    //SLog::slog()->out(String("No column '") + col + "' in the MS",
-             //"hasColumn", clname, LogMessage::WARN);
-   LogIO os(LogOrigin("MsAverager", "hasColumn"));
-   os << LogIO::WARN << String("No column '") + col + "' in the MS"
-		   << LogIO::POST;
+    LogIO os(LogOrigin("MsAverager", "hasColumn"));
+    os << LogIO::WARN << String("No column '") + col + "' in the MS"
+       << LogIO::POST;
+
     return False;
 }
 

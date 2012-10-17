@@ -1907,7 +1907,9 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 }
 
 Bool Imager::setsdoptions(const Float scale, const Float weight, 
-			  const Int convsupport, String pointCol)
+			  const Int convsupport, String pointCol,
+                          const Quantity truncate, 
+                          const Quantity gwidth, const Quantity jwidth)
 {
 
 
@@ -1931,6 +1933,9 @@ Bool Imager::setsdoptions(const Float scale, const Float weight,
        << "No such direction column as "<< pointingDirCol_p
        << " in pointing table "<< LogIO::EXCEPTION;
   }
+  qtruncate_p=truncate;
+  qgwidth_p=gwidth;
+  qjwidth_p=jwidth;
   // Destroy the FTMachine
   if(ft_p) {delete ft_p; ft_p=0;}
   if(gvp_p) {delete gvp_p; gvp_p=0;}
@@ -3589,7 +3594,7 @@ Record Imager::clean(const String& algorithm,
     else {
       /* For msmfs, the one input mask PER FIELD must be replicated for all 
 	 Taylor-planes PER FIELD */
-      if(algorithm=="msmfs" && Int(mask.nelements())>0){
+      if(algorithm=="msmfs" && (Int(mask.nelements())>=(nmodels/ntaylor_p)) ){
        for(Int tay=0;tay<nmodels;tay++)
 	 {
 	   maskNames[tay] = mask[ tay%(nmodels/ntaylor_p)  ];

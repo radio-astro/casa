@@ -173,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     void setDOPBCorrection(Bool doit=True) {doPBCorrection=doit;};
     Bool getDOPBCorrection() {return doPBCorrection;};
-    Bool getPBLimit() {cout << "AWP::::::::::pblimit : " << pbLimit_p << endl;  return pbLimit_p;};
+    virtual Float getPBLimit() {return pbLimit_p;};
     // Initialize transform to Visibility plane using the image
     // as a template. The image is loaded and Fourier transformed.
     
@@ -367,8 +367,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1);
 
     inline virtual Float pbFunc(const Float& a, const Float& limit) 
-    {Float tt=sqrt(a);return  (abs(tt) >= limit)?tt:1.0;};
-    //    {if (abs(a) >= limit) return (a);else return 1.0;};
+    //    {Float tt=sqrt(a);return  (abs(tt) >= limit)?tt:1.0;};
+    {if (abs(a) >= limit) return (a);else return 1.0;};
     inline virtual Complex pbFunc(const Complex& a, const Float& limit) 
     {if (abs(a)>=limit) return (a); else return Complex(1.0,0.0);};
 
@@ -466,8 +466,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Percentage of the peak of the PB after which the image is set
     // to zero.
     //
-    Float pbLimit_p;
-
     CountedPtr<SolvableVisJones> epJ_p;
     Double sigma;
     Int Nant_p, doPointing;

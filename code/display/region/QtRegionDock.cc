@@ -93,6 +93,10 @@ namespace casa {
 	    }
 	}
 
+	void QtRegionDock::emitCreate( QtRegion *r ) {
+	    emit regionChange( r, "created" );
+	}
+
 	void QtRegionDock::addRegion(QtRegion *r, QtRegionState *state, int index) {
 
 	    // book keeping for DataManager region access...
@@ -106,7 +110,7 @@ namespace casa {
 	    }
 	    region_stack->setCurrentWidget(state);
 
-	    emit regionChange( r, "created" );
+	    // emit regionChange( r, "created" );
 
 	    connect( r, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SIGNAL(regionChange(viewer::QtRegion*,std::string)));
 	    connect( state, SIGNAL(outputRegions(const QString &,const QString &,const QString&,const QString&)), SLOT(output_region_event(const QString &,const QString &,const QString&,const QString&)) );
@@ -199,6 +203,14 @@ namespace casa {
 	    }
 
 	    current_dd = dd;
+	}
+
+	void QtRegionDock::updateRegionStats( ) {
+	    QWidget *widget = region_stack->currentWidget( );
+	    QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
+	    if ( state != 0 ) {
+		state->reloadStatistics( );
+	    }
 	}
 
 	void QtRegionDock::stack_changed( int index ) {

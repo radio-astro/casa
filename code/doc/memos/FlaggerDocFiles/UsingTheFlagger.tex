@@ -329,7 +329,7 @@ it is easier to detect than in other correlations.
 
 \subsection{List of flag commands (flagdata, flagcmd)}
 \label{Sec:FlagCmdLists}
-There are two flagging tasks in version 3.4 of CASA. The main task flagdata is
+There are two flagging tasks in version 4.0 of CASA. The main task flagdata is
 a replacement for the old flagdata/flagdata2/testautoflag/flagautocorr. This
 task can take parameters input from the interface as well as input from an
 external text file or a list of strings. This is the so-called list mode. All the flagging commands
@@ -380,7 +380,7 @@ table rows.
 
 \begin{figure}
 \includegraphics[scale=0.8]{flagcmd_screenshot.png}
-\caption{Screenshot of the FLAG_CMD sub-table of a MS with flag commands for the
+\caption{Screenshot of the FLAG\_CMD sub-table of a MS with flag commands for the
 online flags. }
 \end{figure}
 
@@ -518,7 +518,7 @@ parameters to the FLAG_CMD sub-table.
 \end{enumerate}
 
 
-\paragraph{Using (and mis-using) the FLAG_CMD subtable}
+\paragraph{Using (and mis-using) the FLAG\_CMD subtable}
 The FLAG\_CMD sub-table is meant to store only meta-data selections such as
 online flags. Using it to save other parameters (from modes such as clip, quack,
 shadow, etc.) is possible but carries a risk that in future releases these
@@ -883,7 +883,7 @@ CASA <12>: summary
 \subsection{Obtaining summaries per reason}
 Attach the tool script that does this.
 
-\subsection{FLAGCMD sub-table vs flag-command text files}
+\subsection{FLAG\_CMD sub-table vs flag-command text files}
 See section \ref{Sec:FlagCmdLists}
 
 

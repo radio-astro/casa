@@ -203,6 +203,19 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 	connect(actionPreferences, SIGNAL(triggered()), this, SLOT(preferences()));
 	connect(actionColors, SIGNAL(triggered()), this, SLOT(curveColorPreferences()));
 	connect(actionLegend, SIGNAL(triggered()), this, SLOT(legendPreferences()));
+	connect(actionAnnotationText, SIGNAL(triggered()), pixelCanvas, SLOT(createAnnotationText()));
+	connect(actionRangeXSelection, SIGNAL(triggered()), pixelCanvas, SLOT(rangeSelectionMode()));
+	connect(actionChannelPositioning, SIGNAL(triggered()), pixelCanvas, SLOT(channelPositioningMode()));
+	connect(pixelCanvas,SIGNAL(clearPaletteModes()),this, SLOT(clearPaletteModes()));
+	connect(pixelCanvas, SIGNAL(togglePalette(int)), this, SLOT(togglePalette(int)));
+	QActionGroup* paletteGroup = new QActionGroup(this );
+	actionAnnotationText->setActionGroup( paletteGroup );
+	actionRangeXSelection->setActionGroup( paletteGroup );
+	actionChannelPositioning->setActionGroup( paletteGroup );
+	actionChannelPositioning->setToolTip("<html>Specify a new channel position in the viewer or movie the viewer through a range of channels<br/> (Ctrl+click the right mouse button to set a new channel position or drag the channel indicator to movie the channel</html>");
+	actionAnnotationText->setCheckable( true );
+	actionRangeXSelection->setCheckable( true );
+	actionChannelPositioning->setCheckable( true );
 
 	//Spectral Line Fitting & Moments/Collapse initialization
 	momentSettingsWidget->setTaskSpecLineFitting( false );
@@ -591,10 +604,11 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	spcRef->setCurrentIndex(frameindex);
 	lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 
+	//YUnits
 	yUnit = QString(img->units().getName().chars());
-
 	yUnitPrefix = "";
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
+	setDisplayYUnits( yAxisCombo->currentText());
 
 	xpos = "";
 	ypos = "";
@@ -1032,10 +1046,10 @@ void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 }
 
 
-void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
+void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*/,
 		const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
-		const QString &/*linecolor*/, const QString & text, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
+		const QString &/*linecolor*/, const QString & /*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 	if (!isVisible()) return;
 	if (!analysis) return;
 
@@ -2014,14 +2028,15 @@ Int QtProfile::scaleAxis(){
 }
 
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
-	//It doesn't make sense to change the y-axis units if they
-	//are dimensionless astronomical data units.
-	if ( yUnit ==ConverterIntensity::ADU ){
-		this->yAxisCombo->setVisible( false );
-		this->leftLabel->setVisible( false );
-	}
+	bool unitsAcceptable = ConverterIntensity::isSupportedUnits( yUnit );
+	setYUnitConversionVisibility( unitsAcceptable );
 	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
 	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
+}
+
+void QtProfile::setYUnitConversionVisibility( bool visible ){
+	yAxisCombo->setVisible( visible );
+	leftLabel->setVisible( visible );
 }
 
 
@@ -2290,7 +2305,14 @@ void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
 void QtProfile::initializeSolidAngle() const {
 	//Get the major and minor axis beam widths.
 	ImageInfo information = this->image->imageInfo();
-	GaussianBeam beam = information.restoringBeam();
+	GaussianBeam beam;
+	bool multipleBeams = information.hasMultipleBeams();
+	if ( !multipleBeams ){
+		beam = information.restoringBeam();
+	}
+	else {
+		beam = information.restoringBeam( 0, -1 );
+	}
 	Quantity majorQuantity = beam.getMajor();
 	Quantity minorQuantity = beam.getMinor();
 
@@ -2321,14 +2343,36 @@ void QtProfile::initializeSolidAngle() const {
 
 void QtProfile::setDisplayYUnits( const QString& unitStr ){
 	QString displayUnit = unitStr;
-	//ADU units are dimensionless
-	if ( yUnit == ConverterIntensity::ADU ){
+	//Right now optical units are not being supported as far as changing
+	//them on the y-axis.
+	bool convertableUnits = ConverterIntensity::isSupportedUnits( yUnit );
+	if ( !convertableUnits ){
 		displayUnit = "";
 	}
 	pixelCanvas->setDisplayYUnits( displayUnit );
 	this->specFitSettingsWidget->setDisplayYUnits( displayUnit );
 }
 
+void QtProfile::clearPaletteModes(){
+	actionRangeXSelection->setChecked( false );
+	actionChannelPositioning->setChecked( false );
+	actionAnnotationText->setChecked( false );
+}
 
+void QtProfile::toggleAction( QAction* action ){
+	if ( ! action->isChecked() ){
+		clearPaletteModes();
+		action->setChecked( true );
+	}
+}
+
+void QtProfile::togglePalette( int mode ){
+	if ( mode == CanvasMode::MODE_ANNOTATION ){
+		toggleAction( actionAnnotationText );
+	}
+	else {
+		qDebug() << "QtProfile unsupported toggle mode: "<< mode;
+	}
+}
 
 }

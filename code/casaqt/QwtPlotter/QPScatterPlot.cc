@@ -493,6 +493,8 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                         if(!sameBrush) p->setBrush(brush);
                     } else if(diffColor) {
                         p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
+                        p->setPen(
+                            m_coloredBrushes[m_coloredData->binAt(i)].color());
                     }
                     m_symbol.draw(p, rect);
                 } else if(drawMaskedSymbol && mask) {
@@ -504,6 +506,8 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                         if(!sameBrush) p->setBrush(mbrush);
                     } else if(diffColor) {
                         p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
+                        p->setPen(
+                            m_coloredBrushes[m_coloredData->binAt(i)].color());
                     }
                     m_symbol.draw(p, mRect);
                 }

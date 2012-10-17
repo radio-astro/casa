@@ -1270,7 +1270,7 @@ void GridFT::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& w
   convertArray(weights,sumWeight);
 
   const IPosition latticeShape = weightImage.shape();
-    
+
   Int nx=latticeShape(0);
   Int ny=latticeShape(1);
 

@@ -68,21 +68,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nx=screen.shape()(0), ny=screen.shape()(1);
     Int convOrig=nx/2;
     Float xpart,ypart;
-    if (isNoOp())
+    if (!isNoOp())
       {
-	screen = 1.0;
+	for (Int i=0; i<nx;i++)
+	  {
+	    xpart = square(i-convOrig);
+	    for (Int j=0;j<ny;j++)
+	      {
+		ypart = sqrt(xpart + square(j-convOrig))*psScale_p;
+		if (multiply)  screen(i, j) *= SynthesisUtils::libreSpheroidal(ypart);
+		else           screen(i, j)  = SynthesisUtils::libreSpheroidal(ypart);
+	      }
+	  }
       }
-    else
-      for (Int i=0; i<nx;i++)
-	{
-	  xpart = square(i-convOrig);
-	  for (Int j=0;j<ny;j++)
-	    {
-	      ypart = sqrt(xpart + square(j-convOrig))*psScale_p;
-	      if (multiply)  screen(i, j) *= SynthesisUtils::libreSpheroidal(ypart);
-	      else           screen(i, j)  = SynthesisUtils::libreSpheroidal(ypart);
-	    }
-	}
   }
 
   void PSTerm::applySky(Matrix<Complex>& screen, 
@@ -102,20 +100,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int convSize = screen.shape()[0];
     //    Vector<Complex> correction(inner);
     Vector<Complex> correction;
-    if (isNoOp())
+    if (!isNoOp())
       {
-	screen=1.0;
-      }
-    else
-      {
-      for (Int iy=-inner/2;iy<inner/2;iy++) 
-	{
-	  psCtor_p->correctX1D(correction, iy+inner/2);
-	  for (Int ix=-inner/2;ix<inner/2;ix++) 
-	    {
-	      screen(ix+convSize/2,iy+convSize/2)=correction(ix+inner/2);
-	    }
-	}
+	for (Int iy=-inner/2;iy<inner/2;iy++) 
+	  {
+	    psCtor_p->correctX1D(correction, iy+inner/2);
+	    for (Int ix=-inner/2;ix<inner/2;ix++) 
+	      {
+		screen(ix+convSize/2,iy+convSize/2)=correction(ix+inner/2);
+	      }
+	  }
       }
     (void)sampling; 
   }

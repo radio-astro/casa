@@ -463,9 +463,7 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 		ui.minThresholdLineEdit->clear();
 		ui.maxThresholdLineEdit->clear();
 	}
-	//Until we get to qwt6
-	ui.graphThresholdButton->setEnabled( false );
-	ui.graphThresholdButton->setVisible( false );
+	ui.graphThresholdButton->setEnabled( enabled );
 }
 
 
@@ -522,13 +520,18 @@ void MomentSettingsWidgetRadio::thresholdTextChanged( const QString& text ){
 	}
 }
 
+void MomentSettingsWidgetRadio::thresholdSpecified(){
+	//qDebug() << "Threshold specified";
+}
+
 void MomentSettingsWidgetRadio::graphicalThreshold(){
 	if ( thresholdingBinDialog == NULL ){
-		thresholdingBinDialog = new ThresholdingBinPlotDialog( this );
+		QString yUnits = this->getYUnit();
+		thresholdingBinDialog = new ThresholdingBinPlotDialog( yUnits, this );
+		connect( thresholdingBinDialog, SIGNAL(accepted()), this, SLOT(thresholdSpecified()));
 	}
 	ImageInterface<Float>* image = const_cast<ImageInterface<Float>* >(taskMonitor->getImage());
 	thresholdingBinDialog->setImage( image );
-
 	thresholdingBinDialog->show();
 }
 

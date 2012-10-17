@@ -58,7 +58,8 @@ namespace casa {
 	}
 
 	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
-					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0) {
+					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0),
+					pre_dd_change_statistics_count(-1) {
 	    setupUi(this);
 #if defined(__APPLE__)
 	    QFont font( "Lucida Grande", 11 );
@@ -221,9 +222,13 @@ namespace casa {
 	void QtRegionState::updateCoord( ) { emit positionVisible(true); }
 
 	void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
-		if ( stats == 0 || stats->size() == 0 ) return;
+	  if ( stats == 0 || stats->size() == 0 ) {
+		if ( pre_dd_change_statistics_count != -1 ) clearStatistics( );
+		pre_dd_change_statistics_count = -1;
+		return;
+	  }
 
-		 while ( (int)stats->size() < statistics_group->count() ) {
+	    while ( (int)stats->size() < statistics_group->count() ) {
 		QtRegionStats *w = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 		if ( w == 0 ) throw internal_error( );
 		statistics_group->removeWidget(w);
@@ -252,7 +257,11 @@ namespace casa {
 	    } else {
 		first->updateStatistics(*stat_iter);
 	    }
-	    if ( num < 2 ) return;
+
+	    if ( num < 2 ) {
+		first->disableNextButton( );
+		return;
+	    }
 
 	    QtRegionStats *prev = first;
 
@@ -269,6 +278,19 @@ namespace casa {
 	    }
 	    prev->setNext( statistics_group, first );
 
+	    int statistics_count = statistics_group->count( );
+	    if ( pre_dd_change_statistics_count < statistics_count && statistics_count > 0 )
+		statistics_group->setCurrentIndex(statistics_count-1);
+
+	    pre_dd_change_statistics_count = -1;
+	}
+
+	void QtRegionState::reloadStatistics( ) {
+	    QString cat = categories->tabText(categories->currentIndex( ));
+	    if ( cat == "stats" ) {
+		pre_dd_change_statistics_count = statistics_group->count( );
+		emit collectStatistics( );
+	    }
 	}
 
 	void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {

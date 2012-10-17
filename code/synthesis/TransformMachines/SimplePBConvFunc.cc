@@ -447,7 +447,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       //addBeamCoverage(twoDPB);
       
  
-      if(1) {
+      if(0) {
 	CoordinateSystem ftCoords(coords);
 	directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
 	AlwaysAssert(directionIndex>=0, AipsError);
@@ -469,7 +469,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       LatticeFFT::cfft2d(twoDPB2);
       
       // Write out FT of screen as an image
-      if(1) {
+      if(0) {
 	CoordinateSystem ftCoords(coords);
 	directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
 	AlwaysAssert(directionIndex>=0, AipsError);
@@ -499,7 +499,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       Int trial=0;
       for (trial=convSize_p/2-2;trial>0;trial--) {
 	//Searching down a diagonal
-	if(abs(convFunc_p(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-3*maxAbsConvFunc)) {
+	if(abs(convFunc_p(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
 	  found=True;
 	  trial=Int(sqrt(2.0*Float(trial*trial)));
 	  break;
@@ -520,7 +520,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
 	}
       */
       if(!found){
-	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
+	if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	// if it drops by more than 2 magnitudes per pixel
 	trial=( convSize_p > (10*convSampling)) ? 5*convSampling : (convSize_p/2 - 4*convSampling);

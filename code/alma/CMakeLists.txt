@@ -700,6 +700,10 @@ casa_add_executable( alma asdmSummary
   apps/asdmSummary/asdmSummary.cc 
   )
 
+casa_add_executable( alma bdflags2MS
+  apps/asdm2MS/bdflags2MS.cc
+  )
+
 casa_add_assay(alma ASDMBinaries/test/tReadBigBDF.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadAllBDFs.cc)
 casa_add_assay(alma ASDM/test/tTableStreamReader.cc)
