@@ -21,6 +21,7 @@ import partitionhelper as ph
 # These tasks have been verified to work on MMS. 
 TASKLIST = [
             'bandpass',
+            'flagdata',
             'fluxscale',
             'gaincal',
             'gencal',

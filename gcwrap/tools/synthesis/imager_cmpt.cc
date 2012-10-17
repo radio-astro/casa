@@ -352,18 +352,25 @@ imager::done()
    return close();
 }
 
-int imager::drawmask(const std::string& image, const std::string& mask ){
+::casac::record*  imager::drawmask(const std::string& image, const std::string& mask, const int niter,  const int npercycle, const std::string& threshold){
 
-  int rstat=-1;
+  casac::record* rstat=0;
   try{
     String elmask(mask);
     if(elmask==String("")){
       elmask=String(image)+String(".mask");
     }
-    Int dummy=0;
-    Int dummier=0;
-    String dummiest="0.0Jy";
-    rstat=itsImager->interactivemask(image, elmask,dummy, dummier, dummiest);
+    Int elniter=niter;
+    Int elnpercycle=npercycle;
+    String elthreshold=threshold;
+    Int stat=itsImager->interactivemask(image, elmask, elniter, elnpercycle, elthreshold);
+    Record elrec;
+    elrec.define("stat", stat);
+    elrec.define("niter", elniter);
+    elrec.define("npercycle", elnpercycle);
+    elrec.define("threshold", elthreshold);
+    rstat=fromRecord(elrec);
+
   } catch  (AipsError x) {
     //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);

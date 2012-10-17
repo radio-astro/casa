@@ -10,7 +10,7 @@
         <description>
             This task has two main types of operation. One type
             will read the parameters from the interface and flag
-            using any of the various modes available. Ther other type
+            using any of the various available modes. Ther other type
             will read the commands from a text file or a Python list of strings,
             containing a list of flag commands (each line containing data selection
             parameters and any parameter specific for the mode being 
@@ -18,14 +18,14 @@
             
             It is also possible to only save the parameters set in the
             interface without flagging. The parameters can be saved
-            in the FLAG_CMD sub-table or in the provided ASCII file. Note that
+            in the FLAG_CMD sub-table or in a text file. Note that
             when saving to an external file, the parameters will be appended to
             the given file.
             
             The available flagging modes are: manual, clip, shadow, quack,
             elevation, tfcrop, rflag, extend, unflag and summary.
 
-            The current flags an be automatically backed up before applying new flags
+            The current flags can be automatically backed up before applying new flags
             if the parameter flagbackup is set. Previous flag versions can be recovered 
             using the flagmanager task.
         </description>

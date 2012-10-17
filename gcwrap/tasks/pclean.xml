@@ -203,7 +203,10 @@
 			<description>Interactive clean</description>
 			<value>False</value>
 		</param>
-
+		<param type="int" name="npercycle" subparam="true">
+		  <description>niter per cycle of interactive clean</description>
+		  <value>100</value>
+		</param>
 
 		<param type="int" name="wprojplanes" subparam="true">
 			<description>Number of w-projection planes for convolution</description>
@@ -380,6 +383,12 @@
 		     <default param="outertaper"><value type="vector"></value></default>
 		   </equals>
 		 </when>
+		 <when param="interactive">
+		   <equals type="bool" value="False"/>
+		   <equals type="bool" value="True">
+		     <default param="npercycle"><value type="int">100</value></default>
+		   </equals>
+		 </when>
 		</constraints>
 	      </input>
 
@@ -424,7 +433,7 @@
         mask -- mask image to be used for CLEANing. As long as the image has
                the same shape (size), mask images from a previous
                interactive session can be used for a new execution.
-               Only an image mask is allowed at this stage. Text formats not allowed yet.
+	       Only an image mask is allowed at this stage. Text formats not allowed yet.
 
         field -- Select fields in MS.  Use field id(s) or field name(s).
                     ['go listobs' to obtain the list id's or names]
@@ -509,8 +518,7 @@
                are aliased to mode='cube' for backward compatibility 
 	       and comfort.
 
-  &gt;&gt;&gt; mode='cube' expandable parame
-ters
+  &gt;&gt;&gt; mode='cube' expandable parameters
            nchan -- Total number of channels in the output image.
               Example: nchan=100.
               Default: -1; Automatically selects enough channels to cover
@@ -553,6 +561,9 @@ ters
               example: interactive=True
                 The viewer will open with the image displayed. Select the
         	region for the mask and double click in the middle of it.
+
+	 &gt;&gt;&gt; npercycle -- Number of iteration in between viewer interactions.
+	       default=100
 
 	pbcor -- Output primary beam-corrected image
                 If pbcor=False, the final output image is NOT corrected for
@@ -619,8 +630,12 @@ ters
 
 
 	clusterdef -- Name of a file that contains the cluster definition.
-                       If clusterdef='' (the default) then all the cores of the machine on 
-                       which casapy is run will be used
+	              NOTE: there is a chapter in the cookbook on how to 
+		      define this file
+                       If clusterdef='' (the default) then all the cores, if possible, 
+		       of the machine on 
+                       which casapy is run will be used.
+<!--
 		       The cluster definition file has lines with 3 comma seperated fields:
                        computername, number of cores to use and working directory
 		       e.g of a cluster definition file:
@@ -633,7 +648,7 @@ ters
 		       to all the computers used in a cluster definition file and the working 
 		       directories has to be crossmounted  by all the computers under the 
 		       same names         
-                  
+-->                  
           Example of a cube imaging run:
 	  
 	  pclean(vis="ngc5921.ms.contsub",imagename="loulou",imsize=[2500, 2500],

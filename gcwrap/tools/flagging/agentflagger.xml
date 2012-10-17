@@ -30,7 +30,9 @@ one measurement set at a time.
   the modes tfcrop, rflag and extend. From version 3.4 on, it is also possible to
   flag CAL tables. Give the CAL table name instead of the MS.
 
-  \t af.open('uid_X002.ms')
+\begin{verbatim}
+  af.open('uid_X002.ms')
+\end{verbatim}
 
 
  \medskip\noindent\textbf{Select the Data}
@@ -41,8 +43,9 @@ one measurement set at a time.
 
   1) Create a Python dictionary which internally will be transformed into a record
      containing the selection parameters.
+\begin{verbatim}
 
-     Select the whole MS.
+     # Select the whole MS.
      af.selectdata()
 
      Select a portion of the MS using a dictionary.
@@ -50,10 +53,12 @@ one measurement set at a time.
      myrecord['scan']='1~3'
      myrecord['spw']='0:1~10'
      af.selectdata(myrecord)
+\end{verbatim}
 
    2) Parse the parameters names directly to the function.
-
+\begin{verbatim}
      af.selectdata(scan='1~3', spw='0:1~10')
+\end{verbatim}
 
 
  \medskip\noindent\textbf{Parse the Parameters for the Flagging Mode(s)}
@@ -66,7 +71,7 @@ one measurement set at a time.
   two ways of parsing the agent's parameters.
 
   1) Using the general method af.parseagentparameters().
-
+\begin{verbatim}
      Construct a dictionary with the parameters for each agent. Each agent's
      parameters should go to a different 'key' of the dictionary. Example:
 
@@ -98,10 +103,11 @@ one measurement set at a time.
      myagents['mode'] = 'summary
      myagents['spwchan] = True
      af.parseagentparameters(myagents)
+\end{verbatim}
 
    2) The other way to parse agent's parameters is to use the convenience functions.
       The above example would become:
-
+\begin{verbatim}
      # Create a shadow agent:
      af.parseshadowparameters()
 
@@ -116,6 +122,7 @@ one measurement set at a time.
      
      # Add another summary agent to the list.
      af.parsesummaryparameters(spwchan=True)
+\end{verbatim}
      
 
  \medskip\noindent\textbf{Initialize the Agents}
@@ -133,8 +140,9 @@ one measurement set at a time.
 
   In the same way, if an agent tfcrop, rflag or clip is present, the asyncio mechanism will be switched
   on.
-
+\begin{verbatim}
   af.init()
+\end{verbatim}
 
  \medskip\noindent\textbf{Run the tool}
 
@@ -146,8 +154,9 @@ one measurement set at a time.
   The run method gathers several reports, depending on wich agents are run. The display and summary agents
   produce reports that can be retrieved from calling the run method. The reports are returned via a Python
   dictionary.
-
+\begin{verbatim}
   myreports = af.run(writeflags=True)
+\end{verbatim}
   
   The dictionary returned in 'myreports' will contain four reports from the two summary agents that were
   added previously. The first report is the normal summary for each selection parameter. The second report
@@ -157,7 +166,9 @@ one measurement set at a time.
 
   Do not forget to destroy and close the tool at the end.
   
+\begin{verbatim}
   af.done()
+\end{verbatim}
 
 </description>
 
@@ -367,6 +378,9 @@ with their specific parameters. It takes no parameters.
 
 <input>
 </input>
+<example>
+af.init()
+</example>
 <returns type="bool"/> 
 </method>
 
@@ -390,9 +404,10 @@ Executes a flagging run.
      </param>
 
 </input>
-<returns type="record"/>
 <example>
+af.run()
 </example>
+<returns type="record"/>
 </method>
 
 

@@ -145,9 +145,11 @@ class simutil:
             origin="simutil"            
         if toterm:
             print clr+"["+origin+"] "+bw+s
-        casalog.post(s,priority=priority,origin=origin)
         if priority=="ERROR":
-            return False
+            #return False
+            raise Exception, s
+        else:
+            casalog.post(s,priority=priority,origin=origin)
 
 
 
