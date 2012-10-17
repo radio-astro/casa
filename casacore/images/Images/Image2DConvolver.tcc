@@ -212,13 +212,13 @@ template <class T> void Image2DConvolver<T>::convolve(
 			if (targetres) {
 				os << LogIO::NORMAL;
 				if (channel >= 0) {
-					os << "Channel " << channel;
+					os << "Channel " << channel << " of " << nChan;
 					if (polarization >= 0) {
 						os << ", ";
 					}
 				}
 				if (polarization >= 0) {
-					os << "Polarization " << polarization;
+					os << "Polarization " << polarization << " of " << nPol;
 				}
 				os << " ";
 				if (near(inputBeam, GaussianBeam(parameters), 1e-5, Quantity(1e-2, "arcsec"))) {
