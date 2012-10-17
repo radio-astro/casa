@@ -207,7 +207,7 @@ def correct_ant_posns (vis_name, print_offsets=False):
       if (print_offsets):
         print "No offsets found for this MS"
       else:
-        casalog.post("No offsets found for this MS")
+        casalog.post("No offsets found for this MS", "WARN")
     ant_string = ','.join(["%s" % ii for ii in ants])
     return [ 0, ant_string, parms ]
 

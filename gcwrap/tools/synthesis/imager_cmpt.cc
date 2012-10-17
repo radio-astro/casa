@@ -1681,13 +1681,20 @@ imager::settaylorterms(const int ntaylorterms, const double reffreq)
 }
 
 bool
-imager::setsdoptions(const double scale, const double weight, const int convsupport, const std::string& pointingcolumntouse)
+imager::setsdoptions(const double scale, const double weight, const int convsupport, const std::string& pointingcolumntouse, const ::casac::variant &truncate, const ::casac::variant &gwidth, const ::casac::variant &jwidth)
 {
 
    Bool rstat(False);
    try {
      casa::String pcolToUse(pointingcolumntouse);
-     rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse);
+     casa::Quantity qTruncate = casaQuantity(truncate);
+     casa::Quantity qGWidth = casaQuantity(gwidth);
+     casa::Quantity qJWidth = casaQuantity(jwidth);
+     *itsLog << "qTruncate=" << qTruncate.getValue() << qTruncate.getUnit() << LogIO::POST;
+     *itsLog << "qGWidth=" << qGWidth.getValue() << qGWidth.getUnit() << LogIO::POST;
+     *itsLog << "qJWidth=" << qJWidth.getValue() << qJWidth.getUnit() << LogIO::POST;
+     rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse,
+                                     qTruncate, qGWidth, qJWidth);
    } catch  (AipsError x) {
      //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
      RETHROW(x);

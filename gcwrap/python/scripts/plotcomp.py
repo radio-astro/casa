@@ -4,6 +4,7 @@ import pylab as pl
 import os
 import shutil
 import tempfile
+import matplotlib
 
 def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
              include0amp=False, include0bl=False, blunit='', bl0flux=0.0):
@@ -224,6 +225,8 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
                 titletxt+='\n bl0 flux:%.3f Jy @ %s GHz' % (bl0flux, compdict['freqs (GHz)'][0]) 
         pl.legend(loc='best', title=titletxt)
         #pl.legend(loc='best', title='($%.0f^\circ$ az, $%.0f^\circ$ el)' % azeldegs)
+        y_formatter=matplotlib.ticker.ScalarFormatter(useOffset=False)
+        pl.axes().yaxis.set_major_formatter(y_formatter) 
         pl.ion()
         pl.draw()
         if compdict.get('savedfig'):

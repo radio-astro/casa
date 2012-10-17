@@ -440,4 +440,4 @@ class taskmanager(object):
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     tm = taskmanager( task_path=[ '', os.environ['__CASAPY_PYTHONDIR'] ] )
 else:
-    tm = taskmanager( task_path=[ '', casadef.task_directory ] )
+    tm = taskmanager( task_path=[ '', casadef.python_library_directory ] )

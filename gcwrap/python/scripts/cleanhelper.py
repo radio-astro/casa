@@ -1240,7 +1240,7 @@ class cleanhelper:
                 ib.done(verbose=False)
                 
             k=k+1
-            ia.close()
+            if ia.isopen(): ia.close()
         #########
         if((len(maskelos)==1) and  (self.outputmask == '')):
             self.outputmask=modelimages[0]+'.mask'

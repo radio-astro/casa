@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/tools/xml/casa.xsd">
+
+
+ 
+        <tool name="synthesisimager" module="synthesisimager">
+        <shortdescription>tool for synthesis imaging</shortdescription>
+       
+<description>
+synthesisimager is an tool that accomplishes synthesis processing.
+A {\tt synthesisimager} must be constructed for each MeasurementSet for which one
+wishes to do processing. Multiple copies of {\tt synthesisimager} may
+be made at any time (provide they are given different names).
+</description>
+
+<code>
+	<include>tools/synthesis/synthesisimager_forward.h</include>
+<private>
+	<include>tools/synthesis/synthesisimager_private.h</include>
+</private>
+
+</code>
+
+
+<!-- ===================================== -->
+ 
+   <method type="constructor" name="synthesisimager">
+   <shortdescription>Construct an synthesisimager tool</shortdescription>
+   
+<description>
+This is used to construct {\tt synthesisimager} tool. 
+
+</description>
+<input>
+
+</input>
+<returns type="synthesisimager"/>
+<example>
+
+
+</example>
+</method>
+
+<!-- ===================================== -->
+ 
+   <method type="function" name="selectdata">
+   <shortdescription>Select data from one MS</shortdescription>
+
+<description>
+Select data from one MS. Call this function in succession if there are
+multiple MSs. 
+</description>
+<input>
+
+     <param type="record" name="selpars">
+     <description>All parameters for data selections</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="defineimage">
+   <shortdescription>Define the image coordinate systems and types</shortdescription>
+
+<description>
+Define the image coordinate systems, image shapes and the number of images (multi-field, multi-term, etc)
+</description>
+<input>
+
+     <param type="record" name="impars">
+     <description>All parameters for image coordinate system</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+
+   <method type="function" name="setupimaging">
+   <shortdescription>Set parameters to control gridding and imaging</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="gridpars">
+     <description>All parameters for imaging/gridding</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="setupdeconvolution">
+   <shortdescription>Set parameters to control minor cycle algorithms</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="decpars">
+     <description>All parameters for deconvolution (minor cycle)</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="setupiteration">
+   <shortdescription>Set parameters to control iteration mechanisms</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="iterpars">
+     <description>All parameters that control iterations</description>
+     <value type="record"></value>
+     </param>
+
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+<!--
+
+   <method type="function" name="setotheroptions">
+   <shortdescription>Set all other parameters</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="bool" name="usescratch">
+     <description>If True, use the model data column on disk. If False use a model record.</description>
+     <value>True</value>
+     </param>
+
+
+</input>
+<returns type="bool"/>
+</method>
+
+-->
+
+<!-- ===================================== -->
+
+<!-- 
+
+   <method type="function" name="initloops">
+   <shortdescription>Initializing loops</shortdescription>
+
+<description>
+</description>
+<input>
+
+</input>
+<returns type="record"/>
+</method>
+
+-->
+
+<!-- ===================================== -->
+
+   <method type="function" name="endloops">
+   <shortdescription>End loops and restore images</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="loopcontrols"> 
+     <description> Loop Controls</description>     
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="runmajorcycle">
+   <shortdescription>Run a major cycle</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="loopcontrols"> 
+     <description> Loop Controls</description>     
+<!--     <value type="record"></value> -->
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+
+   <method type="function" name="runminorcycle">
+   <shortdescription>Run a minor cycle</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="loopcontrols"> 
+     <description> Loop Controls</description>     
+<!--      <value type="record"></value> -->
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="done">
+   <shortdescription>Close the tool</shortdescription>
+
+<description>
+</description>
+<input>
+
+</input>
+<returns type="bool"/>
+</method>
+
+</tool>
+
+</casaxml>

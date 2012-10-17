@@ -48,6 +48,7 @@ importfitsidi.xml
 importgmrt.xml
 importuvfits.xml
 importvla.xml
+imreframe.xml
 imregrid.xml
 imsmooth.xml
 imstat.xml
@@ -106,6 +107,7 @@ specfit.xml
 splattotable.xml
 split.xml
 statwt.xml
+tclean.xml
 testconcat.xml
 uvcontsub.xml
 uvcontsub2.xml

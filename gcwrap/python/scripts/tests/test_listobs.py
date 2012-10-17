@@ -42,30 +42,22 @@ class listobs_test1(unittest.TestCase):
 
     def setUp(self):
         self.res = None
-        if (not os.path.exists(msfile1)):            
+        if (not os.path.lexists(msfile1)):            
             shutil.copytree(datapath+msfile1, msfile1, symlinks=True)
 
-        if (not os.path.exists(msfile2)):            
+        if (not os.path.lexists(msfile2)):            
             shutil.copytree(datapath+msfile2, msfile2, symlinks=True)
         
         default(listobs)
         
-    
-    def tearDown(self):
-        pass        
-
+            
     def test1(self):
-        '''Listobs 1: Default values'''
-        self.res = listobs()
-        self.assertFalse(self.res,'Default parameters should return False')
-        
-    def test2(self):
-        '''Listobs 2: Input MS'''
+        '''Listobs 1: Input MS'''
         self.res = listobs(vis=msfile1)
         self.assertEqual(self.res, None, "Return value should be None")
 
-    def test3(self):
-        '''Listobs 3: CSV-591. Check if long field names are fully displayed'''
+    def test2(self):
+        '''Listobs 2: CSV-591. Check if long field names are fully displayed'''
         ms.open(msfile1)
         res = ms.summary(True)
         ms.close()
@@ -74,8 +66,8 @@ class listobs_test1(unittest.TestCase):
         name = res['scan_7']['0']['FieldName']
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
         
-    def test4(self):
-        '''Listobs 4: CAS-2751. Check that ALMA MS displays one row per scan'''
+    def test3(self):
+        '''Listobs 3: CAS-2751. Check that ALMA MS displays one row per scan'''
         ms.open(msfile2)
         res = ms.summary(True)
         ms.close()
@@ -98,8 +90,8 @@ class listobs_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file %s.'%(out,reference, diff))
                     
-    def test5(self):
-        '''Listobs 5: Save on a file, verbose=False'''
+    def test4(self):
+        '''Listobs 4: Save on a file, verbose=False'''
         output = 'listobs5.txt'
         out = "newobs5.txt"
         reference = reffile+'5'
@@ -124,8 +116,8 @@ class listobs_test1(unittest.TestCase):
                         'New and reference files are different in second run. %s != %s. '
                         'See the diff file %s.'%(out,reference,diff2))
         
-    def test6(self):
-        '''Listobs 6: Save on a file, verbose=True'''
+    def test5(self):
+        '''Listobs 5: Save on a file, verbose=True'''
         output = 'listobs6.txt'
         out = "newobs6.txt"
         diff = "difflistobs6"
@@ -139,8 +131,8 @@ class listobs_test1(unittest.TestCase):
                         'See the diff file %s.'%(out,reference,diff))
         
 
-    def test7(self):
-        '''Listobs 7: test scan selection parameters'''
+    def test6(self):
+        '''Listobs 6: test scan selection parameters'''
         output = "listobs7.txt"
         out = "newobs7.txt"
         diff = "difflistobs7"
@@ -153,8 +145,8 @@ class listobs_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file %s.'%(out,reference,diff))
 
-    def test8(self):
-        '''Listobs 8: test antenna selection parameters'''
+    def test7(self):
+        '''Listobs 7: test antenna selection parameters'''
         output = "listobs8.txt"
         out = "newobs8.txt"
         diff = "difflistobs8"
@@ -169,9 +161,6 @@ class listobs_test1(unittest.TestCase):
 
 
 class listobs_cleanup(unittest.TestCase):
-
-    def setUp(self):
-        pass
     
     def tearDown(self):
         # It will ignore errors in case the files don't exist

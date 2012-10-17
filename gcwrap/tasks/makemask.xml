@@ -19,24 +19,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="mode">
       <description>Mask method (copy,expand,merge)</description>
-      <value>copy</value>
+      <value>list</value>
       <allowed kind="enum">
+        <value>list</value> 
         <value>copy</value>
         <value>expand</value>
-        <value>merge</value> 
        <!-- <value>draw</value>--> 
       </allowed>
     </param>
     
-    <param type="string" name="outimage" >
-      <description>Name of output image. Regrid and modify if it exists.</description>
-      <value></value>
+    <param type="any" name="inpimage" mustexist="true">
+      <description>Name of input image.</description>
+      <any type="variant" limittypes="string stringArray"/>
+         <value type="string"></value>
     </param>
 
-    <param type="string" name="outmask">
-      <description>Name of embedded mask to write (default, mask0,...), or \'\' to save as integer mask only.</description>
-      <value>mask0</value>
-    </param>
 
 
     <!-- SUB-PARAMETERS -->
@@ -44,39 +41,45 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <!-- Mode = copy,expand,merge, draw-->
             <!-- for merge, inpimage can be list -->
             <!--<param type="string" name="inpimage" subparam="true" >-->
-            <param type="any" name="inpimage" subparam="true" >
-	      <description>Name of input image.</description>
-              <any type="variant" limittypes="string stringArray"/>
-              <value type="string"></value>
-	    </param>
 
             <!-- Mode = copy,expand,merge -->
             <!--<param type="string" name="inpmask" subparam="true">-->
             <param type="any" name="inpmask" subparam="true">
             <!-- for merge, inpmask can be list -->
               <any type="variant" limittypes="string stringArray"/>
-              <description>Embedded mask to use (default, mask0,...). Use \'\' for integer mask (zero vs non-zero in inpimage).  Need to include parent image name for merge mode</description>
+              <description>mask(s) to be processed: image masks,T/F internal masks(Need to include parent image names)</description>
  
-              <value type="string">mask0</value>
+              <value type="string"></value>
+            </param>
+ 
+            <param type="string" name="output" subparam="true">
+               <description>Name of output mask (imagename or imagename:internal_maskname)</description>
+               <value></value>
             </param>
         
+            <param type="bool" name="overwrite" subparam="true">
+               <description>overwrite output if exists?</description>
+               <value>False</value>
+            </param>
+
             <!-- Mode = expand -->
 	    <param type="any" name="inpfreqs" subparam="true">
-              <description>List of chans/freqs (in inpimage) to read masks from and merge </description>
+              <description>List of chans/freqs (in inpmask) to read masks from </description>
               <any type="variant" limittypes="string intArray"/>
               <value type="intArray"></value>
             </param>
 
 	    <param type="any" name="outfreqs" subparam="true">
-              <description>List of chans/freqs (in outimage) on which to expand the mask</description>
+              <description>List of chans/freqs (in output) on which to expand the mask</description>
               <any type="variant" limittypes="string intArray"/>
               <value type="intArray"></value>
             </param>
 
-            <param type="string" name="template" subparam="true">
+           <!-- <param type="string" name="template" subparam="true">
               <description>template image name</description>
               <value type="string"></value>
-            </param>
+            </param>-->
+                    
               
 
 
@@ -105,22 +108,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <constraints>                    
 
                 <when param="mode">
+                    <equals value="list">
+                    </equals>
                     <equals value="copy">
-                        <default param="inpimage"><value type="string"></value></default>
-                        <default param="inpmask"><value type="string">mask0</value></default>
+                        <default param="inpmask"><value type="string"></value></default>
+                        <default param="output"><value type="string"></value></default>
+                        <default param="overwrite"><value type="bool">False</value></default>
                     </equals>
                     <equals value="expand">
-                        <default param="inpimage"><value type="string"></value></default>
                         <default param="inpmask"><value type="string">mask0</value></default>
                         <default param="inpfreqs"><value type="intArray"></value></default>
                         <default param="outfreqs"><value type="intArray"></value></default>
-                        <default param="template"><value type="string"></value></default>
+                        <default param="output"><value type="string"></value></default>
+                        <default param="overwrite"><value type="bool">False</value></default>
+                        <!--<default param="template"><value type="string"></value></default>-->
                     </equals>
-                    <equals value="merge">
-                        <default param="inpimage"><value type="stringArray">[]</value></default>
-                        <default param="inpmask"><value type="stringArray">[]</value></default>
+                    <!--<equals value="merge">-->
                     <!--    <default param="regionlist"><value type="stringArray"></value></default>-->
-                    </equals>
+                    <!--</equals>-->
                     <!--<equals value="draw">
                         <default param="inpimage"><value type="string"></value></default>
                     </equals>-->
@@ -139,9 +144,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 Modes : 
 -------------
 
-copy :  Copy/regrid a mask from one image into another
+copy :  Copy/merge masks and regrid if necessary to a new or existing mask
 expand : Expand a mask from one range of freqs to another range
-merge : merge multiple 1/0 masks and T/F in-image-masks to create a new mask
+list : list internal masks in inpimage to the log
 <!--region : Make a mask from a list of region files on the input image coordinate-sys
 -->
 <!--draw : Draw a mask from the viewer using the input image.-->
@@ -154,39 +159,49 @@ result of input and processing, the mask will be regridded to the output
 coordinate system.  
 
 
-Input/Output Rules :
+Parameter Descriptions and rules:
 ------------------------------
+inpimage : Name of input image to use as a reference for the output coordinates (if output does not exist). 
+           Also used as a reference image when regions are specified in inpmask for copy mode
+           default: none (must specify)
 
-inpimage : Name of input image 
-           (merge mode) Name(s) of input images (string or a list of string) 
-inpmask : Name of input mask 
-          default: 'mask0' 
-         (copy or expand mode)
-         Specify how to read the mask from inpimage.
-         'mask0' : give an embedded-mask name (true/false)
-            ' '  : use the inpimage values to make a mask (zero/non-zero)
-         (merge mode)
-         Specify the T/F mask(s) to be merged. Need to include the parent image file
-         name along with the internal mask name seperated by ':'. (e.g. image1.im:mask0)
-         Can be a string or a list of strings.
+Expandable parameters for mode='copy' and 'expand':
+inpmask : Name(s) of input mask(s)
+          default: none
+         To specify an image (zero/non-zero) mask, just give a image name (e.g. myimage1.im)
+         To specify an internal (T/F) mask, you must give a parent image name and the internal mask name
+         seperated by a colon. (e.g. myimage1.im:mask0). The internal mask names can be found by running
+         the makemask task in mode='list'. 
  
-outimage : Name of output image. 
-                 To re-grid a mask to a different coordinate system, give outimage 
-                 a copy of an image with the target coordinate system. 
+         (expand mode)
+         'myimage:mask0' : use(true/false) internal mask 
+         'myimage'  : use the inpimage values to make a mask (zero/non-zero).
+                      Non-zero values are normalized to one in the process.
+         (merge mode)
+         Specify the image mask(s), T/F mask(s), and region(s) to be merged in a list of strings.
+         The regions can be specified directly in the CASA region format or in the text file(s) contains
+         the regions. 
+ 
+output : Name of output image. 
+         default: none
+         *The resultant mask is written as an image (zero/one) mask if the output is a plain image name
+         *The resultant mask is written as an internal (T/F) mask if the output name is the form of 'imagename:maskname'
+         *To re-grid a mask to a different coordinate system,  
+          give an image with the target coordinate system in inpimage. Or make a copy an imge
+          with the target coordinate system and specified the name of the copy in output. 
 
-outmask : Specify how to save the mask in outimage
-          default: mask0        
 
-    - If outimage exists, it will regrid the mask to the new coordinate system  and modify outimage.
-             - If outmask name is specified, it will modify only the embedded mask in outimage.
-             - if outmask is '', it will modify the values in outimage.
+    - If output is specifield as a plain image, if it exists, it will regrid the mask to 
+      the new coordinate system  and modify output (if overwrite=True).
+    - If output is specifield as an image with an internal mask, if the internal mask exists,
+      it will regrid the mask to the new coordinate system  and modify the internal mask only (if overwrite=True).
+    - If output does not exist, it will only copy inpimage
+    - If output == inpimage, do not regrid. Only modify in-place.
 
-    - If outimage does not exist, it will only copy inpimage (no regridding)
+overwrite : overwrite the mask specified in output? (see also the output rules above)
+            default: False
 
-    - If outimage == inpimage, do not regrid. Only modify in-place.
-
-
-Expandable parameters for mode='expand':
+Additional expandable parameters for mode='expand':
   inpfreqs : input channel/frequency/velocity range
              Specify channels in a list of integers. for frequency/velocity, 
              a range is specified in a string with '~', e.g. '1.5MHz~1.6MHz'
@@ -194,71 +209,85 @@ Expandable parameters for mode='expand':
   outfreqs : output channel/frequency/velocity range  
              Specify same way as inpfreqs
              default: []  - all channels
-  template : template image name
-             default: '' 
 
  
 Usage examples : 
 ---------------------------
+(1) (list mode):
+     makemask(mode='list', inpimage='mymask.im')
+     it prints out a list of the internal mask(s) exist in mymask.im to the log 
 
-(1) (copy mode):
-     Regrid a boolean mask from one coordinate system to another (nearest interpolation), 
-     and save as boolean mask in the output image.   
-
-     makemask(mode='copy', 
-              inpimage='oldmask.im', inpmask='mask0', 
-              outimage='newmask.im', outmask='mask0')
-  
 (2) (copy mode):
+     Regrid a boolean mask from one coordinate system to another and save as boolean mask 
+     in the output image.   
+
+     makemask(mode='copy', inpimage='oldmask.im', inpimage='oldmask.im:mask0', output='newmask.im:mask0')
+  
+(3) (copy mode):
      Same as (1), but save as integer mask in the output image.
      
-     makemask(mode='copy', 
-              inpimage='oldmask.im', inpmask='mask0', 
-              outimage='newmask.im', outmask='')
-
-
-(3) (copy mode):
-     Convert a boolean(true/false) mask to integer(one/zero) mask in the same image
-     
-     makemask(mode='copy', 
-              inpimage='oldmask.im', inpmask='mask0',
-              outimage='oldmask.im', outmask='')
+     makemask(mode='copy', inpimage='oldmask.im', inpmask='oldmask.im:mask0', output='newmask.im')
 
 
 (4) (copy mode):
+     Convert a boolean(true/false) mask to integer(one/zero) mask in the same image
+     
+     makemask(mode='copy', inpimage='oldmask.im', inpmask='oldmask.im:mask0', output='', overwrite=True)
+
+
+(5) (copy mode):
      Convert an integer (one/zero) mask to boolean(true/false) mask in the same image
      
-     makemask(mode='copy', 
-              inpimage='oldmask.im', inpmask='',
-              outimage='oldmask.im', outmask='mask0')
+     makemask(mode='copy', inpimage='oldmask.im', inpmask='oldmask.im', output='oldmask.im:mask0')
 
 
-(5) (expand mode):
+(6) (copy mode):
+<!--     Make a one/zero mask from a list of region files, using the input coordinate-sys,
+     and saving in a new output file.  Remember, if outimage has a different 
+     coordinate system from inpimage, the mask will be regridded to it. --> 
+     Merge a one/zero mask and  T/F masks, using the input coordinate-sys of inpimage and
+     saving in a new output file. Remember, if the image specified in output already exist and 
+     has a different coordinate system from inpimage, the mask will be regridded to it.
+     All masks to be merged are specified in a list in inpmask.
+     The name of internal masks must be given in the format, 'parent_image_name:internal_mask_name', 
+     as shown the example below.
+  
+     In the example below, image1.im (the 1/0 mask), the internal masks, mask0 from image1.im
+     and mask1 from image2.im, and a region (on image1.im as defined in inpimage)  are combined. 
+     The output, newmask.im is a new mask name which has not
+     yet exist so image specified in inpimage, image1.im's coordinates are used as a target
+     image coordinates. If image1.im and image2.im has different coordinates, image2.im:mask1 is
+     regridded before it is combined to the other two masks.
+
+     makemask(mode='copy',
+              inpimage='image1.im', <!--regionlist=['box1.rgn','circle[[15pix , 15pix] ,8pix ]']-->
+              inpmask=['image1.im', image1.im:mask0','image2.mask:mask1', 'circle[[15pix , 15pix] ,8pix ]'],
+              output='newmask.im);
+
+(7) (expand mode):
      Expand a (one/zero) mask from continuum imaging to use as an input mask image for
-     spectral line imaging. Use an existing spectral line clean image as a template. 
+     spectral line imaging. Use an existing spectral line clean image as a template by
+     sepecified in inpimage. 
      The inpfreqs is left out as it uses a default (=[], means all channels).
 
-     makemask(mode='expand', 
-              inpimage='cont.clean.mask', inpmask='', outfreqs=[4,5,6,7],
-              outimage='spec.clean.mask', outmask='', template='spec.clean.image')
+     makemask(mode='expand', inpimage='spec.clean.image, inpmask='cont.clean.mask' 
+              outfreqs=[4,5,6,7], output='spec.clean.mask')
 
-(6) (expand mode):
+(8) (expand mode):
      Expand a boolean mask from one range of channels to another range 
      in the same image.
 
-     makemask(mode='expand', 
-              inpimage='oldmask.im', inpmask='mask0', inpfreqs=[5,6], outfreqs=[4,5,6,7],
-              outimage='oldmask.im', outmask='mask0')
+     makemask(mode='expand', inpimage='oldmask.im', inpmask='oldmask.im:mask0', inpfreqs=[5,6], outfreqs=[4,5,6,7],
+              output='oldmask.im:mask0', overwrite=True)
 
 
-(7) (expand mode):
+(9) (expand mode):
      Expand a boolean mask from a range of channels in the input image to another range
      of channels in a  different image with a different spectral-coordinate system.
-     Save the mask as ones/zeros so that it can be given to 'clean'.
+     Save the mask as ones/zeros so that it can be used as an input mask in the clean task. 
 
-     makemask(mode='expand', 
-              inpimage='smallmask.im', inpmask='mask0', inpfreqs='1.5MHz~1.6MHz', outfreqs='1.2MHz~1.8MHz',
-              outimage='bigmask.im', outmask='')
+     makemask(mode='expand', inpimage='bigmask.im' inpmask='smallmask.im:mask0', 
+              inpfreqs='1.5MHz~1.6MHz', outfreqs='1.2MHz~1.8MHz', output='bigmask.im', overwrite=True)
 
 <!--
 (7) (draw mode):
@@ -269,24 +298,6 @@ Usage examples :
               outimage='newmask.im', outmask='');
 -->
 
-(8) (merge mode):
-<!--     Make a one/zero mask from a list of region files, using the input coordinate-sys,
-     and saving in a new output file.  Remember, if outimage has a different 
-     coordinate system from inpimage, the mask will be regridded to it. --> 
-     Merge a one/zero mask and T/F masks, using the input coordinate-sys of inpimage and
-     saving in a new output file. Remember, if outimage already exist and has a different
-     coordinate system from inpimage, the mask will be regridded to it.
-     Both inpimage and inpmask can be string or a list of strings for multiple masks.
-     For inpmask, the name masks must be given in the format, 'parent_image_name:internal_mask_name', 
-     as shown the example below.
-     In the case outimage does not exist yet, it will use the coordinates of inpimage or 
-     the first one in inpimage list.  If inpimage is not specified, it will then use the first one in
-     inpmask list. 
-
-     makemask(mode='merge',
-              inpimage='image1.im', <!--regionlist=['box1.rgn','circle[[15pix , 15pix] ,8pix ]']-->
-              inpmask=['image1.im:mask0','image2.mask:mask1'],
-              outimage='newmask.im', outmask='');
 
 
   </example>

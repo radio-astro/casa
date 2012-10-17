@@ -105,7 +105,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Overwrite (unprompted) pre-existing output file?</description>
         <value>False</value>
     </param>
-    <param type="any" name="beam">
+    <param type="any" name="beam" subparam="yes">
         <any type='variant' limittype='string record'/>
         <description>Alternate way of describing a Gaussian. If specified, must be a dictionary with keys "major", "minor", and "pa" (or "positionangle")</description>
         <value type="string"/>
@@ -177,7 +177,7 @@ an image.
     beam  -- When kernel="gauss", this parameter can be used instead of major,
              minor, and pa to specify the gaussian parameters. See details below.
     targetres -- Used only for gaussian kernels. If True, major, minor, and
-             pa are the resolution of the output image. If false, a gaussian
+             pa, or beam, are the resolution of the output image. If false, a gaussian
              with these parameters is convolved with the input image to produce
              the output image.
     mask --  Mask to use. See help par.mask. Default is none.
@@ -215,6 +215,13 @@ Gaussian kernel: major and minor are the full width at half maximum
                  be used to convolve the input image to create the
                  output image. If True, the input image must have
                  a restoring beam in its header.
+                 If the image has multiple beams and targetres=True,
+                 all planes in the image will be convolved so that the
+                 resulting resolution is that specified by the beam parameter.
+                 If the image has multiple beams and targetres=False, each plane
+                 will be convolved with a Gaussian specified by beam (and hence, in
+                 general, the output image will also have multiple beams that vary
+                 with spectral channel and/or polarization).
 Boxcar kernel:   major, length of the box along the y-axis and
                  minor, length of the box along the x-axis
 
@@ -228,12 +235,16 @@ The major, minor, and pa parameters can be specified in one of three ways
               In this case, the units of major and minor are assumed to 
               be in arcsec and units of pa are assumed to be degrees. 
 
-In the case of a Gaussian, the {\stfaf beam} parameter offers an alternate way of
-describing the convolving Gaussian. If used, neither {\stfaf major}, {stfaf minor},
-nor {\stfaf pa} can be specified. The {\stfaf beam} parameter must have exactly three
+In the case of a Gaussian, the beam parameter offers an alternate way of
+describing the convolving Gaussian. If used, neither major, minor,
+nor pa can be specified. The beam parameter must have exactly three
 fields: "major", "minor", and "pa" (or "positionangle"). This is, not coincidentally,
-the record format for the output of ia.restoringbeam().
+the record format for the output of ia.restoringbeam(). For example
 
+beam = {"major": "5arcsec", "minor": "2arcsec", "pa": "20deg"}
+
+If both beam and any of major, minor, and/or pa is specified for a Gaussian kernel,
+an exception will be thrown.
 
 Note: Using pixel units allows you to convolve axes with different units.
 

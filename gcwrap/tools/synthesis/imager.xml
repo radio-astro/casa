@@ -3507,7 +3507,8 @@ the machine as specified by the aipsrc variable system.resources.memory.
 gridding process.
 \item[gridfunction] The gridding function used. Currently only
 Box-car ('BOX') and Prolate Spheriodal Wave Function ('SF')
-are supported.  In the case of Single-Dish imaging the Primary Beam ('PB') also can be used. 
+are supported.  In the case of Single-Dish imaging the Primary Beam ('PB'), 
+Gaussian ('GAUSS'), and Gaussian * Jinc ('GJINC') also can be used. 
 \item[location] For some unusual types of image, one needs to know the
 location to be used in calculating phase rotations. For example,
 one can specify images to be constructed in azel, in which
@@ -3563,6 +3564,8 @@ especially in wide-field cleaning.
      <value>BOX</value>
      <value>PB</value>
      <value>SF</value>
+     <value>GAUSS</value>
+     <value>GJINC</value>
      </param>
 
      <param type="any" name="location">
@@ -3859,7 +3862,9 @@ is multiplied by this factor.
 \item[convsupport] This parameter can be used to change the support used in gridding single dish data in imaging. If 'PB' or 'pb' is used as the 'convtype' in 
  <link anchor="imager:imager.setoptions.function">setoptions</link> this parameter is ignored as the support is defined by the primary beam. The deafult of -1 mans 1 as convsupport is used for 'box' convolution function and 3 is used for 'SF' convolution function.
 \item[pointingcolumntouse] This parameter is NOT to be changed under normal circumstances. This is to be used by those who know what they are doing and want to try to use different columns in the POINTING table especially if they believe their dish direction is wrong. And if any of the {\tt _OFFSET} columns is used do not expect to be able to use a different frame in the image setup in <link anchor="imager:imager.defineimage.function">defineimage</link>. Possible values are {\tt DIRECTION, TARGET, ENCODER, POINTING_OFFSET, SOURCE_OFFSET} 
-
+\item[truncate] The truncation radius as a quantity or a float value. This parameter is effective only when 'GAUSS' or 'GJINC' is used as the 'convtype' in <link anchor="imager:imager.setoptions.function">setoptions</link>. You can use an unit 'pixel' to specify truncation radius as pixel value. If float value is set, or quantity without unit is set, its unit will be 'pixel'.
+\item[gwidth] The width of the gaussian beam as a radius of half maximum. This parameter is effective only when 'GAUSS' or 'GJINC' is used as the 'convtype' in <link anchor="imager:imager.setoptions.function">setoptions</link>. You can use an unit 'pixel' to specify truncation radius as pixel value. If float value is set, or quantity without unit is set, its unit will be 'pixel'. Note that, when 'GJINC' is used as the 'convtype', gwidth doesn't directry specify width of the convolution function.
+\item[jwidth] The witdh of the jinc beam as a parameter c, where jinc = J_1(pi*x/c)/(pi*x/c). This parameter is effective only when 'GJINC' is used as the 'convtype' in <link anchor="imager:imager.setoptions.function">setoptions</link>. You can use an unit 'pixel' to specify truncation radius as pixel value. If float value is set, or quantity without unit is set, its unit will be 'pixel'. Note that jwidth doesn't directly specify width of the convolution function. 
 </description>
 
 <input>
@@ -3890,6 +3895,24 @@ is multiplied by this factor.
 	    <value>SOURCE_OFFSET</value>
      </allowed>
 
+     </param>
+
+     <param type="any" name="truncate">
+     <description>truncation radius (effective only for 'GAUSS' or 'GJINC')</description>
+     <any type="variant" />
+     <value>-1pixel</value>
+     </param>
+
+     <param type="any" name="gwidth">
+     <description>radius of half maximum for gaussian (effective only for 'GAUSS' or 'GJINC')</description>
+     <any type="variant" />
+     <value>-1pixel</value>
+     </param>
+
+     <param type="any" name="jwidth">
+     <description>c-parameter for jinc function (effective only for 'GJINC')</description>
+     <any type="variant" />
+     <value>-1pixel</value>
      </param>
 
 </input>

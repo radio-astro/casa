@@ -22,8 +22,8 @@ compwidth          =  "1.875GHz"
 setpointings       =  True
 integration        =  "10s"
 direction          =  "J2000 17h20m53.2s -35d47m00s"
-mapsize            =  "14arcsec"
-maptype            =  "hexagonal"
+mapsize            =  "13arcsec"
+maptype            =  "ALMA"
 pointingspacing    =  ""
 #observe            =  True
 obsmode            =  "int"
@@ -74,27 +74,15 @@ ia.open(project+"/"+project + '.alma.cycle0.extended.image')
 hii_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-refstats = { 'max': 5.046,
-             'min': -.1833,
-             'rms': 0.09893,
-             'sum': 363.2 }
-
 reftol   = {'sum':  0.1,
             'max':  0.04,
             'min':  0.04,
             'rms':  0.1}
 
-# Kumar's rev 16734
-refstats = { 'max': 5.6306,
-             'min': -.061013,
-             'rms': 0.10197,
-             'sum': 370.6 }
-
-# Kumar's rev 17055-17139
-refstats = { 'max': 5.4746,
-             'min': -0.083616,
-             'rms': 0.1006,
-             'sum': 358.2 }
+refstats = { 'max': 4.9865,
+             'min': -0.120,
+             'rms': 0.0959,
+             'sum': 338. }
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())

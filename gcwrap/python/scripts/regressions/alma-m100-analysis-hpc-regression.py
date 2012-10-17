@@ -640,7 +640,7 @@ if(mystep in thesteps):
             pclean(vis=name+'-line-vs.ms',
                    imagename='test-'+name+'-sec_phasecal',
                    field='3c*Ph*',spw='0~3',
-                   nterms=2,
+                   nterms=2, alg='multiscale', scales=[0],
                    mode='mfs',niter=100,
                    interactive=False,
                    mask='test-'+name+'-sec_phasecal.mask', imsize=200,cell='0.5arcsec')
@@ -680,7 +680,7 @@ if(mystep in thesteps):
             pclean(vis=name+'-line-vs.ms',
                    imagename='test-'+name+'-prim_phasecal',
                    field='1224*',spw='0~3',
-                   nterms=2,
+                   nterms=2, alg='multiscale', scales=[0],
                    mode='mfs',niter=100,
                    interactive=False,
                    mask='test-'+name+'-prim_phasecal.mask',imsize=200,cell='0.5arcsec')
@@ -857,7 +857,7 @@ if(mystep in thesteps):
             phasecenter='',
             stokes='I',
             weighting='briggs',robust=0.5,
-            npercycle=100,cyclefactor=1.5)
+            cyclefactor=1.5)
     else:
         clean(
             vis='M100all_lores.ms.contsub',
@@ -901,7 +901,7 @@ if(mystep in thesteps):
                restfreq='115.271201800GHz',stokes='I',
                weighting='briggs',robust=0.5,
                pbcor=False,
-               npercycle=100,cyclefactor=1.5)
+               cyclefactor=1.5)
     else:
         clean(vis='M100all_lores.ms.contsub',imagename='M100line',
               field='2~47',

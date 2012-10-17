@@ -115,6 +115,7 @@ scripts/task_importfitsidi.py
 scripts/task_importgmrt.py
 scripts/task_importuvfits.py
 scripts/task_importvla.py
+scripts/task_imreframe.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
 scripts/task_imstat.py
@@ -173,6 +174,7 @@ scripts/task_specfit.py
 scripts/task_splattotable.py
 scripts/task_split.py
 scripts/task_statwt.py
+scripts/task_tclean.py
 scripts/task_testconcat.py
 scripts/task_uvcontsub.py
 scripts/task_uvcontsub2.py

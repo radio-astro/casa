@@ -200,6 +200,7 @@ def simobserve(
             # calculate model parameters from the component list:
 
             compdirs = []
+            cl.done()
             cl.open(complist)
 
             for i in range(cl.length()):
@@ -341,7 +342,7 @@ def simobserve(
             # TODO use max ant = min PB instead?
             # (set back to simdata - there must be an automatic way to do this)
             casalog.origin('simobserve')
-            pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
+            pb = 1.2*0.29979/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
             # PSF size
             if uvmode:
@@ -502,7 +503,9 @@ def simobserve(
             if verbose: util.msg("calculating map pointings centered at "+str(dir0))
 
             if len(pointingspacing) < 1:
-                pointingspacing = "0.5PB"
+                pointingspacing = "Nyquist"
+            if str.upper(pointingspacing)=="NYQUIST":
+                pointingspacing="0.48113PB"
             q = re.compile('(\d+.?\d+)\s*PB')
             qq = q.match(pointingspacing.upper())
             if qq:
@@ -512,7 +515,9 @@ def simobserve(
                     return False
                 pointingspacing = "%farcsec" % (float(z[0])*pb)
                 # todo make more robust to nonconforming z[0] strings
-            pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
+            if verbose:
+                msg("pointing spacing in mosaic = "+pointingspacing)
+            pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir, beam=pb)
             nfld=len(pointings)
             etime = qa.convert(qa.mul(qa.quantity(integration),scanlength),"s")['value']
             # etime is an array of scan lengths - here they're all the same.
@@ -557,22 +562,43 @@ def simobserve(
         imcenter , offsets = util.median_direction(pointings)        
         epoch, ra, dec = util.direction_splitter(imcenter)
 
-        # model is centered at model_refdir, and has model_size; this is the offset in 
-        # angular arcsec from the model center to the imcenter:        
+        # model is centered at model_refdir, and has model_size;         
         mepoch, mra, mdec = util.direction_splitter(model_refdir)
-        if ra['value'] >= 359.999:
-            ra['value'] = ra['value'] - 360.
-        if mra['value'] >= 359.999:
-            mra['value'] = mra['value'] - 360.
-        # XXX put in real angular mod-360 diff here for obs near RA=0
+        # ra/mra should be in degrees, but just in case
+        ra=qa.convert(ra,'deg')
+        mra=qa.convert(mra,'deg')
+        dec=qa.convert(dec,'deg')
+        mdec=qa.convert(mdec,'deg')
+
+        # observation near ra=0:
+        if abs(mra['value'])<10 or abs(mra['value']-360.)<10 or abs(ra['value'])<10 or abs(mra['value']-360.)<10:
+            nearzero=True
+        else:
+            nearzero=False
+
+        # fix wraps
+        if nearzero: # put break at 180
+           if ra['value'] >= 180.:
+               ra['value'] = ra['value'] - 360.
+           if mra['value'] >= 180.:
+               mra['value'] = mra['value'] - 360.
+        else:
+           if ra['value'] >= 360.:
+               ra['value'] = ra['value'] - 360.
+           if mra['value'] >= 360.:
+               mra['value'] = mra['value'] - 360.
+
+        # shift is the offset from the model to imcenter
         shift = [ (qa.convert(ra,'deg')['value'] - 
                    qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(dec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
+
         xmax = qa.convert(model_size[0],'deg')['value']*0.5
         ymax = qa.convert(model_size[1],'deg')['value']*0.5
         overlap = False        
+        # wrapang in median_direction should make offsets always small, not >360
         for i in xrange(offsets.shape[1]):
             xc = pl.absolute(offsets[0,i]+shift[0])  # offsets and shift are in degrees
             yc = pl.absolute(offsets[1,i]+shift[1])
@@ -1176,16 +1202,19 @@ def simobserve(
     except TypeError, e:
         finalize_tools()
         msg("task_simobserve -- TypeError: %s" % e,priority="error")
+        raise TypeError, e
         return False
     except ValueError, e:
         finalize_tools()
         #print "task_simobserve -- OptionError: ", e
         msg("task_simobserve -- OptionError: %s" % e,priority="error")
+        raise ValueError, e
         return False
     except Exception, instance:
         finalize_tools()
         #print '***Error***',instance
         msg("task_simobserve -- Exception: %s" % instance,priority="error")
+        raise Exception, instance
         return False
     return True
 

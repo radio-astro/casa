@@ -1,4 +1,3 @@
-from casac import *
 import os
 import commands
 import math
@@ -7,7 +6,7 @@ import shutil
 import string
 import time
 import ast
-from taskinit import casalog,qa,ms
+from taskinit import *
 
 '''
 A set of helper functions for the tasks tflagdata and flagcmd.
@@ -41,7 +40,7 @@ Others
     
 '''
 ###some helper tools
-tb=casac.table()
+tblocal = tbtool()
 
 
 debug = False
@@ -999,31 +998,31 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
 
         mstable = msfile + '/FLAG_CMD'
         try:
-            tb.open(mstable, nomodify=False)
+            tblocal.open(mstable, nomodify=False)
         except:
             raise Exception, 'Error opening FLAG_CMD table ' + mstable
-        nrows = int(tb.nrows())
+        nrows = int(tblocal.nrows())
         casalog.post('There are ' + str(nrows)
                      + ' rows already in FLAG_CMD', 'DEBUG')
         # add blank rows
-        tb.addrows(nadd)
+        tblocal.addrows(nadd)
         # now fill them in
-        tb.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
-        tb.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
+        tblocal.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
+        tblocal.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
                   nrow=nadd)
-        tb.putcol('REASON', pl.array(reas_list), startrow=nrows,
+        tblocal.putcol('REASON', pl.array(reas_list), startrow=nrows,
                   nrow=nadd)
-        tb.putcol('COMMAND', pl.array(cmd_list), startrow=nrows,
+        tblocal.putcol('COMMAND', pl.array(cmd_list), startrow=nrows,
                   nrow=nadd)
         # Other columns
-        tb.putcol('TYPE', pl.array(typ_list), startrow=nrows, nrow=nadd)
-        tb.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
+        tblocal.putcol('TYPE', pl.array(typ_list), startrow=nrows, nrow=nadd)
+        tblocal.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
                   nrow=nadd)
-        tb.putcol('LEVEL', pl.array(lev_list), startrow=nrows,
+        tblocal.putcol('LEVEL', pl.array(lev_list), startrow=nrows,
                   nrow=nadd)
-        tb.putcol('APPLIED', pl.array(app_list), startrow=nrows,
+        tblocal.putcol('APPLIED', pl.array(app_list), startrow=nrows,
                   nrow=nadd)
-        tb.close()
+        tblocal.close()
     
         casalog.post('Saved ' + str(nadd) + ' rows to FLAG_CMD')
         
@@ -1646,10 +1645,10 @@ def backupFlags(msfile, prename):
         integer giving a name, which does not already exist'''
         
     prefix = prename
-    aftool = casac.agentflagger()
-    aftool.open(msfile)
+    aflocal = aftool()
+    aflocal.open(msfile)
     try:
-        existing = aftool.getflagversionlist(printflags=False)
+        existing = aflocal.getflagversionlist(printflags=False)
     
         # remove comments from strings
         existing = [x[0:x.find(' : ')] for x in existing]
@@ -1666,10 +1665,10 @@ def backupFlags(msfile, prename):
     
         casalog.post('Saving current flags to ' + versionname, 'DEBUG')
     
-        aftool.saveflagversion(versionname=versionname,
+        aflocal.saveflagversion(versionname=versionname,
                                 comment='Flags autosave on ' + time_string, merge='replace')
     finally:
-        aftool.done()
+        aflocal.done()
         
     return
 
@@ -1750,11 +1749,11 @@ def extractAntennaInfo(msname='', antnamelist=[], outfile=''):
     antnamelist = newants;
     
     ## Read antenna subtable of input MS
-    tb.open(msname+'/ANTENNA');
-    a_position = (tb.getcol('POSITION')).transpose();
-    a_dish_diameter = tb.getcol('DISH_DIAMETER');
-    a_name = tb.getcol('NAME');
-    tb.close();
+    tblocal.open(msname+'/ANTENNA');
+    a_position = (tblocal.getcol('POSITION')).transpose();
+    a_dish_diameter = tblocal.getcol('DISH_DIAMETER');
+    a_name = tblocal.getcol('NAME');
+    tblocal.close();
     
     ## Pick out only selected antennas from this list, and make a dictionary
     antlist = {};

@@ -98,6 +98,7 @@ casa_add_library( tools
  synthesis/imagertask_cmpt.cc
  synthesis/CalTables/PlotCal.cc
  synthesis/simulator_cmpt.cc
+ synthesis/synthesisimager_cmpt.cc
  synthesis/vpmanager_cmpt.cc
  tables/table_cmpt.cc
  tables/tableindex_cmpt.cc
@@ -151,6 +152,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  synthesis/imagertask.xml
  synthesis/imager.xml
  synthesis/simulator.xml
+ synthesis/synthesisimager.xml
  synthesis/vpmanager.xml
  tables/tableindex.xml
  tables/tableiterator.xml

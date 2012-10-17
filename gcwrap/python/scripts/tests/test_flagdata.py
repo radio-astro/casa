@@ -5,6 +5,7 @@ import filecmp
 from tasks import *
 from taskinit import *
 from __main__ import default
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 #
 # Test of flagdata modes
@@ -49,6 +50,10 @@ if os.environ.has_key('TEST_DATADIR'):
         datapath = DATADIR
 
 print 'flagdata tests will use data from '+datapath         
+
+# jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
+if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
+    ParallelTaskHelper.bypassParallelProcessing(1)
 
 # Base class which defines setUp functions
 # for importing different data sets
@@ -485,7 +490,7 @@ class test_msselection(test_base):
         self.assertEqual(s['baseline']['VA09&&VA28']['flagged'], 252)
         self.assertEqual(s['baseline']['VA09&&VA09']['flagged'], 3780)
         self.assertEqual(s['flagged'], 190386)
-                
+                        
 
 class test_statistics_queries(test_base):
 
@@ -1228,6 +1233,49 @@ class test_CASA_4_0_bug_fix(test_base):
         res = tflagdata(vis=self.vis, mode='summary')['flagged']
         self.assertEqual(res, 0)
         
+    def test_spw_freq1(self):
+        '''flagdata: CAS-3562, flag all spw channels greater than a frequency'''
+        flagdata(vis=self.vis, spw='>2000MHz', flagbackup=False)
+        
+        # Flag only spw=6,7
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['spw']['0']['flagged'], 0)
+        self.assertEqual(res['spw']['10']['flagged'], 0)
+        self.assertEqual(res['spw']['7']['flagged'], 274944)
+        self.assertEqual(res['spw']['7']['total'], 274944)
+        self.assertEqual(res['spw']['6']['flagged'], 274944)
+        self.assertEqual(res['spw']['6']['total'], 274944)
+        self.assertEqual(res['flagged'], 549888)
+
+    def test_spw_freq2(self):
+        '''flagdata: CAS-3562, flag the channel with a frequency'''
+        flagdata(vis=self.vis, spw='*:1956MHz,*:945MHz', flagbackup=False)
+        
+         # Flag only spw=5,8, first channel (0)
+        res = flagdata(vis=self.vis, mode='summary', spwchan=True)
+        self.assertEqual(res['spw:channel']['1:0']['flagged'], 0)
+        self.assertEqual(res['spw:channel']['15:0']['flagged'], 0)
+        self.assertEqual(res['spw:channel']['5:0']['flagged'], 4296)
+        self.assertEqual(res['spw:channel']['5:0']['total'], 4296)
+        self.assertEqual(res['spw:channel']['8:0']['flagged'], 4296)
+        self.assertEqual(res['spw:channel']['8:0']['total'], 4296)
+        self.assertEqual(res['flagged'], 8592)
+
+    def test_spw_freq3(self):
+        '''flagdata: CAS-3562, flag a range of frequencies'''
+        flagdata(vis=self.vis, spw='1500 ~ 2000MHz', flagbackup=False)
+        
+        # Flag only spw=0~5 
+        res = flagdata(vis=self.vis, mode='summary', spwchan=True)
+        self.assertEqual(res['spw']['0']['flagged'], 274944)
+        self.assertEqual(res['spw']['1']['flagged'], 274944)
+        self.assertEqual(res['spw']['2']['flagged'], 274944)
+        self.assertEqual(res['spw']['3']['flagged'], 274944)
+        self.assertEqual(res['spw']['4']['flagged'], 274944)
+        self.assertEqual(res['spw']['5']['flagged'], 274944)
+        self.assertEqual(res['spw']['6']['flagged'], 0)
+        self.assertEqual(res['flagged'], 1649664)
+     
 # Cleanup class 
 class cleanup(test_base):
     

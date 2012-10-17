@@ -3147,6 +3147,7 @@ Failure (returning F) is a sign of a bug.
 
      <param type="string" name="complex_value">
      <description>Which derived value to use for complex columns (amp, amplitude, phase, imag, real, imaginary)</description>
+     <value></value>
      </param>
     
      <param type="bool" name="useflags">
