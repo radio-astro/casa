@@ -43,6 +43,7 @@
 #  include <QContextMenuEvent>
 #  include <QToolBar>
 #  include <QToolButton>
+#  include <QTimer>
 #include <graphics/X11/X_exit.h>
 
 namespace casa {
@@ -94,14 +95,21 @@ class QtPointToolButton: public QtMouseToolButton {
  public: 
  
   QtPointToolButton(QWidget* parent = 0);
-  ~QtPointToolButton() {  }
+  ~QtPointToolButton() { delete timer; }
 
  protected:
+
   Casarc &rc;
+
   virtual void mousePressEvent(QMouseEvent*);
+  virtual void mouseReleaseEvent(QMouseEvent*);
+
+  QTimer *timer;
+  QPoint popup_menu_pos;
   
  protected slots:
   void show_context_menu( const QPoint & );
+  void popup_options_menu( );
 
 };
 

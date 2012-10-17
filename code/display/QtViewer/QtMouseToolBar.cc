@@ -52,31 +52,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-    QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(QtMouseToolNames::POINT,parent), rc(viewer::getrc( )) {
+  QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(QtMouseToolNames::POINT,parent),
+							    rc(viewer::getrc( )), timer(new QTimer( )) {
 	setContextMenuPolicy( Qt::CustomContextMenu );
 	connect( this, SIGNAL(customContextMenuRequested(const QPoint&)),
 		 this, SLOT(show_context_menu(const QPoint &)) );
+	connect( timer, SIGNAL(timeout( )), SLOT(popup_options_menu( )) );
+    }
+
+    void QtPointToolButton::popup_options_menu( ) {
+	timer->stop( );
+	show_context_menu(popup_menu_pos);
     }
 
     void QtPointToolButton::mousePressEvent( QMouseEvent *event ) {
-	Qt::KeyboardModifiers mod = event->modifiers( );
-	// Qt is somewhat brain damaged for our purposes here... the situation is as follows:
-	// (1) on osx with Qt compiled using quartz, CTRL+click displays the context menu
-	// (2) on linux with Qt compiled using X11 and displaying locally or
-	//     remotely on a linux system, CTRL+click displays the context menu
-	// (3) on linux with Qt compiled using X11 and displaying remotely
-	//     on an osx system, CMD+click displays the context menu *AND* there
-	//     is no way for us to detect here that the command key is pressed
-	//     Thu Aug 30 10:32:15 EDT 2012 <drs>
-	//
-	// *note*also* that setting Qt::AA_MacDontSwapCtrlAndMeta did not change the
-	//             CTRL/META logic here...   Thu Aug 30 10:32:15 EDT 2012 <drs>
-#if defined(__APPLE__)
-	if ( mod & Qt::MetaModifier ) return;		// context menu...
-#else
-	if ( mod & Qt::ControlModifier ) return;	// context menu...
-#endif
+	popup_menu_pos = event->globalPos( );
+	timer->start( 750 );	// popup menu in 3/4 of a second
 	QtMouseToolButton::mousePressEvent(event);
+    }
+
+    void QtPointToolButton::mouseReleaseEvent( QMouseEvent *event ) {
+	timer->stop( );
+	QtMouseToolButton::mouseReleaseEvent(event);
     }
 
     class PopupMenu : public QMenu {
@@ -92,12 +89,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	event(&kev);
     }
 
-    void QtPointToolButton::show_context_menu( const QPoint &pos ) {
+    void QtPointToolButton::show_context_menu( const QPoint &global_pos ) {
 	using namespace QtMouseToolNames;
 
-	QPoint global_pos = mapToGlobal(pos);
 	QMenu *options = new PopupMenu( );
-
 	for ( int i = 0; i < SYM_POINT_REGION_COUNT; ++i ) {
 	    QAction *act = options->addAction(QIcon(QString::fromStdString(pointRegionSymbolIcon((PointRegionSymbols)i))), QString( ));
 	    act->setData(QVariant(i));
