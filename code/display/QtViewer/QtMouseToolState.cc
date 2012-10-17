@@ -78,7 +78,8 @@ namespace QtMouseToolNames {
      
     "Drag tool using the assigned mouse button.",
      
-    "Click assigned mouse button to drop cursor at that position."
+    "Click assigned mouse mark a point region at that cursor position."
+    "\nClick and hold for other symbol markers."
     "\nDouble click inside to execute."
     "\n<Esc> to cancel",
      
