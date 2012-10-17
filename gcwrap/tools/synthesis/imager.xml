@@ -1142,9 +1142,27 @@ drawmask  is used to interactively draw  regions over a template image which you
      </description>
      <value></value>
      </param>
+     
+     <param type="int" name="niter">
+     <description>Total  number of iteration to display in box; just for display or python packaging
+     </description>
+     <value>0</value>
+     </param>
+     
+     <param type="int" name="npercycle">
+     <description>npercycle value  to display in box; just for display or python packaging
+     </description>
+     <value>0</value>
+     </param>
+
+     <param type="string" name="threshold">
+       <description>threshold to display in box ; just for display or python packaging
+       </description>
+       <value>0 mJy</value>
+     </param>   
 
 </input>
-<returns type="int"/>
+<returns type="record"/>
 <example>
 
 im.drawmask(image='mytemplate.image', mask='myregions.mask')
