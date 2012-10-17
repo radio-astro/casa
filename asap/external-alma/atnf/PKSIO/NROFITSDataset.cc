@@ -619,7 +619,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
     return -1 ;
   }
   // DEBUG
-//   nro_debug_output( "RX", ARYNM, RX ) ;
+  //nro_debug_output( "RX", ARYNM, RX ) ;
   //
   if ( readColumn( HPBW, "HPBW", sameEndian ) != 0 ) {
     os << LogIO::WARN << "Error while reading data HPBW." << LogIO::POST ;
@@ -1021,7 +1021,10 @@ int NROFITSDataset::fillRecord( int i )
   //
   strcpy( record_->ARRYT, str4.c_str() ) ;
   status = readTable( record_->ARRYT, "ARRYT", strlen(record_->ARRYT), i ) ;
-  record_->ARRYT[3] = '\0' ;
+  for (int j = strlen(record_->ARRYT)-1 ; j >= 0 ; j--) {
+    if (record_->ARRYT[j] == ' ') record_->ARRYT[j] = '\0';
+    else break;
+  }
   if ( status ) {
     os << LogIO::WARN << "Error while reading ARRYT." << LogIO::POST ;
     return status ;
@@ -1548,42 +1551,41 @@ void NROFITSDataset::fillARYTP()
   string arry2 ;
   string arry3 ;
   string arry4 ;
+  char arytp[4];
   if ( readHeader( arry, "ARRY1" ) == 0 ) 
     arry1 = arry ;
   else 
     arry1 = "00000000000000000000" ;
   for ( int i = 0 ; i < 20 ; i++ ) {
     if ( arry1[i] == '1' ) {
-      char arytp[4] ;
+      for (int j = 0 ; j < 4 ; j++) arytp[j] = '\0';
       sprintf( arytp, "H%d", i+1 ) ;
       ARYTP[count++] = string( arytp ) ;
-      //cout << "ARYTP[" << count-1 << "] = " << ARYTP[count-1] << endl ; 
     }
   }
   if ( readHeader( arry, "ARRY2" ) == 0 )
     arry2 = arry ;
   else 
     arry2 = "00000000000000000000" ;
-  for ( int i = 0 ; i < 20 ; i++ ) {
+  for ( int i = 0 ; i < 10 ; i++ ) {
     if ( arry2[i] == '1' ) {
-      if ( i < 10 ) {
-        char arytp[4] ;
-        sprintf( arytp, "W%d", i+1 ) ;
-        ARYTP[count++] = string( arytp ) ;
-        //cout << "ARYTP[" << count-1 << "] = " << ARYTP[count-1] << endl ;
-      }
-      else if ( i < 15 ) {
-        char arytp[4] ;
-        sprintf( arytp, "U%d", i-9 ) ;
-        ARYTP[count++] = string( arytp ) ;
-        //cout << "ARYTP[" << count-1 << "] = " << ARYTP[count-1] << endl ;
-      }
-      else {
-        char arytp[4] ;
-        sprintf( arytp, "X%d", i-14 ) ;
-        ARYTP[count++] = string( arytp ) ;
-        //cout << "ARYTP[" << count-1 << "] = " << ARYTP[count-1] << endl ;
-      }
+      for (int j = 0 ; j < 4 ; j++) arytp[j] = '\0';
+      sprintf( arytp, "W%d", i+1 ) ;
+      ARYTP[count++] = string( arytp ) ;
+    }
+  }
+  for ( int i = 10 ; i < 15 ; i++ ) {
+    if ( arry2[i] == '1' ) {
+      for (int j = 0 ; j < 4 ; j++) arytp[j] = '\0';
+      sprintf( arytp, "U%d", i-9 ) ;
+      ARYTP[count++] = string( arytp ) ;
+    }
+  }
+  for ( int i = 15 ; i < 20 ; i++ ) {
+    if ( arry2[i] == '1' ) {
+      for (int j = 0 ; j < 4 ; j++) arytp[j] = '\0';
+      sprintf( arytp, "X%d", i-14 ) ;
+      ARYTP[count++] = string( arytp ) ;
     }
   }
   if ( readHeader( arry, "ARRY3" ) == 0 ) 
@@ -1592,10 +1594,9 @@ void NROFITSDataset::fillARYTP()
     arry3 = "00000000000000000000" ;
   for ( int i = 0 ; i < 20 ; i++ ) {
     if ( arry3[i] == '1' ) {
-      char arytp[4] ;
+      for (int j = 0 ; j < 4 ; j++) arytp[j] = '\0';
       sprintf( arytp, "A%d", i+1 ) ;
       ARYTP[count++] = string( arytp ) ;
-      //cout << "ARYTP[" << count-1 << "] = " << ARYTP[count-1] << endl ;
     }
   }
   if ( readHeader( arry, "ARRY4" ) == 0 )
@@ -1604,12 +1605,12 @@ void NROFITSDataset::fillARYTP()
     arry4 = "00000000000000000000" ;
   for ( int i = 0 ; i < 20 ; i++ ) {
     if ( arry4[i] == '1' ) {
-      char arytp[4] ;
+      for (int j = 0 ; j < 4 ; j++) arytp[j] = '\0';
       sprintf( arytp, "A%d", i+21 ) ;
       ARYTP[count++] = string( arytp ) ;
-      //cout << "ARYTP[" << count-1 << "] = " << ARYTP[count-1] << endl ;
     }
   }      
+  //nro_debug_output("ARYTP", ARYTP.size(), ARYTP);
 }
 
 int NROFITSDataset::readARRY()
@@ -2233,10 +2234,11 @@ int NROFITSDataset::readColumn( vector<double> &v, char *name, int b, int idx )
 
 uInt NROFITSDataset::getArrayId( string type )
 {
-  uInt ib = 99 ;
-  for ( uInt i = 0 ; i < arrayid_.size() ; i++ ) {
-    uInt len = ARYTP[i].size() ;
-    if ( type.compare( 0, len, ARYTP[i], 0, len ) == 0 ) {
+  uInt ib = 99;
+  uInt len0 = type.size();
+  for (uInt i = 0 ; i < arrayid_.size() ; i++) {
+    uInt len = ARYTP[i].size();
+    if ( len0 == len && type.compare( 0, len, ARYTP[i], 0, len ) == 0 ) {
       ib = i ;
       break ;
     }

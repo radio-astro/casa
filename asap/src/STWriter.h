@@ -37,7 +37,6 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/BasicSL/String.h>
 
-#include "Logger.h"
 #include "Scantable.h"
 
 class PKSwriter;
@@ -52,7 +51,7 @@ namespace asap {
   * @date 2006-03-08
   * @version 2.0a
 */
-class STWriter : public Logger {
+class STWriter {
 public:
   explicit STWriter(const string &format = "SDFITS");
   virtual ~STWriter();
@@ -80,8 +79,6 @@ private:
                       casa::Matrix<casa::uChar>& flag,
                       casa::Vector<casa::Complex>& xpol,
                       const casa::Table& tab);
-
-  void replacePtTab(const casa::Table& tab, const std::string& fname);
 
   casa::String getObsTypes( casa::Int srctype ) ;
 

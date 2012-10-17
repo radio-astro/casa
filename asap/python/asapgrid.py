@@ -447,11 +447,13 @@ class _SDGridPlotter:
         #print 'npol=',self.npol
         #print 'nrow=',nrow
 
-        idx = 0
-        d0 = s.get_direction( 0 ).split()[-1]
-        while ( s.get_direction(self.npol*idx) is not None \
-                and s.get_direction(self.npol*idx).split()[-1] == d0 ):
+        idx = 1
+        d0 = s.get_direction( 0 ).split()[-2]
+        d = s.get_direction(self.npol*idx)
+        while( d is not None \
+               and d.split()[-2] != d0):
             idx += 1
+            d = s.get_direction(self.npol*idx)
         
         self.nx = idx
         self.ny = nrow / (self.npol * idx )
@@ -483,7 +485,7 @@ class _SDGridPlotter:
         else:
             opt += ', channel %s'%(chan)
         data = self.getData( chan, pol )
-        data = numpy.fliplr( data )
+        #data = numpy.fliplr( data )
         title = 'Gridded Image (%s)'%(opt)
         pl.figure(10)
         pl.clf()
@@ -529,7 +531,7 @@ class _SDGridPlotter:
         self.tablein = scantable( tab, average=False )
         if self.ifno < 0:
             ifno = self.tablein.getif(0)
-            print 'ifno=',ifno
+            #print 'ifno=',ifno
         else:
             ifno = self.ifno
         sel = selector()

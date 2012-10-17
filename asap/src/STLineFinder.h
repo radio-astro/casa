@@ -47,7 +47,6 @@
 // ASAP
 #include "ScantableWrapper.h"
 #include "Scantable.h"
-#include "STFitter.h"
 
 namespace asap {
 

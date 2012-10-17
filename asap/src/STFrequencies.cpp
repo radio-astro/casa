@@ -14,6 +14,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Containers/RecordField.h>
 #include <casa/Arrays/IPosition.h>
+#include <casa/Logging/LogIO.h>
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -263,7 +264,9 @@ MFrequency::Types STFrequencies::getFrame(bool base) const
   MFrequency::Types mft;
   if (!MFrequency::getType(mft, rf)) {
     ostringstream oss;
-    pushLog("WARNING: Frequency type unknown assuming TOPO");
+    LogIO os( casa::LogOrigin( "STFrequencies", "getFrame") );
+    os << LogIO::WARN << "WARNING: Frequency type unknown assuming TOPO"
+       << LogIO::POST;
     mft = MFrequency::TOPO;
   }
 

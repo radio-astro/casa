@@ -158,6 +158,7 @@ public:
   int getBeam(int whichrow) const {return table_->getBeam(whichrow);}
   std::vector<uint> getPolNos() { return table_->getPolNos(); }
   int getPol(int whichrow) const {return table_->getPol(whichrow);}
+  std::vector<uint> getCycleNos() { return table_->getCycleNos(); }
   int getCycle(int whichrow) const {return table_->getCycle(whichrow);}
   std::vector<uint> getScanNos() { return table_->getScanNos(); }
   int getScan(int whichrow) const {return table_->getScan(whichrow);}

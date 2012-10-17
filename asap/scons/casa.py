@@ -62,9 +62,8 @@ def generate(env):
                 env.Append(SHFORTRANFLAGS=ppflags)
                 env.Append(SHLINKFLAGS=linkflags)
                 env.Append(LINKFLAGS=linkflags)
-                # otherwise darwin puts builddir into the name
-            env.Append(SHLINKFLAGS=["-install_name", "${TARGET.file}"])
-            env.Append(SHLINKFLAGS=["-single_module"])
+            # need flat_namespace to prevent segv in boost
+            env.Append(LDMODULEFLAGS=["-single_module", "-flat_namespace"])
             
     AddCasaPlatform()
 

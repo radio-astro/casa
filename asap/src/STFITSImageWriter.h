@@ -32,18 +32,24 @@
 #define STFITSIMAGEWRITER_H
 
 #include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/ostream.h>
 
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include "Scantable.h"
-#include "Logger.h"
+
+//#include "Scantable.h"
+
+namespace casa {
+  class String;
+}
 
 namespace asap {
+
+class Scantable;
+
+
 /**
  * A class to export a Scantable to FITS file(s)
  */
-class STFITSImageWriter : public Logger {
+class STFITSImageWriter {
 public:
 // Constructor
   STFITSImageWriter();

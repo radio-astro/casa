@@ -2,7 +2,7 @@ import _asap
 from asap.parameters import rcParams
 from asap.logging import asaplog, asaplog_post_dec
 from asap.utils import _n_bools, mask_and
-
+from numpy import ndarray
 
 class fitter:
     """
@@ -25,6 +25,7 @@ class fitter:
         self._p = None
         self._selection = None
         self.uselinear = False
+        self._constraints = []
 
     def set_data(self, xdat, ydat, mask=None):
         """
@@ -72,14 +73,18 @@ class fitter:
         """
         Set the function to be fit.
         Parameters:
-            poly:     use a polynomial of the order given with nonlinear least squares fit
-            lpoly:    use polynomial of the order given with linear least squares fit
+            poly:     use a polynomial of the order given with nonlinear 
+                      least squares fit
+            lpoly:    use polynomial of the order given with linear least 
+                      squares fit
             gauss:    fit the number of gaussian specified
             lorentz:  fit the number of lorentzian specified
             sinusoid: fit the number of sinusoid specified
         Example:
-            fitter.set_function(poly=3)  # will fit a 3rd order polynomial via nonlinear method
-            fitter.set_function(lpoly=3)  # will fit a 3rd order polynomial via linear method
+            fitter.set_function(poly=3)  # will fit a 3rd order polynomial 
+                                         # via nonlinear method
+            fitter.set_function(lpoly=3)  # will fit a 3rd order polynomial 
+                                          # via linear method
             fitter.set_function(gauss=2) # will fit two gaussians
             fitter.set_function(lorentz=2) # will fit two lorentzians
             fitter.set_function(sinusoid=3) # will fit three sinusoids
@@ -116,11 +121,15 @@ class fitter:
             self.fitfuncs = [ 'sinusoid' for i in range(n) ]
             self.components = [ 3 for i in range(n) ]
             self.uselinear = False
+        elif kwargs.has_key('expression'):
+            self.uselinear = False
+            raise RuntimeError("Not yet implemented")
         else:
             msg = "Invalid function type."
             raise TypeError(msg)
 
         self.fitter.setexpression(self.fitfunc,n)
+        self._constraints = []
         self.fitted = False
         return
 
@@ -146,25 +155,28 @@ class fitter:
             msg = "Fitter not yet initialised. Please set data & fit function"
             raise RuntimeError(msg)
 
-        else:
-            if self.data is not None:
-                self.x = self.data._getabcissa(row)
-                self.y = self.data._getspectrum(row)
-                #self.mask = mask_and(self.mask, self.data._getmask(row))
-                if len(self.x) == len(self.mask):
-                    self.mask = mask_and(self.mask, self.data._getmask(row))
-                else:
-                    asaplog.push('lengths of data and mask are not the same. preset mask will be ignored')
-                    asaplog.post('WARN','asapfit.fit')
-                    self.mask=self.data._getmask(row)
-                asaplog.push("Fitting:")
-                i = row
-                out = "Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (self.data.getscan(i),
-                                                                      self.data.getbeam(i),
-                                                                      self.data.getif(i),
-                                                                      self.data.getpol(i),
-                                                                      self.data.getcycle(i))
-                asaplog.push(out,False)
+        if self.data is not None:
+            self.x = self.data._getabcissa(row)
+            self.y = self.data._getspectrum(row)
+            #self.mask = mask_and(self.mask, self.data._getmask(row))
+            if len(self.x) == len(self.mask):
+                self.mask = mask_and(self.mask, self.data._getmask(row))
+            else:
+                asaplog.push('lengths of data and mask are not the same. '
+                             'preset mask will be ignored')
+                asaplog.post('WARN','asapfit.fit')
+                self.mask=self.data._getmask(row)
+            asaplog.push("Fitting:")
+            i = row
+            out = "Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (
+                self.data.getscan(i),
+                self.data.getbeam(i),
+                self.data.getif(i),
+                self.data.getpol(i),
+                self.data.getcycle(i))
+            
+            asaplog.push(out, False)
+
         self.fitter.setdata(self.x, self.y, self.mask)
         if self.fitfunc == 'gauss' or self.fitfunc == 'lorentz':
             ps = self.fitter.getparameters()
@@ -173,6 +185,9 @@ class fitter:
         fxdpar = list(self.fitter.getfixedparameters())
         if len(fxdpar) and fxdpar.count(0) == 0:
              raise RuntimeError,"No point fitting, if all parameters are fixed."
+        if self._constraints:
+            for c in self._constraints:
+                self.fitter.addconstraint(c[0]+[c[-1]])
         if self.uselinear:
             converged = self.fitter.lfit()
         else:
@@ -233,7 +248,8 @@ class fitter:
         if self.fitfunc is None:
             msg = "Please specify a fitting function first."
             raise RuntimeError(msg)
-        if (self.fitfunc == "gauss" or self.fitfunc == "lorentz" or self.fitfunc == "sinusoid") and component is not None:
+        if (self.fitfunc == "gauss" or self.fitfunc == "lorentz" 
+            or self.fitfunc == "sinusoid") and component is not None:
             if not self.fitted and sum(self.fitter.getparameters()) == 0:
                 pars = _n_bools(len(self.components)*3, False)
                 fxd  = _n_bools(len(pars), False)
@@ -337,6 +353,25 @@ class fitter:
             msg = "Please select a valid  component."
             raise ValueError(msg)
 
+
+    def add_constraint(self, xpar, y):
+        """Add parameter constraints to the fit. This is done by setting up
+        linear equations for the related parameters.
+
+        For example a two component gaussian fit where the amplitudes are
+        constraint by amp1 = 2*amp2
+        needs a constraint   
+
+            add_constraint([1, 0, 0, -2, 0, 0, 0], 0)
+
+        a velocity difference of v2-v1=17
+
+            add_constraint([0.,-1.,0.,0.,1.,0.], 17.)
+
+        """
+        self._constraints.append((xpar, y))
+        
+
     def get_area(self, component=None):
         """
         Return the area under the fitted gaussian/lorentzian component.
@@ -380,7 +415,8 @@ class fitter:
         errs = list(self.fitter.geterrors())
         cerrs = errs
         if component is not None:
-            if self.fitfunc == "gauss" or self.fitfunc == "lorentz" or self.fitfunc == "sinusoid":
+            if self.fitfunc == "gauss" or self.fitfunc == "lorentz" \
+                    or self.fitfunc == "sinusoid":
                 i = 3*component
                 if i < len(errs):
                     cerrs = errs[i:i+3]
@@ -462,7 +498,9 @@ class fitter:
                 out += "%s%s = %3.3f %s, " % (pnam[0], fix0, pars[i],   ounit)
                 out += "%s%s = %3.3f %s, " % (pnam[1], fix1, pars[i+1], aunit)
                 out += "%s%s = %3.3f %s\n" % (pnam[2], fix2, pars[i+2], aunit)
-                if len(area): out += "      area = %3.3f %s %s\n" % (area[i], ounit, aunit)
+                if len(area): out += "      area = %3.3f %s %s\n" % (area[i], 
+                                                                     ounit, 
+                                                                     aunit)
                 c+=1
                 i+=3
         return out
@@ -570,7 +608,8 @@ class fitter:
 
             ylab = self.data._get_ordinate_label()
 
-        colours = ["#777777","#dddddd","red","orange","purple","green","magenta", "cyan"]
+        colours = ["#777777","#dddddd","red","orange","purple","green",
+                   "magenta", "cyan"]
         nomask=True
         for i in range(len(m)):
             nomask = nomask and m[i]
@@ -603,7 +642,8 @@ class fitter:
             cs = components
             if isinstance(components,int): cs = [components]
             if plotparms:
-                self._p.text(0.15,0.15,str(self.get_parameters()['formatted']),size=8)
+                self._p.text(0.15,0.15,
+                             str(self.get_parameters()['formatted']),size=8)
             n = len(self.components)
             self._p.palette(3)
             for c in cs:
@@ -655,11 +695,13 @@ class fitter:
         if len(rows) > 0: self.blpars=[]
         asaplog.push("Fitting:")
         for r in rows:
-            out = " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (scan.getscan(r),
-                                                                   scan.getbeam(r),
-                                                                   scan.getif(r),
-                                                                   scan.getpol(r),
-                                                                   scan.getcycle(r))
+            out = " Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]" % (
+                scan.getscan(r),
+                scan.getbeam(r),
+                scan.getif(r),
+                scan.getpol(r),
+                scan.getcycle(r)
+                )
             asaplog.push(out, False)
             self.x = scan._getabcissa(r)
             self.y = scan._getspectrum(r)
@@ -667,7 +709,8 @@ class fitter:
             if len(self.x) == len(self.mask):
                 self.mask = mask_and(self.mask, self.data._getmask(row))
             else:
-                asaplog.push('lengths of data and mask are not the same. preset mask will be ignored')
+                asaplog.push('lengths of data and mask are not the same. '
+                             'preset mask will be ignored')
                 asaplog.post('WARN','asapfit.fit')
                 self.mask=self.data._getmask(row)
             self.data = None

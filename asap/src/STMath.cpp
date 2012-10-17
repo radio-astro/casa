@@ -387,9 +387,7 @@ STMath::average( const std::vector<CountedPtr<Scantable> >& in,
       // which requires resetting this value
       cycColOut.put(i, uInt(0));
     } else {
-      ostringstream oss;
-      oss << "For output row="<<i<<", all input rows of data are flagged. no averaging" << endl;
-      pushLog(String(oss));
+      os << "For output row="<<i<<", all input rows of data are flagged. no averaging" << LogIO::POST;
     }
     acc.reset();
 
@@ -1251,6 +1249,7 @@ CountedPtr< Scantable > STMath::dosigref( const CountedPtr < Scantable >& sig,
                                           casa::Float tsysv,
                                           casa::Float tau )
 {
+  LogIO os( casa::LogOrigin( "STMath", "dosigref()"));
 if ( ! ref->conformant(*sig) ) {
     throw(AipsError("'sig' and 'ref' scantables are not conformant."));
   }
@@ -1262,8 +1261,8 @@ if ( ! ref->conformant(*sig) ) {
     std::string inkernel = "boxcar";
     smref = smooth(ref, inkernel, fsmoothref );
     ostringstream oss;
-    oss<<"Applied smoothing of "<<fsmoothref<<" on the reference."<<endl;
-    pushLog(String(oss));
+    os <<"Applied smoothing of "<<fsmoothref<<" on the reference."
+       << LogIO::POST;
   }
   else {
     smref = ref;
@@ -1308,7 +1307,7 @@ if ( ! ref->conformant(*sig) ) {
         ostringstream oss;
         Float elev;
         refelevCol.get(i, elev);
-        oss << "user specified Tsys = " << tsysv;
+        os << "user specified Tsys = " << tsysv;
         // do recalc elevation if EL = 0
         if ( elev == 0 ) {
           throw(AipsError("EL=0, elevation data is missing."));
@@ -1319,8 +1318,7 @@ if ( ! ref->conformant(*sig) ) {
             tsysrefscalar = tsysv * exp(tau/elev);
           }
         }
-        oss << ", corrected (for El) tsys= "<<tsysrefscalar;
-        pushLog(String(oss));
+        os << ", corrected (for El) tsys= "<<tsysrefscalar;
       }
       else {
         tsysrefscalar = tsysref[0];
@@ -1356,6 +1354,7 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
 
 {
   setInsitu(false);
+  LogIO os( casa::LogOrigin( "STMath", "donod()"));
   STSelector sel;
   std::vector<int> scan1, scan2, beams, types;
   std::vector< vector<int> > scanpair;
@@ -1443,9 +1442,7 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
   CountedPtr< Scantable > calb2;
 
   msg=String("Processing dototalpower for subset of the data");
-  ostringstream oss1;
-  oss1 << msg  << endl;
-  pushLog(String(oss1));
+  os << msg << LogIO::POST;
   // Debug for IRC CS data
   //float tcal1=7.0;
   //float tcal2=4.0;
@@ -1458,9 +1455,7 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
 
   // dosigref calibration
   msg=String("Processing dosigref for subset of the data");
-  ostringstream oss2;
-  oss2 << msg  << endl;
-  pushLog(String(oss2));
+  os << msg  << endl;
   calb1=dosigref(sig1,ref2,smoothref,tsysv,tau);
   calb2=dosigref(sig2,ref1,smoothref,tsysv,tau);
 
@@ -2160,6 +2155,7 @@ CountedPtr< Scantable > STMath::gainElevation( const CountedPtr< Scantable >& in
                                                const std::string & filename,
                                                const std::string& method)
 {
+  LogIO os( LogOrigin( "STMath", "gainElevation", WHERE ) ) ;
   // Get elevation data from Scantable and convert to degrees
   CountedPtr< Scantable > out = getScantable(in, false);
   Table& tab = out->table();
@@ -2202,10 +2198,8 @@ CountedPtr< Scantable > STMath::gainElevation( const CountedPtr< Scantable >& in
       delete ppoly;
       throw(AipsError("There is no known gain-elevation polynomial known for this instrument"));
     }
-    ostringstream oss;
-    oss << "Making polynomial correction with " << msg << " coefficients:" << endl;
-    oss << "   " <<  coeff;
-    pushLog(String(oss));
+    os << "Making polynomial correction with " << msg << " coefficients:" << endl;
+    os << "   " <<  coeff << LogIO::POST;
     const uInt nrow = tab.nrow();
     Vector<Float> factor(nrow);
     for ( uInt i=0; i < nrow; ++i ) {
@@ -2216,7 +2210,7 @@ CountedPtr< Scantable > STMath::gainElevation( const CountedPtr< Scantable >& in
 
   } else {
     // Read and correct
-    pushLog("Making correction from ascii Table");
+    os << "Making correction from ascii Table" << LogIO::POST;
     scaleFromAsciiTable(tab, filename, method, x, true);
   }
   return out;
@@ -2287,6 +2281,8 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
                                              float d, float etaap,
                                              float jyperk )
 {
+  LogIO os( LogOrigin( "STMath", "convertFlux", WHERE ) ) ;
+
   CountedPtr< Scantable > out = getScantable(in, false);
   Table& tab = in->table();
   Table& outtab = out->table();
@@ -2298,7 +2294,7 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
   Double cfac = 1.0;
 
   if ( fluxUnit == JY ) {
-    pushLog("Converting to K");
+    os << "Converting to K" << LogIO::POST;
     Quantum<Double> t(1.0,fluxUnit);
     Quantum<Double> t2 = t.get(JY);
     cfac = (t2 / t).getValue();               // value to Jy
@@ -2306,7 +2302,7 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
     tokelvin = true;
     out->setFluxUnit("K");
   } else if ( fluxUnit == K ) {
-    pushLog("Converting to Jy");
+    os << "Converting to Jy" << LogIO::POST;
     Quantum<Double> t(1.0,fluxUnit);
     Quantum<Double> t2 = t.get(K);
     cfac = (t2 / t).getValue();              // value to K
@@ -2323,9 +2319,7 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
   if (jyperk > 0.0) {
     factor *= jyperk;
     if ( tokelvin ) factor = 1.0 / jyperk;
-    ostringstream oss;
-    oss << "Jy/K = " << jyperk;
-    pushLog(String(oss));
+    os << "Jy/K = " << jyperk << LogIO::POST;
     Vector<Float> factors(outtab.nrow(), factor);
     scaleByVector(outtab,factors, false);
   } else if ( etaap > 0.0) {
@@ -2337,9 +2331,7 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
       d = sda.diameter(inst);
     }
     jyperk = STAttr::findJyPerK(etaap, d);
-    ostringstream oss;
-    oss << "Jy/K = " << jyperk;
-    pushLog(String(oss));
+    os << "Jy/K = " << jyperk << LogIO::POST;
     factor *= jyperk;
     if ( tokelvin ) {
       factor = 1.0 / factor;
@@ -2353,7 +2345,7 @@ CountedPtr< Scantable > STMath::convertFlux( const CountedPtr< Scantable >& in,
     // to be computed per IF and may be different and may
     // change per integration.
 
-    pushLog("Looking up conversion factors");
+    os <<"Looking up conversion factors" << LogIO::POST;
     convertBrightnessUnits(out, tokelvin, cfac);
   }
 
@@ -2546,7 +2538,6 @@ CountedPtr< Scantable >
   while ( it != in.end() ){
     if ( ! (*it)->conformant(*out) ) {
       // non conformant.
-      //pushLog(String("Warning: Can't merge scantables as header info differs."));
       LogIO os( LogOrigin( "STMath", "merge()", WHERE ) ) ;
       os << LogIO::SEVERE << "Can't merge scantables as header informations (any one of AntennaName, Equinox, and FluxUnit) differ." << LogIO::EXCEPTION ;
     }
@@ -2745,6 +2736,7 @@ CountedPtr< Scantable >
                                 const std::string & refTime,
                                 const std::string & method)
 {
+  LogIO os( casa::LogOrigin("STMath", "frequencyAlign()", WHERE));
   // clone as this is not working insitu
   bool insitu = insitu_;
   setInsitu(false);
@@ -2783,10 +2775,8 @@ CountedPtr< Scantable >
   MFrequency::Types system = in->frequencies().getFrame();
   MVTime mvt(refEpoch.getValue());
   String epochout = mvt.string(MVTime::YMD) + String(" (") + refEpoch.getRefString() + String(")");
-  ostringstream oss;
-  oss << "Aligned at reference Epoch " << epochout
-      << " in frame " << MFrequency::showType(system);
-  pushLog(String(oss));
+  os << "Aligned at reference Epoch " << epochout
+     << " in frame " << MFrequency::showType(system) << LogIO::POST;
   // set up the iterator
   Block<String> cols(4);
   // select by constant direction

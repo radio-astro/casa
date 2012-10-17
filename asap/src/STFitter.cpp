@@ -79,6 +79,7 @@ void Fitter::reset()
   x_.resize();
   y_.resize();
   m_.resize();
+  constraints_.clear();
 }
 
 
@@ -293,6 +294,24 @@ bool Fitter::setParameters(std::vector<float> params)
     return true;
 }
 
+void Fitter::addConstraint(const std::vector<float>& constraint)
+{
+  if (funcs_.nelements() == 0)
+    throw (AipsError("Function not yet set."));
+  constraints_.push_back(constraint);
+  
+}
+
+void Fitter::applyConstraints(GenericL2Fit<Float>& fitter)
+{
+  std::vector<std::vector<float> >::const_iterator it;
+  for (it = constraints_.begin(); it != constraints_.end(); ++it) {
+    Vector<Float> tmp(*it);
+    fitter.addConstraint(tmp(Slice(0,tmp.nelements()-1)),
+			 tmp(tmp.nelements()-1));
+  }
+}
+
 bool Fitter::setFixedParameters(std::vector<bool> fixed)
 {
     if (funcs_.nelements() == 0)
@@ -376,6 +395,7 @@ bool Fitter::fit() {
   fitter.setMaxIter(50+n*10);
   // Convergence criterium
   fitter.setCriteria(0.001);
+  applyConstraints(fitter);
 
   // Fit
 //   Vector<Float> sigma(x_.nelements());
@@ -396,13 +416,9 @@ bool Fitter::fit() {
 
   chisquared_ = fitter.getChi2();
 
-//   residual_.resize();
-//   residual_ =  y_;
-//   fitter.residual(residual_,x_);
   // use fitter.residual(model=True) to get the model
   thefit_.resize(x_.nelements());
   fitter.residual(thefit_,x_,True);
-  // residual = data - model
   residual_.resize(x_.nelements()); 
   residual_ = y_ - thefit_ ;
   return true;
@@ -418,16 +434,9 @@ bool Fitter::lfit() {
   }
 
   fitter.setFunction(func);
-  //fitter.setMaxIter(50+n*10);
-  // Convergence criterium
-  //fitter.setCriteria(0.001);
-
-  // Fit
-//   Vector<Float> sigma(x_.nelements());
-//   sigma = 1.0;
+  applyConstraints(fitter);
 
   parameters_.resize();
-//   parameters_ = fitter.fit(x_, y_, sigma, &m_);
   parameters_ = fitter.fit(x_, y_, &m_);
   std::vector<float> ps;
   parameters_.tovector(ps);
@@ -438,13 +447,8 @@ bool Fitter::lfit() {
 
   chisquared_ = fitter.getChi2();
 
-//   residual_.resize();
-//   residual_ =  y_;
-//   fitter.residual(residual_,x_);
-  // use fitter.residual(model=True) to get the model
   thefit_.resize(x_.nelements());
   fitter.residual(thefit_,x_,True);
-  // residual = data - model
   residual_.resize(x_.nelements()); 
   residual_ = y_ - thefit_ ;
   return true;

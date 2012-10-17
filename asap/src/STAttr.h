@@ -37,7 +37,6 @@
 #include <measures/Measures/MEpoch.h>
 #include <casa/Utilities/CountedPtr.h>
 
-#include "Logger.h"
 #include "STDefs.h"
 
 namespace casa {
@@ -46,7 +45,7 @@ namespace casa {
 
 namespace asap {
 
-class STAttr : public Logger {
+class STAttr {
 
  public:
 

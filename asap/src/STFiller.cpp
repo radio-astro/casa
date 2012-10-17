@@ -35,6 +35,7 @@
 #include <casa/System/ProgressMeter.h>
 #include <atnf/PKSIO/NROReader.h>
 #include <casa/Logging/LogIO.h>
+#include <fits/FITS/FITSSpectralUtil.h>
 
 #include <time.h>
 
@@ -136,7 +137,6 @@ void STFiller::open( const std::string& filename, const std::string& antenna, in
   nIF_ = ifs.nelements();
   // Get basic parameters.
   if ( anyEQ(haveXPol_, True) ) {
-    pushLog("Cross polarization present");
     for (uInt i=0; i< npols.nelements();++i) {
       if (npols[i] < 3) npols[i] += 2;// Convert Complex -> 2 Floats
     }
@@ -163,10 +163,12 @@ void STFiller::open( const std::string& filename, const std::string& antenna, in
     header_ = 0;
     throw(AipsError("Failed to get header."));
   }
+  LogIO os( casa::LogOrigin( "STFiller") );
+  
   if ((header_->obstype).matches("*SW*")) {
     // need robust way here - probably read ahead of next timestamp
-    pushLog("Header indicates frequency switched observation.\n"
-               "setting # of IFs = 1 ");
+    os << "Header indicates frequency switched observation.\n"
+       << "setting # of IFs = 1 " << LogIO::POST;
     nIF_ = 1;
     header_->obstype = String("fswitch");
   }
@@ -225,7 +227,8 @@ void STFiller::open( const std::string& filename, const std::string& antenna, in
   }
   Vector<Int> start(nIF_, 1);
   Vector<Int> end(nIF_, 0);
-  reader_->select(beams, ifs, start, end, ref, True, haveXPol_[0], False, getPt);
+  reader_->select(beams, ifs, start, end, ref, True, haveXPol_[0], False, 
+		  getPt);
   table_->setHeader(*header_);
   //For MS, add the location of POINTING of the input MS so one get
   //pointing data from there, if necessary.
@@ -248,24 +251,12 @@ void STFiller::open( const std::string& filename, const std::string& antenna, in
   //translate frequency reference frame back to
   //MS style (as PKSMS2reader converts the original frame
   //in FITS standard style)
-  if (freqFrame == "TOPOCENT") {
-    freqFrame = "TOPO";
-  } else if (freqFrame == "GEOCENER") {
-    freqFrame = "GEO";
-  } else if (freqFrame == "BARYCENT") {
-    freqFrame = "BARY";
-  } else if (freqFrame == "GALACTOC") {
-    freqFrame = "GALACTO";
-  } else if (freqFrame == "LOCALGRP") {
-    freqFrame = "LGROUP";
-  } else if (freqFrame == "CMBDIPOL") {
-    freqFrame = "CMB";
-  } else if (freqFrame == "SOURCE") {
-    freqFrame = "REST";
-  }
+  MFrequency::Types fframe;
+  FITSSpectralUtil::frameFromSpecsys(fframe, freqFrame);
   // set both "FRAME" and "BASEFRAME"
-  table_->frequencies().setFrame(freqFrame, false);
-  table_->frequencies().setFrame(freqFrame,true);
+  table_->frequencies().setFrame(fframe, false);
+  table_->frequencies().setFrame(fframe,true);
+  
   //table_->focus().setParallactify(true);
 }
 

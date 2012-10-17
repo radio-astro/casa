@@ -7,6 +7,7 @@ from asap.logging import asaplog
 asaplog.disable()
 
 from nose.tools import *
+from nose.plugins.skip import SkipTest
 
 def tempdir_setup():
     os.makedirs("test_temp")
@@ -22,6 +23,10 @@ class TestNRO(object):
         sel.set_order(["SCANNO", "POLNO"])
         s.set_selection(sel)
         self.st = s.copy()
+        del s
+
+    def tearDown(self):
+        del self.st
 
     def test_init(self):
         assert_equal(self.st.nrow(), 36)
@@ -44,6 +49,7 @@ class TestNRO(object):
         assert_equal(self.st.stats('mean')[0],1.0662506818771362)
         assert_equal(self.st.stats('sum')[0],2183.681396484375)
 
+
     def test_frequency(self):
         rf=self.st.get_restfreqs()
         assert_equal(len(rf),2)
@@ -51,4 +57,4 @@ class TestNRO(object):
         assert_equal(rf[1][0],86754330000.0)
         self.st.set_unit('GHz')
         abc=self.st._getabcissa(0)
-        assert_equal(abc[0],85.17337639557438)
+        assert_equal(abc[0],85.183349020848283)

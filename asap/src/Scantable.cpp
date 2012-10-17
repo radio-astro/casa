@@ -19,6 +19,7 @@
 #include <casa/iostream.h>
 #include <casa/OS/File.h>
 #include <casa/OS/Path.h>
+#include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayAccessor.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -69,6 +70,7 @@
 #include "STPolLinear.h"
 #include "STPolStokes.h"
 #include "STUpgrade.h"
+#include "STFitter.h"
 #include "Scantable.h"
 
 #define debug 1
@@ -167,8 +169,7 @@ Scantable::Scantable(const std::string& name, Table::TableType ttype) :
 }
 */
 
-Scantable::Scantable( const Scantable& other, bool clear ):
-  Logger()
+Scantable::Scantable( const Scantable& other, bool clear )
 {
   // with or without data
   String newname = String(generateName());
@@ -725,16 +726,19 @@ std::string Scantable::formatTime(const MEpoch& me, bool showdate, uInt prec) co
 }
 
 void Scantable::calculateAZEL()
-{
+{  
+  LogIO os( LogOrigin( "Scantable", "calculateAZEL()", WHERE ) ) ;
   MPosition mp = getAntennaPosition();
   MEpoch::ROScalarColumn timeCol(table_, "TIME");
   ostringstream oss;
-  oss << "Computed azimuth/elevation using " << endl
-      << mp << endl;
+  oss << mp;
+  os << "Computed azimuth/elevation using " << endl
+     << String(oss) << endl;
   for (Int i=0; i<nrow(); ++i) {
     MEpoch me = timeCol(i);
     MDirection md = getDirection(i);
-    oss  << " Time: " << formatTime(me,False) << " Direction: " << formatDirection(md)
+    os  << " Time: " << formatTime(me,False) 
+	<< " Direction: " << formatDirection(md)
          << endl << "     => ";
     MeasFrame frame(mp, me);
     Vector<Double> azel =
@@ -743,10 +747,9 @@ void Scantable::calculateAZEL()
                             )().getAngle("rad").getValue();
     azCol_.put(i,Float(azel[0]));
     elCol_.put(i,Float(azel[1]));
-    oss << "azel: " << azel[0]/C::pi*180.0 << " "
-        << azel[1]/C::pi*180.0 << " (deg)" << endl;
+    os << "azel: " << azel[0]/C::pi*180.0 << " "
+       << azel[1]/C::pi*180.0 << " (deg)" << LogIO::POST;
   }
-  pushLog(String(oss));
 }
 
 void Scantable::clip(const Float uthres, const Float dthres, bool clipoutside, bool unflag)
@@ -884,6 +887,8 @@ std::vector<bool> Scantable::getMask(int whichrow) const
 std::vector<float> Scantable::getSpectrum( int whichrow,
                                            const std::string& poltype ) const
 {
+  LogIO os( LogOrigin( "Scantable", "getSpectrum()", WHERE ) ) ;
+
   String ptype = poltype;
   if (poltype == "" ) ptype = getPolType();
   if ( whichrow  < 0 || whichrow >= nrow() )
@@ -906,7 +911,9 @@ std::vector<float> Scantable::getSpectrum( int whichrow,
     arr = stpol->getSpectrum(requestedpol, ptype);
   }
   if ( arr.nelements() == 0 )
-    pushLog("Not enough polarisations present to do the conversion.");
+    
+    os << "Not enough polarisations present to do the conversion." 
+       << LogIO::POST;
   arr.tovector(out);
   return out;
 }

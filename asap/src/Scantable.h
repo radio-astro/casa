@@ -38,11 +38,11 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/Table.h>
 
-#include "Logger.h"
+
 #include "MathUtils.h"
 #include "STFit.h"
 #include "STFitEntry.h"
-#include "STFitter.h"
+//#include "STFitter.h"
 #include "STFocus.h"
 #include "STFrequencies.h"
 #include "STHeader.h"
@@ -54,6 +54,8 @@
 #include "STWeather.h"
 
 namespace asap {
+
+class Fitter;
 
 /**
   * This class contains and wraps a casa::Table, which is used to store
@@ -73,7 +75,7 @@ namespace asap {
   * @date
   * @version
 */
-class Scantable : private Logger
+class Scantable
 {
 
 friend class STMath;
@@ -317,6 +319,9 @@ public:
   std::vector<uint> getScanNos() const { return getNumbers(scanCol_); }
   int getScan(int whichrow) const { return scanCol_(whichrow); }
 
+  std::vector<uint> getCycleNos() const { return getNumbers(cycleCol_); }
+  int getCycle(int whichrow) const { return cycleCol_(whichrow); }
+
   //TT addition
   std::vector<uint> getMolNos() {return getNumbers(mmolidCol_); }
 
@@ -331,7 +336,7 @@ public:
   int getChannels(int whichrow) const;
 
   int ncycle(int scanno=-1) const;
-  int getCycle(int whichrow) const { return cycleCol_(whichrow); }
+
 
   double getInterval(int whichrow) const
     { return integrCol_(whichrow); }

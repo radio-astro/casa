@@ -36,7 +36,7 @@
 #include <casa/ostream.h>
 
 #include "Scantable.h"
-#include "Logger.h"
+
 
 namespace casa {
   template<class T> class Vector;
@@ -47,7 +47,7 @@ namespace asap {
 /**
  * A class to export a Scnatble to ASCII file(s)
  */
-class STAsciiWriter : public Logger {
+class STAsciiWriter {
 public:
 // Constructor
   STAsciiWriter();

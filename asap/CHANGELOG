@@ -1,19 +1,20 @@
 Changelog
 =========
 
-Release 4.1.0 [2012-17-05]
+Release 4.1.0 [2012-10-10]
 
 * reworked build system to work as 'normal' python package
 * Ticket #257 fixed bug in average_time introduced in 4.0
 * experimental merging of IFs
 * speed ups
-* move to ipython>=0.11
+* work with to ipython>=0.11
 * Ticket #269 fixed regression of reference scan detection for Hobart data
-* work under OS X 10.7 
+* work under OS X 10.7/10.8
 * fixed logging control through rcParams
 * fix for frequency_alignment
 * Ticket #264 silence skydip.
 * Ticket #265 fix summary for multiple IF chains 
+* Ticket #280 fix SDFITS frequency frame output
 
 Release 4.0.0 [2011-10-05]
 

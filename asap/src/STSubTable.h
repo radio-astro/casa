@@ -15,7 +15,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 
-#include "Logger.h"
+
 
 namespace asap {
 
@@ -27,7 +27,7 @@ Abstract base class for all subtables in the Scantable class.
 @date $Date:$
 @version $Revision:$
 */
-class STSubTable : public Logger {
+class STSubTable  {
 public:
   STSubTable() {;}
   STSubTable( casa::Table tab, const casa::String& name);

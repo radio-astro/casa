@@ -21,10 +21,13 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/RecordField.h>
+#include <casa/Utilities/CountedPtr.h>
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
+
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 
 #include "ScantableWrapper.h"
 #include "Scantable.h"
@@ -235,6 +238,7 @@ protected:
   Block<Table> tableList_ ;
   Vector<uInt> rows_ ;
   Int nchunk_ ;
+  CountedPtr<DirectionCoordinate> dircoord_;
 
   /////////////// gridPerRow variable
   IPosition vshape_;

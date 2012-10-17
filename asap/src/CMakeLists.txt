@@ -29,7 +29,6 @@ set( ASAP_SRCS
      ${SRCDIR}/MathUtils.cpp
      ${SRCDIR}/TableTraverse.cpp
      ${SRCDIR}/RowAccumulator.cpp
-     ${SRCDIR}/Logger.cpp
      ${SRCDIR}/LineCatalog.cpp
      ${SRCDIR}/STAttr.cpp
      ${SRCDIR}/STHeader.cpp 
@@ -78,7 +77,6 @@ set( ASAP_PYSRCS
      ${SRCDIR}/python_STSelector.cpp
      ${SRCDIR}/python_STMath.cpp
      ${SRCDIR}/python_Fitter.cpp
-     ${SRCDIR}/python_Logger.cpp
      ${SRCDIR}/python_STLineFinder.cpp
      ${SRCDIR}/python_STFitEntry.cpp
      ${SRCDIR}/python_STWriter.cpp

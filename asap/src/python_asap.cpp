@@ -80,7 +80,6 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_STWriter();
   asap::python::python_MSWriter();
   asap::python::python_LineCatalog();
-  asap::python::python_Logger();
   asap::python::python_LogSink();
   asap::python::python_STCoordinate();
   asap::python::python_STAtmosphere();
@@ -124,5 +123,6 @@ BOOST_PYTHON_MODULE(_asap) {
   casa::pyrap::register_convert_std_vector<bool>();
   casa::pyrap::register_convert_casa_valueholder();
   casa::pyrap::register_convert_casa_record();
+
 #endif
 }

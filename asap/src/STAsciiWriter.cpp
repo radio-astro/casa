@@ -43,6 +43,7 @@
 #include <casa/fstream.h>
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
+#include <casa/Logging/LogIO.h>
 
 #include <measures/Measures/MEpoch.h>
 
@@ -175,9 +176,8 @@ Bool STAsciiWriter::write(const Scantable& stable, const String& fileName)
       of << endl;
     }
     of.close();
-    ostringstream oss;
-    oss << "Wrote " << fName;
-    pushLog(String(oss));
+    LogIO os( LogOrigin( "STAsciiWriter") ) ;    
+    os << "Wrote " << fName << LogIO::POST;
     ++iter;
   }
   return True;

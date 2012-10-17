@@ -7,9 +7,9 @@ def main10():
     banner = welcome()
     exit_msg = ''
     args = ['-colors','Linux','-noconfirm_exit', '-readline', 
-            '-xmode', 'Plain', '-autocall', '2', '-auto_indent',
+            '-xmode', 'Plain', '-autocall', '2', '-autoindent',
             '-pi1', 'ASAP> ', '-po', 'asap>: ', '-pprint']
-    ipshell = IPShellEmbed(sys.argv[1:],banner,exit_msg)
+    ipshell = IPShellEmbed(args,banner,exit_msg)
     return ipshell
 
 

@@ -37,11 +37,9 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Utilities/Assert.h>
+#include <casa/Logging/LogIO.h>
 
 #include <atnf/PKSIO/PKSrecord.h>
-#ifndef NOPKSMS
-#include <atnf/PKSIO/PKSMS2writer.h>
-#endif
 #include <atnf/PKSIO/PKSSDwriter.h>
 #include <atnf/PKSIO/SrcType.h>
 
@@ -49,6 +47,8 @@
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/ArrayColumn.h>
+
+#include <fits/FITS/FITSSpectralUtil.h>
 
 #include "STFITSImageWriter.h"
 #include "STAsciiWriter.h"
@@ -67,11 +67,7 @@ STWriter::STWriter(const std::string &format)
   String t(format_);
   t.upcase();
   if (t == "MS2") {
-    #ifdef NOPKSMS
     throw (AipsError("MS2 OUTPUT FORMAT IS NO LONGER SUPPORTED"));
-    #else
-    writer_ = new PKSMS2writer();
-    #endif
   } else if (t == "SDFITS") {
     writer_ = new PKSSDwriter();
   } else if (t == "ASCII" || t == "FITS" || t == "CLASS") {
@@ -98,11 +94,7 @@ Int STWriter::setFormat(const std::string &format)
   String t(format_);
   t.upcase();
   if (t== "MS2") {
-    #ifdef NOPKSMS
     throw (AipsError("MS2 OUTPUT FORMAT IS NO LONGER SUPPORTED"));
-    #else
-    writer_ = new PKSMS2writer();
-    #endif
   } else if (t== "SDFITS") {
     writer_ = new PKSSDwriter();
   } else if (t == "ASCII" || t == "FITS" || t == "CLASS") {
@@ -120,8 +112,14 @@ Int STWriter::write(const CountedPtr<Scantable> in,
   // into the output frame, as we do everything related to SPectarlCoordinates
   // in asap on-the-fly.
 
+  String freqframe;
+  FITSSpectralUtil::specsysFromFrame(freqframe, 
+				     in->frequencies().getFrame(true));
   CountedPtr<Scantable> inst = in;
   if (in->frequencies().getFrame(true) != in->frequencies().getFrame(false)) {
+    FITSSpectralUtil::specsysFromFrame(freqframe, 
+				     in->frequencies().getFrame(false));
+  
     STMath stm(false);
     inst = stm.frequencyAlign(in);
   }
@@ -150,8 +148,6 @@ Int STWriter::write(const CountedPtr<Scantable> in,
   // this is a little different from what I have done
   // before. Need to check with the Offline User Test data
   STHeader hdr = inst->getHeader();
-  //const Int nPol  = hdr.npol;
-  //const Int nChan = hdr.nchan;
   std::vector<uint> ifs = inst->getIFNos();
   int nIF = inst->nif();//ifs.size();
   Vector<uInt> nPol(nIF),nChan(nIF);
@@ -160,9 +156,13 @@ Int STWriter::write(const CountedPtr<Scantable> in,
   fluxUnit.upcase();
   nPol = 0;nChan = 0; havexpol = False;
   for (uint i=0;i<ifs.size();++i) {
-    nPol(ifs[i]) = inst->npol();
+    if ( inst->npol() > 2 ) {
+      havexpol(ifs[i]) = True;      
+      nPol(ifs[i]) = 2;
+    } else {
+      nPol(ifs[i]) = inst->npol();
+    }
     nChan(ifs[i]) = inst->nchan(ifs[i]);
-    havexpol(ifs[i]) = nPol(ifs[i]) > 2;
   }
 //   Vector<String> obstypes(2);
 //   obstypes(0) = "TR";//on
@@ -172,15 +172,10 @@ Int STWriter::write(const CountedPtr<Scantable> in,
 
   // Create the output file and write static data.
   Int status;
-//   status = writer_->create(String(filename), hdr.observer, hdr.project,
-//                            hdr.antennaname, hdr.antennaposition,
-//                            hdr.obstype, hdr.fluxunit,
-//                            hdr.equinox, hdr.freqref,
-//                            nChan, nPol, havexpol, False);
   status = writer_->create(String(filename), hdr.observer, hdr.project,
                            inst->getAntennaName(), hdr.antennaposition,
                            hdr.obstype, hdr.fluxunit,
-                           hdr.equinox, hdr.freqref,
+                           hdr.equinox, freqframe,
                            nChan, nPol, havexpol, False);
   if ( status ) {
     throw(AipsError("Failed to create output file"));
@@ -221,7 +216,8 @@ Int STWriter::write(const CountedPtr<Scantable> in,
         TableIterator typeit( ctable, "SRCTYPE" ) ;
         while(!typeit.pastEnd() ) {
           Table ttable = typeit.table() ;
-          TableIterator ifit(ttable, "IFNO", TableIterator::Ascending, TableIterator::HeapSort);
+          TableIterator ifit(ttable, "IFNO", 
+			     TableIterator::Ascending, TableIterator::HeapSort);
           MDirection::ScalarColumn dirCol(ctable, "DIRECTION");
           pksrec.direction = dirCol(0).getAngle("rad").getValue();
           pksrec.IFno = 1;
@@ -240,7 +236,8 @@ Int STWriter::write(const CountedPtr<Scantable> in,
             Vector<String> stmp0, stmp1;
             inst->frequencies().getEntry(crpix,crval, pksrec.freqInc,
                                          rec.asuInt("FREQ_ID"));
-            inst->focus().getEntry(pksrec.parAngle, pksrec.focusAxi, pksrec.focusTan,
+            inst->focus().getEntry(pksrec.parAngle, pksrec.focusAxi, 
+				   pksrec.focusTan,
                                    pksrec.focusRot, tmp0,tmp1,tmp2,tmp3,tmp4,
                                    rec.asuInt("FOCUS_ID"));
             inst->molecules().getEntry(pksrec.restFreq,stmp0,stmp1,
@@ -283,9 +280,6 @@ Int STWriter::write(const CountedPtr<Scantable> in,
                 pksrec.tcal[ipol] = mean( dummyA ) ;
               }
             }
-            //LogIO os ;
-            //os << "npol = " << npol << " pksrec.tcal = " << pksrec.tcal << LogIO::POST ;
-            
             pksrec.mjd       = rec.asDouble("TIME");
             pksrec.interval  = rec.asDouble("INTERVAL");
             pksrec.fieldName = rec.asString("FIELDNAME");
@@ -327,15 +321,12 @@ Int STWriter::write(const CountedPtr<Scantable> in,
     ++pksrec.scanNo;
     ++scanit;
   }
-  ostringstream oss;
-  oss << "STWriter: wrote " << count << " rows to " << filename;
-  pushLog(String(oss));
-  
+  LogIO os( casa::LogOrigin("STWriter"));
+  os << "STWriter: wrote " << count << " rows to " << filename
+     << casa::LogIO::POST;
+
   writer_->close();
-  //if MS2 delete POINTING table exists and copy the one in the keyword
-  if ( format_ == "MS2" ) {
-    replacePtTab(table, filename);
-  }
+
   return 0;
 }
 
@@ -386,23 +377,6 @@ void STWriter::polConversion( Matrix< Float >& specs, Matrix< uChar >& flags,
   }
 }
 
-// For writing MS data, if there is the reference to
-// original pointing table it replace it by it.
-void STWriter::replacePtTab (const Table& tab, const std::string& fname)
-{
-  String oldPtTabName = fname;
-  oldPtTabName.append("/POINTING");
-  if ( tab.keywordSet().isDefined("POINTING") ) {
-    String PointingTab = tab.keywordSet().asString("POINTING");
-    if ( Table::isReadable(PointingTab) ) {
-      Table newPtTab(PointingTab, Table::Old);
-      newPtTab.copy(oldPtTabName, Table::New);
-      ostringstream oss;
-      oss << "STWriter: copied  " <<PointingTab  << " to " << fname;
-      pushLog(String(oss));
-    }
-  }
-}
 
 // get obsType string from SRCTYPE value
 String STWriter::getObsTypes( Int srctype )

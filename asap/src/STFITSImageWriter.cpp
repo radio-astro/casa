@@ -29,8 +29,10 @@
 //# $Id: $
 //#---------------------------------------------------------------------------
 
+
 #include <fitsio.h>
-#include <images/Images/TempImage.h>
+#include <casa/Containers/RecordField.h>
+#include <casa/Logging/LogIO.h>
 
 #include <lattices/Lattices/ArrayLattice.h>
 
@@ -40,7 +42,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableIter.h>
 #include <tables/Tables/TableRecord.h>
-#include <casa/Containers/RecordField.h>
+
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
@@ -270,10 +272,9 @@ Bool STFITSImageWriter::write(const Scantable& stable,
       throw AipsError("Couldn't modify AZIMUTH");        
     }
     fits_close_file(fptr, &status);
-    ostringstream oss;
-    oss << "Wrote " << fileName;
-    pushLog(String(oss));  
-    //pushLog(String(oss));
+    
+    LogIO os( casa::LogOrigin("STFITSImageWriter"));
+    os << "Wrote " << fileName << LogIO::POST;
     ++iter;
   }
   return True;

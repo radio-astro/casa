@@ -48,6 +48,7 @@ namespace asap {
         .def("setfixedparameters", &Fitter::setFixedParameters)
         .def("getparameters", &Fitter::getParameters)
         .def("setparameters", &Fitter::setParameters)
+        .def("addconstraint", &Fitter::addConstraint)
         .def("getestimate", &Fitter::getEstimate)
         .def("estimate", &Fitter::computeEstimate)
         .def("geterrors", &Fitter::getErrors)

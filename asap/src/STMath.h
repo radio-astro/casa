@@ -22,7 +22,6 @@
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
-#include "Logger.h"
 #include "Scantable.h"
 #include "STDefs.h"
 #include "STPol.h"
@@ -33,7 +32,7 @@ namespace asap {
 	* Mathmatical operations on Scantable objects
 	* @author Malte Marquarding
 */
-class STMath : private Logger {
+class STMath {
 public:
 	// typedef for long method name
   typedef casa::InterpolateArray1D<casa::Double,

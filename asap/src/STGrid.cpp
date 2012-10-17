@@ -1142,8 +1142,6 @@ void STGrid::setupGrid( Int &nx,
     }
   }
   cellx_ = qcellx.getValue( "rad" ) ;
-  // DEC correction
-  cellx_ /= cos( center_[1] ) ;
   celly_ = qcelly.getValue( "rad" ) ;
   //os << "cellx_=" << cellx_ << ", celly_=" << celly_ << ", cos("<<center_(1)<<")=" << cos(center_(1)) << LogIO::POST ;
   if ( nx_ < 0 ) {
@@ -1155,9 +1153,21 @@ void STGrid::setupGrid( Int &nx,
       os << "Using default spatial extent (10arcmin) in y" << LogIO::POST ;
       wy = 0.00290888 ;
     }
-    nx_ = Int( ceil( wx/cellx_ ) ) ;
+    nx_ = Int( ceil( wx/(cellx_/cos(center_[1])) ) ) ;
     ny_ = Int( ceil( wy/celly_ ) ) ;
   }
+
+  // create DirectionCoordinate
+  Matrix<Double> xform(2,2) ;
+  xform = 0.0 ;
+  xform.diagonal() = 1.0 ;
+  dircoord_ = new DirectionCoordinate(MDirection::J2000,
+                                      Projection( Projection::SIN ),
+                                      center_[0], center_[1],
+                                      -cellx_, celly_,
+                                      xform,
+                                      0.5*Double(nx_-1), 
+                                      0.5*Double(ny_-1)) ;
 }
 
 void STGrid::mapExtent( Double &xmin, Double &xmax, 
@@ -1527,17 +1537,6 @@ void STGrid::toInt( Array<uInt> &u, Array<Int> &v )
 
 void STGrid::toPixel( Array<Double> &world, Array<Double> &pixel )
 {
-  // using DirectionCoordinate
-  Matrix<Double> xform(2,2) ;
-  xform = 0.0 ;
-  xform.diagonal() = 1.0 ;
-  DirectionCoordinate coord( MDirection::J2000,
-                             Projection( Projection::SIN ),
-                             center_[0], center_[1],
-                             cellx_, celly_,
-                             xform,
-                             0.5*Double(nx_-1), 
-                             0.5*Double(ny_-1) ) ;
   uInt nrow = world.shape()[1] ;
   Bool bw, bp ;
   Double *w_p = world.getStorage( bw ) ;
@@ -1549,7 +1548,7 @@ void STGrid::toPixel( Array<Double> &world, Array<Double> &pixel )
   for ( uInt i = 0 ; i < nrow ; i++ ) {
     _world.takeStorage( vshape, ww_p, SHARE ) ;
     _pixel.takeStorage( vshape, wp_p, SHARE ) ;
-    coord.toPixel( _pixel, _world ) ;
+    dircoord_->toPixel( _pixel, _world ) ;
     ww_p += 2 ;
     wp_p += 2 ;
   }
@@ -1689,6 +1688,7 @@ void STGrid::fillTable( Table &tab )
   cpix(0) = Double( nx_ - 1 ) * 0.5 ;
   cpix(1) = Double( ny_ - 1 ) * 0.5 ;
   Vector<Double> dir( 2 ) ;
+  Vector<Double> pix( 2 );
   ArrayColumn<Double> directionCol( tab, "DIRECTION" ) ;
   ArrayColumn<Float> spectraCol( tab, "SPECTRA" ) ;
   ScalarColumn<uInt> polnoCol( tab, "POLNO" ) ;
@@ -1703,11 +1703,13 @@ void STGrid::fillTable( Table &tab )
   long offset ;
   uInt scanno = 0 ;
   for ( Int iy = 0 ; iy < ny_ ; iy++ ) {
-    dir(1) = center_(1) - ( cpix(1) - (Double)iy ) * celly_ ;
+    pix(1) = (Double)(iy);
     for ( Int ix = 0 ; ix < nx_ ; ix++ ) {
-      dir(0) = center_(0) - ( cpix(0) - (Double)ix ) * cellx_ ;
+      pix(0) = (Double)(nx_-1-ix);
+      dircoord_->toWorld(dir,pix);
+      //os << "dir[" << ix << "," << iy << "]=" << dir << LogIO::POST;
       for ( Int ipol = 0 ; ipol < npol_ ; ipol++ ) {
-        offset = ix + iy * nx_ + ipol * nx_ * ny_ ;
+        offset = ix + nx_ * (iy + ipol * ny_) ;
         //os << "offset = " << offset << LogIO::POST ;
         sp_p = sp.getStorage( bsp ) ;
         wsp_p = sp_p ;

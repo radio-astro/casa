@@ -38,8 +38,11 @@
 #include <casa/Containers/Block.h>
 #include <scimath/Functionals/Function.h>
 #include <scimath/Functionals/CompoundFunction.h>
+#include <scimath/Fitting/GenericL2Fit.h>
+
 
 #include "STFitEntry.h"
+
 
 namespace asap {
 
@@ -54,6 +57,7 @@ public:
 	       std::vector<bool> mask);
   bool setParameters(std::vector<float> params);
   bool setFixedParameters(std::vector<bool> fixed);
+  void addConstraint(const std::vector<float>& constraint);
 
   std::vector<float> getResidual() const;
   std::vector<float> getFit() const;
@@ -75,6 +79,7 @@ public:
 
 private:
   void clear();
+  void applyConstraints(casa::GenericL2Fit<casa::Float>& fitter);
   casa::Vector<casa::Float> x_;
   casa::Vector<casa::Float> y_;
   casa::Vector<casa::Bool> m_;
@@ -86,6 +91,7 @@ private:
   casa::Float chisquared_;
   casa::Vector<casa::Float> parameters_;
   casa::Vector<casa::Bool> fixedpar_;
+  std::vector<std::vector<float> > constraints_;
 
   casa::Vector<casa::Float> error_;
   casa::Vector<casa::Float> thefit_;
