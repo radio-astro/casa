@@ -10,7 +10,7 @@ with links from each 'class' box/section to the relevant doxygen code-doc pages.
 
 \begin{enumerate}
 \item
-\htmladdnormallink{AgentFlagger}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/agentflagger-Tool.html#x562-5740002.4.1}:
+\htmladdnormallink{AgentFlagger}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/agentflagger-Tool.html}:
 The top-level Flagger class that connects all of the following together, and defines the C++ user-interface for the flagger.  This is the class used by the tool layer.
 
 \item \htmladdnormallink{FlagDataHandler}{http://www.eso.org/~jagonzal/Flagging-3.4-Docs/html/classcasa_1_1FlagDataHandler.html} : A top level class defining the data handling interface for the flagging module. 
@@ -375,7 +375,7 @@ FlagDataHandler::COMPLETE\_SCAN\_MAP\_ANTENNA\_PAIRS\_ONLY.
 \item Initialize the agents.
 
 This method will create agents and add them to a FlagAgentList. If for any reason, the call to
-FlagAgentBase::create(fdh\_p, agent_rec) fails, an error message will be
+FlagAgentBase::create(fdh\_p, agent\_rec) fails, an error message will be
 displayed. Any agents previously added to the FlagAgentList will remain there. A subsequent call to this method can be done to add
 more agents to the same FlagAgentList.
 

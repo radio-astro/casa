@@ -33,8 +33,8 @@ within the system. There are five broad packages:
 	\begin{itemize}
 	\item \ahlink{Autoflag}{autoflag} - automatic flagging capabilities (based on selection or statistics)
 	\item \ahlink{Calibrater}{calibrater} - synthesis calibration facilities
-	\item \ahlink{Flagger}{flagger} - flagging capabilities (based on selection or statistics)
-	\item \ahlink{TestFlagger}{testflagger} - new flagging framework  (based on selection or statistics)
+	\item \ahlink{Flagger}{flagger} - old flagging capabilities (based on selection or statistics)
+	\item \ahlink{AgentFlagger}{agentflagger} - new flagging framework (based on selection or statistics)
 	\item \ahlink{Imager}{imager} - synthesis and single dish imaging including deconvolution
 	\item \ahlink{Simulator}{simulator} - facilities for simulation of telescope data
 	\item \ahlink{vpmanager}{imager} - facilities for specifying voltage patterns and primary beams
