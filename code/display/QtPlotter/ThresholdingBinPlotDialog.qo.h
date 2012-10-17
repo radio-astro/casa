@@ -25,37 +25,44 @@
 #ifndef THRESHOLDINGBINPLOTDIALOG_QO_H_1
 #define THRESHOLDINGBINPLOTDIALOG_QO_H_1
 
-#include <QDialog>
-#include <qwt_plot.h>
 #include <display/QtPlotter/ThresholdingBinPlotDialog.ui.h>
 #include <casa/aips.h>
+#include <pair.h>
+#include <QDialog>
 
-class QwtPlotPicker;
+using namespace std;
 
 namespace casa {
 
 template <class T> class ImageInterface;
-template <class T> class ImageHistograms;
+class ThresholdingBinPlotWidget;
 
 //This dialog displays a histogram that allows the user
 //to set a minimum/maximum moment collapse threshold graphically.
 //Intensity is displayed on the x-axis.  The y-axis is a count of
 //the number of pixels at each intensity.
 
-class ThresholdingBinPlotDialog : public QDialog
-{
+class ThresholdingBinPlotDialog : public QDialog {
     Q_OBJECT
 
 public:
     ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
     void setImage( ImageInterface<Float>* img );
+    void setInterval( double minValue, double maxValue );
+    pair<double,double> getInterval() const;
     ~ThresholdingBinPlotDialog();
+
+protected:
+    void keyPressEvent( QKeyEvent* event );
 
 private:
     Ui::ThresholdingBinPlotDialogClass ui;
-    ImageHistograms<Float>* histogramMaker;
-    QwtPlot binPlot;
-    QwtPlotPicker* rangeTool;
+    ThresholdingBinPlotWidget* plotWidget;
+
 };
+
+
+
+
 }
 #endif // THRESHOLDINGBINPLOTDIALOG_H

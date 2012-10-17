@@ -65,6 +65,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/SpecFitSettingsWidgetOptical.qo.h
   QtPlotter/SpecFitSettingsWidgetRadio.qo.h
   QtPlotter/ThresholdingBinPlotDialog.qo.h
+  QtPlotter/ThresholdingBinPlotWidget.qo.h
   QtPlotter/LegendPreferences.qo.h
   QtPlotter/CanvasHolder.qo.h
   QtPlotter/SpectralPositioningWidget.qo.h
@@ -155,6 +156,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtPlotter/SpecFitSettingsWidgetOptical.ui
   QtPlotter/SpecFitSettingsFixedTableCell.ui
   QtPlotter/ThresholdingBinPlotDialog.ui
+  QtPlotter/ThresholdingBinPlotWidget.ui
   QtPlotter/LegendPreferences.ui
   QtPlotter/SpectralPositioningWidget.ui
   QtPlotter/annotations/AnnotationEditor.ui
@@ -416,6 +418,7 @@ casa_add_library( display
   QtPlotter/MomentCollapseThreadRadio.cc
   QtPlotter/ProfileTaskMonitor.cc
   QtPlotter/ThresholdingBinPlotDialog.cc
+  QtPlotter/ThresholdingBinPlotWidget.cc
   QtPlotter/LegendPreferences.cc
   QtPlotter/SpectralPositioningWidget.cc 
   QtPlotter/conversion/Converter.cc

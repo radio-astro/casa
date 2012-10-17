@@ -224,6 +224,10 @@ void AnimatorHolder::setModeEnabled( int imageCount ){
 			ui.imageGroupBox->setChecked( false );
 		}
 		addRemoveChannelAnimatorBasedOnFrameCount();
+		int displayCount = getAnimationCount();
+		if ( displayCount == 1 ){
+			ui.imageGroupBox->setChecked( true );
+		}
 	}
 	if ( modeChanged ){
 		modeChange();

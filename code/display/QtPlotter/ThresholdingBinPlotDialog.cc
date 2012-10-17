@@ -24,84 +24,51 @@
 //#
 #include "ThresholdingBinPlotDialog.qo.h"
 
-#include <images/Images/ImageHistograms.h>
+#include <display/QtPlotter/ThresholdingBinPlotWidget.qo.h>
 #include <images/Images/ImageInterface.h>
-#include <display/QtPlotter/Util.h>
 #include <QDebug>
-#include <qwt_plot_curve.h>
-#include <qwt_plot_picker.h>
-#include <qwt_picker.h>
+#include <QKeyEvent>
 
 namespace casa {
 
 ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent)
-    : QDialog(parent), histogramMaker( NULL ),  binPlot( this )
-{
+    : QDialog(parent){
 	ui.setupUi(this);
 	setWindowTitle( "Graphical Collapse/Moments Threshold Specification");
 
-	//Add the plot to the dialog
-	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidget);
-	layout->addWidget( &binPlot );
-	binPlot.setAxisTitle( QwtPlot::yLeft, "Count" );
-	binPlot.setAxisTitle( QwtPlot::xBottom, yAxisUnits );
-	binPlot.setCanvasBackground( Qt::white );
-	ui.plotWidget->setLayout( layout );
+	//Add the plot widget to the dialog
+	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
+	plotWidget = new ThresholdingBinPlotWidget( yAxisUnits, this );
+	layout->addWidget( plotWidget );
+	ui.plotWidgetHolder->setLayout( layout );
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
-	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
-
-	//rangeTool = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
-	 //       QwtPicker::RectSelectionType, QwtPlotPicker::CrossRubberBand, QwtPicker::AlwaysOn,
-	//        binPlot.canvas());
-	//rangeTool->setStateMachine(new QwtPickerDragPointMachine());
-	//rangeTool->setRubberBandPen(QColor(Qt::green));
-	//rangeTool->setRubberBand(QwtPicker::CrossRubberBand);
-	//rangeTool->setTrackerPen(QColor(Qt::green));
+	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
 }
 
-void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
-	if ( img != NULL ){
-		//TODO:  Logging when we construct this?
-		if ( histogramMaker == NULL ){
-			histogramMaker = new ImageHistograms<Float>( *img );
-		}
-		else {
-			histogramMaker->setNewImage( *img );
-		}
-		Array<Float> values;
-		Array<Float> counts;
-		bool success = histogramMaker->getHistograms( values, counts );
-		if ( success ){
-			//put the data into the qwt plot
-			//qDebug() << "Number of points in histogram is " << values.size();
-			vector<float> xVector;
-			vector<float> yVector;
-			values.tovector( xVector );
-			counts.tovector( yVector );
-			for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
-				QVector<double> xValues(2);
-				QVector<double> yValues(2);
-				xValues[0] = xVector[i];
-				xValues[1] = xVector[i];
-				yValues[0] = 0;
-				yValues[1] = yVector[i];
-				QwtPlotCurve* curve  = new QwtPlotCurve();
-				curve->setData( xValues, yValues );
-				curve->attach(&binPlot);
-			}
-			binPlot.replot();
-		}
-		else {
-			QString msg( "Could not make a histogram from the image.");
-			Util::showUserMessage( msg, this );
-		}
+void ThresholdingBinPlotDialog::keyPressEvent( QKeyEvent* event ){
+	int keyCode = event->key();
+	//This was written here because pressing a return on a line edit inside
+	//the dialog was closing the dialog.
+	if ( keyCode != Qt::Key_Return ){
+		QDialog::keyPressEvent( event );
 	}
 }
 
-ThresholdingBinPlotDialog::~ThresholdingBinPlotDialog()
-{
-	delete histogramMaker;
 
+void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
+	plotWidget->setImage( img );
 }
+
+pair<double,double> ThresholdingBinPlotDialog::getInterval() const {
+	return plotWidget->getMinMaxValues();
+}
+
+void ThresholdingBinPlotDialog::setInterval( double minValue, double maxValue ){
+	plotWidget->setMinMaxValues( minValue, maxValue );
+}
+
+ThresholdingBinPlotDialog::~ThresholdingBinPlotDialog(){
+}
+
 }
