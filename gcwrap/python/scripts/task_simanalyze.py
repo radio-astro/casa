@@ -794,16 +794,26 @@ def simanalyze(
 
 
     except TypeError, e:
-        msg("task_simanalyze -- TypeError: %s" % e,priority="error")
+        finalize_tools()
+        #msg("simanalyze -- TypeError: %s" % e,priority="error")
+        casalog.post("simanalyze -- TypeError: %s" % e, priority="ERROR")
         raise TypeError, e
         return
     except ValueError, e:
-        print "task_simanalyze -- OptionError: ", e
+        finalize_tools()
+        #print "simanalyze -- OptionError: ", e
+        casalog.post("simanalyze -- OptionError: %s" % e, priority="ERROR")
         raise ValueError, e
         return
     except Exception, instance:
-        print '***Error***',instance
+        finalize_tools()
+        #print '***Error***',instance
+        casalog.post("simanalyze -- Exception: %s" % instance, priority="ERROR")
         raise Exception, instance
         return
 
 
+def finalize_tools():
+    if ia.isopen(): ia.close()
+    im.close()
+    tb.close()
