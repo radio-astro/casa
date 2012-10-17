@@ -1156,7 +1156,7 @@ Bool CubeSkyEquation::isNewFTM(FTMachine* ftm)
 	  (ftm->name() == "AWProjectFT")
 	  || (ftm->name() == "AWProjectWBFT")
 	  || (ftm->name() == "PBWProjectFT")
-	  || (ftm->name() == "MultiTermFT")
+	  //	  || (ftm->name() == "MultiTermFT")
 	  //	  || (ftm->name() == "GridFT")
 	  );
 }
