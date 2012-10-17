@@ -221,7 +221,7 @@ Usage examples :
      Regrid a boolean mask from one coordinate system to another and save as boolean mask 
      in the output image.   
 
-     makemask(mode='copy', inpimage='oldmask.im', inpimage='oldmask.im:mask0', output='newmask.im:mask0')
+     makemask(mode='copy', inpimage='oldmask.im', inpmask='oldmask.im:mask0', output='newmask.im:mask0')
   
 (3) (copy mode):
      Same as (1), but save as integer mask in the output image.
@@ -270,7 +270,7 @@ Usage examples :
      sepecified in inpimage. 
      The inpfreqs is left out as it uses a default (=[], means all channels).
 
-     makemask(mode='expand', inpimage='spec.clean.image, inpmask='cont.clean.mask' 
+     makemask(mode='expand', inpimage='spec.clean.image', inpmask='cont.clean.mask' 
               outfreqs=[4,5,6,7], output='spec.clean.mask')
 
 (8) (expand mode):
@@ -286,7 +286,7 @@ Usage examples :
      of channels in a  different image with a different spectral-coordinate system.
      Save the mask as ones/zeros so that it can be used as an input mask in the clean task. 
 
-     makemask(mode='expand', inpimage='bigmask.im' inpmask='smallmask.im:mask0', 
+     makemask(mode='expand', inpimage='bigmask.im', inpmask='smallmask.im:mask0', 
               inpfreqs='1.5MHz~1.6MHz', outfreqs='1.2MHz~1.8MHz', output='bigmask.im', overwrite=True)
 
 <!--

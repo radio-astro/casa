@@ -39,19 +39,19 @@ def simobserve(
 
         casalog.origin('simobserve')
         if verbose: casalog.filter(level="DEBUG2")
-    
+
         a = inspect.stack()
         stacklevel = 0
         for k in range(len(a)):
             if (string.find(a[k][1], 'ipython console') > 0):
                 stacklevel = k
         myf = sys._getframe(stacklevel).f_globals
-         
+
         # create the utility object:
         util = simutil(direction)  # this is the dir of the observation - could be ""
         if verbose: util.verbose = True
         msg = util.msg
-    
+
         # it was requested to make the user interface "observe" for what 
         # is sm.observe and sm.predict.
         # interally the code is clearer if we stick with predict so
@@ -1189,7 +1189,7 @@ def simobserve(
                 sm.corrupt();
                 sm.done();
 
-                
+
 
         # cleanup - delete newmodel, newmodel.flat etc
 #        if os.path.exists(modelflat):
@@ -1201,19 +1201,22 @@ def simobserve(
 
     except TypeError, e:
         finalize_tools()
-        msg("task_simobserve -- TypeError: %s" % e,priority="error")
+        #msg("simobserve -- TypeError: %s" % e, priority="error")
+        casalog.post("simobserve -- TypeError: %s" % e, priority="ERROR")
         raise TypeError, e
         return False
     except ValueError, e:
         finalize_tools()
         #print "task_simobserve -- OptionError: ", e
-        msg("task_simobserve -- OptionError: %s" % e,priority="error")
+        #msg("simobserve -- OptionError: %s" % e, priority="error")
+        casalog.post("simobserve -- OptionError: %s" % e, priority="ERROR")
         raise ValueError, e
         return False
     except Exception, instance:
         finalize_tools()
         #print '***Error***',instance
-        msg("task_simobserve -- Exception: %s" % instance,priority="error")
+        #msg("simobserve -- Exception: %s" % instance, priority="error")
+        casalog.post("simobserve -- Exception: %s" % instance, priority="ERROR")
         raise Exception, instance
         return False
     return True
