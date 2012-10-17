@@ -121,6 +121,9 @@
             <height>26</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>coordinate system</string>
+          </property>
           <item>
            <property name="text">
             <string>J2000</string>
@@ -177,6 +180,9 @@
             <width>115</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>horizontal units</string>
           </property>
           <property name="currentIndex">
            <number>2</number>
@@ -279,6 +285,9 @@
             <height>22</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>horizontal coordinate</string>
+          </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
@@ -307,6 +316,9 @@
             <width>120</width>
             <height>22</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>vertical coordinate</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -418,6 +430,9 @@
             <width>115</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>vertical units</string>
           </property>
           <property name="currentIndex">
            <number>2</number>
@@ -547,6 +562,9 @@
             <height>26</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>bounding units</string>
+          </property>
           <property name="currentIndex">
            <number>2</number>
           </property>
@@ -585,6 +603,9 @@
             <height>21</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>bounding width</string>
+          </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
@@ -597,6 +618,9 @@
             <width>91</width>
             <height>21</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>bounding height</string>
           </property>
          </widget>
         </widget>
@@ -634,6 +658,9 @@
             <width>161</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>outline color</string>
           </property>
           <property name="currentIndex">
            <number>3</number>
@@ -715,6 +742,9 @@
             <height>25</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>outline line width</string>
+          </property>
           <property name="minimum">
            <number>1</number>
           </property>
@@ -752,6 +782,9 @@
             <width>115</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>outline style</string>
           </property>
           <item>
            <property name="text">
@@ -800,6 +833,9 @@
             <height>26</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>symbol used to mark point</string>
+          </property>
          </widget>
          <widget class="QSpinBox" name="marker_scale">
           <property name="geometry">
@@ -809,6 +845,9 @@
             <width>41</width>
             <height>25</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>symbol size</string>
           </property>
           <property name="minimum">
            <number>0</number>
@@ -850,6 +889,9 @@
             <height>22</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>label string</string>
+          </property>
          </widget>
         </widget>
         <widget class="QGroupBox" name="groupBox_6">
@@ -881,6 +923,9 @@
             <width>151</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>label color</string>
           </property>
           <property name="currentIndex">
            <number>3</number>
@@ -968,7 +1013,7 @@
            </rect>
           </property>
           <property name="toolTip">
-           <string>font name</string>
+           <string>label font name</string>
           </property>
          </widget>
          <widget class="QSpinBox" name="font_size">
@@ -979,6 +1024,9 @@
             <width>63</width>
             <height>25</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>label font size</string>
           </property>
           <property name="minimum">
            <number>7</number>
@@ -1000,6 +1048,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QCheckBox" name="font_bold">
+            <property name="toolTip">
+             <string>make text bold</string>
+            </property>
             <property name="text">
              <string>bold</string>
             </property>
@@ -1007,6 +1058,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="font_italic">
+            <property name="toolTip">
+             <string>make text italic</string>
+            </property>
             <property name="text">
              <string>italic</string>
             </property>
@@ -1030,7 +1084,7 @@
           </sizepolicy>
          </property>
          <property name="toolTip">
-          <string>text position</string>
+          <string>text position relative to region</string>
          </property>
          <property name="minimum">
           <number>0</number>
@@ -1070,7 +1124,7 @@
           </rect>
          </property>
          <property name="toolTip">
-          <string>y offset delta</string>
+          <string>pixle y offset delta</string>
          </property>
          <property name="minimum">
           <number>-999</number>
@@ -1092,7 +1146,7 @@
           </rect>
          </property>
          <property name="toolTip">
-          <string>x offset delta</string>
+          <string>pixel x offset delta</string>
          </property>
          <property name="minimum">
           <number>-999</number>
@@ -1190,6 +1244,9 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>start frame</string>
+         </property>
          <property name="maximum">
           <number>99</number>
          </property>
@@ -1242,7 +1299,7 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>mark for later operations</string>
+          <string>region is in selection group</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
@@ -1265,6 +1322,9 @@
            <width>79</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>end frame</string>
          </property>
         </widget>
         <widget class="QCheckBox" name="region_annotation">
@@ -1291,8 +1351,8 @@
           </font>
          </property>
          <property name="toolTip">
-          <string>mark this region as an annotation
-(which does not participate in calculations)</string>
+          <string>annotation only
+(does not participate in calculations)</string>
          </property>
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
@@ -1503,6 +1563,9 @@
             <height>22</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>output file name</string>
+          </property>
          </widget>
          <widget class="QPushButton" name="save_file_name_browse">
           <property name="geometry">
@@ -1512,6 +1575,9 @@
             <width>81</width>
             <height>32</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>show browser to select file</string>
           </property>
           <property name="text">
            <string>browse</string>
@@ -1541,6 +1607,9 @@
             <width>161</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>output format</string>
           </property>
           <item>
            <property name="text">
@@ -1594,6 +1663,9 @@
             <height>20</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>output current region only</string>
+          </property>
           <property name="text">
            <string>current region</string>
           </property>
@@ -1610,6 +1682,9 @@
             <height>20</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>output all selected regions</string>
+          </property>
           <property name="text">
            <string>all selected regions</string>
           </property>
@@ -1622,6 +1697,9 @@
             <width>102</width>
             <height>20</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>output all regions</string>
           </property>
           <property name="text">
            <string>all regions</string>
@@ -1651,6 +1729,9 @@
             <width>161</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>output coordinate system</string>
           </property>
           <item>
            <property name="text">
@@ -1698,6 +1779,9 @@
             <height>22</height>
            </rect>
           </property>
+          <property name="toolTip">
+           <string>input file name</string>
+          </property>
          </widget>
          <widget class="QPushButton" name="load_file_name_browse">
           <property name="geometry">
@@ -1707,6 +1791,9 @@
             <width>81</width>
             <height>32</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>show browser to select region</string>
           </property>
           <property name="text">
            <string>browse</string>
@@ -1736,6 +1823,9 @@
             <width>161</width>
             <height>26</height>
            </rect>
+          </property>
+          <property name="toolTip">
+           <string>input file format</string>
           </property>
           <item>
            <property name="text">
