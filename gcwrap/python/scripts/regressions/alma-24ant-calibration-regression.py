@@ -139,7 +139,7 @@ if(mystep in thesteps):
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms',
            mode = 'manual',
            antenna = 'DV14',
-           flagbackup = F) # inserted by DP: DV14 has very high Tsys and is reported as having no signal in PT
+           flagbackup = F) 
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms',
            mode = 'manual',
@@ -383,60 +383,60 @@ if(mystep in thesteps):
     mode = 'manual',
     antenna = 'DA46&DV15',
     scan = '17~28', spw='1',
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DV15&DV21', spw='1',
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DA41&DV08',
     scan = '4~8', spw='0',
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DV08&DV20',
     scan = '4~8', spw='0',
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DA42',
     spw='1:0~1461', 
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DA46',
     spw='1:0~1461', 
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DV08',
     spw='0:0~1475', 
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DV20',
     spw='0:0~1475', 
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
   
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DV15',
     spw='1', 
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
 
   flagdata(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     mode = 'manual',
     antenna = 'DV21',
     spw='1:0~1461', 
-    flagbackup = F) # inserted by DP, see checklist
+    flagbackup = F)
 
   timing()
 

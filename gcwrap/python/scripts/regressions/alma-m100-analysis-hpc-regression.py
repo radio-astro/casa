@@ -10,7 +10,6 @@
 #                                                                           # 
 # Input data:                                                               #
 #     two ASDMs                                                             #
-#     two tsys cal tables                                                   #
 #     the clean masks                                                       #
 #                                                                           #
 #############################################################################
@@ -57,10 +56,10 @@ step_title = { 0 : 'Data import and partitioning',
 basename=['X54','X220']
 makeplots=False
 print "Make plots?", makeplots
-usepclean=False
+usepclean=True
 print "Use pclean?", usepclean
 therefant = 'DV01'
-mynumsubmss = 16
+mynumsubmss = 8
 
 #############################
 
@@ -640,7 +639,8 @@ if(mystep in thesteps):
             pclean(vis=name+'-line-vs.ms',
                    imagename='test-'+name+'-sec_phasecal',
                    field='3c*Ph*',spw='0~3',
-                   nterms=2, alg='multiscale', scales=[0],
+                   nterms=2,
+                   alg='multiscale', scales=[0],
                    mode='mfs',niter=100,
                    interactive=False,
                    mask='test-'+name+'-sec_phasecal.mask', imsize=200,cell='0.5arcsec')
@@ -680,7 +680,8 @@ if(mystep in thesteps):
             pclean(vis=name+'-line-vs.ms',
                    imagename='test-'+name+'-prim_phasecal',
                    field='1224*',spw='0~3',
-                   nterms=2, alg='multiscale', scales=[0],
+                   nterms=2,
+                   alg='multiscale', scales=[0],
                    mode='mfs',niter=100,
                    interactive=False,
                    mask='test-'+name+'-prim_phasecal.mask',imsize=200,cell='0.5arcsec')
