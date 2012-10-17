@@ -149,9 +149,7 @@ Bool TblAsContourDM::drawIntoList(Display::RefreshReason reason,
   wc->setAttribute(dashem);
 
   // now plot the data
-  wc->drawContourMap(parent->itsLinblc, parent->itsLintrc, theData, 
-			levels, usePixelEdges);
-  return True;
+  return wc->drawContourMap( parent->itsLinblc, parent->itsLintrc, theData, levels, usePixelEdges );
 }
 
 // (required) default constructor
