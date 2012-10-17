@@ -136,16 +136,16 @@ public:
     // Copies all of the components (or just the one in the cache) from
     // the specified VisBuffer into this one.
 
-    virtual void copy (const VisBuffer2 & other, Bool copyCachedDataOnly = True);
+    virtual void copy (const VisBuffer2 & other, Bool fetchIfNeeded = True);
 
     // Copies the specified components (or just the one in the cache) from
     // the specified VisBuffer into this one.
 
     virtual void copyComponents (const VisBuffer2 & other,
 				 const VisBufferComponents2 & components,
-				 Bool copyCachedDataOnly = False);
+				 Bool fetchIfNeeded = True);
 
-    virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent);
+    virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent, Bool fetchIfNeeded = True);
 
     virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
     virtual const Vector<Double> getFrequencies (Int rowInBuffer,
@@ -171,7 +171,7 @@ public:
     // VisBufferImpl2 only to benefit from caching of the feed and antenna IDs.
 
     // Note that feed_pa is a function instead of a cached value
-    virtual Vector<Float> feed_pa(Double time) const;
+    virtual Vector<Float> feedPa (Double time) const;
 
     // NOMINAL parallactic angle (feed p.a. offset NOT included)
     virtual Float parang0(Double time) const;
@@ -240,9 +240,9 @@ public:
     virtual const Vector<MDirection> & direction2 () const;
     virtual const Vector<Double> & exposure () const;
     virtual const Vector<Int> & feed1 () const;
-    virtual const Vector<Float> & feed1_pa () const;
+    virtual const Vector<Float> & feedPa1 () const;
     virtual const Vector<Int> & feed2 () const;
-    virtual const Vector<Float> & feed2_pa () const;
+    virtual const Vector<Float> & feedPa2 () const;
     virtual Int fieldId () const;
     virtual const Matrix<Bool> & flag () const;
     virtual void setFlag (const Matrix<Bool>&);
@@ -253,12 +253,14 @@ public:
     virtual const Vector<Bool> & flagRow () const;
     virtual void setFlagRow (const Vector<Bool>&);
     virtual const Matrix<Float> & imagingWeight () const;
+    virtual Int nAntennas () const;
     virtual Int nChannels () const;
     virtual Int nCorrelations () const;
     virtual Int nRows () const;
     virtual const Vector<Int> & observationId () const;
     virtual const MDirection& phaseCenter () const;
     virtual Int polarizationFrame () const;
+    virtual Int polarizationId () const;
     virtual const Vector<Int> & processorId () const;
     virtual const Vector<uInt> & rowIds () const;
     virtual const Vector<Int> & scan () const;
@@ -302,7 +304,7 @@ protected:
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
 
-    virtual void cacheCopy (const VisBufferImpl2 & other, Bool markAsCached);
+    //virtual void cacheCopy (const VisBufferImpl2 & other, Bool markAsCached);
     virtual void cacheClear (Bool markAsCached = False);
 
     void adjustWeightFactorsAndFlags (Matrix <Float> & rowWeightFactors,
@@ -330,7 +332,8 @@ protected:
     void computeRowWeightFactors (Matrix <Float> & rowWeightFactors, Bool useWeightSpectrum);
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
-                                       Bool isNewSpectralWindow, const SubChunkPair2 & subchunk);
+                                       Bool isNewSpectralWindow, const SubChunkPair2 & subchunk,
+                                       Int nRows, Int nChannels, Int nCorrelations);
 
     virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
     virtual void dirtyComponentsAdd (VisBufferComponent2 component);
@@ -405,12 +408,14 @@ private:
     virtual void fillFloatData (Cube<Float>& value) const;
     virtual void fillImagingWeight (Matrix<Float> & value) const;
     virtual void fillJonesC (Vector<SquareMatrix<Complex, 2> >& value) const;
+    virtual void fillNAntennas (Int& value) const;
     virtual void fillNChannel (Int& value) const;
     virtual void fillNCorr (Int& value) const;
     virtual void fillNRow (Int& value) const;
     virtual void fillObservationId (Vector<Int>& value) const;
     virtual void fillPhaseCenter (MDirection& value) const;
     virtual void fillPolFrame (Int& value) const;
+    virtual void fillPolarizationId (Int& value) const;
     virtual void fillProcessorId (Vector<Int>& value) const;
     virtual void fillRowIds (Vector<uInt>& value) const;
     virtual void fillScan (Vector<Int>& value) const;

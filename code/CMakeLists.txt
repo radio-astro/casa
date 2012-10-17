@@ -27,6 +27,8 @@ include( ui )
 include( target )
 include( CASA )
 
+SET (EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -fno-omit-frame-pointer")
+
 set( CASA_MAJOR_VERSION 4 )
 set( CASA_MINOR_VERSION 0 )
 set( CASA_PATCH_VERSION 0 )

@@ -326,6 +326,35 @@ private:
     int64_t vmPages_p; // in pages
 };
 
+class IoStatistics {
+
+public:
+
+    IoStatistics ();
+
+    IoStatistics operator- (const IoStatistics &) const;
+    IoStatistics operator+ (const IoStatistics &) const;
+    IoStatistics operator/ (const IoStatistics &) const;
+    IoStatistics operator* (Double factor) const;
+
+    void capture ();
+
+    Double getBytesRead () const;
+    Double getBytesWritten () const;
+    Double getNReads () const;
+    Double getNWrites () const;
+
+    String report (float scale = .001, const String & scaleTag = String ("K")) const;
+
+private:
+
+    Double nBytesRead_p;
+    Double nBytesWritten_p;
+    Double nReads_p;
+    Double nWrites_p;
+    String statFile_p;
+};
+
 
 // These two classes, Times and DeltaTimes should be moved out of this file and
 // into casacore/casa/OS.  In the meantime, an ifdef should keep the apple from

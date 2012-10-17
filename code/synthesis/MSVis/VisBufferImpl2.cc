@@ -22,7 +22,9 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/VisBufferAsyncWrapper2.h>
 #include <synthesis/MSVis/VisBufferComponents2.h>
+#include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisBufferImpl2.h>
+#include <synthesis/MSVis/VisBuffer2Adapter.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 
@@ -70,7 +72,7 @@ public:
 
 protected:
 
-    virtual void copy (const VbCacheItemBase * other, Bool markAsCached = False) = 0;
+    virtual void copy (const VbCacheItemBase * other, Bool fetchIfNeeded) = 0;
 
     VisBufferImpl2 * getVb () const
     {
@@ -203,6 +205,17 @@ public:
         isDirty_p = True;
     }
 
+    template <typename U>
+    void
+    setSpecial (const U & newItem)
+    {
+        // For internal use for items which aren't really demand fetched
+
+        item_p = newItem;
+        isPresent_p = True;
+        isDirty_p = False;
+    }
+
     virtual void
     setDirty ()
     {
@@ -226,31 +239,57 @@ protected:
     }
 
 
+//    virtual void
+//    copy (const VbCacheItemBase * otherRaw, Bool markAsCached)
+//    {
+//        // Convert generic pointer to one pointint to this
+//        // cache item type.
+//
+//        const VbCacheItem * other = dynamic_cast <const VbCacheItem *> (otherRaw);
+//        Assert (other != 0);
+//
+//        // Capture the cached status of the other item
+//
+//        isPresent_p = other->isPresent_p;
+//
+//        // If the other item was cached then copy it over
+//        // otherwise clear out this item.
+//
+//        if (isPresent_p){
+//            item_p = other->item_p;
+//        }
+//        else {
+//            item_p = T ();
+//
+//            if (markAsCached){
+//                isPresent_p = True;
+//            }
+//        }
+//    }
+
     virtual void
-    copy (const VbCacheItemBase * otherRaw, Bool markAsCached)
+    copy (const VbCacheItemBase * otherRaw, Bool fetchIfNeeded)
     {
-        // Convert generic pointer to one pointint to this
-        // cache item type.
+        const VbCacheItem<T> * other = dynamic_cast <const VbCacheItem<T> *> (otherRaw);
+        copyAux (other, fetchIfNeeded);
+    }
 
-        const VbCacheItem * other = dynamic_cast <const VbCacheItem *> (otherRaw);
-        Assert (other != 0);
+    void
+    copyAux (const VbCacheItem<T> * other, bool fetchIfNeeded)
+    {
+        if (other->isPresent()){
 
-        // Capture the cached status of the other item
-
-        isPresent_p = other->isPresent_p;
-
-        // If the other item was cached then copy it over
-        // otherwise clear out this item.
-
-        if (isPresent_p){
             item_p = other->item_p;
+            isPresent_p = True;
+            isDirty_p = False;
+        }
+        else if (fetchIfNeeded){
+            set (other->get());
         }
         else {
-            item_p = T ();
 
-            if (markAsCached){
-                isPresent_p = True;
-            }
+            isPresent_p = False;
+            isDirty_p = False;
         }
     }
 
@@ -305,12 +344,14 @@ public:
     VbCacheItem <Matrix<Float> > imagingWeight_p;
     VbCacheItem <Cube<Complex> > modelVisCube_p;
     VbCacheItem <Matrix<CStokesVector> > modelVisibility_p;
+    VbCacheItem <Int> nAntennas_p;
     VbCacheItem <Int> nChannels_p;
     VbCacheItem <Int> nCorrelations_p;
     VbCacheItem <Int> nRows_p;
     VbCacheItem <Vector<Int> > observationId_p;
     VbCacheItem <MDirection> phaseCenter_p;
     VbCacheItem <Int> polFrame_p;
+    VbCacheItem <Int> polarizationId_p;
     VbCacheItem <Vector<Int> > processorId_p;
     VbCacheItem <Vector<uInt> > rowIds_p;
     VbCacheItem <Vector<Int> > scan_p;
@@ -480,12 +521,14 @@ VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
     imagingWeight_p.initialize (vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight);
     modelVisCube_p.initialize (vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel);
     modelVisibility_p.initialize (vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel);
+    nAntennas_p.initialize (vb, &VisBufferImpl2::fillNAntennas, NAntennas);
     nChannels_p.initialize (vb, &VisBufferImpl2::fillNChannel, NChannels);
     nCorrelations_p.initialize (vb, &VisBufferImpl2::fillNCorr, NCorrelations);
     nRows_p.initialize (vb, &VisBufferImpl2::fillNRow, NRows);
     observationId_p.initialize (vb, &VisBufferImpl2::fillObservationId, ObservationId);
     phaseCenter_p.initialize (vb, &VisBufferImpl2::fillPhaseCenter, PhaseCenter);
     polFrame_p.initialize (vb, &VisBufferImpl2::fillPolFrame, PolFrame);
+    polarizationId_p.initialize (vb, &VisBufferImpl2::fillPolarizationId, PolarizationId);
     processorId_p.initialize (vb, &VisBufferImpl2::fillProcessorId, ProcessorId);
     rowIds_p.initialize (vb, &VisBufferImpl2::fillRowIds, RowIds);
     scan_p.initialize (vb, &VisBufferImpl2::fillScan, Scan);
@@ -592,19 +635,19 @@ VisBufferImpl2::checkVisIterBase (const char * func, const char * file, int line
   }
 }
 
-void
-VisBufferImpl2::cacheCopy (const VisBufferImpl2 & other, Bool markAsCached)
-{
-    CacheRegistry::iterator dst;
-    CacheRegistry::const_iterator src;
-
-    for (dst = state_p->cacheRegistry_p.begin(), src = other.state_p->cacheRegistry_p.begin();
-         dst != state_p->cacheRegistry_p.end();
-         dst ++, src ++)
-    {
-        (*dst)->copy (* src, markAsCached);
-    }
-}
+//void
+//VisBufferImpl2::cacheCopy (const VisBufferImpl2 & other, Bool markAsCached)
+//{
+//    CacheRegistry::iterator dst;
+//    CacheRegistry::const_iterator src;
+//
+//    for (dst = state_p->cacheRegistry_p.begin(), src = other.state_p->cacheRegistry_p.begin();
+//         dst != state_p->cacheRegistry_p.end();
+//         dst ++, src ++)
+//    {
+//        (*dst)->copy (* src, markAsCached);
+//    }
+//}
 
 void
 VisBufferImpl2::cacheClear (Bool markAsCached)
@@ -640,43 +683,68 @@ VisBufferImpl2::construct (ROVisibilityIterator2 * vi)
 }
 
 void
-VisBufferImpl2::copy (const VisBuffer2 & other, Bool copyCachedDataOnly)
+VisBufferImpl2::copy (const VisBuffer2 & otherRaw, Bool fetchIfNeeded)
 {
-#warning "Implement copy"
+    const VisBufferImpl2 * other = dynamic_cast<const VisBufferImpl2 *> (& otherRaw);
+
+    ThrowIf (other == 0,
+             String::format ("Copy between %s and VisBufferImpl2 not implemented.",
+                             typeid (otherRaw).name()));
+
+    for (CacheRegistry::iterator dst = state_p->cacheRegistry_p.begin(),
+                                 src = other->state_p->cacheRegistry_p.begin();
+         dst != state_p->cacheRegistry_p.end();
+         dst ++, src ++){
+
+        (* dst)->copy (* src, fetchIfNeeded);
+    }
 }
 
 void
-VisBufferImpl2::copyComponents (const VisBuffer2 & other,
+VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
                                 const VisBufferComponents2 & components,
-                                Bool copyCachedDataOnly)
+                                Bool fetchIfNeeded)
 {
-#warning "Implement copyComponents"
+    const VisBufferImpl2 * other = dynamic_cast<const VisBufferImpl2 *> (& otherRaw);
+
+    ThrowIf (other == 0,
+             String::format ("Copy between %s and VisBufferImpl2 not implemented.",
+                             typeid (otherRaw).name()));
+
+    for (CacheRegistry::iterator dst = state_p->cacheRegistry_p.begin(),
+                                 src = other->state_p->cacheRegistry_p.begin();
+         dst != state_p->cacheRegistry_p.end();
+         dst ++, src ++){
+
+        if (components.contains ((* src)->getComponent())){
+
+            (* dst)->copy (* src, fetchIfNeeded);
+        }
+    }
 }
 
 void
-VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent)
+VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
+                                    Bool fetchIfNeeded)
 {
-    cache_p->antenna1_p.set (vb->antenna1 ());
-    cache_p->antenna2_p.set (vb->antenna2 ());
-    cache_p->arrayId_p.set (vb->arrayId ());
-    cache_p->dataDescriptionId_p.set (vb->dataDescriptionId ());
-    cache_p->fieldId_p.set (vb->fieldId ());
-    cache_p->spectralWindow_p.set (vb->spectralWindow ());
-    cache_p->time_p.set (vb->time ());
-    cache_p->nRows_p.set (vb->nRows ());
+
+    VisBufferComponents2 components =
+        VisBufferComponents2::these (Antenna1, Antenna2, ArrayId, DataDescriptionId,
+                                     FieldId, SpectralWindow, casa::vi::Time,
+                                     NRows, Feed1, Feed2, Unknown);
+
+    copyComponents (* vb, components, fetchIfNeeded);
 
     setIterationInfo (vb->msId(), vb->msName (), vb->isNewMs (),
                       vb->isNewArrayId (), vb->isNewFieldId (), vb->isNewSpectralWindow (),
                       vb->getSubchunk ());
 
-    cache_p->feed1_p.set (vb->feed1 ());
-    cache_p->feed2_p.set (vb->feed2 ());
-
     if(dirDependent){
-        cache_p->feed1Pa_p.set (vb->feed1_pa ());
-        cache_p->feed2Pa_p.set (vb->feed2_pa ());
-        cache_p->direction1_p.set (vb->direction1 ());
-        cache_p->direction2_p.set (vb->direction2 ());
+
+        VisBufferComponents2 components =
+                VisBufferComponents2::these (Direction1, Direction2, FeedPa1, FeedPa2, Unknown);
+
+        copyComponents (* vb, components, fetchIfNeeded);
     }
 }
 
@@ -1076,11 +1144,14 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
                                       Bool isNewArrayId,
                                       Bool isNewFieldId,
                                       Bool isNewSpectralWindow,
-                                      const SubChunkPair2 & subchunk)
+                                      const SubChunkPair2 & subchunk,
+                                      Int nRows,
+                                      Int nChannels,
+                                      Int nCorrelations)
 {
     // Prepare this VisBuffer for the new subchunk
 
-    cacheClear ();
+    cacheClear();
 
     setIterationInfo (msId, msName, isNewMs, isNewArrayId, isNewFieldId,
                       isNewSpectralWindow, subchunk);
@@ -1089,6 +1160,10 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
 
     state_p->frequencies_p.flush();
     state_p->channelNumbers_p.flush();
+
+    cache_p->nRows_p.setSpecial (nRows);
+    cache_p->nChannels_p.setSpecial (nChannels);
+    cache_p->nCorrelations_p.setSpecial (nCorrelations);
 }
 
 
@@ -1234,7 +1309,7 @@ VisBufferImpl2::azel(Double time) const
 }
 
 Vector<Float>
-VisBufferImpl2::feed_pa(Double time) const
+VisBufferImpl2::feedPa(Double time) const
 {
   return getViP()->feed_pa(time);
 }
@@ -1325,7 +1400,7 @@ VisBufferImpl2::feed1 () const
 }
 
 const Vector<Float> &
-VisBufferImpl2::feed1_pa () const
+VisBufferImpl2::feedPa1 () const
 {
     return cache_p->feed1Pa_p.get ();
 }
@@ -1337,7 +1412,7 @@ VisBufferImpl2::feed2 () const
 }
 
 const Vector<Float> &
-VisBufferImpl2::feed2_pa () const
+VisBufferImpl2::feedPa2 () const
 {
     return cache_p->feed2Pa_p.get ();
 }
@@ -1408,8 +1483,11 @@ VisBufferImpl2::imagingWeight () const
 //    return cache_p->lsrFrequency_p.get ();
 //}
 
-
-
+Int
+VisBufferImpl2::nAntennas () const
+{
+    return cache_p->nAntennas_p.get ();
+}
 
 Int
 VisBufferImpl2::nChannels () const
@@ -1445,6 +1523,12 @@ Int
 VisBufferImpl2::polarizationFrame () const
 {
     return cache_p->polFrame_p.get ();
+}
+
+Int
+VisBufferImpl2::polarizationId () const
+{
+    return cache_p->polarizationId_p.get ();
 }
 
 const Vector<Int> &
@@ -1777,13 +1861,24 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
                 String whichrec=getViP()->ms().keywordSet().asString(modelkey);
                 Record modrec(getViP()->ms().keywordSet().asRecord(whichrec));
-#warning "Uncomment later"
-                ///// state_p->visModelData_p.addModel(modrec, Vector<Int>(1, msId()), *this);
+                state_p->visModelData_p.addModel(modrec, Vector<Int>(1, msId()), VisBuffer2Adapter (this));
             }
         }
 
-#warning "Uncomment later"
-        ///// state_p->visModelData_p.getModelVis(*this);
+        {
+            // Horrible kluge here.  The model field itself is mutable within this class so
+            // that the filling operation can modify it even though the accessor method
+            // is const.  This is a reasonable use of mutable since the user is unaware that
+            // the data is cached and filled on demand.  However, the getModelVis method
+            // repeatedly modifies the VisBuffer that it gets passed and there doesn't appear
+            // to be any easy way to rework it so that it can get by with const access (it
+            // modifies the modelVis field and then passes the modified VisBuffer on down
+            // to other virtual methods which can potentially access the modified model
+            // field.
+
+            VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this));
+            state_p->visModelData_p.getModelVis (vb2a);
+        }
     }
     else{
 
@@ -1815,9 +1910,9 @@ VisBufferImpl2::fillDirection1 (Vector<MDirection>& value) const
   CheckVisIterBase ();
   // fill state_p->feed1_pa cache, antenna, feed and time will be filled automatically
 
-  feed1_pa();
+  feedPa1 ();
 
-  fillDirectionAux (value, antenna1 (), feed1 (), feed1_pa ());
+  fillDirectionAux (value, antenna1 (), feed1 (), feedPa1 ());
 
   value.resize(antenna1 ().nelements()); // could also use nRow()
 }
@@ -1828,69 +1923,74 @@ VisBufferImpl2::fillDirection2 (Vector<MDirection>& value) const
   CheckVisIterBase ();
   // fill state_p->feed1_pa cache, antenna, feed and time will be filled automatically
 
-  feed2_pa();
+  feedPa2 ();
 
-  fillDirectionAux (value, antenna2 (), feed2 (), feed2_pa ());
+  fillDirectionAux (value, antenna2 (), feed2 (), feedPa2 ());
 
   value.resize(antenna2 ().nelements()); // could also use nRow()
 }
 
 void
 VisBufferImpl2::fillDirectionAux (Vector<MDirection>& value,
-                             const Vector<Int> & antenna,
-                             const Vector<Int> &feed,
-			     const Vector<Float> & feedPa) const
+                                  const Vector<Int> & antenna,
+                                  const Vector<Int> &feed,
+                                  const Vector<Float> & feedPa) const
 {
-  value.resize (antenna.nelements()); // could also use nRow()
+    value.resize (antenna.nelements()); // could also use nRow()
 
-  const ROMSPointingColumns & mspc = getViP()->subtableColumns ().pointing();
-  state_p->pointingTableLastRow_p = mspc.pointingIndex (antenna (0),
-                                            time()(0), state_p->pointingTableLastRow_p);
-  if (getViP()->allBeamOffsetsZero() && state_p->pointingTableLastRow_p < 0) {
+    const ROMSPointingColumns & mspc = getViP()->subtableColumns ().pointing();
+    state_p->pointingTableLastRow_p = mspc.pointingIndex (antenna (0),
+                                                          time()(0), state_p->pointingTableLastRow_p);
 
-    // No true pointing information found; use phase center from the field table
+    if (getViP()->allBeamOffsetsZero() && state_p->pointingTableLastRow_p < 0) {
 
-    value.set(phaseCenter());
-    state_p->pointingTableLastRow_p = 0;
-    return;
-  }
+        // No true pointing information found; use phase center from the field table
 
-  for (uInt row = 0; row < antenna.nelements(); ++row) {
-
-    DebugAssert(antenna (row) >= 0 && feed (row) >= 0, AipsError);
-
-    Int pointIndex1 = mspc.pointingIndex(antenna (row), time()(row), state_p->pointingTableLastRow_p);
-
-    if (pointIndex1 >= 0) {
-      state_p->pointingTableLastRow_p = pointIndex1;
-      value(row) = mspc.directionMeas(pointIndex1, timeInterval()(row));
-    } else {
-      value(row) = phaseCenter(); // nothing found, use phase center
+        value.set(phaseCenter());
+        state_p->pointingTableLastRow_p = 0;
+        return;
     }
 
-    if (!getViP()->allBeamOffsetsZero()) {
+    for (uInt row = 0; row < antenna.nelements(); ++row) {
 
-      RigidVector<Double, 2> beamOffset =
-        getViP()->getBeamOffsets()(0, antenna (row), feed (row));
+        DebugAssert(antenna (row) >= 0 && feed (row) >= 0, AipsError);
 
-      if (downcase (getViP()->antennaMounts()(antenna (row))) == "alt-az") {
+        Int pointIndex1 = mspc.pointingIndex(antenna (row), time()(row), state_p->pointingTableLastRow_p);
 
-        SquareMatrix<Double, 2> xform(SquareMatrix<Double, 2>::General);
-        // SquareMatrix' default constructor is a bit strange.
-        // We will probably need to change it in the future
-        Double cpa = cos(feedPa(row));
-        Double spa = sin(feedPa(row));
-        xform(0, 0) = cpa;
-        xform(1, 1) = cpa;
-        xform(0, 1) = -spa;
-        xform(1, 0) = spa;
-        beamOffset *= xform; // parallactic angle rotation
-      }
+        if (pointIndex1 >= 0) {
 
-      // x direction is flipped to convert az-el type frame to ra-dec
-      value(row).shift(-beamOffset(0), beamOffset(1), True);
+            state_p->pointingTableLastRow_p = pointIndex1;
+            value(row) = mspc.directionMeas(pointIndex1, timeInterval()(row));
+        }
+        else {
+
+            value(row) = phaseCenter(); // nothing found, use phase center
+        }
+
+        if (!getViP()->allBeamOffsetsZero()) {
+
+            RigidVector<Double, 2> beamOffset = getViP()->getBeamOffsets()(0, antenna (row),
+                                                                           feed (row));
+
+            if (downcase (getViP()->antennaMounts()(antenna (row))) == "alt-az") {
+
+                SquareMatrix<Double, 2> xform(SquareMatrix<Double, 2>::General);
+
+                Double cpa = cos(feedPa(row));
+                Double spa = sin(feedPa(row));
+
+                xform(0, 0) = cpa;
+                xform(1, 1) = cpa;
+                xform(0, 1) = -spa;
+                xform(1, 0) = spa;
+
+                beamOffset *= xform; // parallactic angle rotation
+            }
+
+            value(row).shift(-beamOffset(0), beamOffset(1), True);
+                // x direction is flipped to convert az-el type frame to ra-dec
+        }
     }
-  }
 }
 
 void
@@ -1939,7 +2039,8 @@ VisBufferImpl2::fillFeedPa2 (Vector <Float> & feedPa) const
 {
   CheckVisIterBase ();
 
-  // fill feed, antenna and time caches, if not filled before
+  // Fill feed, antenna and time caches, if not filled before.
+
   feed2();
   antenna2();
   time();
@@ -1956,20 +2057,17 @@ VisBufferImpl2::fillFeedPaAux (Vector <Float> & feedPa,
 {
   for (uInt row = 0; row < feedPa.nelements(); ++row) {
 
-    const Vector<Float>& antennaPointingAngle = feed_pa (time ()(row));
-        // caching inside ROVisibilityIterator2, if the time doesn't change.
-        // Otherwise we should probably fill both buffers for feed1 and feed2
-        // simultaneously to speed up things.
+    const Vector<Float>& antennaPointingAngle = this->feedPa (time ()(row));
 
     Assert(antenna (row) >= 0 && antenna (row) < (int) antennaPointingAngle.nelements());
 
     feedPa (row) = antennaPointingAngle (antenna (row));
-      //
-      // state_p->feed_pa returns only the first feed position angle
+
+    if (feed (row) != 0){  // Skip when feed(row) is zero
+
+      // feedPa returns only the first feed position angle so
       // we need to add an offset if this row correspods to a
       // different feed
-
-    if (feed (row)){  // Skip when feed(row) is zero
 
       float feedsAngle = getViP()->receptorAngles()(0, antenna (row), feed (row));
       float feed0Angle = getViP()->receptorAngles()(0, antenna (row), 0);
@@ -2033,7 +2131,7 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
     const VisImagingWeight & weightGenerator = getViP()->getImagingWeightGenerator ();
 
     ThrowIf (weightGenerator.getType () == "none",
-             "Bug check... imaging weights not set");
+             "Bug check: Imaging weight generator not set");
 
     value.resize (flag().shape ());
 
@@ -2064,13 +2162,20 @@ VisBufferImpl2::fillJonesC (Vector<SquareMatrix<Complex, 2> >& value) const
   getViP()->jonesC (value);
 }
 
+void
+VisBufferImpl2::fillNAntennas (Int & value) const
+{
+  CheckVisIter ();
+
+  value = getVi()->getNAntennas();
+}
 
 void
 VisBufferImpl2::fillNChannel (Int & value) const
 {
   CheckVisIter ();
 
-  value = visCube().shape ()(1);
+  //value = getVi()->;
 }
 
 void
@@ -2078,7 +2183,7 @@ VisBufferImpl2::fillNCorr (Int & value) const
 {
   CheckVisIter ();
 
-  value  = correlationTypes().nelements();
+  //value  = correlationTypes().nelements();
 }
 
 void
@@ -2086,7 +2191,7 @@ VisBufferImpl2::fillNRow (Int& value) const
 {
   CheckVisIter ();
 
-  value = getViP()->nRows ();
+  //value = getViP()->nRows ();
 }
 
 void
@@ -2111,6 +2216,14 @@ VisBufferImpl2::fillPolFrame (Int& value) const
   CheckVisIter ();
 
   value = getViP()->polFrame ();
+}
+
+void
+VisBufferImpl2::fillPolarizationId (Int& value) const
+{
+  CheckVisIter ();
+
+  value = getViP()->polarizationId ();
 }
 
 void

@@ -1260,7 +1260,8 @@ VisibilityIteratorReadImpl2::configureNewSubchunk ()
 
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
-                                isNewSpectralWindow (), subchunk_p);
+                                isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
+                                channelSelector_p->getNFrequencies(), nPolarizations_p);
 
 }
 
@@ -3145,10 +3146,10 @@ VisibilityIteratorWriteImpl2::putModel(const RecordInterface& rec, Bool iscompon
 //  fields.resize(nfields, True);
 //  Int msid = getReadImpl()->msId();
 //
-//  Vector<Int> spws =  getReadImpl()->msChannels_p.spw_p[msid];
-//  Vector<Int> starts = getReadImpl()->msChannels_p.start_p[msid];
-//  Vector<Int> nchan = getReadImpl()->msChannels_p.width_p[msid];
-//  Vector<Int> incr = getReadImpl()->msChannels_p.inc_p[msid];
+//  Vector<Int> spws =  getReadImpl()->subtableColumns().spw_p[msid];
+//  Vector<Int> starts = getReadImpl()->subtableColumns().start_p[msid];
+//  Vector<Int> nchan = getReadImpl()->subtableColumns().width_p[msid];
+//  Vector<Int> incr = getReadImpl()->subtableColumns().inc_p[msid];
 //
 //  VisModelData::putModel(getReadImpl()->ms(), rec, fields, spws, starts, nchan, incr,
 //                         iscomponentlist, incremental);

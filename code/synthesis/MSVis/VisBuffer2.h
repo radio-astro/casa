@@ -125,22 +125,23 @@ public:
     // to confuse VisBuffer users.
 
 
-    // Copies all of the components (or just the one in the cache) from
-    // the specified VisBuffer into this one.
+    // Copies all of the components from the specified VisBuffer into this one.
+    // Uncached values will be cleared in this VB.
 
-    virtual void copy (const VisBuffer2 & other, Bool copyCachedDataOnly = True) = 0;
+    virtual void copy (const VisBuffer2 & other, Bool fetchIfNeeded) = 0;
 
     // Copies the specified components (or just the one in the cache) from
     // the specified VisBuffer into this one.
 
     virtual void copyComponents (const VisBuffer2 & other,
 				 const VisBufferComponents2 & components,
-				 Bool copyCachedDataOnly = False) = 0;
+				 Bool fetchIfNeeded = True) = 0;
 
     // Copies the coordinate components from the specified VisBuffer into this one.
     // Depending on includeDirections the direction related ones are copied or not.
 
-    virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections) = 0;
+    virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
+                                    Bool fetchIfNeeded = True) = 0;
 
     // For attached VBs this returns the VI the VB is attached to.  For free
     // VBs this method returns False.
@@ -384,21 +385,25 @@ public:
     // Calcuates the parallactic angle for the first receptor of
     // each antenna at the specified time.
 
-    virtual Vector<Float> feed_pa(Double time) const = 0; // [nR]
+    virtual Vector<Float> feedPa(Double time) const = 0; // [nR]
 
     // Calculates the parallactic angle for feed 0 of the
     // row's Antenna1.
 
-    virtual const Vector<Float> & feed1_pa () const = 0; // [nR]
+    virtual const Vector<Float> & feedPa1 () const = 0; // [nR]
 
     // Calculates the parallactic angle for feed 0 of the
     // row's Antenna2.
 
-    virtual const Vector<Float> & feed2_pa () const = 0; // [nR]
+    virtual const Vector<Float> & feedPa2 () const = 0; // [nR]
 
     // Returns the hour angle of the array at the specified time.
 
     virtual Double hourang(Double time) const = 0;
+
+    virtual Int nAntennas () const = 0;
+
+    virtual Int nChannels () const = 0;
 
     // Returns the number of correlations along the visCube
     // correlation axis.
@@ -428,6 +433,8 @@ public:
 
     virtual Int polarizationFrame () const = 0;
 
+    virtual Int polarizationId () const = 0;
+
     // The returned Vector serves as a map between the rows in
     // the VisBuffer and the row IDs in the underlying MS main
     // virtual table:  mainTableID [i] = rowIds () [ i] = 0;
@@ -444,7 +451,8 @@ protected:
 
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
-                                       Bool isNewSpectralWindow, const SubChunkPair2 & subchunk) = 0;
+                                       Bool isNewSpectralWindow, const SubChunkPair2 & subchunk,
+                                       Int nRows, Int nChannels, Int nCorrelations) = 0;
     virtual void invalidate() = 0;
 
 

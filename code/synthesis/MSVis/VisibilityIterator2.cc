@@ -83,106 +83,6 @@ FrequencySelection::getFrameOfReference () const
     return referenceFrame_p;
 }
 
-
-FrequencySelections::FrequencySelections ()
-{}
-
-FrequencySelections::FrequencySelections (const FrequencySelections & other)
-{
-    for (Selections::const_iterator s = other.selections_p.begin();
-         s != other.selections_p.end(); s++){
-        selections_p.push_back ((* s)->clone());
-    }
-
-    filterWindow_p = other.filterWindow_p;
-    selectedWindows_p = other.selectedWindows_p;
-}
-
-FrequencySelections::~FrequencySelections ()
-{
-    for (Selections::const_iterator s = selections_p.begin();
-         s != selections_p.end(); s++){
-        delete (* s);
-    }
-}
-
-void
-FrequencySelections::add (const FrequencySelection & selection)
-{
-    if (! selections_p.empty()){
-        ThrowIf (getFrameOfReference() != selection.getFrameOfReference(),
-                 utilj::format ("Frequency selection #%d has incompatible frame of reference %d:%s "
-                                "(!= %d:%s)",
-                                selections_p.size() + 1,
-                                selection.getFrameOfReference(),
-                                FrequencySelection::frameName (selection.getFrameOfReference()).c_str(),
-                                getFrameOfReference(),
-                                FrequencySelection::frameName (getFrameOfReference()).c_str()));
-    }
-
-    selections_p.push_back (selection.clone());
-    Int msIndex = selections_p.size() - 1;
-    set<int> windows = selection.getSelectedWindows();
-
-    for (set<int>::const_iterator w = windows.begin(); w != windows.end(); w++){
-        selectedWindows_p.insert (make_pair (msIndex, * w));
-    }
-
-}
-
-FrequencySelections *
-FrequencySelections::clone () const
-{
-    return new FrequencySelections (* this);
-}
-
-const FrequencySelection &
-FrequencySelections::get (Int msIndex) const
-{
-    if (selections_p.empty()){
-        return FrequencySelectionUsingChannels ();
-    }
-
-    ThrowIf (msIndex < 0 || msIndex >= (int) selections_p.size(),
-             String::format ("MS index, %d, out of bounds [0,%d]", msIndex, selections_p.size() - 1));
-
-    return * selections_p [msIndex];
-}
-
-
-Int
-FrequencySelections::getFrameOfReference () const
-{
-    if (selections_p.empty()){
-        return FrequencySelection::ByChannel;
-    }
-    else {
-        return selections_p.front()->getFrameOfReference();
-    }
-}
-
-Bool
-FrequencySelections::isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const
-{
-    // Empty selections means everything is selected
-
-    if (selections_p.empty()){
-        return True;
-    }
-
-    SelectedWindows::const_iterator swi =
-        selectedWindows_p.find (make_pair (msIndex, spectralWindowId));
-
-    return swi != selectedWindows_p.end();
-}
-
-
-Int
-FrequencySelections::size () const
-{
-    return (Int) selections_p.size();
-}
-
 void
 FrequencySelectionUsingChannels::add (Int spectralWindow, Int firstChannel,
                                       Int nChannels, Int increment)
@@ -357,7 +257,104 @@ FrequencySelectionUsingFrame::toString () const
     return s;
 }
 
+FrequencySelections::FrequencySelections ()
+{}
 
+FrequencySelections::FrequencySelections (const FrequencySelections & other)
+{
+    for (Selections::const_iterator s = other.selections_p.begin();
+         s != other.selections_p.end(); s++){
+        selections_p.push_back ((* s)->clone());
+    }
+
+    filterWindow_p = other.filterWindow_p;
+    selectedWindows_p = other.selectedWindows_p;
+}
+
+FrequencySelections::~FrequencySelections ()
+{
+    for (Selections::const_iterator s = selections_p.begin();
+         s != selections_p.end(); s++){
+        delete (* s);
+    }
+}
+
+void
+FrequencySelections::add (const FrequencySelection & selection)
+{
+    if (! selections_p.empty()){
+        ThrowIf (getFrameOfReference() != selection.getFrameOfReference(),
+                 utilj::format ("Frequency selection #%d has incompatible frame of reference %d:%s "
+                                "(!= %d:%s)",
+                                selections_p.size() + 1,
+                                selection.getFrameOfReference(),
+                                FrequencySelection::frameName (selection.getFrameOfReference()).c_str(),
+                                getFrameOfReference(),
+                                FrequencySelection::frameName (getFrameOfReference()).c_str()));
+    }
+
+    selections_p.push_back (selection.clone());
+    Int msIndex = selections_p.size() - 1;
+    set<int> windows = selection.getSelectedWindows();
+
+    for (set<int>::const_iterator w = windows.begin(); w != windows.end(); w++){
+        selectedWindows_p.insert (make_pair (msIndex, * w));
+    }
+
+}
+
+FrequencySelections *
+FrequencySelections::clone () const
+{
+    return new FrequencySelections (* this);
+}
+
+const FrequencySelection &
+FrequencySelections::get (Int msIndex) const
+{
+    if (selections_p.empty()){
+        return defaultSelection_p;
+    }
+
+    ThrowIf (msIndex < 0 || msIndex >= (int) selections_p.size(),
+             String::format ("MS index, %d, out of bounds [0,%d]", msIndex, selections_p.size() - 1));
+
+    return * selections_p [msIndex];
+}
+
+
+Int
+FrequencySelections::getFrameOfReference () const
+{
+    if (selections_p.empty()){
+        return FrequencySelection::ByChannel;
+    }
+    else {
+        return selections_p.front()->getFrameOfReference();
+    }
+}
+
+Bool
+FrequencySelections::isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const
+{
+    // Empty selections means everything is selected
+
+    if (selections_p.empty()){
+        return True;
+    }
+
+    SelectedWindows::const_iterator swi =
+        selectedWindows_p.find (make_pair (msIndex, spectralWindowId));
+
+    return swi != selectedWindows_p.end();
+}
+
+
+Int
+FrequencySelections::size () const
+{
+    return (Int) selections_p.size();
+}
 
 
 ROVisibilityIterator2::ROVisibilityIterator2(const MeasurementSet& ms,

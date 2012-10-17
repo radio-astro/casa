@@ -17,6 +17,8 @@ namespace casa {
 
     class MeasurementSet;
     class NewMSSimulator;
+    class ROVisibilityIterator;
+
 
     namespace vi {
 
@@ -570,12 +572,38 @@ private:
 
 };
 
+class PerformanceComparator {
+
+public:
+
+    PerformanceComparator (const String & ms);
+    void compare ();
+
+protected:
+
+    void compareOne (ROVisibilityIterator * oldVi,
+                     ROVisibilityIterator2 * newVi,
+                     Int nSweeps);
+
+    ROVisibilityIterator * createViOld ();
+    ROVisibilityIterator2 * createViNew ();
+
+    Double sweepViOld (ROVisibilityIterator & vi);
+    Double sweepViNew (ROVisibilityIterator2 & vi);
+
+private:
+
+    String ms_p;
+
+};
+
 #define TestErrorIf(c,m) {if (c) ThrowTestError (m);}
 
 #define ThrowTestError(m) \
     throw TestError (m, __func__, __FILE__, __LINE__);
 
 class TestError : public std::exception {
+
 public:
 
     TestError (const String & message, const String & function,

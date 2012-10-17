@@ -826,11 +826,14 @@ Tester::doTests ()
 
     try {
 
-        doTest<BasicChannelSelection> ();
+        //// doTest<BasicChannelSelection> ();
 
-        doTest<BasicMutation> ();
+        //// doTest<BasicMutation> ();
 
-        doTest<FrequencyChannelSelection> ();
+        //// doTest<FrequencyChannelSelection> ();
+
+        PerformanceComparator pc ("3c391_ctm_mosaic_spw0.ms");
+        pc.compare();
     }
     catch (TestError & e){
 
@@ -1413,6 +1416,168 @@ TheWidget::noMoreData (ROVisibilityIterator2 & vi, VisBuffer2 * vb, int nRows)
 TheWidget::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
 {
 }*/
+
+PerformanceComparator::PerformanceComparator (const String & ms)
+: ms_p (ms)
+{}
+
+void
+PerformanceComparator::compare ()
+{
+    printf ("\n========== Performance Comparison Begin =========\n");
+
+    MeasurementSet ms (ms_p);
+
+    printf ("--- MeasurementSet: %s\n", ms_p.c_str());
+
+    Block<int> sortColumns;
+
+    ROVisibilityIterator oldVi (ms, sortColumns, True);
+
+    ROVisibilityIterator2 newVi (ms, sortColumns);
+
+    printf ("\n--- Default channel selection ---\n");
+
+    //////compareOne (& oldVi, & newVi, 11);
+
+    printf ("\n--- First channel selection ---\n");
+
+    Block< Vector<Int> > groupSize (1, Vector<Int> (1, 1));
+    Block< Vector<Int> > spectralWindow (1, Vector<Int> (1, 0));
+    Block< Vector<Int> > start (1, Vector<Int> (1, 0));
+    Block< Vector<Int> > increment (1, Vector<Int> (1, 1));
+    Block< Vector<Int> > count (1, Vector<Int> (1, 1));
+
+    oldVi.selectChannel (groupSize, start, count, increment, spectralWindow);
+
+    FrequencySelections fs;
+    FrequencySelectionUsingChannels fsuc;
+    fsuc.add (0, 0, 1);
+    fs.add (fsuc);
+
+    newVi.setFrequencySelection (fs);
+
+    compareOne (& oldVi, & newVi, 1);
+
+    printf ("\n========== Performance Comparison Complete =========\n");
+
+}
+
+
+void
+PerformanceComparator::compareOne (ROVisibilityIterator * oldVi,
+                                   ROVisibilityIterator2 * newVi,
+                                   int nSweeps)
+{
+    using namespace utilj;
+
+    IoStatistics oldIo1;
+    ThreadTimes oldTime1 = ThreadTimes::getTime ();
+
+    try {
+
+        for (int i = 0; i < nSweeps; i++){
+            Double d = sweepViOld (* oldVi);
+            printf ("... old sweep %d completed. (%f)\n", i, d);
+        }
+    }
+    catch (AipsError & e){
+        printf ("*** Caught exception while sweeping oldVi: %s\n", e.what());
+        throw;
+    }
+
+    ThreadTimes oldTime2 = ThreadTimes::getTime ();
+    IoStatistics oldIo2;
+
+    IoStatistics newIo1;
+    ThreadTimes newTime1 = ThreadTimes::getTime ();
+
+    try{
+        for (int i = 0; i < nSweeps; i++){
+            Double d = sweepViNew (* newVi);
+            printf ("... new sweep %d completed. (%f)\n", i, d);
+        }
+    }
+    catch (AipsError & e){
+        printf ("*** Caught exception while sweeping newVi: %s\n", e.what());
+        throw;
+    }
+
+    ThreadTimes newTime2 = ThreadTimes::getTime ();
+    IoStatistics newIo2;
+
+    IoStatistics oldIo = oldIo2 - oldIo1;
+    IoStatistics newIo = newIo2 - newIo1;
+    DeltaThreadTimes oldDt = oldTime2 - oldTime1;
+    DeltaThreadTimes newDt = newTime2 - newTime1;
+
+    printf ("--- Stats ---  nSweeps=%d\n\n", nSweeps);
+    printf ("Old VI: %s; %s\n", oldIo.report ().c_str(), oldDt.formatStats().c_str());
+    printf ("New VI: %s; %s\n", newIo.report ().c_str(), newDt.formatStats().c_str());
+    IoStatistics ratioIo = newIo / oldIo;
+    printf ("old/new: %s ; elapsed: %6.2f %% cpu: %6.2f %%\n", ratioIo.report (100, "%").c_str(),
+            newDt.elapsed () / oldDt.elapsed() * 100,
+            newDt.cpu() / oldDt.cpu() * 100);
+
+}
+
+Double
+PerformanceComparator::sweepViNew (ROVisibilityIterator2 & vi)
+{
+    VisBuffer2 * vb = vi.getVisBuffer();
+    Double sum = 0;
+
+    for (vi.originChunks (); vi.moreChunks(); vi.nextChunk()){
+
+        for (vi.origin(); vi.more(); vi++){
+
+            Int nRows = vb->nRows();
+            Int nChannels = vb->nChannels();
+            Int nCorrelations = vb->nCorrelations();
+
+            for (Int row = 0; row < nRows; row ++){
+                for (Int channel = 0; channel < nChannels; channel ++){
+                    for (Int correlation = 0; correlation < nCorrelations; correlation ++){
+                        Complex c = vb->visCube ()(correlation, channel, row);
+                        c = c * c;
+                        sum += c.real();
+                    }
+                }
+            }
+        }
+    }
+
+    return sum;
+}
+
+Double
+PerformanceComparator::sweepViOld (ROVisibilityIterator & vi)
+{
+    VisBuffer vb (vi);
+    Double sum = 0;
+
+    for (vi.originChunks (); vi.moreChunks(); vi.nextChunk()){
+
+        for (vi.origin(); vi.more(); vi++){
+
+            Int nRows = vb.nRow();
+            Int nChannels = vb.nChannel();
+            Int nCorrelations = vb.nCorr();
+
+            for (Int row = 0; row < nRows; row ++){
+                for (Int channel = 0; channel < nChannels; channel ++){
+                    for (Int correlation = 0; correlation < nCorrelations; correlation ++){
+                        Complex c = vb.visCube ()(correlation, channel, row);
+                        c = c * c;
+                        sum += c.real();
+                    }
+                }
+            }
+        }
+    }
+
+    return sum;
+}
 
 } // end namespace casa
 } // end namespace vi

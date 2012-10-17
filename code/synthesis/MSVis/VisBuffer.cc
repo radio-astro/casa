@@ -1973,6 +1973,7 @@ Vector<Int>& VisBuffer::fillCorrType()
 
 // calling fillFeed1_pa or fillFeed2_pa will fill antenna, feed
 // and time caches automatically
+
 Vector<Float>& VisBuffer::fillFeed1_pa()
 {
   CheckVisIterBase ();
@@ -1986,6 +1987,7 @@ Vector<Float>& VisBuffer::fillFeed1_pa()
 
   // now actual calculations
   for (uInt row = 0; row < feed1_pa_p.nelements(); ++row) {
+
     const Vector<Float>& ant_pa = feed_pa(time_p(row)); // caching inside
     // ROVisibilityIterator, if the time doesn't change. Otherwise
     // we should probably fill both buffers for feed1 and feed2

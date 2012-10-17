@@ -179,49 +179,6 @@ private:
 
 ///////////////////////////////////////////////////////////////////
 //
-//    FrequencySelections class
-//
-//    A FrequenceSelections object is a collection of FrequencySelection objects.
-//    It is intended to allow the user to provide a frequency selection per
-//    MS when the VisibilityIterator is sweeping multiple MSs.  All selections
-//    included in the collection must have the same frame of reference; an
-//    exception will be thrown when attempting to add a frame with a different
-//    frame of reference.
-
-class FrequencySelections {
-public:
-
-    FrequencySelections ();
-    FrequencySelections (const FrequencySelections & other);
-    ~FrequencySelections ();
-
-    void add (const FrequencySelection & selection);
-    FrequencySelections * clone () const;
-    void filterToSpectralWindow (Int spectralWindowId);
-    const FrequencySelection & get (Int msIndex) const;
-    Int getFrameOfReference () const;
-    Bool isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const;
-    Int size () const;
-
-//**********************************************************************
-// Internal methods below this line
-//**********************************************************************
-
-
-private:
-
-    typedef std::set<pair<Int, Int> > SelectedWindows;
-
-    mutable Int filterWindow_p;
-    SelectedWindows selectedWindows_p;
-
-    typedef std::vector<FrequencySelection *> Selections;
-    Selections selections_p;
-};
-
-
-///////////////////////////////////////////////////////////////////
-//
 // FrequencySelectionUsingChannels class
 //
 // Selects sets of channels from a single MS.  The selection is created
@@ -333,6 +290,52 @@ private:
     Elements elements_p;
     mutable Elements filtered_p;
 };
+
+
+///////////////////////////////////////////////////////////////////
+//
+//    FrequencySelections class
+//
+//    A FrequenceSelections object is a collection of FrequencySelection objects.
+//    It is intended to allow the user to provide a frequency selection per
+//    MS when the VisibilityIterator is sweeping multiple MSs.  All selections
+//    included in the collection must have the same frame of reference; an
+//    exception will be thrown when attempting to add a frame with a different
+//    frame of reference.
+
+class FrequencySelections {
+public:
+
+    FrequencySelections ();
+    FrequencySelections (const FrequencySelections & other);
+    ~FrequencySelections ();
+
+    void add (const FrequencySelection & selection);
+    FrequencySelections * clone () const;
+    void filterToSpectralWindow (Int spectralWindowId);
+    const FrequencySelection & get (Int msIndex) const;
+    Int getFrameOfReference () const;
+    Bool isSpectralWindowSelected (Int msIndex, Int spectralWindowId) const;
+    Int size () const;
+
+//**********************************************************************
+// Internal methods below this line
+//**********************************************************************
+
+
+private:
+
+    typedef std::set<pair<Int, Int> > SelectedWindows;
+
+    const FrequencySelectionUsingChannels defaultSelection_p;
+    mutable Int filterWindow_p;
+    SelectedWindows selectedWindows_p;
+
+    typedef std::vector<FrequencySelection *> Selections;
+    Selections selections_p;
+};
+
+
 
 
 ///////////////////////////////////////////////////////////////////
