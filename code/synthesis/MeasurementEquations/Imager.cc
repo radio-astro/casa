@@ -1881,6 +1881,14 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   if(padding>=1.0) {
     padding_p=padding;
   }
+
+  // Check if gridfunction is set to gauss or gjinc for non single dish imaging
+  if (ftmachine_p!="sd" 
+      && (gridfunction_p=="gauss" || gridfunction_p=="gjinc")) {
+    os << LogIO::SEVERE
+       << "Grid function " << gridfunction << " is available only for single dish imaging" << LogIO::EXCEPTION;
+  }
+
   // Destroy the FTMachine
   if(ft_p) {delete ft_p; ft_p=0;}
   if(gvp_p) {delete gvp_p; gvp_p=0;}
