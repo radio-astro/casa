@@ -3,7 +3,9 @@
 #
 # v1.0: 2012.02.13, M. Caillat
 #
+import os
 from taskinit import *
+
 def asdmsummary(asdm=None):
     """Prints a description of the content of an SDM dataset to the CASA logger.
 
@@ -16,7 +18,8 @@ def asdmsummary(asdm=None):
     try:
         casalog.origin('asdmsummary')
         theexecutable = 'asdmSummary'
-        execute_string = theexecutable + ' ' + '--logfile \"' +casalog.logfile() +'\"'+ ' ' + asdm
+#        execute_string = theexecutable + ' ' + '--logfile \"' +casalog.logfile() +'\"'+ ' ' + asdm
+        execute_string = theexecutable + ' '  + asdm
         casalog.post('Running ' + execute_string)
         exitcode = os.system(execute_string) >> 8
         if exitcode != 0 :

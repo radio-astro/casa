@@ -81,6 +81,7 @@ atmosphere = casac.atmosphere()
 
 from accum import  accum
 from applycal import  applycal
+from asdmsummary import  asdmsummary
 from autoclean import  autoclean
 from bandpass import  bandpass
 from blcal import  blcal
