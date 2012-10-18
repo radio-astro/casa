@@ -63,6 +63,14 @@ void QtPlotSettings::scroll(int dx, int dy){
     maxY += dy * stepY;
 }
 
+pair<double,double> QtPlotSettings::getZoomOutY( double zoomFactor ) const {
+	double prevSpanY = spanY();
+	double minY = this->minY - zoomFactor * prevSpanY;
+	double maxY = this->maxY + zoomFactor * prevSpanY;
+	pair<double,double> percentageSpan( minY, maxY );
+	return percentageSpan;
+}
+
 void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits ){
 	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
@@ -74,10 +82,21 @@ void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits, const 
 			originalMaxX = maxX[i];
 		}
 	}
-	double prevSpanY = spanY();
-	minY = minY - zoomFactor * prevSpanY;
-	maxY = maxY + zoomFactor * prevSpanY;
 	adjust( topUnits, bottomUnits );
+}
+
+pair<double,double> QtPlotSettings::getZoomInY( double zoomFactor ) const {
+	double prevSpanY = spanY();
+	double minY = this->minY + zoomFactor * prevSpanY;
+	double maxY = this->maxY - zoomFactor * prevSpanY;
+	pair<double,double> percentageSpan( minY,maxY);
+	return percentageSpan;
+}
+
+void QtPlotSettings::zoomY( double minY, double maxY ){
+	this->minY = minY;
+	this->maxY = maxY;
+	adjustAxis( minY, maxY, numYTicks );
 }
 
 void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits ){
@@ -91,11 +110,10 @@ void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits, const Q
 			originalMaxX = maxX[i];
 		}
 	}
-	double prevSpanY = spanY();
-	minY = minY + zoomFactor * prevSpanY;
-	maxY = maxY - zoomFactor * prevSpanY;
 	adjust( topUnits, bottomUnits );
 }
+
+
 
 void QtPlotSettings::adjust( const QString& topUnits, const QString& bottomUnits){
 	//Adjust the bottom axis allowing it to set the number of ticks.

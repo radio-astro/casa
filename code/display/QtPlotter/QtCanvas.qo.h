@@ -91,6 +91,7 @@ public:
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 	void setFrameMarker( float framePositionX );
+	void setZoomRectColor( QColor color );
 
 	CurveData getCurveData(int);
 	ErrorData getCurveError(int id);
@@ -129,10 +130,7 @@ public:
 	QSize minimumSizeHint() const;
 	QSize sizeHint() const;
 	~QtCanvas();
-	void increaseCurZoom();
-	int getCurZoom();
-	int getZoomStackSize();
-	void setZoomRectColor( QColor color );
+
 
 	void setTitle(const QString &text, int fontSize = 13,const QString &font = FONT_NAME);
 	QString getTitle(){return title.text;};
@@ -207,6 +205,9 @@ public:
 	QString getDisplayYUnits();
 	void setDisplayYUnits( const QString& displayUnits );
 
+	int getCurZoom();
+	int getZoomStackSize();
+
 public slots:
 	void zoomIn();
 	void zoomOut();
@@ -244,8 +245,7 @@ protected:
 	void drawWelcome(QPainter *painter);
 	void drawCurves(QPainter *painter);
 	void drawxRange(QPainter *painter);
-	void defaultZoomIn();
-	void defaultZoomOut();
+
 
 private slots:
 	void deleteSelectedAnnotation();
@@ -255,6 +255,13 @@ private slots:
 	void findRedshift();
 
 private:
+
+	//Zoom functionality
+	void zoomYBasedOnX( QtPlotSettings& settings, double zoomFactor, bool zoomIn );
+	pair<double,double> getRangeFor( double zoomFactor, bool zoomIn, double minX, double maxX );
+	void increaseCurZoom();
+	void defaultZoomIn();
+	void defaultZoomOut();
 
 	/**
 	 * Stores the curve information for later plotting.

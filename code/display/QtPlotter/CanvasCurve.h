@@ -28,6 +28,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <vector>
+#include <pair.h>
 #include <QColor>
 #include <QString>
 
@@ -59,7 +60,7 @@ public:
 			const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const;
 	void getMinMax(Double& xmin, Double& xmax, Double& ymin,
 			Double& ymax, bool plotError ) const;
-
+	pair<double,double> getRangeFor(double xMin, double xMax, Bool& exists );
 	void scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits );
 	double convertValue( double value, double freqValue, const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits);
 	virtual ~CanvasCurve();
