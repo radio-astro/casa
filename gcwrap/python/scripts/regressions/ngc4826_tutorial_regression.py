@@ -1436,13 +1436,13 @@ model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 # jiggled around a fair bit.  The median is _not_ affected by the two spurious
 # blobs at 501.64 km/s, though.  (Verified by doing imstat with a tight polygon
 # region.)
-clean_offsrc_rms = 0.0481
-clean_offline_rms = 0.04938
+clean_offsrc_rms = 0.0604
+clean_offline_rms = 0.0625
 clean_momentzero_rms = 14.05
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
-model_pbcor_sum = 66.57
+model_pbcor_sum = 72.72
 
 ## # RR, 3/11/2011 - The rmses went up, but not to their historical maxima.  The
 ## # model_pbcor_sum went down, but not to its historical minimum.  Nobody seems

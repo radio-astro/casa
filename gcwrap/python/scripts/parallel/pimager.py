@@ -543,13 +543,13 @@ class pimager():
     def pcontmt(self, msname=None, imagename=None, imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
-              majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
+              majorcycles=-1, cyclefactor=1.5, niter=1000, npercycle=100, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=1, savemodel=False, nterms=2):
         if(nterms==1):
             self.pcont(msname=msname, imagename=imagename, imsize=imsize, 
               pixsize=pixsize, phasecenter=phasecenter, field=field, spw=spw, stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets,  
-              majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, 
+              majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, npercycle=npercycle, gain=gain, 
               threshold=threshold, alg=alg, scales=scales, weight=weight, robust=robust, 
               npixels=npixels,  uvtaper=uvtaper, outertaper=outertaper, 
               timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
@@ -689,11 +689,18 @@ class pimager():
                 if (interactive and (intmask==0)):
                     if(maj==0):
                         ia.removefile(maskimage)
-                    intmask=im.drawmask(residuals[0],maskimage);
+                    retdraw=im.drawmask(residuals[0],maskimage, niter=niterpercycle, npercycle=npercycle, threshold=threshold);
+                    intmask=retdraw['stat']
+                    ####The user may want to change these in the gui
+                    threshold=retdraw['threshold']
+                    niterpercycle=retdraw['niter']
+                    npercycle=retdraw['npercycle']
                     print 'intmask', intmask
                     if(intmask==1):
+                        interactive=False
                         im.done()
                     if(intmask==2):
+                        interactive=False
                         break;
                 else:
                     if (maj==0):
@@ -741,8 +748,9 @@ class pimager():
                 donemaj = not needclean
 
                 if(needclean):
+                    elniter=npercycle if(interactive) else niterpercycle
                     retval = dc.mtclean(residuals=residuals, models=models, 
-                                        niter=niterpercycle, gain=gain, threshold=threshold, 
+                                        niter=elniter, gain=gain, threshold=newthresh, 
                                         displayprogress=True, mask=maskimage)
                     print 'mtclean return', retval
                     if(majorcycles <=1):
@@ -825,7 +833,7 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='',  
-              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, npercycle=100, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=1, savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
@@ -1025,11 +1033,18 @@ class pimager():
             if (interactive and (intmask==0)):
                 if(maj==0):
                     ia.removefile(maskimage)
-                intmask=im.drawmask(residual,maskimage);
+                retdraw=im.drawmask(imagename+'.residual',maskimage, niter=niterpercycle, npercycle=npercycle, threshold=threshold);
+                intmask=retdraw['stat']
+                    ####The user may want to change these in the gui
+                threshold=retdraw['threshold']
+                niterpercycle=retdraw['niter']
+                npercycle=retdraw['npercycle']
                 print 'intmask', intmask
                 if(intmask==1):
+                    interactive=False
                     im.done()
                 if(intmask==2):
+                    interactive=False
                     break;
             else:
                 if (maj==0):
@@ -1084,7 +1099,8 @@ class pimager():
                 casalog.post('Deconvolving for major cycle '+str(maj))  
                 #incremental clean...get rid of tempmodel
                 shutil.rmtree(tempmodel, True)
-                rundecon='retval=a.cleancont(alg="'+str(alg)+'", thr="'+str(newthresh)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
+                elniter=npercycle if(interactive) else niterpercycle
+                rundecon='retval=a.cleancont(alg="'+str(alg)+'", thr="'+str(newthresh)+'", scales='+ str(scales)+', niter='+str(elniter)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
                 print 'Deconvolution command', rundecon
                 out[0]=c.odo(rundecon,0)
                 over=False
@@ -1379,7 +1395,7 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='', 
-              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, npercycle=100, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0],
               mode='channel', start=0, nchan=1, step=1, restfreq='', stokes='I', weight='natural', 
               robust=0.0, npixels=0,uvtaper=False, outertaper=[], timerange='', uvrange='',baselines='', scan='', observation='',  pbcorr=False,  minpb=0.2,
               imagetilevol=100000,
@@ -1428,13 +1444,8 @@ class pimager():
             ###for now if oldthresh is 0 that is niter is determines end we will do one interactive loop
             notdone=True
             while(notdone):
-                myim=casac.imager()
-                retintval=myim.drawmask(residual, maskimage)
-                myim.done()
-                if(retintval==2):
-                    notdone=False
-                    break
                 
+     
                 ia.open(residual)
                 residstat=ia.statistics()
                 ia.done()
@@ -1442,7 +1453,19 @@ class pimager():
                 newthresh=psfoutermax*cyclefactor*maxresid
                 if(newthresh < oldthresh):
                     newthresh=oldthresh
-                
+                myim=casac.imager()
+                retdraw=myim.drawmask(imagename+'.residual',maskimage, niter=niter, npercycle=npercycle, threshold=qa.tos(qa.quantity(newthresh, "Jy")));
+                myim.done()
+                retintval=retdraw['stat']
+                    ####The user may want to change these in the gui
+                somethresh=qa.convert(qa.quantity(retdraw['threshold'], "Jy"), "Jy")['value']
+                if(somethresh < newthresh):
+                    newthresh=somethresh
+                niter=retdraw['niter']
+                npercycle=retdraw['npercycle']
+                if(retintval==2):
+                    notdone=False
+                    break
                 if(retintval==1):
                     ###The user has decided to be done with interactive
                     notdone=False
@@ -1451,7 +1474,7 @@ class pimager():
                 threshold=newthresh                
                 retval=self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
                            field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
-                           numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, gain=gain, threshold=threshold, alg=alg, scales=scales,
+                           numcpuperhost=numcpuperhost, majorcycles=majorcycles, cyclefactor=cyclefactor, niter=npercycle, gain=gain, threshold=threshold, alg=alg, scales=scales,
                            mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
                            robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
                            observation=observation,  pbcorr=pbcorr, minpb=minpb, imagetilevol=imagetilevol,
@@ -1467,8 +1490,12 @@ class pimager():
             npercycle=niter/majorcycles
             for k in range(majorcycles):
                 myim=casac.imager()
-                retval=myim.drawmask(residual, maskimage)
+                retdraw=myim.drawmask(imagename+'.residual',maskimage, niter=niter, npercycle=npercycle, threshold=threshold);
                 myim.done()
+                niter=retdraw['niter']
+                npercycle=retdraw['npercycle']
+                threshold=retdraw['threshold']
+                retval=retdraw['stat']
                 if(retval==2):
                     break
                 self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
@@ -1685,6 +1712,7 @@ class pimager():
 ##############
                 chanind[k]=chancounter
                 chancounter=chancounter+1
+                time.sleep(1) ###just to avoid an i/o bottle neck
 ###############
         retval={}
         retval['converged']=True
@@ -1723,6 +1751,7 @@ class pimager():
                             print 'command is ', runcomm
                             print 'processor ', k
                             out[k]=self.c.odo(runcomm,k)
+                            time.sleep(1)
 ###################
                             chanind[k]=chancounter
                             chancounter+=1
