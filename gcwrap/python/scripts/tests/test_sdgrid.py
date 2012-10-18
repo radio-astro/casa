@@ -44,11 +44,13 @@ class sdgrid_unittest_base(object):
     def nonzero(self,ref,index):
         refpix=ref[1]
         resultpix=index[1]
+        msglt = 'There are nonzero pixels that should be zero'
+        msggt = 'There are zero pixels that should be nonzero'
         self.assertEqual(len(refpix),len(resultpix),
-                         msg='There are nonzero pixels that should be zero')
+                         msg=(msglt if len(refpix) < len(resultpix) else msggt))
         for i in xrange(len(refpix)):
             self.assertEqual(refpix[i],resultpix[i],
-                             msg='There are nonzero pixels that should be zero')
+                             msg='Index doesn\'t match: ref %s, result %s'%(refpix[i],resultpix[i]))
 
     def generateNonzeroPix(self,npol,npix,width):
         index=[]
