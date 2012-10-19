@@ -302,9 +302,9 @@ function set_DEBUGGER {
 }
 
 
-function set_PGPLOT_DIR {
+# function set_PGPLOT_DIR {
     # If it is already set, do not change it.
-    if [ "x$PGPLOT_DIR" = "x" ]; then
+    # if [ "x$PGPLOT_DIR" = "x" ]; then
         # echo "TBD: set_PGPLOT_DIR"
         # TODO: Things seem to run OK without setting PGPLOT_DIR.  Consider deleting this code.
         #    local result=""
@@ -328,8 +328,8 @@ function set_PGPLOT_DIR {
         #        echo
         #        echo
         #    fi
-    fi
-}
+    # fi
+# }
 
 function set_PYTHON_EXECUTABLE {
     # Ignore any previous values.
@@ -465,7 +465,7 @@ set_A_ARCH
 set_A_ROOT
 set_A_SITE
 set_CASAPATH
-set_PGPLOT_DIR
+# set_PGPLOT_DIR
 
 
 #
