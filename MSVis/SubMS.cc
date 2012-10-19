@@ -30,6 +30,7 @@
 //#define COPYTIMER
 
 #include <synthesis/MSVis/SubMS.h>
+#include <asdmstman/AsdmStMan.h>
 #include <ms/MeasurementSets/MSSelection.h>
 //#include <ms/MeasurementSets/MSTimeGram.h>
 //#include <tables/Tables/ExprNode.h>
@@ -1208,18 +1209,21 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                                  const Int nCorr, const String& telescop,
                                  const Vector<MS::PredefinedColumns>& colNames,
                                  const Int obstype,
-                                 const Bool compress)
+                                 const Bool compress,
+				 const asdmStManUseAlternatives asdmStManUse)
   {
     //Choose an appropriate tileshape
     IPosition dataShape(2, nCorr, nchan);
     IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
-    return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress);
+    return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),
+		   compress, asdmStManUse);
     //return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector());
   }
   MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
                                  const Int nCorr, 
                                  const Vector<MS::PredefinedColumns>& colNamesTok,
-                                 const Vector<Int>& tshape, const Bool compress)
+                                 const Vector<Int>& tshape, const Bool compress,
+				 const asdmStManUseAlternatives asdmStManUse)
   {
     if(tshape.nelements() != 3)
       throw(AipsError("TileShape has to have 3 elements ") );
@@ -1258,12 +1262,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     if (mustWriteOnlyToData)
       {
         MS::addColumnToDesc(td, MS::DATA, 2);
-        if (compress) MS::addColumnCompression(td,MS::DATA,true);
-        String hcolName=String("Tiled")+String("DATA");
-        td.defineHypercolumn(hcolName, 3,
-                             stringToVector("DATA"));
-        tiledDataNames.resize(1);
-        tiledDataNames[0] = hcolName;
+	if(asdmStManUse==DONT){
+	  if (compress) MS::addColumnCompression(td,MS::DATA,true);
+	  String hcolName=String("Tiled")+String("DATA");
+	  td.defineHypercolumn(hcolName, 3,
+			       stringToVector("DATA"));
+	  tiledDataNames.resize(1);
+	  tiledDataNames[0] = hcolName;
+	}
       }
     else{
       tiledDataNames.resize(ncols);
@@ -1275,22 +1281,28 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
            colNamesTok[i] == MS::CORRECTED_DATA ||
            colNamesTok[i] == MS::FLOAT_DATA ||
            colNamesTok[i] == MS::LAG_DATA) {
-          MS::addColumnToDesc(td, colNamesTok[i], 2);
-          if (compress) MS::addColumnCompression(td,colNamesTok[i],true);
+	  if(asdmStManUse==DONT ||
+	     colNamesTok[i] != MS::DATA){
+	    MS::addColumnToDesc(td, colNamesTok[i], 2);
+	    if (compress) MS::addColumnCompression(td,colNamesTok[i],true);
+	  }
         }
         else {
           throw(AipsError(MS::columnName(colNamesTok[i]) +
                           " is not a recognized data column "));
         }
-        String hcolName = String("Tiled") + MS::columnName(colNamesTok[i]);
-        td.defineHypercolumn(hcolName, 3,
-                             stringToVector(MS::columnName(colNamesTok[i])));
-        tiledDataNames[i] = hcolName;
+	if(asdmStManUse==DONT ||
+	   colNamesTok[i] != MS::DATA){
+	  String hcolName = String("Tiled") + MS::columnName(colNamesTok[i]);
+	  td.defineHypercolumn(hcolName, 3,
+			       stringToVector(MS::columnName(colNamesTok[i])));
+	  tiledDataNames[i] = hcolName;
+	}
       }
     }
 
     //other cols for compression
-    if (compress) {
+    if (compress && asdmStManUse!=USE_FOR_DATA_WEIGHT_SIGMA_FLAG) {
       MS::addColumnCompression(td, MS::WEIGHT, true);
       MS::addColumnCompression(td, MS::SIGMA, true);
     }
@@ -1298,22 +1310,25 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     // add this optional column because random group fits has a
     // weight per visibility
     MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
-    
+
+    // if(asdmStManUse==DONT){
     //     td.defineHypercolumn("TiledDATA",3,
     //                           stringToVector(MS::columnName(MS::DATA)));
-    td.defineHypercolumn("TiledFlag",3,
-                         stringToVector(MS::columnName(MS::FLAG)));
+    // }
     td.defineHypercolumn("TiledFlagCategory",4,
                          stringToVector(MS::columnName(MS::FLAG_CATEGORY)));
     td.defineHypercolumn("TiledWgtSpectrum",3,
                          stringToVector(MS::columnName(MS::WEIGHT_SPECTRUM)));
     td.defineHypercolumn("TiledUVW",2,
                          stringToVector(MS::columnName(MS::UVW)));
-    td.defineHypercolumn("TiledWgt",2,
-                         stringToVector(MS::columnName(MS::WEIGHT)));
-    td.defineHypercolumn("TiledSigma", 2,
-                         stringToVector(MS::columnName(MS::SIGMA)));
-   
+    if(asdmStManUse!=USE_FOR_DATA_WEIGHT_SIGMA_FLAG){
+      td.defineHypercolumn("TiledFlag",3,
+			   stringToVector(MS::columnName(MS::FLAG)));
+      td.defineHypercolumn("TiledWgt",2,
+			   stringToVector(MS::columnName(MS::WEIGHT)));
+      td.defineHypercolumn("TiledSigma", 2,
+			   stringToVector(MS::columnName(MS::SIGMA)));
+    }
 
     SetupNewTable newtab(MSFileName, td, Table::New);
     
@@ -1379,12 +1394,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     TiledShapeStMan tiledStMan5("TiledSigma", 
                                 IPosition(2,tileShape(0), tileShape(1) * tileShape(2)));
     
-    // Bind the DATA, FLAG & WEIGHT_SPECTRUM columns to the tiled stman
+    // Bind the DATA, FLAG & WEIGHT_SPECTRUM columns to the tiled stman or asdmStMan
+
+    AsdmStMan sm;
     
     if (mustWriteOnlyToData){
-      TiledShapeStMan tiledStMan1Data("TiledDATA",tileShape);
+      if(asdmStManUse==DONT){
+	TiledShapeStMan tiledStMan1Data("TiledDATA",tileShape);
       
-      newtab.bindColumn(MS::columnName(MS::DATA), tiledStMan1Data);
+	newtab.bindColumn(MS::columnName(MS::DATA), tiledStMan1Data);
+      }
+      else{
+	newtab.bindColumn(MS::columnName(MS::DATA), sm);
+      }
     }
     else{
       for(uInt i = 0; i < ncols; ++i){
@@ -1392,14 +1414,25 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         
         newtab.bindColumn(MS::columnName(colNamesTok[i]), tiledStMan1Data);
       }
+      if(asdmStManUse!=DONT){
+	newtab.bindColumn(MS::columnName(MS::DATA), sm);
+      }
     }    
-    newtab.bindColumn(MS::columnName(MS::FLAG),tiledStMan1f);
     newtab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),tiledStMan1fc);
     newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM),tiledStMan2);
     
     newtab.bindColumn(MS::columnName(MS::UVW),tiledStMan3);
-    newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
-    newtab.bindColumn(MS::columnName(MS::SIGMA),tiledStMan5);
+    if(asdmStManUse==USE_FOR_DATA_WEIGHT_SIGMA_FLAG){
+      newtab.bindColumn(MS::columnName(MS::FLAG),sm);
+      newtab.bindColumn(MS::columnName(MS::WEIGHT),sm);
+      newtab.bindColumn(MS::columnName(MS::SIGMA),sm);      
+    }
+    else{
+      newtab.bindColumn(MS::columnName(MS::FLAG),tiledStMan1f);
+      newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
+      newtab.bindColumn(MS::columnName(MS::SIGMA),tiledStMan5);
+    }
+      
 
     // avoid lock overheads by locking the table permanently
     TableLock lock(TableLock::AutoLocking);

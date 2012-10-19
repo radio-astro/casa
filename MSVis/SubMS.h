@@ -108,6 +108,12 @@ class SubMS
     useLinIntThenFFTShift // for the case the input grid is not equidistant in frequency but the output grid is
   };
 
+  enum asdmStManUseAlternatives {
+    DONT,
+    USE_FOR_DATA,
+    USE_FOR_DATA_WEIGHT_SIGMA_FLAG
+  };
+
   SubMS(String& theMS, Table::TableOption option = Table::Old);
   
   // construct from an MS
@@ -223,14 +229,16 @@ class SubMS
                                  const Int npol, const String& telescop,
                                  const Vector<MS::PredefinedColumns>& colNamesTok,
 				 const Int obstype=0,
-                                 const Bool compress=False);
+                                 const Bool compress=False,
+				 const asdmStManUseAlternatives asdmStManUse=DONT);
 
   // Same as above except allowing manual tileshapes
   static MeasurementSet* setupMS(const String& msname, const Int nchan,
                                  const Int npol,
                                  const Vector<MS::PredefinedColumns>& colNamesTok,
 				 const Vector<Int>& tileShape=Vector<Int>(1,0),
-                                 const Bool compress=False);
+                                 const Bool compress=False,
+				 const asdmStManUseAlternatives asdmStManUse=DONT);
 
   
   // Add optional columns to outTab if present in inTab and possColNames.
