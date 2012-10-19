@@ -25,6 +25,8 @@ casa_add_library( asdmstman
   AsdmIndex.h
   AsdmStMan.cc
   AsdmStMan.h
+  Register.cc
+  Register.h
   )
 
 install (FILES

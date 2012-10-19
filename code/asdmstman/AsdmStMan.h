@@ -1,6 +1,8 @@
 //# AsdmStMan.h: Storage Manager for the main table of a raw ASDM MS
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
+//# (c) European Southern Observatory, 2012
+//# Copyright by ESO (in the framework of the ALMA collaboration)
 //#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
@@ -12,7 +14,7 @@
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
 //#
-//# You should have receied a copy of the GNU Library General Public License
+//# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
