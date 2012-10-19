@@ -1377,7 +1377,10 @@ class simple_cluster:
             # is not very responsive while it's running, so we execute it only when there are jobs
             # beign processed.        
             if (len(self._jobs.keys())>0):
-                self.check_resource()
+                try:
+                    self.check_resource()
+                except:
+                    pass
 
             gr=set()
             for val in self._jobs.values():
