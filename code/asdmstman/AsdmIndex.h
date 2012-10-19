@@ -65,25 +65,19 @@ class AipsIO;
 struct AsdmIndex
 {
   // Get nr of complex values in cross-correlation data block.
-  uInt crossDataSize() const
-    { return nBl * crossNspw * crossNchan * crossNpol; }
-  // Get nr of values in auto-correlation data block.
-  uInt autoDataSize() const
-    { return nAnt * autoNspw * autoNchan * autoNpol; }
+  uInt dataSize() const;
 
   // Get number of rows spanned by the data blocks.
   uInt nrow() const
-    { return nBl*crossNspw + nAnt*autoNspw; }
+    { return nBl*nSpw; }
 
   //# Data members.
   uInt  fileNr;
-  uInt  nBl, crossNspw, crossNchan, crossNpol;
-  uInt  nAnt, autoNspw, autoNchan, autoNpol;
-  uInt  crossStepBl, crossStepSpw;
-  uInt  autoStepBl, autoStepSpw;
+  uInt  nBl, nSpw, nChan, nPol;
+  uInt  stepBl, stepSpw;
   Int64 row;
   vector<double> scaleFactors;    //# crossdata scale factor per spw
-  Int64 crossOffset, autoOffset;
+  Int64 fileOffset;
   Short dataType;       //# data type: 0=short 1=int32 3=float cross data
   //                                   10=auto 11=wvr? 12=zerolags
 };

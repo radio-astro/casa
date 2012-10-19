@@ -32,7 +32,7 @@
 
 
 //# Includes
-#include <asdmstman/AsdmStMan.h> ////
+#include <asdmstman/AsdmStMan.h> 
 #include <tables/Tables/StManColumn.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Containers/Block.h>

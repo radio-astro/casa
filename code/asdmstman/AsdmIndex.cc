@@ -29,24 +29,48 @@
 
 //# Includes
 #include <asdmstman/AsdmIndex.h>
+#include <tables/Tables/DataManError.h>
 #include <casa/IO/AipsIO.h>
 
 namespace casa {
+
+  uInt AsdmIndex::dataSize() const
+  {
+    int polSize;
+    switch (dataType) {
+    case 0:
+      polSize = 2*2*nPol;    // cross complex short
+      break;
+    case 1:
+      polSize = 2*4*nPol;    // cross complex int
+      break;
+    case 3:
+      polSize = 2*4*nPol;    // cross complex float
+      break;
+    case 10:
+      // For autocorr, the nr of pol values is special (see getAuto).
+      if (nPol == 3) {
+        polSize = 4*4;
+      } else if (nPol == 4) {
+        polSize = 4*6;
+      } else {
+        polSize = 4*nPol;
+      }
+      break;
+    default:
+      throw DataManError ("AsdmStMan: unknown datatype " +
+                          String::toString(dataType));
+    }
+    return nBl * nSpw * nChan * polSize;
+  }
 
   AipsIO& operator<< (AipsIO& os, const AsdmIndex& ix)
   {
     // This is version 1 of the index.
     os << Short(1) << ix.dataType << ix.fileNr
-       << ix.nBl << ix.crossNspw << ix.crossNchan << ix.crossNpol
-       << ix.nAnt << ix.autoNspw << ix.autoNchan << ix.autoNpol
-       << ix.crossStepBl << ix.crossStepSpw
-       << ix.autoStepBl << ix.autoStepSpw
-       << ix.row << ix.crossOffset << ix.autoOffset;
+       << ix.nBl << ix.nSpw << ix.nChan << ix.nPol
+       << ix.stepBl << ix.stepSpw << ix.row << ix.fileOffset;
     os.put (ix.scaleFactors);
-    ///<< ix.scaleFactors[0] << ix.scaleFactors[1]
-    ///<< ix.scaleFactors[2] << ix.scaleFactors[3] << 
-    ///<< ix.scaleFactors[0] << ix.scaleFactors[1]
-    ///<< ix.scaleFactors[2] << ix.scaleFactors[3];
     return os;
   }
 
@@ -54,14 +78,9 @@ namespace casa {
   {
     Short version;
     os >> version >> ix.dataType >> ix.fileNr;
-    os >> ix.nBl >> ix.crossNspw >> ix.crossNchan >> ix.crossNpol
-       >> ix.nAnt >> ix.autoNspw >> ix.autoNchan >> ix.autoNpol
-       >> ix.crossStepBl >> ix.crossStepSpw
-       >> ix.autoStepBl >> ix.autoStepSpw
-       >> ix.row >> ix.crossOffset >> ix.autoOffset;
+    os >> ix.nBl >> ix.nSpw >> ix.nChan >> ix.nPol
+       >> ix.stepBl >> ix.stepSpw >> ix.row >> ix.fileOffset;
     os.get (ix.scaleFactors);
-    ///>> ix.scaleFactors[0] >> ix.scaleFactors[1]
-    ///>> ix.scaleFactors[2] >> ix.scaleFactors[3];
     return os;
   }
 

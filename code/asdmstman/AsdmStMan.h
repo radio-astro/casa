@@ -37,7 +37,6 @@
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
 
-
 namespace casa {
 
 //# Forward Declarations.
@@ -252,18 +251,20 @@ private:
   // Close the currently open BDF file.
   void closeBDF();
 
-  // Read the cross-correlation data for the given row.
-  void readCross (const AsdmIndex& ix, Complex* buf, uInt rownr);
-
-  // Read the auto-correlation data for the given row.
-  void readAuto (const AsdmIndex& ix, Complex* buf, uInt rownr);
-
   // Return the entry number in the index containing the row.
   uInt searchIndex (Int64 rownr);
 
   // Return the index block containing the row.
   // It sets itsIndexEntry to that block.
   const AsdmIndex& findIndex (Int64 rownr);
+
+  // Get data from the buffer.
+  // <group>
+  void getShort (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
+  void getInt   (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
+  void getFloat (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
+  void getAuto  (const AsdmIndex&, Complex* buf, uInt bl, uInt spw);
+  // </group>
 
 
   //# Declare member variables.
@@ -282,8 +283,7 @@ private:
   Int64  itsStartRow;     //# First row of data block
   Int64  itsEndRow;       //# First row of next data block
   uInt   itsIndexEntry;   //# Index entry number of current data block
-  vector<char>      itsCrossData;
-  vector<char>      itsAutoData;
+  vector<char>      itsData;
   vector<AsdmIndex> itsIndex;
   vector<Int64>     itsIndexRows;
 };
@@ -292,3 +292,4 @@ private:
 } //# end namespace
 
 #endif
+

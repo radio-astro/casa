@@ -62,7 +62,7 @@ void writeIndex (const String& fname,
                  const Block<String>& bdfNames,
                  const vector<AsdmIndex>& index)
 {
-  AipsIO aio(fname + "index", ByteIO::New);
+  AipsIO aio(fname + "asdmindex", ByteIO::New);
   aio.putstart ("AsdmStMan", 1);
   // Write the index info.
   aio << asBigEndian << bdfNames;
@@ -86,6 +86,9 @@ void createTable (uInt ntime, uInt nant,
   td.addColumn (ScalarColumnDesc<Int>("ANTENNA1"));
   td.addColumn (ScalarColumnDesc<Int>("ANTENNA2"));
   td.addColumn (ArrayColumnDesc<Complex>("DATA"));
+  td.addColumn (ArrayColumnDesc<Bool>("FLAG"));
+  td.addColumn (ArrayColumnDesc<Float>("WEIGHT"));
+  td.addColumn (ArrayColumnDesc<Float>("SIGMA"));
   // Now create a new table from the description.
   SetupNewTable newtab("tAsdmStMan_tmp.data", td, Table::New);
   // Create the storage managers; bind DATA to AsdmStMan.
@@ -93,12 +96,18 @@ void createTable (uInt ntime, uInt nant,
   newtab.bindAll (sm1);
   AsdmStMan sm2;
   newtab.bindColumn ("DATA", sm2);
+  newtab.bindColumn ("FLAG", sm2);
+  newtab.bindColumn ("WEIGHT", sm2);
+  newtab.bindColumn ("SIGMA", sm2);
   // Finally create the table. The destructor closes it.
   uInt nbl = nant*(nant-1)/2;
-  uInt nrow = (nbl*crossnspw +nant*autonspw) * ntime;
+  uInt nrow = (nbl*crossnspw + nant*autonspw) * ntime;
   Table tab(newtab, nrow);
   // DATA should not be writable.
   AlwaysAssertExit (! tab.isColumnWritable("DATA"));
+  AlwaysAssertExit (! tab.isColumnWritable("FLAG"));
+  AlwaysAssertExit (! tab.isColumnWritable("WEIGHT"));
+  AlwaysAssertExit (! tab.isColumnWritable("SIGMA"));
   AlwaysAssertExit (tab.isColumnWritable("ANTENNA1"));
 
   // Write data into the columns.
@@ -111,32 +120,13 @@ void createTable (uInt ntime, uInt nant,
                                    crossnspw, nbl));  // real,imag
   indgen (crossData);
   // Create the real auto-correlation data.
+  AlwaysAssert (autonpol<3, AipsError);
   Array<Float> autoData(IPosition(4, autonpol, autonchan, autonspw, nant));
   indgen (autoData);
+  // Create the index object.
   vector<AsdmIndex> index;
   index.reserve (ntime);
-  // Fill the initial index object.
   AsdmIndex ix;
-  ix.fileNr = 0;
-  ix.dataType = 0;   // short
-  ix.nAnt = nant;
-  ix.nBl = nbl;
-  ix.crossNspw = crossnspw;
-  ix.crossNchan = crossnchan;
-  ix.crossNpol = crossnpol;
-  ix.crossStepBl = crossnpol*crossnchan;
-  ix.crossStepSpw = crossnpol*crossnchan*nbl;
-  ix.autoNspw = autonspw;
-  ix.autoNchan = autonchan;
-  ix.autoNpol = autonpol;
-  ix.autoStepBl = autonpol*autonchan;
-  ix.autoStepSpw = autonpol*autonchan*nant;
-  ix.crossOffset = 0;
-  ix.autoOffset = 0;
-  ix.scaleFactors.resize(crossnspw);
-  for (uInt i=0; i<crossnspw; ++i) {
-    ix.scaleFactors[i] = 1;  //i+1;
-  }
   // Create 2 BDFs.
   Block<String> bdfNames(2);
   bdfNames[0] = tab.tableName() + "/bdf1";
@@ -147,7 +137,7 @@ void createTable (uInt ntime, uInt nant,
   bdfs[0] = &bdf1;
   bdfs[1] = &bdf2;
   Int64 fileSize[] = {0,0};
-  // Now write the columns/
+  // Now write the columns and data.
   uInt row = 0;
   for (uInt i=0; i<ntime; ++i) {
     ix.fileNr = i%2;
@@ -180,10 +170,34 @@ void createTable (uInt ntime, uInt nant,
     bdfs[ix.fileNr]->write (crossSize, crossData.data());
     bdfs[ix.fileNr]->write (autoSize, autoData.data());
     // Set the correct values in the index entry and add it to the index vector.
-    ix.crossOffset = fileSize[ix.fileNr];
-    ix.autoOffset  = ix.crossOffset + crossSize;
-    fileSize[ix.fileNr] += crossSize + autoSize;
+    ix.dataType = 0;   // short
+    ix.nBl = nbl;
+    ix.nSpw = crossnspw;
+    ix.nChan = crossnchan;
+    ix.nPol = crossnpol;
+    ix.stepBl = crossnpol*crossnchan;
+    ix.stepSpw = crossnpol*crossnchan*nbl;
+    ix.fileOffset = fileSize[ix.fileNr];
+    ix.scaleFactors.resize(crossnspw);
+    for (uInt i=0; i<crossnspw; ++i) {
+      ix.scaleFactors[i] = 1;  //i+1;
+    }
+    AlwaysAssert (ix.dataSize() == crossSize, AipsError);
     index.push_back (ix);
+    // The same for the auto data.
+    ix.row += crossnspw*nbl;
+    ix.dataType = 10;   // auto
+    ix.nBl = nant;
+    ix.nSpw = autonspw;
+    ix.nChan = autonchan;
+    ix.nPol = autonpol;
+    ix.stepBl = autonpol*autonchan;
+    ix.stepSpw = autonpol*autonchan*nant;
+    ix.fileOffset = fileSize[ix.fileNr] + crossSize;
+    ix.scaleFactors.resize(0);
+    AlwaysAssert (ix.dataSize() == autoSize, AipsError);
+    index.push_back (ix);
+    fileSize[ix.fileNr] += crossSize + autoSize;
     // Use different values for the next data block.
     crossData += Short(1);
     autoData  += Float(2);
@@ -191,11 +205,9 @@ void createTable (uInt ntime, uInt nant,
   // Create the BDF index file (version 1).
   // The name of the file is table.f<i>index, where <i> is the seqnr
   // of the data manager.
-  //ostringstream oss;
-  //oss << RODataManAccessor(tab, "DATA", True).dataManagerSeqNr();
-  //writeIndex (tab.tableName() + "/table.f" + String(oss.str()),
-  //            False, bdfNames, index);
-  writeIndex (tab.tableName() + "/table.asdm",
+  ostringstream oss;
+  oss << RODataManAccessor(tab, "DATA", True).dataManagerSeqNr();
+  writeIndex (tab.tableName() + "/table.f" + String(oss.str()),
               False, bdfNames, index);
 }
 
@@ -214,6 +226,9 @@ void readTable (uInt ntime, uInt nant,
   AlwaysAssertExit (tab.canRemoveColumn(Vector<String>(1, "DATA")));
   // Create objects for the columns.
   ROArrayColumn<Complex> dataCol(tab, "DATA");
+  ROArrayColumn<Bool> flagCol(tab, "FLAG");
+  ROArrayColumn<Float> weightCol(tab, "WEIGHT");
+  ROArrayColumn<Float> sigmaCol(tab, "SIGMA");
   ROScalarColumn<Double> timeCol(tab, "TIME");
   ROScalarColumn<Int> ddidCol(tab, "DATA_DESC_ID");
   ROScalarColumn<Int> ant1Col(tab, "ANTENNA1");
@@ -223,6 +238,10 @@ void readTable (uInt ntime, uInt nant,
   Matrix<Complex> expAuto(autonpol, autonchan);
   indgen (expCross, Complex(0,1), Complex(2,2));
   indgen (expAuto, Complex(0,0), Complex(1,0));
+  Matrix<Bool> expCrossFlag(crossnpol, crossnchan, False);
+  Matrix<Bool> expAutoFlag(autonpol, autonchan, False);
+  Vector<Float> expCrossWS(crossnpol, 1.);
+  Vector<Float> expAutoWS(autonpol, 1.);
   uInt rownr = 0;
   for (uInt i=0; i<ntime; ++i) {
     Matrix<Complex> expc (expCross.copy());
@@ -235,8 +254,11 @@ void readTable (uInt ntime, uInt nant,
           AlwaysAssertExit (ddidCol(rownr) == Int(j));
           AlwaysAssertExit (ant1Col(rownr) == Int(a1));
           AlwaysAssertExit (ant2Col(rownr) == Int(a2));
-          ///          cout << expc;
-          ///          cout << dataCol(rownr);
+          AlwaysAssertExit (allEQ (flagCol(rownr), expCrossFlag));
+          AlwaysAssertExit (allEQ (weightCol(rownr), expCrossWS));
+          AlwaysAssertExit (allEQ (sigmaCol(rownr), expCrossWS));
+          ///cout << expc;
+          ///cout << dataCol(rownr);
           AlwaysAssertExit (allNear (dataCol(rownr), expc, 1e-5));
           expc += Complex(2*crossnpol*crossnchan, 2*crossnpol*crossnchan);
           rownr++;
@@ -250,8 +272,11 @@ void readTable (uInt ntime, uInt nant,
         AlwaysAssertExit (ddidCol(rownr) == Int(j));
         AlwaysAssertExit (ant1Col(rownr) == Int(k));
         AlwaysAssertExit (ant2Col(rownr) == Int(k));
-        ///          cout << expa;
-        ///          cout << dataCol(rownr);
+        AlwaysAssertExit (allEQ (flagCol(rownr), expAutoFlag));
+        AlwaysAssertExit (allEQ (weightCol(rownr), expAutoWS));
+        AlwaysAssertExit (allEQ (sigmaCol(rownr), expAutoWS));
+        ///cout << expa;
+        ///cout << dataCol(rownr);
         AlwaysAssertExit (allNear (dataCol(rownr), expa, 1e-5));
         expa += Complex(autonpol*autonchan, 0);
         rownr++;
@@ -286,3 +311,4 @@ int main (int argc, char* argv[])
   } 
   return 0;                           // exit with success status
 }
+

@@ -29,7 +29,7 @@ void writeIndex (const String& fname,
                  const Block<String>& bdfNames,
                  const vector<AsdmIndex>& index)
 {
-  AipsIO aio(fname + "index", ByteIO::New);
+  AipsIO aio(fname + "asdmindex", ByteIO::New);
   aio.putstart ("AsdmStMan", 1);
   // Write the index info.
   aio << asBigEndian << bdfNames;
@@ -56,7 +56,7 @@ void check (const String& msName)
 {
   Table tab(msName);
   ROArrayColumn<Complex> data(tab, "DATA");
-  ROArrayColumn<Complex> oldd(tab, "DATASAV");
+  ROArrayColumn<Complex> oldd(tab, "DATASAVE");
   for(uInt i=0; i<tab.nrow(); i++){
     if (!allEQ(oldd(i), data(i))){
       cout << "disagreement in row " << i << " " << oldd(i) << endl;
@@ -65,109 +65,110 @@ void check (const String& msName)
   }
 }
 
+void createIndex (const String& msName, const string& fileName,
+                  const string& dataPath, bool bigendian)
+{
+  map<string,int> fileMap;
+  vector<string> fileNames;
+  ifstream infile (fileName.c_str());
+  AlwaysAssert (infile, AipsError);
+  AsdmIndex ix;
+  vector<AsdmIndex> index;
+  // Read first line.
+  string line;
+  getline (infile, line);
+  while (infile) {
+    // A line looks like:
+    // row fname nbl nspw nchan npol stepbl stepspw scalefactors fileoffset type
+    //  0    1    2    3    4     5     6       7        8            9      10
+    Vector<String> parts = stringToVector(line, '|');
+    AlwaysAssert (parts.size() == 11, AipsError);
+    ix.row = toInt(parts[0]);
+    ix.nBl = toInt(parts[2]);
+    ix.nSpw = toInt(parts[3]);
+    ix.nChan = toInt(parts[4]);
+    ix.nPol = toInt(parts[5]);
+    ix.stepBl = toInt(parts[6]);
+    ix.stepSpw = toInt(parts[7]);
+    ix.fileOffset = toInt(parts[9]);
+    ix.dataType = toInt(parts[10]);
+    // Split scale factors (remove [] around it).
+    String factStr (parts[8].substr(1, parts[8].size()-2));
+    Vector<String> factors = stringToVector(factStr, ',');
+    for (uInt i=0; i<factors.size(); ++i) {
+      ix.scaleFactors.push_back (toDouble(factors[i]));
+    }
+    // Now turn file name into a filenr.
+    map<string,int>::const_iterator iter = fileMap.find(parts[1]);
+    if (iter == fileMap.end()) {
+      // New filename.
+      ix.fileNr = fileNames.size();
+      fileNames.push_back (parts[1]);
+      fileMap[parts[1]] = ix.fileNr;
+    } else {
+      ix.fileNr = iter->second;
+    }
+    // The index entry is complete; add it to the vector.
+    index.push_back (ix);
+    // Read next line.
+    getline (infile, line);
+  }
+
+  // Handle the MS if given.
+  if (msName.empty()) {
+    for (uInt i=0; i<fileNames.size(); ++i) {
+      cout << i << "  " << fileNames[i] << endl;
+    }
+  } else {
+    // Rename the DATA column to DATASAVE.
+    Table tab(msName, Table::Update);
+    tab.renameColumn ("DATASAVE", "DATA");
+    // Add new DATA column binding it to AsdmStMan.
+    ArrayColumnDesc<Complex> dataCol ("DATA");
+    AsdmStMan stman;
+    tab.addColumn (dataCol, stman);
+    tab.flush();
+    // The name of the file is table.f<i>index, where <i> is the seqnr
+    // of the new data manager.
+    ostringstream oss;
+    oss << RODataManAccessor(tab, "DATA", True).dataManagerSeqNr();
+    // Now write the index file.
+    Block<String> bdfNames(fileNames.size());
+    for (uInt i=0; i<fileNames.size(); ++i) {
+      bdfNames[i] = dataPath + '/' + fileNames[i];
+    }
+    writeIndex (tab.tableName() + "/table.f" + String(oss.str()),
+                bigendian, bdfNames, index);
+  }
+}
+
 int main(int argc, char* argv[])
 {
-  if (argc < 5) {
-    cerr << "Run as:   makeAsdmIndex ms infile datapath isbigendian (0 or 1)"
+  if (argc < 5  &&  argc != 2) {
+    cerr << "Run as:   makeAsdmIndex ms [infile datapath isbigendian (0 or 1)]"
+         << endl;
+    cerr << "If 1 argument is given, only the DATA comparison will be done"
          << endl;
     return 1;
   }
-  String msName(argv[1]);
-  string dataPath(argv[3]);
-  bool bigendian = toInt(argv[4]);
   try {
     // Register AsdmStMan to be able to use it.
     AsdmStMan::registerClass();
-    map<string,int> fileMap;
-    vector<string> fileNames;
-    ifstream infile (argv[2]);
-    AlwaysAssert (infile, AipsError);
-    AsdmIndex ix;
-    vector<AsdmIndex> index;
-    // Read first line.
-    string line;
-    cout << "start" << endl;
-    getline (infile, line);
-    while (infile) {
-      //cout << "new line" << endl;
-      Vector<String> parts = stringToVector(line, '|');
-      AlwaysAssert (parts.size() == 18, AipsError);
-      ix.row = toInt(parts[0]);
-      ix.nBl = toInt(parts[2]);
-      ix.crossNspw = toInt(parts[3]);
-      ix.crossNchan = toInt(parts[4]);
-      ix.crossNpol = toInt(parts[5]);
-      ix.nAnt = toInt(parts[6]);
-      ix.autoNspw = toInt(parts[7]);
-      ix.autoNchan = toInt(parts[8]);
-      ix.autoNpol = toInt(parts[9]);
-      ix.crossStepBl = toInt(parts[10]);
-      ix.crossStepSpw = toInt(parts[11]);
-      ix.autoStepBl = toInt(parts[12]);
-      ix.autoStepSpw = toInt(parts[13]);
-      ix.crossOffset = toInt(parts[15]);
-      ix.autoOffset = toInt(parts[16]);
-      ix.dataType = toInt(parts[17]);
-      // Split scale factors.
-      String factStr (parts[14].substr(1, parts[14].size()-2));
-      Vector<String> factors = stringToVector(factStr, ',');
-      for (uInt i=0; i<factors.size(); ++i) {
-        ix.scaleFactors.push_back (toDouble(factors[i]));
-      }
-      // Now turn file name into a filenr.
-      map<string,int>::const_iterator iter = fileMap.find(parts[1]);
-      if (iter == fileMap.end()) {
-        // New filename.
-        ix.fileNr = fileNames.size();
-        fileNames.push_back (parts[1]);
-        fileMap[parts[1]] = ix.fileNr;
-      } else {
-        ix.fileNr = iter->second;
-      }
-      // The index entry is complete; add it to the vector.
-      index.push_back (ix);
-      // Read next line.
-      getline (infile, line);
+    String msName(argv[1]);
+    if (argc > 2) {
+      string infile(argv[2]);
+      string dataPath(argv[3]);
+      bool bigendian = toInt(argv[4]);
+      // Create the index file.
+      createIndex (msName, infile, dataPath, bigendian);
     }
-
-    // Handle the MS if given.
-    if (msName.empty()) {
-      for (uInt i=0; i<fileNames.size(); ++i) {
-        cout << i << "  " << fileNames[i] << endl;
-      }
-    } else {
-      {
-	// Rename the DATA column to DATASAV.
-	Table tab(msName, Table::Update);
-	if(!tab.tableDesc().isColumn("DATASAV")){
-	  tab.renameColumn ("DATASAV", "DATA");
-	}
-	// Add new DATA column binding it to AsdmStMan.
-	ArrayColumnDesc<Complex> dataCol ("DATA");
-	AsdmStMan stman;
-	tab.addColumn (dataCol, stman);
-	tab.flush();
-	// The name of the file is table.f<i>index, where <i> is the seqnr
-	// of the new data manager.
-	//ostringstream oss;
-	//oss << RODataManAccessor(tab, "DATA", True).dataManagerSeqNr();
-	// Now write the index file.
-	Block<String> bdfNames(fileNames.size());
-	for (uInt i=0; i<fileNames.size(); ++i) {
-	  bdfNames[i] = dataPath + '/' + fileNames[i];
-	}
-	//writeIndex (tab.tableName() + "/table.f" + String(oss.str()),
-	//          bigendian, bdfNames, index);
-	writeIndex (tab.tableName() + "/table.asdm",
-		    bigendian, bdfNames, index);
-      }
-
-      check(msName);
-
-    }
+    // Compare the DATA and DATASAVE column.
+    check (msName);
   } catch (std::exception& x) {
     cerr << "Error: " << x.what() << endl;
     return 1;
   }
   return 0;
 }
+
+
