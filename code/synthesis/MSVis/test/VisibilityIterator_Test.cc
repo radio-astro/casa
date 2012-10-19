@@ -20,13 +20,13 @@ using namespace casa;
 using namespace casa::vi;
 
 int
-main (int /*nArgs*/, char * /*args*/ [])
+main (int nArgs, char * args [])
 {
     using namespace casa::vi::test;
 
     Tester tester;
 
-    tester.doTests ();
+    tester.doTests (nArgs, args);
 
 //    MsFactory msf ("test.ms");
 //
@@ -819,8 +819,10 @@ Tester::doTest ()
 }
 
 bool
-Tester::doTests ()
+Tester::doTests (int nArgs, char * args [])
 {
+
+    Arguments arguments = parseArgs (nArgs, args);
     nTestsAttempted_p = 0;
     nTestsPassed_p = 0;
 
@@ -832,8 +834,32 @@ Tester::doTests ()
 
         //// doTest<FrequencyChannelSelection> ();
 
+        int tests = PerformanceComparator::Both;
+
+        if (utilj::containsKey ("--old", arguments)){
+            tests = PerformanceComparator::Old;
+        }
+
+        if (utilj::containsKey ("--new", arguments)){
+            tests = PerformanceComparator::New;
+        }
+
+        int nSweeps = 1;
+        String sweepNumber = arguments ["--sweeps"];
+        if (! sweepNumber.empty()){
+            nSweeps = String::toInt (sweepNumber);
+            nSweeps = nSweeps <= 0 ? 1 : nSweeps;
+        }
+
+        int nChannelTests = 1;
+        String nChannelTestsNumber = arguments ["--nChannels"];
+        if (! nChannelTestsNumber.empty()){
+            nChannelTests = String::toInt (nChannelTestsNumber);
+            nChannelTests = nChannelTests <= 1 ? 1 : nChannelTests;
+        }
+
         PerformanceComparator pc ("3c391_ctm_mosaic_spw0.ms");
-        pc.compare();
+        pc.compare(tests, nSweeps, nChannelTests);
     }
     catch (TestError & e){
 
@@ -853,6 +879,39 @@ Tester::doTests ()
     }
 
     return allPassed;
+}
+
+Tester::Arguments
+Tester::parseArgs (int nArgs, char * args []) const
+{
+    printf ("nArgs=%d\n", nArgs);
+    String optionsRaw [] = {"--old", "--new", "--sweeps", "--nChannels", ""};
+    set<String> options;
+    Bool ok = True;
+
+    for (int i = 0; ! optionsRaw [i].empty(); i++){
+
+        options.insert (optionsRaw [i]);
+    }
+
+    Arguments result;
+
+    for (int i = 1; i < nArgs; i ++){
+
+        vector<String> splits = utilj::split (String (args[i]), "=");
+
+        if (utilj::contains (splits [0], options)){
+
+            result [splits[0]] = splits.size() > 1 ? splits[1] : "";
+        }
+        else{
+
+            printf ("*** Unknown option: '%s'\n", splits[0].c_str());
+            ThrowTestError ("Unknown command line option");
+        }
+    }
+
+    return result;
 }
 
 BasicChannelSelection::BasicChannelSelection ()
@@ -1422,7 +1481,7 @@ PerformanceComparator::PerformanceComparator (const String & ms)
 {}
 
 void
-PerformanceComparator::compare ()
+PerformanceComparator::compare (int tests, int nSweeps, int nChannelTests)
 {
     printf ("\n========== Performance Comparison Begin =========\n");
 
@@ -1440,50 +1499,58 @@ PerformanceComparator::compare ()
 
     //////compareOne (& oldVi, & newVi, 11);
 
-    printf ("\n--- First channel selection ---\n");
+    for (int i = 1; i <= nChannelTests; i++){
 
-    Block< Vector<Int> > groupSize (1, Vector<Int> (1, 1));
-    Block< Vector<Int> > spectralWindow (1, Vector<Int> (1, 0));
-    Block< Vector<Int> > start (1, Vector<Int> (1, 0));
-    Block< Vector<Int> > increment (1, Vector<Int> (1, 1));
-    Block< Vector<Int> > count (1, Vector<Int> (1, 1));
+        printf ("\n--- Selecting %d channels ---\n", i);
 
-    oldVi.selectChannel (groupSize, start, count, increment, spectralWindow);
+        Block< Vector<Int> > groupSize (1, Vector<Int> (1, 1));
+        Block< Vector<Int> > spectralWindow (1, Vector<Int> (1, 0));
+        Block< Vector<Int> > start (1, Vector<Int> (1, 0));
+        Block< Vector<Int> > increment (1, Vector<Int> (1, 1));
+        Block< Vector<Int> > count (1, Vector<Int> (1, i));
 
-    FrequencySelections fs;
-    FrequencySelectionUsingChannels fsuc;
-    fsuc.add (0, 0, 1);
-    fs.add (fsuc);
+        oldVi.selectChannel (groupSize, start, count, increment, spectralWindow);
 
-    newVi.setFrequencySelection (fs);
+        FrequencySelections fs;
+        FrequencySelectionUsingChannels fsuc;
+        fsuc.add (0, 0, i);
+        fs.add (fsuc);
 
-    compareOne (& oldVi, & newVi, 1);
+        newVi.setFrequencySelection (fs);
+
+        compareOne (& oldVi, & newVi, nSweeps, tests);
+    }
 
     printf ("\n========== Performance Comparison Complete =========\n");
-
 }
 
 
 void
 PerformanceComparator::compareOne (ROVisibilityIterator * oldVi,
                                    ROVisibilityIterator2 * newVi,
-                                   int nSweeps)
+                                   int nSweeps,
+                                   int tests)
 {
     using namespace utilj;
 
     IoStatistics oldIo1;
     ThreadTimes oldTime1 = ThreadTimes::getTime ();
 
-    try {
+    if (tests & PerformanceComparator::Old){
 
-        for (int i = 0; i < nSweeps; i++){
-            Double d = sweepViOld (* oldVi);
-            printf ("... old sweep %d completed. (%f)\n", i, d);
+        printf ("... Starting old sweeps\n");
+
+        try {
+
+            for (int i = 0; i < nSweeps; i++){
+                Double d = sweepViOld (* oldVi);
+                printf ("... old sweep %d completed. (%f)\n", i, d);
+            }
         }
-    }
-    catch (AipsError & e){
-        printf ("*** Caught exception while sweeping oldVi: %s\n", e.what());
-        throw;
+        catch (AipsError & e){
+            printf ("*** Caught exception while sweeping oldVi: %s\n", e.what());
+            throw;
+        }
     }
 
     ThreadTimes oldTime2 = ThreadTimes::getTime ();
@@ -1492,15 +1559,20 @@ PerformanceComparator::compareOne (ROVisibilityIterator * oldVi,
     IoStatistics newIo1;
     ThreadTimes newTime1 = ThreadTimes::getTime ();
 
-    try{
-        for (int i = 0; i < nSweeps; i++){
-            Double d = sweepViNew (* newVi);
-            printf ("... new sweep %d completed. (%f)\n", i, d);
+    if (tests & PerformanceComparator::New){
+
+        printf ("... Starting new sweeps\n");
+
+        try{
+            for (int i = 0; i < nSweeps; i++){
+                Double d = sweepViNew (* newVi);
+                printf ("... new sweep %d completed. (%f)\n", i, d);
+            }
         }
-    }
-    catch (AipsError & e){
-        printf ("*** Caught exception while sweeping newVi: %s\n", e.what());
-        throw;
+        catch (AipsError & e){
+            printf ("*** Caught exception while sweeping newVi: %s\n", e.what());
+            throw;
+        }
     }
 
     ThreadTimes newTime2 = ThreadTimes::getTime ();

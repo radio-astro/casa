@@ -559,9 +559,15 @@ private:
 class Tester {
 public:
 
-    bool doTests ();
+    bool doTests (int nArgs, char * args []);
 
     std::pair<Bool, Bool> sweepMs (TestWidget & testWidget);
+
+protected:
+
+    typedef std::map<String, String> Arguments;
+
+    Arguments parseArgs (int nArgs, char * args []) const;
 
 private:
 
@@ -576,14 +582,17 @@ class PerformanceComparator {
 
 public:
 
+    enum {Old=1, New=2, Both=3};
+
     PerformanceComparator (const String & ms);
-    void compare ();
+    void compare (Int, Int, Int);
 
 protected:
 
     void compareOne (ROVisibilityIterator * oldVi,
                      ROVisibilityIterator2 * newVi,
-                     Int nSweeps);
+                     Int nSweeps,
+                     Int tests);
 
     ROVisibilityIterator * createViOld ();
     ROVisibilityIterator2 * createViNew ();
