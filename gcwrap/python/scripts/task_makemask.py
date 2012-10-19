@@ -82,14 +82,17 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
         #   => T overwrite inpimage
         #   => F exception
 
-        if inpimage=='': raise Exception, "inpimage is empty"
-        if not os.path.isdir(inpimage):
-            raise Exeption, "inpimage=%s does not exist" % inpimage    
+        # check inpimage 
+        if (['list','copy','expand'].count(mode)==1):
+            if inpimage=='': raise Exception, "inpimage is empty"
+            if not os.path.isdir(inpimage):
+                raise Exception, "inpimage=%s does not exist" % inpimage    
        
         # === list mode ===
         if mode == 'list':
            inpOK=checkinput(inpimage)
            if inpOK: 
+              
                ia.open(inpimage)
                inmasklist=ia.maskhandler('get')
                # now ia.maskhandler returns ['T'] if no internal mask is there...
@@ -98,14 +101,65 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                if len(inmasklist) ==0:
                    casalog.post('No internal (T/F) masks were found in %s' % (inpimage),'INFO')
                else:
-                   casalog.post('Internal (T/F) masks in %s: %s' % (inpimage, str(inmasklist)),'INFO')
+                   defaultmaskname=ia.maskhandler('default')[0]
+                   printinmasks=''
+                   for mname in inmasklist:
+                       if mname==defaultmaskname:
+                           printinmasks+='\''+mname+'\''+'(default)'
+                       else:
+                           printinmasks+='\''+mname+'\''
+                       if mname != inmasklist[-1]:
+                           printinmasks+=', '
+                 
+                   casalog.post('Internal (T/F) masks in %s: %s' % (inpimage, printinmasks),'INFO')
+               ia.close()
  
+        elif mode == 'setdefaultmask':
+            inpOK=checkinput(inpmask)
+            if inpOK:
+                (parentimage,bmask)=extractmaskname(inpmask)
+		if bmask=='':
+		    raise Exception, "Missing an internal mask name"
+                ia.open(parentimage)
+                defaultmaskname=ia.maskhandler('default')[0]
+                inmasklist=ia.maskhandler('get')
+                if defaultmaskname==bmask:
+                    casalog.post('No change. %s is already a default internal mask' % bmask, 'INFO')
+                else:
+                    ia.maskhandler('set',bmask)
+                    casalog.post('Set %s as a default internal mask' % bmask, 'INFO')
+                    if len(inmasklist)>1:
+                        casalog.post('Current internal masks are %s' % str(inmasklist), 'INFO')
+                ia.close()
+
+        elif mode == 'delete':
+            inpOK=checkinput(inpmask)
+            if inpOK:
+                (parentimage,bmask)=extractmaskname(inpmask)
+                if bmask=='':
+                    raise Exception, "Missing an internal mask name"
+                ia.open(parentimage)
+                casalog.post('Deleting the internal mask, %s ' % bmask, 'INFO')
+                defaultmaskname=ia.maskhandler('default')[0]
+                ia.maskhandler('delete',bmask)
+                inmasklist=ia.maskhandler('get')
+                if inmasklist.count('T')!=0:
+                    inmasklist.remove('T')
+                if len(inmasklist) !=0 and defaultmaskname==bmask:
+                    ia.maskhandler('set',inmasklist[0])
+                    casalog.post('Set %s as a default internal mask' % inmasklist[0], 'INFO')
+                    if len(inmasklist)>1:
+                        casalog.post('Current internal masks are %s' % str(inmasklist), 'INFO')
+          
+                ia.close()
+
         #elif mode != 'merge':
         else:
            import commands
            # copy can have multiple input masks, expand has only one.
            # check inpimage, inpmask, output, overwrite
            # 
+           storeinmask = False # used to check if output to a new internal mask
            inpOK=checkinput(inpimage)
            if inpOK:
                (immask,inmask)=extractmaskname(inpimage)
@@ -174,10 +228,11 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                (outparentim, outbmask)=extractmaskname(output)
                #print "extractmaskname::: outparentim=",outparentim, "outbmask=",outbmask
                if outbmask!='':
-                   outputwithmask=True 
                    (parentimexist,maskexist)=checkinmask(outparentim,outbmask)    
                    if parentimexist and maskexist and not overwrite:
                        raise Exception, "output=%s exists. If you want to overwrite it, please set overwrite=True" % output
+                   if parentimexist and not maskexist:
+                       storeinmask=True
                else:
                   outparentim=output
                
@@ -443,15 +498,25 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    casalog.post("Convert the image mask to T/F mask",'INFO')
 		    #ia.calcmask(mask='%s<0.5' % tmp_outmaskimage,name=outmask,asdefault=True)
 		    ia.calcmask(mask='%s=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
-		ow = False
-		if inpimage==output:
-		    casalog.post("Updating "+output+"with new mask","INFO")
+
+                if storeinmask:
+                    ia.open(outparentim)
+                    ia.maskhandler('copy',[tmp_outmaskimage+':'+outbmask, outbmask])
+                    ia.maskhandler('set',outbmask)
+                    ia.done()
+		    casalog.post("Output the mask to %s in %s" % (outbmask,outparentim) ,"INFO")
 		else:
-                    if os.path.isdir(outparentim):
-		        casalog.post(outparentim+" exists, overwriting","INFO")
-		        ow=True
-		ia.rename(outparentim,ow)
-		ia.done()
+		    ow = False
+                    if  inpimage==output:
+		        casalog.post("Updating "+output+"with new mask","INFO")
+		    else:
+                        if os.path.isdir(outparentim):
+		            casalog.post(outparentim+" exists, overwriting","INFO")
+		            ow=True
+                        else:
+		            casalog.post("Output the mask to "+outparentim ,"INFO")
+		    ia.rename(outparentim,ow)
+		    ia.done()
 
             except Exception, instance:
                 print "*** Error ***", instance
@@ -666,9 +731,17 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		# if outfile does not exist initially sum_tmp_outfile is a copy of inpimage
 		# so rename it with overwrite=T all the cases
                 #print "open sum_tmp_outfile=",sum_tmp_outfile
-		ia.open(sum_tmp_outfile) 
-		ia.rename(outparentim,overwrite=True) 
-		ia.done()
+                if storeinmask:
+                    ia.open(outparentim)
+                    ia.maskhandler('copy',[sum_tmp_outfile+':'+outbmask, outbmask])    
+                    ia.maskhandler('set',outbmask)
+                    ia.done()
+		    outputmsg="to create an output mask: %s in %s" % (outbmask,outparentim)
+                else:
+		    ia.open(sum_tmp_outfile) 
+		    ia.rename(outparentim,overwrite=True) 
+		    ia.done()
+		    outputmsg="to create an output mask: %s " % outparentim
 
                 casalog.post("Merged masks from:","INFO")
                 if len(usedimfiles)>0:
@@ -679,6 +752,7 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                     casalog.post("region txt file(s): "+str(usedrgfiles),"INFO")
                 if len(usedrglist)>0:
                     casalog.post("region(s) from direct input: "+str(usedrglist),"INFO")
+                casalog.post(outputmsg,"INFO")
                 
 
             except Exception, instance:
@@ -853,11 +927,13 @@ def checkinput(inpname):
             return True # only the image
         else:
             if not tfmaskexist: 
-                raise Exception, "Cannot find the internal mask, %s" % tfmaskname 
+                ia.open(parentimage)
+                inmasklist=ia.maskhandler('get')
+                raise Exception, "Cannot find the internal mask, %s. Candidate mask(s) are %s" % (tfmaskname, str(inmasklist))
             else:
                 return True # image mask and internal mask
     else:
-        raise Exception, "Cannot find  %s" % parentimage 
+        raise Exception, "Cannot find the image=%s" % parentimage 
    
 
 def checkinmask(parentimage,tfmaskname):
@@ -912,5 +988,3 @@ def makeEmptyimage(template,outimage):
     incsys=ia.coordsys()
     ia.fromshape(outimage,shape=inshp,csys=incsys.torecord())
     ia.done()
-
- 
