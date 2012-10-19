@@ -69,6 +69,12 @@ class CubeSkyEquation : public SkyEquation {
   void initializeGetSlice(const VisBuffer& vb, Int row,
 			  Bool incremental, Int cubeSlice=0, 
 			  Int nCubeSlice=1);   
+  void newInitializeGetSlice(const VisBuffer& vb, Int row,
+			     Bool incremental, Int cubeSlice=0, 
+			     Int nCubeSlice=1);   
+  void oldInitializeGetSlice(const VisBuffer& vb, Int row,
+			     Bool incremental, Int cubeSlice=0, 
+			     Int nCubeSlice=1);   
   virtual VisBuffer& getSlice(VisBuffer& vb, 
 			      Bool incremental, Int cubeSlice=0,
 			      Int nCubeSlice=1); 

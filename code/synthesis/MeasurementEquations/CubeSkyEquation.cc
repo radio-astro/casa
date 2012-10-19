@@ -941,7 +941,7 @@ CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIt
     oldWvi = NULL;
 
     Bool isEnabled;
-    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
+    //    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
 
     //isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
     // For now (release 3.4) make imaging be explicitly turned on
@@ -1173,23 +1173,14 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
   for (Int field=0; field < sm_->numberOfModels(); ++field)
     {
       newFTM = isNewFTM(&(*ftm_p[field]));
-      // newFTM = ((ftm_p[field]->name() == "AWProjectFT")   || 
-      // 		(ftm_p[field]->name() == "AWProjectWBFT") ||
-      // 		(ftm_p[field]->name() == "PBWProjectFT")  ||
-      // 		(ftm_p[field]->name() == "GridFT"));
       
-      if (newFTM) 
-	newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice, field);
-      else 
-	{
-	  oldFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice, field);
-	  sm_->setImageNormalization(False);
-	}
+      if (newFTM) newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice, field);
+      else        oldFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice, field);
     }
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
-void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
+void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
 					  Int cubeSlice, Int nCubeSlice, int field) 
 {
   //============================================================================
@@ -1297,18 +1288,104 @@ void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
       // 4. Finally, we add the statistics
       sm_->addStatistics(sumwt, chisq);
     }
+    sm_->setImageNormalization(False);
 }
 
 void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb, 
 					   Int row, 
 					   Bool incremental, Int cubeSlice, 
-					   Int nCubeSlice){
+					   Int nCubeSlice)
+{
+  LogIO os(LogOrigin("CubeSkyEquation", "initializeGetSlice"));
+
+  Bool newFTM=False;
+  for (Int field=0; field < sm_->numberOfModels(); ++field)
+    {
+      newFTM = isNewFTM(&(*ftm_p[field]));
+      
+      if (newFTM) oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+      else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+    }
+  // if (!newFTM)
+  //   tmpWBNormalizeImage(dopsf);
+}
+
+void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb, 
+					    Int row, 
+					    Bool incremental, Int cubeSlice, 
+					    Int nCubeSlice)
+{
+  //  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
+  //  for(Int field=0; field < sm_->numberOfFields(); ++field){
+  sm_->setImageNormalization(True);
+  imGetSlice_p.resize(sm_->numberOfModels(), True, False);
+  for(Int model=0; model < sm_->numberOfModels(); ++model)
+    {
+      if(nCubeSlice>1)
+      ftm_p[model]->reset();
+    }
+
+  Int ntaylors=sm_->numberOfTaylorTerms(),
+    nfields = sm_->numberOfModels()/ntaylors;
+  
+  for(Int field=0; field < nfields; ++field)
+    {
+      //the different apply...jones user ft_ and ift_
+      ft_=&(*ftm_p[field]);
+      ift_=&(*iftm_p[field]);
+      
+      Block<CountedPtr<ImageInterface<Complex> > > imGetSliceVec(sm_->numberOfTaylorTerms());
+      PtrBlock<SubImage<Float> *> modelSliceVec(sm_->numberOfTaylorTerms());
+      PtrBlock<SubImage<Float> *> weightSliceVec(sm_->numberOfTaylorTerms());
+      PtrBlock<SubImage<Float> *> fluxScaleVec(sm_->numberOfTaylorTerms());
+      Block<Matrix<Float> > weightVec(sm_->numberOfTaylorTerms()); // this is by value
+      
+      for(Int taylor=0; taylor < sm_->numberOfTaylorTerms(); ++taylor)
+	{
+	  Int model = sm_->getModelIndex(field,taylor);
+	  // NEW : Do the applySkyJones slice-by-slice -- to make it go into initializeToVis :(
+	  cerr << "Taylor, Model, Field: " << taylor << " " << model << " " << field << endl;
+	  if(incremental)
+	    sliceCube(modelSliceVec[taylor], sm_->deltaImage(model), cubeSlice, nCubeSlice);
+	  else
+	    sliceCube(modelSliceVec[taylor], sm_->image(model), cubeSlice, nCubeSlice);
+	  sliceCube(fluxScaleVec[taylor], sm_->fluxScale(model), cubeSlice, nCubeSlice);
+	  sliceCube(weightSliceVec[taylor], sm_->ggS(model), cubeSlice, nCubeSlice);
+	  sliceCube(imGetSlice_p[model], model, cubeSlice, nCubeSlice, 1);
+	  imGetSliceVec[taylor] = imGetSlice_p[model];
+	  weightVec[taylor] = weightSlice_p[model];
+	}// end of taylor
+      
+      //U// cout << "CubeSkyEquation :: Calling new initializeToVis with " << modelSliceVec.nelements() << " models and " << imGetSliceVec.nelements() << " complex grids " << endl;
+      //U// LatticeExprNode LEN = max( *(modelSliceVec[0] ) );
+      //U// cout << "CubeSkyEq  : Peak in image to be predicted : " << LEN.getFloat() << endl;
+      
+      ftm_p[field]->initializeToVis(imGetSliceVec, modelSliceVec, weightSliceVec, fluxScaleVec, weightVec,vb);
+      
+      for (Int taylor=0; taylor < sm_->numberOfTaylorTerms(); ++taylor)
+	{
+	  //     Int model = sm_->getModelIndex(field,taylor);
+	  // weightSlice_p[model] = weightSliceVec[taylor]; // because this is by value...
+	  delete modelSliceVec[taylor];
+	  delete weightSliceVec[taylor];
+	}
+    }//end of field
+  ft_=&(*ftm_p[0]);
+  ift_=&(*iftm_p[0]);
+}
+
+void CubeSkyEquation::oldInitializeGetSlice(const VisBuffer& vb, 
+					    Int row, 
+					    Bool incremental, Int cubeSlice, 
+					    Int nCubeSlice){
+  sm_->setImageNormalization(False);
+  
   imGetSlice_p.resize(sm_->numberOfModels(), True, False);
   for(Int model=0; model < sm_->numberOfModels(); ++model){
     if(nCubeSlice>1){
       ftm_p[model]->reset();
     }
-     //the different apply...jones user ft_ and ift_
+    //the different apply...jones user ft_ and ift_
     ft_=&(*ftm_p[model]);
     ift_=&(*iftm_p[model]);
     if(cubeSlice==0){
@@ -1325,16 +1402,16 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
   ft_=&(*ftm_p[0]);
   ift_=&(*iftm_p[0]);
   
-
+  
 }
 
 void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int model, Int cubeSlice, 
 				Int nCubeSlice, Int typeOfSlice){
-
+  
   IPosition blc(4,0,0,0,0);
   IPosition trc(4,sm_->cImage(model).shape()(0)-1,
-		 sm_->cImage(model).shape()(1)-1,sm_->cImage(model).shape()(2)-1,
-		 0);
+		sm_->cImage(model).shape()(1)-1,sm_->cImage(model).shape()(2)-1,
+		0);
   Int beginChannel=cubeSlice*nchanPerSlice_p;
   Int endChannel=beginChannel+nchanPerSlice_p-1;
   if(cubeSlice==(nCubeSlice-1))
@@ -1348,16 +1425,16 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
     
     Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
     /*slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
-					     IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), 0);
+      IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), 0);
     */
     slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), 0);
     
     /*
-    slice= new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
-					       IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),(sliceIm->shape()(2) , 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
+      slice= new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
+      IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),(sliceIm->shape()(2) , 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
     */
     //slice->setMaximumCacheSize((sliceIm->shape()[0])*(sliceIm->shape()[1])/4);
-   slice->setMaximumCacheSize(sliceIm->shape().product());
+    slice->setMaximumCacheSize(sliceIm->shape().product());
     //slice.copyData(sliceIm);
     slice->set(Complex(0.0, 0.0));
     //slice->setCoordinateInfo(sm_->image(model).coordinates());
@@ -1366,17 +1443,17 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   else{
     slice=sliceIm;
   }
-
+  
 }
 
 void CubeSkyEquation::sliceCube(SubImage<Float>*& slice,
-				  ImageInterface<Float>& image, Int cubeSlice, 
-				  Int nCubeSlice){
-
+				ImageInterface<Float>& image, Int cubeSlice, 
+				Int nCubeSlice){
+  
   IPosition blc(4,0,0,0,0);
   IPosition trc(4,image.shape()(0)-1,
 		image.shape()(1)-1,image.shape()(2)-1,
-		 0);
+		0);
   Int beginChannel=cubeSlice*nchanPerSlice_p;
   Int endChannel=beginChannel+nchanPerSlice_p-1;
   if(cubeSlice==(nCubeSlice-1))
@@ -1391,15 +1468,15 @@ void CubeSkyEquation::sliceCube(SubImage<Float>*& slice,
 VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,  
 				     Bool incremental,
 				     Int cubeSlice, Int nCubeSlice) {
-
+  
   Int nRow=result.nRow();
-
+  
   result.modelVisCube(); // get the visibility so vb will have it
   VisBuffer vb(result); // method only called using writable VI so no ROVIA
-
+  
   Int nmodels=sm_->numberOfModels();
   Bool FTChanged=ftm_p[0]->changed(vb);
-
+  
   // we might need to recompute the "sky" for every single row, but we
   // avoid this if possible.
   internalChangesGet_p=False;  // Does this VB change inside itself?
@@ -1408,14 +1485,14 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
      (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT")) {
     changedSkyJonesLogic(result, firstOneChangesGet_p, internalChangesGet_p);
   }
-
+  
   if(internalChangesGet_p || internalChangesPut_p) {
     if(internalChangesPut_p)
       internalChangesPut_p=False;
     // Yes there are changes within this buffer: go row by row.
     // This will automatically catch a change in the FTMachine so
     // we don't have to check for that.
-
+    
     Matrix<Complex> refres;
     Matrix<Complex> refvb;
     for (Int row=0; row<nRow; row++) {
@@ -1440,7 +1517,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     // This buffer has changed wrt the previous buffer, but
     // this buffer has no changes within it. Again we don't need to
     // check for the FTMachine changing.
-
+    
     finalizeGetSlice();
     initializeGetSlice(result, 0, False, cubeSlice, nCubeSlice);
     if(incremental || (nmodels > 1)){
@@ -1463,7 +1540,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       ftm_p[0]->get(result);
   }
   return result;
-
+  
 }
 
 void
@@ -1477,73 +1554,73 @@ Bool
 CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
                               const CoordinateSystem& coords,
                               Int slice, Int nslice){
-    //bypass this for now
+  //bypass this for now
   return False;
-    // Enforce that all SPWs are in the same frequency frame.
-    //
-    // If all the SPWs in the MS are in LSRK frame, we can do data
-    // selection (since image is always in LSRK).
-    //
-    // If not all SPWs in the MS are in the same frequency frame and
-    // in LSRK frame, for now, disable data selection since the
-    // mapping between image (in LSRK) and MS channels will be time
-    // variable.
-    VisBufferAutoPtr vb (vi);
-    ROScalarMeasColumn<MFrequency> freqFrame=vb->msColumns().spectralWindow().refFrequencyMeas();
-    uInt nrows=vb->msColumns().spectralWindow().nrow();
-    String firstString = freqFrame(0).getRefString();
-    Bool allFramesSame=True;
-    for (uInt i=0;i<nrows;i++)
-        if (freqFrame(i).getRefString() != firstString)
-        {allFramesSame = False;break;}
-
-    if (!allFramesSame || (firstString!="LSRK"))
-        return False;
-
-    // Only one slice lets keep what the user selected
-    if(nslice==1)
-        return False;
-
-    Double start=0.0; 
-    Double end=0.0;
-    Double chanwidth=1.0;
-    Int specIndex=coords.findCoordinate(Coordinate::SPECTRAL);
-    SpectralCoordinate specCoord=coords.spectralCoordinate(specIndex);
-    Vector<Int>spectralPixelAxis=coords.pixelAxes(specIndex);
-    if(nchanPerSlice_p>0){
-        specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
-        specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))+0.5);
-        chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
-    }
-    if(end < start){
-        Double tempoo=start;
-        start=end;
-        end=tempoo;
-    }
-
-    Block<Vector<Int> > spwb;
-    Block<Vector<Int> > startb;
-    Block<Vector<Int> > nchanb;
-    Block<Vector<Int> > incrb=blockChanInc_p;
-    vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
-    // cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
-    // 	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
-    if(spwb.nelements()==0)
-        return False;
-
-    //cerr << "Original is " << blockChanStart_p[0] <<  "   " << blockChanWidth_p[0] << "  " <<  blockChanInc_p[0] << "   " 
-    //	 <<  blockSpw_p[0] << endl;
-    //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
-    vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
-
-    return True;
-
+  // Enforce that all SPWs are in the same frequency frame.
+  //
+  // If all the SPWs in the MS are in LSRK frame, we can do data
+  // selection (since image is always in LSRK).
+  //
+  // If not all SPWs in the MS are in the same frequency frame and
+  // in LSRK frame, for now, disable data selection since the
+  // mapping between image (in LSRK) and MS channels will be time
+  // variable.
+  VisBufferAutoPtr vb (vi);
+  ROScalarMeasColumn<MFrequency> freqFrame=vb->msColumns().spectralWindow().refFrequencyMeas();
+  uInt nrows=vb->msColumns().spectralWindow().nrow();
+  String firstString = freqFrame(0).getRefString();
+  Bool allFramesSame=True;
+  for (uInt i=0;i<nrows;i++)
+    if (freqFrame(i).getRefString() != firstString)
+      {allFramesSame = False;break;}
+  
+  if (!allFramesSame || (firstString!="LSRK"))
+    return False;
+  
+  // Only one slice lets keep what the user selected
+  if(nslice==1)
+    return False;
+  
+  Double start=0.0; 
+  Double end=0.0;
+  Double chanwidth=1.0;
+  Int specIndex=coords.findCoordinate(Coordinate::SPECTRAL);
+  SpectralCoordinate specCoord=coords.spectralCoordinate(specIndex);
+  Vector<Int>spectralPixelAxis=coords.pixelAxes(specIndex);
+  if(nchanPerSlice_p>0){
+    specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
+    specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))+0.5);
+    chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
+  }
+  if(end < start){
+    Double tempoo=start;
+    start=end;
+    end=tempoo;
+  }
+  
+  Block<Vector<Int> > spwb;
+  Block<Vector<Int> > startb;
+  Block<Vector<Int> > nchanb;
+  Block<Vector<Int> > incrb=blockChanInc_p;
+  vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
+  // cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
+  // 	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
+  if(spwb.nelements()==0)
+    return False;
+  
+  //cerr << "Original is " << blockChanStart_p[0] <<  "   " << blockChanWidth_p[0] << "  " <<  blockChanInc_p[0] << "   " 
+  //	 <<  blockSpw_p[0] << endl;
+  //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
+  vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
+  
+  return True;
+  
 }
 
 void CubeSkyEquation::fixImageScale()
 {
   LogIO os(LogOrigin("CubeSkyEquation", "fixImageScale"));
-
+  
   // make a minimum value to ggS
   // This has the same effect as Sault Weighting, but 
   // is implemented somewhat differently.
@@ -1561,24 +1638,24 @@ void CubeSkyEquation::fixImageScale()
   
   ggSMin1 = ggSMax * constPB_p * constPB_p;
   ggSMin2 = ggSMax * minPB_p * minPB_p;
-    
+  
   for (Int model=0;model<sm_->numberOfModels();model++) {
     if(ej_ || (ftm_p[model]->name() == "MosaicFT") ) {
       
       
-
-    /*Don't print this for now
-      if (scaleType_p == "SAULT") {
-      os << "Using SAULT image plane weighting" << LogIO::POST;
-    }
-    else {
-    os << "Using No image plane weighting" << LogIO::POST;
-    }
-    */
-    sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
-    if ((ftm_p[model]->name()!="MosaicFT")) {
-      if(scaleType_p=="SAULT"){
-	
+      
+      /*Don't print this for now
+	if (scaleType_p == "SAULT") {
+	os << "Using SAULT image plane weighting" << LogIO::POST;
+	}
+	else {
+	os << "Using No image plane weighting" << LogIO::POST;
+	}
+      */
+      sm_->fluxScale(model).removeRegion ("mask0", RegionHandler::Any, False);
+      if ((ftm_p[model]->name()!="MosaicFT")) {
+	if(scaleType_p=="SAULT"){
+	  
 	  // Adjust flux scale to account for ggS being truncated at ggSMin1
 	  // Below ggSMin2, set flux scale to 0.0
 	  // FluxScale * image => true brightness distribution, but
@@ -1586,116 +1663,116 @@ void CubeSkyEquation::fixImageScale()
 	  // if ggS < ggSMin2, set to Zero;
 	  // if ggS > ggSMin2 && < ggSMin1, set to ggSMin1/ggS
 	  // if ggS > ggSMin1, set to 1.0
-	
-	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
-					(iif(sm_->ggS(model) < (ggSMin2), 0.0,
-					     sqrt((sm_->ggS(model))/ggSMin1) )) );
-	sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
-					(iif(sm_->ggS(model) > (ggSMin1), 1.0,
-					     (sm_->fluxScale(model)) )) );
-	// truncate ggS at ggSMin1
-	sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-				  (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)), 
-				       sm_->ggS(model)) )
-				  );
-	
+	  
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					       sqrt((sm_->ggS(model))/ggSMin1) )) );
+	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
+					  (iif(sm_->ggS(model) > (ggSMin1), 1.0,
+					       (sm_->fluxScale(model)) )) );
+	  // truncate ggS at ggSMin1
+	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
+				    (iif(sm_->ggS(model) < (ggSMin1), ggSMin1*(sm_->fluxScale(model)), 
+					 sm_->ggS(model)) )
+				    );
+	  
 	}
-
+	
 	else{
-
+	  
 	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
 					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
 					       sqrt((sm_->ggS(model))/ggSMax) )) );
 	  sm_->ggS(model).copyData( (LatticeExpr<Float>) 
-					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
-					       sqrt((sm_->ggS(model))*ggSMax) )) );
-
+				    (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+					 sqrt((sm_->ggS(model))*ggSMax) )) );
+	  
 	}
-
+	
       } else {
 	
-	  Int nXX=sm_->ggS(model).shape()(0);
-	  Int nYY=sm_->ggS(model).shape()(1);
-	  Int npola= sm_->ggS(model).shape()(2);
-	  Int nchana= sm_->ggS(model).shape()(3);
-	  IPosition blc(4,nXX, nYY, npola, nchana);
-	  IPosition trc(4, nXX, nYY, npola, nchana);
-	  blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
-
-	  //Those damn weights per plane can be wildly different so 
-	  //deal with it properly here
-	  for (Int j=0; j < npola; ++j){
-	    for (Int k=0; k < nchana ; ++k){
-	      
-	      blc(2)=j; trc(2)=j;
-	      blc(3)=k; trc(3)=k;
-	      Slicer sl(blc, trc, Slicer::endIsLast);
-	      SubImage<Float> fscalesub(sm_->fluxScale(model), sl, True);
-	      SubImage<Float> ggSSub(sm_->ggS(model), sl, True);
-	      Float planeMax;
-	      LatticeExprNode LEN = max( ggSSub );
-	      planeMax =  LEN.getFloat();
-
-	      ///////////
-	      LatticeExprNode LEN1 = min( ggSSub );
-	      os << LogIO::DEBUG1
-                 << "Max " << planeMax << " min " << LEN1.getFloat() << LogIO::POST;
-
-	      //////////
-	      ///As we chop the image later...the weight can vary per channel
-	      ///lets be conservative and go to 1% of ggsMin2
-	      if(planeMax !=0){
-		if(doflat_p){
-		  fscalesub.copyData( (LatticeExpr<Float>) 
-				      (iif(ggSSub < (ggSMin2/100.0), 
-					   0.0, sqrt(ggSSub/planeMax))));
-		  ggSSub.copyData( (LatticeExpr<Float>) 
-				   (iif(ggSSub < (ggSMin2/100.0), 0.0, 
-					sqrt(planeMax*ggSSub))));
-		}
-		else{
-		  fscalesub.copyData( (LatticeExpr<Float>) 
-				      (iif(ggSSub < (ggSMin2/100.0), 
-					   0.0, (ggSSub/planeMax))));
-		  ggSSub.copyData( (LatticeExpr<Float>) 
-				   (iif(ggSSub < (ggSMin2/100.0), 0.0, 
-					(planeMax))));
-		}
-
-		//ggSSub.copyData( (LatticeExpr<Float>) 
-		//		 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
-		//		      planeMax)));
+	Int nXX=sm_->ggS(model).shape()(0);
+	Int nYY=sm_->ggS(model).shape()(1);
+	Int npola= sm_->ggS(model).shape()(2);
+	Int nchana= sm_->ggS(model).shape()(3);
+	IPosition blc(4,nXX, nYY, npola, nchana);
+	IPosition trc(4, nXX, nYY, npola, nchana);
+	blc(0)=0; blc(1)=0; trc(0)=nXX-1; trc(1)=nYY-1; 
 	
-
-	      }
-	    }
-
-	  }
-	  /*
+	//Those damn weights per plane can be wildly different so 
+	//deal with it properly here
+	for (Int j=0; j < npola; ++j){
+	  for (Int k=0; k < nchana ; ++k){
 	    
+	    blc(2)=j; trc(2)=j;
+	    blc(3)=k; trc(3)=k;
+	    Slicer sl(blc, trc, Slicer::endIsLast);
+	    SubImage<Float> fscalesub(sm_->fluxScale(model), sl, True);
+	    SubImage<Float> ggSSub(sm_->ggS(model), sl, True);
+	    Float planeMax;
+	    LatticeExprNode LEN = max( ggSSub );
+	    planeMax =  LEN.getFloat();
+	    
+	    ///////////
+	    LatticeExprNode LEN1 = min( ggSSub );
+	    os << LogIO::DEBUG1
+	       << "Max " << planeMax << " min " << LEN1.getFloat() << LogIO::POST;
+	    
+	    //////////
+	    ///As we chop the image later...the weight can vary per channel
+	    ///lets be conservative and go to 1% of ggsMin2
+	    if(planeMax !=0){
+	      if(doflat_p){
+		fscalesub.copyData( (LatticeExpr<Float>) 
+				    (iif(ggSSub < (ggSMin2/100.0), 
+					 0.0, sqrt(ggSSub/planeMax))));
+		ggSSub.copyData( (LatticeExpr<Float>) 
+				 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+				      sqrt(planeMax*ggSSub))));
+	      }
+	      else{
+		fscalesub.copyData( (LatticeExpr<Float>) 
+				    (iif(ggSSub < (ggSMin2/100.0), 
+					 0.0, (ggSSub/planeMax))));
+		ggSSub.copyData( (LatticeExpr<Float>) 
+				 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+				      (planeMax))));
+	      }
+	      
+	      //ggSSub.copyData( (LatticeExpr<Float>) 
+	      //		 (iif(ggSSub < (ggSMin2/100.0), 0.0, 
+	      //		      planeMax)));
+	      
+	      
+	    }
+	  }
+	  
+	}
+	/*
+	  
 	  ftm_p[model]->getFluxImage(sm_->fluxScale(model));
 	  
 	  sm_->fluxScale(model).copyData( (LatticeExpr<Float>) 
-					  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
-					  (sm_->ggS(model)/ggSMax) )) );
-
-	  */
-	  //}	
-    }
-    
+	  (iif(sm_->ggS(model) < (ggSMin2), 0.0,
+	  (sm_->ggS(model)/ggSMax) )) );
+	  
+	*/
+	//}	
+      }
+      
       //because for usual ft machines a applySJoneInv is done on the gS
       //in the finalizepu tstage...need to understand if its necessary
       /*need to understand that square business
-      if( (ft_->name() != "MosaicFT") && (!isPSFWork_p)){
+	if( (ft_->name() != "MosaicFT") && (!isPSFWork_p)){
 	sm_->gS(model).copyData( (LatticeExpr<Float>) 
-				 (iif(sm_->fluxScale(model) > 0.0, 
-				      ((sm_->gS(model))/(sm_->fluxScale(model))), 0.0 )) );
-
-      }
+	(iif(sm_->fluxScale(model) > 0.0, 
+	((sm_->gS(model))/(sm_->fluxScale(model))), 0.0 )) );
+	
+	}
       */
       ///
-    sm_->fluxScale(model).clearCache();
-    sm_->ggS(model).clearCache();
+      sm_->fluxScale(model).clearCache();
+      sm_->ggS(model).clearCache();
     }
     
   }
@@ -1704,41 +1781,41 @@ void CubeSkyEquation::fixImageScale()
 void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 {
   LogIO os(LogOrigin("CubeSkyEquation", "tmpNormalizeImage"));
-
+  
   SubImage<Float> *gSSliceVec;
   SubImage<Float> *ggSSliceVec;
   Int nCubeSlice;
   // Number of Taylor terms per field
   Int ntaylors = sm_->numberOfTaylorTerms();
   isLargeCube(sm_->cImage(0), nCubeSlice);
-
+  
   //  if (!sm_->isImageNormalized()) return;
   // PSFs are normalized in makeApproxPSF()
   if(dopsf) ntaylors = 2 * sm_->numberOfTaylorTerms() - 1;
-
+  
   Int nfields = sm_->numberOfModels()/ntaylors;
-
+  
   for (Int cubeSlice=0; cubeSlice<nCubeSlice;cubeSlice++)
-      for (Int field=0; field<nfields; field++)
-	{
-	  Int baseindex = sm_->getModelIndex(field,0); // field,taylorterm
-	  sliceCube(ggSSliceVec, sm_->ggS(baseindex), cubeSlice, nCubeSlice);
-	  
-	  for (Int taylor=0; taylor < ntaylors; ++taylor)
-	    {
-	      Int index = sm_->getModelIndex(field, taylor);
-	      
-	      sliceCube(gSSliceVec, sm_->gS(index), cubeSlice, nCubeSlice);
-	      
-	      LatticeExpr<Float> le(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
-	      gSSliceVec->copyData(le);
-
-	      // if (dopsf) 
-	      // 	{
-	      // 	  storeImg(String("thePSF.im"), *gSSliceVec);
-	      // 	  storeImg(String("thePB.im"), *ggSSliceVec);
-	      // 	}		  
-	    }
-	}
+    for (Int field=0; field<nfields; field++)
+      {
+	Int baseindex = sm_->getModelIndex(field,0); // field,taylorterm
+	sliceCube(ggSSliceVec, sm_->ggS(baseindex), cubeSlice, nCubeSlice);
+	
+	for (Int taylor=0; taylor < ntaylors; ++taylor)
+	  {
+	    Int index = sm_->getModelIndex(field, taylor);
+	    
+	    sliceCube(gSSliceVec, sm_->gS(index), cubeSlice, nCubeSlice);
+	    
+	    LatticeExpr<Float> le(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
+	    gSSliceVec->copyData(le);
+	    
+	    // if (dopsf) 
+	    // 	{
+	    // 	  storeImg(String("thePSF.im"), *gSSliceVec);
+	    // 	  storeImg(String("thePB.im"), *ggSSliceVec);
+	    // 	}		  
+	  }
+      }
 }
 } //# NAMESPACE CASA - END
