@@ -42,8 +42,10 @@ class sdgrid_unittest_base(object):
                         msg='grid result differ: ref %s, val %s'%(ref,val))
 
     def nonzero(self,ref,index):
-        refpix=ref[1]
-        resultpix=index[1]
+        #refpix=ref[1]
+        #resultpix=index[1]
+        refpix = ref
+        resultpix = index
         msglt = 'There are nonzero pixels that should be zero'
         msggt = 'There are zero pixels that should be nonzero'
         self.assertEqual(len(refpix),len(resultpix),
@@ -63,7 +65,8 @@ class sdgrid_unittest_base(object):
             ito=ifrom+npol*2*(width-1)-2*tweak
             index+=range(ifrom,ito+npol)
         #print 'index=',index
-        nonzeropix_ref=(numpy.zeros(len(index),int),numpy.array(index))
+        #nonzeropix_ref=(numpy.zeros(len(index),int),numpy.array(index))
+        nonzeropix_ref=numpy.array(index)
         return nonzeropix_ref
 
     def addrow(self,val):
@@ -213,15 +216,15 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
         npol=2
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         self.nonzero(nonzeropix_ref,nonzeropix)
 
         # pol0 must be 10.0
-        pol0=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol0=self.data[0,nonzeropix[0]]
         self.check(10.0,pol0)
 
         # pol1 must be 1.0
-        pol1=self.data[nonzeropix[0][1],nonzeropix[1][1]]
+        pol1=self.data[0,nonzeropix[1]]
         self.check(1.0,pol1)
         
 
@@ -236,15 +239,15 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
         # default width for SF is 3
         width=3
         npol=2
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
         self.nonzero(nonzeropix_ref,nonzeropix)
 
         # pol0 must be 10.0 while pol1 must be 1.0
-        for i in xrange(0,len(nonzeropix[1]),npol):
-            pol0=self.data[nonzeropix[0][i],nonzeropix[1][i]]
+        for i in xrange(0,len(nonzeropix),npol):
+            pol0=self.data[0,nonzeropix[i]]
             self.check(10.0,pol0)
-            pol1=self.data[nonzeropix[0][i+1],nonzeropix[1][i+1]]
+            pol1=self.data[0,nonzeropix[i+1]]
             self.check(1.0,pol1)
         
 
@@ -257,17 +260,18 @@ class sdgrid_single_integ(sdgrid_unittest_base,unittest.TestCase):
         self.getdata()
 
         # default width for GAUSS is 4
-        width=4
+        width=2
         npol=2
-        nonzeropix=self.data.nonzero()
-        nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
+        nonzeropix=self.data.nonzero()[1]
+        nonzeropix_ref=numpy.array([218, 219, 220, 221, 222, 223, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 354, 355, 356, 357, 358, 359])
+        #nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
         self.nonzero(nonzeropix_ref,nonzeropix)
         
         # pol0 must be 10.0 while pol1 must be 1.0
-        for i in xrange(0,len(nonzeropix[1]),npol):
-            pol0=self.data[nonzeropix[0][i],nonzeropix[1][i]]
+        for i in xrange(0,len(nonzeropix),npol):
+            pol0=self.data[0,nonzeropix[i]]
             self.check(10.0,pol0)
-            pol1=self.data[nonzeropix[0][i+1],nonzeropix[1][i+1]]
+            pol1=self.data[0,nonzeropix[i+1]]
             self.check(1.0,pol1)
 
 ###
@@ -314,12 +318,12 @@ class sdgrid_clipping(sdgrid_unittest_base,unittest.TestCase):
         npol=1
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
 
         # pol0 must be 1.0
-        pol0=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol0=self.data[0,nonzeropix[0]]
         self.check(1.0,pol0)
         
 
@@ -389,14 +393,15 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
         # pol0 is flagged so that data must be zero
-        nonzeropix_ref2=(numpy.array([nonzeropix_ref[0][1]]),
-                         numpy.array([nonzeropix_ref[1][1]]))
-        nonzeropix=self.data.nonzero()
+        #nonzeropix_ref2=(numpy.array([nonzeropix_ref[0][1]]),
+        #                 numpy.array([nonzeropix_ref[1][1]]))
+        nonzeropix_ref2=numpy.array([nonzeropix_ref[1]])
+        nonzeropix=self.data.nonzero()[1]
         #print nonzeropix
         self.nonzero(nonzeropix_ref2,nonzeropix)
 
         # pol1 must be 1.0
-        pol1=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol1=self.data[0,nonzeropix[0]]
         self.check(1.0,pol1)
         
 
@@ -442,12 +447,12 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
         npol=1
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
 
         # pol0 must be 5.5 (={10.0+1.0}/{1.0+1.0}
-        pol0=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol0=self.data[0,nonzeropix[0]]
         self.check(5.5,pol0)
         
     def test401(self):
@@ -471,12 +476,12 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
         npol=1
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
 
         # pol0 must be 4.0 (={10.0*0.5+1.0*1.0}/{0.5+1.0})
-        pol0=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol0=self.data[0,nonzeropix[0]]
         self.check(4.0,pol0)
         
 
@@ -501,12 +506,12 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
         npol=1
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
 
         # pol0 must be 4.0 (={10.0*0.5+1.0*1.0}/{0.5+1.0})
-        pol0=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol0=self.data[0,nonzeropix[0]]
         self.check(4.0,pol0)
         
 
@@ -535,12 +540,12 @@ class sdgrid_weighting(sdgrid_unittest_base,unittest.TestCase):
         npol=1
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
 
         # pol0 must be 2.8 (={10.0*0.5*0.5+1.0*1.0*1.0}/{0.5*0.5+1.0*1.0})
-        pol0=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol0=self.data[0,nonzeropix[0]]
         self.check(2.8,pol0)
         
 ###
@@ -577,15 +582,15 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
         npol=2
         width=1
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         self.nonzero(nonzeropix_ref,nonzeropix)
 
-        pol0=self.data[nonzeropix[0][0],nonzeropix[1][0]]
+        pol0=self.data[0,nonzeropix[0]]
         #self.check(0.625,pol0)
         #self.check(0.5,pol0)
         self.check(0.6666666667,pol0)
         
-        pol1=self.data[nonzeropix[0][1],nonzeropix[1][1]]
+        pol1=self.data[0,nonzeropix[1]]
         #self.check(0.0625,pol1)
         #self.check(0.05,pol1)
         self.check(0.06666666667,pol1)
@@ -601,7 +606,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
         # default width for SF is 3
         width=3
         npol=2
-        nonzeropix=self.data.nonzero()
+        nonzeropix=self.data.nonzero()[1]
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
         self.nonzero(nonzeropix_ref,nonzeropix)
 
@@ -623,7 +628,7 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
                    4.63147834e-03,   4.63147851e-04,   9.89488605e-03,
                    9.89488559e-04,   4.63147834e-03,   4.63147851e-04,
                    1.54954410e-04,   1.54954414e-05]
-        nonzerodata=numpy.take(self.data,nonzeropix[1],axis=1).squeeze()
+        nonzerodata=numpy.take(self.data,nonzeropix,axis=1).squeeze()
         for i in xrange(len(nonzerodata)):
             self.check(refdata[i],nonzerodata[i])
 
@@ -636,10 +641,11 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
         self.getdata()
         
         # default width for GAUSS is 4
-        width=4
+        width=3
         npol=2
-        nonzeropix=self.data.nonzero()
-        nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
+        nonzeropix=self.data.nonzero()[1]
+        nonzeropix_ref = numpy.array([218, 219, 220, 221, 222, 223, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 354, 355, 356, 357, 358, 359])
+        #nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
         self.nonzero(nonzeropix_ref,nonzeropix)
 
 ##         refdata=[  1.77304173e-05,   1.77304173e-06,   1.39215190e-04,
@@ -702,37 +708,51 @@ class sdgrid_map(sdgrid_unittest_base,unittest.TestCase):
 ##          1.76581250e-06,   1.39098149e-04,   1.39098147e-05,
 ##          2.76906649e-04,   2.76906649e-05,   1.39098105e-04,
 ##          1.39098111e-05,   1.76581198e-05,   1.76581193e-06 ]
-        refdata = [  1.81808045e-05,   1.81808048e-06,   1.42181379e-04,
-         1.42181389e-05,   2.80359789e-04,   2.80359782e-05,
-         1.42181379e-04,   1.42181389e-05,   1.81808082e-05,
-         1.81808093e-06,   1.77607908e-05,   1.77607922e-06,
-         5.56025654e-04,   5.56025661e-05,   4.38016886e-03,
-         4.38016868e-04,   8.59508105e-03,   8.59508116e-04,
-         4.38016886e-03,   4.38016868e-04,   5.56032173e-04,
-         5.56032210e-05,   1.77640995e-05,   1.77641004e-06,
-         1.39544805e-04,   1.39544809e-05,   4.37528640e-03,
-         4.37528623e-04,   3.45972925e-02,   3.45972902e-03,
-         6.86253384e-02,   6.86253421e-03,   3.45973410e-02,
-         3.45973414e-03,   4.37568687e-03,   4.37568669e-04,
-         1.39754135e-04,   1.39754138e-05,   2.78791587e-04,
-         2.78791576e-05,   8.59215762e-03,   8.59215739e-04,
-         6.86249956e-02,   6.86249975e-03,   1.37247697e-01,
-         1.37247695e-02,   6.86251894e-02,   6.86251884e-03,
-         8.59371200e-03,   8.59371212e-04,   2.79630651e-04,
-         2.79630658e-05,   1.42285324e-04,   1.42285335e-05,
-         4.38034954e-03,   4.38034942e-04,   3.45974155e-02,
-         3.45974136e-03,   6.86248764e-02,   6.86248764e-03,
-         3.45974676e-02,   3.45974672e-03,   4.38075094e-03,
-         4.38075076e-04,   1.42502890e-04,   1.42502895e-05,
-         1.81863579e-05,   1.81863584e-06,   5.56052139e-04,
-         5.56052109e-05,   4.37586755e-03,   4.37586743e-04,
-         8.59079324e-03,   8.59079300e-04,   4.37586801e-03,
-         4.37586801e-04,   5.56058600e-04,   5.56058621e-05,
-         1.81898176e-05,   1.81898179e-06,   1.77693855e-05,
-         1.77693846e-06,   1.39854470e-04,   1.39854483e-05,
-         2.78070598e-04,   2.78070602e-05,   1.39854485e-04,
-         1.39854492e-05,   1.77693983e-05,   1.77693983e-06]
-        nonzerodata=numpy.take(self.data,nonzeropix[1],axis=1).squeeze()
+##         refdata = [  1.81808045e-05,   1.81808048e-06,   1.42181379e-04,
+##          1.42181389e-05,   2.80359789e-04,   2.80359782e-05,
+##          1.42181379e-04,   1.42181389e-05,   1.81808082e-05,
+##          1.81808093e-06,   1.77607908e-05,   1.77607922e-06,
+##          5.56025654e-04,   5.56025661e-05,   4.38016886e-03,
+##          4.38016868e-04,   8.59508105e-03,   8.59508116e-04,
+##          4.38016886e-03,   4.38016868e-04,   5.56032173e-04,
+##          5.56032210e-05,   1.77640995e-05,   1.77641004e-06,
+##          1.39544805e-04,   1.39544809e-05,   4.37528640e-03,
+##          4.37528623e-04,   3.45972925e-02,   3.45972902e-03,
+##          6.86253384e-02,   6.86253421e-03,   3.45973410e-02,
+##          3.45973414e-03,   4.37568687e-03,   4.37568669e-04,
+##          1.39754135e-04,   1.39754138e-05,   2.78791587e-04,
+##          2.78791576e-05,   8.59215762e-03,   8.59215739e-04,
+##          6.86249956e-02,   6.86249975e-03,   1.37247697e-01,
+##          1.37247695e-02,   6.86251894e-02,   6.86251884e-03,
+##          8.59371200e-03,   8.59371212e-04,   2.79630651e-04,
+##          2.79630658e-05,   1.42285324e-04,   1.42285335e-05,
+##          4.38034954e-03,   4.38034942e-04,   3.45974155e-02,
+##          3.45974136e-03,   6.86248764e-02,   6.86248764e-03,
+##          3.45974676e-02,   3.45974672e-03,   4.38075094e-03,
+##          4.38075076e-04,   1.42502890e-04,   1.42502895e-05,
+##          1.81863579e-05,   1.81863584e-06,   5.56052139e-04,
+##          5.56052109e-05,   4.37586755e-03,   4.37586743e-04,
+##          8.59079324e-03,   8.59079300e-04,   4.37586801e-03,
+##          4.37586801e-04,   5.56058600e-04,   5.56058621e-05,
+##          1.81898176e-05,   1.81898179e-06,   1.77693855e-05,
+##          1.77693846e-06,   1.39854470e-04,   1.39854483e-05,
+##          2.78070598e-04,   2.78070602e-05,   1.39854485e-04,
+##          1.39854492e-05,   1.77693983e-05,   1.77693983e-06]
+        refdata = [1.37290766e-03,   1.37290757e-04,   3.63217224e-03,
+         3.63217230e-04,   1.37290766e-03,   1.37290757e-04,
+         1.37290766e-03,   1.37290757e-04,   2.71596070e-02,
+         2.71596084e-03,   7.29541257e-02,   7.29541294e-03,
+         2.71596070e-02,   2.71596084e-03,   1.37290766e-03,
+         1.37290757e-04,   3.63217224e-03,   3.63217230e-04,
+         7.29541257e-02,   7.29541294e-03,   1.98309869e-01,
+         1.98309869e-02,   7.29541257e-02,   7.29541294e-03,
+         3.63217224e-03,   3.63217230e-04,   1.37290766e-03,
+         1.37290757e-04,   2.71596070e-02,   2.71596084e-03,
+         7.29541257e-02,   7.29541294e-03,   2.71596070e-02,
+         2.71596084e-03,   1.37290766e-03,   1.37290757e-04,
+         1.37290766e-03,   1.37290757e-04,   3.63217224e-03,
+         3.63217230e-04,   1.37290766e-03,   1.37290757e-04]
+        nonzerodata=numpy.take(self.data,nonzeropix,axis=1).squeeze()
         for i in xrange(len(nonzerodata)):
             self.check(refdata[i],nonzerodata[i])
 
@@ -832,9 +852,9 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
         #print nonzeropix_ref
         # shift 3 pixels downward
-        nonzeropix_ref[1][0]-=nshift*npol*npix
-        nonzeropix_ref[1][1]-=nshift*npol*npix
-        nonzeropix=self.data.nonzero()
+        nonzeropix_ref[0]-=nshift*npol*npix
+        nonzeropix_ref[1]-=nshift*npol*npix
+        nonzeropix=self.data.nonzero()[1]
         #print nonzeropix_ref
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
