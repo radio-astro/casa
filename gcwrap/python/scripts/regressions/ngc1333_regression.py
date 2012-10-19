@@ -989,8 +989,8 @@ cal1_8may=5.72 # (channel averaged)
 cal2_8may=6.70 # (channel averaged)
 src2may=3.13   # (channel averaged)
 src8may=8.18   # (channel averaged)
-immax=0.562
-imrms=0.0668
+immax=0.694
+imrms=0.0729
 
 diff_cal1_2may=abs((cal1_2may-gcal1_2may)/cal1_2may)
 diff_cal2_2may=abs((cal2_2may-gcal2_2may)/cal2_2may)
