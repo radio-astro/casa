@@ -47,6 +47,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			static QString toDegreeString( int hrs, int mins, double secs );
 			static QString toDecString( int hrs, int mins, double secs );
 			static void appendSign( double rad, QString& degreeString );
+			static QList<QString> getTitleCaseVariations( QString source );
+			static QString toTitleCase( QString word );
+
 			/**
 			 * Designed to take an input string of the format '[km/s]' and return 'km/s'.
 			 */

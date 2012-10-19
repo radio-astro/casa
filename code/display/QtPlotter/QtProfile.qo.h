@@ -170,7 +170,7 @@ public slots:
 	void right();
 	void preferences();
 	void frameChanged( int );
-	void setPreferences(int stateAutoX, int stateAutoY, int showGrid,
+	void setPreferences(bool stateAutoX, bool stateAutoY, int showGrid,
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
 			bool displayStepFunction, bool opticalFitter, bool showChannelLine );
 	void curveColorPreferences();

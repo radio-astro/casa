@@ -134,6 +134,7 @@ private:
     void setAstronomicalFilters( Searcher* searcher );
     void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
     void initializeSearchRange( QLineEdit* lineEdit, Double& value );
+    vector<string> initializeChemicalNames();
     void startSearchThread();
 
     MDoppler getRedShiftAdjustment( bool reverseRedshift) const;

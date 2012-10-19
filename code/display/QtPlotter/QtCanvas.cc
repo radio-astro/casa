@@ -74,8 +74,8 @@ QtCanvas::QtCanvas(QWidget *parent)
     traditionalColors = true;
     setPlotSettings(QtPlotSettings());
     xRangeMode=false;
-    autoScaleX = 2;
-    autoScaleY = 2;
+    autoScaleX = true;
+    autoScaleY = true;
     plotError  = 2;
     showGrid   = 2;
     taskMode = UNKNOWN_MODE;
@@ -114,16 +114,16 @@ void QtCanvas::initContextMenu(){
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings){
-    if (autoScaleX != 0 && autoScaleY != 0) {
+    //if (autoScaleX != 0 && autoScaleY != 0) {
        zoomStack.resize(1);
        curZoom = 0;
-    }
-    else {
+   // }
+   /* else {
        if (zoomStack.size() < 1) {
           zoomStack.resize(1);
           curZoom = 0;
        }
-    }
+    }*/
     zoomStack[curZoom] = settings;
     curMarker = 0;
     refreshPixmap();
@@ -151,7 +151,8 @@ void QtCanvas::defaultZoomOut(){
 	}
 
     double zoomFactor = (double)FRACZOOM/100.0;
-    settings.zoomOut( zoomFactor, getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom) );
+    settings.zoomOut( zoomFactor, getUnits(QtPlotSettings::xTop),
+    		getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY );
     zoomYBasedOnX( settings, zoomFactor, false );
 
     std::vector<QtPlotSettings>::iterator it;
@@ -180,7 +181,7 @@ void QtCanvas::zoomYBasedOnX( QtPlotSettings& settings, double zoomFactor, bool 
 	double minX = settings.getMinX(QtPlotSettings::xBottom );
 	double maxX = settings.getMaxX(QtPlotSettings::xBottom );
 	pair<double,double> yRange = getRangeFor( zoomFactor, zoomIn, minX, maxX );
-	settings.zoomY( yRange.first, yRange.second );
+	settings.zoomY( yRange.first, yRange.second, autoScaleY );
 }
 
 void QtCanvas::defaultZoomIn(){
@@ -192,7 +193,8 @@ void QtCanvas::defaultZoomIn(){
 	}
 
 	//Change x zoom by a percentage.
-	settings.zoomIn( zoomFactor, getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom) );
+	settings.zoomIn( zoomFactor, getUnits(QtPlotSettings::xTop),
+			getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY );
 	zoomYBasedOnX( settings, zoomFactor, true );
 
 	zoomStack.push_back(settings);
@@ -317,8 +319,8 @@ void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &erro
 
 void QtCanvas::setDataRange()
 {
-	if (autoScaleX == 0 && autoScaleY == 0)
-		return;
+	//if (autoScaleX == 0 && autoScaleY == 0)
+	//	return;
 
 	Double xmin = 1000000000000000000000000.;
 	Double xmax = -xmin;
@@ -331,22 +333,27 @@ void QtCanvas::setDataRange()
 		++it;
 	}
 
-	QtPlotSettings settings;
-	adjustExtremes( &xmin, &xmax );
-	adjustExtremes( &ymin, &ymax );
+	if ( autoScaleX ){
+		adjustExtremes( &xmin, &xmax );
+	}
+	if ( autoScaleY ){
+		adjustExtremes( &ymin, &ymax );
+	}
 
 	//Store the results in the plot settings
-	if (autoScaleX) {
+	QtPlotSettings settings;
+	//if (autoScaleX) {
 		settings.setMinX(QtPlotSettings::xBottom, xmin);
 		settings.setMaxX(QtPlotSettings::xBottom, xmax);
 		settings.setMinX(QtPlotSettings::xTop, topAxisRange.first );
 		settings.setMaxX(QtPlotSettings::xTop, topAxisRange.second );
-	}
-	if (autoScaleY) {
+	//}
+	//if (autoScaleY) {
 		settings.setMinY(ymin);
 		settings.setMaxY(ymax);
-	}
-	settings.adjust( getUnits( QtPlotSettings::xTop ), getUnits(QtPlotSettings::xBottom) );
+	//}
+
+	settings.adjust( getUnits( QtPlotSettings::xTop ), getUnits(QtPlotSettings::xBottom), autoScaleX, autoScaleY );
 
 	if ( curZoom > 0 ) {
 		// if the canvas is zoomed, keep the zoom level,
@@ -426,7 +433,7 @@ void QtCanvas::setTopAxisRange(const Vector<Float> &values, bool topAxisDescendi
 	QtPlotSettings currentSettings = zoomStack[curZoom];
 	currentSettings.setMinX(QtPlotSettings::xTop, min );
 	currentSettings.setMaxX( QtPlotSettings::xTop, max );
-	currentSettings.adjust(getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom));
+	currentSettings.adjust(getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY);
 	zoomStack[curZoom] = currentSettings;
 	refreshPixmap();
 }
@@ -1918,11 +1925,27 @@ void QtCanvas::endZoomRect( QMouseEvent* /*event*/ ){
 	settings.setMinY( prevMaxY - dy * rect.bottom() );
 	settings.setMaxY( prevMaxY - dy * rect.top() );
 	//qDebug() << "min-x: " << settings.minX << " max-x: " << settings.maxX;
-	settings.adjust( getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom));
+	settings.adjust( getUnits(QtPlotSettings::xTop), getUnits( QtPlotSettings::xBottom), autoScaleX, autoScaleY );
 	if ( curveMap.size() != 0) {
 		zoomStack.resize(curZoom + 1);
 		zoomStack.push_back(settings);
 		zoomIn();
+	}
+}
+
+void QtCanvas::setAutoScaleX(bool autoScale) {
+	bool oldAutoScale = autoScaleX;
+	if ( oldAutoScale != autoScale ){
+		autoScaleX = autoScale;
+		setDataRange();
+	}
+}
+
+void QtCanvas::setAutoScaleY(bool autoScale) {
+	bool oldAutoScale = autoScaleY;
+	if ( oldAutoScale != autoScale ){
+		autoScaleY = autoScale;
+		setDataRange();
 	}
 }
 }

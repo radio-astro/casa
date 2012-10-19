@@ -28,7 +28,8 @@
 #include <iostream>
 #include <QMessageBox>
 #include <QWidget>
-
+#include <QMap>
+#include <QtCore/qmath.h>
 
 namespace casa {
 
@@ -165,6 +166,46 @@ namespace casa {
 			strippedUnits = unitStr.mid(openingBracketEnd + 1, endBracketStart - openingBracketEnd -1 );
 		}
 		return strippedUnits;
+	}
+
+	QList<QString> Util::getTitleCaseVariations( QString source ){
+		QString baseString = source.trimmed().toLower();
+		QStringList wordList = baseString.split( " ", QString::SkipEmptyParts );
+		QMap<int,QList<QString> > wordMap;
+		int wordCount = wordList.size();
+		for ( int i = 0; i < wordCount; i++ ){
+			QString wordLookup = wordList[i];
+			QList<QString> titleCaseList;
+			titleCaseList.append( wordLookup );
+			titleCaseList.append( toTitleCase( wordLookup ));
+			wordMap.insert( i, titleCaseList );
+		}
+
+		//Combine the strings
+		int count = static_cast<int>(qPow( 2, wordCount ));
+		QList<QString> variationList;
+		int i = 0;
+		while ( i < count ){
+			QString variation;
+			for ( int j = 0; j < wordCount; j++ ){
+				int lookup = static_cast<int>((i / qPow( 2, wordCount - j - 1))) % 2;
+				QList<QString> lookupList = wordMap[j];
+				variation = variation + lookupList[lookup];
+				if ( j != wordCount - 1 ){
+					variation = variation + " ";
+				}
+			}
+			variationList.append(variation);
+			i++;
+		}
+		return variationList;
+	}
+
+	QString Util::toTitleCase( QString word ){
+		QString firstLetter = word.mid( 0, 1 );
+		QString firstLetterUpperCase = firstLetter.toUpper();
+		QString result = word.replace(0,1,firstLetterUpperCase );
+		return result;
 	}
 
 	QString Util::toDegreeString( int hrs, int mins, double secs ){

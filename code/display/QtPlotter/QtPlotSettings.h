@@ -37,10 +37,12 @@ class QtPlotSettings
 {
 public:
     QtPlotSettings();
-    void adjust( const QString& topUnits, const QString& bottomUnits );
-    void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits );
-    void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits );
-    void zoomY( double minY, double maxY );
+    void adjust( const QString& topUnits, const QString& bottomUnits, bool autoScaleX, bool autoScaleY );
+    void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+    		bool autoScaleX, bool autoScaleY );
+    void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+    		bool autoScaleX, bool autoScaleY );
+    void zoomY( double minY, double maxY, bool autoScaleY );
     pair<double,double> getZoomInY( double zoomFactor ) const;
     pair<double,double> getZoomOutY( double zoomFactor ) const;
 

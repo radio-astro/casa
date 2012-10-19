@@ -71,7 +71,8 @@ pair<double,double> QtPlotSettings::getZoomOutY( double zoomFactor ) const {
 	return percentageSpan;
 }
 
-void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits ){
+void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits,
+		const QString& bottomUnits, bool autoScaleX, bool autoScaleY ){
 	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
 		double prevSpanX = spanX(axisIndex);
@@ -82,7 +83,7 @@ void QtPlotSettings::zoomOut( double zoomFactor, const QString& topUnits, const 
 			originalMaxX = maxX[i];
 		}
 	}
-	adjust( topUnits, bottomUnits );
+	adjust( topUnits, bottomUnits, autoScaleX, autoScaleY );
 }
 
 pair<double,double> QtPlotSettings::getZoomInY( double zoomFactor ) const {
@@ -93,13 +94,16 @@ pair<double,double> QtPlotSettings::getZoomInY( double zoomFactor ) const {
 	return percentageSpan;
 }
 
-void QtPlotSettings::zoomY( double minY, double maxY ){
+void QtPlotSettings::zoomY( double minY, double maxY, bool autoScaleY ){
 	this->minY = minY;
 	this->maxY = maxY;
-	adjustAxis( minY, maxY, numYTicks );
+	if ( autoScaleY ){
+		adjustAxis( minY, maxY, numYTicks );
+	}
 }
 
-void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits ){
+void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits,
+		const QString& bottomUnits, bool autoScaleX, bool autoScaleY ){
 	for ( int i = 0; i < END_AXIS_INDEX; i++ ){
 		AxisIndex axisIndex = static_cast<AxisIndex>(i);
 		double prevSpanX = spanX( axisIndex );
@@ -110,22 +114,27 @@ void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits, const Q
 			originalMaxX = maxX[i];
 		}
 	}
-	adjust( topUnits, bottomUnits );
+	adjust( topUnits, bottomUnits, autoScaleX, autoScaleY );
 }
 
 
 
-void QtPlotSettings::adjust( const QString& topUnits, const QString& bottomUnits){
-	//Adjust the bottom axis allowing it to set the number of ticks.
-	adjustAxis( minX[0], maxX[0], numXTicks);
+void QtPlotSettings::adjust( const QString& topUnits, const QString& bottomUnits,
+		bool autoScaleX, bool autoScaleY){
+	if ( autoScaleX ){
+		//Adjust the bottom axis allowing it to set the number of ticks.
+		adjustAxis( minX[0], maxX[0], numXTicks);
 
-	//Adjust the top axis using the same number of ticks.  Use a
-	//converter to get its min and max based on the min and max of
-	//the bottom axis.
-	adjustAxisTop( minX[1], maxX[1], topUnits, bottomUnits);
+		//Adjust the top axis using the same number of ticks.  Use a
+		//converter to get its min and max based on the min and max of
+		//the bottom axis.
+		adjustAxisTop( minX[1], maxX[1], topUnits, bottomUnits);
+	}
 
-	//Now adjust the y-axis
-    adjustAxis(minY, maxY, numYTicks);
+	if ( autoScaleY ){
+		//Now adjust the y-axis
+		adjustAxis(minY, maxY, numYTicks);
+	}
 }
 
 void QtPlotSettings::adjustAxis(double &min, double &max,

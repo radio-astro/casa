@@ -143,11 +143,11 @@ public:
 			const QString &font = FONT_NAME, QtPlotSettings::AxisIndex axisIndex=QtPlotSettings::xBottom);
 	void setWelcome(const QString &text, int fontSize = 14,
 			const QString &font = FONT_NAME);
-	void setAutoScaleX(int a) {autoScaleX = a;}
-	void setAutoScaleY(int a) {autoScaleY = a;}
+	void setAutoScaleX(bool autoScale);
+	void setAutoScaleY(bool autoScale);
 	void setShowGrid(int a)   {showGrid = a; refreshPixmap();}
-	int getAutoScaleX( ) {return autoScaleX;}
-	int getAutoScaleY( ) {return autoScaleY;}
+	bool getAutoScaleX( ) {return autoScaleX;}
+	bool getAutoScaleY( ) {return autoScaleY;}
 	int getShowGrid( )   {return showGrid;}
 	void setPlotError(int a)  {plotError = a; setDataRange();}
 
@@ -424,8 +424,8 @@ private:
 	QPoint currentCursorPosition;
 	QColor xcursor;
 
-	int autoScaleX;
-	int autoScaleY;
+	bool autoScaleX;
+	bool autoScaleY;
 	int plotError;
 	int showGrid;
 
