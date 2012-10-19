@@ -1297,15 +1297,18 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 					   Int nCubeSlice)
 {
   LogIO os(LogOrigin("CubeSkyEquation", "initializeGetSlice"));
+  
+  oldInitializeGetSlice(vb, row, incremental, cubeSlice, nCubeSlice);
 
-  Bool newFTM=False;
-  for (Int field=0; field < sm_->numberOfModels(); ++field)
-    {
-      newFTM = isNewFTM(&(*ftm_p[field]));
+  // Bool newFTM=False;
+  // for (Int field=0; field < sm_->numberOfModels(); ++field)
+  //   {
+  //     newFTM = isNewFTM(&(*ftm_p[field]));
       
-      if (newFTM) oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
-      else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
-    }
+  //     if (newFTM) oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+  //     else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+  //   }
+
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
