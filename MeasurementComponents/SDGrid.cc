@@ -271,7 +271,9 @@ void SDGrid::init() {
     Int itruncate=(Int)(truncate*Double(convSampling)+0.5);
     logIO() << LogIO::DEBUG1 << "hwhm=" << hwhm << LogIO::POST;
     logIO() << LogIO::DEBUG1 << "itruncate=" << itruncate << LogIO::POST;
-    convSupport=(Int)(truncate+0.5);
+    //convSupport=(Int)(truncate+0.5);
+    convSupport = (Int)(truncate);
+    convSupport += (((truncate-(Float)convSupport) > 0.0) ? 1 : 0);
     convSize=convSampling*(2*convSupport+2);
     convFunc.resize(convSize);
     convFunc=0.0;
@@ -299,7 +301,10 @@ void SDGrid::init() {
     logIO() << LogIO::DEBUG1 << "hwhm=" << hwhm << LogIO::POST;
     logIO() << LogIO::DEBUG1 << "c=" << c << LogIO::POST;
     logIO() << LogIO::DEBUG1 << "itruncate=" << itruncate << LogIO::POST;
-    convSupport=(truncate_p >= 0.0) ? (Int)(truncate_p+0.5) : (Int)(2*c+0.5);
+    //convSupport=(truncate_p >= 0.0) ? (Int)(truncate_p+0.5) : (Int)(2*c+0.5);
+    Float convSupportF = (truncate_p >= 0.0) ? truncate_p : (2*c);
+    convSupport = (Int)convSupportF;
+    convSupport += (((convSupportF-(Float)convSupport) > 0.0) ? 1 : 0); 
     convSize=convSampling*(2*convSupport+2);
     convFunc.resize(convSize);
     convFunc=0.0;
