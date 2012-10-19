@@ -374,9 +374,9 @@ calmax16=1.43
 #srcmean=156.9898
 srcmean=147.43
 #immax=151.4
-immax=165.99
+immax=162.22
 #imrms=14.96
-imrms=16.41
+imrms=13.18
 
 # old (pre-minsnr=2)
 #calmean22=17.99
