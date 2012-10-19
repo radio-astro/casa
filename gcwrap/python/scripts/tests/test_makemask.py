@@ -367,5 +367,5 @@ class test_inmask(makemaskTestBase):
         self.assertTrue(defaultmask=='mask2')
 
 def suite():
-    return [test_inmask]
-    #return [test_merge,test_expand,test_copy]
+    #return [test_inmask]
+    return [test_merge,test_expand,test_copy,test_inmask]
