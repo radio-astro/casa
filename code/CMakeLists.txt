@@ -686,7 +686,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.166
+           VERSION 1.0.167
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -934,6 +934,7 @@ casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis )
 casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost)
+casa_add_module( asdmstman CASACORE )
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()
