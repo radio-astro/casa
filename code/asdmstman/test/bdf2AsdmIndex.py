@@ -224,9 +224,9 @@ class SDMDataObjectStreamReader:
 
             numberOfBytesToRead = numberOfBytesPerValue * self.binaryPartSize[binaryPartName]
             if binaryPartName == "crossData":
-                crossDataDesc["base"] = self.position() # + 1?
+                crossDataDesc["base"] = self.position()
             elif binaryPartName == "autoData":
-                autoDataDesc["base"] = self.position() # +1 ?
+                autoDataDesc["base"] = self.position() 
             bytes = self.f.read(numberOfBytesToRead) 
             if len(bytes) < numberOfBytesToRead:
                 print "EOF reached while reading a binary attachment ('" + binaryPartName + "')"

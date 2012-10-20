@@ -54,11 +54,13 @@ double toDouble (const String& str)
 
 void check (const String& msName)
 {
+  cout << "Performing consistency check ..." << endl;
+
   Table tab(msName);
   ROArrayColumn<Complex> data(tab, "DATA");
   ROArrayColumn<Complex> oldd(tab, "DATASAVE");
   for(uInt i=0; i<tab.nrow(); i++){
-    if (!allEQ(oldd(i), data(i))){
+    if (!allNear(oldd(i), data(i), 1E-6)){
       cout << "disagreement in row " << i << " " << oldd(i) << endl;
       cout << data(i) << endl;
     }
@@ -66,7 +68,7 @@ void check (const String& msName)
 }
 
 void createIndex (const String& msName, const string& fileName,
-                  const string& dataPath, bool bigendian)
+                  const string& dataPath, bool bigendian, bool docheck)
 {
   map<string,int> fileMap;
   vector<string> fileNames;
@@ -92,12 +94,18 @@ void createIndex (const String& msName, const string& fileName,
     ix.stepSpw = toInt(parts[7]);
     ix.fileOffset = toInt(parts[9]);
     ix.dataType = toInt(parts[10]);
+
     // Split scale factors (remove [] around it).
     String factStr (parts[8].substr(1, parts[8].size()-2));
     Vector<String> factors = stringToVector(factStr, ',');
+    ix.scaleFactors.resize(0); //DP
     for (uInt i=0; i<factors.size(); ++i) {
       ix.scaleFactors.push_back (toDouble(factors[i]));
     }
+    //for (uInt i=0; i<ix.scaleFactors.size(); ++i) {
+    //  cout << "ix.scaleFactors[i] " << i << " " << ix.scaleFactors[i] << endl;
+    //}
+
     // Now turn file name into a filenr.
     map<string,int>::const_iterator iter = fileMap.find(parts[1]);
     if (iter == fileMap.end()) {
@@ -120,9 +128,20 @@ void createIndex (const String& msName, const string& fileName,
       cout << i << "  " << fileNames[i] << endl;
     }
   } else {
-    // Rename the DATA column to DATASAVE.
+
     Table tab(msName, Table::Update);
-    tab.renameColumn ("DATASAVE", "DATA");
+    if(docheck){ // Rename the DATA column to DATASAVE.
+      tab.renameColumn ("DATASAVE", "DATA");
+    }
+    else{
+      if(tab.canRemoveColumn("DATA")){ 
+	tab.removeColumn ("DATA");
+      }
+      else{
+	cout << "Cannot remove column DATA. Renaming it to DATASAVE" << endl;
+	tab.renameColumn ("DATASAVE", "DATA");
+      }
+    }
     // Add new DATA column binding it to AsdmStMan.
     ArrayColumnDesc<Complex> dataCol ("DATA");
     AsdmStMan stman;
@@ -144,8 +163,8 @@ void createIndex (const String& msName, const string& fileName,
 
 int main(int argc, char* argv[])
 {
-  if (argc < 5  &&  argc != 2) {
-    cerr << "Run as:   makeAsdmIndex ms [infile datapath isbigendian (0 or 1)]"
+  if (argc < 6  &&  argc != 2) {
+    cerr << "Run as:   makeAsdmIndex ms [infile datapath isbigendian (0 or 1) check (0 or 1)]"
          << endl;
     cerr << "If 1 argument is given, only the DATA comparison will be done"
          << endl;
@@ -155,15 +174,19 @@ int main(int argc, char* argv[])
     // Register AsdmStMan to be able to use it.
     AsdmStMan::registerClass();
     String msName(argv[1]);
+    bool docheck = True;
     if (argc > 2) {
       string infile(argv[2]);
       string dataPath(argv[3]);
       bool bigendian = toInt(argv[4]);
+      docheck = toInt(argv[5]);
       // Create the index file.
-      createIndex (msName, infile, dataPath, bigendian);
+      createIndex (msName, infile, dataPath, bigendian, docheck);
     }
     // Compare the DATA and DATASAVE column.
-    check (msName);
+    if(docheck){
+      check (msName);
+    }
   } catch (std::exception& x) {
     cerr << "Error: " << x.what() << endl;
     return 1;
