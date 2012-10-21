@@ -605,7 +605,9 @@ namespace casa {
 	void QtRegionState::load_regions( bool ) {
 	    QString path = load_filename->text( );
 	    if ( path == "" ) {
+#if QT_VERSION >= 0x040700
 		load_filename->setPlaceholderText(QApplication::translate("QtRegionState", "please enter a file name or use 'browse' button", 0, QApplication::UnicodeUTF8));
+#endif
 		load_now->setFocus(Qt::OtherFocusReason);
 		return;
 	    }
@@ -638,7 +640,9 @@ namespace casa {
 		    char *buf = (char*) malloc((strlen(path.toAscii( ).constData( )) + 50) * sizeof(char));
 		    sprintf( buf, "could not read %s", path.toAscii( ).constData( ) );
 		    load_filename->clear( );
+#if QT_VERSION >= 0x040700
 		    load_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
+#endif
 		    load_now->setFocus(Qt::OtherFocusReason);
 		    free(buf);
 		    return;
@@ -649,7 +653,9 @@ namespace casa {
 		char *buf = (char*) malloc((strlen(path.toAscii( ).constData( )) + 50) * sizeof(char));
 		sprintf( buf, "file '%s' does not exist", path.toAscii( ).constData( ) );
 		load_filename->clear( );
+#if QT_VERSION >= 0x040700
 		load_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
+#endif
 		load_now->setFocus(Qt::OtherFocusReason);
 		free(buf);
 		return;
@@ -677,7 +683,9 @@ namespace casa {
 	void QtRegionState::save_region( bool ) {
 	    QString path = save_filename->text( );
 	    if ( path == "" ) {
+#if QT_VERSION >= 0x040700
 		save_filename->setPlaceholderText(QApplication::translate("QtRegionState", "please enter a file name or use 'browse' button", 0, QApplication::UnicodeUTF8));
+#endif
 		save_now->setFocus(Qt::OtherFocusReason);
 		return;
 	    }
@@ -694,7 +702,9 @@ namespace casa {
 		char *buf = (char*) malloc((strlen(name.toAscii( ).constData( )) + 50) * sizeof(char));
 		sprintf( buf, "unable to write to %s", name.toAscii( ).constData( ) );
 		save_filename->clear( );
+#if QT_VERSION >= 0x040700
 		save_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
+#endif
 		save_now->setFocus(Qt::OtherFocusReason);
 		free(buf);
 		return;
@@ -903,7 +913,9 @@ namespace casa {
 
 	void QtRegionState::noOutputNotify( ) {
 	    save_filename->clear( );
+#if QT_VERSION >= 0x040700
 	    save_filename->setPlaceholderText(QApplication::translate("QtRegionState", "no regions were selected for output...", 0, QApplication::UnicodeUTF8));
+#endif
 	    save_now->setFocus(Qt::OtherFocusReason);
 	}
 

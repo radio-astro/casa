@@ -46,7 +46,7 @@
 #include <QDebug>
 #include <QThread>
 #include <sys/time.h>
-
+#include <limits>
 
 
 
@@ -366,7 +366,9 @@ bool SpecFitSettingsWidgetRadio::isValidEstimate( QString& peakStr,
 		QString& centerStr, QString& fwhmStr,
 		QString& fixedStr, int rowIndex ) {
 	bool validEstimate = true;
-	QDoubleValidator validator;
+	QDoubleValidator validator( numeric_limits<double>::min( ),
+				    numeric_limits<double>::max( ),
+				    10, 0 );
 	int pos = 0;
 	QString msg( "Row "+QString::number(rowIndex)+" of the initial estimate table is invalid.\n");
 	if ( ! validator.validate(peakStr, pos) == QValidator::Acceptable ){

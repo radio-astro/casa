@@ -28,7 +28,8 @@
 
 #include <cmath>
 #include <QString>
-#include <pair.h>
+#include <utility>		/***for std::pair***/
+
 using namespace std;
  
 namespace casa { 
