@@ -40,6 +40,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/iosfwd.h>
 #include <images/Images/MomentsBase.h>
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
