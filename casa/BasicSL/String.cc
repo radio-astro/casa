@@ -32,6 +32,7 @@
 #include <stdarg.h>
 #include <casa/string.h>
 #include <casa/sstream.h>
+#include <stdio.h>		/**for vsnprintf( ) **/
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
