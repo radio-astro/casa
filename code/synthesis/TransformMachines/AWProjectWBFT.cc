@@ -456,16 +456,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
     // }
     ftWeightImage(wtImage, sumWt, doFFTNorm);
-    if (tt_pp != "")
-      { // uncommented by UUU
-	String name("ftwtimg"+sensitivityPatternQualifierStr_p+".im.conj");
-	storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
-      }
-    else
-      { // uncommented by UUU
-	String name("ftwtimg"+sensitivityPatternQualifierStr_p+".im");
-	storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
-      }
+    // if (tt_pp != "")
+    //   { // uncommented by UUU
+    // 	String name("ftwtimg"+sensitivityPatternQualifierStr_p+".im.conj");
+    // 	storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
+    //   }
+    // else
+    //   { // uncommented by UUU
+    // 	String name("ftwtimg"+sensitivityPatternQualifierStr_p+".im");
+    // 	storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
+    //   }
 
     sensitivityImage.resize(griddedWeights.shape()); 
     sensitivityImage.setCoordinateInfo(griddedWeights.coordinates());
@@ -1306,8 +1306,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	lattice=arrayLattice;
 	visResampler_p->initializeToSky(griddedData, sumWeight);
       }
-
-    cout << " griddedData shape : " << griddedData.shape() << endl;
 
     //AlwaysAssert(lattice, AipsError);
     if (resetPBs_p)

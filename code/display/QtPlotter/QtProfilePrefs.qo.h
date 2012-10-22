@@ -76,14 +76,14 @@ class QtProfilePrefs : public QDialog, Ui::QtProfilePrefsGUI{
 
 public:
 	QtProfilePrefs(QWidget *parent = 0);
-	QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY, int showGrid,
+	QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY, int showGrid,
 			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
 			bool displayStepFunction, bool opticalFitter, bool channelLine);
 	~QtProfilePrefs();
 	void syncUserPreferences();
 
 signals:
-	void currentPrefs(int stateAutoX, int stateAutoY, int showGrid, int stateMProf,
+	void currentPrefs(bool stateAutoX, bool stateAutoY, int showGrid, int stateMProf,
 			int stateRel, bool showToolTips, bool showTopAxis,
 			bool displayStepFunction, bool opticalFitter, bool channelLine);
 

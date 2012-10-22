@@ -81,6 +81,8 @@ namespace casa {
 
 	    connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
 	    connect( mystate, SIGNAL(translateY(const QString &, const QString &, const QString &)), SLOT(translate_y(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(resizeX(const QString &, const QString &, const QString &)), SLOT(resize_x(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(resizeY(const QString &, const QString &, const QString &)), SLOT(resize_y(const QString&,const QString&, const QString &)) );
 
 	    connect (mystate->getFitButton(), SIGNAL(clicked()), this, SLOT(updateCenterInfo()));
 
@@ -219,18 +221,22 @@ namespace casa {
 		mystate->getCoordinatesAndUnits( c, xu, yu, whu );
 		getPositionString( x, y, angle, width, height, c, xu, yu, whu );
 
-		int precision = ( whu == "arcmin" ? 2 :
-				  whu == "arcsec" ? 1 :
-				  whu == "deg" ? 3 : 5 );
+		QString qwidth;
+		QString qheight;
+		if ( width < 0.001 && height < 0.001 ) {
+		  fprintf( stderr, "in the 'g' spot..." );
+		    qwidth = QString("%1").arg(width,0,'g',5);
+		    qheight = QString("%1").arg(height,0,'g',5);
+		} else {
+		    qwidth = QString("%1").arg(width);
+		    qheight = QString("%1").arg(height);
+		}
 				  
 		mystate->updatePosition( QString::fromStdString(x),
 					 QString::fromStdString(y),
 					 QString::fromStdString(angle),
-					 QString("%1").arg(width,0,'g',precision),
-					 QString("%1").arg(height,0,'g',precision) );
+					 qwidth, qheight );
 
-					 // QString("%1").arg(width), 
-					 // QString("%1").arg(height) );
 	    }
 
 	}
@@ -271,6 +277,12 @@ namespace casa {
 	    if ( translateY( y.toStdString( ), y_units.toStdString( ), coordsys.toStdString( ) ) ) {
 		refresh( );
 	    }
+	}
+	void QtRegion::resize_x( const QString &x, const QString &x_units, const QString &coordsys ) {
+	    resizeX( x.toStdString( ), x_units.toStdString( ), coordsys.toStdString( ) );
+	}
+	void QtRegion::resize_y( const QString &y, const QString &y_units, const QString &coordsys ) {
+	    resizeY( y.toStdString( ), y_units.toStdString( ), coordsys.toStdString( ) );
 	}
 
 	void QtRegion::refresh_zrange_event( int min, int max ) {

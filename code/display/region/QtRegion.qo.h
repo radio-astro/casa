@@ -134,6 +134,8 @@ namespace casa {
 
 		virtual bool translateX( const std::string &/*x*/, const std::string &/*x_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
 		virtual bool translateY( const std::string &/*y*/, const std::string &/*y_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
+		virtual bool resizeX( const std::string &/*x*/, const std::string &/*x_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
+		virtual bool resizeY( const std::string &/*y*/, const std::string &/*y_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
 
 		void holdSignals( ) { hold_signals++; }
 		void releaseSignals( );
@@ -196,6 +198,8 @@ namespace casa {
 
 		void translate_x( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
 		void translate_y( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
+		void resize_x( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
+		void resize_y( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
 
 		void refresh_zrange_event(int,int);
 		// revoke...

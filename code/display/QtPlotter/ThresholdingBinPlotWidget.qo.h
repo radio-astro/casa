@@ -30,7 +30,7 @@
 #include <casa/aips.h>
 #include <qwt_plot.h>
 #include <qwt_plot_picker.h>
-#include <vector.h>
+#include <vector>
 #include <QDebug>
 using namespace std;
 

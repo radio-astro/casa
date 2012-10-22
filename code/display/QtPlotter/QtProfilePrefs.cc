@@ -53,7 +53,7 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent)
 	initializeConnections();
 }
 
-QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
+QtProfilePrefs::QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY,
 		int stateGrid, int stateMProf, int stateRel, bool showToolTips,
 		bool showTopAxis, bool displayAsStepFunction, bool opticalFit, bool channelLine )
 :QDialog(parent)
@@ -101,7 +101,7 @@ QtProfilePrefs::QtProfilePrefs(QWidget *parent, int stateAutoX, int stateAutoY,
 
 void QtProfilePrefs::syncUserPreferences(){
 	//Update the profiler with user preferences.
-	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
+	emit currentPrefs(autoScaleX->checkState(), autoScaleY->checkState(), (int)showGrid->checkState(),
 		(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
 		topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
 		opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;
@@ -165,7 +165,7 @@ void QtProfilePrefs::persist(){
 
 void QtProfilePrefs::accepted(){
 	persist();
-	emit currentPrefs((int)autoScaleX->checkState(), (int)autoScaleY->checkState(), (int)showGrid->checkState(),
+	emit currentPrefs(autoScaleX->checkState(), autoScaleY->checkState(), (int)showGrid->checkState(),
 			(int)multiProf->checkState(), (int)relative->checkState(), toolTipsCheckBox->checkState(),
 			topAxisCheckBox->checkState(), stepFunctionCheckBox->checkState(),
 			opticalSpecFitCheckBox->checkState(), channelLineCheckBox->checkState() ) ;

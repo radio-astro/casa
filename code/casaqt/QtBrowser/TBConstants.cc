@@ -1000,7 +1000,7 @@ const String TBConstants::OPEN_TEXT_NUM = String("Enter the number of rows") +
 
 /* Help Constants/Defaults */
 
-const String TBConstants::HELP_DIR = "/code/casaqt/implement/QtBrowser/help/";
+const String TBConstants::HELP_DIR = "/code/casaqt/QtBrowser/help/";
 const String TBConstants::HELP_INDEX = "index.html";
 const String TBConstants::HELP_XML = "help.xml";
 

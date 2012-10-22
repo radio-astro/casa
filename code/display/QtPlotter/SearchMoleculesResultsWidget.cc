@@ -200,7 +200,7 @@ bool SearchMoleculesResultsWidget::getLine(int lineIndex, Float& peak, Float& ce
 }
 
 //--------------------------------------------------------------------------------------
-//                   Utiltiy - Search Results Table
+//                   Utility - Search Results Table
 //--------------------------------------------------------------------------------------
 
 void SearchMoleculesResultsWidget::setTableValue(int row, int col, double val ){

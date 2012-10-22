@@ -35,6 +35,7 @@
 #if defined(__APPLE__)
 #include <crt_externs.h>
 #else
+#include <linux/limits.h>
 extern "C" char **environ;
 #endif
 

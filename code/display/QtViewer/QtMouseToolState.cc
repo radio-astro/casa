@@ -28,6 +28,7 @@
 
 
 #include <display/QtViewer/QtMouseToolState.qo.h>
+#include <stdio.h>		/***for sprintf( )***/
 #include <vector>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

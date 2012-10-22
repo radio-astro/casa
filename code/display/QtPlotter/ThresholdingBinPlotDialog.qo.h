@@ -27,7 +27,7 @@
 
 #include <display/QtPlotter/ThresholdingBinPlotDialog.ui.h>
 #include <casa/aips.h>
-#include <pair.h>
+#include <utility>		/***for std::pair***/
 #include <QDialog>
 
 using namespace std;

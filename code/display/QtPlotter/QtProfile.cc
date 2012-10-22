@@ -436,8 +436,8 @@ void QtProfile::initPreferences(){
 	profilePrefs = new QtProfilePrefs(this,pixelCanvas->getAutoScaleX(), pixelCanvas->getAutoScaleY(),
 			pixelCanvas->getShowGrid(),stateMProf, stateRel, pixelCanvas->getShowToolTips(), pixelCanvas-> getShowTopAxis(),
 			pixelCanvas->isDisplayStepFunction(), specFitSettingsWidget->isOptical(), pixelCanvas->isShowChannelLine());
-	connect(profilePrefs, SIGNAL(currentPrefs(int, int, int, int, int, bool, bool, bool, bool, bool)),
-			this, SLOT(setPreferences(int, int, int, int, int, bool, bool, bool, bool, bool)));
+	connect(profilePrefs, SIGNAL(currentPrefs(bool, bool, int, int, int, bool, bool, bool, bool, bool)),
+			this, SLOT(setPreferences(bool, bool, int, int, int, bool, bool, bool, bool, bool)));
 	profilePrefs->syncUserPreferences();
 }
 
@@ -446,7 +446,7 @@ void QtProfile::preferences()
 	profilePrefs->show();
 }
 
-void QtProfile::setPreferences(int inAutoX, int inAutoY, int showGrid, int inMProf, int inRel,
+void QtProfile::setPreferences(bool inAutoX, bool inAutoY, int showGrid, int inMProf, int inRel,
 		bool showToolTips, bool showTopAxis, bool displayStepFunction, bool opticalFitter,
 		bool showChannelLine){
 	bool update=false;

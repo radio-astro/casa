@@ -28,6 +28,9 @@
 
 #include <cmath>
 #include <QString>
+#include <utility>		/***for std::pair***/
+
+using namespace std;
  
 namespace casa { 
 
@@ -35,9 +38,15 @@ class QtPlotSettings
 {
 public:
     QtPlotSettings();
-    void adjust( const QString& topUnits, const QString& bottomUnits );
-    void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits );
-    void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits );
+    void adjust( const QString& topUnits, const QString& bottomUnits, bool autoScaleX, bool autoScaleY );
+    void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+    		bool autoScaleX, bool autoScaleY );
+    void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+    		bool autoScaleX, bool autoScaleY );
+    void zoomY( double minY, double maxY, bool autoScaleY );
+    pair<double,double> getZoomInY( double zoomFactor ) const;
+    pair<double,double> getZoomOutY( double zoomFactor ) const;
+
     void scroll(int dx, int dy);
     enum AxisIndex {xBottom, xTop, END_AXIS_INDEX };
     double spanX( AxisIndex index ) const {
