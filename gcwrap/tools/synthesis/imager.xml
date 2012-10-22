@@ -3579,11 +3579,13 @@ especially in wide-field cleaning.
      <param type="string" name="gridfunction">
      <description>Gridding function</description>
      <value>SF</value>
-     <value>BOX</value>
-     <value>PB</value>
-     <value>SF</value>
-     <value>GAUSS</value>
-     <value>GJINC</value>
+     <allowed kind="enum">
+       <value>SF</value>
+       <value>BOX</value>
+       <value>PB</value>
+       <value>GAUSS</value>
+       <value>GJINC</value>
+     </allowed>
      </param>
 
      <param type="any" name="location">

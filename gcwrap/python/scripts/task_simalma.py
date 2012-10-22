@@ -285,6 +285,8 @@ def simalma(
         finally:
             casalog.origin('simalma')
 
+        qimgsize_tp = None
+
         if acaratio > 0:
             ########################################################
             # ACA-7m simulation
@@ -373,6 +375,8 @@ def simalma(
                 npts_multi = npts * int(2./pbgridratio_tp)**2
                 msg("Number of pointings to map vicinity of each direction = %d" % npts_multi, origin="simalma", priority="DEBUG2")
 
+            # back-up imsize for TP image generation
+            qimgsize_tp = [mapx, mapy]
 
             grid_tp = qa.mul(PB12ot, pbgridratio_tp)
             pbunit = PB12ot['unit']
@@ -484,7 +488,71 @@ def simalma(
                 cell_aca = cell
 
                 # Define imsize to cover TP map region
-                imsize_aca = 0
+                #imsize_aca = 0
+                msg("Defining image size of ACA to cover map region of total power simulation", origin="simalma", priority=v_priority)
+                msg("- The total power map size: [%s, %s]" % \
+                    (qa.tos(qimgsize_tp[0]), qa.tos(qimgsize_tp[1])), \
+                    origin="simalma", priority=v_priority)
+                if cell != '':
+                    # user-defined cell size
+                    msg("- The user defined cell size: %s" % cell, \
+                        origin="simalma", priority=v_priority)
+                    imgcell = [cell, cell]
+                else:
+                    if model_cell == None:
+                        # components only simulation
+                        compmodel = fileroot+"/"+pref_bl+".compskymodel"
+                        msg("getting the cell size of input compskymodel", \
+                            origin="simalma", priority=v_priority)
+                        if not os.path.exists(compmodel):
+                            msg("Could not find the skymodel, '%s'" % \
+                                compmodel, priority='error')
+                        # modifymodel just collects info if outmodel==inmodel
+                        model_vals = myutil.modifymodel(compmodel,compmodel,
+                                                        "","","","","",-1,
+                                                        flatimage=False)
+                        model_cell = model_vals[1]
+                        model_size = model_vals[2]
+
+                    # skymodel (+ components list) simulation
+                    msg("- The cell size of input skymodel: [%s, %s]" % \
+                        (qa.tos(model_cell[0]), qa.tos(model_cell[1])), \
+                        origin="simalma", priority=v_priority)
+                    imgcell = model_cell
+
+                imsize_aca = calc_imsize(mapsize=qimgsize_tp, cell=imgcell)
+
+                msg("---> The number of pixels needed to cover the map region: [%d, %d]" % \
+                    (imsize_aca[0], imsize_aca[1]), \
+                    origin="simalma", priority=v_priority)
+
+                msg("Compare with BL imsize and adopt the larger one", \
+                    origin="simalma", priority=v_priority)
+                # Compare with imsize of BL (note: imsize is an intArray)
+                if is_array_type(imsize) and imsize[0] > 0:
+                    # User has defined imsize
+                    if len(imsize) > 1:
+                        imsize_bl = imsize[0:2]
+                    else:
+                        imsize_bl = [imsize[0], imsize[0]]
+                    msg("---> BL imsize (user defined): [%d, %d]" % \
+                        (imsize_bl[0], imsize_bl[1]), \
+                        origin="simalma", priority=v_priority)
+                else:
+                    # the same as input model (calculate from model_size)
+                    msg("estimating imsize of BL from input sky model.", \
+                        origin="simalma", priority=v_priority)
+                    imsize_bl = calc_imsize(mapsize=model_size, cell=imgcell)
+                    msg("---> Estimated BL imsize (sky model): [%d, %d]" % \
+                        (imsize_bl[0], imsize_bl[1]), \
+                        origin="simalma", priority=v_priority)
+
+                imsize_aca = [max(imsize_aca[0], imsize_bl[0]), \
+                              max(imsize_aca[1], imsize_bl[1])]
+
+                msg("The image size of ACA: [%d, %d]" % \
+                    (imsize_aca[0], imsize_aca[1]), \
+                    origin="simalma", priority=v_priority)
 
                 taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_aca+"', modelimage='', cell='"+str(cell_aca)+"', imsize="+str(imsize_aca)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
@@ -596,3 +664,43 @@ def is_array_type(value):
         return True
     else:
         return False
+
+def calc_imsize(mapsize=None, cell=None):
+    if mapsize == None:
+        raise ValueError, "mapsize is not defined"
+    if cell == None:
+        raise ValueError, "cell is not defined"
+    # get a list of cell size
+    if is_array_type(cell):
+        if len(cell) < 2:
+            cell = [cell[0], cell[0]]
+    else:
+        cell = [cell, cell]
+
+    for qval in cell:
+        if not qa.compare(qval, "deg"):
+            raise TypeError, "cell should be an angular size"
+
+    qcellx = qa.quantity(cell[0])
+    qcelly = qa.quantity(cell[1])
+
+    # get a list of map size
+    if is_array_type(mapsize):
+        if len(mapsize) < 2:
+            mapsize = [mapsize[0], mapsize[0]]
+    else:
+        mapsize = [mapsize, mapsize]
+
+    for qval in mapsize:
+        if not qa.compare(qval, "deg"):
+            raise TypeError, "mapsize should be an angular size"
+
+    vsizex = qa.convert(mapsize[0], qcellx['unit'])['value']
+    vsizey = qa.convert(mapsize[1], qcelly['unit'])['value']
+
+    # Calculate the number of pixels to cover the map size
+    npixx = int(numpy.ceil(vsizex/qcellx['value']))
+    npixy = int(numpy.ceil(vsizey/qcelly['value']))
+
+    return [npixx, npixy]
+

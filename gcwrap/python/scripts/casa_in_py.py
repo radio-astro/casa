@@ -179,6 +179,7 @@ from clearcal_pg import clearcal_pg as clearcal
 from delmod_pg import delmod_pg as delmod
 from bandpass_pg import bandpass_pg as bandpass
 #from clearplot_pg import clearplot_pg as clearplot
+from asdmsummary import  asdmsummary
 from listvis_pg import listvis_pg as listvis
 from accum_pg import accum_pg as accum
 from concat_pg import concat_pg as concat

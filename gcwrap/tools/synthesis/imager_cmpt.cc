@@ -1697,9 +1697,10 @@ imager::setsdoptions(const double scale, const double weight, const int convsupp
      casa::Quantity qTruncate = casaQuantity(truncate);
      casa::Quantity qGWidth = casaQuantity(gwidth);
      casa::Quantity qJWidth = casaQuantity(jwidth);
-     *itsLog << "qTruncate=" << qTruncate.getValue() << qTruncate.getUnit() << LogIO::POST;
-     *itsLog << "qGWidth=" << qGWidth.getValue() << qGWidth.getUnit() << LogIO::POST;
-     *itsLog << "qJWidth=" << qJWidth.getValue() << qJWidth.getUnit() << LogIO::POST;
+     *itsLog << LogIO::DEBUGGING
+             << "qTruncate=" << qTruncate.getValue() << qTruncate.getUnit() << endl
+             << "qGWidth=" << qGWidth.getValue() << qGWidth.getUnit() << endl
+             << "qJWidth=" << qJWidth.getValue() << qJWidth.getUnit() << LogIO::POST;
      rstat = itsImager->setsdoptions(scale, weight, convsupport, pcolToUse,
                                      qTruncate, qGWidth, qJWidth);
    } catch  (AipsError x) {

@@ -164,15 +164,10 @@ if(mystep in thesteps):
 
   os.system('rm -rf hpc-uid___A002_X47bd4d_Xbd4.ms.wvr') 
 
-  mylogfile= casalog.logfile()
-  casalog.setlogfile('hpc-uid___A002_X47bd4d_Xbd4.ms.wvrgcal')
-  
   wvrgcal(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms',
     caltable = 'hpc-uid___A002_X47bd4d_Xbd4.ms.wvr',
     tie = ['targetx1,J0339-017'],
     statsource = 'targetx1')
-  
-  casalog.setlogfile(mylogfile)
   
   os.system('rm -rf hpc-uid___A002_X47bd4d_Xbd4.ms.wvr.smooth') 
   
@@ -580,15 +575,12 @@ if(mystep in thesteps):
   
   os.system('rm -rf hpc-uid___A002_X47bd4d_Xbd4.ms.split.flux_short_inf') 
   os.system('rm -rf hpc-uid___A002_X47bd4d_Xbd4.ms.split.fluxscale') 
-  mylogfile = casalog.logfile()
-  casalog.setlogfile('hpc-uid___A002_X47bd4d_Xbd4.ms.split.fluxscale')
+
   
   fluxscale(vis = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split',
     caltable = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split.ampli_short_inf',
     fluxtable = 'hpc-uid___A002_X47bd4d_Xbd4.ms.split.flux_short_inf',
     reference = '1') # Callisto
-  
-  casalog.setlogfile(mylogfile)
   
   f = open('hpc-uid___A002_X47bd4d_Xbd4.ms.split.fluxscale')
   fc = f.readlines()

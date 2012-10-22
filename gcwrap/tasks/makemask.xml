@@ -18,29 +18,29 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <!-- MAIN PARAMETERS -->
 
     <param type="string" name="mode">
-      <description>Mask method (copy,expand,merge)</description>
+      <description>Mask method (copy,expand,merge,delete,setdefaultmask)</description>
       <value>list</value>
       <allowed kind="enum">
         <value>list</value> 
         <value>copy</value>
         <value>expand</value>
+        <value>delete</value>
+        <value>setdefaultmask</value>
        <!-- <value>draw</value>--> 
       </allowed>
     </param>
     
-    <param type="any" name="inpimage" mustexist="true">
-      <description>Name of input image.</description>
-      <any type="variant" limittypes="string stringArray"/>
-         <value type="string"></value>
-    </param>
 
 
 
     <!-- SUB-PARAMETERS -->
 
-            <!-- Mode = copy,expand,merge, draw-->
-            <!-- for merge, inpimage can be list -->
-            <!--<param type="string" name="inpimage" subparam="true" >-->
+            <!-- Mode = copy,expand,list-->
+            <param type="any" name="inpimage" subparam="true">
+            <description>Name of input image.</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
+            </param>
 
             <!-- Mode = copy,expand,merge -->
             <!--<param type="string" name="inpmask" subparam="true">-->
@@ -109,19 +109,28 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                 <when param="mode">
                     <equals value="list">
+                        <default param="inpimage"><value type="string"></value></default>
                     </equals>
                     <equals value="copy">
+                        <default param="inpimage"><value type="string"></value></default>
                         <default param="inpmask"><value type="string"></value></default>
                         <default param="output"><value type="string"></value></default>
                         <default param="overwrite"><value type="bool">False</value></default>
                     </equals>
                     <equals value="expand">
-                        <default param="inpmask"><value type="string">mask0</value></default>
+                        <default param="inpimage"><value type="string"></value></default>
+                        <default param="inpmask"><value type="string"></value></default>
                         <default param="inpfreqs"><value type="intArray"></value></default>
                         <default param="outfreqs"><value type="intArray"></value></default>
                         <default param="output"><value type="string"></value></default>
                         <default param="overwrite"><value type="bool">False</value></default>
                         <!--<default param="template"><value type="string"></value></default>-->
+                    </equals>
+                    <equals value="delete">
+                        <default param="inpmask"><value type="string"></value></default>
+                    </equals>
+                    <equals value="setdefaultmask">
+                        <default param="inpmask"><value type="string"></value></default>
                     </equals>
                     <!--<equals value="merge">-->
                     <!--    <default param="regionlist"><value type="stringArray"></value></default>-->
@@ -147,6 +156,10 @@ Modes :
 copy :  Copy/merge masks and regrid if necessary to a new or existing mask
 expand : Expand a mask from one range of freqs to another range
 list : list internal masks in inpimage to the log
+delete : delete an internal mask from an image (if the deleted mask was a default mask,
+         the task chooses the first one in the remaining internal mask list (as appears 
+         in the log when do listing with mode='list') 
+setdefaultmask : set a specified internal mask as a defult internal mask 
 <!--region : Make a mask from a list of region files on the input image coordinate-sys
 -->
 <!--draw : Draw a mask from the viewer using the input image.-->
@@ -154,7 +167,7 @@ list : list internal masks in inpimage to the log
 it appears that interaction with the viewer can be a bit flaky when called
 in succession.-->
 
-In all cases, if the output image has a different coordinate system from the
+In all cases (for output mask is expected), if the output image has a different coordinate system from the
 result of input and processing, the mask will be regridded to the output
 coordinate system.  
 
@@ -163,9 +176,9 @@ Parameter Descriptions and rules:
 ------------------------------
 inpimage : Name of input image to use as a reference for the output coordinates (if output does not exist). 
            Also used as a reference image when regions are specified in inpmask for copy mode
-           default: none (must specify)
+           default: none (must specify for list, copy, expand modes)
 
-Expandable parameters for mode='copy' and 'expand':
+Expandable parameters for mode='copy','expand','delete' and 'setdefaultmask':
 inpmask : Name(s) of input mask(s)
           default: none
          To specify an image (zero/non-zero) mask, just give a image name (e.g. myimage1.im)
@@ -181,11 +194,16 @@ inpmask : Name(s) of input mask(s)
          Specify the image mask(s), T/F mask(s), and region(s) to be merged in a list of strings.
          The regions can be specified directly in the CASA region format or in the text file(s) contains
          the regions. 
+
+         (delete and setdefaultmask mode)
+         Specify the internal mask with the format, image:mask
+         
  
 output : Name of output image. 
          default: none
          *The resultant mask is written as an image (zero/one) mask if the output is a plain image name
          *The resultant mask is written as an internal (T/F) mask if the output name is the form of 'imagename:maskname'
+          The created mask is set as a default internal mask.
          *To re-grid a mask to a different coordinate system,  
           give an image with the target coordinate system in inpimage. Or make a copy an imge
           with the target coordinate system and specified the name of the copy in output. 
@@ -288,6 +306,16 @@ Usage examples :
 
      makemask(mode='expand', inpimage='bigmask.im', inpmask='smallmask.im:mask0', 
               inpfreqs='1.5MHz~1.6MHz', outfreqs='1.2MHz~1.8MHz', output='bigmask.im', overwrite=True)
+
+(10) (delete mode)
+      Delete an internal mask from an image.
+
+      makemask(mode='delete', inpmask='newmask.im:mask0')
+
+(11) (setdefaultmask mode)
+      Set an internal mask as a default internal mask.
+     
+      makemask(mode='setdefaultmask', inpmask='newmask.im:mask1')
 
 <!--
 (7) (draw mode):

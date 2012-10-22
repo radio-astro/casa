@@ -122,8 +122,9 @@ class visstat_test(unittest.TestCase):
         '''Visstat 3: Test on different columns and axis'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
 #        flagdata(vis=msfile, antenna='17')
-        print "Create scratch columns. Expect and ignore error messages from applycal"
-        applycal(vis=msfile)
+        print "Create scratch columns."
+        cb.open(msfile)
+        cb.close()
 
         tb.open(msfile)
         cols = tb.colnames()
@@ -134,8 +135,10 @@ class visstat_test(unittest.TestCase):
             cols.append(x)
         print cols
         cols.remove('DATA')
+        have_corr = False
 	if('CORRECTED_DATA' in cols):
             cols.remove('CORRECTED_DATA')
+            have_corr = True
         have_model = False
         if('MODEL_DATA' in cols):
             cols.remove('MODEL_DATA')
@@ -151,7 +154,9 @@ class visstat_test(unittest.TestCase):
 	    print 'col ',col
 	    print 'cplx ',cplx
             if col in cplx:
-                data_cols = ['data', 'corrected'] # not supported: 'residual'
+                data_cols = ['data'] # not supported: 'residual'
+                if have_corr:
+                    data_cols.append('corrected')
                 if have_model:
                     data_cols.append('model')
                 
@@ -191,6 +196,8 @@ class visstat_test(unittest.TestCase):
                         +"\nError: Missing key " + dc.upper() + " in result"
 #                        raise Exception("Missing key " + dc.upper() + " in result")
 
+        print 'retValue[\'success\'] ', retValue['success']
+        print 'retValue[\'error_msgs\'] ', retValue['error_msgs']
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
     def test4(self):
