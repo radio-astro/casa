@@ -3145,7 +3145,7 @@ void SolvableVisCal::reportSolvedQU() {
 
   /*
   MeasurementSet ms(msName());
-  MSFieldColumns msfldcol(ms.field());
+  ROMSFieldColumns msfldcol(ms.field());
   String fldname(msfldcol.name()(currField()));
   */
   String fldname(csmi.getFieldName(currField()));
@@ -5061,7 +5061,7 @@ void SolvableVisJones::applyRefAnt() {
   Matrix<Double> xyz;
   {
     MeasurementSet ms(msName());
-    MSAntennaColumns msant(ms.antenna());
+    ROMSAntennaColumns msant(ms.antenna());
     msant.position().getColumn(xyz);
   }
   // Calculate (squared) antenna distances, relative
