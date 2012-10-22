@@ -150,11 +150,11 @@ namespace casa {
 	    // deprecated...
 	    coordinates_apply->hide( );
 	    coordinates_reset->hide( );
-	    bounding_height->setReadOnly(true);
-	    bounding_width->setReadOnly(true);
 
 	    connect( center_x, SIGNAL(editingFinished( )), SLOT(translate_x( )) );
 	    connect( center_y, SIGNAL(editingFinished( )), SLOT(translate_y( )) );
+	    connect( bounding_width, SIGNAL(editingFinished( )), SLOT(resize_x( )) );
+	    connect( bounding_height, SIGNAL(editingFinished( )), SLOT(resize_y( )) );
 
 	    // update line characteristics...
 	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
@@ -807,6 +807,12 @@ namespace casa {
 	}
 	void QtRegionState::translate_y( ) {
 	    emit translateY( center_y->displayText( ), y_units->currentText( ), coordinate_system->currentText( ) );
+	}
+	void QtRegionState::resize_x( ) {
+	    emit resizeX( bounding_width->displayText( ), dim_units->currentText( ), coordinate_system->currentText( ) );
+	}
+	void QtRegionState::resize_y( ) {
+	    emit resizeY( bounding_height->displayText( ), dim_units->currentText( ), coordinate_system->currentText( ) );
 	}
 
 	void QtRegionState::frame_min_change( int v ) {

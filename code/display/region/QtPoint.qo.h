@@ -80,6 +80,10 @@ namespace casa {
 			{ return Region::translateX( x, x_units, coordsys ); }
 		bool translateY( const std::string &y, const std::string &y_units, const std::string &coordsys )
 			{ return Region::translateY( y, y_units, coordsys ); }
+		bool resizeX( const std::string &x, const std::string &x_units, const std::string &coordsys )
+			{ return Region::resizeX( x, x_units, coordsys ); }
+		bool resizeY( const std::string &y, const std::string &y_units, const std::string &coordsys )
+			{ return Region::resizeY( y, y_units, coordsys ); }
 
 		int numFrames( ) const { return QtRegion::numFrames( ); }
 		void zRange( int &min, int &max ) const { QtRegion::zRange(min,max); }

@@ -184,6 +184,8 @@ namespace casa {
 
 		bool translateX( const std::string &/*x*/, const std::string &/*x_units*/, const std::string &/*coordsys*/ );
 		bool translateY( const std::string &/*x*/, const std::string &/*y_units*/, const std::string &/*coordsys*/ );
+		bool resizeX( const std::string &/*x*/, const std::string &/*x_units*/, const std::string &/*coordsys*/ );
+		bool resizeY( const std::string &/*x*/, const std::string &/*y_units*/, const std::string &/*coordsys*/ );
 
 		// one would expect the "number of frames" in our composite cube (including
 		// multiple images) to be contained in the non-GUI portion of the viewer

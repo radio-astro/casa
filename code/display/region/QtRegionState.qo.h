@@ -136,6 +136,8 @@ namespace casa {
 		void positionVisible( bool );
 		void translateX( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
 		void translateY( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
+		void resizeX( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
+		void resizeY( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
 
 		void zRange( int z_min, int z_max );
 		/* void regionCategoryChange( QString ); */
@@ -156,6 +158,8 @@ namespace casa {
 		void coordsys_change( const QString &text );
 		void translate_x( );
 		void translate_y( );
+		void resize_x( );
+		void resize_y( );
 		void category_change( int );
 		void filetab_change( int );
 		// keeps text color in sync with line color (if they were the same before)
