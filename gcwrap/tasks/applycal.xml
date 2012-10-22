@@ -337,11 +337,10 @@ another visibility file.
                relevant calibrations
                default: True; example: calwt=False
        applymode -- Calibration apply mode:
-               ''='calflag' (default) calibrate data and flags
-               'trial' report on flags, dataset unchanged
-               'flagonly' apply flags only (data unchanged)
-               'calonly' calibrate data only (flags unchanged; use
-                                              with extreme caution!)
+               ''='calflag' (default) calibrate data and apply flags from solutions
+               'trial' report on flags from solutions, dataset entirely unchanged
+               'flagonly' apply flags from solutions only, data not calibrated
+               'calonly' calibrate data only (by unflagged solutions), flags from solutions NOT applied (use with extreme caution!)
        flagbackup -- Back up the state of the flags before applying calibration
                      default: True
        async -- Run task in a separate process 

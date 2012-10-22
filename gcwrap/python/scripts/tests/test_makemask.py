@@ -320,6 +320,52 @@ class test_expand(makemaskTestBase):
 
         #self.assertTrue(os.path.exists(self.outimage3))
         #self.assertTrue(self.compareimpix(self.refimage4,self.outimage3))
+
+class test_inmask(makemaskTestBase):
+    """internal mask manupilations"""
+
+    #data in repository
+    inimage='ngc5921.cube1.bmask2' #T/F mask
+
+    def setUp(self):
+        for img in [self.inimage]:
+            if not os.path.isdir(img):
+                shutil.copytree(datapath+img,img)
+
+    def tearDown(self):
+        if not debug:
+            for img in [self.inimage]:
+                if os.path.isdir(img):
+                    shutil.rmtree(img)
+        else:
+            print "debugging mode: clean-up did not performed"
+
+    def test_deletemask(self):
+        """ (delete mode) delete an internal mask from the image"""
+        try:
+            makemask(mode='delete',inpmask=self.inimage+':'+'mask2')
+        except Exception, e:
+            print "\nError running makemask"
+            raise e
+
+        ia.open(self.inimage)
+        mlist=ia.maskhandler('get')
+        ia.close()
+        self.assertTrue(mlist.count('mask2')==0)
+
+    def test_setdefault(self):
+        """ (setdefaultmask mode) set an internal mask as a default mask"""
+        try:
+            makemask(mode='setdefaultmask',inpmask=self.inimage+':'+'mask2')
+        except Exception, e:
+            print "\nError running makemask"
+            raise e
+
+        ia.open(self.inimage)
+        defaultmask=ia.maskhandler('default')[0]
+        ia.close()
+        self.assertTrue(defaultmask=='mask2')
+
 def suite():
-    #return [test_expand]
-    return [test_merge,test_expand,test_copy]
+    #return [test_inmask]
+    return [test_merge,test_expand,test_copy,test_inmask]

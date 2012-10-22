@@ -258,6 +258,17 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             spave = gridder.getResult()
             del gridder
 
+            # Now set fluxunit, specunit, frame, and doppler
+            if ( fluxunit != '' ): spave.set_fluxunit(fluxunit)
+            if ( specunit != '' ):
+                spave.set_unit(specunit)
+                if ( specunit == 'km/s' and rfset ):
+                    fval = sdutil.normalise_restfreq(restfreq)
+                    spave.set_restfreqs(freqs=fval)
+
+            if ( frame != '' ): spave.set_freqframe(frame)
+            if ( doppler != '' ): spave.set_doppler(ddoppler)
+
 
         # Reload plotter if necessary
         sd.plotter._assert_plotter(action="reload")

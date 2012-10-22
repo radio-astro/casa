@@ -193,8 +193,6 @@ def simanalyze(
                 imsize=[imsize0,imsize1]
 
 
-
-
             # check for default measurement sets:
             default_mslist = glob.glob(fileroot+"/*ms")
             n_default=len(default_mslist)
@@ -308,8 +306,12 @@ def simanalyze(
                     psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
                     minimsize = 8* int(psfsize/cell_asec)
 
-                if imsize[0] < minimsize: imsize[0] = minimsize
-                if imsize[1] < minimsize: imsize[1] = minimsize
+                if imsize[0] < minimsize:
+                    msg("The number of image pixel in x-axis, %d, is small to cover 8 x PSF. Setting x pixel number, %d." % (imsize[0], minimsize), priority='warn')
+                    imsize[0] = minimsize
+                if imsize[1] < minimsize:
+                    msg("The number of image pixel in y-axis, %d, is small to cover 8 x PSF. Setting y pixel number, %d" % (imsize[1], minimsize), priority='warn')
+                    imsize[1] = minimsize
 
 
             # Do single dish imaging first if tpmstoimage exists.
