@@ -1499,6 +1499,10 @@ void fillState(MainRow* r_p) {
   if (debug) cout << "fillState : exiting" << endl;
 }
 
+void fillMainLazily(ASDM*  ds_p, const  map<int, set<int> >&   selected_eb_scan_m) {
+
+}
+
 /**
  * This function fills the MS Main table from an ASDM Main table which refers to correlator data.
  *
@@ -4324,7 +4328,11 @@ int main(int argc, char *argv[]) {
 
   // And then finally process the state and the main table.
   //
-  {
+  bool lazy_fill_data = false;
+  if (lazy_fill_data) {
+    fillMainLazily(ds, selected_eb_scan_m);
+  }
+  else {
     const MainTable& mainT = ds->getMain();
     const StateTable& stateT = ds->getState();
     
