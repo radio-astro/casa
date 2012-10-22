@@ -111,7 +111,7 @@ void StandardTsys::setSpecify(const Record& specify) {
   // Verify required columns in SYSCAL
   {
     MSSysCal mssc(sysCalTab);
-    MSSysCalColumns sscol(mssc);
+    ROMSSysCalColumns sscol(mssc);
     if ( (sscol.spectralWindowId().isNull() || 
 	  !sscol.spectralWindowId().isDefined(0)) ||
 	 (sscol.time().isNull() || 
@@ -144,7 +144,7 @@ void StandardTsys::setSpecify(const Record& specify) {
   Int iter=0;
   while (!sysCalIter.pastEnd()) {
     MSSysCal mssc(sysCalIter.table());
-    MSSysCalColumns sccol(mssc);
+    ROMSSysCalColumns sccol(mssc);
 
     Int ispw=sccol.spectralWindowId()(0);
     nSlot(ispw)++;
@@ -195,7 +195,7 @@ void StandardTsys::specify(const Record&) {
 
     // First extract info from SYSCAL
     MSSysCal mssc(sysCalIter.table());
-    MSSysCalColumns sccol(mssc);
+    ROMSSysCalColumns sccol(mssc);
 
     Int ispw=sccol.spectralWindowId()(0);
     currSpw()=ispw; // registers everything else!
@@ -318,7 +318,7 @@ void StandardTsys::specify(const Record&) {
   Vector<Int> islot(nSpw(),0);
   while (!sysCalIter.pastEnd()) {
     MSSysCal mssc(sysCalIter.table());
-    MSSysCalColumns sccol(mssc);
+    ROMSSysCalColumns sccol(mssc);
 
     Int ispw=sccol.spectralWindowId()(0);
     Double timestamp=sccol.time()(0);
