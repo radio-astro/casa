@@ -79,10 +79,10 @@ reftol   = {'sum':  0.1,
             'min':  0.04,
             'rms':  0.1}
 
-refstats = { 'max': 4.9865,
-             'min': -0.120,
-             'rms': 0.0959,
-             'sum': 338. }
+refstats = { 'max': 4.986,
+             'min': -0.1275,
+             'rms': 0.09621,
+             'sum': 329.9 }
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
