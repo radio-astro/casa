@@ -486,6 +486,56 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
                   'trcf': '17:03:03.151, +61.19.10.757, YY, 1.42133e+09Hz'}
         self._checkstats(self.outfile,refstats)
 
+    def test107(self):
+        """Test 107: Gaussian gridding"""
+        nchan=40
+        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GAUSS',dochannelmap=True,nchan=nchan,start=400,step=10)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
+        refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'blcf': '17:32:18.690, +57.37.28.536, I, 1.42038e+09Hz',
+                  'max': numpy.array([ 15.28046036]),
+                  'maxpos': numpy.array([58, 21,  0, 20], dtype=numpy.int32),
+                  'maxposf': '17:10:23.737, +58.42.25.413, I, 1.42087e+09Hz',
+                  'mean': numpy.array([ 0.75082603]),
+                  'min': numpy.array([-0.14009152]),
+                  'minpos': numpy.array([34, 69,  0, 33], dtype=numpy.int32),
+                  'minposf': '17:19:43.545, +61.07.22.487, I, 1.42119e+09Hz',
+                  'npts': numpy.array([ 225000.]),
+                  'rms': numpy.array([ 1.47686982]),
+                  'sigma': numpy.array([ 1.2717751]),
+                  'sum': numpy.array([ 168935.85698331]),
+                  'sumsq': numpy.array([ 490757.49952306]),
+                  'trc': numpy.array([74, 74,  0, 39], dtype=numpy.int32),
+                  'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
+        self._checkstats(self.outfile,refstats)
+
+    def test108(self):
+        """Test 108: Gaussian*Jinc gridding"""
+        nchan=40
+        res=sdimaging(infile=self.rawfile,specunit=self.mode,outfile=self.outfile,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,gridfunction='GJINC',dochannelmap=True,nchan=nchan,start=400,step=10)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,nchan)
+        refstats={'blc':numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'blcf': '17:32:18.690, +57.37.28.536, I, 1.42038e+09Hz',
+                  'max':numpy.array([ 15.31498909]),
+                  'maxpos':numpy.array([58, 21,  0, 20], dtype=numpy.int32),
+                  'maxposf': '17:10:23.737, +58.42.25.413, I, 1.42087e+09Hz',
+                  'mean':numpy.array([ 0.72415226]),
+                  'min':numpy.array([-0.16245638]),
+                  'minpos':numpy.array([68, 69,  0, 36], dtype=numpy.int32),
+                  'minposf': '17:05:39.206, +61.05.09.055, I, 1.42126e+09Hz',
+                  'npts':numpy.array([ 225000.]),
+                  'rms':numpy.array([ 1.44985926]),
+                  'sigma':numpy.array([ 1.25606618]),
+                  'sum':numpy.array([ 162934.25891985]),
+                  'sumsq':numpy.array([ 472970.63791706]),
+                  'trc':numpy.array([74, 74,  0, 39], dtype=numpy.int32),
+                  'trcf': '17:03:03.151, +61.19.10.757, I, 1.42133e+09Hz'}
+        self._checkstats(self.outfile,refstats)
+
 
 ###
 # Test frequency imaging

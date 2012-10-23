@@ -46,7 +46,12 @@ if not os.access(TESTS_DIR, os.F_OK):
     else:            #Mac release
         TESTS_DIR = CASA_DIR+'/Resources/python/tests/'
 
-import memTest
+HAVE_MEMTEST=True
+try:
+    import memTest
+except:
+    HAVE_MEMTEST = False
+
 import testwrapper
 from testwrapper import *
 
@@ -237,7 +242,7 @@ def main(testnames=[]):
     # Run all tests and create a XML report
     xmlfile = xmldir+'nose.xml'
     try:
-        if (MEM):
+        if (HAVE_MEMTEST and MEM):
             regstate = nose.run(argv=[sys.argv[0],"-d","-s","--with-memtest","--verbosity=2",
                             "--memtest-file="+xmlfile], suite=list, addplugins=[memTest.MemTest()])
         else:

@@ -5,7 +5,7 @@ import pylab as pl
 import asap as sd
 from taskinit import * 
 
-def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
+def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
 
         casalog.origin('sdimaging')
         try:
@@ -185,7 +185,7 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                     casalog.post('Setting imaging mode as \'channel\'','INFO')
                 im.defineimage(mode='channel', nx=nx, ny=ny, cellx=cellx, celly=celly, nchan=1, start=0, step=allchannels, phasecenter=phasecenter, spw=spwid, restfreq=restfreq, stokes=stokes, movingsource=ephemsrcname)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
-            im.setsdoptions(pointingcolumntouse=pointingcolumn)
+            im.setsdoptions(pointingcolumntouse=pointingcolumn, convsupport=convsupport, truncate=truncate, gwidth=gwidth, jwidth=jwidth)
             im.makeimage(type='singledish', image=outfile)
             im.close()
             

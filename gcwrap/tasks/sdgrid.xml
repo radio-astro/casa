@@ -52,20 +52,40 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <allowed kind="enum">
         <value>BOX</value>
         <value>GAUSS</value>
+        <value>GJINC</value>
         <value>PB</value>
         <value>SF</value>
         <value>box</value>
         <value>gauss</value>
+        <value>gjinc</value>
         <value>pb</value>
         <value>sf</value>
       </allowed>
     </param>
 
-    <param type="int" name="width" subparam="true">
-      <description>width of convolution kernel</description>
+    <param type="int" name="convsupport" subparam="true">
+      <description>truncate of convolution kernel</description>
       <value>-1</value>
     </param>
 
+    <param type="any" name="truncate" subparam="true">
+      <description>truncation radius of convolution kernel</description>
+      <any type="variant" limittype="string int double"/>
+      <value type="int">-1</value>
+    </param>
+
+    <param type="any" name="gwidth" subparam="true">
+            <description>HWHM for gaussian</description>
+            <any type="variant" limittype="string int double"/>
+            <value type="int">-1</value>
+    </param>
+
+    <param type="any" name="jwidth" subparam="true">
+            <description>c-parameter for jinc function</description>
+            <any type="variant" limittype="string int double"/>
+            <value type="int">-1</value>
+    </param>
+   
     <param type="string" name="weight">
       <description>weight type</description>
       <value>UNIFORM</value>
@@ -124,26 +144,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <equals value="BOX"/>
         <equals value="box"/>
         <equals value="SF">
-          <default param="width" type="int"><value>-1</value></default>
-        </equals>
-        <equals value="SF">
-          <default param="width" type="int"><value>-1</value></default>
+          <default param="convsupport" type="int"><value>-1</value></default>
         </equals>
         <equals value="sf">
-          <default param="width" type="int"><value>-1</value></default>
+          <default param="convsupport" type="int"><value>-1</value></default>
         </equals>
         <equals value="GAUSS">
-          <default param="width" type="int"><value>-1</value></default>
+          <default param="truncate" type="int"><value>-1</value></default>
+          <default param="gwidth" type="int"><value>-1</value></default>
         </equals>
         <equals value="gauss">
-          <default param="width" type="int"><value>-1</value></default>
+          <default param="truncate" type="int"><value>-1</value></default>
+          <default param="gwidth" type="int"><value>-1</value></default>
         </equals>
-        <equals value="PB">
-          <default param="width" type="int"><value>-1</value></default>
+        <equals value="GJINC">
+          <default param="truncate" type="int"><value>-1</value></default>
+          <default param="gwidth" type="int"><value>-1</value></default>
+          <default param="jwidth" type="int"><value>-1</value></default>
         </equals>
-        <equals value="pb">
-          <default param="width" type="int"><value>-1</value></default>
+        <equals value="gjinc">
+          <default param="truncate" type="int"><value>-1</value></default>
+          <default param="gwidth" type="int"><value>-1</value></default>
+          <default param="jwidth" type="int"><value>-1</value></default>
         </equals>
+        <equals value="PB"/>
+        <equals value="pb"/>
       </when>
     </constraints>
 
@@ -174,7 +199,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: 'BOX'
                 example: 'SF'
             &gt;&gt;&gt; gridfunction expandable parameter:
-               width -- width of convolution kernel, not available 
+               truncate -- truncate of convolution kernel, not available 
                         for BOX gridding
                    default: -1 (use default for each gridfunction)
                    example: 3
@@ -236,7 +261,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Spheroidal Wave Function), 'GAUSS' (Gaussian). and 'PB' 
         (Primary Beam, not implemented yet). For 'PB', correct 
         antenna informations should be included in input file. 
-        The 'width' parameter specifies width of the convolution kernel 
+        The 'truncate' parameter specifies truncate of the convolution kernel 
         in pixel unit. For Gaussian gridding, 'width' is treated as HWHM 
         and actual width (the width that convolution function has non-zero 
         value) is set to 4*HWHM to take into account contribution from 

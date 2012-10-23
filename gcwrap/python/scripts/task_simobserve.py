@@ -675,7 +675,7 @@ def simobserve(
             lims = pl.xlim(),pl.ylim()
             if pb <= 0 and verbose:
                 msg("unknown primary beam size for plot",priority="warn")
-            if max(max(lims)) > pb:
+            if max(max(lims)) > pb and not components_only:
                 plotcolor = 'w'
             else:
                 plotcolor = 'k'
