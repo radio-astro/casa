@@ -685,6 +685,7 @@ install (FILES
 casa_add_executable( alma asdm2MS 
   apps/asdm2MS/asdm2MS.cc
   apps/asdm2MS/ASDM2MSFiller.cc
+  apps/asdm2MS/BDF2AsdmStManIndex.cc
   apps/asdm2MS/ASDMTableBase.cc
   apps/asdm2MS/ASDMTables.cc
   apps/asdm2MS/ASDMVerbatimFiller.cc

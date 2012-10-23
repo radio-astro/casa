@@ -1,4 +1,4 @@
-//# StandardVisCal.cc: Implementation of Standard VisCal types
+//# DJones.cc: Implementation of polarization-related calibration types
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003,2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -290,7 +290,7 @@ void DJones::applyRefAnt() {
   // Get the refant name from the nMS
   String refantName("none");
   MeasurementSet ms(msName());
-  MSAntennaColumns msantcol(ms.antenna());
+  ROMSAntennaColumns msantcol(ms.antenna());
   refantName=msantcol.name()(refant());
   
   logSink() << "Applying refant: " << refantName
@@ -599,8 +599,7 @@ void DllsJones::solveOneVB(const VisBuffer& vb) {
   Vector<Complex> obs(2);
   Vector<Float> wt(2);
   for (Int ich=0;ich<nChan;++ich) {
-    Int currCh=vb.channel()(ich);
-
+    //Int currCh=vb.channel()(ich);
     //cout << "Ch=" << currCh;
 
     solveCPar().reference(solveAllCPar()(Slice(),Slice(ich,1,1),Slice()));
@@ -777,7 +776,7 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
   if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
 
   MeasurementSet ms(msName());
-  MSFieldColumns msfldcol(ms.field());
+  ROMSFieldColumns msfldcol(ms.field());
 
   // Inform logger/history
   logSink() << "Solving for " << typeName()
@@ -923,7 +922,7 @@ void XMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
   if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
 
   MeasurementSet ms(msName());
-  MSFieldColumns msfldcol(ms.field());
+  ROMSFieldColumns msfldcol(ms.field());
 
   // Arrange for iteration over data
   Block<Int> columns;
@@ -1213,10 +1212,10 @@ void XJones::setSolve(const Record& solvepar) {
 
 void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
 
-  if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
+  if (prtlev()>4) cout << "   Xj::newselfSolve(ve)" << endl;
 
   MeasurementSet ms(msName());
-  MSFieldColumns msfldcol(ms.field());
+  ROMSFieldColumns msfldcol(ms.field());
 
   // Inform logger/history
   logSink() << "Solving for " << typeName()
@@ -1433,6 +1432,19 @@ void XJones::solveOneVB(const VisBuffer& vb) {
   // This just a simple average of the cross-hand
   //  visbilities...
 
+  MeasurementSet ms(msName());
+  ROMSFieldColumns msfldcol(ms.field());
+
+  // We are actually solving for all channels simultaneously
+  solveCPar().reference(solveAllCPar());
+  solveParOK().reference(solveAllParOK());
+  solveParErr().reference(solveAllParErr());
+  solveParSNR().reference(solveAllParSNR());
+  
+  // Fill solveCPar() with 1, nominally, and flagged
+  solveCPar()=Complex(1.0);
+  solveParOK()=False;
+
   Int nChan=vb.nChannel();
 
   Complex d,md;
@@ -1506,6 +1518,25 @@ void XJones::solveOneVB(const VisBuffer& vb) {
       solveParOK()(blc,trc)=True;
     }
   }
+
+  
+  if (ntrue(solveParOK())>0) {
+    Float ang=arg(sum(solveCPar()(solveParOK()))/Float(ntrue(solveParOK())))*90.0/C::pi;
+    
+    
+    logSink() << "Mean position angle offset solution for " 
+	      << msfldcol.name()(currField())
+	      << " (spw = " << currSpw() << ") = "
+	      << ang
+	      << " deg."
+	      << LogIO::POST;
+  }
+  else
+    logSink() << "Position angle offset solution for " 
+	      << msfldcol.name()(currField())
+	      << " (spw = " << currSpw() << ") "
+	      << " was not determined (insufficient data)."
+	      << LogIO::POST;
   
 }
 
