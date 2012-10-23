@@ -233,7 +233,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="doubleArray" name="cell" subparam="true">
-            <description>x and y cell size. (default map extent/subplot number)</description>
+            <description>x and y cell size, e.g., ["1arcmin","1arcmin"]. (default map extent/subplot number)</description>
             <value type="vector"></value>
     </param>
 
