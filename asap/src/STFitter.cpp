@@ -37,7 +37,8 @@
 #include <scimath/Functionals/CompiledFunction.h>
 #include <scimath/Functionals/CompoundFunction.h>
 #include <scimath/Functionals/Gaussian1D.h>
-#include <scimath/Functionals/Lorentzian1D.h>
+//#include <scimath/Functionals/Lorentzian1D.h>
+#include "Lorentzian1D.h"
 #include <scimath/Functionals/Sinusoid1D.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/AutoDiff.h>
@@ -116,19 +117,19 @@ bool Fitter::computeEstimate() {
   parameters_.resize(n*3);
   Gaussian1D<Float>* g = 0;
   for (uInt i=0; i<n;i++) {
-    g = dynamic_cast<Gaussian1D<Float>* >(funcs_[i]);
-    if (g) {
-      const GaussianSpectralElement *gauss = 
-	dynamic_cast<const GaussianSpectralElement *>(listGauss[i]) ;
-      (*g)[0] = gauss->getAmpl();
-      (*g)[1] = gauss->getCenter();
-      (*g)[2] = gauss->getFWHM();     
-      /*
-      (*g)[0] = listGauss[i].getAmpl();
-      (*g)[1] = listGauss[i].getCenter();
-      (*g)[2] = listGauss[i].getFWHM();
-      */
-    }
+//     g = dynamic_cast<Gaussian1D<Float>* >(funcs_[i]);
+//     if (g) {
+//       const GaussianSpectralElement *gauss = 
+// 	dynamic_cast<const GaussianSpectralElement *>(listGauss[i]) ;
+//       (*g)[0] = gauss->getAmpl();
+//       (*g)[1] = gauss->getCenter();
+//       (*g)[2] = gauss->getFWHM();     
+//       /*
+//       (*g)[0] = listGauss[i].getAmpl();
+//       (*g)[1] = listGauss[i].getCenter();
+//       (*g)[2] = listGauss[i].getFWHM();
+//       */
+//     }
   }
   estimate_.resize();
   listGauss.evaluate(estimate_,x_);

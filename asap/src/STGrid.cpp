@@ -82,6 +82,9 @@ void  STGrid::init()
   wtype_ = "UNIFORM" ;
   convSupport_ = -1 ;
   userSupport_ = -1 ;
+  truncate_ = "";
+  gwidth_ = "";
+  jwidth_ = "";
   convSampling_ = 100 ;
   nprocessed_ = 0 ;
   nchunk_ = 0 ;
@@ -142,11 +145,17 @@ void STGrid::defineImage( int nx,
 }
   
 void STGrid::setFunc( string convType,
-                      int convSupport ) 
+                      int convSupport,
+                      string truncate,
+                      string gwidth,
+                      string jwidth ) 
 {
   convType_ = String( convType ) ;
   convType_.upcase() ;
   userSupport_ = (Int)convSupport ;
+  truncate_ = String( truncate );
+  gwidth_ = String( gwidth );
+  jwidth_ = String( jwidth );
 }
 
 #define NEED_UNDERSCORES
@@ -428,6 +437,13 @@ void STGrid::grid()
     wtype_ = "UNIFORM" ;
   }
 
+  // Warn if gauss or gjinc gridding with non-square cells
+  if ((cellx_ != celly_) && (convType_=="GAUSS"||convType_=="GJINC")) {
+    os << LogIO::WARN 
+       << "The " << convType_ << " gridding doesn't support non-square grid." << endl
+       << "Result may be wrong." << LogIO::POST;
+  }
+
   // grid parameter
   os << LogIO::DEBUGGING ;
   os << "----------" << endl ;
@@ -441,7 +457,19 @@ void STGrid::grid()
   os << "   (cellx,celly) = (" << cellx_ << "," << celly_ << ")" << endl ;
   os << "   center = " << center_ << endl ;
   os << "   weighting = " << wtype_ << endl ;
-  os << "   convfunc = " << convType_ << " with support " << convSupport_ << endl ; 
+  os << "   convfunc = " << convType_ << endl;
+  if (convType_ == "GAUSS") {
+    os << "      gwidth = " << gwidth_ << endl;
+    os << "      truncate = " << truncate_ << endl;
+  }
+  else if (convType_ == "GJINC") {
+    os << "      gwidth = " << gwidth_ << endl;
+    os << "      jwidth = " << jwidth_ << endl;
+    os << "      truncate = " << truncate_ << endl;
+  }
+  else {
+    os << "      support = " << userSupport_ << endl;
+  }
   os << "   doclip = " << (doclip_?"True":"False") << endl ;
   os << "----------" << LogIO::POST ;
   os << LogIO::NORMAL ;
@@ -1566,10 +1594,66 @@ void STGrid::boxFunc( Vector<Float> &convFunc, Int &convSize )
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
 #define grdsf grdsf_
+#define grdgauss grdgauss_
+#define grdjinc1 grdjinc1_
 #endif
+#if defined(USE_CASAPY)
 extern "C" { 
-   void grdsf(Double*, Double*);
+  void grdsf(Double*, Double*);
+  void grdgauss(Double*, Double*, Double*); 
+  void grdjinc1(Double*, Double*, Int*, Double*);
 }
+#else
+extern "C" {
+  void grdsf(Double*, Double*);
+}
+void grdgauss(Double *hwhm, Double *val, Double *out)
+{
+  *out = exp(-log(2.0) * (*val / *hwhm) * (*val / *hwhm));
+}
+void grdjinc1(Double *c, Double *val, Int *normalize, Double *out)
+{
+  // Calculate J_1(x) using approximate formula
+  Double x = C::pi * *val / *c;
+  Double ax = fabs(x);
+  Double ans;
+  if ( ax < 8.0 ) {
+    Double y = x * x;
+    Double ans1 = x * (72362614232.0 + y * (-7895059235.0 
+                       + y * (242396853.1 + y * (-2972611.439 
+                       + y * (15704.48260 + y * (-30.16036606))))));
+    Double ans2 = 144725228442.0 + y * (2300535178.0
+                       + y * (18583304.74 + y * (99447.43394
+                       + y * (376.9991397 + y * 1.0))));
+    ans = ans1 / ans2;
+  }
+  else {
+    Double z = 8.0 / ax;
+    Double y = z * z;
+    Double xx = ax - 2.356194491;
+    Double ans1 = 1.0 + y * (0.183105e-2 + y * (-0.3516396496e-4
+                      + y * (0.2457520174e-5 + y * (-0.240337019e-6))));
+    Double ans2 = 0.04687499995 + y * (-0.2002690873e-3
+                      + y * (0.8449199096e-5 + y * (-0.88228987e-6 
+                      + y * (0.105787412e-6))));
+    ans = sqrt(0.636619772 / ax) * (cos(xx) * ans1
+                                    - z * sin(xx) * ans2);
+    if (x < 0.0)
+      ans = -ans;
+  }
+  
+  // Then, calculate Jinc
+  if (x == 0.0) {
+    *out = 0.5;
+  }
+  else {
+    *out = ans / x;
+  }
+
+  if (*normalize == 1)
+    *out = *out / 0.5;  
+}
+#endif
 void STGrid::spheroidalFunc( Vector<Float> &convFunc ) 
 {
   convFunc = 0.0 ;
@@ -1581,16 +1665,45 @@ void STGrid::spheroidalFunc( Vector<Float> &convFunc )
   }
 }
 
-void STGrid::gaussFunc( Vector<Float> &convFunc ) 
+void STGrid::gaussFunc( Vector<Float> &convFunc, Double hwhm, Double truncate ) 
 {
   convFunc = 0.0 ;
-  // HWHM of the Gaussian is convSupport_ / 4
-  // To take into account Gaussian tail, kernel cutoff is set to 4 * HWHM
-  Int len = convSampling_ * convSupport_ ;
-  Double hwhm = len * 0.25 ;
+  Int len = (Int)(truncate*Double(convSampling_)+0.5);
+  Double out, val;
   for ( Int i = 0 ; i < len ; i++ ) {
-    Double val = Double(i) / hwhm ;
-    convFunc(i) = exp( -log(2)*val*val ) ;
+    val = Double(i) / Double(convSampling_) ;
+    grdgauss(&hwhm, &val, &out);
+    convFunc(i) = out;
+  }
+}
+
+void STGrid::gjincFunc( Vector<Float> &convFunc, Double hwhm, Double c, Double truncate )
+{
+  convFunc = 0.0;
+  Double out1, out2, val;
+  Int normalize = 1;
+  if  (truncate >= 0.0) { 
+    Int len = (Int)(truncate*Double(convSampling_)+0.5);
+    for (Int i = 0 ; i < len ; i++) {
+      val = Double(i) / Double(convSampling_);
+      grdgauss(&hwhm, &val, &out1);
+      grdjinc1(&c, &val, &normalize, &out2);
+      convFunc(i) = out1 * out2;
+    }
+  }
+  else {
+    Int len = convFunc.nelements();
+    for (Int i = 0 ; i < len ; i++) {
+      val = Double(i) / Double(convSampling_);
+      grdjinc1(&c, &val, &normalize, &out2);
+      if (out2 <= 0.0) {
+        LogIO os(LogOrigin("STGrid","gjincFunc",WHERE));
+        os << LogIO::DEBUG1 << "convFunc is automatically truncated at radius " << val << LogIO::POST;
+        break;
+      }
+      grdgauss(&hwhm, &val, &out1);
+      convFunc(i) = out1 * out2;
+    }
   }
 }
 
@@ -1599,8 +1712,58 @@ void STGrid::pbFunc( Vector<Float> &convFunc )
   convFunc = 0.0 ;
 }
 
+vector<float> STGrid::getConvFunc()
+{
+  LogIO os(LogOrigin("STGrid","getConvFunc",WHERE));
+  Vector<Float> convFunc;
+  vector<float> out;
+
+  if (cellx_ <= 0.0 || celly_ <= 0.0) {
+    selectData();
+    setupGrid();
+  }
+
+  if (convType_ == "BOX" || convType_ == "SF") {
+    setConvFunc(convFunc);
+  }
+  else if (convType_ == "GAUSS") {
+    Quantum<Double> q1,q2;
+    readQuantity(q1,gwidth_);
+    readQuantity(q2,truncate_);
+//     if (celly_ <= 0.0 
+//         && ((!q1.getUnit().empty()&&q1.getUnit()!="pixel") ||
+//             (!q2.getUnit().empty()&&q2.getUnit()!="pixel"))) {
+//       throw AipsError("You have to call defineImage to get correct convFunc");
+//     }
+    setConvFunc(convFunc);
+  }
+  else if (convType_ == "GJINC") {
+    Quantum<Double> q1,q2,q3;
+    readQuantity(q1,gwidth_);
+    readQuantity(q2,truncate_);
+    readQuantity(q3,jwidth_);
+//     if (celly_ <= 0.0 
+//         && ((!q1.getUnit().empty()&&q1.getUnit()!="pixel") ||
+//             (!q2.getUnit().empty()&&q2.getUnit()!="pixel") ||
+//             (!q3.getUnit().empty()&&q3.getUnit()!="pixel"))) {
+//       throw AipsError("You have to call defineImage to get correct convFunc");
+//     }
+    setConvFunc(convFunc);
+  }
+  else if (convType_ == "PB") {
+    throw AipsError("Grid function PB is not available");
+  }
+  else {
+    throw AipsError("Unknown grid function: "+convType_);
+  }
+
+  convFunc.tovector(out);
+  return out;
+}
+
 void STGrid::setConvFunc( Vector<Float> &convFunc )
 {
+  LogIO os(LogOrigin("STGrid","setConvFunc",WHERE));
   convSupport_ = userSupport_ ;
   if ( convType_ == "BOX" ) {
     if ( convSupport_ < 0 )
@@ -1608,6 +1771,9 @@ void STGrid::setConvFunc( Vector<Float> &convFunc )
     Int convSize = convSampling_ * ( 2 * convSupport_ + 2 )  ;
     convFunc.resize( convSize ) ;
     boxFunc( convFunc, convSize ) ;
+    os << LogIO::DEBUGGING
+       << "convType_ = " << convType_ << endl
+       << "convSupport_ = " << convSupport_ << LogIO::POST;
   }
   else if ( convType_ == "SF" ) {
     if ( convSupport_ < 0 )
@@ -1615,17 +1781,115 @@ void STGrid::setConvFunc( Vector<Float> &convFunc )
     Int convSize = convSampling_ * ( 2 * convSupport_ + 2 )  ;
     convFunc.resize( convSize ) ;
     spheroidalFunc( convFunc ) ;
+    os << LogIO::DEBUGGING
+       << "convType_ = " << convType_ << endl
+       << "convSupport_ = " << convSupport_ << LogIO::POST;
   }
   else if ( convType_ == "GAUSS" ) {
-    // to take into account Gaussian tail
-    if ( convSupport_ < 0 )
-      convSupport_ = 4 ; // 1 * 4
-    else {
-      convSupport_ = userSupport_ * 4 ;
+    // determine pixel gwidth
+    // default is HWHM corresponding to b = 1.0 (Mangum et al. 2007)
+    Double pixelGW;
+    Quantum<Double> q ;
+    if (!gwidth_.empty()) {
+      readQuantity( q, gwidth_ );
+      if ( q.getUnit().empty() || q.getUnit()=="pixel" ) {
+        pixelGW = q.getValue();
+      }
+      else {
+        pixelGW = q.getValue("rad")/celly_;
+      }
     }
-    Int convSize = convSampling_ * ( 2 * convSupport_ + 2 ) ;
+    pixelGW = (pixelGW >= 0.0) ? pixelGW : sqrt(log(2.0)); 
+    if (pixelGW < 0.0) {
+      os << LogIO::SEVERE
+         << "Negative width is specified for gaussian" << LogIO::EXCEPTION;
+    }
+    // determine truncation radius
+    // default is 3 * HWHM
+    Double truncate;
+    if (!truncate_.empty()) {
+      readQuantity( q, truncate_ );
+      if ( q.getUnit().empty() || q.getUnit()=="pixel" ) {
+        truncate = q.getValue();
+      }
+      else {
+        truncate = q.getValue("rad")/celly_;
+      }
+    }      
+    //convSupport_ = (Int)(truncate+0.5);
+    truncate = (truncate >= 0.0) ? truncate : 3.0 * pixelGW;
+    convSupport_ = Int(truncate);
+    convSupport_ += (((truncate-(Double)convSupport_) > 0.0) ? 1 : 0);
+    Int convSize = convSampling_ * ( 2*convSupport_ + 2 ) ;
     convFunc.resize( convSize ) ;
-    gaussFunc( convFunc ) ;
+    gaussFunc( convFunc, pixelGW, truncate ) ;
+    os << LogIO::DEBUGGING
+       << "convType_ = " << convType_ << endl
+       << "convSupport_ = " << convSupport_ << endl
+       << "truncate_ = " << truncate << "pixel" << endl
+       << "gwidth_ = " << pixelGW << "pixel" << LogIO::POST;
+  }
+  else if ( convType_ == "GJINC" ) {
+    // determine pixel gwidth
+    // default is HWHM corresponding to b = 2.52 (Mangum et al. 2007)
+    Double pixelGW;
+    Quantum<Double> q ;
+    if (!gwidth_.empty()) {
+      readQuantity( q, gwidth_ );
+      if ( q.getUnit().empty() || q.getUnit()=="pixel" ) {
+        pixelGW = q.getValue();
+      }
+      else {
+        pixelGW = q.getValue("rad")/celly_;
+      }
+    }
+    pixelGW = (pixelGW >= 0.0) ? pixelGW : sqrt(log(2.0)) * 2.52; 
+    if (pixelGW < 0.0) {
+      os << LogIO::SEVERE
+         << "Negative width is specified for gaussian" << LogIO::EXCEPTION;
+    }
+    // determine pixel c
+    // default is c = 1.55 (Mangum et al. 2007)
+    Double pixelJW;
+    if (!jwidth_.empty()) {
+      readQuantity( q, jwidth_ );
+      if ( q.getUnit().empty() || q.getUnit()=="pixel" ) {
+        pixelJW = q.getValue();
+      }
+      else {
+        pixelJW = q.getValue("rad")/celly_;
+      }
+    }
+    pixelJW = (pixelJW >= 0.0) ? pixelJW : 1.55; 
+    if (pixelJW < 0.0) {
+      os << LogIO::SEVERE
+         << "Negative width is specified for jinc" << LogIO::EXCEPTION;
+    }
+    // determine truncation radius
+    // default is -1.0 (truncate at first null)
+    Double truncate = -1.0;
+    if (!truncate_.empty()) {
+      readQuantity( q, truncate_ );
+      if ( q.getUnit().empty() || q.getUnit()=="pixel" ) {
+        truncate = q.getValue();
+      }
+      else {
+        truncate = q.getValue("rad")/celly_;
+      }
+    }      
+    //convSupport_ = (truncate >= 0.0) ? (Int)(truncate+0.5) : (Int)(2*pixelJW+0.5);
+    Double convSupportF = (truncate >= 0.0) ? truncate : (2*pixelJW);
+    convSupport_ = (Int)convSupportF;
+    convSupport_ += (((convSupportF-(Double)convSupport_) > 0.0) ? 1 : 0);
+    Int convSize = convSampling_ * ( 2*convSupport_ + 2 ) ;
+    convFunc.resize( convSize ) ;
+    gjincFunc( convFunc, pixelGW, pixelJW, truncate ) ;
+    os << LogIO::DEBUGGING
+       << "convType_ = " << convType_ << endl
+       << "convSupport_ = " << convSupport_ << endl
+       << "truncate_ = " << truncate << "pixel" << endl
+       << "gwidth_ = " << pixelGW << "pixel" << endl
+       << "jwidth_ = " << pixelJW << "pixel" << LogIO::POST;
   }
   else if ( convType_ == "PB" ) {
     if ( convSupport_ < 0 ) 

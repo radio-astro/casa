@@ -221,3 +221,15 @@ class TestScantable(object):
         res_rms = (q-b).stats('rms')
         assert_almost_equals(res_rms[0], 0.38346, 5)
         assert_almost_equals(res_rms[1], 0.38780, 5)        
+
+
+    def test_reshape(self):
+        cp = self.st.copy()
+        n = cp.nchan()
+        rs = cp.reshape(10,-10,False)
+        assert_equals(n-20, rs.nchan())
+        assert_equals(cp.nchan(), n)
+        rs = cp.reshape(10,n-11,False)
+        assert_equals(n-20, rs.nchan())
+        cp.reshape(10,-10,True)
+        assert_equals(n-20, cp.nchan())

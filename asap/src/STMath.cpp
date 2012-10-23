@@ -2454,13 +2454,10 @@ CountedPtr< Scantable > STMath::smoothOther( const CountedPtr< Scantable >& in,
       Vector<Bool> maskout;
       if (kernel == "hanning") {
 	mathutil::hanning(specout, maskout, spec, !mask);
-	convertArray(flag, !maskout);
       } else if (kernel == "rmedian") {
 	mathutil::runningMedian(specout, maskout, spec , mask, width);
-	convertArray(flag, maskout);
       } else if (kernel == "poly") {
 	mathutil::polyfit(specout, maskout, spec, !mask, width, order);
-	convertArray(flag, !maskout);
       }
 
       for (uInt j = 0; j < flag.nelements(); ++j) {

@@ -51,6 +51,7 @@ class TestNRO(object):
 
 
     def test_frequency(self):
+        raise SkipTest("Currently disabled")
         rf=self.st.get_restfreqs()
         assert_equal(len(rf),2)
         assert_equal(rf[0][0],85162157000.0)

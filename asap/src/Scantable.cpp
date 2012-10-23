@@ -1834,7 +1834,7 @@ void asap::Scantable::reshapeSpectrum( int nmin, int nmax )
   }
 
   // if nmax exceeds nChan, reset nmax to nChan
-  if ( nmax >= nChan ) {
+  if ( nmax >= nChan-1 ) {
     if ( nmin == 0 ) {
       // nothing to do
       LogIO os( LogOrigin( "Scantable", "reshapeSpectrum()", WHERE ) ) ;

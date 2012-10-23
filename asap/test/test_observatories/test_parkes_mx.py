@@ -26,6 +26,5 @@ class TestParkes(object):
         avp.auto_sinusoid_baseline()
         rms = avp.stats("rms")
         mx = avp.stats("max_abc")
-        print rms
         assert_almost_equals(rms[0], 0.04148, 5)
         assert_almost_equals(mx[0], 86.67328, 5)

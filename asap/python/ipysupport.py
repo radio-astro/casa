@@ -96,6 +96,7 @@ def commands():
         bin             - return a scan with binned channels
         resample        - return a scan with resampled channels
         smooth          - return the spectrally smoothed scan
+        reshape         - cut out channel range
         poly_baseline   - fit a polynomial baseline to all Beams/IFs/Pols
         auto_poly_baseline - automatically fit a polynomial baseline
         recalc_azel     - recalculate azimuth and elevation based on

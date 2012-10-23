@@ -2191,6 +2191,26 @@ class scantable(Scantable):
             return s
 
     @asaplog_post_dec
+    def reshape(self, first, last, insitu=None):
+        """Resize the band by providing first and last channel. 
+        This will cut off all channels outside [first, last].
+        """
+        if insitu is None: 
+            insitu = rcParams['insitu']
+        varlist = vars()
+        if last < 0:
+            last = self.nchan()-1 + last
+        s = None
+        if insitu:
+            s = self
+        else:
+            s = self.copy()
+        s._reshape(first,last)
+        s._add_history("reshape", varlist)
+        if not insitu:
+            return s        
+
+    @asaplog_post_dec
     def resample(self, width=5, method='cubic', insitu=None):
         """\
         Return a scan where all spectra have been binned up.

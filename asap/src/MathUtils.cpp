@@ -196,7 +196,7 @@ void mathutil::runningMedian(Vector<Float>& out, Vector<Bool>& outflag,
   for (uInt i=hwidth; i<(n-hwidth); ++i) {
     // add data value
     out[i] = ms.add(in[i+hwidth], flag[i+hwidth]);
-    outflag[i] = (ms.nval() == 0);
+    outflag[i] = (ms.nval() > 0 );
   }
   // replicate edge values from first value with full width of values
   for (uInt i=0;i<hwidth;++i) {

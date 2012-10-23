@@ -6,61 +6,17 @@ from asap._asap import stgrid, stgrid2
 import pylab as pl
 from logging import asaplog
 
-class asapgrid:
-    """
-    The asapgrid class is defined to convolve data onto regular
-    spatial grid. Typical usage is as follows:
-
-       # create asapgrid instance with two input data
-       g = asapgrid( ['testimage1.asap','testimage2.asap'] )
-       # set IFNO if necessary
-       g.setIF( 0 )
-       # set POLNOs if necessary
-       g.setPolList( [0,1] )
-       # set SCANNOs if necessary
-       g.setScanList( [22,23,24] )
-       # define image with full specification
-       # you can skip some parameters (see help for defineImage)
-       g.defineImage( nx=12, ny=12, cellx='10arcsec', celly='10arcsec',
-                      center='J2000 10h10m10s -5d05m05s' )
-       # set convolution function
-       g.setFunc( func='sf', width=3 )
-       # enable min/max clipping
-       g.enableClip()
-       # or, disable min/max clipping
-       #g.disableClip()
-       # actual gridding
-       g.grid()
-       # save result
-       g.save( outfile='grid.asap' )
-       # plot result
-       g.plot( plotchan=1246, plotpol=-1, plotgrid=True, plotobs=True )
-    """
-    def __init__( self, infile ):
-        """
-        Create asapgrid instance.
-
-        infile -- input data as a string or string list if you want
-                  to grid more than one data at once.  
-        """
+class asapgrid_base(object):
+    def __init__( self ):
         self.outfile = None
         self.ifno = None
-        self.gridder = stgrid()
-        self.setData( infile )
+        self.gridder = None
+        self.infile = None
+        self.scantab = None
 
     def setData( self, infile ):
-        """
-        Set data to be processed.
-
-        infile -- input data as a string or string list if you want
-                  to grid more than one data at once.  
-        """
-        if isinstance( infile, str ):
-            self.gridder._setin( infile )
-        else:
-            self.gridder._setfiles( infile )
-        self.infile = infile 
-
+        raise NotImplementedError('setData is not implemented')
+    
     def setIF( self, ifno ):
         """
         Set IFNO to be processed. Currently, asapgrid allows to process
@@ -72,7 +28,7 @@ class asapgrid:
         """
         self.ifno = ifno
         self.gridder._setif( self.ifno )
-
+        
     def setPolList( self, pollist ):
         """
         Set list of polarization components you want to process.
@@ -134,23 +90,77 @@ class asapgrid:
             celly = '%sarcsec'%(celly)
         self.gridder._defineimage( nx, ny, cellx, celly, center )
 
-    def setFunc( self, func='box', width=-1 ):
+    def setFunc( self, func='box', convsupport=-1, truncate="-1", gwidth="-1", jwidth="-1" ):
         """
         Set convolution function. Possible options are 'box' (Box-car,
-        default), 'sf' (prolate spheroidal), and 'gauss' (Gaussian).
-        Width of convolution function can be set using width parameter.
-        By default (-1), width is automatically set depending on each
-        convolution function. Default values for width are:
+        default), 'sf' (prolate spheroidal), 'gauss' (Gaussian), and 
+        'gjinc' (Gaussian * Jinc).
+        Width of convolution function can be set using several parameters.
+        For 'box' and 'sf', we have one parameter, convsupport, that
+        specifies a cut-off radius of the convlolution function. By default
+        (-1), convsupport is automatically set depending on each convolution
+        function. Default values for convsupport are:
 
            'box': 1 pixel
            'sf': 3 pixels
-           'gauss': 1 pixel (width is used as HWHM)
 
-        func -- Function type ('box', 'sf', 'gauss').
-        width -- Width of convolution function. Default (-1) is to
-                 choose pre-defined value for each convolution function.
+        For 'gauss', we have two parameters for convolution function,
+        truncate and gwidth. The truncate is similar to convsupport
+        except that truncate allows to specify its value as float or
+        string consisting of numeric and unit (e.g. '10arcsec' or
+        '3pixel'). Available units are angular units ('arcsec', 'arcmin',
+        'deg', etc.) and 'pixel'. Default unit is 'pixel' so that if
+        you specify numerical value or string without unit to gwidth,
+        the value will be interpreted as 'pixel'. gwidth is an HWHM of
+        gaussian. It also allows string value. Interpretation of the
+        value for gwidth is same as truncate. Default value for 'gauss'
+        is
+
+              gwidth: '-1' ---> sqrt(log(2.0)) pixel
+            truncate: '-1' ---> 3*gwidth pixel
+
+        For 'gjinc', there is an additional parameter jwidth that
+        specifies a width of the jinc function whose functional form is
+
+            jinc(x) = J_1(pi*x/jwidth) / (pi*x/jwidth)
+
+        Default values for 'gjinc' is
+
+              gwidth: '-1' ---> 2.52*sqrt(log(2.0)) pixel
+              jwidth: '-1' ---> 1.55
+            truncate: '-1' ---> automatically truncate at first null
+
+        Default values for gwidth and jwidth are taken from Mangum et al.
+        (2007).
+
+        func -- Function type ('box', 'sf', 'gauss', 'gjinc').
+        convsupport -- Width of convolution function. Default (-1) is
+                       to choose pre-defined value for each convolution
+                       function. Effective only for 'box' and 'sf'.
+        truncate -- Truncation radius of the convolution function.
+                    Acceptable value is an integer or a float in units of
+                    pixel, or a string consisting of numeric plus unit.
+                    Default unit for the string is 'pixel'. Default (-1)
+                    is to choose pre-defined value for each convolution
+                    function. Effective only for 'gauss' and 'gjinc'.
+        gwidth -- The HWHM of the gaussian. Acceptable value is an integer
+                  or a float in units of pixel, or a string consisting of
+                  numeric plus unit. Default unit for the string is 'pixel'.
+                  Default (-1) is to choose pre-defined value for each
+                  convolution function. Effective only for 'gauss' and
+                  'gjinc'.
+        jwidth -- The width of the jinc function. Acceptable value is an
+                  integer or a float in units of pixel, or a string
+                  consisting of numeric plus unit. Default unit for the
+                  string is 'pixel'. Default (-1) is to choose pre-defined
+                  value for each convolution function. Effective only for
+                  'gjinc'.
         """
-        self.gridder._setfunc( func, width )
+        self.gridder._setfunc(func,
+                              convsupport=convsupport,
+                              truncate=truncate,
+                              gwidth=gwidth,
+                              jwidth=jwidth)
 
     def setWeight( self, weightType='uniform' ):
         """
@@ -184,6 +194,86 @@ class asapgrid:
         Actual gridding which will be done based on several user inputs. 
         """
         self.gridder._grid()
+        
+    def plotFunc(self, clear=True):
+        """
+        Support function to see the shape of current grid function.
+
+        clear -- clear panel if True. Default is True.
+        """
+        pl.figure(11)
+        if clear:
+            pl.clf()
+        f = self.gridder._getfunc()
+        convsampling = 100
+        a = numpy.arange(0,len(f)/convsampling,1./convsampling,dtype=float)
+        pl.plot(a,f,'.-')
+        pl.xlabel('pixel')
+        pl.ylabel('convFunc')
+
+    def save( self, outfile='' ):
+        raise NotImplementedError('save is not implemented')
+
+    def plot( self, plotchan=-1, plotpol=-1, plotobs=False, plotgrid=False ):
+        raise NotImplementedError('plot is not implemented')
+
+    def getResult( self ):
+        raise NotImplementedError('getResult is not implemented')
+
+class asapgrid(asapgrid_base):
+    """
+    The asapgrid class is defined to convolve data onto regular
+    spatial grid. Typical usage is as follows:
+
+       # create asapgrid instance with two input data
+       g = asapgrid( ['testimage1.asap','testimage2.asap'] )
+       # set IFNO if necessary
+       g.setIF( 0 )
+       # set POLNOs if necessary
+       g.setPolList( [0,1] )
+       # set SCANNOs if necessary
+       g.setScanList( [22,23,24] )
+       # define image with full specification
+       # you can skip some parameters (see help for defineImage)
+       g.defineImage( nx=12, ny=12, cellx='10arcsec', celly='10arcsec',
+                      center='J2000 10h10m10s -5d05m05s' )
+       # set convolution function
+       g.setFunc( func='sf', convsupport=3 )
+       # enable min/max clipping
+       g.enableClip()
+       # or, disable min/max clipping
+       #g.disableClip()
+       # actual gridding
+       g.grid()
+       # save result
+       g.save( outfile='grid.asap' )
+       # plot result
+       g.plot( plotchan=1246, plotpol=-1, plotgrid=True, plotobs=True )
+    """
+    def __init__( self, infile ):
+        """
+        Create asapgrid instance.
+
+        infile -- input data as a string or string list if you want
+                  to grid more than one data at once.  
+        """
+        super(asapgrid,self).__init__()
+        self.gridder = stgrid()
+        self.infile=infile
+        self.setData(infile)
+
+    def setData( self, infile ):
+        """
+        Set data to be processed.
+
+        infile -- input data as a string or string list if you want
+                  to grid more than one data at once.  
+        """
+        if isinstance( infile, str ):
+            self.gridder._setin( infile )
+        else:
+            self.gridder._setfiles( infile )
+        self.infile = infile 
 
     def save( self, outfile='' ):
         """
@@ -223,7 +313,7 @@ class asapgrid:
         asaplog.push('plot: elapsed time %s sec'%(t1-t0))
         asaplog.post('DEBUG','asapgrid.plot')
         
-class asapgrid2:
+class asapgrid2(asapgrid_base):
     """
     The asapgrid class is defined to convolve data onto regular
     spatial grid. Typical usage is as follows:
@@ -259,9 +349,9 @@ class asapgrid2:
         scantab -- input data as a scantable or a list of scantables
                    to grid more than one data at once.  
         """
-        self.outfile = None
-        self.ifno = None
+        super(asapgrid2,self).__init__()
         self.gridder = stgrid2()
+        self.scantab = scantab
         self.setData( scantab )
 
     def setData( self, scantab ):
@@ -277,136 +367,12 @@ class asapgrid2:
             self.gridder._setfiles( scantab )
         self.scantab = scantab
 
-    def setIF( self, ifno ):
-        """
-        Set IFNO to be processed. Currently, asapgrid allows to process
-        only one IFNO for one gridding run even if the data contains
-        multiple IFs. If you didn't specify IFNO, default value, which
-        is IFNO in the first spectrum, will be processed.
-
-        ifno -- IFNO to be processed.
-        """
-        self.ifno = ifno
-        self.gridder._setif( self.ifno )
-
-    def setPolList( self, pollist ):
-        """
-        Set list of polarization components you want to process.
-        If not specified, all POLNOs will be processed.
-
-        pollist -- list of POLNOs.
-        """
-        self.gridder._setpollist( pollist )
-
-    def setScanList( self, scanlist ):
-        """
-        Set list of scans you want to process. If not specified, all
-        scans will be processed.
-
-        scanlist -- list of SCANNOs.
-        """
-        self.gridder._setscanlist( scanlist )
-
-    def defineImage( self, nx=-1, ny=-1, cellx='', celly='', center='' ):
-        """
-        Define spatial grid.
-
-        First two parameters, nx and ny, define number of pixels of
-        the grid. If which of those is not specified, it will be set
-        to the same value as the other. If none of them are specified,
-        it will be determined from map extent and cell size.
-
-        Next two parameters, cellx and celly, define size of pixel.
-        You should set those parameters as string, which is constructed
-        numerical value and unit, e.g. '0.5arcmin', or numerical value.
-        If those values are specified as numerical value, their units
-        will be assumed to 'arcsec'. If which of those is not specified,
-        it will be set to the same value as the other. If none of them
-        are specified, it will be determined from map extent and number
-        of pixels, or set to '1arcmin' if neither nx nor ny is set.
-
-        The last parameter, center, define the central coordinate of
-        the grid. You should specify its value as a string, like,
-
-           'J2000 05h08m50s -16d23m30s'
-
-        or 
-
-           'J2000 05:08:50 -16.23.30'
-
-        You can omit equinox when you specify center coordinate. In that
-        case, J2000 is assumed. If center is not specified, it will be
-        determined from the observed positions of input data.
-
-        nx -- number of pixels along x (R.A.) direction.
-        ny -- number of pixels along y (Dec.) direction.
-        cellx -- size of pixel in x (R.A.) direction.
-        celly -- size of pixel in y (Dec.) direction.
-        center -- central position of the grid.
-        """
-        if not isinstance( cellx, str ):
-            cellx = '%sarcsec'%(cellx)
-        if not isinstance( celly, str ):
-            celly = '%sarcsec'%(celly)
-        self.gridder._defineimage( nx, ny, cellx, celly, center )
-
-    def setFunc( self, func='box', width=-1 ):
-        """
-        Set convolution function. Possible options are 'box' (Box-car,
-        default), 'sf' (prolate spheroidal), and 'gauss' (Gaussian).
-        Width of convolution function can be set using width parameter.
-        By default (-1), width is automatically set depending on each
-        convolution function. Default values for width are:
-
-           'box': 1 pixel
-           'sf': 3 pixels
-           'gauss': 1 pixel (width is used as HWHM)
-
-        func -- Function type ('box', 'sf', 'gauss').
-        width -- Width of convolution function. Default (-1) is to
-                 choose pre-defined value for each convolution function.
-        """
-        self.gridder._setfunc( func, width )
-
-    def setWeight( self, weightType='uniform' ):
-        """
-        Set weight type. Possible options are 'uniform' (default),
-        'tint' (weight by integration time), 'tsys' (weight by
-        Tsys: 1/Tsys**2), and 'tintsys' (weight by integration time
-        as well as Tsys: tint/Tsys**2).
-
-        weightType -- weight type ('uniform', 'tint', 'tsys', 'tintsys')
-        """
-        self.gridder._setweight( weightType )
-
-    def enableClip( self ):
-        """
-        Enable min/max clipping.
-
-        By default, min/max clipping is disabled so that you should
-        call this method before actual gridding if you want to do
-        clipping.
-        """
-        self.gridder._enableclip()
-
-    def disableClip( self ):
-        """
-        Disable min/max clipping.
-        """
-        self.gridder._disableclip()
-
-    def grid( self ):
-        """
-        Actual gridding which will be done based on several user inputs. 
-        """
-        self.gridder._grid()
-
     def getResult( self ):
         """
         Return gridded data as a scantable.
         """
         tp = 0 if rcParams['scantable.storage']=='memory' else 1
-        return scantable( self.gridder._get( tp ), average=False )
+        return scantable( self.gridder._get( tp ), average=False )    
 
 class _SDGridPlotter:
     def __init__( self, infile, outfile=None, ifno=-1 ):

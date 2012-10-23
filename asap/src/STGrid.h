@@ -60,7 +60,10 @@ public:
                     string scelly="",
                     string scenter="" ) ;
   void setFunc( string convtype="box",
-                int convsupport=-1 ) ;
+                int convsupport=-1,
+                string truncate="",
+                string gwidth="",
+                string jwidth="" ) ;
 
   void setWeight( const string wType="uniform" ) ;
 
@@ -70,6 +73,9 @@ public:
   void grid() ;
   
   string saveData( string outfile="" ) ;
+
+  // support function to know how grid function looks like
+  vector<float> getConvFunc();
 
 //private:
 protected:
@@ -137,7 +143,8 @@ protected:
   
   void boxFunc( Vector<Float> &convFunc, Int &convSize ) ;
   void spheroidalFunc( Vector<Float> &convFunc ) ;
-  void gaussFunc( Vector<Float> &convFunc ) ;
+  void gaussFunc( Vector<Float> &convFunc, Double hwhm, Double truncate ) ;
+  void gjincFunc( Vector<Float> &convFunc, Double hwhm, Double c, Double truncate );
   void pbFunc( Vector<Float> &convFunc ) ;
   void setConvFunc( Vector<Float> &convFunc ) ;
 
@@ -231,6 +238,9 @@ protected:
   String convType_ ;
   Int convSupport_ ;
   Int userSupport_ ;
+  String gwidth_;
+  String jwidth_;
+  String truncate_;
   Int convSampling_ ;
   Vector<uInt> pollist_ ;
   Vector<uInt> scanlist_ ;

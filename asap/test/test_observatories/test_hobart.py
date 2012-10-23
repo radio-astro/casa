@@ -22,6 +22,7 @@ class TestHobart(object):
         f = fitter()
         f.set_scan(scan)
         f.set_function(gauss=1) # fit gaussian(s)
+        f.set_parameters(params=[2,11,1])
         f.fit()
         f.plot(filename='output/hobartfit_pol%d.png' % polno)
         fp = f.get_parameters()
