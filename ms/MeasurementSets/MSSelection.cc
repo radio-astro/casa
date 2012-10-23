@@ -411,7 +411,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 (taqlExpr_p != "") || (polnExpr_p != "")        || (stateExpr_p != "")
 	 ))
       throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
-				    "Only field- and antenna-selection is supported for CalTables")));
+				    "Only field-, spw- and antenna-selection is supported for CalTables")));
     return ms;
   }
   //----------------------------------------------------------------------------
