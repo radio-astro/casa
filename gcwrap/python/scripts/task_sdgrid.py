@@ -5,7 +5,7 @@ import pylab as pl
 import asap as sd
 from taskinit import * 
 
-def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
+def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
 
         casalog.origin('sdgrid')
         try:
@@ -16,7 +16,10 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
                       + '   ifno = %s\n'%(ifno) \
                       + '   pollist = %s\n'%(pollist) \
                       + '   gridfunction = %s\n'%(gridfunction) \
-                      + '   width = %s\n'%(width) \
+                      + '   convsupport = %s\n'%(convsupport) \
+                      + '   truncate = %s\n'%(truncate) \
+                      + '   gwidth = %s\n'%(gwidth) \
+                      + '   jwidth = %s\n'%(jwidth) \
                       + '   weight = %s\n'%(weight) \
                       + '   clipminmax = %s\n'%(clipminmax) \
                       + '   outfile = %s\n'%(outfile) \
@@ -43,12 +46,12 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
             else:
                 pols = [pollist]
 
-            # gridfunction and width
+            # gridfunction and convsupport
             if gridfunction.upper() == 'PB':
                 msg='Sorry. PB gridding is not implemented yet.'
                 raise Exception, msg
             elif gridfunction.upper() == 'BOX':
-                width=-1
+                convsupport=-1
                 
 
             # outfile
@@ -127,7 +130,10 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
                       + '   scans = %s\n'%(scans) \
                       + '   pols = %s\n'%(pols) \
                       + '   gridfunction = %s\n'%(gridfunction) \
-                      + '   width = %s\n'%(width) \
+                      + '   convsupport = %s\n'%(convsupport) \
+                      + '   truncate = %s\n'%(truncate) \
+                      + '   gwidth = %s\n'%(gwidth) \
+                      + '   jwidth = %s\n'%(jwidth) \
                       + '   weight = %s\n'%(weight) \
                       + '   clipminmax = %s\n'%(clipminmax) \
                       + '   outname = %s\n'%(outname) \
@@ -152,7 +158,10 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
                                  cellx=cellx, celly=celly,
                                  center=centerstr )
             gridder.setFunc( func=gridfunction,
-                             width=width )
+                             convsupport=convsupport,
+                             truncate=str(truncate),
+                             gwidth=str(gwidth),
+                             jwidth=str(jwidth) )
             gridder.grid()
             gridder.save( outfile=outname )
             if plot:
@@ -164,3 +173,4 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
             casalog.post( str(instance), priority = 'ERROR' )
             raise Exception, instance
             return
+

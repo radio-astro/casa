@@ -77,7 +77,37 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <value>BOX</value>
                 <value>PB</value>
                 <value>SF</value>
+                <value>GAUSS</value>
+                <value>GJINC</value>
+                <value>box</value>
+                <value>pb</value>
+                <value>sf</value>
+                <value>gauss</value>
+                <value>gjinc</value>
             </allowed>
+    </param>
+
+    <param type="int" name="convsupport" subparam="true">
+            <description>convolution support for gridding</description>
+            <value>-1</value>
+    </param>
+
+    <param type="any" name="truncate" subparam="true">
+            <description>truncation radius for gridding</description>
+            <any type="variant" limittype="string int double"/>
+            <value type="int">-1</value>
+    </param>
+
+    <param type="any" name="gwidth" subparam="true">
+            <description>HWHM for gaussian</description>
+            <any type="variant" limittype="string int double"/>
+            <value type="int">-1</value>
+    </param>
+
+    <param type="any" name="jwidth" subparam="true">
+            <description>c-parameter for jinc function</description>
+            <any type="variant" limittype="string int double"/>
+            <value type="int">-1</value>
     </param>
    
     <param type="string" name="outfile">
@@ -153,7 +183,37 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <default param="start"><value type="double">0</value></default>
                     <default param="step"><value type="double">1</value></default>
                 </equals>
-            </when>   
+            </when>
+            <when param="gridfunction">
+                <equals type="string" value="BOX"/>
+                <equals type="string" value="box"/>
+                <equals type="string" value="SF">
+                    <default param="convsupport"><value type="int">-1</value></default>
+                </equals>
+                <equals type="string" value="sf">
+                    <default param="convsupport"><value type="int">-1</value></default>
+                </equals>
+                <equals type="string" value="PB"/>
+                <equals type="string" value="pb"/>
+                <equals type="string" value="GAUSS">
+                    <default param="truncate"><value type="int">-1</value></default>
+                    <default param="gwidth"><value type="int">-1</value></default>
+                </equals>
+                <equals type="string" value="gauss">
+                    <default param="truncate"><value type="int">-1</value></default>
+                    <default param="gwidth"><value type="int">-1</value></default>
+                </equals>
+                <equals type="string" value="GJINC">
+                    <default param="truncate"><value type="int">-1</value></default>
+                    <default param="gwidth"><value type="int">-1</value></default>
+                    <default param="jwidth"><value type="int">-1</value></default>
+                </equals>
+                <equals type="string" value="gjinc">
+                    <default param="truncate"><value type="int">-1</value></default>
+                    <default param="gwidth"><value type="int">-1</value></default>
+                    <default param="jwidth"><value type="int">-1</value></default>
+                </equals>
+            </when>
     </constraints>
   </input>
 
