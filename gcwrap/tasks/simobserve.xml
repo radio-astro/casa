@@ -572,7 +572,7 @@ mosaic simulation task:
 
     project.[cfg].skymodel = 4d input sky model image (optionally) scaled
     project.[cfg].skymodel.flat.regrid.conv = input sky regridded to match the
-        output image, and convolved with the output synthesized beam
+        output image, and convolved with the output clean beam
     project.[cfg].skymodel.png = diagnostic figure of sky model with pointings
 
     project.[cfg].ptg.txt = list of mosaic pointings
