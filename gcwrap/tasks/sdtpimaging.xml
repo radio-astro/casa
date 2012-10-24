@@ -122,6 +122,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <value>BOX</value>
                 <value>PB</value>
                 <value>SF</value>
+                <value>GAUSS</value>
+                <value>GJINC</value>
+                <value>box</value>
+                <value>pb</value>
+                <value>sf</value>
+                <value>gauss</value>
+                <value>gjinc</value>
             </allowed>
     </param>
 
@@ -222,7 +229,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  default: 'direction'
                gridfunction -- gridding function for imaging
                  options: 'BOX' (Box-car), 'SF' (Spheroidal), 
-                          'PB' (Primary-beam)
+                          'PB' (Primary-beam), 'GAUSS' (Gaussian),
+                          'GJINC' (Gaussian*Jinc)
                  default: 'BOX'
                  example: 'SF'
         plotlevel -- control for plotting of results
@@ -280,7 +288,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Among the imaging sub-parameters, ephemsrcname is used to set the name 
         of a moving source such as planets to produce a stationary image (can 
         be omitted), and pointingcolumn is used to specify which pointing data 
-        column to use for imaging. 
+        column to use for imaging. Convolution kernel for imaging can be 
+        specified by using gridfunction. Available options are 'Box' (Box-car),
+        'SF' (Spheroidal), 'PB' (Primary-beam), 'GAUSS' (Gaussian), and 
+        'GJINC' (Gaussian*Jinc), where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a 
+        first order Bessel function J_1. Sub-parameters for convolution 
+        functions cannot be specified in this task. To costomize your 
+        convolution function, please do imaging using sdimaging task or 
+        imager tool.
   </example>
 
 </task>
