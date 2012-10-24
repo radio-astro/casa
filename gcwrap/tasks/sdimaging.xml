@@ -248,9 +248,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: '' (use all polarizations)
                 example: 'XX'
         gridfunction -- gridding function for imaging
-                options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
+                options: 'BOX' (Box-car), 'SF' (Spheroidal), 
+                         'PB' (Primary-beam), 'GAUSS' (Gaussian),
+                         'GJINC' (Gaussian*Jinc)
                 default: 'BOX'
                 example: 'SF'
+            &gt;&gt;&gt; gridfunction expandable parameter:
+               convsupport -- convolution support for 'SF' 
+                   default: -1 (use default for each gridfunction)
+                   example: 3
+               truncate -- truncattion radius of convolution kernel.
+                           effective only for 'GAUSS' and 'GJINC'.
+                   default: '-1' (use default for each gridfunction)
+                   example: 3, '20arcsec', '3pixel'
+               gwidth -- HWHM for gaussian. Effective only for 
+                         'GAUSS' and 'GJINC'.
+                   default: '-1' (use default for each gridfunction)
+                   example: 3, '20arcsec', '3pixel'
+               jwidth -- Width of jinc function. Effective only for 
+                         'GJINC'.
+                   default: '-1' (use default for each gridfunction)
+                   example: 3, '20arcsec', '3pixel'
         outfile -- output image name
                 default: none
                 example: 'mySDimage.im'
@@ -322,6 +340,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
         Spheroidal Wave Function), and 'PB' (Primary Beam). For 'PB', correct 
         antenna informations should be included in input file. 
+
+        There are four subparameters for gridfunction: convsupport, truncate, 
+        gwidth, and jwidth. The convsupport is an integer specifying cut-off 
+        radius for 'SF' in units of pixel. By default (convsupport=-1), 
+        the cut-off radius is set to 3 pixels. The truncate is a cut-off 
+        radius for 'GAUSS' or 'GJINC'. It accepts integer, float, and 
+        string values of numeric plus unit. Allowed units are angular 
+        units such as 'deg', 'arcmin', 'arcsec', and 'pixel'. Default unit 
+        is 'pixel' so that string without unit or numerical values (integer 
+        or float) will be interpreted as radius in pixel. Default value 
+        for truncate, which is used when negative radius is set, is 3*HWHM 
+        for 'GAUSS' and radius at first null for 'GJINC'. The gwidth is 
+        the HWHM of gaussian for 'GAUSS' and 'GJINC'. Default value is 
+        sqrt(log(2)) pixel for 'GAUSS' and 2.52*sqrt(log(2)) pixel for 
+        'GJINC'. The jwidth specifies width of the jinc function (parameter 
+        'c' in the definition above). Default is 1.55 pixel. Both gwidth 
+        jwidth allows integer, float, or string of numeric plus unit. 
+        Default values for gwidth and jwidth are taken from Mangum et al. 
+        (2007).
   </example>
 
 </task>
