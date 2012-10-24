@@ -534,6 +534,7 @@ void ImageProfileFitter::_setResults() {
 				default:
 					*_getLog() << "Logic Error: Unhandled Spectral Element type"
 						<< LogIO::EXCEPTION;
+					break;
 				}
 			}
 		}
@@ -1318,7 +1319,7 @@ void ImageProfileFitter::_makeSolutionImage(
 	Vector<Float> dataCopy(values.size());
 	Vector<Double>::const_iterator iter;
 	// isNaN(Array<Double>&) works, isNaN(Array<Float>&) gives spurious results
-	Array<Bool> nanMask = ! isNaN(values);
+	Array<Bool> nanInfMask = ! (isNaN(values) || isInf(values));
 
 	Vector<Float>::iterator jiter = dataCopy.begin();
 	for (iter=values.begin(); iter!=values.end(); iter++, jiter++) {
@@ -1326,7 +1327,7 @@ void ImageProfileFitter::_makeSolutionImage(
 	}
 	image.put(dataCopy.reform(shape));
 	Bool hasPixMask = ! allTrue(mask);
-	Bool hasNanMask = ! allTrue(nanMask);
+	Bool hasNanMask = ! allTrue(nanInfMask);
 	if (hasNanMask || hasPixMask) {
 		Array<Bool> resMask(shape);
 		String maskName = image.makeUniqueRegionName(
@@ -1336,11 +1337,11 @@ void ImageProfileFitter::_makeSolutionImage(
 		if (hasPixMask) {
 			resMask = mask.copy().reform(shape);
 			if (hasNanMask) {
-				resMask = resMask && nanMask;
+				resMask = resMask && nanInfMask;
 			}
 		}
 		else {
-			resMask = nanMask;
+			resMask = nanInfMask;
 		}
 		(&image.pixelMask())->put(resMask);
 	}
