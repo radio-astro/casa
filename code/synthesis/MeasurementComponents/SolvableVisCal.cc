@@ -5637,7 +5637,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
   if (incremental) {
     logSink() << LogIO::NORMAL
-              << "will output an incremental caltable"
+              << "Generating an incremental caltable"
               << LogIO::POST;
   }
 
@@ -6178,12 +6178,27 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Matrix<Double> spidx(nFld,3,0.0);
     Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
+    Vector<Double> refFreq(nFld,0.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
       uInt tranidx=tranField(iTran);
       Int nValidFlux=ntrue(scaleOK.column(tranidx));
+
       String oFitMsg;
       if (nValidFlux>1) { 
+
+	// Make fd and freq lists
+	Vector<Double> fds;
+	fds=fd.column(tranidx)(scaleOK.column(tranidx)).getCompressedArray();
+	Vector<Double> fderrs;
+	fderrs=fderr.column(tranidx)(scaleOK.column(tranidx)).getCompressedArray();
+	Vector<Double> freqs;
+	freqs=solFreq(scaleOK.column(tranidx)).getCompressedArray();
+
+	// Reference frequency is first in the list
+	refFreq(tranidx)=freqs[0];
+	freqs/=refFreq(tranidx);
+
         // calculate spectral index
         // fit the per-spw fluxes to get spectral index
         LinearFit<Double> fitter;
@@ -6200,32 +6215,40 @@ void SolvableVisJones::fluxscale(const String& outfile,
         // log(S/S0)=alpha*log(f/f0) + beta*log(f/f0)**2
         Polynomial< AutoDiff<Double> > bp(fitorder);
         fitter.setFunction(bp);
-        // need the way to mask some spw
-        //Vector<Double> log_solFreq=log10(solFreq);
-        Vector<Double> log_relsolFreq=log10(solFreq)-mean(log10(solFreq));
-        Vector<Double> log_fd=log10(fd.column(tranidx));
 
-        //Vector<Double> soln=fitter.fit(log10(solFreq), log10(fd.column(tranidx)), fderr.column(tranidx)/solFreq);
-        //Vector<Double> soln=fitter.fit(log_solFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
-        Vector<Double> soln=fitter.fit(log_relsolFreq, log_fd, fderr.column(tranidx)/fd.column(tranidx));
+        Vector<Double> log_relsolFreq=log10(freqs);
+        Vector<Double> log_fd=log10(fds);
+
+	// The error in the log of fds is fderrs/fds
+        Vector<Double> soln=fitter.fit(log_relsolFreq, log_fd, fderrs/fds);
         Vector<Double> errs=fitter.errors();
         covar=fitter.compuCovariance();
 
-        for (Int i=0; i<soln.nelements(); i++) {
+        for (uInt i=0; i<soln.nelements(); i++) {
            spidx(tranidx,i) = soln(i);
            spidxerr(tranidx,i) = errs(i);
         } 
-        oFitMsg =" Fitted spectral index for ";
+        oFitMsg =" Fitted spectrum for ";
 	oFitMsg += fldNames(tranidx);
         oFitMsg += " with fitorder="+String::toString<Int>(fitorder)+": ";
-        for (Int j=1; j<soln.nelements();j++) {
+	oFitMsg += "Flux density = "+String::toString<Double>(exp10(soln(0)));
+	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);
+	oFitMsg += " +/- "+String::toString<Double>(ferr); 
+	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
+        for (uInt j=1; j<soln.nelements();j++) {
           if (j==1) {
-            oFitMsg += "spectral index="+String::toString<Double>(soln(1)); 
-            oFitMsg += " +/- "+String::toString<Double>(errs(1)); 
+            oFitMsg += " spidx="+String::toString<Double>(soln(1)); 
+	    if (nValidFlux>2)
+	      oFitMsg += " +/- "+String::toString<Double>(errs(1)); 
+	    else
+	      oFitMsg += " (degenerate)";
           }
           if (j==2) {
-            oFitMsg += " curvature="+String::toString<Double>(soln(2)); 
-            oFitMsg += " +/- "+String::toString<Double>(errs(2)); 
+            oFitMsg += " curv="+String::toString<Double>(soln(2)); 
+	    if (nValidFlux>3)
+	      oFitMsg += " +/- "+String::toString<Double>(errs(2)); 
+	    else
+	      oFitMsg += " (degenerate)";
           }
         }
         if ( oListFile != "" ) {
@@ -6294,12 +6317,15 @@ void SolvableVisJones::fluxscale(const String& outfile,
       fspar.define("caltype", "G Cal");
       setSpecify(fspar);
         //
-        { // generate per chan factor taking account for spectral index
+      { // generate per chan factor taking account for spectral index
           // for(Int ich=0;ich<nchan;ich++); fl = soln(0) + alpha*chanf(ich) * beta*chanf(ich)*chanf(ich)
           // fact = sqrt(fl) at each ich for each spw and each field
           // and store 1/fact in bcal-like table 
-        }
-      for (Int iFld=0;iFld<nFld;iFld++) {
+      }
+
+      // Only do fields that occurred in the input caltable
+      for (uInt ifld=0;ifld<fldList.nelements();ifld++) {
+	Int iFld=fldList(ifld);
         setCurrField(iFld);
         //
         initSolvePar(); // somewhat redundant but needed to reset solveCPar
@@ -6312,7 +6338,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         fspar.define("time",mgreft(iFld)); 
 
          // for only looping thru field id (set all spw for each field)
-        fspar.define("parameter", 1./mgratio.column(iFld));
+        fspar.define("parameter", abs(1./mgratio.column(iFld)));
         fspar.define("paramerr", 1./mgerr.column(iFld));
         //
         specify(fspar);
