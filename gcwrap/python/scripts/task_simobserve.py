@@ -63,7 +63,7 @@ def simobserve(
             if antennalist == "":
                 uvmode = False
                 antennalist = sdantlist
-            else: 
+            else:
                 #uvmode = True
                 #msg("Both antennalist and sdantlist are defined. sdantlist will be ignored",priority="warn")
                 msg("Both antennalist and sdantlist are defined. Define one of them.",priority="error")
@@ -107,8 +107,8 @@ def simobserve(
             if (predict and (not uvmode) and os.path.exists(fileroot+"/"+project+".sd.ms")):
                 msg(fileroot+"/"+project+".sd.ms exists but overwrite=F",priority="error")
                 return False
-    
-    
+
+
         saveinputs = myf['saveinputs']
         saveinputs('simobserve',fileroot+"/"+project+".simobserve.last",
                    myparams=in_params)
@@ -117,20 +117,20 @@ def simobserve(
 
         # some hardcoded variables that may be reintroduced in future development
         relmargin = .5  # number of PB between edge of model and pointing centers
-        scanlength = 1  # number of integrations per scan 
-        
+        scanlength = 1  # number of integrations per scan
+
         if type(skymodel) == type([]):
             skymodel = skymodel[0]
         skymodel = skymodel.replace('$project',project)
-    
+
         if type(complist) == type([]):
             complist = complist[0]
-    
+
         if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
             msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
             return False
-    
-    
+
+
         grscreen = False
         grfile = False
         if graphics == "both":
@@ -140,7 +140,7 @@ def simobserve(
             grscreen = True
         if graphics == "file":
             grfile = True
-        
+
         ##################################################################
         # set up skymodel image
 
@@ -165,13 +165,13 @@ def simobserve(
             returnpars = util.modifymodel(skymodel,newmodel,
                                           inbright,indirection,incell,
                                           incenter,inwidth,innchan,
-                                          flatimage=False) 
+                                          flatimage=False)
             if not returnpars:
                 return False
 
             (model_refdir,model_cell,model_size,
              model_nchan,model_center,model_width,
-             model_stokes) = returnpars 
+             model_stokes) = returnpars
 
             modelflat = fileroot + "/" + project + ".skymodel.flat"
             if os.path.exists(modelflat) and (not predict):
@@ -210,7 +210,7 @@ def simobserve(
             model_center = cl.getspectrum(0)['frequency']['m0']
             # components don't yet support spectrum
             if util.isquantity(compwidth,halt=False):
-                model_width = compwidth                
+                model_width = compwidth
             else:
                 model_width = "2GHz"
                 msg("component-only simulation, compwidth unset: setting bandwidth to 2GHz",priority="warn")
@@ -273,7 +273,7 @@ def simobserve(
                 tail=z[0]
                 tail=tail.lower()
                 if util.isquantity(tail,halt=False):
-                    resl = qa.convert(tail,"arcsec")['value']                
+                    resl = qa.convert(tail,"arcsec")['value']
                     if os.path.exists(repodir):
                         confnum = (1.044-6.733*pl.log10(resl*qa.convert(model_center,"GHz")['value']/345.))
                         confnum = max(1,min(6,confnum))
@@ -286,7 +286,7 @@ def simobserve(
             else: # assume FS
                 tail = antennalist[5:]
                 if util.isquantity(tail,halt=False):
-                    resl = qa.convert(tail,"arcsec")['value']                
+                    resl = qa.convert(tail,"arcsec")['value']
                     if os.path.exists(repodir):
                         confnum = (2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
                         confnum = max(1,min(28,confnum))
@@ -296,7 +296,6 @@ def simobserve(
                         msg("converted resolution to antennalist "+antennalist)
                     else:
                         msg("failed to find antenna configuration repository at "+repodir,priority="warn")
-                        
 
 
         # Search order is fileroot/ -> specified path -> repository
@@ -355,7 +354,7 @@ def simobserve(
                 maxbase2=max(lon)-min(lon)
                 if maxbase2>maxbase:
                     maxbase=maxbase2
-                # estimate the psf size from the minimum spatial scale            
+                # estimate the psf size from the minimum spatial scale
                 psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
                 del cx, cy, cz, lat, lon, maxbase, maxbase2
             else: # Single-dish
@@ -378,7 +377,7 @@ def simobserve(
         if components_only:
             # first set based on psfsize:
             model_cell = [ str(psfsize/5)+"arcsec", str(psfsize/5)+"arcsec" ]
-            
+
             # XXX if the user has set direction should we center the compskymodel there?
             # if len(direction)>0: model_refdir = direction
 
@@ -392,7 +391,7 @@ def simobserve(
             modimsize=int((qa.convert(model_size[0],"arcsec")['value'])/(qa.convert(model_cell[0],"arcsec")['value']))
             modimsize=max([modimsize,32])
             newepoch,newlat,newlon = util.direction_splitter(model_refdir)
-            
+
             if os.path.exists(newmodel):
                 if overwrite:
                     shutil.rmtree(newmodel)
@@ -405,23 +404,23 @@ def simobserve(
                     else:
                         if oldshape[0] != modimsize or oldshape[1]==modimsize:
                             needmodel=True
-                    oldcs=ia.coordsys()                            
+                    oldcs=ia.coordsys()
                     ia.done()
                     olddir = (oldcs.referencevalue())['numeric']
                     if ( olddir[0] != qa.convert(newlat,oldcs.units()[0])['value'] or
-                         olddir[1] != qa.convert(newlon,oldcs.units()[1])['value'] or 
+                         olddir[1] != qa.convert(newlon,oldcs.units()[1])['value'] or
                          newepoch != oldcs.referencecode() ):
                         needmodel=True
                     oldcs.done()
                     del oldcs, olddir
-                    if needmodel:                        
+                    if needmodel:
                         msg(newmodel+" exists and is inconsistent with required size="+str(modimsize)+" and direction. Please set overwrite=True",priority="error")
                         return False
 
             if needmodel:
                 csmodel = ia.newimagefromshape(newmodel,[modimsize,modimsize,1,1])
                 modelcsys = csmodel.coordsys()
-                modelshape = csmodel.shape()     
+                modelshape = csmodel.shape()
                 modelcsys.setdirection(refpix=[modimsize/2,modimsize/2],
                                        refval=[qa.tos(newlat),qa.tos(newlon)],
                                        refcode=newepoch,
@@ -448,8 +447,8 @@ def simobserve(
                     shutil.move(newmodel+".flat",modelflat)
 
 
-        # and finally, with model_cell set either from an actual skymodel, 
-        # or from the antenna configuration in components_only case, 
+        # and finally, with model_cell set either from an actual skymodel,
+        # or from the antenna configuration in components_only case,
         # we can check for the user that the psf is likely to be sampled enough:
         cell_asec=qa.convert(model_cell[0],'arcsec')['value']
         if psfsize < cell_asec:
@@ -478,7 +477,7 @@ def simobserve(
                 dir = direction
                 dir0 = dir
         util.direction = dir0
-        
+
         # if the integration time is a real time quantity
         # test for weird units
         if not util.isquantity(integration):
@@ -559,10 +558,10 @@ def simobserve(
 
 
         # find imcenter - phase center
-        imcenter , offsets = util.median_direction(pointings)        
+        imcenter , offsets = util.median_direction(pointings)     
         epoch, ra, dec = util.direction_splitter(imcenter)
 
-        # model is centered at model_refdir, and has model_size;         
+        # model is centered at model_refdir, and has model_size;
         mepoch, mra, mdec = util.direction_splitter(model_refdir)
         # ra/mra should be in degrees, but just in case
         ra=qa.convert(ra,'deg')
@@ -589,15 +588,15 @@ def simobserve(
                mra['value'] = mra['value'] - 360.
 
         # shift is the offset from the model to imcenter
-        shift = [ (qa.convert(ra,'deg')['value'] - 
-                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(dec,'rad')['value'] ), 
+        shift = [ (qa.convert(ra,'deg')['value'] -
+                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(dec,'rad')['value'] ),
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
 
         xmax = qa.convert(model_size[0],'deg')['value']*0.5
         ymax = qa.convert(model_size[1],'deg')['value']*0.5
-        overlap = False        
+        overlap = False
         # wrapang in median_direction should make offsets always small, not >360
         for i in xrange(offsets.shape[1]):
             xc = pl.absolute(offsets[0,i]+shift[0])  # offsets and shift are in degrees
@@ -621,7 +620,7 @@ def simobserve(
                 msg("   "+pointings[idir])
             if nfld >= 20:
                 msg("   (printing only first 20 - see pointing file for full list)")
-            
+
         if not overlap:
             msg("No overlap between model and pointings",priority="error")
             return False
@@ -659,7 +658,7 @@ def simobserve(
         if grfile:
             file = fileroot + "/" + project + ".skymodel.png"
         else:
-            file = ""                            
+            file = ""
     
         if grscreen or grfile:
             util.newfig(show=grscreen)
@@ -701,10 +700,10 @@ def simobserve(
             ylim = max(abs(pl.array(lims[1])))
             # show entire pb: (statim doesn't by default)
             pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
-            pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])            
+            pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])         
             pl.xlabel("resized model sky",fontsize="x-small")
             util.endfig(show=grscreen,filename=file)
-    
+
 
 
 
@@ -713,7 +712,7 @@ def simobserve(
 
 
         ##################################################################
-        # set up observatory, feeds, etc        
+        # set up observatory, feeds, etc
         quickpsf_current = False
 
         if uvmode:
@@ -764,7 +763,7 @@ def simobserve(
             if not util.isquantity(totaltime):
                 msg("total time "+totaltime+" does not appear to represent a time interval (use 's','min','h'; not 'sec','m','hr')",priority="error")
                 return False
-                
+
             if qa.quantity(totaltime)['value'] < 0.:
                 # casapy crashes for negative totaltime
                 msg("Negative totaltime is not allowed.",priority="error")
@@ -798,20 +797,20 @@ def simobserve(
                 mounttype = 'EQUATORIAL'
             # Should ASKAP be BIZARRE or something else?  It may be effectively equatorial.
 
-            sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
-                         dishdiameter=diam.tolist(), 
+            sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz,
+                         dishdiameter=diam.tolist(),
                          mount=[mounttype], antname=antnames, padname=padnames, 
                          coordsystem='global', referencelocation=posobs)
             if str.upper(telescopename).find('VLA') > 0:
-                sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
-                               deltafreq=qa.tos(model_width), 
-                               freqresolution=qa.tos(model_width), 
+                sm.setspwindow(spwname=fband, freq=qa.tos(model_start),
+                               deltafreq=qa.tos(model_width),
+                               freqresolution=qa.tos(model_width),
                                nchannels=model_nchan, refcode="LSRK",
                                stokes='RR LL')
                 sm.setfeed(mode='perfect R L',pol=[''])
-            else:            
-                sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
-                               deltafreq=qa.tos(model_width), 
+            else:
+                sm.setspwindow(spwname=fband, freq=qa.tos(model_start),
+                               deltafreq=qa.tos(model_width),
                                freqresolution=qa.tos(model_width), 
                                nchannels=model_nchan, refcode="LSRK",
                                stokes='XX YY')
@@ -852,22 +851,22 @@ def simobserve(
                 ###
                 #print "you need at least %16.12e sec but you have %16.12e sec (%f < %f = %s)" % (totalscansec, totalsec, totalsec, totalscansec, str(totalsec<totalscansec))
                 ###
-        
+
             # sm.observemany
             srces = []
             starttimes = []
             stoptimes = []
             dirs = []
-                    
+
             if usehourangle:
-                sttime = -totalsec/2.0 
+                sttime = -totalsec/2.0
             else:
                 sttime = 0. # leave start at the reftime
             sttime=sttime+haoffset
             scanstart=sttime
 
             # can before sources
-            if docalibrator:                            
+            if docalibrator:
                 endtime = sttime + qa.convert(integration,'s')['value']
                 sm.observe(sourcename="phase calibrator", spwname=fband,
                            starttime=qa.quantity(sttime, "s"),
@@ -887,8 +886,8 @@ def simobserve(
                 # advance start time - XX someday slew goes here
                 sttime = endtime
 
-                if kfld == nfld: 
-                    if docalibrator:                            
+                if kfld == nfld:
+                    if docalibrator:
                         endtime = sttime + qa.convert(integration,'s')['value'] 
 
                         # need to observe cal singly to get new row in obs table, so 
@@ -908,7 +907,7 @@ def simobserve(
                     sttime = endtime
 #                 if kfld > nfld: kfld = 0
                 if kfld > nfld-1: kfld = 0
-            # if directions is unset, NewMSSimulator::observemany 
+            # if directions is unset, NewMSSimulator::observemany
 
             # looks up the direction in the field table.
             if not docalibrator:
@@ -950,19 +949,19 @@ def simobserve(
                 # XXX will 2 cl work?
                 if docalibrator:
                     complist=complist+","+fileroot+"/"+project+'.cal.cclist'
-                if verbose:                        
+                if verbose:
                     msg("predicting from "+complist,priority="warn",origin="simobserve")
                 else:
                     msg("predicting from "+complist,origin="simobserve")
                 sm.predict(complist=complist)
-            
+
             sm.done()
             msg('generation of measurement set '+msfile+' complete',origin="simobserve")
 
 
             ############################################
             # create figure 
-            if grfile:            
+            if grfile:
                 file = fileroot + "/" + project + ".observe.png"
             else:
                 file = ""
@@ -970,7 +969,7 @@ def simobserve(
             # update psfsize using uv coverage instead of maxbase above
             if os.path.exists(msfile):
                 # psfsize was set from the antenna posns before, but uv is better
-                tb.open(msfile)  
+                tb.open(msfile)
                 rawdata = tb.getcol("UVW")
                 tb.done()
                 maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
@@ -991,7 +990,7 @@ def simobserve(
             else:
                 multi = 0
 
-            
+
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
                 util.ephemeris(refdate,direction=util.direction,telescope=telescopename,ms=msfile,usehourangle=usehourangle)
@@ -999,7 +998,7 @@ def simobserve(
                 if uvmode:
                     util.nextfig()
                     util.plotants(stnx, stny, stnz, stnd, padnames)
-                    
+
                     # uv coverage
                     util.nextfig()
                     klam_m = 300/qa.convert(model_center,'GHz')['value']
@@ -1011,11 +1010,11 @@ def simobserve(
                     pl.xlabel('u[klambda]',fontsize='x-small')
                     pl.ylabel('v[klambda]',fontsize='x-small')
                     pl.axis('equal')
-            
+
                     # show dirty beam from observed uv coverage
                     util.nextfig()
-                    im.open(msfile)  
-                    # TODO spectral parms                    
+                    im.open(msfile)
+                    # TODO spectral parms
                     msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([minimsize,128])))
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
@@ -1057,10 +1056,10 @@ def simobserve(
 
         noise_any = False
         msroot = fileroot + "/" + project  # if leakage, can just copy from this project
-    
+
         if thermalnoise != "":
             knowntelescopes = ["ALMA", "ACA", "SMA", "EVLA", "VLA"]
-            
+
             noise_any = True
 
             noisymsroot = msroot + ".noisy"
@@ -1068,7 +1067,7 @@ def simobserve(
                 msroot += ".sd"
                 noisymsroot += ".sd"
  
-            # Cosmic background radiation temperature in K. 
+            # Cosmic background radiation temperature in K.
             t_cmb = 2.725
 
 
@@ -1085,7 +1084,7 @@ def simobserve(
                 msg(message,origin="noise")
 
             if os.path.exists(noisymsroot+".ms"):
-                shutil.rmtree(noisymsroot+".ms")                
+                shutil.rmtree(noisymsroot+".ms")
             shutil.copytree(msfile,noisymsroot+".ms")
             if sm.name() != '':
                 msg("table persistence error on %s" % sm.name(),priority="error")
@@ -1177,7 +1176,7 @@ def simobserve(
                     noisymsroot+'.ms and adding polarization leakage',
                     origin="noise",priority="warn")
                 if os.path.exists(noisymsroot+".ms"):
-                    shutil.rmtree(noisymsroot+".ms")                
+                    shutil.rmtree(noisymsroot+".ms")
                 shutil.copytree(msfile,noisymsroot+".ms")
                 if sm.name() != '':
                     msg("table persistence error on %s" % sm.name(),priority="error")
@@ -1193,11 +1192,13 @@ def simobserve(
 
         # cleanup - delete newmodel, newmodel.flat etc
 #        if os.path.exists(modelflat):
-#            shutil.rmtree(modelflat)  
+#            shutil.rmtree(modelflat)
         if os.path.exists(modelflat+".regrid"):
-            shutil.rmtree(modelflat+".regrid")  
+            shutil.rmtree(modelflat+".regrid")
         if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
-            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
+            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")
+        if os.path.exists(fileroot+"/"+project+".noisy.sd.T.cal"):
+            shutil.rmtree(fileroot+"/"+project+".noisy.sd.T.cal")
 
     except TypeError, e:
         finalize_tools()
@@ -1225,7 +1226,7 @@ def simobserve(
 def plotpb(pb,axes,lims=None,color='k'):
     # This beam is automatically scaled when you zoom in/out but
     # not anchored in plot area. We'll wait for Matplotlib 0.99
-    # for that function. 
+    # for that function.
     #major=major
     #minor=minor
     #rangle=rangle

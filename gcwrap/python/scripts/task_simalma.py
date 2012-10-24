@@ -230,15 +230,11 @@ def simalma(
 
         # Calculate 12-m PB
         Dant = 12.
-        pbval = 0.3 / qa.convert(qa.quantity(model_center),'GHz')['value'] \
+        pbval = 0.2997924 / qa.convert(qa.quantity(model_center),'GHz')['value'] \
                 / Dant * 3600. * 180 / numpy.pi # arcsec
-        # Definition of PB in OT and simulator differs.
-        PB12ot = qa.quantity(pbval, "arcsec")
-        PB12sim = qa.quantity(pbval*1.2, "arcsec")
-        msg("PB size - OT: %s, simulator: %s" % (qa.tos(PB12ot), qa.tos(PB12sim)), origin="simalma", priority='DEBUG2')
-        nyqpbratio = nyquist/1.2   # OT Nyquist spacing in unit of simulator PB
-        pointingspacing = str(nyqpbratio)+"PB"
-        #msg("Setting Nyquist pointing spacing %s" % pointingspacing, origin="simalma", priority="warn")
+        PB12 = qa.quantity(pbval*1.2, "arcsec")
+        msg("PB size: %s" % (qa.tos(PB12)), origin="simalma", priority='DEBUG2')
+        pointingspacing = str(nyquist)+"PB"
 
         ############################################################
         # ALMA-BL simulation

@@ -30,6 +30,7 @@ def plotants(vis=None,figfile=''):
                   button on the right at the bottom of the display.  This
                   produces a png format file.
        """
+
        try:
               if type(vis) == str and os.path.isdir(vis):
                      mp.open(vis)
@@ -50,4 +51,4 @@ def plotants(vis=None,figfile=''):
        except Exception, instance:
               print '*** Error ***',instance
 
-       mp.close()
+       mp.done()
