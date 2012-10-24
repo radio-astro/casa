@@ -338,7 +338,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         The parameter gridfunction sets gridding function for imaging. 
         Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
-        Spheroidal Wave Function), and 'PB' (Primary Beam). For 'PB', correct 
+        Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*
+        Jinc), where Jinc(x) = J_1(pi*x/c)/(pi*x/c) with a first order 
+        Bessel function J_1, and 'PB' (Primary Beam). For 'PB', correct 
         antenna informations should be included in input file. 
 
         There are four subparameters for gridfunction: convsupport, truncate, 
