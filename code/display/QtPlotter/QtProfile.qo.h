@@ -220,6 +220,8 @@ signals:
    void movieChannel( int startChannel, int endChannel );
 
 private:
+   pair<double,double> getMaximumTemperature();
+   void postConversionWarning( QString unitStr);
    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
    void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
    void fillPlotTypes(const ImageInterface<Float>* img);
