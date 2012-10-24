@@ -78,7 +78,7 @@ void SettingsWidget::reset( bool taskChanged ){
 		QLayout* stackedLayout = layout();
 		if ( stackedLayout == NULL ){
 				stackedLayout = new QStackedLayout( this );
-				//boxLayout->setMargin( 0 );
+				stackedLayout->setContentsMargins( 2, 1, 2, 1 );
 		}
 		if ( taskHelper == NULL || taskChanged ){
 			if ( specLineFitting ){

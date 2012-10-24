@@ -347,7 +347,8 @@ private:
    QtProfilePrefs* profilePrefs;
    int frameIndex;
    bool newOverplots;
-
+   pair<double,double> getMaximumTemperature();
+   void postConversionWarning( QString unitStr);
    private slots:
    	   void changeTopAxis();
    	   void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );

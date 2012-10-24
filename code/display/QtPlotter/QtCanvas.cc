@@ -55,7 +55,7 @@ QtCanvas::~QtCanvas(){
 
 QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent),
-           MARGIN_LEFT(100), MARGIN_BOTTOM(60), MARGIN_TOP(100), MARGIN_RIGHT(25), FRACZOOM(20),
+           MARGIN_LEFT(100), MARGIN_BOTTOM(60), MARGIN_TOP(80), MARGIN_RIGHT(25), FRACZOOM(20),
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
           contextMenu( this ),

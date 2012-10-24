@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>885</width>
-    <height>822</height>
+    <height>560</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -19,7 +19,7 @@
   <property name="minimumSize">
    <size>
     <width>832</width>
-    <height>600</height>
+    <height>560</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -353,13 +353,13 @@
       <property name="minimumSize">
        <size>
         <width>811</width>
-        <height>230</height>
+        <height>215</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>255</height>
+        <height>215</height>
        </size>
       </property>
       <property name="currentIndex">
@@ -372,7 +372,7 @@
           <x>0</x>
           <y>0</y>
           <width>861</width>
-          <height>241</height>
+          <height>211</height>
          </rect>
         </property>
         <property name="sizePolicy">
@@ -394,7 +394,7 @@
          <enum>QTabWidget::South</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -450,9 +450,9 @@
           <property name="geometry">
            <rect>
             <x>10</x>
-            <y>10</y>
+            <y>0</y>
             <width>841</width>
-            <height>201</height>
+            <height>181</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -616,7 +616,7 @@
     <string>Specify a new channel position in the viewer or movie the viewer through a range of channels.</string>
    </property>
    <property name="toolTip">
-    <string></string>
+    <string>Specify a new channel position in the viewer or movie the viewer through a range of channels.</string>
    </property>
   </action>
   <action name="actionAnnotationText">
