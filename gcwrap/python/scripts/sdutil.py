@@ -40,12 +40,14 @@ def get_listvalue(value):
     return _to_list(value, int) or []
 
 def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
-                 in_field=None, in_beams=None):
+                 in_field=None, in_beams=None, in_rows=None):
     scans = get_listvalue(in_scans)
     ifs   = get_listvalue(in_ifs)
     pols  = get_listvalue(in_pols)
     beams = get_listvalue(in_beams)
-    selector = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
+    rows = get_listvalue(in_rows)
+    selector = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams,
+                           rows=rows)
 
     if (in_field != ""):
         # NOTE: currently can only select one
