@@ -444,7 +444,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	setErrorHandler(ANTENNA_EXPR, mssErrHandler_p);
       }
     else
-      mssErrHandler_p->reset();
+      {
+	mssErrHandler_p = MSAntennaParse::thisMSAErrorHandler;
+	MSAntennaParse::thisMSAErrorHandler->reset();
+	//	mssErrHandler_p->reset();
+      }
 
     try
       {
