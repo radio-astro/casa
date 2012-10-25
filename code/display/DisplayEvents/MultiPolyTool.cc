@@ -59,12 +59,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	WorldCanvas *wc = ev.worldCanvas( );
 	if ( ! wc->inDrawArea(x, y) ) return;
 
-	its2ndLastPressTime = itsLastPressTime;
-	itsLastPressTime = ev.timeOfEvent();
-  
 	// finish building the polygon...
 	// could still be needed for flagging measurement sets...
-	if (ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval())  {
+	if ( ev.modifiers( ) & Display::KM_Double_Click )  {
 	    if ( memory::nullptr.check(building_polygon) == false ) {
 		// upon double-click close polygon if more than 3 vertices...
 		// otherwise, add another vertex...
@@ -235,15 +232,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    needsHandles=True;  }
 
 	if ( itsMode==Ready && ev.worldCanvas()==itsCurrentWC &&
-	     ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval() )  {
+	     ev.modifiers( ) & Display::KM_Double_Click )  {
 	    Int x = ev.pixX();
 	    Int y = ev.pixY();
 
 	    if(itsCurrentWC->inDrawArea(x,y)) {
-
-		// "double click" in draw area & polygon exists
-		itsLastPressTime = its2ndLastPressTime = -1.0;
-				// reset dbl click timing
 
 		if (!itsPolygonPersistent) reset();
 		else {
@@ -345,7 +338,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Bool existed = (itsMode!=Off);
 	itsMode = Off;
 	itsEmitted = False;
-	itsLastPressTime = its2ndLastPressTime = -1.0;
 	if(existed && !skipRefresh) refresh();  }	// erase old drawing if necessary.
 
 

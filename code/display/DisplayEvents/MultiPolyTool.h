@@ -228,9 +228,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // position that move started from
 	    Int itsBaseMoveX, itsBaseMoveY;
 
-	    // times of the last two presses
-	    Double itsLastPressTime, its2ndLastPressTime;
-
 	    // may not be needed...
 	    int resizing_region_handle;
 
