@@ -370,6 +370,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
       }
     mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
+    //    mssErrHandler_p=NULL;
   }
   
   void MSSelection::deleteNodes()
@@ -445,7 +446,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else
       {
-	mssErrHandler_p = MSAntennaParse::thisMSAErrorHandler;
+	//mssErrHandler_p = MSAntennaParse::thisMSAErrorHandler;
 	MSAntennaParse::thisMSAErrorHandler->reset();
 	//	mssErrHandler_p->reset();
       }
