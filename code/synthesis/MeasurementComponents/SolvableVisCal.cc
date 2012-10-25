@@ -6231,8 +6231,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
         oFitMsg =" Fitted spectrum for ";
 	oFitMsg += fldNames(tranidx);
         oFitMsg += " with fitorder="+String::toString<Int>(fitorder)+": ";
-	oFitMsg += "Flux density = "+String::toString<Double>(exp10(soln(0)));
-	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);
+//	oFitMsg += "Flux density = "+String::toString<Double>(exp10(soln(0)));
+	oFitMsg += "Flux density = "+String::toString<Double>(pow(10.0,(soln(0))));
+//	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);
+        Double ferr=(errs(0)>0.0 ? pow(10.0,(errs(0))) : 0.0);
 	oFitMsg += " +/- "+String::toString<Double>(ferr); 
 	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
         for (uInt j=1; j<soln.nelements();j++) {
