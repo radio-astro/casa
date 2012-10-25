@@ -160,6 +160,12 @@ def normalise_restfreq(in_restfreq):
         mesg = "wrong type of restfreq given."
         raise Exception, mesg
 
+def set_restfreq(s, restfreq):
+    rfset = (restfreq != '') and (restfreq != [])
+    if rfset:
+        molids = s._getmolidcol_list()
+        s.set_restfreqs(normalise_restfreq(restfreq))
+
 def set_spectral_unit(s, specunit):
     if (specunit != ''):
         s.set_unit(specunit)
@@ -183,12 +189,6 @@ def set_freqframe(s, frame):
 def set_fluxunit(s, fluxunit, telescopeparm, insitu=True):
     ret = None
     
-    # set flux unit string (be more permissive than ASAP)
-    if ( fluxunit == 'k' ):
-        fluxunit = 'K'
-    elif ( fluxunit == 'JY' or fluxunit == 'jy' ):
-        fluxunit = 'Jy'
-
     # check current fluxunit
     # for GBT if not set, set assumed fluxunit, Kelvin
     antennaname = s.get_antennaname()
@@ -426,7 +426,7 @@ def scantable_restore_factory(s, infile, fluxunit, specunit, frame, doppler, res
         return scantable_restore_impl(s, fluxunit, specunit, frame, doppler, restfreq)
 
 class scantable_restore_interface(object):
-    def __init__(self):
+    def __init__(self, s=None, fluxunit=None, specunit=None, frame=None, doppler=None, restfreq=None):
         pass
 
     def restore(self):
