@@ -1,5 +1,4 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 1995,1996,1999-2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,28 +21,27 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
 
-#include <string>
+#ifndef STDLOGICAL_H_
+#define STDLOGICAL_H_
 
-#define CASACORE_VERSION "1.0.168"
+#include <casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
-  // Get the casacore version.
-  const std::string getVersion();
+// define logical operations on STL containers
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+template<class T, class U> Bool allNearAbs (const T &l, const T &r, const U tolerance);
 
-} //# NAMESPACE CASA - END
 
-#endif
+
+} // end namespace casa
+
+#ifndef CASACORE_NO_AUTO_TEMPLATES
+#include <casa/BasicMath/StdLogical.tcc>
+#endif //# CASACORE_NO_AUTO_TEMPLATES
+
+
+
+#endif /* STDLOGICAL_H_ */

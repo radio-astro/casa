@@ -22,6 +22,7 @@ tMSDerivedValues
 tMSFieldBuffer
 tMSFieldGram
 tMSMainBuffer
+tMSMetaData
 tMSPolBuffer
 tMSReader
 tMSScanGram
