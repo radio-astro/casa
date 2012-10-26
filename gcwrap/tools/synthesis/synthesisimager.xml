@@ -135,6 +135,19 @@ Define the image coordinate systems, image shapes and the number of images (mult
      <value type="record"></value>
      </param>
 
+</input>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+
+   <method type="function" name="initmapper">
+   <shortdescription>Construct ftmachine, deconvolver, and allocate image-memory</shortdescription>
+
+<description>
+</description>
+<input>
 
 </input>
 <returns type="bool"/>
@@ -142,26 +155,16 @@ Define the image coordinate systems, image shapes and the number of images (mult
 
 <!-- ===================================== -->
 
-<!--
-
-   <method type="function" name="setotheroptions">
-   <shortdescription>Set all other parameters</shortdescription>
+   <method type="function" name="initcycles">
+   <shortdescription>Construct SkyModel and SkyEquation</shortdescription>
 
 <description>
 </description>
 <input>
 
-     <param type="bool" name="usescratch">
-     <description>If True, use the model data column on disk. If False use a model record.</description>
-     <value>True</value>
-     </param>
-
-
 </input>
 <returns type="bool"/>
 </method>
-
--->
 
 <!-- ===================================== -->
 
