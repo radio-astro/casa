@@ -1705,6 +1705,19 @@ Date/Time:                         RR:                      RL:                 
   </example>
 </method>
 
+<method type="function" name="metadata">
+    <shortdescription>Get the MS metadata associated with this MS.</shortdescription>
+    <returns type="msmetadata"/>
+    <description>Get the MS metadata associated with this MS.</description>
+    <example>
+        # get the number of spectral windows in the specified MS
+        ms.open"my.ms")
+        metadata = ms.metadata()
+        ms.done()
+        nspw = metadata.nspw()
+        metadata.done()
+    </example>
+</method>
  
    <method type="function" name="selectinit">
    <shortdescription>Initialize the selection of an ms</shortdescription>

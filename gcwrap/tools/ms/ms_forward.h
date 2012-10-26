@@ -10,3 +10,7 @@ class MSFlagger;
 class MSSelection;
 };
 
+namespace casac {
+	class msmetadata;
+};
+
