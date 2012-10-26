@@ -64,9 +64,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public:
     // The default constructor generates the message "Table error".
-    MSSelectionErrorHandler ();
+    MSSelectionErrorHandler();
     virtual ~MSSelectionErrorHandler ();
-
+    
     virtual void reportError(const char *token,const String source=String(""));
     virtual String constructMessage();
 
@@ -76,6 +76,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vector<String> tokenList, messageList;
   };
 
+  // <synopsis> 
+  //
+  // The handleError() method is overloaded to send the accumulated
+  // error messages to the LogIO object as warning messages.
+  //
+  //</synopsis>
+  
   class MSSelectionLogError: public MSSelectionErrorHandler
   {
   public:
