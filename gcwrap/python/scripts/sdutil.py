@@ -166,7 +166,7 @@ def normalise_restfreq(in_restfreq):
 def set_restfreq(s, restfreq):
     rfset = (restfreq != '') and (restfreq != [])
     if rfset:
-        molids = s._getmolidcol_list()
+##         molids = s._getmolidcol_list()
         s.set_restfreqs(normalise_restfreq(restfreq))
 
 def set_spectral_unit(s, specunit):
@@ -473,6 +473,19 @@ class scantable_restore_impl(scantable_restore_interface):
             self.scntab.set_freqframe(self.frame)
         if self.rfset:
             self.scntab._setmolidcol_list(self.molids)
-                     
 
+def get_interactive_mask(s, masklist, invert=False):
+    new_mask=sd.interactivemask(scan=s)
+    if (len(masklist) > 0):
+        new_mask.set_basemask(masklist=masklist,invert=invert)
+        
+    new_mask.select_mask(once=False,showmask=True)
+    # Wait for user to finish mask selection
+    finish=raw_input("Press return to calculate statistics.\n")
+    new_mask.finish_selection()
     
+    # Get final mask list
+    msk=new_mask.get_mask()
+    #msks=s.get_masklist(msk)
+    del new_mask
+    return msk

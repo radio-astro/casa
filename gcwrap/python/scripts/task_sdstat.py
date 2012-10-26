@@ -180,19 +180,8 @@ def get_mask(s, interactive, masklist, invertmask):
     msk = None
     if interactive:
         # Interactive masking
-        new_mask=sd.interactivemask(scan=s)
-        if (len(masklist) > 0):
-            new_mask.set_basemask(masklist=masklist,invert=False)
-
-        new_mask.select_mask(once=False,showmask=True)
-        # Wait for user to finish mask selection
-        finish=raw_input("Press return to calculate statistics.\n")
-        new_mask.finish_selection()
-        
-        # Get final mask list
-        msk=new_mask.get_mask()
-        del new_mask
-        msks=s.get_masklist(msk)
+        msk = sdutil.get_interactive_mask(s, masklist, False)
+        msks = s.get_masklist(msk)
         if len(msks) < 1:
             #print 'No channel is selected. Exit without calculation.'
             raise Exception, 'No channel is selected. Exit without calculation.'
