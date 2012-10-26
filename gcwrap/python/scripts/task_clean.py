@@ -7,7 +7,8 @@ im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, observation, mode, gridmode,
-          wprojplanes, facets, cfcache, painc, epjtable, interpolation,
+          wprojplanes, facets, cfcache, painc, aterm, psterm, wbawp, epjtable, 
+          interpolation,
           niter, gain, threshold, psfmode, imagermode, ftmachine, mosweight,
           scaletype, multiscale, negcomponent, smallscalebias,
           interactive, mask, nchan, start, width, outframe,
@@ -121,6 +122,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                           antenna=antenna,scan=scan, observation=str(observation),
                           mode=mode,gridmode=gridmode, 
                           wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,painc=painc,
+                          psterm=psterm,aterm=aterm,wbawp=wbaw,
                           epjtable=epjtable,interpolation=interpolation,niter=niter,
                           gain=gain,
                           threshold=threshold,psfmode=psfmode,imagermode=imagermode, 
@@ -555,9 +557,11 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                              wprojplanes=wprojplanes,
                              freqinterp=interpolation, padding=padding,
                              cfcachedirname=cfcache, pastep=painc,
+                             pblimit=minpb,
                              epjtablename=epjtable,
                              applypointingoffsets=applyoffsets,
-                             dopbgriddingcorrections=pbgridcorrect);
+                             dopbgriddingcorrections=pbgridcorrect,
+                             psterm=psterm,aterm=aterm,wbawp=wbawp);
 
 
             ##Set the restoring beam

@@ -111,8 +111,8 @@ namespace casa{
     // fiddle with this logic at your own risk (can easily lead to a
     // lot of grief. --Sanjay).
     //
-    if (wndx > 0)
-      cerr << "F, W, M: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << wVal << endl;
+    // if (wndx != 1)
+    //   cerr << "F, W, M: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << wVal << endl;
     if (wVal > 0.0) 
       convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
     else

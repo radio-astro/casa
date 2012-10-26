@@ -3171,7 +3171,8 @@ def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
 #    ftm = userftm;
     ftm='ft';
     if ((gridmode == 'widefield') and(wprojplanes > 1)): ftm = 'wproject';
-    elif (gridmode == 'aprojection'):                    ftm = 'pbwproject';
+    elif (gridmode == 'aprojection'):                    ftm = 'awproject';
+    elif (gridmode == 'advancedaprojection'):            ftm = 'awproject';
     elif (imagermode == 'csclean'):                      ftm = 'ft';
     elif (imagermode == 'mosaic'):                       ftm = userftm;
     return ftm;

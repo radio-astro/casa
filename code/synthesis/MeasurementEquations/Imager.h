@@ -250,7 +250,10 @@ class Imager
 		  const String& freqinterpmethod="linear",
 		  const Int imageTileSizeInPix=0,
 		  const Bool singleprecisiononly=False,
-		  const Int numthreads=-1);
+		  const Int numthreads=-1,
+		  const Bool psTermOn=True,
+		  const Bool aTermOn=True,
+		  const Bool wbAWP=False);
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
@@ -901,7 +904,7 @@ protected:
   //
   EPJones *epJ;
   String epJTableName_p, cfCacheDirName_p;
-  Bool doPointing, doPBCorr;
+  Bool doPointing, doPBCorr, psTermOn_p, aTermOn_p, wbAWP_p;
   //SimplePlotterPtr plotter_p;
   Record interactiveState_p;
 

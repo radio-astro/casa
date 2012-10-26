@@ -45,6 +45,7 @@
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/CFDefs.h>
 #include <synthesis/TransformMachines/Utils.h>
+// #include <casa/Tables/Table.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   using namespace CFDefs;
@@ -109,13 +110,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // arrays and multi-feed antennas.
   //
   // </todo>
+  //
+  //----------------------------------------------------------------------
+  class CFCacheTable
+  {
+  public:
+    CFCacheTable(): freqList(), wList(), muellerList(), cfNameList() {};
+    ~CFCacheTable() {};
+    
+    CFCacheTable& operator=(const CFCacheTable& other)
+    {
+      //      if (other != *this)
+	{
+	  freqList = other.freqList;
+	  wList = other.wList;
+	  muellerList = other.muellerList;
+	  cfNameList = other.cfNameList;
+	}
+      return *this;
+    }
 
+    vector<Double> freqList, wList;
+    vector<Int> muellerList;
+    vector<String> cfNameList;
+  };
+  //
+  //----------------------------------------------------------------------
+  //
   class CFCache
   {
   public:
     typedef Vector< CFStore > CFStoreCacheType;
+    typedef vector<CFCacheTable> CFCacheTableType;
     CFCache(const char *cfDir="CF"):
-      memCache_p(), memCacheWt_p(), XSup(), YSup(), paList(), key2IndexMap(),
+      memCache_p(), memCacheWt_p(), cfCacheTable_p(), XSup(), YSup(), paList(), 
+      paList_p(), key2IndexMap(),
       cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False),
       avgPBReadyQualifier_p("")
     {};
@@ -227,8 +256,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   private:
     CFStoreCacheType memCache_p, memCacheWt_p;
+    CFCacheTableType cfCacheTable_p;
+
     Matrix<Int> XSup, YSup;
     Vector<Float> paList, Sampling;
+    vector<Float> paList_p;
     Matrix<Float> key2IndexMap; // Nx2 [PAVal, Freq]
     String Dir, cfPrefix, aux;
     ParAngleChangeDetector paCD_p;
