@@ -1,4 +1,4 @@
-//# SynthesisImager.h: Imager functionality sits here; 
+//# SIMapper.h: Imager functionality sits here; 
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SYNTHESISIMAGER_H
-#define SYNTHESIS_SYNTHESISIMAGER_H
+#ifndef SYNTHESIS_SIMAPPER_H
+#define SYNTHESIS_SIMAPPER_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
@@ -35,81 +35,79 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
-#include<synthesis/MeasurementEquations/SIMapperCollection.h>
-#include<synthesis/MeasurementComponents/SISkyModel.h>
-#include<synthesis/MeasurementEquations/SISkyEquation.h>
-#include<synthesis/MeasurementEquations/SIIterBot.h>
-#include<synthesis/MeasurementEquations/SIMaskHandler.h>
+#include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/MeasurementComponents/SIDeconvolver.h>
+#include <synthesis/MeasurementEquations/SIIterBot.h>
+#include <synthesis/MeasurementEquations/SIMaskHandler.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
-class MeasurementSet;
-class ViewerProxy;
 template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
-class SynthesisImager 
+class SIMapper 
 {
  public:
   // Default constructor
 
-  SynthesisImager();
-  ~SynthesisImager();
+  SIMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
+  ~SIMapper();
 
   // Copy constructor and assignment operator
   //Imager(const Imager&);
   //Imager& operator=(const Imager&);
 
-  // make all pure-inputs const
-  void selectData(Record selpars);
-  void defineImage(Record impars);
-  void setupImaging(Record gridpars);
-  void setupDeconvolution(Record recpars);
-  SIIterBot setupIteration(Record iterpars);
-  void initMapper();
-  void initCycles();
-  // Record initLoops();
-  //  void endLoops(Record& loopcontrols){SIIterBot lc(loopcontrols); endLoops(lc); }
-  void endLoops(SIIterBot& loopcontrols);
-  //  void runMajorCycle(){SIIterBot rec; runMajorCycle(rec);}
-  void runMajorCycle(SIIterBot& loopcontrols);
-  void runMinorCycle(SIIterBot& loopcontrols);
+  ///// Minor Cycle Functions
+
+  void getCopyOfResidualAndMask( TempImage<Float> &residual, TempImage<Float> &mask );
+  void setMask( TempImage<Float> &mask );
+
+  void deconvolve( SIIterBot &loopcontrols );
+
+  Float getPeakResidual();
+  Float getPSFSidelobeLevel();
+  Float getModelFlux();
+  Bool isModelUpdated();
+
+  void restore();
+
+  ///// Major Cycle Functions
+
+  void initializeGrid();
+  void grid();
+  void finalizeGrid();
+
+  void initializeDegrid();
+  void degrid();
+  void finalizeDegrid();
+
+  Record getFTMRecord();
 
 protected:
 
-  /////////////// Member Objects
+  ///////////////////// Member Objects
 
-  SIMapperCollection itsMappers;
+  CountedPtr<SIDeconvolver> itsDeconvolver;
+  CountedPtr<FTMachine> itsFTMachine; 
+  CountedPtr<CoordinateSystem> itsCoordSys;
+  CountedPtr<SIMaskHandler> itsMaskHandler;
 
-  //  CountedPtr<VisSet> itsVisSet;
+  Float itsImage, itsPsf, itsModel;
+  Float itsResidual, itsOriginalResidual;
+  Float itsWeight, itsBeam;
 
-  CountedPtr<FTMachine> itsCurrentFTMachine;
-  CountedPtr<SIDeconvolver> itsCurrentDeconvolver;
-  CountedPtr<CoordinateSystem> itsCurrentCoordSys;
-  CountedPtr<SIMaskHandler> itsCurrentMaskHandler;
+  Bool updatedmodel_p;
+  Int mapperid_p;
 
-  SISkyModel itsSkyModel;
-  SISkyEquation itsSkyEquation;
+  //////////////////// Member Functions
+  
+  void allocateImageMemory();
 
-  ///SIIterBot itsLoopController;
 
-  /////////////// All input parameters
+  /////////////////// All input parameters
 
-  // Data Selection
-  // Image Definition
-  String startmodel_p;
-
-  // Iteration Control
-  // Imaging/Gridding
-  // Deconvolution
-
-  // Other Options
-  Bool usescratch_p;
-
-  //////////////// Internal functions
- 
 };
 
 
