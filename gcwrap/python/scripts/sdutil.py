@@ -8,12 +8,14 @@ import numpy as np
 
 qatl = casac.quanta()
 
+def get_abspath(filename):
+    return os.path.expanduser(os.path.expandvars(filename))
+
 def assert_infile_exists(infile=None):
     if (infile == ""):
         raise Exception, "infile is undefined"
 
-    filename = os.path.expandvars(infile)
-    filename = os.path.expanduser(filename)
+    filename = get_abspath(infile)
     if not os.path.exists(filename):
         mesg = "File '%s' not found." % (filename)
         raise Exception, mesg
@@ -28,8 +30,7 @@ def get_default_outfile_name(infile=None, outfile=None, suffix=None):
 
 
 def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overwrite=None):
-    filename = os.path.expandvars(outfile)
-    filename = os.path.expanduser(filename)
+    filename = get_abspath(outfile)
     if not overwrite and (outform.upper != "ASCII"):
         if os.path.exists(filename):
             mesg = "Output file '%s' exists." % (filename)
@@ -311,8 +312,7 @@ def save(s, outfile, outform, overwrite):
             outform_local = 'ASAP'
             outfile_local = outfile
 
-    outfilename = os.path.expandvars(outfile_local)
-    outfilename = os.path.expanduser(outfilename)
+    outfilename = get_abspath(outfile_local)
     if overwrite and os.path.exists(outfilename):
         os.system('rm -rf %s' % outfilename)
 
@@ -453,25 +453,27 @@ class scantable_restore_impl(scantable_restore_interface):
         self.doppler = self.coord[2]
         self.molids = s._getmolidcol_list()
         self.rfset = ((restfreq != '') and (restfreq != []))
-        self.dorestore = (self.rfset) and \
-                         ((frame != '' and frame != self.frame) or \
-                          (doppler != '' and doppler != self.doppler) or \
-                          (fluxunit != '' and fluxunit != self.fluxunit) or \
-                          (specunit != '' and specunit != self.specunit))
-        #casalog.post('dorestore=%s'%(self.dorestore))
+        self.frameset = frame != '' or frame != self.frame
+        self.dopplerset = doppler != '' or doppler != self.doppler
+        self.fluxset = self.fluxunit != '' and \
+                       (fluxunit != '' or fluxunit != self.fluxunit)
+        self.specset = specunit != '' or specunit != self.specunit
 
     def restore(self):
         self.scntab.set_selection()
         
-        if self.dorestore:
-            casalog.post('Restoreing header information in input scantable')
-            self._restore()
+        casalog.post('Restoreing header information in input scantable')
+        self._restore()
                          
     def _restore(self):
-        self.scntab.set_fluxunit(self.fluxunit)
-        self.scntab.set_unit(self.specunit)
-        self.scntab.set_doppler(self.doppler)
-        self.scntab.set_freqframe(self.frame)
+        if self.fluxset:
+            self.scntab.set_fluxunit(self.fluxunit)
+        if self.specset:
+            self.scntab.set_unit(self.specunit)
+        if self.dopplerset:
+            self.scntab.set_doppler(self.doppler)
+        if self.frameset:
+            self.scntab.set_freqframe(self.frame)
         if self.rfset:
             self.scntab._setmolidcol_list(self.molids)
                      
