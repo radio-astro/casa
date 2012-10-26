@@ -3,6 +3,7 @@ tFunctors
 tMath
 tMathNaN
 tPrimes
+tStdLogical
 tRNG
 )
 

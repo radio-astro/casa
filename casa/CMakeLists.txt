@@ -283,6 +283,8 @@ BasicMath/Functors.h
 BasicMath/Math.h
 BasicMath/Primes.h
 BasicMath/Random.h
+BasicMath/StdLogical.h
+BasicMath/StdLogical.tcc
 DESTINATION include/casacore/casa/BasicMath
 )
 
