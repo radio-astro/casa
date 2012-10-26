@@ -176,9 +176,9 @@ def set_spectral_unit(s, specunit):
 def set_doppler(s, doppler):
     if (doppler != ''):
         if (doppler in ['radio', 'optical', 'z']):
-            ddopler = doppler.upper()
+            ddoppler = doppler.upper()
         else:
-            ddopler = doppler
+            ddoppler = doppler
         s.set_doppler(ddoppler)
     else:
         casalog.post('Using current doppler conversion')
