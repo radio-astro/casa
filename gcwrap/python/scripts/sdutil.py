@@ -342,7 +342,7 @@ def dochannelrange(s, channelrange):
 
 
 def doaverage(s, scanaverage, timeaverage, tweight, polaverage, pweight,
-              averageall=False):
+              averageall=False, docopy=False):
     # Average in time if desired
     sret = None
     if ( timeaverage ):
@@ -395,6 +395,8 @@ def doaverage(s, scanaverage, timeaverage, tweight, polaverage, pweight,
             else:
                 #spave=scal.copy()
                 sret = s
+    if docopy and (sret == s):
+        sret = s.copy()
     return sret
 
 def plot_scantable(s, pltfile, plotlevel, comment=None):
