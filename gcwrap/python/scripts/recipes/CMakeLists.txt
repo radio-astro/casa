@@ -32,6 +32,7 @@ casa_add_python( tools tools_recipes_python python/${PYTHONV}/recipes
   gaincal_unflag_nearest.py
   getazel.py
   __init__.py
+  linfeedpolhelpers.py
   lsms.py
   make_labelled_ms.py
   pixelmask2cleanmask.py
