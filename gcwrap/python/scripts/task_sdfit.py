@@ -5,213 +5,89 @@ import sdutil
 import asap as sd
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
+import sdutil
 
 def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
 
 
         casalog.origin('sdfit')
 
+        restorer = None
         retValue={}
 
         try:
-            if infile=='':
-                    raise Exception, 'infile is undefined'
-
-            filename = os.path.expandvars(infile)
-            filename = os.path.expanduser(filename)
-            if not os.path.exists(filename):
-                s = "File '%s' not found." % (filename)
-                raise Exception, s
+            sdutil.assert_infile_exists(infile)
 
             #load the data  without averaging
-            sorg = sd.scantable(infile,average=False,antenna=antenna)
-
+            s = sd.scantable(infile,average=False,antenna=antenna)
+                        
             # Select scan and field
-            sel = sd.selector()
-
-            # Set up scanlist
-            if ( type(scanlist) == list ):
-                    # is a list
-                    scans = scanlist
-            else:
-                    # is a single int, make into list
-                    scans = [ scanlist ]
-            # Now select them
-            if ( len(scans) > 0 ):
-                    sel.set_scans(scans)
-
-            # Select source names
-            if ( field != '' ):
-                    sel.set_name(field)
-                    # NOTE: currently can only select one
-                    # set of names this way, will probably
-                    # need to do a set_query eventually
-
-            # Select IFs
-            if ( type(iflist) == list ):
-                    # is a list
-                    ifs = iflist
-            else:
-                    # is a single int, make into list
-                    ifs = [ iflist ]
-            if ( len(ifs) > 0 ):
-                    # Do any IF selection
-                    sel.set_ifs(ifs)
-
-            # Select polarization
-            if ( type(pollist) == list ):
-                    pols = pollist
-            else:
-                    pols = [ polist ] 
-            if ( len(pols) > 0 ):
-                    sel.set_polarisations(pols)
             try:
+                    sel = sdutil.get_selector(in_scans=scanlist,
+                                              in_ifs=iflist,
+                                              in_pols=pollist,
+                                              in_field=field)
 		    #Apply the selection (if any)
-                    sorg.set_selection(sel)
+                    s.set_selection(sel)
             except Exception, instance:
                 casalog.post( str(instance), priority = 'ERROR' )
                 raise Exception, instance
 
             del sel
 
-	    # Copy the original data (CAS-3987)
-	    if (sd.rcParams['scantable.storage'] == 'disk'):
-		    s = sorg.copy()
-	    else:
-		    s = sorg
-	    del sorg
+            # restorer
+            restorer = sdutil.scantable_restore_factory(s,
+                                                        infile,
+                                                        fluxunit,
+                                                        specunit,
+                                                        frame,
+                                                        doppler,
+                                                        restfreq)
 	    
 	    # set restfreq
-	    modified_molid = False
 	    if (specunit == 'km/s'):
 		    if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
 			    mesg = "Restfreq must be given."
 			    raise Exception, mesg
-		    elif (len(str(restfreq)) > 0):
-			    molids = s._getmolidcol_list()
-			    s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
-			    modified_molid = True
+                    sdutil.set_restfreq(s, restfreq)
 
-            # get telescope name
-            #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
-            antennaname = s.get_antennaname()
-
-            # check current fluxunit
-            # for GBT if not set, set assumed fluxunit, Kelvin
-            fluxunit_now = s.get_fluxunit()
-            if ( antennaname == 'GBT'):
-                            if (fluxunit_now == ''):
-                                    casalog.post( "No fluxunit in the data. Set to Kelvin." )
-                                    s.set_fluxunit('K')
-                                    fluxunit_now = s.get_fluxunit()
-
-            casalog.post( "Current fluxunit = "+fluxunit_now )
-
-	    unit_in = s.get_unit()
             # set default spectral axis unit
-            if ( specunit != '' ):
-                    s.set_unit(specunit)
+            sdutil.set_spectral_unit(s, specunit)
 
             # reset frame and doppler if needed
-            if ( frame != '' ):
-                    s.set_freqframe(frame)
-            else:
-                    casalog.post( 'Using current frequency frame' )
-
-            if ( doppler != '' ):
-                    if ( doppler == 'radio' ):
-                            ddoppler = 'RADIO'
-                    elif ( doppler == 'optical' ):
-                            ddoppler = 'OPTICAL'
-                    elif ( doppler == 'z' ):
-                            ddoppler = 'Z'
-                    else:
-                            ddoppler = doppler
-
-                    s.set_doppler(ddoppler)
-            else:
-                    casalog.post( 'Using current doppler convention' )
+            sdutil.set_freqframe(s, frame)
+            sdutil.set_doppler(s, doppler)
 
             # convert flux
-            # set flux unit string (be more permissive than ASAP)
-            if ( fluxunit == 'k' ):
-                    fluxunit = 'K'
-            elif ( fluxunit == 'JY' or fluxunit == 'jy' ):
-                    fluxunit = 'Jy'
-
-            # fix the fluxunit if necessary
-            if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
-                            if ( fluxunit != '' ):
-                                    if ( fluxunit == fluxunit_now ):
-                                            casalog.post( "No need to change default fluxunits" )
-                                    else:
-                                            s.set_fluxunit(fluxunit)
-                                            casalog.post( "Reset default fluxunit to "+fluxunit )
-                                            fluxunit_now = s.get_fluxunit()
-                            else:
-                                    casalog.post( "no fluxunit for set_fluxunit", priority = 'WARN' )
-
-
-            elif ( fluxunit=='' or fluxunit==fluxunit_now ):
-                    if ( fluxunit==fluxunit_now ):
-                            casalog.post( "No need to convert fluxunits" )
-
-            elif ( type(telescopeparm) == list ):
-                    # User input telescope params
-                    if ( len(telescopeparm) > 1 ):
-                            D = telescopeparm[0]
-                            eta = telescopeparm[1]
-                            casalog.post( "Use phys.diam D = %5.1f m" % (D) )
-                            casalog.post(  "Use ap.eff. eta = %5.3f " % (eta) )
-                            s.convert_flux(eta=eta,d=D)
-                    elif ( len(telescopeparm) > 0 ):
-                            jypk = telescopeparm[0]
-                            casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
-                            s.convert_flux(jyperk=jypk)
-                    else:
-                            casalog.post( "Empty telescope list" )
-
-            elif ( telescopeparm=='' ):
-                    if ( antennaname == 'GBT'):
-                            # needs eventually to be in ASAP source code
-                            #print "Convert fluxunit to "+fluxunit
-                            casalog.post( "Convert fluxunit to "+fluxunit )
-                            # THIS IS THE CHEESY PART
-                            # Calculate ap.eff eta at rest freq
-                            # Use Ruze law
-                            #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
-                            # with
-                            casalog.post( "Using GBT parameters" )
-                            eps = 0.390  # mm
-                            eta_0 = 0.71 # at infinite wavelength
-                            # Ideally would use a freq in center of
-                            # band, but rest freq is what I have
-                            rf = s.get_restfreqs()[0][0]*1.0e-9 # GHz
-                            eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
-                            casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
-                            casalog.post( "At rest frequency %5.3f GHz" % (rf) )
-                            D = 104.9 # 100m x 110m
-                            casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
-                            s.convert_flux(eta=eta,d=D)
-
-                            casalog.post( "Successfully converted fluxunit to "+fluxunit )
-                    elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
-                            s.convert_flux()
-
-                    else:
-                            # Unknown telescope type
-                            #print "Unknown telescope - cannot convert"
-                            casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
+            stmp = sdutil.set_fluxunit(s, fluxunit, telescopeparm, False)
+            if stmp:
+                restorer.restore()
+                del restorer
+                restorer = None
+                s = stmp
+                del stmp
 
             # Make line region masks and list of line regions
+##             (linemask,linelist,nlines,domask,doguess) = get_mask(s,
+##                                                                  fitmode,
+##                                                                  maskline,
+##                                                                  invertmask,
+##                                                                  nfit,
+##                                                                  thresh,
+##                                                                  min_nchan,
+##                                                                  avg_limit,
+##                                                                  box_size,
+##                                                                  edge)
+            maskforstat = []
+            maskforfit = None
             if ( fitmode == 'list' ):
                     # Assume the user has given a list of lines
                     # e.g. maskline=[[3900,4300]] for a single line
                     if ( len(maskline) > 0 ):
                             # There is a user-supplied channel mask for lines
                             if ( not invertmask ):
-                                    linemask=s.create_mask(maskline)
-                                    domask = True
+                                    maskforstat = s.create_mask(maskline)
+                                    maskforfit = maskforstat
                                     doguess = True
                                     # Make sure this is a list-of-lists (e.g. [[1,10],[20,30]])
                                     if ( type(maskline[0]) == list ):
@@ -220,16 +96,12 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                                             linelist = maskline
                                     else:
                                             # Not a list, turn into one
-                                            nlines = len(maskline)/2
-                                            linelist = []
-                                            for i in range(nlines):
-                                                    lo = maskline[2*i]
-                                                    up = maskline[2*i+1]
-                                                    linelist = linelist + [[lo,up]]
+                                            linelist = to_list_of_list(maskline)
+                                            nlines = len(linelist)
                             else:
                                     # invert regions
-                                    linemask=s.create_mask(maskline,invert=True)
-                                    domask = True
+                                    maskforstat=s.create_mask(maskline,invert=True)
+                                    maskforfit = maskforstat
                                     nlines = 1
                                     linelist=[]
                                     doguess = False
@@ -243,7 +115,6 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                             nlines = 1
                             linelist=[]
                             doguess = True
-                            domask = False
 
                     #print "Identified ",nlines," regions for fitting"
                     casalog.post( "Identified %d regions for fitting" % (nlines) )
@@ -254,22 +125,14 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
 
 	    elif (fitmode == 'interact'):
 		    # Interactive masking
-		    new_mask=sd.interactivemask(scan=s)
-		    #if (len(maskline) > 0):
-                    new_mask.set_basemask(masklist=maskline,invert=invertmask)
-		    new_mask.select_mask(once=False,showmask=True)
-		    # Wait for user to finish mask selection
-		    finish=raw_input("Press return to fit lines.\n")
-
-		    # Get final mask list
-		    linemask=new_mask.get_mask()
-		    linelist=s.get_masklist(linemask)
+                    maskforstat = sdutil.get_interactive_mask(s, maskline, invertmask)
+                    maskforfit = maskforstat
+		    linelist=s.get_masklist(maskforstat)
 		    nlines=len(linelist)
 		    if nlines < 1:
 			    msg='No channel is selected. Exit without fittinging.'
 			    casalog.post( msg, priority = 'WARN' )
 			    return
-		    domask=True
 		    doguess=True
 		    print '%d region(s) is selected as a linemask' % nlines
 		    print 'The final mask list ('+s._getabcissalabel()+') ='+str(linelist)
@@ -284,8 +147,6 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
 				    casalog.post(msg, priority='WARN')
 				    nfit=[1]
 			    casalog.post('List of line number reassigned.\n   nfit = '+str(nfit))
-		    new_mask.finish_selection()
-		    del new_mask
 
             else:
                     # Fit mode AUTO and in channel mode
@@ -293,11 +154,8 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                     casalog.post( "Trying AUTO mode - find line channel regions" )
                     if ( len(maskline) > 0 ):
                             # There is a user-supplied channel mask for lines
-                            linemask=s.create_mask(maskline,invert=invertmask)
-                            domask = True
-                    else:
-                            # Use whole region
-                            domask = False
+                            maskforstat=s.create_mask(maskline,invert=invertmask)
+                            maskforfit = maskforstat
 
                     # Use linefinder to find lines
                     #print "Using linefinder"
@@ -312,12 +170,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                     linelist=[]
                     nlines=[]
                     for irow in range(s.nrow()):
-                        if ( domask ):
-                            #nlines=fl.find_lines(mask=linemask,nRow=irow,edge=edge)
-                            nlines.append(fl.find_lines(mask=linemask,nRow=irow,edge=edge))
-                        else:
-                            #nlines=fl.find_lines(nRow=irow,edge=edge)
-                            nlines.append(fl.find_lines(nRow=irow,edge=edge))
+                        nlines.append(fl.find_lines(mask=maskforstat,nRow=irow,edge=edge))
                         # Get ranges
 
                         ptout="SCAN[%d] IF[%d] POL[%d]: " %(s.getscan(irow), s.getif(irow), s.getpol(irow))
@@ -329,16 +182,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                                 casalog.post( ptout+"Nothing found.", priority = 'WARN' )
 
                         # This is a linear list of pairs of values, so turn these into a list of lists
-                        llisttmp = []
-                        for i in range(nlines[irow]):
-                            lo = ll[2*i]
-                            up = ll[2*i+1]
-                            if specunit == 'km/s':
-                                    tmp=lo
-                                    lo=up
-                                    up=tmp
-                            llisttmp = llisttmp + [[lo,up]]
-                        linelist.append(llisttmp)
+                        linelist.append(to_list_of_list(ll))
                     # Done with linefinder
                     casalog.post( "Finished linefinder." )
                     #print "Finished linefinder, found ",nlines,"lines"
@@ -395,16 +239,8 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                             linecen = linecen + [cent]
                         else:
                             # For what its worth, do stats on unmasked region
-                            if ( domask ):
-                                    #maxl = s.stats('max',linemask)[irow]
-                                    #suml = s.stats('sum',linemask)[irow]
-                                    maxl = s._math._stats(s,linemask,'max')[irow]
-                                    suml = s._math._stats(s,linemask,'sum')[irow]
-                            else:
-                                    #maxl = s.stats('max')[irow]
-                                    #suml = s.stats('sum')[irow]
-                                    maxl = s._math._stats(s,[],'max')[irow]
-                                    suml = s._math._stats(s,[],'sum')[irow]
+                            maxl = s._math._stats(s,maskforstat,'max')[irow]
+                            suml = s._math._stats(s,maskforstat,'sum')[irow]
                                     
                             linemax.append([maxl])
                             if (maxl != 0.0):
@@ -472,10 +308,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
 			    else:
 				    f.set_function(gauss=ncomps)
 				    
-                            if ( domask ):
-                                    f.set_scan(s,linemask)
-                            else:
-                                    f.set_scan(s)
+                            f.set_scan(s,maskforfit)
                             #for irow in range(s.nrow()):
                             if ( doguess ):
                                     # Guesses using max, cen, and eqw
@@ -562,24 +395,23 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
             # Store fit
             if ( outfile != '' ):
                     store_fit(fitfunc, outfile, fitparams, s, overwrite)
-
-	    #restore the original spectral axis unit
-	    s.set_unit(unit_in)
-	    #restore the original moleculeID column
-	    if modified_molid:
-		    s._setmolidcol_list(molids)
 	    
             # Final clean up
             del f
             del s
-            if (domask): del linemask
+##             if (domask): del linemask
 
             return retValue
 
         except Exception, instance:
+                import traceback
+                print traceback.format_exc()
                 casalog.post( str(instance), priority = 'ERROR' )
                 raise Exception, instance
         finally:
+                if restorer is not None:
+                    restorer.restore()
+                    del restorer
                 casalog.post('')
                 
 
@@ -750,3 +582,6 @@ def plot( fitter, irow, fitted, residual ):
         if ( irow/nr == nc-1 ):
                 myp.set_axes('xlabel',xlab)
         myp.release()
+
+def to_list_of_list(l):
+    return array(l).reshape(len(l)/2,2).tolist()
