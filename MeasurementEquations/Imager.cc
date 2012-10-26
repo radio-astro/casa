@@ -1823,7 +1823,10 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const String& cfCacheDirName,const Float& paStep, 
 			const Float& pbLimit, const String& interpMeth, const Int imageTileVol,
 			const Bool singprec,
-			const Int numthreads)
+			const Int numthreads,
+			const Bool psTermOn,
+			const Bool aTermOn,
+			const Bool wbawp)
 {
 
 #ifdef PABLO_IO
@@ -1870,6 +1873,9 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   cfCacheDirName_p = cfCacheDirName;
   paStep_p = paStep;
   pbLimit_p = pbLimit;
+  psTermOn_p=psTermOn;
+  aTermOn_p=aTermOn;
+  wbAWP_p=wbawp;
   freqInterpMethod_p=interpMeth;
   imageTileVol_p=imageTileVol;
   singlePrec_p=singprec;

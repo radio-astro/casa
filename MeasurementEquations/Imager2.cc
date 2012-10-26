@@ -2820,17 +2820,36 @@ Bool Imager::createFTMachine()
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
-    psTerm->setOpCode(CFTerms::NOOP);
+    
+    //
+    // Selectively switch off CFTerms.
+    //
+    if (aTermOn_p == False) apertureFunction->setOpCode(CFTerms::NOOP);
+    if (psTermOn_p == False) psTerm->setOpCode(CFTerms::NOOP);
+
+    //
+    // Construct the CF object with appropriate CFTerms.
+    //
     CountedPtr<ConvolutionFunction> awConvFunc;
-    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,False);
+    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP_p);
+
+    //
+    // Construct the appropriate re-sampler.
+    //
     CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
     //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
-    CountedPtr<CFCache> cfcache = new CFCache();
 
+    //
+    // Construct and initialize the CF cache object.
+    //
+    CountedPtr<CFCache> cfcache = new CFCache();
     cfcache->setCacheDir(cfCacheDirName_p.data());
-    cerr << "cfcache->initCache2()" << endl;
     cfcache->initCache2();
 
+    //
+    // Finally construct the FTMachine with the CFCache, ConvFunc and
+    // Re-sampler objects.  
+    //
     ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
 			     cfcache, awConvFunc, 
 			     //			     mthVisResampler,

@@ -32,6 +32,9 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Directory.h>
 #include <fstream>
+// #include <tables/Tables/TableDesc.h>
+// #include <tables/Tables/SetupNewTab.h>
+// #include <tables/Tables/Table.h>
 
 namespace casa{
   CFCache::~CFCache()  {}
@@ -140,13 +143,67 @@ namespace casa{
 
     try
       {
-	Regex regex(Regex::fromPattern(String("CF*")));
+	Regex regex(Regex::fromPattern(String("CFS*")));
 	Vector<String> fileNames(dirObj.find(regex));
-	for (uInt i=0; i < fileNames.nelements(); i++)
+	if (fileNames.nelements() > 0)
 	  {
-	    PagedImage<Complex> thisCF(Dir+'/'+fileNames[i]);
-	    TableRecord miscinfo = thisCF.miscInfo();
-	    miscinfo.print(cerr);
+	    log_l << "No. of CFs found: " << fileNames.nelements() << LogIO::POST;
+	    //
+	    // Gather the list of PA values
+	    //
+	    for (uInt i=0; i < fileNames.nelements(); i++)
+	      {
+		PagedImage<Complex> thisCF(Dir+'/'+fileNames[i]);
+		TableRecord miscinfo = thisCF.miscInfo();
+		//	    miscinfo.print(cerr);
+		Double  paVal, wVal; Int mVal;
+		miscinfo.get("ParallacticAngle",paVal);
+		paList_p.push_back(paVal);
+	      }
+	    //
+	    // Make the PA-value list unique
+	    //
+	    sort( paList_p.begin(), paList_p.end() );
+	    paList_p.erase( unique( paList_p.begin(), paList_p.end() ), paList_p.end() );
+	    cfCacheTable_p.resize(paList_p.size());
+	    
+	    // For each CF, load the PA, Muelller element, WValue and the Ref. Freq. 
+	    // Insert these values in the lists in the cfCacheTable
+	    for (uInt i=0; i < fileNames.nelements(); i++)
+	      {
+		PagedImage<Complex> thisCF(Dir+'/'+fileNames[i]);
+		TableRecord miscinfo = thisCF.miscInfo();
+		Double  paVal, wVal; Int mVal,fVal;
+		miscinfo.get("ParallacticAngle",paVal);
+		miscinfo.get("MuellerElement",mVal);
+		miscinfo.get("WValue",wVal);
+		Int index= thisCF.coordinates().findCoordinate(Coordinate::SPECTRAL);
+		CoordinateSystem coordSys = thisCF.coordinates();
+		SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
+		fVal=spCS.referenceValue()(0);
+		// Find the position of the given paVal in the
+		// paList_p.  That index will also be where the F,W,M
+		// values need to be instered in the cfCacheTable.
+		Int paPos = std::find(paList_p.begin(), paList_p.end(), paVal) - paList_p.begin() - 1;
+		if (paPos < paList_p.size())
+		  {
+		    cfCacheTable_p[paPos].freqList.push_back(fVal);
+		    cfCacheTable_p[paPos].wList.push_back(wVal);
+		    cfCacheTable_p[paPos].muellerList.push_back(mVal);
+		    cfCacheTable_p[paPos].cfNameList.push_back(fileNames[i]);
+		  }
+	      }
+	    for (uInt i=0; i < cfCacheTable_p.size(); i++)
+	      {
+		Vector<Double> fList(cfCacheTable_p[i].freqList), 
+		  wList(cfCacheTable_p[i].wList);
+		Vector<Int> mList(cfCacheTable_p[i].muellerList);
+		log_l << "PA: " << paList_p[i]
+		      << " FreqList: " << fList 
+		      << " MuellerElement: " << mList
+		      << " WValue: " << wList
+		      << LogIO::POST;
+	      }
 	  }
       }
     catch(AipsError& x)
@@ -160,16 +217,20 @@ namespace casa{
   //
   CFCache& CFCache::operator=(const CFCache& other)
   {
-    paList = other.paList;
-    Sampling = other.Sampling;
-    XSup = other.XSup;
-    YSup = other.YSup;
-    Dir = other.Dir;
-    cfPrefix = other.cfPrefix;
-    aux = other.aux;
-    paCD_p = other.paCD_p;
-    memCache_p = other.memCache_p;
-    memCacheWt_p = other.memCacheWt_p;
+    //    if (this != other)
+      {
+	paList = other.paList;
+	Sampling = other.Sampling;
+	XSup = other.XSup;
+	YSup = other.YSup;
+	Dir = other.Dir;
+	cfPrefix = other.cfPrefix;
+	aux = other.aux;
+	paCD_p = other.paCD_p;
+	memCache_p = other.memCache_p;
+	memCacheWt_p = other.memCacheWt_p;
+	cfCacheTable_p = other.cfCacheTable_p;
+      }
     return *this;
   };
   //
@@ -712,5 +773,20 @@ namespace casa{
     //
     return memCache_p;
   }
+  //
+  //-----------------------------------------------------------------------
+  //
+  // void CFCache::constructTable_p(CFCache::CFCacheTable& tab)
+  // {
+  //   TableDesc td("CFCache","0.0",TableDesc::Scratch);
+    
+  //   add PA and baseline type info.
 
+  //   td.addColumn(ScalarColumnDesc<Double>("Ref. Frequency"));
+  //   td.addColumn(ScalarColumnDesc<Double>("W Value"));
+  //   td.addColumn(ScalarColumnDesc<uInt>("Mueller Index"));
+  //   td.addColumn(ScalarColumnDesc<String>("CF Disk File Name"));
+  //   SetupNewTable newTab("CFCache.dat",td,Table::Scratch);
+  //   tab = Table(newTab);
+  // }
 } // end casa namespace
