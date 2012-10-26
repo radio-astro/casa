@@ -185,6 +185,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         # test merged scantable
         outname = self.inlist[0]+"_coadd"
+        print outname
         self.assertTrue(os.path.exists(outname),msg="No output written")
         merged = self._get_scantable_params(outname)
         self._test_merged_scantable(merged, self.ref2125)
@@ -227,7 +228,7 @@ class sdcoadd_basicTest( sdcoadd_unittest_base, unittest.TestCase ):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('Output file \'%s\' exist.'%(outfile))
+            pos=str(e).find('Output file \'%s\' exists.'%(outfile))
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
@@ -313,20 +314,20 @@ class sdcoadd_mergeTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._copy_inputs()
 
         infiles = self.inlist
+        innhist = 0
+        htab="/HISTORY"
+        for tab in infiles:
+            tb.open(tab+htab)
+            innhist += tb.nrows()
+            tb.close()
         outfile = self.outname
         result = sdcoadd(infiles=infiles,outfile=outfile)
         self.assertEqual(result,None)
         self.assertTrue(os.path.exists(outfile),msg="No output written")
 
-        htab="/HISTORY"
         tb.open(outfile+htab)
         outnhist = tb.nrows()
         tb.close()
-        innhist = 0
-        for tab in infiles:
-            tb.open(tab+htab)
-            innhist += tb.nrows()
-            tb.close()
         self.assertTrue(outnhist >= innhist,\
                         msg="nHIST = %d (expected: >= %d)" % (outnhist, innhist))
     def testmerge02( self ):
@@ -542,7 +543,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._comp_unit_coord(infiles,initval)
 
     def testDT( self ):
-        """Storage Test DT: sdcoadd on storage='memory' and insitu=T"""
+        """Storage Test DT: sdcoadd on storage='disk' and insitu=T"""
         tid = "DT"
         infiles = self.inlist
         outfile = self.outname+tid
@@ -573,7 +574,7 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         self._comp_unit_coord(infiles,initval)
 
     def testDF( self ):
-        """Storage Test DF: sdcoadd on storage='memory' and insitu=F"""
+        """Storage Test DF: sdcoadd on storage='disk' and insitu=F"""
         tid = "DF"
         infiles = self.inlist
         outfile = self.outname+tid
