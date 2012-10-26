@@ -298,28 +298,23 @@ def save(s, outfile, outform, overwrite):
                                                overwrite)
     if ( (outform == 'ASCII') or (outform == 'ascii') ):
             outform_local = 'ASCII'
-            outfile_local = outfile #+ '_'
     elif ( (outform == 'ASAP') or (outform == 'asap') ):
             outform_local = 'ASAP'
-            outfile_local = outfile
     elif ( (outform == 'SDFITS') or (outform == 'sdfits') ):
             outform_local = 'SDFITS'
-            outfile_local = outfile
     elif ( (outform == 'MS') or (outform == 'ms') or (outform == 'MS2') or (outform == 'ms2') ):
             outform_local = 'MS2'
-            outfile_local = outfile
     else:
             outform_local = 'ASAP'
-            outfile_local = outfile
 
-    outfilename = get_abspath(outfile_local)
+    outfilename = get_abspath(outfile)
     if overwrite and os.path.exists(outfilename):
         os.system('rm -rf %s' % outfilename)
 
-    s.save(outfile_local, outform_local, overwrite)
-    
+    s.save(outfile, outform_local, overwrite)
+
     if outform_local!='ASCII':
-        casalog.post('Wrote output %s file %s'%(outform_local,outfile_local))
+        casalog.post('Wrote output %s file %s'%(outform_local,outfile))
 
 def doopacity(s, tau):
     antennaname = s.get_antennaname()
