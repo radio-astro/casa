@@ -297,7 +297,7 @@ def save(s, outfile, outform, overwrite):
                                                overwrite)
     if ( (outform == 'ASCII') or (outform == 'ascii') ):
             outform_local = 'ASCII'
-            outfile_local = outfile + '_'
+            outfile_local = outfile #+ '_'
     elif ( (outform == 'ASAP') or (outform == 'asap') ):
             outform_local = 'ASAP'
             outfile_local = outfile

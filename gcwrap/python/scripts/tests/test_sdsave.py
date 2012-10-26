@@ -94,7 +94,7 @@ class sdsave_unittest_base:
             import commands
             wcout=commands.getoutput('ls '+st[0]+'*.txt'+' | wc')
             n=int(wcout.split()[0])*self.npol
-            filein=st[0]+'__SCAN%d_CYCLE%d_IF%d.txt'%(self.scanno,self.cycleno,self.ifno)
+            filein=st[0]+'_SCAN%d_CYCLE%d_IF%d.txt'%(self.scanno,self.cycleno,self.ifno)
             self._checkfile(filein)
             f=open(filein)
             sp=[]
