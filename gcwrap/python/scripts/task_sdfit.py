@@ -78,17 +78,19 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
 ##                                                                  avg_limit,
 ##                                                                  box_size,
 ##                                                                  edge)
-            maskforstat = []
+            defaultmask = []
+            linelist = []
+            nlines = 1
             maskforfit = None
+            doguess = True
             if ( fitmode == 'list' ):
                     # Assume the user has given a list of lines
                     # e.g. maskline=[[3900,4300]] for a single line
                     if ( len(maskline) > 0 ):
                             # There is a user-supplied channel mask for lines
                             if ( not invertmask ):
-                                    maskforstat = s.create_mask(maskline)
-                                    maskforfit = maskforstat
-                                    doguess = True
+                                    defaultmask = s.create_mask(maskline)
+                                    maskforfit = defaultmask
                                     # Make sure this is a list-of-lists (e.g. [[1,10],[20,30]])
                                     if ( type(maskline[0]) == list ):
                                             ll = len(maskline)
@@ -100,10 +102,10 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                                             nlines = len(linelist)
                             else:
                                     # invert regions
-                                    maskforstat=s.create_mask(maskline,invert=True)
-                                    maskforfit = maskforstat
-                                    nlines = 1
-                                    linelist=[]
+                                    defaultmask=s.create_mask(maskline,invert=True)
+                                    maskforfit = defaultmask
+                                    #nlines = 1
+                                    #linelist=[]
                                     doguess = False
 
                     else:
@@ -112,9 +114,8 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                                     casalog.post( msg, priority = 'WARN' )
                                     return
                             # Use whole region
-                            nlines = 1
-                            linelist=[]
-                            doguess = True
+                            #nlines = 1
+                            #linelist=[]
 
                     #print "Identified ",nlines," regions for fitting"
                     casalog.post( "Identified %d regions for fitting" % (nlines) )
@@ -125,15 +126,14 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
 
 	    elif (fitmode == 'interact'):
 		    # Interactive masking
-                    maskforstat = sdutil.get_interactive_mask(s, maskline, invertmask)
-                    maskforfit = maskforstat
-		    linelist=s.get_masklist(maskforstat)
+                    defaultmask = sdutil.get_interactive_mask(s, maskline, invertmask)
+                    maskforfit = defaultmask
+		    linelist=s.get_masklist(defaultmask)
 		    nlines=len(linelist)
 		    if nlines < 1:
 			    msg='No channel is selected. Exit without fittinging.'
 			    casalog.post( msg, priority = 'WARN' )
 			    return
-		    doguess=True
 		    print '%d region(s) is selected as a linemask' % nlines
 		    print 'The final mask list ('+s._getabcissalabel()+') ='+str(linelist)
 		    print 'Number of line(s) to fit: nfit =',nfit
@@ -154,8 +154,8 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                     casalog.post( "Trying AUTO mode - find line channel regions" )
                     if ( len(maskline) > 0 ):
                             # There is a user-supplied channel mask for lines
-                            maskforstat=s.create_mask(maskline,invert=invertmask)
-                            maskforfit = maskforstat
+                            defaultmask=s.create_mask(maskline,invert=invertmask)
+                            maskforfit = defaultmask
 
                     # Use linefinder to find lines
                     #print "Using linefinder"
@@ -170,7 +170,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                     linelist=[]
                     nlines=[]
                     for irow in range(s.nrow()):
-                        nlines.append(fl.find_lines(mask=maskforstat,nRow=irow,edge=edge))
+                        nlines.append(fl.find_lines(mask=defaultmask,nRow=irow,edge=edge))
                         # Get ranges
 
                         ptout="SCAN[%d] IF[%d] POL[%d]: " %(s.getscan(irow), s.getif(irow), s.getpol(irow))
@@ -186,7 +186,6 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                     # Done with linefinder
                     casalog.post( "Finished linefinder." )
                     #print "Finished linefinder, found ",nlines,"lines"
-                    doguess = True
                     del fl
 
             # If we have line regions, get starting guesses
@@ -195,62 +194,20 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
             linecen=[]
             if ( doguess ):
                     # For each line get guess of max, cen and estimated equivalent width (sum/max)
+                    dbw = 1.0
+                    current_unit = s.get_unit()
                     for irow in range(s.nrow()):
                         casalog.post( "start row %d" % (irow) )
-                        if( fitmode=='auto' ):
-                                # in auto mode, linelist will be determined
-                                # for each spectra
-                                llist=linelist[irow]
-                        else:
-                                # otherwise, linelist will be the same
-                                # for all spectra
-                                llist=linelist
-                        if( len(llist) > 0):
-                            maxlt=[]
-                            eqwt=[]
-                            cent=[]
-                            for x in llist:
-                                    if ( x[0] > x[1] ):
-                                            tmp=x[0]
-                                            x[0]=x[1]
-                                            x[1]=tmp
-                                    #print x
-                                    casalog.post( "detected line: "+str(x) ) 
-                                    msk = s.create_mask(x, row=irow)
-                                    #maxl = s.stats('max',msk)[irow]
-                                    #suml = s.stats('sum',msk)[irow]
-                                    maxl = s._math._stats(s,msk,'max')[irow]
-                                    suml = s._math._stats(s,msk,'sum')[irow]
-
-                                    if ( maxl != 0.0 ):
-                                            eqw = suml/maxl
-                                            if ( s.get_unit() != 'channel' ):
-                                                    xx=s._getabcissa(irow)
-                                                    dbw=abs(xx[1]-xx[0])
-                                                    eqw = eqw * dbw
-                                    else:
-                                            eqw = 0.0
-                                    cen = 0.5*(x[0] + x[1])
-                                    maxlt = maxlt + [maxl]
-                                    eqwt = eqwt + [eqw]
-                                    cent = cent + [cen]
-                            linemax = linemax + [maxlt]
-                            lineeqw = lineeqw + [eqwt]
-                            linecen = linecen + [cent]
-                        else:
-                            # For what its worth, do stats on unmasked region
-                            maxl = s._math._stats(s,maskforstat,'max')[irow]
-                            suml = s._math._stats(s,maskforstat,'sum')[irow]
-                                    
-                            linemax.append([maxl])
-                            if (maxl != 0.0):
-                                    eqw = suml/maxl
-                            else:
-                                    eqw = 0.0
-                            lineeqw.append([eqw])
-                            # I dont know a better way to specify the center of the spectrum
-                            cen = s.nchan()/2
-                            linecen.append([cen])
+                        # in auto mode, linelist will be detemined for each spectra
+                        # otherwise, linelist will be the same for all spectra
+                        llist = linelist[irow] if fitmode == 'auto' else linelist
+                        if current_unit != 'channel':
+                            xx = s._getabcisssa(irow)
+                            dbw = abs(xx[1]-xx[0])
+                        (maxlt,eqwt,cent) = get_initial_guess_list(s,llist,defaultmask,dbw,irow)
+                        linemax.append(maxlt)
+                        lineeqw.append(eqwt)
+                        linecen.append(cent)
 
             # Now the line fitting for each rows in scantable
             retValue['nfit']=[]
@@ -369,23 +326,17 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
                                     # Did not converge
                                     retValue['nfit'] += [-ncomps]
                                     fitparams.append([[0,0,0]])
-                                    casalog.post( 'Fitting:' )
-                                    casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow)) )
-                                    casalog.post( "   Fit failed to converge", priority = 'WARN' )
+                                    warn_fit_failed(s,irow,'Fit failed to converge')
                             # Clean up
                             #del f
                     else:
                             fitparams.append([[0,0,0]])
                             retValue['nfit']+=[-1]
-                            casalog.post( 'Fitting:' )
-                            casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow)) )
-                            casalog.post( '   Fit failed.', priority = 'WARN' )
+                            warn_fit_failed(s,irow,'Fit failed.')
                 else:
                     fitparams.append([[0,0,0]])
                     retValue['nfit']+=[-1]
-                    casalog.post( 'Fitting:' )
-                    casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow)) )
-                    casalog.post( '   No lines detected.', priority = 'WARN' )
+                    warn_fit_failed(s,irow,'No lines detected.')
 
                 # plot
                 if ( abs(plotlevel) > 0 ):
@@ -585,3 +536,43 @@ def plot( fitter, irow, fitted, residual ):
 
 def to_list_of_list(l):
     return array(l).reshape(len(l)/2,2).tolist()
+
+def get_initial_guess_list(s, linelist, defaultmask, dbw, irow):
+    if len(linelist) > 0:
+        maxlt=[]
+        eqwt=[]
+        cent=[]
+        for x in linelist:
+            if ( x[0] > x[1] ):
+                x = [x[1],x[0]]
+            #print x
+            casalog.post( "detected line: "+str(x) ) 
+            msk = s.create_mask(x, row=irow)
+            (maxl,eqw,cen)=get_initial_guess(s,msk,x,dbw,irow)
+            maxlt = maxlt + [maxl]
+            eqwt = eqwt + [eqw]
+            cent = cent + [cen]
+    else:
+        (maxl,eqw,cen)=get_initial_guess(s,defaultmask,[],dbw,irow)
+        maxlt = [maxl]
+        eqwt = [eqw]
+        cent = [cen]
+    return (maxlt,eqwt,cent)
+
+def get_initial_guess(s, msk, linerange, dbw, irow):
+    [maxl,suml] = [s._math._statsrow(s,msk,st,irow)[0] for st in ['max','sum']]
+    if ( maxl != 0.0 ):
+        eqw = suml/maxl*dbw
+    else:
+        eqw = 0.0
+    if len(linerange) > 1:
+        cen = 0.5*(linerange[0] + linerange[1])
+    else:
+        # I dont know a better way to specify the center of the spectrum
+        cen = s.nchan(irow)/2
+    return (maxl,eqw,cen)
+    
+def warn_fit_failed(s,irow,message=''):
+    casalog.post( 'Fitting:' )
+    casalog.post( 'Scan[%d] Beam[%d] IF[%d] Pol[%d] Cycle[%d]' %(s.getscan(irow), s.getbeam(irow), s.getif(irow), s.getpol(irow), s.getcycle(irow)) )
+    casalog.post( "   %s"%(message), priority = 'WARN' )
