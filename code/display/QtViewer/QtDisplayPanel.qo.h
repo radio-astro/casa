@@ -970,7 +970,7 @@ public:
    * Attempts to set appropriate plot margins based on the number of
    * plots that are displayed.
    */
-  void setMarginSize(  );
+  //void setMarginSize(  );
 
   //# DATA
   //An estimate for the number of pixels that correspond to one

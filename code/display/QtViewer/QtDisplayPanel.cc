@@ -1524,11 +1524,11 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
   //Adjust the font size according to the number of panels we are displaying.
   //We don't want a huge font when there are lots of plots or the user will only
   //see axis labels, not the plots themselves.
-  setLabelFontSize();
+  //setLabelFontSize();
 
   //If there are lots of plots being displayed, we want smaller plot margins so
   //that more screen real estate will be saved for the plots.
-  setMarginSize ();
+  //setMarginSize ();
 
   // Current relative position (and size) for panel placement;
   // ranges from 0 (left edge of pc) to 1 (right edge)
@@ -1674,7 +1674,7 @@ void QtDisplayPanel::setLabelFontSize(  ){
 	}
 }
 
-void QtDisplayPanel::setMarginSize( ){
+/*void QtDisplayPanel::setMarginSize( ){
 	//Try to set appropriate plot margins based on the number of
 	//plots that are displaying
 	int rowCount = pd_->getRowCount();
@@ -1684,7 +1684,7 @@ void QtDisplayPanel::setMarginSize( ){
 	int topMargin = TOP_MARGIN_SPACE_DEFAULT / rowCount;
 	int bottomMargin = BOTTOM_MARGIN_SPACE_DEFAULT / rowCount;
 	setPanelMargins( pd_, leftMargin, rightMargin, bottomMargin, topMargin );
-}
+}*/
 
 void QtDisplayPanel::setPanelMargins( PanelDisplay* pd, int marginA, int marginB,
 			int lengthMarginA, int lengthMarginB){
@@ -1769,17 +1769,17 @@ void QtDisplayPanel::setColorBarMargins( bool vertical, float plotPercentage,
 	  }
 
 	  //Add the additional space into both margins
-	  int excessTopSpace = additionalSpaceMargin - lnmrgnb_;
+	  //int excessTopSpace = additionalSpaceMargin - lnmrgnb_;
 	  int top = lnmrgnb_;
-	  if ( excessTopSpace > 0 ){
+	  /*if ( excessTopSpace > 0 ){
 		  top = top + additionalSpaceMargin;
-	  }
+	  }*/
 
-	  int excessBottomSpace = additionalSpaceMargin - lnmrgna_;
+	  //int excessBottomSpace = additionalSpaceMargin - lnmrgna_;
 	  int bottom= lnmrgna_;
-	  if (excessBottomSpace > 0 ){
+	  /*if (excessBottomSpace > 0 ){
 		  bottom = bottom + additionalSpaceMargin;
-	  }
+	  }*/
 
 	  setPanelMargins( cbp, mrgna_, mrgnb_, bottom, top);
 
