@@ -670,42 +670,45 @@ void ImageFITSConverter::restoreHistory (LoggerHolder& logger,
 Bool ImageFITSConverter::removeFile (String& error, const File& outFile,
                                      const String& outName, Bool allowOverwrite)
 {
-	String basename = outFile.path().baseName();
-	if (basename.empty() || basename == "." || basename == "..") {
-		throw AipsError(
-			"Invalid file path " + outFile.path().absoluteName() + ". You really don't want me to delete the directory you're in."
-		);
-	}
-   if (outFile.exists()) {
-      if (allowOverwrite) {
-         String msg;
-         try {
-            if (outFile.isRegular()) {
-		RegularFile rfile(outFile);
-		rfile.remove();
-	    } else if (outFile.isSymLink()) {
-		SymLink sfile(outFile);
-		sfile.remove();
-	    } else {
-		msg = "Cannot remove file - unknown file type";
+    String basename = outFile.path().baseName();
+    if (basename.empty() || basename == "." || basename == "..") {
+	throw AipsError(
+	    "Invalid file path " + outFile.path().absoluteName() + ". You really don't want me to delete the directory you're in."
+	    );
+    }
+    if (outFile.exists()) {
+	if (allowOverwrite) {
+	    String msg;
+	    try {
+		if (outFile.isSymLink()) {
+		    SymLink sfile(outFile);
+		    sfile.remove();
+		} else if (outFile.isRegular()) {
+		    RegularFile rfile(outFile);
+		    rfile.remove();
+		} else if (outFile.isDirectory()) {
+		    Directory dfile(outFile);
+		    dfile.removeRecursive();
+		} else {
+		    msg = "Cannot remove file - unknown file type";
+		}
+	    } catch (AipsError x) {
+		msg = x.getMesg();
 	    }
-         } catch (AipsError x) {
-            msg = x.getMesg();
-         }
 //
-         if (outFile.exists()) {
-	    error = "Could not remove file " + outName;
-	    if (msg != "") {
-		error += ": (" + msg + ")";
+	    if (outFile.exists()) {
+		error = "Could not remove file " + outName;
+		if (msg != "") {
+		    error += ": (" + msg + ")";
+		}
+		return False;
 	    }
+	} else {
+	    error = outName + " already exists, will not overwrite.";
 	    return False;
-         }
-      } else {
-         error = outName + " already exists, will not overwrite.";
-         return False;
-      }
-   }
-   return True;
+	}
+    }
+    return True;
 }
 
 Bool ImageFITSConverter::ImageToFITSOut(

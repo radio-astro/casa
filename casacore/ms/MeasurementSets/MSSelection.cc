@@ -370,6 +370,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
       }
     mssErrHandler_p=MSAntennaParse::thisMSAErrorHandler=NULL;
+    //    mssErrHandler_p=NULL;
   }
   
   void MSSelection::deleteNodes()
@@ -411,7 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 (taqlExpr_p != "") || (polnExpr_p != "")        || (stateExpr_p != "")
 	 ))
       throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
-				    "Only field- and antenna-selection is supported for CalTables")));
+				    "Only field-, spw- and antenna-selection is supported for CalTables")));
     return ms;
   }
   //----------------------------------------------------------------------------
@@ -444,7 +445,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	setErrorHandler(ANTENNA_EXPR, mssErrHandler_p);
       }
     else
-      mssErrHandler_p->reset();
+      {
+	//mssErrHandler_p = MSAntennaParse::thisMSAErrorHandler;
+	MSAntennaParse::thisMSAErrorHandler->reset();
+	//	mssErrHandler_p->reset();
+      }
 
     try
       {

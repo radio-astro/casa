@@ -1,5 +1,4 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 1993,1994,1995,1996,1999,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +22,39 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#include <casa/BasicMath/StdLogical.h>
 
-#include <string>
+#include <casa/Utilities/Assert.h>
 
-#define CASACORE_VERSION "1.0.168"
+#include <set>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+using namespace casa;
 
-  // Get the casacore version.
-  const std::string getVersion();
+int main() {
+	try {
+		std::set<Float> a;
+		std::set<Float> b;
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+		Float a1[] = {0.1, 5.2, 6.3};
+		Float b1[] = {0.5};
 
-} //# NAMESPACE CASA - END
+		a.insert(a1, a1+3);
+		b.insert(b1, b1+1);
+		AlwaysAssert(! allNearAbs(a, b, 0.1), AipsError);
 
-#endif
+		b.clear();
+		Float b2[] = {0.2, 5.1, 6.4};
+		b.insert(b2, b2+3);
+		AlwaysAssert(! allNearAbs(a, b, 0.05), AipsError);
+		AlwaysAssert(allNearAbs(a, b, 0.11), AipsError);
+
+		cout << "OK" << endl;
+		return 0;
+	}
+	catch (const AipsError& exc) {
+		cout << "FAIL" << endl;
+		return 1;
+	}
+
+}
