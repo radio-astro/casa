@@ -43,15 +43,11 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                                                         doppler,
                                                         restfreq)
 
-            try:
-                #Apply the selection
-                sel = sdutil.get_selector(scanlist, iflist, pollist,
-                                          field)
-                s.set_selection(sel)
-            except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
-                raise Exception, instance
-                return
+            #Apply the selection
+            sel = sdutil.get_selector(scanlist, iflist, pollist,
+                                      field)
+            s.set_selection(sel)
+            del sel
 
             stmp = sdutil.set_fluxunit(s, fluxunit, telescopeparm, False)
 
@@ -149,10 +145,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             # DONE
             
         except Exception, instance:
-                #print '***Error***',instance
-                import traceback
-                print traceback.format_exc()
-                casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
                 return
         finally:

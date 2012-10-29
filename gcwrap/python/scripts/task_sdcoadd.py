@@ -86,10 +86,7 @@ def sdcoadd(infiles, antenna, fluxunit, telescopeparm, specunit, frame, doppler,
             del merged, spave
             # DONE
         except Exception, instance:
-                #print '***Error***',instance
-                import traceback
-                print traceback.format_exc()
-                casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
                 return
         finally:

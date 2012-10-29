@@ -18,17 +18,17 @@ import task_sdbaseline
 
 def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
+##         a=inspect.stack()
+##         stacklevel=0
+##         for k in range(len(a)):
+##           if (string.find(a[k][1], 'ipython console') > 0):
+##                 stacklevel=k
+##         myf=sys._getframe(stacklevel).f_globals
 
-        restorer = None
+##         restorer = None
 
-        saveinputs=myf['saveinputs']
-        saveinputs('sdreduce','sdreduce.tmp')       
+##         saveinputs=myf['saveinputs']
+##         saveinputs('sdreduce','sdreduce.tmp')       
 
         casalog.origin('sdreduce')
 
@@ -132,8 +132,7 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame
             del sout
 
         except Exception, instance:
-                #print '***Error***',instance
-                casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
                 return
         finally:
@@ -145,43 +144,43 @@ def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame
 
 
 
-def _reset_inputs(param=None):
-        '''
-        internal function to recover inputs of sdreduce (containing other tasks) with global task parameter settin
-g
-        '''
-        arg_names=['infile','antenna','fluxunit','telescopeparm','specunit','restfreq','frame','doppler','calmode','scanlist','field','iflist','pollist','channelrange','average','scanaverage','timeaverage','tweight','averageall','polaverage','pweight','tau','kernel','kwidth','blfunc','order','npiece','applyfft','fftmethod','fftthresh','addwn','rejwn','clipthresh','clipniter','masklist','maskmode','thresh','avg_limit','edge','verifycal','verifysm','verifybl','verbosebl','bloutput','blformat','showprogress','minnrow','outfile','outform','overwrite','plotlevel']
-        a=inspect.stack()
-        stacklevel=0
-        for k in range(len(a)):
-          if (string.find(a[k][1], 'ipython console') > 0):
-                stacklevel=k
-        myf=sys._getframe(stacklevel).f_globals
-        a=odict()
-        paramfile = 'sdreduce' + '.tmp'
-        f=open(paramfile)
-        while 1:
-                try:
-                        line=f.readline()
-                        if (line.find('#') != 0):
-                          splitline=line.split('\n')[0]
-                          splitline2=splitline.split('=')
-                          pname = splitline2[0].rstrip()
-                          pvalstr = splitline2[1].lstrip()
-                          pval = eval(pvalstr)
-                          for key in arg_names:
-                            if pname== key:
-                              a[key]=pval
-                              break
+## def _reset_inputs(param=None):
+##         '''
+##         internal function to recover inputs of sdreduce (containing other tasks) with global task parameter settin
+## g
+##         '''
+##         arg_names=['infile','antenna','fluxunit','telescopeparm','specunit','restfreq','frame','doppler','calmode','scanlist','field','iflist','pollist','channelrange','average','scanaverage','timeaverage','tweight','averageall','polaverage','pweight','tau','kernel','kwidth','blfunc','order','npiece','applyfft','fftmethod','fftthresh','addwn','rejwn','clipthresh','clipniter','masklist','maskmode','thresh','avg_limit','edge','verifycal','verifysm','verifybl','verbosebl','bloutput','blformat','showprogress','minnrow','outfile','outform','overwrite','plotlevel']
+##         a=inspect.stack()
+##         stacklevel=0
+##         for k in range(len(a)):
+##           if (string.find(a[k][1], 'ipython console') > 0):
+##                 stacklevel=k
+##         myf=sys._getframe(stacklevel).f_globals
+##         a=odict()
+##         paramfile = 'sdreduce' + '.tmp'
+##         f=open(paramfile)
+##         while 1:
+##                 try:
+##                         line=f.readline()
+##                         if (line.find('#') != 0):
+##                           splitline=line.split('\n')[0]
+##                           splitline2=splitline.split('=')
+##                           pname = splitline2[0].rstrip()
+##                           pvalstr = splitline2[1].lstrip()
+##                           pval = eval(pvalstr)
+##                           for key in arg_names:
+##                             if pname== key:
+##                               a[key]=pval
+##                               break
 
-                except:
-                        break
-        f.close()
-        if(param == None):
-          myf['__set_default_parameters'](a)
-        elif(param == 'paramkeys'):
-          return a.keys()
-        else:
-          if(a.has_key(param)):
-            return a[param]
+##                 except:
+##                         break
+##         f.close()
+##         if(param == None):
+##           myf['__set_default_parameters'](a)
+##         elif(param == 'paramkeys'):
+##           return a.keys()
+##         else:
+##           if(a.has_key(param)):
+##             return a[param]
 

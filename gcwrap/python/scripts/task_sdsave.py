@@ -31,23 +31,14 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
             s = sd.scantable(infile,average=scanaverage,antenna=antenna,getpt=getpt)
 
             #Select rows
-            try: 
-                #Apply the selection
-                sel = sdutil.get_selector(in_scans=scanlist,
-                                          in_ifs=iflist,
-                                          in_pols=pollist,
-                                          in_field=field,
-                                          in_rows=rowlist)
-                if not sel.is_empty():
-                    s.set_selection(sel)
-                del sel
-            except Exception, instance:
-                #print '***Error***',instance
-                #print 'No output written.'
-                casalog.post( str(instance), priority = 'ERROR' )
-                casalog.post( 'No output written.', priority = 'ERROR' )
-                return
-   
+            #Apply the selection
+            sel = sdutil.get_selector(in_scans=scanlist,
+                                      in_ifs=iflist,
+                                      in_pols=pollist,
+                                      in_field=field,
+                                      in_rows=rowlist)
+            s.set_selection(sel)
+            del sel   
 
             #Apply averaging
             spave = sdutil.doaverage(s, scanaverage, timeaverage,
@@ -71,8 +62,7 @@ def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, sc
             
 
         except Exception, instance:
-                #print '***Error***',instance
-                casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
                 return
         finally:

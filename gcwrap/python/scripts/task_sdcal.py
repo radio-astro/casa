@@ -58,14 +58,8 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             # A scantable selection
             sel = sdutil.get_selector(scanlist, iflist, pollist,
                                       field)
-
-            try:
-                #Apply the selection
-                s.set_selection(sel)
-            except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
-                raise Exception, instance
-                return
+            #Apply the selection
+            s.set_selection(sel)
             del sel
 
 
@@ -107,8 +101,7 @@ def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             # DONE
 
         except Exception, instance:
-                #print '***Error***',instance
-                casalog.post( str(instance), priority='ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
                 return
         finally:
