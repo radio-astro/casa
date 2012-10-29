@@ -148,6 +148,37 @@ class test_base(unittest.TestCase):
         default(flagdata)
         flagdata(vis=self.vis, mode='unflag', savepars=False)
 
+    def setUp_tsys_case(self):
+        self.vis = "X7ef.tsys"
+         
+        if os.path.exists(self.vis):
+            print "The CalTable is already around, just unflag"
+            
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                        os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
+
+    def setUp_bpass_case(self):
+        self.vis = "cal.fewscans.bpass"
+
+        if os.path.exists(self.vis):
+            print "The CalTable is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                        os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
+
 
 class test_tfcrop(test_base):
     """flagdata:: Test of mode = 'tfcrop'"""
@@ -176,7 +207,7 @@ class test_tfcrop(test_base):
         self.assertEqual(res['correlation']['LR']['flagged'], 4931)
         self.assertEqual(res['correlation']['RR']['flagged'], 4483)
 
-    def test_extend1(self):
+    def test_extendpols(self):
         '''flagdata:: Extend the flags created by clip'''
         flagdata(vis=self.vis, mode='clip', correlation='abs_rr', clipminmax=[0,2])
         res = flagdata(vis=self.vis, mode='summary')
@@ -184,6 +215,56 @@ class test_tfcrop(test_base):
         self.assertEqual(res['correlation']['LL']['flagged'], 0)
         flagdata(vis=self.vis, mode='extend', extendpols=True, savepars=False)
         test_eq(flagdata(vis=self.vis, mode='summary', correlation='Ll'), 1099776, 43)
+        
+    def test_extendtime(self):
+        '''flagdata:: Extend the flags created by tfcrop'''
+        flagdata(vis=self.vis, mode='tfcrop')
+        # The total per spw:channel/baseline/correlation/scan is 89.
+        # Show only the ones that are 50% of the total, 44 flags, These should grow
+        pre = flagdata(vis=self.vis, mode='summary', spwchan=True, basecnt=True, correlation='RR',spw='5',
+                       antenna='ea11&&ea19')
+        # these should grow later
+        self.assertEqual(pre['spw:channel']['5:10']['flagged'], 118)
+        self.assertEqual(pre['spw:channel']['5:10']['total'], 179)
+        self.assertEqual(pre['spw:channel']['5:28']['flagged'], 128)
+        self.assertEqual(pre['spw:channel']['5:29']['flagged'], 151)
+
+        # these should not grow later. After the consolidation of MMS summaries
+        # is fixed, revise this test
+#        self.assertEqual(pre['spw:channel']['5:11']['flagged'], 32)
+#        self.assertEqual(pre['spw:channel']['5:12']['flagged'], 29)
+#        self.assertEqual(pre['spw:channel']['5:21']['flagged'], 34)
+        
+        # Extend in time only
+        flagdata(vis=self.vis, mode='extend', extendpols=False, growtime=50.0, growfreq=0.0, 
+                 growaround=False,flagneartime=False,flagnearfreq=False,savepars=False)
+        pos = flagdata(vis=self.vis, mode='summary', spwchan=True, basecnt=True, correlation='RR',spw='5',
+                       antenna='ea11&&ea19')
+        self.assertEqual(pos['spw:channel']['5:10']['flagged'], 179)
+        self.assertEqual(pos['spw:channel']['5:10']['total'], 179)
+        self.assertEqual(pos['spw:channel']['5:28']['flagged'], 179)
+        self.assertEqual(pos['spw:channel']['5:29']['flagged'], 179)
+        
+        # These did not grow
+#        self.assertEqual(pos['spw:channel']['5:11']['flagged'], 32)
+#        self.assertEqual(pos['spw:channel']['5:12']['flagged'], 29)
+#        self.assertEqual(pos['spw:channel']['5:21']['flagged'], 34)
+        
+    def test_extendfreq(self):
+        '''flagdata:: Extend the flags created manually for one scan only'''
+        flagdata(vis=self.vis, mode='manual',spw='*:0~35',timerange='2010/10/16/14:45:00~14:45:20')
+        pre = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(pre['scan']['31']['flagged'], 0)
+        self.assertEqual(pre['scan']['30']['flagged'], 165888)
+        self.assertEqual(pre['flagged'], 165888)
+        
+        # Extend in frequency only
+        flagdata(vis=self.vis, mode='extend', extendpols=False, growtime=0.0, growfreq=50.0, savepars=False)
+        pos = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(pos['scan']['31']['flagged'], 0)
+        self.assertEqual(pos['flagged'], 294912)
+        
+        
 
 class test_rflag(test_base):
     """flagdata:: Test of mode = 'rflag'"""
@@ -1275,6 +1356,7 @@ class test_CASA_4_0_bug_fix(test_base):
         self.assertEqual(res['spw']['5']['flagged'], 274944)
         self.assertEqual(res['spw']['6']['flagged'], 0)
         self.assertEqual(res['flagged'], 1649664)
+                 
      
 # Cleanup class 
 class cleanup(test_base):
@@ -1287,9 +1369,11 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest-alma.*ms*')
         os.system('rm -rf Four_ants_3C286.*ms*')
         os.system('rm -rf shadowtest_part.*ms*')
+        os.system('rm -rf cal.fewscans.bpass*')
+        os.system('rm -rf X7ef.tsys*')
         os.system('rm -rf list*txt')
 
-    def test1(self):
+    def test_runTest(self):
         '''flagdata: Cleanup'''
         pass
 
