@@ -1495,7 +1495,10 @@ namespace casa{
     // cerr << "max threads " << omp_get_max_threads() 
     // 	 << " threads available " << omp_get_num_threads() 
     // 	 << endl;
-    Int Nth=max(omp_get_max_threads()-2,1);
+    Int Nth=1;
+#ifdef HAS_OMP
+    Nth=max(omp_get_max_threads()-2,1);
+#endif
     // Timer tim;
     // tim.mark();
 #pragma omp parallel default(none) firstprivate(Er, El, nx, ny)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
