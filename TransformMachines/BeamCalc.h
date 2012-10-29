@@ -213,6 +213,9 @@ namespace casa
     
   private:
 
+  void computePixelValues(const ApertureCalcParams *ap, const calcAntenna *a, const Pathology *p,
+			  const Double &L0, Complex *Er, Complex *El, 
+			  const Int &i, const Int &j);
     //normalizes a "vector" of 3 Doubles in the vector sense
     inline void norm3(Double *v)
     {
