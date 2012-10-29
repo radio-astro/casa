@@ -270,7 +270,10 @@ namespace casa{
 		    // doimain.  No need to apply it to the
 		    // wt-functions.
 
+		    Timer tim;
+		    tim.mark();
 		    wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
+		    tim.show("WTerm: ");
 		    // wTerm.applySky(cfWtBufMat, iw, cellSize, wScale, cfWtBuf.shape()(0)/4);
 
     		    IPosition PolnPlane(4,0,0,0,0),
@@ -784,12 +787,13 @@ namespace casa{
 	// Float psScale= (image.coordinates().increment()(0)*nx) /
 	//   (coords.increment()(0)*screen.shape()(0));
 
-	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0));
+	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
+	  innerQuaterFraction=1.5;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
 	// by the sky-image and is equal to convSize/convSampling.
-	psScale = 2.0*convSampling/convSize;// nx*image.coordinates().increment()(0)*convSampling/2;
+	psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
 	psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
 
 	MuellerElementType muellerElement(0,0);
@@ -894,7 +898,7 @@ namespace casa{
       threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
     //    threshold *= aTerm_p->getSupportThreshold()*0.1;
-    threshold *= 1e-3;
+    threshold *= aTerm_p->getSupportThreshold();
     //
     // Find the support size of the conv. function in pixels
     //
@@ -994,7 +998,7 @@ namespace casa{
     Bool found=False;
     Complex *funcPtr;
     Bool dummy;
-    uInt Nth=8;
+    uInt Nth=1, threadID=0;
 
     for (uInt i=0;i<nCFS;i++)
     	cfShape[i]=func.shape()[i];
@@ -1014,12 +1018,15 @@ namespace casa{
       {
 	    R0 = R1; R1 -= Nth;
 
-#pragma omp parallel default(none) firstprivate(R0,R1)  private(R) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
+#pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
 	    { 
 #pragma omp for
 	      for(R=R0;R>R1;R--)
 		{
-		  archPeak(threshold, origin, cfShape, funcPtr, nCFS, PixInc, omp_get_thread_num(), R, maxR);
+#ifdef HAS_OMP
+		  threadID=omp_get_thread_num();
+#endif
+		  archPeak(threshold, origin, cfShape, funcPtr, nCFS, PixInc, threadID, R, maxR);
 		}
 	    }///omp 	    
 
