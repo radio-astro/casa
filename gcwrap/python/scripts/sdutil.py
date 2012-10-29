@@ -31,8 +31,8 @@ def get_default_outfile_name(infile=None, outfile=None, suffix=None):
 
 
 def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overwrite=None):
-    filename = get_abspath(outfile)
     if not overwrite and (outform.upper != "ASCII"):
+        filename = get_abspath(outfile)
         if os.path.exists(filename):
             mesg = "Output file '%s' exists." % (filename)
             raise Exception, mesg
