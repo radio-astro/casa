@@ -1496,8 +1496,8 @@ namespace casa{
     // 	 << " threads available " << omp_get_num_threads() 
     // 	 << endl;
     Int Nth=max(omp_get_max_threads()-2,1);
-    Timer tim;
-    tim.mark();
+    // Timer tim;
+    // tim.mark();
 #pragma omp parallel default(none) firstprivate(Er, El, nx, ny)  private(i,j) shared(ap, a, p, L0) num_threads(Nth)
     {
 #pragma omp for
@@ -1509,7 +1509,7 @@ namespace casa{
 	  }
       }
     }
-    tim.show("BeamCalc:");
+    // tim.show("BeamCalc:");
     
     deletePathology(p);
     deleteAntenna(a);
