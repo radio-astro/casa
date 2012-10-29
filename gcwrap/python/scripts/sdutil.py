@@ -5,6 +5,7 @@ import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable
 import numpy as np
+import traceback
 
 qatl = casac.quanta()
 
@@ -489,3 +490,7 @@ def get_interactive_mask(s, masklist, invert=False):
     #msks=s.get_masklist(msk)
     del new_mask
     return msk
+
+def process_exception(e):
+    casalog.post(traceback.format_exc(),'SEVERE')
+    casalog.post(str(e),'ERROR')
