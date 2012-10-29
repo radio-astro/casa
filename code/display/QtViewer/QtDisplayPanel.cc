@@ -1545,11 +1545,11 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
 	//Adjust the font size according to the number of panels we are displaying.
 	//We don't want a huge font when there are lots of plots or the user will only
 	//see axis labels, not the plots themselves.
-	setLabelFontSize();
+	//setLabelFontSize();
 
 	//If there are lots of plots being displayed, we want smaller plot margins so
 	//that more screen real estate will be saved for the plots.
-	setMarginSize ();
+	//setMarginSize ();
 
 	// Current relative position (and size) for panel placement;
 	// ranges from 0 (left edge of pc) to 1 (right edge)
@@ -1698,13 +1698,20 @@ void QtDisplayPanel::setLabelFontSize(  ){
 void QtDisplayPanel::setMarginSize( ){
 	//Try to set appropriate plot margins based on the number of
 	//plots that are displaying
+
 	int rowCount = pd_->getRowCount();
 	int columnCount = pd_->getColumnCount();
 	int leftMargin = LEFT_MARGIN_SPACE_DEFAULT / columnCount;
 	int rightMargin = RIGHT_MARGIN_SPACE_DEFAULT / columnCount;
+	//int xSpacing = qMax( leftMargin, rightMargin );
 	int topMargin = TOP_MARGIN_SPACE_DEFAULT / rowCount;
 	int bottomMargin = BOTTOM_MARGIN_SPACE_DEFAULT / rowCount;
+	//int ySpacing = qMax( topMargin, bottomMargin );
 	setPanelMargins( pd_, leftMargin, rightMargin, bottomMargin, topMargin );
+	/*Record margins, chgdOpts;
+	margins.define( "xspacing", xSpacing );
+	margins.define( "yspacing", ySpacing );
+	pd_->setOptions( margins, chgdOpts );*/
 }
 
 void QtDisplayPanel::setPanelMargins( PanelDisplay* pd, int marginA, int marginB,
