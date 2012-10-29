@@ -2,22 +2,16 @@ import os
 from taskinit import *
 
 import asap as sd
-import task_sdsave
 import task_flagmanager
+import sdutil
 
 def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
         casalog.origin('sdflagmanager')
 	fg.done()
 
 	try:
-		if infile=='':
-			raise Exception, 'infile is undefined'
-
-		infilename = os.path.expandvars(infile)
-		infilename = os.path.expanduser(infilename)
-		if not os.path.exists(infilename):
-			s = "File '%s' not found." % (infilename)
-			raise Exception, s
+                sdutil.assert_infile_exists(infile)
+                infilename=sdutil.get_abspath(infile)
 
 		if (mode=='list') or (mode=='save') or (mode=='restore') or (mode=='delete') or (mode=='rename'):
 			import datetime
@@ -34,14 +28,14 @@ def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
 			if os.path.exists(sdfverfile):
 				os.system('mv %s %s' % (sdfverfile, msfverfile))
 			
-			task_sdsave.sdsave(infilename, 0, True, [], [], '', [], [], False, False, 'none', False, 'none', '', msfilename, 'MS', False)
+                        sdutil.save(sd.scantable(infilename,False), msfilename, 'MS2', False)
 			task_flagmanager.flagmanager(msfilename, mode, versionname, oldname, comment, merge)
 
 			if mode=='restore':
 				backupinfile = infilename + '-sdflagmanager-backup-' + dtstr + '.asap'
 				# if a directory with the same name as backupinfile exists, rename it for backup
 				os.system('mv %s %s' % (infilename, backupinfile))
-				task_sdsave.sdsave(msfilename, 0, True, [], [], '', [], [], False, False, 'none', False, 'none', '', infilename, 'ASAP', False)
+                                sdutil.save(sd.scantable(msfilename,False), infilename, 'ASAP', False)
 			
 			os.system('rm -rf %s' % (msfilename))
 			os.system('mv %s %s' % (msfverfile, sdfverfile))
@@ -53,5 +47,5 @@ def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
 			raise Exception, "Unknown mode" + str(mode)
 		
 	except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
