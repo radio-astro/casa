@@ -44,7 +44,11 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <casa/Utilities/CompositeNumber.h>
+#include <casa/OS/Timer.h>
 #include <ostream>
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 
 #define MAX_FREQ 1e30
 
@@ -182,12 +186,14 @@ namespace casa{
 		//		Bool doSquint=False; Complex tt;
 		ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
 		aTerm.applySky(ftATerm_l, vb, doSquint, 0);
-		tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
+
+		//tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
 
 		
 		doSquint=True;
 		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,conjFreq);
-		tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
+
+		//tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
 
 		// {
 		//   ostringstream name;
@@ -242,6 +248,8 @@ namespace casa{
 		    //		    Int inner = cfBufMat.shape()(0)/aTerm.getOversampling();
 		    //		    Float inner = 2.0*aTerm.getOversampling()/cfBufMat.shape()(0);
 
+		    // Timer tim;
+		    // tim.mark();
 		    if (psTerm.isNoOp())
 		      cfBufMat = cfWtBufMat = 1.0;
 		    else
@@ -249,6 +257,7 @@ namespace casa{
 			psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
 			psTerm.applySky(cfWtBufMat, False); // Assign
 		      }
+		    // tim.show("PSTerm*2: ");
 
 		    // WBAWP CODE BEGIN  -- make PS*PS for Weights
 		    // psTerm.applySky(cfWtBufMat, True);  // Multiply
@@ -277,8 +286,10 @@ namespace casa{
 		    //-------------------------------------------------------------		    
 		    // WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
 		    //cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
+		    // tim.mark();
 		    cfWtBuf *= ftATerm_l.get();
 		    cfBuf *= ftATerm_l.get();
+		    // tim.show("W*A*2: ");
 		    // WBAWP CODE END
 
 		    
@@ -303,6 +314,7 @@ namespace casa{
 		    // Set the ref. freq. of the co-ordinate system to
 		    // that set by ATerm::applySky().
 		    //
+		    // tim.mark();
     		    CoordinateSystem cs=twoDPB_l.coordinates();
     		    Int index= twoDPB_l.coordinates().findCoordinate(Coordinate::SPECTRAL);
     		    SpectralCoordinate SpCS = twoDPB_l.coordinates().spectralCoordinate(index);
@@ -311,6 +323,7 @@ namespace casa{
     		    Vector<Double> refValue; refValue.resize(1); refValue(0)=cfRefFreq;
     		    SpCS.setReferenceValue(refValue);
     		    cs.replaceCoordinate(SpCS,index);
+		    // tim.show("CSStuff:");
     		    // {
 		    //   ostringstream name;
 		    //   name << "twoDPB.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
@@ -322,19 +335,14 @@ namespace casa{
 		    // Now FT the function and copy the data from
 		    // TempImages back to the CFBuffer buffers
 		    //
+		    // tim.mark();
     		    LatticeFFT::cfft2d(twoDPB_l);
     		    LatticeFFT::cfft2d(twoDPBSq_l);
+		    // tim.show("FFT*2:");
 		    // Array<Complex> t0;
 		    // twoDPBSq_l.get(t0); t0 = abs(t0);
 		    // twoDPBSq_l.put(t0);
 
-    		    // {
-    		    //   ostringstream name;
-    		    //   name << "twoDPB.after" << iw << "_" << inu << "_" << muellerElements(imx)(imy) << ".im";
-    		    //   storeImg(name,twoDPB_l);
-    		    //   name << "twoDPBSq.after" << iw << "_" << inu << "_" << muellerElements(imx)(imy) << ".im";
-    		    //   storeImg(name,twoDPBSq_l);
-    		    // }
 
 		    IPosition shp(twoDPB_l.shape());
 		    IPosition start(4, 0, 0, 0, 0), pbSlice(4, shp[0]-1, shp[1]-1,1/*polInUse*/, 1),
@@ -359,8 +367,10 @@ namespace casa{
 		    //
 		    if (iw==0) wtcpeak = max(cfWtBuf);
 		    cfWtBuf /= wtcpeak;
+
+
 		    resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
-		    
+
 		    Vector<Double> ftRef(2);
 		    // ftRef(0)=cfWtBuf.shape()(0)/2-1;
 		    // ftRef(1)=cfWtBuf.shape()(1)/2-1;
@@ -377,8 +387,17 @@ namespace casa{
 
 		    
 		    // setUpCFSupport(cfBuf, xSupport, ySupport, sampling);
-		    if (iw==0) cpeak = max(cfBuf);
+		    //		    if (iw==0) 
+		      cpeak = max(cfBuf);
 		    cfBuf /= cpeak;
+    		    // {
+    		    //   ostringstream name;
+    		    //   name << "twoDPB.after" << iw << "_" << inu << "_" << muellerElements(imx)(imy) << ".im";
+    		    //   storeImg(name,twoDPB_l);
+    		    //   // name << "twoDPBSq.after" << iw << "_" << inu << "_" << muellerElements(imx)(imy) << ".im";
+    		    //   // storeImg(name,twoDPBSq_l);
+    		    // }
+
 		    resizeCF(cfBuf, xSupport, ySupport, sampling,0.0);
 
 		    log_l << "Support: " << xSupport << " pixels" << LogIO::POST;
@@ -781,7 +800,6 @@ namespace casa{
 	//
 	for (Int iw=0;iw<wConvSize;iw++) 
 	  {
-	    cerr << "Setting W = " << iw << " plane." << endl;
 	    for(uInt inu=0;inu<freqValues.nelements(); inu++)
 	      {
 		Int npol=0;
@@ -837,7 +855,7 @@ namespace casa{
 
 	  // cfb_p->show(NULL,cerr);
 
-	  // cfb_p->makePersistent("test.cf");
+	  //cfb_p->makePersistent("test.cf");
 	  // cfwtb_p->makePersistent("test.wtcf");
 
 	}
@@ -875,16 +893,21 @@ namespace casa{
     else 
       threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
-    threshold *= aTerm_p->getSupportThreshold()*0.1;
+    //    threshold *= aTerm_p->getSupportThreshold()*0.1;
+    threshold *= 1e-3;
     //
     // Find the support size of the conv. function in pixels
     //
+    // Timer tim;
+    // tim.mark();
     if (found = findSupport(func,threshold,convFuncOrigin,R))
       xSupport=ySupport=Int(0.5+Float(R)/sampling)+1;
+    // tim.show("findSupport:");
 
     if (xSupport*sampling > convFuncOrigin)
       {
 	log_l << "Convolution function support size > N/2.  Limiting it to N/2, but this should be considered a bug"
+	      << "(threshold = " << threshold << ")"
 	      << LogIO::WARN;
 	xSupport = ySupport = (Int)(convFuncOrigin/sampling);
       }
@@ -924,49 +947,123 @@ namespace casa{
   }
   //
   //----------------------------------------------------------------------
+  // A global method for use in OMP'ed findSupport() below
   //
-  Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold,
-			       Int& origin, Int& R)
+  void archPeak(const Float& threshold, const Int& origin, const Block<Int>& cfShape, const Complex* funcPtr, 
+		const Int& nCFS, const Int& PixInc,const Int& th, const Int& R, Block<Int>& maxR)
+  {
+    Block<Complex> vals;
+    Block<Int> ndx(nCFS);	ndx=0;
+    Int NSteps;
+    //Check every PixInc pixel along a circle of radius R
+    NSteps = 90*R/PixInc; 
+    vals.resize((Int)(NSteps+0.5));
+    uInt valsNelements=vals.nelements();
+    vals=0;
+
+    for(Int pix=0;pix<NSteps;pix++)
+      {
+	ndx[0]=(int)(origin + R*sin(2.0*M_PI*pix*PixInc/R));
+	ndx[1]=(int)(origin + R*cos(2.0*M_PI*pix*PixInc/R));
+	
+	if ((ndx[0] < cfShape[0]) && (ndx[1] < cfShape[1]))
+	  //vals[pix]=func(ndx);
+	  vals[pix]=funcPtr[ndx[0]+ndx[1]*cfShape[1]+ndx[2]*cfShape[2]+ndx[3]*cfShape[3]];
+      }
+
+    maxR[th]=-R;
+    for (Int i=0;i<valsNelements;i++)
+      if (fabs(vals[i]) > threshold)
+	{
+	  maxR[th]=R;
+	  break;
+	}
+    //		th++;
+  }
+  //
+  //----------------------------------------------------------------------
+  //
+  Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold, 
+			       Int& origin, Int& radius)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "findSupport[R&D]"));
-    Double NSteps;
-    Int PixInc=1;
-    Vector<Complex> vals;
-    IPosition ndx(4,origin,0,0,0);
+
+    Int nCFS=func.shape().nelements(),
+      PixInc=1, R0, R1, R, convSize;
+    Block<Int> cfShape(nCFS);
     Bool found=False;
-    IPosition cfShape=func.shape();
-    Int convSize = cfShape(0);
+    Complex *funcPtr;
+    Bool dummy;
+    uInt Nth=8;
 
-    // for(R=convSize/2-1;R>0;R--)
-    //   {
-    // 	if(
-    // 	   (abs(func(IPosition(4,R+origin,origin,0,0)))>threshold)||
-    // 	   (abs(func(IPosition(4,origin,R+origin,0,0)))>threshold) 
-    // 	   ) 
-    // 	  {found=True;break;}
-    //   }
-    // return found;
+    for (uInt i=0;i<nCFS;i++)
+    	cfShape[i]=func.shape()[i];
+    convSize = cfShape[0];
 
-    for(R=convSize/2-2;R>1;R--)
+#ifdef HAS_OMP
+    Nth = max(omp_get_max_threads()-2,1);
+#endif
+    
+    Block<Int> maxR(Nth);
+
+    funcPtr = func.getStorage(dummy);
+
+    R1 = convSize/2-2;
+
+    while (R1 > 1)
       {
-	NSteps = 90*R/PixInc; //Check every PixInc pixel along a
-	//circle of radious R
-	vals.resize((Int)(NSteps+0.5));
-	vals=0;
-	for(Int th=0;th<NSteps;th++)
-	  {
-	    ndx(0)=(int)(origin + R*sin(2.0*M_PI*th*PixInc/R));
-	    ndx(1)=(int)(origin + R*cos(2.0*M_PI*th*PixInc/R));
-	    
-	    if ((ndx(0) < cfShape(0)) && (ndx(1) < cfShape(1)))
-	      vals(th)=func(ndx);
-	  }
+	    R0 = R1; R1 -= Nth;
 
-	if (max(abs(vals)) > threshold)
-	  {found=True;break;}
+#pragma omp parallel default(none) firstprivate(R0,R1)  private(R) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
+	    { 
+#pragma omp for
+	      for(R=R0;R>R1;R--)
+		{
+		  archPeak(threshold, origin, cfShape, funcPtr, nCFS, PixInc, omp_get_thread_num(), R, maxR);
+		}
+	    }///omp 	    
+
+	    for (Int th=0;th<Nth;th++)
+	      if (maxR[th] > 0)
+		{found=True; radius=maxR[th]; return found;}
       }
     return found;
   }
+  //
+  //----------------------------------------------------------------------
+  //
+  // Bool AWConvFunc::findSupport(Array<Complex>& func, Float& threshold,
+  // 			       Int& origin, Int& R)
+  // {
+  //   LogIO log_l(LogOrigin("AWConvFunc", "findSupport[R&D]"));
+  //   Double NSteps;
+  //   Int PixInc=1;
+  //   Vector<Complex> vals;
+  //   IPosition ndx(4,origin,0,0,0);
+  //   Bool found=False;
+  //   IPosition cfShape=func.shape();
+  //   Int convSize = cfShape(0);
+
+  //   for(R=convSize/2-2;R>1;R--)
+  //     {
+  // 	//Check every PixInc pixel along a circle of radius R
+  // 	NSteps = 90*R/PixInc; 
+  // 	vals.resize((Int)(NSteps+0.5));
+  // 	vals=0;
+  // 	for(Int th=0;th<NSteps;th++)
+  // 	  {
+  // 	    ndx(0)=(int)(origin + R*sin(2.0*M_PI*th*PixInc/R));
+  // 	    ndx(1)=(int)(origin + R*cos(2.0*M_PI*th*PixInc/R));
+	    
+  // 	    if ((ndx(0) < cfShape(0)) && (ndx(1) < cfShape(1)))
+  // 	      vals(th)=func(ndx);
+  // 	  }
+
+  // 	if (max(abs(vals)) > threshold)
+  // 	  {found=True;break;}
+  //     }
+  //   return found;
+  // }
   //
   //----------------------------------------------------------------------
   //
