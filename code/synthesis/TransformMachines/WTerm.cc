@@ -26,6 +26,9 @@
 //#
 //# $Id$
 #include <synthesis/TransformMachines/WTerm.h>
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -37,6 +40,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Int convSize = screen.shape()(0);
     Double twoPiW=2.0*C::pi*Double(wValue);
+#ifdef HAS_OMP
+    Int Nth=max(omp_get_max_threads()-2,1);
+#endif
 
     if (!isNoOp())
       {
@@ -44,6 +50,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    Double m=sampling(1)*Double(iy);
 	    Double msq=m*m;
+#pragma omp parallel default(none) firstprivate(msq,iy) shared(twoPiW,convSize) num_threads(Nth)
+    {
+#pragma omp for
 	    for (Int ix=-inner/2;ix<inner/2;ix++) 
 	      {
 		Double l=sampling(0)*Double(ix);
@@ -54,6 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    screen(ix+convSize/2,iy+convSize/2)*=Complex(cos(phase),sin(phase));
 		  }
 	      }
+    }
 	  }
       }
   }
