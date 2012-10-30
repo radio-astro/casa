@@ -74,6 +74,7 @@ test_listobs                    scastro@eso.org
 test_listpartition              scastro@eso.org
 test_makemask                   ttsutsum@nrao.edu
 test_measures			rreid@nrao.edu
+test_msmd                       dmehring@nrao.edu
 test_msmoments                  takeshi.nakazato@nao.ac.jp
 test_partition                  jkern@nrao.edu
 test_pcasa                      jkern@nrao.edu

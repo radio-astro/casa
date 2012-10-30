@@ -177,7 +177,16 @@ def setjy_core(vis=None, field=None, spw=None,
                      'WARN')
 
       # Split the process for solar system objects
-      if standard=="Butler-JPL-Horizons 2012":
+      # To maintain the behavior of SetJy such that if a flux density is specified
+      # we use it rather than the model, we need to check the state of the 
+      # input fluxdensity  JSK 10/25/2012
+      userFluxDensity = fluxdensity is not None
+      if userFluxDensity and isinstance(fluxdensity, list):
+        userFluxDensity = fluxdensity[0] > 0.0
+      elif userFluxDensity:
+        userFluxDensity = fluxdensity > 0.0
+
+      if standard=="Butler-JPL-Horizons 2012" and not userFluxDensity:
         casalog.post("Using Butler-JPL-Horizons 2012")
         ssmoddirs = findCalModels(target='SolarSystemModels',
                   roots=[casa['dirs']['data']],

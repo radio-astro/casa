@@ -146,22 +146,17 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-        #flagmanager(vis = name+'.ms', mode = 'save', versionname = 'Original')
+        flagmanager(vis = name+'.ms', mode = 'save', versionname = 'Original')
         os.system('rm -rf cal-tsys_'+name+'.calnew cal-*'+name+'.Wnew')
 
         gencal(vis=name+'.ms',
                caltype='tsys',
                caltable='cal-tsys_'+name+'.calnew')
 
-	wvrgcal(vis=name+'.ms', caltable='cal-wvr-'+name+'.Wnew',  
+	wvrgcal(vis=name+'.ms', caltable='cal-'+name+'.Wnew',  
                 toffset=-1, segsource=True,
-		tie=["Titan,1037-295,NGC3256"], statsource="1037-295")
-
-        smoothcal(vis = name+'.ms',
-		  tablein = 'cal-wvr-'+name+'.Wnew',
-		  caltable = 'cal-'+name+'.Wnew',
-		  smoothtype = 'mean',
-		  smoothtime = 2.88) # the integration time
+		tie=["Titan,1037-295,NGC3256"], statsource="1037-295",
+                smooth=3)
 
     if makeplots:
         for spw in ['1','3','5','7']:
@@ -179,12 +174,12 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     for name in basename:
-        #flagmanager(vis = name+'.ms', mode = 'restore', versionname = 'Original')
+        flagmanager(vis = name+'.ms', mode = 'restore', versionname = 'Original')
 
-	tflagdata(vis=name+'.ms', flagbackup = F, mode = 'shadow')
-	tflagdata(vis=name+'.ms',mode='manual', autocorr=True)
-        tflagdata(vis=name+'.ms', mode='manual', flagbackup = F, intent='*POINTING*')
-        tflagdata(vis=name+'.ms', mode='manual', flagbackup = F, intent='*ATMOSPHERE*')
+	flagdata(vis=name+'.ms', flagbackup = F, mode = 'shadow')
+	flagdata(vis=name+'.ms',mode='manual', autocorr=True)
+        flagdata(vis=name+'.ms', mode='manual', flagbackup = F, intent='*POINTING*')
+        flagdata(vis=name+'.ms', mode='manual', flagbackup = F, intent='*ATMOSPHERE*')
 
         flagmanager(vis = name+'.ms', mode = 'save', versionname = 'Apriori')
 
@@ -235,9 +230,9 @@ if(mystep in thesteps):
 
     flagmanager(vis ='uid___A002_X1d54a1_X174_K_WVR.ms', mode = 'restore', versionname = 'Original')
        
-    tflagdata(vis='uid___A002_X1d54a1_X174_K_WVR.ms', mode='manual',
+    flagdata(vis='uid___A002_X1d54a1_X174_K_WVR.ms', mode='manual',
              antenna='DV04', flagbackup = T, scan='4,5,9', spw='7')
-            
+
     for name in basename:
 
 	for field in ['Titan','1037*','NGC*']:
@@ -275,30 +270,30 @@ if(mystep in thesteps):
 
     flagmanager(vis ='ngc3256_line.ms', mode = 'restore', versionname = 'Original')
 
-    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='*:0~16,*:125~127')
+    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='*:0~16,*:125~127')
 
-    tflagdata(vis = 'ngc3256_line.ms', flagbackup = T,
+    flagdata(vis = 'ngc3256_line.ms', flagbackup = T,
 	timerange='>2011/04/16/12:00:00', field='Titan')
 
     fixplanets(vis='ngc3256_line.ms', field='Titan', fixuvw=True)
 
-    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
+    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
              correlation='YY', mode='manual',
              antenna='DV07', timerange='')
 
-    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
+    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='3',
              correlation='YY', mode='manual',
              antenna='DV08', timerange='>2011/04/17/03:00:00')
 
-    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='0',
+    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='0',
              correlation='', mode='manual',
              antenna='PM03', timerange='2011/04/17/02:15:00~02:15:50')
 
-    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='2,3', 
+    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='2,3', 
              correlation='', mode='manual',
              antenna='PM03', timerange='2011/04/16/04:13:50~04:18:00')
 
-    tflagdata(vis='ngc3256_line.ms', flagbackup=T, spw='',
+    flagdata(vis='ngc3256_line.ms', flagbackup=T, spw='',
              correlation='', mode='manual',
              antenna='PM03&DV10', timerange='>2011/04/16/15:00:00')
 
@@ -412,19 +407,19 @@ if(mystep in thesteps):
 
     flagmanager(vis = name+'.ms', mode = 'restore', versionname = 'step12')
     
-    tflagdata(vis='ngc3256_line.ms', mode='manual',
+    flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:13:35~04:13:45', flagbackup = T)
     
-    tflagdata(vis='ngc3256_line.ms', mode='manual',
+    flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/05:21:13~05:21:19', flagbackup = T)
     
-    tflagdata(vis='ngc3256_line.ms', mode='manual',
+    flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:16:40~04:16:49', flagbackup = T)
     
-    tflagdata(vis='ngc3256_line.ms', mode='manual',
+    flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:14:00~04:17:10', antenna='PM03', flagbackup = T)
     
-    tflagdata(vis='ngc3256_line.ms', mode='manual',
+    flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/17/00:35:30~01:20:20', antenna='DV04', spw='3', flagbackup = T)
 
     flagmanager(vis = name+'.ms', mode = 'save', versionname = 'step13')
@@ -436,7 +431,7 @@ mystep = 15
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    clearcal('ngc3256_line.ms')
+    delmod('ngc3256_line.ms')
 
     gaincal(vis='ngc3256_line.ms', caltable='cal-ngc3256.G1n', spw='*:40~80', field='1037*',
             selectdata=T, solint='int', refant=therefant, calmode='p')

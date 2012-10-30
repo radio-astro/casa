@@ -13,21 +13,21 @@ import numpy
 from taskinit import *
 import copy
 
-def tclean(vis, field, spw,
-           imagename,
-           startmodel,
-           niter,
-           usescratch, clusterdef):
+def tclean(vis='', field='', spw='',
+           imagename='',nchan=1,
+           startmodel='',
+           niter=0, threshold=0.0, loopgain=0.1, maxcycleniter=-1, cyclefactor=1, minpsffraction=0.05, maxpsffraction=0.8,
+           usescratch=True, clusterdef=''):
 
     #casalog.post('This is an empty task. It is meant only to build/test/maintain the interface for the refactored imaging code. When ready, it will be offered to users for testing.','WARN')
 
     # Put all parameters into dictionaries
     params={}
     params['dataselection']={'vis':vis, 'field':field, 'spw':spw, 'usescratch':usescratch}
-    params['imagedefinition']={}
+    params['imagedefinition']={'imagename':imagename, 'nchan':nchan}
     params['imaging']={'startmodel':startmodel}
     params['deconvolution']={}
-    params['iteration']={'niter':niter}
+    params['iteration']={'niter':niter, 'threshold':threshold, 'loopgain':loopgain, 'maxcycleniter':maxcycleniter, 'cyclefactor':cyclefactor , 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction}
     params['other']={'clusterdef':clusterdef}
 
     # Instantiate the Imager class
@@ -50,7 +50,7 @@ def tclean(vis, field, spw,
     imager.finalize()
 
     # Save history - Params, Flux Cleaned, Peak Residual, Niter, TimeTaken, Image Names?
-    return True
+    return imager.returninfo()
 
 
 ###################################################
@@ -65,6 +65,7 @@ class PySynthesisImager:
         self.casalog = casalog
         self.params = params
         self.loopcontrols = {}
+        self.listofimagedefinitions = []
         self.casalog.origin('tclean')
 
 
@@ -75,6 +76,8 @@ class PySynthesisImager:
         errs = "" 
 
         errs = errs + self.checkAndFixSelectionPars( self.params['dataselection'] )
+
+        errs = errs + self.checkAndFixImageCoordPars( self.params['imagedefinition'] )
 
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
@@ -89,10 +92,23 @@ class PySynthesisImager:
             self.toolsi = casac.synthesisimager() ##gentools(['si'])[0]
             toolsi = self.toolsi
         toolsi.selectdata(selpars=self.params['dataselection'])
-        toolsi.defineimage(impars=self.params['imagedefinition'])
-        toolsi.setupimaging(gridpars=self.params['imaging'])
-        toolsi.setupdeconvolution(decpars=self.params['deconvolution'])
-        toolsi.setupiteration(iterpars=self.params['iteration'])
+
+        impars = copy.deepcopy( self.params['imagedefinition'] )
+
+        ## Start a loop on 'multi-fields' here....
+        for eachimdef in self.listofimagedefinitions:
+            # Fill in the individual parameters
+            impars['imagename'] = eachimdef[ 'imagename' ]
+            # Init a mapper for each individual field
+            toolsi.defineimage(impars=impars)
+            toolsi.setupimaging(gridpars=self.params['imaging'])
+            toolsi.setupdeconvolution(decpars=self.params['deconvolution'])
+            toolsi.initmapper()
+        ## End loop on 'multi-fields' here....
+
+        self.loopcontrols = toolsi.setupiteration(iterpars=self.params['iteration'] ) # From ParClean loopcontrols gets overwritten, but it is always with the same thing. Try to clean this up. 
+
+        ##toolsi.initcycles()
 
 
     def runMajorCycle(self,toolsi=None):
@@ -122,6 +138,10 @@ class PySynthesisImager:
         toolsi.endloops( self.loopcontrols )
         #toolsi.done()
 
+    def returninfo(self):
+        return self.loopcontrols
+
+
     ###### Start : Parameter-checking functions ##################
     def checkAndFixSelectionPars(self, selpars={} ):
         errs=""
@@ -145,6 +165,25 @@ class PySynthesisImager:
                         errs = errs + "Selection for " + par + " must be a list of " + str(nvis) + " selection strings\n"
                 else:
                     errs = errs + "Selection for " + par + " is unspecified\n"
+
+        return errs
+
+    def checkAndFixImageCoordPars(self, impars={} ):
+        errs=""
+
+        ### Get a list of image-coord pars from the multifield outlier file + main field...
+        ### Go through this list, and do setup. :  Fill in self.listofimagedefinitions with dicts of params
+
+        ## FOR NOW... this list is just a list of image names....
+
+        ## One image only
+        if type( impars['imagename'] ) == str:
+            self.listofimagedefinitions.append( {'imagename':impars['imagename']} )
+
+        ## If multiple images are specified....... 
+        if type( impars['imagename'] ) == list:
+            for imname in impars['imagename']:
+                self.listofimagedefinitions.append( {'imagename':imname} )
 
         return errs
 
@@ -183,9 +222,9 @@ class ParallelPySynthesisImager(PySynthesisImager):
         self.params['dataselection'] = copy.deepcopy(selpars)
 
     def runMajorCycle(self):
-        lcontrols = dict(self.loopcontrols)
+        lcontrols = copy.deepcopy( self.loopcontrols )
         for ch in range(0,self.nchunks):
-            self.loopcontrols = dict(lcontrols)
+            self.loopcontrols = copy.deepcopy( lcontrols )
             PySynthesisImager.runMajorCycle(self, self.toollist[ch] )  # Send in updated model as startmodel..
         self.gatherImages()
 

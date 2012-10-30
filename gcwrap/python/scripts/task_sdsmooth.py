@@ -35,15 +35,9 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             # A scantable selection
             sel = sdutil.get_selector(scanlist, iflist, pollist,
                                       field)
-            try:
-                #Apply the selection
-                sorg.set_selection(sel)
-                del sel
-            except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
-                casalog.post( 'No output written.' )
-                raise Exception, instance
-                return
+            #Apply the selection
+            sorg.set_selection(sel)
+            del sel
 
             # Copy scantable when usign disk storage not to modify
             # the original table.
@@ -78,7 +72,7 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             del s
 
         except Exception, instance:
-                casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
                 return
 

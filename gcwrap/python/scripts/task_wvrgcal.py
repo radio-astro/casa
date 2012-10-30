@@ -63,9 +63,8 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
         """
 	#Python script
 
-	# make ms and tb tool local 
-	ms = casac.ms()
-	tb = casac.table()
+	# make ms tool local 
+	mst = casac.ms()
 
 	try:
 		casalog.origin('wvrgcal')
@@ -123,7 +122,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 						execute_string += ' '
 
 		if (not reversespw==''):
-			spws = ms.msseltoindex(vis=vis,spw=reversespw)['spw']
+			spws = mst.msseltoindex(vis=vis,spw=reversespw)['spw']
 			for id in spws:
 				execute_string += ' --reversespw '+str(id)
 

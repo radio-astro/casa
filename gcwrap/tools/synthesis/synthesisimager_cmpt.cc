@@ -113,14 +113,16 @@ synthesisimager::defineimage(const casac::record& impars)
   return rstat;
 }
 
-  bool synthesisimager::setupiteration(const casac::record& iterpars)
+casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
 {
-  Bool rstat(False);
+  //Bool rstat(False);
+  casac::record* rstat(0);
 
   try 
     {
-      casa::Record rec = *toRecord( iterpars );
-      itsImager->setupIteration( rec );
+      casa::Record recpars = *toRecord( iterpars );
+      casa::SIIterBot loopcontrols = itsImager->setupIteration( recpars );
+      rstat=fromRecord(loopcontrols);
     } 
   catch  (AipsError x) 
     {
@@ -130,14 +132,13 @@ synthesisimager::defineimage(const casac::record& impars)
   return rstat;
 }
 
-  /*
-bool synthesisimager::setotheroptions(Bool usescratch)
+bool synthesisimager::initmapper()
 {
   Bool rstat(False);
 
   try 
     {
-      itsImager->setOtherOptions( usescratch )
+      itsImager->initMapper( );
     } 
   catch  (AipsError x) 
     {
@@ -146,7 +147,23 @@ bool synthesisimager::setotheroptions(Bool usescratch)
   
   return rstat;
 }
-  */
+
+bool synthesisimager::initcycles()
+{
+  Bool rstat(False);
+
+  try 
+    {
+      itsImager->initCycles( );
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+
    /*
 casac::record* synthesisimager::initloops()
 {
@@ -172,8 +189,9 @@ casac::record* synthesisimager::initloops()
 
   try 
     {
-      casa::Record *rec = toRecord(loopcontrols);
-      itsImager->endLoops(*rec);
+      casa::Record rec = *toRecord(loopcontrols);
+      casa::SIIterBot lcrec(rec);
+      itsImager->endLoops(lcrec);
     } 
   catch  (AipsError x) 
     {
@@ -191,21 +209,10 @@ casac::record* synthesisimager::initloops()
   try 
     {
       casa::Record inrec = *toRecord(loopcontrols);
-      itsImager->runMajorCycle(inrec);
-      rstat=fromRecord(inrec);
+      casa::SIIterBot lcrec(inrec);
+      itsImager->runMajorCycle(lcrec);
+      rstat=fromRecord(lcrec);
       //      loopcontrols = *fromRecord(inrec);
-
-      /*
-      if( inrec.isDefined("nmajordone") ) cout << "inrec has nmajordone" << endl;
-      else cout << "inrec does not have nmajordone" << endl;
-      if( inrec.isDefined("stop") ) cout << "inrec has stop" << endl;
-      else cout << "inrec does not have stop" << endl;
-      if( inrec.isDefined("nmajordone") ) cout << "inrec has nmajordone" << endl;
-      else cout << "inrec does not have nmajordone" << endl;
-      casa::Record trec = *toRecord(loopcontrols);
-      if( trec.isDefined("nmajordone") ) cout << "loopcontrols has nmajordone" << endl;
-      else cout << "loopcontrols does not have nmajordone" << endl;
-      */
 
     } 
   catch  (AipsError x) 
@@ -224,8 +231,9 @@ casac::record* synthesisimager::initloops()
   try 
     {
       casa::Record inrec = *toRecord(loopcontrols);
-      itsImager->runMinorCycle(inrec);
-      rstat=fromRecord(inrec);
+      casa::SIIterBot lcrec(inrec);
+      itsImager->runMinorCycle(lcrec);
+      rstat=fromRecord(lcrec);
       //      loopcontrols = *fromRecord(inrec);
     } 
   catch  (AipsError x) 

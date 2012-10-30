@@ -235,7 +235,7 @@ def plotms(vis=None,
         symboloutline = symboloutline or False
         #if customsymbol:
         pm.setSymbol(symbolshape, symbolsize, symbolcolor,
-                     symbolfill, symboloutline)
+                     symbolfill, symboloutline, False)
 
         # Set custom flagged symbol
         #if not customflaggedsymbol:
@@ -247,7 +247,7 @@ def plotms(vis=None,
         #if customflaggedsymbol:
         pm.setFlaggedSymbol(flaggedsymbolshape, flaggedsymbolsize,
                             flaggedsymbolcolor, flaggedsymbolfill,
-                            flaggedsymboloutline)
+                            flaggedsymboloutline, False)
 
         # Set various user-directed appearance parameters
         pm.setTitle(title,False)

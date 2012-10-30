@@ -27,16 +27,10 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
 		if (sorg.nchan()==1):
 			s = "Cannot process the input data. It contains only single channel data."
 			raise Exception, s
-
-		try:
-			sel = sdutil.get_selector(scanlist, iflist, pollist, field)
-			sorg.set_selection(sel)
-			del sel
-		except Exception, instance:
-			casalog.post( str(instance), priority = 'ERROR' )
-			casalog.post( 'No output written.' )
-			raise Exception, instance
-			return
+                
+                sel = sdutil.get_selector(scanlist, iflist, pollist, field)
+                sorg.set_selection(sel)
+                del sel
 
 		# Copy scantable when usign disk storage not to modify
 		# the original table.
@@ -108,7 +102,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, fra
                 del s
 	
 	except Exception, instance:
-		casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
 		raise Exception, instance
 
 
@@ -192,16 +186,7 @@ def dobaseline(s, blfile, masklist, maskmode, thresh, avg_limit, edge, blfunc, o
                 msk = None
 
                 if (maskmode == 'interact'):
-                        new_mask = sd.interactivemask(scan=s)
-                        if (len(lmask) > 0):
-                                new_mask.set_basemask(masklist=lmask,invert=False)
-                        new_mask.select_mask(once=False,showmask=True)
-
-                        finish = raw_input("Press return to baseline spectra.\n")
-                        new_mask.finish_selection()
-
-                        msk = new_mask.get_mask()
-                        del new_mask
+                        msk = sdutil.get_interactive_mask(s, lmask, False)
                         msks = s.get_masklist(msk)
                         if len(msks) < 1:
                                 casalog.post( 'No channel is selected. Exit without baselining.', priority = 'WARN' )

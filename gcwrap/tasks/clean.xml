@@ -112,10 +112,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <allowed kind="enum">
 	<value></value>
 	<value>widefield</value>
-<!--	<value>aprojection</value>
-	<value>experimental</value>
-	These 2 parameters are removed as per CAS-3352
---> 
+	<value>aprojection</value>
+	<value>advancedaprojection</value> 
      </allowed>
     </param>
     
@@ -135,9 +133,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Parallactic angle bin increment (degrees)</description>
       <value>360.0</value>
     </param>
+    <param type="bool" name="aterm" subparam="true">
+      <description>Switch-on the A-Term?</description>
+      <value>True</value>
+    </param>
+    <param type="bool" name="psterm" subparam="true">
+      <description>Switch-on the PS-Term?</description>
+      <value>True</value>
+    </param>
+    <param type="bool" name="wbawp" subparam="true">
+      <description>Trigger the wide-band A-Projection algorithm?</description>
+      <value>False</value>
+    </param>
     <param type="string" name="epjtable" subparam="true">
       <description>Table of EP-Jones parameters</description>
-      <value></value>
+      <value type="string"></value>
     </param>
 
     <param type="string" name="interpolation" subparam="true">
@@ -196,7 +206,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value>mosaic</value>
 	<value>sd</value>
 	<value>both</value>
-	<value>pbwproject</value>
+	<value>awproject</value>
       </allowed>
     </param>
 
@@ -482,18 +492,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		      <default param="facets"><value>1</value></default>
               </equals>
 	      <equals value="aprojection">
-		      <!-- <default param="wprojplanes"><value>1</value></default> -->
-		      <!-- <default param="facets"><value>1</value></default> -->
-		      <default param="cfcache"><value type="string">cfcache.dir</value></default>
-		      <default param="painc"><value>360.0</value></default>
-		      <!-- <default param="epjtable"><value type="string"></value></default> -->
+		 <default param="wprojplanes"><value>1</value></default> 
+		 <!-- <default param="facets"><value>1</value></default>  -->
+		 <default param="cfcache"><value type="string">cfcache.dir</value></default>
+		 <default param="painc"><value>360.0</value></default>
+		 <!-- <default param="epjtable"><value type="string"></value></default>  -->
               </equals>
-	      <equals value="experimental">
-		      <default param="ftmachine"><value type="string">ft</value></default>
+	      <equals value="advancedaprojection">
+		      <!-- <default param="ftmachine"><value type="string">ft</value></default> -->
 		      <default param="wprojplanes"><value>1</value></default>
-		      <default param="facets"><value>1</value></default>
 		      <default param="cfcache"><value type="string">cfcache.dir</value></default>
 		      <default param="painc"><value>360.0</value></default>
+		      <default param="wbawp"><value>False</value></default>
+		      <default param="aterm"><value>True</value></default>
+		      <default param="psterm"><value>True</value></default>
 		      <default param="epjtable"><value type="string"></value></default>
               </equals>
 	    </when>
@@ -956,20 +968,27 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                facets is the number of facets on each side of the image 
                    (i.e. the total number of facets is 'facets x facets'). 
                    If wprojplanes>1, W-Projection is done for each facet.
-<!--
+
   &gt;&gt;&gt; gridmode='aprojection' expandable parameters
-               Corrects for the (E)VLA polarization squint using the
-               A-Projection algorithm (Bhatnagar et al., AandA (2008)).
-               cfcache is the name of the directory to be used to cache the
-                   convolution functions.  These functions can be reused 
-                   again if the image parameters are unchanged.  If the image 
-                   parameters change, a new cache must be created (or the
-                   existing one removed). 
-               painc (in degrees) is the Parallactic Angle increment used to
-                   compute the convolution functions.
-====This section is removed as per CAS-3352
-====to be reintroduced whenever supported
--->
+               Corrects for the (E)VLA time-varying PB effects
+               including polarization squint using the A-Projection
+               algorithm (Bhatnagar et al., AandA, 487, 419 (2008)).
+               This can optinally include w-projection also.
+
+               wprojplanes is the number of pre-computed w-planes used
+               for W-Projection algorithm.  wprojplanes=1 diables
+               correction for non-coplanar effects.
+
+               cfcache is the name of the directory to store the
+               convolution functions and weighted sensitivty pattern
+               function. <!-- These functions can be reused again if the -->
+               <!-- image parameters are unchanged.  If the image -->
+               <!-- parameters change, a new cache must be created (or the -->
+               <!-- existing one removed). -->
+
+               painc (in degrees) is the Parallactic Angle increment
+               used to compute the convolution functions.
+
   &gt;&gt;&gt; imagermode='mosaic' expandable parameter(s):
                Make a mosaic of the different pointings (uses csclean style
                too)

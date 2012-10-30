@@ -3617,7 +3617,7 @@ especially in wide-field cleaning.
 
      <param type="string" name="epjtablename">
      <description>E-Jones table name.  This is used if applypointingoffsets is set to True. </description>
-     <value></value>
+     <value type="string"></value>
      </param>
 
      <param type="bool" name="applypointingoffsets">
@@ -3668,9 +3668,22 @@ however not used yet.</description>
        <value>false</value>
      </param>
      <param type="int" name="numthreads">
-     <description>Limit the number of threads used in this run (openmp enabled only)</description>
-     <value>-1</value>
+       <description>Limit the number of threads used in this run (openmp enabled only)</description>
+       <value>-1</value>
      </param>
+     <param type="bool" name="psterm">
+       <description>Switch-on the PS-Term?</description>
+       <value>true</value>
+     </param>
+     <param type="bool" name="aterm">
+       <description>Switch-on the A-Term?</description>
+       <value>true</value>
+     </param>
+     <param type="bool" name="wbawp">
+       <description>Trigger the WB A-Projection algorithm?</description>
+       <value>false</value>
+     </param>
+     
 </input>
 <returns type="bool"/>
 <example>

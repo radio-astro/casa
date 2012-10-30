@@ -593,6 +593,14 @@ class par(str):
 		Default: none; Example: contfile='ngc5921_cont.im'
 		"""
 
+        @staticmethod
+        def convsupport():
+                """
+                convsupport -- convolution support for 'SF' 
+                default: -1 (use default for each gridfunction)
+                example: 3
+                """
+
 	@staticmethod
 	def createimage():
 		"""
@@ -1050,20 +1058,22 @@ class par(str):
 	@staticmethod
 	def gridfunction():
 		"""
-                (for sdimaging, sdtpimaging)
-		gridfunction -- gridding function for imaging
-		options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
-		default: 'BOX'
-                
-                ------------------------------------------------------------
-
                 gridfunction -- gridding function 
                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 
-                         'GAUSS' (Gaussian), 'PB' (Primary-beam)
+                         'GAUSS' (Gaussian), 'PB' (Primary-beam),
+                         'GJINC' (Gaussian*Jinc)
                 default: 'BOX'
                 'PB' is not implemented yet.
 		"""
-		
+
+        @staticmethod
+        def gwidth():
+                """
+               gwidth -- HWHM for gaussian. Effective only for 
+                          'GAUSS' and 'GJINC'.
+               default: '-1' (use default for each gridfunction)
+               example: 3, '20arcsec', '3pixel'
+                """
 	@staticmethod
 	def hditem():
 		"""
@@ -1337,6 +1347,15 @@ class par(str):
                	Use the 'NEXT' button on gui to iterate through values.
                	To abort an iteration, close the gui window.
 		"""
+
+        @staticmethod
+        def jwidth():
+                """
+                jwidth -- Width of jinc function. Effective only for 
+                          'GJINC'.
+                default: '-1' (use default for each gridfunction)
+                example: 3, '20arcsec', '3pixel'
+                """
 
 	@staticmethod
 	def kernel():
@@ -2897,6 +2916,15 @@ class par(str):
                caltable fit.
 		"""
 
+        @staticmethod
+        def truncate():
+                """
+                truncate -- truncattion radius of convolution kernel.
+                            effective only for 'GAUSS' and 'GJINC'.
+                default: '-1' (use default for each gridfunction)
+                example: 3, '20arcsec', '3pixel'
+                """
+
 	@staticmethod
 	def tweight():
 		"""
@@ -3073,13 +3101,6 @@ class par(str):
 	def width():
 		"""
                 Channel width (value>1 indicates channel averaging:
-
-		---------------------------------------------------------------
-
-                (for sdgrid)
-                width -- width of convolution kernel, not available 
-                         for BOX gridding
-                default: -1 (use default for each gridfunction)
                 """
 
 	@staticmethod

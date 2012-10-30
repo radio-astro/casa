@@ -30,6 +30,7 @@ import string
 import re
 import shutil
 import nose
+from taskinit import casalog
 
 PYVER = str(sys.version_info[0]) + "." + str(sys.version_info[1])
 
@@ -71,13 +72,17 @@ def usage():
     print 'Usage:\n'
     print 'casapy [casapy-options] -c runUnitTest.py [options] test_name\n'
     print 'Options:'
-    print '   no option         run all tests defined in active/gcwrap/python/scripts/tests/unittests_list.txt'
-    print '   <test_name>       run only <test_name> (more tests are separated by spaces)'
-    print '   --file <list>     run the tests defined in an ASCII file <list>; one test per line'
-    print '   --datadir <dir>   set an env. variable to a directory, TEST_DATADIR=<dir> that can be used inside the tests'
-    print '   --mem             show the memory used by the tests and the number of files left open'
-    print '   --list            print the list of tests from active/gcwrap/python/scripts/tests/unittests_list.txt'
-    print '   --Help            print this message and exit\n'
+    print '  no option              run all tests defined in '
+    print '                         active/gcwrap/python/scripts/tests/unittests_list.txt.'
+    print '  <test_name>            run only <test_name> (more tests are separated by spaces).'
+    print '  -f or --file <list>    run the tests defined in an ASCII file <list>; one test per line.'
+    print '  -d or --datadir <dir>  set an env. variable to a directory, TEST_DATADIR=<dir> '
+    print '                         that can be used inside the tests.'
+    print '  -m or --mem            show the memory used by the tests and the number of files left open.'
+    print '  -g or --debug          set casalog.filter to DEBUG.'
+    print '  -l or --list           print the list of tests from '
+    print '                         active/gcwrap/python/scripts/tests/unittests_list.txt.'
+    print '  -H or --Help           print this message and exit.\n'
     print 'NOTE: it will look for tests in the install directory, which usually is \r'
     print '      <casa_install_dir>/python/2.6/tests'
     print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
@@ -274,7 +279,8 @@ if __name__ == "__main__":
         
             try:
                 # Get only this script options
-                opts,args=getopt.getopt(sys.argv[i+2:], "Hlmf:d:", ["Help","list","mem","file=","datadir="])
+                opts,args=getopt.getopt(sys.argv[i+2:], "Hlmgf:d:", ["Help","list","mem",
+                                                                     "debug","file=","datadir="])
                 
             except getopt.GetoptError, err:
                 # Print help information and exit:
@@ -307,12 +313,15 @@ if __name__ == "__main__":
                     if o in ("-H", "--Help"):
                         usage()
                         os._exit(0) 
-                    elif o in ("-l", "--list"):
+                    if o in ("-l", "--list"):
                         list_tests()
                         os._exit(0)
-                    elif o in ("-m", "--mem"):
+                    if o in ("-m", "--mem"):
                         # run specific tests in mem mode            
                         MEM = 1
+                    elif o in ("-g", "--debug"):
+                        #Set the casalog to DEBUG
+                        casalog.filter('DEBUG')
                     elif o in ("-f", "--file"):
                         hasfile = True
                         testnames = a

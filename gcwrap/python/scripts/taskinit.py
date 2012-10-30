@@ -74,6 +74,7 @@ rgtool = casac.regionmanager
 sltool = casac.spectralline
 dctool = casac.deconvolver
 vptool = casac.vpmanager
+msmdtool = casac.msmetadata
 utilstool = casac.utils
 cu = casac.cu = utilstool()
 vftask = casac.vlafillertask()
@@ -88,7 +89,7 @@ def gentools(tools=None):
 	"""
 	Generate a fresh set of tools the ones who's
 	state can be funny
-	im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools() 
+	im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd=gentools() 
 	or if you want specific set of tools
 	im, ia, cb=gentools(['im', 'ia', 'cb'])
 
@@ -97,16 +98,16 @@ def gentools(tools=None):
 		 'tb':'tbtool()', 'fg':'fgtool()', 'me' :'metool()', 
 		 'ia': 'iatool()', 'po':'potool()', 'sm' :'smtool()', 
 		 'cl': 'cltool()', 'cs' :'coordsystool()', 'rg':'rgtool()',
-		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()'}
+		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()', 'msmd':'msmdtool()'}
 	reqtools=[]
         if (not tools) or not hasattr(tools, '__iter__'):
 		reqtools=['im', 'cb', 'ms','tb', 'fg', 'me', 'ia', 'po',
-                          'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp']
+                          'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp', 'msmd']
 	else:
 		reqtools=tools
 	return tuple([eval(tooldic[reqtool]) for reqtool in reqtools])
 
-im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd=gentools()
 
 def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=False):
         """

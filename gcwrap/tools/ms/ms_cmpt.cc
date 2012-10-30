@@ -34,6 +34,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <ms_cmpt.h>
+#include <msmetadata_cmpt.h>
 #include <tools/ms/Statistics.h>
 #include <msfits/MSFits/MSFitsInput.h>
 #include <msfits/MSFits/MSFitsOutput.h>
@@ -572,6 +573,18 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
    return rstat;
 }
 
+msmetadata* ms::metadata() {
+	try {
+		if (detached()) {
+			return 0;
+		}
+		return new msmetadata(*itsMS);
+	}
+	catch(const AipsError& x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
 
 ::casac::record*
 ms::summary(bool verbose, const std::string& listfile)

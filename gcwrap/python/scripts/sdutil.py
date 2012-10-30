@@ -5,15 +5,18 @@ import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable
 import numpy as np
+import traceback
 
 qatl = casac.quanta()
+
+def get_abspath(filename):
+    return os.path.expanduser(os.path.expandvars(filename))
 
 def assert_infile_exists(infile=None):
     if (infile == ""):
         raise Exception, "infile is undefined"
 
-    filename = os.path.expandvars(infile)
-    filename = os.path.expanduser(filename)
+    filename = get_abspath(infile)
     if not os.path.exists(filename):
         mesg = "File '%s' not found." % (filename)
         raise Exception, mesg
@@ -28,9 +31,8 @@ def get_default_outfile_name(infile=None, outfile=None, suffix=None):
 
 
 def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overwrite=None):
-    filename = os.path.expandvars(outfile)
-    filename = os.path.expanduser(filename)
     if not overwrite and (outform.upper != "ASCII"):
+        filename = get_abspath(outfile)
         if os.path.exists(filename):
             mesg = "Output file '%s' exists." % (filename)
             raise Exception, mesg
@@ -40,12 +42,14 @@ def get_listvalue(value):
     return _to_list(value, int) or []
 
 def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
-                 in_field=None, in_beams=None):
+                 in_field=None, in_beams=None, in_rows=None):
     scans = get_listvalue(in_scans)
     ifs   = get_listvalue(in_ifs)
     pols  = get_listvalue(in_pols)
     beams = get_listvalue(in_beams)
-    selector = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams)
+    rows = get_listvalue(in_rows)
+    selector = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams,
+                           rows=rows)
 
     if (in_field != ""):
         # NOTE: currently can only select one
@@ -160,6 +164,12 @@ def normalise_restfreq(in_restfreq):
         mesg = "wrong type of restfreq given."
         raise Exception, mesg
 
+def set_restfreq(s, restfreq):
+    rfset = (restfreq != '') and (restfreq != [])
+    if rfset:
+##         molids = s._getmolidcol_list()
+        s.set_restfreqs(normalise_restfreq(restfreq))
+
 def set_spectral_unit(s, specunit):
     if (specunit != ''):
         s.set_unit(specunit)
@@ -167,9 +177,9 @@ def set_spectral_unit(s, specunit):
 def set_doppler(s, doppler):
     if (doppler != ''):
         if (doppler in ['radio', 'optical', 'z']):
-            ddopler = doppler.upper()
+            ddoppler = doppler.upper()
         else:
-            ddopler = doppler
+            ddoppler = doppler
         s.set_doppler(ddoppler)
     else:
         casalog.post('Using current doppler conversion')
@@ -183,12 +193,6 @@ def set_freqframe(s, frame):
 def set_fluxunit(s, fluxunit, telescopeparm, insitu=True):
     ret = None
     
-    # set flux unit string (be more permissive than ASAP)
-    if ( fluxunit == 'k' ):
-        fluxunit = 'K'
-    elif ( fluxunit == 'JY' or fluxunit == 'jy' ):
-        fluxunit = 'Jy'
-
     # check current fluxunit
     # for GBT if not set, set assumed fluxunit, Kelvin
     antennaname = s.get_antennaname()
@@ -295,29 +299,23 @@ def save(s, outfile, outform, overwrite):
                                                overwrite)
     if ( (outform == 'ASCII') or (outform == 'ascii') ):
             outform_local = 'ASCII'
-            outfile_local = outfile + '_'
     elif ( (outform == 'ASAP') or (outform == 'asap') ):
             outform_local = 'ASAP'
-            outfile_local = outfile
     elif ( (outform == 'SDFITS') or (outform == 'sdfits') ):
             outform_local = 'SDFITS'
-            outfile_local = outfile
     elif ( (outform == 'MS') or (outform == 'ms') or (outform == 'MS2') or (outform == 'ms2') ):
             outform_local = 'MS2'
-            outfile_local = outfile
     else:
             outform_local = 'ASAP'
-            outfile_local = outfile
 
-    outfilename = os.path.expandvars(outfile_local)
-    outfilename = os.path.expanduser(outfilename)
+    outfilename = get_abspath(outfile)
     if overwrite and os.path.exists(outfilename):
         os.system('rm -rf %s' % outfilename)
 
-    s.save(outfile_local, outform_local, overwrite)
-    
+    s.save(outfile, outform_local, overwrite)
+
     if outform_local!='ASCII':
-        casalog.post('Wrote output %s file %s'%(outform_local,outfile_local))
+        casalog.post('Wrote output %s file %s'%(outform_local,outfile))
 
 def doopacity(s, tau):
     antennaname = s.get_antennaname()
@@ -340,7 +338,7 @@ def dochannelrange(s, channelrange):
 
 
 def doaverage(s, scanaverage, timeaverage, tweight, polaverage, pweight,
-              averageall=False):
+              averageall=False, docopy=False):
     # Average in time if desired
     sret = None
     if ( timeaverage ):
@@ -393,6 +391,8 @@ def doaverage(s, scanaverage, timeaverage, tweight, polaverage, pweight,
             else:
                 #spave=scal.copy()
                 sret = s
+    if docopy and (sret == s):
+        sret = s.copy()
     return sret
 
 def plot_scantable(s, pltfile, plotlevel, comment=None):
@@ -426,7 +426,7 @@ def scantable_restore_factory(s, infile, fluxunit, specunit, frame, doppler, res
         return scantable_restore_impl(s, fluxunit, specunit, frame, doppler, restfreq)
 
 class scantable_restore_interface(object):
-    def __init__(self):
+    def __init__(self, s=None, fluxunit=None, specunit=None, frame=None, doppler=None, restfreq=None):
         pass
 
     def restore(self):
@@ -451,27 +451,46 @@ class scantable_restore_impl(scantable_restore_interface):
         self.doppler = self.coord[2]
         self.molids = s._getmolidcol_list()
         self.rfset = ((restfreq != '') and (restfreq != []))
-        self.dorestore = (self.rfset) and \
-                         ((frame != '' and frame != self.frame) or \
-                          (doppler != '' and doppler != self.doppler) or \
-                          (fluxunit != '' and fluxunit != self.fluxunit) or \
-                          (specunit != '' and specunit != self.specunit))
-        #casalog.post('dorestore=%s'%(self.dorestore))
+        self.frameset = frame != '' or frame != self.frame
+        self.dopplerset = doppler != '' or doppler != self.doppler
+        self.fluxset = self.fluxunit != '' and \
+                       (fluxunit != '' or fluxunit != self.fluxunit)
+        self.specset = specunit != '' or specunit != self.specunit
 
     def restore(self):
         self.scntab.set_selection()
         
-        if self.dorestore:
-            casalog.post('Restoreing header information in input scantable')
-            self._restore()
+        casalog.post('Restoreing header information in input scantable')
+        self._restore()
                          
     def _restore(self):
-        self.scntab.set_fluxunit(self.fluxunit)
-        self.scntab.set_unit(self.specunit)
-        self.scntab.set_doppler(self.doppler)
-        self.scntab.set_freqframe(self.frame)
+        if self.fluxset:
+            self.scntab.set_fluxunit(self.fluxunit)
+        if self.specset:
+            self.scntab.set_unit(self.specunit)
+        if self.dopplerset:
+            self.scntab.set_doppler(self.doppler)
+        if self.frameset:
+            self.scntab.set_freqframe(self.frame)
         if self.rfset:
             self.scntab._setmolidcol_list(self.molids)
-                     
 
+def get_interactive_mask(s, masklist, invert=False):
+    new_mask=sd.interactivemask(scan=s)
+    if (len(masklist) > 0):
+        new_mask.set_basemask(masklist=masklist,invert=invert)
+        
+    new_mask.select_mask(once=False,showmask=True)
+    # Wait for user to finish mask selection
+    finish=raw_input("Press return to calculate statistics.\n")
+    new_mask.finish_selection()
     
+    # Get final mask list
+    msk=new_mask.get_mask()
+    #msks=s.get_masklist(msk)
+    del new_mask
+    return msk
+
+def process_exception(e):
+    casalog.post(traceback.format_exc(),'SEVERE')
+    casalog.post(str(e),'ERROR')

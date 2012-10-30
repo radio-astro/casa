@@ -228,7 +228,7 @@ class sdmath_test0(unittest.TestCase,sdmath_unittest_base):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('File %s exists.'%(self.outfile))
+            pos=str(e).find('Output file \'%s\' exists.'%(self.outfile))
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))       
         

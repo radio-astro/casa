@@ -47,6 +47,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
+    <param type="int" name="nchan">
+      <description>Number of channels in the output image</description>
+      <value type="int">1</value>
+    </param>
+
 
 <!--============================================== -->
 <!--                            Imaging/Gridding Parameters                                                      -->
@@ -71,6 +76,36 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="int">500</value>
     </param>
 
+    <param type="double" name="threshold">
+      <description>Stopping threshold (number, in units of Jy)</description>
+      <value type="double">0.0</value>
+    </param>
+
+    <param type="double" name="loopgain">
+      <description>Loop gain</description>
+      <value type="double">0.1</value>
+    </param>
+
+    <param type="int" name="maxcycleniter">
+      <description>Maximum number of minor-cycle iterations before triggering a major cycle</description>
+      <value type="int">-1</value>
+    </param>
+
+    <param type="double" name="cyclefactor" subparam="true">
+      <description>Scaling on PSF sidelobe level to compute the minor-cycle stopping threshold.</description>
+      <value type="double">1.0</value>
+    </param>
+
+    <param type="double" name="minpsffraction" subparam="true">
+      <description>PSF fraction that marks the max depth of cleaning in the minor cycle </description>
+      <value type="double">0.05</value>
+    </param>
+
+    <param type="double" name="maxpsffraction" subparam="true">
+      <description>PSF fraction that marks the minimum depth of cleaning in the minor cycle </description>
+      <value type="double">0.8</value>
+    </param>
+
 <!--============================================== -->
 <!--                            Other Operational Parameters                                       -->
 <!--============================================== -->
@@ -84,8 +119,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="string"></value>
     </param>
 <!--=============================================== -->
+<!--===============  Constraints                        ============== -->
 
    <constraints>
+     <when param="maxcycleniter">
+       <notequals type="int" value="-1">
+	 <default param="cyclefactor"><value>1.0</value></default>
+	 <default param="minpsffraction"><value>0.05</value></default>
+	 <default param="maxpsffraction"><value>0.8</value></default>
+       </notequals>
+     </when>
+
    </constraints>
 
   </input>
