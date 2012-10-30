@@ -61,6 +61,130 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	Feather::Feather(){
+
+	}
+
+	Feather::~Feather(){
+
+	}
+	Feather::Feather(const ImageInterface<Float>& /*SDImage*/, const ImageInterface<Float>& /*INTImage*/){
+
+	 }
+
+	 Bool Feather::setEffectiveDishDiam(const Float /*xdiam*/, const Float /*ydiam=-1.0*/){
+		 return true;
+	 }
+
+	 void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+		 uy.resize( 13 );
+				 yamp.resize( 13 );
+				 ux.resize( 13 );
+				 xamp.resize(13);
+				fillXVectors( ux, uy );
+				 xamp[0]=yamp[0] = 1;
+				 xamp[1]=yamp[1] = 1;
+				 xamp[2]=yamp[2] = 0.9;
+				 xamp[3]=yamp[3] = 0.8;
+				 xamp[4]=yamp[4] = 0.7;
+				 xamp[5]=yamp[5] = 0.6;
+				 xamp[6]=yamp[6] = 0.5;
+				 xamp[7]=yamp[7] = 0.4;
+				 xamp[8]=yamp[8] = 0.3;
+				 xamp[9]=yamp[9] = 0.2;
+				 xamp[10]=yamp[10] = 0.1;
+				 xamp[11]=yamp[11] = 0.05;
+				 xamp[12]=yamp[12] = 0;
+	 }
+
+	 void Feather::fillXVectors( Vector<Float>& ux, Vector<Float>& uy ) const{
+		 ux[0]=uy[0] = 0;
+		 ux[1]=uy[1] = 5;
+		 ux[2]=uy[2] = 10;
+		 ux[3]=uy[3] = 20;
+		 ux[4]=uy[4] = 30;
+		 ux[5]=uy[5] = 40;
+		 ux[6]=uy[6] = 50;
+		 ux[7]=uy[7] = 60;
+		 ux[8]=uy[8] = 70;
+		 ux[9]=uy[9] = 80;
+		 ux[10]=uy[10]= 90;
+		 ux[11]=uy[11] = 100;
+		 ux[12]=uy[12] = 1800;
+	 }
+
+	 void Feather::getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+		 uy.resize( 13 );
+		 yamp.resize( 13 );
+		 ux.resize( 13 );
+		 xamp.resize(13);
+		 fillXVectors( ux, uy );
+		 xamp[0]=yamp[0] = 0;
+		 xamp[1]=yamp[1] = 0.05;
+		 xamp[2]=yamp[2] = 0.1;
+		 xamp[3]=yamp[3] = 0.2;
+		 xamp[4]=yamp[4] = 0.3;
+		 xamp[5]=yamp[5] = 0.4;
+		 xamp[6]=yamp[6] = 0.5;
+		 xamp[7]=yamp[7] = 0.6;
+		 xamp[8]=yamp[8] = 0.7;
+		 xamp[9]=yamp[9] = 0.8;
+		 xamp[10]=yamp[10] = 0.9;
+		 xamp[11]=yamp[11] = 1;
+		 xamp[12]=yamp[12] = 1;
+	 }
+
+
+	 void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+		 uy.resize( 13 );
+		 yamp.resize( 13 );
+		 ux.resize( 13 );
+		 xamp.resize(13);
+		 fillXVectors( ux, uy );
+		 for ( int i = 0; i < 13; i++ ){
+			    		 xamp[i] = rand() % 100;
+			    		 yamp[i] = rand() % 100;
+			    	 }
+
+	 }
+	    void Feather::getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+	    	 uy.resize( 13 );
+	    	 yamp.resize( 13 );
+	    	 ux.resize( 13 );
+	    	 xamp.resize(13);
+	    	 fillXVectors( ux, uy );
+	    	 for ( int i = 0; i < 13; i++ ){
+	    		 xamp[i] = rand() % 100;
+	    		 yamp[i] = rand() % 100;
+	    	 }
+	    }
+
+	    void Feather::getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+	    	uy.resize( 13 );
+	    	yamp.resize( 13 );
+	    	ux.resize( 13 );
+	    	xamp.resize(13);
+	    	fillXVectors( ux, uy );
+	    	for ( int i = 0; i < 13; i++ ){
+	    		xamp[i] = rand() % 100;
+	    		yamp[i] = rand() % 100;
+	    	}
+	    }
+	        void Feather::getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+	        	uy.resize( 13 );
+	        	yamp.resize( 13 );
+	        	ux.resize( 13 );
+	        	xamp.resize(13);
+	        	fillXVectors( ux, uy );
+	        	 for ( int i = 0; i < 13; i++ ){
+	        		    		 xamp[i] = rand() % 100;
+	        		    		 yamp[i] = rand() % 100;
+	        		    	 }
+	        }
+
+	        Bool Feather::saveFeatheredImage(const String& imagename){
+	        	return true;
+	        }
 
   void Feather::applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& fftim, Vector<Quantity>& extraconv){
     /*
