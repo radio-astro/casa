@@ -149,7 +149,9 @@ namespace casa{
     sigma = 1.0/(HPBW*HPBW);
     //    awEij.setSigma(sigma);
     //    Int bandID = getVLABandID(Freq,telescopeNames(0),im);
-    Int bandID = BeamCalc::Instance()->getBandID(Freq,telescopeNames(0));
+    Int bandID=0;
+    if (!isNoOp())
+      bandID = BeamCalc::Instance()->getBandID(Freq,telescopeNames(0));
     
     return bandID;
   }
