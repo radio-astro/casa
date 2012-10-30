@@ -69,7 +69,6 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                             sd.rcParams['verbose']=True
 
             (retValue,resultstats) = calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, format)
-            casalog.post('retValue=%s'%(retValue))
 
             # Output to terminal if outfile is not empty
             savestatistics(resultstats, outfile, overwrite)
@@ -98,9 +97,6 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 casalog.post('')
 
 def calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, stformat):
-    usr = get_user()
-    tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
-
     # Warning for multi-IF data
     if len(s.getifnos()) > 1:
         #print '\nWarning - The scantable contains multiple IF data.'
@@ -116,7 +112,7 @@ def calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, stf
 
     # Get statistics values
     formstr = get_formatter(stformat)
-    statsdict = get_stats(s, tmpfile, msk, formstr)
+    statsdict = get_stats(s, msk, formstr)
 
     resultstats = statsdict.pop('statslist')
 
@@ -128,18 +124,15 @@ def calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, stf
 
     if sd.rcParams['verbose']:
             # Print equivalent width
-            out = get_statstext(s, eqw, formstr)
-            outp = get_statstext(s, integratef, formstr)
-            rlines = write_stats(tmpfile, 'eqw', abclbl, out)
-            resultstats += rlines
-            for rl in rlines:
-                    casalog.post( rl )
+            out = get_statstext(s, 'eqw', abclbl, eqw, formstr)
+            resultstats += out
 
             # Print integrated flux
-            rlines = write_stats(tmpfile, 'Integrated intensity', intlbl, outp)
-            resultstats += rlines
-            for rl in rlines:
-                    casalog.post( rl )
+            outp = get_statstext(s, 'Integrated intensity', intlbl, integratef, formstr)
+            resultstats += outp
+
+            # to logger
+            casalog.post(out[:-2]+outp)
 
     # reshape statsdict for return
     for k in ['min','max']:
@@ -155,8 +148,7 @@ def savestatistics(stats, outfile, overwrite):
         if ( not os.path.exists(outfile) or overwrite ):
             #sys.stdout=open( outfile,'w' )
             f=open(outfile,'w')
-            for xx in stats:
-                    f.write( xx )
+            f.write(stats)
             f.close()
             #sd.rcParams['verbose']=verbsave
             #bbb=True
@@ -205,8 +197,11 @@ def get_mask(s, interactive, masklist, invertmask):
         casalog.post( 'Using full region' )
     return msk
 
-def get_stats(s, tmpfile, msk=None, formstr='3.3f'):
-    statslist = []
+def get_stats(s, msk=None, formstr='3.3f'):
+    usr = get_user()
+    tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
+    #statslist = []
+    statslist = ''
     d = {}
     statsname = ['max', 'min', 'max_abc', 'min_abc',
                  'sum', 'mean', 'median', 'rms',
@@ -289,41 +284,34 @@ def get_eqw(maxl, minl, suml, dabc):
 def get_integf(suml, dabc):
     return suml * dabc
 
-def get_statstext(s, val, formstr):
+def get_statstext(s, title, label, val, formstr):
+    sep = "--------------------------------------------------"
+    head = string.join([sep,string.join([" ","%s ["%(title),label,"]"]," "),sep],'\n')
+    tail = ''
+    out = head + '\n'
     if isinstance(val,list):
-        out = ''
         ns = len(val)
         for i in xrange(ns):
-            out += get_statstr(s, i, val[i], formstr)
+            out += get_statstr(s, i, val[i], formstr, sep)
     else:
-        out = get_statstr(s, 0, val, formstr)
+        out += get_statstr(s, 0, val, formstr, sep)
+    out += '\n%s'%(tail)
     return out
 
-def get_statstr(s, i, val, formstr):
+def get_statstr(s, i, val, formstr, separator):
     out = ''
     out += 'Scan[%d] (%s) ' % (s.getscan(i), s._getsourcename(i))
     out += 'Time[%s]:\n' % (s._gettime(i))
     if s.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (s.getbeam(i))
     if s.nif(-1) > 1: out +=  ' IF[%d] ' % (s.getif(i))
     if s.npol(-1) > 1: out +=  ' Pol[%d] ' % (s.getpol(i))
-    #out += '= %3.3f\n' % (eqw[i])
     out += ('= %'+formstr) % (val) + '\n'
-    out +=  "--------------------------------------------------\n "
+    out +=  "%s\n "%(separator)
     return out
 
-def write_stats(tmpfile, title, label, statsstr):
-    f = open(tmpfile,'w')
-    print >> f, "--------------------------------------------------"
-    print >> f, " ","%s ["%(title),label,"]"
-    print >> f, "--------------------------------------------------"
-    print >> f, statsstr
-    #print >> f, ''
-    f.close()
-    return get_text_from_file(tmpfile)
-
-def get_text_from_file(tmpfile):
-    f = open(tmpfile,'r')
+def get_text_from_file(filename):
+    f = open(filename,'r')
     rlines = f.readlines()
     f.close()
-    return rlines
+    return string.join(rlines,'')
 
