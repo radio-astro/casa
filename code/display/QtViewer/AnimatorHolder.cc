@@ -513,7 +513,7 @@ void AnimatorHolder::modeChanged( Mode mode ){
 void AnimatorHolder::modeChange(){
 	bool channelMode = ui.channelGroupBox->isChecked();
 	bool imageMode = ui.imageGroupBox->isChecked();
-	Mode mode = END_MODE;
+	Mode mode = CHANNEL_MODE;
 	if ( channelMode && !imageMode ){
 		mode = CHANNEL_MODE;
 		changePalette( ui.channelGroupBox, selectedColor );
