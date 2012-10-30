@@ -270,10 +270,10 @@ namespace casa{
 		    // doimain.  No need to apply it to the
 		    // wt-functions.
 
-		    Timer tim;
-		    tim.mark();
+		    // Timer tim;
+		    // tim.mark();
 		    wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
-		    tim.show("WTerm: ");
+		    // tim.show("WTerm: ");
 		    // wTerm.applySky(cfWtBufMat, iw, cellSize, wScale, cfWtBuf.shape()(0)/4);
 
     		    IPosition PolnPlane(4,0,0,0,0),
@@ -898,7 +898,10 @@ namespace casa{
       threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
     //    threshold *= aTerm_p->getSupportThreshold()*0.1;
-    threshold *= aTerm_p->getSupportThreshold();
+    if (aTerm_p->isNoOp()) 
+      threshold *= 1e-3; // This is the threshold used in "standard" FTMchines
+    else
+      threshold *= aTerm_p->getSupportThreshold();
     //
     // Find the support size of the conv. function in pixels
     //
