@@ -12,13 +12,7 @@ def sdlist(infile, antenna, scanaverage, outfile, overwrite):
             sdutil.assert_infile_exists(infile)
             sdutil.assert_outfile_canoverwrite_or_nonexistent(outfile,'ASAP',overwrite)
 
-            #load the data with or without averaging
-            s=sd.scantable(infile,average=scanaverage,antenna=antenna)
-
-            s._summary(outfile)
-
-            # Clean up scantable
-            del s
+            dolist(infile, scanaverage, antenna, outfile)
 
             # DONE
         except Exception, instance:
@@ -26,3 +20,12 @@ def sdlist(infile, antenna, scanaverage, outfile, overwrite):
                 raise Exception, instance
                 return
 
+def dolist(infile,scanaverage,antenna,outfile):
+     #load the data with or without averaging
+    s=sd.scantable(infile,average=scanaverage,antenna=antenna)
+
+    s._summary(outfile)
+
+    # Clean up scantable
+    del s
+   
