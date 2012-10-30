@@ -1,8 +1,9 @@
 import os
 import sys
 from taskinit import *
-
+import sdutil
 import asap as sd
+from asap.scantable import is_scantable, is_ms
 
 def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
 
@@ -10,93 +11,67 @@ def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
 
 
         try:
+            # no scaling
+            if factor == 1.0:
+                casalog.post( "scaling factor is %s. No scaling" % factor )
+                return
+
             #load the data with or without averaging
-            if infile=='':
-                raise Exception, 'infile is undefined'
-
-            filename = os.path.expandvars(infile)
-            filename = os.path.expanduser(filename)
-            if not os.path.exists(filename):
-                s = "File '%s' not found." % (filename)
-                raise Exception, s
-
-            if outfile == '':
-                    outfile = infile.rstrip('/')+'_scaled'+str(factor)
-            if not overwrite and not outfile=='':
-                outfilename = os.path.expandvars(outfile)
-                outfilename = os.path.expanduser(outfilename)
-                if os.path.exists(outfilename):
-                    s = "Output file '%s' exist." % (outfilename)
-                    raise Exception, s
-
-            s=sd.scantable(infile,average=False,antenna=antenna)
+            sdutil.assert_infile_exists(infile)
 
             #check the format of the infile
-            if isinstance(infile, str):
-              #import os.path
-              #infile = os.path.expandvars(infile)
-              #infile = os.path.expanduser(infile)
-              #if os.path.isdir(infile) and os.path.exists(infile+'/table.info'):
-              #  if os.path.exists(infile+'/table.f1'):
-              if os.path.isdir(filename) and os.path.exists(filename+'/table.info'):
-                if os.path.exists(filename+'/table.f1'):
-                  format = 'MS2'
-                else:
-                  format = 'ASAP'
-              else:
-                  format = 'SDFITS'
-
-            if factor == 1.0:
-                  #print "scaling factor is %s. No scaling" % factor
-                  casalog.post( "scaling factor is %s. No scaling" % factor )
-                  return
-            elif isinstance( factor, str ):
-                  casalog.post( 'read factor from \'%s\'' %factor )
-                  f = open( factor )
-                  lines = f.readlines()
-                  f.close()
-                  del f
-                  for i in range( len(lines) ):
-                          lines[i] = lines[i].rstrip('\n')
-                          lines[i] = lines[i].split()
-                          for j in range( len(lines[i]) ):
-                                  lines[i][j] = float( lines[i][j] )
-                  factor = lines
-            #if outfile == 'none':
-            #  s.scale(factor, scaletsys, True)
-            #  s.save(infile, format, True)
-            #  if scaletsys:
-            #    print "Scaled spectra and Tsys by "+str(factor)
-            #  else:
-            #    print "Scaled spectra by "+str(factor)
-
-            #  del s
-            #else:
-            s2 = s.scale(factor, scaletsys, False)
-            if scaletsys:
-                    oldtsys=s._row_callback(s._gettsys, "Original Tsys")
-                    #print "Scaled spectra and Tsys by "+str(factor)
-            del s
-	    
-            if scaletsys:
-                    casalog.post( "Scaled spectra and Tsys by "+str(factor) )
-                    newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
+            if is_scantable(infile):
+                outform = 'ASAP'
+            elif is_ms(infile):
+                outform = 'MS2'
             else:
-                    #print "Scaled spectra by "+str(factor)
-                    casalog.post( "Scaled spectra by "+str(factor) )
-                    oldtsys=s2._row_callback(s2._gettsys, "Tsys (not scaled)")
+                outform = 'SDFITS'
 
-            s2.save(outfile, format, overwrite)
-            #print "Wrote scaled data to %s file, %s " % (format, outfile)
-            casalog.post( "Wrote scaled data to %s file, %s " % (format, outfile) )
-            del s2
+            project = sdutil.get_default_outfile_name(infile,
+                                                      outfile,
+                                                      '_scaled'+str(factor))
+            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
+                                                              outform,
+                                                              overwrite)
+
+            s = doscale(infile, antenna, factor, scaletsys)
+
+            sdutil.save(s, outfile, outform, overwrite)
+            casalog.post( "Wrote scaled data to %s file, %s " % (outform, outfile) )
+            del s
 
             # DONE
 
         except Exception, instance:
-                #print '***Error***',instance
-                casalog.post( str(instance), priority = 'ERROR' )
+                sdutil.process_exception(instance)
                 raise Exception, instance
                 return
 
 
+def doscale(infile, antenna, factor, scaletsys):
+    s=sd.scantable(infile,average=False,antenna=antenna)
+
+    if isinstance( factor, str ):
+        casalog.post( 'read factor from \'%s\'' %factor )
+        f = open( factor )
+        lines = f.readlines()
+        f.close()
+        del f
+        for i in range( len(lines) ):
+            lines[i] = lines[i].rstrip('\n')
+            lines[i] = lines[i].split()
+            for j in range( len(lines[i]) ):
+                lines[i][j] = float( lines[i][j] )
+        thefactor = lines
+    else:
+        thefactor = factor
+
+    s2 = s.scale(thefactor, scaletsys, False)
+    casalog.post( "Scaled spectra and Tsys by "+str(factor) )
+
+    if scaletsys:
+        oldtsys=s._row_callback(s._gettsys, "Original Tsys")
+        newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
+    else:
+        oldtsys=s2._row_callback(s2._gettsys, "Tsys (not scaled)")
+    return s2

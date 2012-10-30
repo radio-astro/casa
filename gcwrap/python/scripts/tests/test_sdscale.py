@@ -159,11 +159,11 @@ class sdscale_test0(unittest.TestCase,sdscale_unittest_base):
         """Test 001: Existing outfile with overwrite=False"""
         os.system('cp -r %s %s'%(self.rawfile,self.outfile))
         try:
-            res=sdscale(infile=self.rawfile,outfile=self.outfile)
+            res=sdscale(infile=self.rawfile,factor=2.0,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('Output file \'%s\' exist.'%(self.outfile))
+            pos=str(e).find('Output file \'%s\' exists.'%(self.outfile))
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
