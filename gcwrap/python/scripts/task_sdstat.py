@@ -14,20 +14,11 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 
         casalog.origin('sdstat')
 
-        restorer = None
-
         ###
         ### Now the actual task code
         ###
-        retValue={}
-        ## if os.environ.has_key( 'USER' ):
-        ##     usr = os.environ['USER']
-        ## else:
-        ##     import commands
-        ##     usr = commands.getoutput( 'whoami' )
-        usr = get_user()
-        tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
-        resultstats = []
+        restorer = None
+        verbsave=sd.rcParams['verbose']
         try:
             sdutil.assert_infile_exists(infile)
 
@@ -72,73 +63,16 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 
             sdutil.set_doppler(s, doppler)
 
-	    # Warning for multi-IF data
-	    if len(s.getifnos()) > 1:
-		#print '\nWarning - The scantable contains multiple IF data.'
-		#print '          Note the same mask(s) are applied to all IFs based on CHANNELS.'
-		#print '          Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0))
-		casalog.post( 'The scantable contains multiple IF data.', priority='WARN' )
-		casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority='WARN' )
-		casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0)), priority='WARN' )
-
-
             # If outfile is set, sd.rcParams['verbose'] must be True
-            verbsave=sd.rcParams['verbose']
             if ( len(outfile) > 0 ):
                     if ( not os.path.exists(outfile) or overwrite ):
                             sd.rcParams['verbose']=True
 
-            # Get mask
-            msk = get_mask(s, interactive, masklist, invertmask)
-
-            # Get statistics values
-            formstr = get_formatter(format)
-            statsdict = get_stats(s, tmpfile, msk, formstr)
-                    
-            resultstats = statsdict['statslist']
-
-	    # Get unit labels
-            (abclbl,intlbl,xunit,intunit) = get_unit_labels(s, specunit, fluxunit)
-
-            # Equivalent width and integrated intensities
-            (eqw,integratef) = get_eqw_and_integf(s, statsdict)
-
-            if sd.rcParams['verbose']:
-                    # Print equivalent width
-                    out = get_statstext(s, eqw, formstr)
-                    outp = get_statstext(s, integratef, formstr)
-                    rlines = write_stats(tmpfile, 'eqw', abclbl, out)
-                    resultstats += rlines
-                    for rl in rlines:
-                            casalog.post( rl )
-                            
-                    # Print integrated flux
-                    rlines = write_stats(tmpfile, 'Integrated intensity', intlbl, outp)
-                    resultstats += rlines
-                    for rl in rlines:
-                            casalog.post( rl )
-                            
-            # Put into output dictionary
-            for name in ['rms','stddev','max','min','sum','median','mean']:
-                retValue[name] = statsdict[name]
-            retValue['min_abscissa'] = qa.quantity(statsdict['min_abc'],xunit)
-            retValue['max_abscissa'] = qa.quantity(statsdict['max_abc'],xunit)
-            retValue['eqw']=qa.quantity(eqw,xunit)
-            retValue['totint']=qa.quantity(integratef,intunit)
+            (retValue,resultstats) = calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, format)
+            casalog.post('retValue=%s'%(retValue))
 
             # Output to terminal if outfile is not empty
-            if ( len(outfile) > 0 ):
-                    if ( not os.path.exists(outfile) or overwrite ):
-                            #sys.stdout=open( outfile,'w' )
-                            f=open(outfile,'w')
-                            for xx in resultstats:
-                                    f.write( xx )
-                            f.close()
-                            sd.rcParams['verbose']=verbsave
-                            #bbb=True
-                    else:
-                            #print '\nFile '+outfile+' already exists.\nStatistics results are not written into the file.\n'
-                            casalog.post( 'File '+outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
+            savestatistics(resultstats, outfile, overwrite)
 
             return retValue
     
@@ -149,6 +83,8 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 raise Exception, instance
                 return
         finally:
+                # restore rcParams
+                sd.rcParams['verbose']=verbsave
                 try:
                         # Restore header information in the table
                         if restorer is not None:
@@ -160,6 +96,74 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 except:
                         pass
                 casalog.post('')
+
+def calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, stformat):
+    usr = get_user()
+    tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
+
+    # Warning for multi-IF data
+    if len(s.getifnos()) > 1:
+        #print '\nWarning - The scantable contains multiple IF data.'
+        #print '          Note the same mask(s) are applied to all IFs based on CHANNELS.'
+        #print '          Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0))
+        casalog.post( 'The scantable contains multiple IF data.', priority='WARN' )
+        casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority='WARN' )
+        casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0)), priority='WARN' )
+
+
+    # Get mask
+    msk = get_mask(s, interactive, masklist, invertmask)
+
+    # Get statistics values
+    formstr = get_formatter(stformat)
+    statsdict = get_stats(s, tmpfile, msk, formstr)
+
+    resultstats = statsdict.pop('statslist')
+
+    # Get unit labels
+    (abclbl,intlbl,xunit,intunit) = get_unit_labels(s, specunit, fluxunit)
+
+    # Equivalent width and integrated intensities
+    (eqw,integratef) = get_eqw_and_integf(s, statsdict)
+
+    if sd.rcParams['verbose']:
+            # Print equivalent width
+            out = get_statstext(s, eqw, formstr)
+            outp = get_statstext(s, integratef, formstr)
+            rlines = write_stats(tmpfile, 'eqw', abclbl, out)
+            resultstats += rlines
+            for rl in rlines:
+                    casalog.post( rl )
+
+            # Print integrated flux
+            rlines = write_stats(tmpfile, 'Integrated intensity', intlbl, outp)
+            resultstats += rlines
+            for rl in rlines:
+                    casalog.post( rl )
+
+    # reshape statsdict for return
+    for k in ['min','max']:
+        statsdict['%s_abscissa'%(k)] = qa.quantity(statsdict.pop('%s_abc'%(k)),xunit)
+    for (k,v,u) in [('eqw',eqw,xunit),('totint',integratef,intunit)]:
+        statsdict[k] = qa.quantity(v,u)
+
+    return (statsdict,resultstats)
+
+
+def savestatistics(stats, outfile, overwrite):
+    if ( len(outfile) > 0 ):
+        if ( not os.path.exists(outfile) or overwrite ):
+            #sys.stdout=open( outfile,'w' )
+            f=open(outfile,'w')
+            for xx in stats:
+                    f.write( xx )
+            f.close()
+            #sd.rcParams['verbose']=verbsave
+            #bbb=True
+        else:
+            #print '\nFile '+outfile+' already exists.\nStatistics results are not written into the file.\n'
+            casalog.post( 'File '+outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
+
 
 def get_formatter(format):
     format=format.replace(' ','')
