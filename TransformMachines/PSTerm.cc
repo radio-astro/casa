@@ -28,6 +28,9 @@
 #include <synthesis/TransformMachines/PSTerm.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //
@@ -67,18 +70,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    AlwaysAssert(psCtor_p.null()==False, SynthesisFTMachineError);
     Int nx=screen.shape()(0), ny=screen.shape()(1);
     Int convOrig=nx/2;
-    Float xpart,ypart;
+    Float xpart, psScale_local=psScale_p;
+#ifdef HAS_OMP
+    Int Nth=max(omp_get_max_threads()-2,1);
+#endif
+
     if (!isNoOp())
       {
 	for (Int i=0; i<nx;i++)
 	  {
 	    xpart = square(i-convOrig);
+#pragma omp parallel default(none) firstprivate(xpart,convOrig, i) shared(psScale_local,ny,multiply) num_threads(Nth)
+   {
+#pragma omp for
 	    for (Int j=0;j<ny;j++)
 	      {
-		ypart = sqrt(xpart + square(j-convOrig))*psScale_p;
+		Float ypart;
+		ypart = sqrt(xpart + square(j-convOrig))*psScale_local;
 		if (multiply)  screen(i, j) *= SynthesisUtils::libreSpheroidal(ypart);
 		else           screen(i, j)  = SynthesisUtils::libreSpheroidal(ypart);
 	      }
+    }
 	  }
       }
   }
