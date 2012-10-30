@@ -2321,7 +2321,7 @@ Bool Deconvolver::mtclean(const Vector<String>& residuals,
 
     }           
 
-  return True;
+  return maxResidual <= threshold.getValue(String("Jy"));
 }
 
 

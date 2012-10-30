@@ -224,7 +224,6 @@ namespace casa {
 		QString qwidth;
 		QString qheight;
 		if ( width < 0.001 && height < 0.001 ) {
-		  fprintf( stderr, "in the 'g' spot..." );
 		    qwidth = QString("%1").arg(width,0,'g',5);
 		    qheight = QString("%1").arg(height,0,'g',5);
 		} else {

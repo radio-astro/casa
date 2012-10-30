@@ -282,14 +282,14 @@ FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMappe
 			}
 		}
 
-		// Extend across time
+		// Extend across frequency
 		if (growfreq_p > 0)
 		{
 			for (Int timestep_i=0;timestep_i<nTimesteps;timestep_i++)
 			{
 				for (Int pol_k=0;pol_k<nPols;pol_k++)
 				{
-					if ((100.0*acummTime(pol_k,timestep_i)/nChannels) >= growtime_p)
+					if ((100.0*acummTime(pol_k,timestep_i)/nChannels) >= growfreq_p)
 					{
 						// Flag all the channels for this polarization and timestep
 						for (Int chan_j=0;chan_j<nChannels;chan_j++)
@@ -302,14 +302,14 @@ FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMappe
 			}
 		}
 
-		// Extend across frequency
+		// Extend across time
 		if (growtime_p > 0)
 		{
 			for (Int chan_j=0;chan_j<nChannels;chan_j++)
 			{
 				for (Int pol_k=0;pol_k<nPols;pol_k++)
 				{
-					if ((100.0*acummFreq(pol_k,chan_j)/nTimesteps) >= growfreq_p)
+					if ((100.0*acummFreq(pol_k,chan_j)/nTimesteps) >= growtime_p)
 					{
 						// Flag all the timesteps for this polarization and channel
 						for (Int timestep_i=0;timestep_i<nTimesteps;timestep_i++)

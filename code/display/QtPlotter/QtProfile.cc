@@ -2349,8 +2349,60 @@ void QtProfile::setDisplayYUnits( const QString& unitStr ){
 	if ( !convertableUnits ){
 		displayUnit = "";
 	}
+	else {
+		postConversionWarning( displayUnit );
+	}
 	pixelCanvas->setDisplayYUnits( displayUnit );
 	this->specFitSettingsWidget->setDisplayYUnits( displayUnit );
+}
+
+void QtProfile::postConversionWarning( QString unitStr ){
+	if ( unitStr == ConverterIntensity::KELVIN ){
+		if ( z_xval.size() > 0 ){
+			//Calculate h nu/ k T where h is Plank's constant, k is boltzman's constant
+			//nu is observing frequency and T is the maximum temperature.
+			pair<double,double> freqTempPair = getMaximumTemperature( );
+			double proportion = ( QC::h.getValue() * freqTempPair.first ) / ( QC::k.getValue() * freqTempPair.second );
+			const float RATIO_THRESHOLD = 0.1;
+			if ( proportion > RATIO_THRESHOLD ){
+				//Calculate the Kelvin threshold 5 h nu / kB
+				double kelvinThreshold = ( 5 * QC::h.getValue() * freqTempPair.first ) / QC::k.getValue();
+				QString msg( "Warning: Brightness was calculated using the Raleigh Jeans approximation.  For source temperatures < " );
+				msg.append( QString::number(kelvinThreshold));
+				msg.append( " K errors are >~10%");
+				*itsLog << LogIO::WARN << msg.toStdString() << LogIO::POST;
+				profileStatus->showMessage( msg );
+			}
+		}
+	}
+}
+
+pair<double,double> QtProfile::getMaximumTemperature(){
+	//Convert xValues to Hz
+	Vector<float> xValues = z_xval;
+	const QString HERTZ = "Hz";
+	QString xAxisUnit(xaxisUnit.c_str());
+	if ( xAxisUnit != HERTZ ){
+		Converter* converter = Converter::getConverter( xAxisUnit, HERTZ );
+		for ( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
+			xValues[i] = converter->convert( xValues[i] );
+		}
+		delete converter;
+	}
+
+	//Convert the y values
+	Vector<float> yValues = getYValues();
+	ConverterIntensity::convert( yValues, xValues, yUnitPrefix + yUnit, ConverterIntensity::KELVIN, 0, "" );
+	int maxIndex = 0;
+	double max = numeric_limits<double>::min();
+	for( int i = 0; i < static_cast<int>(yValues.size()); i++ ){
+		if ( yValues[i] > max ){
+			max = yValues[i];
+			maxIndex = i;
+		}
+	}
+	pair<double,double> results( xValues[maxIndex], max);
+	return results;
 }
 
 void QtProfile::clearPaletteModes(){
