@@ -48,14 +48,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
         sel = sdutil.get_selector(in_scans=scanlist, in_ifs=iflist,
                                   in_pols=pollist, in_field=field,
                                   in_beams=beamlist)
-        try:
-            #Apply the selection
-            sorg.set_selection(sel)
-        except Exception, instance:
-            casalog.post( str(instance), priority = 'ERROR' )
-            raise Exception, instance
-            return
-        # For printing header information
+        sorg.set_selection(sel)
         ssel=sel.__str__()
         del sel
 
@@ -67,91 +60,11 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             s = sorg
         del sorg
 
-        # get telescope name
-        #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
-        antennaname = s.get_antennaname()
-
-        # determine current fluxunit
-        fluxunit_now = s.get_fluxunit()
-        if ( antennaname == 'GBT'):
-            if (fluxunit_now == ''):
-                casalog.post( "no fluxunit in the data. Set to Kelvin." )
-                s.set_fluxunit('K')
-                fluxunit_now = s.get_fluxunit()
-        casalog.post( "Current fluxunit = "+fluxunit_now )
-
-        # set flux unit string (be more permissive than ASAP)
-        if ( fluxunit == 'k' ):
-            fluxunit = 'K'
-        elif ( fluxunit == 'JY' or fluxunit == 'jy' ):
-            fluxunit = 'Jy'
-
-        # fix the fluxunit if necessary
-        if ( telescopeparm == 'FIX' or telescopeparm == 'fix' ):
-            if ( fluxunit != '' ):
-                if ( fluxunit == fluxunit_now ):
-                    casalog.post( "No need to change default fluxunits" )
-                else:
-                    s.set_fluxunit(fluxunit)
-                    casalog.post( "Reset default fluxunit to "+fluxunit )
-                    fluxunit_now = s.get_fluxunit()
-            else:
-                casalog.post( "no fluxunit for set_fluxunit", priority = 'WARN' )
-
-        elif ( fluxunit=='' or fluxunit==fluxunit_now ):
-            if ( fluxunit==fluxunit_now ):
-                casalog.post( "No need to convert fluxunits" )
-
-        elif ( type(telescopeparm) == list ):
-            # User input telescope params
-            if ( len(telescopeparm) > 1 ):
-                D = telescopeparm[0]
-                eta = telescopeparm[1]
-                casalog.post( "Use phys.diam D = %5.1f m" % (D) )
-                casalog.post( "Use ap.eff. eta = %5.3f " % (eta) )
-                s.convert_flux(eta=eta,d=D,insitu=True)
-            elif ( len(telescopeparm) > 0 ):
-                jypk = telescopeparm[0]
-                casalog.post( "Use gain = %6.4f Jy/K " % (jypk) )
-                s.convert_flux(jyperk=jypk,insitu=True)
-            else:
-                casalog.post( "Empty telescope list" )
-
-        elif ( telescopeparm=='' ):
-            if ( antennaname == 'GBT'):
-                # needs eventually to be in ASAP source code
-                casalog.post( "Convert fluxunit to "+fluxunit )
-                # THIS IS THE CHEESY PART
-                # Calculate ap.eff eta at rest freq
-                # Use Ruze law
-                #   eta=eta_0*exp(-(4pi*eps/lambda)**2)
-                # with
-                casalog.post( "Using GBT parameters" )
-                eps = 0.390  # mm
-                eta_0 = 0.71 # at infinite wavelength
-                # Ideally would use a freq in center of
-                # band, but rest freq is what I have
-                rf = s.get_restfreqs()[0][0]*1.0e-9 # GHz
-                eta = eta_0*pl.exp(-0.001757*(eps*rf)**2)
-                casalog.post( "Calculated ap.eff. eta = %5.3f " % (eta) )
-                casalog.post( "At rest frequency %5.3f GHz" % (rf) )
-                D = 104.9 # 100m x 110m
-                casalog.post( "Assume phys.diam D = %5.1f m" % (D) )
-                s.convert_flux(eta=eta,d=D,insitu=True)
-
-                casalog.post( "Successfully converted fluxunit to "+fluxunit )
-            elif ( antennaname in ['AT','ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43', 'CEDUNA', 'HOBART']):
-                s.convert_flux(insitu=True)
-
-            else:
-                # Unknown telescope type
-                casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
-
+        # convert flux
+        sdutil.set_fluxunit(s, fluxunit, telescopeparm)
 
         # set spectral axis unit
-        if ( specunit != '' ):
-            casalog.post( "Changing spectral axis to "+specunit )
-            s.set_unit(specunit)
+        sdutil.set_spectral_unit(s, specunit)
 
         # set rest frequency
         if ( specunit == 'km/s' and rfset ):
@@ -160,56 +73,12 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             s.set_restfreqs(freqs=fval)
 
         # reset frame and doppler if needed
-        if ( frame != '' ):
-            casalog.post( "Changing frequency frame to "+frame )
-            s.set_freqframe(frame)
-        else:
-            casalog.post( 'Using current frequency frame' )
-
-        if ( doppler != '' ):
-            if ( doppler == 'radio' ):
-                ddoppler = 'RADIO'
-            elif ( doppler == 'optical' ):
-                ddoppler = 'OPTICAL'
-            elif ( doppler == 'z' ):
-                ddoppler = 'Z'
-            else:
-                ddoppler = doppler
-
-            s.set_doppler(ddoppler)
-        else:
-            casalog.post( 'Using current doppler convention' )
+        sdutil.set_freqframe(s, frame)
+        sdutil.set_doppler(s, doppler)
 
         # Averaging
         # average over time (scantable is already scan averaged if necessary)
-        if ( timeaverage and not scanaverage):
-            if tweight=='none':
-                del s
-                errmsg = "Please specify weight type of time averaging"
-                raise Exception,errmsg
-            stave=sd.average_time(s,scanav=scanaverage, weight=tweight)
-        else:
-            # No time averaging
-            stave = s
-        del s
-
-        # average over polarization
-        if ( polaverage ):
-            if pweight=='none':
-                del stave
-                errmsg = "Please specify weight type of polarization averaging"
-                raise Exception,errmsg
-            np = stave.npol()
-            if ( np > 1 ):
-                spave=stave.average_pol(weight=pweight)
-            else:
-                # only single polarization
-                casalog.post( "Single polarization data - no need to average" )
-                spave=stave
-        else:
-            # No pol averaging
-            spave=stave
-        del stave
+        spave = sdutil.doaverage(s, scanaverage, timeaverage, tweight, polaverage, pweight)
 
         # Grid scantable
         if plottype == 'grid':
@@ -472,7 +341,7 @@ def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             # DONE
 
     except Exception, instance:
-        casalog.post( str(instance), priority = 'ERROR' )
+        sdutil.process_exception(instance)
         raise Exception, instance
         return
 
