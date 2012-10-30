@@ -17,12 +17,9 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
             sdutil.assert_infile_exists(infile)
             filename = sdutil.get_abspath(infile)
 
-	    if (outfile != ''):
-	        project = outfile.rstrip('/')
-	    else:
-	        project = infile.rstrip('/')
-	        if not overwrite:
-		    project = project + '_f'
+            project = sdutil.get_default_outfile_name(infile, outfile, '_f')
+            if len(outfile)==0 and overwrite:
+                project = filename
 
             sdutil.assert_outfile_canoverwrite_or_nonexistent(project,outform,overwrite)
 
@@ -59,19 +56,16 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
 	    # (CAS-3096). If not, print warning message and exit.
 	    outformat = outform.upper()
 	    if (outformat == 'MS'): outformat = 'MS2'
-	    if overwrite and (project == infile.rstrip('/')) and (outformat != format):
+	    if overwrite and (sdutil.get_abspath(project) == sdutil.get_abspath(infile)) and (outformat != format):
 		    msg = "The input and output data format must be identical when "
 		    msg += "their names are identical and overwrite=True. "
 		    msg += "%s and %s given for input and output, respectively." % (format, outformat)
 	            raise Exception, msg
 	    
             # Do at least one
-	    docmdflag = True
-	    if (len(flagrow) == 0) and (len(maskflag) == 0) and (not clip):
-                    if not interactive:
-			    raise Exception, 'No flag operation specified.'
-		    # interactive flagging only
-                    docmdflag = False
+            docmdflag = ((len(flagrow)+len(maskflag)>0) or clip)
+            if (not docmdflag) and (not interactive):
+                raise Exception, 'No flag operation specified.'
 
             print_summary(s, plotlevel)
 
@@ -112,21 +106,6 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
             posterior_plot(s, project, unflag, plotlevel)
 
             # Now save the spectrum and write out final ms
-            if ( (outform == 'ASCII') or (outform == 'ascii') ):
-                    outform = 'ASCII'
-                    spefile = project + '_'
-            elif ( (outform == 'ASAP') or (outform == 'asap') ):
-                    outform = 'ASAP'
-                    spefile = project
-            elif ( (outform == 'SDFITS') or (outform == 'sdfits') ):
-                    outform = 'SDFITS'
-                    spefile = project
-            elif ( (outform == 'MS') or (outform == 'ms') or (outform == 'MS2') or (outform == 'ms2') ):
-                    outform = 'MS2'
-                    spefile = project
-            else:
-                    outform = 'ASAP'
-                    spefile = project
 
 	    # Commented out on 19 Apr 2012. (CAS-3986)
             #if overwrite and os.path.exists(outfilename):
@@ -140,10 +119,10 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
 	    if modified_molid:
 		    s._setmolidcol_list(molids)
 	    
-            s.save(spefile,outform,overwrite)
-	    
+            s.save(project,outformat,overwrite)
+
             if outform!='ASCII':
-                    casalog.post( "Wrote output "+outform+" file "+spefile )
+                    casalog.post( "Wrote output "+outformat+" file "+project )
 
             del s
 
@@ -184,7 +163,7 @@ def doflag(s, flagmode, maskflag, clip, clipminmax, clipoutside, flagrow, unflag
             uthres = max(clipminmax)
             doclip = (uthres > dthres)
             
-    ans = prior_plot(s, clip, doclip, uthres, dthres, clipoutside, flagrow, unflag, masks, plotlevel)
+    ans = prior_plot(s, clip, uthres, dthres, clipoutside, flagrow, unflag, masks, plotlevel)
 
     if ans.upper() == 'Y':
             if clip and doclip:
@@ -227,33 +206,22 @@ def print_summary(s, plotlevel):
         #casalog.post( s._summary() )
         s._summary()
 
-def prior_plot(s, clip, doclip, uthres, dthres, clipoutside, flagrow, unflag, defaultmask, plotlevel):
+def prior_plot(s, clip, uthres, dthres, clipoutside, flagrow, unflag, defaultmask, plotlevel):
     if ( abs(plotlevel) > 0 ):
         flgmode = 'unflag' if unflag else 'flag'
         nr = s.nrow()
         np = min(nr,16)
         if nr >16:
             casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
-        masks16 = []
-        if clip:
-            for row in xrange(np):
-                if doclip:
-                    masks16.append(array(s._getclipmask(row, uthres, dthres, clipoutside, unflag)))
-                else:
-                    nchan = s.nchan(s.getif(row))
-                    masks16.append([False]*(nchan))
-        elif (len(flagrow) > 0):
-            for row in xrange(np):
-                nchan = s.nchan(s.getif(row))
-                masks16.append([(row in flagrow) and not (unflag)]*nchan)
 
-        myp = init_plotter(plotlevel)
+        myp = init_plotter(plotlevel=plotlevel)
 
         myp.set_panels(rows=np,cols=0,nplots=np)
         myp.legend(loc=1)
         label0='Spectrum'
         label1='previously flagged data'
         label2='current flag masks'
+        idefaultmask = logical_not(array(defaultmask))
         for row in xrange(np):
                 myp.subplot(row)
                 x = s._getabcissa(row)
@@ -265,11 +233,19 @@ def prior_plot(s, clip, doclip, uthres, dthres, clipoutside, flagrow, unflag, de
                 else:
                         oldmskarr = array(s._getmask(row))
 
-                masks = masks16[row] if len(masks16)>0 else defaultmask
-
-                marr = logical_not(array(masks))
-                allmsk = logical_and(marr,oldmskarr)
-                plot_data(myp,x,y,logical_not(allmsk),0,label0)
+                if clip:
+                    if uthres == dthres:
+                        marr = array([True]*nchan)
+                    else:
+                        #marr = logical_not(array(s._getclipmask(row, uthres, dthres, clipoutside, unflag)))
+                        marr = array(s._getclipmask(row, uthres, dthres, (not clipoutside), unflag))
+                elif len(flagrow) > 0:
+                    #marr = logical_not(array([(row in flagrow) and (not unflag)]*nchan))
+                    marr = array([(row not in flagrow) or unflag]*nchan)
+                else:
+                    marr = idefaultmask
+                allmsk = logical_not(logical_and(marr,oldmskarr))
+                plot_data(myp,x,y,allmsk,0,label0)
                 plot_data(myp,x,y,oldmskarr,2,label1)
                 plot_data(myp,x,y,marr,1,label2)
                 xlim=[min(x),max(x)]
@@ -321,7 +297,7 @@ def plot_data(myp,x,y,msk,color=0,label=None):
     ym = ma.masked_array(y,mask=msk)
     myp.plot(x,ym)
 
-def init_plotter(colormap=None,plotlevel=None):
+def init_plotter(colormap=["green","red","#dddddd","#777777"],plotlevel=None):
     f=get_frame('sdflag')
     #myp = f.f_locals['myp']
     myp = f.f_globals['myp'] if f.f_globals.has_key('myp') else None
