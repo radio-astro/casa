@@ -2113,8 +2113,7 @@ void STGrid2::setScantableList( const vector<ScantableWrapper> &v )
 
 ScantableWrapper STGrid2::getResultAsScantable( int tp )
 {
-  Table::TableType ttype = (tp==0) ? Table::Memory : Table::Plain ;
-  ScantableWrapper sw( ttype ) ;
+  ScantableWrapper sw( tp ) ;
   CountedPtr<Scantable> s = sw.getCP() ;
   s->setHeader( dataList_[0].getCP()->getHeader() ) ;
   Table tout, tin ;

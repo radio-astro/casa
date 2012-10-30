@@ -863,7 +863,7 @@ void Scantable::applyChanFlag( uInt whichrow, const std::vector<bool>& msk, uCha
 
 void Scantable::flagRow(const std::vector<uInt>& rows, bool unflag)
 {
-  if ( selector_.empty() && (rows.size() == table_.nrow()) )
+  if (selector_.empty() && (rows.size() == table_.nrow()) && !unflag)
     throw(AipsError("Trying to flag whole scantable."));
 
   uInt rowflag = (unflag ? 0 : 1);

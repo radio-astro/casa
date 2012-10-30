@@ -359,12 +359,17 @@ class fitter:
         linear equations for the related parameters.
 
         For example a two component gaussian fit where the amplitudes are
-        constraint by amp1 = 2*amp2
-        needs a constraint   
+        constraint by amp1 = 2*amp2 and paramaters for the two components
+        in the order [amp1,peakv1,sigma1,amp2,peakv2,sigma2]
+        needs a constraint
 
-            add_constraint([1, 0, 0, -2, 0, 0, 0], 0)
+            add_constraint([1, 0, 0, -2, 0, 0], 0)
 
-        a velocity difference of v2-v1=17
+        as the linear equation is
+            
+            1*amp1 + 0*peakv1 + 0*sigma1 -2*amp2 + 0*peakv2 + 0*sigma2 = 0
+        
+        and similarly for a velocity difference of v2-v1=17
 
             add_constraint([0.,-1.,0.,0.,1.,0.], 17.)
 
