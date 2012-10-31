@@ -31,12 +31,12 @@
 #include <casa/BasicSL/String.h>
 #include <casa/BasicSL.h>
 #include <casa/Quanta/Quantum.h>
+#include <components/ComponentModels/GaussianBeam.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //Forward declaration
   template<class T> class ImageInterface;
   template<class T> class Vector;
-  class GaussianBeam;
   class CoordinateSystem;
   // <summary> Class that contains functions needed for feathering</summary>
 
@@ -47,10 +47,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //default constructor
     Feather();
     //Constructor 
-    Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage);
+    Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdScale=1.0);
     //Destructor
     virtual ~Feather();
     //set the SDimage and Int images 
+    void setSDScale(Float sdscale=1.0);
     void setSDImage(const ImageInterface<Float>& SDImage);
     void setINTImage(const ImageInterface<Float>& IntImage);
     //set and get effective dish diameter to be used in feathering function
@@ -80,7 +81,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void fillXVectors( Vector<Float>& ux, Vector<Float>& uy ) const;
     static void applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& newbeam, Vector<Quantity>& extraconv);
 
-
+  private:
+    CountedPtr<ImageInterface<Float> > lowIm_p;
+    CountedPtr<ImageInterface<Float> > highIm_p;
+    CountedPtr<ImageInterface<Complex> > cwImage_p;
+    CountedPtr<ImageInterface<Complex> > cwHighIm_p;
+    void getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
+		  Vector<Float>& uy, Vector<Float>& yamp, ImageInterface<Complex>& ftimage);
+    //calculate the complex weight image to apply on the interf image
+    void calcCWeightImage();
+    void applyFeather();
+    GaussianBeam hBeam_p;
+    GaussianBeam lBeam_p;
+    Float dishDiam_p;
+    Bool cweightCalced_p;
+    Bool cweightApplied_p;
+    Float sdScale_p;
   };
 
 
