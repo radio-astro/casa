@@ -56,7 +56,7 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
 	    # (CAS-3096). If not, print warning message and exit.
 	    outformat = outform.upper()
 	    if (outformat == 'MS'): outformat = 'MS2'
-	    if overwrite and (sdutil.get_abspath(project) == sdutil.get_abspath(infile)) and (outformat != format):
+	    if overwrite and (os.path.samefile(project,infile)) and (outformat != format):
 		    msg = "The input and output data format must be identical when "
 		    msg += "their names are identical and overwrite=True. "
 		    msg += "%s and %s given for input and output, respectively." % (format, outformat)

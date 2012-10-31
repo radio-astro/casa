@@ -10,6 +10,9 @@ import traceback
 qatl = casac.quanta()
 
 def get_abspath(filename):
+    return os.path.abspath(expand_path(filename))
+
+def expand_path(filename):
     return os.path.expanduser(os.path.expandvars(filename))
 
 def assert_infile_exists(infile=None):
@@ -18,7 +21,7 @@ def assert_infile_exists(infile=None):
 
     filename = get_abspath(infile)
     if not os.path.exists(filename):
-        mesg = "File '%s' not found." % (filename)
+        mesg = "File '%s' not found." % (infile)
         raise Exception, mesg
 
 
@@ -26,7 +29,7 @@ def get_default_outfile_name(infile=None, outfile=None, suffix=None):
     if (outfile == ""):
         res = infile.rstrip("/") + suffix
     else:
-        res = outfile
+        res = outfile.rstrip("/")
     return res
 
 
@@ -34,7 +37,7 @@ def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overw
     if not overwrite and (outform.upper != "ASCII"):
         filename = get_abspath(outfile)
         if os.path.exists(filename):
-            mesg = "Output file '%s' exists." % (filename)
+            mesg = "Output file '%s' exists." % (outfile)
             raise Exception, mesg
 
 
@@ -167,7 +170,6 @@ def normalise_restfreq(in_restfreq):
 def set_restfreq(s, restfreq):
     rfset = (restfreq != '') and (restfreq != [])
     if rfset:
-##         molids = s._getmolidcol_list()
         s.set_restfreqs(normalise_restfreq(restfreq))
 
 def set_spectral_unit(s, specunit):
@@ -297,16 +299,20 @@ def save(s, outfile, outform, overwrite):
     assert_outfile_canoverwrite_or_nonexistent(outfile,
                                                outform,
                                                overwrite)
-    if ( (outform == 'ASCII') or (outform == 'ascii') ):
-            outform_local = 'ASCII'
-    elif ( (outform == 'ASAP') or (outform == 'asap') ):
-            outform_local = 'ASAP'
-    elif ( (outform == 'SDFITS') or (outform == 'sdfits') ):
-            outform_local = 'SDFITS'
-    elif ( (outform == 'MS') or (outform == 'ms') or (outform == 'MS2') or (outform == 'ms2') ):
-            outform_local = 'MS2'
-    else:
-            outform_local = 'ASAP'
+##     if ( (outform == 'ASCII') or (outform == 'ascii') ):
+##             outform_local = 'ASCII'
+##     elif ( (outform == 'ASAP') or (outform == 'asap') ):
+##             outform_local = 'ASAP'
+##     elif ( (outform == 'SDFITS') or (outform == 'sdfits') ):
+##             outform_local = 'SDFITS'
+##     elif ( (outform == 'MS') or (outform == 'ms') or (outform == 'MS2') or (outform == 'ms2') ):
+##             outform_local = 'MS2'
+##     else:
+##             outform_local = 'ASAP'
+    outform_local = outform.upper()
+    if outform_local == 'MS': outform_local = 'MS2'
+    if outform_local not in ['ASAP','ASCII','MS2','SDFITS']:
+        outform_local = 'ASAP'
 
     outfilename = get_abspath(outfile)
     if overwrite and os.path.exists(outfilename):
@@ -475,22 +481,28 @@ class scantable_restore_impl(scantable_restore_interface):
         if self.rfset:
             self.scntab._setmolidcol_list(self.molids)
 
-def get_interactive_mask(s, masklist, invert=False):
-    new_mask=sd.interactivemask(scan=s)
-    if (len(masklist) > 0):
-        new_mask.set_basemask(masklist=masklist,invert=invert)
-        
-    new_mask.select_mask(once=False,showmask=True)
-    # Wait for user to finish mask selection
-    finish=raw_input("Press return to calculate statistics.\n")
-    new_mask.finish_selection()
-    
-    # Get final mask list
-    msk=new_mask.get_mask()
-    #msks=s.get_masklist(msk)
+def interactive_mask(s, masklist, invert=False, purpose=None):
+    new_mask = init_interactive_mask(s, masklist, invert)
+    msk = get_interactive_mask(new_mask, purpose)
+    finalize_interactive_mask(new_mask)
     del new_mask
     return msk
 
+def init_interactive_mask(s, masklist, invert=False):
+    new_mask = sd.interactivemask(scan=s)
+    if (len(masklist) > 0):
+        new_mask.set_basemask(masklist=masklist,invert=invert)
+    new_mask.select_mask(once=False,showmask=True)
+    return new_mask
+
+def get_interactive_mask(obj, purpose=None):
+    # Wait for user to finish mask selection
+    finish=raw_input("Press return %s.\n"%(purpose))
+    return obj.get_mask()
+
+def finalize_interactive_mask(obj):
+    obj.finish_selection()
+    
 def process_exception(e):
     casalog.post(traceback.format_exc(),'SEVERE')
     casalog.post(str(e),'ERROR')

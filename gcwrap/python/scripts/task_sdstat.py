@@ -169,7 +169,7 @@ def get_mask(s, interactive, masklist, invertmask):
     msk = None
     if interactive:
         # Interactive masking
-        msk = sdutil.get_interactive_mask(s, masklist, False)
+        msk = sdutil.interactive_mask(s, masklist, False, purpose='to calculate statistics')
         msks = s.get_masklist(msk)
         if len(msks) < 1:
             #print 'No channel is selected. Exit without calculation.'
