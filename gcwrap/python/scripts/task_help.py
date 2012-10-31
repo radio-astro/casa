@@ -45,6 +45,7 @@ def toolhelp():
     print ' im : Imaging utilities'
     print ' me : Measures utilities'
     print ' ms : MeasurementSet (MS) utilties'
+    print ' msmd : MS metadata accessors'
     print ' mp : MS plotting (data (amp/phase) versus other quantities)'
     print ' qa : Quanta utilities'
     print ' pm : PlotMS utilities'
