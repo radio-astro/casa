@@ -1,4 +1,4 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+,<<<<<<<<<<<<<,<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -39,6 +39,9 @@
 % JO 2011-06-07 added negative channel widths
 % JO 2011-10-06 edits for Release 3.3.0
 % JO 1012-04-23 edits for Release 3.4.0
+% DP 2012-09-21 edits for improved wvrgcal section
+% JO 2012-10-18 Release 4.0.0 edits
+% GM 2012-10-30 Further r4.0.0 edits, incl lin feed poln
 
 \chapter{Synthesis Calibration}
 \label{chapter:cal}
@@ -52,7 +55,7 @@
 
 This chapter explains how to calibrate interferometer
 data within the CASA task system.  Calibration is the process
-of determining the complex correction factors that must be 
+of determining the net complex correction factors that must be 
 applied to each visibility in order to make them as close as
 possible to what an idealized interferometer would measure, such
 that when the data is imaged an accurate picture of the sky
@@ -70,11 +73,11 @@ parameter names!
 \label{section:cal.tasks}
 
 {\bf Alert:} The calibration table format has changed in CASA
-3.4. From now on, calibration tables are independent of the MS that
+3.4. From now on, calibration tables are largely independent of the MS that
 they were created from and can be applied to any MS. We recommend
 using the new calibration table format throughout and recreate them
-when possible (only important when the user switches between CASA 3.3
-to 3.4 during calibration). If absolutely necessary, old calibration
+when possible (only important when the user switches from CASA 3.3
+to 3.4 or 4.1 during calibration). If absolutely necessary, old calibration
 tables can be converted to the new format using the task {\tt
   caltabconvert}, but some information was not stored in the old
 tables and cannot be filled into the new tables. When old calibration
@@ -105,7 +108,10 @@ There are helper tasks to create, manipulate, and explore calibration
 tables:
 \begin{itemize}
    \item {\tt accum} --- Accumulate incremental calibration solutions
-      into a cumulative cal table (\S~\ref{section:cal.tables.accum}),
+      into a cumulative cal table (\S~\ref{section:cal.tables.accum})
+      ({\bf ALERT:} The {\tt accum} task is generally no longer recommended
+      for most calibration scenarios.  Please write to the NRAO CASA
+      helpdesk  if you need support using {\tt accum}.),
    \item {\tt applycal} --- Apply calculated calibration solutions
       (\S~\ref{section:cal.correct.apply}),
    \item {\tt clearcal} --- Re-initialize the calibration for a
@@ -133,9 +139,8 @@ tasks that are recently added to the suite:
    \item {\tt cvel} --- Regrid a spectral MS onto a new frequency
       channel system
       (\S~\ref{section:cal.other.cvel}),
-   \item {\tt gencal} --- Create a calibration table from lists,
-      including options for delays, antenna position errors, and 
-      amplitude and phase adjustment
+   \item {\tt gencal} --- Create a calibration tables from metadata
+     such as antenna position offsets, gaincurves and opacities 
       (\S~\ref{section:cal.prior.gencal}),
    \item {\tt wvrgcal} --- Generate a gain table based on Water Vapour
      Radiometer data (for ALMA use - \S~\ref{section:cal.prior.wvrgcal}),
@@ -149,7 +154,11 @@ tasks that are recently added to the suite:
    \item {\tt uvsub} --- Subtract the transform of a model image from
      the uv data (\S~\ref{section:cal.other.uvsub}),
    \item {\tt statwt} --- Recalcuate the data weights based on their
-     scatter (\S~\ref{section:cal.other.statwt}).  
+     scatter (\S~\ref{section:cal.other.statwt}),
+   \item {\tt conjugatevis} --- Change the signs of visibility phases 
+     (\S~\ref{section:cal.other.conjugatevis}).
+
+.  
 \end{itemize}
 These are not yet full-featured, and may have only rudimentary
 controls and options.
@@ -167,8 +176,8 @@ Information on other useful tasks and parameter setting can be found in:
       (\S~\ref{section:edit.plot.plotxy}),
     \item {\tt plotweather} --- plot the weather information of an MS
       and calculate atmospheric opacities (\S~\ref{section:cal.prior.opacity.evla}),
-   \item {\tt tflagdata} --- non-interactive data flagging
-      (\S~\ref{section:edit.tflagdata}),
+   \item {\tt flagdata} --- non-interactive data flagging
+      (\S~\ref{section:edit.flagdata}),
    \item data selection --- general data selection syntax
       (\S~\ref{section:io.selection}).
 \end{itemize}
@@ -209,12 +218,11 @@ This can be broken down into a number of discrete phases:
       antenna
       gain-elevation curves, atmospheric models, delays, and
       antenna position offsets. Use the
-      {\tt setjy} task (\S~\ref{section:cal.prior.models}) for flux
-      densities and models,
-      set the {\tt gaincurve} (\S~\ref{section:cal.prior.curves})
-      and {\tt opacity} (\S~\ref{section:cal.prior.opacity}) parameters 
-      in subsequent tasks, and use {\tt gencal} (\S~\ref{section:cal.prior.gencal})
-      for delay and antenna position offsets;
+      {\tt setjy} task (\S~\ref{section:cal.prior.models}) for
+      calibrator flux
+      densities and models, and use {\tt gencal} (\S~\ref{section:cal.prior.gencal})
+      for antenna position offsets, gaincurves, antenna efficiencies,
+      and opacities;
    \item {\bf Bandpass Calibration} --- solve
       for the relative gain of the system over the frequency channels 
       in the dataset (if needed), having pre-applied the prior
@@ -315,7 +323,7 @@ the insertion of other non-calibration steps
   are shown on the connectors.  Note that from the output solver
   through the accumulator only a single calibration type (e.g. {\tt
     'B'}, {\tt 'G'}) can be smoothed, interpolated or accumulated at a
-  time.  {\tt accum} is optional and all calibration files. The final
+  time.  {\tt accum} is optional (and not recommended as of v4.0). The final
   set of cumulative calibration tables of all types (accummulated or
   as a list of caltables) are then input to {\tt applycal} as shown in
   Figure~\ref{fig:casacalflow}. }
@@ -328,7 +336,7 @@ the calibration tasks.  The ``solver'' tasks ({\tt gaincal},
 {\tt bandpass}, {\tt blcal}, {\tt polcal}) take in the MS
 (which may have a calibration model attached) and previous calibration
 tables, and will output an ``incremental'' calibration table
-(it increments the previous calibration, if any).  This table
+(it is incremental to the previous calibration, if any).  This table
 can then be smoothed using {\tt smoothcal} if desired.
 
 You can optionally accumulate the incremental calibration onto
@@ -359,10 +367,10 @@ for an example naming scheme).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{The Calibration of VLA data in CASA}
+\subsection{The Calibration of traditional VLA data in CASA}
 \label{section:cal.flow.vla}
 
-CASA supports the calibration of VLA data that is 
+CASA supports the calibration of traditional VLA data that is 
 imported from the Archive through the {\tt importvla} task.
 See \S~\ref{section:io.import.vla} for more information.
 
@@ -393,18 +401,18 @@ exporting with {\tt FITTP}, then this calibration will be in the
 data itself.  In this case, you do not want to re-apply these
 calibrations when processing in CASA.
 
-\subsection{Loading JVLA data in CASA}
+\subsection{Loading Jansky VLA data in CASA}
 \label{section:cal.flow.evla}
 
-JVLA data can be loaded into CASA either via {\tt importevla} or by
+Jansky VLA data can be loaded into CASA either via {\tt importevla} or by
 using the task {\tt importasdm}. Both tasks will convert ASDM raw data
 files into measurement sets. {\tt importasdm} will convert the data
 itself and the majority of the metadata. {\tt importevla} will run
-{\tt importasdm} followed by JVLA-specific corrections, like the
+{\tt importasdm} followed by Jansky VLA-specific corrections, like the
 application of the on-line flags (e.g. times when the subreflector was
 not in place or the an antenna was not on source), an option to clip
 values that are exactly zero (as of 2010, such values still may appear
-in the JVLA raw data), and flagging for shadowing.
+in the VLA raw data), and flagging for shadowing.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -421,7 +429,7 @@ is carried out.  These include
       telescopes),
    \item {\bf gain curves} --- antenna gain-elevation dependence,
    \item {\bf atmospheric optical depth} --- attenuation of the signal
-      by the atmosphere, correcting for its elevation dependence.
+      by the atmosphere, including correcting for its elevation dependence.
    \item {\bf flux density models} --- establish the flux density
       scale using ``standard'' calibrator sources, with models for
       resolved calibrators,
@@ -440,7 +448,7 @@ We now deal with these in turn.
 \subsection{System Temperature Correction}
 \label{section:cal.prior.tsys}
 
-Some telescopes, including the JVLA and the VLBA, record the
+Some telescopes, including the VLA and the VLBA, record the
 visibilities in the form of raw {\it correlation coefficient} 
 with weights proportional to the number of bits correlated.
 The correlation coefficient is the fraction of the total signal
@@ -452,7 +460,7 @@ level of on-line calibration (TBD).
 
 {\bf ALERT:} There is as yet no mechanism available in {\tt importvla}
 or in the calibration tasks to use the system temperature information
-provided by the VLA/JVLA on-line system to calibrate JVLA or VLBA data
+provided by the VLA/Jansky VLA on-line system to calibrate Jansky VLA or VLBA data
 in raw form.  This includes VLA data taken after the Modcomp turn-over
 in late June 2007.  You may pass the data through AIPS first.  You can
 also just forge ahead with standard calibration.  The drawback to this
@@ -464,7 +472,7 @@ calibrator observations or self-calibration will remain in the data.
 \label{section:cal.prior.curves}
 
 Large antennas (such as the 25-meter antennas used
-in the JVLA and VLBA) have a forward gain and efficiency that changes with
+in the VLA and VLBA) have a forward gain and efficiency that changes with
 elevation. Gain curve calibration involves compensating for the effects of
 elevation on the amplitude of the received signals at each antenna.
 Antennas are not absolutely rigid, and so their effective collecting
@@ -476,39 +484,15 @@ observing wavelength.  By design, this effect is usually minimized
 the gain decreasing at higher and lower elevations.  Gain curves are
 most often described as 2nd- or 3rd-order polynomials in zenith angle.
 
-Gain curve calibration has been implemented in CASA for the JVLA and
-VLA (only), with gain curve polynomial coefficients available directly
-from the CASA data repository.  To make gain curve corrections for
-JVLA and VLA data, set {\tt gaincurve=True} for any of the calibration
-tasks.
+Gain curve calibration has been implemented in CASA for the Jansky VLA
+and old VLA (only), with gain curve polynomial coefficients available
+directly from the CASA data repository.  To make gain curve and
+antenna efficiency corrections for VLA data, use {\tt gencal} with
+{\tt caltable='gceff'}. 
 
-{\bf ALERT:} The {\tt gaincurve} parameter must be supplied
-to any calibration task that allows pre-application of the prior
-calibration (e.g. {\tt bandpass}, {\tt gaincal}, {\tt applycal}).
-This should be done consistently through the calibration process.
-In future updates we will add the capability to {\tt gencal}
-(\S~\ref{section:cal.prior.gencal}) to create a calibration table for this.
 
-For example, to pre-apply the gaincurve during gain calibration:
-\small
-\begin{verbatim}
-  gaincal('data.ms','cal.G0',gaincuve=True, solint=0.,refant=11)
-\end{verbatim}
-\normalsize
-{\bf NOTE:} Set {\tt gaincurve=False} if you are not using E/VLA data.
-
-The gain curve will be calculated per timestamp.  Upon execution of a
-calibration task (e.g., {\tt gaincal}, {\tt bandpass}, {\tt applycal}, 
-etc.), the gain
-curve data appropriate to the observing frequencies will be
-automatically retrieved from the data repository and applied.
-
-{\bf ALERT:} Currently, gain-curves for E/VLA are built into
-the CASA system and this is what is applied when {\tt gaincurve=True}.
-Therefore, the application of the gain-curves, if {\tt gaincurve=True},
-is allowed only if the E/VLA is set as the telescope of observation
-in the MS, otherwise an error will be generated.
-Set {\tt gaincurve=False} if you are not using VLA data.  
+{\bf ALERT:} 
+If you are not using VLA data, do not use gaincurve corrections.
 A general mechanism for incorporating gaincurve information for
 other arrays will be made available in future releases.
 The gain-curve information available for the E/VLA is
@@ -539,58 +523,42 @@ of these effects, tropospheric attenuation, using a plane-parallel
 approximation for the troposphere to estimate the elevation
 dependence.
 
-Opacity corrections are a component of calibration type 'T'.  To make
+To make
 opacity corrections in CASA, an estimate of the zenith opacity is
 required (see observatory-specific chapters for how to measure zenith
-opacity).  This is then supplied to the {\tt opacity} parameter in
-the calibration tasks, which can be a single value or a list of
-opacities with entries for the different spectral windows.
-
-{\bf ALERT:} The {\tt opacity} parameter must be supplied
-to any calibration task that allows pre-application of the prior
-calibration (e.g. {\tt bandpass}, {\tt gaincal}, {\tt applycal}).
-This should be done consistently through the calibration process.
-In future updates we will add the capability to {\tt gencal}
-(\S~\ref{section:cal.prior.gencal}) to create a calibration table for this.
-Furthermore, you currently can only supply a single value
-of {\tt opacity}, which will then be pre-applied to whatever 
-calibration task that you set it in.
-Generalizations to antenna- and time-dependent opacities, including
-derivation (from weather information) and solving (directly from the
-visibility data) capabilities, will be made available in the future.
-
-For example, if the zenith optical depth is $\tau=0.1$\,nepers, then
-use the following parameters:
+opacity).  This is then supplied to the {\tt caltype='opac'} parameter
+in {\tt gencal} which creates a calibration table with all the
+information. E.g. for data with two spectral windows, the inputs are
+like: 
 \small
 \begin{verbatim}
-  gaincal('data.ms', 'cal.G0', solint='inf', combine='',refant=11, opacity=0.1)
+gencal(vis='dataset.ms',
+       caltable='opacity.cal',
+       caltype='opac',
+       spw='0,1',
+       parameter=[0.0399,0.037])
 \end{verbatim}
 \normalsize
-The calibration task in this example will apply an
-elevation-dependent opacity correction (scaled to 0.1 nepers at the
-zenith for all antennas for this example) calculated at each 
-data sample before solving for gains on an ``infinite'' (up to scan
-boundaries) timescale. 
+
 
 If you do not have an externally supplied value for {\tt opacity}, for
 example from a VLA tip procedure, then you should either use an
 average value for the telescope, or leave it at zero and let
 your gain calibration compensate as best it can (e.g. that your 
 calibrator is at the same elevation as your target at approximately 
-the same time.
-As noted above, there are no facilities yet to estimate this from the
+the same time. As noted above, there are no facilities yet to estimate this from the
 data (e.g. by plotting Tsys vs. elevation).
 
-Below, we give instructions for determining {\tt opacity} for JVLA
+Below, we give instructions for determining {\tt opacity} for Jansky VLA
 data from weather statistics and VLA observations where tip-curve data
 is available.  It is beyond the scope of this cookbook to provide
 information for other telescopes.
 
 %%%%%
-\subsubsection{Determining opacity corrections for JVLA data}
+\subsubsection{Determining opacity corrections for VLA data}
 \label{section:cal.prior.opacity.evla}
 
-For the JVLA site, weather statistics and/or seasonal models that
+For the VLA site, weather statistics and/or seasonal models that
 average over many years of weather statistics prove to be reasonable good
 ways to estimate the opacity at the time of the observations. The task
 {\tt plotweather} calculates the opacity as a mix of both actual
@@ -684,20 +652,21 @@ applications compare the observed {\tt DATA} column with the Fourier
 transform of calibrator model when it is provided (if no model is
 specified, a point source at the phase center is assumed).  
 
-The {\tt setjy} task is then used to set the proper flux density and
-attaches a model image of the calibrator to the MS if specified. For
+The {\tt setjy} task is used to set the proper flux density and
+attaches a model image (if specified) of the calibrator to the MS. For
 sources that are recognized flux calibrators (listed in Tables
 \ref{table:fluxcal-table} and \ref{table:fluxcal-table-solarsystem}),
 {\tt setjy} can calculate the flux densities as a function of
 frequency (and time, for Solar System objects).  Otherwise, the flux
 densities should be manually specified.  
 
-For the JVLA, the default source models are customarily point sources
-defined by the Baars, Perley-Taylor 99, or Perley-Butler 2010 flux density
-scales ('Perley-Butler 2010' is standard by default),
-or point sources of unit flux density if the flux density is
-unknown. In fact, the model can be any image in Jy/pixel units (models
-typically generated by the {\tt clean} task).
+For the VLA, the default source models are customarily point sources
+defined by the Baars, Perley-Taylor 99, Perley-Butler 2010, or
+Perley-Butler 2013 flux density scales ('Perley-Butler 2010' is
+standard by default), or point sources of unit flux density if the
+flux density is unknown. In fact, the model can be any image in
+Jy/pixel units (models typically generated by the {\tt clean} task).
+
 
 Optionally, the MODEL column can be filled with the Fourier transform
 of (option {\tt usescratch=T} is {\tt setjy}, {\tt ft}, and {\tt
@@ -707,39 +676,45 @@ storage requirements are less demanding without the MODEL\_DATA column.
 
 \vspace{5mm}
 \begin{table}[h!]
-\caption{Recognized Flux Density Calibrators. Note that the JVLA uses
-J2000 calibrator names.
+\caption{Recognized Flux Density Calibrators. Note that the VLA uses
+J2000 calibrator names. CASA accepts alls trings that contain the
+names below. E.g. 'PKS 1934-638' will be recognized
         {\label{table:fluxcal-table}}}
 \begin{center}
-\begin{tabular}{|cccc|} \hline
-{\bf 3C Name}  & {\bf B1950 Name}& {\bf J2000 Name} & {\bf Alt. J2000 Name} \\
-  3C286        &  1328+307       &  1331+305       & J1331+3030\\
-  3C48         &  0134+329       &  0137+331       & J0137+3309\\
-  3C147        &  0538+498       &  0542+498       & J0542+4951\\
-  3C138        &  0518+165       &  0521+166       & J0521+1638\\
-  --           &  1934-638       &    --           & -- \\
-  3C295        &  1409+524       &  1411+522       & J1411+5212\\
+\begin{tabular}{|ccccc|} \hline
+ {\bf 3C Name}  & {\bf B1950 Name}& {\bf J2000 Name} & {\bf Alt. J2000
+   Name} & {\bf Standards}\\
+3C48  &  0134+329 &  0137+331 &  J0137+3309 & 1,3,4,5,6  \\
+3C123 &  0433+295 &  0437+296 &  J0437+2940 &      2 \\
+3C138 &  0518+165 &  0521+166 &  J0521+1638 &      1,3,4,5,6\\
+3C147 &  0538+498 &  0542+498 &  J0542+4951 &      1,3,4,5,6\\
+3C196 &  0809+483 &  0813+482 &  J0813+4813 &      1,2 \\
+3C286 &  1328+307 &  1331+305 &  J1331+3030 &      1,2,3,4,5,6\\
+3C295 &  1409+524 &  1411+522 &  J1411+5212 &      1,2,3,4,5,6\\
+ --   &  1934-638 &    --     &  J1939-6342 &      1,3,4,5,6\\
 \hline
 \end{tabular}
 \end{center}
+Standards are: (1) Perley-Butler 2010, (2) Perley-Butler 2013, (3) Perley-Taylor 99, (4) Perley-Taylor 95, (5) Perley 90, (6) Baars 
 \end{table}
+
 
 
 \vspace{5mm}
 \begin{table}[h!]
-\caption{Recognized Solar System Objects for Flux Calibration
+\caption{'Butler-JPL-Horizons 2012' recognized Solar System Objects for Flux Calibration
         {\label{table:fluxcal-table-solarsystem}}}
 \begin{center}
 \begin{tabular}{|l|} \hline
 \hline
 \multicolumn{1}{|c|}{Planets} \\
 
-Venus, Mars, Jupiter, Uranus, Neptune, Pluto\footnotemark[1]\\
+Venus\footnotemark[1], Mars\footnotemark[2], Jupiter\footnotemark[3], Uranus\footnotemark[4], Neptune\footnotemark[5]\\
 \hline
 \multicolumn{1}{|c|}{Moons}\\
-{\it Jupiter:} Io, Europa, Ganymede, Callisto\\
-{\it Saturn:}  Titan \\
-{\it Neptune:} Triton \\
+{\it Jupiter:}  Io, Europa, Ganymede, Callisto\\
+{\it Saturn:}  Titan\footnotemark[7] \\
+%{\it Neptune:} Triton \\
 %{\it Mars moons:} Phobos, Deimos\\
 %{\it Jupiter moons:} Io, Europa, Ganymede, Callisto\\
 %{\it Saturn moons:} Mimas, Enceladus, Tethys, Dione, Rhea, Titan, Hyperion\\
@@ -753,21 +728,81 @@ Venus, Mars, Jupiter, Uranus, Neptune, Pluto\footnotemark[1]\\
 %{\it Pluto moon:} Charon\\
 \hline
 \multicolumn{1}{|c|}{Asteroids}\\
-Ceres, Pallas\footnotemark[2], Vesta\footnotemark[2], Juno\footnotemark[2], Victoria\footnotemark[2], Davida\footnotemark[2]\\
+Ceres, Pallas\footnotemark[8], Vesta\footnotemark[8],
+Juno\footnotemark[8]\\
+%, Victoria\footnotemark[2], Davida\footnotemark[2]\\
 %Ceres, Pallas, Juno, Vesta, Astraea, Hygiea, Parthenope, Victoria\\
 %Davida, Interamnia\\
 \hline
 \end{tabular}
 \end{center}
 \footnotesize
-$^1$ Pluto alone.  No allowance is made for the possibility of Charon
-  being in the field.\\
-$^2$ not recommended for this release (The temperature is not yet adjusted
-   for varying distance from the Sun.  The model data can be scaled after
-   running setjy, but it is an involved process.)
+$^1$ Venus: model for $\sim300$\,MHz to 350\,GHz, no atmospheric lines
+(CO,H$_2$O,HDO, etc.)\\
+$^2$ Mars: tabulated as a function of time and frequency (30 - 1000GHz) based on 
+               Rudy el tal (1988), no atmopheric lines (CO, H20, H$_2$O$_2$, HDO, etc)\\
+$^3$ Jupiter: model for 30-1020GHz, does not include synchrotron
+emission\\
+$^4$ Uranus: model for 60-1800GHz, contains no rings or synchrotron.\\
+$^5$ Neptune: model for 2-2000GHz, the broad CO absorption line
+               is included, but contains no rings or synchrotron. \\
+
+$^7$ Titan: model for 53.3-1024.1GHz, include many spectral lines\\
+$^8$ not recommended (The temperature is not yet adjusted for
+                varying distance from the Sun.  The model data can be scaled
+                after running setjy, but it is an involved process.)
+
 \normalsize
 
 \end{table}
+
+
+
+% Butler-JPL-Horizons 2010:
+%
+%\vspace{5mm}
+%\begin{table}[h!]
+%\caption{Recognized Solar System Objects for Flux Calibration
+%        {\label{table:fluxcal-table-solarsystem}}}
+%\begin{center}
+%\begin{tabular}{|l|} \hline
+%\hline
+%\multicolumn{1}{|c|}{Planets} \\
+%
+%Venus, Mars, Jupiter, Uranus, Neptune, Pluto\footnotemark[1]\\
+%\hline
+%\multicolumn{1}{|c|}{Moons}\\
+%{\it Jupiter:} Io, Europa, Ganymede, Callisto\\
+%{\it Saturn:}  Titan \\
+%{\it Neptune:} Triton \\
+%%{\it Mars moons:} Phobos, Deimos\\
+%%{\it Jupiter moons:} Io, Europa, Ganymede, Callisto\\
+%%{\it Saturn moons:} Mimas, Enceladus, Tethys, Dione, Rhea, Titan, Hyperion\\
+%%Iapetus, Phoebe, Janus, Epimetheus, Helene, Telesto, Calypso, Atlas\\
+%%Prometheus, Pandora, Pan\\
+%%{\it Uranus moons:} Ariel, Umbriel, Titania, Oberon, Miranda, Cordelia\\
+%%Ophelia, Bianca, Cressida, Desdemona, Juliet, Portia, Rosalind\\
+%%Belinda, Puck\\
+%%{\it Neptune moons:} Triton, Nereid, Naiad, Thalassa, Despina, Galatea\\
+%%Larissa, Proteus\\
+%%{\it Pluto moon:} Charon\\
+%\hline
+%\multicolumn{1}{|c|}{Asteroids}\\
+%Ceres, Pallas\footnotemark[2], Vesta\footnotemark[2], Juno\footnotemark[2], Victoria\footnotemark[2], Davida\footnotemark[2]\\
+%%Ceres, Pallas, Juno, Vesta, Astraea, Hygiea, Parthenope, Victoria\\
+%%Davida, Interamnia\\
+%\hline
+%\end{tabular}
+%\end{center}
+%\footnotesize
+%$^1$ Pluto alone.  No allowance is made for the possibility of Charon
+%  being in the field.\\
+%$^2$ not recommended for this release (The temperature is not yet adjusted
+%   for varying distance from the Sun.  The model data can be scaled after
+%   running setjy, but it is an involved process.)
+%\normalsize
+%
+%\end{table}
 
 
 The inputs for {\tt setjy} are:
@@ -782,13 +817,12 @@ modimage            =         ''        #  File location for field model
 listmodels          =      False        #  List the available modimages for VLA
                                         #   calibrators or Tb models for Solar System
                                         #   objects
-scalebychan         =      False        #  scale the flux density on a per channel
-                                        #   basis or else on a per spw basis
+scalebychan         =       True        #  scale the flux density on a per channel basis
+                                        #   or else on a per spw basis
 fluxdensity         =         -1        #  Specified flux density [I,Q,U,V]; -1 will
                                         #   lookup values
 standard            = 'Perley-Butler 2010' #  Flux density standard
-usescratch          =      False        #  Will create if necessary and use the
-                                        #   MODEL_DATA
+usescratch          =      False        #  Will create if necessary and use the MODEL_DATA
 async               =      False        #  If true the taskname must be started using
                                         #   setjy(...)
 \end{verbatim}
@@ -809,7 +843,7 @@ Models of available calibrator sources can be listed by setting {\it
 that are in the paths where calibrator models for known telescopes are
 stored. It will also show all images in the working directory - any
 image there could potentially be a calibrator model. If the calibrator
-model is found by {\it listmodimages} it can be used in the {\it
+model is found by {\it listmodels} it can be used in the {\it
   modimage} parameter without a path.
 
 The {\tt fluxdensity} parameter can be used to specify the flux of the
@@ -826,10 +860,12 @@ wavelengths the majority of these sources become too weak and variable
 to be reliable flux estimators. Alternatives are thermal objects such
 as planets, moons, and asteroids. Those sources, however, are all
 Solar System objects, which implies that they move and may be
-(strongly) resolved. The {\tt standard='Butler-JPL-Horizons 2010'}
+(strongly) resolved. The {\tt standard='Butler-JPL-Horizons 2010'} and
+the recommended {\tt  standard='Butler-JPL-Horizons 2012'} (for more
+information on the implemented models, see a forthcoming memo)
 option of {\tt setjy} includes flux density calibration using Solar
 System objects. CASA currently supports the objects listed in
-Table~\ref{table:fluxcal-table-solarsystem}. These names are
+Table~\ref{table:fluxcal-table-solarsystem} for ALMA. These names are
 recognized when they are used in the 'field' parameter in {\tt setjy}.
 In that case, {\tt setjy} will obtain the geocentric distance and
 angular diameter at the time of the observation from a (JPL--Horizons)
@@ -842,7 +878,7 @@ asteroids.
 An example, using data from the M99 tutorial in 
 \url{http://casaguides.nrao.edu/index.php?title=CARMA_spectral_line_mosaic_M99}:
 
-{\tt setjy(vis='c0104I', field='MARS', spw='0~2', standard='Butler-JPL-Horizons 2010')}
+{\tt setjy(vis='c0104I', field='MARS', spw='0~2', standard='Butler-JPL-Horizons 2012')}
 
 Tip: Running casalog.filter('INFO1') before running setjy with a Solar
 System object may send the logger a reference to the temperature
@@ -850,8 +886,8 @@ measurement.  Use casalog.filter('INFO') to restore the normal logging
 level.
 
 The source model will be attached to the MS and applied to all
-calibration steps when {\tt usescratch=False}. {\tt usesratch=True
-  fills the MODEL\_DATA column with the Fourier transform of the
+calibration steps when {\tt usescratch=False}. {\tt usesratch=True}
+  fills the {\tt MODEL\_DATA} column with the Fourier transform of the
   model. As of CASA 3.4. we found that under some circumstances,
   creation of the MODEL column may prevent memory issues and if tasks
   fail, we recoomend to set {\tt usesratch=True}. Note that currently
@@ -887,7 +923,7 @@ The full-polarization flux density (I,Q,U,V) may also be explicitly provided:
 
 {\bf ALERT:} The apparent brightness of objects in the Solar System
 will vary with time (Fig.~\ref{fig:reldelfdperday}) because of the
-Earth's motion relative to them, if nothing else.  If the field {\it
+Earth's varying distance to them, if nothing else.  If the field {\it
   index} of a flux calibrator spans several days, you should run setjy
 more than once, limiting each run to a suitable timerange by using the
 timerange, scan, and/or observation selection parameters.  Note that
@@ -977,7 +1013,7 @@ The models available are:
 3C138_Q.im  3C147_Q.im  3C286_Q.im  3C48_Q.im
 \end{verbatim}
 
-(more calibrator models for the JVLA are available at\\
+(more calibrator models for the VLA are available at\\
 \url{https://science.nrao.edu/facilities/evla/data-processing/flux-calibrator-models-for-new-evla-bands}
 \normalsize
 These are all un-reconvolved images of AIPS CC lists.  
@@ -1026,12 +1062,12 @@ calibrator:
   # Limit 3C48 (fieldid=0) solutions to uvrange = 0-40 klambda
   gaincal(vis='ngc7538_XBAND.ms', caltable='cal.G', field='0',
           solint=60.0, refant='10', selectdata=True, uvrange='0~40klambda', 
-          append=False, gaincurve=False, opacity=0.0)
+          append=False)
 
   # Append phase-calibrator's solutions (no uvrange) to the same table
   gaincal(vis='ngc7538_XBAND.ms', caltable='cal.G', field='2', 
           solint=60.0, refant='10', selectdata=True, uvrange='', 
-          append=True, gaincurve=False, opacity=0.0)
+          append=True)
 
   # Fluxscale
   fluxscale(vis='ngc7538_XBAND.ms', caltable='cal.G', reference=['0137+331'],
@@ -1052,7 +1088,7 @@ while the following illustrates the use of of a model:
   # Solutions on both calibrators with no uvrange
   gaincal(vis='ngc7538_XBAND.ms', caltable='cal.G2', field='0,2',
           solint=60.0, refant='10', 
-          append=False, gaincurve=False, opacity=0.0)
+          append=False)
 
   # Fluxscale
   fluxscale(vis='ngc7538_XBAND.ms', caltable='cal.G2', reference=['0137+331'],
@@ -1081,13 +1117,16 @@ The {\tt gencal} task has the inputs:
 #  gencal :: Specify Calibration Values of Various Types
 vis                 =         ''        #  Name of input visibility file
 caltable            =         ''        #  The new/existing calibration table
-caltype             =         ''        #  The calibration type:
-                                        #   'amp','ph','sbd','mbd','antpos','antposvla'
+caltype             =         ''        #  The calibration type: 'amp','ph', 'sbd','mbd','
+                                        #   antpos','antposvla','tsys','evlagain','opac','
+                                        #   gc','gceff','eff'
 spw                 =         ''        #  Calibration spw(s) selection
 antenna             =         ''        #  Calibration antenna(s) selection
 pol                 =         ''        #  Calibration polarizations(s) selection
 parameter           =         []        #  The calibration values
-async               =      False        #  If true the taskname must be started using gencal(...)
+async               =      False        #  If true the taskname must be started using
+                                        #   gencal(...)
+
 \end{verbatim}
 \normalsize
 
@@ -1098,13 +1137,22 @@ Current antenna-based gencal options (caltype) are:
    \item {\tt 'ph'} --- phase correction
    \item {\tt 'sbd'} --- single-band delay (phase-frequency slope for each spw)
    \item {\tt 'mbd'} --- multi-band delay (phase-frequency slope over all spw)
-   \item {\tt 'antpos'} --- ITRF antenna position corrections
-     (automatic parameter lookup is supported)
-   \item {\tt 'antposvla'} --- VLA-centric antenna position corrections 
+   \item {\tt 'antpos'} --- ITRF antenna position corrections for the
+     Jansky VLA (automatic parameter lookup is supported)
+   \item {\tt 'antposvla'} --- old VLA-centric antenna position
+     corrections 
+   \item {\tt 'tsys'} --- Tsys from the SYSCAL table (ALMA)
+   \item {\tt 'evlagain'} --- EVLA switched-power gains (experimental)
+   \item {\tt 'opac'} --- Tropospheric opacity
+    \item {\tt 'gc'} --- Gain curve (zenith-angle-dependent gain) (VLA
+    only) (auto-lookup only)
+    \item {\tt 'gceff'} --- Antenna efficiency (sqrt(K/Jy)) (VLA only) (auto-lookup only)
+    \item {\tt 'eff'} --- Gain curve and efficiency (VLA only) (auto-lookup only)
 \end{itemize}
 
-The calibration specifications cannot be time-variable in the present
-implementation.  Calibration values can be assigned to each {\tt spw},
+The calibration parameter specifications cannot be time-variable in the present
+implementation (though some of them will introduce implicit
+time-dependence upon evaluation in the apply).  Calibration values can be assigned to each {\tt spw},
 {\tt antenna} and {\tt pol} selection, where applicable.  The list 
 of calibration values specified in {\tt parameter} must conform to
 the range of spectral windows, antennas, and polarizations specified
@@ -1137,10 +1185,10 @@ will be zero).  The phases in each spectral window will nominally be
 flattened, but any phase offsets between spectral windows will remain.
 (These can be corrected using {\tt caltype='phase'}, or via ordinary
 spectral-window-dependent phase calibration.)  For {\tt caltype='mbd'},
-the derived phase corrections are referred to zero frequency.  This
+the evaluated phase corrections are referred to zero frequency.  This
 causes a correction that is coherent over many spectral windows. 
 If the data are already coherent over many spectral windows and share
-a common multi-band delay (e.g., JVLA data), {\tt caltype='mbd'} 
+a common multi-band delay (e.g., VLA data, per baseband), {\tt caltype='mbd'} 
 corrections will maintain this coherence and flatten the 
 frequency-dependent phase.  Using {\tt caltype='sbd'} in this instance
 will introduce phase offsets among spectral windows that reflect
@@ -1150,7 +1198,7 @@ For antenna position corrections ({\tt caltype='antpos'}), the antenna
 position offsets are specified in the ITRF frame.  If the {\tt
   antenna} field is left empty, {\tt gencal} will try to look up the
 appropriate antenna position offsets at the time of the observation
-from the JVLA baseline webpage
+from the VLA baseline webpage
 \url{http://www.vla.nrao.edu/astro/archive/baselines/}.
 
 For VLA position corrections in the VLA-centric frame, use {\tt
@@ -1220,7 +1268,7 @@ In the following example, antenna position corrections in meters (in
 ITRF) for antenna EA09 (dBx=0.01, dBy=0.02, dBz=0.03) and for antenna
 EA10 (dBx=-0.03, dBy=-0.01, dBz=-0.02) are introduced.  Note that 
 three parameters are required for each antenna. The antenna offsets
-can be obtained for the 'JVLA/VLA Baseline Corrections' web page:
+can be obtained for the 'Jansky VLA/ old VLA Baseline Corrections' web page:
 {\url http://www.vla.nrao.edu/astro/archive/baselines}. The table
 given on this webpage has a format like:\\ 
 
@@ -1267,27 +1315,40 @@ gencal(vis='test.ms',caltable='test.antposvla',caltype='antposvla', \
        parameter=[0.01,0.02,0.03, -0.03,-0.01,-0.02])
 \end{verbatim}
 \normalsize
+
+{\tt gencal} is also the task to generate gaincurve, antenna
+efficiency, and opacity tables. The first two items can be determined
+together with {\tt caltype='gceff'} and the latter with {\tt
+  caltype='opac'}. These tables are treated just like any other
+calibration table and will be carried through the calibration
+steps. This method replaces the older method where 'gaincurve' and
+'opacity' keywords were present in calibration tasks such as {\tt
+  gaincal}, {\tt bandpass}, or {\tt applycal}.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Applying JVLA switched power  or ALMA Tsys
+\subsection{Applying Jansky VLA switched power  or ALMA Tsys
    using {\tt gencal}}
 \label{section:cal.prior.gencalevlagains}
-Noise diodes in the JVLA antennas can be used to pre-calibrate the
+Noise diodes in the Jansky VLA antennas can be used to pre-calibrate the
 data. The diodes follow an ON-OFF cycle and the power for both states is
-measured and recorded. This is called the 'JVLA switched power'
-calibration. To apply the calibration, the switched power data first needs to be
+measured and recorded. This is called the 'VLA switched power'
+calibration. To apply the calibration, the switched power data first
+needs to have been
 filled into the measurement set via {\tt importevla} and {\tt switchedpower=True}
-(see Sect.\,\ref{section:io.import.evla}). The second setp is to
+(see Sect.\,\ref{section:io.import.evla}). The second step is to
 create a calibration table vis {\tt gencal} and {\tt
   caltype='evlagain'}, like 
 
 \small
 \begin{verbatim}
-gencal(vis='test.ms',caltable='JVLAswitchedpower.cal',caltype='evlagain')
+gencal(vis='test.ms',caltable='VLAswitchedpower.cal',caltype='evlagain')
 \end{verbatim}
 \normalsize
 
 For ALMA the calibration of system temperature is done via hot loads
-and the data recorded similar to the JVLA in the measurement set (ALMA
+and the data recorded similar to the VLA in the measurement set (ALMA
 will provide measurement sets where these data are available. To
 derive the calibration table from it, use {\tt caltype='tsys'}:
 
@@ -1298,7 +1359,7 @@ gencal(vis='test.ms',caltable='ALMAtsys.cal',caltype='tsys')
 \normalsize
 
 
-This calibration tables created for ALMA or JVLA are then carried
+This calibration tables created for ALMA or VLA are then carried
 along all further calibration steps in the {\tt gaintable} parameter.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1338,33 +1399,43 @@ async               =      False        #  If true the taskname must be started 
 \normalsize
 
 The task {\tt wvrgcal} generates a gain table based on Water Vapor
-Radiometer (WVR) data and is used for ALMA data reduction. It is an interface to the executable
-``wvrgcal'' which is part of the CASA 3.4 distribution and can also be called from outside
-CASA. The wvrgcal software is based on the libair and libbnmin libraries which were developed
-by Bojan Nikolic at the University of Cambridge as part of EU FP6 ALMA Enhancement program.
+Radiometer (WVR) data and is used for ALMA data reduction. It is an
+interface to the executable ``wvrgcal'' which is part of the CASA 4.0
+distribution and can also be called from outside CASA. The wvrgcal
+software is based on the libair and libbnmin libraries which were
+developed by Bojan Nikolic at the University of Cambridge as part of
+EU FP6 ALMA Enhancement program.
 
-CASA 3.4 contains version 1.1.1 of wvrgcal. Source code of the stand-alone package and links 
-to documentation can be
-found at \url{http://www.mrao.cam.ac.uk/\~bn204/alma/wvrsoft.html}. In particular, there are
-two ALMA memos which describe the algorithms implemented in the software. They can be found
-at \url{http://www.mrao.cam.ac.uk/\~bn204/publications/2009/ALMAMemo587.pdf} and
-\url{http://www.mrao.cam.ac.uk/\~bn204/publications/2009/ALMAMemo588.pdf}.
+CASA 4.0 contains version 1.2.1 of wvrgcal. Source code of the
+stand-alone package and links to documentation can be found at
+\url{http://www.mrao.cam.ac.uk/\~bn204/alma/wvrsoft.html}. In
+particular, there are three ALMA memos (number 587, 588, and 593
+(submitted)) which describe the algorithms implemented in the
+software. They can be found at \url{http://www.alma.cl/almamemos}.
+The only recently submitted memo 593 can be found at
+\url{http://xxx.lanl.gov/pdf/1207.6069}.
 
-Briefly, wvrgcal follows a Bayesian approach to calculate the coefficients that convert the outputs of
-the ALMA 183 GHz water-vapor radiometers (mounted on each antenna) into estimates of path fluctuations 
-which can then be used to correct the observed interferometric visibilities.
+Briefly, wvrgcal follows a Bayesian approach to calculate the
+coefficients that convert the outputs of the ALMA 183 GHz water-vapor
+radiometers (mounted on each antenna) into estimates of path
+fluctuations which can then be used to correct the observed
+interferometric visibilities.
 
-The CASA task interface to wvrgcal follows closely the interface of the shell executable
-at the same time staying within the CASA task parameter conventions. 
+The CASA task interface to wvrgcal follows closely the interface of
+the shell executable at the same time staying within the CASA task
+parameter conventions.
 
-In ALMA data, the WVR measurements belonging to a given observation are contained in the ASDM
-for that observation. After conversion to an MS using {\tt importasdm}, the WVR information
-can be found in separate spectral windows (as of May 2012, it is still spectral window id 0).
-This spectral window must be present in the MS for wvrgcal to work.
+In ALMA data, the WVR measurements belonging to a given observation
+are contained in the ASDM for that observation. After conversion to an
+MS using {\tt importasdm}, the WVR information can be found in
+separate spectral windows (as of September 2012, it is still spectral
+window id 0).  This spectral window must be present in the MS for
+wvrgcal to work.
 
-The various features of wvrgcal are then controlled by a number of task parameters (see the list above). 
-They have default values which will work for ALMA data.
-An example for a typical wvrgcal call can be found in the ALMA CASA guide for the NGC 3256 analysis:
+The various features of wvrgcal are then controlled by a number of
+task parameters (see the list above).  They have default values which
+will work for ALMA data.  An example for a typical wvrgcal call can be
+found in the ALMA CASA guide for the NGC 3256 analysis:
 
 \small
 \begin{verbatim}
@@ -1373,21 +1444,93 @@ An example for a typical wvrgcal call can be found in the ALMA CASA guide for th
 \end{verbatim}
 \normalsize
 
-Here, {\tt vis} is the name of input visibility file (which as mentioned above also contains the
-WVR data in spectral window 0) and {\tt caltable} is the name of the output gain calibration table.
+Here, {\tt vis} is the name of input visibility file (which as
+mentioned above also contains the WVR data in spectral window 0) and
+{\tt caltable} is the name of the output gain calibration table.
 
-{\tt toffset} is the known time offset in seconds between the WVR measurements and the visibility integrations
-they are valid for. For ALMA, this offset is presently -1~s (which is also the default value).
+{\tt toffset} is the known time offset in seconds between the WVR
+measurements and the visibility integrations they are valid for. For
+ALMA, this offset is presently -1~s (which is also the default value).
 
-The parameter {\tt segsource} (segregate source) controls whether separate coefficients are calculated
-for each source. The default value True is the recommended one for ALMA.
-When {\tt segsource} is True, the subparameter {\tt tie} is available. It permits to form groups of
-sources for which common coefficients are calculated as well as possible.
+The parameter {\tt segsource} (segregate source) controls whether
+separate coefficients are calculated for each source. The default
+value True is the recommended one for ALMA.  When {\tt segsource} is
+True, the subparameter {\tt tie} is available. It permits to form
+groups of sources for which common coefficients are calculated as well
+as possible. The {\tt tie} parameter ensures best possible phase
+transfer between a group of sources. In general it is recommended to
+tie together all of the sources in a single Science Goal (in ALMA
+speak) and their phase calibrator(s).  The recommended maximum angular
+distance up to which two sources can be tied is 15$^\circ$.
 
 Finally, the parameter {\tt statsource} controls for which sources statistics are calculated and
 displayed in the logger. This has no influence on the generated calibration table.
 See the online help of wvrgcal for a brief explanation of the other
 parameters.
+
+
+\subsubsection{Statistical parameters shown in the logger output of {\tt wvrgcal}}
+
+{\tt wvrgcal} writes out a variety of information to
+the logger, including various statistical measures of the performance.
+This allows the user to judge whether WVR correction is appropriate
+for the ms, to check whether any antennas have problematic WVR values,
+and to examine the predicted performance of the WVR correction when
+applied.
+
+For each set of correction coefficients which are calculated (the
+number of coefficient sets are controlled by the parameters
+{\tt nsol}, {\tt segsource} and {\tt tie}), the wvrgcal output to the logger
+first of all shows the
+time sample, the individual temperatures of each of the four WVR
+channels and the elevation of the source in question at that time. 
+
+For each of these coefficient sets, it then gives the evidence of the
+bayesian parameter estimation, the calculated precipitable water
+vapour (PWV) and its error in mm, and the correction coefficients
+found for each WVR channel (dTdL).
+
+The output then shows the statistical information about the
+observation. First of all it gives the start and end times for the
+parts of the observation used to calculate these statistics
+(controlled by {\tt segsource}).  It then shows a break down for each
+of the antennas in the data set. This gives the antenna name and
+number; whether or not it has a WVR (column {\tt WVR}); whether or not
+it has been flagged (colum {\tt FLAG}); the RMS of the path length
+variation with time towards that antenna (column {\tt RMS}); and the
+discrepency between the RMS path length calculated separately for
+different WVR channels (column {\tt Disc.}). These values allow the
+user to see if an inidivdual WVR appears to have been suffering from
+problems during the observation, and to flag that antenna using {\tt
+  wvrflag} if necessary.
+
+This discrepancy value, {\tt Disc.}, can in addition be used as a simple
+diagnostic tool to evaluate whether or not the WVR correction caltable
+created by {\tt wvrgcal} should be applied. In the event of the WVR
+observations being contaminated by strong cloud emission in the
+atmosphere, the attempt by {\tt wvrgcal} to fit the water vapour line
+may not be successful, and applying the produced calibration table can
+in extremem cases reduce the quality of the data. However, these
+weather conditions should identified by a high value in the
+discrepancy column produced when running {\tt wvrgcal}.
+
+Although there have not currently been enough cases checked to give
+definitive limits, the available data sets as of summer 2012 suggest
+that discrepancy values of greather than a 1000 microns usually indicate
+strong cloud contamination of the WVR data, and the output calibration
+table should probably not be applied. If the values are between 100
+and 1000 microns, then the user should manually examine the
+phases before and after applying the caltable to decide if WVR
+correction is appropriate.
+
+After the antenna-by-antenna statistics, the output then displays some
+estimates of the performance of the {\tt wvrgcal} correction. 
+These are the thermal contribution from the water vapour to the path
+fluctuations per antenna (in microns), the largest path fluctuation
+found on a baseline (in microns), and the expected error on the path
+length calculated for each baseline due to the error in the
+coefficients (in microns). 
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1397,9 +1540,7 @@ parameters.
 Other {\it a priori} calibrations will be added to the 
 {\tt calibrater} ({\tt cb}) tool 
 in the near future.  These will include
-system temperature normalization (amplitude) corrections,
-tropospheric phase corrections derived from Water Vapor Radiometry
-(WVR) measurements, instrumental line-length corrections, etc.  Where
+instrumental line-length corrections, ionospheric corrections, etc.  Where
 appropriate, solving capabilities for these effects will also be
 added.
 
@@ -1408,7 +1549,9 @@ added.
 \section{Solving for Calibration --- Bandpass, Gain, Polarization}
 \label{section:cal.solve}
 
-These tasks actually solve for the unknown calibration parameters,
+The {\tt gaincal}, {\tt bandpass}, {\tt polcal}, and {\tt blcal}
+tasks actually solve for the unknown calibration parameters from the
+visibility data obtained on calibrator sources,
 placing the results in a calibration table.  They take as input
 an MS, and a number of parameters that specify any prior calibration
 or previous calibration tables to pre-apply before computing the
@@ -1477,7 +1620,7 @@ bandpass, a pointing, an observation of your target, or something else
 or a combination. The format for the scan intents of your observations
 are listed in the logger when you run {\tt listobs}. Minimum matching
 with wildcards will work, like '*BANDPASS*'. This is especially useful
-when multiple intents are attached to scans.  Fibally, {\tt
+when multiple intents are attached to scans.  Finally, {\tt
   observation} is an identifier to distinguish between different
 observing runs, mainly used for ALMA.
 
@@ -1510,8 +1653,7 @@ not accounted for in the model
 See \S~\ref{section:io.selection} for more on the selection parameters.
 
 %%%%%%
-\subsubsection{Prior Calibration and Correction: {\tt parang}, {\tt gaincurve} and
-   {\tt opacity} }
+\subsubsection{Prior Calibration and Correction: {\tt parang} }
 \label{section:cal.solve.pars.prior}
 
 These parameters control the on-the-fly application of various
@@ -1523,20 +1665,16 @@ measurement equation.  This is necessary for polarization calibration
 and imaging, or for cases where the parallactic angles are different
 for geographically spaced antennas and it is desired that the ordinary
 gain calibration not absorb the inter-antenna parallactic angle phase.  
-When dealing with only the parallel-hand data (e.g. RR, LL, XX, YY)
+When dealing with only the parallel-hand data (e.g. RR, LL, XX, YY),
+and an unpolarized calibrator model
 for a co-located array (e.g. the VLA or ALMA), you can set {\tt  parang=False} 
 and save some computational effort.  Otherwise, set {\tt parang=True} to apply
 this correction.
 
-There are two control parameters for applying Prior Calibration:
-\small
-\begin{verbatim}
-gaincurve    =      False   #   Apply VLA antenna gain curve correction
-opacity      =        0.0   #   Opacity correction to apply (nepers)
-\end{verbatim}
-\normalsize
-
-See \S~\ref{section:cal.prior} for more on {\bf Prior Calibration}.
+See \S~\ref{section:cal.prior} for more on {\bf Prior Calibration},
+including
+how to invoke {\tt gaincurve} and {\tt opacity} correction using
+{\tt gencal}.
 
 %%%%%%
 \subsubsection{Previous Calibration: {\tt gaintable},
@@ -1571,7 +1709,7 @@ lists, with an entry for each table in {\tt gaintable}.  The order is
 given by that in {\tt gaintable}.
 
 The {\tt gainfield} parameter specifies which fields from the
-respective {\tt gaintable} to use to apply.  This is a list,
+respective {\tt gaintable} to select for apply.  This is a list,
 with each entry a string or list of strings.  The default 
 {\tt ''} for an entry means to use all in that table.  For
 example,
@@ -1609,49 +1747,68 @@ or even
    gainfield = [ '0' ]
 \end{verbatim}
 \normalsize
-which is to take all.
+which is to take all for the second table in {\tt gaintable}. In addition, {\tt gainfield} can be specified by
+\small
+\begin{verbatim}
+   gainfield = [ 'nearest' ]
+\end{verbatim}
+\normalsize
+which selects the calibrator that is the spatially closest (in sky
+coordinates) to each of the selected
+MS fields specified in the {\tt field} parameter. This is particularly
+useful for running {\tt applycal} with a number of different sources
+to be calibrated in a single run.
+
 
 The {\tt interp} parameter chooses the interpolation scheme to be used
-when pre-applying the solution in the tables.  This interpolation is
-(currently) only in time.
-The choices are currently {\tt 'nearest'}, {\tt 'linear'}, and {\tt 'aipslin'}:
+when pre-applying the solution in the tables.  Interpolation in both
+time and frequency (for channel-dependent calibrations) are supported.
+The choices are currently {\tt 'nearest'} and {\tt 'linear'}, and 
+{\tt 'nearest'}, {\tt 'linear'}, {\tt cubic}, and {\tt spline} for 
+frequency-dependent interpolation.   Frequency-dependent interpolation
+is only relevant for channel-dependent calibration tables (like
+bandpasses)
+that are undersampled in frequency relative to the data.
+
 \begin{itemize}
-\item {\tt 'nearest'} just picks the entry nearest in time to the
+\item {\tt 'nearest'} just picks the entry nearest in time or freq to the
    visibility in question;
 
 \item {\tt 'linear'} interpolation calibrates each datum with
    calibration phases and amplitudes linearly 
-   interpolated from neighboring time values. In the case of phase,
+   interpolated from neighboring values. In the case of phase,
    this mode will assume that phase never jumps more than $180^\circ$
    between neighboring points, and so undersampled cycle-slips will
    not be corrected for.  Solutions will not be {\em extrapolated}
-   arbitrarily in time for data before the first solution or after
+   arbitrarily in time or frequency for data before the first solution or after
    the last solution; such data will be calibrated using {\tt
    'nearest'} to avoid unreasonable extrapolations.
 
+\item {\tt 'cubic'} interpolation forms a 3rd-order polynomial that
+   passes through the nearest 4 calibration samples (separately in
+   phase and amplitude
 
-\item {\tt 'aipslin'} emulates the classic AIPS interpolation mode with
-   linearly interpolated amplitudes and phases derived from
-   interpolation of the complex calibration values. While this method
-   avoids having to track cycle slips (which is unstable for solutions
-   with very low SNR), it will yield a phase interpolation which becomes
-   increasingly non-linear as the spanned phase difference increases. The
-   non-linearity mimics the behavior of {\tt interp='nearest'} as the spanned
-   phase difference approaches $180^\circ$ (the phase of the interpolated
-   complex calibration value initially changes very slowly, then rapidly
-   jumps to the second value at the midpoint of the interval).
+\item {\tt 'spline'} interpolation forms a cubic spline that
+   passes through the nearest 4 calibration samples (separately in
+   phase and amplitude
+
 \end{itemize}
+
+For each gaintable, specify the interpolation style in quotes, with
+the frequency-dependent interpolation style specified after a comma,
+if relevant.
 
 If the uncalibrated phase is changing rapidly, a {\tt 'nearest'}
 interpolation is not desirable. Usually, {\tt interp='linear'} is the
 best choice. For example,
 \small
 \begin{verbatim}
-   interp = [ 'nearest', 'linear' ]
+   gaintable=['gain','bandpass']
+   interp = [ 'nearest', 'linear,spline' ]
 \end{verbatim}
 \normalsize
-uses nearest ``interpolation'' on the first table, and linear
-on the second.
+uses nearest ``interpolation'' on the first table, and linear (in
+time) and spline (in freq) on the second.
 
 The {\tt spwmap} parameter sets the spectral window combinations to
 form for the {\tt gaintable}(s).  This is a list, or a list of lists,
@@ -1689,7 +1846,7 @@ minsnr              =        3.0        #  Reject solutions below this SNR
 \end{verbatim} 
 \normalsize
 
-The temporal solution interval is given by {\tt solint}. Optionally a
+The time and frequency (if relevant) solution interval is given by {\tt solint}. Optionally a
 frequency interval ofor each solution can be added after a comma,
 e.g. {\tt solint='60s,300Hz'}. Time units are in seconds unless
 specified differently. Frequency units can be either channels or Hz
@@ -1727,11 +1884,10 @@ will make a single solution for the entire dataset (for a given field
 and spw).  
 \small
 \begin{verbatim}
-   solint = 'inf,30'
-   combine = 'spw'
+   solint = 'inf,30ch'
 \end{verbatim}
-will calculate a solution for each scan, averaging over 30
-channels. The solutions will span across spw boundaries. 
+will calculate a bandpass solution for each scan, averaging over 30
+channels.
 
 You can specify multiple choices for combination:
 \small
@@ -1786,9 +1942,9 @@ append       =      False   #   Append solutions to (existing) table.  False wil
 \normalsize
 
 The {\tt solnorm} parameter toggles on the option to normalize the
-solution amplitudes after the solutions are obtained.  The exact
+solution after the solutions are obtained.  The exact
 effect of this depends upon the type of solution.  Not all tasks
-include this parameter.  
+use this parameter.  
 
 One should be aware when using {\tt solnorm} that if this is done
 in the last stage of a chain of calibration, then the part of 
@@ -1808,7 +1964,7 @@ Of course, this only matters if the table already exists.  If
 \subsection{Spectral Bandpass Calibration ({\tt bandpass})}
 \label{section:cal.solve.band}
 
-For channelized data, it is often desirable to solve for the gain
+For channelized data, it is usually desirable to solve for the gain
 variations in frequency as well as in time.  Variation in frequency
 arises as a result of non-uniform filter passbands or other frequency-dependent
 effects in signal transmission.  It is usually the case that these
@@ -1902,7 +2058,7 @@ enter the gain solution and make (probably subtle) adjustments to the
 flux scale.
 
 We finally note that {\tt solnorm=False} at the bandpass step in the
-calibration chain will in the end produce the correct results.  It
+calibration chain will still in the end produce the correct results.  It
 only means that there will be a part of what we usually think of the
 gain calibration inside the bandpass solution, particularly if
 {\tt bandpass} is run as the first step.
@@ -1915,7 +2071,7 @@ Calibration type {\tt 'B'} differs from {\tt 'G'} only in that it is
 determined for each channel in each spectral window.  It is possible
 to solve for it as a function of time, but it is most efficient to
 keep the {\tt 'B'} solving timescale as long as possible, and use {\tt
-'G'} or {\tt 'T'} for rapid frequency-independent time-scale variations.
+'G'} or {\tt 'T'} for frequency-independent rapid  time-scale variations.
 
 The {\tt 'B'} solutions are limited by the signal-to-noise ratio
 available per channel, which may be quite small.  It is therefore
@@ -1976,11 +2132,11 @@ spw = '0:4~59'                   # channels 4-59 of spw 0
 \end{verbatim}
 \normalsize
 This is not so critical for {\tt 'B'} solutions as for {\tt 'BPOLY'},
-as each channel is solved for independently, and poor solutions
-can be dropped.
+as each channel is solved for independently, and poor solutions at
+edges can be ignored.
 
 If you have multiple time solutions, then these will be applied using
-whatever interpolation scheme is specified in later tasks. 
+whatever time interpolation scheme is specified in later tasks. 
 
 The {\tt combine} parameter (\S~\ref{section:cal.solve.pars.solving}) 
 can be used to combine data across spectral windows, scans, and fields.
@@ -2066,13 +2222,12 @@ bandpass(vis='data.ms',          # input data set
 \label{section:cal.solve.gain}
 
 The fundamental calibration to be done on your interferometer data
-is to calibrate the antenna-based gains as a function of time in
-the various frequency channels and polarizations.  Some of
+is to calibrate the antenna-based gains as a function of time. Some of
 these calibrations are known beforehand (``a priori'') and others
 must be determined from observations of calibrators, or from observations
 of the target itself (``self-calibration'').
 
-It is best to have removed a (slowly-varying) ``bandpass'' from the
+It is best to have determined a (constant or slowly-varying) ``bandpass'' from the
 frequency channels by solving for the bandpass (see above).  Thus,
 the {\tt bandpass} calibration table would be input to {\tt gaincal} via
 the {\tt gaintable} parameter (see below).
@@ -2149,8 +2304,8 @@ possible to solve for the net effect using calibration type G.
 
 Generally speaking, type G can represent any per-spectral window
 multiplicative polarization- and time-dependent complex gain effect
-downstream of the polarizers.  (Polarization {\it independent} effects
-{\it upstream} of the polarizers may also be treated with G.)
+downstream of the polarizers.  (Polarization- and time- {\it independent} effects
+{\it upstream} of the polarizers may also be treated implicitly with G.)
 Multi-channel data (per spectral window) will be averaged in frequency
 before solving (use calibration type B to solve for
 frequency-dependent effects within each spectral window).
@@ -2164,7 +2319,7 @@ gaincal('data.ms',
         field='0,1',            # Restrict field selection
         solint=90.0,            # Solve for phase and amp on a 90s timescale
         gaincurve=True          # Note: gaincurve=False by default
-        refant=3)               #
+        refant='3')             #
 			        
 plotcal('cal.G','amp')          # Inspect solutions
 \end{verbatim}
@@ -2184,8 +2339,8 @@ phase reference may have jumps in the R--L phase, and the resulting
 polarization angle response will vary during the observation, thus
 corrupting the polarization imaging.
 
-To apply this solution to the calibrators and the target source (field
-2, say):
+To apply this solution to the calibrators (fields 0,1) and the target source (field
+2):
 \small
 \begin{verbatim}
 applycal('data.ms',
@@ -2199,7 +2354,7 @@ plotxy('data.ms',xaxis='channel',datacolumn='corrected',subplot=212)
 The calibrated data is written to the {\tt CORRECTED\_DATA} column, with 
 {\tt calwt=True} by default.
 
-{\bf Alert:} {\it Current} (as of June 2010)  JVLA data has no weights
+{\bf Alert:} {\it Current} (as of June 2010)  VLA data has no weights
 to the data. To avoid trouble, {\tt calwt=False} should be set for
 those data sets. Older VLA data should still be calibrated with  {\tt calwt=True}.
 
@@ -2354,19 +2509,23 @@ The inputs for fluxscale are:
 vis                 =         ''        #  Name of input visibility file (MS)
 caltable            =         ''        #  Name of input calibration table
 fluxtable           =         ''        #  Name of output, flux-scaled calibration table
-reference           =       ['']        #  Reference field name(s) (transfer flux scale FROM)
-transfer            =       ['']        #  Transfer field name(s) (transfer flux scale TO), '' ->
-                                        #   all
+reference           =       ['']        #  Reference field name(s) (transfer flux scale
+                                        #   FROM)
+transfer            =       ['']        #  Transfer field name(s) (transfer flux scale
+                                        #   TO), '' -> all
+listfile            =         ''        #  Name of listfile that contains the fit
+                                        #   information.  Default is  (no file).
 append              =      False        #  Append solutions?
-refspwmap           =       [-1]        #  Scale across spectral window boundaries.  See help
-                                        #   fluxscale
+refspwmap           =       [-1]        #  Scale across spectral window boundaries.  See
+                                        #   help fluxscale
+incremental         =      False        #  incremental caltable
 async               =      False        #  If true the taskname must be started using
                                         #   fluxscale(...)
 \end{verbatim}
 \normalsize
 
 Before running {\tt fluxscale}, one must have first run {\tt setjy} for the
-{\tt reference} sources and run a {\tt gaincal} on both {\tt reference}
+{\tt reference} sources and run a {\tt gaincal} that includes {\tt reference}
 and {\tt transfer} fields.  After running {\tt fluxscale} the output
 {\tt fluxtable} caltable will have been scaled such that the correct
 scaling will be applied to the {\tt transfer} sources.
@@ -2385,12 +2544,17 @@ fluxscale(vis='data.ms',
           transfer='0234+258, 0323+022')     # Select calibrators to scale
 \end{verbatim}
 \normalsize
-The output table, {\tt 'cal.Gflx'}, contains solutions that are properly scaled
-for all calibrators.
+
+
+The output table, {\tt 'cal.Gflx'}, contains either the scaling
+factors alone ({\tt incremental=T}) to be used alongside with the
+input gain table {\tt 'cal.G'}, or a scaled version of the gain table
+({\tt incremental=F}), that replaces it for the execution of {\tt applycal}.
+
 
 Note that the assertion that the gain solutions are independent of the
 calibrator includes the assumption that the gain amplitudes are
-strictly not systematically time dependent.  While synthesis antennas
+strictly not systematically time-dependent in any way.  While synthesis antennas
 are designed as much as possible to achieve this goal, in practice, a
 number of effects conspire to frustrate it.  When relevant, it is
 advisable to pre-apply {\tt gaincurve} and {\tt opacity} 
@@ -2399,6 +2563,13 @@ for the {\tt 'G'} solutions that will be flux-scaled (see
 \S~\ref{section:cal.prior} and \S~\ref{section:cal.solve.pars.prior}).
 When the {\tt 'G'} solutions are essentially constant for each
 calibrator separately, the fluxscale operation is likely to be robust.
+
+{\tt fluxscale} will report the fluxes of each spw for each source. In
+addition, it will attempt a fit across the spws of each source and
+report a spectral index and curvature
+($S\propto(\nu/\nu_0)^{\alpha+\beta*\log(\nu/\nu_0)}$)). This
+information can be subsequently used to build up a model for the
+spectral slope of a calibrator with the {\tt setjy} task if required. 
 
 The {\tt fluxscale} task can be executed on either {\tt 'G'} or {\tt
 'T'} solutions, but it should only be used on one of these types if
@@ -2523,10 +2694,10 @@ the baselines and thus causing problems in the solving.
 \label{section:cal.solve.pol}
 
 Full support for instrumental polarization calibration for the 
-circular feed basis (e.g., JVLA) is provided in CASA.  Support for 
-the linear feed basis (e.g., ALMA) will be deployed and documented
-for the general user in the 3.4 release.  The following examples
-assume the circular basis.
+circular feed basis (e.g., VLA) is provided in CASA.  Support for 
+the linear feed basis (e.g., ALMA) is now practical (as of v4.0)
+and is also described below.  The linear feed basis treatment
+will be expanded and streamlined for the v4.1 release.
 
 The inputs to {\tt polcal} are:
 \small
@@ -2593,6 +2764,10 @@ this after getting the D-terms from one of the above modes.  Requires
 the observation of a calibrator with known $Q+iU$ (or at least known $U/Q$).
 This will produce a calibration table of type {\tt 'X'}. 
 
+\item{\tt 'Dflls'} --- A specialized mode for instrumental
+polarization solving for the linear feed basis.  This will probably
+be consolidated with other options in a future release.
+
 \end{description}
 
 There are channelized solution modes for the above options.  For
@@ -2611,6 +2786,14 @@ the future, enabling more sensitive solutions.
 %%%%%%
 \subsubsection{Heuristics and Strategies for Polarization Calibration }
 \label{section:cal.solve.pol.hstics}
+
+
+{\bf ALERT:} This section concentrates on polarization calibration for
+the circular feed basis.  It will be generalized to include the linear
+feed basis for the v4.1 release.  See
+\S~\ref{section:cal.solve.pol.example2} for the currently supported
+processing steps for the linear feed basis.
+
 
 Fundamentally, with good ordinary gain (and bandpass, if relevant)
 calibration already in hand, good polarization calibration must
@@ -2645,7 +2828,7 @@ unpolarized & any & set $Q=U=0$ & {\tt 'D'} or {\tt 'Df'} & D-terms
   only \\
 known non-zero & 2+ scans & set $Q,U$ & {\tt 'D+X'} or 
   {\tt 'Df+X'} & D-terms and PA \\
-unknown & 3+ scans & ignored & {\tt 'D+QU'} or {\tt 'Df+QU'} &
+unknown & 2+ scans & ignored & {\tt 'D+QU'} or {\tt 'Df+QU'} &
   D-terms and source \\
 \hline
 \end{tabular}
@@ -2727,7 +2910,8 @@ bandpass (.bcal) solutions in subsequent polarization calibration steps.
 
 
 %%%%%%
-\subsubsection{A Polarization Calibration Example}
+\subsubsection{A Polarization Calibration Example - Circular Feed
+  Basis (e.g., VLA $\nu>1$ GHz)}
 \label{section:cal.solve.pol.example}
 
 In the following example, we do a standard {\tt 'D+QU'} solution on
@@ -2798,6 +2982,240 @@ D-table in {\tt gaintable}).
 A full processing example for continuum polarimetry can be found
 in \S~\ref{section:scripts.jupiter}.
 
+
+%%%%%%
+\subsubsection{A Polarization Calibration Example - Linear Feed
+  Basis (e.g., ALMA, VLA $\nu<1$ GHz)}
+\label{section:cal.solve.pol.example2}
+
+CASA v4.0.0 introduces supports for instrumental polarization 
+calibration for the linear feed basis at a level that is now
+practical for the general user.  Some details remain to be
+implemented with full flexibility, and much of what follows
+will be streamlined for the v4.1 release.
+
+Calibrating the instrumental polarization for the linear feed basis
+is somewhat more complicated than the circular feed basis because
+the polarization effects (source and instrument) appear in all
+four correlations at first or zeroth order (whereas for circular
+feeds, the polarization information only enters the parallel
+hand correlations at second order).   As a result, e.g., the 
+time-dependent gain calibration will be distorted by any non-zero 
+source polarization, and some degree of iteration will be required to
+isolate the gain calibration if the source polarization is not
+initially known.  These complications can actually be used to 
+advantage in solving for the instrumental calibration; in can
+be shown, for example, that a significantly linearly polarized
+calibrator enables a better instrumental polarization 
+solution than an unpolarized calibrator.
+
+In the following example, we show the processing steps for calibrating
+the instrumental polarization using a strongly ($>$ 5\%) polarized
+point-source calibrator (which is also the time-dependent gain
+calibrator) that has been observed over a range of parallactic angle
+(a single scan is not sufficient).  We assume that we have calibrated
+the gain, bandpass, and cross-hand delay as described above, and that
+the gain calibration ({\tt polcal.gcal}) was obtained assuming the
+calibrator was unpolarized.
+
+First, we import some utility functions from the CASA recipes
+area:
+
+\small
+\begin{verbatim}
+from recipes.linfeedpolhelpers import *
+\end{verbatim}
+
+\normalsize 
+
+Since the gain calibrator was assumed unpolarized, the time-dependent
+gain solutions contain information about the source polarization.
+This can be seen by plotting the amp vs. time for this table using
+{\tt poln='/'}.  The antenna-based polarization amplitude ratios will
+reveal the sinusoidal (in parallactic angle) of the source
+polarization.  Run a utility method ({\tt qufromgain()}) to extract
+the apparent source polarization estimates for each spw:
+
+\small
+\begin{verbatim}
+qu=qufromgain('polcal.gcal')
+\end{verbatim}
+
+\normalsize
+
+The source polarization reported for all spws should be reasonably
+consistent.  This estimate is not as good as can be obtained from
+the cross-hands (see below) since it relies on the gain amplitude 
+polarization ratio being stable which may not be precisely true.
+However, this estimate will be useful in resolving an ambiguity
+that occurs in the cross-hand estimates.
+
+Next we estimate both the XY-phase offset and source polarization from
+the cross-hands.  The XY-phase offset is a spectral phase-only
+bandpass relating the X and Y systems of the reference antenna.  The
+cross-hand delay solved for above represents a systematic component
+(linear phase in frequency).  If the XY-phase is solved for in a
+channel-dependent manner (as below), it is strictly not necessary to
+have solved for the cross-hand delay above, but it does not hurt (at
+it allows reasonably coherent channel averages for data examination).
+The source polarization occurs in the cross-hands as a sinusoidal
+function of parallactic angle that is common to both cross-hands on
+all baselines (for a point-source).  If the XY-phase bandpass is
+uniformly zero, then the source linear polarization function will
+occur entirely in the real part of the cross-hand visibilities.
+Non-zero XY-phase has the effect of rotating the source linear
+polarization signature partially into the imaginary part, where
+circular (and instrumental) polarization occur (cf the circular feed
+basis where the cross-hand phase merely rotates the position angle of
+linear polarization).  The following solve averages all baselines
+together and first solves for a channelized XY-phase (the slope of the
+source polarization function in the complex plane), then corrects the
+slope and solves for a channel-averaged source polarization.  This
+calibration is obtained using {\tt gaintype='XYf+QU'} in {\tt
+gaincal}:
+
+\small
+\begin{verbatim}
+   default('gaincal')
+   vis                 = 'polcal_linfeed.ms'
+   caltable            = 'polcal.xy0amb'   # possibly with 180deg ambiguity
+   field               = '1'               # the calibrator 
+   solint              =      'inf'    
+   combine             =     'scan' 
+   preavg              =      200.0        # minimal parang change
+   smodel              = [1,0,1,0]         # non-zero U assumed
+   gaintype             =     'XYf+QU'        
+   gaintable           = ['polcal.gcal','polcal.bcal','polcal.xdelcal]
+   gaincal()
+\end{verbatim}
+\normalsize 
+
+Note that we imply non-zero Stokes U in {\tt smodel}; this is to
+enforce the assumption of non-zero source polarization signature 
+in the cross-hands in the ratio of data and model.  This solve
+will report the center-channel XY-phase and apparent Q,U for
+each spw.  The Q,U results should be recognizable in comparison
+to that reported by {\tt qufromgain()} above.  However, since the 
+XY-phase has a 180 degree ambiguity (you can rotate the source
+polarization signature to lie entirely in the visibility
+real part by rotating clockwise or counter-clockwise), some
+or all spw QU estimates may have the wrong sign.  We correct
+this using the {\tt xyamb()} utility method, using the {\tt qu}
+obtained from {\tt qufromgain()} above (which is not
+ambiguous):
+
+\small
+\begin{verbatim}
+S=xyamb(xy='polcal.xy0amb',qu=qu,xyout='polcal.xy0')
+\end{verbatim}
+\normalsize 
+
+The python variable {\tt S} now contains the mean
+source model (Stokes I $=$ 1; fractional Q,U; V=0)
+that can be used in a revision of the gain calibration
+and instrumental polarization calibration.
+
+Next we revise the gain calibration using the full polarization
+source model:
+
+\small
+\begin{verbatim}
+   default('gaincal')
+   vis                 = 'polcal_linfeed.ms'
+   caltable            = 'polcal.gcal1'   
+   field               = '1'         
+   solint              = 'int'        # or whatever was used previously
+   smodel              = S            # obtained from xyamb
+   gaintype            =     'G'        
+   gaintable           = ['polcal.bcal']
+   parang              = T            # so source poln properly rotated
+   gaincal()
+\end{verbatim}
+\normalsize 
+
+Note that {\tt parang=T} so that the supplied source linear
+polarization is properly rotated in the parallel-hand visibility
+model.  This new gain solution can be plotted with {\tt poln='/'} as
+above to show that the source polarization is no longer distorting it.
+Also, if {\tt qufromgain} is run on this new gain table, the reported
+source polarization should be statistically indistinguishable from
+zero.
+
+Finally, we can now solve for the instrumental polarization:
+
+\small
+\begin{verbatim}
+   default('polcal')
+   vis                 = 'polcal_linfeed.ms'
+   caltable            = 'polcal.dcal'
+   field               = '1'
+   solint              = 'inf'
+   combine             = 'scan'
+   preavg              = 200
+   poltype             = 'Dflls'      # freq-dep LLS solver
+   refant              = ''           # no reference antenna
+   smodel              = S
+   gaintable           = ['polcal.gcal1','polcal.bcal','polcal.xdelcal','polcal.xy0']
+   polcal()
+\end{verbatim}
+\normalsize
+
+
+Note that no reference antenna is used since this solve will produce
+an absolute instrumental polarization solution that is registered
+to the assumed source polarization ({\tt S}) and prior calibrations.
+Applying a refant (referring all instrumental polarization terms
+to a reference antenna's X feed, which would then be assumed perfect)
+would, in fact, discard valid information about the imperfections
+in the reference antenna's X feed.  (Had we used an unpolarized
+calibrator, we would not have a valid xy-phase solution, nor would
+we have had access to the absolute instrumental polarization solution
+demonstrated here.)
+
+A few points:
+
+\begin{itemize}
+
+\item Since the gain, bandpass, and XY-phase calibrations were obtained
+prior to the instrumental polarization solution and maybe distorted by
+it, it is generally desirable to resolve for them using the
+instrumental polarization solution.  In effect, this means iterating
+the sequence of calibration steps using all of the best of the
+available information at each stage, including the source
+polarization (and {\tt parang=T}).  This is a generalization
+of traditional self-calibration.  For the CASA v4.1 release,
+we expect to provide utility methods for iteration.
+
+\item If the source linear polarization fraction and position angle is
+known {\em a priori}, the processing steps outlined above can be
+amended to use that source polarization assertion in the gain and
+instrumental calibration solves.  The {\tt qufromgain()} method is not
+needed (but can be used to verify assumptions), the {\tt
+gaincal(...,gaintype='XYf+QU',...)} should not be altered (parallactic
+angle coverage is still required!), and the {\tt
+xyamb()} run should use the {\em a priori} polarization for {\tt qu}.
+If there is likely to be a large systematic offset in the mean
+feed position angle, iteration of the gain, bandpass, and instrumental
+polarization terms is required to properly isolate the calibration
+effects.
+
+\item Note that the above process does not explicitly include a position
+angle calibration.  In effect, the estimated source polarization sets
+the mean feed position angle as the reference position angle, and this
+is usually within a degree or so of optimal.  If your mean X feed
+position angle is not $\sim$ 0 degrees, and your MS does not account
+for the offset in its FEED subtable, be careful in your interpretation
+of the final position angle. Currently, the circular feed-specific
+position angle calibration modes of {\tt polcal} ({\tt poltype='X' or
+'Xf'}) will not properly handle the linear feed basis; this will
+be fixed in the CASA v4.1 release.
+
+\end{itemize}
+
+
+A full processing example for linear feed basis polarimetry is under
+development and will be distributed with an upcoming CASA release.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Baseline-based Calibration ({\tt blcal})}
 \label{section:cal.solve.blcal}
@@ -2840,7 +3258,7 @@ async               =      False        #  If true the taskname must be started 
 
 The {\tt freqdep} parameter controls whether {\tt blcal} solves for 
 ``gain'' ({\tt freqdep=False}) or ``bandpass'' ({\tt freqdep=True})
-style calibration.
+style non-closing calibration.
 
 Other parameters are the same as in other calibration tasks.
 These common calibration parameters are described in
@@ -3325,6 +3743,10 @@ in Figure~\ref{fig:smoothcal_4826}.
 \subsection{Calibration Interpolation and Accumulation ({\tt accum})}
 \label{section:cal.tables.accum}
 
+{\bf ALERT:} The {\tt accum} task is generally no longer recommended
+for most calibration scenarios.  Please write to the NRAO CASA
+helpdesk  if you need support using {\tt accum}.
+
 The {\tt accum} task is used to interpolate calibration solutions onto
 a different time grid, and to {\it accumulate} incremental
 calibrations into a {\it cumulative} calibration table.  The manual
@@ -3410,8 +3832,9 @@ in the {\tt incrtable} onto those in {\tt tablein} and {\tt caltable}.
 The syntax is described in \S~\ref{section:cal.solve.pars.previous}.
 
 The {\tt interp} parameter controls the method used for interpolation.
-The options are (currently): {\tt 'nearest'}, {\tt 'linear'}, and
-{\tt 'aipslin'}.
+The options are (currently): {\tt 'nearest'} and {\tt 'linear'} for
+time-dependent interpolation, and {\tt 'nearest'}, {\tt 'linear'}, {\tt
+  cubic}, and {\tt spline} for (optional) frequency-dependent interpolation.
 These are described in \S~\ref{section:cal.solve.pars.previous}.
 For most purposes, the {\tt 'linear'} option should suffice.
 
@@ -3420,6 +3843,10 @@ We now describe the two uses of {\tt accum}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Interpolation using ({\tt accum})}
 \label{section:cal.tables.accum.interp}
+
+{\bf ALERT:} The {\tt accum} task is generally no longer recommended
+for most calibration scenarios.  Please write to the NRAO CASA
+helpdesk  if you need support using {\tt accum}.
 
 Calibration solutions (most notably $G$ or $T$) can be interpolated
 onto the timestamps of the science target observations using {\tt accum}.  
@@ -3657,23 +4084,34 @@ spw                 =         ''        #  Select spectral window/channels
 intent              =         ''        #  Select observing intent
 selectdata          =       True        #  Other data selection parameters
      timerange      =         ''        #  Select data based on time range
-     uvrange        =         ''        #  Select data within uvrange (default units meters)
+     uvrange        =         ''        #  Select data within uvrange (default units
+                                        #   meters)
      antenna        =         ''        #  Select data based on antenna/baseline
      scan           =         ''        #  Scan number range
      observation    =         ''        #  Select by observation ID(s)
-     msselect       =         ''        #  Optional complex data selection (ignore for now)
+     msselect       =         ''        #  Optional complex data selection (ignore for
+                                        #   now)
 
 gaintable           =       ['']        #  Gain calibration table(s) to apply on the fly
-gainfield           =       ['']        #  Select a subset of calibrators from gaintable(s)
+gainfield           =       ['']        #  Select a subset of calibrators from
+                                        #   gaintable(s)
 interp              =       ['']        #  Interp type in time[,freq], per gaintable.
                                         #   default=linear,linear
-spwmap              =         []        #  Spectral windows combinations to form for gaintables(s)
-gaincurve           =      False        #  Apply internal VLA antenna gain curve correction
+spwmap              =         []        #  Spectral windows combinations to form for
+                                        #   gaintables(s)
+gaincurve           =      False        #  Apply internal VLA antenna gain curve
+                                        #   correction
 opacity             =         []        #  Opacity correction to apply (nepers), per spw
 parang              =      False        #  Apply parallactic angle correction
-calwt               =       True        #  Calibrate data weights from all relevant calibrations
-flagbackup          =       True        #  Automatically back up the state of flags before the run?
-async               =      False        #  If true the taskname must be started using applycal(...)
+calwt               =       True        #  Calibrate data weights from all relevant
+                                        #   calibrations
+applymode           =         ''        #  Calibration mode:
+                                        #   ""="calflag","trial","flagonly", or "calonly"
+flagbackup          =       True        #  Automatically back up the state of flags before
+                                        #   the run?
+async               =      False        #  If true the taskname must be started using
+                                        #   applycal(...)
+
 \end{verbatim}
 \normalsize
 As in other tasks, setting {\tt selectdata=True} will open up the
@@ -3693,7 +4131,7 @@ The weights should reflect the inverse noise variance of the
 visibility, and errors in amplitude are usually also in the weights.
 
 
-{\bf Alert:} {\it Current} (as of June 2010) JVLA data has no weights
+{\bf Alert:} {\it Current} (as of June 2010) VLA data has no weights
 to the data. To avoid trouble, {\tt calwt=False} should be set for
 those data sets. Older VLA data should still be calibrated with {\tt
   calwt=True}.
@@ -3714,6 +4152,21 @@ calibration as it is solved and applied.  You can also do any required
 smoothing of tables using {\tt smoothcal}
 (\S~\ref{section:cal.tables.smooth}), as this is not yet available in
 {\tt accum} or {\tt applycal}.
+
+
+{\tt applycal} has different {\tt applymode}s: {\tt 'calflag'} will
+apply all flags from a calibration table to the data and apply the
+calibration itself to the remaining visibilities. {\tt 'trial'} will
+only report on the calibration table flags but not manipulate the
+data, {\tt 'flagonly'} applies the flags but not the calibration
+itself, and {\tt 'calonly'} will apply the calibration and but not the
+solution table flags. Data that would {\tt 'calflag'} would flag are
+thus passed through uncalibrated. This option can be useful when
+{\tt applycal} is executed in consecutive steps, one calibration table
+at a time. Portions of the data that were not calibrated in the first
+run can then be calibrated in a second run with a different
+calibration table. This option should be used with care such that no
+uncalibrated data remains in the final data product. 
 
 
 {\tt applycal} will flag all data that have no calibration
@@ -4560,7 +5013,7 @@ helpdesk.
 
 I most cases, the data that comes from the telescopes have the correct
 absolute or relative weights associated (absolute weights will be
-supplied once the JVLA switched power application becomes standard; for
+supplied once the VLA switched power application becomes standard; for
 ALMA the Tsys application is already in place). However, there are
 data sets where one would like to adjust the weights based on the
 scatter of the visibilities (typically as a function of time, antenna,
@@ -4614,6 +5067,27 @@ restriction. {\tt minsamp} sets the minimum number of unflagged
 visibilities used for the calculation.
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Change the signs of visibility phases ({\tt
+    conjugatevis})}
+\label{section:cal.other.conjugatevis}
+
+{\tt conjugatevis} is an easy task to flip the signs of the phases of
+visibilities, thus creating the complex conjugate numbers. The inputs
+are like:
+
+\small
+\begin{verbatim} 
+#  conjugatevis :: Change the sign of the phases in all visibility columns.
+vis                 =         ''        #  Name of input visibility file.
+spwlist             =         ''        #  Spectral window selection
+outputvis           =         ''        #  Name of output visibility file
+overwrite           =      False        #  Overwrite the outputvis if it exists.
+async               =      False        #  If true the taskname must be started using conjugatevis(...)
+\end{verbatim}
+\normalsize
+
+The task works on all scratch columns. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

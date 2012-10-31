@@ -17,6 +17,7 @@
 % JO  2011-04-24  Release 3.2.0 edits
 % JO  2011-10-03  Release 3.3.0 edits 
 % JO  2012-05-06  Release 3.4.0 edits
+% JO  2012-10-18  Release 4.0.0 edits
 
 \chapter{Image Analysis}
 \label{chapter:analysis}
@@ -42,6 +43,8 @@ The image analysis tasks are:
    \item {\tt imhead} --- summarize and manipulate the ``header'' 
          information in a CASA image 
          (\S~\ref{section:analysis.imhead})
+   \item {\tt imsubimage} --- Create a (sub)image from a region of the
+     image (\S~\ref{section:analysis.imsubimage}) 
    \item {\tt imcontsub} --- perform continuum subtraction on a
          spectral-line image cube 
          (\S~\ref{section:analysis.imcontsub})
@@ -65,21 +68,20 @@ The image analysis tasks are:
    \item {\tt imregrid} --- regrid an image onto the coordinate
          system of another image 
          (\S~\ref{section:analysis.regrid})
-   \item {\tt imsmooth} --- smooth images in the spectral and angular directions
+   \item {\tt imsmooth} --- smooth images in the spectral and angular
+     directions
          (\S~\ref{section:analysis.imsmooth})
    \item{\tt specfit} --- fit 1-dimensional Gaussians, 
      polynomial, and/or Lorentzians models to an image or image region 
-          (\S~\ref{section:analysis.specfit})
+        (\S~\ref{section:analysis.specfit})
+    \item {\tt makemask} --- image mask handling
+         (\S~\ref{section:analysis.makemask})
   \item{\tt slsearch} --- query a subset of the Splatalogue spectral
 line catalog
           (\S~\ref{section:analysis.slsearch})
   \item{\tt splattotable} --- convert a file exported from Splatalogue
 to a CASA table 
           (\S~\ref{section:analysis.splattotable})
-
-
-
-
    \item {\tt importfits} --- import a FITS image into a CASA  
          {\it image} format table 
          (\S~\ref{section:analysis.fits.import})
@@ -106,6 +108,11 @@ image analysis (\S~\ref{section:analysis.toolkit}).
 We now describe some sets of parameters are are common to the image
 analysis.  These should behave the same way in any of the tasks
 described in this section that they are found in.  
+
+{\bf ALERT:} As of CASA 4.0.0 we introduced changed {\tt clean} such
+that for large fractional bandwidths, if the PSF changes more than
+half a pixel, a different beam will be used for each image
+plane. These cubes are supported in all image analysis tasks.  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Region Selection ({\tt box})}
@@ -294,23 +301,21 @@ The {\tt region} parameter points to a CASA region which can be
 directly specified or listed in a ImageRegion file.  An
 ImageRegion file can be created with the CASA {\tt viewer}'s region
 manager (\S~\ref{section:display.image.rgnmgr}). Or directly using the
-CASA region syntax (Chapter\,\ref{chapter:regionformat}; note: the
-{\tt viewer} has not be fully converted for the new region format as
-of CASA 3.3. -- old regions formats
-  are still supported for that CASA version). 
-Typically ImageRegion files will have the suffix {\tt '.rgn'}.  
+CASA region syntax (Chapter\,\ref{chapter:regionformat}.
+Typically ImageRegion files will have the suffix {\tt '.crtf'} for
+CASA Region Text Format.  
 
 {\bf Alert:} When both the region parameter and any of
 box/chans/stokes are specified simultaneously, the task may perform
 unwanted selections. Only specify one of these (sets of)
 parameters. We recommend the use of CASA regions and may remove the
-box/chans/stokes selection in CASA 3.4 releases and higher. 
+box/chans/stokes selection in later releases. 
 
 
 For example: 
 \small
 \begin{verbatim}
-    region=' circle[[18h12m24s, -23d11m00s], 2.3arcsec]'
+    region='circle[[18h12m24s, -23d11m00s], 2.3arcsec]'
 \end{verbatim}
 \normalsize
 
@@ -318,7 +323,7 @@ or
 
 \small
 \begin{verbatim}
-    region='myimage.im.rgn'
+    region='myimage.im.crtf'
 \end{verbatim}
 \normalsize
 
@@ -340,10 +345,16 @@ To summarize and change keywords and values in the ``header'' of
 your image, use the {\tt imhead} task.  Its inputs are:
 \small
 \begin{verbatim}
-#  imhead :: Lists, gets and puts image header parameters
-imagename      =         ''   #   Name of input image file
-mode           =  'summary'   #   Options: get, put, summary, list, stats
-async          =      False      
+#  imhead :: List, get and put image header parameters
+imagename           =         ''        #  Name of the input image
+mode                =  'summary'        #  imhead options: add, del, get, history, list, put, summary
+     verbose        =      False        #  Give a full listing of beams or just a short summary? 
+                                        #   Only used when the image has multiple beams and
+                                        #   mode="summary".
+
+async               =      False        #  If true the taskname must be started using imhead(...)
+
+
 \end{verbatim}
 \normalsize
 
@@ -432,6 +443,22 @@ prints in the logger:
 \end{verbatim}
 \normalsize
 
+If the beam size per plane differs, the beam information will be
+displayed for the channel with the smallest beam, the one with the
+largest beam, and the channel closest to the median beam size. E.g.,
+
+\small
+\begin{verbatim}
+Restoring Beams
+Pol   Type Chan      Freq   Vel
+I    Max    0 9.680e+08     0   39.59 arcsec x   22.77 arcsec pa=-70.57 deg
+I    Min  511 1.990e+09 -316516   20.36 arcsec x   12.05 arcsec pa=-65.67 deg
+I Median  255 1.478e+09 -157949   27.11 arcsec x   15.54 arcsec pa=-70.36 deg 
+\end{verbatim}
+\normalsize
+
+If {\tt verbose=T} the beam information for every plane will be provided.
+
 If you choose {\tt mode='list'}, you get the summary in the logger and
 a listing of keywords and values to the terminal:
 \small
@@ -515,6 +542,50 @@ CASA <58>: imhead('ngc5921.demo.cleanimg.image',mode='get',hdkey='observer')
   Out[58]: {'unit': '', 'value': 'CASA'}
 \end{verbatim}
 \normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Extracting sub-images ({\tt imsubimage})}
+\label{section:analysis.imsubimage}
+
+The task {\tt imsubimage} provides a way to extract a smaller data
+cube from a bigger one. The inputs are: 
+
+\small
+\begin{verbatim}
+#  imsubimage :: Create a (sub)image from a region of the image
+imagename           =         ''        #  Input image name.  Default is unset.
+outfile             =         ''        #  Output image name.  Default is unset.
+region              =         ''        #  Region of interest.  Default is whole image.
+mask                =         ''        #  Mask to use. See help par.mask. Default is
+                                        #   none.
+dropdeg             =      False        #  Drop degenerate axes
+overwrite           =      False        #  Overwrite (unprompted) pre-existing output
+                                        #   file?
+verbose             =       True        #  Post additional informative messages to the
+                                        #   logger
+stretch             =      False        #  Stretch the mask if necessary and possible?
+wantreturn          =       True        #  If True, return an image analysis tool
+                                        #   associated with the subimage. If False, return
+                                        #   nothing.
+async               =      False        #  If true the taskname must be started using
+                                        #   imsubimage(...)
+\end{verbatim}
+\normalsize 
+
+The {\tt region} keyword defines the size f the smaller cube and is
+specified via the CASA region CRTF syntax.  E.g.
+
+\small
+\begin{verbatim}
+region='box [ [ 100pix , 130pix] , [120pix, 150pix ] ]'
+\end{verbatim}
+\normalsize
+
+will extract the portion of the image that is between pixel
+coordinates (100,130) and (12,150). {\tt dropdeg=T} is useful to remove
+axes in the data cube that are degenerate, i.e. axes with a single
+plane only. A single Stokes I axis is a common example.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1058,7 +1129,7 @@ When you load the image, use the LEL:
 \end{verbatim}
 \normalsize
 which is entered into the LEL box at the bottom of the Load Data menu
-(\S~\ref{section:display.viewerGUI.load}).
+(\S~\ref{section:display.dataManager.load}).
 
 %%%%%%%%
 %%% FIXEE dmehring says this section is obsolete. impbcor should now
@@ -1377,6 +1448,10 @@ If a single moment is chosen, the {\tt outfile} specifies the exact
 name of the output image.  If multiple {\tt moments} are chosen,
 then {\tt outfile} will be used as the root of the output filenames,
 which will get different suffixes for each moment.  
+
+For image cubes that contain different beam sizes for each plane, {\tt
+  immoments} will smooth all planes to the largest beam size first, then
+collapse to the desired moment.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Hints for using ({\tt immoments})}
@@ -1983,6 +2058,10 @@ imcollapse(imagename="myimage.im", outfile="collapse_spec_mean.im",
 \end{verbatim}
 \normalsize
 
+Note that {\tt imcollapse} will not smooth to a common beam for all
+planes if they differ. If this is desired, run {\tt imsmooth} before
+{\tt imcollapse}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2124,7 +2203,8 @@ input, the Gaussian kernel smoothing also requires a position
 angle. By default, the kernel size defines the kernel itself, i.e. the
 data will be smoothed with this kernel. If the {\tt targetres} parameter
 for Gaussian kernels is set to 'True', major and minor axes will be
-those from the {\it output} resolution. 
+those from the {\it output} resolution, and the kernel will be
+adjusted for each plane to arrive at the final resolution. 
 
 Examples: \\
 
@@ -2421,18 +2501,71 @@ and fwhm solutions for all Gaussians.
 \label{section:analysis.specfit.pixel}
 As mentioned above, {\tt specfit} can also fit spectral cubes on a
 pixel by pixel basis. In this case, one can choose to write none, any
-or all of the solution and error images for Gaussian/Lorentzian fits via the
-parameters {\tt amp}, {\tt amperr}, {\tt center}, {\tt centererr},
-{\tt fwhm}, and {\tt fwhmerr}. The
-specified parameter value will by appended by "\_n" where n is the
-Gaussian/Lorentzian component number. Writing analogous images for polynomial
-coefficients is not yet supported although polynomial fits when {\tt
-  multifit=True} is supported. Best fit coefficients are written to the
-logger. Pixels for which fits were not attempted or did not converge
-will be masked as bad.
+or all of the solution and error images for Gaussian/Lorentzian fits
+via the parameters {\tt amp}, {\tt amperr}, {\tt center}, {\tt
+  centererr}, {\tt fwhm}, and {\tt fwhmerr}. The files written contain
+all the components along a ``component number'' axis. They can be
+inspected by using the ``hidden axes'' slider in the {\tt viewer}
+(\S\ref{section:display.image.raster}). Writing analogous images for
+polynomial coefficients is not yet supported although polynomial fits
+when {\tt multifit=True} is supported. Best fit coefficients are
+written to the logger. Pixels for which fits were not attempted or did
+not converge will be masked as bad.
  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Image Mask Handling {\tt makemask}}
+\label{section:analysis.makemask}
+
+{\tt makemask} facilitates the handling of image masks in CASA. There
+are two basic mask formats: 1) one or more Boolean masks stored
+internally in the image file, and 2) images with zero and non-zero image
+values. {\tt makemask} looks like:
+
+\small
+\begin{verbatim}
+#  makemask :: Makes and manipulates image masks
+mode                =     'list'        #  Mask method
+                                       #   (copy,expand,merge,delete,setdefaultmask)
+    inpimage       =         ''        #  Name of input image.
+
+async               =      False        #  If true the taskname must be started using
+                                       #   makemask(...) 
+\end{verbatim}
+\normalsize
+
+To distinguish between Boolean internal masks and zero/non-zero
+images, {\tt makemask} uses the syntax {\it galaxy.image:mask0} for Boolean
+masks within an image, in this example the Boolean mask {\it mask0}
+within the image {\it galaxy.image}. Without the colon separator, the image
+itself is assumed to the be treated like a zero/non-zero mask.
 
 
+{\tt mode='list'} lists all the internal Boolean masks that are
+present in an image. The default masks can be set with mode {\tt
+  setdefaultmask} and they can be deleted with the mode {\tt
+  delete}. The default mask is used when an image is displayed in the
+{\tt viewer} and is used in all analysis tasks.
+
+
+{\tt mode='copy'} lets a user to copy a Boolean mask from one image to
+another image, or to write out the Boolean mask as a zero/non-zero
+image. The latter format is very useful when different masks are
+combined or manipulated. All the image analysis tools, in particular
+{\tt immath} are applicable for such zero/non-zero masks as they act
+like normal images. {\tt makemask} will always attempt to regrid the
+input mask to the output image.
+
+
+{\tt mode='expand'} furthermore expands a mask in the spectral
+domain. It regrids first then stretches the edge channels. E.g. a one
+plane continuum image would be stretched to all planes of a
+data cube. 
+
+{\tt mode='merge'} merges CASA region files (CRTF files) with a mask
+that is already present. E.g. one can use the {\tt viewer} to create a
+region file, then use this mode in {\tt makemask} to convert the
+regions into an image mask, either an internal Boolean mask or an
+image with zero/non-zero values.
 
 
 

@@ -31,6 +31,7 @@
 % JO 2011-10-03 edits for Release 3.3
 % JO 2011-10-03 remove autoclean
 % JO 2012-04-19 edits for 3.4.0
+% JO 2012-10-18 edits for 4.0.0
 
 
 \chapter{Synthesis Imaging}
@@ -69,7 +70,10 @@ The current imaging and deconvolution tasks are:
          Fourier plane (\S~\ref{section:im.feather}),
    \item {\tt deconvolve} --- image-plane only deconvolution based on
          the dirty image and beam, using one of several algorithms
-         (\S~\ref{section:im.deconvolve}).
+         (\S~\ref{section:im.deconvolve}),
+   \item {\tt pclean} --- an experimental task for {\tt clean} to work
+     in a parallelized way for multi-node and core computing systems
+          (\S~\ref{section:im.pclean})
 \end{itemize}
 
 There are also tasks that help you set up the imaging or interface
@@ -127,6 +131,10 @@ In a later patch, we will use
 the standard data selection set (\S~\ref{section:io.selection}).
 
 
+{\bf ALERT:} {\tt clean} tries to use up to four cores on the computer that
+it is running on. If this is not desired, the environment variable
+{\it OMP\_NUM\_THREAD} can be set to a lower value. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Parameter {\tt cell} }
@@ -182,15 +190,24 @@ For example, the {\tt clean} task run with
 a series of output images will be created with the names
 {\tt ngc5921.clean}, {\tt ngc5921.residual}, {\tt ngc5921.model}, etc.
 
-If an image with that name already exists, it will in general
+{\bf If an image with that name already exists, it will in general
 be overwritten.  Beware using names of existing images however.
 If the {\tt clean} is run using an {\tt imagename} where 
 {\tt <imagename>.residual} and {\tt <imagename>.model} already
 exist then {\tt clean} will continue starting from these
-(effectively restarting from the end of the previous {\tt clean}). 
+(effectively restarting from the end of the previous {\tt clean}).} 
 Thus, if multiple runs of {\tt clean} are run consecutively
 with the same {\tt imagename}, then the cleaning is incremental
 (as in the {\tt difmap} package).
+
+The output image may also have a different beam per plane. For
+datasets with very large fractional bandwidth, {\tt clean} will use a
+different PSF for each channel when the PSF changes by more than half
+a pixel as a function of frequency. To smooth to a common resolution,
+use the parameter {\tt restoringbeam} within {\tt clean}
+(\S\,\ref{section:im.clean.restoringbeam}) or the task {\tt imsmooth}
+after {\tt clean}ing. Data analysis tasks such as {\tt immoments} in
+CASA support changing beams per plane.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Parameter {\tt imsize} }
@@ -1092,9 +1109,16 @@ To create an image and then deconvolve it with the CLEAN algorithm,
 use the {\tt clean} task.  This task will work for single-field data,
 or for multi-field mosaics (\S~\ref{section:im.clean.mosaic}), in both
 narrow and wide-field imaging modes.  
-{\bf ALERT:} There is now an experimental feature to image data taken with
-``heterogeneous'' arrays with non-identical dish sizes 
-(\S~\ref{section:im.clean.hetero}).
+
+
+\normalsize {\bf ALERT:} For large fractional bandwidths the psf in
+{\tt clean} may vary considerably with frequency in data cubes. To
+accommodate this fact we have introduced a per-plane psf (dirty beam)
+when the change is larger than half the size of a pixel. Analysis
+tasks in CASA can deal with such beam variation. If a single beam size
+is requested, {\tt imsmooth} can be invoked on the {\tt clean}
+products to smooth to a common, uniform beam for all channels.
+
 
 {\bf Toolkit Note:} MEM is not included in {\tt clean}, but is
 available in the toolkit.
@@ -1140,7 +1164,7 @@ modelimage          =         ''   #  Name of model image(s) to initialize clean
 restoringbeam       =       ['']   #  Output Gaussian restoring beam for CLEAN image
 pbcor               =      False   #  Output primary beam-corrected image
 minpb               =        0.1   #  Minimum PB level to use
-calready            =       True   #  Create scratch columns and store model visibilities for selfcal
+usescratch          =      False   #  True if to save model visibilities in MODEL_DATA column
 async               =      False   #  If true the taskname must be started using clean(...)
 \end{verbatim}
 \normalsize
@@ -1157,12 +1181,7 @@ These include:
    <imagename>.clean.residual             # the residual image
    <imagename>.clean.psf                  # the synthesized (dirty) beam
 \end{verbatim}
-\normalsize
-{\bf ALERT:} The {\tt <imagename>.clean.flux.pbcoverage} image is
-new in Patch 4 version 2.4.0 and reflects the unweighted primary beam
-coverage (without weighting or gridding kernel factors) used for
-the {\tt minpb} cutoff (\S~\ref{section:im.clean.minpb}).  This is
-produced only for {\tt imagermode='mosaic'} with {\tt ftmachine='mosaic'}.
+
 
 The {\tt mode}, {\tt psfmode}, {\tt imagermode}, and {\tt weighting}
 parameters open up other sub-parameters.  These are detailed
@@ -1270,9 +1289,7 @@ coordinates [80,80] and [120,120], you may use the rectangular region:
 \normalsize
 
 For more complicated and multiple clean regions, it will be best to
-user the {\tt viewer} to create them interactively (but note that as
-of CASA 3.3. the viewer will still write the old formats - {\tt clean}
-will still support those for CASA 3.3) or write a region file
+use the {\tt viewer} to create them interactively or to create a region file
 (Chapter\,\ref{chapter:regionformat}) and use that file as an input
 like:
 
@@ -1896,6 +1913,14 @@ is calculated by fitting to the PSF (e.g. the {\tt .psf} image).
 For a mosaic, this is at the center of the field closest to the
 {\tt phasecenter}.
 
+The restoring beam can also be used to establish a single beam for
+large fractional bandwidths. If the PSF changes more that half a pixel
+across all channels in a cube, the PSF itself will be stored in the
+form of a cube, changing size from channel to channel. A specified
+restoring beam will output all planes at the same resolution and thus
+collapse to a single PSF (note that this can also be done in hindsight
+using {\tt imsmooth}).
+
 To specify a restoring beam, provide {\tt restoringbeam} a list of 
 {\tt [bmaj, bmin, bpa]} which are the parameters of an elliptical
 Gaussian.  The default units are in arc-seconds for {\tt bmaj, bmin}
@@ -2223,7 +2248,7 @@ is given in Appendix~\ref{section:scripts.ngc4826}.
 \subsection{Heterogeneous imaging}
 \label{section:im.clean.hetero}
 
-The {\tt clean} task and underlying tools can now handle cases where
+The {\tt clean} task and underlying tools can handle cases where
 there are multiple dish sizes, and thus voltage patterns and primary
 beams, in the array.  This is effected by using the dish sizes stored
 in the {\tt ANTENNA} sub-table of the MS.  Depending on how the data
@@ -2231,13 +2256,6 @@ was written and imported into CASA, the user may have to manually edit
 this table to insert the correct dish sizes (e.g. using {\tt
 browsetable} or the {\tt tb} table tool).  
 
-{\bf ALERT:} This feature is new in Patch 3, and has not been
-extensively tested.  Currently, this works only for an MS where the
-{\tt OBSERVATORY} keyword is CARMA, ALMA, or is unknown.  You must
-set {\tt imagermode='mosaic'} with {\tt ftmachine='mosaic'}, even
-when imaging a single field, to use this feature.
-This will be improved, and made easier to set and use, in future
-releases.  
 
 % \subsection{The {\tt entropy} algorithm}
 % \label{section:im.clean.entropy}
@@ -2519,10 +2537,15 @@ of the computer.  However, there is a large penalty in execution time.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Primary Beam Correction ({\tt impbcor})}
+\section{Primary Beam Correction ({\tt impbcor}, {\tt widebandpbcor})}
 \label{section:im.impbcor}
 
-The primary beam correction can be applied during the imaging with {\tt clean}. It is also possible to correct after imaging using the task {\tt impbcor}:
+
+The primary beam correction can be applied during the imaging with
+{\tt clean}. It is also possible to correct after imaging using the
+task {\tt impbcor} for 'regular' data sets, or {\tt widebandpbcorr}
+for those that used the Taylor-term expansion function in {\tt clean}
+({\tt nterms>1}). {\tt pbcor} has the following inputs:
 
 \small
 \begin{verbatim}
@@ -2558,6 +2581,35 @@ The main inputs are the input image and the image of a primary beam in
 the {\tt pbimage} parameter. The {\tt mode} parameter will typically
 be {\it 'divide'} but it is also possible to multiply with the beam
 pattern.
+
+{\tt widebandpbcorr} is an experimental task and its functionality
+will be incoporated into {\tt clean} in one of the next versions of
+CASA. {\tt widebandpbcor} has the following options
+
+\small
+\begin{verbatim}
+#  widebandpbcor :: Wideband PB-correction on the output of the MS-MFS algorithm
+vis                 =         ''        #  Name of measurement set.
+imagename           =         ''        #  Name-prefix of multi-termimages to operate on.
+nterms              =          2        #  Number of taylor terms to use
+threshold           =         ''        #  Intensity above which to re-calculate spectral index
+action              =    'pbcor'        #  PB-correction (pbcor) or only calc spectral-index (calcalpha)
+     reffreq        =         ''        #  Reference frequency (if specified in clean)
+     pbmin          =        0.2        #  PB threshold below which to not correct
+     field          =         ''        #  Fields to include in the PB calculation
+     spwlist        =         ''        #  List of N spw ids
+     chanlist       =         []        #  List of N channel ids
+     weightlist     =         []        #  List of N weights (relative)
+
+async               =      False        #  If true the taskname must be started using widebandpbcor(...)
+\end{verbatim}
+\normalsize  
+
+{\tt action='pbcor'} computes Taylor-coefficient images that represent
+the primary beam spectrum and applies them to the input Taylor
+coefficient images. The {\tt action='calcalpha'} will recalculate
+spectral index maps based on the primary beam correction polynomials. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Combined Single Dish and Interferometric Imaging 
@@ -3005,6 +3057,95 @@ a reminder on how to run the calibration tasks.
 
 See the example of cleaning and self-calibrating the Jupiter 6cm continuum
 data given below in Appendix~\ref{section:scripts.jupiter}.  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Parallel Cleaning ({\tt pclean})}
+\label{section:im.pclean}
+
+{\tt pclean} is an {\bf experimental} task to allow clean speedup by using
+more than a single computing node. 
+
+The inputs are somewhat different from {\tt clean} but we will merge
+the two tasks in the future: 
+\small
+\begin{verbatim}
+#  pclean :: Invert and deconvolve images with parallel engines
+vis                 =         ''        #  Name of input visibility file
+imagename           =         ''        #  Pre-name of output images
+imsize              = [256, 256]        #  Image size in pixels (nx,ny), symmetric for
+                                        #   single value
+cell                = ['1.0arcsec', '1.0arcsec'] #  The image cell size in arcseconds.
+phasecenter         =         ''        #  Image center: direction or field index
+stokes              =         ''        #  Stokes params to image (eg I,IV,IQ,IQUV)
+mask                =         ''        #  mask image
+field               =         ''        #  Field Name or id
+spw                 =         ''        #  Spectral windows e.g. '0~3', '' is all
+ftmachine           =       'ft'        #  Fourier Transform Engine ('ft', 'sd', 'mosaic'
+                                        #   or 'wproject')
+alg                 =    'clark'        #  Deconvolution algorithm ('clark', 'hogbom',
+                                        #   'multiscale')
+cyclefactor         =        1.5        #  Control number of major cycle, threshold of
+                                        #   cycle=residualPeak*psfSidelobe*cyclefactor
+niter               =        500        #  Maximum number of iterations
+gain                =        0.1        #  Gain to use in deconvolution
+threshold           =    '0.0Jy'        #  Flux level to stop cleaning, must include
+                                        #   units: '1.0mJy'
+weighting           =  'natural'        #  Type of weighting
+mode                =   'extend'        #  Clean mode ('continuum', 'cube')
+interactive         =      False        #  Interactive clean
+overwrite           =      False        #  Overwrite an existing model image
+uvtaper             =      False        #  Apply additional uv tapering of visibilities
+timerange           =         ''        #  Range of time to select from data
+uvrange             =         ''        #  Select data within uvrange
+antenna             =         ''        #  Select data based on antenna/baseline
+scan                =         ''        #  Scan number range
+observation         =         ''        #  Observation ID range
+pbcor               =      False        #  Correct for the primary beam post deconvolution
+minpb               =        0.2        #  Fractional of peak of pb coverage where to stop
+                                        #   the  pb correction
+clusterdef          =         ''        #  File that contains cluster definition
+async               =      False        #  If true the taskname must be started using
+                                        #   pclean(...)
+\end{verbatim}
+\normalsize
+
+In {\tt pclean}, the parameter {\tt als} controls whether the 'clark',
+'hogbom', or 'multiscale' cleaning algorithms are used. 'ft', 'sd',
+'mosaic', and 'wproject' are specified via {\tt ftmachine}, similar to
+{\tt imagermode} in {\tt clean}. Important is the {\tt clusterdef}
+parameter. It specifies a file with all computer names, the number of
+CPU cores and temporary directories that can be used for {\tt
+  pclean}. It is formatted like:
+
+\small
+\begin{verbatim}
+############################
+hal9000, 10,   /home/ptest
+sal9000, 12,   /home/ptest
+nearstar, 6,    /home/ptest
+############################
+\end{verbatim}
+\normalsize
+
+It is advisable to leave one or two cores unused by {\tt pclean} on
+computers that run the task. This will allow other, sometimes vital,
+processes to continue. 
+
+{\bf IMPORTANT: the user have to have passwordless ssh access to all
+  the computers used in a cluster definition file and the working
+  directories has to be crossmounted by all the computers under the
+  same names.}
+
+
+{\tt pclean} attempts so slice the data in time bins for continuum
+imaging and in channel bins for spectral imaging and send
+sub-processes to the individual nodes. Since they all report back to
+the main terminal while they are executed, the logging may look a bit
+messy. After the clean processes on the nodes concluded, the data will
+be put back together to create single image files.
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

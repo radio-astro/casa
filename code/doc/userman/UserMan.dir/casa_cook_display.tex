@@ -12,16 +12,18 @@
 % JO 2010-03-03 updates for 3.0.1
 % JO 2011-10-08  Release 3.3.0 edits
 % JO 2011-05-09  Release 3.4 edits and Harald Kuemmel edits. 
+% JO 2012-10-24  Release 4.0 edits
 
 \chapter{Visualization With The CASA Viewer}
 \label{chapter:display}
 
 This chapter describes how to display data with the {\tt casaviewer}
 either as a stand-alone or through the {\tt viewer} task. You can
-display both images and Measurement Sets in the viewer. We are,
-however, splitting the functionalities into two different tasks {\tt
-  imview} for images and {\tt msview} for measurement sets and
-recommend those two tasks as they have improved functionality. 
+display both images and Measurement Sets in the viewer. We are
+in the process of splitting the task-level access to the viewer into 
+two different tasks {\tt imview} for images and {\tt msview} for measurement 
+sets. These tasks offer improved functionality in the form of command
+line access to many of the viewer features. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,13 +32,11 @@ recommend those two tasks as they have improved functionality.
 
 \begin{figure}[h!]
 \begin{center}
-\pngname{viewer_n5921_1}{4.3}
-\pngname{viewer_n5921_2}{2.1}
+\pngname{viewer-start}{5}
+%\pngname{viewer_n5921_1}{4.3}
+%\pngname{viewer_n5921_2}{2.1}
 \caption{\label{fig:viewer_start} The {\bf Viewer Display Panel} (left) and 
-{\bf Data Display Options} (right) panels that appear when the 
-{\tt viewer} is called with the image cube from NGC5921
-({\tt viewer('ngc5921.demo.cleanimg.image')}).  The initial display is
-of the first channel of the cube.}
+the {\bf Data Display Options} (right) panel for a regular image or data cube.}
 \hrulefill
 \end{center}
 \end{figure}
@@ -65,42 +65,46 @@ Examples of starting the {\tt viewer}:
 
   CASA <3>: viewer('ngc5921.demo.cleanimg.image')
 
-  CASA <5>: viewer('ngc5921.demo.cleanimg.image', 'contour')
+  CASA <4>: viewer('ngc5921.demo.cleanimg.image', 'contour')
   
   CASA <5>: viewer('"ngc5921.demo.cleanimg.image"^2', 'lel')
 \end{verbatim}
 \normalsize
-The first of these creates
-an empty {\bf Viewer Display Panel} 
+
+The first of these creates an empty {\bf Viewer Display Panel} 
 (\S~\ref{section:display.viewerGUI.displaypanel}) and a {\bf Load Data} 
-window (\S~\ref{section:display.viewerGUI.load}) .  The second starts the
+window (\S~\ref{section:display.dataManager.load}) .  The second starts the
 {\tt viewer} loaded with a Measurement Set.  The third example
-starts the {\tt viewer} with an image cube 
-(see Figure~\ref{fig:viewer_start}).  
+starts the {\tt viewer} with an image cube (see Figure~\ref{fig:viewer_start}).  
 
-Example four brings up a display panel as it was when its state was saved
-to the given 'restore' file ({\tt ngc5921.usecase.clean.image.rstr}).
-This includes the data displayed as well as options and viewer
-settings.  (See \S~\ref{section:display.viewerGUI.save-restore},
-{\bf Saving and Restoring Viewer State}).
+%Example four brings up a display panel as it was when its state was saved
+%to the given 'restore' file ({\tt ngc5921.usecase.clean.image.rstr}).
+%This includes the data displayed as well as options and viewer
+%settings.  (See \S~\ref{section:display.viewerGUI.save-restore},
+%{\bf Saving and Restoring Viewer State}).
 
-Examples five and six are less common cases, which make use of the second
-parameter ({\tt displaytype}).  Example five displays the image in contour
-form.  Example six uses 'Lattice (Image) Expression Language' to display the
-square of the image data.
+Examples four and five make use of the second parameter ({\tt displaytype}).  Example 
+four displays the image in contour form.  Example five uses 'Lattice (Image) Expression 
+Language' to display the square of the image data.
 
-{\bf NOTE:} the {\tt viewer} task determines file types (images, MSs,
-restore files) automatically.  It is no longer necessary to specify
-{\tt filetype='ms'} explicitly.
+{\bf NOTE:} the viewer determines file types (images, MSs, restore files) automatically.  
+It is not necessary to specify, e.g., {\tt filetype='ms'} explicitly.
+
+The CASA  viewer consists of a number of graphical user interface (GUI) windows.
+The main {\bf Viewer Display Panel} (\S~\ref{section:display.viewerGUI.displaypanel})
+is used for both image and Measurement Set viewing and we describe it first. The
+{\bf Data Manager Panel} (\S~\ref{section:display.dataManager}) is used to load images, 
+Measurement Sets, and Display Panel States and to save regions and images. Most
+other windows are context specific and we describe these in the sections on viewing
+images (\S~\ref{section:display.image}) and Measurement Sets (\S~\ref{section:display.ms}).
 
 \begin{figure}[h!]
 \begin{center}
+\pngname{viewer-start-ms}{5}
 \pngname{viewer_n5921ms_1}{4.3}
 \pngname{viewer_n5921ms_2}{2.1}
 \caption{\label{fig:viewer_start_ms} The {\bf Viewer Display Panel}
-(left) and {\bf Data Display Options} (right) panels that appear when the 
-{\tt viewer} is called with the NGC5921 Measurement Set
-({\tt viewer('ngc5921.demo.ms')}).} 
+(left) and {\bf Data Display Options} (right) panels with a Measurement Set open.} 
 \hrulefill
 \end{center}
 \end{figure}
@@ -109,8 +113,8 @@ restore files) automatically.  It is no longer necessary to specify
 \subsection{Running the CASA viewer outside {\tt casapy}}
 \label{section:display.start.casaviewer}
 
-{\tt casaviewer} is the name of the stand-alone viewer application that
-is available with a CASA installation.  From the operating system prompt,
+If you have CASA installed, then the CASA viewer is available as a
+stand-alone application called {\tt casaviewer}.  From the operating system prompt,
 the following commands are equivalent to the {\tt casapy} task commands
 given in the previous Section:
 
@@ -122,7 +126,7 @@ given in the previous Section:
   
   casaviewer image_filename &
   
-  casaviewer restore_filename &
+  %casaviewer restore_filename &
   
   casaviewer image_filename contour &
   
@@ -131,23 +135,8 @@ given in the previous Section:
 \normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The {\tt viewer} GUI}
-\label{section:display.viewerGUI}
 
-The CASA {\tt viewer} application consists of a number of
-graphical user interface (GUI) windows that respond to mouse and
-keyboard input.  Here we describe the {\bf Viewer Display Panel} 
-(\S~\ref{section:display.viewerGUI.displaypanel}) and the
-{\bf Load Data} window (\S~\ref{section:display.viewerGUI.load}).
-They are used for both image and MS viewing.  Several other windows
-are context-specific and are described in the sections on viewing
-images (\S~\ref{section:display.image}) and Measurement Sets
-(\S~\ref{section:display.ms}).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{The Viewer Display Panel}
+\section{The Viewer Display Panel}
 \label{section:display.viewerGUI.displaypanel}
 
 % \begin{figure}[h!]
@@ -157,13 +146,12 @@ images (\S~\ref{section:display.image}) and Measurement Sets
 % \hrulefill
 % \end{figure}
  
-The Viewer Display Panel is the the window that actually displays the
-image or MS.  This is shown in the left panels of 
-Figures~\ref{fig:viewer_start} and \ref{fig:viewer_start_ms}.
-Note that this panel is the same whether an image or MS is
-being displayed.
+The Viewer Display Panel displays the image or Measurement Set. It is shown in the left panels of 
+Figures~\ref{fig:viewer_start} and \ref{fig:viewer_start_ms} and appears the same whether an image 
+or Measurement Set is being displayed.
  
-At the top of the Viewer Display Panel are the menus:
+At the top of the Viewer Display Panel are dro-down menus:
+
 \begin{itemize}
 \item {\bf Data}
   \begin{itemize}
@@ -178,13 +166,14 @@ At the top of the Viewer Display Panel are the menus:
       \item  {\tt Print} --- print the displayed image
       \item  {\tt Save Panel State} --- to a 'restore' file (xml format)
       \item  {\tt Restore Panel State} --- from a restore file
+      \item  {\tt Preferences} --- manually edit the viewer configuration
       \item  {\tt Close Panel} --- close the Viewer Display Panel (will exit
              if this is the last display panel open)
       \item  {\tt Quit Viewer} --- close all display panels and exit
   \end{itemize}
 \item {\bf Display Panel}
   \begin{itemize}
-      \item {\tt New Panel} --- create another Viewer Display Panel (cleared)
+      \item {\tt New Panel} --- create a new, empty Viewer Display Panel
       \item {\tt Panel Options} --- open the Display Panel's options window
       \item  {\tt Save Panel State}
       \item  {\tt Restore Panel State}
@@ -194,20 +183,20 @@ At the top of the Viewer Display Panel are the menus:
   \end{itemize}
 \item {\bf Tools}
   \begin{itemize}
-      \item {\tt Spectral Profile} --- plot frequency/velocity profile
-                 of point or region of image
+      \item {\tt Spectral Profile} --- plot intensity vs. frequency for part of an image
+       \item {\tt Collapse Image} --- create moment maps by integrating along the spectral axis
   \end{itemize}
 \item {\bf View}
   \begin{itemize}
-      \item {\tt Main Toolbar} --- show/hide top row of icons
-      \item {\tt Mouse Toolbar} --- show/hide second row of
-                 mouse-button action selection icons
-      \item {\tt Animator} --- show/hide tapedeck control panel
-      \item {\tt Position Tracking} --- show/hide bottom position
-                 tracking report box  
-      \item {\tt regions} --- show/hide region box  
+      \item {\tt Main Toolbar} --- show/hide the top row of icons (Figure \ref{fig:viewer_maintoolbar}
+      \item {\tt Mouse Toolbar} --- show/hide the second row of mouse-button action selection icons
+      \item {\tt Animator} --- show/hide tapedeck control panel attachment
+      \item {\tt Position Tracking} --- show/hide the position tracking attachment 
+      \item {\tt Regions} --- show/hide the region manager attachment
   \end{itemize}
 \end{itemize}
+
+\subsection{The Main Toolbar}
 
 \begin{figure}[h!]
 \begin{center}
@@ -218,8 +207,9 @@ At the top of the Viewer Display Panel are the menus:
 \hrulefill
 \end{center}
 \end{figure}
-Below this is the {\bf Main Toolbar} (Figure~\ref{fig:viewer_maintoolbar}),
-the top row of icons for fast access to some of these menu items:
+
+Below the drop down menus is the {\bf Main Toolbar} (Figure~\ref{fig:viewer_maintoolbar}).
+This top row of icons offers fast access to these menu items:
 \begin{itemize}
    \item {\bf folder} ({\tt Data:Open} shortcut) --- show the Load Data panel
    \item {\bf wrench} ({\tt Data:Adjust} shortcut) --- show the Data Display
@@ -228,73 +218,76 @@ the top row of icons for fast access to some of these menu items:
               menu of loaded data
    \item {\bf delete} ({\tt Data:Close} shortcut) --- closes/unloads 
               selected data
-   \item {\bf save data} --- save/export data to a file
+   \item {\bf save data} ({\tt Data:Save as}) --- save/export data to a file
    \item {\bf new panel} ({\tt Display Panel:New Panel})
    \item {\bf panel wrench} ({\tt Display Panel:Panel Options}) --- show
               the Display Panel's options window 
    
-   \item  {\bf save panel} -- save panel state to a 'restore' file
-   \item  {\bf restore panel} -- restore panel state from a restore file
-   \item  {\bf profile panel} -- open the spectral profiler
-  % \item {\bf region save} ({\tt Tools:Region Manager}) --- save/control
-    regions.
-    
-    (Note: some of these newer buttons do not appear in older figures of
-    this document).
-   
+   \item  {\bf save panel} ({\tt Display Panel: Save Panel State}) -- save panel state to a 'restore' file
+   \item  {\bf restore panel} ({\tt Display Panel: Restore Panel State}) -- restore panel state from a restore file
+   \item  {\bf profile panel} ({\tt Tools: Spectral Profile}) -- open the spectral profiler
+   \item  {\bf collapse panel}({\tt Tools: Collapse Image}) -- open the image collapse panel
+  % \item {\bf region save} ({\tt Tools:Region Manager}) --- save/control   
    \item {\bf print} ({\tt Display Panel:Print}) --- print data
    \item {\bf magnifier box} --- zoom out all the way
    \item {\bf magnifier plus} --- zoom in (by a factor of 2)
    \item {\bf magnifier minus} --- zoom out (by a factor of 2)
 \end{itemize}
 
+\subsection{The Mouse Toolbar}
+
 \begin{figure}[h!]
 \begin{center}
 \pngname{viewer_mousetoolbar}{3}
 \caption{\label{fig:viewer_mousetoolbar} The 
-{\bf 'Mouse Tool' Bar} allows you to assign separate mouse buttons to
-tools you control with the mouse within the image display area.  Initially,
-zooming, color adjustment, and rectangular regions are assigned to the left,
-middle and right mouse buttons,
-respectively.}
+{\bf 'Mouse Tool' Bar} allows you to assign how mouse buttons behave in 
+the image display area.  Initially, zooming, color adjustment, and rectangular 
+regions are assigned to the left, middle and right mouse buttons. Click on a tool
+with a mouse button to assign that tool to that mouse button.}
 \hrulefill
 \end{center}
 \end{figure}
 
-Below this are the ten {\bf Mouse Tool} buttons
-(Figure~\ref{fig:viewer_mousetoolbar}). These allow assignment of
-{\it each} of the three mouse buttons to a different operation on the display
-area. Clicking a mouse tool icon will [re-]assign {\bf the mouse button that
-was clicked} to that tool.  The icons show which mouse button is currently
+Below the Main Toolbar are ten {\bf Mouse Tool} buttons
+(Figure~\ref{fig:viewer_mousetoolbar}). These allow you to assign
+what behavior the three mouse buttons have when clicked in the display area. Clicking a mouse 
+tool icon will [re-]assign the mouse button that was clicked to that tool. 
+Black and white squares beneath the icons show which mouse button is currently
 assigned to which tool.  
 
-The 'escape' key can be used to cancel any mouse tool operation that was
-begun but not completed, and to erase any tool showing in the display area.
+The mouse tools available from the toolbar are:
+
+({\em Note that the 'escape' key can be used to cancel any mouse tool operation that was
+begun but not completed, and to erase a region, point, or other tool showing in the display area.})
+
 \begin{itemize}
    \item {\bf Zooming (magnifying glass icon):}
      To zoom into a selected area, press the Zoom tool's mouse button
      (the {\bf left} button by default) on one corner of the desired
      rectangle and drag to the desired opposite corner. Once the button is
      released, the zoom rectangle can still be moved or resized by dragging.
-     To complete the zoom, double-click inside the selected rectangle
-     (double-clicking {\it outside} it will zoom {\it out} instead).
+     To complete the zoom, double-click inside the selected rectangle. If you
+     instead double-clicking {\it outside} the rectangle, you will zoom {\it out}.
    \item {\bf Panning (hand icon):} Press the tool's mouse button on a 
      point you wish to move, drag it to the position where you want it
      moved, and release. {\it Note: The arrow keys, Page Up, Page Down,
-     Home and End keys can also be used to scroll through your data any time
+     Home and End keys can also be used to pan through your data any time
      you are zoomed in. (Click on the main display area first, to be sure
      the keyboard is 'focused' there).}
    \item {\bf Stretch-shift colormap fiddling (crossed arrows):} This is
      usually the handiest color adjustment; it is assigned to the {\bf middle}
      mouse button by default.
    \item {\bf Brightness-contrast colormap fiddling (light/dark sun)} 
-   \item {\bf Positioning (bombsight):} This tool can place a 'crosshair'
+   \item {\bf Positioning (plus):} This tool can place a point
      marker on the display to select a position. It is used to flag
-     Measurement Set data or to select an image position for spectral profiles.
-     Click on the desired position with the tool's mouse button to place
-     the crosshair; once placed you can drag it to other locations.
-     Double-click is not needed for this tool.  
-     See \S~\ref{section:display.viewerGUI.displaypanel.region} for more
+     Measurement Set data or to select an image position for spectral
+     profiles.  Click on the desired position with the tool's mouse
+     button to place the point; once placed you can drag it to other
+     locations. You can also place multiple points on the display
+     (e.g. for different spectral profile positions) -- remove them by
+     hovering over and hitting {\tt ESC}.  Double-click is not needed
+     for this tool.  See
+     \S~\ref{section:display.viewerGUI.displaypanel.region} for more
      detail.
    \item {\bf Rectangle, Ellipse and Polygon region drawing:} The rectangle
      region tool is assigned to the {\bf right} mouse button by default.
@@ -308,8 +301,7 @@ begun but not completed, and to erase any tool showing in the display area.
      Polygon regions are created by clicking the assigned mouse button
      at the desired vertices, clicking the final location twice to finish.
      Once created, a polygon can be moved by dragging from inside, or
-     reshaped by dragging the handles at the vertices.  Double-click inside to
-     confirm region selection.
+     reshaped by dragging the handles at the vertices. 
      See \S~\ref{section:display.viewerGUI.displaypanel.region} for the uses
      of this tool.
    \item {\bf Polyline drawing:}
@@ -325,14 +317,40 @@ begun but not completed, and to erase any tool showing in the display area.
      in both axes are $[deg]$, the distances are displayed in $[arcsec]$.
 \end{itemize}
 
-The main {\bf Display Area} lies below the toolbars.
+\subsection{Display Area}
 
-On the right side of the display area is an {\bf Animator} panel.  The most prominent
-feature is the ``tape deck'' which provides movement between image planes
-along a selected third dimension of an image cube. This set of buttons is
-only enabled when a registered image reports that it has more than one plane
-along its 'Z axis'. In the most common case, the animator selects the frequency
-channel. From left to right, the tape deck controls allow the user to:
+The main {\bf Display Area} lies below the toolbars. This area shows
+the image or Measurement Set currently loaded. Clicking the mouse inside
+the display area allows region or position selection according to the settings
+in the mouse toolbar.
+
+The Display Area may have up to three attached panels: the {\bf
+  Animator} panel, the {\bf Position Tracking} panel, and the {\bf
+  Regions} panel. These appear on the right side of the image by
+default but may be dragged to be attached to any side of the image or
+"undocked" from the main display panel to act as separate
+windows. Each of these attached panels can be turned off by clicking
+the "X" in the top right corner or toggled via the drop down {\bf
+  View} menu.
+
+\subsubsection{Animator Panel}
+
+The Animator Panel allows you to scroll through the channels of a data
+cube or rotate among several loaded images. The main features of the
+panel are the two ``tape decks''. The {\bf Channels} tape deck enables
+movement between planes of an individual image. By default, the
+channel tape deck scrolls among frequency planes when R.A. and
+Declination are the displayed axes. The {\bf Images} tape rotates
+which is being displayed (among registered images), allowing one one
+to 'blink' between images when more than a single image is loaded and
+registered. If both "Channels" and "Images" is checked, then the
+channel tape deck provides movement between image planes in {\it all}
+loaded and registered images.  If the "Channels" is checked, but
+"Images" is not, then the movement is between image planes of only a
+single image.
+
+
+From left to right, the tape deck controls allow the user to:
 \begin{itemize}
    \item {\bf rewind} to the start of the sequence (i.e., the first plane)
    \item {\bf step backwards} by one plane
@@ -342,224 +360,244 @@ channel. From left to right, the tape deck controls allow the user to:
    \item {\bf step forward} by one plane
    \item {\bf fast forward} to the end of the sequence
 \end{itemize}
-To the right of the tape deck is an editable text box indicating the
-current frame (channel) number and a label showing the total number of
-frames. Below that is a box for controlling the (nominal) animation
-speed. To the right is a 'normal/blink' toggle.
 
-'Blink' mode is useful when more than one raster image is
-registered. In that mode, the tapedeck controls {\it which image} is
-displayed at the moment rather than the particular image plane
-(set that in 'Normal' mode first). The registered images must cover the
-same portion of the sky and use the same coordinate projection.
+To the right of each tape deck are two editable text boxes. The first indicates the
+current frame (image) number number with a label showing the total number of
+frames (images). To the right of this is a box that allows the user to set 
+the 'Rate' or speed of the animation when "play" is clicked.
 
-{\bf Note:} {\em In 'normal' mode, it is advisable to have only ONE
-raster image registered at a time, to avoid confusion. Unregister (or
-close) the others).}
+\subsubsection{Position Tracking Panel}
 
-Underneath the Animator Panel is the {\bf Position Tracking} panel.  As
-the mouse moves over the main display, this panel shows information such as
-flux density, position (e.g. RA and Dec), Stokes, and frequency (or velocity),
-for the point currently under the cursor.  Each registered image/MS displays
-its own tracking information.  Tracking can be 'frozen' (and unfrozen again)
-with the space bar.  (Click on the main display area first, to be sure the
-keyboard is 'focused' there).
+The {\bf Position Tracking} panel (below the images in Fig\,\ref{fig:viewer_start})
+shows information such as intensity, position (e.g. RA and Dec), Stokes, frequency 
+(or velocity), and pixel location for the point currently under the cursor.  A separate box
+appears for each registered image or Measurement Set and you can see the
+tracking information for each.  Tracking can be 'frozen' (and unfrozen again)
+by hitting the space bar when the viewer's focus is on the main display area 
+(to be sure that this is case first click on the main display area).
 
-The Animator or Tracking panels can be hidden or detached (and later
-re-attached) by using the boxes at upper right of the panels; this is
-useful for increasing the size of the display area.  (Use the 'View'
-menu to show a hidden panel again).  The individual tracking areas
-(one for each registered image) can be hidden using the checkbox at
-upper left of each area.
+\subsubsection{Region Panel}
+
+The 'Region' panel becomes active when regions
+are created. We discuss this in \S\ref{section:display.image.rgnmgr}. It contains
+information on the properties of the selected region and statistics within the region and
+allows for fitting of the emission in the region and saving or loading of region files.
+
+\subsubsection{Region Selection and Positioning in the Display Area}
+\label{section:display.viewerGUI.displaypanel.region}
+
+Within the display area, you you can draw regions or select positions using the mouse.
+To do so, first select the appropriate tool(s) on the {\tt Mouse Toolbar}. The tools
+work as follows.
+
+The {\tt Rectangle Region} drawing tool currently works for the following: 
+\begin{itemize}
+  \item Region statistics reporting for images (via double clicking in the region or in the Regions panel),
+  \item Defining a region to be average for the spectral profile tool (accessed via the {\tt Tools:Spectral Profile} drop down menu or "Open the Spectrum Profiler" icon),
+  \item Flagging of Measurement Sets. Note that the {\tt Rectangle Region} tool's mouse button must also be double-clicked to confirm an MS flagging edit.
+  \item Creating and saving an image region for various types of analysis (from the Regions panel, see \S~\ref{section:display.image.rgnmgr})
+  \item Selecting Clean regions interactively (\S~\ref{section:im.clean.interactive})
+\end{itemize}
+
+The {\tt Polygon Region} and {\tt Ellipse Region} drawing have the same uses, except that polygon region
+flagging of a Measurement Set is not supported.
+
+The {\tt Positioning} tool works for the spectral profiler, flagging visibilities, and can be saved and loaded via the Regions panel. 
+Flagging with the pointer responds to single click or drag.
+
+Once a region is defined, mouse over it inside the main display area to bring it into focus in the Regions panel or Spectral Profile Tool.
+
+{\em Region Statistics:} A variety of statistics for the currently region are displayed in the {\bf stats} tab of the Regions panel. These can
+be printed to the terminal window (not the logger) by double-clicking the completed region with the left mouse button. Here is an example of 
+reported region statistics:
+
+\small
+\begin{verbatim}
+(IRC10216.36GHzcont.image) image
+          Stokes         Velocity            Frame          Doppler        Frequency 
+               I -2.99447e+11km/s             LSRK            RADIO      3.63499e+10 
+  BrightnessUnit         BeamArea             Npts              Sum             Flux 
+         Jy/beam          36.2521            27547     1.087686e-01     3.000336e-03 
+            Mean              Rms          Std dev          Minimum          Maximum 
+    3.948473e-06     3.723835e-04     3.723693e-04    -1.045624e-03     9.968892e-03 
+
+\end{verbatim}
+\normalsize
+
+{\em Interaction With Spectral Profile Tool:} The {\tt Spectral Profile} display (see \S~\ref{section:display.image.specprof}), when active, 
+updates on {\em each change} of the rectangle, polygon, or point position. 
 
 %%%%%%
 
 \subsection{Saving and Restoring Display Panel State}
 \label{section:display.viewerGUI.save-restore}
 
-It is straightforward to save a display panel's current state (what
-data is on display along with data and panel settings).  Select 'Save Display
-Panel State to File'
-(seventh icon from left in Figure \ref{fig:viewer_maintoolbar})
-and confirm the filename.  It is strongly
-advisable (but not required) to retain the file's '.rstr' extension.  
+You can save the display panel's current state --- meaning the 
+panel settings and the data on display --- or load a saved panel
+state from disk. To save the display panel state, select {\bf Save Panel State}
+from the {\bf Display Panel} drop-down menu or click the 
+"Save Display Panel State to File" icon on the main toolbar 
+(an arrow pointing from a picture to a page, the seventh icon from left in Figure
+\ref{fig:viewer_maintoolbar}). It is advisable but not required to retain the file's '.rstr' ("Restore")
+extension.
 
-Press 'Restore Display Panel State from File' (the button to the right
-of 'Save Display Panel State to File') to
-choose a previously-created restore file.  You can also select restore
-files from the 'Load Data' window.
+You can restore the display panel to the saved state by loading the saved
+state from the Data Manager Panel, by selecting {\bf Restore Panel State}
+from the {\bf Display Panel} drop down menu, or by clicking the "Restore Display Panel State"
+icon (just to the right of the "Save Display Panel State" icon).
 
-It is possible to restore MSs or images, multiple layers such as
-contour-over-raster, and LEL displays.  You can also the save the panel
-state with no data loaded, to restore preferred initial settings such
-as overall panel size.  Animation and zoom state should
-likewise restore themselves.
+It is possible to restore panel states viewing Measurement Sets or image and
+panel states that have multiple layers, such as
+contour plots over raster images. You can also save LEL displays. 
+You can also the save or restore the panel state with no data loaded, which is a
+convenient way to restore preferred initial settings such as overall panel size.
 
-Restore is fairly forgiving about data location, and will find files located:
+{\em Data Locations:} The viewer is fairly forgiving regarding data location when restore a saved panel state.
+It will find files located:
 \begin{itemize}
   \item in the original location recorded in the restore file
   \item in the current working directory (where you started the viewer)
   \item in the restore file's directory
   \item in the original location relative to the restore file
 \end{itemize}
-This means that restore files will generally work if moved together with
-data files.  The process is less forgiving if you save the display of an
-LEL (image) expression, however; the files must be in the locations specified
-in the original LEL expression.  If a data file is {\bf not} found, restore
-will attempt to proceed but results will vary. 
+This means that you can generally restore a saved panel state if you move that
+file together with data files. The exception to this rule is that the process is less forgiving
+if you save the display of an LEL expression. In this case the files must be in the locations 
+specified in the original LEL expression.  If a data file is {\bf not} found, restore
+will attempt to proceed but results may not be ideal. 
 
-Restore files are in ascii (xml) format, and some obvious manual edits are
-possible.  However, these files are longer and more complex than you might
-imagine.  Use caution, and back up restore files you want to preserve.
-If you make a mistake, the viewer may not recognize the file as a restore
-file; other unexpected results could also occur.  It is usually easier
-and safer to make changes on the display panel and then save the restore
-file again.
-
-%%%%%%
-
-\subsection{Region Selection and Positioning}
-\label{section:display.viewerGUI.displaypanel.region}
-
-You can draw regions or select positions on the display with the mouse,
-once you have selected the appropriate tool(s) on the {\tt Mouse Toolbar}
-(see above).
-
-The {\tt Rectangle Region} drawing tool currently works for the following: 
-\begin{itemize}
-  \item Region statistics reporting for images,
-  \item Region spectral profiles for images, via the
-        {\tt Tools:Spectral Profile} menu,
-  \item Flagging of Measurement Sets
-  \item Creating and Saving an image region for various types of analysis
-        (\S~\ref{section:display.image.rgnmgr})
-  \item Selecting Clean regions interactively (\S~\ref{section:im.clean.interactive})
-\end{itemize}
-
-The {\tt Polygon Region} drawing has the same uses, except that polygon region
-flagging of an MS is not supported.
-
-The {\tt Positioning} crosshair tool works for the last two of the above.
-
-The {\tt Spectral Profile} display
-(see \S~\ref{section:display.image.specprof}), when active, updates on
-{\em each change} of the rectangle, polygon, or crosshair.  
-Flagging with the crosshair also responds to single click or drag.
-
-Region statistics are printed in the terminal window (not the logger)
-by double-clicking the completed region. The statistics are also
-displeyed in the region dock
-(\S~\ref{section:display.image.rgnmgr}). The {\tt Rectangle Region}
-tool's mouse button must also be double-clicked to confirm an MS
-flagging edit.
-
-Here is an example of region statistics from the viewer:
-\small
-\begin{verbatim}
-     Frequency       Velocity         Stokes BrightnessUnit       BeamArea 
- 1.41804e+09Hz     499.87km/s              I        Jy/beam        30.1576 
-          Npts            Sum           Flux           Mean            Rms 
-        114359   2.062986e+00   6.840674e-02   1.803956e-05   8.969640e-04 
-       Std dev        Minimum        Maximum 
-  8.967865e-04  -3.730000e-03   3.895760e-03 
-\end{verbatim}
-\normalsize
+{\em Manually Editing Saved Display Panel States:} The saved "Restore" files are in ascii 
+(xml) format, and manual edits are possible. However, these files are long and complex.  Use caution, and back 
+up restore files before editing. If you make a mistake, the viewer may not  even recognize the file as a restore file.  
+It is easier and safer to make changes on the display panel and then save the display panel state again.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{The Load Data Panel}
-\label{section:display.viewerGUI.load}
+\section{The Data Manager Panel --- Saving and Loading Data}
+\label{section:display.dataManager}
+
 \begin{figure}[h!]
 \begin{center}
 \pngname{viewer_load}{4}
-\caption{\label{fig:viewer_load} The {\bf Load Data - Viewer} panel
-that appears if you open the {\tt viewer} without any {\tt infile}
-specified, or if you use the {\tt Data:Open} menu or Open icon.
-You can see all available files (e.g. images and MS) in the current directory
-that could be loaded into the viewer.} 
-\hrulefill
+\caption{\label{fig:viewer_load} The {\bf load} tab of the {\bf Data Manager} panel.
+This appears if you open the {\tt viewer} without any {\tt infile} 
+specified, if you use select {\bf Open} from the {\bf Data} drop down menu, or click the
+Open (Folder) icon. You can access the {\bf save image} or {\bf save region} tabs
+from this view or by selecting {\bf Save as...} from the {\bf Data} drop down menu.
+The load tab shows all files in the current directory that can be loaded into the viewer 
+--- images, MS, CASA region files, and Display Panel State files.}
 \end{center}
+\hrulefill
 \end{figure}
 
-You can use the {\bf Load Data - Viewer} GUI to interactively
-choose images or MS to load into the viewer.  An example of
-this panel is shown in Figure~\ref{fig:viewer_load}.  This
-panel is accessed through the {\tt Data:Open} menu or Open icon
-of the {\bf Viewer Display Panel}.  It also appears if you open 
-the {\tt viewer} without any {\tt infile} specified.
+You can use the {\bf Data Manager Panel} to interactively save  and load
+images, Measurement Sets, Display Panel States, and regions. An 
+example of the loading tab in this panel is shown in Figure~\ref{fig:viewer_load}.  This
+panel appears automatically if you open the viewer without specifying
+an infile or it can be accessed through the {\tt Data:Open} menu or Open icon
+of the {\bf Viewer Display Panel}.
 
-Selecting a file on disk in the {\tt Load Data} panel will
-provide options for how to display the data. Images can be displayed
-as: 
+\subsection{Loading Data}
+\label{section:display.dataManager.load}
+
+The {\bf load} tab of the {\bf Data Manager Panel} allows you to interactively
+choose images or Measurement Sets to load into the viewer. The load tab
+automatically shows you the available images, Measurement Sets, and
+Display Panel States in the current directory that can be opened by the viewer.
+When you highlight an image in this view, the tab shows a brief summary of
+the image: pixel shape, extent of the image on the sky and in frequency/velocity, and 
+restoring beam (if available).
+
+Selecting a file also provide options for how to display the data. Images can be displayed as: 
+
 \begin{enumerate}
-\item raster image, 
-\item contour map, 
-\item vector map,
-\item marker map.  
+\item raster image 
+\item contour map 
+\item vector map
+\item marker map  
 \end{enumerate}
 
-You can also enter a 'Lattice Expression Language' (LEL) expression in the
-box provided (\S~\ref{section:analysis.pars.lattice}). The images used in the
-LEL expression should have the same coordinates and extents).
+These options area each discussed in \S\,\ref{section:display.image}.
 
-A MS can only be displayed as a raster.
+{\em LEL:} Instead of only loading an image from disk, you may ask the
+viewer to evaluate a 'Lattice Expression Language' (LEL) expression (\S~\ref{section:analysis.pars.lattice}). This can
+be entered in the box provided after you click the "LEL" box. The images used in the
+LEL expression should have the same coordinates and extents. 
 
+{\em Measurement Sets:} A Measurement Set can only be displayed as a raster. For 
+measurement sets, the load tab offers options for data selection. This will reduce 
+loading and processing times for visibility flagging.  
 
-%%%%%%
-\subsubsection{Registered vs. Open Datasets}
+{\em Regridding Images on Load:} Optionally, you may regrid the velocity axis of an image 
+on load to match the current coordinates grid in the Display Panel. In this case, the viewer
+will interpolate (using the selected interpolation scheme) the cube on disk to share the 
+same velocity gridding as the loaded coordinates. This can be used, e.g., to overlay contour
+maps of different spectral lines or to make synchronized moves of multiple cubes. Note that
+the regridding depends on the rest frequency in the image. 
+
+\subsection{Registered vs. Open Datasets}
 \label{section:display.viewerGUI.load.register}
 
-When you 'load' data as described above, it is first {\em opened}, and then
-{\em registered} on all existing {\tt Display Panels}.  The distinction
-is subtle.  An 'open' dataset has been prepared in memory from disk; it
-may be registered (enabled for drawing) on one {\tt Display Panel} and not
-on another.  All open datasets will have a tab in the {\tt Data Options}
-window, whether currently registered or not.  On the other hand, only those
-datasets registered on a particular panel will show in its {\tt Tracking}
-area.
+When you load data as described above, it is first {\em opened}, and then
+{\em registered} on all existing {\tt Display Panels}.  
 
-At present, it is useful to have more than one image registered on a
-panel {\em only} if you are displaying a contour image over a raster image
+An {\em open} dataset has been prepared in memory from disk.  All open datasets will 
+have a tab in the {\tt Data Display Options} window, whether currently registered or not.  
+
+When a data set is {\em registered} to a Display Panel its coordinates are aligned to
+the other displays in the panel and it is ready for drawing. If multiple Display Panels are open
+then a data set may be registered on one {\tt Display Panel} and not on another. Only those
+data sets registered on a particular Display Panel show up in its {\bf Position Tracking}
+panel.
+
+{\em Why Register More Than One Image?} It is useful to have more than one image registered on a
+panel if you are displaying a contour image over a raster image
 (\S~\ref{section:display.image.viewcontours}) or 'blinking' between images
 (see {\bf Animator} in \S~\ref{section:display.viewerGUI.displaypanel}).
-(In future we also hope to provide transparent overlay of raster images).
 
-It is the user's responsibility -- and highly advisable -- to unregister
-(or close) datasets that are no longer in use, using the {\tt Register}
-or {\tt Close} toolbutton or menu.  In future the viewer will attempt
-to aid in unregistering datasets which are not 'compatible' with a
-newly-loaded one (different sky area, e.g., or MS vs. image).
+{\em Unregistering Images:} A data set can be registered or unregistered using the {\bf Register}
+item in the {\bf Data} drop down menu or the {\bf Register} icon (third from left). Click the name of the image to
+toggle its registration state in that Display Panel. Failing to unregister or close data sets that are 
+no longer in use (or not compatible with other data in the Display Panel) may cause problems with 
+the viewer. 
 
-If you close a dataset, you must reload it from disk as described above
-to see it again.  That can take a little time for MSs, especially.  If you
-unregister a dataset, it is set to draw immediately when you re-register it,
-with its options as you have previously set them.  In general, close
-unneeded datasets but unregister those you'll be working with again.
+{\em Closing vs. Unregistering:} You can close a data set that is no longer needed using the {\bf Close}
+option in the {\bf Data} drop-down menu or the "Close" icon (fourth from left). 
+
+If you close a dataset, you must reload it from disk (or recreate it) to see it again.  If you
+unregister a dataset, it will draw immediately if you re-register it, with its options as you have 
+previously set them.  In general, close unneeded datasets but unregister those that you intend to use again.
+
+\subsection{Saving Data or Regions}
+\label{section:display.viewerGUI.save}
 
 \begin{figure}[h!]
 \begin{center}
 \pngname{viewer_save}{4}
-\caption{\label{fig:viewer_save} The {\bf Save Data - Viewer} panel
-that appears when pressing the 'save data' icon in the {\bf Main Toolbar}
+\caption{\label{fig:viewer_save} The {\bf Save Data - Image} panel
+that appears when pressing the 'save region
 (Figure~\ref{fig:viewer_maintoolbar}).} 
 \hrulefill
 \end{center}
 \end{figure}
-\subsection{The Save Data Panel}
-\label{section:display.viewerGUI.save}
-The user can use the {\bf Save Data - Viewer} GUI to export images from the
-viewer to a file. The panel is shown Figure~\ref{fig:viewer_save}.
-This panel is accessed pressing the 'save data' icon in the 
-{\bf Main Toolbar} (Figure~\ref{fig:viewer_maintoolbar}).
-The upper part lists all images that can be exported to disk.
-To save an image to a file, the use can either enter the new filename in the
-box labeled 'save to:' followed by the save-button (alternatively the
-'Enter'-key), or press 'browse...' and specify a filename via a
-standard filebrowser GUI.
 
-Independent on the original format, images can be exported in both,
-FITS format and CASA image format.
- 
+The viewer can create new images by carrying out velocity regridding, evaluating an LEL
+expression, or collapsing a data cube. You can save these images to disk using the 
+Data Manager Panel. Select {\bf Save as} under the {\bf Data} drop-down menu or
+click the {\bf Save as} (disk) icon to bring up the Data Manager Panel set to the save tabs.
+This tab is shown in Figure~\ref{fig:viewer_save}. 
+
+From the Save Image tab of the Data Manager Panel, you can export images from the
+viewer to either a CASA image or FITS file on disk. Select the desired file name and click
+"save."
+
+The Data Manager also allows you to save the loaded regions to a file, either in the CASA
+region or ds9 format. The left part lists all images that can be exported to disk.  To save an
+image to a file, the use can either enter the new filename in the box
+labeled 'output name:' followed by the save-button (alternatively the
+'Enter'-key), or choose a file name from the right hand side.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Viewing Images}
@@ -567,8 +605,8 @@ FITS format and CASA image format.
 
 There are several options for viewing an image.  These are seen
 at the right of the {\bf Load Data - Viewer} panel 
-described in \S~\ref{section:display.viewerGUI.load} and shown in 
-Figure~\ref{fig:viewer_load_image} after selecting an image.  They are:
+described in \S~\ref{section:display.dataManager.load} and shown in 
+Figure~\ref{fig:viewer_start} after selecting an image.  They are:
 \begin{itemize}
    \item {\tt raster image} --- a greyscale or color image,
    \item {\tt contour map} --- contours of intensity as a line plot,
@@ -580,19 +618,19 @@ The {\tt raster image} is the default image display, and is what you
 get if you invoke the {\tt viewer} from {\tt casapy} with an image
 file name.  In this case, you will need to use the {\tt Open} menu to
 bring up the {\bf Load Data} panel to choose a different display.
-
-\begin{figure}[h!]
-\begin{center}
-\pngname{viewer_load_image}{4}
-\caption{\label{fig:viewer_load_image} The {\bf Load Data - Viewer} panel
-as it appears if you select an image.  You can see all options
-are available to load the image as a {\tt raster image}, 
-{\tt contour map}, {\tt vector map}, or {\tt marker map}.
-In this example, clicking on the {\tt raster image} button would 
-bring up the displays shown in Figure~\ref{fig:viewer_start}.}
-\hrulefill
-\end{center}
-\end{figure}
+%
+%\begin{figure}[h!]
+%\begin{center}
+%\pngname{viewer_load_image}{4}
+%\caption{\label{fig:viewer_load_image} The {\bf Load Data - Viewer} panel
+%as it appears if you select an image.  You can see all options
+%are available to load the image as a {\tt raster image}, 
+%{\tt contour map}, {\tt vector map}, or {\tt marker map}.
+%In this example, clicking on the {\tt raster image} button would 
+%bring up the displays shown in Figure~\ref{fig:viewer_start}.}
+%\hrulefill
+%\end{center}
+%\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -951,133 +989,331 @@ panel.}
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Spectral Profile Plotting}
+\subsection{The Spectral Profile Tool}
 \label{section:display.image.specprof}
-From the {\bf Main Toolbar} (see Fig.~\ref{fig:viewer_maintoolbar}),
-the {\tt Spectral Profile} plotting tool can be selected.
-This creates a new {\bf Spectral Profile} window containing an x-y plot
-of the intensity versus spectral axis. The displayed spectrum is extracted in
-region marked with the {\bf Point}, {\bf Rectangle}, {\bf Ellipse} or 
-{\bf Polygon Region} tool in the {\bf Viewer Display Panel}. The spectrum
-shown in the {\bf Spectral Profile} window (right panel in Figure 
-\ref{fig:viewer_specprof}) is automatically updated if the corresponding
-region is dragged across the image in the {\bf Viewer Display Panel}
-(right panel in Fig.~\ref{fig:viewer_specprof}).
 
 \begin{figure}[h!]
 \begin{center}
-\pngname{viewer_specprof_1}{3.3}
-\pngname{viewer_specprof_2}{2.9}
+\pngname{viewer_specprof_1}{2.2}
+\pngname{viewer_specprof_2}{3.3}
 \caption{\label{fig:viewer_specprof} The {\bf Spectral Profile} panel (right)
 that appears when pressing the button {\bf Open the Spectrum Profiler} in the
 {\bf Main Toolbar} and then use the tools to select a region in the image,
-such as the rectangular region on the left panel. The profile changes to
-track movements of the region if moved by dragging with
-the mouse.} 
+such as the rectangular region on the left panel. The Spectral Profile tool
+shows the most recent image highlighted and updates to track movements 
+of the region if moved by dragging with the mouse.} 
 \hrulefill
 \end{center}
 \end{figure}
-\subsubsection{Toolbar}
+
+The {\bf Spectral Profile Tool} allows you examine the intensity as a function
+frequency or velocity. To start a new Spectral Profile window, click the 
+{\bf Spectral Profile} option from the {\bf Tools} drop-down menu or click the 
+"Spectral Profile" (red line graph) icon from the Main Toolbar 
+(see Fig.~\ref{fig:viewer_maintoolbar}). A new Spectral Profile window will appear. 
+
+{\em Make Sure That You Use the Radio Version:} This section describes the 
+"Radio" version of the profiler. To be sure that you have the radio version of the tool
+selected (this may not be the default), click on the preferences icon 
+( the gear fourth from the left) and make sure that the "Optical" option is not checked.
+
+The Spectral Profile Tool consists of a toolbar (\S \ref{section:display.image.specprof.toolbar}),
+a main display area (\S \ref{section:display.image.specprof.mainwindow}), and three associated tabs:
+{\bf Set Position} (\S \ref{section:display.image.specprof.setpos}), 
+{\bf Spectral-Line Fitting} (\S \ref{section:display.image.specprof.specfit}), 
+{\bf Line Overlays} (\S \ref{section:display.image.specprof.lineoverlay}).
+
+{\em Interaction With the Main Display Panel:} For the Spectral Profile tool to work, a region or point
+must be specified in the main Viewer Display window. Use the mouse tools to specify a point, 
+rectangle, ellipse, or polygon region. Alternatively, load a region file. The Spectral Profile tool will show 
+a spectrum extracted from the region most recently highlight by the mouse in the main Viewer Display Panel.
+The method of extraction can be specified by the user; it is a mean by default).
+
+The Spectral Profile tool can also feed back to the Main Display Panel. By holding CTRL and clicking
+in the spectrum, you will cause the Main Display Panel to jump to display the frequency channel corresponding
+to the spectral (x) coordinate of the region clicked in the Spectral Profile tool. Holding CTRL and dragging out
+a spectral range will queue a movie scrolling through images across that spectral range.
+
+\subsubsection{Spectral Profile Toolbar}
 \label{section:display.image.specprof.toolbar}
-The toolbar of the {\bf Spectral Profile} (Figure \ref{fig:viewer_spectoolbar})
-contains action icons to (from left to right):
-\begin{itemize}
-\item export the current profile to a FITS or ASCII file;
-\item print the main window;
-\item save the panel as an image (PNG, JPG, PDF, ...);
-\item set plot preferences;
-\item 'move' the spectrum in the xy-plane (arrows);
-\item zoom in and out (magnifiers).
-\end{itemize}
 
 \begin{figure}[h!]
 \begin{center}
 \pngname{viewer_spectoolbar}{4}
-\caption{\label{fig:viewer_spectoolbar}The toolbar of the
-{\bf Spectral Profile} contains a couple of action icons to save data
-or manipulate the displayed xy-range.}
+\caption{\label{fig:viewer_spectoolbar} The toolbar for the Spectral Profile tool allows the user to
+save the spectrum, print or save the tool as an image, edit preferences (general, tool, legend), and
+pan or zoom around the spectrum.}
 \hrulefill
 \end{center}
 \end{figure}
-\subsubsection{Main window}
-\label{section:display.image.specprof.mainwindow}
-The main window shows the spectrum extracted from the image. The unit of the
-spectral axis can be selected between frequency, wavelength and velocity
-units (available only if a rest frequency is given). The user can choose
-between the different combine types {\tt mean}, {\tt median}, {\tt sum}
-and {\tt flux}\footnote{The combine type {\tt flux} is similar to sum, but
-divided by the number of pixels in the synthesized beam. This option is only available
-for adequate data.}
-in a combo box. Besides the spectral values also the error bars can be plotted.
-The error values are either computed by propagating the pixel errors provided
-in the data (error type {\tt propagated}) or by computing the
-root-mean squared error (error type {\tt rmse}).
 
-\begin{figure}[h!]
-\begin{center}
-\pngname{viewer_specmouse_1}{2.1}
-\pngname{viewer_specmouse_2}{2.1}
-\pngname{viewer_specmouse_3}{2.1}
-\caption{\label{fig:viewer_specmouse}With {\tt dragging the left mouse button}
-over the main window the user can interactively zoom into the profile
-(yellow box in left panel). Pressing the {\tt shift-key} while {\tt dragging the left mouse button}
-marks a spectral range with a gray area (middle panel) and provides
-start and end values for the tabs {\tt collapse/moments} and {\tt linefit}. With the
-{\tt ctrl-key} pressed, a gray line marks the cursor position. Clicking the {\tt left mouse button}
-displays the corresponding spectral channel in the {\bf Viewer Display Panel}.}
-\hrulefill
-\end{center}
-\end{figure}
-The main window is sensitive to the following combination input from keyboard
-and mouse (Figure \ref{fig:viewer_specmouse}):
+Figure \ref{fig:viewer_spectoolbar} shows the toolbar from the top portion of the {\bf Spectral Profile} 
+window. From left to right, the icons allow the user to:
+
 \begin{itemize}
-\item {\bf zoom:} when {\tt pressing and dragging the left mouse button}, a
-yellow box is drawn onto the panel. After releasing the mouse button,
-the xy-range is zoomed to the values of the yellow box
-(Fig.~\ref{fig:viewer_specmouse}, left panel);
-\item {\bf spectral range selection:} when {\tt pressing and dragging left 
-mouse button with shift-key}, a gray box marks a spectral range in the plot.
-The start and end values are written into the {\tt from:} and {\tt to:} box
-of the {\bf collapse/moments} and {\bf linefit} tab. 
-This allows an interactive (Fig.~\ref{fig:viewer_specmouse}, middle panel)
-selection of the spectral range used in the collapse/moments or linefit operation;
-\item {\bf specral channel selection:} When pressing the {\tt ctr-key}, a gray
-line is drawn at the current position of the mouse in the spectral profile
-window (Fig.~\ref{fig:viewer_specmouse}, right panel). After
-{\tt pressing the right mouse button}, the image in the {\bf Viewer Display Panel}
-displays in the z-axis the spectral channel marked with the gray line.
+\item (disk) export the current profile to a FITS or ASCII file
+\item (printer) print the main window to a hard copy
+\item (writing desk) save the panel as an image (PNG, JPG, PDF, etc.)
+\item (gear) set plot preferences
+\item (color wheel) set color preferences for the plot
+\item (signpost) set legend preferences
+\item (arrows) pan the spectrum in the indicated direction
+{\em Note: The arrow keys also allow one to pan using the keyboard.}
+\item (magnitfying glass) zoom to the default zoom, in, and out
+{\em Note: the +/- keys allow one to zoom with the keyboard}
 \end{itemize}
 
-\subsubsection{Image analysis}
-\label{section:display.image.specprof.analysis}
-The two tabs labeled {\tt collapse/moments} and {\tt linefit} in the lower
-part of the {\bf Spectral Profile} panel offer simple image analysis tools to
-the user (see Figs.~\ref{fig:viewer_specprof} and \ref{fig:viewer_specmouse}).
-
-In {\tt collapse/moments} the user can collapse the image along the spectral
-axis between the start and end values provided in the corresponding boxes.
-Various collapse types ({\tt mean}, {\tt median} and {\tt sum}) are offered,
-and the error is computed via error propagation from the pixel errors
-{\tt propagated} or by computing the root-mean squared error ({\tt rmse}).
-The collapsed image is displayed in the {\bf Viewer Display Panel}.
 
 \begin{figure}[h!]
 \begin{center}
-\pngname{viewer_specproffit}{4}
-\caption{\label{fig:viewer_specproffit}A Gaussian fit (blue line)to the spectral
-profile (red line). The status line at the bottom of the panel contains the main
-fit results, all details are printed to standard output.}
+\hrulefill \\
+\pngname{viewer_prefs_1}{1.0}
+\pngname{viewer_prefs_2}{2.5}
+\pngname{viewer_prefs_3}{2.5}
+\caption{\label{fig:viewer_prefs} Preferences options in the Spectral Profile Tool. From the toolbar, one
+can access dialogs to set overall viewer preferences, colors for plotting, and how the plot legend is displayed.}
 \hrulefill
 \end{center}
 \end{figure}
-In {\tt linefit} the user can fit a profile (Gaussian plus polynomial)
-to the spectrum profile (Figure \ref{fig:viewer_specproffit}). If
-error bars are displayed in the spectral profiler, they are used in
-the fitting as weights. The main results of the fit are shown in the
-status bar of the {\bf Spectral Profile}.  A detailed summary of the
-fit is sent to the standard output (either the casapy window or the
-window where the viewer was started).
 
+Figure \ref{fig:viewer_prefs} shows the setting dialogs accessible from the toolbar. 
+
+The {\bf Preferences} dialog opened by the gear icon allows the user to:
+
+\begin{itemize}
+\item Toggle automatic scaling the x- and y-ranges of the plot. 
+\item Toggle the coordinate grid overlay in the background of the plot.
+\item Toggle whether registered images other than the current one appear as overlays on the plot.
+\item Toggle whether these profiles are plotted relative to the main profile {\em (in development)}.
+\item Toggle the display of tooltips {\em (in development)}.
+\item Toggle the plotting of a top axis.
+\item Toggle between a histogram and simple line style for the plot.
+\item Toggle between the radio and optical versions of the Spectral Profile tool {\em Note: We discuss only the radio version here; this mainly
+impacts the Spectral Line Fitting and Collapse/Moments functionality.}.
+\item Toggle the overplotting of a line showing the channel currently being displayed in the main Display Panel.
+\end{itemize}
+
+The {\bf Color Curve Preferences} dialog opened by the color wheel icon allows the user to:
+
+\begin{itemize}
+\item Select the color of the line marking the current channel shown in the main Display Panel.
+\item Select the color used to overlay molecular lines from Splatalogue.
+\item Select the color to plot the initial Gaussian estimate used in spectral line fitting.
+\item Select the color used for the zoom rectangle.
+\item Set a queue of colors used to plot the various data sets registered in the Display Panel.
+\item Set a queue of colors to plot the set of Gaussian fits.
+\item Set a queue of colors to plot the synthesized curve.
+\end{itemize}
+
+Two sets of preset colors, "Traditional" or "Alternative", are available and the user can define
+their own custom color palette.
+
+The legend options opened by the signpost icon allow the user to toggle the plotting of
+a legend defining the curves shown in the main Spectral Profile window. Using a drop-down 
+dialog, the legend can be placed in the top left corner of the plot, to the right of the plot, or below the plot. 
+Toggling the color bar causes the color of the curve to be indicated either via a short bar or using
+the color of the text itself. Double click the names of the files or curves to edit the text shown for that curve 
+by hand.
+
+\subsubsection{Main Spectral Profile Window}
+\label{section:display.image.specprof.mainwindow}
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{viewer_specmain}{4}
+\caption{\label{fig:viewer_specmain} The main panel for the {\bf Spectral Profile} tool. Buttons along
+the bottom row allow the axes to be set. Arrow keys pan and dragging out an area with the mouse zooms.
+Holding CTRL and clicking in the spectrum will jump the main Viewer Display panel to display that
+frequency channel.}
+\hrulefill
+\end{center}
+\end{figure}
+
+The main window shows the spectrum extracted from active region of the image in the 
+main Display Panel and any other registered images if overlays are enabled.  Menus
+along the bottom of the image allow the user to select how the spectrum is displayed. From left to
+right:
+
+\begin{itemize}
+\item The units for the bottom spectral axis.
+\item The units for the top spectral axis. {\em Note: only enabled if only a single image is registered
+and the top axis option is enabled. Dual axes are not well-defined for mixed data sets.}
+\item The units for the left intensity or flux axis {\em Note: fraction of peak allows easy comparison of data
+with disparate intensity scales.}.
+\item The velocity reference frame used if a velocity axis is chosen for the top or bottom axis.
+\item The method used to extract spectrum from the region.
+\item Toggle the calculation and overplotting of error bars calculated from scatter in the data ({\tt rmse} refers
+to root mean square error).
+\end{itemize}
+
+%\begin{figure}[h!]
+%\begin{center}
+%\hrulefill \\
+%\pngname{viewer_specmouse_1}{2.1}
+%\pngname{viewer_specmouse_2}{2.1}
+%\pngname{viewer_specmouse_3}{2.1}
+%\caption{\label{fig:viewer_specmouse}With {\tt dragging the left mouse button}
+%over the main window the user can interactively zoom into the profile
+%(yellow box in left panel). Pressing the {\tt shift-key} while {\tt dragging the left mouse button}
+%marks a spectral range with a gray area (middle panel) and provides
+%start and end values for the tabs {\tt collapse/moments} and {\tt linefit}. With the
+%{\tt ctrl-key} pressed, a gray line marks the cursor position. Clicking the {\tt left mouse button}
+%displays the corresponding spectral channel in the {\bf Viewer Display Panel}.}
+%\hrulefill
+%\end{center}
+%\end{figure}
+
+In addition to these drop-down menus, the main Spectral Profile window allows the user to do the following using keyboard and mouse inputs: % (Figure \ref{fig:viewer_specmouse}):
+
+\begin{itemize}
+\item {\em jump the main Display Panel window to a specified channel (CTRL+click):} hold CTRL and click in the spectrum. A marker will appear and the
+main Viewer Display Panel will jump to display that channel.
+\item {\em animate the main Display Panel in a movie across a frequency range (CTRL+click+drag):} hold CTRL, click, and drag. The main Viewer Display
+panel will respond by showing a movie scrolling across the selected spectral channels.
+\item {\em zoom the Spectral Profile (+/-, mouse drag)}: Use the +/- keys to zoom in the same
+way as the toolbar buttons. Alternatively, press and dragging the left mouse button. A yellow box is drawn onto the panel. After releasing the mouse button,
+the plot will zoom to the selected range.
+\item {\em pan the Spectral Profile (arrows)}: Use the arrow keys to pan the plot.
+\item {\em select a spectral range"} hold shift, click and drag. A gray area will be swept out in the display. This method can be used to select a range
+for spectral line fitting or collapsing a data cube.
+\end{itemize}
+
+\subsubsection{Set Position}
+\label{section:display.image.specprof.setpos}
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{viewer_setpos}{4}
+\caption{\label{fig:viewer_setpos} The Set Position tab in the Spectral Profile Tool. Here user can specify the center and extent (for rectangles) of 
+the region under consideration by hand.}
+\hrulefill
+\end{center}
+\end{figure}
+
+The Spectral Profile Tool displays the spectrum extracted from the
+highlighted region in the main Viewer Display Panel. The {\bf Set
+  Position} tab inside the Spectral Profile Tool allows the user to
+refine the position of this region manually. Shown in Figure
+\ref{fig:viewer_setpos}, this tab allows the user to type in a new
+R.A. and Declination or pixel center for a point or rectangle
+region. The user may also specify the extent of the rectangular region
+by setting the {\bf Type} drag-down menu to Rectangle. Currently this
+feature only works for points or rectangular regions ({\em in
+  development}).
+
+\subsubsection{Spectral-Line Fitting}
+\label{section:display.image.specprof.specfit}
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{viewer_specfit_1}{4}
+\caption{\label{fig:viewer_specproffit} The Spectral Line Fitting tab in the 
+Spectral Profile Tool. The user can fit a combination of a polynomial and multiple Gaussian components,
+specifying the range to be fit (gray region) manually or with a shift+click+drag. Initial estimates for each component
+may be entered by hand or specified via an initial estimates GUI. The results are output to a dialog and text file with
+the fit overplotted (here in blue) on the spectrum (with the possibility to save it to disk).}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{viewer_specfit_2}{3}
+\pngname{viewer_specfit_3}{3}
+\caption{\label{fig:viewer_specproffit_2} The left panel shows the graphical specification of initial estimates for Gaussian fitting.
+Slider bars specify the center, FWHM, and peak intensity for the initial estimate. The right panel shows the verbose output of
+the fitting.}
+\hrulefill
+\end{center}
+\end{figure}
+
+{\em Very much under active development.}
+
+The {\bf Spectral-Line Fitting} tab, shown in Figures \ref{fig:viewer_specproffit} and \ref{fig:viewer_specproffit_2}, 
+allows the user to interactively fit a combination of Gaussian and polynomial profiles to the data shown 
+in the Spectral Line Profile tool. The tool includes a number of options, many of which remain under
+development:
+
+\begin{itemize}
+\item A drag-down menu at the top of the panel allows the user to pick which data set to fit.
+\item The spectral range to fit can be specified by either holding shift+click+dragging or by typing it manually
+into the box at the top left.
+\item Optionally multiple fits can be carried out once. ({\em Under development.})
+\item Optionally a polynomial of the specified order may be fit. 
+\item The results may be saved to a text file. This text file should be specified {\em before} the fit is carried out. {\em Note that 
+the fit curve itself becomes a normal spectral profile data set and can be saved to disk using the toolbar (disk icon) after the 
+fit.}
+\item One or more Gaussians can be fit ({\em Results are presently most stable for one Gaussian.}). Specify the number of
+Gaussians and then enter initial estimates for the peak, center, and FWHM in the table below. Any of these values can be fixed
+for any of the Gaussians being fit. Initial estimates can also be manually specified by clicking {\bf Specify Estimates.} This brings up an additional 
+GUI window (Figure \ref{fig:viewer_specproffit_2}), where slides can be used to specify initial estimates for each Gaussian to be fit.
+\end{itemize}
+
+Currently the tool works well for specifying a single Gaussian. Fitting multiple components can become unstable (often due to poor 
+choice of initial estimates). This is an area of active development and future releases will offer improved capabilties.
+
+\subsubsection{Line Overlays}
+\label{section:display.image.specprof.lineoverlay}
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{viewer_lineoverlay}{4}
+\caption{\label{fig:viewer_lineoverlay} Line Overlays in the Spectral Profile Tool. The {\bf Line Overlay} tab, shown at the bottom,
+allows users to query the CASA copy of the Spaltalogue spectral line database. Enter the redshift of your source (right panel),
+select and Astronomical Filter from the drop down menu, and use shift+click+drag to select a frequency range (or do so manually). 
+The "Search" button will bring up the dialog seen at the left top part of the image, which can in turn be used to graph the candidate
+lines in the main Spectral Profile window (here CO v=0).}
+\hrulefill
+\end{center}
+\end{figure}
+
+{\em Very much under active development.}
+
+This experimental new feature, shown in Figure \ref{fig:viewer_lineoverlay}, allows the user to search the portion of the Splatalogue database
+that is packaged with CASA to identify spectral lines in the region of interest. Select the {\bf Line Overlays}
+tab. If know, enter the redshift or velocity of your source in the "Doppler Shift" panel. Specify a minimum and maximum frequency range to
+search or, even easier, hold shift and drag out a range in the spectrum (you will see a gray box appear). Optionally, you may select 
+an astronomical filter from the list --- this is usually a good idea, to pare the potentially very large list of candidate lines to a smaller set of
+reasonable candidates. 
+
+Click "Search" and the Spectral Profile will search Splatalogue for a list of Spectral lines that that fit that Astronomical
+Filter in that frequency range for that redshift. A dialog will pop up showing the list of candidate lines. Highlight one or more of them and
+click "Graph Selected Lines." A set of vertical markers will appear in the main Spectral Profile window at the appropriate (redshifted)
+frequencies for the line.
+
+We emphasize that this feature remains under active development. Look for improved performance and an expanded feature set in the next release.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{The Collapse/Moments Tool}
+\label{section:display.image.collapse}
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{viewer_collapse}{4}
+\caption{\label{fig:viewer_collapse} The {\bf Collapse/Moments} tool, accessed from
+the Main Toolbar or the {\bf Tools} drop down menu. The mean spectrum from the region 
+in the Main Display Panel appears in the top part of the tool. After selecting a range,
+a moment to calculate, and optionally data to exclude click collapse to calculate a new image.}
+\hrulefill
+\end{center}
+\end{figure}
+
+{\em This area is under active development.}
+
+{\em Major Caveat: The collapse tool currently works only on CASA images, not FITS files.}
+
+The collapse/moments tool, available from the main toolbar (arrows), allows the user
+to interactively collapse an image cube into a plane using a wide variety of algorithms. Load a data cube and
+click the collapse icon or select {\bf Collapse/Moments} from the drop down {\bf Tools} menu.
+
+The tool uses the same format as the Spectral Profile tool and will show the integrated spectrum of whatever region
+or point is currently selected in the main Display Panel. The window that comes up allows the user to select the spectral range 
+manually or via a shift+click+drag motion of the mouse (sweeping out a gray area). A list of available calculations appears in the center 
+of the panel. One can select anywhere from one to all of these. In the right side of the panel, one can select a range of values to 
+include or exclude from the calculation (e.g., to engage in an approximation of $\sigma$-clipping or something similar). 
+
+The results can be saved to a file. If they are not, then they will be saved to a temporary file and can later be saved from the Data Manager
+panel using the {\bf Save Image} functionality.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Managing Regions and Annotations}
@@ -1101,11 +1337,10 @@ some images, masks are stored in a True/False Boolean format.
   Regions can be created with the buttons marked as 'R' in the mouse
   tool bar (\S~\ref{section:display.viewerGUI.displaypanel},
   \S~\ref{section:display.viewerGUI.displaypanel.region}). The viewer
-  currently supports rectangles, ellipses, polygons, and the point
-  (crosshair). As usual, a mouse button can be assigned to each button
-  as indicated by the small black square in each button (marking the
-  left, middle, or right mouse button
-  \S~\ref{section:display.viewerGUI.displaypanel},
+  currently supports rectangles, ellipses, polygons, and the point. As
+  usual, a mouse button can be assigned to each button as indicated by
+  the small black square in each button (marking the left, middle, or
+  right mouse button \S~\ref{section:display.viewerGUI.displaypanel},
   \S~\ref{section:display.viewerGUI.displaypanel.region}). An example
   is shown in Fig.\,\ref{fig:viewer_regions}.
 
@@ -1132,12 +1367,13 @@ corners are solid.
 Regions can be moved by dragging with the mouse button and if more
 than one region is selected, all selected regions move together.
 
-To load, unload, modify, and to display the value statistics of each
+To load a region one can use the regular {\tt Load Data Browser}.To
+load, unload, modify, and to display the value statistics of each
 region, the Region Panel can be loaded via the
 'View'$\rightarrow$'region' drop-down menu. As all other panels, the
 region panel can be docked to different portions of the viewer and it
 can also be detached. If it is dismissed (the cross in the upper right
-corner), it can be retrieved by the {\tt 'View'} menu. 
+corner), it can be retrieved by the {\tt 'View'} menu.
 
 The three basic windows of the region panel are shown in
 Fig.\,\ref{fig:viewer_regionpanel}.
@@ -1156,7 +1392,7 @@ region panel: {\tt properties}, {\tt stats}, and {\tt file}.}
 
 The bottom of this panel features a slider to switch between regions
 in the image. Regions can be removed by hovering over and pressing
-{\tt ESC}} or by pressing the buttons to the right side of the slider
+{\tt ESC} or by pressing the buttons to the right side of the slider
 where the first button deletes all regions and the far right button
 deletes the region that is currently displayed in the panel.
 
@@ -1208,9 +1444,12 @@ further use.
 \label{section:display.image.rgnmgr.file}
 
 The third tab 'file' is used for loading and saving regions from and
-to disk (select the appropriate the action at the top). To save to
-ascii file, one can specify the file format, where the default is a
-CASA region file (saved with a *.crtf suffix, see
+to disk (select the appropriate the action at the top). {\it If no
+  region has been created, the region panel will be empty. Use the
+  regular ``Load Data'' file browser
+  (\S~\ref{section:display.dataManager.load}) to load the a region file.}
+To save to ascii file, one can specify the file format, where the
+default is a CASA region file (saved with a *.crtf suffix, see
 \S\,\ref{chapter:regionformat}). It is also possible to load and save
 DS9 regions, but remember that the DS9 format does not offer the full
 flexibility and cannot capture stokes and spectral axes. DS9 regions
@@ -1540,7 +1779,7 @@ animation and sliders.
 \label{section:display.ms.adjust.flagging}
 
 These options allow you to edit (flag or unflag) MS data.
-The Crosshair and Rectangle Region {\bf Mouse Tools}
+The Point Tool and Rectangle Region {\bf Mouse Tools}
 (\S~\ref{section:display.viewerGUI.displaypanel.region}) are used on
 the display to select the area to edit.  When using the Rectangle Region
 tool, double-click inside the selected rectangle to confirm the edit.
@@ -1582,7 +1821,7 @@ the data you wish to edit.
 
 This control can be used to extend subsequent edits to all baselines
 which include the desired antenna[s].  For example, if you set this item
-to 'Yes' and then click the crosshair on a visibility point with
+to 'Yes' and then click the point tool on a visibility position with
 baseline 3-19, the edit would extend over baselines 0-3, 1-3, 2-3, 3-3,
 3-4, ... 3-{\tt nAntennas-1}.  Note that the second antenna of the selection
 (19) is irrelevant here -- you can click anywhere within the 'Antenna 3 block',
@@ -1747,76 +1986,54 @@ greatly speed up retrieval.
 \section{Printing from the Viewer}
 \label{section:display.print}
 
-You can use the {\tt Data:Print} menu or the {\bf Print} button to
-bring up the {\bf Viewer Print Manager}.  From this panel, you can
-print a hardcopy of what is in the Display Panel, or save it in a 
-variety of formats.
-
 \begin{figure}[h!]
 \begin{center}
 %\pngname{viewer_printing}{6}
 \pngname{viewer_jupiter_print}{6}
-\caption{\label{fig:viewer_print} Setting up to print to a file.
-The background color has been set to {\tt white}, the line width
-to {\tt 2}, and the print resolution to {\tt 600} dpi (for an
-postscript plot).  To make the plot, use the {\bf Save} button on
-the {\bf Viewer Print Manager} panel (positioned in the figure in
-the upper right) and select a format with the drop-down, or 
-use the {\bf Print} button to send directly to a printer.
-} 
+\caption{\label{fig:viewer_print} Printing the display to a hardcopy
+of a file. From the {\bf Viewer Print Manager}, located in top right here and
+accessed by the print icon or from the Data drop down menu, 
+you can use the {\bf Save} button to save save an image or {\bf Print}
+directly to a printer. To achieve the best results, it is often helpful to
+adjust the settings in the {\bf Data Display Options} and {\bf Viewer Canvas Manager},
+shown at right.} 
 \hrulefill
 \end{center}
 \end{figure}
 
-Figure~\ref{fig:viewer_print} shows an example of printing to a file.
-The key to making acceptable hardcopies (particularly for printing
-or inclusion in documents) is to set the background color and line
-widths to appropriate values so the plot and labels show up in the
-limited resolution of the hardcopy.
+You can select {\tt Data:Print} from the drop down menu or click 
+the {\bf Print} icon to bring up the {\bf Viewer Print Manager}. From this 
+panel, you can {\bf Print} the contents of Display Panel to a hardcopy
+or {\bf Save} them as an image in a format selected from the drop-down
+menu at the bottom left of the window. Note that the save feature will
+overwrite the file in question without prompting.
 
-Use the {\bf Viewer Canvas Manager} 
-(\S~\ref{section:display.viewerGUI.canvas}) to change the 
-{\bf Background Color} from its default of {\tt black} to
-{\tt white} if you are making plots for printing or inclusion in
-a document.  You might also want to change the {\bf colormap}
-accordingly.
+The Viewer Print Manager allows you to adjust the DPI, orientation,
+and page format (Output Media) for Postscript or PDF files and to
+scale the image to a desired pixel size for other images.
 
-Adjust the {\bf Line Width} of the {\bf Axis Label Properties}
-options in the {\bf Data Display Options} panel so that the
-labels will be visible when printed.  Increasing from the default
-of {\tt 1.4} to a value around {\tt 2} seems to work well.
+To achieve the best output it is usually advisable to adjust the settings
+in the {\bf Viewer Print Manager}, {\bf Data Display Options}, 
+and {\bf Viewer Canvas Manager} . For PDF and Postscript output, turning
+the DPI up all the way yields the best-looking results. For other images,
+a white background often makes for better looking images than the 
+default black. It is often necessary to increase the {\bf Line Width}
+in the {\bf Axis Label Properties} (in the {\bf Data Display Options} panel)
+to ensure that the labels will be visible when printed.  Increasing from the default
+of {\tt 1.4} to a value around {\tt 2} often works well.
 
-You can choose an output file name in the panel.  Be sure to
-make it a new name, otherwise it will not overwrite a previous file
-(and will not say anything about it).
-
-If you will be printing to a postscript printer or to a PS or EPS file,
-dial up the {\bf [PS] Resolution (dpi)} to its maximum of {\tt 600}.  
-This will increase the size of the PS file somewhat, but will
-make a much better plot.  Use {\tt gzip} to compress the PS file
-if necessary.
-Be sure to choose the desired Output Media and Orientation for
-PS also.
-
-{\bf BETA ALERT:} The postscript printing capabilities of the 
-{\tt casaviewer} are currently limited due to some issues with the
-way we use Qt and do axis labels.  Significant improvements have
-been made in Patch 3.  This will be further upgraded in the
-future, but for now you will need to follow the suggestions above
-to get a useable plot.  Note that {\tt ghostview} may show a poorer
-version of the PS than you will get when you print.
+Figure~\ref{fig:viewer_print} shows an example of printing to a file while
+adjusting the {\bf Data Display Options} and {\bf Viewer Canvas Manager} to
+improve the appearance of the plot.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Image Viewer ({\tt imview})}
 \label{section:display.imview}
 
-{\tt imview} is currently mostly a close of the {\tt viewer}. A
-significant improvement, however, is that {\tt imview} adds
-scriptability from the usual task interface to the {\tt viewer}. This
-will enable the production of plots without invoking the GUI. To date,
-the controls from the command interface are still limited but we will
-add the full functionality gradually. 
+The {\tt imview} task offers scriptable access to many viewer options.
+This enables the production of customized plots without invoking the GUI 
+and allows one to open the viewer to a carefully selected state.
 
 {\tt imview} has the following inputs:
 
@@ -1881,10 +2098,12 @@ async               =      False        #  If true the taskname must be started
 \end{verbatim}
 \normalsize
 
-The {\tt raster} and {\tt contour} parameters control how images are
-loaded. They take python dictionaries as inputs. This may be an easier
-solution than a complicated matrix of input parameters. The structure
-looks like:
+The {\tt raster} and {\tt contour} parameters specify which images to load
+and how these images should be displayed. These parameters take 
+python dictionaries as inputs. The fields in these dictionaries specify how
+the image will be displayed.
+
+An example call to {\tt imview} looks like this:
 
 \small
 \begin{verbatim}
@@ -1900,15 +2119,16 @@ imview(raster={'file': 'ngc5921.clean.image',
 \end{verbatim}
 \normalsize
 
-Let's go through the structure: 
+The argument to {\tt raster} is enclosed in the curly braces \{ \} . Within these
+braces are a number of "key":"value" pairs. Each sets an option in the viewer,
+with the GUI parameter to set defined by the "key" and the value to set it to
+defined by "value." In the example above, 'file':'ngc5921.clean.image' 
+sets the file name of the raster image, 'range': [-0.01,0.03] sets the range of
+pixel values used for the scaling.
 
-The parameter that can be found in the GUI is listed here as 'key':'value'
-pair. E.g. 'file':'ngc5921.clean.image' sets the file name of the
-raster image, 'range': [-0.01,0.03] sets the scaling. 
-
-{\tt contour} can take more than a single file at a time to allow
-multiple contour overlays. This can be achieved by specifying two
-dictionaries in {} brackets
+{\tt contour} works similar to 'raster' but can accept multiple dictionaries in order to produce
+multiple contour overlays on a single image. To specify multiple contour overlays, simply 
+pass multiple dictionaries (comma delimited) in to the contour argument:
 
 \small
 \begin{verbatim}
@@ -1917,15 +2137,16 @@ dictionaries in {} brackets
 \end{verbatim}
 \normalsize
 
+{\tt zoom} specifies the part of the image to be shown.
 
-{\tt zoom} is a parameter to specify the part of the image that is
-shown, {\tt axes} defines what axes are shown (most obviously 'x':'Right
-Ascension', 'y':'Declination' are the default and most useful, but one
-axis could also be frequency), and {\tt out} defines the filename of
-the output in various graphic formats. 
+{\tt axes} defines what axes are shown. By default, the viewer 
+will show 'x':'Right Ascension', 'y':'Declination' but one may also
+view position-frequency images. 
 
-Currently, the following parameters are supported:
+{\tt out} defines the filename of the output, with the extension setting the file type. 
 
+Currently, the following parameters are supported with additional functionality
+planned for future releases:
 
 \small
 \begin{verbatim}
@@ -1948,7 +2169,7 @@ zoom    -- (int)    integral zoom level
                     channel (int)     => chanel to display
            (dict)   <region record>   => record loaded
                                          e.g. rg.fromfiletorecord( )
-axes    -- (string*3) demension to display on the x, y, and z axes
+axes    -- (string*3) dimension to display on the x, y, and z axes
            (dict)     x               => dimension for x-axes
                       y               => dimension for y-axes
                       z               => dimension for z-axes
@@ -1961,6 +2182,7 @@ out     -- (string) file with a supported extension
                       orient (string) => portrait or landscape
 \end{verbatim}
 \normalsize
+
 Examples are also found in {\tt help imview}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -21,6 +21,8 @@
 % STM 2011-05-03  Release 3.2.0 importevla and importasdm update
 % JO 2011-10-03 Release 3.3 edits
 % JO 2012-05-05 Release 3.4 edits
+% DP 2012-09-27 addition of virtualconcat
+% JO 2012-09-28 Release 4.0.0 edits
 
 \chapter{Visibility Data Import, Export, and Selection}
 \label{chapter:io} 
@@ -38,7 +40,7 @@ to concatenate multiple datasets.  These are:
      {\it ASDM} format (\S~\ref{section:io.import.asdm})
    \item {\tt importasdm} --- import of ALMA data in 
          {\it ASDM} format (\S~\ref{section:io.import.asdm})
-   \item {\tt importevla} --- import of EVLA/JVLA data and flags in 
+   \item {\tt importevla} --- import of Jansky VLA data and flags in 
          {\it ASDM} format (\S~\ref{section:io.import.evla})
    \item {\tt importuvfits} --- import visibility data in UVFITS
          format (\S~\ref{section:io.import.uvfits.import})
@@ -58,6 +60,8 @@ to concatenate multiple datasets.  These are:
          (\S~\ref{section:io.vis.visstat})
    \item {\tt concat} --- concatenate two or more MS into a
          new MS (\S~\ref{section:io.concat})
+   \item {\tt virtualconcat} --- concatenate two or more MS or multi-MS into a
+         new multi-MS (\S~\ref{section:io.concat} and chapter \ref{chapter:parallel})
 \end{itemize}
 
 In CASA, there is a standard syntax for selection of data that
@@ -603,7 +607,7 @@ async           =   False   #  If true the taskname must be started using import
 \normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{EVLA/JVLA: Filling of Science Data Model (ASDM) data}
+\subsection{Janksy VLA: Filling of Science Data Model (ASDM) data}
 \label{section:io.import.evla}
 
 \begin{wrapfigure}{r}{2.5in}
@@ -616,7 +620,7 @@ async           =   False   #  If true the taskname must be started using import
   \end{boxedminipage}
 \end{wrapfigure}
 
-The {\bf importevla} task will fill SDM data from JVLA (or ALMA) into
+The {\bf importevla} task will fill SDM data from the Jansky VLA (or ALMA) into
 a MS, along with online flagging data contained in the {\tt Flag.xml}
 SDM table.  Otherwise, it behaves as {\tt importasdm} but with a
 streamlined parameter set.
@@ -627,21 +631,17 @@ The default inputs are:
 \begin{verbatim}
 #  importevla :: Convert an Science Data Model observation into a CASA Measurement Set
 asdm                =         ''        #  Name of input asdm directory (on disk)
-vis                 =         ''        #  Root name of the ms to be created. Note the
-                                        #   .ms is NOT added
+vis                 =         ''        #  Root name of the ms to be created. Note the .ms
+                                        #   is NOT added
 ocorr_mode          =       'co'        #  Fill correlation mode AUTO_ONLY (ao),
                                         #   CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
 compression         =      False        #  Flag for turning on data compression
 asis                =         ''        #  Create verbatim copies of these SDM tables in
                                         #   the MS.
 scans               =         ''        #  List of scans to fill (default is all scans).
-switchedpower       =      False        #   The SysPower and CalDevice tables are
-                                        #   processed if and only if this parameter is
-                                        #   set to true, enabling support for switched-
-                                        #   power gain and tsys corrections.
-verbose             =      False        #  Output lots of information while the filler
-                                        #   is working
-overwrite           =       True        #  Over write an existing MS
+verbose             =      False        #  Output lots of information while the filler is
+                                        #   working
+overwrite           =      False        #  Over write an existing MS
 online              =       True        #  Create online flags
      tbuff          =        0.0        #  Time padding buffer (in seconds)
 
@@ -651,8 +651,8 @@ flagzero            =       True        #  Create flag commands for zero points
 
 shadow              =       True        #  Create flag commands for shadowed data
      tolerance      =        0.0        #  Amount of shadow allowed (in meters)
-     addantenna     =         ''        #  File name or dictionary with additional
-                                        #   antenna names, positions and diameters
+     addantenna     =         ''        #  File name or dictionary with additional antenna
+                                        #   names, positions and diameters
 
 applyflags          =      False        #  Apply flag commands to MS
 savecmds            =      False        #  Save flag commands to an ASCII file
@@ -677,8 +677,8 @@ task after filling to examine these flags and then apply.
 See {\tt importasdm} (\S~\ref{section:io.import.asdm}) for a
 description of the common parameters.  Some differences:
 
-Note that {\it importevla} uses the {\tt switchedpower} toggle to combine the
-action of the two related parameters that {\tt importasdm} uses.
+Note that {\it importevla} automatically loads in VLA switched
+power information (unlike in previous versions).
 
 The {\tt online} parameter controls creation of online flags from the 
 {\tt Flag.xml} SDM table. The {\tt tbuff} parameter adds a time ``buffer''
@@ -707,8 +707,8 @@ subtable). {\tt addantenna} can be a file that defines the positions
 of antennas that are on the ground but do not appear in the MS. They
 can still shadow antennas in the array. 
 
-{\tt savecmds} will save all flagging commands in the {\tt flagcmd}
-and {\tt tflagdata} syntax (\S\,\ref{section:edit.tflagdata} and
+{\tt savecmds} will save all flagging commands in the {\tt flagdata}
+and {\tt flagcmd} syntax (\S\,\ref{section:edit.flagdata} and
 \ref{section:edit.flagcmd}) to a file to be applied later or for
 bookkeeping. 
 
@@ -1471,17 +1471,22 @@ The default inputs are:
 \small
 \begin{verbatim}
 #  concat :: Concatenate several visibility data sets.
-vis                 = 'IRC10216.cont'   #  Name of input visibility files to be concatenated
+vis                 =         ''        #  Name of input visibility files to be
+                                        #   concatenated
 concatvis           =         ''        #  Name of output visibility file
-freqtol             =         ''        #  Frequency shift tolerance for considering data as the same spwid
-dirtol              =         ''        #  Direction shift tolerance for considering data as the same field
+freqtol             =         ''        #  Frequency shift tolerance for considering data
+                                        #   as the same spwid
+dirtol              =         ''        #  Direction shift tolerance for considering data
+                                        #   as the same field
+respectname         =      False        #  If true, fields with a different name are not
+                                        #   merged even if their direction agrees
 timesort            =      False        #  If true, sort by TIME in ascending order
 copypointing        =       True        #  Copy all rows of the POINTING table.
-visweightscale      =         []        #  List of the weight scaling factors to be applied to the individual MSs
+visweightscale      =         []        #  List of the weight scaling factors to be
+                                        #   applied to the individual MSs
 createmms           =      False        #  Should this create a multi-MS output
-async               =      False        #  If true the taskname must
-be started using concat(...)
-
+async               =      False        #  If true the taskname must be started using
+                                        #   concat(...)
 \end{verbatim}
 \normalsize
 
@@ -1552,6 +1557,16 @@ instead of {\tt concat} to save time and diskspace. {\tt testconcat} has
 the same parameters as {\tt concat}. It produces an output MS with
 the concatenated subtables and an empty Main table.
 
+Furthermore, the new task {\tt virtualconcat} permits to concatenate
+MSs into a multi-MS (MMS, see chapter \ref{chapter:parallel}) 
+which is much faster as the data is {\it moved}
+into the MMS rather than copied and only some reindexing is done. 
+The bulk data is not rewritten.
+If you want to keep a copy of the original
+MSs, set the parameter {\tt keepcopy} of {\tt virtualconcat} to True. 
+The creation of that copy will of course consume some of the time you 
+saved by doing a virtual concatenation. 
+Otherwise {\it virtualconcat} offers the same functionality as {\tt concat}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
