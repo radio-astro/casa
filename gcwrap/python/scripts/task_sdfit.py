@@ -77,7 +77,7 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, d
             # Now the line fitting for each rows in scantable
             doguess = not ((fitmode.lower()=='list') and (invertmask))
             (retValue,fitparams) = dofit(s,
-                                         fitmode, fitfunc, revisednfit,
+                                         fitmode, fitfunc.lower(), revisednfit,
                                          nlines, defaultmask,
                                          doguess, linelist, plotlevel)
             # Store fit
@@ -189,8 +189,6 @@ def dofit(s, fitmode, fitfunc, nfit, nlines, defaultmask, doguess, linelist, plo
     fitdict = dict.fromkeys(['nfit','peak','cent','fwhm'],[])
     fitparams=[]
     f=sd.fitter()
-    funcdict = {'gauss': f.set_gauss_parameters,
-                'lorentz': f.set_lorentz_parameters}
     if ( abs(plotlevel) > 0 ):
             init_plot( f, s.nrow(), plotlevel)
     dbw = 1.0
@@ -248,7 +246,7 @@ def dofit(s, fitmode, fitfunc, nfit, nlines, defaultmask, doguess, linelist, plo
                 # cannot guess for multiple comps yet
                 if ( comps[i] == 1 ):
                     # use guess
-                    funcdict[fitfunc](maxl[i], cenl[i], fwhm[i], component=n)
+                    getattr(f,'set_%s_parameters'%(fitfunc))(maxl[i], cenl[i], fwhm[i], component=n)
                 n += comps[i]
         else:
             # No guesses
@@ -327,20 +325,15 @@ def init_plot( fitter, n, plotlevel):
         from matplotlib import rc as rcp
         rcp('lines', linewidth=1)
         if not (fitter._p and fitter._p._alive()):
-                from asap.asapplotter import new_asaplot
-                visible = sd.rcParams['plotter.gui']
-                if plotlevel > 0 and (not visible):
-                    casalog.post("GUI plot not available", priority = "ERROR")
-                fitter._p = new_asaplot(visible=visible)
+            fitter._p = sdutil.get_plotter(plotlevel)
         fitter._p.hold()
         fitter._p.clear()
         # set nrow and ncol (maximum 4x4)
         fitter._p.set_panels(rows=n, cols=0, ganged=False)
         casalog.post( 'nrow,ncol= %d,%d' % (fitter._p.rows, fitter._p.cols ) )
-
+        fitter._p.palette(0,["#777777", "#dddddd", "red", "orange", "purple", "green", "magenta", "cyan"])
 
 def plot( fitter, irow, fitted, plotlevel, firstplot=False ):
-        colors = ["#777777", "#dddddd", "red", "orange", "purple", "green", "magenta", "cyan"]
         if firstplot:
             labels = ['Spectrum', 'Selected Region', 'Residual', 'Fit']
         else:
@@ -363,12 +356,12 @@ def plot( fitter, irow, fitted, plotlevel, firstplot=False ):
         idx = 0
         if mr or (not all(themask)):
                 # dumped region
-                plot_line(myp,x,y,themask,label=labels[0],color=1,colormap=colors)
+                plot_line(myp,x,y,themask,label=labels[0],color=1)
                 idx = 1
         themask = logical_not(themask)
         
         # fitted region
-        plot_line(myp,x,y,themask,label=labels[idx],color=0,colormap=colors,scale=True)
+        plot_line(myp,x,y,themask,label=labels[idx],color=0,scale=True)
 
         # plot fitted result
         if ( fitted ):
@@ -410,8 +403,7 @@ def get_initial_guess_list(s, linelist, defaultmask, dbw, irow):
         # guesses: [maxlist,fwhmlist,cenlist]
         guesses = [[],[],[]]
         for x in linelist:
-            if ( x[0] > x[1] ):
-                x = [x[1],x[0]]
+            x.sort()
             casalog.post( "detected line: "+str(x) ) 
             msk = s.create_mask(x, row=irow)
             guess = get_initial_guess(s,msk,x,dbw,irow)

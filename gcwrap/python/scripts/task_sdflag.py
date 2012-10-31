@@ -56,7 +56,8 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
 	    # (CAS-3096). If not, print warning message and exit.
 	    outformat = outform.upper()
 	    if (outformat == 'MS'): outformat = 'MS2'
-	    if overwrite and (os.path.samefile(project,infile)) and (outformat != format):
+	    if overwrite and os.path.exists(project) and (os.path.samefile(project,infile)) \
+                   and (outformat != format):
 		    msg = "The input and output data format must be identical when "
 		    msg += "their names are identical and overwrite=True. "
 		    msg += "%s and %s given for input and output, respectively." % (format, outformat)
@@ -94,12 +95,11 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
             if docmdflag:
                     doflag(s, flagmode, maskflag, clip, clipminmax, clipoutside, flagrow, unflag, plotlevel)
 
-            anyflag = docmdflag
+            anyflag = False
             if interactive:
-                    interactiveflag = dointeractiveflag(s,showflagged)
-                    anyflag = (anyflag or interactiveflag)
+                    anyflag = dointeractiveflag(s,showflagged)
 
-            if not anyflag:
+            if not (anyflag or docmdflag):
                     del s
                     raise Exception, 'No flag operation. Finish without saving'
 
@@ -133,56 +133,50 @@ def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field,
                 casalog.post('')
 
 def doflag(s, flagmode, maskflag, clip, clipminmax, clipoutside, flagrow, unflag, plotlevel):
-    nr = s.nrow()
     if clip:
-            casalog.post("Number of spectra to be flagged: %d" % (nr) )
-            casalog.post("Applying clipping...")
-            if len(flagrow) > 0 or len(maskflag) > 0:
-                    casalog.post("flagrow and maskflag will be ignored",priority = 'WARN')
+        # Clipping
+        d = {'msg':('spectra',s.nrow(),'clipping')}
+        if (len(flagrow)+len(maskflag)) > 0:
+            d['ignore'] = 'flagrow and maskflag'
     elif len(flagrow) == 0:
-            # Channel based flag
-            casalog.post( "Number of spectra to be flagged: %d" % (nr) )
-            casalog.post( "Applying channel flagging..." )
+        # Channel based flag
+        d = {'msg':('spectra',s.nrow(),'channel flagging')}
     else:
-            # Row flagging
-            casalog.post( "Number of rows to be flagged: %d" % (len(flagrow)) )
-            casalog.post( "Applying row flagging..." )
-            if len(maskflag) > 0:
-                    casalog.post("maskflag will be ignored",priority = 'WARN')
+        # Row flagging
+        d = {'msg':('rows',len(flagrow),'row flagging')}
+        if len(maskflag) > 0:
+            d['ignore'] = 'maskflag'
+    casalog.post('Number of %s to be flagged: %d\nApplying %s...'%(d['msg']))
+    if d.has_key('ignore'):
+        casalog.post('%s will be ignored'%(d['ignore']),priority='WARN')
                     
     if (len(maskflag) > 0):
         masks = s.create_mask(maskflag)
     else:
         masks = [False for i in xrange(s.nchan())]
         
-    doclip = False
-    dthres = uthres = None
+    thresh = [None,None]
     if isinstance(clipminmax, list):
         if (len(clipminmax) == 2):
-            dthres = min(clipminmax)
-            uthres = max(clipminmax)
-            doclip = (uthres > dthres)
+            thresh = clipminmax[:]
+            thresh.sort()
             
-    ans = prior_plot(s, clip, uthres, dthres, clipoutside, flagrow, unflag, masks, plotlevel)
+    ans = prior_plot(s, clip, thresh, clipoutside, flagrow, unflag, masks, plotlevel)
 
     if ans.upper() == 'Y':
-            if clip and doclip:
-                    s.clip(uthres, dthres, clipoutside, unflag)
+            if clip and (thresh[1] > thresh[0]):
+                    s.clip(thresh[1], thresh[0], clipoutside, unflag)
             elif (len(flagrow) == 0):
                     s.flag(mask=masks,unflag=unflag)
             else:
                     s.flag_row(flagrow, unflag)
 
-            params={}
+            params={'mode':flagmode,'maskflag':maskflag}
             sel = s.get_selection()
-            scans = sel.get_scans()
-            ifs = sel.get_ifs()
-            pols = sel.get_pols()
-            params['pols'] = pols if len(pols)>0 else list(s.getpolnos())
-            params['ifs'] = ifs if len(ifs)>0 else list(s.getifnos())
-            params['scans'] = scans if len(scans)>0 else list(s.getscannos())
-            params['mode']=flagmode
-            params['maskflag']=maskflag
+            keys=['pol','if','scan']
+            for key in keys:
+                val = getattr(sel,'get_%ss'%(key))()
+                params['%ss'%(key)] = val if len(val)>0 else list(getattr(s,'get%snos'%(key))())
             #print "input parameters:\n", params
             s._add_history( "sdflag", params ) 
 
@@ -206,7 +200,7 @@ def print_summary(s, plotlevel):
         #casalog.post( s._summary() )
         s._summary()
 
-def prior_plot(s, clip, uthres, dthres, clipoutside, flagrow, unflag, defaultmask, plotlevel):
+def prior_plot(s, clip, threshold, clipoutside, flagrow, unflag, defaultmask, plotlevel):
     if ( abs(plotlevel) > 0 ):
         flgmode = 'unflag' if unflag else 'flag'
         nr = s.nrow()
@@ -218,9 +212,8 @@ def prior_plot(s, clip, uthres, dthres, clipoutside, flagrow, unflag, defaultmas
 
         myp.set_panels(rows=np,cols=0,nplots=np)
         myp.legend(loc=1)
-        label0='Spectrum'
-        label1='previously flagged data'
-        label2='current flag masks'
+        labels = ['Spectrum','current flag masks','previously flagged data']
+        masks =  [ None,      None,                None]
         idefaultmask = logical_not(array(defaultmask))
         for row in xrange(np):
                 myp.subplot(row)
@@ -229,31 +222,26 @@ def prior_plot(s, clip, uthres, dthres, clipoutside, flagrow, unflag, defaultmas
                 nchan = len(y)
 
                 if s._getflagrow(row):
-                        oldmskarr = array([False]*(nchan))
+                        masks[2] = array([False]*(nchan))
                 else:
-                        oldmskarr = array(s._getmask(row))
+                        masks[2] = array(s._getmask(row))
 
                 if clip:
-                    if uthres == dthres:
-                        marr = array([True]*nchan)
+                    if threshold[0] == threshold[1]:
+                        masks[1] = array([True]*nchan)
                     else:
-                        #marr = logical_not(array(s._getclipmask(row, uthres, dthres, clipoutside, unflag)))
-                        marr = array(s._getclipmask(row, uthres, dthres, (not clipoutside), unflag))
+                        masks[1] = array(s._getclipmask(row, threshold[1], threshold[0], (not clipoutside), unflag))
                 elif len(flagrow) > 0:
-                    #marr = logical_not(array([(row in flagrow) and (not unflag)]*nchan))
-                    marr = array([(row not in flagrow) or unflag]*nchan)
+                    masks[1] = array([(row not in flagrow) or unflag]*nchan)
                 else:
-                    marr = idefaultmask
-                allmsk = logical_not(logical_and(marr,oldmskarr))
-                plot_data(myp,x,y,allmsk,0,label0)
-                plot_data(myp,x,y,oldmskarr,2,label1)
-                plot_data(myp,x,y,marr,1,label2)
+                    masks[1] = idefaultmask
+                masks[0] = logical_not(logical_and(masks[1],masks[2]))
+                for i in xrange(3):
+                    plot_data(myp,x,y,masks[i],i,labels[i])
                 xlim=[min(x),max(x)]
                 myp.axes.set_xlim(xlim)
 
-                label0='spec'
-                label1='prev'
-                label2='flag'
+                labels = ['spec','flag','prev']
         myp.release()
         
         #Apply flag
@@ -302,11 +290,7 @@ def init_plotter(colormap=["green","red","#dddddd","#777777"],plotlevel=None):
     #myp = f.f_locals['myp']
     myp = f.f_globals['myp'] if f.f_globals.has_key('myp') else None
     if not (myp and myp._alive()):
-        from matplotlib import rc as rcp
-        rcp('lines', linewidth=1)
-        from asap.asapplotter import new_asaplot
-        visible = (plotlevel > 0) if plotlevel else sd.rcParams['plotter.gui']
-        newp = new_asaplot(visible=visible)
+        newp = sdutil.get_plotter(plotlevel)
         casalog.post('Create new plotter')
     else:
         newp = myp

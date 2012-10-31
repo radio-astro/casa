@@ -506,3 +506,14 @@ def finalize_interactive_mask(obj):
 def process_exception(e):
     casalog.post(traceback.format_exc(),'SEVERE')
     casalog.post(str(e),'ERROR')
+
+def get_plotter(plotlevel=0):
+    from matplotlib import rc as rcp
+    rcp('lines', linewidth=1)
+    from asap.asapplotter import new_asaplot
+    visible = sd.rcParams['plotter.gui']
+    if plotlevel > 0 and (not visible):
+        casalog.post("GUI plot not available", priority = "ERROR")
+##     visible = (plotlevel > 0) if plotlevel else sd.rcParams['plotter.gui']
+    plotter = new_asaplot(visible=visible)
+    return plotter
