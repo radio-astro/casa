@@ -938,11 +938,11 @@ int main() {
     				cout << "*** test getFieldsForTime()" << endl;
     				std::set<uInt> expec;
     				expec.insert(0);
-    				AlwaysAssert(md.getFieldsForTimes(4842824746, 10) == expec, AipsError);
+    				AlwaysAssert(md.getFieldsForTimes(4842824746.0, 10) == expec, AipsError);
     				uInt mine[] = {1, 2, 3, 4, 5};
     				expec.insert(mine, mine+5);
     				AlwaysAssert(
-    					md.getFieldsForTimes(4842824746, 10000) == expec,
+    					md.getFieldsForTimes(4842824746.0, 10000) == expec,
     					AipsError
     				);
     			}
