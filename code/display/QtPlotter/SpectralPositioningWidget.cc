@@ -199,7 +199,14 @@ void SpectralPositioningWidget::setPosition(){
 		}
 
 		if ( success ){
-			profileTaskMonitor->setPosition( worldX, worldY);
+			try {
+				profileTaskMonitor->setPosition( worldX, worldY);
+			}
+			catch( ... ){
+				QString msg( "The position could not be set.\nPlease check the format and value of the position.");
+				Util::showUserMessage( msg, this );
+				 *logger << LogIO::WARN << "Could not set the position." << LogIO::POST;
+			}
 		}
 		else {
 			 *logger << LogIO::WARN << "Could not set the position." << LogIO::POST;
@@ -216,6 +223,7 @@ bool SpectralPositioningWidget::fillPointWorld( QList<double> &worldX, QList<dou
 	double centerXRad = toRadians( recognizedFormat, ui.pointRALineEdit );
 	if ( recognizedFormat ){
 		double centerYRad = toRadians( recognizedFormat, ui.pointDECLineEdit );
+		qDebug() << "centerYRad="<<centerYRad;
 		if ( recognizedFormat ){
 			double length = qAbs( worldXValues[1] - worldXValues[0] );
 			double height = qAbs( worldYValues[1] - worldYValues[0] );
@@ -363,13 +371,14 @@ double SpectralPositioningWidget::toRadians( Bool& valid, QLineEdit *lineEdit ){
 	Quantity quantity;
 	QString angleText = lineEdit->text();
 	String angleExpression( angleText.toStdString() );
-	valid = MVAngle::read( quantity, angleExpression );
 	double radians = 0;
+	valid = MVAngle::read( quantity, angleExpression );
 	if ( valid ){
 		MVAngle angle( quantity );
 		radians = angle.radian();
 	}
-	else {
+
+	if ( !valid ){
 		QString msg( "The format used to specify the position was not recognized.");
 		Util::showUserMessage( msg, this );
 	}
