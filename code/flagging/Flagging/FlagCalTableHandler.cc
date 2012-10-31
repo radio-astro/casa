@@ -579,6 +579,14 @@ FlagCalTableHandler::summarySignal()
 }
 
 
+// -----------------------------------------------------------------------
+// Check what data columns exist
+// -----------------------------------------------------------------------
+bool
+FlagCalTableHandler::checkIfColumnExists(String column)
+{
+	return originalCalTable_p->tableDesc().isColumn(column);
+}
 
 //////////////////////////////////////////
 //////// CTBuffer implementation ////////
@@ -793,9 +801,11 @@ Cube<Complex>& CTBuffer::correctedVisCube()
 {
 	if (!CTcorrectedVisCubeOK_p)
 	{
-		Cube<Float> tmp = calIter_p->paramErr();
+//		Cube<Float> tmp = calIter_p->paramErr();
+		Cube<Complex> tmp = calIter_p->cparam();
 
 		// Transform Cube<Float> into Cube<Complex>
+/*
 		Cube<Complex> tmpTrans(tmp.shape());
 		for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
 		{
@@ -807,13 +817,15 @@ Cube<Complex>& CTBuffer::correctedVisCube()
 				}
 			}
 		}
+*/
 
-		paramerr_p.resize(tmpTrans.shape(),False);
-		paramerr_p = tmpTrans;
+
+		cparam_p.resize(tmp.shape(),False);
+		cparam_p = tmp;
 		CTcorrectedVisCubeOK_p = True;
 	}
 
-	return paramerr_p;
+	return cparam_p;
 }
 
 Cube<Complex>& CTBuffer::modelVisCube()
@@ -903,6 +915,7 @@ void CTBuffer::invalidate()
 
 	return;
 }
+
 
 } //# NAMESPACE CASA - END
 

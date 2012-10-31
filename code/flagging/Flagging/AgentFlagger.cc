@@ -78,6 +78,7 @@ AgentFlagger::done()
 	msname_p = "";
 	iterationApproach_p = FlagDataHandler::SUB_INTEGRATION;
 	timeInterval_p = 0.0;
+	isMS_p = true;
 	combinescans_p = false;
 	spw_p = "";
 	scan_p = "";
@@ -159,7 +160,7 @@ AgentFlagger::open(String msname, Double ntime)
 	// create a FlagDataHandler object
 	Table table(msname_p,TableLock(TableLock::AutoNoReadLocking));
 	TableInfo& info = table.tableInfo();
-	String type=info.type();
+	String type = info.type();
 	table.flush();
 	table.relinquishAutoLocks(True);
 	table.unlock();
@@ -168,11 +169,13 @@ AgentFlagger::open(String msname, Double ntime)
 	// For a measurement set
 	if (type == "Measurement Set")
 	{
+		isMS_p = true;
 		fdh_p = new FlagMSHandler(msname_p, iterationApproach_p, timeInterval_p);
 	}
 	// For a calibration file
 	else
 	{
+		isMS_p = false;
 		fdh_p = new FlagCalTableHandler(msname_p, iterationApproach_p, timeInterval_p);
 	}
 
@@ -344,6 +347,25 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 		return false;
 	}
 
+	// Validate datacolumn
+	if (mode.compare("tfcrop") == 0 or mode.compare("clip") == 0 or mode.compare("rflag") == 0
+			or mode.compare("display") == 0){
+
+		String dc = "";
+		if (agentParams_p.isDefined("datacolumn"))
+			agentParams_p.get("datacolumn", dc);
+
+		os << LogIO::NORMAL << "Validating data column "<<dc<<" based on input type"<< LogIO::POST;
+
+		String datacolumn = validateDataColumn(dc);
+		if (datacolumn.compare("") == 0){
+			os << LogIO::WARN << "Data column " << dc << " is not supported for this input " << LogIO::POST;
+			return false;
+		}
+
+		os << LogIO::NORMAL << "Will use data column "<< datacolumn << LogIO::POST;
+		agentParams_p.define("datacolumn", datacolumn);
+	}
 
 	// Name for the logging output
 	if (! agentParams_p.isDefined("name")){
@@ -388,22 +410,27 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 		fdh_p->enableAsyncIO(true);
 	}
 
-	// Make correlation always uppercase
 	// Default for all modes
 	String correlation = "";
-	if (agentParams_p.isDefined("correlation")) {
 
+	// Make correlation always uppercase
+	if (agentParams_p.isDefined("correlation")) {
 		agentParams_p.get("correlation", correlation);
 		correlation.upcase();
 		agentParams_p.define("correlation", correlation);
 	}
+
 
 	// Create one agent for each polarization
 	if (mode.compare("tfcrop") == 0) {
 
 		if (not agentParams_p.isDefined("correlation")) {
 			// Default for tfcrop
-			correlation = "ABS_ALL";
+			if (isMS_p)
+				correlation = "ABS_ALL";
+			else
+				correlation = "REAL_ALL";
+
 			agentParams_p.define("correlation", correlation);
 		}
 		if (dbg){
@@ -519,7 +546,7 @@ AgentFlagger::initAgents()
 	}
 
 	// Send the logging of the re-applying agents to the debug
-	// as we are only interested in seeing the unapply action (tflagcmd)
+	// as we are only interested in seeing the unapply action (flagcmd)
 	uChar loglevel = LogIO::DEBUGGING;
 	Bool retstate = true;
 
@@ -538,7 +565,7 @@ AgentFlagger::initAgents()
 			}
 
 			// Change the log level if apply=True in a mixed state
-			Bool apply = true;;
+			Bool apply = true;
 			if (agent_rec.isDefined("apply")) {
 				agent_rec.get("apply", apply);
 			}
@@ -573,7 +600,7 @@ AgentFlagger::initAgents()
 
 			try
 			{
-				// jagonzal: CAS-3943 (tflagdata seg-faults when non-existent data column is to be read)
+				// jagonzal: CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
 				Bool createAgent = true;
 				if (((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0
 					or mode.compare("clip") == 0 or mode.compare("display") == 0))
@@ -722,31 +749,19 @@ AgentFlagger::run(Bool writeflags, Bool sequential)
 	agents_list_p.tableSummary();
 	if (writeflags)
 		os << LogIO::NORMAL << "=> " << "Writing flags to the MS" << LogIO::POST;
-//	else
-//		os << LogIO::NORMAL << "=> " << "Flags are not written to the MS (writeflags = False)"
-//			<< LogIO::POST;
 
 	agents_list_p.terminate();
 	agents_list_p.join();
 
 	// Gather the display reports from all agents
-//	FlagReport combinedReport = agents_list_p.gatherReports();
 	combinedReport = agents_list_p.gatherReports();
 
 	// Send reports to display agent
 	if (displayAgent_p)
 		displayAgent_p->displayReports(combinedReport);
 
-	// Get the record with the summary if there was any summary agent in the list
-//	Record summary_stats = Record();
-//	if (summaryAgent_p){
-//		summary_stats = summaryAgent_p->getResult();
-
-//	}
-
 	agents_list_p.clear();
 
-//	return summary_stats;
 	return combinedReport;
 }
 
@@ -993,20 +1008,87 @@ AgentFlagger::isModeValid(String mode)
 {
 	bool ret;
 
-	if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
-			mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
-			mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
-			mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
-			mode.compare("unflag") == 0 or mode.compare("summary") == 0
-			or mode.compare("display") == 0) {
+	// The validation depends on the type of input
+	if (isMS_p) {
+		if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
+				mode.compare("quack") == 0 or mode.compare("shadow") == 0 or
+				mode.compare("elevation") == 0 or mode.compare("tfcrop") == 0 or
+				mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
+				mode.compare("unflag") == 0 or mode.compare("summary") == 0
+				or mode.compare("display") == 0) {
 
-		ret = true;
+			ret = true;
+		}
+		else
+			ret = false;
 	}
-	else
-		ret = false;
+	else {
+		if (mode.compare("manual") == 0 or mode.compare("clip") == 0 or
+				mode.compare("quack") == 0 or mode.compare("tfcrop") == 0 or
+				mode.compare("extend") == 0 or mode.compare("rflag") == 0 or
+				mode.compare("unflag") == 0 or mode.compare("summary") == 0
+				or mode.compare("display") == 0) {
+
+			ret = true;
+		}
+		else
+			ret = false;
+
+	}
 
 	return ret;
 }
+
+// ---------------------------------------------------------------------
+// AgentFlagger::validateDataColumn
+// Check if datacolumn is valid for the current type of input
+// Return validated datacolumn
+// ---------------------------------------------------------------------
+String
+AgentFlagger::validateDataColumn(String datacol)
+{
+	String ret = "";
+	Bool checkcol = false;
+	datacol.upcase();
+
+	// The validation depends on the type of input
+	if (isMS_p) {
+		if (datacol.compare("DATA") == 0 or datacol.compare("CORRECTED") == 0 or
+				datacol.compare("MODEL") == 0 or datacol.compare("RESIDUAL") == 0 or
+				datacol.compare("RESIDUAL_DATA") == 0) {
+
+			ret = datacol;
+		}
+		else
+			ret = "DATA";
+	}
+	else {
+		// Input is a calibration table
+		if (datacol.compare("FPARAM") == 0 or (datacol.compare("CPARAM") == 0) or
+				(datacol.compare("SNR") == 0)) {
+			checkcol = fdh_p->checkIfColumnExists(datacol);
+		}
+//		else {
+//			checkcol = false;
+//		}
+		if (!checkcol){
+			//Assign a default column
+			if (fdh_p->checkIfColumnExists("FPARAM"))
+				ret = "FPARAM";
+			else if (fdh_p->checkIfColumnExists("CPARAM"))
+				ret = "CPARAM";
+			else
+				ret = "";
+		}
+		if (checkcol)
+			ret = datacol;
+
+	}
+
+	return ret;
+}
+
+
 
 // ---------------------------------------------------------------------
 // AgentFlagger::parseManualParameters

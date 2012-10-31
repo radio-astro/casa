@@ -50,6 +50,34 @@ debug = False
 #     Reading functions
 #
 #######################################################
+def isCalTable(msname):
+    '''Check if a file is a cal table
+    msname --> filename
+    Return 1 for cal table, 0 for and 2 for MMS'''
+    
+    if not tblocal.open(msname):
+        raise ValueError, "Unable to open MS %s," % msname
+    
+    tbinfo = tblocal.info()
+    tblocal.close()
+    retval = 0
+    
+    if tbinfo['type'] == 'Calibration':
+        retval = 1
+    
+    elif tbinfo['type'] == 'Measurement Set':
+        # MMS type
+        if tbinfo['subType'] == 'CONCATENATED':
+            retval = 2
+        else:
+            # MS type
+            retval = 0            
+    else:
+        retval = 0
+    
+    return retval
+
+
 def readFile(inputfile):
     '''Read in the lines from an input file
     inputfile -->  file in disk with a list of strings per line

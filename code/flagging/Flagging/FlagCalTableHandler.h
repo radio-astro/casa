@@ -80,7 +80,7 @@ private:
 	Vector<Double> frequency_p;
 	Cube<Complex> cparam_p;
 	Cube<Complex> fparam_p;   // This is in reality a Cube<Float>
-	Cube<Complex> paramerr_p; // This is in reality a Cube<Float>
+//	Cube<Complex> paramerr_p; // This is in reality a Cube<Float>
 	Cube<Complex> snr_p;      // This is in reality a Cube<Float>
 	Int nRow_p;
 	Int nRowChunk_p;
@@ -156,6 +156,9 @@ public:
 
 	// Provide table name (for flag version)
 	String getTableName();
+
+	// Check if a given column is available in the cal table
+	bool checkIfColumnExists(String column);
 
 	// Signal true when a progress summary has to be printed
 	bool summarySignal();

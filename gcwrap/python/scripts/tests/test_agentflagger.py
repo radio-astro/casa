@@ -92,6 +92,35 @@ class test_tsys(test_base):
     def setUp(self):
          self.setUp_tsys_case()
 
+    def test_unsupported_elevation_tsys(self):
+        '''AgentFlagger: Unsupported elevation mode'''
+        aflocal = casac.agentflagger()
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        aflocal.parseelevationparameters()
+        aflocal.init()
+        res = aflocal.run(writeflags=True)
+        aflocal.done() 
+        self.assertEqual(res, {})
+
+    def test_mixed_agents_tsys(self):
+        '''AgentFlagger: supported and unsupported agents in a list'''
+        aflocal = casac.agentflagger()
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        aflocal.parsemanualparameters(spw='1')
+        aflocal.parseagentparameters({'mode':'shadow','spw':'3'}) #unsupported mode
+        aflocal.parseelevationparameters()     # unsupported mode
+        aflocal.parsemanualparameters(spw='5')
+        aflocal.parsesummaryparameters(spw='1,3,5')
+        aflocal.init()
+        res = aflocal.run(writeflags=True)
+        aflocal.done() 
+        self.assertEqual(res['report0']['spw']['1']['flagged'], 32256)
+        self.assertEqual(res['report0']['spw']['3']['flagged'], 0)
+        self.assertEqual(res['report0']['spw']['5']['flagged'], 32256)
+        self.assertEqual(res['report0']['flagged'], 32256*2)
+        
     def test_manual_field_selection_agent_layer_for_tsys_CalTable(self):
         """AgentFlagger:: Manually flag a Tsys-based CalTable using flag agent selection engine for field """
         aflocal = casac.agentflagger()
@@ -254,8 +283,8 @@ class test_tsys(test_base):
         aflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
         agentClip={'apply':True,'mode':'clip','clipzeros':True,'clipminmax':[0.,600.],'datacolumn':datacolumn,'correlation':'Sol1'}
-        agentExtension={'apply':True,'mode':'extend','extendpols':True,'correlation':'ALL'}
-        agentSummary={'apply':True,'mode':'summary','correlation':'ALL'}
+        agentExtension={'apply':True,'mode':'extend','extendpols':True,'growfreq':0.0, 'growtime':0.0}
+        agentSummary={'apply':True,'mode':'summary','correlation':'""'}
         aflocal.parseagentparameters(agentUnflag)
         aflocal.parseagentparameters(agentClip)
         aflocal.parseagentparameters(agentExtension)
@@ -265,11 +294,9 @@ class test_tsys(test_base):
         aflocal.done() 
 
         self.assertEqual(summary['report0']['total'], 129024)
-        self.assertEqual(summary['report0']['flagged'], 1726)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 863)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 863)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512)
+        self.assertEqual(summary['report0']['flagged'], 1500)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 750)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 750)
 
     def test_clip_minmax_fparm_sol2(self):
         """AgentFlagger:: Test cliping second calibration solution product of FPARAM column using a minmax range """
@@ -323,7 +350,7 @@ class test_tsys(test_base):
         """AgentFlagger:: Test cliping all calibration solution products of FPARAM column using a minmax range """
         aflocal = casac.agentflagger()
         datacolumn = 'FPARAM'
-        correlation = 'ALL'
+        correlation = ''
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -347,7 +374,7 @@ class test_tsys(test_base):
         """AgentFlagger:: Test cliping only zeros in all calibration solution products of FPARAM column"""
         aflocal = casac.agentflagger()
         datacolumn = 'FPARAM'
-        correlation = 'ALL'
+        correlation = ''
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -371,7 +398,7 @@ class test_tsys(test_base):
         """AgentFlagger:: Test cliping only NaNs/Infs in all calibration solution products of FPARAM column"""
         aflocal = casac.agentflagger()
         datacolumn = 'FPARAM'
-        correlation = 'ALL'
+        correlation = ''
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -395,7 +422,7 @@ class test_tsys(test_base):
         """AgentFlagger:: Error case test when a complex operator is used with CalTables """
         aflocal = casac.agentflagger()
         datacolumn = 'FPARAM'
-        correlation = 'ABS ALL'
+        correlation = 'ABS_ALL'
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -415,35 +442,12 @@ class test_tsys(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 442.0)
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
-    def test_clip_minmax_paramerr_all_for_tsys_CalTable(self):
-        """AgentFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for Tsys CalTable"""
-        aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        correlation = 'ALL'
-        aflocal.open(self.vis)
-        aflocal.selectdata()
-        agentUnflag={'apply':True,'mode':'unflag'}
-        agentClip={'apply':True,'mode':'clip','clipzeros':True,'clipminmax':[0.,0.2],'datacolumn':datacolumn,'correlation':correlation}
-        agentSummary={'apply':True,'mode':'summary'}
-        aflocal.parseagentparameters(agentUnflag)
-        aflocal.parseagentparameters(agentClip)
-        aflocal.parseagentparameters(agentSummary)
-        aflocal.init()
-        summary = aflocal.run(writeflags=True)
-        aflocal.done() 
-
-        self.assertEqual(summary['report0']['total'], 129024.0)
-        self.assertEqual(summary['report0']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
-
+ 
     def test_clip_minmax_snr_all_for_tsys_CalTable(self):
         """AgentFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for Tsys CalTable"""
         aflocal = casac.agentflagger()
         datacolumn = 'SNR'
-        correlation = 'ALL'
+        correlation = ''
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -469,6 +473,18 @@ class test_bpass(test_base):
     
     def setUp(self):
         self.setUp_bpass_case()
+
+    def test_default_cparam_bpass(self):
+        '''Flagdata: flag CPARAM as the default column'''
+        aflocal = casac.agentflagger()
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        aflocal.parseclipparameters(clipzeros=True)
+        aflocal.parsesummaryparameters()
+        aflocal.init()
+        summary = aflocal.run(writeflags=True)
+        aflocal.done() 
+        self.assertEqual(summary['report0']['flagged'], 489, 'Should use CPARAM as the default column')
 
     def test_manual_field_selection_agent_layer_for_bpass_CalTable(self):
         """AgentFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for field """
@@ -559,181 +575,28 @@ class test_bpass(test_base):
 
         self.assertEqual(summary['report0']['antenna']['ea09']['flagged'], 48000.0)
         self.assertEqual(summary['report0']['antenna']['ea10']['flagged'], 0.0)
-        
-    def test_clip_zeros_paramerr_all_for_bpass_CalTable(self):
-        """AgentFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
+
+    def test_clip_minmax_cparam_for_bpass(self):
+        """AgentFlagger:: Clip all calibration solutions of CPARAM column using a minmax range"""
         aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        correlation = 'ALL'
+        datacolumn = 'CPARAM'
         aflocal.open(self.vis)
         aflocal.selectdata()
-        agentUnflag={'apply':True,'mode':'unflag'}
-        agentClip={'apply':True,'mode':'clip','clipzeros':True,'datacolumn':datacolumn,'correlation':correlation}
-        agentSummary={'apply':True,'mode':'summary'}
-        aflocal.parseagentparameters(agentUnflag)
-        aflocal.parseagentparameters(agentClip)
-        aflocal.parseagentparameters(agentSummary)
+        aflocal.parseclipparameters(clipminmax=[0.,3.],datacolumn=datacolumn,clipzeros=True)
+        aflocal.parsesummaryparameters()
         aflocal.init()
         summary = aflocal.run(writeflags=True)
         aflocal.done() 
-
-        self.assertEqual(summary['report0']['total'], 1248000.0)
-        self.assertEqual(summary['report0']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
-
-    def test_clip_nan_and_inf_paramerr_all_for_bpass_CalTable(self):
-        """AgentFlagger:: Test cliping only zeros in all calibration solution products of PARAMERR column for bpass CalTable"""
-        aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        correlation = 'ALL'
-        aflocal.open(self.vis)
-        aflocal.selectdata()
-        agentUnflag={'apply':True,'mode':'unflag'}
-        agentClip={'apply':True,'mode':'clip','datacolumn':datacolumn,'correlation':correlation}
-        agentSummary={'apply':True,'mode':'summary'}
-        aflocal.parseagentparameters(agentUnflag)
-        aflocal.parseagentparameters(agentClip)
-        aflocal.parseagentparameters(agentSummary)
-        aflocal.init()
-        summary = aflocal.run(writeflags=True)
-        aflocal.done() 
-
-        self.assertEqual(summary['report0']['total'], 1248000.0)
-        self.assertEqual(summary['report0']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
-
-    def test_clip_minmax_paramerr_all_for_bpass_CalTable(self):
-        """AgentFlagger:: Test cliping all calibration solution products of PARAMERR column using a minmax range for bpass CalTable"""
-        aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        correlation = 'ALL'
-        aflocal.open(self.vis)
-        aflocal.selectdata()
-        agentUnflag={'apply':True,'mode':'unflag'}
-        agentClip={'apply':True,'mode':'clip','clipzeros':True,'clipminmax':[0., 0.001],'datacolumn':datacolumn,'correlation':correlation}
-        agentSummary={'apply':True,'mode':'summary'}
-        aflocal.parseagentparameters(agentUnflag)
-        aflocal.parseagentparameters(agentClip)
-        aflocal.parseagentparameters(agentSummary)
-        aflocal.init()
-        summary = aflocal.run(writeflags=True)
-        aflocal.done() 
-    
-        self.assertEqual(summary['report0']['total'], 1248000.0)
-        self.assertEqual(summary['report0']['flagged'], 253315.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 134252.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 119063.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
-
-    def test_rflag_paramerr_all_for_bpass_CalTable(self):
-        """AgentFlagger:: Test rflag in all calibration solution products of PARAMERR column for bpass CalTable"""
-        aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        correlation = 'ALL'
-        aflocal.open(self.vis)
-        aflocal.selectdata()
-        agentUnflag={'apply':True,'mode':'unflag'}
-        agentRflag={'apply':True,'mode':'rflag','datacolumn':datacolumn,'correlation':correlation}
-        agentSummary={'apply':True,'mode':'summary'}
-        aflocal.parseagentparameters(agentUnflag)
-        aflocal.parseagentparameters(agentRflag)
-        aflocal.parseagentparameters(agentSummary)
-        aflocal.init()
-        summary = aflocal.run(writeflags=True)
-        aflocal.done() 
-
-        self.assertEqual(summary['report0']['total'], 1248000.0)
-        self.assertEqual(summary['report0']['flagged'], 184222.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 93880.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 90342.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
-
-    def test_tfcrop_paramerr_all_for_bpass_CalTable(self):
-        """AgentFlagger:: Test tfcrop in all calibration solution products of PARAMERR column for bpass CalTable"""
-        aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        correlation = 'REAL ALL'
-        aflocal.open(self.vis)
-        aflocal.selectdata()
-        agentUnflag={'apply':True,'mode':'unflag'}
-        agentTfcrop={'apply':True,'mode':'tfcrop','datacolumn':datacolumn,'correlation':correlation}
-        agentSummary={'apply':True,'mode':'summary'}
-        aflocal.parseagentparameters(agentUnflag)
-        aflocal.parseagentparameters(agentTfcrop)
-        aflocal.parseagentparameters(agentSummary)
-        aflocal.init()
-        summary = aflocal.run(writeflags=True)
-        aflocal.done() 
-
-        self.assertEqual(summary['report0']['total'], 1248000.0)
-        self.assertTrue(abs(summary['report0']['flagged'] - 63861.0) <= 5)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
-        assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 32193.0) <= 5
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
-        assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 31668.0) <=5
-
-    def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable(self):
-        """AgentFlagger:: Test tfcrop first calibration solution product of PARAMERR column, and then extend to the other solution for bpass CalTable"""
-        aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        aflocal.open(self.vis)
-        aflocal.selectdata()
-        agentUnflag={'apply':True,'mode':'unflag'}
-        agentTfcrop={'apply':True,'mode':'tfcrop','datacolumn':datacolumn,'correlation':'Sol1'}
-        agentExtension={'apply':True,'mode':'extend','extendpols':True,'correlation':'ALL'}
-        agentSummary={'apply':True,'mode':'summary','correlation':'ALL'}
-        aflocal.parseagentparameters(agentUnflag)
-        aflocal.parseagentparameters(agentTfcrop)
-        aflocal.parseagentparameters(agentExtension)
-        aflocal.parseagentparameters(agentSummary)
-        aflocal.init()
-        summary = aflocal.run(writeflags=True)
-        aflocal.done() 
-
-        self.assertEqual(summary['report0']['total'], 1248000.0)
-        assert abs(summary['report0']['flagged'] - 72034.0) <= 5
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
-        assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 36017.0) <= 5
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
-        assert abs(summary['report0']['correlation']['Sol2']['flagged'] - 36017.0) <= 5
-
-    def test_tfcrop_paramerr_sol1_extension_for_bpass_CalTable2(self):
-        """AgentFlagger:: Test tfcrop first calibration solution product of PARAMERR column, 
-        and then extend to the other solution for bpass CalTable"""
-
-        # Same as the previous test but using the specific parsing functions
-        aflocal = casac.agentflagger()
-        datacolumn = 'PARAMERR'
-        aflocal.open(self.vis)
-        aflocal.selectdata()
-        aflocal.parsemanualparameters(apply=False)
-        aflocal.parsetfcropparameters(datacolumn=datacolumn, correlation='Sol1')
-        aflocal.parseextendparameters(extendpols=True, correlation='ALL')
-        aflocal.parsesummaryparameters(correlation='ALL')
-        aflocal.init()
-        summary = aflocal.run(writeflags=True)
-        aflocal.done() 
-
+        self.assertEqual(summary['report0']['flagged'], 597642)
         self.assertEqual(summary['report0']['total'], 1248000)
-        self.assert_(abs(summary['report0']['flagged'] - 72034.0) <= 5)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000)
-        self.assertTrue(abs(summary['report0']['correlation']['Sol1']['flagged'] - 36017.0) <= 5)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000)
-        self.assertTrue(abs(summary['report0']['correlation']['Sol2']['flagged'] - 36017.0) <= 5)
-
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 309877)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 287765)
+        
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
         """AgentFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
         aflocal = casac.agentflagger()
         datacolumn = 'SNR'
-        correlation = 'ALL'
+        correlation = ''
         aflocal.open(self.vis)
         aflocal.selectdata()
         agentUnflag={'apply':True,'mode':'unflag'}
@@ -753,7 +616,68 @@ class test_bpass(test_base):
         self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 38044.0)
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
 
+    def test_rflag_cparam_sol2(self):
+        """AgentFlagger:: Test rflag solution 2 of CPARAM column for bpass"""
+        aflocal = casac.agentflagger()
+        correlation = 'Sol2'
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        agentRflag={'apply':True,'mode':'rflag','correlation':correlation}
+        agentSummary={'apply':True,'mode':'summary'}
+        aflocal.parseagentparameters(agentRflag)
+        aflocal.parseagentparameters(agentSummary)
+        aflocal.init()
+        summary = aflocal.run(writeflags=True)
+        aflocal.done() 
+        self.assertEqual(summary['report0']['flagged'], 13197)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 13197)
 
+    def test_tfcrop_cparam_sol1_extension(self):
+        """AgentFlagger:: Test tfcrop first calibration solution product of CPARAM column, 
+        and then extend to the other solution for bpass CalTable"""
+        aflocal = casac.agentflagger()
+        datacolumn = "CPARAM"
+        correlation = 'Sol1'
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        aflocal.parsetfcropparameters(datacolumn=datacolumn, correlation=correlation)
+        aflocal.parsesummaryparameters()
+        # Extend to the other solution
+        aflocal.parseextendparameters(extendpols=True,growfreq=0.0,growtime=0.0)
+        aflocal.parsesummaryparameters()
+        aflocal.init()
+        summary = aflocal.run(writeflags=True)
+        aflocal.done()
+        
+        # flags from first summary, only tfcrop
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'],36312)
+        self.assertEqual(summary['report0']['flagged'],36312)
+        
+        # flags from second summary, tfcrop+extend
+        self.assertEqual(summary['report2']['flagged'], 36312*2)
+        self.assertEqual(summary['report2']['correlation']['Sol2']['flagged'],36312)
+
+#class test_MS(test_base):
+#
+#    def setUP(self):
+#        self.setUp_4Ants()
+#   
+#    def test_catchNullSel(self):
+#        '''AgentFlagger: Catch null selections'''
+#        aflocal = casac.agentflagger()
+#        aflocal.open(self.vis)
+#        aflocal.selectdata(scan='1', catchnullsel=True)
+#        self.assertFalse(aflocal.parsemanualparameters())
+#        self.assertFalse(aflocal.init())
+#        res = aflocal.run()
+#        aflocal.done()
+#        self.assertTrue(res == {})
+#        
+#    def test_donotcatchNullSel(self):
+#        '''AgentFlagger: do not catch null selections'''
+#        
+    
 class test_display(test_base):
     """AgentFlagger:: Automatic test to check basic behaviour of display GUI using pause=False option """
 
@@ -767,7 +691,6 @@ class test_display(test_base):
         agentManual={'apply':True,'mode':'manual','spw':'*:20~40'}
         agentSummary={'apply':True,'mode':'summary'}
         agentDisplay={'mode':'display','datadisplay':True,'pause':False}
-        aflocal.parseagentparameters(agentUnflag)
         aflocal.parseagentparameters(agentManual)
         aflocal.parseagentparameters(agentSummary)
         aflocal.parseagentparameters(agentDisplay)
@@ -811,10 +734,36 @@ class test_display(test_base):
         summary = aflocal.run(writeflags=True)
         aflocal.done()
 
+    def test_display_cal_tables(self):
+        '''AgentFlagger: Select spws, display and flag cal tables'''
+        self.setUp_bpass_case()
+        aflocal = casac.agentflagger()
+        aflocal.open(self.vis)
+        aflocal.selectdata(spw='1')
+        aflocal.parsemanualparameters(spw='1:0~10;60~63')
+        aflocal.parsesummaryparameters(spwchan=True)
+#        agentManual={'apply':True,'mode':'manual'}
+#        agentSummary={'apply':True,'mode':'summary','spwchan':True}
+        agentDisplay={'mode':'display','datadisplay':True,'pause':False}
+#        aflocal.parseagentparameters(agentManual)
+#        aflocal.parseagentparameters(agentSummary)
+        aflocal.parseagentparameters(agentDisplay)
+        aflocal.init()
+        summary = aflocal.run(writeflags=True)
+        aflocal.done()
+        
+        self.assertEqual(summary['report0']['spw:channel']['1:0']['flagged'], 1300)
+        self.assertEqual(summary['report0']['spw:channel']['1:5']['flagged'], 1300)
+        self.assertEqual(summary['report0']['spw:channel']['1:10']['flagged'], 1300)
+        self.assertEqual(summary['report0']['spw:channel']['1:11']['flagged'], 0)
+        self.assertEqual(summary['report0']['spw:channel']['1:60']['flagged'], 1300)
+        self.assertEqual(summary['report0']['spw:channel']['1:59']['flagged'], 0)
+        self.assertEqual(summary['report0']['flagged'], 15*1300)
+
 
 # Dummy class which cleans up created files
 class cleanup(test_base):
-    
+            
     def tearDown(self):
         os.system('rm -rf cal.fewscans.bpass*')
         os.system('rm -rf X7ef.tsys*')
