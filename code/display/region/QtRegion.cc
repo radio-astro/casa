@@ -76,10 +76,13 @@ namespace casa {
 
 	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
+	    connect( mystate, SIGNAL(collectStatistics( )), SLOT(reload_statistics_event( )) );
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
 
 	    connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
 	    connect( mystate, SIGNAL(translateY(const QString &, const QString &, const QString &)), SLOT(translate_y(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(resizeX(const QString &, const QString &, const QString &)), SLOT(resize_x(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(resizeY(const QString &, const QString &, const QString &)), SLOT(resize_y(const QString&,const QString&, const QString &)) );
 
 	    connect (mystate->getFitButton(), SIGNAL(clicked()), this, SLOT(updateCenterInfo()));
 
@@ -203,11 +206,7 @@ namespace casa {
 	    if ( statistics_visible == false ) {
 		if ( region_modified ) statistics_update_needed = true;
 	    } else if ( (statistics_update_needed || region_modified) && regionVisible( ) ) {
-		statistics_update_needed = false;
-		std::list<RegionInfo> *rl = generate_dds_statistics( );
-		// send statistics to region state object...
-		mystate->updateStatistics(rl);
-		delete rl;
+		reload_statistics_event( );
 	    }
 
 	    // update position, when needed...
@@ -222,18 +221,22 @@ namespace casa {
 		mystate->getCoordinatesAndUnits( c, xu, yu, whu );
 		getPositionString( x, y, angle, width, height, c, xu, yu, whu );
 
-		int precision = ( whu == "arcmin" ? 2 :
-				  whu == "arcsec" ? 1 :
-				  whu == "deg" ? 3 : 5 );
+		QString qwidth;
+		QString qheight;
+		if ( width < 0.001 && height < 0.001 ) {
+		  fprintf( stderr, "in the 'g' spot..." );
+		    qwidth = QString("%1").arg(width,0,'g',5);
+		    qheight = QString("%1").arg(height,0,'g',5);
+		} else {
+		    qwidth = QString("%1").arg(width);
+		    qheight = QString("%1").arg(height);
+		}
 				  
 		mystate->updatePosition( QString::fromStdString(x),
 					 QString::fromStdString(y),
 					 QString::fromStdString(angle),
-					 QString("%1").arg(width,0,'g',precision),
-					 QString("%1").arg(height,0,'g',precision) );
+					 qwidth, qheight );
 
-					 // QString("%1").arg(width), 
-					 // QString("%1").arg(height) );
 	    }
 
 	}
@@ -252,6 +255,14 @@ namespace casa {
 	    updateStateInfo( false, Region::RegionChangeFocus );
 	}
 
+	void QtRegion::reload_statistics_event( ) {
+	    statistics_update_needed = false;
+	    std::list<RegionInfo> *rl = generate_dds_statistics( );
+	    // send statistics to region state object...
+	    mystate->updateStatistics(rl);
+	    delete rl;
+	}
+
 	void QtRegion::refresh_position_event( bool visible ) {
 	    position_visible = visible;
 	    updateStateInfo( false, Region::RegionChangeUpdate );
@@ -266,6 +277,12 @@ namespace casa {
 	    if ( translateY( y.toStdString( ), y_units.toStdString( ), coordsys.toStdString( ) ) ) {
 		refresh( );
 	    }
+	}
+	void QtRegion::resize_x( const QString &x, const QString &x_units, const QString &coordsys ) {
+	    resizeX( x.toStdString( ), x_units.toStdString( ), coordsys.toStdString( ) );
+	}
+	void QtRegion::resize_y( const QString &y, const QString &y_units, const QString &coordsys ) {
+	    resizeY( y.toStdString( ), y_units.toStdString( ), coordsys.toStdString( ) );
 	}
 
 	void QtRegion::refresh_zrange_event( int min, int max ) {
@@ -394,12 +411,13 @@ namespace casa {
 
 			if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
 
-			if ( change == Region::RegionChangeCreate )
+			if ( change == Region::RegionChangeCreate ) {
+			    dock_->emitCreate( this );
 			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" :
 							      type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
 						QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
 						QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
-			else
+			} else
 			    emit regionUpdate( id_, change, worldx, worldy, pixelx, pixely );
 		    }
 		    break;

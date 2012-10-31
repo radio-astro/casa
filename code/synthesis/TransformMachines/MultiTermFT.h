@@ -126,7 +126,7 @@ public:
   // Various small inline functions
   virtual Bool isFourier() {return True;}
   virtual void setNoPadding(Bool nopad){subftm_p->setNoPadding(nopad);};
-  virtual String name(){return machineName_p;};
+  virtual String name() const {return machineName_p;};
   virtual void setMiscInfo(const Int qualifier){thisterm_p=qualifier;};
 
 protected:

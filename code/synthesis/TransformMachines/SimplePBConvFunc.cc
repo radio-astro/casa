@@ -267,7 +267,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     //phase gradient per pixel to apply
     pixFieldDir(0) = -pixFieldDir(0)*2.0*C::pi/Double(nx)/Double(convSampling);
     pixFieldDir(1) = -pixFieldDir(1)*2.0*C::pi/Double(ny)/Double(convSampling);
-    
+
     if(!doneMainConv_p){
       Vector<Double> sampling;
       sampling = dc.increment();
@@ -447,6 +447,22 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
       //addBeamCoverage(twoDPB);
       
  
+      if(0) {
+	CoordinateSystem ftCoords(coords);
+	directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+	AlwaysAssert(directionIndex>=0, AipsError);
+	dc=coords.directionCoordinate(directionIndex);
+	Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
+	Vector<Int> shape(2); shape(0)=convSize_p;shape(1)=convSize_p;
+	Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
+	ftCoords.replaceCoordinate(*ftdc, directionIndex);
+	delete ftdc; ftdc=0;
+	ostringstream os1;
+	os1 << "Screen_" << vb.fieldId() ;
+	PagedImage<Float> thisScreen(pbShape, ftCoords, String(os1));
+	LatticeExpr<Float> le(abs(twoDPB));
+	thisScreen.copyData(le);
+      }
       
       // Now FFT and get the result back
       LatticeFFT::cfft2d(twoDPB);
@@ -619,6 +635,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     }
     //Apply the shift phase gradient
 
+    //    cerr << "phase grad: " << pixFieldDir << endl;
     for (Int iy=0;iy<convSize_p;iy++) { 
       Complex phy(cos(Double(iy-convSize_p/2)*pixFieldDir(1)),sin(Double(iy-convSize_p/2)*pixFieldDir(1))) ;
       for (Int ix=0;ix<convSize_p;ix++) {

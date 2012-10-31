@@ -463,9 +463,7 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 		ui.minThresholdLineEdit->clear();
 		ui.maxThresholdLineEdit->clear();
 	}
-	//Until we get to qwt6
-	ui.graphThresholdButton->setEnabled( false );
-	ui.graphThresholdButton->setVisible( false );
+	ui.graphThresholdButton->setEnabled( enabled );
 }
 
 
@@ -522,14 +520,32 @@ void MomentSettingsWidgetRadio::thresholdTextChanged( const QString& text ){
 	}
 }
 
+void MomentSettingsWidgetRadio::thresholdSpecified(){
+	pair<double,double> minMaxValues = thresholdingBinDialog->getInterval();
+	QString maxValueStr = QString::number( minMaxValues.second);
+	ui.maxThresholdLineEdit->setText( maxValueStr );
+	if ( ! ui.symmetricIntervalCheckBox->isChecked() ){
+		ui.minThresholdLineEdit->setText( QString::number(minMaxValues.first) );
+	}
+	else {
+		thresholdTextChanged( maxValueStr );
+	}
+}
+
 void MomentSettingsWidgetRadio::graphicalThreshold(){
 	if ( thresholdingBinDialog == NULL ){
-		thresholdingBinDialog = new ThresholdingBinPlotDialog( this );
+		QString yUnits = this->getYUnit();
+		thresholdingBinDialog = new ThresholdingBinPlotDialog( yUnits, this );
+		connect( thresholdingBinDialog, SIGNAL(accepted()), this, SLOT(thresholdSpecified()));
 	}
 	ImageInterface<Float>* image = const_cast<ImageInterface<Float>* >(taskMonitor->getImage());
 	thresholdingBinDialog->setImage( image );
-
 	thresholdingBinDialog->show();
+	QString minValueStr = ui.minThresholdLineEdit->text();
+	QString maxValueStr = ui.maxThresholdLineEdit->text();
+	double minValue = minValueStr.toDouble();
+	double maxValue = maxValueStr.toDouble();
+	thresholdingBinDialog->setInterval( minValue, maxValue );
 }
 
 

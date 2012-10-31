@@ -70,6 +70,7 @@ signals:
 
 private slots:
 	void thresholdingChanged();
+	void thresholdSpecified();
 	void adjustTableRows( int count );
 	void collapseImage();
 	void setCollapsedImageFile();

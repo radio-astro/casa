@@ -41,6 +41,7 @@
 #include <display/QtPlotter/WorldCanvasTranslator.h>
 #include <display/QtPlotter/ProfileFitMarker.h>
 #include <display/QtPlotter/MolecularLine.h>
+#include <display/QtPlotter/canvasMode/CanvasMode.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -61,10 +62,11 @@
 
 namespace casa { 
 
+class Annotation;
+
 #define QT_DIAMOND_SIZE 5
 
-class GraphLabel
-{
+class GraphLabel{
 public:
 	QString text;
 	QString fontName;
@@ -76,12 +78,20 @@ public:
 class QtCanvas : public QWidget, public WorldCanvasTranslator
 {
 	Q_OBJECT
+
+friend class CanvasModeAnnotation;
+friend class CanvasModeRangeSelection;
+friend class CanvasModeChannel;
+friend class CanvasModeContextMenu;
+friend class CanvasModeZoom;
+
 public:
 	QtCanvas(QWidget *parent = 0);
 
 	void setPlotSettings(const QtPlotSettings &settings);
 	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 	void setFrameMarker( float framePositionX );
+	void setZoomRectColor( QColor color );
 
 	CurveData getCurveData(int);
 	ErrorData getCurveError(int id);
@@ -108,8 +118,8 @@ public:
 	template<class T> void plotPolyLine(const Vector<T>&, const Vector<T>&);
 	void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
 			const QString& lb="");
-	enum ColorCategory { TITLE_COLOR, CURVE_COLOR, ZOOM_COLOR, REGION_COLOR,
-					CURVE_COLOR_PRIMARY, CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL };
+	enum ColorCategory { TITLE_COLOR, CURVE_COLOR, CURVE_COLOR_PRIMARY,
+		CURVE_COLOR_SECONDARY, WARNING_COLOR, CURVE_TRADITIONAL };
 	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
 			const QString& lb="", ColorCategory colorCategory=CURVE_COLOR );
 	void addMolecularLine(MolecularLine* molecularLine );
@@ -120,9 +130,7 @@ public:
 	QSize minimumSizeHint() const;
 	QSize sizeHint() const;
 	~QtCanvas();
-	void increaseCurZoom();
-	int getCurZoom();
-	int getZoomStackSize();
+
 
 	void setTitle(const QString &text, int fontSize = 13,const QString &font = FONT_NAME);
 	QString getTitle(){return title.text;};
@@ -135,11 +143,11 @@ public:
 			const QString &font = FONT_NAME, QtPlotSettings::AxisIndex axisIndex=QtPlotSettings::xBottom);
 	void setWelcome(const QString &text, int fontSize = 14,
 			const QString &font = FONT_NAME);
-	void setAutoScaleX(int a) {autoScaleX = a;}
-	void setAutoScaleY(int a) {autoScaleY = a;}
+	void setAutoScaleX(bool autoScale);
+	void setAutoScaleY(bool autoScale);
 	void setShowGrid(int a)   {showGrid = a; refreshPixmap();}
-	int getAutoScaleX( ) {return autoScaleX;}
-	int getAutoScaleY( ) {return autoScaleY;}
+	bool getAutoScaleX( ) {return autoScaleX;}
+	bool getAutoScaleY( ) {return autoScaleY;}
 	int getShowGrid( )   {return showGrid;}
 	void setPlotError(int a)  {plotError = a; setDataRange();}
 
@@ -197,15 +205,17 @@ public:
 	QString getDisplayYUnits();
 	void setDisplayYUnits( const QString& displayUnits );
 
-public slots:
-   void zoomIn();
-   void zoomOut();
-   void zoomNeutral();
-   void gaussianCenterPeakSelected();
-   void gaussianFWHMSelected();
-   void findRedshift();
-   void changeTaskMode( int mode );
+	int getCurZoom();
+	int getZoomStackSize();
 
+public slots:
+	void zoomIn();
+	void zoomOut();
+	void zoomNeutral();
+	void changeTaskMode( int mode );
+	void createAnnotationText();
+	void rangeSelectionMode();
+	void channelPositioningMode();
 
 signals:
 	void xRangeChanged(float xmin, float xmax);
@@ -214,6 +224,8 @@ signals:
 	void findRedshiftAt( double center, double peak );
 	void channelRangeSelect( float startVal, float endVal );
 	void curvesChanged();
+	void clearPaletteModes();
+	void togglePalette( int modeIndex );
 
 protected:
 	void paintEvent(QPaintEvent *event);
@@ -233,11 +245,23 @@ protected:
 	void drawWelcome(QPainter *painter);
 	void drawCurves(QPainter *painter);
 	void drawxRange(QPainter *painter);
-	void defaultZoomIn();
-	void defaultZoomOut();
 
+
+private slots:
+	void deleteSelectedAnnotation();
+	void editSelectedAnnotation();
+	void gaussianCenterPeakSelected();
+	void gaussianFWHMSelected();
+	void findRedshift();
 
 private:
+
+	//Zoom functionality
+	void zoomYBasedOnX( QtPlotSettings& settings, double zoomFactor, bool zoomIn );
+	pair<double,double> getRangeFor( double zoomFactor, bool zoomIn, double minX, double maxX );
+	void increaseCurZoom();
+	void defaultZoomIn();
+	void defaultZoomOut();
 
 	/**
 	 * Stores the curve information for later plotting.
@@ -249,7 +273,7 @@ private:
 	 * 		secondary spectral fitting curve, etc).
 	 */
 	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(),
-				const QString& lb="", ColorCategory colorCategory = CURVE_COLOR);
+		const QString& lb="", ColorCategory colorCategory = CURVE_COLOR);
 	void refreshPixmap();
 
 	/**
@@ -337,22 +361,41 @@ private:
 
 	/**
 	 * Initializes the shift-right-click pop-up menu that
-	 * the user can use to specify Gaussian estimates.
+	 * the user can use to specify Gaussian estimates, edit annotations, search for redshift, etc,
+	 * depending on context.
 	 */
-	void initGaussianEstimateContextMenu();
-	void initLineOverlayContextMenu();
+	void initContextMenu();
 	void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
 	bool storeClickPosition( QMouseEvent* event );
 	int getLastAxis() const;
 	void stripCurveTitleNumbers( QString& curveName ) const;
 	bool duplicateCurve( QString& targetLabel );
 	void setYLabel(const QString &text, int fontSize = 10, const QString &font = FONT_NAME);
+
+	//Annotation methods
+	void selectAnnotation( QMouseEvent* event, bool select = true );
+	bool isAnnotation( QMouseEvent* event ) const;
+	Annotation* getSelectedAnnotation() const;
+
+	//Mouse Events
+	void storeActiveAnnotation( QMouseEvent* event );
+	void selectChannel( QMouseEvent* event );
+	void updateChannel( QMouseEvent* event );
+	void moveChannel( QMouseEvent* event );
+	void startRangeX( QMouseEvent* event );
+	void updateRangeX( QMouseEvent* event );
+	void endRangeX( QMouseEvent* event );
+	void startZoomRect( QMouseEvent* event );
+	void updateZoomRect( QMouseEvent* event );
+	void endZoomRect( QMouseEvent* event );
+	void resetSelectedAnnotation( QMouseEvent* event );
+
+	//Plot Margins
 	const int MARGIN_LEFT;
 	const int MARGIN_BOTTOM;
 	const int MARGIN_TOP;
 	const int MARGIN_RIGHT;
 	const int FRACZOOM;
-	//enum { MARGIN = 80 , FRACZOOM=20};
 
 	GraphLabel title;
 	GraphLabel xLabel[2];
@@ -361,7 +404,6 @@ private:
 
 	std::map<int, CanvasCurve> curveMap;
 	std::vector<QtPlotSettings> zoomStack;
-	std::map<int, CurveData> markerStack;
 	QList<MolecularLine*> molecularLineStack;
 	std::pair<double,double> topAxisRange;
 
@@ -382,8 +424,8 @@ private:
 	QPoint currentCursorPosition;
 	QColor xcursor;
 
-	int autoScaleX;
-	int autoScaleY;
+	bool autoScaleX;
+	bool autoScaleY;
 	int plotError;
 	int showGrid;
 
@@ -398,10 +440,17 @@ private:
 	QString yUnitImage;
 	QString yUnitDisplay;
 
-	QMenu lineOverlayContextMenu;
+	//Context Menu
+	QMenu contextMenu;
+	QAction* centerPeakAction;
+	QAction* fwhmAction;
+	QAction* findRedshiftAction;
+	QAction* createAnnotationAction;
+	QAction* editAnnotationAction;
+	QAction* deleteAnnotationAction;
+	void showContextMenu( QMouseEvent* event );
 
 	//Profile Fitting Gaussian Estimation
-	QMenu gaussianContextMenu;
 	double gaussianEstimateX;
 	double gaussianEstimateY;
 	QList<ProfileFitMarker> profileFitMarkers;
@@ -419,6 +468,7 @@ private:
 	 */
 	QColor getDiscreteColor(ColorCategory colorCategory, int id=0);
 	QColor frameMarkerColor;
+	QColor zoomColor;
 	QList<QString> mainCurveColorList;
 	QList<QString> fitCurveColorList;
 	QList<QString> fitSummaryCurveColorList;
@@ -449,6 +499,15 @@ private:
 
 	float channelSelectValue;
 
+	Annotation* selectedAnnotation;
+	vector<Annotation*> annotations;
+
+	//Returns true if the user is in the process of drawing an
+	//annotation.
+	bool isAnnotationActive() const;
+
+	Annotation* getActiveAnnotation() const;
+	CanvasMode* currentMode;
 };
 
 }

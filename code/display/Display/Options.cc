@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <iostream>
 #include <dirent.h>
+#include <string.h>		/***for strlen( )***/
 
 namespace casa {
     namespace viewer {

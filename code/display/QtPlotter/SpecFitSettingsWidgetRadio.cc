@@ -46,7 +46,7 @@
 #include <QDebug>
 #include <QThread>
 #include <sys/time.h>
-
+#include <limits>
 
 
 
@@ -115,18 +115,13 @@ void SpecFitThread::run(){
 SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
     : QWidget(parent), fitter( NULL ), specFitThread( NULL ),
       progressDialog("Calculating fit(s)...", "Cancel", 0, 100, this),
-      plotDialog( this ), gaussEstimateDialog( this ),
-      POINT_COUNT(20), SUM_FIT_INDEX(-1)
+      gaussEstimateDialog( this ), POINT_COUNT(20), SUM_FIT_INDEX(-1)
 {
 	ui.setupUi(this);
 
 
 	progressDialog.setModal( true );
 	connect( &progressDialog, SIGNAL(canceled()), this, SLOT(cancelFit()));
-
-	//Until we get the code written
-	ui.loadButton->setVisible( false );
-	ui.plotButton->setVisible( false );
 
 	//Text fields
 	QValidator *validator = new QDoubleValidator(-1.0e+32, 1.0e+32,10,this);
@@ -147,17 +142,14 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 	connect( ui.polyFitCheckBox, SIGNAL(stateChanged(int)), this, SLOT(polyFitChanged(int)) );
 	connect( ui.gaussCountSpinBox, SIGNAL(valueChanged(int)), this, SLOT(gaussCountChanged(int)));
 	connect( ui.fitButton, SIGNAL(clicked()), this, SLOT(specLineFit()));
-	connect( ui.plotButton, SIGNAL(clicked()), this, SLOT(showPlots()));
 	connect( ui.cleanButton, SIGNAL(clicked()), this, SLOT(clean()));
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(setOutputLogFile()));
 	connect( ui.viewButton, SIGNAL(clicked()), this, SLOT(viewOutputLogFile()));
 	connect( ui.saveOutputCheckBox, SIGNAL(stateChanged(int)), this, SLOT(saveOutputChanged(int)));
 	connect( ui.advancedGaussianEstimatesButton, SIGNAL(clicked()), this, SLOT(specifyGaussianEstimates()));
 	connect( &gaussEstimateDialog, SIGNAL( accepted()), this, SLOT(gaussianEstimatesChanged()));
-	//connect( &gaussEstimateDialog, SIGNAL( gaussEstimateUnitsChanged(QString)), this, SLOT( gaussEstimateUnitsChanged(QString)));
 
 	ui.viewButton->setEnabled( false );
-	ui.plotButton->setEnabled( false );
 	ui.advancedGaussianEstimatesButton->setEnabled( false );
 }
 
@@ -374,7 +366,9 @@ bool SpecFitSettingsWidgetRadio::isValidEstimate( QString& peakStr,
 		QString& centerStr, QString& fwhmStr,
 		QString& fixedStr, int rowIndex ) {
 	bool validEstimate = true;
-	QDoubleValidator validator;
+	QDoubleValidator validator( numeric_limits<double>::min( ),
+				    numeric_limits<double>::max( ),
+				    10, 0 );
 	int pos = 0;
 	QString msg( "Row "+QString::number(rowIndex)+" of the initial estimate table is invalid.\n");
 	if ( ! validator.validate(peakStr, pos) == QValidator::Acceptable ){
@@ -792,7 +786,7 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 		}
 	}
     ui.viewButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
-	ui.plotButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
+	//ui.plotButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
 }
 
 
@@ -1012,10 +1006,6 @@ void SpecFitSettingsWidgetRadio::pixelsChanged( int pixX, int pixY ){
 	drawCurves( pixX, pixY);
 }
 
-void SpecFitSettingsWidgetRadio::showPlots(){
-	plotDialog.show();
-}
-
 //Called when the Gauss Estimate dialog is shown.  We populate it with the
 //current information.
 void SpecFitSettingsWidgetRadio::specifyGaussianEstimates(){
@@ -1163,8 +1153,7 @@ void SpecFitSettingsWidgetRadio::addCurveName( const QString& curveName ){
 	ui.curveComboBox->addItem( curveName );
 }
 
-SpecFitSettingsWidgetRadio::~SpecFitSettingsWidgetRadio()
-{
+SpecFitSettingsWidgetRadio::~SpecFitSettingsWidgetRadio(){
 	reset();
 }
 }

@@ -28,6 +28,7 @@
 #ifndef SYNTHESIS_CFDEFS_H
 #define SYNTHESIS_CFDEFS_H
 #include <casa/Arrays/Array.h>
+#include <scimath/Mathematics/RigidVector.h>
 #include <casa/aips.h>
 
 namespace casa
@@ -37,6 +38,9 @@ namespace casa
     typedef Array<Double> CFTypeReal ;
     enum CACHETYPE {NOTCACHED=0,DISKCACHE, MEMCACHE};
     enum CFARRAYSHAPE {NXPOS=0,NYPOS,NWPOS,NPOLPOS,NBASEPOS,CFNDIM};
+    typedef RigidVector<Int,2> MuellerElementType ;
+    typedef Matrix<Int> MuellerMatrixType ;
+    typedef Vector<Vector<Int> > PolMapType;
   } //# NAMESPACE CASA - END
 }
 #endif

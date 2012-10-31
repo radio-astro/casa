@@ -30,6 +30,9 @@
 #define SYNTHESIS_CONVOLUTIONFUNCTION_H
 
 #include <synthesis/TransformMachines/CFStore.h>
+#include <synthesis/TransformMachines/CFStore2.h>
+#include <synthesis/TransformMachines/PolOuterProduct.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 #include <casa/Logging/LogOrigin.h>
@@ -101,9 +104,11 @@ namespace casa{
     virtual void makeConvFunction(const ImageInterface<Complex>& image,
 				  const VisBuffer& vb,
 				  const Int wConvSize,
-				  const Float pa,
-				  CFStore& cfs,
-				  CFStore& cfwts) = 0;
+				  const CountedPtr<PolOuterProduct>& pop,
+				  const Float pa, 
+				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				  CFStore2& cfs,
+				  CFStore2& cfwts) = 0;
     // This method computes the average response function.  This is
     // typically image-plane equivalent of the convolution functions,
     // averaged over various axis.  The precise averaging will be
@@ -119,20 +124,28 @@ namespace casa{
 
     //
     virtual void setPolMap(const Vector<Int>& polMap) = 0;
+    virtual void setSpwSelection(const Cube<Int>& spwChanSelFlag) {spwChanSelFlag_p.assign(spwChanSelFlag);}
+    virtual void setSpwFreqSelection(const Matrix<Double>& spwFreqSel) {spwFreqSelection_p.assign(spwFreqSel);}
     //    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R)=0;
-
+    virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& image,
+					      const VisBuffer& vb) = 0;
 
     // virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
     // {setPolMap(polMap); setFeedStokes(feedStokes);};
 
-    virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs)=0;
-
+    //    virtual void prepareConvFunction(const VisBuffer& vb, CFStore2& cfs)=0;
+    virtual void prepareConvFunction(const VisBuffer& vb, VBRow2CFBMapType& theMap)=0;
+    virtual Matrix<Int> makeBaselineList(const Vector<Int>& antList);
+    virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
+    virtual void setMiscInfo(const RecordInterface& /*params*/) {};
   private:
     Int nDim;
   protected:
     LogIO& logIO() {return logIO_p;}
     LogIO logIO_p;
+    Cube<Int> spwChanSelFlag_p;
+    Matrix<Double> spwFreqSelection_p;
   };
 
 };

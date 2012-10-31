@@ -44,6 +44,11 @@ namespace vi {
 // These include VbCacheItemBase, VbCacheItem, VisBufferCache
 // and VisBufferState.
 
+
+// Possible array shapes of data coming from the main table cells.
+
+typedef enum {NoCheck, Nr, NfNr, NcNfNr, NcNfNcatNr, I3Nr, N_ShapePatterns} ShapePattern;
+
 class VbCacheItemBase {
 
     // Provides a common base class for all of the cached value classes.
@@ -58,7 +63,7 @@ public:
 
     virtual ~VbCacheItemBase () {}
 
-    virtual void clear () = 0;
+    virtual void clear (Bool clearStatusOnly = False) = 0;
     virtual void clearDirty () = 0;
     virtual void fill () const = 0;
     VisBufferComponent2
@@ -68,7 +73,9 @@ public:
     }
     virtual Bool isDirty () const = 0;
     virtual Bool isPresent () const = 0;
+    virtual Bool isShapeOk (const Vector<IPosition> &) const = 0;
     virtual void setDirty () = 0;
+    virtual String shapeErrorMessage (const Vector<IPosition> &) const = 0;
 
 protected:
 
@@ -79,12 +86,20 @@ protected:
         return vb_p;
     }
 
-    virtual void initialize (VisBufferImpl2 * vb, VisBufferComponent2 component);
+    virtual void initialize (VisBufferImpl2 * vb, VisBufferComponent2 component,
+                             Bool isKey = True);
+
+    Bool isKey () const { return isKey_p;}
 
     virtual void setAsPresent () = 0;
+    void setIsKey (Bool isKey)
+    {
+        isKey_p = isKey;
+    }
 
 private:
 
+    Bool isKey_p;
     VisBufferComponent2 vbComponent_p;
     VisBufferImpl2 * vb_p; // [use]
 
@@ -107,9 +122,11 @@ public:
     {}
 
     virtual void
-    clear ()
+    clear (Bool clearStatusOnly)
     {
-        clearValue (item_p);
+        if (clearStatusOnly) {
+            clearValue (item_p);
+        }
         isPresent_p = False;
         clearDirty ();
     }
@@ -166,7 +183,8 @@ public:
 
 
     void
-    initialize (VisBufferImpl2 * vb, Filler filler, VisBufferComponent2 component = Unknown)
+    initialize (VisBufferImpl2 * vb, Filler filler,
+                VisBufferComponent2 component = Unknown)
     {
         VbCacheItemBase::initialize (vb, component);
         filler_p = filler;
@@ -184,12 +202,33 @@ public:
         return isPresent_p;
     }
 
+    virtual Bool
+    isShapeOk (const Vector<IPosition> &) const
+    {
+        return True;
+    }
+
     virtual void
     set (const T & newItem)
     {
         ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
 
-        item_p = newItem;
+        ThrowIf (isKey() && ! getVb()->isRekeyable (),
+                 "This VisBuffer is does not allow row key values to be changed.");
+
+        // Set operations to a rekeyable VB are allowed to change the shapes of the
+        // values.  When T derives from Array, the assign method will use Array::assign
+        // which resizes the destination value to match the source value.  For nonkeyable
+        // VBs, the normal operator= method is used which for Arrays will throw an
+        // exception when a shape incompatibility exists between the source and destination.
+
+        if (isKey ()){
+            assign (item_p, newItem);
+        }
+        else{
+            item_p = newItem;
+        }
+
         isPresent_p = True;
         isDirty_p = True;
     }
@@ -199,6 +238,9 @@ public:
     set (const U & newItem)
     {
         ThrowIf (! getVb()->isWritable (), "This VisBuffer is readonly");
+
+        ThrowIf (isKey () && ! getVb()->isRekeyable (),
+                 "This VisBuffer is does not allow row key values to be changed.");
 
         item_p = newItem;
         isPresent_p = True;
@@ -222,8 +264,19 @@ public:
         isDirty_p = True;
     }
 
+    virtual String
+    shapeErrorMessage (const Vector<IPosition> &) const
+    {
+        Throw ("Scalar shapes should not have shape errors.");
+    }
 
 protected:
+
+    void
+    assign (T & lhs, const T & rhs)
+    {
+        lhs = rhs;
+    }
 
     template <typename E>
     static void clearValue (Array <E> & value){
@@ -293,6 +346,12 @@ protected:
         }
     }
 
+    T &
+    getItem () const
+    {
+        return item_p;
+    }
+
     void
     setAsPresent ()
     {
@@ -305,6 +364,73 @@ private:
     mutable Bool isDirty_p;
     mutable Bool isPresent_p;
     mutable T    item_p;
+};
+
+template <typename T>
+class VbCacheItemArray : public VbCacheItem<T> {
+public:
+
+    typedef typename VbCacheItem<T>::Filler Filler;
+
+    virtual ~VbCacheItemArray () {}
+
+    void
+    initialize (VisBufferImpl2 * vb,
+                Filler filler,
+                VisBufferComponent2 component = Unknown,
+                ShapePattern shapePattern = NoCheck)
+    {
+        VbCacheItem<T>::initialize (vb, filler, component);
+        shapePattern_p = shapePattern;
+    }
+
+
+    virtual Bool
+    isShapeOk (const Vector<IPosition> & shapes) const
+    {
+        // Check to see if the shape of this data item is consistent
+        // with the expected shape.
+
+        Bool result = shapePattern_p == NoCheck ||
+                      this->getItem().shape() == shapes (shapePattern_p);
+
+        return result;
+    }
+
+    virtual String
+    shapeErrorMessage (const Vector<IPosition> & shapes) const
+    {
+
+        ThrowIf (shapePattern_p == NoCheck,
+                 "No shape error message for NoCheck type array");
+
+        ThrowIf (isShapeOk (shapes),
+                 "Shape is OK so no error message.");
+
+        ostringstream os;
+
+        os << "VisBuffer::ShapeError: "
+           << VisBufferComponents2::name (this->getComponent())
+           << " should have shape "
+           << shapes (shapePattern_p).toString()
+           << " but had shape "
+           << this->getItem().shape().toString();
+
+        return os.str();
+
+    }
+
+protected:
+
+    void
+    assign (T & dst, const T & src)
+    {
+        dst.assign (src);
+
+    }
+private:
+
+    ShapePattern shapePattern_p;
 };
 
 
@@ -320,54 +446,54 @@ public:
 
     // The values that are potentially cached.
 
-    VbCacheItem <Vector<Int> > antenna1_p;
-    VbCacheItem <Vector<Int> > antenna2_p;
+    VbCacheItemArray <Vector<Int> > antenna1_p;
+    VbCacheItemArray <Vector<Int> > antenna2_p;
     VbCacheItem <Int> arrayId_p;
-    VbCacheItem <Vector<SquareMatrix<Complex, 2> > > cjones_p;
-    VbCacheItem <Cube<Complex> > correctedVisCube_p;
-    VbCacheItem <Matrix<CStokesVector> > correctedVisibility_p;
-    VbCacheItem <Vector<Int> > corrType_p;
+    VbCacheItemArray <Vector<SquareMatrix<Complex, 2> > > cjones_p;
+    VbCacheItemArray <Cube<Complex> > correctedVisCube_p;
+    VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
+    VbCacheItemArray <Vector<Int> > corrType_p;
     VbCacheItem <Int> dataDescriptionId_p;
-    VbCacheItem <Vector<MDirection> > direction1_p; //where the first antenna/feed is pointed to
-    VbCacheItem <Vector<MDirection> > direction2_p; //where the second antenna/feed is pointed to
-    VbCacheItem <Vector<Double> > exposure_p;
-    VbCacheItem <Vector<Int> > feed1_p;
-    VbCacheItem <Vector<Float> > feed1Pa_p;
-    VbCacheItem <Vector<Int> > feed2_p;
-    VbCacheItem <Vector<Float> > feed2Pa_p;
+    VbCacheItemArray <Vector<MDirection> > direction1_p; //where the first antenna/feed is pointed to
+    VbCacheItemArray <Vector<MDirection> > direction2_p; //where the second antenna/feed is pointed to
+    VbCacheItemArray <Vector<Double> > exposure_p;
+    VbCacheItemArray <Vector<Int> > feed1_p;
+    VbCacheItemArray <Vector<Float> > feed1Pa_p;
+    VbCacheItemArray <Vector<Int> > feed2_p;
+    VbCacheItemArray <Vector<Float> > feed2Pa_p;
     VbCacheItem <Int> fieldId_p;
-    VbCacheItem <Matrix<Bool> > flag_p;
-    VbCacheItem <Array<Bool> > flagCategory_p;
-    VbCacheItem <Cube<Bool> > flagCube_p;
-    VbCacheItem <Vector<Bool> > flagRow_p;
-    VbCacheItem <Cube<Float> > floatDataCube_p;
-    VbCacheItem <Matrix<Float> > imagingWeight_p;
-    VbCacheItem <Cube<Complex> > modelVisCube_p;
-    VbCacheItem <Matrix<CStokesVector> > modelVisibility_p;
+    VbCacheItemArray <Matrix<Bool> > flag_p;
+    VbCacheItemArray <Array<Bool> > flagCategory_p;
+    VbCacheItemArray <Cube<Bool> > flagCube_p;
+    VbCacheItemArray <Vector<Bool> > flagRow_p;
+    VbCacheItemArray <Cube<Float> > floatDataCube_p;
+    VbCacheItemArray <Matrix<Float> > imagingWeight_p;
+    VbCacheItemArray <Cube<Complex> > modelVisCube_p;
+    VbCacheItemArray <Matrix<CStokesVector> > modelVisibility_p;
     VbCacheItem <Int> nAntennas_p;
     VbCacheItem <Int> nChannels_p;
     VbCacheItem <Int> nCorrelations_p;
     VbCacheItem <Int> nRows_p;
-    VbCacheItem <Vector<Int> > observationId_p;
+    VbCacheItemArray <Vector<Int> > observationId_p;
     VbCacheItem <MDirection> phaseCenter_p;
     VbCacheItem <Int> polFrame_p;
     VbCacheItem <Int> polarizationId_p;
-    VbCacheItem <Vector<Int> > processorId_p;
-    VbCacheItem <Vector<uInt> > rowIds_p;
-    VbCacheItem <Vector<Int> > scan_p;
-    VbCacheItem <Vector<Float> > sigma_p;
-    VbCacheItem <Matrix<Float> > sigmaMat_p;
+    VbCacheItemArray <Vector<Int> > processorId_p;
+    VbCacheItemArray <Vector<uInt> > rowIds_p;
+    VbCacheItemArray <Vector<Int> > scan_p;
+    VbCacheItemArray <Vector<Float> > sigma_p;
+    VbCacheItemArray <Matrix<Float> > sigmaMat_p;
     VbCacheItem <Int> spectralWindow_p;
-    VbCacheItem <Vector<Int> > stateId_p;
-    VbCacheItem <Vector<Double> > time_p;
-    VbCacheItem <Vector<Double> > timeCentroid_p;
-    VbCacheItem <Vector<Double> > timeInterval_p;
-    VbCacheItem <Matrix<Double> > uvw_p;
-    VbCacheItem <Cube<Complex> > visCube_p;
-    VbCacheItem <Matrix<CStokesVector> > visibility_p;
-    VbCacheItem <Vector<Float> > weight_p;
-    VbCacheItem <Matrix<Float> > weightMat_p;
-    VbCacheItem <Cube<Float> > weightSpectrum_p;
+    VbCacheItemArray <Vector<Int> > stateId_p;
+    VbCacheItemArray <Vector<Double> > time_p;
+    VbCacheItemArray <Vector<Double> > timeCentroid_p;
+    VbCacheItemArray <Vector<Double> > timeInterval_p;
+    VbCacheItemArray <Matrix<Double> > uvw_p;
+    VbCacheItemArray <Cube<Complex> > visCube_p;
+    VbCacheItemArray <Matrix<CStokesVector> > visibility_p;
+    VbCacheItemArray <Vector<Float> > weight_p;
+    VbCacheItemArray <Matrix<Float> > weightMat_p;
+    VbCacheItemArray <Cube<Float> > weightSpectrum_p;
 
     template <typename T, typename U>
     static void
@@ -380,32 +506,31 @@ public:
 
         if (dataItem.isPresent() && data.nelements() > 0) {
 
-          blc(0) = trc(0) = 1;
-          p1.reference(data (blc, trc).reform(mat));
+            blc(0) = trc(0) = 1;
+            p1.reference(data (blc, trc).reform(mat));
 
-          blc(0) = trc(0) = 2;
-          p2.reference(data (blc, trc).reform(mat));
+            blc(0) = trc(0) = 2;
+            p2.reference(data (blc, trc).reform(mat));
 
-          blc(0) = trc(0) = 3;
-          p3.reference(data (blc, trc).reform(mat));
+            blc(0) = trc(0) = 3;
+            p3.reference(data (blc, trc).reform(mat));
 
-          if (sort){ // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
+            if (sort){ // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
 
-              tmp = p1;
-              p1 = p2;
-              p2 = p3;
-              p3 = tmp;
-          }
-          else {      // Unsort correlations: (PP,PQ,QP,QQ) -> (PP,QQ,PQ,QP)
+                tmp = p1;
+                p1 = p2;
+                p2 = p3;
+                p3 = tmp;
+            }
+            else {      // Unsort correlations: (PP,PQ,QP,QQ) -> (PP,QQ,PQ,QP)
 
-              tmp = p3;
-              p3 = p2;
-              p2 = p1;
-              p1 = tmp;
-          }
+                tmp = p3;
+                p3 = p2;
+                p2 = p1;
+                p1 = tmp;
+            }
         }
     }
-
 };
 
 class VisBufferState {
@@ -457,6 +582,7 @@ public:
       isNewArrayId_p (False),
       isNewFieldId_p (False),
       isNewSpectralWindow_p (False),
+      isRekeyable_p (False),
       isWritable_p (False),
       pointingTableLastRow_p (-1),
       vi_p (0),
@@ -474,6 +600,7 @@ public:
     Bool isNewArrayId_p;
     Bool isNewFieldId_p;
     Bool isNewSpectralWindow_p;
+    Bool isRekeyable_p;
     Bool isWritable_p;
     mutable Int pointingTableLastRow_p;
     Int msId_p;
@@ -497,29 +624,30 @@ VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
     // with the vb object to allow it to iterate over the cached
     // values.
 
-    antenna1_p.initialize (vb, & VisBufferImpl2::fillAntenna1, Antenna1);
-    antenna2_p.initialize (vb, &VisBufferImpl2::fillAntenna2, Antenna2);
+    antenna1_p.initialize (vb, & VisBufferImpl2::fillAntenna1, Antenna1, Nr);
+    antenna2_p.initialize (vb, &VisBufferImpl2::fillAntenna2, Antenna2, Nr);
     arrayId_p.initialize (vb, &VisBufferImpl2::fillArrayId, ArrayId);
     cjones_p.initialize (vb, &VisBufferImpl2::fillJonesC, JonesC);
-    correctedVisCube_p.initialize (vb, &VisBufferImpl2::fillCubeCorrected, VisibilityCubeCorrected);
-    correctedVisibility_p.initialize (vb, &VisBufferImpl2::fillVisibilityCorrected, VisibilityCorrected);
+    correctedVisCube_p.initialize (vb, &VisBufferImpl2::fillCubeCorrected, VisibilityCubeCorrected, NcNfNr);
+    correctedVisibility_p.initialize (vb, &VisBufferImpl2::fillVisibilityCorrected, VisibilityCorrected, NcNfNr);
     corrType_p.initialize (vb, &VisBufferImpl2::fillCorrType, CorrType);
     dataDescriptionId_p.initialize (vb, &VisBufferImpl2::fillDataDescriptionId, DataDescriptionId);
     direction1_p.initialize (vb, &VisBufferImpl2::fillDirection1, Direction1);
     direction2_p.initialize (vb, &VisBufferImpl2::fillDirection2, Direction2);
-    exposure_p.initialize (vb, &VisBufferImpl2::fillExposure, Exposure);
-    feed1_p.initialize (vb, &VisBufferImpl2::fillFeed1, Feed1);
+    exposure_p.initialize (vb, &VisBufferImpl2::fillExposure, Exposure, Nr);
+    feed1_p.initialize (vb, &VisBufferImpl2::fillFeed1, Feed1, Nr);
     feed1Pa_p.initialize (vb, &VisBufferImpl2::fillFeedPa1, FeedPa1);
-    feed2_p.initialize (vb, &VisBufferImpl2::fillFeed2, Feed2);
+    feed2_p.initialize (vb, &VisBufferImpl2::fillFeed2, Feed2, Nr);
     feed2Pa_p.initialize (vb, &VisBufferImpl2::fillFeedPa2, FeedPa2);
     fieldId_p.initialize (vb, &VisBufferImpl2::fillFieldId, FieldId);
     flag_p.initialize (vb, &VisBufferImpl2::fillFlag, Flag);
     flagCategory_p.initialize (vb, &VisBufferImpl2::fillFlagCategory, FlagCategory);
-    flagCube_p.initialize (vb, &VisBufferImpl2::fillFlagCube, FlagCube);
-    flagRow_p.initialize (vb, &VisBufferImpl2::fillFlagRow, FlagRow);
-    floatDataCube_p.initialize (vb, &VisBufferImpl2::fillFloatData, FloatData);
+        // required column but not used in casa, make it a nocheck for shape validation
+    flagCube_p.initialize (vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr);
+    flagRow_p.initialize (vb, &VisBufferImpl2::fillFlagRow, FlagRow, Nr);
+    floatDataCube_p.initialize (vb, &VisBufferImpl2::fillFloatData, FloatData, NcNfNr);
     imagingWeight_p.initialize (vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight);
-    modelVisCube_p.initialize (vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel);
+    modelVisCube_p.initialize (vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel, NcNfNr);
     modelVisibility_p.initialize (vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel);
     nAntennas_p.initialize (vb, &VisBufferImpl2::fillNAntennas, NAntennas);
     nChannels_p.initialize (vb, &VisBufferImpl2::fillNChannel, NChannels);
@@ -529,31 +657,32 @@ VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
     phaseCenter_p.initialize (vb, &VisBufferImpl2::fillPhaseCenter, PhaseCenter);
     polFrame_p.initialize (vb, &VisBufferImpl2::fillPolFrame, PolFrame);
     polarizationId_p.initialize (vb, &VisBufferImpl2::fillPolarizationId, PolarizationId);
-    processorId_p.initialize (vb, &VisBufferImpl2::fillProcessorId, ProcessorId);
+    processorId_p.initialize (vb, &VisBufferImpl2::fillProcessorId, ProcessorId, Nr);
     rowIds_p.initialize (vb, &VisBufferImpl2::fillRowIds, RowIds);
-    scan_p.initialize (vb, &VisBufferImpl2::fillScan, Scan);
-    sigma_p.initialize (vb, &VisBufferImpl2::fillSigma, Sigma);
+    scan_p.initialize (vb, &VisBufferImpl2::fillScan, Scan, Nr);
+    sigma_p.initialize (vb, &VisBufferImpl2::fillSigma, Sigma, Nr);
     sigmaMat_p.initialize (vb, &VisBufferImpl2::fillSigmaMat, SigmaMat);
     spectralWindow_p.initialize (vb, &VisBufferImpl2::fillSpectralWindow, SpectralWindow);
-    stateId_p.initialize (vb, &VisBufferImpl2::fillStateId, StateId);
-    time_p.initialize (vb, &VisBufferImpl2::fillTime, casa::vi::Time);
-    timeCentroid_p.initialize (vb, &VisBufferImpl2::fillTimeCentroid, TimeCentroid);
-    timeInterval_p.initialize (vb, &VisBufferImpl2::fillTimeInterval, TimeInterval);
-    uvw_p.initialize (vb, &VisBufferImpl2::fillUvw, Uvw);
+    stateId_p.initialize (vb, &VisBufferImpl2::fillStateId, StateId, Nr);
+    time_p.initialize (vb, &VisBufferImpl2::fillTime, casa::vi::Time, Nr);
+    timeCentroid_p.initialize (vb, &VisBufferImpl2::fillTimeCentroid, TimeCentroid, Nr);
+    timeInterval_p.initialize (vb, &VisBufferImpl2::fillTimeInterval, TimeInterval, Nr);
+    uvw_p.initialize (vb, &VisBufferImpl2::fillUvw, Uvw, I3Nr);
     visCube_p.initialize (vb, &VisBufferImpl2::fillCubeObserved, VisibilityCubeObserved);
-    visibility_p.initialize (vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved);
-    weight_p.initialize (vb, &VisBufferImpl2::fillWeight, Weight);
+    visibility_p.initialize (vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NcNfNr);
+    weight_p.initialize (vb, &VisBufferImpl2::fillWeight, Weight, Nr);
     weightMat_p.initialize (vb, &VisBufferImpl2::fillWeightMat, WeightMat);
-    weightSpectrum_p.initialize (vb, &VisBufferImpl2::fillWeightSpectrum, WeightSpectrum);
+    weightSpectrum_p.initialize (vb, &VisBufferImpl2::fillWeightSpectrum, WeightSpectrum, NcNfNr);
 
 }
 
 void
-VbCacheItemBase::initialize (VisBufferImpl2 * vb, VisBufferComponent2 component)
+VbCacheItemBase::initialize (VisBufferImpl2 * vb, VisBufferComponent2 component, Bool isKey)
 {
     vbComponent_p = component;
     vb_p = vb;
     vb_p->registerCacheItem (this);
+    setIsKey (isKey);
 }
 
 
@@ -966,6 +1095,13 @@ VisBufferImpl2::isNewSpectralWindow () const
 }
 
 Bool
+VisBufferImpl2::isRekeyable () const
+{
+    return state_p->isRekeyable_p;
+}
+
+
+Bool
 VisBufferImpl2::isWritable () const
 {
     return state_p->isWritable_p;
@@ -1166,6 +1302,25 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
     cache_p->nCorrelations_p.setSpecial (nCorrelations);
 }
 
+void
+VisBufferImpl2::setRekeyable (Bool isRekeyable)
+{
+    state_p->isRekeyable_p = isRekeyable;
+}
+
+void
+VisBufferImpl2::setShape (Int nCorrelations, Int nChannels, Int nRows)
+{
+    ThrowIf (! isRekeyable(), "Operation setShape is illegal on nonrekeyable VisBuffer");
+
+    cacheClear (True); // leave values alone so that array could be reused
+
+    cache_p->nCorrelations_p.setSpecial(nCorrelations);
+    cache_p->nChannels_p.setSpecial(nChannels);
+    cache_p->nRows_p.setSpecial(nRows);
+}
+
+
 
 // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)
 void
@@ -1276,6 +1431,36 @@ VisBufferImpl2::validate ()
 }
 
 void
+VisBufferImpl2::validateShapes () const
+{
+    // Check that all of the modified array columns have the proper shape.
+    // Throw an exception if any columns have improper shape.  This is
+    // intended to be a last chance sanity-check before the data is written to disk
+    // or made available for use.
+
+    Vector<IPosition> validShapes (N_ShapePatterns);
+    validShapes [Nr] = IPosition (1, nRows());
+    validShapes [NfNr] = IPosition (2, nChannels(), nRows());
+    validShapes [NcNfNr] = IPosition (3, nCorrelations(), nChannels(), nRows());
+    //validShapes [NcNfNcatNr] = IPosition (4, nCorrelations(), nChannels(), nCategories(), nRows());
+    //   flag_category is not used in CASA, so no need to implement checking.
+
+    String message;
+
+    for (CacheRegistry::iterator i = state_p->cacheRegistry_p.begin();
+         i != state_p->cacheRegistry_p.end();
+         i++){
+
+        if ((*i)->isDirty() && ! (*i)->isShapeOk (validShapes)){
+
+            message += (*i)->shapeErrorMessage (validShapes) + "\n";
+        }
+    }
+
+    ThrowIf (! message.empty(), message);
+}
+
+void
 VisBufferImpl2::writeChangesBack ()
 {
     ThrowIf (! state_p->isAttached_p,
@@ -1285,9 +1470,13 @@ VisBufferImpl2::writeChangesBack ()
 
     ThrowIf (rwvi == 0, "Can't write to a read-only VisibilityIterator.");
 
+    if (isRekeyable()){
+
+        validateShapes ();
+    }
+
     rwvi->writeBackChanges (this);
 }
-
 
 //      +---------------+
 //      |               |
@@ -1344,10 +1533,22 @@ VisBufferImpl2::antenna1 () const
     return cache_p->antenna1_p.get ();
 }
 
+void
+VisBufferImpl2::setAntenna1 (const Vector<Int> & value) const
+{
+    cache_p->antenna1_p.set (value);
+}
+
 const Vector<Int> &
 VisBufferImpl2::antenna2 () const
 {
     return cache_p->antenna2_p.get ();
+}
+
+void
+VisBufferImpl2::setAntenna2 (const Vector<Int> & value) const
+{
+    cache_p->antenna2_p.set (value);
 }
 
 Int
@@ -1356,12 +1557,17 @@ VisBufferImpl2::arrayId () const
     return cache_p->arrayId_p.get ();
 }
 
+void
+VisBufferImpl2::setArrayId (Int value) const
+{
+    cache_p->arrayId_p.set (value);
+}
+
 const Vector<SquareMatrix<Complex, 2> > &
 VisBufferImpl2::cjones () const
 {
     return cache_p->cjones_p.get ();
 }
-
 
 const Vector<Int> &
 VisBufferImpl2::correlationTypes () const
@@ -1373,6 +1579,12 @@ Int
 VisBufferImpl2::dataDescriptionId () const
 {
     return cache_p->dataDescriptionId_p.get ();
+}
+
+void
+VisBufferImpl2::setDataDescriptionId (Int value) const
+{
+    cache_p->dataDescriptionId_p.set (value);
 }
 
 const Vector<MDirection> &
@@ -1393,10 +1605,22 @@ VisBufferImpl2::exposure () const
     return cache_p->exposure_p.get ();
 }
 
+void
+VisBufferImpl2::setExposure (const Vector<Double> & value) const
+{
+    cache_p->exposure_p.set (value);
+}
+
 const Vector<Int> &
 VisBufferImpl2::feed1 () const
 {
     return cache_p->feed1_p.get ();
+}
+
+void
+VisBufferImpl2::setFeed1 (const Vector<Int> & value) const
+{
+    cache_p->feed1_p.set (value);
 }
 
 const Vector<Float> &
@@ -1411,6 +1635,12 @@ VisBufferImpl2::feed2 () const
     return cache_p->feed2_p.get ();
 }
 
+void
+VisBufferImpl2::setFeed2 (const Vector<Int> & value) const
+{
+    cache_p->feed2_p.set (value);
+}
+
 const Vector<Float> &
 VisBufferImpl2::feedPa2 () const
 {
@@ -1421,6 +1651,12 @@ Int
 VisBufferImpl2::fieldId () const
 {
     return cache_p->fieldId_p.get ();
+}
+
+void
+VisBufferImpl2::setFieldId (Int value) const
+{
+    cache_p->fieldId_p.set (value);
 }
 
 const Matrix<Bool> &
@@ -1513,6 +1749,12 @@ VisBufferImpl2::observationId () const
     return cache_p->observationId_p.get ();
 }
 
+void
+VisBufferImpl2::setObservationId (const Vector<Int> & value) const
+{
+    cache_p->observationId_p.set (value);
+}
+
 const MDirection&
 VisBufferImpl2::phaseCenter () const
 {
@@ -1537,6 +1779,12 @@ VisBufferImpl2::processorId () const
     return cache_p->processorId_p.get ();
 }
 
+void
+VisBufferImpl2::setProcessorId (const Vector<Int> & value) const
+{
+    cache_p->processorId_p.set (value);
+}
+
 const Vector<uInt> &
 VisBufferImpl2::rowIds () const
 {
@@ -1547,6 +1795,12 @@ const Vector<Int> &
 VisBufferImpl2::scan () const
 {
     return cache_p->scan_p.get ();
+}
+
+void
+VisBufferImpl2::setScan (const Vector<Int> & value) const
+{
+    cache_p->scan_p.set (value);
 }
 
 const Vector<Float> &
@@ -1560,7 +1814,6 @@ VisBufferImpl2::setSigma (const Vector<Float> & sigma)
 {
     cache_p->sigma_p.set (sigma);
 }
-
 
 const Matrix<Float> &
 VisBufferImpl2::sigmaMat () const
@@ -1580,10 +1833,22 @@ VisBufferImpl2::stateId () const
     return cache_p->stateId_p.get ();
 }
 
+void
+VisBufferImpl2::setStateId (const Vector<Int> & value) const
+{
+    cache_p->stateId_p.set (value);
+}
+
 const Vector<Double> &
 VisBufferImpl2::time () const
 {
     return cache_p->time_p.get ();
+}
+
+void
+VisBufferImpl2::setTime (const Vector<Double> & value) const
+{
+    cache_p->time_p.set (value);
 }
 
 const Vector<Double> &
@@ -1592,16 +1857,34 @@ VisBufferImpl2::timeCentroid () const
     return cache_p->timeCentroid_p.get ();
 }
 
+void
+VisBufferImpl2::setTimeCentroid (const Vector<Double> & value) const
+{
+    cache_p->timeCentroid_p.set (value);
+}
+
 const Vector<Double> &
 VisBufferImpl2::timeInterval () const
 {
     return cache_p->timeInterval_p.get ();
 }
 
+void
+VisBufferImpl2::setTimeInterval (const Vector<Double> & value) const
+{
+    cache_p->timeInterval_p.set (value);
+}
+
 const Matrix<Double> &
 VisBufferImpl2::uvw () const
 {
     return cache_p->uvw_p.get ();
+}
+
+void
+VisBufferImpl2::setUvw (const Matrix<Double> & value) const
+{
+    cache_p->uvw_p.set (value);
 }
 
 const Cube<Complex> &
@@ -2171,27 +2454,33 @@ VisBufferImpl2::fillNAntennas (Int & value) const
 }
 
 void
-VisBufferImpl2::fillNChannel (Int & value) const
+VisBufferImpl2::fillNChannel (Int &) const
 {
   CheckVisIter ();
 
-  //value = getVi()->;
+  // This value enters the VB from a route that doesn't involve
+  // filling; however the framework requires that this method exist
+  // so it's implemented as a no-op.
 }
 
 void
-VisBufferImpl2::fillNCorr (Int & value) const
+VisBufferImpl2::fillNCorr (Int &) const
 {
   CheckVisIter ();
 
-  //value  = correlationTypes().nelements();
+  // This value enters the VB from a route that doesn't involve
+  // filling; however the framework requires that this method exist
+  // so it's implemented as a no-op.
 }
 
 void
-VisBufferImpl2::fillNRow (Int& value) const
+VisBufferImpl2::fillNRow (Int&) const
 {
   CheckVisIter ();
 
-  //value = getViP()->nRows ();
+  // This value enters the VB from a route that doesn't involve
+  // filling; however the framework requires that this method exist
+  // so it's implemented as a no-op.
 }
 
 void

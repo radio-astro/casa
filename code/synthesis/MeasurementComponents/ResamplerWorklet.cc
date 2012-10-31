@@ -28,7 +28,7 @@
 
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/Utils.h>
-#include <synthesis/MeasurementComponents/VisibilityResampler.h>
+#include <synthesis/TransformMachines/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>

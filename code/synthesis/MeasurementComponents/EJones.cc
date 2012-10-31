@@ -204,8 +204,8 @@ C                                       Rick Perley efficiencies
 
 
   Double Efffrq[] = {1.0,  1.1,  1.2,  1.3,  1.4,  1.5,  1.6,  1.7,  1.8,
-		     1.9,  2.0,  2.000001,  2.3,  2.7,  3.0,  3.5,  3.7,  4.0,  4.000001,
-		     5.0,  6.0,  7.0,  8.0,  8.000001, 12.0, 12.000001, 13.0, 14.0, 15.0,
+		     1.9,  2.0,  2.0+1e-9,  2.3,  2.7,  3.0,  3.5,  3.7,  4.0,  4.0+1e-9,
+		     5.0,  6.0,  7.0,  8.0,  8.0+1e-9, 12.0, 12.0+1e-9, 13.0, 14.0, 15.0,
 		     16.0, 17.0, 18.0, 19.0, 24.0, 26.0, 26.5, 28.0, 33.0, 38.0,
 		     40.0, 43.0, 48.0};
   Double Eff[] = {0.45, 0.48, 0.48, 0.45, 0.46, 0.45, 0.43, 0.44, 0.44,
@@ -224,14 +224,15 @@ C                                       Rick Perley efficiencies
 
   // convert to voltagey units
   ef=sqrt(ef);
-  
-  
+
   ScalarSampledFunctional<Double> fx(f);
   ScalarSampledFunctional<Double> fy(ef);
   Interpolate1D<Double,Double> eff(fx,fy);
-  eff.setMethod(Interpolate1D<Double,Double>::cubic);
-  for (Int ispw=0;ispw<nSpw();++ispw)
-    eff_(ispw)=eff(spwfreqs_(ispw)/1.e9);
+  eff.setMethod(Interpolate1D<Double,Double>::linear);
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    Double fghz=spwfreqs_(ispw)/1.e9;
+    eff_(ispw)=eff(fghz);
+  }
 
   //  cout << "spwfreqs_ = " << spwfreqs_ << endl;
   //  cout << "eff_      = " << eff_ << endl;

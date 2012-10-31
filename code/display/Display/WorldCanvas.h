@@ -666,15 +666,16 @@ public:
   // Note that the contours are not intrinsically drawn in world
   // coordinates.  For complex data, the conversion to real values is
   // done according to the last call to setComplexToRealMethod.
+  // Returns true if OK, false if error...
   // <group>
-  void drawContourMap(const Vector<Double> &blPos, 
+  bool drawContourMap(const Vector<Double> &blPos, 
 		      const Vector<Double> &trPos,
 		      const Matrix<Float> &data,
 		      const Vector<Float> &levels,
 		      const Bool usePixelEdges = False);
 
 
-  void drawContourMap(const Vector<Double> &blPos,
+  bool drawContourMap(const Vector<Double> &blPos,
 		      const Vector<Double> &trPos,
 		      const Matrix<Complex> &data,
 		      const Vector<Float> &levels,
@@ -694,14 +695,15 @@ public:
   // <src>data</src>, and only pixels in <src>data</src> where
   // corresponding pixels in <src>mask</src> are <src>True</src> will
   // be contoured.
+  // Returns true if OK, false if error...
   // <group>
-  void drawContourMap(const Vector<Double> &blPos, 
+  bool drawContourMap(const Vector<Double> &blPos, 
 		      const Vector<Double> &trPos,
 		      const Matrix<Float> &data,
 		      const Matrix<Bool> &mask,
 		      const Vector<Float> &levels,
 		      const Bool usePixelEdges = False);
-  void drawContourMap(const Vector<Double> &blPos,
+  bool drawContourMap(const Vector<Double> &blPos,
 		      const Vector<Double> &trPos,
 		      const Matrix<Complex> &data,
 		      const Matrix<Bool> &mask,
@@ -784,7 +786,7 @@ public:
 
   // Draw a vector map.    
   // <group>
-   void drawVectorMap(const Vector<Double>& blc,
+   bool drawVectorMap(const Vector<Double>& blc,
                       const Vector<Double>& trc,
                       const Matrix<Complex>& data,
                       const Matrix<Bool>& mask,
@@ -797,7 +799,7 @@ public:
                       Double xWorldInc, Double yWorldInc,
                       const Bool usePixelEdges);
 
-   void drawVectorMap(const Vector<Double>& blc,
+   bool drawVectorMap(const Vector<Double>& blc,
                       const Vector<Double>& trc,
                       const Matrix<Float>& data,
                       const Matrix<Bool>& mask,
@@ -814,8 +816,9 @@ public:
 // Draw marker maps.  Only makerType "square" available presently.
 // The marker holds its shape in screen pixel coordinates.  This
 // means a square is always a square regardless of aspect ratio
+// Returns true if OK, false if error...
 // <group>
-   void drawMarkerMap(const Vector<Double>& blc,
+   bool drawMarkerMap(const Vector<Double>& blc,
                       const Vector<Double>& trc,
                       const Matrix<Float>& data,
                       const Matrix<Bool>& mask,
@@ -823,7 +826,7 @@ public:
                       Float scale, Double xWorldInc, Double yWorldInc,
                       const String& markeType,
                       Bool usePixelEdges);
-   void drawMarkerMap(const Vector<Double>& blc,
+   bool drawMarkerMap(const Vector<Double>& blc,
                       const Vector<Double>& trc,
                       const Matrix<Complex>& data,
                       const Matrix<Bool>& mask,
@@ -1078,7 +1081,7 @@ public:
    // must be radians.  rotation  must be radians.  if amp is of
    // dimension 0, amplitude unity is assumed.  if mask if dimension
    // 0 all data are assumed good.
-   void drawVectorMap(const Vector<Double>& blc,
+   bool drawVectorMap(const Vector<Double>& blc,
                       const Vector<Double>& trc,
                       const Matrix<Float>& amp,
                       const Matrix<Float>& pa,

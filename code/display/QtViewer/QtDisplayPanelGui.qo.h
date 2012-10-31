@@ -252,7 +252,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   //Increments the channel in the images from the start channel
   //to the end channel.
   void movieChannels( int startChannel, int endChannel );
-  void movieChannels( int startChannel, bool forward, int maxChannels );
+  void movieChannels( int channel, bool forward, int stepSize, int channelStart, int channelEnd  );
   void movieStop();
   void registerAllDDs();
   void unregisterAllDDs();
@@ -298,10 +298,14 @@ class QtDisplayPanelGui : public QtPanelBase {
   
     // The DD now exists, and is on QtViewerBase's list.
     // autoregister tells DPs whether they are to register the DD.
+    // ***** dd is added to the world canvas holder during *****
+    // ***** the processing of this event...               *****
     void ddCreated(QtDisplayData*, Bool autoRegister);
   
     // The DD is no longer on QtViewerBase's list, but is not
     // destroyed until after the signal.
+    // ***** dd is removed from the world canvas holder    *****
+    // ***** during the processing of this event...        *****
     void ddRemoved(QtDisplayData*);
 
     void closed( const QtDisplayPanelGui * );
@@ -338,7 +342,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   virtual void ddRegChange_() {
     //hideImageMenus();
     updateDDMenus_();
-    arrangeTrackBoxes_();  
+    arrangeTrackBoxes_();
+    updateFrameInformation();
   }
 
   // Respond to registration/close menu clicks.
@@ -479,15 +484,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QToolButton *ddRegBtn_, *ddCloseBtn_;
 
   QtMouseToolBar* mouseToolBar_;
-  
-  QDockWidget*  animDockWidget_;
-  //QFrame*       animWidget_;  // Ui::QtAnimatorGui populates this.
-  viewer::QtRegionDock  *regionDock_;
-  
-  QDockWidget*  trkgDockWidget_;
-  QWidget*    trkgWidget_;
-  
-     
+
   // connection to rc file
   Casarc &rc;
   // rc id for this panel type
@@ -495,11 +492,16 @@ class QtDisplayPanelGui : public QtPanelBase {
 
  private:
   bool use_new_regions;
-  bool movieForward;
+
+  //Animating the channel
   int movieChannel;
   int movieChannelEnd;
   int movieLast;
+  int movieStart;
+  int movieStep;
   QTimer movieTimer;
+  void setAnimationRate();
+
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
@@ -508,9 +510,17 @@ class QtDisplayPanelGui : public QtPanelBase {
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
   void updateFrameInformation();
+  void initAnimationHolder();
 
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
+
+  //Docking/Dock Widgets
+  string addAnimationDockWidget();
+  QDockWidget*  animDockWidget_;
+  viewer::QtRegionDock  *regionDock_;
+  QDockWidget*  trkgDockWidget_;
+  QWidget*    trkgWidget_;
 
  private slots:
   void incrementMovieChannel();

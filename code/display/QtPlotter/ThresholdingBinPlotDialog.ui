@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>ThresholdingBinPlotDialogClass</class>
  <widget class="QWidget" name="ThresholdingBinPlotDialogClass">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>541</width>
+    <height>341</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,7 +36,9 @@
       <widget class="QLabel" name="binPlotDialogTitle">
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>13</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
         </font>
        </property>
        <property name="text">
@@ -57,7 +62,7 @@
     </layout>
    </item>
    <item>
-    <widget class="QWidget" name="plotWidget" native="true">
+    <widget class="QWidget" name="plotWidgetHolder" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -83,6 +88,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="okButton">
+       <property name="toolTip">
+        <string>Accept the threshold values specified and close this dialog.</string>
+       </property>
        <property name="text">
         <string>OK</string>
        </property>
@@ -90,6 +98,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
+       <property name="toolTip">
+        <string>Close this dialog.</string>
+       </property>
        <property name="text">
         <string>Cancel</string>
        </property>

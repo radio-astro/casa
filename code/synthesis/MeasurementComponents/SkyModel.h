@@ -138,7 +138,7 @@ public:
     LINEAR=StokesImageUtil::LINEAR
   };
 
-  SkyModel() : itsAlgorithm(""), itsSubAlgorithm(""), imageRegion_p(0) { }  
+  SkyModel() : itsAlgorithm(""), itsSubAlgorithm(""), imageRegion_p(0), isImageNormalized_p(False) { }  
 
   // Number of models contained
   virtual Int numberOfModels() = 0;
@@ -210,6 +210,8 @@ public:
   // Is this model empty
   virtual Bool isEmpty(Int model=0) = 0;
 
+  virtual Int getModelIndex(uInt field=0, uInt taylor=0) = 0;
+
   //set Algorithm (e.g clean, mem, nnls)
   void setAlgorithm(const String& alg) {itsAlgorithm = alg;}
     
@@ -228,6 +230,9 @@ public:
   // use the default shape
   void unsetImageRegion() { imageRegion_p = 0; }
   // </group>
+
+  void setImageNormalization(Bool val) {isImageNormalized_p = val;};
+  Bool isImageNormalized() {return isImageNormalized_p;};
   
 protected:
   String itsAlgorithm;
@@ -235,7 +240,7 @@ protected:
   // this ImageRegion is used to suggest the shape for the
   // XFR.  If null, then just use the shape of image(model)
   ImageRegion *imageRegion_p;
-
+  Bool isImageNormalized_p;
 
 private:
 };

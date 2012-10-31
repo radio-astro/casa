@@ -1,6 +1,7 @@
 #include "VisibilityIterator_Test.h"
 
 #include <ms/MeasurementSets/MeasurementSet.h>
+#include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TiledDataStMan.h>
@@ -23,6 +24,10 @@ int
 main (int nArgs, char * args [])
 {
     using namespace casa::vi::test;
+
+    CopyMs msCopier;
+    msCopier.doit ("ngc5921.ms");
+    return 0;
 
     Tester tester;
 
@@ -418,7 +423,6 @@ MsFactory::fillCube (ArrayColumn<T> & column, const FillState & fillState,
              correlation ++){
 
             cell (correlation, channel) = (* generator) (fillState, channel, correlation);
-
         }
     }
 
@@ -1651,7 +1655,22 @@ PerformanceComparator::sweepViOld (ROVisibilityIterator & vi)
     return sum;
 }
 
-} // end namespace casa
-} // end namespace vi
+void
+CopyMs::doit (const String & oldMsName)
+{
+    casa::MeasurementSet oldMs (oldMsName);
+
+    String newMsName = String::format ("%s.copy", oldMsName.c_str());
+
+    system (String::format ("test -d %s && rm -r %s", newMsName.c_str(), newMsName.c_str()).c_str());
+
+    SetupNewTable newSetup (newMsName, oldMs.requiredTableDesc(), Table::NewNoReplace);
+
+    casa::MeasurementSet newMs (newSetup, 0, False);
+    newMs.createDefaultSubtables(Table::NewNoReplace);
+}
+
 } // end namespace test
+} // end namespace vi
+} // end namespace casa
 

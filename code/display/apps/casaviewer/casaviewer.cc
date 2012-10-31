@@ -374,6 +374,12 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	    persistent = true;
 	} else if ( ! strcmp(argv[x],"--casapy") ) {
 	    casapy_start = true;
+	}  else if ( ! strncmp(argv[x],"--rcdir",7) ) {
+	    if ( argv[x][7] == '=' ) {
+		viewer::setrcDir(&argv[x][8]);
+	    } else if ( x + 1 < argc ) {
+		viewer::setrcDir(argv[++x]);
+	    }
 	} else if ( ! strncmp(argv[x],"--casalogfile",13) ) {
 	    if ( argv[x][13] == '=' ) {
 		char *file = strdup( &argv[x][14] );

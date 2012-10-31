@@ -30,7 +30,7 @@
 #include <measures/Measures/MCDoppler.h>
 #include <QDebug>
 #include <assert.h>
-#include <limits.h>
+#include <limits>
 using namespace std;
 
 namespace casa {

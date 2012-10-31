@@ -194,6 +194,7 @@ public:
   virtual Bool changed(const VisBuffer& vb);
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&/*vb*/, Bool /*useCorrected*/) {};
+  virtual String name() const { return "GridBoth";};
 
 private:
 

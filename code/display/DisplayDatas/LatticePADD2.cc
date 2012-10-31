@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // given position (Float and Complex versions).
 template <>
 String LatticePADisplayData<Float>::showValue(const Vector<Double>& world) {
-  if(!conformed()) return "";
+  //if(!conformed()) return "";
 	// (kludge: showValue() and showPosition() should also have
 	// wch passed in, and call conformsTo(wch) instead...).
   Vector<Double> fullWorld, fullPixel;

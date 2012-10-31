@@ -292,18 +292,24 @@ void ImageSkyModel::initializeGradients() {
   }
 }
 
-Bool ImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool incremental, 
-					  Bool modelToMS) {
-  
+Bool ImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool incremental, Bool modelToMS) 
+{
   LogIO os(LogOrigin("ImageSkyModel", "makeNewtonRaphsonStep"));
-
   se.gradientsChiSquared(incremental, modelToMS);
+  // os << "Image normalization moved to CSE!!" << LogIO::WARN << LogIO::POST;
 
   // Now for each model, we find the recommended step
+  LatticeExpr<Float> le;
   if(numberOfModels()>0) {
     for(Int thismodel=0;thismodel<nmodels_p;thismodel++) {
       if(isSolveable(thismodel)) {
-	LatticeExpr<Float> le(iif(ggS(thismodel)>(0.0), -gS(thismodel)/ggS(thismodel), 0.0));
+	// SB
+	// Use the following code without the CSE::tmpNormalizeImage()
+	if (isImageNormalized()) le = LatticeExpr<Float>(gS(thismodel));
+	else                     le = (iif(ggS(thismodel)>(0.0), -gS(thismodel)/ggS(thismodel), 0.0));
+
+	// Use the following code when using CSE::tmpNormalizeImage()
+	//	le = LatticeExpr<Float>(gS(thismodel));
 	residual(thismodel).copyData(le);
       }
     }
@@ -737,7 +743,8 @@ ComponentList& ImageSkyModel::componentList()
 
 Long ImageSkyModel::cacheSize(Int model){
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
-  Long cachesize=min((image_p[model]->shape()[0])*(image_p[model]->shape()[1])/4, 1000000);
+  //  Long cachesize=(image_p[model]->shape()[0])*(image_p[model]->shape()[1])/4;
+  Long cachesize=(image_p[model]->shape().product());
   // return Long((HostInfo::memoryFree()/(sizeof(Float)*16)*1024));
 
   return cachesize;

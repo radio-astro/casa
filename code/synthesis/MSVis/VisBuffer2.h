@@ -93,6 +93,17 @@ class VisibilityIterator2;
 // averaging across time will need to decide what values ought to be reported
 // for the VisBuffer's timestamp, pointing angle, etc.
 //
+// Another possible attribute of a VisBuffer is "rekeyable".  This is for when
+// the VisBuffer is being filled by client code rather than from an input MS.
+// Because of this, the enforcement of VisBuffer invariants is relaxed.  Users
+// will be able to change row key fields (e.g., antenna1, data description id,
+// etc.) as well as change the shape of the data.  The method validateShapes is
+// provided which will check that all modified shapes are consistent.  This method
+// is automatically called by writeChangesBack and should also be called whenever
+// the construction process is complete and the VisBuffer is about to be released
+// for use; it's better to catch the error rather than letting an inconsistent
+// VisBuffer escape into consuming code.
+//
 //</synopsis>
 //
 //<todo>
@@ -207,7 +218,8 @@ public:
     // The frequency index is the zero-based index along the frequency axis of
     // a visibility cube.
 
-    virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const = 0;
+    virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex,
+                                 Int frame = FrameNotSpecified) const = 0;
     virtual const Vector<Double> getFrequencies (Int rowInBuffer,
                                                  Int frame = FrameNotSpecified) const = 0;
     virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const = 0;
@@ -222,7 +234,7 @@ public:
     // of a tiny piece of code.  As such, this refactor is initially not going to
     // support this functionality since it is probably better implemented in the one
     // place that actually needs it. (jjacobs 10/3/12)
-
+    //
     //virtual void sortCorr () = 0;
     //virtual void unSortCorr() = 0;
 
@@ -252,6 +264,11 @@ public:
     //
     //  The isWritable method is True when the attached iterator is writable
     //  and False otherwise.
+    //
+    //  The isRekeyable method is True when the VisBuffer is writable and also
+    //  allows the modification of non-data fields (e.g., antenna1, fieldId, etc.)
+    //  A rekeyable VB is one that could be used to create data for a brand new
+    //  MS.
 
     virtual Bool isNewArrayId () const = 0;
     virtual Bool isNewFieldId () const = 0;
@@ -278,14 +295,6 @@ public:
     //  nF :== number of frequencies (or channels)
     //  nC :== number of correlations
     //  nR :== number of table rows contained in the buffer
-    //
-    //  ** Caution **
-    //
-    //  Some of the methods below have in their argument lists a parameter of the
-    //  form "Int row = -1".  These will return the requested value assuming the
-    //  value requested is constant for all of the rows in the VisBuffer.  Otherwise
-    //  it will throw an exception.
-
 
     //--------------------------------------------------------
     //
@@ -299,40 +308,56 @@ public:
     //  visCube).  This should not be a problem in normal usage.
 
     virtual const Vector<Int> & antenna1 () const = 0; // [nR]
+    virtual void setAntenna1 (const Vector<Int> & value) const = 0; // [nR]
     virtual const Vector<Int> & antenna2 () const = 0; // [nR]
+    virtual void setAntenna2 (const Vector<Int> & value) const = 0; // [nR]
     virtual Int arrayId () const = 0;
+    virtual void setArrayId (Int value) const = 0;
     virtual Int dataDescriptionId () const = 0;
+    virtual void setDataDescriptionId (Int value) const = 0;
     virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
     virtual const Vector<MDirection> & direction2 () const = 0; // [nR]
     virtual const Vector<Double> & exposure () const = 0; // [nR]
+    virtual void setExposure (const Vector<Double> & value) const = 0; // [nR]
     virtual const Vector<Int> & feed1 () const = 0; // [nR]
+    virtual void setFeed1 (const Vector<Int> & value) const = 0; // [nR]
     virtual const Vector<Int> & feed2 () const = 0; // [nR]
+    virtual void setFeed2 (const Vector<Int> & value) const = 0; // [nR]
     virtual Int fieldId () const = 0;
+    virtual void setFieldId (Int value) const = 0;
     virtual const Matrix<Bool> & flag () const = 0; // [nF,nR]
-    virtual void setFlag (const Matrix<Bool>&) = 0; // [nF,nR]
+    virtual void setFlag (const Matrix<Bool>& value) = 0; // [nF,nR]
     virtual const Array<Bool> & flagCategory () const = 0; // [nC,nF,nCategories,nR]
-    virtual void setFlagCategory (const Array<Bool>&) = 0; // [nC,nF,nCategories,nR]
+    virtual void setFlagCategory (const Array<Bool>& value) = 0; // [nC,nF,nCategories,nR]
     virtual const Cube<Bool> & flagCube () const = 0; // [nC,nF,nR]
-    virtual void setFlagCube (const Cube<Bool>&) = 0; // [nC,nF,nR]
+    virtual void setFlagCube (const Cube<Bool>& value) = 0; // [nC,nF,nR]
     virtual const Vector<Bool> & flagRow () const = 0; // [nR]
-    virtual void setFlagRow (const Vector<Bool>&) = 0; // [nR]
+    virtual void setFlagRow (const Vector<Bool>& value) = 0; // [nR]
     virtual const Vector<Int> & observationId () const = 0; // [nR]
+    virtual void setObservationId (const Vector<Int> & value) const = 0; // [nR]
     virtual const Vector<Int> & processorId () const = 0; // [nR]
+    virtual void setProcessorId (const Vector<Int> & value) const = 0; // [nR]
     virtual const Vector<Int> & scan () const = 0; // [nR]
+    virtual void setScan (const Vector<Int> & value) const = 0; // [nR]
     virtual const Vector<Float> & sigma () const = 0; // [nR]
-    virtual void setSigma (const Vector<Float> &) = 0; // [nR]
+    virtual void setSigma (const Vector<Float> & value) = 0; // [nR]
     virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
     virtual const Vector<Int> & stateId () const = 0; // [nR]
+    virtual void setStateId (const Vector<Int> & value) const = 0; // [nR]
     virtual const Vector<Double> & time () const = 0; // [nR]
+    virtual void setTime (const Vector<Double> & value) const = 0; // [nR]
     virtual const Vector<Double> & timeCentroid () const = 0; // [nR]
+    virtual void setTimeCentroid (const Vector<Double> & value) const = 0; // [nR]
     virtual const Vector<Double> & timeInterval () const = 0; // [nR]
+    virtual void setTimeInterval (const Vector<Double> & value) const = 0; // [nR]
     virtual const Matrix<Double> & uvw () const = 0; // [3,nR]
+    virtual void setUvw (const Matrix<Double> & value) const = 0; // [3,nR]
     virtual const Vector<Float> & weight () const = 0; // [nR]
-    virtual void setWeight (const Vector<Float>&) = 0; // [nR]
+    virtual void setWeight (const Vector<Float>& value) = 0; // [nR]
     virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
-    virtual void setWeightMat (const Matrix<Float>&) = 0; // [nC,nR]
+    virtual void setWeightMat (const Matrix<Float>& value) = 0; // [nC,nR]
     virtual const Cube<Float> & weightSpectrum () const = 0; // [nC,nF,nR]
-    virtual void setWeightSpectrum (const Cube<Float>&) = 0; // [nC,nF,nR]
+    virtual void setWeightSpectrum (const Cube<Float>& value) = 0; // [nC,nF,nR]
 
     // --------------------------------------------------------------
     // Visibility data accessors in order of observed, corrected,
@@ -382,7 +407,7 @@ public:
 
     virtual const Vector<Int> & correlationTypes () const = 0; // [nC]
 
-    // Calcuates the parallactic angle for the first receptor of
+    // Calculates the parallactic angle for the first receptor of
     // each antenna at the specified time.
 
     virtual Vector<Float> feedPa(Double time) const = 0; // [nR]
@@ -454,7 +479,9 @@ protected:
                                        Bool isNewSpectralWindow, const SubChunkPair2 & subchunk,
                                        Int nRows, Int nChannels, Int nCorrelations) = 0;
     virtual void invalidate() = 0;
-
+    virtual Bool isRekeyable () const = 0;
+    virtual void setRekeyable (Bool isRekeable) = 0;
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows) = 0;
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 

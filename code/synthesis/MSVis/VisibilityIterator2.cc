@@ -706,7 +706,7 @@ const MSDerivedValues &
 ROVisibilityIterator2::getMSD () const
 {
     CheckImplementationPointerR ();
-    return readImpl_p->getMSD ();
+    return readImpl_p->getMsd ();
 }
 
 Int

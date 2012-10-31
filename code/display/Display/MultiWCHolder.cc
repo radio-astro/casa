@@ -385,7 +385,16 @@ void MultiWCHolder::removeFromAllWorldCanvasHolders(DisplayData &displaydata) {
     localWCHLI++;
   }
 }
-
+// Distribute blinkMode to all WorldCanvasHolders.
+void MultiWCHolder::setBlinkMode( bool mode ) {
+  ListIter<WorldCanvasHolder *> localWCHLI(itsWCHList);
+  localWCHLI.toStart();
+  while (!localWCHLI.atEnd()) {
+    WorldCanvasHolder *holder = localWCHLI.getRight();
+    holder->setBlinkMode(mode);
+    localWCHLI++;
+  }
+}
 // Distribute restrictions to all WorldCanvasHolders.
 void MultiWCHolder::distributeRestrictions() {
   ListIter<WorldCanvasHolder *> localWCHLI(itsWCHList);

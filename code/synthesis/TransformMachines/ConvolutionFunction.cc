@@ -28,16 +28,19 @@
 #include <synthesis/TransformMachines/ConvolutionFunction.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   ConvolutionFunction::~ConvolutionFunction() {};
-  //  ConvolutionFunction& operator=(const ConvolutionFunction& other) {return *this;}
-  // int ConvolutionFunction::getVisParams(const VisBuffer& vb) {return 0;};
-  // void ConvolutionFunction::makeConvFunction(const ImageInterface<Complex>& image,
-  // 					     const VisBuffer& vb,
-  // 					     const Int wConvSize,
-  // 					     const Float pa,
-  // 					     CFStore& cfs,
-  // 					     CFStore& cfwts) {};
-  // void ConvolutionFunction::setPolMap(const Vector<Int>& polMap) {};
-  // void ConvolutionFunction::setFeedStokes(const Vector<Int>& feedStokes) {};
-  // void ConvolutionFunction::setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes) 
-  // {setPolMap(polMap); setFeedStokes(feedStokes);};
+  Matrix<Int> ConvolutionFunction::makeBaselineList(const Vector<Int>& antList)
+  {
+    Int na=antList.nelements();
+    Int nb=max(na,na*(na-1));
+    Matrix<Int> baselineList(nb,2);
+    nb=0;
+    for(Int ia=0;ia<na;ia++)
+      for (int ja=ia;ja<na;ja++)
+	{
+	  baselineList(nb,0)=antList[ia];
+	  baselineList(nb,1)=antList[ja];
+	  nb++;
+	}
+    return baselineList;
+  }
 };

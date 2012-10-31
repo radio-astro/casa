@@ -29,8 +29,8 @@
 #ifndef SYNTHESIS_RESAMPLERWORKLET_H
 #define SYNTHESIS_RESAMPLERWORKLET_H
 
-#include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
-#include <synthesis/MeasurementComponents/VBStore.h>
+#include <synthesis/TransformMachines/VisibilityResamplerBase.h>
+#include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
 #include <synthesis/MSVis/AsynchronousTools.h>
 #include <synthesis/MSVis/VisBuffer.h>

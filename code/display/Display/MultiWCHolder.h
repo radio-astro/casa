@@ -177,6 +177,9 @@ class MultiWCHolder {
   virtual Int bLength();
   virtual Int bIndex();
 
+  //Sets whether the viewer is in blink mode.
+  void setBlinkMode( bool blinkMode );
+
   // Determines which DDs will be restricted, which are always active.
   virtual Bool isBlinkDD(DisplayData *dd);
 

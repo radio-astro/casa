@@ -599,7 +599,7 @@ protected:
 
     // Provides access to the MS-derived values object
 
-    const MSDerivedValues & getMSD () const; // for use by Async I/O *ONLY*
+    const MSDerivedValues & getMsd () const; // for use by Async I/O *ONLY*
 
     // Get privileged (non-const) access to the containing ROVI
 

@@ -370,7 +370,7 @@ and minimum will need to be specified.</string>
           <item>
            <widget class="QLabel" name="minIncludeLabel">
             <property name="text">
-             <string>&lt;font color='black'&gt;Min:&lt;/font&gt;</string>
+             <string>&lt;font color='black'&gt;Start:&lt;/font&gt;</string>
             </property>
            </widget>
           </item>
@@ -414,7 +414,7 @@ and minimum will need to be specified.</string>
           <item>
            <widget class="QLabel" name="maxIncludeLabel">
             <property name="text">
-             <string>&lt;font color='black'&gt;Max:&lt;/font&gt;</string>
+             <string>&lt;font color='black'&gt;End:&lt;/font&gt;</string>
             </property>
            </widget>
           </item>

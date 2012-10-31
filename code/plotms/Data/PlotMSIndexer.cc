@@ -918,6 +918,8 @@ Record PlotMSIndexer::getPointMetaData(Int i) {
                                          getIndex0010(currChunk_,irel_)));
     Int ant2 = Int(plotmscache_->getAnt2(currChunk_,
                                          getIndex0010(currChunk_,irel_)));
+    String ant1name = plotmscache_->antstanames_(ant1);
+    String ant2name = plotmscache_->antstanames_(ant2);
     Double time = plotmscache_->getTime(currChunk_, 0);
     Int spw = Int(plotmscache_->getSpw(currChunk_, 0));
     Double freq = plotmscache_->getFreq(currChunk_, ichan);
@@ -931,6 +933,8 @@ Record PlotMSIndexer::getPointMetaData(Int i) {
     r.define("time", time);
     r.define("ant1", ant1);
     r.define("ant2", ant2);
+    r.define("ant1name", ant1name);
+    r.define("ant2name", ant2name);
     r.define("time", time);
     r.define("spw", spw);
     r.define("freq", freq);

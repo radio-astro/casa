@@ -41,7 +41,7 @@ public:
 	static const QString FRACTION_OF_PEAK;
 	static const QString KELVIN;
 	static const QString ADU;
-
+	static bool isSupportedUnits( const QString& yUnit );
 	//Hertz values are needed corresponding to the values for Jy/Beam Kelvin conversions
 	//only.  Both oldUnits and newUnits refer to the old and new units of the values
 	//array.  In order to do FRACTION_OF_PEAK conversions, a maximum value with

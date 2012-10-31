@@ -92,6 +92,30 @@ Vector<float> CanvasCurve::getYValues() const{
 	return yValues;
 }
 
+pair<double,double> CanvasCurve::getRangeFor(double xMin, double xMax, Bool& exists ){
+	pair<double,double> yRange;
+	exists = false;
+	int yCount = curveData.size() / 2;
+	for ( int i = 0; i < yCount; i++ ){
+		if ( xMin <= curveData[2*i] && curveData[2*i]<= xMax ){
+			if ( !exists ){
+				yRange.first = curveData[2*i+1];
+				yRange.second = curveData[2*i+1];
+				exists = true;
+			}
+			else {
+				if ( curveData[2*i+1] < yRange.first ){
+					yRange.first = curveData[2*i+1];
+				}
+				else if ( curveData[2*i+1] > yRange.second ){
+					yRange.second = curveData[2*i+1];
+				}
+			}
+		}
+	}
+	return yRange;
+}
+
 
 Vector<float> CanvasCurve::getErrorValues() const{
 	int errorCount = errorData.size();

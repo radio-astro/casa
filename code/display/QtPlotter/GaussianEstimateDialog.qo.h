@@ -28,7 +28,6 @@
 #include <QtGui/QDialog>
 #include <display/QtPlotter/GaussianEstimateDialog.ui.h>
 #include <display/QtPlotter/SearchMoleculesDialog.qo.h>
-#include <display/QtPlotter/SelectEstimateDialog.qo.h>
 #include <display/QtPlotter/SpecFitGaussian.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
@@ -59,14 +58,9 @@ public:
     void setEstimates( QList<SpecFitGaussian>& estimates );
 
 private slots:
-	void searchMolecules();
-	void molecularLinesChanged();
 	void unitsChanged( int index );
 	void plotsCoordinatedChanged( int );
 	void coordinatedValuesChanged( float );
-	void updateMolecularLines();
-	void clearGraphs();
-	void clearSelectedPlots();
 
 private:
 	void resetEstimates();
@@ -76,21 +70,17 @@ private:
 	void setCurveColor();
 	void initializeLimits( const Vector<float>& values, Float* const min, Float* const max );
 	Vector<float> translateDataUnits( const Vector<float>& xValues, Converter* converter );
-	//void translateEstimateUnits( SpecFitGaussian& estimate, Converter* converter );
 	Vector<float> xVals;
     Vector<float> yVals;
     QColor curveColor;
     QString specUnitStr;
     QString displayYUnits;
     QString unitStr;
-	SearchMoleculesDialog searchDialog;
     QList<GaussianEstimateWidget*> plots;
     Ui::GaussianEstimateDialogClass ui;
     bool plotsCoordinated;
 
     QWidget* plotHolderWidget;
-    SelectEstimateDialog selectEstimateDialog;
-    SelectEstimateDialog clearPlotDialog;
 };
 }
 #endif // GAUSSIANESTIMATEDIALOG_QO_H

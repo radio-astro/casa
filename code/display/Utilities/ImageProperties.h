@@ -29,8 +29,9 @@
 #define DISPLAY_IMAGEINFO_H_
 #include <string>
 #include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <components/ComponentModels/GaussianBeam.h>
+#include <images/Images/ImageInterface.h>
 
 namespace casa {
     namespace viewer {
@@ -50,6 +51,8 @@ namespace casa {
 	    public:
 		ImageProperties( );
 		ImageProperties( const std::string &/*path*/ );
+		ImageProperties( ImageInterface<Float> * );
+		ImageProperties( ImageInterface<std::complex<float> >* );   /**** throws exception ****/
 		const ImageProperties &operator=( const std::string & );
 
 		bool hasDirectionAxis( ) const { return has_direction_axis; }
@@ -60,8 +63,14 @@ namespace casa {
 		std::vector<std::string> raRangeAsStr( ) const { return ra_range_str; }
 		Vector<double> decRange( ) const { return dec_range; }
 		std::vector<std::string> decRangeAsStr( ) const { return dec_range_str; }
-		Vector<Quantum<Double> > restoringBeam( ) const { return beam_vec; }
-		std::vector<std::string> restoringBeamAsStr( ) const { return beam_string_vec; }
+		size_t nBeams( ) const { return restoring_beams.size( ); }
+		std::vector<std::vector<double> > restoringBeams( ) const;
+		std::vector<double> restoringBeam( size_t channel ) const
+			{ return beam_as_vector(channel < restoring_beams.size( ) ? restoring_beams[channel] : restoring_beams[0]); }
+		std::vector<std::string> restoringBeamAsStr( size_t channel ) const
+			{ return beam_as_string_vector(channel < restoring_beams.size( ) ? restoring_beams[channel] : restoring_beams[0]); }
+		std::vector<double> medianRestoringBeam( ) const;
+		std::vector<std::string> medianRestoringBeamAsStr( ) const;
 		Vector<double> freqRange( const std::string &units="" ) const;
 		const std::string &freqUnits( ) const { return freq_units; }
 		Vector<double> veloRange( const std::string &units="" ) const;
@@ -73,6 +82,11 @@ namespace casa {
 		int spectralAxisNumber() const { return cs_.spectralAxisNumber( ); }
 
 	    private:
+		std::vector<double> beam_as_vector( const GaussianBeam &beam ) const;
+		std::vector<std::string> beam_as_string_vector( const GaussianBeam &beam ) const;
+		void clear_state( );
+		void initialize_state( ImageInterface<Float> *image );
+		void reset( ImageInterface<Float> *image );
 		void reset( const std::string &path="" );
 		bool status_ok;
 		std::string path_;
@@ -88,8 +102,7 @@ namespace casa {
 		std::vector<std::string> ra_range_str;
 		Vector<double> dec_range;
 		std::vector<std::string> dec_range_str;
-		Vector<Quantum<Double> > beam_vec;
-		std::vector<std::string> beam_string_vec;
+		std::vector<GaussianBeam> restoring_beams;
 		CoordinateSystem cs_;
 	};
     }

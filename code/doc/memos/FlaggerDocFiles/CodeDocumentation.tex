@@ -10,7 +10,7 @@ with links from each 'class' box/section to the relevant doxygen code-doc pages.
 
 \begin{enumerate}
 \item
-\htmladdnormallink{TestFlagger}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/testflagger-Tool.html#x562-5740002.4.1}:
+\htmladdnormallink{AgentFlagger}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/agentflagger-Tool.html}:
 The top-level Flagger class that connects all of the following together, and defines the C++ user-interface for the flagger.  This is the class used by the tool layer.
 
 \item \htmladdnormallink{FlagDataHandler}{http://www.eso.org/~jagonzal/Flagging-3.4-Docs/html/classcasa_1_1FlagDataHandler.html} : A top level class defining the data handling interface for the flagging module. 
@@ -157,7 +157,7 @@ this pre-selection is calculated as a loose union of all input selection paramet
 (currently a list of all unique spectral-windows and field-ids).
 
 This is done automatically at the task level, and is in the control of the user at the 
-tool level (via {\tt tf.selectdata()}.
+tool level (via {\tt af.selectdata()}.
 
 Note that there is a second level of selection per agent (command) that ensures
 that each agent (command) sees only its correct subset of the data. 
@@ -271,10 +271,10 @@ Two types of datasets : wideband continuum single-pointing,   spectral-line mosa
 
 \subsection{Python tool and task}
 
-\subsubsection{testflagger tool}
+\subsubsection{agentflagger tool}
 \paragraph{Examples how to use the the new flagging framework from the tool.}
 All the functions available in the tool are explained
-\htmladdnormallink{here.}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/testflagger-Module.html}
+\htmladdnormallink{here.}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/agentflagger-Module.html}
 
 \begin{enumerate}
 \item Open the MS or a calibration file and attach it to the tool.
@@ -286,7 +286,7 @@ FlagDataHandler::SUB\_INTEGRATION iteration approach and 0.0 seconds as the
 time interval.
 
 \begin{verbatim}
-    tf.open('my.ms')
+    af.open('my.ms')
 \end{verbatim}
 
 \item Select the data where to flag. If left blank, the whole MS will be
@@ -301,10 +301,10 @@ other takes the individual parameters as arguments.
     selection={}
     selection['spw']="0:1~10"
     selection=['scan']="1"
-    tf.selectdata(selection)
+    af.selectdata(selection)
 
   2) Second method:
-    tf.selectdata(spw="0:1~10", scan="1")
+    af.selectdata(spw="0:1~10", scan="1")
 \end{verbatim}
 
 \item Parse the parameters of the flagging agents.
@@ -340,26 +340,26 @@ the flags.
      agent_pars["mode"] = "clip"
      agent_pars["clipzeros"] = true
      agent_pars["apply"] = true
-     tf.parseagentparameters(agent_pars)
+     af.parseagentparameters(agent_pars)
 
      agent_pars = {}
      agent_pars["mode"] = "manual"
      agent_pars["autocorr"] = true
-     tf.parseagentparameters(agent_pars)
+     af.parseagentparameters(agent_pars)
 
      agent_pars = {}
      agent_pars["mode"] = "summary"
      agent_pars["basecnt"] = true
-     tf.parseagentparameters(agent_pars)
+     af.parseagentparameters(agent_pars)
 \end{verbatim}
 
 There are convenience functions to parse the agent's parameters, one specific for each agent.
 The above calls can be done instead using these functions.
 
 \begin{verbatim}
-     tf.parseclipparameters(clipzeros=true, apply=true)
-     tf.parsemanualparameters(autocorr=true)
-     tf.parsesummaryparameters(basecnt=true)
+     af.parseclipparameters(clipzeros=true, apply=true)
+     af.parsemanualparameters(autocorr=true)
+     af.parsesummaryparameters(basecnt=true)
 \end{verbatim}
 
 In either one of the cases, three agents will be created. We need to initialize the agents, which
@@ -375,12 +375,12 @@ FlagDataHandler::COMPLETE\_SCAN\_MAP\_ANTENNA\_PAIRS\_ONLY.
 \item Initialize the agents.
 
 This method will create agents and add them to a FlagAgentList. If for any reason, the call to
-FlagAgentBase::create(fdh\_p, agent_rec) fails, an error message will be
+FlagAgentBase::create(fdh\_p, agent\_rec) fails, an error message will be
 displayed. Any agents previously added to the FlagAgentList will remain there. A subsequent call to this method can be done to add
 more agents to the same FlagAgentList.
 
 \begin{verbatim}
-     tf.init()
+     af.init()
 \end{verbatim}
 
 \item Process the flags and write them to the MS.
@@ -406,13 +406,13 @@ summaries per field, spw, scan, correlation, etc. The second report
 gives the antenna positions for plotting.
 
 \begin{verbatim}
-     my_reports = tf.run()
+     my_reports = af.run()
 \end{verbatim}
 
 \item Destroy the tool.
 
 \begin{verbatim}
-    tf.done()
+    af.done()
 \end{verbatim}
  \end{enumerate}
  
@@ -421,13 +421,13 @@ gives the antenna positions for plotting.
 
 \item Run multiple summary agents in a list. In order to do this, add as many
 summary agents are desired when parsing the agent's parameters. You can do this by
-calling the tf.parseagentparameters() several times before calling tf.init().
+calling the af.parseagentparameters() several times before calling af.init().
 
 \item Determine to run the agents in sequential or in parallel. Set the
 'sequential' parameter of the run method to True or False to control this.
 
 \item Flag CAL tables in currently only possible in the tool. Give a CAL table
-name when calling the tf.open() method instead of a MS.
+name when calling the af.open() method instead of a MS.
 
 \end{enumerate}
 
@@ -436,20 +436,20 @@ I/O and parallel run}
 
 \subsubsection{flaghelper functions}
 
-This Python file contains many helper functions for tflagdata and flacmd. The
+This Python file contains many helper functions for flagdata and flacmd. The
 functions can be imported inside casapy.
 
 \begin{verbatim}
      import flaghelper as fh
 \end{verbatim}
 
-\subsubsection{tflagdata task}
-Help for the tflagdata task is available \htmladdnormallink{here.}
-{http://www.eso.org/~scastro/ALMA/casa/active/TaskRef/tflagdata-task.html#x107-1060000.1.104}
+\subsubsection{flagdata task}
+Help for the flagdata task is available \htmladdnormallink{here.}
+{http://casa.nrao.edu/docs/taskref/flagdata-task.html}
 
 \subsubsection{flagcmd task}
 Help for the flagcmd task is available \htmladdnormallink{here.}
-{http://www.eso.org/~scastro/ALMA/casa/active/TaskRef/flagcmd-task.html#x33-320000.1.30}
+{http://casa.nrao.edu/docs/taskref/flagcmd-task.html}
 
 
 

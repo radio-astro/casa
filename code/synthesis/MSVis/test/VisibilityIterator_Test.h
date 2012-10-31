@@ -641,11 +641,19 @@ private:
 
 };
 
+class CopyMs {
+
+public:
+
+    void doit (const String &);
+
+};
+
 void printMs (MeasurementSet * ms);
 
 
-} // end namespace casa
-} // end namespace vi
 } // end namespace test
+} // end namespace vi
+} // end namespace casa
 
 #endif // ! defined (VisibilityIterator_Test_H_20120912_1001

@@ -1644,7 +1644,7 @@ VisibilityIteratorReadImpl2::configureNewChunk ()
 }
 
 const MSDerivedValues &
-VisibilityIteratorReadImpl2::getMSD () const
+VisibilityIteratorReadImpl2::getMsd () const
 {
     return msd_p;
 }

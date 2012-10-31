@@ -116,7 +116,7 @@ class QtDisplayData : public QObject {
   
   // Returns a String with value and position information,
   // suitable for a cursor tracking display.
-  virtual String trackingInfo(const WCMotionEvent& ev);
+  virtual pair<String,String> trackingInfo(const WCMotionEvent& ev);
 
   
   // Convert 2-D 'pseudoregion' (or 'mouse region' Record, from the region
@@ -453,7 +453,7 @@ class QtDisplayData : public QObject {
   DParameterRange<Float>* colorBarCharSizeOpt_;  
 
   viewer::ImageProperties image_properties;
-
+  void setPlotTitle();
 };
 
 

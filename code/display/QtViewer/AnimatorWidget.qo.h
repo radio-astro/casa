@@ -50,6 +50,9 @@ public:
     int getRate() const;
     int getFrame() const;
     int getFrameCount() const;
+    int getFrameStart() const;
+    int getFrameEnd() const;
+    int getStepSize() const;
     ~AnimatorWidget();
 
 signals:
@@ -63,11 +66,19 @@ signals:
 	void fwdPlay();
 	void toEnd();
 	void frameNumberEdited( int );
+	void lowerBoundChanged( int );
+	void upperBoundChanged( int );
+	void stepSizeChanged( int );
 
 private slots:
 	void frameNumberEdited();
+	void movieLimitLowerChanged( int value );
+	void movieLimitUpperChanged( int value );
+	void sliderControl( int action );
+	void endToEndMode( bool mode );
 
 private:
+	int resetFrameBounded( int frameNumber ) const;
 	void blockSignals( bool block );
 	int frameCount;
 	int play;

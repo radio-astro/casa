@@ -17,11 +17,11 @@
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
 //# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
+//#	   Internet email: aips2-request@nrao.edu.
+//#	   Postal address: AIPS++ Project Office
+//#			   National Radio Astronomy Observatory
+//#			   520 Edgemont Road
+//#			   Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
 
@@ -45,6 +45,7 @@
 #include <math.h>
 #include <algorithm>
 #include <casa/BasicMath/Functors.h>
+#include <cstdlib>
 
 #define SEXAGPREC 9
 
@@ -72,7 +73,7 @@ namespace casa {
 	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false), draw_center_(false){
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
-	    // 	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
+	    //	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
 	    // }
 	}
 
@@ -441,7 +442,7 @@ if (!markCenter()) return;
 
 	static inline MDirection::Types viewer_to_casa( Region::Coord type ) {
 	    return type == Region::J2000 ?  MDirection::J2000 :
-		type == Region::B1950 ?  MDirection::B1950 :
+		type == Region::B1950 ?	 MDirection::B1950 :
 		type == Region::Galactic ? MDirection::GALACTIC :
 		type == Region::SuperGalactic ? MDirection::SUPERGAL :
 		type == Region::Ecliptic ? MDirection::ECLIPTIC : MDirection::J2000;
@@ -631,7 +632,7 @@ if (!markCenter()) return;
 
 		MDirection::Types cccs = current_casa_coordsys( );
 		MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
-// 		const CoordinateSystem &cs = wc_->coordinateSystem( );
+//		const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 		Vector<Double> worldv(2);
 		Vector<Double> linearv(2);
@@ -710,7 +711,6 @@ if (!markCenter()) return;
 
 		MDirection::Types cccs = current_casa_coordsys( );
 		MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
-		const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 		Vector<Double> worldv(2);
 		Vector<Double> linearv(2);
@@ -755,6 +755,208 @@ if (!markCenter()) return;
 	    // move region...
 	    move( new_center_x - cur_center_x, new_center_y - cur_center_y );
 
+	    return true;
+	}
+
+	bool Region::resizeX( const std::string &x, const std::string &x_units, const std::string &coordsys ) {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
+
+	    double cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y;
+	    boundingRectangle( cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y );
+
+	    if ( x_units == "pix" ) {
+		double pix_blc_x, pix_blc_y, pix_trc_x, pix_trc_y;
+		double new_blc_x, new_trc_x;
+		double new_blc_y, new_trc_y;
+		try { linear_to_pixel( wc_, cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y, pix_blc_x, pix_blc_y, pix_trc_x, pix_trc_y ); } catch(...) { return false; }
+		double cur_pix_distance = pix_trc_x - pix_blc_x;
+		double new_pix_distance = atof(x.c_str( ));
+		double shift = (new_pix_distance - cur_pix_distance) / 2.0;
+		try { pixel_to_linear( wc_, pix_blc_x - shift, pix_blc_y, pix_trc_x + shift, pix_trc_y,
+				       new_blc_x, new_blc_y, new_trc_x, new_trc_y ); } catch(...) { return false; }
+		resize( (new_trc_x - new_blc_x) - (cur_trc_x - cur_blc_x), 0 );
+
+	    } else {
+
+		Quantity new_distance;
+		const char degstr[] = { 0x00B0, 0x0000 };
+		if ( x_units == "\"" ) {
+		    new_distance = Quantity( atof(x.c_str( )), "arcsec" );
+		} else if ( x_units == "\'" ) {
+		    new_distance = Quantity( atof(x.c_str( )), "arcmin" );
+		} else if ( x_units == "rad" ) {
+		    new_distance = Quantity( atof(x.c_str( )), "rad" );
+		} else if ( x_units == degstr ) {
+		    new_distance = Quantity( atof(x.c_str( )), "deg" );
+		} else {
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    return false;
+		}
+
+		MDirection::Types cccs = current_casa_coordsys( );
+		MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
+
+		Vector<Double> cur_blc_worldv(2);
+		Vector<Double> cur_blc_linearv(2);
+		Vector<Double> cur_trc_worldv(2);
+		Vector<Double> cur_trc_linearv(2);
+
+		/**** use the midpoint for other dimension ****/
+		cur_blc_linearv(0) = cur_blc_x;
+		cur_blc_linearv(1) = (cur_trc_y + cur_blc_y) / 2.0;
+		cur_trc_linearv(0) = cur_trc_x;
+		cur_trc_linearv(1) = cur_blc_linearv(1);
+		if ( ! wc_->linToWorld( cur_blc_worldv, cur_blc_linearv ) ||
+		     ! wc_->linToWorld( cur_trc_worldv, cur_trc_linearv ) ) {
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    return false;
+		}
+
+		MDirection cur_blc( Quantum<Vector<Double> > (cur_blc_worldv,"rad"), cccs );
+		MDirection cur_trc( Quantum<Vector<Double> > (cur_trc_worldv,"rad"), cccs );
+
+		// convert current blc/trc corners to input direction type...
+		MDirection input_blc;
+		MDirection input_trc;
+		if ( cccs != input_direction ) {
+		    input_blc = MDirection::Convert(cur_blc,input_direction)( );
+		    input_trc = MDirection::Convert(cur_trc,input_direction)( );
+		} else {
+		    input_blc = cur_blc;
+		    input_trc = cur_trc;
+		}
+
+		double original_distance = input_blc.getValue( ).separation(input_trc.getValue( ));
+		double shift = (new_distance.getValue("rad") - original_distance) / 2.0;
+		MDirection output_blc(input_blc);
+		MDirection output_trc(input_trc);
+		if ( input_blc.getAngle( ).getValue("rad")[0] < input_trc.getAngle( ).getValue("rad")[0] ) {
+		    output_blc.shiftLongitude(-shift);
+		    output_trc.shiftLongitude(shift);
+		} else {
+		    output_blc.shiftLongitude(shift);
+		    output_trc.shiftLongitude(-shift);
+		}
+		
+		Vector<Double> out_blc_worldv(2);
+		Vector<Double> out_blc_linearv(2);
+		Vector<Double> out_trc_worldv(2);
+		Vector<Double> out_trc_linearv(2);
+		out_blc_worldv(0) = output_blc.getAngle( ).getValue("rad")[0];
+		out_blc_worldv(1) = output_blc.getAngle( ).getValue("rad")[1];
+		out_trc_worldv(0) = output_trc.getAngle( ).getValue("rad")[0];
+		out_trc_worldv(1) = output_trc.getAngle( ).getValue("rad")[1];
+		if ( ! wc_->worldToLin( out_blc_linearv, out_blc_worldv ) ||
+		     ! wc_->worldToLin( out_trc_linearv, out_trc_worldv ) ) {
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    return false;
+		}
+
+		resize( (out_trc_linearv[0] - out_blc_linearv[0]) - (cur_trc_x - cur_blc_x), 0 );
+	    }
+
+	    refresh( );
+	    return true;
+	}
+
+	bool Region::resizeY( const std::string &y, const std::string &y_units, const std::string &coordsys ) {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
+
+	    double cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y;
+	    boundingRectangle( cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y );
+
+	    if ( y_units == "pix" ) {
+		double pix_blc_x, pix_blc_y, pix_trc_x, pix_trc_y;
+		double new_blc_x, new_trc_x;
+		double new_blc_y, new_trc_y;
+		try { linear_to_pixel( wc_, cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y, pix_blc_x, pix_blc_y, pix_trc_x, pix_trc_y ); } catch(...) { return false; }
+		double cur_pix_distance = pix_trc_y - pix_blc_y;
+		double new_pix_distance = atof(y.c_str( ));
+		double shift = (new_pix_distance - cur_pix_distance) / 2.0;
+		try { pixel_to_linear( wc_, pix_blc_x, pix_blc_y - shift, pix_trc_x, pix_trc_y + shift,
+				       new_blc_x, new_blc_y, new_trc_x, new_trc_y ); } catch(...) { return false; }
+		resize( 0, (new_trc_y - new_blc_y) - (cur_trc_y - cur_blc_y) );
+
+	    } else {
+
+		Quantity new_distance;
+		const char degstr[] = { 0x00B0, 0x0000 };
+		if ( y_units == "\"" ) {
+		    new_distance = Quantity( atof(y.c_str( )), "arcsec" );
+		} else if ( y_units == "\'" ) {
+		    new_distance = Quantity( atof(y.c_str( )), "arcmin" );
+		} else if ( y_units == "rad" ) {
+		    new_distance = Quantity( atof(y.c_str( )), "rad" );
+		} else if ( y_units == degstr ) {
+		    new_distance = Quantity( atof(y.c_str( )), "deg" );
+		} else {
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    return false;
+		}
+
+		MDirection::Types cccs = current_casa_coordsys( );
+		MDirection::Types input_direction = string_to_casa_coordsys(coordsys);
+
+		Vector<Double> cur_blc_worldv(2);
+		Vector<Double> cur_blc_linearv(2);
+		Vector<Double> cur_trc_worldv(2);
+		Vector<Double> cur_trc_linearv(2);
+
+		/**** use the midpoint for other dimension ****/
+		cur_blc_linearv(0) = (cur_trc_x + cur_blc_x) / 2.0;
+		cur_blc_linearv(1) = cur_blc_y;
+		cur_trc_linearv(0) = cur_blc_linearv(0);
+		cur_trc_linearv(1) = cur_trc_y;
+		if ( ! wc_->linToWorld( cur_blc_worldv, cur_blc_linearv ) ||
+		     ! wc_->linToWorld( cur_trc_worldv, cur_trc_linearv ) ) {
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    return false;
+		}
+
+		MDirection cur_blc( Quantum<Vector<Double> > (cur_blc_worldv,"rad"), cccs );
+		MDirection cur_trc( Quantum<Vector<Double> > (cur_trc_worldv,"rad"), cccs );
+
+		// convert current blc/trc corners to input direction type...
+		MDirection input_blc;
+		MDirection input_trc;
+		if ( cccs != input_direction ) {
+		    input_blc = MDirection::Convert(cur_blc,input_direction)( );
+		    input_trc = MDirection::Convert(cur_trc,input_direction)( );
+		} else {
+		    input_blc = cur_blc;
+		    input_trc = cur_trc;
+		}
+
+		double original_distance = input_blc.getValue( ).separation(input_trc.getValue( ));
+		double shift = (new_distance.getValue("rad") - original_distance) / 2.0;
+		MDirection output_blc(input_blc);
+		MDirection output_trc(input_trc);
+		if ( input_blc.getAngle( ).getValue("rad")[1] < input_trc.getAngle( ).getValue("rad")[1] ) {
+		    output_blc.shiftLatitude(-shift);
+		    output_trc.shiftLatitude(shift);
+		} else {
+		    output_blc.shiftLatitude(shift);
+		    output_trc.shiftLatitude(-shift);
+		}
+		
+		Vector<Double> out_blc_worldv(2);
+		Vector<Double> out_blc_linearv(2);
+		Vector<Double> out_trc_worldv(2);
+		Vector<Double> out_trc_linearv(2);
+		out_blc_worldv(0) = output_blc.getAngle( ).getValue("rad")[0];
+		out_blc_worldv(1) = output_blc.getAngle( ).getValue("rad")[1];
+		out_trc_worldv(0) = output_trc.getAngle( ).getValue("rad")[0];
+		out_trc_worldv(1) = output_trc.getAngle( ).getValue("rad")[1];
+		if ( ! wc_->worldToLin( out_blc_linearv, out_blc_worldv ) ||
+		     ! wc_->worldToLin( out_trc_linearv, out_trc_worldv ) ) {
+		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    return false;
+		}
+
+		resize( 0, (out_trc_linearv[1] - out_blc_linearv[1]) - (cur_trc_y - cur_blc_y) );
+	    }
+
+	    refresh( );
 	    return true;
 	}
 
@@ -1032,7 +1234,7 @@ if (!markCenter()) return;
 
 	    linear_to_world( wc_, base, base, base+lx, base+ly, blcx, blcy, trcx, trcy );
 	    MDirection::Types cccs = get_coordinate_type( wc_->coordinateSystem( ) );
-// 	    Region::Coord crcs = casa_to_viewer(cccs);
+//	    Region::Coord crcs = casa_to_viewer(cccs);
 	    if ( coordsys == cccs && units == "rad" ) {
 		wx = fabs(trcx-blcx);
 		wy = fabs(trcy-blcy);
@@ -1156,13 +1358,11 @@ if (!markCenter()) return;
 	    static Vector<Double> worldv(2);	// avoid vector allocation for each conversion
 	    static Vector<Double> linearv(2);
 
-	    const CoordinateSystem &cs = wc->coordinateSystem( );
-
 	    // BEGIN - critical section
 
 	    // if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
-	    // 	worldv.resize(cs.nWorldAxes( ));
-	    // 	worldv = cs.referenceValue( );
+	    //	worldv.resize(cs.nWorldAxes( ));
+	    //	worldv = cs.referenceValue( );
 	    // }
 
 	    worldv(0) = world_x;
@@ -1300,19 +1500,19 @@ if (!markCenter()) return;
 	    world_to_linear( wc, world_x1, world_y1, lin_x2, lin_y2 );
 	}
 
-        MDirection::Types get_coordinate_type( const CoordinateSystem &cs ) {
+	MDirection::Types get_coordinate_type( const CoordinateSystem &cs ) {
 	    for ( uInt i=0; i < cs.nCoordinates(); ++i )
 		if ( cs.type(i) == Coordinate::DIRECTION )
 		    return cs.directionCoordinate(i).directionType(true);
 	    return MDirection::EXTRA;
 	}
 
-   RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg) {
+	RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg) {
 		  if( image==0 || padd == 0 ) return 0;
 		  try {
 			  // store the coordinate system and the axis names
 			  const CoordinateSystem& cs = image->coordinates();
-			  Vector<String> nm          = cs.worldAxisNames();
+			  Vector<String> nm	     = cs.worldAxisNames();
 			  Vector<String> axesNames   = padd->worldToPixelAxisNames( cs );
 
 
@@ -1588,7 +1788,7 @@ if (!markCenter()) return;
 			  LogOrigin origin("Region", __FUNCTION__);;
 			  *log << origin << LogIO::NORMAL << "Centering results:" << LogIO::POST;
 			  for (RegionInfo::center_t::iterator it=layercenter->begin() ; it != layercenter->end(); it++ ){
-				  *log << origin << LogIO::NORMAL << "  --- " << (*it).first << ": " << (*it).second << LogIO::POST;
+				  *log << origin << LogIO::NORMAL << "	--- " << (*it).first << ": " << (*it).second << LogIO::POST;
 			  }
 
 			  if (pixCen.size()>1){
@@ -1688,7 +1888,7 @@ if (!markCenter()) return;
 
 		    Int zPos = -1;
 		    Int hPos = -1;
-		    for (Int k = 0; k < nm.nelements(); k++) {
+		    for (size_t k = 0; k < nm.nelements(); k++) {
 			if (nm(k) == zaxis)
 			    zPos = k;
 			if (nm(k) == haxis)
@@ -1696,7 +1896,7 @@ if (!markCenter()) return;
 		    }
 
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-		    //   begin collecting statistics...
+		    //	 begin collecting statistics...
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    RegionInfo::stats_t *layerstats = new RegionInfo::stats_t( );
 
@@ -1793,9 +1993,6 @@ if (!markCenter()) return;
 			units(0) = units(1) = "rad";
 			dCoord.setWorldAxisUnits(units);
 			Vector<Double> deltas = dCoord.increment();
-
-			Double major = beam.getMajor("rad");
-			Double minor = beam.getMinor("rad");
 			beamArea = beam.getArea("rad2") / abs(deltas(0) * deltas(1));
 		    }
 
@@ -1844,7 +2041,7 @@ if (!markCenter()) return;
 		    if( cs->showType(coordno) == "Direction" ) {
 			// Check for Right Ascension and Declination
 			Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
-			AlwaysAssert( axisincoord>=0 && axisincoord < axnames.nelements(), AipsError);
+			AlwaysAssert( axisincoord>=0 && axisincoord < (int) axnames.nelements(), AipsError);
 			if( axnames[axisincoord] == axtype.c_str() ) {
 			    return ax;
 			}

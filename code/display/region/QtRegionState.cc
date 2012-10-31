@@ -58,7 +58,8 @@ namespace casa {
 	}
 
 	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
-					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0) {
+					QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0),
+					pre_dd_change_statistics_count(-1) {
 	    setupUi(this);
 #if defined(__APPLE__)
 	    QFont font( "Lucida Grande", 11 );
@@ -149,11 +150,11 @@ namespace casa {
 	    // deprecated...
 	    coordinates_apply->hide( );
 	    coordinates_reset->hide( );
-	    bounding_height->setReadOnly(true);
-	    bounding_width->setReadOnly(true);
 
 	    connect( center_x, SIGNAL(editingFinished( )), SLOT(translate_x( )) );
 	    connect( center_y, SIGNAL(editingFinished( )), SLOT(translate_y( )) );
+	    connect( bounding_width, SIGNAL(editingFinished( )), SLOT(resize_x( )) );
+	    connect( bounding_height, SIGNAL(editingFinished( )), SLOT(resize_y( )) );
 
 	    // update line characteristics...
 	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
@@ -221,9 +222,13 @@ namespace casa {
 	void QtRegionState::updateCoord( ) { emit positionVisible(true); }
 
 	void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
-		if ( stats == 0 || stats->size() == 0 ) return;
+	  if ( stats == 0 || stats->size() == 0 ) {
+		if ( pre_dd_change_statistics_count != -1 ) clearStatistics( );
+		pre_dd_change_statistics_count = -1;
+		return;
+	  }
 
-		 while ( (int)stats->size() < statistics_group->count() ) {
+	    while ( (int)stats->size() < statistics_group->count() ) {
 		QtRegionStats *w = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 		if ( w == 0 ) throw internal_error( );
 		statistics_group->removeWidget(w);
@@ -252,7 +257,11 @@ namespace casa {
 	    } else {
 		first->updateStatistics(*stat_iter);
 	    }
-	    if ( num < 2 ) return;
+
+	    if ( num < 2 ) {
+		first->disableNextButton( );
+		return;
+	    }
 
 	    QtRegionStats *prev = first;
 
@@ -269,6 +278,19 @@ namespace casa {
 	    }
 	    prev->setNext( statistics_group, first );
 
+	    int statistics_count = statistics_group->count( );
+	    if ( pre_dd_change_statistics_count < statistics_count && statistics_count > 0 )
+		statistics_group->setCurrentIndex(statistics_count-1);
+
+	    pre_dd_change_statistics_count = -1;
+	}
+
+	void QtRegionState::reloadStatistics( ) {
+	    QString cat = categories->tabText(categories->currentIndex( ));
+	    if ( cat == "stats" ) {
+		pre_dd_change_statistics_count = statistics_group->count( );
+		emit collectStatistics( );
+	    }
 	}
 
 	void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
@@ -583,7 +605,9 @@ namespace casa {
 	void QtRegionState::load_regions( bool ) {
 	    QString path = load_filename->text( );
 	    if ( path == "" ) {
+#if QT_VERSION >= 0x040700
 		load_filename->setPlaceholderText(QApplication::translate("QtRegionState", "please enter a file name or use 'browse' button", 0, QApplication::UnicodeUTF8));
+#endif
 		load_now->setFocus(Qt::OtherFocusReason);
 		return;
 	    }
@@ -616,7 +640,9 @@ namespace casa {
 		    char *buf = (char*) malloc((strlen(path.toAscii( ).constData( )) + 50) * sizeof(char));
 		    sprintf( buf, "could not read %s", path.toAscii( ).constData( ) );
 		    load_filename->clear( );
+#if QT_VERSION >= 0x040700
 		    load_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
+#endif
 		    load_now->setFocus(Qt::OtherFocusReason);
 		    free(buf);
 		    return;
@@ -627,7 +653,9 @@ namespace casa {
 		char *buf = (char*) malloc((strlen(path.toAscii( ).constData( )) + 50) * sizeof(char));
 		sprintf( buf, "file '%s' does not exist", path.toAscii( ).constData( ) );
 		load_filename->clear( );
+#if QT_VERSION >= 0x040700
 		load_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
+#endif
 		load_now->setFocus(Qt::OtherFocusReason);
 		free(buf);
 		return;
@@ -655,7 +683,9 @@ namespace casa {
 	void QtRegionState::save_region( bool ) {
 	    QString path = save_filename->text( );
 	    if ( path == "" ) {
+#if QT_VERSION >= 0x040700
 		save_filename->setPlaceholderText(QApplication::translate("QtRegionState", "please enter a file name or use 'browse' button", 0, QApplication::UnicodeUTF8));
+#endif
 		save_now->setFocus(Qt::OtherFocusReason);
 		return;
 	    }
@@ -672,7 +702,9 @@ namespace casa {
 		char *buf = (char*) malloc((strlen(name.toAscii( ).constData( )) + 50) * sizeof(char));
 		sprintf( buf, "unable to write to %s", name.toAscii( ).constData( ) );
 		save_filename->clear( );
+#if QT_VERSION >= 0x040700
 		save_filename->setPlaceholderText(QApplication::translate("QtRegionState", buf, 0, QApplication::UnicodeUTF8));
+#endif
 		save_now->setFocus(Qt::OtherFocusReason);
 		free(buf);
 		return;
@@ -775,6 +807,12 @@ namespace casa {
 	}
 	void QtRegionState::translate_y( ) {
 	    emit translateY( center_y->displayText( ), y_units->currentText( ), coordinate_system->currentText( ) );
+	}
+	void QtRegionState::resize_x( ) {
+	    emit resizeX( bounding_width->displayText( ), dim_units->currentText( ), coordinate_system->currentText( ) );
+	}
+	void QtRegionState::resize_y( ) {
+	    emit resizeY( bounding_height->displayText( ), dim_units->currentText( ), coordinate_system->currentText( ) );
 	}
 
 	void QtRegionState::frame_min_change( int v ) {
@@ -881,7 +919,9 @@ namespace casa {
 
 	void QtRegionState::noOutputNotify( ) {
 	    save_filename->clear( );
+#if QT_VERSION >= 0x040700
 	    save_filename->setPlaceholderText(QApplication::translate("QtRegionState", "no regions were selected for output...", 0, QApplication::UnicodeUTF8));
+#endif
 	    save_now->setFocus(Qt::OtherFocusReason);
 	}
 

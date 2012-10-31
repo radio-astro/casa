@@ -359,12 +359,16 @@ public:
   // X is normalizable by the model
   virtual Bool normalizable() { return True; };
 
-  // X gathers/solves for itself
-  virtual Bool useGenericGatherForSolve() { return False; };
+  // X generically gathers, but solves for itself per solution
+  virtual Bool useGenericGatherForSolve() { return True; };
+  virtual Bool useGenericSolveOne() { return False; }
 
   // X gathers/solves for itself 
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
+
+  // When genericall gathering, solve using first VB only in VBGA
+  virtual void selfSolveOne(VisBuffGroupAcc& vbga) { this->solveOneVB(vbga(0)); };
 
   virtual void keep(const Int& slot);
 

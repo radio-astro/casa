@@ -385,6 +385,12 @@ public:
   virtual void stop();		// slots corresp. to tapedeck buttons.
   virtual void fwdPlay();
   virtual void setRate(int rate);
+  void lowerBoundAnimatorImageChanged( int );
+  void upperBoundAnimatorImageChanged(int);
+  void stepSizeAnimatorImageChanged(int);
+  void lowerBoundAnimatorChannelChanged( int );
+  void upperBoundAnimatorChannelChanged(int);
+  void stepSizeAnimatorChannelChanged(int);
 
     
   virtual void goTo(int frm, bool channelFrame=false) { if(modeZ() || channelFrame ) goToZ(frm); else goToB(frm);  }
@@ -395,15 +401,7 @@ public:
 	//# et. al. buys us anything at all...).
   virtual void goToZ(int frm);
   virtual void goToB(int frm);
-  
 
-  virtual void setLastFrame(Int frm) { return setEndFrame(frm+1);  }
-  virtual void setEndFrame(Int frm)  { 
-    if(modeZ()) setEndZFrame(frm); else setEndBFrame(frm);  }
-  virtual void setEndZFrame(Int frm);
-  virtual void setEndBFrame(Int frm);
-
-  
   virtual void emitAnimState() { emit animatorChange();  }
   
   //# mouse tools
@@ -774,11 +772,6 @@ public:
   Int zLen_, bLen_;		//# total number of frames for each mode.
   Int zIndex_, bIndex_;		//# current frame (0-based).
   
-  //# Start_, End_ , Step_ are current user-desired anim. limits;
-  //# 0 <= Start_ <= Index_ < End_ <=Len_   and  1 <= Step_ <= Len_.
-  Int zStart_, zEnd_, zStep_;
-  Int bStart_, bEnd_, bStep_;
-  
   Int animRate_;  		//# frames / sec. for play.
   Int minRate_, maxRate_;	//# limits to above:
 				//# 1 <= minRate_ <= animRate_ <= maxRate_.
@@ -1006,6 +999,13 @@ public:
    static const int BOTTOM_MARGIN_SPACE_DEFAULT;
    static const int TOP_MARGIN_SPACE_DEFAULT;
    static const int RIGHT_MARGIN_SPACE_DEFAULT;
+
+   //# Start_, End_ are current user-defined animator limits;
+   //# The user can now set her/her own desired limits.
+   //# 0 <= Start_ <=Index_ < End_ <=Len_   and  1 <= Step_ <= Len_.
+   Int zStart_, zEnd_, zStep_;
+   Int bStart_, bEnd_, bStep_;
+
 };
 
 

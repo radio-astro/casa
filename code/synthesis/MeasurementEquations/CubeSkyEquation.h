@@ -58,11 +58,23 @@ class CubeSkyEquation : public SkyEquation {
   virtual void putSlice(VisBuffer& vb, Bool dopsf, 
 			FTMachine::Type col,Int cubeSlice=0, 
 			Int nCubeSlice=1);
-  virtual void finalizePutSlice(const VisBuffer& vb,  
+  virtual void finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 				Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
+				   Int cubeSlice=0, Int nCubeSlice=1,
+				   Int field=0);
+  virtual void oldFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
+				   Int cubeSlice=0, Int nCubeSlice=1,
+				   Int field=0);
   void initializeGetSlice(const VisBuffer& vb, Int row,
 			  Bool incremental, Int cubeSlice=0, 
 			  Int nCubeSlice=1);   
+  void newInitializeGetSlice(const VisBuffer& vb, Int row,
+			     Bool incremental, Int cubeSlice=0, 
+			     Int nCubeSlice=1);   
+  void oldInitializeGetSlice(const VisBuffer& vb, Int row,
+			     Bool incremental, Int cubeSlice=0, 
+			     Int nCubeSlice=1);   
   virtual VisBuffer& getSlice(VisBuffer& vb, 
 			      Bool incremental, Int cubeSlice=0,
 			      Int nCubeSlice=1); 
@@ -77,6 +89,8 @@ class CubeSkyEquation : public SkyEquation {
 
   //get the weight image from the ftmachines
   virtual void getWeightImage(const Int model, ImageInterface<Float>& weightim);
+  void tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit);
+
  protected:
 
   void configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIterator * & oldWvi);
@@ -99,6 +113,7 @@ class CubeSkyEquation : public SkyEquation {
   Bool getFreqRange(ROVisibilityIterator& vi, const CoordinateSystem& coords,
 		  Int slice, Int nslice);
 
+  Bool isNewFTM(FTMachine *);
  private:
   // if skyjones changed in get or put we need to tell put or get respectively
   // about it

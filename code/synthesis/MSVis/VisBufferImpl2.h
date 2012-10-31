@@ -37,7 +37,6 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MSVis/VisBufferComponents2.h>
-#include <synthesis/MSVis/VisBufferBase2.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/TransformMachines/VisModelData.h>
 
@@ -54,6 +53,9 @@ namespace vi {
 
 //#forward
 
+class VbCacheItemBase;
+class VisBufferCache;
+class VisBufferState;
 class VisBufferImpl2;
 class ROVisibilityIterator2;
 class VisibilityIterator2;
@@ -94,13 +96,10 @@ class VisibilityIterator2;
 // explicitly use these classes but should use the helper class
 // VisBufferImplAutoPtr which will ensure that the appropriate class is
 // used.
+//
 //</synopsis>
 
 //<todo>
-// <li> reconcile vis/visCube usage: visCube, flagCube and weightMatrix
-// are currently only correct when this VisBufferImpl got them from a
-// VisIter, operations like -=, freqAverage() are only done for
-// visibility() and flag().
 //</todo>
 
 class VisBufferImpl2 : public VisBuffer2 {
@@ -210,6 +209,7 @@ public:
     virtual Bool isNewFieldId () const;
     virtual Bool isNewMs() const;
     virtual Bool isNewSpectralWindow () const;
+    virtual Bool isRekeyable () const;
     virtual Bool isWritable () const;
     virtual Int msId() const;
     virtual String msName (Bool stripPath = False) const;
@@ -231,19 +231,27 @@ public:
     //  in a different representation.
 
     virtual const Vector<Int> & antenna1 () const;
+    virtual void setAntenna1 (const Vector<Int> & value) const;
     virtual const Vector<Int> & antenna2 () const;
+    virtual void setAntenna2 (const Vector<Int> & value) const;
     virtual Int arrayId () const;
+    virtual void setArrayId (Int value) const;
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
     virtual const Vector<Int> & correlationTypes () const;
     virtual Int dataDescriptionId () const;
+    virtual void setDataDescriptionId (Int value) const;
     virtual const Vector<MDirection> & direction1 () const;
     virtual const Vector<MDirection> & direction2 () const;
     virtual const Vector<Double> & exposure () const;
+    virtual void setExposure (const Vector<Double> & value) const;
     virtual const Vector<Int> & feed1 () const;
+    virtual void setFeed1 (const Vector<Int> & value) const;
     virtual const Vector<Float> & feedPa1 () const;
     virtual const Vector<Int> & feed2 () const;
+    virtual void setFeed2 (const Vector<Int> & value) const;
     virtual const Vector<Float> & feedPa2 () const;
     virtual Int fieldId () const;
+    virtual void setFieldId (Int value) const;
     virtual const Matrix<Bool> & flag () const;
     virtual void setFlag (const Matrix<Bool>&);
     virtual const Array<Bool> & flagCategory () const;
@@ -258,21 +266,29 @@ public:
     virtual Int nCorrelations () const;
     virtual Int nRows () const;
     virtual const Vector<Int> & observationId () const;
+    virtual void setObservationId (const Vector<Int> & value) const;
     virtual const MDirection& phaseCenter () const;
     virtual Int polarizationFrame () const;
     virtual Int polarizationId () const;
     virtual const Vector<Int> & processorId () const;
+    virtual void setProcessorId (const Vector<Int> & value) const;
     virtual const Vector<uInt> & rowIds () const;
     virtual const Vector<Int> & scan () const;
+    virtual void setScan (const Vector<Int> & value) const;
     virtual const Vector<Float> & sigma () const;
     virtual void setSigma (const Vector<Float> &);
     virtual const Matrix<Float> & sigmaMat () const;
     virtual Int spectralWindow () const;
     virtual const Vector<Int> & stateId () const;
+    virtual void setStateId (const Vector<Int> & value) const;
     virtual const Vector<Double> & time () const;
+    virtual void setTime (const Vector<Double> & value) const;
     virtual const Vector<Double> & timeCentroid () const;
+    virtual void setTimeCentroid (const Vector<Double> & value) const;
     virtual const Vector<Double> & timeInterval () const;
+    virtual void setTimeInterval (const Vector<Double> & value) const;
     virtual const Matrix<Double> & uvw () const;
+    virtual void setUvw (const Matrix<Double> & value) const;
     virtual const Cube<Complex> & visCubeCorrected () const;
     virtual void setVisCubeCorrected (const Cube<Complex> &);
     virtual const Matrix<CStokesVector> & visCorrected () const;
@@ -350,9 +366,12 @@ protected:
     virtual ROVisibilityIterator2 * getViP () const; // protected, non-const access to VI
     void registerCacheItem (VbCacheItemBase *);
     virtual void stateCopy (const VisBufferImpl2 & other); // copy relevant noncached members
-
+    virtual void setRekeyable (Bool isRekeyable);
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows);
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem);
+
+    void validateShapes () const;
 
 private:
 

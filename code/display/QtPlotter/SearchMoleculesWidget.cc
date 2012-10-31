@@ -276,6 +276,33 @@ void SearchMoleculesWidget::initializeSearchRange( QLineEdit* lineEdit, Double& 
 	}
 }
 
+vector<string> SearchMoleculesWidget::initializeChemicalNames(){
+	//Get the search parameters
+	QString searchList = ui.searchLineEdit->text();
+	QList<QString> moleculeList;
+	if ( ! searchList.isEmpty() ){
+		moleculeList = searchList.split(",");
+	}
+
+	//We need to have upper and lower case variations of all of the
+	//molecules.
+	QList<QString> moleculeMasterList;
+	for ( int i = 0; i < moleculeList.size(); i++ ){
+		if ( moleculeList[i].trimmed().size() > 0 ){
+			moleculeMasterList.append( Util::getTitleCaseVariations( moleculeList[i]));
+		}
+	}
+
+	//The search engine needs casa independent units
+	int masterListCount = moleculeMasterList.size();
+	vector<string> chemNames( masterListCount );
+	for ( int i = 0; i < masterListCount; i++ ){
+		qDebug() << "Searching for "<<moleculeMasterList[i];
+		chemNames[i] = moleculeMasterList[i].trimmed().toStdString();
+	}
+	return chemNames;
+}
+
 double SearchMoleculesWidget::getRedShiftedValue( bool reverseRedshift, double value ) const{
 	Vector<Double> inputValues(1);
 	inputValues[0] = value;
@@ -346,21 +373,9 @@ void SearchMoleculesWidget::search(){
 		searcher->reset();
 	}
 
-	//Get the search parameters
-	QString searchList = ui.searchLineEdit->text();
-	QList<QString> moleculeList;
-	if ( ! searchList.isEmpty() ){
-		moleculeList = searchList.split(",");
-	}
-	vector<string> chemNames( moleculeList.size());
-	for ( int i = 0; i < moleculeList.size(); i++ ){
-		chemNames[i] = moleculeList[i].trimmed().toStdString();
-	}
+	//Get the chemical names
+	vector<string> chemNames = initializeChemicalNames();
 	searcher->setChemicalNames( chemNames );
-
-	//Create a temporary file for the search results
-	//String resultTableName = viewer::options.temporaryPath("SearchMoleculesResults");
-	//searcher->setResultFile( resultTableName );
 
 	//Set the range for the search
 	Double minValue = SPLATALOGUE_DEFAULT_MIN;

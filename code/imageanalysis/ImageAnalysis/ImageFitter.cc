@@ -854,10 +854,11 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 		Quantity epa  = gaussShape->positionAngleError();
 
 		size << "Clean beam size ---" << endl;
-		size
-			<< TwoSidedShape::sizeToString(
-				beam.getMajor(), beam.getMinor(), beam.getPA(), False
-			) << endl;
+		// CAS-4577, users want two digits, so just do it explicitly here rather than using
+		// TwoSidedShape::sizeToString
+		size << std::fixed << std::setprecision(2) << "       --- major axis FWHM: " << beam.getMajor() << endl;
+		size << "       --- minor axis FWHM: " << beam.getMinor() << endl;
+		size << "       --- position angle: " << beam.getPA(True) << endl;
 		Bool fitSuccess = False;
 		Angular2DGaussian bestSol(maj, min, pa);
 		Angular2DGaussian bestDecon;

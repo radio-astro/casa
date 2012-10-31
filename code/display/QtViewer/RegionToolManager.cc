@@ -230,7 +230,19 @@ namespace casa {
 	    }
 
 	    if ( ev.keystate() ) {
-		if ( ev.key( ) == Display::K_Pointer_Button1 ) {
+
+		// find which buttons are bound to region keys...
+		std::set<Display::KeySym> region_buttons;
+		for ( tool_map::iterator it = tools.begin( ); it != tools.end( ); ++it ) {
+		    Display::KeySym sym = (*it).second->getKey( );
+		    if ( sym != Display::K_None )
+			region_buttons.insert(sym);
+		}
+
+		// allow region buttons to move and resize any regions... but only if there
+		// is one bound region button, this extra condition allows for using multiple
+		// buttons to disentangle (and move) overlapping regions...
+		if ( region_buttons.size( ) == 1 && region_buttons.find(ev.key( )) != region_buttons.end( ) ) {
 
 		    if ( ev.modifiers( ) & Display::KM_Shift ) {
 			// shift-click within a region
