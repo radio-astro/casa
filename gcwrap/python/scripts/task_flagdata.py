@@ -99,6 +99,10 @@ def flagdata(vis,
     if (isinstance(freqdev,str) and freqdev != ""):
         freqdev = os.path.abspath(freqdev)        
         
+    # CAS-4696
+    if (action == 'none' or action=='' or action=='calculate' and flagbackup):
+        flagbackup = False
+        
     # SMC: moved the flagbackup to before initializing the cluster.
     # Note that with this change, a flag backup will be created even if
     # an error happens that prevents the flagger tool from running.    
