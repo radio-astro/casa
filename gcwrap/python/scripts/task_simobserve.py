@@ -144,7 +144,6 @@ def simobserve(
         ##################################################################
         # set up skymodel image
 
-
         if os.path.exists(skymodel):
             components_only = False
             # create a new skymodel called skymodel, or if its already there, called newmodel
@@ -227,7 +226,7 @@ def simobserve(
                 if yc > cmax:
                     cmax = yc
 
-            model_size = ["%fdeg" % (2*cmax), "%fdeg" % (2*cmax)]
+            model_size = ["%fdeg" % (3*cmax), "%fdeg" % (3*cmax)]
 
 
         # for cases either if there is a skymodel or if there are only components,
@@ -376,8 +375,10 @@ def simobserve(
         # simulation, 
         if components_only:
             # first set based on psfsize:
-            model_cell = [ str(psfsize/5)+"arcsec", str(psfsize/5)+"arcsec" ]
-
+            # needs high subsampling because small shifts in placement of 
+            # components lead to large changes in the difference image.
+            model_cell = [ str(psfsize/20)+"arcsec", str(psfsize/20)+"arcsec" ]
+            
             # XXX if the user has set direction should we center the compskymodel there?
             # if len(direction)>0: model_refdir = direction
 
@@ -389,7 +390,7 @@ def simobserve(
             needmodel=True
 
             modimsize=int((qa.convert(model_size[0],"arcsec")['value'])/(qa.convert(model_cell[0],"arcsec")['value']))
-            modimsize=max([modimsize,32])
+#            modimsize=max([modimsize,32])
             newepoch,newlat,newlon = util.direction_splitter(model_refdir)
 
             if os.path.exists(newmodel):
@@ -421,11 +422,12 @@ def simobserve(
                 csmodel = ia.newimagefromshape(newmodel,[modimsize,modimsize,1,1])
                 modelcsys = csmodel.coordsys()
                 modelshape = csmodel.shape()
+                cell0_rad=qa.convert(model_cell[0],'rad')['value']
+                cell1_rad=qa.convert(model_cell[1],'rad')['value']
                 modelcsys.setdirection(refpix=[modimsize/2,modimsize/2],
                                        refval=[qa.tos(newlat),qa.tos(newlon)],
-                                       refcode=newepoch,
-                                       incr=[qa.tos(qa.mul(model_cell[0],-1)),
-                                             model_cell[1]])
+                                       refcode=newepoch)
+                modelcsys.setincrement([-cell0_rad,cell1_rad],'direction')
                 modelcsys.setreferencevalue(type="spectral",value=qa.tos(model_center))
                 modelcsys.setrestfrequency(qa.tos(model_center))
                 modelcsys.setincrement(type="spectral",value=compwidth)
@@ -440,11 +442,12 @@ def simobserve(
                 # flatimage adds in components if complist!=None
                 #util.flatimage(newmodel,complist=complist,verbose=verbose)
                 util.flatimage(newmodel,verbose=verbose)
-                modelflat = fileroot + "/" + project + ".skymodel.flat"
-                if modelflat != newmodel+".flat":
-                    if os.path.exists(modelflat):
-                        shutil.rmtree(modelflat)
-                    shutil.move(newmodel+".flat",modelflat)
+                modelflat = fileroot + "/" + project + ".compskymodel.flat"
+#                modelflat = fileroot + "/" + project + ".skymodel.flat"
+#                if modelflat != newmodel+".flat":
+#                    if os.path.exists(modelflat):
+#                        shutil.rmtree(modelflat)
+#                    shutil.move(newmodel+".flat",modelflat)
 
 
         # and finally, with model_cell set either from an actual skymodel,
@@ -663,14 +666,15 @@ def simobserve(
         if grscreen or grfile:
             util.newfig(show=grscreen)
 
+# remove after we fix the scaling algorithm for the images
             if components_only:
                 pl.plot()
                 # TODO add symbols at locations of components
                 pl.plot(coffs[0,]*3600,coffs[1,]*3600,'o',c="#dddd66")
                 pl.axis("equal")
-
             else:
                 discard = util.statim(modelflat,plot=True,incell=model_cell)
+            
             lims = pl.xlim(),pl.ylim()
             if pb <= 0 and verbose:
                 msg("unknown primary beam size for plot",priority="warn")
