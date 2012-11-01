@@ -1,71 +1,87 @@
 \section{Software Documentation}
 
-\subsection{C++ Infrastructure}
+\subsection{C++ Infrastructure}\label{Sec:CodeDocs}
 
 \subsubsection{Framework}
-{\green Link to (or copy of) Justo's documentation of the infrastructure design, 
-with links from each 'class' box/section to the relevant doxygen code-doc pages. }
+%{\green Link to (or copy of) Justo's documentation of the infrastructure design, 
+%with links from each 'class' box/section to the relevant doxygen code-doc pages. }
 
 \paragraph{Main Classes}
 
 \begin{enumerate}
 \item
-\htmladdnormallink{AgentFlagger}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/agentflagger-Tool.html}:
-The top-level Flagger class that connects all of the following together, and defines the C++ user-interface for the flagger.  This is the class used by the tool layer.
+%\htmladdnormallink{AgentFlagger}{http://www.eso.org/~scastro/ALMA/casa/active/CasaRef/agentflagger-Tool.html}:
+%\htmladdnormallink{AgentFlagger}{http://casa.nrao.edu/active/docs/CasaRef/agentflagger-Module.html}:
+\htmladdnormallink{AgentFlagger}{http://casa.nrao.edu/docs/CasaRef/agentflagger-Module.html}:
+The top-level AgentFlagger class that connects all of the following together, and defines the C++ user-interface 
+for the agentflagger.  
+This is the class used by the tool layer.
 
-\item \htmladdnormallink{FlagDataHandler}{http://www.eso.org/~jagonzal/Flagging-3.4-Docs/html/classcasa_1_1FlagDataHandler.html} : A top level class defining the data handling interface for the flagging module. 
+%\item \htmladdnormallink{FlagDataHandler}{http://www.eso.org/~jagonzal/Flagging-3.4-Docs/html/classcasa_1_1FlagDataHandler.html} : A top level class defining the data handling interface for the flagging module. 
+\item \htmladdnormallink{FlagDataHandler}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagDataHandler.html} : 
+A top level class defining the data handling interface for the flagging module. 
 
-\item The  \htmladdnormallink{FlagAgentBase}{XXX} base class defines the behaviour of all flagging agents
+\item The  \htmladdnormallink{FlagAgentBase}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentBase.html} 
+base class defines the behaviour of all flagging agents
 and contains agent-level data-selection, etc.  The main functions to be implemented by derived classes are
 setAgentParameters(), preProcessBuffer(), computeAntennaPairFlags() or computeRowFlags(), getReport() . 
 
 List of available Flag Agents : 
 \begin{enumerate}
-\item \htmladdnormallink{FlagAgentManual}{XXX} :  Flag/Unflag based on data-selections.  
+\item \htmladdnormallink{FlagAgentManual}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentManual.html} :  
+Flag/Unflag based on data-selections.  
 The only processing done by this agent is to set the flags for all data it sees to 
 True if the operation is to flag, and to False to unflag. A boolean parameter
 apply determines whether to flag (apply=True) or unflag (apply=False). By
 default it is set to True.
 
-\item \htmladdnormallink{FlagAgentQuack}{XXX} :  Flag time-ranges at the beginning and/or end of scans. 
+\item \htmladdnormallink{FlagAgentQuack}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentQuack.html} :  
+Flag time-ranges at the beginning and/or end of scans. 
 Uses the YYY iteration-mode. 
 
-\item \htmladdnormallink{FlagAgentElevation}{XXX} : Flag time-ranges based on source elevation. 
+\item \htmladdnormallink{FlagAgentElevation}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentElevation.html} : 
+Flag time-ranges based on source elevation. 
 Uses the YYY iteration-mode.
 
-\item \htmladdnormallink{FlagAgentShadow}{XXX} : For each timestep, flag antennas that are shadowed by
+\item \htmladdnormallink{FlagAgentShadow}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentShadow.html} : 
+For each timestep, flag antennas that are shadowed by
 any other antenna.  Antennas to be flagged are chosen and marked in the preProcess() stage.
 Rows are flagged in computeRow(), and this agent uses the YYY iteration-mode.
 
-\item \htmladdnormallink{FlagAgentExtend}{XXX} : Read and extend flags along specified axes, within the
+\item \htmladdnormallink{FlagAgentExtend}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentExtension.html} : 
+Read and extend flags along specified axes, within the
 current chunk.  Uses the YYY iteration-mode.
 
-\item \htmladdnormallink{FlagAgentClip}{XXX} :  Flag based on a clip threshold and visExpression.
+\item \htmladdnormallink{FlagAgentClip}{http://casa.nrao.edu/docs/doxygen/htmlclasscasa_1_1FlagAgentClipping.html} : 
+Flag based on a clip threshold and visExpression.
 Find and flag NaNs and Infs.  Uses the YYY iteration-mode. 
 
-\item \htmladdnormallink{FlagAgentTimeFreqCrop}{XXX} : The TFCrop algorithm is run per
+\item \htmladdnormallink{FlagAgentTimeFreqCrop}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentTimeFreqCrop.html} : 
+The TFCrop algorithm is run per
 baseline, via FlagAgentTimeFreqCrop::computeAntennaPairFlags()
 
-\item \htmladdnormallink{FlagAgentRFlag}{XXX} : The RFlag algorithm....
+\item \htmladdnormallink{FlagAgentRFlag}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentRFlag.html} : 
+The RFlag algorithm. 
 Implements multiple passes through each chunk via the  passIntermediate() and passFinal() mechanism.
 
-\item \htmladdnormallink{FlagAgentSummary}{XXX} : Flag counts are accumulated in computeRow()
+\item \htmladdnormallink{FlagAgentSummary}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentSummary.html} : 
+Flag counts are accumulated in computeRow()
 and packaged into a Record in getResult(). 
 
-\item \htmladdnormallink{FlagAgentDisplay}{XXX} : Visibilities are read and displayed from computeAntennaPair(). Navigation-buttons control the order in which the framework iterates through baselines. 
+\item \htmladdnormallink{FlagAgentDisplay}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagAgentDisplay.html} : 
+Visibilities are read and displayed from computeAntennaPair(). Navigation-buttons control the order in which the framework iterates through baselines. 
 
 \end{enumerate}
 
 
 
-\item The \htmladdnormallink{FlagReport}{XXX} class allows each flag agent to build and return 
+\item The \htmladdnormallink{FlagReport}{http://casa.nrao.edu/docs/doxygen/html/classcasa_1_1FlagReport.html} class allows each flag agent to build and return 
 information (summary counts, reports as plots, etc) to the user (and/or) to the display agent
 for end-of-MS reports.
 \end{enumerate}
 
-
 \subsubsection{Control Flow}
-{\green  Justo, if you have a nicer way to describe the control flow, then please replace this part,  but otherwise, just this text-algorithm may be good-enough for this document (after it's completed).  If you already have the different iteration-modes explained somewhere (in one of the .h files), we can just point to it from here.  }
+% {\green  Justo, if you have a nicer way to describe the control flow, then please replace this part,  but otherwise, just this text-algorithm may be good-enough for this document (after it's completed).  If you already have the different iteration-modes explained somewhere (in one of the .h files), we can just point to it from here.  }
 
 
 %%% For documentation on how to use this syntax, see the PDF file from here : 
@@ -119,14 +135,14 @@ for end-of-MS reports.
 
 \subsubsection{Performance Optimizations}
 
-{\green  Explanation of various performance-optimization features  
-
-
-Justo - please feel free to replace this whole section if you have your own version of all this.  
-I wrote this for the 'running the flagger' section of this document, but later moved 
-it here instead....
-
-}
+% {\green  Explanation of various performance-optimization features  
+%
+%
+%Justo - please feel free to replace this whole section if you have your own version of all this.  
+%I wrote this for the 'running the flagger' section of this document, but later moved 
+%it here instead....
+%
+% }
 
 
 There are several performance-optimization choices that can be made. 
@@ -239,7 +255,7 @@ Mosaic  :  each scan is a different fields.\\
 
 
 \paragraph{Comparison between modes}
-{\green Tables from Justo for 50 and 150 GB continuum datasets. }
+%  {\green Tables from Justo for 50 and 150 GB continuum datasets. }
 
 
 \begin{figure}
@@ -269,7 +285,7 @@ Two types of datasets : wideband continuum single-pointing,   spectral-line mosa
 
 
 
-\subsection{Python tool and task}
+\subsection{Python tool and task}\label{Sec:TaskTool}
 
 \subsubsection{agentflagger tool}
 \paragraph{Examples how to use the the new flagging framework from the tool.}
