@@ -92,9 +92,21 @@ class ViewerApp : public QApplication {
 };
 
 bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
-    try { return QApplication::notify(receiver,e); }
-    catch ( AipsError e ) {
+    // cap qt event recursion limit at 500 events deep...
+    static unsigned long recursion_count = 0;
+    if ( recursion_count > 500 ) {
+	qWarning( ) << "qt event recursion limit reached...";
+	return false;
+    }
+
+    try {
+      recursion_count++;
+      bool result = QApplication::notify(receiver,e);
+      if ( recursion_count != 0 ) recursion_count--;
+      return result;
+    } catch ( AipsError e ) {
 	qWarning( ) << "unhandled exception:" << e.getMesg().c_str();
+	if ( recursion_count != 0 ) recursion_count--;
 	return false;
     } catch ( ... ) {
 	qWarning("unhandled exception... ");
