@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     static Double worldFreq(const CoordinateSystem& cs, Int spectralpix=0);
   private:
-    
+    void fillXVectors( Vector<Float>& ux, Vector<Float>& uy ) const;
     static void applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& newbeam, Vector<Quantity>& extraconv);
 
 

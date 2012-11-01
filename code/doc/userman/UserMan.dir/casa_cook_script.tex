@@ -13,6 +13,7 @@
 % JO 2010-03-01 Release 3.0.1 edits
 % JO 2011-10-03 Release 3.2. edits
 % JO 2012-05-10 Release 3.4 edits
+% JO 2012-10-29 Release 4.0 edits
 
 \chapter[Appendix: Annotated Example Scripts]{Annotated Example Scripts}
 \label{chapter:scripts}
@@ -78,6 +79,7 @@ The latest version of this script can be found at:
 # Revised      JO  2010-04-13 (Release 3.0.1) edit viewer call           #
 # Checked      JO  2010-10-07 (Release 3.1.0)                            #
 # Updated      JO  2012-05-10 (Release 3.4.0)                            #
+# Updated      JO  2012-10-29 (Release 4.0.0)                            #
 #                                                                        #
 # Features Tested:                                                       #
 #    The script illustrates end-to-end processing with CASA              #
@@ -141,7 +143,7 @@ The latest version of this script can be found at:
 #                          v                                             #
 ##########################################################################
 print 'Demo Script for NGC5921 VLA HI observation'
-print 'Version for Release 0 (3.4.0) May-2012'
+print 'Version for Release 4.0.0 Oct-2012'
 print ''
 
 import time
@@ -317,11 +319,11 @@ listobs()
 #
 # Get rid of the autocorrelations from the MS
 #
-print '--Flagautocorr--'
+print '--Flagdata autocorrelations--'
 
-# Don't default this one either, there is only one parameter (vis)
 
-flagautocorr()
+flagdata(vis=vis,mode='manual',autocorr=T)
+
 
 #
 #=====================================================================
@@ -1321,6 +1323,7 @@ The latest version of this script can be found at:
 # Revised JO  2010-04-13 (Release 3.0.1) edit viewer call            #
 # Checked JO  2010-10-07 (Release 3.1.0)                             #
 # Updated JO  2012-05-10 (Release 3.4.0)                             #
+# Updated JO  2012-10-29 (Release 4.0.0)                             #
 #                                                                    #
 # This is a VLA 6cm dataset that was observed in 1999 to set the     #
 # flux scale for calibration of the VLA.  Included in the program    #
@@ -1374,6 +1377,7 @@ usespw = ''
 usespwlist = ['0','1']
 
 # prior calibration to apply
+# note that we will change this soon as gencal takes on the generation of gaincurve and opacity calibration tables
 usegaincurve = True
 gainopacity = 0.0
 
@@ -3150,6 +3154,7 @@ print '--- Done ---'
 #
 #=====================================================================
 
+
 \end{verbatim}
 \normalsize
 
@@ -3192,6 +3197,7 @@ The latest version of this script can be found at:
 # Updated by STM    2009-12-20                  Release 3.0 final        #
 # Checked by JO     2010-10-08                  Release 3.1.0            #
 # Updated by JO     2012-05-10                  Release 3.4.0            #
+# Updated by JO     2012-10-29                  Release 4.0.0            #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
 #                                                                        #
@@ -3551,7 +3557,7 @@ print "Mark Region and Locate, look in logger"
 print "This is a correlator glitch in baseline 3-9 at 06:19:30"
 print "PLEASE DON\'T FLAG ANYTHING HERE. THE SCRIPT WILL DO IT!"
 print "In a normal session you could Mark Region and Flag."
-print "Here we will use tflagdata instead."
+print "Here we will use flagdata instead."
 # Pause script if you are running in scriptmode
 user_check=raw_input('Return to continue script\n')
 
@@ -3561,15 +3567,15 @@ user_check=raw_input('Return to continue script\n')
 #
 # Flag end channels
 #
-print '--TFlagdata--'
-default('tflagdata')
+print '--Flagdata--'
+default('flagdata')
 
 print ""
 print "Flagging edge channels in all spw"
 print "  0~3:0~1;62~63 , 4~11:0~1;30~31, 12~15:0~1;62~63 "
 print ""
 
-tflagdata(vis='ngc4826.tutorial.ms', mode='manual',
+flagdata(vis='ngc4826.tutorial.ms', mode='manual',
          spw='0~3:0;1;62;63,4~11:0;1;30;31,12~15:0;1;62;63')
 
 #
@@ -3580,7 +3586,7 @@ print "Flagging bad correlator field 8 antenna 3&9 spw 15 all channels"
 print "  timerange 1998/04/16/06:19:00.0~1998/04/16/06:20:00.0"
 print ""
 
-tflagdata(vis='ngc4826.tutorial.ms', mode='manual', field='8', spw='15', antenna='3&9', 
+flagdata(vis='ngc4826.tutorial.ms', mode='manual', field='8', spw='15', antenna='3&9', 
          timerange='1998/04/16/06:19:00.0~1998/04/16/06:20:00.0')
 
 
@@ -4124,6 +4130,7 @@ print '          Signal-to-Noise ratio = '+str(im_srcmax16/im_offlinerms16)
 print "Done with NGC4826 Tutorial"
 #
 ##########################################################################
+
 
 \end{verbatim}
 \normalsize

@@ -209,6 +209,7 @@ protected:
 	String msname_p;
 	uShort iterationApproach_p;
 	Double timeInterval_p;
+	Bool isMS_p;
 
 
 	// members to parse to selectData
@@ -337,6 +338,8 @@ private:
 
 	// Check if mode is valid against a list of known modes
 	bool isModeValid(String mode);
+
+	String validateDataColumn(String datacol);
 
 	// Sink used to store history
 	LogSink logSink_p;

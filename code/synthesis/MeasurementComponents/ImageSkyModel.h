@@ -251,7 +251,7 @@ public:
                                     const CoordinateSystem& imgCoords,
                                     const uInt nMouthsToFeed=1);
   
-  virtual Int getModelIndex(uInt field, uInt taylor){return field;};
+  virtual Int getModelIndex(uInt field, uInt /*taylor*/){return field;};
 
 protected:
 

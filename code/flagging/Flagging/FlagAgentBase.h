@@ -175,6 +175,7 @@ public:
 		RESIDUAL,
 		RESIDUAL_DATA,
 		FPARAM,
+		CPARAM,
 		PARAMERR,
 		SNR
 	};

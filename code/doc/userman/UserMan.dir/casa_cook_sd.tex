@@ -36,13 +36,15 @@
 % time you execute set_restfreqs it adds the new value(s) to the
 % frequencies table) and the last value(s) is used as rest frequencies.
 
-% TT: took out "BETA"  
-{\bf NOTE:} The single-dish analysis package within CASA 
-is included in the release for the use
-of the ALMA computing and commissioning groups.  
-%Therefore, this description is included in this Cookbook
-%as an appendix. 
-However, it is fully accessible for general users.
+%% % KS: discarded the NOTE. (CASA 4.0) SD package is not only for CSV
+%% % anymore since Cycle-I starts before the next release CASA 4.1?
+%% % TT: took out "BETA"  
+%% {\bf NOTE:} The single-dish analysis package within CASA 
+%% is included in the release for the use
+%% of the ALMA computing and commissioning groups.  
+%% %Therefore, this description is included in this Cookbook
+%% %as an appendix. 
+%% However, it is fully accessible for general users.
 
 For single-dish spectral calibration and analysis, 
 CASA uses the ATNF Spectral Analysis Package (ASAP).
@@ -90,10 +92,10 @@ and features of ASAP and the SDtasks presented in
 %to a single data table SDFITS or other data format supported by ASAP.  
 
 \medskip
-{\bf R3.4 New Features}\\
-The single dish package (ASAP) is now loaded at the start-up of CASA. 
-It is not necessary to load ASAP explicitly by invoking {\tt asap\_init}
-anymore.
+%{\bf R3.4 New Features}\\
+%The single dish package (ASAP) is now loaded at the start-up of CASA. 
+%It is not necessary to load ASAP explicitly by invoking {\tt asap\_init}
+%anymore.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -287,7 +289,7 @@ A set of single dish tasks is available for simplifying basic
 reduction activities.  The list currently includes:
 
 \begin{itemize}
-
+ 
 \item {\bf sdcal} --- select, calibrate, and average SD data
 
 \item {\bf sdsmooth} --- smooth SD spectra
@@ -308,8 +310,6 @@ reduction activities.  The list currently includes:
 
 \item {\bf sdimaging} --- create an image from the total power or spectral data
 
-\item{\bf sdimprocess} --- remove the 'scanning noise' from raster scanned image  
-
 \item {\bf sdlist} --- print a summary of a SD dataset
 
 \item {\bf sdmath} --- do simple arithmetic for SD spectra 
@@ -324,8 +324,10 @@ catalog data
 \item {\bf sdstat} --- compute statistics of regions of SD spectra
 
 \item {\bf sdtpimaging} --- do a simple calibration and create an image from the total power raster scans
- 
-\item{\bf msmoments} --- compute moments from spectral data
+
+\item {\bf sdimprocess} --- remove the 'scanning noise' from raster scanned image  
+
+\item {\bf msmoments} --- compute moments from spectral data
 
 \end{itemize}
 
@@ -481,12 +483,41 @@ doppler -- doppler mode
         options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
         default: currently set doppler in scantable
 calmode -- calibration mode
-        options: 'ps','nod','fs','fsotf','quotient','none'
+        options: 'ps','nod','otf','otfraster',
+                 'fs','fsotf','quotient','none'
         default: 'none'
         example: choose mode 'none' if you have
                  already calibrated and want to
                  try averaging
         WARNING: 'fsotf' is not implemented yet
+    >>> calmode expandable parameter
+         fraction -- Edge marking parameter for 'otf' and 'otfraster'.
+                     specify a number of OFF scans as a fraction of 
+                     total number of data points. 
+                 default: '10%'
+                 options: '20%' in string style or float value less 
+                          than 1.0 (e.g. 0.15).
+                          'auto' is available only for 'otfraster'. 
+         noff -- Edge marking parameter for 'otfraster'.
+                 It is used to specify a number of OFF scans near 
+                 edge directly. Value of noff comes before setting 
+                 by fraction.
+                 default: -1 (use fraction)
+                 options: any positive integer
+         width -- Edge marking parameter for 'otf'.
+                  Pixel width with respect to a median spatial 
+                  separation between neighboring two data in time.
+                  Default will be fine in most cases.
+                 default: 0.5
+                 options: float value
+         elongated -- Edge marking parameter for 'otf'.
+                      Set True only if observed area is elongeted 
+                      in one direction.
+                 default: False
+         markonly -- Set True if you want to save data just after 
+                     edge marking (i.e. uncalibrated data) to see 
+                     how OFF scans are defined.
+                 default: False
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
@@ -506,7 +537,7 @@ pollist -- list of polarization id numbers to select
 channelrange -- channel range selection
         default: [] (use all channel)
         example: [0,5000]
-        Note that specified values are recognized as 'channel' 
+        Note that specified values are recognized as 'channel'
         regardless of the value of specunit 
 scanaverage -- average integrations within scans
         options: (bool) True,False
@@ -576,10 +607,10 @@ plotlevel -- control for plotting of results
 DESCRIPTION:
 
 Task {\tt sdcal} performs data selection, calibration for single-dish
-spectra.  By setting {\tt calmode='none'}, one can run {\tt sdcal} on already 
+spectra.  By setting {\tt calmode='none'}, one can run sdcal on already 
 calibrated data, for further selection , averaging and atmospheric 
-optical depth correction. To save the output spectra in a certain range of 
-channels, you set the range in {\tt channelrange}.
+optical depth correction. To save the output spectra in a certain
+range of channels, you set the range in {\tt channelrange}.
 
 If you give multiple IFs in {\tt iflist}, then your scantable will have
 multiple IFs by default. Averaging of multi-resolution (multi-IFs)
@@ -591,13 +622,13 @@ ASAP recognizes the data of the "AT" telescopes, but currently
 does not know about the GBT or any other telescope. This task
 does know about GBT. Telescope name is obtained from the data.
 If you wish to change the {\tt fluxunit} (see below), by leaving
-the sub-parameter telescopeparm unset ({\tt telescopeparm=''}),
+the sub-parameter {\tt telescopeparm} unset ({\tt telescopeparm=''}),
 it will use internal telescope parameters for
 flux conversion for the data from AT telescopes and it will use an
 approximate aperture efficiency conversion for the GBT data.
-If you give {\tt telescopeparm} a list, then if the list has a single float it
-is assumed to be the gain in Jy/K, if two or more elements they are assumed
-to be telescope diameter (m) and aperture efficiency
+If you give {\tt telescopeparm} a list, then if the list has a single 
+float it is assumed to be the gain in Jy/K, if two or more elements 
+they are assumed to be telescope diameter (m) and aperture efficiency
 respectively.
 
 Note that {\tt sdcal} assumes that the {\tt fluxunit} is set correctly in
@@ -607,34 +638,33 @@ will set the default units to {\tt fluxunit} without conversion.
 unit is missing, this task automatically fixes the default {\tt fluxunit}
 to 'K' before the conversion.
 
+Two new {\tt calmode}, {\tt 'otf'} and {\tt 'otfraster'}, are available. If you 
+specify those modes, the task first try to define several scans 
+near edge as OFF scans, then the data are calibrated using those 
+OFF scans. Those modes are designed for OTF observations without 
+explicit OFF scans. If the observing pattern is 'raster', you 
+should use the 'otfraster' mode to calibrate data. Otherwise, the 
+'otf' mode should be used. For detail about edge marking, see 
+online help of sd.edgemarker module.
+
 WARNING for the GBT raw SDFITS format data as input:\\
 SDtasks are able to handle GBT raw SDFITS format (version 1.3) data since the 
 data filler is available. However, the functionality is not well 
 tested yet, so that there may be unknown bugs. 
 
-% this 'new features' for R3.0.0
-\medskip
-%{\bf R3.0 New Features:}
 {\bf Notes:}
  \begin{itemize}
-% \item A new parameter {\tt verify} is added. The task plots both raw spectra and
-% calibrated spectra to verify the calibration results if {\tt verify} is 'True'. 
-%  \item If the observation mode is On-The-Fly, the direction
-%information will be considered for averaging, i.e., spectra will be
-%averaged only if the directions are in agreement with each other.
   \item Direction information is not considered when data is averaged. 
 Use {\tt sdgrid} task if you want to take care of direction information 
 when averaging.
   \item Calibration of frequency switching data is now fully implemented, including folding.
   \item Additional calibration algorithms are implemented. These are the
-'Chopper-Wheel' calibration and the one adopted in APEX telescope (an advanced version of classical 'Chopper-Wheel' method). Two load
-calibration, which will be a standard calibration mode of ALMA total
-power antennas, is formally implemented but still experimental.
+'Chopper-Wheel' calibration and the one adopted in APEX telescope (an advanced version of classical 'Chopper-Wheel' method). 
 \end{itemize}
 
 \medskip
-{\bf R3.4 New Features:}\\
-This task has been renamed, and was previously called {\tt sdaverage}.
+{\bf R4.0 New Features:}\\
+New calibration modes, 'otf' and 'otfraster', are available.
 
 \subsubsection{{\tt sdsmooth}}
 \label{section:sd.sdtasks.tasks.sdsmooth}
@@ -715,8 +745,8 @@ Set {\tt plotlevel >= 1} to plot the spectrum before and after smoothing.
 See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 \medskip
-{\bf R3.4 New Features:}\\
-Channel binning is available by setting {\tt kernel='regrid'}.
+%{\bf R3.4 New Features:}\\
+%Channel binning is available by setting {\tt kernel='regrid'}.
 
  
 \subsubsection{{\tt sdbaseline}}
@@ -746,9 +776,28 @@ fluxunit -- units for line flux
                          telescopeparm='FIX' to change default fluxunit
                          see description below
 specunit -- units for spectral axis
-        options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
+        options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
         default: '' (=current)
         example: this will be the units for masklist
+    >>> specunit expandable parameters
+         restfreq -- rest frequency
+                 available type includes float, int, string, list of float, 
+                 list of int, list of string, and list of dictionary. the 
+                 default unit of restfreq in case of float, int, or string 
+                 without unit is Hz. string input can be a value only 
+                 (treated as Hz) or a value followed by unit for which 'GHz',
+                 'MHz','kHz',and 'Hz' are available. 
+                 a list can be used to set different rest frequencies for 
+                 each IF. the length of list input must be nIF. dictionary 
+                 input should be a pair of molecule name and frequency with 
+                 keys of 'name' and 'value', respectively. values in the 
+                 dictionary input follows the same manner as for single 
+                 float or string input. 
+                 example: 345.796
+                          '1420MHz'
+                          [345.8, 347.0, 356.7]
+                          ['345.8MHz', '347.0MHz', '356.7MHz']
+                          [{'name':'CO','value':345}]
 frame -- frequency frame for spectral axis
         options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                  'GEO','GALACTO','LGROUP','CMB'
@@ -814,11 +863,12 @@ maskmode -- mode of setting additional channel masks
          setting this parameter to 1) to avoid detecting baseline
          undulations instead of real lines.
 blfunc -- baseline model function
-        options: (str) 'poly','cspline','sinusoid'
+        options: (str) 'poly','chebyshev','cspline','sinusoid'
         default: 'poly'
         example: blfunc='poly' uses a single polynomial line of 
                  any order which should be given as an expandable 
                  parameter 'order' to fit baseline. 
+                 blfunc='chebyshev' uses Chebyshev polynomials. 
                  blfunc='cspline' uses a cubic spline function, a piecewise 
                  cubic polynomial having C2-continuity (i.e., the second 
                  derivative is continuous at the joining points). 
@@ -872,13 +922,20 @@ verify -- verify the results of baseline fitting
         WARNING: Currently this just asks whether you accept
                  the displayed fit and if not, continues
                  without doing any baseline fit.
-verbose -- output fitting results to logger and a file as well
+verbose -- output fitting results to logger
         default: True
         example: If False, the fitting results including coefficients, 
-                 residual rms, etc., are not output to either the CASA 
-                 logger or a text file (<outfile>_blparam.txt), while 
-                 the processing speed gets faster by a factor of about 20 
-                 percent
+                 residual rms, etc., are not output to the CASA logger, 
+                 while the processing speed gets faster
+bloutput -- output fitting results to a text file
+        default: True
+        example: If False, the fitting results including coefficients, 
+                 residual rms, etc., are not output to a text file 
+                 (<outfile>_blparam.txt), while the processing 
+                 speed gets faster
+blformat -- format of the logger output and text file specified with bloutput
+        options: '', 'csv'
+        default: '' (same as in the past, easy to read but huge)
 showprogress -- show progress status for large data
         default: True
 minnrow -- minimum number of input spectra to show progress status
@@ -926,16 +983,31 @@ See \S~\ref{section:io.selection.spw.channel} for details.
 Note, the mask regions should be specified in unit of {\tt specunit} 
 in this task.
 
-Available functions for baseline subtraction are polynomial, cubic spline, and sinusoid. 
+Available functions for baseline subtraction include polynomial, Chebyshev polynomials, 
+cubic spline, and sinusoid. 
 Also, iterative n-$\sigma$ clipping becomes available with cubic spline and sinusoid. 
-
 
 %\medskip
 %{\bf R3.3 New Features:}
 %\begin{enumerate}
 %\item ...
 %\end{enumerate}
-  
+\medskip
+{\bf R4.0 New Features:}\\
+\begin{itemize}
+\item Chebyshev polynomials became available for {\tt blfunc}. 
+\item A new parameter {\tt restfreq} is available to set user defined
+  rest frequencies when {\tt specunit = 'km/s'}. The default is to get
+  the values from input data.
+  These rest frequencies are used to calculate velocities when 
+  {\tt masklist} is defined.
+%Flagging according to frequency and/or velocity now works correctly. 
+\item The {\tt verbose} parameter now effective for CASA logger only: 
+{\tt bloutput} can be used to control output to text file. 
+\item You can specify the output format of logger/text file in {\tt blformat}. 
+\end{itemize}
+
+
 \subsubsection{{\tt sdreduce}}
 \label{section:sd.sdtasks.tasks.sdreduce}
 
@@ -966,6 +1038,25 @@ specunit -- units for spectral axis
         options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
         default: '' (=current)
         example: this will be the units for masklist
+    >>> specunit expandable parameters
+         restfreq -- rest frequency
+                 available type includes float, int, string, list of float, 
+                 list of int, list of string, and list of dictionary. the 
+                 default unit of restfreq in case of float, int, or string 
+                 without unit is Hz. string input can be a value only 
+                 (treated as Hz) or a value followed by unit for which 'GHz',
+                 'MHz','kHz',and 'Hz' are available. 
+                 a list can be used to set different rest frequencies for 
+                 each IF. the length of list input must be nIF. dictionary 
+                 input should be a pair of molecule name and frequency with 
+                 keys of 'name' and 'value', respectively. values in the 
+                 dictionary input follows the same manner as for single 
+                 float or string input. 
+                 example: 345.796
+                          '1420MHz'
+                          [345.8, 347.0, 356.7]
+                          ['345.8MHz', '347.0MHz', '356.7MHz']
+                          [{'name':'CO','value':345}]
 frame -- frequency frame for spectral axis
         options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                  'GEO','GALACTO','LGROUP','CMB'
@@ -1092,10 +1183,11 @@ maskmode -- mode of setting additional channel masks for baselining
          undulations instead of real lines.
 
 blfunc -- baseline model function
-        options: (str) 'none','poly','cspline','sinusoid'
+        options: (str) 'none','poly','chebyshev','cspline','sinusoid'
         default: 'none' (no baselining)
         example: blfunc='poly' uses a single polynomial line of 
                  any order which should be given as an expandable 
+                 blfunc='chebyshev' uses Chebyshev polynomials. 
                  parameter 'order' to fit baseline. 
                  blfunc='cspline' uses a cubic spline function, a piecewise 
                  cubic polynomial having C2-continuity (i.e., the second 
@@ -1157,13 +1249,20 @@ verifybl -- verify the results of baseline fitting
         options: (bool) True,False
         default: False
         NOTE: Currently available only when blfunc='poly'
-verbosebl -- output baseline fitting results to logger and a file as well
+verbosebl -- output fitting results to logger
         default: True
         example: If False, the fitting results including coefficients, 
-                 residual rms, etc., are not output to either the CASA 
-                 logger or a text file (<outfile>_blparam.txt), while 
-                 the processing speed of sdbaseline gets faster by a 
-                 factor of about 20 percent
+                 residual rms, etc., are not output to the CASA logger, 
+                 while the processing speed gets faster
+bloutput -- output fitting results to a text file
+        default: True
+        example: If False, the fitting results including coefficients, 
+                 residual rms, etc., are not output to a text file 
+                 (<outfile>_blparam.txt), while the processing 
+                 speed gets faster
+blformat -- format of the logger output and text file specified with bloutput
+        options: '', 'csv'
+        default: '' (same as in the past, easy to read but huge)
 showprogress -- show progress status for large data
         default: True
 minnrow -- minimum number of input spectra to show progress status
@@ -1221,10 +1320,18 @@ Note, the mask regions should be specified in unit of {\tt specunit}
 in this task.
 
 \medskip
-{\bf R3.4 New Features:}
+{\bf R4.0 New Features:}\\
 \begin{itemize}
-\item This task has been renamed, and was previously called {\tt sdcal}.
-\item Channel binning is available by setting {\tt kernel='regrid'}.
+\item Chebyshev polynomials became available for {\tt blfunc}. 
+\item A new parameter {\tt restfreq} is available to set user defined
+  rest frequencies when {\tt specunit = 'km/s'}. The default is to get
+  the values from input data.
+  These rest frequencies are used to calculate velocities when 
+  {\tt masklist} is defined.
+%Flagging according to frequency and/or velocity now works correctly. 
+\item The {\tt verbosebl} parameter now effective for CASA logger only: 
+{\tt bloutput} can be used to control output to text file. 
+\item You can specify the output format of logger/text file in {\tt blformat}. 
 \end{itemize}
 
 \subsubsection{{\tt sdcoadd}}
@@ -1335,11 +1442,41 @@ See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 Keyword arguments:
 infile -- name of input SD dataset
 antenna -- antenna name or id (only effective for MS input). 
+specunit -- units for spectral axis
+        options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
+        default: '' (=current)
+        example: this will be the units for maskflag
+    >>> specunit expandable parameters
+         restfreq -- rest frequency
+                 available type includes float, int, string, list of float, 
+                 list of int, list of string, and list of dictionary. the 
+                 default unit of restfreq in case of float, int, or string 
+                 without unit is Hz. string input can be a value only 
+                 (treated as Hz) or a value followed by unit for which 'GHz',
+                 'MHz','kHz',and 'Hz' are available. 
+                 a list can be used to set different rest frequencies for 
+                 each IF. the length of list input must be nIF. dictionary 
+                 input should be a pair of molecule name and frequency with 
+                 keys of 'name' and 'value', respectively. values in the 
+                 dictionary input follows the same manner as for single 
+                 float or string input. 
+                 example: 345.796
+                          '1420MHz'
+                          [345.8, 347.0, 356.7]
+                          ['345.8MHz', '347.0MHz', '356.7MHz']
+                          [{'name':'CO','value':345}]
+frame -- frequency frame for spectral axis
+        options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                 'GEO','GALACTO','LGROUP','CMB'
+        default: currently set frame in scantable
+        WARNING: frame='REST' not yet implemented
+doppler -- doppler mode
+        options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+        default: currently set doppler in scantable
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
-                 this selection is in addition to field
-                 and iflist
+        this selection is in addition to field and iflist
 field -- selection string for selecting scans by name
         default: '' (no name selection)
         example: 'FLS3a*'
@@ -1379,6 +1516,9 @@ flagmode -- flag mode
 interactive -- determines interactive flagging
         options: (bool) True,False
         default: False
+     >>> interactive expandable parameters
+        showflagged -- show flagged data on plots
+                default: False
 outfile -- Name of output file
         default: ''
         Note: by default (outfile=''), actual output file name is set as follows: 
@@ -1447,6 +1587,14 @@ data format of {\tt infile}, the data is overwritten with the new data format
 (specified by {\tt outform}) and the data in the original format will be lost.
 
 See the {\tt sdcal} description for note on GBT raw SDFITS format data.
+
+\medskip
+{\bf R4.0 New Features:}%\\
+\begin{itemize}
+\item Flagging by frequency and/or velocity now available.
+\item Flagged data can be plotted on interactive flag plotter 
+when {\tt showflagged = True}.
+\end{itemize}
 
 
 \bigskip
@@ -1610,6 +1758,26 @@ fluxunit -- units for line flux
 specunit -- units for spectral axis
         options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
         default: '' (=current)
+        example: this will be the units for maskline
+    >>> specunit expandable parameters
+         restfreq -- rest frequency
+                 available type includes float, int, string, list of float, 
+                 list of int, list of string, and list of dictionary. the 
+                 default unit of restfreq in case of float, int, or string 
+                 without unit is Hz. string input can be a value only 
+                 (treated as Hz) or a value followed by unit for which 'GHz',
+                 'MHz','kHz',and 'Hz' are available. 
+                 a list can be used to set different rest frequencies for 
+                 each IF. the length of list input must be nIF. dictionary 
+                 input should be a pair of molecule name and frequency with 
+                 keys of 'name' and 'value', respectively. values in the 
+                 dictionary input follows the same manner as for single 
+                 float or string input. 
+                 example: 345.796
+                          '1420MHz'
+                          [345.8, 347.0, 356.7]
+                          ['345.8MHz', '347.0MHz', '356.7MHz']
+                          [{'name':'CO','value':345}]
 frame -- frequency frame for spectral axis
         options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                  'GEO','GALACTO','LGROUP','CMB'
@@ -1742,6 +1910,11 @@ See the {\tt sdcal} description for information on {\tt fluxunit}
 conversion and the {\tt telescopeparm} parameter.
 Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
+\medskip
+{\bf R4.0 New Features:}\\
+Specifying {\tt maskline} (i.e., fitting range) by frequency and/or velocity now works. 
+
+
 \subsubsection{{\tt sdgrid}}
 \label{section::sd.sdtasks.tasks.sdgrid}
 
@@ -1814,32 +1987,35 @@ The sdgrid task performs spatial gridding according to the user
 specification of spatial grid, convolution function, etc.
 
 For grid configuration, the task supplements necessary information 
-by referring input data if any of gridding parameter ('npix', 
-'cell', or 'center') is not specified by the user. If 'center' is 
+by referring input data if any of gridding parameter ({\tt npix}, 
+{\tt cell}, or {\tt center}) is not specified by the user. 
+If {\tt center} is 
 default value (empty string), central position of the grid will be 
-set to the center of observed area, i.e. x=0.5*(xmax+xmin), 
-y=0.5*(ymax+ymin). If either 'cell' or 'npix' is set, unspecified 
+set to the center of observed area, i.e. 
+$ x \, = \, 0.5 \, (x_{\rm max} + x_{\rm min}) $, 
+$ y \, = \, 0.5 \, (y_{\rm max} + y_{\rm min}) $. 
+If either {\tt cell} or {\tt npix} is set, unspecified 
 one will be calculated from the others. In that case, total extent of 
-the grid will be set to cover all observed position. If neither 'cell' 
-nor 'npix' is set, cell size will be set to 1.0 arcmin and number of 
+the grid will be set to cover all observed position. If neither {\tt cell}
+nor {\tt npix} is set, cell size will be set to 1.0 arcmin and number of 
 pixel will be calculated based on that cell size.
  
 Currently, only J2000 frame is supported.
  
-The parameter gridfunction sets gridding function for imaging. 
-Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
-Spheroidal Wave Function), 'GAUSS' (Gaussian). and 'PB' 
-(Primary Beam, not implemented yet). For 'PB', correct 
+The parameter {\tt gridfunction} sets gridding function for imaging. 
+Currently, the task supports {\tt 'BOX'} (Box-car), {\tt 'SF'} (Prolate 
+Spheroidal Wave Function), {\tt 'GAUSS'} (Gaussian). and {\tt 'PB'} 
+(Primary Beam, not implemented yet). For {\tt 'PB'}, correct 
 antenna informations should be included in input file. 
-The 'width' parameter specifies width of the convolution kernel 
-in pixel unit. For Gaussian gridding, 'width' is treated as HWHM 
+The {\tt width} parameter specifies width of the convolution kernel 
+in pixel unit. For Gaussian gridding, {\tt width} is treated as HWHM 
 and actual width (the width that convolution function has non-zero 
-value) is set to 4*HWHM to take into account contribution from 
-Gaussian tail. Otherwise, 'width' is treated as actual width of the 
+value) is set to $ 4 \, {\rm HWHM} $ to take into account contribution from 
+Gaussian tail. Otherwise, {\tt width} is treated as actual width of the 
 convolution function. 
 
-Boolean parameter 'plot' controls whether gridded result is plotted 
-or not. If True, color map of gridded data will be shown. Pixel 
+Boolean parameter {\tt plot} controls whether gridded result is plotted 
+or not. If {\tt True}, color map of gridded data will be shown. Pixel 
 center and observed position are overlayed as blue dot and red dot, 
 respectively. Currently, channel averaged value will be plotted.
 
@@ -1930,19 +2106,20 @@ the data access efficiently. It differs from other single-dish tasks
 that mostly operate on the ASAP scantable data format.
  
 Units of spectral axis can be specified via a parameter {\tt specunit}.
-Allowed values for specunit are 'channel', 'GHz', 'MHz', 'kHz', 'Hz', 
-and 'km/s'. This parameter is also used as the units of the parameter 
+Allowed values for specunit are {\tt 'channel'}, {\tt 'GHz'}, {\tt 'MHz'}, {\tt 'kHz'}, {\tt 'Hz'}, 
+and {\tt 'km/s'}. This parameter is also used as the units of the parameter 
 {\tt start} and {\tt step} that specify reference value of start channel and width 
 of each spectral channel for channel map, respectively.
 
 Selection of the antennas can be made by setting antennaid(s) or 
-antenna name(s) in string (e.g. '0', 'DV01',etc.). Defalut value, -1, means 
+antenna name(s) in string (e.g. {\tt '0'}, {\tt 'DV01'},etc.). Defalut
+value, {\tt -1}, means 
 that the task selects data from all baseline, i.e., data from all antenna when 
 data only contains auto-correlation.
 
 The parameter {\tt gridfunction} sets gridding function for imaging. 
-Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate Spheroidal 
-Wave Function), and 'PB' (Primary Beam). For 'PB', correct antenna 
+Currently, the task supports {\tt 'BOX'} (Box-car), {\tt 'SF'} (Prolate Spheroidal 
+Wave Function), and {\tt 'PB'} (Primary Beam). For {\tt 'PB'}, correct antenna 
 information should be included in input file. 
 
 %\medskip
@@ -2140,10 +2317,13 @@ specunit -- units for spectral axis
         options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
         default: '' (=current)
         example: this will be the units for masklist
-restfreq -- rest frequency used for specunit='km/s'
-        default: '' (use current setting)
-        example: 4.6e10 (float value), '46GHz' (string with unit)
-                 Allowed units are 'THz', 'GHz', 'MHz', 'kHz', and 'Hz'
+    >>> specunit expandable parameter
+         restfreq -- rest frequency
+                 default: '' (use current setting)
+                 example: 4.6e10 (float value in Hz),
+                          '46GHz' (string with unit),
+                          ['345.8GHz', 347.0e9, 356.7e9] (for each IF)
+                          [{'name':'CO','value':345e9}] (a value with name)
 frame -- frequency frame for spectral axis
         options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                  'GEO','GALACTO','LGROUP','CMB'
@@ -2152,9 +2332,9 @@ frame -- frequency frame for spectral axis
 doppler -- doppler mode
         options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
         default: currently set doppler in scantable
-scanlist -- list of scan numbers to process
+scanlist -- list or string of scan numbers to process
         default: [] (use all scans)
-        example: [21,22,23,24]
+        example: [21,22,23,24], or "21~24"
         this selection is in addition to field, iflist, pollist,
         and beamlist
 field -- selection string for selecting scans by name
@@ -2162,17 +2342,17 @@ field -- selection string for selecting scans by name
         example: 'FLS3a*'
         this selection is in addition to scanlist, iflist, pollist,
         and beamlist
-iflist -- list of IF id numbers to select
+iflist -- list or string of IF id numbers to select
         default: [] (use all IFs)
         example: [15]
         this selection is in addition to scanlist, field, pollist,
         and beamlist
-pollist -- list of polarization id numbers to select
+pollist -- list or string of polarization id numbers to select
         default: [] (use all polarizations)
         example: [1]
         this selection is in addition to scanlist, field, iflist,
         and beamlist
-beamlist -- list of beam id numbers to select
+beamlist -- list or string of beam id numbers to select
         default: [] (use all beams)
         example: [1]
         this selection is in addition to scanlist, field, iflist,
@@ -2211,23 +2391,23 @@ kernel -- type of spectral smoothing
                           ignored for hanning (fixed at 5 chans)
                           (0 will turn off gaussian or boxcar)
 plottype -- type of plot
-         options: 'spectra','totalpower','pointing','azel'
+         options: 'spectra','totalpower','pointing','azel','grid'
          default: 'spectra'
-    >>> plottype expandable parameter
-         stack -- code for stacking on single plot for spectral plotting
-                 options: 'p','b','i','t','s','r' or
-                          'pol', 'beam', 'if', 'time', 'scan', 'row'
-                 default: 'p'
-                 example: maximum of 16 stacked spectra
-                          stack by pol, beam, if, time, scan
-                 Note stack selection is ignored when panel='r'.
-         panel -- code for splitting into multiple panels for spectral plotting
-                 options: 'p','b','i','t','s','r' or
-                          'pol', 'beam', 'if', 'time', 'scan', 'row'
-                 default: 'i'
-                 example: maximum of 16 panels
-                          panel by pol, beam, if, time, scan
-                 Note panel selection is ignored when stack='r'.
+    >>> plottype expandable parameters
+        stack -- code for stacking on single plot for spectral plotting
+                options: 'p','b','i','t','s','r' or
+                         'pol', 'beam', 'if', 'time', 'scan', 'row'
+                default: 'p'
+                example: maximum of 16 stacked spectra
+                         stack by pol, beam, if, time, scan
+                Note stack selection is ignored when panel='r'.
+        panel -- code for splitting into multiple panels for spectral plotting
+                options: 'p','b','i','t','s','r' or
+                         'pol', 'beam', 'if', 'time', 'scan', 'row'
+                default: 'i'
+                example: maximum of 16 panels
+                         panel by pol, beam, if, time, scan
+                Note panel selection is ignored when stack='r'.
         flrange -- range for flux axis of plot for spectral plotting
                 options: (list) [min,max]
                 default: [] (full range)
@@ -2252,9 +2432,18 @@ plottype -- type of plot
                 options: (float) doppler velocity (km/s)
                 default: 0.0
                 example: linedop=-30.0
+        center -- the central direction of gridding
+                default: '' (map center)
+                example: 'J2000 19h30m00 -40d00m00'
+                Note currently only supports 'J2000' as direction frame
+        cell -- x and y cell size of gridding
+                default: [] (map extent devided by # of subplots in x and y)
+                example: cell=['1.0arcmin','1.0arcmin']
+                         cell='1.0arcmin' (equivalent to the example above)
+                Note default number of subplots is 1 x 1 in plottype='grid'.
         subplot -- number of subplots (row and column) on a page
                    NOTICE plotter will slow down when a large number is specified
-                   default: -1 (auto)
+                   default: -1 (auto. for plottype='spectra', 1x1 for plottype='grid')
                    example: 23 (2 rows by 3 columns)
         colormap -- the colours to be used for plot lines. 
                 default: None
@@ -2313,40 +2502,58 @@ overwrite -- overwrite the output file if already exists
 
 DESCRIPTION:
     
-Task {\tt sdplot} displays single-dish spectra or total power data.
+Task {\tt sdplot} displays single-dish spectra, total power,
+or pointing direction of input data.
 It assumes that the spectra have been calibrated.
 It does allow selection of scans, IFs, polarizations, and
 some time and channel averaging/smoothing options also,
 but does not write out this data.
 
-*** Only apply to 'spectra' plottype ***\\
-Note that colormap and linestyles cannot be controlled at a time.
-The '{\tt linestyles}' is ignored if both of them are specified.
+This task adds an additional toolbar to Matplotlib plotter. 
+See the cookbook for details of its capability.
+
+*** Data selection ***\\
+This task allows data selection via field name, scan, IF,
+polarization and beam IDs. Selection of field allows pattern
+matching using asterisk, e.g., {\tt `FLS3a*'}. Selection of scans,
+IFs, polarizations, and beams, is possible either by a list
+of IDs or by a CASA type selection syntax using a string of 
+comma separated numbers with operaters, i.e., `{\tt \~{}}', `{\tt >}', `{\tt >=}',
+`{\tt <}', and `{\tt <=}'.
+For example, the following two selections are equivalent:\\
+{\tt scanlist = [0, 1, 2, 7, 8, 9, 15]}\\
+{\tt scanlist = `<3,7\~{}9,15'}
+
+*** control of plot lines in {\tt `spectra'} and {\tt `grid' plottype} ***\\
+Note that {\tt colormap} and {\tt linestyles} cannot be controlled at a time.
+The {\tt linestyles} is ignored if both of them are specified.
 Some plot options, like changing titles, legends, fonts,
 and the like are not supported in this task.  You should use
 {\tt sd.plotter} from the ASAP toolkit directly for this.
 
+*** available {\tt plottypes} ***
+\begin{itemize}
+\item {\tt plottype = `spectra'} plots single dish spectra. Multiple scans,
+IFs, polarizations, and beams can be handles through stacking
+and panelling.
 This task uses the JPL line catalog as supplied by ASAP.
 If you wish to use a different catalog, or have it plot
 the line IDs from top or bottom (rather than alternating),
-then you will need to explore the {\tt sd} toolkit also.
+then you will need to explore the sd toolkit also.
+\item {\tt plottype = `grid'} plots spectra based on their pointing direction.
+The spectra are gridded by direction before plotting.
+Multiple IFs and polarizations are not handled in this mode. Only
+the first IF and polarizaion is gridded and plotted if data 
+includes multiple IDs after selections are applied. Hence, over
+plotting is not available
+\end{itemize}
 
-Note that multiple scans and IFs can in principle be handled
-through stacking and paneling, but this is fairly rudimentary
-at present and you have little control of what happens in
-individual panels.  We recommend that you use {\tt scanlist}, {\tt field},
-and {\tt iflist} to give a single selection for each run.
-
-This task adds an additional toolbar to Matplotlib plotter. See the following 
-instructions for details of its capability.
-
-*** other plottype options ***\\
-Currently most of the parameters are ignored in these modes.
-
+Currently most of the parameters are ignored in the following modes.
 \begin{itemize}
-\item {\tt plottype='totalpower'} is used to plot the total power data, and only plot option is amplitude versus data row number.
-\item {\tt plottype='azel'} plots azimuth and elevation tracks of the source.
-\item {\tt plottype='pointing'} plots antenna poinitings.
+\item {\tt plottype=`totalpower'} is used to plot the total power data.
+and only plot option is amplitude versus data row number.
+\item {\tt plottype=`azel'} plots azimuth and elevation tracks of the source.
+\item {\tt plottype=`pointing'} plots antenna poinitings.
 \end{itemize}
 
 See the {\tt sdcal} description for information on the {\tt fluxunit} conversion
@@ -2355,8 +2562,14 @@ Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 WARNING: be careful plotting otf data with lots of fields!
 
-%\medskip  
-%{\bf R3.2 New Features:}
+\medskip  
+{\bf R4.0 New Features:}
+\begin{itemize}
+\item A new {\tt plottype = \lq grid\rq} is available to grid and plot spectra based
+on their sky position.
+\item {\tt sdplot} accepts CASA-type selection syntax in {\tt scanlist}, {\tt iflist},
+{\tt pollist}, and {\tt beamlist}.
+\end{itemize}
 
 %Two new parameters are added to the task. 
 %A new parameter {\tt beamlist} enables selecting data to plot by a list of beam IDs.
@@ -2490,7 +2703,7 @@ rowlist -- list of row numbers to process
         default: [] (use all rows)
         example: [0,2,4,6]
         For expert users only!
-        this selection is applied first, and then followed by 
+        this selection is applied first, and then followed by
         the selection with scans, fields, ifs, and polarizations. 
 scanlist -- list of to process
         default: [] (use all scans)
@@ -2533,6 +2746,21 @@ polaverage -- average polarizations
                  options: 'none'
                           'var'  (1/var(spec) weighted)
                           'tsys' (1/Tsys**2 weighted)
+restfreq -- rest frequencies of output data
+        Available types are a number, string, a list of numbers or
+        strings (see examples below), and list of dictionaries. 
+        The default unit of restfreq is Hz, if not specified.
+        A list can be used to set different rest frequencies to
+        each IF. the length of list input must be nIF. Dictionary 
+        input should be a pair of molecule name and frequency with 
+        keys of 'name' and 'value', respectively. The 'value's in the 
+        dictionary input follows the same manner as for single 
+        float or string input. 
+        default: '' (use current setting)
+        example: 4.6e10 (float value in Hz),
+                 '46GHz' (string with unit),
+                 ['345.8GHz', '347.0GHz', 356.7e9] (for each IF)
+                 [{'name':'CO','value':345e9}] (a value with name)
 outfile -- name of output dataset
         default: '' 
 outform -- output data format
@@ -2666,6 +2894,13 @@ fluxunit -- units for line flux
 specunit -- units for spectral axis
         options: (str) 'channel','km/s','GHz','MHz','kHz','Hz',''
         default: '' (=current)
+    >>> specunit expandable parameter
+         restfreq -- rest frequency
+                 default: '' (use current setting)
+                 example: 4.6e10 (float value in Hz),
+                          '46GHz' (string with unit),
+                          ['345.8GHz', 347.0e9, 356.7e9] (for each IF)
+                          [{'name':'CO','value':345e9}] (a value with name)
 frame -- frequency frame for spectral axis
         options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
                  'GEO','GALACTO','LGROUP','CMB'
@@ -3649,7 +3884,7 @@ sdtpimaging()
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Using The ASAP Toolkit Within CASA}
+\section{Using The ASAP Toolkit within CASA}
 \label{section:sd.asap}
 
 ASAP is included with the CASA installation/build. It is loaded
@@ -3718,10 +3953,11 @@ table.  Type
 \normalsize
 (using TAB completion) to see the full list. 
 
-\medskip
-{\bf R3.4 New Features}\\
-The single dish package (ASAP) is now loaded at the start-up of CASA. 
-It is not necessary to load ASAP explicitly by invoking {\tt asap\_init} anymore.
+%\medskip
+%{\bf R3.4 New Features}\\
+%The single dish package (ASAP) is now loaded at the start-up of CASA. 
+%It is not necessary to load ASAP explicitly by invoking {\tt asap\_init} anymore.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Environment Variables}
@@ -4424,7 +4660,7 @@ A new function {\tt calibrate} is introduced for more comprehensive
 calibration. This function calls appropriate calibration scheme by
 referring the antenna name in the metadata. The user just specify input
 scantable and calmode parameter that indicates calibration mode ('ps',
-'nod', 'fs', or 'otf'). For GBT data, calibrate function calls one of
+'nod', 'fs', 'otf', or 'otfraster'). For GBT data, calibrate function calls one of
 the functions listed in the above section depending upon the value of
 {\tt calmode}. For APEX data, {\tt apexcal} function is called, while for ALMA
 data, that contains string 'ALMA' or 'OSF' in its antenna name, {\tt almacal}
@@ -4545,11 +4781,9 @@ Smoothing on data can be done as follows:
 \subsection{Baseline Fitting}
 \label{subsection:sd.asap.BLfitting}
 
-CASA offers a variety of functions for baseline fitting: cubic 
-spline function and sinusoid are now available in addition to polynomial. 
-Also three new parameters are added to all the baseline fitting 
-functions in common. They include {\tt getresidual, outlog,} and 
-{\tt blfile} (for detail of these parameters, see below). 
+CASA offers a variety of functions for baseline fitting: Chebyshev 
+polynomials are now available in addition to polynomial, cubic 
+spline and sinusoid. 
 
 The function {\tt sd.scantable.poly\_baseline} carries out a
 baseline fit, given an mask of channels (if desired):
@@ -4620,8 +4854,9 @@ The parameters {\tt edge, threshold}, and {\tt chan\_avg\_limit} can be used
 in common for all the baseline fitting functions that use linefinder 
 ({\tt auto\_*\_baseline}). 
 
-It should also be noted that the above two functions now run about 30 times 
-faster than in CASA 3.1. 
+The functions {\tt chebyshev\_baseline} and {\tt auto\_chebyshev\_baseline} 
+are for baselining using the Chebyshev polynomials with or without linefinder, 
+respectively. 
 
 The functions {\tt cspline\_baseline} and {\tt auto\_cspline\_baseline} 
 are for cubic spline fitting with or without using linefinder, respectively. 

@@ -1226,7 +1226,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			// Request to pre-load ObservedCube
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 		}
-		else if (dataColumn_p.compare("PARAMERR") == 0)
+		else if (dataColumn_p.compare("CPARAM") == 0)
 		{
 			dataReference_p = CORRECTED;
 
@@ -1268,10 +1268,14 @@ FlagAgentBase::setAgentParameters(Record config)
 			expression_p = "REAL ALL";
 		}
 
+		// Replace empty correlation with default
+		if (expression_p.compare("") == 0)
+			expression_p = "ALL";
+
 		expression_p.upcase();
 
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
-				(dataColumn_p.compare("PARAMERR") == 0) or
+				(dataColumn_p.compare("CPARAM") == 0) or
 				(dataColumn_p.compare("SNR") == 0) )
 		{
 			// Check if expression is one of the supported operators
@@ -1283,7 +1287,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
 							<< ", selecting REAL ALL by default. "
-							<< " Keep in mind that complex operators are not supported for FPARAM/PARAMERR/SNR"
+							<< " Keep in mind that complex operators are not supported for FPARAM/CPARAM/SNR"
 							<< LogIO::POST;
 				expression_p = "REAL ALL";
 			}
@@ -2208,7 +2212,7 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 			leftVisCube = &(visibilityBuffer_p->get()->visCube());
 			break;
 		}
-		case PARAMERR:
+		case CPARAM:
 		{
 			leftVisCube = &(visibilityBuffer_p->get()->correctedVisCube());
 			break;
