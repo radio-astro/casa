@@ -186,7 +186,7 @@ def dobaseline(s, blfile, masklist, maskmode, thresh, avg_limit, edge, blfunc, o
                 msk = None
 
                 if (maskmode == 'interact'):
-                        msk = sdutil.get_interactive_mask(s, lmask, False)
+                        msk = sdutil.interactive_mask(s, lmask, False, purpose='to baseline spectra')
                         msks = s.get_masklist(msk)
                         if len(msks) < 1:
                                 casalog.post( 'No channel is selected. Exit without baselining.', priority = 'WARN' )

@@ -78,10 +78,9 @@ def flagdata(vis,
     
     #
     # Task flagdata
-    #    Flags data based on data selection in various ways
-    #    
-    # This is a replacement task to flagdata. It takes different parameters and
-    # different default values. This task uses a new tool and framework underneath.
+    #    Flags data from an MS or calibration table based on data selection in various ways
+    
+    casalog.origin('flagdata')
     
     # jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
     if isinstance(inpfile, str) and inpfile != "":                   
@@ -105,25 +104,34 @@ def flagdata(vis,
     # an error happens that prevents the flagger tool from running.    
     if (mode != 'summary' and flagbackup):
         casalog.post('Backup original flags before applying new flags')
-        fh.backupFlags(vis, 'flagdata')    
-
-    if pCASA.is_mms(vis):
+        fh.backupFlags(vis, 'flagdata')
         # Set flagbackup to False because only the controller
         # should create a backup
         flagbackup = False
-        pCASA.execute("flagdata", locals())
-        return
 
-    casalog.origin('flagdata')
+
+    # Save all the locals()
+    orig_locals = locals()
+    iscal = False
+    
+    # Check if vis is a cal table:
+    # typevis = 1 --> cal table
+    # typevis = 0 --> MS
+    # typevis = 2 --> MMS
+    typevis = fh.isCalTable(vis)
+    if typevis == 1:
+        iscal = True  
+
+    if pCASA.is_mms(vis):
+        pCASA.execute("flagdata", orig_locals)
+        return
 
     # Take care of the trivial parallelization
     # jagonzal (CAS-4119): If flags are not going to be applied is better to run in sequential mode
-    if ParallelTaskHelper.isParallelMS(vis) and action != '' and action != 'none':
-        # Set flagbackup to False because only the controller
-        # should create a backup
-        flagbackup = False
+#        if ParallelTaskHelper.isParallelMS(vis) and action != '' and action != 'none':
+    if typevis == 2 and action != '' and action != 'none':
         # To be safe convert file names to absolute paths.
-        helper = ParallelTaskHelper('flagdata', locals())
+        helper = ParallelTaskHelper('flagdata', orig_locals)
         # jagonzal (CAS-4119): Override summary minabs,maxabs,minrel,maxrel 
         # so that it is done after consolidating the summaries
         
@@ -285,10 +293,6 @@ def flagdata(vis,
 
             
         elif mode == 'clip':
-
-            if correlation == '':
-                # default
-                correlation = "ABS_ALL"
                 
             agent_pars['datacolumn'] = datacolumn.upper()
             agent_pars['clipoutside'] = clipoutside
@@ -312,6 +316,7 @@ def flagdata(vis,
             casalog.post('Clip mode is active')
                         
         elif mode == 'shadow':
+                
             agent_pars['tolerance'] = tolerance
             
             if type(addantenna) == str:
@@ -334,15 +339,13 @@ def flagdata(vis,
             
 
         elif mode == 'elevation':
+
             agent_pars['lowerlimit'] = lowerlimit
             agent_pars['upperlimit'] = upperlimit
             casalog.post('Elevation mode is active')
             
 
         elif mode == 'tfcrop':
-            if correlation == '':
-                # default
-                correlation = "ABS_ALL"
                 
             agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans            
@@ -359,9 +362,6 @@ def flagdata(vis,
 
                       
         elif mode == 'rflag':
-            if correlation == '':
-                # default
-                correlation = "ABS_ALL"
 
             agent_pars['ntime'] = newtime
             agent_pars['combinescans'] = combinescans   
@@ -518,24 +518,33 @@ def flagdata(vis,
                 raise Exception, 'There are no valid commands in list'
             
             unionpars = {}
-            if vrows.__len__() > 1:
-               unionpars = fh.getUnion(vis, flagcmd)
-               
-               if( len( unionpars.keys() ) > 0 ):
-                    casalog.post('Pre-selecting a subset of the MS : ');
-                    casalog.post('%s'%unionpars)
+            # Do not crete union for a cal table
+            if iscal:
+                if vrows.__len__() == 1:
+                    cmd0 = flagcmd[vrows[0]]['command']
+                    unionpars = fh.getSelectionPars(cmd0)
+                    casalog.post('The selected subset of the cal table will be: ');
+                    casalog.post('%s'%unionpars);
                     
-               else:
-                    casalog.post('Iterating through the entire MS');
-                    
-#               mslocal.close()
-                    
-            # Get all the selection parameters, but set correlation to ''
-            elif vrows.__len__() == 1:
-                cmd0 = flagcmd[vrows[0]]['command']
-                unionpars = fh.getSelectionPars(cmd0)
-                casalog.post('The selected subset of the MS will be: ');
-                casalog.post('%s'%unionpars);
+            else:
+                if vrows.__len__() > 1:
+                   unionpars = fh.getUnion(vis, flagcmd)
+                   
+                   if( len( unionpars.keys() ) > 0 ):
+                        casalog.post('Pre-selecting a subset of the MS : ');
+                        casalog.post('%s'%unionpars)
+                        
+                   else:
+                        casalog.post('Iterating through the entire MS');
+                        
+    #               mslocal.close()
+                        
+                # Get all the selection parameters, but set correlation to ''
+                elif vrows.__len__() == 1:
+                    cmd0 = flagcmd[vrows[0]]['command']
+                    unionpars = fh.getSelectionPars(cmd0)
+                    casalog.post('The selected subset of the MS will be: ');
+                    casalog.post('%s'%unionpars);
                 
             aflocal.selectdata(unionpars);
 
@@ -600,7 +609,7 @@ def flagdata(vis,
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  
 
-            if outfile == '':
+            if outfile == '' and not iscal:
                 casalog.post('Saving parameters to FLAG_CMD')        
             else:
                 casalog.post('Saving parameters to '+outfile)
@@ -645,19 +654,20 @@ def flagdata(vis,
         raise
         
     # Write history to the MS
-    try:
-        mslocal.open(vis, nomodify=False)
-        mslocal.writehistory(message='taskname = flagdata', origin='flagdata')
-        param_names = flagdata.func_code.co_varnames[:flagdata.func_code.co_argcount]
-        param_vals = [eval(p) for p in param_names]
-        retval &= write_history(mslocal, vis, 'flagdata', param_names,
-                                param_vals, casalog)
-        
-        mslocal.close()
-    except Exception, instance:
-        mslocal.close()
-        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
-                         'WARN')
+    if not iscal:
+        try:
+            mslocal.open(vis, nomodify=False)
+            mslocal.writehistory(message='taskname = flagdata', origin='flagdata')
+            param_names = flagdata.func_code.co_varnames[:flagdata.func_code.co_argcount]
+            param_vals = [eval(p) for p in param_names]
+            retval &= write_history(mslocal, vis, 'flagdata', param_names,
+                                    param_vals, casalog)
+            
+            mslocal.close()
+        except Exception, instance:
+            mslocal.close()
+            casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                             'WARN')
         
     return
 
