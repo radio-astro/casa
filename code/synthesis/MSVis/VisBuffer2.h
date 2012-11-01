@@ -35,7 +35,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
-#include <boost/noncopyable.hpp>
+#include <boost/utility.hpp>
 
 using casa::vi::VisBufferComponent2;
 using casa::vi::VisBufferComponents2;
