@@ -574,12 +574,18 @@ data.
 
 \subsection{Flagging Calibration-Tables}
 
-\subsubsection{Ability to easily flag the new Calibration Table format}
+\subsubsection{Ability to flag the new Calibration Table format}
 
-The new Calibration Table format can be handled by the AgentFlagger tool in a
+The new Calibration Table format can be handled by the task flagdata and the
+AgentFlagger tool in a
 transparent way, just like a Measurement Set Table. There is an open-time check
 that inspects the table type and uses the appropriate FlagDataHandler
 implementation for all the I/O operations:
+
+
+\begin{verbatim}
+CASA <2>: flagdata('X7ef.tsys', mode='unflag')
+\end{verbatim}
 
 \begin{verbatim}
 
@@ -589,7 +595,7 @@ INFO	AgentFlagger::open	Table type is Calibration
 
 \end{verbatim}
 
-In principle support for the new Calibration Table format has been introduced
+Support for the new Calibration Table format has been introduced
 transparently, so it is possible to flag them using any of the already available
 modes for Measurement Sets. However, due to the nature of the data in
 calibration tables, it only makes sense to use the following flag agent groups:
@@ -599,6 +605,13 @@ calibration tables, it only makes sense to use the following flag agent groups:
 \item Auto-flagging (outliers detection) agents: clip, tfcrop, rflag:
 
 \begin{verbatim}
+# Using the flagdata task
+
+flagdata('X7ef.tsys',mode='clip',clipzeros=True,clipminmax=[0.,600.],datacolumn='FPARAM' )
+\end{verbatim}
+ 
+\begin{verbatim}
+# Using the agentflagger tool
 
 af.open('X7ef.tsys')
 af.selectdata()
@@ -613,6 +626,13 @@ af.done()
 \item Manual flagging (meta-data selections like antenna/time-range):
 
 \begin{verbatim}
+# using the flagdata task
+
+flagdata('X7ef.tsys', antenna='DV09')
+\end{verbatim}
+
+\begin{verbatim}
+# Using the agentflagger tool
 
 af.open('X7ef.tsys')
 af.selectdata()
@@ -627,10 +647,17 @@ af.done()
 \item Auxiliary modes: unflag, summary, display
 
 \begin{verbatim}
+# using the flagdata task
+flagdata('X7ef.tsys', mode='summary', spwchan=True)
+
+\end{verbatim}
+
+\begin{verbatim}
+# using the agentflagger tool
 
 af.open('X7ef.tsys')
 af.selectdata()
-agentSummary={'mode':'summary'}
+agentSummary={'mode':'summary', 'spwchan':True}
 af.parseagentparameters(agentSummary)
 af.init()
 summary = af.run()
@@ -649,19 +676,22 @@ flagdata command-line help.
 
 \item For the autoflagging agents (clip, tfcrop, rflag) it is possible to
 choose the column to operate with, using the 'datacolumn' parameter, being 'FPARAM',
-'PARAMERR' and 'SNR' the currently supported columns:
+'CPARAM' and 'SNR' the currently supported columns:
 
 \begin{verbatim}
 
-agentClip={'mode':'clip','clipminmax':[0.,6.],'datacolumn':'PARAMERR'}
+agentClip={'mode':'clip','clipminmax':[0.,6.],'datacolumn':'CPARAM'}
 af.parseagentparameters(agentClip)
 af.init()
 ...
-INFO	Clip::setAgentParameters	data column is PARAMERR
+INFO	Clip::setAgentParameters	data column is CPARAM
 
 \end{verbatim}
 
-But notice that the default datacolumn is FPARAM:
+There is no default data column for cal tables. The task has DATA as the default for MSs. Once the
+framework has detected the input to be a cal table, it will try to use the given data column. If that
+does not exist (such as DATA), it will try to use FPARAM, then CPARAM. If none of the them exist, it
+will exit with an error.
 
 \begin{verbatim}
 
@@ -674,8 +704,8 @@ INFO	Clip::setAgentParameters	data column is FPARAM
 \end{verbatim}
 
 \item And it is also possible to choose the element of interest to inspect for
-flagging, trough the correlation parameter, specifying a list of comma-separated
-elements or 'ALL' to select all the elements (which is also the default):
+flagging, through the correlation parameter, specifying a list of comma-separated
+elements or '' to select all the elements (which is also the default):
 
 \begin{verbatim}
 
@@ -685,15 +715,13 @@ af.init()
 ...
 INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1
 
-agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':'ALL'}
+agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':''}
 af.parseagentparameters(agentClip)
 af.init()
 ...
 INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
 
 \end{verbatim}
-
-Also notice that the default expression is 'ALL':
 
 \begin{verbatim}
 
@@ -711,14 +739,14 @@ INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
 
 As far as meta-data selection is concerned, we are bounded to what MSSelection
 interface for Calibration Tables offers (currently only field, spw and antenna
-selections). There are two way to apply meta-data selections, with can be used
+selections). There are two ways to apply meta-data selections that can be used
 independently or combined together:
 
 \begin{enumerate}
 
 \item FlagDataHandler selection (global): Create a sub-table with the selection
 to be used by all the agents. The data selection parameters have to be parsed
-trough the selectdata() method of the AgentFlagger tool:
+through the selectdata() method of the AgentFlagger tool:
 
 \begin{verbatim}
 
@@ -778,8 +806,8 @@ several flagging agents at the same time, to reduce I/O overhead,  for instance:
 
 af.open('cal.fewscans.bpass')
 af.selectdata()
-agentRflag={'mode':'rflag','datacolumn':'PARAMERR','correlation':'Sol1'}
-agentTfcrop={'mode':'tfcrop','datacolumn':'PARAMERR','correlation':'Sol1'}
+agentRflag={'mode':'rflag','datacolumn':'CPARAM','correlation':'Sol1'}
+agentTfcrop={'mode':'tfcrop','datacolumn':'CPARAM','correlation':'Sol1'}
 af.parseagentparameters(agentRflag)
 af.parseagentparameters(agentTfcrop)
 af.init()

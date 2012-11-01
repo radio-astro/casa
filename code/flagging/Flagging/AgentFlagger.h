@@ -67,8 +67,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// AgentFlagger performs automated flagging operations on a measurement set.
-// The class is constructed from an MS. After that, the run method may be used
+// AgentFlagger performs automated flagging operations on a measurement set or calibration
+// table. The class is constructed from an MS or cal table. After that, the run method may be used
 // to run any number of flagging agents.
 // </synopsis>
 //
@@ -117,7 +117,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // // A similar situation will happen with the combinescans parameter. If any of the combinescans is
 // // True, it will be taken as True to all agents.
 //
-// // Async I/O will be activated if any of the modes clip, tfcrop or rflag is requested.
+// // Async I/O will be activated if any of the modes clip, tfcrop or rflag is requested. Also for
+// // these three modes, there will be a call to a function that will validate the requested
+// // datacolumn parameter. It will detect if the input is an MS or a cal table and validate the
+// // column. The default is the DATA column. If the input is a cal table, the function will
+// // first check if FPARAM is available, then CPARAM. If none of them is available it will return
+// // False and the agent will not be created.
 //
 // // Only for the tfcrop agent, if a correlation ALL is requested, this method will create one
 // // agent for each available polarization in the MS. For example, if the MS contains polarizations
@@ -142,7 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     af->parseAgentParameters(agent_pars);
 //
 // // There are convenience functions to parse the agent's parameters, one specific for each agent.
-// // The above calls can be done instead using these functions.
+// // The above calls can also be done using these functions instead.
 //
 //     af->parseClipParameters(clipzeros=true, apply=true);
 //     af->parseManualParameters(autocorr=true);
