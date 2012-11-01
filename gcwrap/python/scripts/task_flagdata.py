@@ -486,11 +486,20 @@ def flagdata(vis,
             return 0
         
         if (action == '' or action == 'none') and savepars == True:
-            fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile)  
-            if outfile == '':
-                casalog.post('Saving parameters to FLAG_CMD')
-            else:
-                casalog.post('Saving parameters to '+outfile)                            
+            if iscal:
+                if outfile == '':
+                    casalog.post('Saving to FLAG_CMD is not supported for cal tables', 'WARN')
+                else:
+                    casalog.post('Saving parameters to '+outfile)                            
+                    fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile) 
+            else: 
+                if outfile == '':
+                    casalog.post('Saving parameters to FLAG_CMD')
+                else:
+                    casalog.post('Saving parameters to '+outfile)                            
+                
+                    fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile) 
+                     
             return 0
 
         
@@ -608,17 +617,30 @@ def flagdata(vis,
 
         # Save the current parameters/list to FLAG_CMD or to output
         if savepars:  
-
-            if outfile == '' and not iscal:
-                casalog.post('Saving parameters to FLAG_CMD')        
-            else:
-                casalog.post('Saving parameters to '+outfile)
-                                      
-            if mode != 'list':     
-                fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, cmdreason, outfile)  
-            else:
-                valid_rows = list2save.keys()
-                fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
+            # Cal table type
+            if iscal:
+                if outfile == '':
+                    casalog.post('Saving to FLAG_CMD is not supported for cal tables', 'WARN')
+                else:
+                    casalog.post('Saving parameters to '+outfile)
+                    if mode != 'list':     
+                        fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, cmdreason, outfile)  
+                    else:
+                        valid_rows = list2save.keys()
+                        fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
+                    
+            # MS type
+            else:                
+                if outfile == '':
+                    casalog.post('Saving parameters to FLAG_CMD')        
+                else:
+                    casalog.post('Saving parameters to '+outfile)
+                                          
+                if mode != 'list':     
+                    fh.writeFlagCmd(vis, flagcmd, vrows, writeflags, cmdreason, outfile)  
+                else:
+                    valid_rows = list2save.keys()
+                    fh.writeFlagCmd(vis, list2save, valid_rows, writeflags, cmdreason, outfile)        
             
         # Destroy the tool
         aflocal.done()
