@@ -55,7 +55,7 @@ QtCanvas::~QtCanvas(){
 
 QtCanvas::QtCanvas(QWidget *parent)
         : QWidget(parent),
-           MARGIN_LEFT(100), MARGIN_BOTTOM(60), MARGIN_TOP(80), MARGIN_RIGHT(25), FRACZOOM(20),
+           MARGIN_LEFT(100), MARGIN_BOTTOM(60), MARGIN_TOP(90), MARGIN_RIGHT(25), FRACZOOM(20),ZERO_LIMIT(0.0000000000000005f),
           title(), yLabel(), welcome(),
           showTopAxis( true ), showToolTips( true ), showFrameMarker( true ), displayStepFunction( false ),
           contextMenu( this ),
@@ -114,16 +114,9 @@ void QtCanvas::initContextMenu(){
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings){
-    //if (autoScaleX != 0 && autoScaleY != 0) {
-       zoomStack.resize(1);
-       curZoom = 0;
-   // }
-   /* else {
-       if (zoomStack.size() < 1) {
-          zoomStack.resize(1);
-          curZoom = 0;
-       }
-    }*/
+   zoomStack.resize(1);
+   curZoom = 0;
+
     zoomStack[curZoom] = settings;
     curMarker = 0;
     refreshPixmap();
@@ -942,8 +935,10 @@ void QtCanvas::drawBackBuffer(QPainter *painter){
 QString QtCanvas::getXTickLabel( int tickIndex, int tickCount, QtPlotSettings::AxisIndex axisIndex ) const {
 	QtPlotSettings settings = zoomStack[curZoom];
 	double label = settings.getMinX(axisIndex) + (tickIndex * settings.spanX(axisIndex) / tickCount);
-	if (abs(label) < 0.00000005) label = 0.f;
 	QString tickLabel = QString::number( label );
+	if (abs(label) < ZERO_LIMIT){
+		tickLabel = "0";
+	}
 	if ( axisIndex == QtPlotSettings::xTop && !showTopAxis ){
 	    tickLabel="";
 	}
@@ -998,12 +993,13 @@ void QtCanvas::drawGrid(QPainter *painter){
         }
     }
     int tickCountY = settings.getNumTicksY();
-    for (int j = 0; j <= tickCountY; ++j)
-    {
+    for (int j = 0; j <= tickCountY; ++j){
         int y = rect.bottom() - (j * (rect.height() - 1) / tickCountY );
         double label = settings.getMinY() + (j * settings.spanY() / tickCountY );
-
-        //if (abs(label) < 0.00000005) label = 0.f;
+        QString numberLabel = QString::number( label );
+        if (abs(label) < ZERO_LIMIT){
+        	numberLabel = "0";
+        }
         if (showGrid) {
            painter->setPen(quiteDark);
       	  painter->drawLine(rect.left(), y, rect.right(), y);
@@ -1011,9 +1007,7 @@ void QtCanvas::drawGrid(QPainter *painter){
         painter->setPen(light);
         painter->drawLine(rect.left() - 5, y, rect.left(), y);
         painter->drawText(rect.left() - 2*MARGIN_LEFT/3, y - 10,
-        			MARGIN_LEFT/2, 20,
-                          Qt::AlignRight | Qt::AlignVCenter,
-                          QString::number(label));
+        			MARGIN_LEFT/2, 20, Qt::AlignRight | Qt::AlignVCenter, numberLabel);
     }
     painter->drawRect(rect);
 
@@ -1050,18 +1044,18 @@ void QtCanvas::drawTicks(QPainter *painter)
     for (int j = 0; j <= tickCountY; ++j){
         int y = rect.bottom() - (j * (rect.height() - 1) / tickCountY );
         double label = settings.getMinY() + (j * settings.spanY() / tickCountY );
-        if (abs(label) < 0.00000005) label = 0.f;                                  
+        QString numberLabel = QString::number(label);
+        if (abs(label) < ZERO_LIMIT){
+        	numberLabel = "0";
+        }
         painter->setPen(quiteDark);
         painter->drawLine(rect.right() - 5, y, rect.right(), y);
         painter->setPen(light);
         painter->drawLine(rect.left(), y, rect.left() + 5, y);
         painter->drawText( rect.left() - MARGIN_LEFT / 2, y - 10,
-        					MARGIN_LEFT - 5, 20,
-                          Qt::AlignRight | Qt::AlignVCenter,
-                          QString::number(label));
+        	MARGIN_LEFT - 5, 20, Qt::AlignRight | Qt::AlignVCenter, numberLabel );
     }
     painter->drawRect(rect);
-
 }
 
 void QtCanvas::drawLabels(QPainter *painter)
@@ -1738,6 +1732,7 @@ void QtCanvas::setDisplayYUnits( const QString& displayUnits ){
 	QString oldDisplayUnits = this->yUnitDisplay;
 	yUnitDisplay = displayUnits;
 	setYLabel( "("+yUnitDisplay+")");
+	qDebug() << "QtCanvas oldDisplayUnits="<<oldDisplayUnits<<" newUnits="<<displayUnits;
 	if ( oldDisplayUnits != yUnitDisplay && oldDisplayUnits.length() > 0  ){
 		//Tell all the curves to convert their yUnits
 		for ( int i = 0; i < static_cast<int>(this->curveMap.size()); i++ ){

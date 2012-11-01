@@ -415,7 +415,6 @@ casa_add_library( display
   QtPlotter/SpecFitSettingsWidgetOptical.cc
   QtPlotter/SpecFitSettingsWidgetRadio.cc
   QtPlotter/SpecFitSettingsFixedTableCell.cc
-  QtPlotter/MomentCollapseThreadRadio.cc
   QtPlotter/ProfileTaskMonitor.cc
   QtPlotter/ThresholdingBinPlotDialog.cc
   QtPlotter/ThresholdingBinPlotWidget.cc

@@ -32,6 +32,9 @@ namespace casa {
 
 const QString ConverterIntensity::FRACTION_OF_PEAK = "Fraction of Peak";
 const QString ConverterIntensity::JY_BEAM = "Jy/beam";
+const QString ConverterIntensity::JY_SR = "MJy/sr";
+const QString ConverterIntensity::JY_ARCSEC = "Jy/arcsec^2";
+const QString ConverterIntensity::JY = "Jy";
 const QString ConverterIntensity::KELVIN = "Kelvin";
 const QString ConverterIntensity::ADU = "adu";
 const double ConverterIntensity::SPEED_LIGHT_FACTOR = 0.0000000009;
@@ -45,8 +48,19 @@ const QList<QString> ConverterIntensity::BEAM_UNITS =
 		"mJy/beam"<<"10mJy/beam"<<"100mJy/beam"<<
 		"Jy/beam"<<"10Jy/beam"<<"100Jy/beam"<<
 		"kJy/beam"<<"10kJy/beam"<<"100kJy/beam"<<
-		"MJy/beam"<<"10MJy/beam"<<"100MJybeam"<<
+		"MJy/beam"<<"10MJy/beam"<<"100MJy/beam"<<
 		"GJy/beam";
+
+const QList<QString> ConverterIntensity::JY_UNITS =
+	QList<QString>() << "pJy" <<"10pJy"<<"100pJy"<<
+		"nJy"<<"10nJy"<<"100nJy"<<
+		"uJy"<<"10uJy"<<"100uJy"<<
+		"mJy"<<"10mJy"<<"100mJy"<<
+		"Jy"<<"10Jy"<<"100Jy"<<
+		"kJy"<<"10kJy"<<"100kJy"<<
+		"MJy"<<"10MJy"<<"100MJy"<<
+		"GJy";
+
 
 ConverterIntensity::ConverterIntensity() {
 }
@@ -57,7 +71,7 @@ void ConverterIntensity::setSolidAngle( double angleMeasure ){
 
 bool ConverterIntensity::isSupportedUnits( const QString& yUnit ){
 	bool acceptable = false;
-	if ( yUnit.contains( JY_BEAM) || yUnit.contains( KELVIN )||
+	if ( yUnit.contains( "Jy") || yUnit.contains( KELVIN )||
 			yUnit.contains( FRACTION_OF_PEAK) || yUnit.contains("Jy/arcsec^2") ||
 			yUnit.contains( "MJy/sr" ) ){
 		acceptable = true;
@@ -100,16 +114,67 @@ void ConverterIntensity::convert( Vector<float>& values, const Vector<float> her
 		}
 	}
 	//Converting between Jy/beam.
-	else if ( baseConvertUnits.indexOf( JY_BEAM) > 0  && newUnits.indexOf( JY_BEAM )> 0 ){
-		for ( int i = 0; i < maxPoints; i++ ){
-			values[i] = convertJyBeams( baseConvertUnits, newUnits, values[i]);
-		}
+	else if ( isJansky( baseConvertUnits) && isJansky( newUnits )){
+		qDebug() << "Two Jansky's oldUnits="<<baseConvertUnits<<" newUnits="<<newUnits;
+		convertJansky( values, baseConvertUnits, newUnits );
 	}
 	else {
+		//If the original units are in JY or JY_BEAM, strip off a prefix such as
+		//mJy and adjust the data.
+		QString strippedBase = baseConvertUnits;
+		if ( isJansky( baseConvertUnits ) ){
+			strippedBase = getJanskyBaseUnits( baseConvertUnits );
+			qDebug() << "Old units Jansky old="<<baseConvertUnits<<" new="<<strippedBase;
+			convertJansky( values, baseConvertUnits, strippedBase );
+		}
+		QString strippedNew = newUnits;
+		if ( isJansky( newUnits)){
+			strippedNew = getJanskyBaseUnits( newUnits );
+			qDebug() << "Stripped new="<<strippedNew;
+		}
+
 		//Use Quanta to convert
+		qDebug()<<"Quanta convert old="<<strippedBase<<" new="<<strippedNew;
 		for ( int i = 0; i < maxPoints; i++ ){
 			values[ i ] = convertQuantity( values[i], hertzValues[i],
-					baseConvertUnits, newUnits );
+					strippedBase, strippedNew );
+		}
+
+		if ( isJansky( newUnits ) ){
+			convertJansky( values, strippedNew, newUnits );
+		}
+	}
+}
+
+QString ConverterIntensity::getJanskyBaseUnits( const QString& units ){
+	QString baseUnits = units;
+	int jyIndex = units.indexOf( JY );
+	if ( jyIndex > 0 ){
+		qDebug() << "units="<<baseUnits<<" jyIndex="<<jyIndex;
+		baseUnits = units.mid( jyIndex, units.length() - jyIndex );
+		qDebug() << "baseUnits="<<baseUnits;
+	}
+	return baseUnits;
+}
+
+bool ConverterIntensity::isJansky( const QString& units ){
+	bool janskyUnits = false;
+	if ( units.indexOf( JY ) > 0 ){
+		if ( units.indexOf( JY_ARCSEC) < 0 && units.indexOf( JY_SR) < 0 ){
+			janskyUnits = true;
+		}
+	}
+	return janskyUnits;
+}
+
+void ConverterIntensity::convertJansky( Vector<float>& values, const QString& oldUnits,
+		const QString& newUnits ){
+	for ( int i = 0; i < static_cast<int>(values.size()); i++ ){
+		if ( oldUnits.indexOf( JY_BEAM) > 0 && newUnits.indexOf( JY_BEAM) > 0 ){
+			values[i] = convertJyBeams( oldUnits, newUnits, values[i]);
+		}
+		else {
+			values[i] = convertJY( oldUnits, newUnits, values[i]);
 		}
 	}
 }
@@ -136,16 +201,9 @@ double ConverterIntensity::convertQuantity( double yValue, double frequencyValue
 	double convertedYValue = yValue;
 	if ( oldUnits != KELVIN && newUnits != KELVIN ){
 		Quantity quantity( yValue, oldUnitStr );
-		//qDebug() << "Converting oldUnits="<<oldUnits<<" new units="<<newUnits;
 		Unit newUnitVal( newUnitStr );
-		//bool compatible = quantity.isConform(newUnitVal );
-		//if ( compatible ){
-			quantity.convert( newUnitStr );
-			convertedYValue = quantity.getValue();
-		/*}
-		else {
-			//qDebug()<<"Converting from oldUnits="<<oldUnits<<" to new units="<< newUnits<<" is not supported value="<<yValue;
-		}*/
+		quantity.convert( newUnitStr );
+		convertedYValue = quantity.getValue();
 	}
 	else if ( oldUnits == KELVIN && newUnits != KELVIN ) {
 		if ( beamSolidAngle > 0 ){
@@ -186,10 +244,21 @@ double ConverterIntensity::convertQuantity( double yValue, double frequencyValue
 	return convertedYValue;
 }
 
+double ConverterIntensity::convertJY( const QString& oldUnits,
+		const QString& newUnits, double value ){
+	int sourceIndex = JY_UNITS.indexOf( oldUnits );
+	int destIndex = JY_UNITS.indexOf( newUnits );
+	Vector<double> resultValues(1);
+	resultValues[0] = value;
+	Converter::convert( resultValues, sourceIndex, destIndex );
+	return resultValues[0];
+}
 
-double ConverterIntensity::convertJyBeams( const QString& oldUnits, const QString& newUnits, double value ){
+double ConverterIntensity::convertJyBeams( const QString& oldUnits,
+		const QString& newUnits, double value ){
 	int sourceIndex = BEAM_UNITS.indexOf( oldUnits );
 	int destIndex = BEAM_UNITS.indexOf( newUnits );
+	qDebug() << "convertJyBeams oldUnits="<<oldUnits<<" newUnits="<<newUnits;
 	Vector<double> resultValues(1);
 	resultValues[0] = value;
 	Converter::convert( resultValues, sourceIndex, destIndex );

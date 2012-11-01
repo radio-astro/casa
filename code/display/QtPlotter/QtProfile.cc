@@ -175,7 +175,9 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
 	yUnit = QString(img->units().getName().chars());
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
-	QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
+	QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
+			ConverterIntensity::JY_ARCSEC << ConverterIntensity::JY_SR <<
+			ConverterIntensity::FRACTION_OF_PEAK << ConverterIntensity::KELVIN);
 	for ( int i = 0; i < yUnitsList.size(); i++ ){
 		yAxisCombo->addItem( yUnitsList[i] );
 	}
@@ -183,9 +185,6 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 	setDisplayYUnits( yAxisCombo->currentText() );
 	initializeSolidAngle();
 	connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
-
-
-
 
 	pixelCanvas->setAutoScaleX(true);
 	pixelCanvas->setAutoScaleY(true);
@@ -682,6 +681,7 @@ void QtProfile::wcChanged( const String c,
 
 	setPositionStatus( pxv,pyv,wxv,wyv );
 
+
 	//Get Profile Flux density v/s coordinateType
 	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
 	if ( !ok ){
@@ -698,13 +698,18 @@ void QtProfile::wcChanged( const String c,
 
 	// remove the "/beam" in case of plotting flux
 	if(itsPlotType==QtProfile::PFLUX){
+		qDebug() << "Removing beam from "<<yUnit;
 		Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
 		if(pos>-1){
 			yUnit.remove(pos,5);
-			setPixelCanvasYUnits( yUnitPrefix, yUnit);
+			qDebug() << "New yUnit="<<yUnit;
+
+
 		}
 	}
 
+	qDebug() << "qtprofile yUnitPrefix="<<yUnitPrefix<<" yUnit="<<yUnit;
+	setPixelCanvasYUnits( yUnitPrefix, yUnit);
 	// plot the graph
 	plotMainCurve();
 
@@ -725,7 +730,7 @@ void QtProfile::changePlotType(const QString &text) {
 	// get the coo-sys
 	CoordinateSystem cSys = image->coordinates();
 	yUnit = QString(image->units().getName().chars());
-
+	qDebug() << "yUnit is "<<yUnit;
 	switch (itsPlotType)
 	{
 	case QtProfile::PMEAN:
@@ -2029,8 +2034,15 @@ Int QtProfile::scaleAxis(){
 
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
 	bool unitsAcceptable = ConverterIntensity::isSupportedUnits( yUnit );
+	qDebug() << "Unit acceptable="<<unitsAcceptable<<" yUnit="<<yUnit;
 	setYUnitConversionVisibility( unitsAcceptable );
+	if ( unitsAcceptable ){
+		yAxisCombo->setCurrentIndex( 0 );
+		yAxisCombo->setItemText(0, yUnitPrefix + yUnit);
+	}
 	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
+	qDebug() << "Setting image units="<< yUnitPrefix + yUnit;
+	pixelCanvas->setDisplayYUnits( "" );
 	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 }
 
