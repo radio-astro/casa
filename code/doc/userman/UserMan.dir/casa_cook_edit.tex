@@ -2323,7 +2323,7 @@ A list of flags can be provided through a file specified by the {\tt
   mode} with data selection parameters as well as parameters that are
 specific to that {\tt mode}. All parameters that are not set will be
 reset to their default values (default {\tt mode} is {\tt
-  'manual'}). Each line of this ﬁle or list of strings will be taken
+  'manual'}). Each line of this file or list of strings will be taken
 as a command to the {\tt flagdata} task. This {\tt mode=’list’} is similar to the
 task flagcmd with the {\tt inpmode=’list’} option. 
 
@@ -2859,7 +2859,7 @@ task to input flag commands from a {\tt FLAG\_CMD} MS table.
 This has the sub-parameters:
 \small
 \begin{verbatim}
-inpmode             =    'table'        #  Input mode for flag commands(table/file/xml/cmd)
+inpmode             =    'table'        #  Input mode for flag commands(table/list/xml)
      inpfile        =         ''        #  Source of flag commands
      tablerows      =         []        #  Rows of inpfile to read
      reason         =      'any'        #  Select by REASON types
@@ -2905,7 +2905,7 @@ mode='extend' extendpols=True
 can be called via  
 \small
 \begin{verbatim}
-flagcmd(vis,inpmode='file',inpfile='flags.txt')
+flagcmd(vis,inpmode='list',inpfile='flags.txt')
 \end{verbatim}
 \normalsize
 
@@ -2931,7 +2931,7 @@ task to input flag commands from a XML SDM online flagging
 When set this opens the sub-parameters:
 \small
 \begin{verbatim}
-inpmode             =      'xml'        #  Input mode for flag commands(table/file/xml/cmd)
+inpmode             =      'xml'        #  Input mode for flag commands(table/list/xml)
      tbuff          =        0.0        #  Time buffer (sec) to pad flags
      ants           =         ''        #  Allowed flag antenna names to select by
      reason         =      'any'        #  Select by REASON types
