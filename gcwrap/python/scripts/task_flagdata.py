@@ -498,7 +498,7 @@ def flagdata(vis,
                 else:
                     casalog.post('Saving parameters to '+outfile)                            
                 
-                    fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile) 
+                fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile) 
                      
             return 0
 
