@@ -20,6 +20,12 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #Python script
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
+
+    #If using new FT-Machines, do not use the on-the-fly model_data columns.
+    if gridmode == 'advancedaprojection' and usescratch==False:
+        casalog.post('Forcing usescratch=True for new FTMs. This is temporary.', 'WARN')
+        usescratch=True
+
     #######################################################################  
     #
     # start of the big cube treatment

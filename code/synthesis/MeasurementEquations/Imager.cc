@@ -228,6 +228,7 @@ traceEvent(1,"Entering imager::defaults",25);
   nscales_p=5;
   ntaylor_p=1;
   reffreq_p=0.0;
+  useNewMTFT_p=False;
   scaleMethod_p="nscales";  
   scaleInfoValid_p=False;
   dataMode_p="none";
@@ -3778,12 +3779,17 @@ Record Imager::clean(const String& algorithm,
 
         // check for wrong ftmachine specs.
 	if ( (ftmachine_p != "ft") && (ftmachine_p != "wproject") && 
-             (ftmachine_p != "wbawp") && (ftmachine_p != "nift") ) {
+             (ftmachine_p != "wbawp") && (ftmachine_p != "nift") &&
+             (ftmachine_p != "mosaic") && (ftmachine_p != "awproject") ) {
 	  os << LogIO::SEVERE
-             << "Multi-scale Multi-frequency Clean currently works only with ft and wproject (and wbawp,nift)"
+             << "Multi-scale Multi-frequency Clean currently works only with ft, wproject and mosaic (and wbawp,nift,awproject)"
              << LogIO::POST;
 	  return retval;
 	}
+	
+	useNewMTFT_p=False;
+	if( ftmachine_p == "awproject" ) { useNewMTFT_p=True; }
+
 
 	if (!scaleInfoValid_p) {
           this->unlock();

@@ -44,6 +44,7 @@ casa_add_library( synthesis
   TransformMachines/HetArrayConvFunc.cc
   TransformMachines/MosaicFT.cc
   TransformMachines/MultiTermFT.cc	
+  TransformMachines/NewMultiTermFT.cc	
   TransformMachines/PBMath1DAiry.cc
   TransformMachines/PBMath1D.cc
   TransformMachines/PBMath1DCosPoly.cc
@@ -605,6 +606,7 @@ install (FILES
 	TransformMachines/HetArrayConvFunc.h
 	TransformMachines/MosaicFT.h
 	TransformMachines/MultiTermFT.h
+	TransformMachines/NewMultiTermFT.h
 	TransformMachines/PBMath.h
 	TransformMachines/PBMath1D.h
 	TransformMachines/PBMath1DAiry.h

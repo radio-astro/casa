@@ -191,23 +191,29 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 		  os << "No more processing on this field" << LogIO::POST;
 		  return True;
 	  }
+
+	///cout << "Using New FTMs ? : " << se.isNewFTM() << endl;
 	
+	//------------------------------- For 'active'  ---------------------------------------------------------------///
 	/* Calculate the initial residual image for all models. */
-	if(!donePSF_p)
-	{
-	   os << "Calculating initial residual images..." << LogIO::POST;
-	   solveResiduals(se,(numberIterations()<1)?True:False);
-	}
-	else
-	{
-	  if(numbermajorcycles_p>0) 
-	    {
-	      os << "RE-Calculating residual images because previous residuals have been modified in-place during restoration to be 'coefficient residuals'." << LogIO::POST;
-	      solveResiduals(se,(numberIterations()<1)?True:False);
-	    }
-	}
-
-
+	if( se.isNewFTM() == False )
+	  {
+	    if(!donePSF_p)
+	      {
+		os << "Calculating initial residual images..." << LogIO::POST;
+		solveResiduals(se,(numberIterations()<1)?True:False);
+	      }
+	    else
+	      {
+		if(numbermajorcycles_p>0) 
+		  {
+		    os << "RE-Calculating residual images because previous residuals have been modified in-place during restoration to be 'coefficient residuals'." << LogIO::POST;
+		    solveResiduals(se,(numberIterations()<1)?True:False);
+		  }
+	      }
+	  }
+	//------------------------------- For 'active'  ---------------------------------------------------------------///
+	
 	/* Create the Point Spread Functions */
 	if(!donePSF_p)
 	{
@@ -278,6 +284,24 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 	    donePSF_p=True;
 	}
+
+
+	//------------------------------ For new FTMs --------------------------------------------------------------//
+	if( se.isNewFTM() == True )
+	  {
+	    /* Calculate the initial residual image for all models. */
+	    if( numbermajorcycles_p==0 )
+	      {
+		os << "Calculating initial residual images..." << LogIO::POST;
+		solveResiduals(se,(numberIterations()<1)?True:False);
+	      }
+	    else
+	      {
+		os << "RE-Calculating residual images because previous residuals have been modified in-place during restoration to be 'coefficient residuals'." << LogIO::POST;
+		solveResiduals(se,(numberIterations()<1)?True:False);
+	      }
+	  }
+	//------------------------------- For new FTMs -------------------------------------------------------------//
 
 	/* Return if niter=0 */
 	/* Check if this is an interactive-clean run, or if niter=0 */
@@ -889,6 +913,9 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  
 	  // UUU
 	  //	  LatticeExpr<Float> le(iif(ggS(baseindex)>(0.0), -gS(index)/ggS(baseindex), 0.0));
+
+	  ///cout << "WBC : makeNRs : isnormalized : " << isImageNormalized() << endl;
+
 	  if (isImageNormalized()) le = LatticeExpr<Float>(gS(index));
 	  else                   le = LatticeExpr<Float>(iif(ggS(baseindex)>(0.0), 
 							     -gS(index)/ggS(baseindex), 0.0));

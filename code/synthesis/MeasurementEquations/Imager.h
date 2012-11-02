@@ -873,6 +873,7 @@ protected:
   Int nscales_p;
   Int ntaylor_p;
   Double reffreq_p;
+  Bool useNewMTFT_p;
   Vector<Float> userScaleSizes_p;
   Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
   Float smallScaleBias_p; //ms-clean

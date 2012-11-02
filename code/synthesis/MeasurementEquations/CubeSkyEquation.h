@@ -54,18 +54,18 @@ class CubeSkyEquation : public SkyEquation {
   virtual void predict(Bool incremental=False, MS::PredefinedColumns Type=MS::MODEL_DATA);
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
   
-  virtual void initializePutSlice(const VisBuffer& vb, Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void initializePutSlice(const VisBuffer& vb, Bool dopsf, Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void newInitializePutSlice(const VisBuffer& vb, Bool dopsf, Int cubeSlice=0, Int nCubeSlice=1);
+  virtual void oldInitializePutSlice(const VisBuffer& vb, Bool dopsf, Int cubeSlice=0, Int nCubeSlice=1);
   virtual void putSlice(VisBuffer& vb, Bool dopsf, 
 			FTMachine::Type col,Int cubeSlice=0, 
 			Int nCubeSlice=1);
   virtual void finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 				Int cubeSlice=0, Int nCubeSlice=1);
   virtual void newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
-				   Int cubeSlice=0, Int nCubeSlice=1,
-				   Int field=0);
+				   Int cubeSlice=0, Int nCubeSlice=1);
   virtual void oldFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
-				   Int cubeSlice=0, Int nCubeSlice=1,
-				   Int field=0);
+				   Int cubeSlice=0, Int nCubeSlice=1);
   void initializeGetSlice(const VisBuffer& vb, Int row,
 			  Bool incremental, Int cubeSlice=0, 
 			  Int nCubeSlice=1);   
@@ -90,6 +90,8 @@ class CubeSkyEquation : public SkyEquation {
   //get the weight image from the ftmachines
   virtual void getWeightImage(const Int model, ImageInterface<Float>& weightim);
   void tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit);
+
+  Bool isNewFTM();
 
  protected:
 

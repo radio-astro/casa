@@ -184,6 +184,7 @@
 #include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/AWProjectWBFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines/NewMultiTermFT.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
 #include <synthesis/TransformMachines/AWConvFuncEPJones.h>
 
@@ -3117,8 +3118,16 @@ Bool Imager::createFTMachine()
   // Currently, Multi-Term applies only to wideband imaging.
   if( ntaylor_p > 1 )
   { 
-    //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
-    FTMachine *tempftm = new MultiTermFT(ft_p, ft_p->name(), ntaylor_p, reffreq_p);
+    //cout << "UUU : Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
+    FTMachine *tempftm;
+    if ( useNewMTFT_p == False ) 
+      {
+	tempftm = new MultiTermFT(ft_p, ft_p->name(), ntaylor_p, reffreq_p);
+      }
+    else
+      {
+	tempftm = new NewMultiTermFT(ft_p, ntaylor_p, reffreq_p);
+      }
      ft_p = tempftm;
   }
   /******* End MTFT code ********/
