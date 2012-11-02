@@ -41,6 +41,7 @@ def toolhelp():
     print ' cu : Class utilities'
     print ' dc : Deconvolver utilities'
     print ' fg : Flagging/Flag management utilities'
+    print ' fi : Fitting utilities'
     print ' ia : Image analysis utilities'
     print ' im : Imaging utilities'
     print ' me : Measures utilities'

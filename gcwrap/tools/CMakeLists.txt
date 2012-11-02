@@ -89,6 +89,7 @@ casa_add_library( tools
  ms/MSPlot/MsPlot.cc
  nrao/vlafillertask_cmpt.cc
  plotms/plotms_cmpt.cc
+ scimath/fitter_cmpt.cc
  scimath/functional_cmpt.cc
  StdCasa/conversions_python.cc
  StdCasa/interrupt.cc
@@ -147,6 +148,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  ms/msmetadata.xml
  nrao/vlafillertask.xml
  plotms/plotms.xml
+ scimath/fitter.xml
  scimath/functional.xml
  spectralline/spectralline.xml
  synthesis/calibrater.xml
