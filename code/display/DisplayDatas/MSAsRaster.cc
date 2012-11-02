@@ -349,7 +349,7 @@ void MSAsRaster::selectVS_( const viewer::DisplayDataOptions &ddo ) {
    
   if ( ddo.size( ) > 0 ) {
       // user selection from GUI or arguments when opening...
-      mssel_ = new MeasurementSet( );
+      mssel_ = new MeasurementSet( *itsMS );
       Vector<Vector<Slice> > chansel;
       Vector<Vector<Slice> > corrsel;
       /*bool res =*/ mssSetData( *itsMS, *mssel_, chansel, corrsel, "",
