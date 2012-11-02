@@ -325,6 +325,8 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
  inputgain_p=inputgain;
  userthreshold_p=userthreshold;
 
+ //cout << "MTMC : User threshold : " << userthreshold_p << endl;
+
 
   Int convergedflag = 0;
   Float fluxlimit = -1;
@@ -377,9 +379,9 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
       Int scale=0;
       Int ntaylor=ntaylor_p;
       IPosition blc(blc_p), trc(trc_p);
-#pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion,blc,trc)
+      //UU// #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion,blc,trc)
        { 
-	 #pragma omp for 
+	 //UU// #pragma omp for 
           for(scale=0;scale<nscales_p;scale++)
           {
             /* Solve the matrix eqn for all pixels */
@@ -1285,9 +1287,9 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
    Int scale;
    Int ntaylor=ntaylor_p;
    IPosition blc(blc_p), trc(trc_p), blcPsf(blcPsf_p), trcPsf(trcPsf_p);
-   #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,loopgain,coeffs,blc,trc,blcPsf,trcPsf)
+   //UU//   #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,loopgain,coeffs,blc,trc,blcPsf,trcPsf)
   { 
-    #pragma omp for 
+    //UU//  #pragma omp for 
     for(scale=0;scale<nscales_p;scale++)
    {
      updateRHS(ntaylor,scale, loopgain, coeffs, blc, trc, blcPsf, trcPsf);
@@ -1312,13 +1314,30 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     /* Use the maximum residual (current), to compare against the convergence threshold */
     Float maxres=0.0;
     IPosition maxrespos;
+
     findMaxAbsMask((matR_p[IND2(0,0)]),vecScaleMasks_p[0],maxres,maxrespos);
     Float norma = (1.0/(matA_p[0])(0,0));
-    //rmaxval = MAX(rmaxval, maxres*norma/5.0);
     rmaxval = abs(maxres*norma);
-    
+
+    /* // Calc the max residual across all scales....
+    Int maxscale=0;
+    Float maxscaleresidual=0.0;
+    for (Int scale =0; scale<nscales_p; scale++)
+      {
+	findMaxAbsMask((matR_p[IND2(0,scale)]),vecScaleMasks_p[scale],maxres,maxrespos);
+	if ( maxscaleresidual < maxres )
+	  {
+	    maxscaleresidual = maxres;
+	    maxscale = scale;
+	  }
+      }
+    Float norma = (1.0/(matA_p[maxscale])(0,0));
+    rmaxval = abs(maxscaleresidual*norma);
+    */
+
     /* Check for convergence */
     Int convergedflag = 0;
+    ///    cout << "MTFT::checkconvergence : maxval : " << fabs(rmaxval) << "  userthreshold : " << userthreshold_p << "    fluxlimit : " << fluxlimit << endl;
     if( fabs(rmaxval) < MAX(userthreshold_p,fluxlimit) ) 
     {
       LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
@@ -1382,6 +1401,8 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     // TODO
 
     /* Print out coefficients for a few iterations */
+    if(convergedflag==0)
+      {
     if(fluxlimit==-1) 
     {
          fluxlimit = rmaxval * stopfraction_p;
@@ -1391,8 +1412,8 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     }
     else
     {
-      if(1)
-	//      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
+      //      if(1)
+      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
@@ -1412,6 +1433,9 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
             os << LogIO::POST;
         }
     }
+
+      }// if converged-flag is still 0
+
 
     return convergedflag;
 
