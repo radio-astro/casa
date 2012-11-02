@@ -240,6 +240,9 @@ public:
   
   //get the weight image from the ftmachines
   virtual void getWeightImage(const Int, ImageInterface<Float>&){};
+
+  virtual Bool isNewFTM(){return False;}
+
  protected:
 
   // Increment gradientsChiSquared. The image of SkyModel must contain

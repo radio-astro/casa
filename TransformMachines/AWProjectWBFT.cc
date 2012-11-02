@@ -363,7 +363,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if ((sensitivityPatternQualifier_p == 0) && (doSumWtNorm))
 	  sumwt_l = ((sumwt_l = getSumOfCFWeights()(pol_l,chan_l))==0)?1.0:sumwt_l;
 
-	///sumwt_l = 1.0;  // UUU : Make sure no per-term sumwt normalization happens here.
+	sumwt_l = 1.0;  // UUU : Make sure no per-term sumwt normalization happens here.
 
 	wtImIter.rwCursor() = (wtImIter.rwCursor()
 			       *Float(sizeX)*Float(sizeY)
@@ -516,7 +516,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	n++;
       }
     //    tmp = tmp/n;
-    tmp = fabs(tmp);  // fabs(Array<Complex>&) returns a complex array
+    //UUU// tmp = fabs(tmp);  // fabs(Array<Complex>&) returns a complex array
     //    tmp = (sqrt(fabs(tmp)));  // fabs(Array<Complex>&) returns a complex array
     for(senImIter.reset(); !senImIter.atEnd(); senImIter++)
       senImIter.rwMatrixCursor() = real(tmp);

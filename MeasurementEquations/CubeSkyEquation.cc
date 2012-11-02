@@ -49,6 +49,7 @@
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines/NewMultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
@@ -103,11 +104,12 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachi
 }
 
 void CubeSkyEquation::init(FTMachine& ft){
-  Int nmod=sm_->numberOfModels();
+  Int nmod=sm_->numberOfModels()/sm_->numberOfTaylorTerms();
 
   doflat_p=False;
   
-   if(sm_->numberOfTaylorTerms()>1) 
+  ///   if(sm_->numberOfTaylorTerms()>1) 
+  if( ft.name()=="MultiTermFT" ) 
     {
       nmod = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
     }
@@ -252,6 +254,16 @@ void CubeSkyEquation::init(FTMachine& ft){
       iftm_p[k]->setMiscInfo(tayindex);
     }
   }
+  else if (ft.name() == "NewMultiTermFT") {
+    ft_=new NewMultiTermFT(static_cast<NewMultiTermFT &>(ft));
+    ift_=new NewMultiTermFT(static_cast<NewMultiTermFT &>(ft));
+    ftm_p[0]=ft_;
+    iftm_p[0]=ift_;
+    for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new NewMultiTermFT(static_cast<NewMultiTermFT &>(*ft_));
+      iftm_p[k]=new NewMultiTermFT(static_cast<NewMultiTermFT &>(*ift_));
+    }
+  }
   else if (ft.name() == "SDGrid") {
     ft_=new SDGrid(static_cast<SDGrid &>(ft));
     ift_=new SDGrid(static_cast<SDGrid &>(ft));
@@ -274,9 +286,19 @@ void CubeSkyEquation::init(FTMachine& ft){
     }
   }
 
-  imGetSlice_p.resize(nmod, True, False);
-  imPutSlice_p.resize(nmod, True, False);
-  weightSlice_p.resize(nmod, True, False);
+  Int nmod2;
+  if( ft.name() == "MultiTermFT" || ft.name() == "NewMultiTermFT" )
+    {
+      nmod2 = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
+    }
+ else
+   {
+     nmod2=nmod;
+   }
+
+  imGetSlice_p.resize(nmod2, True, False);
+  imPutSlice_p.resize(nmod2, True, False);
+  weightSlice_p.resize(nmod2, True, False);
 
 }
 
@@ -364,7 +386,7 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
       StokesImageUtil::changeCStokesRep(sm_->cImage(model),
 					StokesImageUtil::CIRCULAR);
     }
-    ft_=&(*ftm_p[model]);
+    //UUU///    ft_=&(*ftm_p[model]);
     scaleImage(model, incremental);
   }
   ft_=&(*ftm_p[0]);
@@ -546,7 +568,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
                          "Gridding weights for PSF",
                          "", "", "", True);
 
-        initializePutSlice(* vb, cubeSlice, nCubeSlice);
+        initializePutSlice(* vb, doPSF, cubeSlice, nCubeSlice);
 
         for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
             for (vi.origin(); vi.more(); vi++) {
@@ -716,7 +738,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                               StokesImageUtil::CIRCULAR);
         }
         //scaleImage(model, incremental);
-        ft_=&(*ftm_p[model]);
+        ///UUU///	ft_=&(*ftm_p[model]);
         scaleImage(model);
         // Reset the various SkyJones
     }
@@ -756,12 +778,12 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         //vb->invalidate();
 
         //	Timers tInitGetSlice=Timers::getTime();
-        //if(!isEmpty){
+	//        if(!isEmpty) 
 	{
             initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
         }
         //	Timers tInitPutSlice=Timers::getTime();
-        initializePutSlice(* vb, cubeSlice, nCubeSlice);
+        initializePutSlice(* vb, False, cubeSlice, nCubeSlice);
         //	Timers tDonePutSlice=Timers::getTime();
         Int cohDone=0;
         ProgressMeter pm(1.0, Double(vb->numberCoh()),
@@ -865,7 +887,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
       sm_->ggS(model).clearCache();
       sm_->work(model).clearCache();
       
-      ft_=&(*ftm_p[model]);
+      //UUU//      ft_=&(*ftm_p[model]); 
       unScaleImage(model);
 
     }
@@ -1051,7 +1073,20 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
   }
 }
 
-void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, 
+void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, Bool dopsf,
+					 Int cubeSlice, Int nCubeSlice) {
+  AlwaysAssert(ok(),AipsError);
+
+  LogIO os(LogOrigin("CubeSkyEquation", "initializePutSlice"));
+
+  Bool newFTM=False;
+  newFTM = isNewFTM(&(*ftm_p[0]));
+  if (newFTM) newInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
+  else        oldInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
+}
+
+
+void CubeSkyEquation::oldInitializePutSlice(const VisBuffer& vb, Bool dopsf, 
 					 Int cubeSlice, Int nCubeSlice) {
   AlwaysAssert(ok(),AipsError);
   Bool dirDep= (ej_ != NULL);
@@ -1070,6 +1105,46 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
   vb_p->assign(vb, False);
   vb_p->updateCoordInfo(& vb, dirDep);
 }
+
+void CubeSkyEquation::newInitializePutSlice(const VisBuffer& vb, Bool dopsf, 
+					 Int cubeSlice, Int nCubeSlice) {
+  AlwaysAssert(ok(),AipsError);
+  Bool dirDep= (ej_ != NULL);
+
+  Int ntaylors=sm_->numberOfTaylorTerms(),
+    nfields = sm_->numberOfModels()/ntaylors;
+
+  for(Int field=0; field < nfields ; ++field){
+
+    Int ntaylors = sm_->numberOfTaylorTerms();
+    if(dopsf) ntaylors = 2 * sm_->numberOfTaylorTerms() - 1;
+
+    Block<CountedPtr<ImageInterface<Complex> > > imPutSliceVec(ntaylors);
+    Block<Matrix<Float> > weightSliceVec(ntaylors);
+    for(Int taylor=0; taylor < ntaylors ; ++taylor) 
+      {
+	Int model = sm_->getModelIndex(field,taylor);
+	sliceCube(imPutSlice_p[model], model, cubeSlice, nCubeSlice, 0);
+	weightSlice_p[model].resize();
+	imPutSliceVec[taylor] = imPutSlice_p[model];
+	weightSliceVec[taylor] = weightSlice_p[model];
+      }
+
+    if(nCubeSlice>1){
+      iftm_p[field]->reset();
+    }
+    //U// cout << "CubeSkyEqn :: Calling new initializeToSky with dopsf " << dopsf << endl;
+    iftm_p[field]->initializeToSky(imPutSliceVec, weightSliceVec,vb,dopsf);
+    dirDep= dirDep || (ftm_p[field]->name() == "MosaicFT");
+  }// end of field
+  assertSkyJones(vb, -1);
+  //vb_p is used to finalize things if vb has changed propoerties
+  vb_p->assign(vb, False);
+  vb_p->updateCoordInfo(& vb, dirDep);
+}
+
+
+
 
 void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
   if ((sm_->doFluxScale(model)) && (ftm_p.nelements() > uInt(model))){
@@ -1118,10 +1193,10 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
                 // Need to apply the SkyJones from the previous row
                 // and finish off before starting with this row
 	      finalizePutSlice(* vb_p, dopsf, cubeSlice, nCubeSlice);
-	      initializePutSlice(vb, cubeSlice, nCubeSlice);
+	      initializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
             }
 
-            for (Int model=0; model<sm_->numberOfModels(); ++model){
+            for (Int model=0; model<sm_->numberOfModels()/( isNewFTM()? sm_->numberOfTaylorTerms() : 1 ); ++model){
                      iftm_p[model]->put(vb, row, dopsf, col);
             }
         }
@@ -1134,14 +1209,14 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
         if(!isBeginingOfSkyJonesCache_p){
 	  finalizePutSlice(*vb_p, dopsf, cubeSlice, nCubeSlice);
         }
-        initializePutSlice(vb, cubeSlice, nCubeSlice);
+        initializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;
-        for (Int model=0; model<sm_->numberOfModels(); ++model){
+        for (Int model=0; model<sm_->numberOfModels()/( isNewFTM()? sm_->numberOfTaylorTerms() : 1 ); ++model){
                  iftm_p[model]->put(vb, -1, dopsf, col);
         }
     }
     else {
-        for (Int model=0; model<sm_->numberOfModels(); ++model){
+      for (Int model=0; model<sm_->numberOfModels()/( isNewFTM()? sm_->numberOfTaylorTerms() : 1 ); ++model){
                 iftm_p[model]->put(vb, -1, dopsf, col);
         }
     }
@@ -1156,9 +1231,15 @@ Bool CubeSkyEquation::isNewFTM(FTMachine* ftm)
 	  (ftm->name() == "AWProjectFT")
 	  || (ftm->name() == "AWProjectWBFT")
 	  || (ftm->name() == "PBWProjectFT")
-	  //	  || (ftm->name() == "MultiTermFT")
+	  || (ftm->name() == "NewMultiTermFT")
 	  //	  || (ftm->name() == "GridFT")
 	  );
+}
+
+Bool CubeSkyEquation::isNewFTM()
+{
+  AlwaysAssert( &(*ftm_p[0]) ,AipsError );
+  return isNewFTM(&(*ftm_p[0]));
 }
 
 void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
@@ -1170,6 +1251,7 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
   LogIO os(LogOrigin("CubeSkyEquation", "finalizePutSlice"));
 
   Bool newFTM=False;
+  /*
   for (Int field=0; field < sm_->numberOfModels(); ++field)
     {
       newFTM = isNewFTM(&(*ftm_p[field]));
@@ -1177,11 +1259,17 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
       if (newFTM) newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice, field);
       else        oldFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice, field);
     }
+  */
+  newFTM = isNewFTM(&(*ftm_p[0]));
+      
+  if (newFTM) newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
+  else        oldFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
+
 void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
-					  Int cubeSlice, Int nCubeSlice, int field) 
+					  Int cubeSlice, Int nCubeSlice) 
 {
   //============================================================================
   // NEW CODE BEGINS
@@ -1193,7 +1281,7 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
       // 	 << LogIO::WARN << LogIO::POST;
       
       sm_->setImageNormalization(True);
-      //      for (Int field=0; field < sm_->numberOfModels(); ++field)
+      for (Int field=0; field < sm_->numberOfModels()/sm_->numberOfTaylorTerms(); ++field)
 	{
 	  ft_=&(*ftm_p[field]);
 	  ift_=&(*iftm_p[field]);
@@ -1243,11 +1331,11 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
 }
 
 void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
-					  Int cubeSlice, Int nCubeSlice, int model) 
+					  Int cubeSlice, Int nCubeSlice) 
 {
   //  cerr << "### Using old code: " << ftm_p[model]->name() << endl;
     {
-      //      for (Int model=0; model < sm_->numberOfModels(); ++model)
+      for (Int model=0; model < sm_->numberOfModels(); ++model)
 	{
 	//the different apply...jones use ft_ and ift_
 	ft_=&(*ftm_p[model]);
@@ -1298,16 +1386,22 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 {
   LogIO os(LogOrigin("CubeSkyEquation", "initializeGetSlice"));
   
-  oldInitializeGetSlice(vb, row, incremental, cubeSlice, nCubeSlice);
+  //  oldInitializeGetSlice(vb, row, incremental, cubeSlice, nCubeSlice);
 
-  // Bool newFTM=False;
-  // for (Int field=0; field < sm_->numberOfModels(); ++field)
-  //   {
-  //     newFTM = isNewFTM(&(*ftm_p[field]));
+   Bool newFTM=False;
+   /*
+   for (Int field=0; field < sm_->numberOfModels(); ++field)
+     {
+       newFTM = isNewFTM(&(*ftm_p[field]));
       
-  //     if (newFTM) oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
-  //     else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
-  //   }
+       if (newFTM) newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+       else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+       }*/
+
+       newFTM = isNewFTM(&(*ftm_p[0]));
+      
+       if (newFTM) newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+       else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
 
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
@@ -1322,7 +1416,7 @@ void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb,
   //  for(Int field=0; field < sm_->numberOfFields(); ++field){
   sm_->setImageNormalization(True);
   imGetSlice_p.resize(sm_->numberOfModels(), True, False);
-  for(Int model=0; model < sm_->numberOfModels(); ++model)
+  for(Int model=0; model < sm_->numberOfModels()/sm_->numberOfTaylorTerms(); ++model)
     {
       if(nCubeSlice>1)
       ftm_p[model]->reset();
@@ -1347,7 +1441,7 @@ void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb,
 	{
 	  Int model = sm_->getModelIndex(field,taylor);
 	  // NEW : Do the applySkyJones slice-by-slice -- to make it go into initializeToVis :(
-	  cerr << "Taylor, Model, Field: " << taylor << " " << model << " " << field << endl;
+	  ///cerr << "Taylor, Model, Field: " << taylor << " " << model << " " << field << endl;
 	  if(incremental)
 	    sliceCube(modelSliceVec[taylor], sm_->deltaImage(model), cubeSlice, nCubeSlice);
 	  else
@@ -1422,7 +1516,7 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   blc(3)=beginChannel;
   trc(3)=endChannel;
   sl_p=Slicer (blc, trc, Slicer::endIsLast);
-  SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, False);
+  SubImage<Complex>* sliceIm= new SubImage<Complex>(sm_->cImage(model), sl_p, True); /// UUU changes to True
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
@@ -1477,7 +1571,7 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   result.modelVisCube(); // get the visibility so vb will have it
   VisBuffer vb(result); // method only called using writable VI so no ROVIA
   
-  Int nmodels=sm_->numberOfModels();
+  Int nmodels=sm_->numberOfModels()/( isNewFTM()? sm_->numberOfTaylorTerms() : 1 );
   Bool FTChanged=ftm_p[0]->changed(vb);
   
   // we might need to recompute the "sky" for every single row, but we
@@ -1642,7 +1736,7 @@ void CubeSkyEquation::fixImageScale()
   ggSMin1 = ggSMax * constPB_p * constPB_p;
   ggSMin2 = ggSMax * minPB_p * minPB_p;
   
-  for (Int model=0;model<sm_->numberOfModels();model++) {
+  for (Int model=0;model<sm_->numberOfModels()/( isNewFTM()? sm_->numberOfTaylorTerms() : 1 );model++) {
     if(ej_ || (ftm_p[model]->name() == "MosaicFT") ) {
       
       
