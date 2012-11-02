@@ -363,7 +363,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if ((sensitivityPatternQualifier_p == 0) && (doSumWtNorm))
 	  sumwt_l = ((sumwt_l = getSumOfCFWeights()(pol_l,chan_l))==0)?1.0:sumwt_l;
 
-	sumwt_l = 1.0;  // UUU : Make sure no per-term sumwt normalization happens here.
+	//sumwt_l = 1.0;  // UUU : Make sure no per-term sumwt normalization happens here.
 
 	wtImIter.rwCursor() = (wtImIter.rwCursor()
 			       *Float(sizeX)*Float(sizeY)
@@ -1400,11 +1400,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	VBRow2CFBMapType& theMap=visResamplerWt_p->getVBRow2CFBMap();
 	convFuncCtor_p->prepareConvFunction(vb,theMap);
 	//
-	// Set the uvw array to zero-sized array and dopsf=Ture.
-	// uvw.nelements()==0 is a gesture to the re-sampler to put
-	// the gridded weights at the origin of the
-	// uv-grid. dopsf=True so that CF*Wts are gridded (as against
-	// CF*Wts*Vis).
+	// Set the uvw array to zero-sized array and dopsf=True.
+	// uvw.nelements()==0 is a hint to the re-sampler to put the
+	// gridded weights at the origin of the uv-grid. dopsf=True so
+	// that CF*Wts are accumulated (as against CF*Wts*Vis).
 	//
 	// Receive the sum-of-weights in a dummy array.
 	Matrix<Double> uvwOrigin;

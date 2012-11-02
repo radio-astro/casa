@@ -758,7 +758,7 @@ protected:
 			 const Vector<String>& mask,
 			 const Vector<String>& fluxMask,
 			 const String complist="");
-  ATerm* createTelescopeATerm(MeasurementSet& ms);
+  ATerm* createTelescopeATerm(MeasurementSet& ms, const Bool& isATermOn=True);
   void destroySkyEquation();
 
   //add residual to the private vars or create residual images

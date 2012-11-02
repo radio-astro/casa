@@ -187,6 +187,7 @@
 #include <synthesis/TransformMachines/NewMultiTermFT.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
 #include <synthesis/TransformMachines/AWConvFuncEPJones.h>
+#include <synthesis/TransformMachines/NoOpATerm.h>
 
 using namespace std;
 
@@ -2818,14 +2819,14 @@ Bool Imager::createFTMachine()
       }
 
     useDoublePrecGrid=False;
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p, aTermOn_p);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
     
     //
     // Selectively switch off CFTerms.
     //
-    if (aTermOn_p == False) apertureFunction->setOpCode(CFTerms::NOOP);
+    if (aTermOn_p == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
     if (psTermOn_p == False) psTerm->setOpCode(CFTerms::NOOP);
 
     //
@@ -2897,7 +2898,7 @@ Bool Imager::createFTMachine()
     //                            skyPosThreshold_p);
     //   }
     useDoublePrecGrid=False;
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
     //    psTerm->setOpCode(CFTerms::NOOP);
@@ -2994,7 +2995,7 @@ Bool Imager::createFTMachine()
       // 	}
       //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
       useDoublePrecGrid=False;
-      CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+      CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
       CountedPtr<PSTerm> psTerm = new PSTerm();
       CountedPtr<WTerm> wTerm = new WTerm();
       psTerm->setOpCode(CFTerms::NOOP);
@@ -4486,17 +4487,22 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
   }
   
 }
-ATerm* Imager::createTelescopeATerm(MeasurementSet& ms)
+ATerm* Imager::createTelescopeATerm(MeasurementSet& ms, const Bool& isATermOn)
 {
   LogIO log_l(LogOrigin("Imager", "createTelescopeATerm"));
+
+  if (!isATermOn) return new NoOpATerm();
+
   ROMSObservationColumns msoc(ms.observation());
   String ObsName=msoc.telescopeName()(0);
   if ((ObsName == "EVLA") || (ObsName == "VLA"))
     return new EVLAAperture();
   else
-    log_l << "Telescope name ('"+
-      ObsName+"') in the MS not recognized to create the telescope specific ATerm"
-	  << LogIO::EXCEPTION;
+    {
+      log_l << "Telescope name ('"+
+	ObsName+"') in the MS not recognized to create the telescope specific ATerm" 
+	    << LogIO::WARN;
+    }
 
   return NULL;
 }

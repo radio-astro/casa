@@ -1231,7 +1231,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
 	// 		False, (Float)pbLimit_p, (Int)4);
       }
-    log_p << "Total flux model image (after avgPB normalization): " 
+    log_p << "Total flux in model image (after avgPB normalization): " 
 	  << sum((*(modelImageVec[0])).get()) << LogIO::POST;
     
     // Convert from Stokes planes to Correlation planes
