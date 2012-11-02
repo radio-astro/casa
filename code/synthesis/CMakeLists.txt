@@ -69,6 +69,7 @@ casa_add_library( synthesis
   TransformMachines/WProjectFT.cc
   TransformMachines/WPConvFunc.cc
   TransformMachines/EVLAConvFunc.cc
+  TransformMachines/ATerm.cc
   TransformMachines/EVLAAperture.cc
   TransformMachines/AzElAperture.cc
   fortran/fgridft.f		
@@ -631,6 +632,7 @@ install (FILES
 	TransformMachines/WPConvFunc.h
 	TransformMachines/WProjectFT.h
         TransformMachines/ATerm.h
+        TransformMachines/NoOpATerm.h
         TransformMachines/AWConvFunc.h
         TransformMachines/AWConvFuncEPJones.h
         TransformMachines/AWProjectFT.h
