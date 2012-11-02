@@ -332,111 +332,72 @@ namespace casa {
 		return region_centers;
 	}
 
-	std::list<RegionInfo> *Ellipse::generate_dds_statistics(  ) {
-	    std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
+	ImageRegion *Ellipse::get_image_region( DisplayData *dd ) const { 
 
-	    if( wc_==0 ) return region_statistics;
+		if( wc_==0 ) return 0;
 
-	    Int zindex = 0;
-	    if (wc_->restrictionBuffer()->exists("zIndex")) {
-		wc_->restrictionBuffer()->getValue("zIndex", zindex);
-	    }
+		PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+		if ( padd == 0 ) return 0;
 
+	    Vector<Double> lin(2), blc(2), center(2);
 	    double blcx, blcy, trcx, trcy;
 	    boundingRectangle( blcx, blcy, trcx, trcy );
 
-	    DisplayData *dd = 0;
-	    const std::list<DisplayData*> &dds = wc_->displaylist( );
-	    Vector<Double> lin(2), blc(2), center(2);
-
 	    lin(0) = blcx;
 	    lin(1) = blcy;
-	    if ( ! wc_->linToWorld(blc, lin)) return region_statistics;
+	    if ( ! wc_->linToWorld(blc, lin)) return 0;
 
 	    double center_x, center_y;
 	    linearCenter( center_x, center_y );
 	    lin(0) = center_x;
 	    lin(1) = center_y;
-	    if ( ! wc_->linToWorld(center, lin)) return region_statistics;
+	    if ( ! wc_->linToWorld(center, lin)) return 0;
 
-	    std::string errMsg_;
-	    std::map<String,bool> processed;
-	    for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
-		dd = *ddi;
+		ImageInterface<Float> *image = padd->imageinterface( );
+		Vector<Int> dispAxes = padd->displayAxes( );
+		dispAxes.resize(2,True);
 
-		PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
-		if (padd==0) continue;
+		MDirection::Types cccs = current_casa_coordsys( );
 
+		const Vector<String> &units = wc_->worldAxisUnits( );
+		const CoordinateSystem &cs = image->coordinates( );
+		Vector<Quantum<Double> > qblc, qcenter;
+		qblc.resize(2);
+		qcenter.resize(2);
+
+		qcenter[0] = Quantum<Double>(center[0], units[0]);
+		qcenter[1] = Quantum<Double>(center[1], units[1]);
+
+		Vector<Double> center_rad(2);
+		center_rad[0] = qcenter[0].getValue("rad");
+		center_rad[1] = qcenter[1].getValue("rad");
+		MDirection mdcenter( Quantum<Vector<Double> >(center_rad,"rad"), cccs );
+
+		qblc[0] = Quantum<Double>(blc[0], units[0]);
+		qblc[1] = Quantum<Double>(blc[1], units[1]);
+
+		Vector<Double> blc_rad_x(2);
+		blc_rad_x[0] = qblc[0].getValue("rad");
+		blc_rad_x[1] = qcenter[1].getValue("rad");
+		MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,"rad"),cccs );
+
+		Vector<Double> blc_rad_y(2);
+		blc_rad_y[0] = qcenter[0].getValue("rad");
+		blc_rad_y[1] = qblc[1].getValue("rad");
+		MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,"rad"),cccs );
+
+		Vector<Quantity> radii(2);
+		double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
+		double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
+		radii[0] = Quantity(xdistance,"rad");
+		radii[1] = Quantity(ydistance,"rad");
+
+		ImageRegion *result = 0;
 		try {
-		    if ( ! padd->conformsTo(*wc_) ) continue;
-
-		    ImageInterface<Float> *image = padd->imageinterface( );
-
-		    if ( image == 0 ) continue;
-
-		    String full_image_name = image->name(false);
-		    std::map<String,bool>::iterator repeat = processed.find(full_image_name);
-		    if (repeat != processed.end()) continue;
-		    processed.insert(std::map<String,bool>::value_type(full_image_name,true));
-
-		    Int nAxes = image->ndim( );
-		    IPosition shp = image->shape( );
-		    const CoordinateSystem &cs = image->coordinates( );
-
-		    int zIndex = padd->activeZIndex( );
-		    IPosition pos = padd->fixedPosition( );
-		    Vector<Int> dispAxes = padd->displayAxes( );
-
-		    if ( nAxes == 2 ) dispAxes.resize(2,True);
-
-		    if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
-			 Int(pos.nelements()) != nAxes ||
-			 anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
-			continue;
-
-		    if ( dispAxes.nelements() > 2u )
-			pos[dispAxes[2]] = zIndex;
-
-		    dispAxes.resize(2,True);
-
-		    // WCBox dummy;
-		    Quantum<Double> px0(0.,"pix");
-		    Vector<Quantum<Double> > centerq(2,px0), radiiq(2,px0);
-		    const Vector<String> &units = wc_->worldAxisUnits( );
-
-		    centerq[0].setValue(center[0]);
-		    centerq[0].setUnit(units[0]);
-		    centerq[1].setValue(center[1]);
-		    centerq[1].setUnit(units[1]);
-
-		    Quantum<Double> _blc_1_(blc[0],units[0]);
-		    radiiq[0] = centerq[0] - _blc_1_;
-		    radiiq[0].setValue(fabs(radiiq[0].getValue( )));
-
-		    Quantum<Double> _blc_2_(blc[1],units[1]);
-		    radiiq[1] = centerq[1] - _blc_2_;
-		    radiiq[1].setValue(fabs(radiiq[1].getValue( )));
-
-		    // This is a 2D ellipse (which is the same sort of ellipse that is created via
-		    // the new annotaitons). I don't know how one creates an elliptical column (which
-		    // extends the 2D ellipse through all spectral channels) that is analogous to
-		    // what is done for rectangles... must consult the delphic oracle when the
-		    // need arises... <drs>
-		    WCEllipsoid ellipse( centerq, radiiq, IPosition(dispAxes), cs);
-		    ImageRegion *imageregion = new ImageRegion(ellipse);
-
-		    region_statistics->push_back(ImageRegionInfo(image->name(true),getLayerStats(padd,image,*imageregion)));
-		    delete imageregion;
-
-		} catch (const casa::AipsError& err) {
-		    errMsg_ = err.getMesg();
-		    continue;
-		} catch (...) {
-		    errMsg_ = "Unknown error converting region";
-		    continue;
-		}
-	    }
-	    return region_statistics;
+		    WCEllipsoid ellipse( qcenter, radii, IPosition(dispAxes), cs);
+			result = new ImageRegion(ellipse);
+		} catch(...) { }
+		return result;
 	}
 
     }

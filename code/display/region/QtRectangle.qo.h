@@ -138,6 +138,7 @@ namespace casa {
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Rectangle::generate_dds_statistics( ); }
+		ImageRegion *get_image_region( DisplayData *dd ) const { return Rectangle::get_image_region( dd ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const 

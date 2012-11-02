@@ -44,7 +44,7 @@ namespace casa {
 	Polygon::Polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts) :
 	  Region( wc ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 	  _drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
-	    for ( int i=0; i < pts.size(); ++i ) {
+	    for ( size_t i=0; i < pts.size(); ++i ) {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
 	    }
@@ -136,7 +136,7 @@ namespace casa {
 	    unsigned int handle = check_handle( x, y );
 	    if ( handle )
 		result |= PointHandle;
-	    return PointInfo( x, y, result == 0 ? PointOutside : result, handle );
+	    return PointInfo( x, y, result == 0 ? (unsigned int) PointOutside : result, handle );
 	}
 
         // returns mouse movement state
@@ -283,7 +283,7 @@ namespace casa {
 
 	int Polygon::move_vertex( int handle, double x, double y ) {
 	    int vertex = handle - 5;
-	    if ( vertex >= _ref_points_.size( ) || vertex < 0 )
+	    if ( vertex >= (int) _ref_points_.size( ) || vertex < 0 )
 		return 0;
 
 	    // use current x & y scaling to translate drawing vertex
@@ -295,7 +295,7 @@ namespace casa {
 	    // calculate any adjustment...
 	    double new_blc_x = x, new_blc_y = y, new_trc_x = x, new_trc_y = y;
 	    for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
-		if ( i != vertex ) {
+	      if ( (int) i != vertex ) {
 		    if ( _drawing_points_[i].first < new_blc_x ) new_blc_x = _drawing_points_[i].first;
 		    if ( _drawing_points_[i].second < new_blc_y ) new_blc_y = _drawing_points_[i].second;
 		    if ( _drawing_points_[i].first > new_trc_x ) new_trc_x = _drawing_points_[i].first;
@@ -627,7 +627,7 @@ namespace casa {
 	    try {
 		std::vector<int> axes = dd->displayAxes( );
 		IPosition shape(cs.nPixelAxes( ));
-		for ( int i=0; i < shape.size( ); ++i )
+		for ( size_t i=0; i < shape.size( ); ++i )
 		    shape(i) = dd->dataShape( )[axes[i]];
 		poly = new AnnPolygon( xv, yv, cs, shape, stokes );
 	    } catch ( AipsError &e ) {
@@ -882,126 +882,38 @@ namespace casa {
 //		return region_centers;
 //	}
 
-	std::list<RegionInfo> *Polygon::generate_dds_statistics(  ) {
-	    std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
+	ImageRegion *Polygon::get_image_region( DisplayData *dd ) const {
 
-	    if( wc_==0 ) return region_statistics;
-
-	    Int zindex = 0;
-	    if (wc_->restrictionBuffer()->exists("zIndex")) {
-		wc_->restrictionBuffer()->getValue("zIndex", zindex);
-	    }
-
-	    DisplayData *dd = 0;
-	    const std::list<DisplayData*> &dds = wc_->displaylist( );
-	    Vector<Double> lin(2), wld(2);
-
-	    Vector<Double> x(_drawing_points_.size( ));
-	    Vector<Double> y(_drawing_points_.size( ));
-	    for ( unsigned int i = 0; i < _drawing_points_.size( ); ++i ) {
-		lin(0) = _drawing_points_[i].first;
-		lin(1) = _drawing_points_[i].second;
-		if ( ! wc_->linToWorld(wld, lin)) return region_statistics;
-		x[i] = wld[0];
-		y[i] = wld[1];
-	    }
-
-	    std::string errMsg_;
-	    std::map<String,bool> processed;
-	    for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
-		dd = *ddi;
+		if( wc_==0 ) return 0;
 
 		PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
-		if (padd==0) continue;
+		if ( padd == 0 ) return 0;
 
-		try {
-		    if ( ! padd->conformsTo(*wc_) ) continue;
-
-		    ImageInterface<Float> *image = padd->imageinterface( );
-
-		    if ( image == 0 ) continue;
-
-		    String full_image_name = image->name(false);
-		    std::map<String,bool>::iterator repeat = processed.find(full_image_name);
-		    if (repeat != processed.end()) continue;
-		    processed.insert(std::map<String,bool>::value_type(full_image_name,true));
-
-		    Int nAxes = image->ndim( );
-		    IPosition shp = image->shape( );
-		    const CoordinateSystem &cs = image->coordinates( );
-
-		    int zIndex = padd->activeZIndex( );
-		    IPosition pos = padd->fixedPosition( );
-		    Vector<Int> dispAxes = padd->displayAxes( );
-
-		    if ( nAxes == 2 ) dispAxes.resize(2,True);
-
-		    if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
-			 Int(pos.nelements()) != nAxes ||
-			 anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
-			continue;
-
-		    if ( dispAxes.nelements() > 2u )
-			pos[dispAxes[2]] = zIndex;
-
-		    dispAxes.resize(2,True);
-#if 0
-		    // WCBox dummy;
-		    Quantum<Double> px0(0.,"pix");
-		    Vector<Quantum<Double> > blcq(nAxes,px0), trcq(nAxes,px0);
-
-		    Int spaxis = getAxisIndex( image, String("Spectral") );
-		    for (Int ax = 0; ax < nAxes; ax++) {
-			if ( ax == dispAxes[0] || ax == dispAxes[1] || ax == spaxis) {
-			    trcq[ax].setValue(shp[ax]-1);
-			} else  {
-			    blcq[ax].setValue(pos[ax]);
-			    trcq[ax].setValue(pos[ax]);
-			}
-		    }
-
-		    // technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
-		    // used here, because it references the "CSmaster" DisplayData which all
-		    // of the display options are referenced from... lets hope all of the
-		    // coordinate systems are kept in sync...      <drs>
-		    const Vector<String> &units = wc_->worldAxisUnits( );
-
-		    for (Int i = 0; i < 2; i++) {
-			Int ax = dispAxes[i];
-
-			blcq[ax].setValue(blc[i]);
-			trcq[ax].setValue(trc[i]);
-
-			blcq[ax].setUnit(units[i]);
-			trcq[ax].setUnit(units[i]);
-		    }
-
-		    // WCBox box(blcq, trcq, cs, Vector<Int>());
-#else
-		    // technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
-		    // used here, because it references the "CSmaster" DisplayData which all
-		    // of the display options are referenced from... lets hope all of the
-		    // coordinate systems are kept in sync...      <drs>
-		    const Vector<String> &units = wc_->worldAxisUnits( );
-
-#endif
-		    Quantum<Vector<Double> > qx(x, units[0]), qy(y, units[1]);
-
-		    WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
-		    ImageRegion *imageregion = new ImageRegion(poly);
-
-		    region_statistics->push_back(ImageRegionInfo(image->name(true),getLayerStats(padd,image,*imageregion)));
-		    delete imageregion;
-
-		} catch (const casa::AipsError& err) {
-		    errMsg_ = err.getMesg();
-		    continue;
-		} catch (...) {
-		    errMsg_ = "Unknown error converting region";
-		    continue;
-		}
+		Vector<Double> lin(2), wld(2);
+		Vector<Double> x(_drawing_points_.size( ));
+		Vector<Double> y(_drawing_points_.size( ));
+		for ( unsigned int i = 0; i < _drawing_points_.size( ); ++i ) {
+			lin(0) = _drawing_points_[i].first;
+			lin(1) = _drawing_points_[i].second;
+			if ( ! wc_->linToWorld(wld, lin)) return 0;
+			x[i] = wld[0];
+			y[i] = wld[1];
 	    }
-	    return region_statistics;
+
+		ImageInterface<Float> *image = padd->imageinterface( );
+		Vector<Int> dispAxes = padd->displayAxes( );
+		dispAxes.resize(2,True);
+
+		const Vector<String> &units = wc_->worldAxisUnits( );
+		const CoordinateSystem &cs = image->coordinates( );
+		Quantum<Vector<Double> > qx(x, units[0]), qy(y, units[1]);
+
+		ImageRegion *result = 0;
+		try {
+			WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
+			result = new ImageRegion(poly);
+		} catch(...) { }
+		return result;
 	}
 
     }

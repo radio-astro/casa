@@ -135,6 +135,7 @@ namespace casa {
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Ellipse::generate_dds_statistics( ); }
+		ImageRegion *get_image_region( DisplayData *dd ) const { return Ellipse::get_image_region( dd ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 

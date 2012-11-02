@@ -38,6 +38,7 @@ namespace casa {
     class PanelDisplay;
     class AnnotationBase;
     class MSAsRaster;
+    class DisplayData;
 
     namespace viewer {
 
@@ -83,8 +84,9 @@ namespace casa {
 
 	    protected:
 		RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
-		std::list<RegionInfo> *generate_dds_statistics( );
+		void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
 		std::list<RegionInfo> *generate_dds_centers( );
+		ImageRegion *get_image_region( DisplayData* ) const;
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;

@@ -39,6 +39,7 @@ namespace casa {
 
     class AnnotationBase;
     class RegionTextList;
+    class DisplayData;
 
     namespace viewer {
 
@@ -213,6 +214,7 @@ namespace casa {
 
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);
+		virtual ImageRegion *get_image_region( DisplayData* ) const = 0; /*DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);*/
 		// At the base of this inheritance hierarchy is a class that uses
 		// multiple inheritance. We are QtRegion is one base class, and we
 		// need to be able to retrieve our peer (the non-GUI dependent)

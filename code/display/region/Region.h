@@ -50,6 +50,7 @@ namespace casa {
     class PrincipalAxesDD;
     template <class T> class ImageInterface;
     class ImageRegion;
+	class DisplayData;
 
     namespace viewer {
 
@@ -273,8 +274,10 @@ namespace casa {
 		virtual void emitUpdate( )
 			DISPLAY_PURE_VIRTUAL(Region::emitUpdate,);
 	    protected:
-		virtual std::list<RegionInfo> *generate_dds_statistics( )
-			DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,new std::list<RegionInfo>( ));
+		virtual std::list<RegionInfo> *generate_dds_statistics( );
+		virtual void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
+		virtual ImageRegion *get_image_region( DisplayData* ) const
+			DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);
 
 		virtual std::list<RegionInfo> *generate_dds_centers(bool )
 			DISPLAY_PURE_VIRTUAL(Region::generate_dds_centers, new std::list<RegionInfo>( ));

@@ -1827,6 +1827,60 @@ if (!markCenter()) return;
 		  return 0;
 	  }
 
+	std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
+		std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
+
+		if( wc_==0 ) return region_statistics;
+
+		Int zindex = 0;
+		if (wc_->restrictionBuffer()->exists("zIndex")) {
+			wc_->restrictionBuffer()->getValue("zIndex", zindex);
+		}
+
+		DisplayData *dd = 0;
+		const std::list<DisplayData*> &dds = wc_->displaylist( );
+
+		ImageRegion *imageregion = get_image_region( wc_->csMaster( ) );
+
+		std::string errMsg_;
+		std::map<String,bool> processed;
+		for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+			dd = *ddi;
+
+			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+			if (padd==0) {
+				generate_nonimage_statistics( dd, region_statistics );
+				continue;
+			}
+
+			try {
+				if ( ! padd->conformsTo(*wc_) ) continue;
+
+				ImageInterface<Float> *image = padd->imageinterface( );
+
+				if ( image == 0 ) continue;
+
+				String full_image_name = image->name(false);
+				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				if (repeat != processed.end()) continue;
+				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+
+				if ( imageregion == 0 ) continue;
+				region_statistics->push_back(ImageRegionInfo(image->name(true),getLayerStats(padd,image,*imageregion)));
+
+			} catch (const casa::AipsError& err) {
+				errMsg_ = err.getMesg();
+				continue;
+			} catch (...) {
+				errMsg_ = "Unknown error converting region";
+				continue;
+			}
+	    }
+
+		delete imageregion;
+		return region_statistics;
+	}
+
    RegionInfo::stats_t *Region::getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg ) {
 
 	    // Compute and print statistics on DD's image for
