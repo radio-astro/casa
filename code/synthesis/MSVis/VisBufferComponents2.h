@@ -105,6 +105,8 @@ public:
     typedef Set::const_iterator const_iterator;
 
     VisBufferComponents2 operator+ (const VisBufferComponents2 & other) const;
+    VisBufferComponents2 & operator+= (const VisBufferComponents2 & other);
+    VisBufferComponents2 & operator+= (VisBufferComponent2 componentToAdd);
 
     const_iterator begin () const;
     Bool contains (VisBufferComponent2 component) const;

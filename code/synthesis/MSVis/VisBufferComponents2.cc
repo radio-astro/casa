@@ -27,6 +27,26 @@ VisBufferComponents2::operator+ (const VisBufferComponents2 & other) const
     return result;
 }
 
+VisBufferComponents2 &
+VisBufferComponents2::operator+= (const VisBufferComponents2 & other)
+{
+    if (& other != this){
+
+        set_p.insert (other.set_p.begin(), other.set_p.end());
+    }
+
+    return * this;
+}
+
+VisBufferComponents2 &
+VisBufferComponents2::operator+= (VisBufferComponent2 componentToAdd)
+{
+    set_p.insert (componentToAdd);
+
+    return * this;
+}
+
+
 VisBufferComponents2
 VisBufferComponents2::all ()
 {
