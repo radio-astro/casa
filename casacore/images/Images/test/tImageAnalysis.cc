@@ -148,7 +148,7 @@ int main() {
             writeTestString("histograms() test");
             FITSImage image("histogram_test.fits");
             ImageAnalysis ia(&image);
-            Record histOut, regionRec;
+            Record regionRec;
             String mask;
             Vector<Int> axes(0);
             Int nbins = 25;
@@ -157,20 +157,15 @@ int main() {
             Bool cumu = False;
             Bool log = False;
             Bool list = False;
-            Int nx = 1;
-            Int ny = 1;
             Vector<Int> size(2);
             size[0] = 600;
             size[1] = 450;
             Bool force = False;
             Bool disk = False;
             Bool extendMask = False;
-            AlwaysAssert(
-                ia.histograms(
-                    histOut, axes, regionRec, mask, nbins, includepix,
-                    gauss, cumu, log, list, "", nx, ny, size, force,
-                    disk, extendMask
-                ), AipsError
+            Record histOut = ia.histograms(
+            	axes, regionRec, mask, nbins, includepix,
+            	gauss, cumu, log, list, force, disk, extendMask
             );
             Array<Float> values = histOut.asArrayFloat("values");
             Array<Float> counts = histOut.asArrayFloat("counts");
