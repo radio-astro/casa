@@ -354,13 +354,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // the data-sum-of-weights.
     //
 
-    //    cerr << "SumCFWt: " << getSumOfCFWeights() << " " << max(wtBuf) << " " << sensitivityPatternQualifier_p << endl;
+        cerr << "SumCFWt: " << getSumOfCFWeights() << " " << max(wtBuf) << " " << sensitivityPatternQualifier_p << endl;
     for(wtImIter.reset(); !wtImIter.atEnd(); wtImIter++)
       {
 	Int pol_l=wtImIter.position()(2), chan_l=wtImIter.position()(3);
 	Double sumwt_l=1.0;;
 	// Lets write some mildly obfuscated code ~[8-)
-	if ((sensitivityPatternQualifier_p == 0) && (doSumWtNorm))
+	if ((sensitivityPatternQualifier_p == -1) && (doSumWtNorm))
 	  sumwt_l = ((sumwt_l = getSumOfCFWeights()(pol_l,chan_l))==0)?1.0:sumwt_l;
 
 	//sumwt_l = 1.0;  // UUU : Make sure no per-term sumwt normalization happens here.
