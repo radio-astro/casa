@@ -117,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doPBCorrection(True), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
-      visResampler_p(), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p(""),
+      visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
       rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), paNdxProcessed_p()
   {
     convSize=0;
