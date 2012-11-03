@@ -32,12 +32,12 @@
 #include <casa/BasicSL.h>
 #include <casa/Quanta/Quantum.h>
 #include <components/ComponentModels/GaussianBeam.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   //Forward declaration
   template<class T> class ImageInterface;
   template<class T> class Vector;
-  class CoordinateSystem;
   // <summary> Class that contains functions needed for feathering</summary>
 
   class Feather{
@@ -66,7 +66,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Get the 1-D slices of the feathering function that will be applied on SD and INTerf data
     void getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
     void getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
-    //Get 1-D slices of the feathered data ...note for SD is effectiveDishdiam is left to the original of image this
+    //Get 1-D slices of the feathered data ...
+    //note for SD  this
     //should return the same values as getFTCutSDImage
     void getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
     void getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
@@ -97,6 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool cweightCalced_p;
     Bool cweightApplied_p;
     Float sdScale_p;
+    CoordinateSystem csysHigh_p;
   };
 
 

@@ -55,6 +55,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/Projection.h>
 #include <coordinates/Coordinates/ObsInfo.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
@@ -72,12 +73,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   Feather::Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdscale) : dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(sdscale) {
     
-    ImageInfo highInfo=INTImage.imageInfo();
-    hBeam_p=highInfo.restoringBeam();
-    ImageInfo lowInfo=SDImage.imageInfo();
-    lBeam_p=lowInfo.restoringBeam();
-    highIm_p= INTImage.cloneII();
-    lowIm_p=SDImage.cloneII();
+    //    ImageInfo highInfo=INTImage.imageInfo();
+    //   hBeam_p=highInfo.restoringBeam();
+    // ImageInfo lowInfo=SDImage.imageInfo();
+    //highIm_p= INTImage.cloneII();
+    setINTImage(INTImage);
+    // ImageInfo lowInfo=SDImage.imageInfo();
+    //lBeam_p=lowInfo.restoringBeam();
+    //lowIm_p=SDImage.cloneII();
+    setSDImage(SDImage);
+    
     cwImage_p=NULL;
     cwHighIm_p=NULL;
 
@@ -89,14 +94,54 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   void Feather::setSDImage(const ImageInterface<Float>& SDImage){
+    if(highIm_p.null())
+      throw(AipsError("High res image has to be defined before SD image"));
     ImageInfo lowInfo=SDImage.imageInfo();
     lBeam_p=lowInfo.restoringBeam();
-    lowIm_p=SDImage.cloneII();
+    if(lBeam_p.isNull())
+      throw(AipsError("No Single dish restoring beam info in image"));
+    CoordinateSystem csyslow=SDImage.coordinates();
+    Vector<Stokes::StokesTypes> stokesvec;
+    if(CoordinateUtil::findStokesAxis(stokesvec, csyslow) <0)
+      CoordinateUtil::addIAxis(csyslow);
+    if(CoordinateUtil::findSpectralAxis(csyslow) <0)
+      CoordinateUtil::addFreqAxis(csyslow);
+    TempImage<Float> sdcopy(SDImage.shape(), csyslow);
+    sdcopy.copyData(SDImage);
+    lowIm_p=new TempImage<Float>(highIm_p->shape(), csysHigh_p);
+    // regrid the single dish image
+    {
+      Vector<Int> dirAxes=CoordinateUtil::findDirectionAxes(csysHigh_p);
+      IPosition axes(3,dirAxes(0),dirAxes(1),2);
+      Int spectralAxisIndex=CoordinateUtil::findSpectralAxis(csysHigh_p);
+      axes(2)=spectralAxisIndex;
+    
+      ImageRegrid<Float> ir;
+      ir.regrid(*lowIm_p, Interpolate2D::LINEAR, axes,  sdcopy);
+    }
+	    
+
+    
   }
   void Feather::setINTImage(const ImageInterface<Float>& INTImage){
     ImageInfo highInfo=INTImage.imageInfo();
     hBeam_p=highInfo.restoringBeam();
-    highIm_p=INTImage.cloneII();
+    if(hBeam_p.isNull())
+      throw(AipsError("No Single dish restoring beam info in image"));
+    csysHigh_p=INTImage.coordinates();
+    Vector<Stokes::StokesTypes> stokesvec;
+    if(CoordinateUtil::findStokesAxis(stokesvec, csysHigh_p) <0)
+      CoordinateUtil::addIAxis(csysHigh_p);
+    if(CoordinateUtil::findSpectralAxis(csysHigh_p) <0)
+      CoordinateUtil::addFreqAxis(csysHigh_p);
+    IPosition myshap=INTImage.shape();
+    if(INTImage.shape().nelements()==2)
+      myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),1,1);
+    if(INTImage.shape().nelements()==3)
+      myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),INTImage.shape()(2),1);
+    highIm_p=new TempImage<Float>(myshap, csysHigh_p);
+    highIm_p->copyData(INTImage);
+    ImageUtilities::copyMiscellaneous(*highIm_p, INTImage);
   }
 
   Bool Feather::setEffectiveDishDiam(const Float xdiam, const Float ydiam){
@@ -178,7 +223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     calcCWeightImage();
     if(highIm_p.null())
       throw(AipsError("No high resolution image set"));
-    cwImage_p=new TempImage<Complex>(highIm_p->shape(), highIm_p->coordinates() );
+    cwHighIm_p=new TempImage<Complex>(highIm_p->shape(), highIm_p->coordinates() );
     StokesImageUtil::From(*cwHighIm_p, *highIm_p);
     LatticeFFT::cfft2d( *cwHighIm_p );
     Vector<Int> extraAxes(cwHighIm_p->shape().nelements()-2);
@@ -312,6 +357,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 
   Bool Feather::saveFeatheredImage(const String& imagename){
+    applyFeather();
+    Int stokesAxis, spectralAxis;
+    spectralAxis=CoordinateUtil::findSpectralAxis(csysHigh_p);
+    Vector<Stokes::StokesTypes> stokesvec;
+    stokesAxis=CoordinateUtil::findStokesAxis(stokesvec, csysHigh_p);
+    Vector<Int> dirAxes=CoordinateUtil::findDirectionAxes(csysHigh_p);
+    Int n3=highIm_p->shape()(stokesAxis);
+    Int n4=highIm_p->shape()(spectralAxis);
+    IPosition blc(highIm_p->shape());
+    IPosition trc(highIm_p->shape());
+    blc(dirAxes(0))=0; blc(dirAxes(1))=0;
+    trc(dirAxes(0))=highIm_p->shape()(dirAxes(0))-1;
+    trc(dirAxes(1))=highIm_p->shape()(dirAxes(1))-1;
+    TempImage<Complex>cimagelow(lowIm_p->shape(), lowIm_p->coordinates());
+    StokesImageUtil::From(cimagelow, *lowIm_p);
+    LatticeFFT::cfft2d( cimagelow);
+    Float sdScaling  = sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2");
+    for (Int j=0; j < n3; ++j){
+      for (Int k=0; k < n4 ; ++k){
+	blc(stokesAxis)=j; trc(stokesAxis)=j;
+	blc(spectralAxis)=k; trc(spectralAxis)=k;
+	Slicer sl(blc, trc, Slicer::endIsLast);
+	SubImage<Complex> cimagehighSub(*cwHighIm_p, sl, True);
+	SubImage<Complex> cimagelowSub(cimagelow, sl, True);
+	cimagelowSub.copyData(  (LatticeExpr<Complex>)((cimagehighSub + cimagelowSub * sdScaling)));
+      }
+    }
+    // FT back to image plane
+    LatticeFFT::cfft2d( cimagelow, False);
+    
+    // write to output image
+    PagedImage<Float> featherImage(highIm_p->shape(), highIm_p->coordinates(), imagename );
+    StokesImageUtil::To(featherImage, cimagelow);
+    ImageUtilities::copyMiscellaneous(featherImage, *highIm_p);
+    
+    
+      
+    
+
+
     return true;
   }
 
