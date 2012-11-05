@@ -21,6 +21,7 @@
 % JO 2011-10-03 Release 3.3 edits
 % GM 2011-10-26 Minor edits for release 3.3
 % JO 2012-05-06 Release 3.4.0 edits
+% JO 2012-09-27 Release 4.0.0 edits
 
 
 %\documentclass[11pt]{article}
@@ -78,19 +79,16 @@ The tasks available for plotting and flagging of data are:
       (\S~\ref{section:edit.plot.plotms})
    \item {\tt plotxy} --- older X-Y plotter with some functionalities not yet implemented in \tt{plotms}
       (\S~\ref{section:edit.plot.plotxy})
-    \item {\tt tflagdata} --- Data Flagging (will replace {\tt
-        flagdata, flagdata2, testautoflag, flagautocorr})
-      (\S~\ref{section:edit.tflagdata})
+    \item {\tt flagdata} --- Data Flagging 
+      (\S~\ref{section:edit.flagdata})
    \item {\tt flagcmd} --- manipulate and apply flags using {\tt FLAG\_CMD} table
       (\S~\ref{section:edit.flagcmd})
- \item {\tt flagdata2} --- non-interactive flagging of data (will be deprecated in CASA 3.5.)
-      (\S~\ref{section:edit.flagdata})
-   \item {\tt flagautocorr} --- non-interactive flagging of auto-correlations (will be deprecated in CASA 3.5.)
-      (\S~\ref{section:edit.flagautocorr})
-   \item {\tt browsetable} --- browse data in any CASA table (including a MS)
+  \item {\tt browsetable} --- browse data in any CASA table (including a MS)
       (\S~\ref{section:edit.browse})
    \item {\tt plotants} --- create simple plots of antenna positions
       (\S~\ref{section:edit.plot.plotants})
+  \item {\tt plotuv} --- plotting of uv-coverages
+      (\S~\ref{section:edit.plot.plotuv})
 \end{itemize}
 
 The following sections describe the use of these tasks.
@@ -250,28 +248,18 @@ The current inputs to the {\tt plotms} task are:
 vis                 =         ''        #  input visibility dataset (blank for none)
 xaxis               =         ''        #  plot x-axis (blank for default/current)
 yaxis               =         ''        #  plot y-axis (blank for default/current)
-selectdata          =       True        #  data selection parameters
-     field          =         ''        #  field names or field index numbers (blank for all)
-     spw            =         ''        #  spectral windows:channels (blank for all)
-     timerange      =         ''        #  time range (blank for all)
-     uvrange        =         ''        #  uv range (blank for all)
-     antenna        =         ''        #  antenna/baselines (blank for all)
-     scan           =         ''        #  scan numbers (blank for all)
-     correlation    =         ''        #  correlations (blank for all)
-     array          =         ''        #  (sub)array numbers (blank for all)
-     msselect       =         ''        #  MS selection (blank for all)
-
+selectdata          =      False        #  data selection parameters
 averagedata         =       True        #  data averaging parameters
-     avgchannel     =         ''        #  average over channel?  (blank = False, otherwise
-                                        #   value in channels)
+     avgchannel     =         ''        #  average over channel?  (blank = False, otherwise value
+                                        #   in channels)
      avgtime        =         ''        #  average over time? (blank = False, other value in
                                         #   seconds)
-     avgscan        =      False        #  only valid if time averaging is turned on.  average
-                                        #   over scans?
-     avgfield       =      False        #  only valid if time averaging is turned on.  average
-                                        #   over fields?
-     avgbaseline    =      False        #  average over all baselines?  (mutually exclusive
-                                        #   with avgantenna)
+     avgscan        =      False        #  only valid if time averaging is turned on.  average over
+                                        #   scans?
+     avgfield       =      False        #  only valid if time averaging is turned on.  average over
+                                        #   fields?
+     avgbaseline    =      False        #  average over all baselines?  (mutually exclusive with
+                                        #   avgantenna)
      avgantenna     =      False        #  average by per-antenna?  (mutually exclusive with
                                         #   avgbaseline)
      avgspw         =      False        #  average over all spectral windows?
@@ -280,7 +268,9 @@ averagedata         =       True        #  data averaging parameters
 transform           =      False        #  transform data in various ways?
 extendflag          =      False        #  have flagging extend to other data points?
 iteraxis            =         ''        #  the axis over which to iterate
+customsymbol        =      False        #  set a custom symbol for unflagged points
 coloraxis           =         ''        #  selects which data to use for colorizing
+customflaggedsymbol =      False        #  set a custom plot symbol for flagged points
 plotrange           =         []        #  plot axes ranges: [xmin,xmax,ymin,ymax]
 title               =         ''        #  Title written along top of plot
 xlabel              =         ''        #  Text for horizontal axis. Blank for default.
@@ -288,8 +278,7 @@ ylabel              =         ''        #  Text for vertical axis. Blank for def
 showmajorgrid       =      False        #  Show major grid lines (horiz and vert.)
 showminorgrid       =      False        #  Show minor grid lines (horiz and vert.)
 plotfile            =         ''        #  Name of plot file to save automatically.
-async               =      False        #  If true the taskname must be started using
-                                        #   plotms(...)
+async               =      False        #  If true the taskname must be started using plotms(...)
 
 \end{verbatim}
 \normalsize All of these parameters can also be set or modified from
@@ -520,28 +509,67 @@ Various tools---selectable as icon buttons at the bottom of the {\tt plotms} win
 
 \item {\bf Pan} --- The ``four-arrow'' button (2nd from left) lets you pan around a zoomed plot.
 
-\item {\bf Annotate} --- The 3rd button from the left is chosen from a drop-down menu to either {\bf Annotate Text} (``T with a green diamond'' button) or {\bf Annotate Rectangle} (``pencil'' button). In the {\bf Annotate Text} environment, click on a location in the plot where text is desired; a window will pop up, allowing you to type text in it. When you click the {\bf OK} button, this text will appear on the plot. {\bf Annotate Rectangle} simply lets you draw a box on the plot by left-clicking and dragging the mouse. By clicking on the {\bf Annotator} tab near the top of the {\tt plotms} window, different fonts, colors, line styles, etc. can be selected for annotations. 
+\item {\bf Annotate} --- The 3rd button from the left is chosen from a
+  drop-down menu to either {\bf Annotate Text} (``T with a green
+  diamond'' button) or {\bf Annotate Rectangle} (``pencil''
+  button). In the {\bf Annotate Text} environment, click on a location
+  in the plot where text is desired; a window will pop up, allowing
+  you to type text in it. When you click the {\bf OK} button, this
+  text will appear on the plot. {\bf Annotate Rectangle} simply lets
+  you draw a box on the plot by left-clicking and dragging the
+  mouse. By clicking on the {\bf Annotator} tab near the top of the
+  {\tt plotms} window, different fonts, colors, line styles, etc. can
+  be selected for annotations.
 
 \item {\bf Home} --- The ``house'' button (5th from left) returns to the original zoom level.
 
-\item {\bf Stack Back} and {\bf Stack Forward} --- The left and right arrow buttons (4th and 6th from left) step through the zoom settings you've visited.
+\item {\bf Stack Back} and {\bf Stack Forward} --- The left and right
+  arrow buttons (4th and 6th from left) step through the zoom settings
+  you've visited.
 
-\item {\bf Mark Regions} --- The ``box with a green diamond'' button (7th from left) lets you mark a region for flagging, unflagging, or locating. Left-click on one corner of the desired region, and then drag the mouse to set the opposite corner of the region. You can mark multiple boxes before performing an operation on them.  
+\item {\bf Mark Regions} --- The ``box with a green diamond'' button
+  (7th from left) lets you mark a region for flagging, unflagging, or
+  locating. Left-click on one corner of the desired region, and then
+  drag the mouse to set the opposite corner of the region. You can
+  mark multiple boxes before performing an operation on them.
 
-\item {\bf Clear Regions} --- Clicking on the ``box with a red circle'' button (8th from left) will clear {\it all} regions which have been marked using {\bf Mark Regions}.
+\item {\bf Clear Regions} --- Clicking on the ``box with a red
+  circle'' button (8th from left) will clear {\it all} regions which
+  have been marked using {\bf Mark Regions}.
 
 \item {\bf Flag} --- Click on the ``flag'' button (9th from left) to flag all points in the marked regions.
 
-\item {\bf Unflag} --- Click on the ``crossed-out flag'' button (10th from left) to unflag any flagged points that would be in the marked regions (even if invisible).
+\item {\bf Unflag} --- Click on the ``crossed-out flag'' button (10th
+  from left) to unflag any flagged points that would be in the marked
+  regions (even if invisible).
 
-\item {\bf Locate} --- The ``magnifying glass on a sheet of paper'' button (11th from left) will print out information to the command line about points in the marked regions.  
+\item {\bf Locate} --- The ``magnifying glass on a sheet of paper''
+  button (11th from left) will print out information to the command
+  line about points in the marked regions.
 
-\item {\bf Hold Drawing} --- If the ``hold drawing'' button (rightmost, or 12th from left) is depressed, and if new plot axes are selected from the {\bf Plots $>$ Axes} tab, these new data will be cached but not plotted. When the button is clicked on again and un-depressed, it will automatically plot the data that was last requested. This can be particularly useful when changing the size of the {\bf plotms} window.
+\item {\bf Hold Drawing} --- If the ``hold drawing'' button
+  (rightmost, or 12th from left) is depressed, and if new plot axes
+  are selected from the {\bf Plots $>$ Axes} tab, these new data will
+  be cached but not plotted. When the button is clicked on again and
+  un-depressed, it will automatically plot the data that was last
+  requested. This can be particularly useful when changing the size of
+  the {\bf plotms} window.
 \end{itemize}
 
-There are two relevant options under the {\bf Options} tab near the top of the {\tt plotms} window. The {\bf when changing plot axes, clear any existing regions or annotations} checkbox determines when regions and annotation are deleted from the plot. The {\bf Tool Button Style} drop-drop down menu determines if icons and/or text represent the buttons at the bottom of the {\tt plotms} window. 
+There are two relevant options under the {\bf Options} tab near the
+top of the {\tt plotms} window. The {\bf when changing plot axes,
+  clear any existing regions or annotations} checkbox determines when
+regions and annotation are deleted from the plot. The {\bf Tool Button
+  Style} drop-drop down menu determines if icons and/or text represent
+the buttons at the bottom of the {\tt plotms} window.
 
-It is possible to hide these icons by going to the {\bf View $>$ Toolbars} menu at the top of the {\tt plotms} window and un-depressing the {\bf Tools} option (except for {\bf Hide Drawing}, which is hidden by clicking on {\bf View $>$ Toolbars $>$ Display}). In addition, the above tools can also be accessed by clicking on the {\bf Tools} tab near the top of the {\tt plotms} window (just below the {\bf View} menu). 
+It is possible to hide these icons by going to the {\bf View $>$
+  Toolbars} menu at the top of the {\tt plotms} window and
+un-depressing the {\bf Tools} option (except for {\bf Hide Drawing},
+which is hidden by clicking on {\bf View $>$ Toolbars $>$
+  Display}). In addition, the above tools can also be accessed by
+clicking on the {\bf Tools} tab near the top of the {\tt plotms}
+window (just below the {\bf View} menu).
 
 The {\bf Tools} tab also enables one additional tool, the {\bf
   Tracker}. To use {\bf Tracker}, click on the {\bf Hover} and/or {\bf
@@ -613,34 +641,120 @@ The {\bf Plots $>$ Data} tab enables averaging of the data in order to increase 
    \item {\bf all spectral windows}
    \item {\bf scalar}
 \end{itemize}
-The box next to a given {\bf Averaging} mode needs to be checked for that averaging to take effect.
+The box next to a given {\bf Averaging} mode needs to be checked for
+that averaging to take effect.
 
-For example, to average {\it n} channels together, the user would click on the box next to {\bf Channels} so that an ``X'' appears in it, and then type the number {\it n} in the empty box. When the user next clicks on {\bf Plot}, every {\it n} channels will then be averaged together and the total number of channels plotted will be decreased by a factor of {\it n}.
+For example, to average {\it n} channels together, the user would
+click on the box next to {\bf Channels} so that an ``X'' appears in
+it, and then type the number {\it n} in the empty box. When the user
+next clicks on {\bf Plot}, every {\it n} channels will then be
+averaged together and the total number of channels plotted will be
+decreased by a factor of {\it n}.
 
-Time averaging is a little trickier, as it is controlled by three fields. If the checkbox next to {\bf Time} under {\bf Averaging} is clicked on, a blank box with units of seconds will become active, along with two additional checkboxes: {\bf Scan} and {\bf Field}. If averaging is desired over a relatively short interval (say, 30 seconds, shorter than the scan length), a number can simply be entered into the blank box and, when the data are replotted, the data will be time averaged. Clicking on the {\bf Scan} or {\bf Field} checkbox in this case will have no impact on the time averaging.
+Time averaging is a little trickier, as it is controlled by three
+fields. If the checkbox next to {\bf Time} under {\bf Averaging} is
+clicked on, a blank box with units of seconds will become active,
+along with two additional checkboxes: {\bf Scan} and {\bf Field}. If
+averaging is desired over a relatively short interval (say, 30
+seconds, shorter than the scan length), a number can simply be entered
+into the blank box and, when the data are replotted, the data will be
+time averaged. Clicking on the {\bf Scan} or {\bf Field} checkbox in
+this case will have no impact on the time averaging.
 
-These checkboxes become relevant if averaging over a relatively long time---say the entire observation, which consists of multiple scans---is desired. Regardless of how large a number is typed into the {\bf Time} averaging blank box, only data within individual scans will be averaged together. In order to average data across scan boundaries, the {\bf Scan} checkbox must be clicked on and the data replotted. Finally, clicking on the {\bf Field} checkbox enables the averaging of multiple fields together in time.
+These checkboxes become relevant if averaging over a relatively long
+time---say the entire observation, which consists of multiple
+scans---is desired. Regardless of how large a number is typed into the
+{\bf Time} averaging blank box, only data within individual scans will
+be averaged together. In order to average data across scan boundaries,
+the {\bf Scan} checkbox must be clicked on and the data
+replotted. Finally, clicking on the {\bf Field} checkbox enables the
+averaging of multiple fields together in time.
 
-Clicking on the {\bf All Baselines} checkbox will average all baselines in the array together. Alternatively, the {\bf Per Antenna} box  may be checked, which will average all baselines for a given antenna together. In this case, all baselines are represented twice; baseline 3-24 will contribute to the averages for both antenna 3 and antenna 24. This can produce some rather strange-looking plots if the user also selects on antenna---say, if the user requests to plot only antenna 0 and then averages {\bf Per Antenna}, In this case, an average of all baselines including antenna 0 will be plotted, but each individual baseline including antenna 0 will also be plotted (because the presence of baselines 0-1, 0-2, 0-3, etc.~trigger {\bf Per Antenna} averaging to try and compute averages for antennae 1, 2, 3, etc. Therefore, baseline 0-1 will contribute to the average for antenna 0, but it will also singlehandedly {\it be} the average for antenna 1.) 
+Clicking on the {\bf All Baselines} checkbox will average all
+baselines in the array together. Alternatively, the {\bf Per Antenna}
+box may be checked, which will average all baselines for a given
+antenna together. In this case, all baselines are represented twice;
+baseline 3-24 will contribute to the averages for both antenna 3 and
+antenna 24. This can produce some rather strange-looking plots if the
+user also selects on antenna---say, if the user requests to plot only
+antenna 0 and then averages {\bf Per Antenna}, In this case, an
+average of all baselines including antenna 0 will be plotted, but each
+individual baseline including antenna 0 will also be plotted (because
+the presence of baselines 0-1, 0-2, 0-3, etc.~trigger {\bf Per
+  Antenna} averaging to try and compute averages for antennae 1, 2, 3,
+etc. Therefore, baseline 0-1 will contribute to the average for
+antenna 0, but it will also singlehandedly {\it be} the average for
+antenna 1.)
 
-Spectral windows can be averaged together by checking the box next to {\bf All Spectral Windows}. This will result in, for a given channel {\it n}, all channels {\it n} from the individual spectral windows being averaged together. 
+Spectral windows can be averaged together by checking the box next to
+{\bf All Spectral Windows}. This will result in, for a given channel
+{\it n}, all channels {\it n} from the individual spectral windows
+being averaged together.
 
-Finally, the default mode is vector averaging, where the complex average is formed by averaging the real and imaginary parts of the relevant visibilities.  If {\bf Scalar} is chosen, then the amplitude of the average is formed by a scalar average of the individual visibility amplitudes.
+Finally, the default mode is vector averaging, where the complex
+average is formed by averaging the real and imaginary parts of the
+relevant visibilities.  If {\bf Scalar} is chosen, then the amplitude
+of the average is formed by a scalar average of the individual
+visibility amplitudes.
 
-When averaging, {\tt plotms} will prefer unflagged data.  I.e., if an averaging bin contains any unflagged
-data at all, only the average of the unflagged will be shown.  For averaging bins that contain {\em only} unflagged data, the average of that unflagged data will be shown.  When flagging on a plot of averaged
-data, the flags will be applied to the unaveraged data in the MS.
+When averaging, {\tt plotms} will prefer unflagged data.  I.e., if an
+averaging bin contains any unflagged data at all, only the average of
+the unflagged will be shown.  For averaging bins that contain {\em
+  only} unflagged data, the average of that unflagged data will be
+shown.  When flagging on a plot of averaged data, the flags will be
+applied to the unaveraged data in the MS.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Plot Symbols}
 \label{section:edit.plot.plotms.symbol}
 
-Plot symbols are selected in the {\bf Plots $>$ Display} tab. Most fundamentally, the user can choose to plot unflagged data and/or flagged data. By default, unflagged data is plotted (the circle next to {\bf Default} is checked under {\bf Unflagged Points Symbol}), and flagged data is not plotted (the circle next to {\bf None} is checked under {\bf Flagged Points Symbol}. We note here that plotting flagged data on an averaged plot is undertaken at the user's own risk, as the distinction between flagged points and unflagged points becomes blurred if data are averaged over a dimension that is partially flagged. Take, for example, a plot of amplitude versus. time where all channels are averaged together, but some channels have been flagged due to RFI spikes. In creating the average, {\tt plotms} will skip over the flagged channels and only use the unflagged ones. The averaged points will be considered unflagged, and the flagged data will not appear on the plot at all.
+Plot symbols are selected in the {\bf Plots $>$ Display} tab. Most
+fundamentally, the user can choose to plot unflagged data and/or
+flagged data. By default, unflagged data is plotted (the circle next
+to {\bf Default} is checked under {\bf Unflagged Points Symbol}), and
+flagged data is not plotted (the circle next to {\bf None} is checked
+under {\bf Flagged Points Symbol}. We note here that plotting flagged
+data on an averaged plot is undertaken at the user's own risk, as the
+distinction between flagged points and unflagged points becomes
+blurred if data are averaged over a dimension that is partially
+flagged. Take, for example, a plot of amplitude versus. time where all
+channels are averaged together, but some channels have been flagged
+due to RFI spikes. In creating the average, {\tt plotms} will skip
+over the flagged channels and only use the unflagged ones. The
+averaged points will be considered unflagged, and the flagged data
+will not appear on the plot at all.
 
-A selection of {\bf None} produces no data points, {\bf Default} results in data points which are small circles (blue for unflagged data and red for flagged data), and {\bf Custom} allows the user to define a plot symbol. If {\bf Custom} plot symbols are chosen, the user can determine the symbol size by typing a number in the blank box next to {\bf px} or by clicking on the adjacent up or down arrows. Symbol shape can be chosen from the drop-down menu to be either ``circle'', ``square'', ``diamond'', or ``pixel'' (note than ``pixel'' only has one possible size). Symbol color can be chosen by typing a hex color code in the blank box next to {\bf Fill:} (e.g., ``ff00ff''), or by clicking on the {\bf ...} button and selecting a color from the pop-up GUI. The adjacent drop-down menu provides options for how heavily the plot symbol is shaded with this color, from heaviest to lightest: ``fill'', ``mesh1'', ``mesh2'', ``mesh3'', and ``no fill''. Finally, the plot symbol can be outlined in black (if {\bf Outline: Default} is checked) or not (if {\bf Outline: None} is checked). Note that if ``no fill'' and {\bf Outline: None} are selected, the plot symbols will be invisible.
+A selection of {\bf None} produces no data points, {\bf Default}
+results in data points which are small circles (blue for unflagged
+data and red for flagged data), and {\bf Custom} allows the user to
+define a plot symbol. If {\bf Custom} plot symbols are chosen, the
+user can determine the symbol size by typing a number in the blank box
+next to {\bf px} or by clicking on the adjacent up or down
+arrows. Symbol shape can be chosen from the drop-down menu to be
+either ``circle'', ``square'', ``diamond'', or ``pixel'' (note than
+``pixel'' only has one possible size). ``autoscaling'' attempts to
+adjust the size of the points from dots to circles of different sizes,
+depending on how many points are plotted. Symbol color can be chosen
+by typing a hex color code in the blank box next to {\bf Fill:} (e.g.,
+``ff00ff''), or by clicking on the {\bf ...}  button and selecting a
+color from the pop-up GUI. The adjacent drop-down menu provides
+options for how heavily the plot symbol is shaded with this color,
+from heaviest to lightest: ``fill'', ``mesh1'', ``mesh2'', ``mesh3'',
+and ``no fill''. Finally, the plot symbol can be outlined in black (if
+{\bf Outline: Default} is checked) or not (if {\bf Outline: None} is
+checked). Note that if ``no fill'' and {\bf Outline: None} are
+selected, the plot symbols will be invisible.
 
-Finally, unflagged data points can be given informative symbol colors using the {\bf Colorize} parameter. By checking the box next to {\bf Colorize} and selecting a data dimension from the drop-down menu, the data will be plotted with colors that vary along that dimension. For example, if ``corr'' is chosen from the {\bf Colorize} menu, ``RR'', ``LL'', ``RL'', and ``LR'' data will each be plotted with a different color. Note that, currently, {\bf colorize} and plotting flagged data appear to be incompatible; a plot can only include one of these special features at a time.
+Finally, unflagged data points can be given informative symbol colors
+using the {\bf Colorize} parameter. By checking the box next to {\bf
+  Colorize} and selecting a data dimension from the drop-down menu,
+the data will be plotted with colors that vary along that
+dimension. For example, if ``corr'' is chosen from the {\bf Colorize}
+menu, ``RR'', ``LL'', ``RL'', and ``LR'' data will each be plotted
+with a different color. Note that, currently, {\bf colorize} and
+plotting flagged data appear to be incompatible; a plot can only
+include one of these special features at a time.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -817,15 +931,16 @@ selection of the {\bf Data} tab.
 \label{section:edit.plot.plotms.iter}
 
 In many cases, it is desirable to iterate through the data that were
-selected in the {\it Data} tab. A typical example is to display a single baseline in a time vs. amplitude plot and
-then proceed to the next baselines step by step. This can be done via the {\it Iter} tab on the left hand
-side of {\tt plotms}. A drop-down menu allows you to select the
-parameter to be iterated on, such as baseline or spw (press {\it plot}
-after changing your selection). The plot titles in the main panel in
-{\tt plotms} show which data slice is currently displayed. To proceed
-to the next plot use the {\it green buttons} below the main panel. The
-different button symbols let you to proceed panel by panel or to jump to the first or last
-panel directly.
+selected in the {\it Data} tab. A typical example is to display a
+single baseline in a time vs. amplitude plot and then proceed to the
+next baselines step by step. This can be done via the {\it Iter} tab
+on the left hand side of {\tt plotms}. A drop-down menu allows you to
+select the parameter to be iterated on, such as baseline or spw (press
+{\it plot} after changing your selection). The plot titles in the main
+panel in {\tt plotms} show which data slice is currently displayed. To
+proceed to the next plot use the {\it green buttons} below the main
+panel. The different button symbols let you to proceed panel by panel
+or to jump to the first or last panel directly.
  
 
 There are two scaling options for the axes: {\it Global} and {\it
@@ -835,14 +950,13 @@ tab. {\it Self} readjusts the axes scaling to the data for each
 individual panel of the iteration. 
 
 
-Note that exporting iterated data only refers to the
-shown panel, the exported files do not (yet) collate all the iteration
-panels in say a
+Note that exporting iterated data only refers to the shown panel, the
+exported files do not (yet) collate all the iteration panels in say a
 multi-page pdf. So please export every panel separately.
 
-The {\it Rows} and {\it Columns} selection boxes will, in the future, control the number of
-panels for multi-panel plots. This feature is likely available in CASA
-3.3 and higher.
+The {\it Rows} and {\it Columns} selection boxes will, in the future,
+control the number of panels for multi-panel plots. This feature is
+likely available in CASA 3.3 and higher.
 
 
 
@@ -850,24 +964,51 @@ panels for multi-panel plots. This feature is likely available in CASA
 \subsubsection{Saving your plot}
 \label{section:edit.plot.plotms.save}
 
-You can save a copy of a plot to file in the {\bf Plots $>$ Export} tab. Click the {\bf Browse} button for a GUI-based selection of the directory and file name to which the plot will be saved. The file format can also be determined in this GUI by the suffix given to the filename: {\tt .png} (PNG), {\tt .jpg} (JPG), {\tt .ps} (PS), or {\tt .pdf} (PDF). Alternatively, the file format can be selected from the {\bf Format} drop-down menu located just below the {\bf Browse} button. In this case, {\tt plotms} will add a suffix to the file name depending on the format chosen.
+You can save a copy of a plot to file in the {\bf Plots $>$ Export}
+tab. Click the {\bf Browse} button for a GUI-based selection of the
+directory and file name to which the plot will be saved. The file
+format can also be determined in this GUI by the suffix given to the
+filename: {\tt .png} (PNG), {\tt .jpg} (JPG), {\tt .ps} (PS), {\tt
+  .pdf} (PDF), and {\tt txt} (TEXT). Alternatively, the file format can
+be selected from the {\bf Format} drop-down menu located just below
+the {\bf Browse} button. In this case, {\tt plotms} will add a suffix
+to the file name depending on the format chosen.
 
 {\bf ALERT:} The plot files produced by the PS and PDF options can be
-large and time-consuming to export.  The JPG is the smallest.\\ 
-{\bf On
-  MacOS there are known problems when exporting to anything but a file
-  in png
-  format. Until this is fixed, please export to png and use third
-  party software, such as the MacOS
-  application {\tt Preview} or the ImageMagick Tool {\tt convert} to
-  convert the png to pdf, jpg, eps, etc. }
+large and time-consuming to export.  The JPG is the smallest.\\
 
-The exported plot resolution can be manipulated using the {\bf High Resolution}, {\bf DPI}, and {\bf Size} options.
+
+The exported plot resolution can be manipulated using the {\bf High
+  Resolution}, {\bf DPI}, and {\bf Size} options.
 
 Click on {\bf Export} to create the file. Note that, if there is more
 than one plot displayed in the {\tt plotms} window,
 % (\S~\ref{section:edit.plot.plotms.window}), 
 it will only export the currently selected plot.
+
+the {\tt TEXT} format will not save an image but the data points
+themselves. This allows one to dump the current plot into a file that
+is used in other programs for further processing. The reported data is
+the same as when using the {\tt locate} button in {\tt plotms} and the
+format looks like:
+
+\small
+\begin{verbatim}
+# x y chan scan field ant1 ant2 ant1name ant2name time freq spw corr offset currchunk irel
+# Real Imag None None None None None None None MJD(seconds) GHz None None None None None
+0.282938 0.0387583 31 5 2 1 12 ea02@E02 ea21@E01 4778968956.000 36.308479452 1 RR 26 0 26
+0.263241 -0.00806698 31 7 2 1 12 ea02@E02 ea21@E01 4778969356.000 36.308479452 1 RR 29 1 28
+0.258207 0.0301206 31 9 2 1 12 ea02@E02 ea21@E01 4778969745.000 36.308479452 1 RR 30 2 28
+0.311155 -0.0180511 31 11 2 1 12 ea02@E02 ea21@E01 4778970133.250 36.308479452 1 RR 31 3 28
+0.284589 -0.0628808 31 13 2 1 12 ea02@E02 ea21@E01 4778970522.250 36.308479452 1 RR 32 4 28
+\end{verbatim}
+\normalsize
+
+where x and y are the two plotted axes and the other columns contain
+additional information such as the baselines or frequencies. The three
+last columns {\it offset, corrchunk, and irel} are internal data
+management items for {\tt plotms} and you most likely will never use them. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Exiting {\tt plotms}}
@@ -1591,8 +1732,7 @@ baselines that have antennas in common with those displayed and
 marked.  For example, if {\tt antenna='1\&2'} is shown, then ALL
 baselines to BOTH antennas 1 and 2 will be flagged.  Currently, there
 is no option to extend the flag to ONLY baselines to the first (or 
-second) antenna in a displayed pair, so it is better to use
-{\tt flagdata2} to remove specific antennas.
+second) antenna in a displayed pair.
 
 Setting {\tt extendtime='all'} will extend the flagging to all times 
 matching the other selection or extension for the data in the marked
@@ -1787,7 +1927,7 @@ iteration = ''
 
 plotxy()
 
-# You can also use flagdata2 to do this non-interactively
+# You can also use flagdata to do this non-interactively
 # (see below)
 
 # Now look at the cross-polar products
@@ -1908,60 +2048,107 @@ async     =      False   #
 \end{verbatim}
 \normalsize
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Data Flagging using {\tt tflagdata}}
-\label{section:edit.tflagdata}
+\subsection{Plotting uv-coverages {\tt plotuv}}
+\label{section:edit.plot.plotuv}
 
-{\bf Alert:} {\tt tflagdata} is experimental for CASA 3.4. For CASA
-3.5. we will remove the current tasks {\tt flagdata}, {\tt flagdata2},
-{\tt flagautocorr}, and {\tt testautoflag} and rename {\tt tflagdata}
-to {\tt flagdata}. So we recommend to become familiar with {\tt
-  tflagdata} and recommend that scripts may be written to use the new
-{\tt tflagdata} syntax. {\tt tflagdata} is substantially faster, more
-flexible, and more comprehensive than the current non-interactive
-flagging tasks. {\tt tflagdata} has many modes to derive flags, based
-on data selections, derived quantities such as shadowing. We also
-implemented automatic flagging algorithms, {\tt tfcrop} and {\tt rflag}. 
 
-For a full description of {\tt tflagdata} please visit:
-
-\url{http://www.aoc.nrao.edu/\~rurvashi/FlaggerDocs/FlaggerDocs.html}
-
-The inputs to {\tt tflagdata} are:
+A simple way to plot uv-coverages is offered by the task {\tt
+  plotuv}:
 
 \small
 \begin{verbatim}
-#  tflagdata ::  All-purpose flagging task based on data-selections and flagging modes/algorithms
+#  plotuv :: Plot the baseline distribution
+vis                 =         ''        #  Name of input visibility file (MS)
+field               =         ''        #  Select field using ID(s) or name(s)
+antenna             =         ''        #  Select data based on antenna/baseline
+spw                 =         ''        #  Select spectral window/channels
+observation         =         ''        #  Select by observation ID(s)
+array               =         ''        #  Select (sub)array(s) by array ID number
+maxnpts             =     100000        #  Maximum number of points per plot.
+colors              = ['r', 'y', 'g', 'b'] #  a list of matplotlib color codes
+symb                =        ','        #  A matplotlib plot symbol code
+ncycles             =          1        #  How many times to cycle through colors per
+                                        #   plot.
+figfile             =         ''        #  Save the plotted figure(s) using this name
+async               =      False        #  If true the taskname must be started using
+                                        #   plotuv(...)
+\end{verbatim}
+\normalsize
+
+{\tt plotuv} provides basic selection of data as well as plotting
+style options. The difference to {\tt plotms} is that {\tt plotuv} is
+also plotting the Hermitian conjugates of the visibilities which
+produces the familiar symmetric plots. This is a remedy to the
+restriction in {\tt plotms} to allow flagging of data. This is
+achieved via a unambiguous link from a displayed data point to a
+visibility. Plotting Hermitian conjugates would break this rule in
+{\tt plotms} and {\tt plotuv} is used instead to plot Hermitian
+conjugates.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Flagging using {\tt flagdata}}
+\label{section:edit.flagdata}
+
+{\bf Alert:} {\tt flagdata} was dubbed {\tt tflagdata} in CASA
+3.4. The previous {\tt flagdata}, {\tt flagdata2},
+{\tt flagautocorr}, and {\tt testautoflag} were all removed from the
+code as they are now obsolete.
+
+For a full description of {\tt flagdata} please visit:
+
+\url{http://www.aoc.nrao.edu/\~rurvashi/FlaggerDocs/FlaggerDocs.html}
+
+The inputs to {\tt flagdata} are:
+
+\small
+\begin{verbatim}
+#  flagdata :: All-purpose flagging task based on data-selections and flagging modes/algorithms
 vis                 =         ''        #  Name of MS file to flag
-mode                =   'manual'        #  Flagging mode (list/manual/clip/shadow/quack/elevation/tfcrop/rflag/
-                                        #   extend/unflag/summary)
-     field          =         ''        #  Field names or field index numbers: ''==>all, field='0~2,3C286'
-     spw            =         ''        #  spectral-window/frequency/channel
-     antenna        =         ''       #  antenna/baselines: ''==>all, antenna ='3,VA04'
-     timerange      =         ''        #  time range: ''==>all,timerange='09:14:0~09:54:0'
-     correlation    =         ''        #  Select data based on correlation
-     scan           =         ''        #  scan numbers: ''==>all
-     intent         =         ''        #  Select data based on observation intent: ''==>all
-     feed           =         ''        #  multi-feed numbers: Not yet implemented
-     array          =         ''        #  (sub)array numbers: ''==>all
-     uvrange        =         ''        #  uv range: ''==>all; uvrange ='0~100klambda', default units=meters
-     observation    =         ''        #  Select data based on observation ID: ''==>all
+mode                =   'manual'        #  Flagging mode (list/manual/clip/shadow/quack/el
+                                        #   evation/tfcrop/rflag/extend/unflag/summary)
+     field          =         ''        #  Field names or field index numbers: '' ==> all,
+                                        #   field='0~2,3C286'
+     spw            =         ''        #  Spectral-window/frequency/channel: '' ==> all,
+                                        #   spw='0:17~19'
+     antenna        =         ''        #  Antenna/baselines: '' ==> all, antenna
+                                        #   ='3,VA04'
+     timerange      =         ''        #  Time range: '' ==>
+                                        #   all,timerange='09:14:0~09:54:0'
+     correlation    =         ''        #  Correlation: '' ==> all, correlation='XX,YY'
+     scan           =         ''        #  Scan numbers: '' ==> all
+     intent         =         ''        #  Observation intent: '' ==> all,
+                                        #   intent='CAL*POINT*'
+     array          =         ''        #  (Sub)array numbers: '' ==> all
+     uvrange        =         ''        #  UV range: '' ==> all; uvrange ='0~100klambda',
+                                        #   default units=meters
+     observation    =         ''        #  Observation ID: '' ==> all
+     feed           =         ''        #  Multi-feed numbers: Not yet implemented
      autocorr       =      False        #  Flag auto-correlations
 
-action              =    'apply'        #  Action to perform in MS and/or in inpfile (none/apply/calculate)
-     display        =         ''        #  Display data and/or end-of-MS reports at runtime (data/report/both).
+action              =    'apply'        #  Action to perform in MS and/or in inpfile
+                                        #   (none/apply/calculate)
+     display        =         ''        #  Display data and/or end-of-MS reports at
+                                        #   runtime (data/report/both).
      flagbackup     =       True        #  Back up the state of flags before the run
 
-savepars            =      False        #  Save the current parameters to the FLAG_CMD table or to a file
-async               =      False        #  If true the taskname must be started using tflagdata(...)
+savepars            =      False        #  Save the current parameters to the FLAG_CMD
+                                        #   table or to a file
+async               =      False        #  If true the taskname must be started using
+                                        #   flagdata(...)
 
 \end{verbatim}
 \normalsize
 
 
-The {\tt mode} parameter (\S \ref{section:edit.tflagdata.mode}) selects the flagging algorithm and the following are available:
+The {\tt mode} parameter (\S \ref{section:edit.flagdata.mode}) selects the flagging algorithm and the following are available:
 
 \small
 \begin{verbatim}
@@ -2016,7 +2203,7 @@ correlation='RE_XX,XY'
 which would select all real XX and XY polarization for flagging. 
 
 \subsection{The {\tt action} parameter}
-\label{section:edit.tflagdata.action}
+\label{section:edit.flagdata.action}
 
 The keyword {\tt action} controls whether the actual flagging
 commands will be applied or not and the options are the empty string
@@ -2080,28 +2267,32 @@ keywords.
 
 
 \subsection{Flagging Modes}
-\label{section:edit.tflagdata.mode}
+\label{section:edit.flagdata.mode}
 
 \subsubsection{Manual Flag/Unflag}
-\label{section:edit.tflagdata.mode.manual}
+\label{section:edit.flagdata.mode.manual}
 
 \small
 \begin{verbatim}
-mode                =   'manual'        #  Flagging mode (list/manual/clip/shadow/quack/elevation/tfcro
-                                        #   p/rflag/extend/unflag/summary)
-     field          =         ''        #  Field names or field index numbers: ''==>all,
+mode                =   'manual'        #  Flagging mode (list/manual/clip/shadow/quack/el
+                                        #   evation/tfcrop/rflag/extend/unflag/summary)
+     field          =         ''        #  Field names or field index numbers: '' ==> all,
                                         #   field='0~2,3C286'
-     spw            =         ''        #  spectral-window/frequency/channel
-     antenna        =         ''        #  antenna/baselines: ''==>all, antenna ='3,VA04'
-     timerange      =         ''        #  time range: ''==>all,timerange='09:14:0~09:54:0'
-     correlation    =         ''        #  Select data based on correlation
-     scan           =         ''        #  scan numbers: ''==>all
-     intent         =         ''        #  Select data based on observation intent: ''==>all
-     feed           =         ''        #  multi-feed numbers: Not yet implemented
-     array          =         ''        #  (sub)array numbers: ''==>all
-     uvrange        =         ''        #  uv range: ''==>all; uvrange ='0~100klambda', default
-                                        #   units=meters
-     observation    =         ''        #  Select data based on observation ID: ''==>all
+     spw            =         ''        #  Spectral-window/frequency/channel: '' ==> all,
+                                        #   spw='0:17~19'
+     antenna        =         ''        #  Antenna/baselines: '' ==> all, antenna
+                                        #   ='3,VA04'
+     timerange      =         ''        #  Time range: '' ==>
+                                        #   all,timerange='09:14:0~09:54:0'
+     correlation    =         ''        #  Correlation: '' ==> all, correlation='XX,YY'
+     scan           =         ''        #  Scan numbers: '' ==> all
+     intent         =         ''        #  Observation intent: '' ==> all,
+                                        #   intent='CAL*POINT*'
+     array          =         ''        #  (Sub)array numbers: '' ==> all
+     uvrange        =         ''        #  UV range: '' ==> all; uvrange ='0~100klambda',
+                                        #   default units=meters
+     observation    =         ''        #  Observation ID: '' ==> all
+     feed           =         ''        #  Multi-feed numbers: Not yet implemented
      autocorr       =      False        #  Flag auto-correlations
 \end{verbatim}
 \normalsize
@@ -2114,14 +2305,15 @@ parameters will be flagged or unflagged, depending on the {\tt
 
 
 \subsubsection{List}
-\label{section:edit.tflagdata.mode.list}
+\label{section:edit.flagdata.mode.list}
 
 
 \small
 \begin{verbatim}
-mode                =     'list'        #  Flagging mode (list/manual/clip/shadow/quack/elevation/tfcro
-                                        #   p/rflag/extend/unflag/summary)
-     inpfile        =         ''        #  Input file with list of commands to run
+mode                =     'list'        #  Flagging mode (list/manual/clip/shadow/quack/el
+                                        #   evation/tfcrop/rflag/extend/unflag/summary)
+     inpfile        =         ''        #  Input ASCII file or Python list of strings with
+                                        #   flag commands.
      reason         =      'any'        #  Select by REASON types
 \end{verbatim}
 \normalsize
@@ -2131,9 +2323,9 @@ A list of flags can be provided through a file specified by the {\tt
   mode} with data selection parameters as well as parameters that are
 specific to that {\tt mode}. All parameters that are not set will be
 reset to their default values (default {\tt mode} is {\tt
-  'manual'}). Each line of this file will be taken as a command to the
-{\tt tflagdata} task. This {\tt mode='list'} is similar to the task
-{\tt flagcmd} with the {\tt inpmode='file'} option.
+  'manual'}). Each line of this file or list of strings will be taken
+as a command to the {\tt flagdata} task. This {\tt mode=’list’} is similar to the
+task flagcmd with the {\tt inpmode=’list’} option. 
 
 An example for such a file would be: 
 
@@ -2147,6 +2339,32 @@ antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'
 \end{verbatim}
 \normalsize
 
+Alternatively, this can be issued in the task directly like:
+
+\small
+\begin{verbatim}
+flagdata(vis='vis',mode='list',
+inpfile=["mode='shadow'",
+         "mode='clip' clipminmax=[0,5] correlation='ABS_ALL'",
+         "mode='quack' quackmode='end' quackinterval=1.0"'
+         "antenna='ea01' timerange='00:00:00~01:00:00'",
+         "antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'"])
+\end{verbatim}
+\normalsize
+or via a variable
+\small
+\begin{verbatim}
+cmds=["mode=’shadow’,
+           "mode=’clip’ clipminmax=[0,5] correlation=’ABS_ALL’",
+           "mode=’quack’ quackmode=’end’ quackinterval=1.0",
+           "antenna=’ea01’ timerange=’00:00:00~01:00:00’",
+           "antenna=’ea11’ timerange=’00:00:00~03:00:00’ spw=’0~4’"]
+
+
+flagdata(vis='vis',mode='list', inpfile=cmds)
+\end{verbatim}
+\normalsize
+
 The syntax should be written with quotes e.g. {\tt mode='manual'
   antenna='ea10'} but will usually also be accepted without the quotes
 (like {\tt mode=manual antenna=ea10}). Spaces are only allowed to
@@ -2157,7 +2375,7 @@ inside strings and there are no commas between the subparameters on each line.
 
 
 \subsubsection{Clip}
-\label{section:edit.tflagdata.mode.clip}
+\label{section:edit.flagdata.mode.clip}
 
 \small
 \begin{verbatim}
@@ -2178,7 +2396,7 @@ also has an option to select between the {\tt DATA}, {\tt
   CORRECTED\_DATA} and other scratch columns for 
 operation. {\tt clipminmax} selects the range of values to be clipped
 -- usually this is combined with {\tt clipoutside=True} to clip
-everything {\it but} the values coverd in {\tt clipminmax}. The data can
+everything {\it but} the values covered in {\tt clipminmax}. The data can
 also be averaged over the selected {\tt spw} channel ranges by setting
 {\tt channelavg=True}. {\tt clip} will also flag 'NaN', 'inf', and
 '-inf' values by default and can flag exact zero values (these are sometimes
@@ -2192,7 +2410,7 @@ from being flagged by the autoflag algorithms.
 
 
 \subsubsection{Shadow}
-\label{section:edit.tflagdata.mode.shadow}
+\label{section:edit.flagdata.mode.shadow}
 
 \small
 \begin{verbatim}
@@ -2213,11 +2431,11 @@ when a baseline is shorter than ${\rm radius}_1 + {\rm radius}_2 - {\rm toleranc
 (where the radii of the antennae are taken from the MS antenna
 subtable). {\tt addantenna} may be used to account for shadowing when
 antennas are not listed in the MS but are physically present. Please
-read the {\tt tflagdata} inline help for the syntax of this option.
+read the {\tt flagdata} inline help for the syntax of this option.
 
 
 \subsubsection{Quack}
-\label{section:edit.tflagdata.mode.quack}
+\label{section:edit.flagdata.mode.quack}
 \small
 \begin{verbatim}
 mode                =    'quack'        #  Flagging mode (list/manual/clip/shadow/quack/
@@ -2242,7 +2460,7 @@ the first unflagged data in the scan, or from the scan boundaries
 independent of data being already flagged or not.
 
 \subsubsection{Elevation}
-\label{section:edit.tflagdata.mode.elevation}
+\label{section:edit.flagdata.mode.elevation}
 
 \small
 \begin{verbatim}
@@ -2261,7 +2479,7 @@ good elevations.
 
 
 \subsubsection{Tfcrop}
-\label{section:edit.tflagdata.mode.tfcrop}
+\label{section:edit.flagdata.mode.tfcrop}
 
 \small
 \begin{verbatim}
@@ -2364,11 +2582,11 @@ parameter.
 
 
 For a detailed description of the {\tt tfcrop parameters} and some
-examples, we refer to the inline help of {\tt tflagdata} and to
+examples, we refer to the inline help of {\tt flagdata} and to
 \url{http://www.aoc.nrao.edu/\~rurvashi/FlaggerDocs/FlaggerDocs.html}.
 
 \subsubsection{Rflag}
-\label{section:edit.tflagdata.mode.rflag}
+\label{section:edit.flagdata.mode.rflag}
 
 \small
 \begin{verbatim}
@@ -2436,29 +2654,43 @@ user supplied (or auto-calculated) thresholds.
 
 
 \subsubsection{Extend}
-\label{section:edit.tflagdata.mode.extend}
+\label{section:edit.flagdata.mode.extend}
 
 \small
 \begin{verbatim}
-mode                =   'extend'        #  Flagging mode (list/manual/clip/shadow/quack/
-                                        #   elevation/tfcrop/rflag/extend/unflag/summary
-                                        #   )
-...
-     ntime          =     'scan'        #  Time-range to use for each chunk (in seconds
-                                        #   or minutes)
+mode                =   'extend'        #  Flagging mode (list/manual/clip/shadow/quack/el
+                                        #   evation/tfcrop/rflag/extend/unflag/summary)
+     field          =         ''        #  Field names or field index numbers: '' ==> all,
+                                        #   field='0~2,3C286'
+     spw            =         ''        #  Spectral-window/frequency/channel: '' ==> all,
+                                        #   spw='0:17~19'
+     antenna        =         ''        #  Antenna/baselines: '' ==> all, antenna
+                                        #   ='3,VA04'
+     timerange      =         ''        #  Time range: '' ==>
+                                        #   all,timerange='09:14:0~09:54:0'
+     correlation    =         ''        #  Correlation: '' ==> all, correlation='XX,YY'
+     scan           =         ''        #  Scan numbers: '' ==> all
+     intent         =         ''        #  Observation intent: '' ==> all,
+                                        #   intent='CAL*POINT*'
+     array          =         ''        #  (Sub)array numbers: '' ==> all
+     uvrange        =         ''        #  UV range: '' ==> all; uvrange ='0~100klambda',
+                                        #   default units=meters
+     observation    =         ''        #  Observation ID: '' ==> all
+     feed           =         ''        #  Multi-feed numbers: Not yet implemented
+     ntime          =     'scan'        #  Time-range to use for each chunk (in seconds or
+                                        #   minutes)
      combinescans   =      False        #  Accumulate data across scans.
      extendpols     =       True        #  If any correlation is flagged, flag all
                                         #   correlations
-     growtime       =       90.0        #  Flag all 'ntime' integrations if more than X%
+     growtime       =       50.0        #  Flag all 'ntime' integrations if more than X%
                                         #   of the timerange is flagged (0-100)
-     growfreq       =       90.0        #  Flag all selected channels if more than X% of
+     growfreq       =       50.0        #  Flag all selected channels if more than X% of
                                         #   the frequency range is flagged(0-100)
      growaround     =      False        #  Flag data based on surrounding flags
      flagneartime   =      False        #  Flag one timestep before and after a flagged
                                         #   one (True/False)
-     flagnearfreq   =      False        #  Flag one channel before and after a flagged
-                                        #   one (True/False)
-
+     flagnearfreq   =      False        #  Flag one channel before and after a flagged one
+                                        #   (True/False)
 \end{verbatim}
 \normalsize
 
@@ -2496,7 +2728,7 @@ flagged, too.
 
 
 \subsubsection{Unflag}
-\label{section:edit.tflagdata.mode.unflag}
+\label{section:edit.flagdata.mode.unflag}
 \small
 \begin{verbatim}
 mode                =   'unflag'        #  Flagging mode (list/manual/clip/shadow/quack/
@@ -2525,7 +2757,7 @@ The selection data will be unflagged.
 
 
 \subsubsection{Summary}
-\label{section:edit.tflagdata.mode.summary}
+\label{section:edit.flagdata.mode.summary}
 \small
 \begin{verbatim}
 mode                =  'summary'        #  Flagging mode (list/manual/clip/shadow/quack/
@@ -2551,7 +2783,7 @@ inline help for details).
 
 \small
 \begin{verbatim}
-s = tflagdata(..., mode='summary')
+s = flagdata(..., mode='summary')
 \end{verbatim}
 \normalsize
 
@@ -2563,10 +2795,6 @@ with a variable assigned, here 's'.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Command-based flagging using {\tt flagcmd}}
 \label{section:edit.flagcmd}
-
-{\bf Alert:} The {\tt flagcmd} task is under development and active
-testing. If you need the flagcmd syntax of CASA 3.3. and older, please
-use the task {\tt oldflagcmd}.
 
 The task {\tt flagcmd} will flag the visibility data set based on 
 a specified set of flagging commands using a flagging 
@@ -2581,7 +2809,7 @@ The inputs to {\tt flagcmd} are:
 \begin{verbatim}
 #  flagcmd :: Flagging task based on batches of flag-commands
 vis                 =         ''        #  Name of MS file to flag
-inpmode             =    'table'        #  Input mode for flag commands(table/file/xml/cmd)
+inpmode             =    'table'        #  Input mode for flag commands(table/list/xml)
      inpfile        =         ''        #  Source of flag commands
      tablerows      =         []        #  Rows of inpfile to read
      reason         =      'any'        #  Select by REASON types
@@ -2618,9 +2846,9 @@ the flagging commands.
 Available {\tt inpmode} options are:
 \begin{itemize}
    \item {\tt 'table'} --- input from MS table (\S~\ref{section:edit.flagcmd.inpmode.table})
+   \item {\tt 'list'} --- input from ASCII file or from a list of
+     strings (\S~\ref{section:edit.flagcmd.inpmode.list})
    \item {\tt 'xml'} --- input from XML table (\S~\ref{section:edit.flagcmd.inpmode.xml})
-   \item {\tt 'file'} --- input from ASCII file (\S~\ref{section:edit.flagcmd.inpmode.file})
-   \item {\tt 'cmd'} --- input from Python strings (\S~\ref{section:edit.flagcmd.inpmode.cmd})
 \end{itemize}
 
 \subsubsection{Input mode {\tt 'table'}}
@@ -2631,7 +2859,7 @@ task to input flag commands from a {\tt FLAG\_CMD} MS table.
 This has the sub-parameters:
 \small
 \begin{verbatim}
-inpmode             =    'table'        #  Input mode for flag commands(table/file/xml/cmd)
+inpmode             =    'table'        #  Input mode for flag commands(table/list/xml)
      inpfile        =         ''        #  Source of flag commands
      tablerows      =         []        #  Rows of inpfile to read
      reason         =      'any'        #  Select by REASON types
@@ -2657,6 +2885,43 @@ process.  The default {\tt 'any'} means all commands, note that
 {\tt reason=''} would only select flags who have a blank {\tt REASON}
 column entry.
 
+
+
+\subsubsection{Input flag mode {\tt 'list'}}
+\label{section:edit.flagcmd.inpmode.list}
+This mode allows one to insert either a list of strings with flagging
+commands or the name of a file name that contains these commands
+equivalent to the {\tt mode='list'} in {\tt flagdata}
+(\S\,\ref{section:edit.flagdata.mode.list}). E.g. a file {\it
+  flags.txt} that contains 
+\small
+\begin{verbatim}
+scan='1~3' mode='manual'
+mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False
+spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0
+mode='extend' extendpols=True
+\end{verbatim}
+\normalsize
+can be called via  
+\small
+\begin{verbatim}
+flagcmd(vis,inpmode='list',inpfile='flags.txt')
+\end{verbatim}
+\normalsize
+
+Alternatively, the individual flagging commands can
+be directly provided in the call itself like 
+\small
+\begin{verbatim}
+inpfile=["scan='1~3' mode='manual'", 
+         "mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False",
+         "spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0",
+         "mode='extend' extendpols=True"]
+\end{verbatim}
+\normalsize
+
+
+
 \subsubsection{Input flag mode {\tt 'xml'}}
 \label{section:edit.flagcmd.inpmode.xml}
 
@@ -2666,7 +2931,7 @@ task to input flag commands from a XML SDM online flagging
 When set this opens the sub-parameters:
 \small
 \begin{verbatim}
-inpmode             =      'xml'        #  Input mode for flag commands(table/file/xml/cmd)
+inpmode             =      'xml'        #  Input mode for flag commands(table/list/xml)
      tbuff          =        0.0        #  Time buffer (sec) to pad flags
      ants           =         ''        #  Allowed flag antenna names to select by
      reason         =      'any'        #  Select by REASON types
@@ -2704,48 +2969,6 @@ the {\tt Flag.xml} file.  The default {\tt 'any'} means all commands.
 Note that {\tt reason=''} would only select flags who have a blank {\tt REASON}
 field entry.
 
-\subsubsection{Input flag mode {\tt 'file'}}
-\label{section:edit.flagcmd.inpmode.file}
-
-The input mode {\tt inpmode='file'} directs the
-task to input flag commands from an ASCII file.  
-When set this opens the sub-parameters:
-\small
-\begin{verbatim}
-inpmode             =     'file'        #  Input mode for flag commands(table/file/xml/cmd)
-     inpfile        =         ''        #  Source of flag commands
-     reason         =      'any'        #  Select by REASON types
-\end{verbatim}
-\normalsize
-Set {\tt inpfile} to the path to the file, and {\tt reason} can select
-once more for a {\tt REASON} given in the file. 
-
-\subsubsection{Input flag mode {\tt 'cmd'}}
-\label{section:edit.flagcmd.inpmode.cmd}
-
-The input mode {\tt inpmode='cmd'} directs the
-task to input flag commands from a Python list of strings. 
-When set this opens the sub-parameters:
-\small
-\begin{verbatim}
-inpmode             =      'cmd'        #  Input mode for flag commands(table/file/xml/cmd)
-     command        =       ['']        #  flag command(s) as a list of strings
-\end{verbatim}
-\normalsize
-The {\tt command} sub-parameter is the command string list, with one
-command per list element.  For example:
-\small
-\begin{verbatim}
-command=["mode='shadow'",
-         "mode='clip' clipminmax=[0,5] correlation='ABS_ALL'",
-         "mode='quack' quackmode='end' quackinterval=1.0",
-         "antenna='ea01' timerange='00:00:00~01:00:00'",
-         "antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'"]
-\end{verbatim}
-\normalsize is a valid set of flagging commands.  These are equivalent
-to the lines in an ASCII flagging command file for {\tt
-  inpmode='file'} and achive the same as in the {\tt 'cmd'} example shown in
-\S\,\ref{section:edit.tflagdata.mode.list}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Operation types {\tt action}}
@@ -2870,7 +3093,7 @@ empty, it will save the commands to the MS given in {\tt vis}.
 
 The format of the listing output depends on the source of the flagging
 commands. A set of flagging commands specified through 
-{\tt inpmode='file'} or {\tt 'cmd'} will be listed directly. The
+{\tt inpmode='list'} will be listed directly. The
 flagging commands extracted through {\tt inpmode='table'} will
 reflect the columns in the table:
 \begin{verbatim}
@@ -2966,8 +3189,8 @@ A flagging command syntax has been devised to populate the {\tt
 COMMAND} column of the {\tt FLAG\_CMD} table and to direct the 
 operation of the {\tt flagcmd} task.
 
-The syntax is similar to {\tt tflagdata}, so please check {\tt help
-  tflagdata} for more info. 
+The syntax is similar to {\tt flagdata}, so please check {\tt help
+  flagdata} for more info. 
 
 You can also use {\tt help flagcmd} inside casapy for this syntax guide also.
 
@@ -3013,7 +3236,7 @@ basic {\tt "manual"} operation, ie. flag the data meeting the selection
           
         
 \item Modes specific parameters with default values (for further details,
-refer to the task {\tt tflagdata}, \S\,\ref{section:edit.tflagdata.mode}).
+refer to the task {\tt flagdata}, \S\,\ref{section:edit.flagdata.mode}).
      
 \begin{enumerate}
      
@@ -3085,8 +3308,8 @@ refer to the task {\tt tflagdata}, \S\,\ref{section:edit.tflagdata.mode}).
               ntime='scan'
               combinescans=False
               extendpols=True
-              growtime=90.0
-              growfreq=90.0
+              growtime=50.0
+              growfreq=50.0
               growaround=False
               flagneartime=False
               flagnearfreq=False
@@ -3142,303 +3365,6 @@ here for compatibility and future expansion
 \normalsize
 
 \end{enumerate}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Non-Interactive Flagging using {\tt flagdata2}}
-\label{section:edit.flagdata}
-
-{\bf Alert:} {\tt flagadata} and {\tt flagdata2} are still available
-in CASA 3.4. But {\tt tflagdata} (\S~\ref{section:edit.tflagdata})
-will be our new flagging task (renaming it it {\tt flagdata} in CASA
-3.5). We strongly recommend to use {\tt tflagdata} as it is faster and
-the syntax will be supported in the future.
-
-
-
-Task {\tt flagdata2} will flag the visibility data set based on the
-specified data selections, most of the information coming from a run
-of the {\tt listobs} task (with/without {\tt verbose=True}). Currently you can
-select based on any combination of: 
-
-\begin{itemize}
-   \item antennas ({\tt antenna})
-   \item baselines ({\tt antenna})
-   \item spectral windows and channels ({\tt spw})
-   \item correlation types ({\tt correlation})
-   \item field ids or names ({\tt field})
-   \item uv-ranges ({\tt uvrange})
-   \item times ({\tt timerange}) or scan numbers ({\tt scan})
-   \item antenna arrays ({\tt array})
-   \item scan intents ({\tt intent})
-   \item observation id ({\tt observation})
-\end{itemize}
-
-and choose to flag, unflag, clip, and
-remove the first part of each scan and/or the 
-autocorrelations.
-
-The inputs to {\tt flagdata2} are:
-\small
-\begin{verbatim}
-#  flagdata2 ::  All purpose flagging task based on selections. It allows the combination of several modes.
-vis                 =         ''        #  Name of file to flag
-flagbackup          =       True        #  Automatically back up the state of flags before the
-                                        #   run?
-selectdata          =      False        #  Data selection parameters, which will affect all modes
-                                        #   (antenna, timerange etc)
-manualflag          =      False        #  Flag by antenna, time, field, etc.
-clip                =      False        #  Clip data according to value
-shadow              =      False        #  Flag shadowed antennas
-elevation           =      False        #  Flag data from antennas below and above the given
-                                        #   elevation range
-quack               =      False        #  Clip beginning or ending of scans
-unflag              =      False        #  Unflag the data specified
-summary             =      False        #  List rows and data points flagged
-async               =      False        #  If true the taskname must be started using
-                                        #   flagdata2(...)
-\end{verbatim}
-\normalsize
-
-There is no default flagging {\tt mode} in flagdata2.  The desired mode needs to be set to True to be used. A set of sub-parameters will
-become visible and can be set as desired.
-
-The mode {\tt summary=True} will print out a summary of the current
-state of flagging into the {\tt logger}.
-
-By setting {\tt quack=True} it will allow dropping of integrations from the
-beginning or ending of scans.  See \S~\ref{section:edit.flagdata.quack} for
-details.
-
-By setting {\tt shadow=True} it will allow shadowed data to be flagged,
-e.g.\ if it has not already during filling 
-(\S~\ref{section:edit.flagdata.shadow}).
-
-Note that with {\tt 'flagdata2'}, it is possible to run multiple modes in one single call to the task. When {\tt 'selectdata=True'}, the
-selection will apply to all modes that are set to True. {\tt 'manualflag'} contains a set of sub-parameters for further selection.
-\small
-\begin{verbatim}
-   flagdata2(vis='my.ms', selectdata=True, field='0~3', manualflag=True, mf_field='1', quack=True)
-   flagdata2(vis='my.ms', manualflag=True, mf_field='3', mf_timerange = '6:0:0~6:23:00', shadow=True)
-\end{verbatim}
-\normalsize
-
-
-Note that often you want to apply many different flagging operations
-in a single pass through the data.  For this, we have implemented
-a ``list'' mode for the {\tt 'manualflag'} selections where
-several flagdata2 task invocations can be combined into a single
-{\tt flagdata2} run by giving lists of parameters. 
-This is possible for the {\tt 'manualflag'} mode, only.
-    
-For example, the following three flagdata2 runs:
-\small
-\begin{verbatim}
-   flagdata2(vis='my.ms', manualflag=True, mf_field='3')
-   flagdata2(vis='my.ms', manualflag=True, mf_field='3', mf_timerange = '6:0:0~6:23:00')
-   flagdata2(vis='my.ms', manualflag=True, mf_field='3', mf_scan='0', mf_spw='0:60;62;64')
-\end{verbatim}
-\normalsize
-can be combined into a single run by:
-\small
-\begin{verbatim}
-   vis = 'my.ms'
-   mode = 'manualflag'
-   selectdata = True
-   
-   mf_field     = '3'
-   mf_spw       = [ ''   , ''            , '0:60;62:64' ]
-   mf_timerange = [ ''   , '6:0:0~6:23:0', ''           ]
-   mf_scan      = [ ''   , ''            , '0'          ]
-   
-   flagdata2()
-\end{verbatim}
-\normalsize
-Note that {\tt mf\_field='3'} is equivalent to {\tt mf\_field=['3','3','3']}.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
--------------------------
-\subsection{Flag Antenna/Channels}
-\label{section:edit.flagdata.ant}
-
-The following commands give the results shown in 
-Figure\,\ref{fig:flagdata_antchan}:
-\small
-\begin{verbatim}
-  default{'plotxy')
-  plotxy('ngc5921.ms','channel',iteration='antenna',subplot=311)
-  default('flagdata2')
-  flagdata2(vis='ngc5921.ms',selectdata=True, manualflag=True, antenna='0',spw='0:10~15')
-  default plotxy
-  plotxy('ngc5921.ms','channel',iteration='antenna',subplot=311)
-\end{verbatim}
-\normalsize
-
-\begin{figure}[h!]
-\begin{center}
-\pngname{msplot_channelants}{3}
-\pngname{msplot_flagantchan}{3}
-\caption{\label{fig:flagdata_antchan} {\tt tflagdata}: Example showing before
-  and after displays using a selection of one antenna and a range of
-  channels. Note that each invocation of the flagdata2 task represents
-  a cumulative selection, i.e., running antenna='0' will flag all
-  data with antenna 0, while antenna='0', spw='0:10~15'
-  will flag only those channels on antenna 0. }
-\hrulefill
-\end{center}
-\end{figure}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Manual flagging and clipping in {\tt flagdata}}
-\label{section:edit.flagdata.clip}
-
-Manualflag and clipping have been separated in {\tt flagdata2}. They are controlled by separated
-parameters, {\tt manualflag=True} and {\tt clip=True} and contain there own sub-parameters:
-
-\small
-\begin{verbatim}
-manualflag          =       True        #  Flag by antenna, time, field, etc.
-     mf_field       =         ''        #  Field names or field index numbers: ''==>all,
-                                        #   field='0~2,3C286'
-     mf_spw         =         ''        #  spectral-window/frequency/channel
-     mf_antenna     =         ''        #  antenna/baselines: ''==>all, antenna = '3,VA04'
-     mf_timerange   =         ''        #  time range: ''==>all, timerange='09:14:0~09:54:0'
-     mf_scan        =         ''        #  scan numbers: ''==>all
-     mf_intent      =         ''        #  observation intent: ''==>all
-     mf_feed        =         ''        #  multi-feed numbers: Not yet implemented
-     mf_array       =         ''        #  (sub)array numbers: ''==>all
-     mf_uvrange     =         ''        #  uv range: ''==>all; uvrange = '0~100klambda', default
-                                        #   units=meters
-     mf_observation =         ''        #  Select data based on observation ID: ''==>all
-
-clip                =       True        #  Clip data according to value
-     clipexpr       =   'ABS RR'        #  Expression to clip on
-     clipminmax     =         []        #  Range to use for clipping
-     clipcolumn     =     'DATA'        #  Data column to use for clipping
-     clipoutside    =       True        #  Clip outside the range, or within it
-     channelavg     =      False        #  Average over channels (scalar average)
-
-\end{verbatim}
-\normalsize
-
-The following commands give the results shown in 
-Figure\,\ref{fig:flagdata}:
-\small
-\begin{verbatim}
-  plotxy('ngc5921.ms','uvdist')
-  flagdata2(vis='ngc5921.ms',clip=True, clipexpr='LL',clipminmax=[0.0,1.6],clipoutside=True)
-  plotxy('ngc5921.ms','uvdist')
-\end{verbatim}
-\normalsize
-
-\begin{figure}[h!]
-\begin{center}
-\pngname{msplot_clipbefore}{3}
-\pngname{msplot_clipafter}{3}
-\caption{\label{fig:flagdata} {\tt tflagdata}: Flagging example using the clip mode. }
-\hrulefill
-\end{center}
-\end{figure}
-
-The {\tt channelavg} toggle (new in Version 3.0.0) is now available
-to (vector) average the data over all channels before doing the
-clipping test.  This is most useful when flagging on phase stable or
-corrected data (e.g.\ after {\tt applycal} and split to a new
-dataset).
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Flagging the beginning of scans}
-\label{section:edit.flagdata.quack}
-
-You can use {\tt quack=True} to drop integrations from
-the beginning of scans (as in the AIPS task {\tt QUACK}):
-\small
-\begin{verbatim}
-quack               =       True        #  Clip beginning or ending of scans
-     quackinterval  =        0.0        #  Quack n seconds from scan beginning/end
-     quackmode      =      'beg'        #  Quack mode. 'beg' ==> beginning of scan. 'endb' ==>
-                                        #   end of scan. 'end' ==> all but end of scan. 'tail'
-                                        #   ==> all but beginning of scan
-     quackincrement =      False        #  Flag incrementally in time?
-\end{verbatim}
-\normalsize
-Note that the time is measured from the first integration in the MS
-for a given scan, and this is often already flagged by the online
-system.
-
-For example, assuming the integration time is 3.3 seconds (e.g. for
-VLA), then
-\small
-\begin{verbatim}
-   quack = True
-   quackinterval = 14.0 
-\end{verbatim}
-\normalsize
-will flag the first 4 integrations in every scan.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Flagging shadowed data with mode {\tt 'shadow'} }
-\label{section:edit.flagdata.shadow}
-
-Visibilities where one antenna is obscured by another antenna
-(typically at low elevations) can be flagged with {\tt shadow=True}:
-\small
-\begin{verbatim}
-shadow        =   True  #  Flag shadowed antennas.
-   diameter   =   -1.0  #  Effective diameter (m) to use. -1 ==>antenna diameter
-\end{verbatim}
-\normalsize
-Note that this can only flag data shadowed by antennas known in the MS
-(in the same subarray for example), not by antennas not in the dataset.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsubsection{Autoflagging.}  
-
-{\bf Alert:} Please use the {\tt tflagdata}
-(\S~\ref{section:edit.tflagdata}) task for autoflagging and RFI
-detections. Not that this task is temporary and will be replaced by
-its final version in the near future. See
-\url{http://www.aoc.nrao.edu/~rurvashi/TFCrop/} for details.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Flagging auto-correlations with {\tt flagautocorr}}
-\label{section:edit.flagautocorr}
-
-{\bf Alert:} {\tt flagautocorr} is still available in CASA 3.4. But
-{\tt tflagdata} (\S~\ref{section:edit.tflagdata}) will be our new
-flagging task (renaming it it {\tt flagdata} in CASA 3.5). We strongly
-recommend to use {\tt tflagdata} as it is faster and the syntax will
-be supported in the future. {\tt tflagdata} has an autocorrelation
-option in mode 'manual'.
-
-The {\tt flagautocorr} task can be used if all you want to do
-is to flag the auto-correlations out of the MS.  Nominally,
-this can be done upon filling from the VLA for example, but
-you may be working from a dataset that still has them.
-
-This task has a single input, the MS file name:
-\small
-\begin{verbatim}
-vis                 =         ''        #   Name of input visibility file (MS)
-\end{verbatim}
-\normalsize
-To use it, just set and go:
-\small
-\begin{verbatim}
-CASA <90>: vis = 'jupiter6cm.usecase.ms'                                         
-CASA <91>: flagautocorr()
-\end{verbatim}
-\normalsize
-
-Note that the auto-correlations can also be flagged using 
-{\tt tflagdata} (\S~\ref{section:edit.flagdata}) but the 
-{\tt flagautocorr} task is a handy shortcut for this common
-operation.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
