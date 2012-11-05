@@ -76,6 +76,7 @@ dctool = casac.deconvolver
 vptool = casac.vpmanager
 msmdtool = casac.msmetadata
 fitool = casac.fitter
+fntool = casac.functional
 utilstool = casac.utils
 cu = casac.cu = utilstool()
 vftask = casac.vlafillertask()
@@ -100,16 +101,16 @@ def gentools(tools=None):
 		 'ia': 'iatool()', 'po':'potool()', 'sm' :'smtool()', 
 		 'cl': 'cltool()', 'cs' :'coordsystool()', 'rg':'rgtool()',
 		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()',
-         'msmd':'msmdtool()','fi':'fitool()'}
+         'msmd':'msmdtool()','fi':'fitool()','fn':'fntool()'}
 	reqtools=[]
         if (not tools) or not hasattr(tools, '__iter__'):
 		reqtools=['im', 'cb', 'ms','tb', 'fg', 'me', 'ia', 'po',
-                          'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp', 'msmd', 'fi']
+                          'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp', 'msmd', 'fi', 'fn']
 	else:
 		reqtools=tools
 	return tuple([eval(tooldic[reqtool]) for reqtool in reqtools])
 
-im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn=gentools()
 
 def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=False):
         """

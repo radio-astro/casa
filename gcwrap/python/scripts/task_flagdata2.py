@@ -2,7 +2,7 @@ import time
 import os
 import sys
 from taskinit import *
-im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn=gentools()
 
 debug = False
 def flagdata2(vis = None,
