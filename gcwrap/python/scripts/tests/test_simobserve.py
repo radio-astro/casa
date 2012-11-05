@@ -7,6 +7,14 @@ from taskinit import *
 import unittest
 
 import numpy
+# to rethrow exception 
+import inspect
+glb = sys._getframe(len(inspect.stack())-1).f_globals
+if glb.has_key('__rethrow_casa_exceptions'):
+    rethrow_org = glb['__rethrow_casa_exceptions']
+else:
+    rethrow_org = False
+
 #
 # Unit test of simobserve task.
 # 
@@ -87,7 +95,7 @@ class simobserve_unittest_base:
 
 
 # ###
-# # Test single dish only skymodel simulations
+# # Test single dish skymodel only simulations
 # ###
 # class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
 #     """
@@ -233,7 +241,7 @@ class simobserve_unittest_base:
     
 
 # ###
-# # Test components list simulations
+# # Test components list only simulations
 # ###
 # class simobserve_comp(simobserve_unittest_base,unittest.TestCase):
 #     """
@@ -275,6 +283,9 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     badquant = "5bad"
     badnum = -1.
     project = simobserve_unittest_base.thistask+"_bad"
+
+    failmsg = "The task must throw exception"
+    errmsg = "Unexpected exception was thrown: %s"
     
     # Reserved methods of unit tests
     def setUp(self):
@@ -285,12 +296,16 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
             if os.path.exists(data):
                 os.system("rm -rf %s" % data)
             os.system("cp -r %s %s" % (self.datapath+data, data))
-        
+
+        # task must rethrow exception 
+        glb['__rethrow_casa_exceptions'] = True
+
         default(simobserve)
         # Add new line for better reading (these tests always print errors).
         print ""
 
     def tearDown(self):
+        glb['__rethrow_casa_exceptions'] = rethrow_org
         for data in self.indata:
             if os.path.exists(data):
                 os.system("rm -rf %s" % data)
@@ -300,63 +315,85 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     # Tests on invalid parameter sets
     def test_default(self):
         """Test Default parameter set. Neigher skymodel nor complist"""
-        res = simobserve()
-        self.assertFalse(res)
+        try:
+            res = simobserve()
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("No sky input found")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
 
 
     def test_noProject(self):
         """Test no project name"""
         project = ''
-        
-        res = simobserve(project=project)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=project)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("No such file or directory: ''")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
         
 
     def testBad_skymodel(self):
         """Test bad skymodel name"""
         skymodel=self.badname
-
-        res = simobserve(project=self.project,skymodel=skymodel)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,skymodel=skymodel)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("No sky input found")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
 
     def test_notImage(self):
         """Test non-image skymodel"""
         skymodel=self.incomp
-
-        res = simobserve(project=self.project,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         skymodel=skymodel)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             skymodel=skymodel)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Image %s cannot be opened; its type is unknown" % skymodel)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
         
     def testBad_inbright(self):
         """Test bad inbright"""
         inbright=self.badquant
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             inbright=inbright)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("invalid literal for float(): %s" % inbright)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
 
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         inbright=inbright)
-        self.assertFalse(res)
-        
     def testBad_indirection(self):
         """Test bad indirection ('J3000' is defaulted to 'J2000')"""
         indirection=self.baddir
-
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
                          indirection=indirection)
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
-        
     def testBad_incell(self):
         """Test bad incell"""
         incell=self.badquant
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         incell=incell)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             incell=incell)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find('Error in QuantumHolder::fromString with input string "%s": Illegal input units or format' % incell)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
 
     def testBad_incenter(self):
         """Test bad incenter"""
@@ -369,7 +406,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
         
-        
     def testBad_inwidth(self):
         """Test bad inwidth"""
         # Negaitve and non-frequency quantity are ignored
@@ -381,44 +417,57 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
-
     def testBad_complist(self):
         """Test bad complist name"""
         complist=self.badname
-        
-        res = simobserve(project=self.project,complist=complist,
-                         totaltime=self.tottime,mapsize=self.mapsize)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,complist=complist,
+                             totaltime=self.tottime,mapsize=self.mapsize)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("No sky input found")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
         
     def test_notComp(self):
         """Test non-components list complist"""
         complist=self.inimage
-        
-        res = simobserve(project=self.project,complist=complist,
-                         totaltime=self.tottime,mapsize=self.mapsize)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,complist=complist,
+                             totaltime=self.tottime,mapsize=self.mapsize)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("%s is non existant or is not a componentlist table" % complist)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
 
     def testBad_compwidth(self):
         """Test bad compwidth"""
         # not frequency
         compwidth="2arcsec"
-
-        res = simobserve(project=self.project,complist=self.incomp,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         compwidth=compwidth)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,complist=self.incomp,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             compwidth=compwidth)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Quantum::operator- unequal units 'GHz, 'arcsec'")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
         
     def testBad_ptgfile(self):
         """Test bad ptgfile name"""
         setpointings=False
         ptgfile = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         setpointings=setpointings,ptgfile=ptgfile)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             setpointings=setpointings,ptgfile=ptgfile)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Can't find pointing file")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
 
     def test_notPtgfile(self):
         """Test nonconforming ptgfile"""
@@ -431,22 +480,28 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         
         setpointings=False
         ptgfile = fname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         setpointings=setpointings,ptgfile=ptgfile)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             setpointings=setpointings,ptgfile=ptgfile)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("No valid lines found in pointing file")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)
 
     def testBad_integration(self):
         """Test bad integration"""
         integration = self.badtime
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         integration=integration)
-        self.assertFalse(res)
-        
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             integration=integration)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find('Failed AlwaysAssert qIntTime.getValue("s")>=0')
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_direction(self):
         """Test bad direction ('J3000' is defaulted to 'J2000')"""
@@ -458,57 +513,73 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
-
     def testBad_mapsize(self):
         """Test bad mapsize"""
         setpointings=True
         mapsize = [self.badquant, self.badquant]
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,
-                         setpointings=setpointings,mapsize=mapsize)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,
+                             setpointings=setpointings,mapsize=mapsize)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("can't interpret '%s' as a CASA quantity" % self.badquant)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_maptype(self):
         """Test bad maptype"""
         maptype = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         maptype=maptype)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             maptype=maptype)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
 
     def testBad_spacing(self):
         """Test bad pointingspacing"""
         pointingspacing = self.badquant
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         pointingspacing=pointingspacing)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             pointingspacing=pointingspacing)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("can't interpret '%s' as a CASA quantity" % pointingspacing)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
 
     def testBad_obsmode(self):
         """Test bad obsmode"""
         obsmode = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         obsmode=obsmode)
-        self.assertFalse(res)
-        
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             obsmode=obsmode)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_antennalist(self):
         """Test bad antennalist name"""
         antennalist = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         antennalist=antennalist)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             antennalist=antennalist)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Couldn't find antennalist")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_caldirection(self):
         """Test bad caldirection ('J3000' is defaulted to 'J2000')"""
@@ -526,23 +597,29 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         """Test bad calflux"""
         caldirection = "J2000 19h00m00 -23d00m50"
         calflux = self.badquant
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         caldirection=caldirection,calflux=calflux)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             caldirection=caldirection,calflux=calflux)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("can't interpret '%s' as a CASA quantity" % calflux)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_sdantlist(self):
         """Test bad sdantlist name"""
         obsmode = "sd"
         sdantlist = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         obsmode=obsmode,sdantlist=sdantlist)
-        self.assertFalse(res)
-    
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             obsmode=obsmode,sdantlist=sdantlist)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Couldn't find antennalist")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     # simobserve automatically defaults a bad ID number to 0.
     # therefore testing non-numeric 'sdant' here
@@ -551,39 +628,48 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         obsmode = "sd"
         sdantlist = self.sdantlist
         sdant = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         obsmode=obsmode,sdantlist=sdantlist,
-                         sdant=sdant)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             obsmode=obsmode,sdantlist=sdantlist,
+                             sdant=sdant)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_refdate(self):
         """Test bad refdate"""
         obsmode = "sd"
         sdantlist = self.sdantlist
         refdate = "05/21"
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         obsmode=obsmode,sdantlist=sdantlist,
-                         refdate=refdate)
-        self.assertFalse(res)
-    
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             obsmode=obsmode,sdantlist=sdantlist,
+                             refdate=refdate)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Invalid reference date")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_hourangle(self):
         """Test bad hourangle"""
         obsmode = "sd"
         sdantlist = self.sdantlist
         hourangle = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         obsmode=obsmode,sdantlist=sdantlist,
-                         hourangle=hourangle)
-        self.assertFalse(res)
-        
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             obsmode=obsmode,sdantlist=sdantlist,
+                             hourangle=hourangle)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find('Error in QuantumHolder::fromString with input string "%s": Illegal input units or format' % hourangle)
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     # casapy crashes for totaltime < 0
     def testBad_totaltime(self):
@@ -591,82 +677,111 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         obsmode = "sd"
         sdantlist = self.sdantlist
         totaltime = self.badtime
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         mapsize=self.mapsize,
-                         obsmode=obsmode,sdantlist=sdantlist,totaltime=totaltime)
-        self.assertFalse(res)
-    
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             mapsize=self.mapsize,
+                             obsmode=obsmode,sdantlist=sdantlist,
+                             totaltime=totaltime)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Negative totaltime is not allowed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_noisetype(self):
         """Test bad thermalnoise type"""
         thermalnoise = self.badname
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         thermalnoise=thermalnoise)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             thermalnoise=thermalnoise)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_pwv(self):
         """Test bad user_pwv"""
         thermalnoise = 'tsys-atm'
         user_pwv = self.badnum
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         thermalnoise=thermalnoise,user_pwv=user_pwv)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             thermalnoise=thermalnoise,user_pwv=user_pwv)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_Tground(self):
         """Test bad t_ground"""
         thermalnoise = 'tsys-atm'
         t_ground = self.badnum
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         thermalnoise=thermalnoise,t_ground=t_ground)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             thermalnoise=thermalnoise,t_ground=t_ground)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_Tsky(self):
         """Test bad t_sky"""
         thermalnoise = 'tsys-manual'
         t_sky = self.badnum
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         thermalnoise=thermalnoise,t_sky=t_sky)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             thermalnoise=thermalnoise,t_sky=t_sky)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_tau0(self):
         """Test bad tau0"""
         thermalnoise = 'tsys-manual'
         tau0 = self.badnum
-
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         thermalnoise=thermalnoise,tau0=tau0)
-        self.assertFalse(res)
-
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             thermalnoise=thermalnoise,tau0=tau0)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
 
     def testBad_leakage(self):
         """Test bad leakage"""
         leakage = self.badnum
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         leakage=leakage)
-        self.assertFalse(res)
-        
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             leakage=leakage)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
     
     def testBad_graphics(self):
         """Test bad graphics selection"""
         graphics = self.badname
-        
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         totaltime=self.tottime,mapsize=self.mapsize,
-                         graphics=graphics)
-        self.assertFalse(res)
+        try:
+            res = simobserve(project=self.project,skymodel=self.inimage,
+                             totaltime=self.tottime,mapsize=self.mapsize,
+                             graphics=graphics)
+            self.fail(self.failmsg)
+        except Exception, e:
+            pos=str(e).find("Parameter verification failed")
+            msg =  self.errmsg % str(e)
+            self.assertNotEqual(pos,-1,msg=msg)        
         
     
 def suite():
