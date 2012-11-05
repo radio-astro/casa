@@ -374,9 +374,9 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
       Int scale=0;
       Int ntaylor=ntaylor_p;
       IPosition blc(blc_p), trc(trc_p);
-      #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion,blc,trc)
+      //OMP//      #pragma omp parallel default(shared) private(scale) firstprivate(ntaylor,criterion,blc,trc)
        { 
-	 #pragma omp for 
+	 //OMP//	 #pragma omp for 
           for(scale=0;scale<nscales_p;scale++)
           {
             /* Solve the matrix eqn for all pixels */
