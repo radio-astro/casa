@@ -80,8 +80,15 @@ void doSel (const MeasurementSet& ms, const String& command, bool showBL=False)
   Vector<Int> selectedAnts1;
   Vector<Int> selectedAnts2;
   Matrix<Int> selectedBaselines;
-  msAntennaGramParseCommand (&ms, command,
-                             selectedAnts1, selectedAnts2, selectedBaselines);
+  TableExprNode col1AsTEN = ms.col(ms.columnName(MS::ANTENNA1)),
+    col2AsTEN = ms.col(ms.columnName(MS::ANTENNA2));
+
+  // msAntennaGramParseCommand (&ms, command,
+  //                            selectedAnts1, selectedAnts2, selectedBaselines);
+  msAntennaGramParseCommand (ms.antenna(), 
+			     col1AsTEN, col2AsTEN,
+			     command,
+			     selectedAnts1, selectedAnts2, selectedBaselines);
   cout << "  " << selectedAnts1 << ' ' << selectedAnts2 << endl;
   if (showBL) {
     cout << "  " << selectedBaselines << endl;
