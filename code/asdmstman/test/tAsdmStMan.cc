@@ -103,12 +103,15 @@ void createTable (uInt ntime, uInt nant,
   uInt nbl = nant*(nant-1)/2;
   uInt nrow = (nbl*crossnspw + nant*autonspw) * ntime;
   Table tab(newtab, nrow);
-  // DATA should not be writable.
-  AlwaysAssertExit (! tab.isColumnWritable("DATA"));
-  AlwaysAssertExit (! tab.isColumnWritable("FLAG"));
-  AlwaysAssertExit (! tab.isColumnWritable("WEIGHT"));
-  AlwaysAssertExit (! tab.isColumnWritable("SIGMA"));
-  AlwaysAssertExit (tab.isColumnWritable("ANTENNA1"));
+  // DATA should not be writable. BUT in order to be compatible
+  // with MSMainColumns, we let it _appear_ writable anyway. 
+  // The alternative solutions would cause too much code duplication.
+  AlwaysAssertExit (tab.isColumnWritable("DATA"));
+  AlwaysAssertExit (tab.isColumnWritable("FLAG"));
+  AlwaysAssertExit (tab.isColumnWritable("WEIGHT"));
+  AlwaysAssertExit (tab.isColumnWritable("SIGMA"));
+
+  AlwaysAssertExit (tab.isColumnWritable("ANTENNA1")); // this is really writable
 
   // Write data into the columns.
   ScalarColumn<Double> timeCol (tab, "TIME");

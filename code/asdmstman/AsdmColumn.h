@@ -67,6 +67,8 @@ public:
   {}
   virtual ~AsdmColumn();
   // All columns are not writable.
+  // However, we let AsdmColumn::isWritable() return True. If an actual write is done, 
+  // an exception will be thrown. This ensures that the StMan will work with MSMainColumns.
   virtual Bool isWritable() const;
   // Set column shape of fixed shape columns; it does nothing.
   virtual void setShapeColumn (const IPosition& shape);
