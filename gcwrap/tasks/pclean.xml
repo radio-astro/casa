@@ -393,6 +393,17 @@
 
 <example>
 
+  PLEASE NOTE:
+  ======
+  The images produced by pclean will not be exactly the same as clean. The code used 
+  and the orchestration can be different. For example for fractionally large wideband 
+  cube, the mosaic convolution function used by each child process is slightly different 
+  because of the frequency used can be different. 
+  We believe most of the differences is within the noise or systematics of the image and 
+  data. So scientifically these should not be an issue
+  The next release will fix these differences by making sure the same code and 
+  orchestration is used when running in parallel or in single process
+  ======  
 	Keyword arguments:
         Invert and deconvolve images with parallel engines
         Form images from visibilities. Handles continuum and spectral line 
