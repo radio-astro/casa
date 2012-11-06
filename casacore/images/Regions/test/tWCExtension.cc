@@ -213,7 +213,6 @@ void doIt()
 
     {
       LCRegion* regptr = wcspoly.toLCRegion (cSys, IPosition(3,30,40,50));
-      const Slicer& bbox = regptr->boundingBox();
       Array<Bool> mask = regptr->get();
       IPosition shape = mask.shape();
       for (uInt k=0; k<shape[2]; k++) {

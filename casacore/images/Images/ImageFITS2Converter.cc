@@ -1440,10 +1440,9 @@ void ImageFITSConverter::_writeBeamsTable(
 	Bool hasSpectral = specAxis >= 0;
 	Bool hasStokes = polAxis >= 0;
 	IPosition axisPath = IPosition::makeAxisPath(beamSet.ndim());
-	for (
-		IPosition pos(beamSet.ndim(), 0);
-			pos!=beamSet.shape(); pos.next(beamSet.shape(), axisPath)
-	) {
+    ArrayPositionIterator iter(beamSet.shape(), axisPath, False);
+    while (! iter.pastEnd()) {
+        const IPosition pos = iter.pos();
 		GaussianBeam beam = beamSet(pos);
 		*chan = hasSpectral ? pos[specAxis] : -1;
 		*pol = hasStokes ? pos[polAxis] : -1;
@@ -1451,6 +1450,7 @@ void ImageFITSConverter::_writeBeamsTable(
 		*bmin = beam.getMinor().getValue();
 		*bpa = beam.getPA("deg", True);
 		writer.write();
+        iter.next();
 	}
 }
 
