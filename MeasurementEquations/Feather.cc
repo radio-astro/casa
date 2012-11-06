@@ -292,41 +292,70 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CoordinateSystem ftCoords(ftimage.coordinates());
     Double freq=worldFreq(ftCoords, 0);
 	////
-    Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+    Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(ftCoords);
+    Int spectralIndex=CoordinateUtil::findSpectralAxis(ftCoords);
     Array<Complex> tmpval;
+    Vector<Complex> meanval;
     IPosition start=ftimage.shape();
-    IPosition shape=ftimage.shape()/2;
+    IPosition shape=ftimage.shape();
+    shape[directionIndex(0)]=shape[directionIndex(0)]/2;
+    shape[directionIndex(1)]=shape[directionIndex(1)]/2;
     for(uInt k=0; k < shape.nelements(); ++k){
       start[k]=0;
-      if(k != uInt(directionIndex+1))
+      if((k != uInt(directionIndex(1))) && (k != uInt(spectralIndex)))
 	shape[k]=1;
     }
-    start[directionIndex+1]=ftimage.shape()[directionIndex+1]/2;
-    start[directionIndex]=ftimage.shape()[directionIndex]/2;
+    start[directionIndex(1)]=ftimage.shape()[directionIndex(1)]/2;
+    start[directionIndex(0)]=ftimage.shape()[directionIndex(0)]/2;
     ftimage.getSlice(tmpval, start, shape, True);
+    if(shape[spectralIndex] >1){
+      meanval.resize(shape[directionIndex(1)]);
+      Matrix<Complex> retmpval(tmpval);
+      Bool colOrRow=spectralIndex > directionIndex(1);
+      for (uInt k=0; k < meanval.nelements(); ++k){
+	meanval[k]=colOrRow ? mean(retmpval.row(k)) : mean(retmpval.column(k));
+      }
+    }
+    else{
+      meanval=tmpval;
+    }
     xamp.resize();
-    xamp=amplitude(tmpval);
+    xamp=amplitude(meanval);
     tmpval.resize();
-    shape=ftimage.shape()/2;
+    shape=ftimage.shape();
+    shape[directionIndex(0)]=shape[directionIndex(0)]/2;
+    shape[directionIndex(1)]=shape[directionIndex(1)]/2;
     for(uInt k=0; k < shape.nelements(); ++k){
       start[k]=0;
-      if(k != uInt(directionIndex))
+      if((k != uInt(directionIndex(0))) && (k != uInt(spectralIndex)))
 	shape[k]=1;
     }
-    start[directionIndex+1]=ftimage.shape()[directionIndex+1]/2;
-    start[directionIndex]=ftimage.shape()[directionIndex]/2;
+    start[directionIndex(1)]=ftimage.shape()[directionIndex(1)]/2;
+    start[directionIndex(0)]=ftimage.shape()[directionIndex(0)]/2;
     ftimage.getSlice(tmpval, start, shape, True);
+    if(shape[spectralIndex] >1){
+      meanval.resize(shape[directionIndex(0)]);
+      Bool colOrRow=spectralIndex > directionIndex(0);
+      Matrix<Complex> retmpval(tmpval);
+      for (uInt k=0; k < meanval.nelements(); ++k){
+	meanval[k]=colOrRow ? mean(retmpval.row(k)) : mean(retmpval.column(k));
+      }
+    }
+    else{
+      meanval=tmpval;
+    }
     yamp.resize();
-    yamp=amplitude(tmpval); 
-    DirectionCoordinate dc=ftCoords.directionCoordinate(directionIndex);
+    yamp=amplitude(meanval); 
+    Int dirCoordIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+    DirectionCoordinate dc=ftCoords.directionCoordinate(dirCoordIndex);
     Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
     Vector<Int> elshape(2); 
-    elshape(0)=ftimage.shape()[directionIndex];
-    elshape(1)=ftimage.shape()[directionIndex+1];
+    elshape(0)=ftimage.shape()[directionIndex(0)];
+    elshape(1)=ftimage.shape()[directionIndex(1)];
     Coordinate* ftdc=dc.makeFourierCoordinate(axes,elshape);	
     Vector<Double> xpix(xamp.nelements());
     indgen(xpix);
-    xpix +=Double(ftimage.shape()[directionIndex])/2.0;
+    xpix +=Double(ftimage.shape()[directionIndex(0)])/2.0;
     Matrix<Double> pix(2, xpix.nelements());
     Matrix<Double> world(2, xpix.nelements());
     Vector<Bool> failures;
@@ -338,7 +367,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     xpix=fabs(xpix)*(C::c)/freq;
     Vector<Double> ypix(yamp.nelements());
     indgen(ypix);
-    ypix +=Double(ftimage.shape()[directionIndex+1])/2.0;
+    ypix +=Double(ftimage.shape()[directionIndex(1)])/2.0;
     pix.resize(2, ypix.nelements());
     world.resize();
     pix.row(1)=ypix;
