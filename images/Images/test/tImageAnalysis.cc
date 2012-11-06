@@ -173,10 +173,9 @@ int main() {
             AlwaysAssert((Int)counts.size() == nbins, AipsError);
             Float expValue = -96;
             IPosition axisPath = IPosition::makeAxisPath(values.ndim());
-            for (
-                IPosition pos(values.ndim(), 0); pos<values.shape();
-                pos.next(values.shape(), axisPath), expValue+=8
-            ) {
+            ArrayPositionIterator iter(values.shape(), axisPath, False);
+            while (! iter.pastEnd()) {
+                const IPosition pos = iter.pos();
                 AlwaysAssert(values(pos) == expValue, AipsError);
                 Float expCount = 0;
                 if (pos[0] == 0 || pos[0] == nbins-1) {
@@ -187,6 +186,8 @@ int main() {
                 }
                 cout << "*** count " << counts(pos) << " exp " << expCount << endl;
                 AlwaysAssert(counts(pos) == expCount, AipsError);
+                iter.next();
+                expValue += 8;
             }
         }
 

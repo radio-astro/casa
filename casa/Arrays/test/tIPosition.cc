@@ -437,67 +437,6 @@ int main()
 
 }
 {
-	// next() tests
-	IPosition x(5, 20, 9, 31, 5, 2);
-	IPosition exp(5, 0);
-	IPosition partialProd(4, 0);
-	uInt pprod = 1;
-	for (uInt i=0; i< partialProd.nelements(); i++) {
-		pprod *= x[i];
-		partialProd[i] = pprod;
-	}
-	uInt i = 0;
-	IPosition axisPath = IPosition::makeAxisPath(x.size());
-	for (
-		IPosition curPos(x.size(), 0); curPos<x;
-		curPos.next(x, axisPath), i++
-	) {
-		uInt partdiff = i;
-		for (Int j=partialProd.size() - 1; j >=0; j-- ) {
-			exp[j+1] = partdiff/partialProd[j];
-			partdiff -= exp[j+1] * partialProd[j];
-		}
-		exp[0] = i % partialProd[0];
-		AlwaysAssert(curPos == exp, AipsError);
-	}
-	AlwaysAssert(i == x.product(), AipsError);
-	IPosition myShape(2, 20, 4);
-	uInt count = 0;
-	axisPath.resize(myShape.size());
-	axisPath = IPosition::makeAxisPath(myShape.size());
-	i = 0;
-	uInt j = 0;
-	for (
-		IPosition pos(2, 0, 0); pos<myShape;
-		pos.next(myShape, axisPath), count++
-	) {
-		AlwaysAssert(pos == IPosition(2, i, j), AipsError);
-		i++;
-		if (i == myShape[0]) {
-			i = 0;
-			j++;
-		}
-	}
-	AlwaysAssert(count = myShape.product(), AipsError);
-
-	count = 0;
-	axisPath = IPosition(2, 1, 0);
-	i = 0;
-	j = 0;
-	for (
-		IPosition pos(2, 0, 0); pos<myShape;
-		pos.next(myShape, axisPath), count++
-	) {
-		AlwaysAssert(pos == IPosition(2, i, j), AipsError);
-		j++;
-		if (j == myShape[1]) {
-			j = 0;
-			i++;
-		}
-	}
-	AlwaysAssert(count = myShape.product(), AipsError);
-
-
 	// operator()(IPostion) tests
 	IPosition ipos(4,11,12,13,14);
 	AlwaysAssert(ipos(IPosition(4, 0, 2, 1 ,3)) == IPosition(4, 11,13,12,14), AipsError);

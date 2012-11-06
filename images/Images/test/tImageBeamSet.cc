@@ -82,7 +82,9 @@ int main() {
 			IPosition pos2(2, 1, 2);
 			x.setBeam(beam1, pos2);
 			IPosition axisPath = IPosition::makeAxisPath(shape.size());
-			for (IPosition pos(2,0,0); pos != shape; pos.next(shape, axisPath)) {
+            ArrayPositionIterator iter(shape, axisPath, False);
+            while (! iter.pastEnd()) {
+                const IPosition pos = iter.pos();
 				GaussianBeam beam = x.getBeam(pos);
 				if (pos == pos2) {
 					AlwaysAssert(beam == beam1, AipsError);
@@ -90,6 +92,7 @@ int main() {
 				else {
 					AlwaysAssert(beam == beam0, AipsError);
 				}
+                iter.next();
 			}
 			{
 				cout << "*** test getting max and min area beams" << endl;
@@ -188,10 +191,9 @@ int main() {
             IPosition pos2(2, 1, 2); 
             x.setBeam(beam1, pos2);
             IPosition axisPath = IPosition::makeAxisPath(shape.size());
-            for (
-            	IPosition pos(2,0,0); pos != shape;
-            	pos.next(shape, axisPath)
-            ) {
+            ArrayPositionIterator iter(shape, axisPath, False);
+            while (! iter.pastEnd()) {
+                const IPosition pos = iter.pos();
                 GaussianBeam beam = x.getBeam(pos);
                 if (pos == pos2) {
                     AlwaysAssert(beam == beam1, AipsError);
@@ -199,6 +201,7 @@ int main() {
                 else {
                     AlwaysAssert(beam == beam0, AipsError);
                 }
+                iter.next();
             }
             {
                 cout << "*** test setBeams()" << endl;

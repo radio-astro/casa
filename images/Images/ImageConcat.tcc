@@ -458,12 +458,10 @@ template<class T> void ImageConcat<T>::_appendBeams(
 		? nStokesThis - nStokesThat
 		: nStokesThat > 0 ? 0 : -1;
 	IPosition axisPath = IPosition::makeAxisPath(beamsThat.ndim());
-	for (
-		IPosition pos(IPosition(beamsThat.ndim(), 0));
-		pos < beamsThat.shape();
-		pos.next(beamsThat.shape(), axisPath, False)
-	) {
-		Bool last = pos == beamsThat.shape() - 1;
+    ArrayPositionIterator iter(beamsThat.shape(), axisPath, False);
+    while (! iter.pastEnd()) {
+        const IPosition pos = iter.pos();
+        Bool last = pos == beamsThat.shape() - 1;
 		infoThis.setBeam(chan, stokes, beamsThat(pos));
 		if (chan >= 0) {
 			chan++;
@@ -478,7 +476,7 @@ template<class T> void ImageConcat<T>::_appendBeams(
 			stokes++;
 		}
 		AlwaysAssert(stokes < (Int)nStokesThis, AipsError);
-
+        iter.next();
 	}
 	this->setImageInfo(infoThis);
 }

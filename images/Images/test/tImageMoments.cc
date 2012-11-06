@@ -142,16 +142,16 @@ int main () {
 		for (uInt i=0; i<gotImages.size(); i++) {
 			IPosition mshape = gotImages[i]->shape();
 			IPosition axisPath = IPosition::makeAxisPath(mshape.size());
-			for (IPosition pos(
-				mshape.size(), 0); pos != mshape;
-				pos.next(mshape, axisPath)
-			) {
-				if (expImage.getAt(pos) < 0.01) {
+            ArrayPositionIterator iter(mshape, axisPath, False);
+			while (! iter.pastEnd()) {
+                const IPosition pos = iter.pos();
+                if (expImage.getAt(pos) < 0.01) {
 					gotImages[i]->putAt(-100, pos);
 					images[i]->putAt(-100, pos);
 				}
+                iter.next();
 			}
-			if (i == 0 || i == 1 || i == 3) {
+           	if (i == 0 || i == 1 || i == 3) {
 				Float epsilon = i == 3 ? 3e-3 : 1e-5;
 				cout << (max(abs(gotImages[i]->get() - images[i]->get()))) << endl;
 				AlwaysAssert(

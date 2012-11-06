@@ -238,11 +238,10 @@ template <class T> Bool ImageStatistics<T>::_getBeamArea(
 				GaussianBeam curBeam;
 				IPosition curBeamPos(beams.shape().nelements(), 0);
 				IPosition axisPath = IPosition::makeAxisPath(beamAreaShape.size());
-				for (
-					IPosition curPos(beamAreaShape.size(), 0);
-					curPos<beamAreaShape; curPos.next(beamAreaShape, axisPath, False)
-				) {
-					if (storageSpecAxis >= 0) {
+                ArrayPositionIterator iter(beamAreaShape, axisPath, False);
+				while (! iter.pastEnd()) {
+                    const IPosition curPos = iter.pos();
+                    if (storageSpecAxis >= 0) {
 						curBeamPos[0] = curPos[storageSpecAxis];
 					}
 					if (storagePolAxis >= 0) {
@@ -250,8 +249,9 @@ template <class T> Bool ImageStatistics<T>::_getBeamArea(
 					}
 					curBeam = beams(curBeamPos);
 					beamArea(curPos) = coeff * curBeam.getArea("rad2");
+                    iter.next();
 				}
-				return True;
+             	return True;
 			}
 		}
 	}
