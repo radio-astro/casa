@@ -4,9 +4,11 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
+from simutil import *
 import unittest
 
 import numpy
+import glob
 # to rethrow exception 
 import inspect
 glb = sys._getframe(len(inspect.stack())-1).f_globals
@@ -93,9 +95,18 @@ class simobserve_unittest_base:
                                rtol=self.rtol,atol=self.atol)
             self.assertEqual(ret,True,msg=message)
 
+    def _get_data_prefix(self,cfgname, project=""):
+        if str.upper(cfgname[0:4]) == "ALMA":
+            foo=cfgname.replace(';','_')
+        else:
+            foo = cfgname
+            foo=foo.replace(".cfg","")
+            sfoo=foo.split('/')
+            if len(sfoo)>1: foo=sfoo[-1]
+            return project+"."+foo
 
 # ###
-# # Test single dish skymodel only simulations
+# # Test skymodel only simulations
 # ###
 # class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
 #     """
@@ -167,26 +178,6 @@ class simobserve_unittest_base:
 #                          setpointings=setpointings,ptgfile=ptgfile,
 #                          obsmode=obsmode,thermalnoise=thermalnoise)
     
-#     def testSky_sdAtmNoise(self):
-#         """Test skymodel simulation: only observation (SD)"""
-#         skymodel = self.refmod
-#         setpointings = False
-#         obsmode = "sd"
-#         thermalnoise = "tsys-atm"
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
-    
-#     def testSky_sdManNoise(self):
-#         """Test skymodel simulation: only observation (SD)"""
-#         skymodel = self.refmod
-#         setpointings = False
-#         obsmode = "sd"
-#         thermalnoise = "tsys-manual"
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
-    
 #     # Tests of interferometer simulation
 #     def testSky_intAll(self):
 #         """Test skymodel simulation: interferometer"""
@@ -205,26 +196,6 @@ class simobserve_unittest_base:
 #                          setpointings=setpointings,ptgfile=ptgfile,
 #                          obsmode=obsmode,thermalnoise=thermalnoise)
     
-#     def testSky_intAtmNoise(self):
-#         """Test skymodel simulation: only observation (SD)"""
-#         skymodel = self.refmod
-#         setpointings = False
-#         obsmode = "int"
-#         thermalnoise = "tsys-atm"
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
-    
-#     def testSky_intManNoise(self):
-#         """Test skymodel simulation: only observation (INT)"""
-#         skymodel = self.refmod
-#         setpointings = False
-#         obsmode = "int"
-#         thermalnoise = "tsys-manual"
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
-
 #     def testSky_intLeak(self):
 #         """Test skymodel simulation: only observation (INT)"""
 #         skymodel = self.refmod
@@ -256,6 +227,529 @@ class simobserve_unittest_base:
 #     Test skymodel + components list simulations
 #     """
 
+###
+# Test noise calculations
+###
+class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
+    """
+    Test noise level of simulated MS
+    """
+    # global variables of the class
+    inimage = "flatoneimage.model"
+
+    # standard parameter settings
+    project = simobserve_unittest_base.thistask+"_nz"
+    indirection = 'J2000 19h00m00 -23d00m00'
+    incenter = "345GHz"
+    inwidth = "10MHz"
+    tint = "4s"
+    tottime = "1800s" # 30min
+    mapsize = ["5arcsec","5arcsec"] # single pointing
+    pointingspacing = "10arcsec"
+    sdantlist = "aca.tp.cfg"
+    antennalist = ""
+    tau0 = 1.0
+    pwv = 1.0
+    graphics = 'file'
+
+    prevmsg = "The noise level differs from the previous value: %f (previous: %f)"
+    anamsg = "The noise level differs more than 10%% from the analytic value: %f (analytic: %f)"
+
+    # Reserved methods
+    def setUp(self):
+        if os.path.exists(self.inimage):
+            shutil.rmtree(self.inimage)
+        shutil.copytree(self.datapath+self.inimage, self.inimage)
+
+        default(simobserve)
+        # Add new line for better reading (these tests always print errors).
+        print ""
+
+    def tearDown(self):
+        if (os.path.exists(self.inimage)):
+            shutil.rmtree(self.inimage)
+        shutil.rmtree(self.project)
+
+    def testNZ_intMan(self):
+        """Test INT thermal noise (tsys-manual)"""
+        thermalnoise="tsys-manual"
+        antlist = "aca_cycle1.cfg"
+        totaltime = "100s"
+        incell = "1arcsec"
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,incell=incell,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='int',sdantlist="",
+                         antennalist=antlist,totaltime=totaltime,
+                         thermalnoise=thermalnoise,tau0=self.tau0,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,antlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="manual",sd=False,aca7m=True)
+        #print "MS noise:", msnoise
+        #print "Analytic:", ananoise
+        # Now compare the result
+        refval = 9.78451847017  # testing only REAL part
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    def testNZ_intAtm(self):
+        """Test INT thermal noise (tsys-atm): standard parameter set"""
+        thermalnoise="tsys-atm"
+        antlist = "aca_cycle1.cfg"
+        totaltime = "100s"
+        incell = "1arcsec"
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,incell=incell,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='int',sdantlist="",
+                         antennalist=antlist,totaltime=totaltime,
+                         thermalnoise=thermalnoise,user_pwv=self.pwv,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,antlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="atm",sd=False,aca7m=True)
+        # Now compare the result
+        refval = 2.27105136133
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    def testNZ_sdMan(self):
+        """Test SD thermal noise (tsys-manual): standard parameter set"""
+        thermalnoise="tsys-manual"
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,tau0=self.tau0,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="manual",sd=True)
+        # Now compare the result
+        refval = 4.91379000092
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+        
+
+    def testNZ_sdMan_dnu(self):
+        """Test SD thermal noise (tsys-manual): inwidth='1MHz'"""
+        thermalnoise="tsys-manual"
+        inwidth = '1MHz'
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,tau0=self.tau0,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="manual",sd=True,dnu=inwidth)
+        # Now compare the result
+        refval = 15.5387677134
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    def testNZ_sdMan_tint(self):
+        """Test SD thermal noise (tsys-manual): integration='2s'"""
+        thermalnoise="tsys-manual"
+        integration = '2s'
+        totaltime = '900s'
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=integration,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=totaltime,
+                         thermalnoise=thermalnoise,tau0=self.tau0,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="manual",sd=True,integration=integration)
+        # Now compare the result
+        refval = 6.94461790663
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+        
+    def testNZ_sdMan_tau(self):
+        """Test SD thermal noise (tsys-manual): tau0=1.5"""
+        thermalnoise="tsys-manual"
+        tau0 = 1.5
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,tau0=tau0,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="manual",sd=True,tau0=tau0)
+        # Now compare the result
+        refval = 9.27620818144
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+        
+    def testNZ_sdMan_el(self):
+        """Test SD thermal noise (tsys-manual): elevation = 60 deg"""
+        thermalnoise="tsys-manual"
+        indir = 'J2000 19h00m00 -53d00m00'
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=indir,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,tau0=self.tau0,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="manual",sd=True,dir=-53.)
+        # Now compare the result
+        refval = 6.0450620991
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+        
+    def testNZ_sdAtm(self):
+        """Test SD thermal noise (tsys-atm): standard parameter set"""
+        thermalnoise="tsys-atm"
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,user_pwv=self.pwv,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="atm",sd=True)
+        # Now compare the result
+        refval = 1.13985820952
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    def testNZ_sdAtm_dnu(self):
+        """Test SD thermal noise (tsys-atm): inwidth='1MHz'"""
+        thermalnoise="tsys-atm"
+        inwidth = '1MHz'
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,user_pwv=self.pwv,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="atm",sd=True,dnu=inwidth)
+        # Now compare the result
+        refval = 3.60454794841
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    def testNZ_sdAtm_tint(self):
+        """Test SD thermal noise (tsys-atm): integration = '2s'"""
+        thermalnoise="tsys-atm"
+        integration = '2s'
+        totaltime = '900s'
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=integration,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=totaltime,
+                         thermalnoise=thermalnoise,user_pwv=self.pwv,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="atm",sd=True,integration=integration)
+        # Now compare the result
+        refval = 1.61165299786
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    def testNZ_sdAtm_el(self):
+        """Test SD thermal noise (tsys-atm): elevation = 60 deg"""
+        thermalnoise="tsys-atm"
+        indir = 'J2000 19h00m00 -53d00m00'
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=indir,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,user_pwv=self.pwv,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="atm",sd=True,dir=-53.)
+        # Now compare the result
+        refval = 1.22177450558
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    def testNZ_sdAtm_pwv(self):
+        """Test SD thermal noise (tsys-atm): pwv = 2.0"""
+        thermalnoise="tsys-atm"
+        pwv = 2.0
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='sd',sdantlist=self.sdantlist,
+                         antennalist=self.antennalist,totaltime=self.tottime,
+                         thermalnoise=thermalnoise,user_pwv=pwv,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,self.sdantlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="atm",sd=True,pwv=pwv)
+        # Now compare the result
+        refval = 1.61886644931
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
+    # Helper functions
+    def _get_ms_names(self, project, antennalist):
+        retDict = {"original": None, "noisy": None}
+        prefix = project+"/"+self._get_data_prefix(antennalist, project)
+        mslist = glob.glob(prefix+"*.noisier*.ms")
+        if len(mslist) > 0:
+            retDict['noisy'] = mslist[0]
+        else:
+            mslist = glob.glob(prefix+"*.noisy*.ms")
+            if len(mslist) > 0:
+                retDict['noisy'] = mslist[0]
+            else:
+                return None
+        
+        if os.path.exists(prefix+".ms"):
+            retDict["original"] = prefix+".ms"
+        elif os.path.exists(prefix+".sd.ms"):
+            retDict["original"] = prefix+".sd.ms"
+        else:
+            return None
+
+        return retDict
+
+    def _get_noise(self, noisyms, origms):
+        tb.open(noisyms)
+        noisy_data = tb.getcol("DATA")
+        tb.close()
+        tb.open(origms)
+        orig_data = tb.getcol("DATA")
+        tb.close()
+        diff_data = noisy_data - orig_data
+        #if (diff_data.imag != 0).any():
+        #    return [diff_data.real.std(),diff_data.imag.std()]
+        #else:
+        #    return [diff_data.real.std()]
+        return diff_data.real.std()
+
+    def _calc_alma_noise(self, mode="manual",sd=True,aca7m=False,\
+                         freq="345GHz",dnu="10MHz",integration='4s',dir=-23.,\
+                         pwv=1.0,tground=269.,tsky=263.,tau0=1.0):
+        if sd:
+            senscoeff = 1.0
+        else:
+            senscoeff = 1./numpy.sqrt(2)
+
+        freq_ghz = qa.convert(freq,"GHz")['value']
+        dnu_hz = qa.convert(dnu,"Hz")['value']
+        tint_sec = qa.convert(integration,"s")['value']
+
+        if aca7m:
+            telescope = "ACA"
+            diam = 7.
+        else: #12m
+            telescope = "ALMA"
+            diam = 12.
+
+        myutil = simutil()
+        eta_phase, espill, eta_block, eta_taper, ecorr, trx \
+                   = myutil.noisetemp(telescope=telescope,freq=freq)
+        eant = eta_phase * espill * eta_block * eta_taper
+
+        tcmb = 2.725
+        # ALMA latitude
+        antpos = -23.022886 # deg
+        el = numpy.pi/2.- (dir-antpos)/180.*numpy.pi     # rad
+        airmass = 1./numpy.sin(el)
+
+        hn_k = 0.04799274551*freq_ghz
+
+        if mode.find("manual") > -1:
+            tau = tau0*airmass
+            Rtcmb = 1./(numpy.exp(hn_k/tcmb)-1.)
+            Rtatmos = 1./(numpy.exp(hn_k/tsky)-1.)
+            Rtground = 1./(numpy.exp(hn_k/tground)-1.)
+            R = Rtcmb*espill + \
+                numpy.exp(tau) *( espill * (1.-numpy.exp(-tau)) * Rtatmos \
+                               + (1.-espill) * Rtground + trx/hn_k)
+        else: # atm
+            tsky, tau0 = self._get_atmsky(tground, tcmb, freq, dnu,
+                                         espill, pwv, airmass)
+            tau = tau0*airmass
+            R = numpy.exp(tau) * (1./(numpy.exp(hn_k/tsky)-1.) + trx/hn_k)
+
+        amp = 8 * 1.38062e-16 * 1e23 * 1e-4 / (eant * ecorr * numpy.pi)
+        tsys=hn_k*R
+        factor = numpy.sqrt(senscoeff * amp / numpy.sqrt(dnu_hz * tint_sec))
+        par = diam / factor / numpy.sqrt(tsys)
+
+        return 1./par**2
+
+    def _get_atmsky(self, tground, tcmb, freq, dnu, espill, pwv, airmass):
+        freq_ghz = qa.convert(freq,"GHz")['value']
+        hn_k = 0.04799274551*freq_ghz
+
+        at.initAtmProfile(temperature=qa.quantity(tground))
+        atmnchan = 10.
+        fcntr = qa.quantity(freq)
+        bw = qa.quantity(dnu)
+        fres = qa.div(qa.quantity(dnu),atmnchan)
+        at.initSpectralWindow(nbands=1,fCenter=fcntr,fWidth=bw,fRes=fres)
+        at.setSkyBackgroundTemperature(qa.quantity(tcmb,"K"))
+        at.setAirMass(airmass)
+        at.setUserWH2O(qa.quantity(pwv,"mm"))
+        rchan = at.getRefChan(spwid=0)
+        ratio = at.getUserWH2O()["value"]/at.getGroundWH2O()["value"]
+
+        #tsky = at.getTebbSky(nc=-1,spwid=0)
+        dz = at.getProfile()[1]["value"]
+        tz = at.getProfile()[2]["value"]
+        radiance = 0.
+        kv = 0.
+        for iz in range(at.getNumLayers()):
+            dtau0 = dz[iz] * (at.getAbsTotalDry(iz, rchan, 0)["value"] + \
+                              at.getAbsTotalWet(iz, rchan, 0)["value"] * ratio)
+            dmass = dtau0[0]*airmass
+            radiance += (1./(numpy.exp(hn_k/tz[iz])-1.)) * numpy.exp(-kv*airmass) \
+                        * (1. - numpy.exp(-dmass))
+            kv += dtau0[0]
+
+        R = espill * (radiance + (1./(numpy.exp(hn_k/tcmb)-1.))*numpy.exp(-kv*airmass))\
+            + (1./(numpy.exp(hn_k/qa.quantity(tground)["value"]) - 1.)) * (1. - espill)
+        tsky = hn_k / numpy.log(1. + (1. / R))
+        tau0 = at.getDryOpacity(spwid=0) + \
+               at.getWetOpacity(spwid=0)['value'][0]
+        return tsky, tau0
 
 ###
 # Tests on bad input parameter settings
@@ -785,7 +1279,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         
     
 def suite():
-    return [simobserve_badinputs]
+    return [simobserve_noise, simobserve_badinputs]
 #     return [simobserve_badinputs,simobserve_sdsky,
 #             simobserve_sdcomp,simobserve_sdcompsky]
 
