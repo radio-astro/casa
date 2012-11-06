@@ -63,6 +63,12 @@ class sdfit_worker(sdutil.sdtask_template):
             self.scan = sorg
 
     def execute(self):
+        self.set_to_scan()
+
+        # restore fluxunit
+        self.fluxunit = self.fluxunit_saved
+        del self.fluxunit_saved
+
         self.__set_linelist()
 
         self.__fit()
