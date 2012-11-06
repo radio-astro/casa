@@ -6,77 +6,67 @@ from asap.scantable import is_scantable
 import sdutil
 
 def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, restfreq, outfile, outform, overwrite):
+    
+    casalog.origin('sdsave')
+    
+    ###
+    ### Now the actual task code
+    ###
+    
+    try:
+        worker = sdsave_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+        
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-        casalog.origin('sdsave')
+class sdsave_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdsave_worker,self).__init__(**kwargs)
+        self.suffix = '_saved'
 
+    def parameter_check(self):
+        # for restore information
+        self.restore = False
+        self.molids = None
+        self.rfset = (self.restfreq != '') and (self.restfreq != [])
+        
+    def initialize_scan(self):
+        self.scan = sd.scantable(self.infile,
+                                 average=self.scanaverage,
+                                 antenna=self.antenna,
+                                 getpt=self.getpt)
 
-        ###
-        ### Now the actual task code
-        ###
+        # scantable selection
+        self.scan.set_selection(self.get_selector())
 
-        try:
-            restore = False
-            rfset = (restfreq != '') and (restfreq != [])
-            #load the data with or without averaging
+    def execute(self):
+        # Apply averaging
+        self.original_scan = self.scan
+        self.scan = sdutil.doaverage(self.original_scan, self.scanaverage,
+                                     self.timeaverage, self.tweight,
+                                     self.polaverage, self.pweight)
 
-            sdutil.assert_infile_exists(infile)
+        if self.original_scan == self.scan and self.rfset \
+               and is_scantable(self.infile) \
+               and sd.rcParams['scantable.storage'] == 'disk':
+            self.molids = self.original_scan._getmolidcol_list()
+            self.restore = True
+        
+        # set rest frequency
+        casalog.post('restore=%s'%(self.restore))
+        if self.rfset:
+            self.scan.set_restfreqs(sdutil.normalise_restfreq(self.restfreq))
 
-            project = sdutil.get_default_outfile_name(infile,
-                                                      outfile,
-                                                      '_saved')
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
-                                                              outform,
-                                                              overwrite)
-
-            s = sd.scantable(infile,average=scanaverage,antenna=antenna,getpt=getpt)
-
-            #Select rows
-            #Apply the selection
-            sel = sdutil.get_selector(in_scans=scanlist,
-                                      in_ifs=iflist,
-                                      in_pols=pollist,
-                                      in_field=field,
-                                      in_rows=rowlist)
-            s.set_selection(sel)
-            del sel   
-
-            #Apply averaging
-            spave = sdutil.doaverage(s, scanaverage, timeaverage,
-                                       tweight, polaverage, pweight)
-
-            if spave == s and rfset and is_scantable(infile) and \
-               sd.rcParams['scantable.storage'] == 'disk':
-                    molids = s._getmolidcol_list()
-                    restore = True
-            del s
-
-            # set rest frequency
-            casalog.post('restore=%s'%(restore))
-            if ( rfset ):
-                spave.set_restfreqs(sdutil.normalise_restfreq(restfreq))
-
-            # save
-            sdutil.save(spave, outfile, outform, overwrite)
-
-            # DONE
+    def save(self):
+        # save
+        sdutil.save(self.scan, self.outfile, self.outform, self.overwrite)
+        
+    def cleanup(self):
+        if self.restore:
+            casalog.post( "Restoreing MOLECULE_ID column in %s "%self.infile )
+            self.original_scan._setmolidcol_list(self.molids)
             
-
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
-        finally:
-                try:
-                        # Restore MOLECULE_ID in the table
-                        if restore:
-                                casalog.post( "Restoreing MOLECULE_ID column in %s " % infile )
-                                spave._setmolidcol_list(molids)
-                                del molids
-                        # Final clean up
-                        del spave
-                except:
-                        pass
-                casalog.post('')
-
-
-

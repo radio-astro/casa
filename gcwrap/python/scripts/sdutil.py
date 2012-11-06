@@ -9,6 +9,114 @@ import traceback
 
 qatl = casac.quanta()
 
+class sdtask_interface(object):
+    """
+    The sdtask_interface defines a common interface for sdtask_worker
+    class. All worker classes can be used as follows:
+
+       worker = sdtask_worker(**locals())
+       worker.initialize()
+       worker.execute()
+       worker.finalize()
+       del worker
+
+    Derived classes must implement the above three methods: initialize(),
+    execute(), and finalize().
+    """
+    def __init__(self, **kwargs):
+        for (k,v) in kwargs.items():
+            setattr(self, k, v)
+
+    def initialize(self):
+        raise NotImplementedError('initialize is abstract method')
+
+    def execute(self):
+        raise NotImplementedError('execute is abstract method')
+
+    def finalize(self):
+        raise NotImplementedError('finalize is abstract method')
+
+class sdtask_template(sdtask_interface):
+    """
+    The sdtask_template is a template class for standard worker
+    class for sdtasks. It partially implement initialize() and
+    finalize() using internal methods that must be implemented
+    in the derived classes. For initialize(), derived classes
+    must implement initialize_scan(), which initializes scantable
+    object and set it to self.scan. You can implement paramter_check()
+    to do any task specific parameter check in initialize().
+    For finalize(), derived classes can implement save() and cleanup().
+    """
+    def __init__(self, **kwargs):
+        super(sdtask_template,self).__init__(**kwargs)
+        if not hasattr(self, 'outform'):
+            self.outform = 'undefined'
+
+    def initialize(self):
+        assert_infile_exists(self.infile)
+        if hasattr(self, 'suffix'):
+            self.project = get_default_outfile_name(self.infile,self.outfile,self.suffix)
+        if hasattr(self, 'outfile') and len(self.outfile) > 0:
+            assert_outfile_canoverwrite_or_nonexistent(self.outfile,self.outform,self.overwrite)
+
+        # task specific parameter check
+        self.parameter_check()
+        
+        # set self.scan
+        self.initialize_scan()
+
+    def finalize(self):
+        # Save result on disk if necessary
+        self.save()
+
+        # some cleanup should be defined here
+        self.cleanup()
+
+    def initialize_scan(self):
+        # initialize scantable object to work with
+        raise NotImplementedError('initialize_scan is abstract method')
+
+    def parameter_check(self):
+        # do nothing by default
+        pass
+
+    def save(self):
+        # do nothing by default
+        pass
+        
+    def cleanup(self):
+        # do nothing by default
+        pass
+        
+    def get_selector(self):
+        attributes = ['scanlist','iflist','pollist','beamlist',
+                      'rowlist','field']
+        for a in attributes:
+            if not hasattr(self,a): setattr(self,a,None)
+        return get_selector(in_scans=self.scanlist, in_ifs=self.iflist,
+                            in_pols=self.pollist, in_beams=self.beamlist,
+                            in_rows=self.rowlist, in_field=self.field)
+
+    def set_to_scan(self):
+        if hasattr(self,'fluxunit'):
+            set_fluxunit(self.scan, self.fluxunit, self.telescopeparm)
+        if hasattr(self,'frame'):
+            set_freqframe(self.scan, self.frame)
+        if hasattr(self,'doppler'):
+            set_doppler(self.scan,self.doppler)
+        if hasattr(self,'specunit'):
+            set_spectral_unit(self.scan,self.specunit)
+            if hasattr(self,'restfreq'):
+                rfset = self.restfreq not in ['',[]]
+                if self.specunit == 'km/s':
+                    if len(self.scan.get_restfreqs()[0]) == 0 and not rfset:
+                        raise Exception('Restfreq must be given')
+                    if rfset:
+                        fval = normalise_restfreq(self.restfreq)
+                        casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
+                        self.scan.set_restfreqs(freqs=fval)
+        
+
 def get_abspath(filename):
     return os.path.abspath(expand_path(filename))
 
@@ -34,7 +142,7 @@ def get_default_outfile_name(infile=None, outfile=None, suffix=None):
 
 
 def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overwrite=None):
-    if not overwrite and (outform.upper != "ASCII"):
+    if not overwrite and (outform.upper() != "ASCII"):
         filename = get_abspath(outfile)
         if os.path.exists(filename):
             mesg = "Output file '%s' exists." % (outfile)
@@ -517,3 +625,4 @@ def get_plotter(plotlevel=0):
 ##     visible = (plotlevel > 0) if plotlevel else sd.rcParams['plotter.gui']
     plotter = new_asaplot(visible=visible)
     return plotter
+

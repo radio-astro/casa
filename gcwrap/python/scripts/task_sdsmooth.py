@@ -9,72 +9,73 @@ import sdutil
 
 def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, chanwidth, verify, outfile, outform, overwrite, plotlevel):
 
-        casalog.origin('sdsmooth')
+    casalog.origin('sdsmooth')
+    
+    try:
+        worker = sdsmooth_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+        
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
+class sdsmooth_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdsmooth_worker,self).__init__(**kwargs)
+        self.suffix = '_sm'
 
-        try:
-            #load the data with or without averaging
-            if infile=='':
-                    raise Exception, 'infile is undefined'
+    def initialize_scan(self):
+        sorg=sd.scantable(self.infile,average=False,antenna=self.antenna)
+        if not (isinstance(sorg,Scantable)):
+            raise Exception, 'infile=%s is not found' % self.infile
+
+        # A scantable selection
+        sel = self.get_selector()
+        sorg.set_selection(sel)
+
+        # Copy scantable when usign disk storage not to modify
+        # the original table.
+        if is_scantable(self.infile) and \
+               sd.rcParams['scantable.storage'] == 'disk':
+            self.scan = sorg.copy()
+        else:
+            self.scan = sorg
+        del sorg
+
+    def parameter_check(self):
+        if self.kernel=='' or self.kernel=='none':
+            errstr = "kernel need to be specified"
+            raise Exception, errstr
+        elif self.kernel!='hanning' and self.kwidth<=0:
+            errstr = "kernel should be > 0"
+            raise Exception, errstr
             
-            sdutil.assert_infile_exists(infile)
+    def execute(self):
+        prior_plot(self.scan, self.project, self.plotlevel)
+            
+        # set various attributes to self.scan
+        self.set_to_scan()
 
-            # Default file name
-            project = sdutil.get_default_outfile_name(infile,
-                                                      outfile,
-                                                      '_sm')
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
-                                                              outform,
-                                                              overwrite)
+        #Average within each scan
+        if self.scanaverage:
+            self.scan = sdutil.doaverage(self.scan,
+                                         self.scanaverage,
+                                         True,
+                                         'tint',
+                                         false,
+                                         'none')
 
-            sorg=sd.scantable(infile,average=False,antenna=antenna)
-            if not (isinstance(sorg,Scantable)):
-                    raise Exception, 'infile=%s is not found' % infile
+        # Actual implementation is defined outside the class
+        # since those are used in task_sdreduce.
+        dosmooth(self.scan, self.kernel, self.kwidth,
+                 self.chanwidth, self.verify)
 
+        posterior_plot(self.scan, self.project, self.plotlevel)
 
-            # A scantable selection
-            sel = sdutil.get_selector(scanlist, iflist, pollist,
-                                      field)
-            #Apply the selection
-            sorg.set_selection(sel)
-            del sel
-
-            # Copy scantable when usign disk storage not to modify
-            # the original table.
-            if is_scantable(infile) and \
-                   sd.rcParams['scantable.storage'] == 'disk':
-                    s = sorg.copy()
-            else:
-                    s = sorg
-            del sorg
-
-            #Average within each scan
-            if scanaverage:
-                    s = sdutil.doaverage(s, scanaverage, True, 'tint',
-                                         false, 'none')
-
-            # Smooth the spectrum
-            if kernel=='' or kernel=='none':
-                errstr = "kernel need to be specified"
-                raise Exception, errstr
-            elif kernel!='hanning' and kwidth<=0:
-                errstr = "kernel should be > 0"
-                raise Exception, errstr
-            else:
-                    prior_plot(s, project, plotlevel)
-
-                    dosmooth(s, kernel, kwidth, chanwidth, verify)
-
-                    posterior_plot(s, project, plotlevel)
-
-            sdutil.save(s, project, outform, overwrite)
-
-            del s
-
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
+    def save(self):
+        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
 
 def dosmooth(s, kernel, kwidth, chanwidth, verify):

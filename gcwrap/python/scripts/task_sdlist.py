@@ -6,26 +6,26 @@ import sdutil
 
 def sdlist(infile, antenna, scanaverage, outfile, overwrite):
 
-        casalog.origin('sdlist')
+    casalog.origin('sdlist')
+    
+    try:
+        worker = sdlist_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
-        try:
-            sdutil.assert_infile_exists(infile)
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(outfile,'ASAP',overwrite)
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-            dolist(infile, scanaverage, antenna, outfile)
+class sdlist_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdlist_worker,self).__init__(**kwargs)
 
-            # DONE
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
+    def initialize_scan(self):
+        self.scan = sd.scantable(self.infile, average=self.scanaverage, antenna=self.antenna)
 
-def dolist(infile,scanaverage,antenna,outfile):
-     #load the data with or without averaging
-    s=sd.scantable(infile,average=scanaverage,antenna=antenna)
+    def execute(self):
+        self.scan._summary(self.outfile)
 
-    s._summary(outfile)
-
-    # Clean up scantable
-    del s
    

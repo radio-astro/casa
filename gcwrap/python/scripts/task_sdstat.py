@@ -11,266 +11,268 @@ import sdutil
 
 def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
 
-
-        casalog.origin('sdstat')
-
-        ###
-        ### Now the actual task code
-        ###
-        restorer = None
-        verbsave=sd.rcParams['verbose']
-        try:
-            sdutil.assert_infile_exists(infile)
-
-            #load the data without averaging
-            s = sd.scantable(infile,average=False,antenna=antenna)
-
-            # collect data to restore
-            restorer = sdutil.scantable_restore_factory(s,
-                                                        infile,
-                                                        fluxunit,
-                                                        specunit,
-                                                        frame,
-                                                        doppler,
-                                                        restfreq)
-
-            #Apply the selection
-            sel = sdutil.get_selector(scanlist, iflist, pollist,
-                                      field)
-            s.set_selection(sel)
-            del sel
-
-            stmp = sdutil.set_fluxunit(s, fluxunit, telescopeparm, False)
-
-            if stmp:
-                    # Restore flux unit in original table before deleting
-                    restorer.restore()
-                    del restorer
-                    restorer = None
-                    del s
-                    s = stmp
-                    del stmp
-
-
-            # set default spectral axis unit
-            sdutil.set_spectral_unit(s, specunit)
-
-            # set restfrequency
-            sdutil.set_restfreq(s, restfreq)
-
-            # reset frame and doppler if needed
-            sdutil.set_freqframe(s, frame)
-
-            sdutil.set_doppler(s, doppler)
-
-            # If outfile is set, sd.rcParams['verbose'] must be True
-            if ( len(outfile) > 0 ):
-                    if ( not os.path.exists(outfile) or overwrite ):
-                            sd.rcParams['verbose']=True
-
-            (retValue,resultstats) = calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, format)
-
-            # Output to terminal if outfile is not empty
-            savestatistics(resultstats, outfile, overwrite)
-
-            return retValue
+    casalog.origin('sdstat')
     
-            # DONE
-            
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
-        finally:
-                # restore rcParams
-                sd.rcParams['verbose']=verbsave
-                try:
-                        # Restore header information in the table
-                        if restorer is not None:
-                                restorer.restore()
-                                del restorer
+    ###
+    ### Now the actual task code
+    ###
+    try:
+        worker = sdstat_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+        
+        return  worker.statistics
+        
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-                        # Final clean up
-                        del s
-                except:
-                        pass
-                casalog.post('')
+class sdstat_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdstat_worker,self).__init__(**kwargs)
 
-def calcstatistics(s, specunit, fluxunit, masklist, invertmask, interactive, stformat):
-    # Warning for multi-IF data
-    if len(s.getifnos()) > 1:
-        #print '\nWarning - The scantable contains multiple IF data.'
-        #print '          Note the same mask(s) are applied to all IFs based on CHANNELS.'
-        #print '          Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0))
-        casalog.post( 'The scantable contains multiple IF data.', priority='WARN' )
-        casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority='WARN' )
-        casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0)), priority='WARN' )
+    def parameter_check(self):
+        # If outfile is set, sd.rcParams['verbose'] must be True
+        self.verbose_saved = sd.rcParams['verbose']
+        if ( len(self.outfile) > 0 ):
+            if ( not os.path.exists(sdutil.get_abspath(self.outfile)) \
+                 or self.overwrite ):
+                sd.rcParams['verbose']=True
 
 
-    # Get mask
-    msk = get_mask(s, interactive, masklist, invertmask)
+    def initialize_scan(self):
+        #load the data without averaging
+        sorg = sd.scantable(self.infile,average=False,antenna=self.antenna)
 
-    # Get statistics values
-    formstr = get_formatter(stformat)
-    statsdict = get_stats(s, msk, formstr)
+        # collect data to restore
+        self.restorer = sdutil.scantable_restore_factory(sorg,
+                                                         self.infile,
+                                                         self.fluxunit,
+                                                         self.specunit,
+                                                         self.frame,
+                                                         self.doppler,
+                                                         self.restfreq)
+        
+        # scantable selection
+        sorg.set_selection(self.get_selector())
 
-    resultstats = statsdict.pop('statslist')
 
-    # Get unit labels
-    (abclbl,intlbl,xunit,intunit) = get_unit_labels(s, specunit, fluxunit)
+        # this is bit tricky
+        # set fluxunit here instead of self.set_to_scan
+        # and remove fluxunit attribute to disable additional
+        # call of set_fluxunit in self.set_to_scan
+        self.scan = sdutil.set_fluxunit(sorg, self.fluxunit, self.telescopeparm, False)
+        self.fluxunit_saved = self.fluxunit
+        del self.fluxunit
 
-    # Equivalent width and integrated intensities
-    (eqw,integratef) = get_eqw_and_integf(s, statsdict)
+        if self.scan:
+            # Restore flux unit in original table before deleting
+            self.restorer.restore()
+            del self.restorer
+            self.restorer = None
+        else:
+            self.scan = sorg
 
-    if sd.rcParams['verbose']:
+    def execute(self):
+        self.set_to_scan()
+
+        # restore self.fluxunit
+        self.fluxunit = self.fluxunit_saved
+        del self.fluxunit_saved
+
+        self.calc_statistics()
+
+    def calc_statistics(self):
+        # Warning for multi-IF data
+        if len(self.scan.getifnos()) > 1:
+            casalog.post( 'The scantable contains multiple IF data.', priority='WARN' )
+            casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority='WARN' )
+            casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.\n' % (self.scan.getif(0)), priority='WARN' )
+
+        # set mask
+        self.__set_mask()
+
+        # set formatter
+        self.__set_formatter()
+
+        # set unit labels
+        self.__set_unit_labels()
+
+        # calculate statistics
+        #statsdict = get_stats(s, msk, formstr)
+        self.__calc_stats()
+
+        # reshape statsdict for return
+        for k in ['min','max']:
+            self.statistics['%s_abscissa'%(k)] = qa.quantity(self.statistics.pop('%s_abc'%(k)),self.xunit)
+        for (k,u) in [('eqw',self.xunit),('totint',self.intunit)]:
+            self.statistics[k] = qa.quantity(self.statistics[k],u)
+
+    def save(self):
+        if ( len(self.outfile) > 0 ):
+            if ( not os.path.exists(sdutil.get_abspath(self.outfile)) \
+                 or self.overwrite ):
+                f=open(self.outfile,'w')
+                f.write(self.resultstats)
+                f.close()
+            else:
+                casalog.post( 'File '+self.outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
+
+    def cleanup(self):
+        # restore sd.rcParams
+        sd.rcParams['verbose'] = self.verbose_saved
+
+        # restore original scantable
+        if self.restorer is not None:
+            self.restorer.restore()
+
+    def __calc_stats(self):
+        usr = get_user()
+        tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
+        self.resultstats = ''
+        self.statistics = {}
+
+        # calculate regular statistics
+        statsname = ['max', 'min', 'max_abc', 'min_abc',
+                     'sum', 'mean', 'median', 'rms',
+                     'stddev']
+        for name in statsname:
+            v = self.scan.stats(name,self.msk,self.format_string)
+            self.statistics[name] = list(v) if len(v) > 1 else v[0]
+            if sd.rcParams['verbose']:
+                self.resultstats += get_text_from_file(tmpfile)
+
+        # calculate additional statistics (eqw and integrated intensity)
+        self.__calc_eqw_and_integf()
+
+        if sd.rcParams['verbose']:
             # Print equivalent width
-            out = get_statstext(s, 'eqw', abclbl, eqw, formstr)
-            resultstats += out
+            out = self.__get_statstext('eqw', self.abclbl, 'eqw')
+            self.resultstats += out
 
             # Print integrated flux
-            outp = get_statstext(s, 'Integrated intensity', intlbl, integratef, formstr)
-            resultstats += outp
+            outp = self.__get_statstext('Integrated intensity', self.intlbl, 'totint')
+            self.resultstats += outp
 
             # to logger
             casalog.post(out[:-2]+outp)
 
-    # reshape statsdict for return
-    for k in ['min','max']:
-        statsdict['%s_abscissa'%(k)] = qa.quantity(statsdict.pop('%s_abc'%(k)),xunit)
-    for (k,v,u) in [('eqw',eqw,xunit),('totint',integratef,intunit)]:
-        statsdict[k] = qa.quantity(v,u)
-
-    return (statsdict,resultstats)
-
-
-def savestatistics(stats, outfile, overwrite):
-    if ( len(outfile) > 0 ):
-        if ( not os.path.exists(outfile) or overwrite ):
-            #sys.stdout=open( outfile,'w' )
-            f=open(outfile,'w')
-            f.write(stats)
-            f.close()
-            #sd.rcParams['verbose']=verbsave
-            #bbb=True
+    def __calc_eqw_and_integf(self):
+        eqw = None
+        integratef = None
+        if isinstance(self.statistics['max'],list):
+            # User selected multiple scans,ifs
+            ns = len(self.statistics['max'])
+            eqw=[]
+            integratef=[]
+            for i in range(ns):
+                #Get bin width
+                abcissa, lbl = self.scan.get_abcissa(rowno=i)
+                dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
+                # Construct equivalent width (=sum/max)
+                eqw = eqw + [get_eqw(self.statistics['max'][i],
+                                     self.statistics['min'][i],
+                                     self.statistics['sum'][i],
+                                     dabc)]
+                # Construct integrated flux
+                integratef = integratef + [get_integf(self.statistics['sum'][i], dabc)]
         else:
-            #print '\nFile '+outfile+' already exists.\nStatistics results are not written into the file.\n'
-            casalog.post( 'File '+outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
-
-
-def get_formatter(format):
-    format=format.replace(' ','')
-    formstr=format
-    if len(format)==0:
-        casalog.post("Invalid format string. Using the default 3.3f.")
-        formstr='3.3f'
-    return formstr
-
-def get_mask(s, interactive, masklist, invertmask):
-    msk = None
-    if interactive:
-        # Interactive masking
-        msk = sdutil.interactive_mask(s, masklist, False, purpose='to calculate statistics')
-        msks = s.get_masklist(msk)
-        if len(msks) < 1:
-            #print 'No channel is selected. Exit without calculation.'
-            raise Exception, 'No channel is selected. Exit without calculation.'
-            #return
-        lbl=s.get_unit()
-        #print 'final mask list ('+lbl+') =',msks
-        casalog.post( 'final mask list ('+lbl+') = '+str(msks) )
-        
-        del msks
-
-    # set the mask region
-    elif ( len(masklist) > 0):
-        msk=s.create_mask(masklist,invert=invertmask)
-        msks=s.get_masklist(msk)
-        if len(msks) < 1:
-            del msk, msks
-            #print 'Selected mask lists are out of range. Exit without calculation.'
-            raise Exception, 'Selected mask lists are out of range. Exit without calculation.'
-            #return
-        del msks
-    else:
-        # Full region
-        #print 'Using full region'
-        casalog.post( 'Using full region' )
-    return msk
-
-def get_stats(s, msk=None, formstr='3.3f'):
-    usr = get_user()
-    tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
-    #statslist = []
-    statslist = ''
-    d = {}
-    statsname = ['max', 'min', 'max_abc', 'min_abc',
-                 'sum', 'mean', 'median', 'rms',
-                 'stddev']
-    for name in statsname:
-        v = s.stats(name,msk,formstr)
-        d[name] = list(v) if len(v) > 1 else v[0]
-        if sd.rcParams['verbose']:
-            statslist += get_text_from_file(tmpfile)
-    d['statslist'] = statslist
-    return d
-
-def get_unit_labels(s, specunit, fluxunit):
-    if specunit != '': abclbl = specunit
-    else: abclbl = s.get_unit()
-    if fluxunit != '': ordlbl = fluxunit
-    else: ordlbl = s.get_fluxunit()
-    intlbl = ordlbl +' * '+abclbl
-    # Check units
-    if abclbl == 'channel' and not qa.check(abclbl):
-        qa.define('channel','1 _')
-    if qa.check(abclbl):
-        xunit = abclbl
-    else:
-        #print "Undefined unit: '"+abclbl+"'...ignored"
-        casalog.post( "Undefined unit: '"+abclbl+"'...ignored", priority = 'WARN' )
-        xunit = '_'
-    if qa.check(ordlbl):
-        intunit = ordlbl+'.'+abclbl
-    else:
-        #print "Undifined unit: '"+ordlbl+"'...ignored"
-        casalog.post( "Undifined unit: '"+ordlbl+"'...ignored", priority = 'WARN' )
-        intunit = '_.'+abclbl
-    return (abclbl,intlbl,xunit,intunit)
-
-def get_eqw_and_integf(s, statsdict):
-    eqw = None
-    integratef = None
-    if isinstance(statsdict['max'],list):
-        # User selected multiple scans,ifs
-        ns = len(statsdict['max'])
-        eqw=[]
-        integratef=[]
-        for i in range(ns):
-            #Get bin width
-            abcissa, lbl = s.get_abcissa(rowno=i)
+            # Single scantable only
+            abcissa, lbl = self.scan.get_abcissa(rowno=0)
             dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
-            # Construct equivalent width (=sum/max)
-            eqw = eqw + [get_eqw(statsdict['max'][i],
-                                 statsdict['min'][i],
-                                 statsdict['sum'][i],
-                                 dabc)]
-            # Construct integrated flux
-            integratef = integratef + [get_integf(statsdict['sum'][i], dabc)]
-
-    else:
-        # Single scantable only
-        abcissa, lbl = s.get_abcissa(rowno=0)
-        dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
         
-        # Construct equivalent width (=sum/max)
-        eqw = get_eqw(statsdict['max'],
-                      statsdict['min'],
-                      statsdict['sum'],
-                      dabc)
+            # Construct equivalent width (=sum/max)
+            eqw = get_eqw(self.statistics['max'],
+                          self.statistics['min'],
+                          self.statistics['sum'],
+                          dabc)
 
-        # Construct integrated flux
-        integratef = get_integf(statsdict['sum'], dabc)
-    return (eqw,integratef)
+            # Construct integrated flux
+            integratef = get_integf(self.statistics['sum'], dabc)
+        self.statistics['eqw'] = eqw
+        self.statistics['totint'] = integratef
+
+    def __set_mask(self):
+        self.msk = None
+        if self.interactive:
+            # Interactive masking
+            self.msk = sdutil.interactive_mask(self.scan,
+                                               self.masklist,
+                                               False,
+                                               purpose='to calculate statistics')
+            msks = self.scan.get_masklist(self.msk)
+            if len(msks) < 1:
+                raise Exception, 'No channel is selected. Exit without calculation.'
+            lbl=self.scan.get_unit()
+            casalog.post( 'final mask list ('+lbl+') = '+str(msks) )
+
+            del msks
+
+        # set the mask region
+        elif ( len(self.masklist) > 0):
+            self.msk=self.scan.create_mask(self.masklist,invert=self.invertmask)
+            msks=self.scan.get_masklist(self.msk)
+            if len(msks) < 1:
+                del self.msk, msks
+                raise Exception, 'Selected mask lists are out of range. Exit without calculation.'
+            del msks
+        else:
+            # Full region
+            casalog.post( 'Using full region' )
+        
+    def __set_formatter(self):
+        self.format_string=self.format.replace(' ','')
+        if len(self.format_string)==0:
+            casalog.post("Invalid format string. Using the default 3.3f.")
+            self.format_string='3.3f'
+
+    def __set_unit_labels(self):
+        if self.specunit != '': self.abclbl = self.specunit
+        else: self.abclbl = self.scan.get_unit()
+        if self.fluxunit != '': ordlbl = self.fluxunit
+        else: ordlbl = self.scan.get_fluxunit()
+        self.intlbl = ordlbl+' * '+self.abclbl
+
+        # Check units
+        if self.abclbl == 'channel' and not qa.check(self.abclbl):
+            qa.define('channel','1 _')
+
+        self.xunit = check_unit(self.abclbl,self.abclbl,'_')
+        self.intunit = check_unit(ordlbl,ordlbl+'.'+self.abclbl,'_.'+self.abclbl)
+
+    def __get_statstext(self, title, label, key):
+        sep = "--------------------------------------------------"
+        head = string.join([sep,string.join([" ","%s ["%(title),label,"]"]," "),sep],'\n')
+        tail = ''
+        out = head + '\n'
+        val = self.statistics[key]
+        if isinstance(val,list):
+            ns = len(val)
+            for i in xrange(ns):
+                out += self.__get_statstr(i, val[i], sep)
+        else:
+            out += self.__get_statstr(0, val, sep)
+        out += '\n%s'%(tail)
+        return out
+
+    def __get_statstr(self, irow, val, separator):
+        out = ''
+        out += 'Scan[%d] (%s) ' % (self.scan.getscan(irow), self.scan._getsourcename(irow))
+        out += 'Time[%s]:\n' % (self.scan._gettime(irow))
+        if self.scan.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (self.scan.getbeam(irow))
+        if self.scan.nif(-1) > 1: out +=  ' IF[%d] ' % (self.scan.getif(irow))
+        if self.scan.npol(-1) > 1: out +=  ' Pol[%d] ' % (self.scan.getpol(irow))
+        out += ('= %'+self.format_string) % (val) + '\n'
+        out +=  "%s\n "%(separator)
+        return out 
+
+def check_unit(unit_in,valid_unit=None,default_unit=None):
+    if qa.check(unit_in):
+        return valid_unit
+    else:
+        casalog.post('Undefined unit: \'%s\'...ignored'%(unit_in), priority='WARN')
+        return default_unit
 
 def get_eqw(maxl, minl, suml, dabc):
     eqw = 0.0
@@ -283,31 +285,6 @@ def get_eqw(maxl, minl, suml, dabc):
     
 def get_integf(suml, dabc):
     return suml * dabc
-
-def get_statstext(s, title, label, val, formstr):
-    sep = "--------------------------------------------------"
-    head = string.join([sep,string.join([" ","%s ["%(title),label,"]"]," "),sep],'\n')
-    tail = ''
-    out = head + '\n'
-    if isinstance(val,list):
-        ns = len(val)
-        for i in xrange(ns):
-            out += get_statstr(s, i, val[i], formstr, sep)
-    else:
-        out += get_statstr(s, 0, val, formstr, sep)
-    out += '\n%s'%(tail)
-    return out
-
-def get_statstr(s, i, val, formstr, separator):
-    out = ''
-    out += 'Scan[%d] (%s) ' % (s.getscan(i), s._getsourcename(i))
-    out += 'Time[%s]:\n' % (s._gettime(i))
-    if s.nbeam(-1) > 1: out +=  ' Beam[%d] ' % (s.getbeam(i))
-    if s.nif(-1) > 1: out +=  ' IF[%d] ' % (s.getif(i))
-    if s.npol(-1) > 1: out +=  ' Pol[%d] ' % (s.getpol(i))
-    out += ('= %'+formstr) % (val) + '\n'
-    out +=  "%s\n "%(separator)
-    return out
 
 def get_text_from_file(filename):
     f = open(filename,'r')
