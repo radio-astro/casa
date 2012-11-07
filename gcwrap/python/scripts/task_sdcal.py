@@ -45,17 +45,17 @@ class sdcal_worker(sdutil.sdtask_template):
         
         # Copy scantable when usign disk storage not to modify
         # the original table.
-        if is_scantable(self.infile) and \
-               sd.rcParams['scantable.storage'] == 'disk':
+        if is_scantable(self.infile) and self.is_disk_storage:
             self.scan = sorg.copy()
         else:
             self.scan = sorg
         del sorg
 
     def execute(self):
-        prior_plot(self.scan, self.plotlevel)
-                
-        # set various attributes to self.scan
+        engine = sdcal_engine(self)
+        engine.prologue()
+        
+        # apply inputs to scan
         self.set_to_scan()
 
 ##         # do opacity (atmospheric optical depth) correction
@@ -66,10 +66,8 @@ class sdcal_worker(sdutil.sdtask_template):
 
         # Actual implementation is defined outside the class
         # since those are used in task_sdreduce.
-        self.scan = docalibration(self.scan, self.calmode, self.fraction,
-                                  self.noff, self.width, self.elongated,
-                                  self.markonly, self.plotpointings,
-                                  self.verify)
+        engine.drive()
+        self.scan = engine.get_result()
         
         # do opacity (atmospheric optical depth) correction
         sdutil.doopacity(self.scan, self.tau)
@@ -80,67 +78,56 @@ class sdcal_worker(sdutil.sdtask_template):
         # Average data if necessary
         self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight, self.averageall)
 
-        posterior_plot(self.scan, self.project, self.plotlevel)
+        engine.epilogue()
 
     def save(self):
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
         
 
-def docalibration(s, calmode, fraction, noff, width, elongated,
-                  markonly, plotpointings, verify=False):
-    scanns = s.getscannos()
-    sn=list(scanns)
-    casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
-    if calmode == 'otf' or calmode=='otfraster':
-        s2 = _mark( s,
-                    (calmode=='otfraster'),
-                    fraction=fraction,
-                    npts=noff,
-                    width=width,
-                    elongated=elongated,
-                    plot=plotpointings )
-        if markonly:
-            scal = s2
+class sdcal_engine(sdutil.sdtask_engine):
+    def __init__(self, worker):
+        super(sdcal_engine,self).__init__(worker)
+
+    def prologue(self):
+        if ( abs(self.plotlevel) > 1 ):
+            casalog.post( "Initial Raw Scantable:" )
+            self.worker.scan._summary()
+
+    def drive(self):
+        scanns = self.worker.scan.getscannos()
+        sn=list(scanns)
+        casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
+        if self.calmode == 'otf' or self.calmode=='otfraster':
+            self.__mark()
+            if not self.markonly:
+                self.result = sd.asapmath.calibrate( self.result,
+                                                     scannos=sn,
+                                                     calmode='ps',
+                                                     verify=self.verify )
         else:
-            scal = sd.asapmath.calibrate( s2,
-                                          scannos=sn,
-                                          calmode='ps',
-                                          verify=verify )
-    else:
-        scal = sd.asapmath.calibrate( s,
-                                      scannos=sn,
-                                      calmode=calmode,
-                                      verify=verify )
-    return scal
+            self.result = sd.asapmath.calibrate( self.worker.scan,
+                                                 scannos=sn,
+                                                 calmode=self.calmode,
+                                                 verify=self.verify )
 
-def prior_plot(s, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        # print summary of input data
-        #print "Initial Raw Scantable:"
-        #print s
-        casalog.post( "Initial Raw Scantable:" )
-        #casalog.post( s._summary() )
-        s._summary()
+    def epilogue(self):
+        if ( abs(self.plotlevel) > 1 ):
+            casalog.post( "Final Calibrated Scantable:" )
+            self.worker.scan._summary()
 
-def posterior_plot(s, project, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        # print summary of calibrated data
-        #print "Final Calibrated Scantable:"
-        #print spave
-        casalog.post( "Final Calibrated Scantable:" )
-        #casalog.post( spave._summary() )
-        s._summary()
+        # Plot final spectrum
+        if ( abs(self.plotlevel) > 0 ):
+            pltfile = project + '_calspec.eps'
+            sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel)
 
-    # Plot final spectrum
-    if ( abs(plotlevel) > 0 ):
-        pltfile = project + '_calspec.eps'
-        sdutil.plot_scantable(s, pltfile, plotlevel)
-
-def _mark(s, israster, *args, **kwargs):
-        marker = sd.edgemarker( israster=israster )
-        marker.setdata( s )
-        marker.setoption( *args, **kwargs )
+    def __mark(self):
+        israster = (self.calmode == 'otfraster')
+        marker = sd.edgemarker(israster=israster)
+        marker.setdata(self.worker.scan)
+        self.npts = self.noff
+        marker.setoption(**self.__dict__)
         marker.mark()
-        if kwargs.has_key('plot') and kwargs['plot']:
-                marker.plot()
-        return marker.getresult()
+        if self.plotpointings:
+            marker.plot()
+        self.result = marker.getresult()
+        

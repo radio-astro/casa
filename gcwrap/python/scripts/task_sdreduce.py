@@ -18,169 +18,101 @@ import task_sdbaseline
 
 def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 
-##         a=inspect.stack()
-##         stacklevel=0
-##         for k in range(len(a)):
-##           if (string.find(a[k][1], 'ipython console') > 0):
-##                 stacklevel=k
-##         myf=sys._getframe(stacklevel).f_globals
+    casalog.origin('sdreduce')
+    
+    ###
+    ### Now the actual task code
+    ###
+    
+    try:
+        worker = sdreduce_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
-##         restorer = None
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-##         saveinputs=myf['saveinputs']
-##         saveinputs('sdreduce','sdreduce.tmp')       
+class sdreduce_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdreduce_worker,self).__init__(**kwargs)
+        self.suffix = '_cal'
 
-        casalog.origin('sdreduce')
+    def initialize_scan(self):
+        # instantiate scantable
+        self.scan = sd.scantable(self.infile, average=False, antenna=self.antenna)
+        
+        # restorer
+        self.restorer = sdutil.scantable_restore_factory(self.scan,
+                                                         self.infile,
+                                                         self.fluxunit,
+                                                         self.specunit,
+                                                         self.frame,
+                                                         self.doppler,
+                                                         self.restfreq)
+        
+        # Apply selection
+        self.scan.set_selection(self.get_selector())
 
-        ###
-        ### Now the actual task code
-        ###
+    def execute(self):
+        # calibration stage
+        casalog.post( "*** sdcal stage ***" )
+        task_sdcal.prior_plot(self.scan, self.plotlevel)
+        self.scan = task_sdcal.docalibration(self.scan, self.calmode,
+                                             self.fraction,
+                                             self.noff, self.width,
+                                             self.elongated,
+                                             self.markonly, self.plotpointings,
+                                             self.verifycal)
 
-        try:
-            tmpfilelist=''
-            sdcalout=''
-            sdsmoothout=''
-            sdbaselineout=''
-            project = sdutil.get_default_outfile_name(infile,
-                                                            outfile,
-                                                            '_cal')
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
-                                                              outform,
-                                                              overwrite)
+        # apply input parameters 
+        self.set_to_scan()
 
-            # instantiate scantable
-            s = sd.scantable(infile, average=False, antenna=antenna)
+        # opacity correction
+        sdutil.doopacity(self.scan, self.tau)
 
-            # restorer
-            restorer = sdutil.scantable_restore_factory(s,
-                                                        infile,
-                                                        fluxunit,
-                                                        specunit,
-                                                        frame,
-                                                        doppler,
-                                                        restfreq)
+        # channel splitting
+        sdutil.dochannelrange(self.scan, self.channelrange)
+        
+        # averaging stage
+        if self.average:
+            self.scan = sdutil.doaverage(self.scan, self.scanaverage,
+                                         self.timeaverage, self.tweight,
+                                         self.polaverage, self.pweight,
+                                         self.averageall)
+        else:
+            casalog.post( "No averaging was applied..." )
+        task_sdcal.posterior_plot(self.scan, self.project, self.plotlevel)
+
+        # smoothing stage
+        casalog.post( "" )
+        casalog.post( "*** sdsmooth stage ***" )
+        if self.kernel != 'none':
+            task_sdsmooth.prior_plot(self.scan, self.project, self.plotlevel)
+            task_sdsmooth.dosmooth(self.scan, self.kernel, self.kwidth,
+                                   self.chanwidth, self.verifysm)
+            task_sdsmooth.posterior_plot(self.scan, self.project, self.plotlevel)
+        else:
+            casalog.post( "No smoothing was applied..." )
+
             
-            # apply input parameters to scantable
-            sdutil.set_spectral_unit(s, specunit)
-            sdutil.set_doppler(s, doppler)
-            sdutil.set_freqframe(s, frame)
-            
-            # apply data selection to scantable
-            sel = sdutil.get_selector(scanlist, iflist, pollist,
-                                      field)
-            s.set_selection(sel)
-            del sel
+        # baseline stage
+        casalog.post( "" )
+        casalog.post( "*** sdbaseline stage ***")
+        if self.blfunc != 'none':
+            task_sdbaseline.prior_plot(self.scan, self.plotlevel)
+            blfile = task_sdbaseline.init_blfile(self.scan, self.infile, self.project, self.masklist, self.maskmode, self.thresh, self.avg_limit, self.edge, self.blfunc, self.order, self.npiece, self.applyfft, self.fftmethod, self.fftthresh, self.addwn, self.rejwn, self.clipthresh, self.clipniter, self.bloutput, self.blformat)
+            task_sdbaseline.dobaseline(self.scan, blfile, self.masklist, self.maskmode, self.thresh, self.avg_limit, self.edge, self.blfunc, self.order, self.npiece, self.applyfft, self.fftmethod, self.fftthresh, self.addwn, self.rejwn, self.clipthresh, self.clipniter, self.verifybl, self.verbosebl, self.blformat, self.showprogress, self.minnrow)
+            task_sdbaseline.posterior_plot(self.scan, self.project, self.plotlevel)
+        else:
+            casalog.post( "No baseline subtraction was applied..." )
 
-            # calibration stage
-            casalog.post( "*** sdcal stage ***" )
-            task_sdcal.prior_plot(s, plotlevel)
-            scal = task_sdcal.docalibration(s, calmode, fraction,
-                                            noff, width, elongated,
-                                            markonly, plotpointings,
-                                            verifycal)
+    def save(self):
+        # write result on disk
+        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
-            # convert flux
-            sdutil.set_fluxunit(scal, fluxunit, telescopeparm, insitu=True)
-
-            # delete original scantable instance
-            s.set_selection()
-            del s
-
-
-            # opacity correction
-            sdutil.doopacity(scal, tau)
-
-            # channel splitting
-            sdutil.dochannelrange(scal, channelrange)
-
-            # averaging stage
-            if average:
-                    sout = sdutil.doaverage(scal, scanaverage, timeaverage,
-                                            tweight, polaverage, pweight,
-                                            averageall)
-            else:
-                    casalog.post( "No averaging was applied..." )
-                    sout = scal
-            task_sdcal.posterior_plot(sout, project, plotlevel)
-
-
-            # smoothing stage
-            casalog.post( "" )
-            casalog.post( "*** sdsmooth stage ***" )
-            if kernel != 'none':
-                    task_sdsmooth.prior_plot(sout, project, plotlevel)
-                    task_sdsmooth.dosmooth(sout, kernel, kwidth, chanwidth,
-                                           verifysm)
-                    task_sdsmooth.posterior_plot(sout, project, plotlevel)
-            else:
-                    casalog.post( "No smoothing was applied..." )
-
-            # baseline stage
-            casalog.post( "" )
-            casalog.post( "*** sdbaseline stage ***")
-            if blfunc != 'none':
-                    task_sdbaseline.prior_plot(sout, plotlevel)
-                    blfile = task_sdbaseline.init_blfile(sout, infile, project, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, bloutput, blformat)
-                    task_sdbaseline.dobaseline(sout, blfile, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifybl, verbosebl, blformat, showprogress, minnrow)
-                    task_sdbaseline.posterior_plot(sout, project, plotlevel)
-            else:
-                    casalog.post( "No baseline subtraction was applied..." )
-                    
-            # write result on disk
-            sdutil.save(sout, project, outform, overwrite)
-            del scal
-            del sout
-
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
-        finally:
-                # restore
-                if restorer is not None:
-                        restorer.restore()
-                        del restorer
-
-
-
-
-## def _reset_inputs(param=None):
-##         '''
-##         internal function to recover inputs of sdreduce (containing other tasks) with global task parameter settin
-## g
-##         '''
-##         arg_names=['infile','antenna','fluxunit','telescopeparm','specunit','restfreq','frame','doppler','calmode','scanlist','field','iflist','pollist','channelrange','average','scanaverage','timeaverage','tweight','averageall','polaverage','pweight','tau','kernel','kwidth','blfunc','order','npiece','applyfft','fftmethod','fftthresh','addwn','rejwn','clipthresh','clipniter','masklist','maskmode','thresh','avg_limit','edge','verifycal','verifysm','verifybl','verbosebl','bloutput','blformat','showprogress','minnrow','outfile','outform','overwrite','plotlevel']
-##         a=inspect.stack()
-##         stacklevel=0
-##         for k in range(len(a)):
-##           if (string.find(a[k][1], 'ipython console') > 0):
-##                 stacklevel=k
-##         myf=sys._getframe(stacklevel).f_globals
-##         a=odict()
-##         paramfile = 'sdreduce' + '.tmp'
-##         f=open(paramfile)
-##         while 1:
-##                 try:
-##                         line=f.readline()
-##                         if (line.find('#') != 0):
-##                           splitline=line.split('\n')[0]
-##                           splitline2=splitline.split('=')
-##                           pname = splitline2[0].rstrip()
-##                           pvalstr = splitline2[1].lstrip()
-##                           pval = eval(pvalstr)
-##                           for key in arg_names:
-##                             if pname== key:
-##                               a[key]=pval
-##                               break
-
-##                 except:
-##                         break
-##         f.close()
-##         if(param == None):
-##           myf['__set_default_parameters'](a)
-##         elif(param == 'paramkeys'):
-##           return a.keys()
-##         else:
-##           if(a.has_key(param)):
-##             return a[param]
-
+    def cleanup(self):
+        # restore
+        if self.restorer:
+            self.restorer.restore()

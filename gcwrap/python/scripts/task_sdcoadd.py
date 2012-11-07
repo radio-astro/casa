@@ -8,113 +8,97 @@ import sdutil
 
 def sdcoadd(infiles, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
 
-        casalog.origin('sdcoadd')
+    casalog.origin('sdcoadd')
 
+    ###
+    ### Now the actual task code
+    ###
+    
+    try:
+        worker = sdcoadd_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+    
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-        ###
-        ### Now the actual task code
-        ###
+class sdcoadd_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdcoadd_worker,self).__init__(**kwargs)
+        self.suffix = '_coadd'
 
-        try:
-            import os.path
-            scantablist = []
-            # List of restorers
-            restore = []
+    def initialize(self):
+        self.nfile = len(self.infiles)
+        if self.nfile < 2:
+            raise Exception, 'Need at least two data file names'
+        super(sdcoadd_worker,self).initialize()
             
-            if len(infiles)<2:
-                 raise Exception, 'Need at least two data file names'
+    def initialize_scan(self):
+        self.scanlist = [None] * self.nfile
+        self.restorer = [None] * self.nfile
 
-            # check output file name
-            project = sdutil.get_default_outfile_name(infiles[0],
-                                                      outfile,
-                                                      '_coadd')
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
-                                                              outform,
-                                                              overwrite)
-            outfilename = sdutil.get_abspath(project)
-
-            #load each the data in the list with or without averaging
-            for i in range(len(infiles)):
-                sdutil.assert_infile_exists(infiles[i])
-                filename = sdutil.get_abspath(infiles[i])
+        for i in xrange(self.nfile):
+            sorg = sd.scantable(self.infiles[i],average=self.scanaverage,antenna=self.antenna)
             
-                thisscan = sd.scantable(infiles[i],average=scanaverage,antenna=antenna)
-                # prepare restorer object
-                restorer = sdutil.scantable_restore_factory(thisscan,
-                                                            filename,
-                                                            fluxunit,
-                                                            specunit,
-                                                            frame,
-                                                            doppler)
+            # prepare restorer object
+            restorer = sdutil.scantable_restore_factory(sorg,
+                                                        self.infiles[i],
+                                                        self.fluxunit,
+                                                        self.specunit,
+                                                        self.frame,
+                                                        self.doppler)
+            # convert flux
+            stmp = sdutil.set_fluxunit(sorg, self.fluxunit, self.telescopeparm, False)
+            if stmp:
+                # Restore header in original table before deleting
+                if restorer is not None:
+                    restorer.restore()
+                self.scanlist[i] = stmp
+            else:
+                self.scanlist[i] = sorg
+                self.restorer[i] = restorer
 
+        # this is bit tricky
+        # set fluxunit here instead of self.set_to_scan
+        # and remove fluxunit attribute to disable additional
+        # call of set_fluxunit in self.set_to_scan
+        self.fluxunit_saved = self.fluxunit
+        del self.fluxunit
 
-                # set default spectral axis unit
-                sdutil.set_spectral_unit(thisscan, specunit)
-                
-                # reset frame and doppler if needed
-                sdutil.set_freqframe(thisscan, frame)
-                sdutil.set_doppler(thisscan, doppler)
+    def execute(self):
+        self.set_to_scan()
 
-                # convert flux
-                stmp = sdutil.set_fluxunit(thisscan, fluxunit, telescopeparm, False)
-                if stmp:
-                    # Restore header in original table before deleting
-                    if restorer is not None:
-                        restorer.restore()
-                        del restorer
-                        restorer = None
-                    del thisscan
-                    thisscan = stmp
-                    del stmp
+        self.merge()
 
-                scantablist.append(thisscan)
-                restore.append(restorer)
+        # Average in time if desired
+        self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage,
+                                     self.tweight, self.polaverage, self.pweight)
 
-            # merge scantables
-            merged = merge(scantablist)
-            #print "Coadded %s" % infiles
-            casalog.post( "Coadded %s" % infiles )
-            
-            # Average in time if desired
-            spave = sdutil.doaverage(merged, scanaverage, timeaverage,
-                                     tweight, polaverage, pweight)
-            
-            # save
-            sdutil.save(spave, project, outform, overwrite)
+    def set_to_scan(self):
+        for scan in self.scanlist:
+            self.scan = scan
+            super(sdcoadd_worker,self).set_to_scan()
+        del self.scan
 
-            # Clean up scantable
-            del merged, spave
-            # DONE
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
-        finally:
-                try:
-                        # Restore header information in the table
-                        for i in range(len(scantablist)):
-                            if restore[i] is not None:
-                                restore[i].restore()
-                        del restore
+    def merge(self):
+        self.scan = sd.merge(self.scanlist)
+        casalog.post( "Coadded %s" % self.infiles )
 
-                       # Final clean up
-                        del scantablist
-                except:
-                        pass
-                casalog.post('')
-                
+        # total row
+        totalrow = 0
+        for scan in self.scanlist:
+            totalrow += scan.nrow()
+        if totalrow > self.scan.nrow():
+            casalog.post( "Actual number of rows is less than the number of rows expected in merged data.", priority = 'WARN' )
+            casalog.post( "Possibly, there are conformance error among the input data.", priority = 'WARN' )
 
-def merge(scantablist):
-    merged=sd.merge(scantablist)
-
-    # check for nrow
-    nrow = 0
-    for scan in scantablist:
-        nrow += scan.nrow()    
-    if (nrow>merged.nrow()): 
-        #print "WARNING: Actual number of rows is less than the number of rows expected in merged data."
-        #print "         Possibly, there are conformance error among the input data."
-        casalog.post( "Actual number of rows is less than the number of rows expected in merged data.", priority = 'WARN' )
-        casalog.post( "Possibly, there are conformance error among the input data.", priority = 'WARN' )
+    def save(self):
+        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
         
-    return merged
+    def cleanup(self):
+        for r in self.restorer:
+            if r:
+                r.restore()
+

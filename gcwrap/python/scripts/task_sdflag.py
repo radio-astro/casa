@@ -10,273 +10,256 @@ from numpy import ma, array, logical_not, logical_and
 
 def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
 
-        casalog.origin('sdflag')
-
-        try:
-            myp=None
-            sdutil.assert_infile_exists(infile)
-            filename = sdutil.get_abspath(infile)
-
-            project = sdutil.get_default_outfile_name(infile, outfile, '_f')
-            if len(outfile)==0 and overwrite:
-                project = filename
-
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,outform,overwrite)
-
-            sorg = sd.scantable(infile,average=False,antenna=antenna)
-
-	    # Copy the original data (CAS-3987)
-	    if (sd.rcParams['scantable.storage'] == 'disk') and (project != infile.rstrip('/')):
-		    s = sorg.copy()
-	    else:
-		    s = sorg
-	    del sorg
-
-	    # set restfreq
-	    modified_molid = False
-	    if (specunit == 'km/s'):
-		    if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
-			    mesg = "Restfreq must be given."
-			    raise Exception, mesg
-		    elif (len(str(restfreq)) > 0):
-			    molids = s._getmolidcol_list()
-			    s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
-			    modified_molid = True
-
-            #check the format of the infile
-            if isinstance(infile, str):
-                    if is_scantable(filename):
-                            format = 'ASAP'
-                    elif is_ms(filename):
-                            format = 'MS2'
-                    else:
-                            format = 'SDFITS'
-
-	    # Check the formats of infile and outfile are identical when overwrite=True.
-	    # (CAS-3096). If not, print warning message and exit.
-	    outformat = outform.upper()
-	    if (outformat == 'MS'): outformat = 'MS2'
-	    if overwrite and os.path.exists(project) and (os.path.samefile(project,infile)) \
-                   and (outformat != format):
-		    msg = "The input and output data format must be identical when "
-		    msg += "their names are identical and overwrite=True. "
-		    msg += "%s and %s given for input and output, respectively." % (format, outformat)
-	            raise Exception, msg
-	    
-            # Do at least one
-            docmdflag = ((len(flagrow)+len(maskflag)>0) or clip)
-            if (not docmdflag) and (not interactive):
-                raise Exception, 'No flag operation specified.'
-
-            print_summary(s, plotlevel)
-
- 	    # set default spectral axis unit
-            unit_in=s.get_unit()
-            sdutil.set_spectral_unit(s, specunit)
-            
-	    # reset frame and doppler if needed
-            sdutil.set_freqframe(s, frame)
-            sdutil.set_doppler(s, doppler)
-
-            # data selection
-            sel = sdutil.get_selector(in_scans=scanlist,
-                                      in_ifs=iflist,
-                                      in_pols=pollist,
-                                      in_field=field)
-            s.set_selection(sel)
-            del sel
-
-            # flag mode
-            if not flagmode.lower() in ['flag','unflag']:
-                raise Exception, 'unexpected flagmode'
-            unflag = (flagmode.lower() == 'unflag')
-                    
-
-            if docmdflag:
-                    doflag(s, flagmode, maskflag, clip, clipminmax, clipoutside, flagrow, unflag, plotlevel)
-
-            anyflag = False
-            if interactive:
-                    anyflag = dointeractiveflag(s,showflagged)
-
-            if not (anyflag or docmdflag):
-                    del s
-                    raise Exception, 'No flag operation. Finish without saving'
-
-            posterior_plot(s, project, unflag, plotlevel)
-
-            # Now save the spectrum and write out final ms
-
-	    # Commented out on 19 Apr 2012. (CAS-3986)
-            #if overwrite and os.path.exists(outfilename):
-            #        os.system('rm -rf %s' % outfilename)
-            
-            #put back original spectral unit
-            s.set_unit(unit_in) 
-            s.set_selection()
-
-	    #restore the original moleculeID column
-	    if modified_molid:
-		    s._setmolidcol_list(molids)
-	    
-            s.save(project,outformat,overwrite)
-
-            if outform!='ASCII':
-                    casalog.post( "Wrote output "+outformat+" file "+project )
-
-            del s
-
-        except Exception, instance:
-                sdutil.process_exception(instance)
-		raise Exception, instance
-        finally:
-                casalog.post('')
-
-def doflag(s, flagmode, maskflag, clip, clipminmax, clipoutside, flagrow, unflag, plotlevel):
-    if clip:
-        # Clipping
-        d = {'msg':('spectra',s.nrow(),'clipping')}
-        if (len(flagrow)+len(maskflag)) > 0:
-            d['ignore'] = 'flagrow and maskflag'
-    elif len(flagrow) == 0:
-        # Channel based flag
-        d = {'msg':('spectra',s.nrow(),'channel flagging')}
-    else:
-        # Row flagging
-        d = {'msg':('rows',len(flagrow),'row flagging')}
-        if len(maskflag) > 0:
-            d['ignore'] = 'maskflag'
-    casalog.post('Number of %s to be flagged: %d\nApplying %s...'%(d['msg']))
-    if d.has_key('ignore'):
-        casalog.post('%s will be ignored'%(d['ignore']),priority='WARN')
-                    
-    if (len(maskflag) > 0):
-        masks = s.create_mask(maskflag)
-    else:
-        masks = [False for i in xrange(s.nchan())]
+    casalog.origin('sdflag')
+    
+    try:
+        worker = sdflag_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
-    thresh = [None,None]
-    if isinstance(clipminmax, list):
-        if (len(clipminmax) == 2):
-            thresh = clipminmax[:]
-            thresh.sort()
-            
-    ans = prior_plot(s, clip, thresh, clipoutside, flagrow, unflag, masks, plotlevel)
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-    if ans.upper() == 'Y':
-            if clip and (thresh[1] > thresh[0]):
-                    s.clip(thresh[1], thresh[0], clipoutside, unflag)
-            elif (len(flagrow) == 0):
-                    s.flag(mask=masks,unflag=unflag)
+class sdflag_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdflag_worker,self).__init__(**kwargs)
+
+        # initialize plotter
+        self.__init_plotter()
+
+    def parameter_check(self):
+        # by default, the task overwrite infile
+        if len(self.outfile)==0: 
+            self.project = self.infile
+        else:
+            self.project = self.outfile
+
+        sdutil.assert_outfile_canoverwrite_or_nonexistent(self.project,
+                                                          self.outform,
+                                                          self.overwrite)
+        
+        #check the format of the infile
+        filename = sdutil.get_abspath(self.infile)
+        if isinstance(self.infile, str):
+            if is_scantable(filename):
+                informat = 'ASAP'
+            elif is_ms(filename):
+                informat = 'MS2'
             else:
-                    s.flag_row(flagrow, unflag)
+                informat = 'SDFITS'
+        else:
+            informat = 'UNDEFINED'
+                
+        # Check the formats of infile and outfile are identical when overwrite=True.
+        # (CAS-3096). If not, print warning message and exit.
+        outformat = self.outform.upper()
+        if (outformat == 'MS'): outformat = 'MS2'
+        if self.overwrite and os.path.exists(self.project) \
+               and (os.path.samefile(self.project,self.infile)) \
+               and (outformat != informat):
+            msg = "The input and output data format must be identical when "
+            msg += "their names are identical and overwrite=True. "
+            msg += "%s and %s given for input and output, respectively." % (informat, outformat)
+            raise Exception, msg
 
-            params={'mode':flagmode,'maskflag':maskflag}
-            sel = s.get_selection()
-            keys=['pol','if','scan']
-            for key in keys:
-                val = getattr(sel,'get_%ss'%(key))()
-                params['%ss'%(key)] = val if len(val)>0 else list(getattr(s,'get%snos'%(key))())
-            #print "input parameters:\n", params
-            s._add_history( "sdflag", params ) 
+        # check restfreq
+        self.rfset = (self.restfreq != '') and (self.restfreq != [])
+        self.restore = (self.specunit == 'km/s') and self.rfset
 
-def dointeractiveflag(s, showflagged):
-    from matplotlib import rc as rcp
-    rcp('lines', linewidth=1)
-    guiflagger = flagplotter(visible=True)
-    #guiflagger.set_legend(loc=1,refresh=False)
-    guiflagger.set_showflagged(showflagged)
-    guiflagger.plot(s)
-    finish=raw_input("Press enter to finish interactive flagging:")
-    guiflagger._plotter.unmap()
-    anyflag = guiflagger._ismodified
-    guiflagger._plotter = None
-    del guiflagger
-    return anyflag
+        # Do at least one
+        self.docmdflag = ((len(self.flagrow)+len(self.maskflag)>0) \
+                          or self.clip)
+        if (not self.docmdflag) and (not self.interactive):
+            raise Exception, 'No flag operation specified.'
 
-def print_summary(s, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        casalog.post( "Initial Scantable:" )
-        #casalog.post( s._summary() )
-        s._summary()
+        # check flagmode
+        if not self.flagmode.lower() in ['flag','unflag']:
+            raise Exception, 'unexpected flagmode'
+        self.unflag = (self.flagmode.lower() == 'unflag')
 
-def prior_plot(s, clip, threshold, clipoutside, flagrow, unflag, defaultmask, plotlevel):
-    if ( abs(plotlevel) > 0 ):
-        flgmode = 'unflag' if unflag else 'flag'
-        nr = s.nrow()
+        # check whether any flag operation is done or not
+        self.anyflag = False
+        
+    def initialize_scan(self):
+        sorg = sd.scantable(self.infile,average=False,antenna=self.antenna)
+
+        if ( abs(self.plotlevel) > 1 ):
+            casalog.post( "Initial Scantable:" )
+            sorg._summary()
+
+        # data selection
+        sorg.set_selection(self.get_selector())
+        
+        # Copy the original data (CAS-3987)
+        if self.is_disk_storage \
+               and (os.path.samefile(self.project,self.infile)):
+            self.scan = sorg.copy()
+        else:
+            self.scan = sorg
+
+    def execute(self):
+        self.set_to_scan()
+
+        if (len(self.maskflag) > 0):
+            self.masks = self.scan.create_mask(self.maskflag)
+        else:
+            self.masks = [False for i in xrange(self.scan.nchan())]
+        
+        self.threshold = [None,None]
+        if isinstance(self.clipminmax, list):
+            if (len(self.clipminmax) == 2):
+                self.threshold = self.clipminmax[:]
+                self.threshold.sort()
+            
+        if self.docmdflag and (abs(self.plotlevel) > 0):
+            # plot flag and update self.docmdflag by the user input
+            self.prior_plot()
+
+        if self.docmdflag:
+            self.command_flag()
+
+        if self.interactive:
+            self.interactive_flag()
+        
+        if not self.anyflag:
+            raise Exception, 'No flag operation. Finish without saving'
+
+        if abs(self.plotlevel) > 0:
+            self.posterior_plot()
+
+    def command_flag(self):
+        # Actual flag operations
+        if self.clip:
+            self.do_clip()
+        elif len(self.flagrow) == 0:
+            self.do_channel_flag()
+        else:
+            self.do_row_flag()
+        self.anyflag = True
+
+        # Add history entry
+        params={'mode':self.flagmode,'maskflag':self.maskflag}
+        sel = self.scan.get_selection()
+        keys=['pol','if','scan']
+        for key in keys:
+            val = getattr(sel,'get_%ss'%(key))()
+            params['%ss'%(key)] = val if len(val)>0 else list(getattr(self.scan,'get%snos'%(key))())
+        #print "input parameters:\n", params
+        self.scan._add_history( "sdflag", params ) 
+
+    def do_clip(self):
+        casalog.post('Number of spectra to be flagged: %d\nApplying clipping...'%(self.scan.nrow()))
+        casalog.post('flagrow and maskflag will be ignored',priority='WARN')
+
+        if self.threshold[1] > self.threshold[0]:
+            self.scan.clip(self.threshold[1], self.threshold[0], self.clipoutside, self.unflag)
+
+    def do_channel_flag(self):
+        casalog.post('Number of spectra to be flagged: %d\nApplying channel flagging...'%(self.scan.nrow()))
+
+        self.scan.flag(mask=self.masks, unflag=self.unflag)
+
+    def do_row_flag(self):
+        casalog.post('Number of rows to be flagged: %d\nApplying row flagging...'%(len(self.flagrow)))
+        casalog.post('maskflag will be ignored',priority='WARN')
+
+        self.scan.flag_row(self.flagrow, self.unflag)
+
+    def interactive_flag(self):
+        from matplotlib import rc as rcp
+        rcp('lines', linewidth=1)
+        guiflagger = flagplotter(visible=True)
+        #guiflagger.set_legend(loc=1,refresh=False)
+        guiflagger.set_showflagged(self.showflagged)
+        guiflagger.plot(self.scan)
+        finish=raw_input("Press enter to finish interactive flagging:")
+        guiflagger._plotter.unmap()
+        ismodified = guiflagger._ismodified
+        guiflagger._plotter = None
+        self.anyflag = self.anyflag or ismodified
+
+    def save(self):
+        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+
+    def prior_plot(self):
+        nr = self.scan.nrow()
         np = min(nr,16)
         if nr >16:
             casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
 
-        myp = init_plotter(plotlevel=plotlevel)
-
-        myp.set_panels(rows=np,cols=0,nplots=np)
-        myp.legend(loc=1)
+        self.myp.set_panels(rows=np,cols=0,nplots=np)
+        self.myp.legend(loc=1)
         labels = ['Spectrum','current flag masks','previously flagged data']
-        masks =  [ None,      None,                None]
-        idefaultmask = logical_not(array(defaultmask))
+        masklist =  [ None,      None,                None]
+        idefaultmask = logical_not(array(self.masks))
         for row in xrange(np):
-                myp.subplot(row)
-                x = s._getabcissa(row)
-                y = s._getspectrum(row)
-                nchan = len(y)
+            self.myp.subplot(row)
+            x = self.scan._getabcissa(row)
+            y = self.scan._getspectrum(row)
+            nchan = len(y)
 
-                if s._getflagrow(row):
-                        masks[2] = array([False]*(nchan))
+            if self.scan._getflagrow(row):
+                masklist[2] = array([False]*(nchan))
+            else:
+                masklist[2] = array(self.scan._getmask(row))
+
+            if self.clip:
+                if self.threshold[0] == self.threshold[1]:
+                    masklist[1] = array([True]*nchan)
                 else:
-                        masks[2] = array(s._getmask(row))
+                    masklist[1] = array(self.scan._getclipmask(row, self.threshold[1], self.threshold[0], (not self.clipoutside), self.unflag))
+            elif len(self.flagrow) > 0:
+                masklist[1] = array([(row not in self.flagrow) or self.unflag]*nchan)
+            else:
+                masklist[1] = idefaultmask
+            masklist[0] = logical_not(logical_and(masklist[1],masklist[2]))
+            for i in xrange(3):
+                plot_data(self.myp,x,y,masklist[i],i,labels[i])
+            xlim=[min(x),max(x)]
+            self.myp.axes.set_xlim(xlim)
 
-                if clip:
-                    if threshold[0] == threshold[1]:
-                        masks[1] = array([True]*nchan)
-                    else:
-                        masks[1] = array(s._getclipmask(row, threshold[1], threshold[0], (not clipoutside), unflag))
-                elif len(flagrow) > 0:
-                    masks[1] = array([(row not in flagrow) or unflag]*nchan)
-                else:
-                    masks[1] = idefaultmask
-                masks[0] = logical_not(logical_and(masks[1],masks[2]))
-                for i in xrange(3):
-                    plot_data(myp,x,y,masks[i],i,labels[i])
-                xlim=[min(x),max(x)]
-                myp.axes.set_xlim(xlim)
-
-                labels = ['spec','flag','prev']
-        myp.release()
+            labels = ['spec','flag','prev']
+        self.myp.release()
         
         #Apply flag
-        if plotlevel > 0 and sd.rcParams['plotter.gui']:
-                ans=raw_input("Apply %s (y/N)?: " % flgmode)
+        if self.plotlevel > 0 and sd.rcParams['plotter.gui']:
+            ans=raw_input("Apply %s (y/N)?: " % self.flagmode)
         else:
-                casalog.post("Applying selected flags")
-                ans = 'Y'
-    else:
-            ans='Y'
-    return ans
+            casalog.post("Applying selected flags")
+            ans = 'Y'
 
-
-def posterior_plot(s, project, unflag, plotlevel):
-    if ( abs(plotlevel) > 0 ):
-        flgmode = 'unflag' if unflag else 'flag'
+        # update self.docmdflag
+        self.docmdflag = (ans.upper() == 'Y')
+    def posterior_plot(self):
         #Plot the result
         #print "Showing only the first spectrum..."
         casalog.post( "Showing only the first spectrum..." )
         row=0
-        myp = init_plotter()
 
-        myp.set_panels()
-        x = s._getabcissa(row)
-        y = s._getspectrum(row)
-        allmskarr=array(s._getmask(row))
-        plot_data(myp,x,y,logical_not(allmskarr),0,"Spectrum after %s" % flgmode+'ging')
-        plot_data(myp,x,y,allmskarr,2,"Flagged")
+        self.myp.set_panels()
+        x = self.scan._getabcissa(row)
+        y = self.scan._getspectrum(row)
+        allmskarr=array(self.scan._getmask(row))
+        plot_data(self.myp,x,y,logical_not(allmskarr),0,"Spectrum after %s" % self.flagmode+'ging')
+        plot_data(self.myp,x,y,allmskarr,2,"Flagged")
         xlim=[min(x),max(x)]
-        myp.axes.set_xlim(xlim)
-        if ( plotlevel < 0 ):
+        self.myp.axes.set_xlim(xlim)
+        if ( self.plotlevel < 0 ):
             # Hardcopy - currently no way w/o screen display first
-            pltfile=project+'_flag.eps'
-            myp.save(pltfile)
-        myp.release()
+            pltfile=self.project+'_flag.eps'
+            self.myp.save(pltfile)
+        self.myp.release()
+    
+    def __init_plotter(self):
+        colormap = ["green","red","#dddddd","#777777"]
+        self.myp = sdutil.get_plotter(self.plotlevel)
+        casalog.post('Create new plotter')
+        self.myp.palette(0,colormap)
+        self.myp.hold()
+        self.myp.clear()
+
 
 def plot_data(myp,x,y,msk,color=0,label=None):
     if label:
@@ -285,27 +268,3 @@ def plot_data(myp,x,y,msk,color=0,label=None):
     ym = ma.masked_array(y,mask=msk)
     myp.plot(x,ym)
 
-def init_plotter(colormap=["green","red","#dddddd","#777777"],plotlevel=None):
-    f=get_frame('sdflag')
-    #myp = f.f_locals['myp']
-    myp = f.f_globals['myp'] if f.f_globals.has_key('myp') else None
-    if not (myp and myp._alive()):
-        newp = sdutil.get_plotter(plotlevel)
-        casalog.post('Create new plotter')
-    else:
-        newp = myp
-    newp.palette(0,colormap)
-    newp.hold()
-    newp.clear()
-    f.f_globals['myp'] = newp
-    return newp    
-
-def get_frame(name):
-    import inspect
-    s = inspect.stack()
-    stacklevel=-1
-    for i in xrange(len(s)):
-        if (s[i][3] == 'sdflag'):
-            stacklevel = i
-            break
-    return s[stacklevel][0]

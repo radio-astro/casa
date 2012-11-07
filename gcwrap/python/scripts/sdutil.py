@@ -51,13 +51,28 @@ class sdtask_template(sdtask_interface):
         super(sdtask_template,self).__init__(**kwargs)
         if not hasattr(self, 'outform'):
             self.outform = 'undefined'
+        self.is_disk_storage = (sd.rcParams['scantable.storage'] == 'disk')
 
     def initialize(self):
-        assert_infile_exists(self.infile)
+        if hasattr(self, 'infile'):
+            assert_infile_exists(self.infile)
+        elif hasattr(self, 'infiles'):
+            if isinstance(self.infiles,str):
+                assert_infile_exists(self.infiles)
+            else:
+                for f in self.infiles:
+                    assert_infile_exists(f)
         if hasattr(self, 'suffix'):
-            self.project = get_default_outfile_name(self.infile,self.outfile,self.suffix)
-        if hasattr(self, 'outfile') and len(self.outfile) > 0:
-            assert_outfile_canoverwrite_or_nonexistent(self.outfile,self.outform,self.overwrite)
+            if hasattr(self, 'infile'):
+                self.project = get_default_outfile_name(self.infile,self.outfile,self.suffix)
+            elif hasattr(self, 'infiles'):
+                self.project = get_default_outfile_name(self.infiles[0],self.outfile,self.suffix)
+        elif hasattr(self, 'outfile') and len(self.outfile) > 0:
+            self.project = self.outfile
+##         if hasattr(self, 'outfile') and len(self.outfile) > 0:
+##             assert_outfile_canoverwrite_or_nonexistent(self.outfile,self.outform,self.overwrite)
+        if hasattr(self, 'project'):
+            assert_outfile_canoverwrite_or_nonexistent(self.project,self.outform,self.overwrite)
 
         # task specific parameter check
         self.parameter_check()
@@ -115,7 +130,33 @@ class sdtask_template(sdtask_interface):
                         fval = normalise_restfreq(self.restfreq)
                         casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                         self.scan.set_restfreqs(freqs=fval)
-        
+
+class sdtask_engine(object):
+    def __init__(self, worker):
+        # set worker instance to work with
+        self.worker = worker
+
+        # copy worker attributes except scan
+        # use worker.scan to access scantable
+        for (k,v) in self.worker.__dict__.items():
+            if k == 'scan': continue
+            setattr(self, k, v)
+
+        # engines result
+        self.result = None
+
+    def get_result(self):
+        return self.result
+
+    def prologue(self):
+        pass
+
+    def drive(self):
+        pass
+
+    def epilogue(self):
+        pass
+    
 
 def get_abspath(filename):
     return os.path.abspath(expand_path(filename))
@@ -407,16 +448,6 @@ def save(s, outfile, outform, overwrite):
     assert_outfile_canoverwrite_or_nonexistent(outfile,
                                                outform,
                                                overwrite)
-##     if ( (outform == 'ASCII') or (outform == 'ascii') ):
-##             outform_local = 'ASCII'
-##     elif ( (outform == 'ASAP') or (outform == 'asap') ):
-##             outform_local = 'ASAP'
-##     elif ( (outform == 'SDFITS') or (outform == 'sdfits') ):
-##             outform_local = 'SDFITS'
-##     elif ( (outform == 'MS') or (outform == 'ms') or (outform == 'MS2') or (outform == 'ms2') ):
-##             outform_local = 'MS2'
-##     else:
-##             outform_local = 'ASAP'
     outform_local = outform.upper()
     if outform_local == 'MS': outform_local = 'MS2'
     if outform_local not in ['ASAP','ASCII','MS2','SDFITS']:

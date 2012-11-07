@@ -57,7 +57,7 @@ class sdplot_worker(sdutil.sdtask_template):
 
         # Copy scantable when usign disk storage not to modify
         # the original table.
-        if doCopy and sd.rcParams['scantable.storage'] == 'disk':
+        if doCopy and self.is_disk_storage:
             self.scan = sorg.copy()
         else:
             self.scan = sorg

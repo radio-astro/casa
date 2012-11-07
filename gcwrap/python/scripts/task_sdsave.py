@@ -52,7 +52,7 @@ class sdsave_worker(sdutil.sdtask_template):
 
         if self.original_scan == self.scan and self.rfset \
                and is_scantable(self.infile) \
-               and sd.rcParams['scantable.storage'] == 'disk':
+               and self.is_disk_storage:
             self.molids = self.original_scan._getmolidcol_list()
             self.restore = True
         

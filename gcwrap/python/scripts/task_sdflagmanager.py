@@ -6,22 +6,18 @@ import task_flagmanager
 import sdutil
 
 def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
-        casalog.origin('sdflagmanager')
-## 	fg.done()
 
-	try:
-            worker = sdflagmanager_worker(**locals())
-            worker.initialize()
-            worker.execute()
-            worker.finalize()
-##                 sdutil.assert_infile_exists(infile)
-##                 infilename=sdutil.get_abspath(infile)
-
-##                 domanage(infilename, mode.lower(), versionname, oldname, comment, merge)
-
-	except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
+    casalog.origin('sdflagmanager')
+    
+    try:
+        worker = sdflagmanager_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+    
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
 class sdflagmanager_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
@@ -45,13 +41,6 @@ class sdflagmanager_worker(sdutil.sdtask_template):
         fg.done()
 
     def execute(self):
-##         namer = filenamer('sdflagmanager',infilename)
-##         msfilename = namer.configure_name(kind='temp',suffix='ms')
-##         # if directories 'msfilename' and 'msfilename.flagversions' already exist accidentally,
-##         # rename it for backup (backupms, backupmsfver)
-##         sdfverfile = namer.flagversion_name(infilename)
-##         msfverfile = namer.flagversion_name(msfilename)
-
         if os.path.exists(self.sdfverfile):
             move(self.sdfverfile, self.msfverfile)
 
@@ -64,7 +53,6 @@ class sdflagmanager_worker(sdutil.sdtask_template):
                                      self.merge)
 
         if self.mode=='restore':
-##             backupinfile = self.namer.configure_name(kind='backup',suffix='asap')
             # if a directory with the same name as backupinfile exists, rename it for backup
             del self.scan
             move(self.infile_abs, self.backupfile)

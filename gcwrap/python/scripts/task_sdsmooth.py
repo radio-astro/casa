@@ -37,8 +37,7 @@ class sdsmooth_worker(sdutil.sdtask_template):
 
         # Copy scantable when usign disk storage not to modify
         # the original table.
-        if is_scantable(self.infile) and \
-               sd.rcParams['scantable.storage'] == 'disk':
+        if is_scantable(self.infile) and self.is_disk_storage:
             self.scan = sorg.copy()
         else:
             self.scan = sorg
@@ -53,7 +52,8 @@ class sdsmooth_worker(sdutil.sdtask_template):
             raise Exception, errstr
             
     def execute(self):
-        prior_plot(self.scan, self.project, self.plotlevel)
+        engine = sdsmooth_engine(self)
+        engine.prologue()
             
         # set various attributes to self.scan
         self.set_to_scan()
@@ -69,49 +69,57 @@ class sdsmooth_worker(sdutil.sdtask_template):
 
         # Actual implementation is defined outside the class
         # since those are used in task_sdreduce.
-        dosmooth(self.scan, self.kernel, self.kwidth,
-                 self.chanwidth, self.verify)
+        engine.drive()
+        self.scan = engine.get_result()
 
-        posterior_plot(self.scan, self.project, self.plotlevel)
+        engine.epilogue()
 
     def save(self):
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
 
-def dosmooth(s, kernel, kwidth, chanwidth, verify):
-    if kernel == 'regrid':
-        if not qa.isquantity(chanwidth):
-            errstr = "Invalid quantity chanwidth "+chanwidth
-            raise Exception, errstr
-        qchw = qa.quantity(chanwidth)
-        oldUnit = s.get_unit()
-        if qchw['unit'] in ("", "channel", "pixel"):
-            s.set_unit("channel")
-        elif qa.compare(chanwidth,"1Hz") or \
-                 qa.compare(chanwidth,"1m/s"):
-            s.set_unit(qchw['unit'])
+class sdsmooth_engine(sdutil.sdtask_engine):
+    def __init__(self, worker):
+        super(sdsmooth_engine,self).__init__(worker)
+
+    def prologue(self):
+        if ( abs(self.plotlevel) > 1 ):
+            # print summary of input data
+            casalog.post( "Initial Scantable:" )
+            #casalog.post( s._summary() )
+            self.worker.scan._summary()
+
+        if ( abs(self.plotlevel) > 0 ):
+            pltfile=self.project+'_rawspec.eps'
+            sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel, 'Raw spectra')
+
+    def drive(self):
+        scan = self.worker.scan
+        if self.kernel == 'regrid':
+            if not qa.isquantity(self.chanwidth):
+                errstr = "Invalid quantity chanwidth "+self.chanwidth
+                raise Exception, errstr
+            qchw = qa.quantity(self.chanwidth)
+            oldUnit = scan.get_unit()
+            if qchw['unit'] in ("", "channel", "pixel"):
+                scan.set_unit("channel")
+            elif qa.compare(self.chanwidth,"1Hz") or \
+                     qa.compare(self.chanwidth,"1m/s"):
+                scan.set_unit(qchw['unit'])
+            else:
+                errstr = "Invalid dimension of quantity chanwidth "+self.chanwidth
+                raise Exception, errstr
+            casalog.post( "Regridding spectra in width "+self.chanwidth )
+            scan.regrid_channel(width=qchw['value'],plot=self.verify,insitu=True)
+            scan.set_unit(oldUnit)
         else:
-            errstr = "Invalid dimension of quantity chanwidth "+chanwidth
-            raise Exception, errstr
-        casalog.post( "Regridding spectra in width "+chanwidth )
-        s.regrid_channel(width=qchw['value'],plot=verify,insitu=True)
-        s.set_unit(oldUnit)
-    else:
-        casalog.post( "Smoothing spectra with kernel "+kernel )
-        s.smooth(kernel=kernel,width=kwidth,plot=verify,insitu=True)
+            casalog.post( "Smoothing spectra with kernel "+self.kernel )
+            scan.smooth(kernel=self.kernel,width=self.kwidth,plot=self.verify,insitu=True)
+        self.result = scan
+    
 
-def prior_plot(s, project, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        # print summary of input data
-        casalog.post( "Initial Scantable:" )
-        #casalog.post( s._summary() )
-        s._summary()
+    def epilogue(self):
+        if ( abs(self.plotlevel) > 0 ):
+            pltfile=self.project+'_smspec.eps'
+            sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel, 'Smoothed spectra')
         
-    if ( abs(plotlevel) > 0 ):
-        pltfile=project+'_rawspec.eps'
-        sdutil.plot_scantable(s, pltfile, plotlevel, 'Raw spectra')
-
-def posterior_plot(s, project, plotlevel):
-    if ( abs(plotlevel) > 0 ):
-        pltfile=project+'_smspec.eps'
-        sdutil.plot_scantable(s, pltfile, plotlevel, 'Smoothed spectra')
