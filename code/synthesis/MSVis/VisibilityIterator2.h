@@ -554,13 +554,13 @@ public:
   // either either provides prefetch columns (enables) or a null pointer (disables).
 
   ROVisibilityIterator2(const MeasurementSet& ms,
-                        const Block<Int>& sortColumns,
+                        const Block<Int>& sortColumns = Block<Int> (),
                         const VisBufferComponents2 * prefetchColumns = 0,
                         const Bool addDefaultSortCols = True,
                         Double timeInterval = 0);
 
   ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
-                         const Block<Int>& sortColumns,
+                         const Block<Int>& sortColumns = Block<Int> (),
                          const VisBufferComponents2 * prefetchColumns = 0,
                          const Bool addDefaultSortCols = True,
                          Double timeInterval = 0);
@@ -1175,13 +1175,13 @@ public:
   // need to call origin() before using it to iterate.
 
   VisibilityIterator2(const MeasurementSet& ms,
-                      const Block<Int>& sortColumns,
+                      const Block<Int>& sortColumns = Block<Int> (),
                       const VisBufferComponents2 * prefetchColumns = 0,
                       const Bool addDefaultSortCols = True,
                       Double timeInterval = 0);
 
   VisibilityIterator2 (const Block<MeasurementSet>& mss,
-                       const Block<Int>& sortColumns,
+                       const Block<Int>& sortColumns = Block<Int> (),
                        const VisBufferComponents2 * prefetchColumns = 0,
                        const Bool addDefaultSortCols = True,
                        Double timeInterval = 0);

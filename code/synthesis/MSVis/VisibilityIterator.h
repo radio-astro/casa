@@ -927,6 +927,8 @@ public:
   // Note: The VisibilityIterator is not initialized correctly by default, you
   // need to call origin() before using it to iterate.
   VisibilityIterator();
+  //VisibilityIterator(Options options, MeasurementSet & ms);
+
   VisibilityIterator(MeasurementSet & ms, const Block<Int>& sortColumns, 
        Double timeInterval=0);
   VisibilityIterator(MeasurementSet & ms, const Block<Int>& sortColumns, 

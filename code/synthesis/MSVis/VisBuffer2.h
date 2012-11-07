@@ -154,6 +154,8 @@ public:
     virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
                                     Bool fetchIfNeeded = True) = 0;
 
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows) = 0;
+
     // For attached VBs this returns the VI the VB is attached to.  For free
     // VBs this method returns False.
 
@@ -481,7 +483,6 @@ protected:
     virtual void invalidate() = 0;
     virtual Bool isRekeyable () const = 0;
     virtual void setRekeyable (Bool isRekeable) = 0;
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows) = 0;
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 
@@ -489,7 +490,9 @@ private:
 
 };
 
+
 } // end namespace vi
+
 
 } //# NAMESPACE CASA - END
 

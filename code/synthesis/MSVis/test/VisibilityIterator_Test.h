@@ -477,7 +477,8 @@ public:
     virtual void endOfChunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
     virtual void nextChunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
     virtual void nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
-    virtual Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/) {}
+    virtual Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
+    { return False;}
     virtual void startOfData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
 
 private:

@@ -891,7 +891,6 @@ Tester::parseArgs (int nArgs, char * args []) const
     printf ("nArgs=%d\n", nArgs);
     String optionsRaw [] = {"--old", "--new", "--sweeps", "--nChannels", ""};
     set<String> options;
-    Bool ok = True;
 
     for (int i = 0; ! optionsRaw [i].empty(); i++){
 
@@ -1409,7 +1408,7 @@ BasicMutation::nextSubchunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
 }
 
 Bool
-BasicMutation::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows)
+BasicMutation::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
 {
     Bool moreSweeps = firstPass_p;
     firstPass_p = False;
@@ -1668,6 +1667,28 @@ CopyMs::doit (const String & oldMsName)
 
     casa::MeasurementSet newMs (newSetup, 0, False);
     newMs.createDefaultSubtables(Table::NewNoReplace);
+
+    ROVisibilityIterator2 srcVi (oldMs);
+
+    VisibilityIterator2 dstVi (newMs);
+
+    VisBuffer2 * srcVb = srcVi.getVisBuffer ();
+    VisBuffer2 * dstVb = dstVi.getVisBuffer ();
+
+    for (srcVi.originChunks (); srcVi.moreChunks (); srcVi.nextChunk ()){
+        for (srcVi.origin (); srcVi.more (); srcVi ++){
+
+            int nCorrelations = srcVb->nCorrelations();
+            int nChannels = srcVb->nChannels();
+            int nRows = srcVb->nRows ();
+
+            dstVb->setShape(nCorrelations, nChannels, nRows);
+
+            dstVb->copyComponents (* srcVb, VisBufferComponents2::all());
+
+            dstVb->writeChangesBack ();
+        }
+    }
 }
 
 } // end namespace test
