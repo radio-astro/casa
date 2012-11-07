@@ -573,6 +573,7 @@ def simanalyze(
             convolved = modelflat + ".regrid.conv"
             difference = imagename + '.diff'
             diff_ia = ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite=True)
+            diff_ia.setbrightnessunit("Jy/beam")
 
             # get rms of difference image for fidelity calculation
             #ia.open(difference)
