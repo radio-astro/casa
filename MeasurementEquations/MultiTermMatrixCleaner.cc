@@ -1407,8 +1407,8 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     }
     else
     {
-      //      if(1)
-      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
+      // if(1)
+	if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
@@ -1457,6 +1457,8 @@ Int MultiTermMatrixCleaner::writeMatrixToDisk(String imagename, Matrix<Float>& t
        stores the results in-place in the residual images */
 Bool MultiTermMatrixCleaner::computeprincipalsolution()
 {
+  LogIO os(LogOrigin("MultiTermMatrixCleaner", "computeprincipalsolution()", WHERE));
+
   os << "MTMC :: Computing principal solution on residuals" << LogIO::POST;
 
 	AlwaysAssert((vecDirty_p.nelements()>0), AipsError);

@@ -2105,7 +2105,20 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
       nomemory=True;
       
     }
-    
+   
+
+      // If msmfs, calculate Coeff Residuals
+      if(doWideBand_p && ntaylor_p>1)
+	{
+	  sm_p->calculateCoeffResiduals(); 
+	  // Re-fill them into the output residual images.
+	  for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+	    (residuals_p[k])->copyData(sm_p->getResidual(k));
+	   }
+
+	}
+
+ 
     Bool dorestore=False;
     if(  beam_p.nelements() >0 )
       dorestore=True;
@@ -2802,7 +2815,7 @@ Bool Imager::createFTMachine()
   //===============================================================
   // A-Projection FTMachine code start here
   //===============================================================
-  else if (ftmachine_p == "awproject"){
+  else if ((ftmachine_p == "awproject")) {
     if (wprojPlanes_p<=1)
       {
 	os << LogIO::NORMAL
@@ -2833,7 +2846,10 @@ Bool Imager::createFTMachine()
     // Construct the CF object with appropriate CFTerms.
     //
     CountedPtr<ConvolutionFunction> awConvFunc;
-    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP_p);
+    //    if (ftmachine_p=="wbmosaic") 
+    //   awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm);
+    // else
+      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP_p);
 
     //
     // Construct the appropriate re-sampler.
@@ -2873,7 +2889,7 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
 
   }
-  else if ((ftmachine_p == "wbawp") || (ftmachine_p == "wbmosaic")){
+  else if ((ftmachine_p == "wbawp")){
 
     if (wprojPlanes_p<=1)
       {
