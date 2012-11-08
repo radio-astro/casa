@@ -214,6 +214,7 @@ casa_add_library( synthesis
  MeasurementComponents/DJones.cc
  MeasurementComponents/EJones.cc
  MeasurementComponents/EPJones.cc
+ MeasurementComponents/EVLASwPow.cc
  MeasurementComponents/GlobalFTMachineCallbacks.cc
  MeasurementComponents/GridBoth.cc
  MeasurementComponents/GSpline.cc
