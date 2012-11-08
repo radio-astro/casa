@@ -1,4 +1,4 @@
-//# TsysGainCal.h: Declaration of Tsys calibration
+//# EVLASwPow.h: Declaration of EVLA Switched Power Calibration
 //# Copyright (C) 1996,1997,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,8 +25,8 @@
 //#
 //#
 
-#ifndef SYNTHESIS_TSYSGAINCAL_H
-#define SYNTHESIS_TSYSGAINCAL_H
+#ifndef SYNTHESIS_EVLASWPOW_H
+#define SYNTHESIS_EVLASWPOW_H
 
 #include <casa/aips.h>
 #include <casa/Containers/Record.h>
@@ -34,74 +34,97 @@
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementComponents/StandardVisCal.h>
-// not yet:#include <synthesis/MeasurementComponents/CalCorruptor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 class VisEquation;
-//not yet: class TJonesCorruptor;
 
 
 // **********************************************************
-//  Standard Tsys Spectrum from SYSCAL table
+//  EVLA switched power Gain and Tsys
 //
 
-class StandardTsys : public BJones {
+
+class EVLASwPow : public GJones {
 public:
 
+  enum SPType{SWPOW,EVLAGAIN=SWPOW,RQ,SWPOVERRQ,NONE};
+  
+  static SPType sptype(String name);
+  static String sptype(SPType sptype);
+
   // Constructor
-  StandardTsys(VisSet& vs);
-  StandardTsys(const Int& nAnt);
+  EVLASwPow(VisSet& vs);
+  EVLASwPow(const Int& nAnt);
 
-  virtual ~StandardTsys();
+  virtual ~EVLASwPow();
 
-  // Return the type enum (for now, pretend we are B)
-  virtual Type type() { return VisCal::B; };
+  // Return the type enum (for now, pretend we are G)
+  virtual Type type() { return VisCal::G; };
 
-  // Return type name as string (ditto)
-  virtual String typeName()     { return "B TSYS"; };
-  virtual String longTypeName() { return "B TSYS (freq-dep Tsys)"; };
-
-  // Tsys are Float parameters
+  // EVLA Gain and Tsys are Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
+  // Return type name as string (ditto)
+  virtual String typeName()     { return "G EVLASWPOW"; };
+  virtual String longTypeName() { return "G EVLASWPOW (Switched-power gain)"; };
+
   // Local setSpecify
-  using BJones::setSpecify;
+  using GJones::setSpecify;
   virtual void setSpecify(const Record& specify);
 
   // Specific specify() that reads the SYSCAL subtable
   virtual void specify(const Record& specify);
 
   // In general, we are freq-dep
-  virtual Bool freqDepPar() { return True; };
+  virtual Bool freqDepPar() { return False; };
 
 
 protected:
 
-  // The Jones matrix elements are not the parameters
-  //  ( j = sqrt(p) )
+  // There are 4 parameters (Gain and Tsys for each pol)
+  virtual Int nPar() { return 4; };  
+
+  // The parameter array is not (just) the Jones matrix element array
   virtual Bool trivialJonesElem() { return False; };
 
-  // Invert doInv for Tsys corrections
-  virtual void syncJones(const Bool& doInv) { BJones::syncJones(!doInv); };
+  // Local version to extract integration time and bandwidth
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
   
-  // Calculate Jones matrix elements from Tsys (j = sqrt(p) )
+  // Calculate Jones matrix elements (slice out the gains)
   virtual void calcAllJones();
 
-  // Calculate weight scale
-  //  For now, just call VisJones version (BJones version is experimental)
-  virtual void syncWtScale() { VisJones::syncWtScale(); };
+  // Synchronize the weight-scaling factors
+  //  Weights are multiplied by G*G/Tsys per antenna
+  virtual void syncWtScale();
+
+  // Experimenting with updateWt
+  //  virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
 
 private:
 
+  // Fill the Tcals from the CALDEVICE table
+  void fillTcals();
+
   // The name of the SYSCAL table
-  String sysCalTabName_;
+  String sysPowTabName_,calDevTabName_;
 
-  // <nothing>
+  // Tcal storage
+  Cube<Float> tcals_;
 
+  // Digital factors for the EVLA
+  Float correff_;      // net corr efficiency (lossy)
+  Float frgrotscale_;  // fringe rotation scale (lossless)
+  Float nyquist_;      // 2*dt*dv
+
+  // Effective per-chan BW, per spw for weight calculation
+  Vector<Double> effChBW_;
 
 };
+
+
+
 
 } //# NAMESPACE CASA - END
 
