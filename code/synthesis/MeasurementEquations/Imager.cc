@@ -3907,7 +3907,7 @@ Record Imager::clean(const String& algorithm,
     savePSF(psfnames);
     redoSkyModel_p=False;
     writeFluxScales(fluxscale_p);
-    restoreImages(image);
+    // restoreImages(image); // Moved to iClean so that it happens only once.
     this->writeHistory(os);
     try{
      // write data processing history into image logtable
@@ -6891,6 +6891,10 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	  }
 	  
 	}
+
+	os << "Restoring Image(s) with the clean-beam" << LogIO::POST;
+	restoreImages(aimage);
+
        } //catch  (AipsError x) {
        //os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        //	RETHROW(x);

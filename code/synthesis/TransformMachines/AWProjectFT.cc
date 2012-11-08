@@ -1774,10 +1774,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// method, normalizeImage also needs to work with Lattices
 	// (rather than ImageInterface).
 	//
-	// UUU //normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
+	// //normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
         //	normalizeImage(*lattice,sumWeight,*avgPB_p, *avgPBSq_p, fftNormalization);
 
-	// UUU nx ny normalization from GridFT...
+	// nx ny normalization from GridFT...
 	{
 	  Int inx = lattice->shape()(0);
 	  Int iny = lattice->shape()(1);

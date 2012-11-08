@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
         if(dbg_p) cout << "Creating new FTM of type : " << subftm->name() << endl;
 	subftms_p[termindex] = getNewFTM(subftm);
-	subftms_p[termindex]->setMiscInfo(termindex);
+	subftms_p[termindex]->setMiscInfo(termindex); 
       }
     if(dbg_p)
       {
@@ -297,8 +297,8 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 
 	Int nX=modelImageVec[0]->shape()(0);
 	Int nY=modelImageVec[0]->shape()(1);
-	///IPosition psource(4,256,280,0,0);
-	IPosition psource(4,100,100,0,0);
+	///IPosition psource(4,nX/2,nY/2,0,0);
+	IPosition psource(4,256,184,0,0);
 	cout << "------ before de-gridding norm : " << modelImageVec[0]->getAt(psource) << "," << modelImageVec[1]->getAt(psource) << endl;
 
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
@@ -315,6 +315,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 
 	// Normalize the model image by the sensitivity image only (from Taylor0)
  	    //AlwaysAssert( sensitivitymaps_p.nelements() > 0 , AipsError );
+	cout << "Divide the models by the weightimage before prediction" << endl;
 	    for(uInt taylor=0;taylor<nterms_p;taylor++)
 	      {
 		normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);
@@ -340,6 +341,15 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 	subftms_p[taylor]->initializeToVis(*(compImageVec[taylor]),vb);
       }
     time_get=0.0;
+
+    /// Multiply the model with the avgPB again, so that it's ready for the minor cycle incremental accumulation
+    cout << "Multiplying the models by the weightimage" << endl;
+    for(uInt taylor=0;taylor<nterms_p;taylor++)
+      {
+	normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+
+      }
+
 
   }// end of initializeToVis
   
@@ -494,8 +504,8 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
     // PSOURCE
     Int nX=resImageVec[0]->shape()(0);
       Int nY=resImageVec[0]->shape()(1);
-      //IPosition psource(4,256,280,0,0);
-      IPosition psource(4,100,100,0,0);
+      //IPosition psource(4,nX/2,nY/2,0,0);
+	IPosition psource(4,256,184,0,0);
       cout << "------ before normalization : " << resImageVec[0]->getAt(psource) << "," << resImageVec[1]->getAt(psource) << endl;
 
     
@@ -533,7 +543,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 	    cout << " PB 0 : " << pbcoeffs_p[0]->getAt(psource) << " PB 1 : " <<  pbcoeffs_p[1]->getAt(psource)  << endl;
 	*/
 
-
+	/*
 	    // Normalize all by the Taylor0 weights
 	    AlwaysAssert( sensitivitymaps_p.nelements() > 0 , AipsError );
 	    for(uInt taylor=0;taylor<gridnterms;taylor++)
@@ -541,7 +551,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 		//////////////////////		normalizeImage( *(resImageVec[taylor]) , weightsVec[0] , *(sensitivitymaps_p[0]) , dopsf , (Float)pblimit_p, (Int)1);   //// use locally-normalized avgPB0.
 		normalizeImage( *(resImageVec[taylor]) , weightsVec[0] , *(weightImageVec[0]) , dopsf , (Float)pblimit_p, (Int)1);   //// use locally-normalized avgPB0.
 	      }// end for taylor  
-	
+	*/
 
     // PSOURCE
     cout << "------ after normalization : " << resImageVec[0]->getAt(psource) << "," << resImageVec[1]->getAt(psource) << endl;

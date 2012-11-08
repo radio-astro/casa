@@ -606,7 +606,10 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
     fluxScale_p[model]->set(1.0);
   }
   AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
-  mandateFluxScale(model);
+  if( isImageNormalized() == False ) 
+    {
+      mandateFluxScale(model);
+    }
   return *fluxScale_p[model];
 };
 
