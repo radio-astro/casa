@@ -35,6 +35,9 @@
                             <value>antposvla</value>
                             <value>tsys</value>
                             <value>evlagain</value>
+                            <value>swpow</value>
+                            <value>rq</value>
+                            <value>swp/rq</value>
                             <value>opac</value>
                             <value>gc</value>
                             <value>gceff</value>
@@ -79,7 +82,10 @@
         'antpos' = ITRF antenna position corrections
         'antposvla' = VLA-centric antenna position corrections 
         'tsys' = Tsys from the SYSCAL table (ALMA)
-        'evlagain' = EVLA switched-power gains (experimental)
+        'swpow' = EVLA switched-power gains (experimental)
+        'evlagain' (='swpow') (this syntax will deprecate)
+        'rq' = EVLA requantizer gains _only_
+        'swp/rq' = EVLA switched-power gains divided by requantizer gain
         'opac' = Tropospheric opacity
         'gc' = Gain curve (zenith-angle-dependent gain) (VLA only)
         'eff' = Antenna efficiency (sqrt(K/Jy)) (VLA only)
@@ -115,11 +121,25 @@
      storing them in the output caltable.
 
      For Tsys (caltype='tsys', for ALMA) and EVLA switched power
-     corrections (caltype='evlagain'), the calibration parameters are
+     corrections (caltype='swpow'), the calibration parameters are
      derived from information contained in MS subtables.  In these
      cases, specification of spw, antenna, pol, and parameter will be
      ignored.
 
+     EVLA switched power calibration is supported in three modes:  
+     'swpow' (formerly 'evlagain', a syntax which will 
+       deprecate) yields the formal EVLA switched power calibration 
+       which describes voltage gain as sqrt(Pdif/Tcal) (used to 
+       correct the visibility data) and Tsys as Psum*Tcal/Pdif/2 (used 
+       to correct the weights).  'swpow' implicitly includes any 
+       requantizer gain scale and adjustments.
+     'rq' yields only the requantizer voltage gains (Tsys is set to
+       1.0 to avoid weight adjustments).
+     'swp/rq' yields the ordinary switched power voltage gains divided
+       by the requantizer voltage gain (Tsys is calculate normally).
+     The 'rq' and 'swp/rq' modes are are mainly intended for testing 
+     and evaluating the EVLA switched power systems.
+  
      For caltype='opac', specify the desired opacity(ies) in the parameter
      argument.  At this time, only constant (in time) opacities are
      supported via gencal.  

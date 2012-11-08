@@ -2696,8 +2696,10 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("KANTPOS",*vs_p);
     else if (utype.contains("TSYS"))
       cal_ = createSolvableVisCal("TSYS",*vs_p);
-    else if (utype.contains("EVLAGAIN"))
-      cal_ = createSolvableVisCal("EVLAGAIN",*vs_p);
+    else if (utype.contains("EVLAGAIN") ||
+	     utype.contains("SWP") ||
+	     utype.contains("RQ"))
+      cal_ = createSolvableVisCal("EVLASWP",*vs_p);
     else if (utype.contains("OPAC"))
       cal_ = createSolvableVisCal("TOPAC",*vs_p);
     else if (utype.contains("GC") || utype.contains("EFF"))
