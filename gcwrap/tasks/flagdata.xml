@@ -1044,6 +1044,12 @@ The task will flag a subset of data based on the following modes of operation:
                         (Appendix E : Special Considerations for EVLA data calibration and imaging in AIPS,
                         http://www.aips.nrao.edu/cook.html#CEE )
 
+                        Note : Since this algorithm operates with two passes through each
+                           chunk of data (time and freq axes), some data points get flagged
+                           twice. This can affect the flag-percentage estimate printed in the
+                           logger at runtime.  An accurate estimate can be obtained via the
+                           summary mode.
+
                ntime -- Timerange (in seconds or minutes) over which to buffer data before running the algorithm.
                      options: 'scan' or any other float value or string containing the units.
                      default: 'scan'
@@ -1102,6 +1108,14 @@ The task will flag a subset of data based on the following modes of operation:
         extend -- Extend and/or grow flags beyond what the basic algorithms detect.
                         This mode will extend the accumulated flags available in the MS,
                         regardless of which algorithm created them.
+                         
+                        Extensions will apply only within the selected data, according to the settings 
+                        of extendpols,growtime,growfreq,growaround, flagneartime,flagnearfreq.
+                        
+                        Note : Runtime summary counts in the logger can sometimes report larger
+                            flag percentages than what is actually flagged. This is because 
+                            extensions onto already-flagged data-points are counted as new flags. 
+                            An accurate flag count can be obtained via the summary mode.
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before running 
                         the algorithm.
@@ -1115,9 +1129,11 @@ The task will flag a subset of data based on the following modes of operation:
                       default: False
                           It only makes sense when ntime not equal 'scan'.                
 
-               extendpols -- Extend flags to all correlations
+               extendpols -- Extend flags to all selected correlations
                       default: True
                       options: True/False
+                         For example, to extend flags from RR to only RL and LR, a data-selection
+                         of correlation='RR,LR,RL' is required along with extendpols=True. 
 
                growtime -- For any channel, flag the entire timerange in the current 2D chunk (
                            set by 'ntime') if more than X% of the timerange is already flagged.
