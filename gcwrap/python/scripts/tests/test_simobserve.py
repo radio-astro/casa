@@ -105,9 +105,10 @@ class simobserve_unittest_base:
             if len(sfoo)>1: foo=sfoo[-1]
             return project+"."+foo
 
-# ###
+# ########################################################################
+# #
 # # Test skymodel only simulations
-# ###
+# #
 # class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
 #     """
 #     Test skymodel simulations
@@ -211,25 +212,28 @@ class simobserve_unittest_base:
     
     
 
-# ###
+# ########################################################################
+# #
 # # Test components list only simulations
-# ###
+# #
 # class simobserve_comp(simobserve_unittest_base,unittest.TestCase):
 #     """
 #     Test components list simulations
 #     """
 
-# ###
+# ########################################################################
+# #
 # # Test skymodel + components list simulations
-# ###
+# #
 # class simobserve_skycomp(simobserve_unittest_base,unittest.TestCase):
 #     """
 #     Test skymodel + components list simulations
 #     """
 
-###
+########################################################################
+#
 # Test noise calculations
-###
+#
 class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
     """
     Test noise level of simulated MS
@@ -270,6 +274,8 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
             shutil.rmtree(self.inimage)
         shutil.rmtree(self.project)
 
+    #-----------------------------------------------------------------#
+    # thermalnoise = "tsys-manual"
     def testNZ_intMan(self):
         """Test INT thermal noise (tsys-manual)"""
         thermalnoise="tsys-manual"
@@ -298,37 +304,6 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
         #print "Analytic:", ananoise
         # Now compare the result
         refval = 9.78451847017  # testing only REAL part
-        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
-                        msg=self.prevmsg % (msnoise, refval))
-        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
-                        msg=self.anamsg % (msnoise, ananoise))
-
-    def testNZ_intAtm(self):
-        """Test INT thermal noise (tsys-atm): standard parameter set"""
-        thermalnoise="tsys-atm"
-        antlist = "aca_cycle1.cfg"
-        totaltime = "100s"
-        incell = "1arcsec"
-        res = simobserve(project=self.project,skymodel=self.inimage,
-                         indirection=self.indirection,incenter=self.incenter,
-                         inwidth=self.inwidth,incell=incell,setpointings=True,
-                         integration=self.tint,mapsize=self.mapsize,
-                         pointingspacing=self.pointingspacing,
-                         obsmode='int',sdantlist="",
-                         antennalist=antlist,totaltime=totaltime,
-                         thermalnoise=thermalnoise,user_pwv=self.pwv,
-                         graphics=self.graphics)
-        self.assertTrue(res)
-        # check for output file
-        msdict = self._get_ms_names(self.project,antlist)
-        if msdict is None:
-            self.fail("Could not find output MSes")
-        noisyms = msdict['noisy']
-        origms = msdict['original']
-        msnoise = self._get_noise(noisyms, origms)
-        ananoise = self._calc_alma_noise(mode="atm",sd=False,aca7m=True)
-        # Now compare the result
-        refval = 2.27105136133
         self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
                         msg=self.prevmsg % (msnoise, refval))
         self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
@@ -479,7 +454,40 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
                         msg=self.prevmsg % (msnoise, refval))
         self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
                         msg=self.anamsg % (msnoise, ananoise))
-        
+
+    #-----------------------------------------------------------------#
+    # thermalnoise = "tsys-atm"
+    def testNZ_intAtm(self):
+        """Test INT thermal noise (tsys-atm): standard parameter set"""
+        thermalnoise="tsys-atm"
+        antlist = "aca_cycle1.cfg"
+        totaltime = "100s"
+        incell = "1arcsec"
+        res = simobserve(project=self.project,skymodel=self.inimage,
+                         indirection=self.indirection,incenter=self.incenter,
+                         inwidth=self.inwidth,incell=incell,setpointings=True,
+                         integration=self.tint,mapsize=self.mapsize,
+                         pointingspacing=self.pointingspacing,
+                         obsmode='int',sdantlist="",
+                         antennalist=antlist,totaltime=totaltime,
+                         thermalnoise=thermalnoise,user_pwv=self.pwv,
+                         graphics=self.graphics)
+        self.assertTrue(res)
+        # check for output file
+        msdict = self._get_ms_names(self.project,antlist)
+        if msdict is None:
+            self.fail("Could not find output MSes")
+        noisyms = msdict['noisy']
+        origms = msdict['original']
+        msnoise = self._get_noise(noisyms, origms)
+        ananoise = self._calc_alma_noise(mode="atm",sd=False,aca7m=True)
+        # Now compare the result
+        refval = 2.27105136133
+        self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
+                        msg=self.prevmsg % (msnoise, refval))
+        self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
+                        msg=self.anamsg % (msnoise, ananoise))
+
     def testNZ_sdAtm(self):
         """Test SD thermal noise (tsys-atm): standard parameter set"""
         thermalnoise="tsys-atm"
@@ -625,6 +633,7 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
         self.assertTrue(abs((msnoise-ananoise)/ananoise) < 1.e-1, \
                         msg=self.anamsg % (msnoise, ananoise))
 
+    #-----------------------------------------------------------------#
     # Helper functions
     def _get_ms_names(self, project, antennalist):
         retDict = {"original": None, "noisy": None}
@@ -751,21 +760,22 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
                at.getWetOpacity(spwid=0)['value'][0]
         return tsky, tau0
 
-###
+########################################################################
+#
 # Tests on bad input parameter settings
-###
+#
 class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     """
     Tests on bad input parameter setting
     """
     # global variables of the class
-    inimage = "core3ps.skymodel"
-    incomp = "core3ps.clist"
-    ptg = "core3ps.ptg.txt"
-    indata = [inimage,incomp,ptg]
+    inimage = "core5ps.skymodel"
+    incomp = "core5ps.clist"
+    indata = [inimage,incomp]
     # Limit pointings to make elapse time shorter
-    tottime = "250s"
-    mapsize = ["40arcsec","40arcsec"]
+    tottime = "1" #number of visit
+    mapsize = ["5arcsec","5arcsec"] # single pointing
+    sdmapsize = ["40arcsec","40arcsec"]
     sdantlist = "aca.tp.cfg"
 
     # bad parameter values
@@ -1104,10 +1114,11 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     def testBad_sdantlist(self):
         """Test bad sdantlist name"""
         obsmode = "sd"
+        mapsize = self.sdmapsize
         sdantlist = self.badname
         try:
             res = simobserve(project=self.project,skymodel=self.inimage,
-                             totaltime=self.tottime,mapsize=self.mapsize,
+                             totaltime=self.tottime,mapsize=mapsize,
                              obsmode=obsmode,sdantlist=sdantlist)
             self.fail(self.failmsg)
         except Exception, e:
@@ -1120,11 +1131,12 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     def testBad_sdant(self):
         """Test bad sdant (non-numeric sdant)"""
         obsmode = "sd"
+        mapsize = self.sdmapsize
         sdantlist = self.sdantlist
         sdant = self.badname
         try:
             res = simobserve(project=self.project,skymodel=self.inimage,
-                             totaltime=self.tottime,mapsize=self.mapsize,
+                             totaltime=self.tottime,mapsize=mapsize,
                              obsmode=obsmode,sdantlist=sdantlist,
                              sdant=sdant)
             self.fail(self.failmsg)
@@ -1136,11 +1148,12 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     def testBad_refdate(self):
         """Test bad refdate"""
         obsmode = "sd"
+        mapsize = self.sdmapsize
         sdantlist = self.sdantlist
         refdate = "05/21"
         try:
             res = simobserve(project=self.project,skymodel=self.inimage,
-                             totaltime=self.tottime,mapsize=self.mapsize,
+                             totaltime=self.tottime,mapsize=mapsize,
                              obsmode=obsmode,sdantlist=sdantlist,
                              refdate=refdate)
             self.fail(self.failmsg)
@@ -1152,11 +1165,12 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     def testBad_hourangle(self):
         """Test bad hourangle"""
         obsmode = "sd"
+        mapsize = self.sdmapsize
         sdantlist = self.sdantlist
         hourangle = self.badname
         try:
             res = simobserve(project=self.project,skymodel=self.inimage,
-                             totaltime=self.tottime,mapsize=self.mapsize,
+                             totaltime=self.tottime,mapsize=mapsize,
                              obsmode=obsmode,sdantlist=sdantlist,
                              hourangle=hourangle)
             self.fail(self.failmsg)
@@ -1169,11 +1183,12 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     def testBad_totaltime(self):
         """Test bad totaltime"""
         obsmode = "sd"
+        mapsize = self.sdmapsize
         sdantlist = self.sdantlist
         totaltime = self.badtime
         try:
             res = simobserve(project=self.project,skymodel=self.inimage,
-                             mapsize=self.mapsize,
+                             mapsize=mapsize,
                              obsmode=obsmode,sdantlist=sdantlist,
                              totaltime=totaltime)
             self.fail(self.failmsg)
@@ -1280,19 +1295,19 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
     
 def suite():
     return [simobserve_noise, simobserve_badinputs]
-#     return [simobserve_badinputs,simobserve_sdsky,
-#             simobserve_sdcomp,simobserve_sdcompsky]
+#     return [simobserve_sdsky, simobserve_sdcomp, simobserve_sdcompsky,
+#             simobserve_noise,simobserve_badinputs]
 
 
 ########################################################################
 # How to generate input data
 # 
 # 1. Generate a component list with
-#    a Gaussian (20 arcsec) + 3 point-like sources
+#    a Gaussian (20 arcsec) + 5 point-like sources
 # 
 #     cl.open()
-#     cl.rename("core3ps.clist")
-#     cl.addcomponent(flux=[20.,0.,0.,0.],fluxunit="Jy",polarization="stokes",\
+#     cl.rename("core5ps.clist")
+#     cl.addcomponent(flux=[2.,0.,0.,0.],fluxunit="Jy",polarization="stokes",\
 #                     dir='J2000 19h00m00 -23d00m00',shape="gaussian",\
 #                     majoraxis="20arcsec",minoraxis="20arcsec",\
 #                     positionangle="0deg",freq="345.0GHz",\
@@ -1300,13 +1315,15 @@ def suite():
 #     ### - Point like sources
 #     ### Note: the last 2 sources are dummy 0Jy sources to make
 #     ###       compskymodel larger (80arcsec^2)
-#     directions = ['J2000 18h59m59.698346 -22d59m48.749605',
-#                   'J2000 19h00m1.102395 -22d59m44.919331',
-#                   'J2000 18h59m59.062324 -23d00m13.627345',
+#     directions = ['J2000 18h59m59.379275 -23d00m10.374590',
+#                   'J2000 19h00m0.063002 -22d59m48.826670',
+#                   'J2000 19h00m0.386715 -23d00m2.973792',
+#                   'J2000 19h00m0.711507 -22d59m57.302818',
+#                   'J2000 18h59m59.918234 -22d59m57.740534',
 #                   'J2000 19h00m2.666667 -23d00m40.000000',
 #                   'J2000 18h59m57.333333 -22d59m20.000000']
-#     fluxes = [[10.,0.,0.,0.],[5.,0.,0.,0.],[8.,0.,0.,0.],
-#               [0.,0.,0.,0.],[0.,0.,0.,0.]]
+#     fluxes = [[0.004347,0.,0.,0.],[0.003808,0.,0.,0.],[0.004571,0.,0.,0.],
+#               [0.008541,0.,0.,0.],[0.005158,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]]
 #     for idx in range(len(directions)):
 #         cl.addcomponent(flux=fluxes[idx],fluxunit="Jy",shape="gaussian",\
 #                         majoraxis="0.5arcsec",minoraxis="0.5arcsec",\
@@ -1316,24 +1333,34 @@ def suite():
 #     cl.done()
 #
 # 2. Generate a CASA image of the components list using simobserve
-#     simobserve(project="simCore3ps",complist='core3ps.clist',\
-#                compwidth="2GHz",direction='J2000 19h00m00 -23d00m00',\
-#                mapsize=['80arcsec','80arcsec'],totaltime='1300s')
+#     simobserve(project="simCore5ps",complist='core5ps.clist',\
+#                compwidth="10MHz",direction='J2000 19h00m00 -23d00m00',\
+#                obsmode='int',mapsize=['80arcsec','80arcsec'],totaltime='1')
 #  simobserve generates a skymodel image,
-#    "$project/$project.alma_out10.compskymodel" [1955x1955] pixels
-#  This image is renamed as "core3ps.skymodel" and used in skymodel tests
+#    "$project/$project.alma_out10.compskymodel" [1873,1873] pixels
+#  This image is renamed as "core5ps.skymodel" and used in skymodel tests
 #  
 # 3. Remove dummy components from list
 #
-#       cl.open("core3ps.clist")
+#       cl.open("core5ps.clist")
 #       numcore = cl.length()
 #       cl.remove([numcore-2, numcore-1])
 #       cl.close()
-# 4. Generate ptgfile
-#     simobserve(project="simPtgCore3ps",complist='core3ps.clist',\
-#                compwidth="2GHz",direction='J2000 19h00m00 -23d00m00',\
-#                mapsize=['50arcsec','50arcsec'],totaltime='1300s',obsmode='')
-#  simobserve generates a skymodel image,
-#    "$project/$project.alma_out10.ptg.txt" with 43 pointings
-#  This image is renamed as "core3ps.ptg.txt" and used in skymodel tests
+# 4. Generate ptgfiles
+#    [I] TP pointing
+#     simobserve(project="simSDPtgCore5ps",complist='core5ps.clist',\
+#                compwidth="10MHz",direction='J2000 19h00m00 -23d00m00',\
+#                maptype='square',mapsize=['40arcsec','40arcsec'],\
+#                totaltime='1',obsmode='',sdantlist='aca.tp.cfg',antennalist='')
+#     simobserve generates a skymodel image,
+#       "$project/$project.alma_out10.ptg.txt" with 16 pointings
+#     This image is renamed as "core5ps.sd40asec.ptg.txt" and used in skymodel tests
+#    [II] INT pointing
+#     simobserve(project="simINTPtgCore5ps",complist='core5ps.clist',\
+#                compwidth="10MHz",direction='J2000 19h00m00 -23d00m00',\
+#                maptype='ALMA',mapsize=['5arcsec','5arcsec'],totaltime='1',\
+#                obsmode='',sdantlist='',antennalist='alma.out01.cfg')
+#     simobserve generates a skymodel image,
+#       "$project/$project.alma_out10.ptg.txt" with single pointing
+#     This image is renamed as "core5ps.single.ptg.txt" and used in skymodel tests
 ########################################################################
