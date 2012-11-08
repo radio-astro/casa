@@ -37,6 +37,7 @@ const QString ConverterIntensity::JY_ARCSEC = "Jy/arcsec^2";
 const QString ConverterIntensity::JY = "Jy";
 const QString ConverterIntensity::KELVIN = "Kelvin";
 const QString ConverterIntensity::ADU = "adu";
+const QString ConverterIntensity::TIMES_PIXELS = "*pixels";
 const double ConverterIntensity::SPEED_LIGHT_FACTOR = 0.0000000009;
 const double ConverterIntensity::FREQUENCY_FACTOR = 2 * 0.0000000000000000000000138;
 double ConverterIntensity::beamSolidAngle = 0;
@@ -79,6 +80,15 @@ bool ConverterIntensity::isSupportedUnits( const QString& yUnit ){
 	return acceptable;
 }
 
+QString ConverterIntensity::stripPixels( const QString& units ){
+	int pixelIndex = units.indexOf( TIMES_PIXELS );
+	QString strippedUnits = units;
+	if ( pixelIndex > 0 ){
+		strippedUnits = units.left(pixelIndex );
+	}
+	return strippedUnits;
+}
+
 void ConverterIntensity::convert( Vector<float>& values, const Vector<float> hertzValues,
 		const QString& oldUnits, const QString& newUnits,
 		double maxValue, const QString& maxUnits ){
@@ -91,32 +101,35 @@ void ConverterIntensity::convert( Vector<float>& values, const Vector<float> her
 		return;
 	}
 
+	QString newUnitsBase = stripPixels( newUnits );
+	QString oldUnitsBase = stripPixels( oldUnits );
+	QString maxUnitsBase = stripPixels( maxUnits );
+
 	//Change fraction of peak back to the original units before converting.  We don't
 	//want the current values in fraction of peak going forward.
-	QString baseConvertUnits = oldUnits;
+	QString baseConvertUnits = oldUnitsBase;
 	int maxPoints = values.size();
-	if ( oldUnits == FRACTION_OF_PEAK && newUnits != FRACTION_OF_PEAK){
+	if ( oldUnitsBase == FRACTION_OF_PEAK && newUnitsBase != FRACTION_OF_PEAK){
 		for ( int i = 0; i < maxPoints; i++ ){
 			values[i] = percentToValue( values[i], maxValue);
 		}
-		baseConvertUnits = maxUnits;
+		baseConvertUnits = maxUnitsBase;
 	}
 
 	//Exit if we don't have anything to do.
-	if ( baseConvertUnits == newUnits ){
+	if ( baseConvertUnits == newUnitsBase ){
 			return;
 	}
 
-	if ( newUnits == FRACTION_OF_PEAK ){
+	if ( newUnitsBase == FRACTION_OF_PEAK ){
 		//Scale the vector
 		for ( int i = 0; i < maxPoints; i++ ){
 			values[ i ] = valueToPercent( values[i], maxValue );
 		}
 	}
 	//Converting between Jy/beam.
-	else if ( isJansky( baseConvertUnits) && isJansky( newUnits )){
-		qDebug() << "Two Jansky's oldUnits="<<baseConvertUnits<<" newUnits="<<newUnits;
-		convertJansky( values, baseConvertUnits, newUnits );
+	else if ( isJansky( baseConvertUnits) && isJansky( newUnitsBase )){
+		convertJansky( values, baseConvertUnits, newUnitsBase );
 	}
 	else {
 		//If the original units are in JY or JY_BEAM, strip off a prefix such as
@@ -124,35 +137,31 @@ void ConverterIntensity::convert( Vector<float>& values, const Vector<float> her
 		QString strippedBase = baseConvertUnits;
 		if ( isJansky( baseConvertUnits ) ){
 			strippedBase = getJanskyBaseUnits( baseConvertUnits );
-			qDebug() << "Old units Jansky old="<<baseConvertUnits<<" new="<<strippedBase;
 			convertJansky( values, baseConvertUnits, strippedBase );
 		}
-		QString strippedNew = newUnits;
-		if ( isJansky( newUnits)){
-			strippedNew = getJanskyBaseUnits( newUnits );
-			qDebug() << "Stripped new="<<strippedNew;
+		QString strippedNew = newUnitsBase;
+		if ( isJansky( newUnitsBase)){
+			strippedNew = getJanskyBaseUnits( newUnitsBase );
 		}
 
 		//Use Quanta to convert
-		qDebug()<<"Quanta convert old="<<strippedBase<<" new="<<strippedNew;
 		for ( int i = 0; i < maxPoints; i++ ){
 			values[ i ] = convertQuantity( values[i], hertzValues[i],
 					strippedBase, strippedNew );
 		}
 
-		if ( isJansky( newUnits ) ){
-			convertJansky( values, strippedNew, newUnits );
+		if ( isJansky( newUnitsBase ) ){
+			convertJansky( values, strippedNew, newUnitsBase );
 		}
 	}
+
 }
 
 QString ConverterIntensity::getJanskyBaseUnits( const QString& units ){
 	QString baseUnits = units;
 	int jyIndex = units.indexOf( JY );
 	if ( jyIndex > 0 ){
-		qDebug() << "units="<<baseUnits<<" jyIndex="<<jyIndex;
 		baseUnits = units.mid( jyIndex, units.length() - jyIndex );
-		qDebug() << "baseUnits="<<baseUnits;
 	}
 	return baseUnits;
 }
@@ -258,7 +267,6 @@ double ConverterIntensity::convertJyBeams( const QString& oldUnits,
 		const QString& newUnits, double value ){
 	int sourceIndex = BEAM_UNITS.indexOf( oldUnits );
 	int destIndex = BEAM_UNITS.indexOf( newUnits );
-	qDebug() << "convertJyBeams oldUnits="<<oldUnits<<" newUnits="<<newUnits;
 	Vector<double> resultValues(1);
 	resultValues[0] = value;
 	Converter::convert( resultValues, sourceIndex, destIndex );

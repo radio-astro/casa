@@ -46,6 +46,7 @@ public:
     void setPlaying( bool mode, int play );
     void setRateInformation( bool mode, int minr, int maxr, int rate );
     void setModeEnabled( int count );
+    void setChannelModeEnabled( int count);
     int getRate( bool mode ) const;
     ~AnimatorHolder();
 
@@ -103,7 +104,7 @@ private slots:
 private:
 	void initChannel();
 	void initImage();
-	void addChannelGroupBox();
+	bool addChannelGroupBox();
 	void addImageGroupBox();
 	void removeChannelGroupBox();
 	bool removeImageGroupBox();

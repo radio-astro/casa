@@ -349,6 +349,7 @@ private:
    bool newOverplots;
    pair<double,double> getMaximumTemperature();
    void postConversionWarning( QString unitStr);
+   void adjustPlotUnits( );
    private slots:
    	   void changeTopAxis();
    	   void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );

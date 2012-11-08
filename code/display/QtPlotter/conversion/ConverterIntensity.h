@@ -45,6 +45,7 @@ public:
 	static const QString JY_BEAM;
 	static const QString JY;
 	static const QString ADU;
+	static const QString TIMES_PIXELS;
 	static bool isSupportedUnits( const QString& yUnit );
 	//Hertz values are needed corresponding to the values for Jy/Beam Kelvin conversions
 	//only.  Both oldUnits and newUnits refer to the old and new units of the values
@@ -72,6 +73,7 @@ private:
 			const QString& newUnits );
 	static bool isJansky( const QString& units );
 	static QString getJanskyBaseUnits( const QString& units );
+	static QString stripPixels( const QString& units );
 	static const QList<QString> BEAM_UNITS;
 	static const QList<QString> JY_UNITS;
 	static double beamSolidAngle;

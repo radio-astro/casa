@@ -676,6 +676,27 @@ void QtDisplayPanelGui::updateFrameInformation(){
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	int displayDataCount = rdds.len();
 	animationHolder->setModeEnabled( displayDataCount );
+	ListIter<QtDisplayData*> iter(rdds );
+	int i = 0;
+	int maxChannels = -1;
+	while ( i < displayDataCount ){
+		QtDisplayData* rdd = iter.getRight();
+		const viewer::ImageProperties & imgProperties = rdd->imageProperties( );
+		const Vector<int> imgShape = imgProperties.shape();
+		if ( imgShape.size() >= 3 ){
+			int channelCount = imgShape[2];
+			if ( channelCount > 1 ){
+				if ( channelCount > maxChannels ){
+					maxChannels = channelCount;
+				}
+			}
+		}
+		iter++;
+		i++;
+	}
+	if ( maxChannels > 0 ){
+		animationHolder->setChannelModeEnabled( maxChannels );
+	}
 }
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {

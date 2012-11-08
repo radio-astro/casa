@@ -46,6 +46,7 @@
 #include <algorithm>
 #include <casa/BasicMath/Functors.h>
 #include <cstdlib>
+#include <QDebug>
 
 #define SEXAGPREC 9
 
@@ -1846,7 +1847,6 @@ if (!markCenter()) return;
 		std::map<String,bool> processed;
 		for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
 			dd = *ddi;
-
 			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
 			if (padd==0) {
 				generate_nonimage_statistics( dd, region_statistics );
@@ -1854,7 +1854,11 @@ if (!markCenter()) return;
 			}
 
 			try {
-				if ( ! padd->conformsTo(*wc_) ) continue;
+				//We should display the region statistics for any
+				//image that is registered.
+				/*if ( ! padd->conformsTo(*wc_) ){
+					continue;
+				}*/
 
 				ImageInterface<Float> *image = padd->imageinterface( );
 
@@ -1866,9 +1870,13 @@ if (!markCenter()) return;
 				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
 
 				if ( imageregion == 0 ) continue;
-				region_statistics->push_back(ImageRegionInfo(image->name(true),getLayerStats(padd,image,*imageregion)));
+				RegionInfo::stats_t * newStats = getLayerStats(padd,image,*imageregion);
+				if ( newStats != NULL ){
+					region_statistics->push_back(ImageRegionInfo(image->name(true), newStats ));
+				}
 
-			} catch (const casa::AipsError& err) {
+			}
+			catch (const casa::AipsError& err) {
 				errMsg_ = err.getMesg();
 				continue;
 			} catch (...) {
@@ -1953,7 +1961,6 @@ if (!markCenter()) return;
 		    //	 begin collecting statistics...
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    RegionInfo::stats_t *layerstats = new RegionInfo::stats_t( );
-
 		    String zLabel="";
 		    String hLabel="";
 		    Vector<Double> tPix,tWrld;

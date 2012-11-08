@@ -1286,9 +1286,11 @@ void QtCanvas::drawCurves(QPainter *painter)
    					 if (displayStepFunction ){
    						 int prevX = getPixelX( data[2*(i-1)] );
    						 int prevY = getPixelY( data[2*i-1] );
+   						 int midX = (prevX + x )/2;
    						 points.moveTo(prevX, prevY);
-   						 points.lineTo(x, prevY);
-   						 points.lineTo(x, y);
+   						 points.lineTo( midX, prevY);
+   						 points.lineTo( midX, y);
+   						 points.lineTo( x, y );
    						 //Plot the last point
    						 if ( i == maxPoints - 1){
    							addDiamond( x, y, 2, points );
@@ -1732,7 +1734,6 @@ void QtCanvas::setDisplayYUnits( const QString& displayUnits ){
 	QString oldDisplayUnits = this->yUnitDisplay;
 	yUnitDisplay = displayUnits;
 	setYLabel( "("+yUnitDisplay+")");
-	qDebug() << "QtCanvas oldDisplayUnits="<<oldDisplayUnits<<" newUnits="<<displayUnits;
 	if ( oldDisplayUnits != yUnitDisplay && oldDisplayUnits.length() > 0  ){
 		//Tell all the curves to convert their yUnits
 		for ( int i = 0; i < static_cast<int>(this->curveMap.size()); i++ ){

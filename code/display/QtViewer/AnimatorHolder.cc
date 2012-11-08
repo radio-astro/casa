@@ -75,9 +75,10 @@ void AnimatorHolder::setHeightFixed() {
 	setFixedHeight( height );
 }
 
-void AnimatorHolder::addChannelGroupBox(){
+bool AnimatorHolder::addChannelGroupBox(){
 	QLayout* layout = this->layout();
 	int channelGroupIndex = layout->indexOf( ui.channelGroupBox );
+	bool channelAdded = false;
 	if ( channelGroupIndex == -1 ){
 		ui.channelGroupBox->setParent( this );
 		//We want the channel group box to always be first
@@ -89,7 +90,9 @@ void AnimatorHolder::addChannelGroupBox(){
 			addImageGroupBox();
 		}
 		setHeightFixed();
+		channelAdded = true;
 	}
+	return channelAdded;
 }
 
 void AnimatorHolder::addImageGroupBox(){
@@ -192,6 +195,22 @@ void AnimatorHolder::initImage(){
 //                    Setters
 //-----------------------------------------------------------------------
 
+void AnimatorHolder::setChannelModeEnabled( int frameCount){
+	//This method was added because if the case where two images were
+	//initially loaded, each with one channel, the animator comes up
+	//with only the "image animator" showing in image mode.
+	//If you then unregister the single channel images and load
+	//at least one image with multiple channels, the channel
+	//animator won't come up because it is stuck in image mode.
+	bool channelAdded=addChannelGroupBox();
+	if ( channelAdded ){
+		ui.channelGroupBox->setCheckable(true);
+		animatorChannel->setEnabled(true);
+		animatorChannel->setFrameInformation(0, frameCount );
+		ui.channelGroupBox->setChecked( false );
+	}
+}
+
 void AnimatorHolder::setModeEnabled( int imageCount ){
 	int animationCount = getAnimationCount();
 	bool modeChanged = false;
@@ -236,10 +255,9 @@ void AnimatorHolder::setModeEnabled( int imageCount ){
 
 void AnimatorHolder::addRemoveChannelAnimatorBasedOnFrameCount(){
 	if ( animatorChannel->getFrameCount() > 1 ){
-			addChannelGroupBox();
-			animatorChannel->setModeEnabled( true );
-			ui.channelGroupBox->setCheckable( true );
-			changePalette( ui.channelGroupBox, selectedColor );
+		animatorChannel->setModeEnabled( true );
+		ui.channelGroupBox->setCheckable( true );
+		changePalette( ui.channelGroupBox, selectedColor );
 	}
 	else {
 		removeChannelGroupBox();
