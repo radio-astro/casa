@@ -46,7 +46,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 namespace vi {
 
-class ROVisibilityIterator2;
 class SubChunkPair2;
 class VisibilityIterator2;
 
@@ -112,7 +111,7 @@ class VisibilityIterator2;
 class VisBuffer2 : private boost::noncopyable {
 
     friend class VisibilityIterator;
-    friend class VisibilityIteratorReadImpl2;
+    friend class VisibilityIteratorImpl2;
 
 public:
 
@@ -159,7 +158,7 @@ public:
     // For attached VBs this returns the VI the VB is attached to.  For free
     // VBs this method returns False.
 
-    virtual const ROVisibilityIterator2 * getVi () const = 0;
+    virtual const VisibilityIterator2 * getVi () const = 0;
 
     virtual Bool isAttached () const = 0;
     virtual Bool isFillable () const = 0;
@@ -474,7 +473,7 @@ public:
 
 protected:
 
-    static VisBuffer2 * factory (ROVisibilityIterator2 * vi, Type t, Bool isWritable);
+    static VisBuffer2 * factory (VisibilityIterator2 * vi, Type t, Bool isWritable);
 
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,

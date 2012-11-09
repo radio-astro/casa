@@ -448,7 +448,6 @@ install (FILES
 	MSVis/VisBufferAsync2.h
 	MSVis/VisBufferAsyncWrapper.h
 	MSVis/VisBufferAsyncWrapper2.h
-	MSVis/VisBufferBase2.h
 	MSVis/VisBufferComponents.h
 	MSVis/VisBufferComponents2.h
 	MSVis/VisBufferImpl2.h

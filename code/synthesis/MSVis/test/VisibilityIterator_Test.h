@@ -22,7 +22,7 @@ namespace casa {
 
     namespace vi {
 
-        class ROVisibilityIterator2;
+        class VisibilityIterator2;
         class VisBuffer2;
 
     }
@@ -474,12 +474,12 @@ public:
 
     virtual boost::tuple <MeasurementSet *, Int, Bool> createMs () = 0;
 
-    virtual void endOfChunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
-    virtual void nextChunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
-    virtual void nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
-    virtual Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
+    virtual void endOfChunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
+    virtual void nextChunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
+    virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
+    virtual Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
     { return False;}
-    virtual void startOfData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
+    virtual void startOfData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
 
 private:
 
@@ -496,9 +496,9 @@ public:
 
     virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
     virtual String name () const { return "BasicChannelSelection";}
-    virtual void nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
-    virtual Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
-    virtual void startOfData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
+    virtual void startOfData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
 
 protected:
 
@@ -535,8 +535,8 @@ public:
     FrequencyChannelSelection () {}
 
     virtual String name () const { return "FrequencyChannelSelection";}
-    virtual void startOfData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
-    Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed);
+    virtual void startOfData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed);
 };
 
 class BasicMutation : public BasicChannelSelection
@@ -548,8 +548,8 @@ public:
 
     virtual boost::tuple <MeasurementSet *, Int, Bool> createMs ();
     virtual String name () const { return "BasicMutation";}
-    virtual void nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
-    virtual Bool noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
+    virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRows);
 
 private:
 
@@ -591,15 +591,15 @@ public:
 protected:
 
     void compareOne (ROVisibilityIterator * oldVi,
-                     ROVisibilityIterator2 * newVi,
+                     VisibilityIterator2 * newVi,
                      Int nSweeps,
                      Int tests);
 
     ROVisibilityIterator * createViOld ();
-    ROVisibilityIterator2 * createViNew ();
+    VisibilityIterator2 * createViNew ();
 
     Double sweepViOld (ROVisibilityIterator & vi);
-    Double sweepViNew (ROVisibilityIterator2 & vi);
+    Double sweepViNew (VisibilityIterator2 & vi);
 
 private:
 

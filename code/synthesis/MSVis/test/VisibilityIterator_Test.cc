@@ -25,9 +25,9 @@ main (int nArgs, char * args [])
 {
     using namespace casa::vi::test;
 
-    CopyMs msCopier;
-    msCopier.doit ("ngc5921.ms");
-    return 0;
+//    CopyMs msCopier;
+//    msCopier.doit ("ngc5921.ms");
+//    return 0;
 
     Tester tester;
 
@@ -740,8 +740,8 @@ Tester::sweepMs (TestWidget & tester)
         do {
 
             Block<Int> noSortColumns;
-            auto_ptr <ROVisibilityIterator2> vi (writableVi ? new VisibilityIterator2 (* ms, noSortColumns)
-                                                            : new ROVisibilityIterator2 (* ms, noSortColumns));
+            auto_ptr <VisibilityIterator2> vi (new VisibilityIterator2 (* ms, noSortColumns, writableVi));
+
             VisBuffer2 * vb = vi->getVisBuffer ();
             Int nRowsProcessed = 0;
 
@@ -752,6 +752,8 @@ Tester::sweepMs (TestWidget & tester)
                 tester.nextChunk (* vi, vb);
 
                 for (vi->origin(); vi->more (); (* vi) ++){
+
+vb->azel (vb->time()(0));
 
                     nRowsProcessed += vb->nRows();
 
@@ -832,12 +834,13 @@ Tester::doTests (int nArgs, char * args [])
 
     try {
 
-        //// doTest<BasicChannelSelection> ();
+        doTest<BasicChannelSelection> ();
 
-        //// doTest<BasicMutation> ();
+        doTest<BasicMutation> ();
 
-        //// doTest<FrequencyChannelSelection> ();
+        doTest<FrequencyChannelSelection> ();
 
+#if 0
         int tests = PerformanceComparator::Both;
 
         if (utilj::containsKey ("--old", arguments)){
@@ -864,6 +867,7 @@ Tester::doTests (int nArgs, char * args [])
 
         PerformanceComparator pc ("3c391_ctm_mosaic_spw0.ms");
         pc.compare(tests, nSweeps, nChannelTests);
+#endif
     }
     catch (TestError & e){
 
@@ -1039,18 +1043,18 @@ BasicChannelSelection::createMs ()
 
 
 /*void
-BasicChannelSelection::endOfChunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb, Int nRowsProcessed)
+BasicChannelSelection::endOfChunk (VisibilityIterator2 & vi, VisBuffer2 * vb, Int nRowsProcessed)
 {
 
 }*/
 
 /* void
-BasicChannelSelection::nextChunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
+BasicChannelSelection::nextChunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
 {
 }*/
 
 void
-BasicChannelSelection::nextSubchunk (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * vb)
+BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * vb)
 {
     // Check out that the subchunk has the appropriate data
 
@@ -1208,7 +1212,7 @@ BasicChannelSelection::checkChannelAndFrequency (Int rowId, Int row, Int channel
     // and the increment is 1E6 * spectral window.  Accept any deviation that is less than a 1/2 of the
     // increment.
 
-    Double frequency = vb->getFrequency(row, channel, MFrequency::TOPO);
+    Double frequency = vb->getFrequency(row, channel/*, MFrequency::TOPO*/);
 
     Double expectedFrequency = 1e9 * (spectralWindow + 1) + 1e6 * (spectralWindow + 1) * expectedChannelNumber;
 
@@ -1293,7 +1297,7 @@ BasicChannelSelection::checkWeightSpectrum (Int rowId, Int spectralWindow, Int r
 }
 
 Bool
-BasicChannelSelection::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed)
+BasicChannelSelection::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed)
 {
     TestErrorIf (nRowsProcessed != 360,
                  String::format ("Expected to process 360 rows, but did %d instead.",
@@ -1305,7 +1309,7 @@ BasicChannelSelection::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * 
 }
 
 void
-BasicChannelSelection::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
+BasicChannelSelection::startOfData (VisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
 {
     // Apply channel selections
 
@@ -1348,7 +1352,7 @@ public:
 
 
 void
-BasicMutation::nextSubchunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
+BasicMutation::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
 {
     // Perform the standard value check
 
@@ -1408,7 +1412,7 @@ BasicMutation::nextSubchunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
 }
 
 Bool
-BasicMutation::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
+BasicMutation::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
 {
     Bool moreSweeps = firstPass_p;
     firstPass_p = False;
@@ -1419,7 +1423,7 @@ BasicMutation::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, 
 
 
 void
-FrequencyChannelSelection::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
+FrequencyChannelSelection::startOfData (VisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
 {
     // Apply channel selections
 
@@ -1433,7 +1437,7 @@ FrequencyChannelSelection::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 *
 }
 
 Bool
-FrequencyChannelSelection::noMoreData (ROVisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed)
+FrequencyChannelSelection::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed)
 {
     TestErrorIf (nRowsProcessed != 270,
                  String::format ("Expected to process 270 rows, but did %d instead.",
@@ -1455,27 +1459,27 @@ TheWidget::createMs ()
 
 
 /*void
-TheWidget::endOfChunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
+TheWidget::endOfChunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
 {
 }*/
 
 /* void
-TheWidget::nextChunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
+TheWidget::nextChunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
 {
 }*/
 
 /* void
-TheWidget::nextSubchunk (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
+TheWidget::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
 {
 }*/
 
 /* void
-TheWidget::noMoreData (ROVisibilityIterator2 & vi, VisBuffer2 * vb, int nRows)
+TheWidget::noMoreData (VisibilityIterator2 & vi, VisBuffer2 * vb, int nRows)
 {
 }*/
 
 /* void
-TheWidget::startOfData (ROVisibilityIterator2 & vi, VisBuffer2 * vb)
+TheWidget::startOfData (VisibilityIterator2 & vi, VisBuffer2 * vb)
 {
 }*/
 
@@ -1496,7 +1500,7 @@ PerformanceComparator::compare (int tests, int nSweeps, int nChannelTests)
 
     ROVisibilityIterator oldVi (ms, sortColumns, True);
 
-    ROVisibilityIterator2 newVi (ms, sortColumns);
+    VisibilityIterator2 newVi (ms, sortColumns);
 
     printf ("\n--- Default channel selection ---\n");
 
@@ -1530,7 +1534,7 @@ PerformanceComparator::compare (int tests, int nSweeps, int nChannelTests)
 
 void
 PerformanceComparator::compareOne (ROVisibilityIterator * oldVi,
-                                   ROVisibilityIterator2 * newVi,
+                                   VisibilityIterator2 * newVi,
                                    int nSweeps,
                                    int tests)
 {
@@ -1597,7 +1601,7 @@ PerformanceComparator::compareOne (ROVisibilityIterator * oldVi,
 }
 
 Double
-PerformanceComparator::sweepViNew (ROVisibilityIterator2 & vi)
+PerformanceComparator::sweepViNew (VisibilityIterator2 & vi)
 {
     VisBuffer2 * vb = vi.getVisBuffer();
     Double sum = 0;
@@ -1663,12 +1667,12 @@ CopyMs::doit (const String & oldMsName)
 
     system (String::format ("test -d %s && rm -r %s", newMsName.c_str(), newMsName.c_str()).c_str());
 
-    SetupNewTable newSetup (newMsName, oldMs.requiredTableDesc(), Table::NewNoReplace);
+    SetupNewTable newSetup (newMsName, oldMs.tableDesc(), Table::NewNoReplace);
 
     casa::MeasurementSet newMs (newSetup, 0, False);
     newMs.createDefaultSubtables(Table::NewNoReplace);
 
-    ROVisibilityIterator2 srcVi (oldMs);
+    VisibilityIterator2 srcVi (oldMs);
 
     VisibilityIterator2 dstVi (newMs);
 

@@ -57,7 +57,7 @@ class VbCacheItemBase;
 class VisBufferCache;
 class VisBufferState;
 class VisBufferImpl2;
-class ROVisibilityIterator2;
+class VisibilityIterator2;
 class VisibilityIterator2;
 
 
@@ -124,13 +124,13 @@ public:
     // Copy construct, looses synchronization with iterator: only use buffer for
     // current iteration (or reattach).
 
-    VisBufferImpl2(ROVisibilityIterator2 * iter, Bool isWritable);
+    VisBufferImpl2(VisibilityIterator2 * iter, Bool isWritable);
 
     // Destructor (detaches from VisIter)
 
     virtual ~VisBufferImpl2();
 
-    virtual void associateWithVisibilityIterator2 (const ROVisibilityIterator2 & vi);
+    virtual void associateWithVisibilityIterator2 (const VisibilityIterator2 & vi);
 
     // Copies all of the components (or just the one in the cache) from
     // the specified VisBuffer into this one.
@@ -152,7 +152,7 @@ public:
     virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const;
     virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const;
 
-    virtual const ROVisibilityIterator2 * getVi () const;
+    virtual const VisibilityIterator2 * getVi () const;
 
     virtual void invalidate();
 
@@ -216,7 +216,9 @@ public:
     virtual SubChunkPair2 getSubchunk () const;
 
     virtual Bool areCorrelationsSorted() const;
+    virtual IPosition getValidShape (Int) const;
     virtual VisModelData getVisModelData() const;
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows);
 
     //////////////////////////////////////////////////////////////////////
     //
@@ -357,17 +359,16 @@ protected:
     virtual VisBufferComponents2 dirtyComponentsGet () const;
     virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
     virtual void dirtyComponentsSet (VisBufferComponent2 component);
-
     void normalizeRow (Int row, Int nCorrelations, const Matrix<Bool> & flagged,
                        Cube<Complex> & visCube, Cube<Complex> & modelCube,
                         Matrix<Float> & weightMat);
 
     virtual void sortCorrelationsAux (Bool makeSorted);
-    virtual ROVisibilityIterator2 * getViP () const; // protected, non-const access to VI
+    virtual VisibilityIterator2 * getViP () const; // protected, non-const access to VI
     void registerCacheItem (VbCacheItemBase *);
     virtual void stateCopy (const VisBufferImpl2 & other); // copy relevant noncached members
     virtual void setRekeyable (Bool isRekeyable);
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows);
+    virtual void setupValidShapes ();
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem);
 
@@ -377,7 +378,7 @@ private:
 
     virtual Bool areCorrelationsInCanonicalOrder () const;
     void checkVisIterBase (const char * func, const char * file, int line, const char * extra = "") const;
-    void construct(ROVisibilityIterator2 * vi);
+    void construct(VisibilityIterator2 * vi);
     void constructCache();
     void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
                            Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow,

@@ -91,8 +91,7 @@ namespace vi {
 
 class VisBuffer2;
 class VisBufferImpl2;
-class VisibilityIteratorReadImpl2;
-class VisibilityIteratorWriteImpl2;
+class VisibilityIteratorImpl2;
 
 class SubtableColumns {
 
@@ -345,7 +344,7 @@ private:
 //    Provides the ordered pair identifying the current subchunk.  The first
 //    component is the chunk (goes from 0 to nChunks-1 during the outer loop
 //    iteration).  The second component is the subchunk number which is
-//    zero after ROVisibilityIterator::origin is called and is increment
+//    zero after VisibilityIterator::origin is called and is increment
 //    until ROVI::more returns False.
 
 class SubChunkPair2 : public std::pair<Int, Int>{
@@ -388,7 +387,7 @@ private:
 };
 
 // <summary>
-// ROVisibilityIterator2 iterates through one or more readonly MeasurementSets
+// VisibilityIterator2 iterates through one or more readonly MeasurementSets
 // </summary>
 // <use visibility=export>
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
@@ -401,18 +400,18 @@ private:
 // </prerequisite>
 //
 // <etymology>
-// The ROVisibilityIterator2 is a readonly iterator returning visibilities
+// The VisibilityIterator2 is a readonly iterator returning visibilities
 // </etymology>
 //
 // <synopsis>
-// ROVisibilityIterator2 provides iteration with various sort orders
+// VisibilityIterator2 provides iteration with various sort orders
 // for one or more MSs. It has member functions to retrieve the fields
 // commonly needed in synthesis calibration and imaging.
 //
 // One should use <linkto class="VisBuffer">VisBuffer</linkto>
 // to access chunks of data.
 //
-// ROVisibilityIterator2s can be either synchronous or asynchronous, depending
+// VisibilityIterator2s can be either synchronous or asynchronous, depending
 // on the constructor used to create them as well as the current value of
 // a CASARC file setting.  A synchronous instance is works the same as
 // this class ever worked; an asynchronous instance uses a second thread
@@ -486,7 +485,7 @@ private:
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
 // </todo>
-class ROVisibilityIterator2 : private boost::noncopyable
+class VisibilityIterator2 : private boost::noncopyable
 {
     // These classes are members of the VI/VB framework and need extra
     // access to the non-public methods of this class.  Any additions of
@@ -496,9 +495,7 @@ class ROVisibilityIterator2 : private boost::noncopyable
     // area of this class so that items in the private area can remeain de
     // facto private.
 
-    friend class VisibilityIteratorReadImpl2;
-    friend class VisibilityIteratorWriteImpl2;
-    friend class ViReadImplAsync2;
+    friend class VisibilityIteratorImpl2;
     friend class VisBufferImpl2;
     friend class VisBufferState;
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected
@@ -512,7 +509,7 @@ public:
 
       virtual ~Factory () {}
 
-      virtual VisibilityIteratorReadImpl2 *
+      virtual VisibilityIteratorImpl2 *
       operator() (const VisBufferComponents2 * /*prefetchColumns*/,
                   const Block<MeasurementSet>& /*mss*/,
                   const Block<Int>& /*sortColumns*/,
@@ -553,21 +550,23 @@ public:
   // enable/disable of asynchronous I/O then they must implement logic that
   // either either provides prefetch columns (enables) or a null pointer (disables).
 
-  ROVisibilityIterator2(const MeasurementSet& ms,
-                        const Block<Int>& sortColumns = Block<Int> (),
-                        const VisBufferComponents2 * prefetchColumns = 0,
-                        const Bool addDefaultSortCols = True,
-                        Double timeInterval = 0);
+  VisibilityIterator2 (const MeasurementSet& ms,
+                       const Block<Int>& sortColumns = Block<Int> (),
+                       Bool isWritable = False,
+                       const VisBufferComponents2 * prefetchColumns = 0,
+                       const Bool addDefaultSortCols = True,
+                       Double timeInterval = 0);
 
-  ROVisibilityIterator2 (const Block<MeasurementSet>& mss,
-                         const Block<Int>& sortColumns = Block<Int> (),
-                         const VisBufferComponents2 * prefetchColumns = 0,
-                         const Bool addDefaultSortCols = True,
-                         Double timeInterval = 0);
+  VisibilityIterator2 (const Block<MeasurementSet>& mss,
+                       const Block<Int>& sortColumns = Block<Int> (),
+                       Bool isWritable = False,
+                       const VisBufferComponents2 * prefetchColumns = 0,
+                       const Bool addDefaultSortCols = True,
+                       Double timeInterval = 0);
 
   // Destructor
 
-  virtual ~ROVisibilityIterator2();
+  virtual ~VisibilityIterator2();
 
   ///////////////////////////////////////////////////////////////////
   //
@@ -613,12 +612,12 @@ public:
   // moreChunks - returns True if the VI is pointing to a valid chunk.
 
   void origin(); // Reset to start of the chunk
-  ROVisibilityIterator2 & operator++(int);
-  ROVisibilityIterator2 & operator++();
+  VisibilityIterator2 & operator++(int);
+  VisibilityIterator2 & operator++();
   Bool more() const;
 
   void originChunks();
-  ROVisibilityIterator2& nextChunk();
+  VisibilityIterator2& nextChunk();
   Bool moreChunks() const;
 
   // Returns the pair (chunk,subchunk) for the current position of the VI.  Only
@@ -736,6 +735,83 @@ public:
   void useImagingWeight(const VisImagingWeight& imWgt);
   const VisImagingWeight & getImagingWeightGenerator () const;
 
+  // Write/modify the flags in the data.
+  // This will flag all channels in the original data that contributed to
+  // the output channel in the case of channel averaging.
+  // All polarizations have the same flag value.
+
+  void writeFlag(const Matrix<Bool>& flag);
+
+  // Write/modify the flags in the data.
+  // This writes the flags as found in the MS, Cube(npol,nchan,nrow),
+  // where nrow is the number of rows in the current iteration (given by
+  // nRow()).
+
+  virtual void writeFlag(const Cube<Bool>& flag);
+
+  // Write/modify the flag row column; dimension Vector(nrow)
+
+  virtual void writeFlagRow(const Vector<Bool>& rowflags);
+
+  void writeFlagCategory(const Array<Bool>& fc);
+
+  // Write/modify the visibilities.
+  // This is possibly only for a 'reference' MS which has a new DATA column.
+  // The first axis of the matrix should equal the selected number of channels
+  // in the original MS.
+  // If the MS does not contain all polarizations, only the parallel
+  // hand polarizations are used.
+
+  void writeVisCorrected (const Matrix<CStokesVector>& vis);
+  void writeVisModel (const Matrix<CStokesVector>& vis);
+  void writeVisObserved (const Matrix<CStokesVector>& vis);
+
+  // Write/modify the visibilities
+  // This writes the data as found in the MS, Cube(npol,nchan,nrow).
+
+  void writeVisCorrected (const Cube <Complex> & vis);
+  void writeVisModel (const Cube <Complex> & vis);
+  void writeVisObserved (const Cube <Complex> & vis);
+
+  // Write/modify the weights
+
+  void writeWeight(const Vector<Float>& wt);
+
+  // Write/modify the weightMat
+
+  virtual void writeWeightMat(const Matrix<Float>& wtmat);
+
+  // Write/modify the weightSpectrum
+
+  virtual void writeWeightSpectrum(const Cube<Float>& wtsp);
+
+  // Write/modify the Sigma
+
+  void writeSigma(const Vector<Float>& sig);
+
+  // Write/modify the ncorr x nrow SigmaMat.
+
+  void writeSigmaMat(const Matrix<Float>& sigmat);
+
+  // This puts a model into the descriptor of the current ms in the iterator
+  // Set iscomponentlist to True if the record represent a componentlist
+  // if False then it is a FTMachine Record that holds the model image
+  // note the spw and fields selected are going to be associated with this model
+  // incremetal =True implies add the model to previous any existant model
+  // in the ms for the spw and fields
+  // false means any existant model will be replaces.
+
+  void putModel(const RecordInterface& rec, Bool iscomponentlist=True,
+                Bool incremental=False);
+
+  // Requests that the modified VisBuffer2 be written back to the visibility
+  // at the same spot that it came from.  The dirtyComponents feature of
+  // VisBuffer is used to mark which portions of the VisBuffer actually need
+  // to be written back out.
+
+  void writeBackChanges (VisBuffer2 *);
+
+
 //**********************************************************************
 // Internal methods below this line
 //**********************************************************************
@@ -743,12 +819,12 @@ public:
 protected:
 
 
-  ROVisibilityIterator2 (const VisBufferComponents2 * prefetchColumns,
-                         const Block<MeasurementSet>& mss,
-                         const Block<Int>& sortColumns,
-                         const Bool addDefaultSortCols,
-                         Double timeInterval,
-                         Bool writable);
+//  VisibilityIterator2 (const VisBufferComponents2 * prefetchColumns,
+//                         const Block<MeasurementSet>& mss,
+//                         const Block<Int>& sortColumns,
+//                         const Bool addDefaultSortCols,
+//                         Double timeInterval,
+//                         Bool writable);
 
 
   void construct (const VisBufferComponents2 * prefetchColumns,
@@ -758,7 +834,7 @@ protected:
                   Double timeInterval,
                   Bool writable);
 
-  VisibilityIteratorReadImpl2 * getReadImpl() const;
+  VisibilityIteratorImpl2 * getImpl() const;
 
 //     +------------------+
 //     |                  |
@@ -1091,19 +1167,13 @@ protected:
 
   const MSDerivedValues & getMSD () const; // for use by Async I/O *ONLY*
 
-  // attach the column objects to the currently selected table
-
-  virtual void attachColumns(const Table &t);
-
-  // returns the table, to which columns are attached,
-  // can be overridden in derived classes
-
-  virtual const Table attachTable() const;
 
   void originChunks(Bool forceRewind);
 
+private:
+
   Int nMS_p;
-  VisibilityIteratorReadImpl2 * readImpl_p;
+  VisibilityIteratorImpl2 * impl_p;
 };
 
 
@@ -1114,7 +1184,7 @@ protected:
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
 // <prerequisite>
-//   <li> <linkto class="ROVisibilityIterator2">ROVisibilityIterator2</linkto>
+//   <li> <linkto class="VisibilityIterator2">VisibilityIterator2</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -1126,7 +1196,7 @@ protected:
 // for one or more MSs. It has member functions to retrieve the fields
 // commonly needed in synthesis calibration and imaging. It is
 // derived from the read-only iterator
-// <linkto class="ROVisibilityIterator2">ROVisibilityIterator2</linkto>.
+// <linkto class="VisibilityIterator2">VisibilityIterator2</linkto>.
 //
 // One should use <linkto class="VisBuffer">VisBuffer</linkto>
 // to access chunks of data.
@@ -1164,7 +1234,8 @@ protected:
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
 // </todo>
-class VisibilityIterator2 : public ROVisibilityIterator2
+#if 0
+class VisibilityIterator2 : public VisibilityIterator2
 {
 
     friend class VisibilityIteratorWriteImpl;
@@ -1287,14 +1358,16 @@ protected:
 
   // Returns a pointer to the VI's write implementation object.
 
-  VisibilityIteratorWriteImpl2 * getWriteImpl() const;
+  VisibilityIteratorImpl2 * getImpl() const;
 
   // Writes up the back writers objects used to implement the writeBack method.
 
   void initializeBackWriters ();
 
-  VisibilityIteratorWriteImpl2 * writeImpl_p; // [own]
+  VisibilityIteratorImpl2 * writeImpl_p; // [own]
 };
+
+#endif // 0
 
 } // end namespace vi
 

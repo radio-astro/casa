@@ -21,7 +21,7 @@ VisBuffer2:: factory (Type t)
 }
 
 VisBuffer2 *
-VisBuffer2::factory (ROVisibilityIterator2 * vi, Type t, Bool isWritable)
+VisBuffer2::factory (VisibilityIterator2 * vi, Type t, Bool isWritable)
 {
     VisBuffer2 * result = NULL;
 

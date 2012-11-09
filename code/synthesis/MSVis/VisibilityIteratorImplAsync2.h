@@ -35,7 +35,7 @@ class WriteData;
 
 namespace vi {
 
-class ViReadImplAsync2 : public VisibilityIteratorReadImpl2 {
+class ViReadImplAsync2 : public VisibilityIteratorImpl2 {
     // This needs to be changed back to ROVisibilityIterator at some point
     // after feasibility testing
 
@@ -48,12 +48,12 @@ public:
 
     typedef casa::asyncio::PrefetchColumns PrefetchColumns;
 
-//    static VisibilityIteratorReadImpl *
+//    static VisibilityIteratorImpl *
 //    create (const ROVisibilityIterator &,
 //            const PrefetchColumns & prefetchColumns,
 //            Int nReadAheadBuffers = -1);
 
-//    VisibilityIteratorReadImpl2 (ROVisibilityIterator2 * rovi,
+//    VisibilityIteratorImpl2 (ROVisibilityIterator2 * rovi,
 //                                 const Block<MeasurementSet> & mss,
 //                                 const Block<Int> & sortColumns,
 //                                 Bool addDefaultSortCols,
@@ -66,19 +66,19 @@ public:
 //                     const Bool addDefaultSortCols,
 //                     Double timeInterval,
 //                     Bool writable)
-//    : VisibilityIteratorReadImpl2 (mss, prefetchColumns, sortColumns,
+//    : VisibilityIteratorImpl2 (mss, prefetchColumns, sortColumns,
 //                                   addDefaultSortCols, timeInterval,
 //                                   writable)
 //    {} // Empty body for the moment.
 
     ViReadImplAsync2 (const PrefetchColumns & prefetchColumns,
-                     const VisibilityIteratorReadImpl2 & other,
+                     const VisibilityIteratorImpl2 & other,
                      Bool writable);
 
 
     ~ViReadImplAsync2 () {} // empty body for now
 
-    VisibilityIteratorReadImpl2 * clone () const;
+    VisibilityIteratorImpl2 * clone () const;
 
     void attachVisBuffer (VisBuffer & vb);
     void detachVisBuffer (VisBuffer & vb);
@@ -98,7 +98,7 @@ public:
     MEpoch getEpoch () const;
 //    Vector<Float> getReceptor0Angle ();
 
-    /////void linkWithRovi (VisibilityIteratorReadImpl * rovi);
+    /////void linkWithRovi (VisibilityIteratorImpl * rovi);
 
     bool more () const;
     bool moreChunks () const;
@@ -109,20 +109,20 @@ public:
 
     void setPrefetchColumns (const PrefetchColumns & prefetchColumns);
 
-    VisibilityIteratorReadImpl2 & selectChannel(Int nGroup=1,
+    VisibilityIteratorImpl2 & selectChannel(Int nGroup=1,
                                         Int start=0,
                                         Int width=0,
                                         Int increment=1,
                                         Int spectralWindow=-1);
 
-    VisibilityIteratorReadImpl2 & selectChannel(const Block< Vector<Int> >& blockNGroup,
+    VisibilityIteratorImpl2 & selectChannel(const Block< Vector<Int> >& blockNGroup,
                                         const Block< Vector<Int> >& blockStart,
                                         const Block< Vector<Int> >& blockWidth,
                                         const Block< Vector<Int> >& blockIncr,
                                         const Block< Vector<Int> >& blockSpw);
 
 
-    VisibilityIteratorReadImpl2 &
+    VisibilityIteratorImpl2 &
     selectVelocity(Int ,
                    const MVRadialVelocity& ,
                    const MVRadialVelocity& ,
@@ -222,7 +222,7 @@ public:
     void timeInterval(Vector<Double>& ) const { NotPrefetched; }
     Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& ) const { NotPrefetched; }
     void uvwMat(Matrix<Double>& ) const { NotPrefetched; }
-    VisibilityIteratorReadImpl2& velInterpolation(const String& ) { NotImplementedROVIA; }
+    VisibilityIteratorImpl2& velInterpolation(const String& ) { NotImplementedROVIA; }
     void visibility(Cube<Complex>& , DataColumn ) const { NotPrefetched; }
     void visibility(Matrix<CStokesVector>& , DataColumn ) const { NotPrefetched; }
     IPosition visibilityShape() const { NotImplementedROVIA; }
@@ -297,7 +297,7 @@ private:
 }; // end class ViReadImplAsync
 
 
-class ViWriteImplAsync2 : public VisibilityIteratorWriteImpl2 {
+class ViWriteImplAsync2 : public VisibilityIteratorImpl2 {
 
 public:
 
@@ -305,12 +305,12 @@ public:
 
     ViWriteImplAsync2 (VisibilityIterator2 * vi);
     ViWriteImplAsync2 (const PrefetchColumns & prefetchColumns,
-                      const VisibilityIteratorWriteImpl2 & other,
+                      const VisibilityIteratorImpl2 & other,
                       VisibilityIterator2 * vi);
 
     ~ViWriteImplAsync2 (){} // empty body for now
 
-    VisibilityIteratorWriteImpl2 * clone () const;
+    VisibilityIteratorImpl2 * clone () const;
 
     void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
 
