@@ -28,6 +28,9 @@ class sdsave_worker(sdutil.sdtask_template):
         super(sdsave_worker,self).__init__(**kwargs)
         self.suffix = '_saved'
 
+    def __del__(self):
+        self.cleanup()
+
     def parameter_check(self):
         # for restore information
         self.restore = False

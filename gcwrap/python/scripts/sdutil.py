@@ -3,9 +3,11 @@ from casac import casac
 from taskinit import casalog
 import asap as sd
 from asap import _to_list
-from asap.scantable import is_scantable
+from asap.scantable import is_scantable, is_ms
 import numpy as np
 import traceback
+import string
+from taskinit import gentools
 
 qatl = casac.quanta()
 
@@ -39,8 +41,8 @@ class sdtask_interface(object):
 class sdtask_template(sdtask_interface):
     """
     The sdtask_template is a template class for standard worker
-    class for sdtasks. It partially implement initialize() and
-    finalize() using internal methods that must be implemented
+    class of non-imaging sdtasks. It partially implement initialize()
+    and finalize() using internal methods that must be implemented
     in the derived classes. For initialize(), derived classes
     must implement initialize_scan(), which initializes scantable
     object and set it to self.scan. You can implement paramter_check()
@@ -131,6 +133,90 @@ class sdtask_template(sdtask_interface):
                         casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                         self.scan.set_restfreqs(freqs=fval)
 
+class sdtask_template_imaging(sdtask_interface):
+    """
+    The sdtask_template_imaging is a template class for worker
+    class of imaging related sdtasks. It partially implement initialize()
+    and finalize() using internal methods that must be implemented
+    in the derived classes. For initialize(), derived classes
+    must implement compile(), which sets up imaging parameters.
+    You can implement paramter_check() to do any task specific parameter
+    check in initialize().
+    For finalize(), derived classes can implement cleanup().
+    """
+    def __init__(self, **kwargs):
+        super(sdtask_template_imaging,self).__init__(**kwargs)
+        self.is_table_opened = False
+        self.is_imager_opened = False
+        self.table, self.imager = gentools(['tb','im'])
+        self.__set_subtable_name()
+
+    def __del__(self):
+        # table and imager must be closed when the instance
+        # is deleted
+        self.close_table()
+        self.close_imager()
+
+    def open_table(self, name, nomodify=True):
+        if self.is_table_opened:
+            casalog.post('Close table before re-open', priority='WARN')
+            return
+        self.table.open(name, nomodify=nomodify)
+        self.is_table_opened = True
+
+    def close_table(self):
+        if self.is_table_opened:
+            self.table.close()
+        self.is_table_opened = False
+
+    def open_imager(self, name):
+        if self.is_imager_opened:
+            casalog.post('Close imager before re-open', priority='WARN')
+            return
+        self.imager.open(name)
+        self.is_imager_opened = True
+
+    def close_imager(self):
+        if self.is_imager_opened:
+            self.imager.close()
+        self.is_imager_opened = False
+
+    def initialize(self):
+        # infile must be MS
+        if not is_ms(self.infile):
+            msg='infile must be in MS format'
+            raise Exception, msg
+        
+        self.parameter_check()
+        self.compile()
+
+    def finalize(self):
+        self.cleanup()
+        self.close_table()
+        self.close_imager()
+
+    def parameter_check(self):
+        pass
+
+    def compile(self):
+        pass
+
+    def cleanup(self):
+        pass
+        
+    def __set_subtable_name(self):
+        self.open_table(self.infile)
+        keys = self.table.getkeywords()
+        self.close_table()
+        self.field_table = get_subtable_name(keys['FIELD'])
+        self.spw_table = get_subtable_name(keys['SPECTRAL_WINDOW'])
+        self.source_table = get_subtable_name(keys['SOURCE'])
+        self.antenna_table = get_subtable_name(keys['ANTENNA'])
+        self.polarization_table = get_subtable_name(keys['POLARIZATION'])
+        self.observation_table = get_subtable_name(keys['OBSERVATION'])
+        self.pointing_table = get_subtable_name(keys['POINTING'])
+        self.data_desc_table = get_subtable_name(keys['DATA_DESCRIPTION'])
+
 class sdtask_engine(object):
     def __init__(self, worker):
         # set worker instance to work with
@@ -142,12 +228,6 @@ class sdtask_engine(object):
             if k == 'scan': continue
             setattr(self, k, v)
 
-        # engines result
-        self.result = None
-
-    def get_result(self):
-        return self.result
-
     def prologue(self):
         pass
 
@@ -157,6 +237,39 @@ class sdtask_engine(object):
     def epilogue(self):
         pass
     
+class parameter_registration(object):
+    def __init__(self, worker, arg_is_value=False):
+        self.worker = worker
+        self.registered = {}
+        self.arg_is_value = arg_is_value
+
+    def register(self, key, *args, **kwargs):
+        arg_is_none = (len(args) == 0 or args[0] == None)
+        arg_is_value = self.arg_is_value
+        if kwargs.has_key('arg_is_value'):
+            arg_is_value = bool(kwargs['arg_is_value'])
+        if not arg_is_none:
+            attr = args[0]
+            if arg_is_value:
+                self.__register(key, attr)
+            elif isinstance(attr, str) and hasattr(self.worker, attr):
+                self.__register(key, getattr(self.worker, attr))
+            else:
+                self.__register(key, attr)
+        elif hasattr(self.worker, key):
+            self.__register(key, getattr(self.worker, key))
+        else:
+            self.__register(key, None)
+
+    def __register(self, key, val):
+        self.registered[key] = val
+
+    def clear(self):
+        self.registered.clear()
+
+    def get_registered(self):
+        return self.registered
+        
 
 def get_abspath(filename):
     return os.path.abspath(expand_path(filename))
@@ -601,12 +714,20 @@ class scantable_restore_impl(scantable_restore_interface):
         self.fluxset = self.fluxunit != '' and \
                        (fluxunit != '' or fluxunit != self.fluxunit)
         self.specset = specunit != '' or specunit != self.specunit
+        self.restore_not_done = True
+
+    def __del__(self):
+        # do restore when the instance is deleted
+        self.restore()
 
     def restore(self):
-        self.scntab.set_selection()
+        if self.restore_not_done:
+            self.scntab.set_selection()
         
-        casalog.post('Restoreing header information in input scantable')
-        self._restore()
+            casalog.post('Restoreing header information in input scantable')
+            self._restore()
+
+        self.restore_not_done = False
                          
     def _restore(self):
         if self.fluxset:
@@ -657,3 +778,58 @@ def get_plotter(plotlevel=0):
     plotter = new_asaplot(visible=visible)
     return plotter
 
+def get_nx_ny(n):
+    nl = _to_list(n, int)
+    if len(nl) == 1:
+        nx = ny = nl[0]
+    else:
+        nx = nl[0]
+        ny = nl[1]
+    return (nx,ny)
+
+def get_cellx_celly(c,unit='arcsec'):
+    if isinstance(c, str):
+        cellx = celly = c
+    elif isinstance(c, list) or isinstance(c, numpy.ndarray):
+        if len(c) == 1:
+            cellx = celly = __to_quantity_string(c[0],unit)
+        elif len(c) > 1:
+            cellx = __to_quantity_string(c[0],unit)
+            celly = __to_quantity_string(c[1],unit)
+        else:
+            cellx = celly = ''
+    else:
+        cellx = celly = __to_quantity_string(c,unit)
+    return (cellx, celly)
+                
+def get_map_center(c,frame='J2000',unit='rad'):
+    map_center = ''
+    if isinstance(c, str):
+        if len(c) > 0:
+            s = c.split()
+            if len(s) == 2:
+                map_center = 'J2000 '+c
+            elif len(s) == 3:
+                if s[0].upper() != 'J2000':
+                    raise ValueError, 'Currently only J2000 is supported'
+                map_center = c
+            else:
+                raise ValueError, 'Invalid map center: %s'%(c)
+    else:
+        l = [frame]
+        for i in xrange(2):
+            if isinstance(c[i], str):
+                l.append(c[i])
+            else:
+                l.append('%s%s'%(c[i],unit))
+        map_center = string.join(l)
+    return map_center
+
+def __to_quantity_string(v,unit='arcsec'):
+    if isinstance(v, str):
+        return v
+    else:
+        return '%s%s'%(v,unit)
+
+def get_subtable_name(v):
+    return v.replace('Table:','').strip()

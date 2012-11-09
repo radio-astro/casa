@@ -151,7 +151,7 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('file %s exists'%(self.outfile))
+            pos=str(e).find('Output file \'%s\' exists.'%(self.outfile))
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 

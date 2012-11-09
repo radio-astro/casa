@@ -3,174 +3,128 @@ import os
 import numpy
 import pylab as pl
 import asap as sd
-from taskinit import * 
+from taskinit import *
+import sdutil
 
 def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
 
-        casalog.origin('sdgrid')
-        try:
-            summary =   'Input Parameter Summary:\n' \
-                      + '   infile = %s\n'%(infile) \
-                      + '   antenna = %s\n'%(antenna) \
-                      + '   scanlist = %s\n'%(scanlist) \
-                      + '   ifno = %s\n'%(ifno) \
-                      + '   pollist = %s\n'%(pollist) \
-                      + '   gridfunction = %s\n'%(gridfunction) \
-                      + '   convsupport = %s\n'%(convsupport) \
-                      + '   truncate = %s\n'%(truncate) \
-                      + '   gwidth = %s\n'%(gwidth) \
-                      + '   jwidth = %s\n'%(jwidth) \
-                      + '   weight = %s\n'%(weight) \
-                      + '   clipminmax = %s\n'%(clipminmax) \
-                      + '   outfile = %s\n'%(outfile) \
-                      + '   overwrite = %s\n'%(overwrite) \
-                      + '   npix = %s\n'%(npix) \
-                      + '   cell = %s\n'%(cell) \
-                      + '   center = %s\n'%(center) \
-                      + '   plot = %s'%(plot)
-            casalog.post( summary, 'DEBUG' )
+    casalog.origin('sdgrid')
+    
+    try:
+        worker = sdgrid_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+        
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
+
+class sdgrid_worker(sdutil.sdtask_interface):
+    def __init__(self, **kwargs):
+        super(sdgrid_worker,self).__init__(**kwargs)
+        self.suffix = '.grid'
+        self.gridder = None
+
+    def initialize(self):
+        self.parameter_check()
+        self.__summarize_raw_inputs()
+        self.__compile()
+        self.__summarize_compiled_inputs()
+
+        # create gridder
+        self.gridder = sd.asapgrid(infile=self.infile)
+
+    def parameter_check(self):
+        if self.gridfunction.upper() == 'PB':
+            msg='Sorry. PB gridding is not implemented yet.'
+            raise Exception, msg
+        elif self.gridfunction.upper() == 'BOX':
+            casalog.post('convsupport is automatically set to -1 for BOX gridding.', priority='WARN')
+            self.convsupport = -1
+
+    def execute(self):
+        # actual gridding
+        self.gridder.setPolList(self.pols)
+        self.gridder.setScanList(self.scans)
+        if self.ifno >= 0:
+            self.gridder.setIF(self.ifno)
+        if self.clipminmax:
+            self.gridder.enableClip()
+        else:
+            self.gridder.disableClip()
+        self.gridder.setWeight(self.weight) 
+        self.gridder.defineImage(nx=self.nx, ny=self.ny,
+                                 cellx=self.cellx, celly=self.celly,
+                                 center=self.mapcenter)
+        self.gridder.setFunc(func=self.gridfunction,
+                             convsupport=self.convsupport,
+                             truncate=str(self.truncate),
+                             gwidth=str(self.gwidth),
+                             jwidth=str(self.jwidth))
+        self.gridder.grid()
+
+    def finalize(self):
+        # save result
+        self.gridder.save(outfile=self.outname)
+
+        # plot result if necessary
+        if self.plot:
+            self.gridder.plot()
             
-            # infile
-            if isinstance( infile, str ):
-                infile = [infile]
+    def __compile(self):
+        # infile
+        if isinstance(self.infile, str):
+            self.infile = [self.infile]
 
-            # scanlist
-            if isinstance(scanlist,list) or isinstance(scanlist,numpy.ndarray):
-                scans = list(scanlist)
-            else:
-                scans = [scanlist]
+        # scanlist
+        self.scans = sdutil._to_list(self.scanlist, int)
 
-            # pollist
-            if isinstance(pollist,list) or isinstance(pollist,numpy.ndarray):
-                pols = list(pollist)
-            else:
-                pols = [pollist]
+        # pollist
+        self.pols = sdutil._to_list(self.pollist, int)
 
-            # gridfunction and convsupport
-            if gridfunction.upper() == 'PB':
-                msg='Sorry. PB gridding is not implemented yet.'
-                raise Exception, msg
-            elif gridfunction.upper() == 'BOX':
-                convsupport=-1
-                
+        # outfile
+        self.outname = sdutil.get_default_outfile_name(self.infile[0],
+                                                       self.outfile,
+                                                       self.suffix)
+        sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outname,
+                                                          'ASAP',
+                                                          self.overwrite)
+        
+        # nx and ny
+        (self.nx, self.ny) = sdutil.get_nx_ny(self.npix)
 
-            # outfile
-            outname=outfile
-            if len(outname) == 0:
-                outname=infile[0].rstrip('/')+'.grid'
-            if os.path.exists(outname):
-                if overwrite:
-                    casalog.post( 'Overwrite existing file %s'%(outname), 'INFO' )
-                    os.system( 'rm -rf %s'%(outname) )
-                else:
-                    msg='file %s exists' % (outname)
-                    raise Exception, msg
+        # cellx and celly
+        (self.cellx, self.celly) = sdutil.get_cellx_celly(self.cell)
 
-            # npix
-            nx=-1
-            ny=-1
-            if isinstance(npix,list) or isinstance(npix,numpy.ndarray):
-                if len(npix)==1:
-                    nx=npix[0]
-                    ny=npix[0]
-                else:
-                    nx=npix[0]
-                    ny=npix[1]
-            else:
-                nx=npix
-                ny=npix
+        # map center
+        self.mapcenter = sdutil.get_map_center(self.center)
 
-            # cell
-            cellx=''
-            celly=''
-            if type(cell)==str:
-                cellx=cell
-                celly=cell
-            elif isinstance(cell,list) or isinstance(cell,numpy.ndarray):
-                if len(cell)==1:
-                    if type(cell[0])==str:
-                        cellx=cell[0]
-                    else:
-                        cellx='%sarcsec'%(cell[0])
-                    celly=cell[0]
-                else:
-                    if type(cell[0])==str:
-                        cellx=cell[0]
-                    else:
-                        cellx='%sarcsec'%(cell[0])
-                    if type(cell[1])==str:
-                        celly=cell[1]
-                    else:
-                        celly='%sarcsec'%(cell[1])
-            else:
-                cellx='%sarcsec'%(cell)
-                celly=cellx
+    def __summarize_raw_inputs(self):
+        params = ['infile', 'antenna', 'scanlist', 'ifno',
+                  'pollist', 'gridfunction', 'convsupport',
+                  'truncate', 'gwidth', 'jwidth', 'weight',
+                  'clipminmax', 'outfile', 'overwrite',
+                  'npix', 'cell', 'center', 'plot']
+        summary = self.__generate_summary(header='Input Parameter Summary',
+                                          params=params)
+        casalog.post(summary, priority='DEBUG')
 
-            # center
-            centerstr=''
-            if isinstance(center,str):
-                centerstr=center
-            else:
-                # two-element list is assumed
-                l=['J2000']
-                for i in xrange(2):
-                    if isinstance(center[i],str):
-                        l.append(center[i])
-                    else:
-                        l.append('%srad'%(center[i]))
-                centerstr=string.join(l)
+    def __summarize_compiled_inputs(self):
+        params = ['infile', 'ifno', 'scans', 'pols',
+                  'gridfunction', 'convsupport',
+                  'truncate', 'gwidth', 'jwidth', 'weight',
+                  'clipminmax', 'outname', 'overwrite',
+                  'nx', 'ny', 'cellx', 'celly',
+                  'mapcenter', 'plot']
+        summary = self.__generate_summary(header='Grid Parameter Summary',
+                                          params=params)
+        casalog.post(summary, priority='DEBUG')
+        
+    def __generate_summary(self, header, params):
+        summary = header+':\n'
+        for p in params:
+            summary += '   %12s = %s\n'%(p,getattr(self,p))
+        return summary
 
-            ############
-            # Gridding #
-            ############
-            casalog.post('Start gridding...', "INFO")
-            summary =   'Grid Parameter Summary:\n' \
-                      + '   infile = %s\n'%(infile) \
-                      + '   ifno = %s\n'%(ifno) \
-                      + '   scans = %s\n'%(scans) \
-                      + '   pols = %s\n'%(pols) \
-                      + '   gridfunction = %s\n'%(gridfunction) \
-                      + '   convsupport = %s\n'%(convsupport) \
-                      + '   truncate = %s\n'%(truncate) \
-                      + '   gwidth = %s\n'%(gwidth) \
-                      + '   jwidth = %s\n'%(jwidth) \
-                      + '   weight = %s\n'%(weight) \
-                      + '   clipminmax = %s\n'%(clipminmax) \
-                      + '   outname = %s\n'%(outname) \
-                      + '   nx = %s\n'%(nx) \
-                      + '   ny = %s\n'%(ny) \
-                      + '   cellx = %s\n'%(cellx) \
-                      + '   celly = %s\n'%(celly) \
-                      + '   centerstr = %s\n'%(centerstr) \
-                      + '   plot = %s'%(plot)
-            casalog.post( summary, 'DEBUG' )
-            gridder = sd.asapgrid( infile=infile )
-            gridder.setPolList( pols )
-            gridder.setScanList( scans )
-            if ( ifno >= 0 ):
-                gridder.setIF( ifno )
-            if ( clipminmax ):
-                gridder.enableClip()
-            else:
-                gridder.disableClip()
-            gridder.setWeight( weight ) 
-            gridder.defineImage( nx=nx, ny=ny,
-                                 cellx=cellx, celly=celly,
-                                 center=centerstr )
-            gridder.setFunc( func=gridfunction,
-                             convsupport=convsupport,
-                             truncate=str(truncate),
-                             gwidth=str(gwidth),
-                             jwidth=str(jwidth) )
-            gridder.grid()
-            gridder.save( outfile=outname )
-            if plot:
-                gridder.plot()
-            del gridder
-            
-        except Exception, instance:
-            #print '***Error***',instance
-            casalog.post( str(instance), priority = 'ERROR' )
-            raise Exception, instance
-            return
-
+    

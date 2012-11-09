@@ -323,8 +323,8 @@ class sdplot_worker(sdutil.sdtask_template):
 
     def __get_grid_parameters(self):
         (nx,ny) = self.__get_mapsize()
-        (cellx,celly) = self.__get_cellsize()
-        mapcenter = self.__get_mapcenter()
+        (cellx,celly) = sdutil.get_cellx_celly(self.cell)
+        mapcenter = sdutil.get_map_center(self.center)
         return (nx,ny,cellx,celly,mapcenter)
         
     def __get_mapsize(self):
@@ -334,35 +334,4 @@ class sdplot_worker(sdutil.sdtask_template):
         nx = (self.subplot % 10)
         ny = int(self.subplot/10)
         return (nx,ny)
-
-    def __get_mapcenter(self):
-        if self.center != '':
-            ldirstr = self.center.split(' ')
-            if len(ldirstr) == 2:
-                mapcenter = "J2000 "+center
-            elif len(ldirstr) == 3:
-                if ldirstr[0].upper() != "J2000":
-                    raise ValueError, "Currently only J2000 is supported"
-            else:
-                errmsg = "Invalid grid center: %s" % (self.center)
-                raise ValueError, errmsg
-        else:
-            mapcenter = self.center
-        return mapcenter
-
-    def __get_cellsize(self):
-        cellx = ''
-        celly = ''
-        if type(self.cell) == str:
-            cellx = self.cell
-            celly = self.cell
-        elif len(self.cell) == 2:
-            cellx = self.cell[0]
-            celly = self.cell[1]
-        elif len(self.cell) == 1:
-            cellx = self.cell[0]
-            celly = self.cell[0]
-        return (cellx,celly)
-
-    
 

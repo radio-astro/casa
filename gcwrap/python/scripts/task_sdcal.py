@@ -67,7 +67,6 @@ class sdcal_worker(sdutil.sdtask_template):
         # Actual implementation is defined outside the class
         # since those are used in task_sdreduce.
         engine.drive()
-        self.scan = engine.get_result()
         
         # do opacity (atmospheric optical depth) correction
         sdutil.doopacity(self.scan, self.tau)
@@ -100,15 +99,15 @@ class sdcal_engine(sdutil.sdtask_engine):
         if self.calmode == 'otf' or self.calmode=='otfraster':
             self.__mark()
             if not self.markonly:
-                self.result = sd.asapmath.calibrate( self.result,
-                                                     scannos=sn,
-                                                     calmode='ps',
-                                                     verify=self.verify )
+                self.worker.scan = sd.asapmath.calibrate( self.worker.scan,
+                                                          scannos=sn,
+                                                          calmode='ps',
+                                                          verify=self.verify )
         else:
-            self.result = sd.asapmath.calibrate( self.worker.scan,
-                                                 scannos=sn,
-                                                 calmode=self.calmode,
-                                                 verify=self.verify )
+            self.worker.scan = sd.asapmath.calibrate( self.worker.scan,
+                                                      scannos=sn,
+                                                      calmode=self.calmode,
+                                                      verify=self.verify )
 
     def epilogue(self):
         if ( abs(self.plotlevel) > 1 ):
@@ -129,5 +128,5 @@ class sdcal_engine(sdutil.sdtask_engine):
         marker.mark()
         if self.plotpointings:
             marker.plot()
-        self.result = marker.getresult()
+        self.worker.scan = marker.getresult()
         

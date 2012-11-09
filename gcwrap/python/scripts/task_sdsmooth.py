@@ -70,7 +70,6 @@ class sdsmooth_worker(sdutil.sdtask_template):
         # Actual implementation is defined outside the class
         # since those are used in task_sdreduce.
         engine.drive()
-        self.scan = engine.get_result()
 
         engine.epilogue()
 
@@ -115,8 +114,6 @@ class sdsmooth_engine(sdutil.sdtask_engine):
         else:
             casalog.post( "Smoothing spectra with kernel "+self.kernel )
             scan.smooth(kernel=self.kernel,width=self.kwidth,plot=self.verify,insitu=True)
-        self.result = scan
-    
 
     def epilogue(self):
         if ( abs(self.plotlevel) > 0 ):

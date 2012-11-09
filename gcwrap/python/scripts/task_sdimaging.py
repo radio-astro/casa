@@ -3,195 +3,187 @@ import os
 import numpy
 import pylab as pl
 import asap as sd
-from taskinit import * 
+from taskinit import *
+import sdutil
 
 def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
 
         casalog.origin('sdimaging')
         try:
-            # file check
-            infile=infile.rstrip('/')+'/'
-            ftab=''
-            spwtab=''
-            srctab=''
-            if os.path.isdir(infile):
-                tb.open(infile)
-                tbkeys=tb.getkeywords()
-                if 'FIELD' not in tbkeys:
-                    raise Exception, 'infile must be in MS format'
-                #ftab=tbkeys['FIELD'].split()[-1]
-                ftab=tbkeys['FIELD'].lstrip('Table: ')
-                #spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
-                spwtab=tbkeys['SPECTRAL_WINDOW'].lstrip('Table: ')
-                if tbkeys.has_key('SOURCE'):
-                    #srctab=tbkeys['SOURCE'].split()[-1]
-                    srctab=tbkeys['SOURCE'].lstrip('Table: ')
-                else:
-                    srctab = ''
-                tb.close()
-                if any(key=='MS_VERSION' for key in tbkeys):
-                    casalog.post( 'MS format' )
-                else:
-                    msg='infile must be in MS format'
-                    raise Exception, msg
-            else:
-                msg='infile must be in MS format'
-                raise Exception, msg
+            worker = sdimaging_worker(**locals())
+            worker.initialize()
+            worker.execute()
+            worker.finalize()
 
-            # spectral unit
-            mode=''
-            if specunit=='channel' or specunit=='':
-                mode='channel'
-            elif specunit=='km/s':
-                mode='velocity'
-            else:
-                mode='frequency'
-
-            # scanlist
-
-            # field
-            fieldid=-1
-            sourceid=-1
-            tb.open(ftab)
-            fieldnames=tb.getcol('NAME')
-            fsrcids=tb.getcol('SOURCE_ID')
-            tb.close()
-            if type(field)==str:
-                for i in range(len(fieldnames)):
-                    if field==fieldnames[i]:
-                        fieldid=i
-                        sourceid=fsrcids[i]
-                        break
-                if fieldid==-1:
-                    msg='field name '+field+' not found in FIELD table'
-                    raise Exception, msg
-            else:
-                if field == -1:
-                    sourceid=fsrcids[0]
-                if field < len(fieldnames):
-                    fieldid=field
-                    sourceid=fsrcids[field]
-                else:
-                    msg='field id %s does not exist' % (field)
-                    raise Exception, msg
-            
-            # restfreq
-            if restfreq=='' and srctab != '':
-                tb.open(srctab)
-                srcidcol=tb.getcol('SOURCE_ID')
-                for i in range(tb.nrows()):
-                    if sourceid==srcidcol[i] and tb.iscelldefined('REST_FREQUENCY',i):
-                        rf = tb.getcell('REST_FREQUENCY',i)
-                        if len(rf) > 0:
-                            restfreq=tb.getcell('REST_FREQUENCY',i)[0]
-                            break
-                tb.close()
-                casalog.post("restfreq set to %s"%restfreq, "INFO")
-
-            # spw
-            spwid=-1
-            tb.open(spwtab)
-            nrows=tb.nrows()
-            if spw < nrows:
-                spwid=spw
-            else:
-                tb.close()
-                msg='spw id %s does not exist' % (spw)
-                raise Exception, msg
-            allchannels=tb.getcell('NUM_CHAN',spwid)
-            tb.close()
-
-            # antenna
-            if type(antenna)==int:
-                if antenna == -1:
-                    pass
-                else:
-                    antenna=str(antenna)+'&&&'
-            else:
-                if (len(antenna)!=0) and (antenna.find('&')==-1) and (antenna.find(';')==-1):
-                    antenna = antenna + '&&&'
-
-            # stokes
-            if stokes=='':
-                stokes='I'
-
-            # gridfunction
-
-            # outfile
-            if os.path.exists(outfile):
-                if overwrite:
-                    os.system( 'rm -rf %s'%(outfile) )
-                else:
-                    msg='file %s exists' % (outfile)
-                    raise Exception, msg
-
-            # imsize
-            nx=''
-            ny=''
-            if len(imsize)==1:
-                nx=imsize[0]
-                ny=imsize[0]
-            else:
-                nx=imsize[0]
-                ny=imsize[1]
-
-            # cell
-            cellx=''
-            celly=''
-            if type(cell)==str:
-                cellx=cell
-                celly=cell
-            elif len(cell)==1:
-                cellx=cell[0]
-                celly=cell[0]
-            else:
-                cellx=cell[0]
-                celly=cell[1]
-
-            if dochannelmap:
-                # start
-                startval=start
-                if mode=='velocity':
-                    startval=str(start)
-                    startval=startval+specunit
-                    startval=['LSRK',startval]
-                elif mode=='frequency':
-                    startval=str(start)
-                    startval=startval+specunit
-
-                # step
-                stepval=step
-                if mode=='velocity':
-                    stepval=str(step)
-                    stepval=stepval+specunit
-                elif mode=='frequency':
-                    stepval=str(step)
-                    stepval=stepval+specunit
-
-            # phasecenter
-            # if empty, it should be determined here...
-
-            ###########
-            # Imaging #
-            ###########
-            casalog.post("Start imaging...", "INFO")
-            im.open(infile)
-            im.selectvis(field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
-            #im.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
-            if dochannelmap:
-                im.defineimage(mode=mode, nx=nx, ny=ny, cellx=cellx, celly=celly, nchan=nchan, start=startval, step=stepval, restfreq=restfreq, phasecenter=phasecenter, spw=spwid, stokes=stokes, movingsource=ephemsrcname)
-            else:
-                if mode!='channel':
-                    casalog.post('Setting imaging mode as \'channel\'','INFO')
-                im.defineimage(mode='channel', nx=nx, ny=ny, cellx=cellx, celly=celly, nchan=1, start=0, step=allchannels, phasecenter=phasecenter, spw=spwid, restfreq=restfreq, stokes=stokes, movingsource=ephemsrcname)
-            im.setoptions(ftmachine='sd', gridfunction=gridfunction)
-            im.setsdoptions(pointingcolumntouse=pointingcolumn, convsupport=convsupport, truncate=truncate, gwidth=gwidth, jwidth=jwidth)
-            im.makeimage(type='singledish', image=outfile)
-            im.close()
-            
         except Exception, instance:
             im.close()
-            #print '***Error***',instance
-            casalog.post( str(instance), priority = 'ERROR' )
+            sdutil.process_exception(instance)
             raise Exception, instance
-            return
+
+class sdimaging_worker(sdutil.sdtask_template_imaging):
+    def __init__(self, **kwargs):
+        super(sdimaging_worker,self).__init__(**kwargs)
+        self.imager_param = sdutil.parameter_registration(self)
+
+    def __del__(self, base=sdutil.sdtask_template_imaging):
+        super(sdimaging_worker,self).__del__()
+
+    def __register(self, key, attr=None):
+        self.imager_param.register(key,attr)
+
+    def __get_param(self):
+        return self.imager_param.get_registered()
+
+    def parameter_check(self):
+        # outfile check
+        sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
+                                                          'im',
+                                                          self.overwrite)
+
+    def compile(self):
+        # imaging mode
+        spunit = self.specunit.lower()
+        if spunit == 'channel' or len(spunit) == 0:
+            self.mode = 'channel'
+        elif spunit == 'km/s':
+            self.mode = 'velocity'
+        else:
+            self.mode = 'frequency'
+        if not self.dochannelmap and self.mode != 'channel':
+            casalog.post('Setting imaging mode as \'channel\'','INFO')
+            self.mode = 'channel'
+        self.__register('mode')
+
+        # scanlist
+
+        # field
+        self.fieldid=-1
+        sourceid=-1
+        self.open_table(self.field_table)
+        field_names = self.table.getcol('NAME')
+        source_ids = self.table.getcol('SOURCE_ID')
+        self.close_table()
+        if type(self.field)==str:
+            try:
+                self.fieldid = field_names.tolist().index(self.field)
+            except:
+                msg = 'field name '+field+' not found in FIELD table'
+                raise ValueError, msg
+        else:
+            if self.field == -1:
+                self.sourceid = source_ids[0]
+            elif self.field < len(field_names):
+                self.fieldid = self.field
+                self.sourceid = source_ids[self.field]
+            else:
+                msg = 'field id %s does not exist' % (self.field)
+                raise ValueError, msg
+
+        # restfreq
+        if self.restfreq=='' and self.source_table != '':
+            self.open_table(self.source_table)
+            source_ids = self.table.getcol('SOURCE_ID')
+            for i in range(self.table.nrows()):
+                if self.sourceid == source_ids[i] \
+                       and self.table.iscelldefined('REST_FREQUENCY',i):
+                    rf = self.table.getcell('REST_FREQUENCY',i)
+                    if len(rf) > 0:
+                        self.restfreq=self.table.getcell('REST_FREQUENCY',i)[0]
+                        break
+            self.close_table()
+            casalog.post("restfreq set to %s"%self.restfreq, "INFO")
+        self.__register('restfreq')
+            
+        # 
+        # spw
+        self.spwid=-1
+        self.open_table(self.spw_table)
+        nrows=self.table.nrows()
+        if self.spw < nrows:
+            self.spwid=self.spw
+        else:
+            self.close_table()
+            msg='spw id %s does not exist' % (self.spw)
+            raise ValueError, msg
+        self.allchannels=self.table.getcell('NUM_CHAN',self.spwid)
+        self.close_table()
+        self.__register('spw','spwid')
+        
+        # antenna
+        if type(self.antenna)==int:
+            if self.antenna >= 0:
+                self.antenna=str(self.antenna)+'&&&'
+        else:
+            if (len(self.antenna) != 0) and (self.antenna.find('&') == -1) \
+                   and (self.antenna.find(';')==-1):
+                self.antenna = self.antenna + '&&&'
+
+        # stokes
+        if self.stokes == '':
+            self.stokes = 'I'
+        self.__register('stokes')
+
+        # gridfunction
+
+        # outfile
+        if os.path.exists(self.outfile) and self.overwrite:
+            os.system('rm -rf %s'%(self.outfile))
+
+        # imsize
+        (self.nx,self.ny) = sdutil.get_nx_ny(self.imsize)
+        self.__register('nx')
+        self.__register('ny')
+
+        # cell
+        (self.cellx,self.celly) = sdutil.get_cellx_celly(self.cell,
+                                                         unit='arcmin')
+        self.__register('cellx')
+        self.__register('celly')
+
+        # channel map
+        if self.dochannelmap:
+            # start
+            if self.mode == 'velocity':
+                self.startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
+            elif self.mode == 'frequency':
+                self.startval = '%s%s'%(self.start,self.specunit)
+            else:
+                self.startval = self.start
+
+            # step
+            if self.mode in ['velocity', 'frequency']:
+                self.stepval = '%s%s'%(self.step,self.specunit)
+            else:
+                self.stepval = self.step
+        else:
+            self.startval = 0
+            self.stepval = self.allchannels
+            self.nchan = 1
+        self.__register('start','startval')
+        self.__register('step', 'stepval')
+        self.__register('nchan')
+                
+        # phasecenter
+        # if empty, it should be determined here...
+
+        self.__register('phasecenter')
+        self.__register('movingsource', 'ephemsrcname')
+
+    def execute(self):
+        # imaging
+        casalog.post("Start imaging...", "INFO")
+        self.open_imager(self.infile)
+        self.imager.selectvis(field=self.fieldid, spw=self.spwid, nchan=-1, start=0, step=1, baseline=self.antenna, scan=self.scanlist)
+        #self.imager.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
+        self.imager.defineimage(**self.__get_param())
+##         if self.dochannelmap:
+##             self.imager.defineimage(mode=self.mode, nx=self.nx, ny=self.ny, cellx=self.cellx, celly=self.celly, nchan=self.nchan, start=self.startval, step=self.stepval, restfreq=self.restfreq, phasecenter=self.phasecenter, spw=self.spwid, stokes=self.stokes, movingsource=self.ephemsrcname)
+##         else:
+## ##             if self.mode != 'channel':
+## ##                 casalog.post('Setting imaging mode as \'channel\'','INFO')
+##             self.imager.defineimage(mode='channel', nx=self.nx, ny=self.ny, cellx=self.cellx, celly=self.celly, nchan=1, start=0, step=self.allchannels, phasecenter=self.phasecenter, spw=self.spwid, restfreq=self.restfreq, stokes=self.stokes, movingsource=self.ephemsrcname)
+        self.imager.setoptions(ftmachine='sd', gridfunction=self.gridfunction)
+        self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth)
+        self.imager.makeimage(type='singledish', image=self.outfile)
+        self.close_imager()
+

@@ -32,6 +32,10 @@ class sdstat_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdstat_worker,self).__init__(**kwargs)
 
+    def __del__(self):
+        # restore scantable when the instance is deleted
+        self.cleanup()
+
     def parameter_check(self):
         # If outfile is set, sd.rcParams['verbose'] must be True
         self.verbose_saved = sd.rcParams['verbose']

@@ -29,6 +29,10 @@ class sdcoadd_worker(sdutil.sdtask_template):
         super(sdcoadd_worker,self).__init__(**kwargs)
         self.suffix = '_coadd'
 
+    def __del__(self):
+        # restore all the scantables when the instance is deleted
+        self.cleanup()
+
     def initialize(self):
         self.nfile = len(self.infiles)
         if self.nfile < 2:

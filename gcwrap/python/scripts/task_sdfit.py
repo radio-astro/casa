@@ -27,6 +27,10 @@ class sdfit_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdfit_worker,self).__init__(**kwargs)
 
+    def __del__(self):
+        # restore scantable when the instance is deleted
+        self.cleanup()
+
     def parameter_check(self):
         self.doguess = not ((self.fitmode.lower()=='list') and (self.invertmask))
 
