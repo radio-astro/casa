@@ -654,8 +654,9 @@ The task will flag a subset of data based on the following modes of operation:
 
               correlation -- Correlation types or expression.
                     default: '' (all correlations)
-                            For modes clip, tfcrop or rflag, the default means ABS_ALL for an MS
-                            and REAL_ALL for a cal table, which will flag all the calibration solutions.
+                            For modes clip, tfcrop or rflag, the default means ABS_ALL. If
+                            the input is cal table that does not contain a complex data column,
+                            the default will fall back to REAL_ALL.
                     example: correlation='XX,YY' or
                     options: Any of 'ABS', 'ARG', 'REAL', 'IMAG', 'NORM' followed by
                              any of 'ALL', 'I', 'XX', 'YY', 'RR', 'LL', 'Sol1', 'Sol2', 'WVR'

@@ -676,15 +676,22 @@ flagdata command-line help.
 
 \item For the autoflagging agents (clip, tfcrop, rflag) it is possible to
 choose the column to operate with, using the 'datacolumn' parameter, being 'FPARAM',
-'CPARAM' and 'SNR' the currently supported columns:
+'CPARAM' and 'SNR' the currently supported columns. The given column will be validated and the correct one
+will be chosen based on the type of input:
 
 \begin{verbatim}
+# giving the correct datacolumn in the task
+flagdata(vis='cal.fewscans.bpass', mode='clip', datacolumn='CPARAM', clipminmax=[0.,6.],clipzeros=True)
 
-agentClip={'mode':'clip','clipminmax':[0.,6.],'datacolumn':'CPARAM'}
-af.parseagentparameters(agentClip)
+# using the default datacolumn in the agentflagger tool
+af.open('cal.fewscans.bpass')
+af.selectdata()
+af.parseclipparameters(clipminmax=[0.,6.],datacolumn='CPARAM', clipzeros=True)
+INFO    AgentFlagger::parseAgentParameters  Validating data column CPARAM based on input type
+INFO    AgentFlagger::parseAgentParameters  Will use data column CPARAM
 af.init()
-...
-INFO	Clip::setAgentParameters	data column is CPARAM
+af.run()
+af.done()
 
 \end{verbatim}
 
@@ -694,18 +701,23 @@ does not exist (such as DATA), it will try to use FPARAM, then CPARAM. If none o
 will exit with an error.
 
 \begin{verbatim}
+# using the flagdata task
+flagdata(vis='cal.fewscans.bpass', mode='clip', clipminmax=[0.,6.])
 
-agentClip={'mode':'clip','clipminmax':[0.,6.]}
-af.parseagentparameters(agentClip)
-af.init()
+# using the default datacolumn in the agentflagger tool
 ...
-INFO	Clip::setAgentParameters	data column is FPARAM
-
+af.parseclipparameters(clipminmax=[0.,6.])
+INFO    AgentFlagger::parseAgentParameters  Validating data column DATA based on input type
+WARN    AgentFlagger::validateDataColumn    Only FPARAM, CPARAM and SNR are supported for cal tables
+INFO    AgentFlagger::parseAgentParameters  Will use data column CPARAM
+...
 \end{verbatim}
 
 \item And it is also possible to choose the element of interest to inspect for
 flagging, through the correlation parameter, specifying a list of comma-separated
-elements or '' to select all the elements (which is also the default):
+elements or '' to select all the elements (which is also the default). If the CPARAM
+datacolumn is used, the default correlation will be ABS\_ALL because this column contains complex data.
+For the other two supported columns (FPARAM,SNR), the default will fall back to REAL\_ALL.
 
 \begin{verbatim}
 
@@ -715,11 +727,11 @@ af.init()
 ...
 INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1
 
-agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'FPARAM','correlation':''}
+agentClip={'mode':'clip','clipminmax':[0.,600.],'datacolumn':'CPARAM','correlation':''}
 af.parseagentparameters(agentClip)
 af.init()
 ...
-INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
+INFO	Clip::setAgentParameters	Visibility expression is ABS SOL1,SOL2
 
 \end{verbatim}
 
@@ -727,9 +739,12 @@ INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
 
 agentClip={'mode':'clip','clipminmax':[0.,6.]}
 af.parseagentparameters(agentClip)
+AgentFlagger::parseAgentParameters  Validating data column DATA based on input type
+AgentFlagger::validateDataColumn    Only FPARAM, CPARAM and SNR are supported for cal tables
+AgentFlagger::parseAgentParameters  Will use data column CPARAM
 af.init()
 ...
-INFO	Clip::setAgentParameters	Visibility expression is REAL SOL1,SOL2
+INFO    Clip::setAgentParameters     Visibility expression is ABS SOL1,SOL2,SOL3,SOL4
 
 \end{verbatim}
 
@@ -749,7 +764,10 @@ to be used by all the agents. The data selection parameters have to be parsed
 through the selectdata() method of the AgentFlagger tool:
 
 \begin{verbatim}
+# using the flagdata task
+flagdata(vis='X7ef.tsys', field='TW Hya')
 
+# using the tool
 af.open('X7ef.tsys')
 af.selectdata(field='TW Hya')
 agentManual={'mode':'manual'}
@@ -765,6 +783,8 @@ agent inspect for flagging. The data selection parameters can be parsed as
 normal agent parameters:
 
 \begin{verbatim}
+# using the flagdata task
+flagdata(vis='X7ef.tsys', antenna='DV09')
 
 af.open('X7ef.tsys')
 af.selectdata()
@@ -776,10 +796,12 @@ af.done()
 		
 \end{verbatim}
 
-\item Combined selection : To iterate only trough a global selection, and at the
+\item Combined selection : To iterate only through a global selection, and at the
 same time have each agent inspecting a particular group of rows for flagging:
 
 \begin{verbatim}
+# using the flagdata task
+flagdata(vis='X7ef.tsys', field='TW Hya', antenna='DV09')
 
 af.open('X7ef.tsys')
 af.selectdata(field='TW Hya')
@@ -803,7 +825,12 @@ several flagging agents at the same time, to reduce I/O overhead,  for instance:
 \item Combination of tfcrop and rflag:
 
 \begin{verbatim}
+# using the flagdata task
+flagdata(vis='cal.fewscans.bpass', mode='list', 
+         inpfile=["mode='rflag' datacolumn='CPARAM' correlation='Sol1'",
+                   mode='tfcrop' datacolumn='CPARAM' correlation='Sol1'"])
 
+# using the agentflagger tool
 af.open('cal.fewscans.bpass')
 af.selectdata()
 agentRflag={'mode':'rflag','datacolumn':'CPARAM','correlation':'Sol1'}
@@ -826,7 +853,12 @@ band-pass calibration table}
 \item Unflag + Clip + Display
 
 \begin{verbatim}
-  
+# using the flagdata task
+flagdata(vis='X7ef.tsys', mode='unflag')
+flagdata(vis='X7ef.tsys', mode='clip',clipminmax=[0.,600.],datacolumn='FPARAM',correlation='Sol1',
+         display='data')
+
+# using the agentflagger tool
 af.open('X7ef.tsys')
 af.selectdata()
 agentUnflag={'mode':'unflag'}
@@ -850,7 +882,11 @@ Verification data)}
 
 \item Unflag + Manual Selection (channel edges) + Summary
 \begin{verbatim}
+# using the flagdata task
+flagdata(vis='X7ef.tsys', mode='unflag')
+flagdata(vis='X7ef.tsys', spw='*:0~9;118~127', display='data')
 
+# using the agentflagger tool
 af.open('X7ef.tsys')
 af.selectdata()
 agentUnflag={'mode':'unflag'}
@@ -874,7 +910,14 @@ Verification data)}
 
 \item Unflag + Manual Selection (antenna) + Summary
 \begin{verbatim}
+# using the flagdata task
+flagdata(vis='X7ef.tsys', mode='unflag')
+flagdata(vis='X7ef.tsys', antenna='DV09')
 
+# next command will return the summary with baseline counting
+flagdata(vis='X7ef.tsys', mode='summary', basecnt=True)
+
+# using the agentflagger tool
 af.open('X7ef.tsys')
 af.selectdata()
 agentUnflag={'mode':'unflag'}

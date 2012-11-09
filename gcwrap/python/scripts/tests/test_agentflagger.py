@@ -484,7 +484,7 @@ class test_bpass(test_base):
         aflocal.init()
         summary = aflocal.run(writeflags=True)
         aflocal.done() 
-        self.assertEqual(summary['report0']['flagged'], 489, 'Should use CPARAM as the default column')
+        self.assertEqual(summary['report0']['flagged'], 10534, 'Should use CPARAM as the default column')
 
     def test_manual_field_selection_agent_layer_for_bpass_CalTable(self):
         """AgentFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for field """
@@ -582,15 +582,15 @@ class test_bpass(test_base):
         datacolumn = 'CPARAM'
         aflocal.open(self.vis)
         aflocal.selectdata()
-        aflocal.parseclipparameters(clipminmax=[0.,3.],datacolumn=datacolumn,clipzeros=True)
+        aflocal.parseclipparameters(clipminmax=[0.,0.3],datacolumn=datacolumn,clipzeros=True)
         aflocal.parsesummaryparameters()
         aflocal.init()
         summary = aflocal.run(writeflags=True)
         aflocal.done() 
-        self.assertEqual(summary['report0']['flagged'], 597642)
+        self.assertEqual(summary['report0']['flagged'], 10631)
         self.assertEqual(summary['report0']['total'], 1248000)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 309877)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 287765)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 10592)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 39)
         
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
         """AgentFlagger:: Test cliping all calibration solution products of SNR column using a minmax range for bpass CalTable"""
@@ -651,12 +651,12 @@ class test_bpass(test_base):
         aflocal.done()
         
         # flags from first summary, only tfcrop
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'],36312)
-        self.assertEqual(summary['report0']['flagged'],36312)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'],19348)
+        self.assertEqual(summary['report0']['flagged'],19348)
         
         # flags from second summary, tfcrop+extend
-        self.assertEqual(summary['report2']['flagged'], 36312*2)
-        self.assertEqual(summary['report2']['correlation']['Sol2']['flagged'],36312)
+        self.assertEqual(summary['report2']['flagged'], 19348*2)
+        self.assertEqual(summary['report2']['correlation']['Sol2']['flagged'],19348)
 
 #class test_MS(test_base):
 #

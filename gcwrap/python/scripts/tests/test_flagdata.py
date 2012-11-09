@@ -1419,7 +1419,7 @@ class test_tsys(test_base):
         self.assertEqual(res['antenna']['DV10']['flagged'], 0)
                
     def test_clip_fparm_sol1(self):
-        """Flagdata:: Test cliping first calibration solution product of FPARAM 
+        """Flagdata:: Test clipping first calibration solution product of FPARAM 
         column using a minmax range """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='Sol1',
@@ -1489,6 +1489,18 @@ class test_tsys(test_base):
         self.assertEqual(res['correlation']['Sol1']['total'], 64512.0)
         self.assertEqual(res['correlation']['Sol2']['flagged'], 442.0)
         self.assertEqual(res['correlation']['Sol2']['total'], 64512.0)
+                
+    def test_invalid_corr(self):
+        '''Flagdata: default correlation should be REAL_ALL in this case'''
+        flagdata(vis=self.vis, mode='clip', correlation='ABS_ALL',clipminmax=[0.,600.])
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1192.0)
+        
+    def test_invalid_datacol(self):
+        '''Flagdata: invalida data column should fall back to default'''
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0.,600.],datacolumn='PARAMERR')
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 1192.0)
                 
 
     def test_clip_fparm_all(self):
@@ -1608,7 +1620,14 @@ class test_bandpass(test_base):
         '''Flagdata: flag CPARAM as the default column'''
         flagdata(vis=self.vis, mode='clip', clipzeros=True)
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 489, 'Should use CPARAM as the default column')
+        self.assertEqual(res['flagged'], 10534, 'Should use CPARAM as the default column')
+
+    def test_invalid_datacol(self):
+        '''Flagdata: invalida data column should fall back to default'''
+        flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='PARAMERR')
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 10534)
+                
         
     def test_manual_field_selection_for_bpass(self):
         """Flagdata:: Manually flag a bpass-based CalTable using field selection"""
@@ -1661,12 +1680,12 @@ class test_bandpass(test_base):
     def test_clip_minmax_cparam_all_for_bpass(self):
         """Flagdata:: Clip all calibration solutions of CPARAM column using a minmax range"""
 
-        flagdata(vis=self.vis, mode='clip',clipzeros=True, clipminmax=[0,3], datacolumn='CPARAM')
+        flagdata(vis=self.vis, mode='clip',clipzeros=True, clipminmax=[0,0.3], datacolumn='CPARAM')
         summary=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(summary['flagged'], 597642)
+        self.assertEqual(summary['flagged'], 10631)
         self.assertEqual(summary['total'], 1248000)
-        self.assertEqual(summary['correlation']['Sol1']['flagged'], 309877)
-        self.assertEqual(summary['correlation']['Sol2']['flagged'], 287765)
+        self.assertEqual(summary['correlation']['Sol1']['flagged'], 10592)
+        self.assertEqual(summary['correlation']['Sol2']['flagged'], 39)
 
     def test_clip_minmax_snr_all_for_bpass(self):
         """Flagdata:: Test cliping all calibration solution products of SNR column using a 
@@ -1684,7 +1703,7 @@ class test_bandpass(test_base):
 
     def test_clip_one_list(self):
         '''Flagdata: Flag one solution using one command in a list'''
-        flagdata(vis=self.vis, mode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='Sol1'"])
+        flagdata(vis=self.vis, mode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1'"])
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 309388)
         self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
@@ -1704,6 +1723,7 @@ class test_bandpass(test_base):
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='REAL_ALL')
         summary=flagdata(vis=self.vis, mode='summary')
 #        self.assertTrue(abs(summary['flagged'] - 63861.0) <= 5)
+#        self.assertEqual(abs(summary['flagged'] - 69369) <= 5)
         self.assertEqual(summary['flagged'], 69369)
         assert abs(summary['correlation']['Sol1']['flagged'] - 36312) <= 5
         assert abs(summary['correlation']['Sol2']['flagged'] - 33057) <= 5
@@ -1714,14 +1734,14 @@ class test_bandpass(test_base):
 
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='Sol1')
         pre=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(pre['correlation']['Sol1']['flagged'],36312)
-        self.assertEqual(pre['flagged'],36312)
+        self.assertEqual(pre['correlation']['Sol1']['flagged'],19348)
+        self.assertEqual(pre['flagged'],19348)
         
         # Extend to other solution
         flagdata(vis=self.vis, mode='extend', extendpols=True, growfreq=0.0, growtime=0.0)
         pos=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(pos['flagged'], 36312*2)
-        self.assertEqual(pos['correlation']['Sol2']['flagged'],36312)
+        self.assertEqual(pos['flagged'], 19348*2)
+        self.assertEqual(pos['correlation']['Sol2']['flagged'],19348)
 
     def test_caltable_flagbackup(self):
         '''Flagmanager:: cal table mode=list, flagbackup=True/False'''

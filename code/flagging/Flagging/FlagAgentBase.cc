@@ -1263,8 +1263,12 @@ FlagAgentBase::setAgentParameters(Record config)
 		{
 			expression_p = "ABS ALL";
 		}
-		else
+		else if (dataColumn_p.compare("CPARAM") == 0)
 		{
+			// CPARAM is a complex column
+			expression_p = "ABS ALL";
+		}
+		else {
 			expression_p = "REAL ALL";
 		}
 
@@ -1274,8 +1278,8 @@ FlagAgentBase::setAgentParameters(Record config)
 
 		expression_p.upcase();
 
+		// These are the float columns that do not support complex operators
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
-				(dataColumn_p.compare("CPARAM") == 0) or
 				(dataColumn_p.compare("SNR") == 0) )
 		{
 			// Check if expression is one of the supported operators
@@ -1286,8 +1290,8 @@ FlagAgentBase::setAgentParameters(Record config)
 			{
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
-							<< ", selecting REAL ALL by default. "
-							<< " Keep in mind that complex operators are not supported for FPARAM/CPARAM/SNR"
+							<< "; selecting REAL ALL by default. "
+							<< " Keep in mind that complex operators are not supported for FPARAM/SNR"
 							<< LogIO::POST;
 				expression_p = "REAL ALL";
 			}
@@ -1309,7 +1313,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			{
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported complex operator: " << expression_p
-							<< ", using ABS by default. "
+							<< "; using ABS by default. "
 							<< " Supported expressions: REAL,IMAG,ARG,ABS,NORM."
 							<< LogIO::POST;
 				expression_p = "ABS " + expression_p;

@@ -174,6 +174,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //     af->initAgents();
 //
+// // Before next step which will write the new flags, it is advisable to create a backup of
+// // the current flags in the MS.
+//
+//    af.saveflagversion(versionname='backup_before_manual_1',
+//                       comment='Backup of flags before running manual',merge='replace')
+//
 // // The next step in the chain is to actually process the flags and write them or
 // // not to the MS. The run method takes two parameters, writeflags and sequential.
 // // The parameter writeflags controls whether to write the flags or not to the MS.
