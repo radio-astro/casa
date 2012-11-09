@@ -606,13 +606,11 @@ calibration tables, it only makes sense to use the following flag agent groups:
 
 \begin{verbatim}
 # Using the flagdata task
-
 flagdata('X7ef.tsys',mode='clip',clipzeros=True,clipminmax=[0.,600.],datacolumn='FPARAM' )
 \end{verbatim}
  
 \begin{verbatim}
 # Using the agentflagger tool
-
 af.open('X7ef.tsys')
 af.selectdata()
 agentClip={'mode':'clip','clipzeros':True,'clipminmax':[0.,600.],'datacolumn':'FPARAM'}
@@ -627,13 +625,11 @@ af.done()
 
 \begin{verbatim}
 # using the flagdata task
-
 flagdata('X7ef.tsys', antenna='DV09')
 \end{verbatim}
 
 \begin{verbatim}
 # Using the agentflagger tool
-
 af.open('X7ef.tsys')
 af.selectdata()
 agentManual={'mode':'manual','antenna':'DV09'}
@@ -654,7 +650,6 @@ flagdata('X7ef.tsys', mode='summary', spwchan=True)
 
 \begin{verbatim}
 # using the agentflagger tool
-
 af.open('X7ef.tsys')
 af.selectdata()
 agentSummary={'mode':'summary', 'spwchan':True}
@@ -767,7 +762,7 @@ through the selectdata() method of the AgentFlagger tool:
 # using the flagdata task
 flagdata(vis='X7ef.tsys', field='TW Hya')
 
-# using the tool
+# using the agentflagger tool
 af.open('X7ef.tsys')
 af.selectdata(field='TW Hya')
 agentManual={'mode':'manual'}
@@ -786,6 +781,7 @@ normal agent parameters:
 # using the flagdata task
 flagdata(vis='X7ef.tsys', antenna='DV09')
 
+# using the agentflagger tool
 af.open('X7ef.tsys')
 af.selectdata()
 agentManual={'mode':'manual','antenna':'DV09'}
@@ -803,6 +799,7 @@ same time have each agent inspecting a particular group of rows for flagging:
 # using the flagdata task
 flagdata(vis='X7ef.tsys', field='TW Hya', antenna='DV09')
 
+# using the agentflagger tool
 af.open('X7ef.tsys')
 af.selectdata(field='TW Hya')
 agentManual={'mode':'manual','antenna':'DV09'}
