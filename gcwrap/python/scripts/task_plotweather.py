@@ -4,15 +4,16 @@
 ##
 ##
 ## J. Marvil 2.6.12
+## revised 4.27.12 to add support for missing/empty weather table
+## revised 11.05.12 to address CASA 4.0 changes
 ###############################################
 
 
 import casac
-#from tasks import *
 from taskinit import *
 import pylab as pl
 from math import pi,floor
-from time import sleep
+import os.path as osp
 
 
 ###############
@@ -37,25 +38,6 @@ def jm_set_Ylabel_pos(pos=(0.5,0.5)):
     ax.yaxis.label.set_rotation(270)
     ax.yaxis.label.set_position(pos)
 
-###############
-## fixed y-ticks for plotting phase, in this case, wind direction
-def jm_set_Yphase_ticks(myScale=180):
-    myYlocs=pl.linspace(-myScale,myScale,5)
-    myLocator = pl.FixedLocator(myYlocs)
-    ax=pl.gca()
-    ax.yaxis.set_major_locator( myLocator )
-    pl.ylim([-1.1*myScale,1.1*myScale])
-    jm_clip_Yticks()
-
-###############
-## fixed y-ticks, from zero to myScale, used for data that can't be negative
-def jm_set_Ygain_ticks(myScale=.2):
-    myYlocs=pl.linspace(0,myScale,5)
-    myLocator = pl.FixedLocator(myYlocs)
-    ax=pl.gca()
-    ax.yaxis.set_major_locator( myLocator )
-    pl.ylim([-.02*myScale,1.1*myScale])
-    jm_clip_Yticks()
 
 ###############
 ## fixed y-ticks, from myMin to myMax
@@ -96,24 +78,56 @@ def jm_sunEL(mytime):
 
 ################
 ## gets and plots data from the weather table of the given MS
-def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
+def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
     myMS=vis
+    if plotName == '': plotName = myMS+'.plotweather.png'
+
+    # check for weather table
+
+    if osp.isdir(myMS+'/WEATHER'):
+    
+        try:
+            tb.open(myMS+'/WEATHER')
+            firstTime = tb.getcol('TIME')[0]
+            tb.close()
+            WEATHER_table_exists = True
+
+        except:
+            print 'could not open weather table, using seasonal model only and turning off plots'
+            WEATHER_table_exists = False
+            doPlot=False
+            seasonal_weight = 1.0
+    else:
+        print 'could not find a weather table, using seasonal model only and turning off plots'
+        WEATHER_table_exists = False
+        doPlot=False
+        seasonal_weight = 1.0
+
+
 
     ##retrieve center frequency for each sub-band
     tb.open(myMS+'/SPECTRAL_WINDOW')
     spwFreqs=tb.getcol('REF_FREQUENCY') * 1e-9   
     tb.close()
 
-    ##retrieve stuff from weather table
-    tb.open(myMS+'/WEATHER')
-    mytime=tb.getcol('TIME')
-    mytemp=tb.getcol('TEMPERATURE') - 273.15
-    mydew=tb.getcol('DEW_POINT') - 273.15
-    mywinds=tb.getcol('WIND_SPEED')
-    mywindd=tb.getcol('WIND_DIRECTION')*(180.0/pi)
-    mypres=tb.getcol('PRESSURE')
-    myhum=tb.getcol('REL_HUMIDITY')
-    tb.close()
+    ##retrieve stuff from weather table, if exists
+    
+    if WEATHER_table_exists:
+        tb.open(myMS+'/WEATHER')
+        mytime=tb.getcol('TIME')
+        mytemp=tb.getcol('TEMPERATURE') - 273.15
+        mydew=tb.getcol('DEW_POINT') - 273.15
+        mywinds=tb.getcol('WIND_SPEED')
+        mywindd=tb.getcol('WIND_DIRECTION')*(180.0/pi)
+        mypres=tb.getcol('PRESSURE')
+        myhum=tb.getcol('REL_HUMIDITY')
+        tb.close()
+
+    else:
+        ms.open(myMS)
+        mytime_range = ms.range(["time"])
+        mytime = [mytime_range['time'][0]]
+
 
     ##calculate the elevation of the sun
     sunEL=[]
@@ -134,28 +148,32 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
         myTimestr2.append(time2)
  
     ##convert time to a decimal
-    numtime=pl.datestr2num(myTimestr)
+    numtime=pl.datestr2num(myTimestr)    
 
     ##### calculate opacity as in EVLA memo 143
     thisday= 30*(float(myTimestr[0][5:7])-1)+float(myTimestr[0][8:10]) 
     thisday=thisday + 5 * (thisday / 365.)
 
-    # get 22 GHz zenith opacity and pwv estimate from weatherstation (myPWV)
-    myTauZ, myPWV1 = Tau_K_Calc(mydew,mytemp,thisday)
-    myTauZ1, myPWV = Tau_K_Calc(mydew,mytemp,thisday, weights=(0,1.0))
-    myTauZ2, myPWV = Tau_K_Calc(mydew,mytemp,thisday, weights=(1.0,0))
 
-    # estimate pwv from seasonal model zenith opacity    
-    myPWV2 = -1.71 + 1.3647*myTauZ1
-    myPWV = (1-seasonal_weight)*myPWV1 + seasonal_weight*myPWV2
+    if WEATHER_table_exists:
+        # get 22 GHz zenith opacity and pwv estimate from weatherstation (myPWV)
+        myTauZ, myPWV1 = Tau_K_Calc(mydew,mytemp,thisday)
+        myTauZ1, myPWV = Tau_K_Calc(mydew,mytemp,thisday, weights=(0,1.0))
+        myTauZ2, myPWV = Tau_K_Calc(mydew,mytemp,thisday, weights=(1.0,0))
+
+        # estimate pwv from seasonal model zenith opacity    
+        myPWV2 = -1.71 + 1.3647*myTauZ1
+        myPWV = (1-seasonal_weight)*myPWV1 + seasonal_weight*myPWV2
  
-#     tmp = casac.Quantity(270.0,'K')
-#     pre = casac.Quantity(790.0,'mbar')
-#     alt = casac.Quantity(2125,'m')
-#     h0 = casac.Quantity(2.0,'km')
-#     wvl = casac.Quantity(-5.6, 'K/km')
-#     mxA = casac.Quantity(48,'km')
-#     dpr = casac.Quantity(10.0,'mbar')
+    else:
+        day = thisday*1.0
+        if day > 199: day = day - 365. 
+        m = day + 165. # modified day of the year 
+        myTauZ = 22.1 - 0.178*m + 0.00044*m**2 # tau from seaonal model, in % 
+        myPWV = -1.71 + 1.3647*myTauZ
+        myPWV1, myPWV2 = myPWV, myPWV
+        myTauZ1, myTauZ2 = myTauZ, myTauZ
+ 
     tmp = qa.quantity(270.0,'K')
     pre = qa.quantity(790.0,'mbar')
     alt = qa.quantity(2125,'m')
@@ -167,9 +185,6 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
     att = 1
     nb = 1
 
-#     fC=casac.Quantity(25.0,'GHz')
-#     fW=casac.Quantity(50.,'GHz')
-#     fR=casac.Quantity(0.25,'GHz')
     fC=qa.quantity(25.0,'GHz')
     fW=qa.quantity(50.,'GHz')
     fR=qa.quantity(0.25,'GHz')
@@ -338,12 +353,10 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True):
     pl.ylim(0,.25)
     jm_set_Yvar_ticks(6)
     jm_set_Ylabel_pos(pos=(0,.5))
-    pl.savefig(myMS+'.plotweather.png',dpi=150)
+    pl.savefig( plotName, dpi=150)
     pl.close()
-#    sleep(1)
 
-    casalog.post('wrote weather figure: '+myMS+'.plotweather.png')
+    casalog.post('wrote weather figure: '+plotName)
     return meanTau
-
 
 
