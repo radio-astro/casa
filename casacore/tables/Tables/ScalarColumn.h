@@ -272,16 +272,16 @@ public:
     // when operating on a null object. It was felt it was too expensive
     // to test on null over and over again. The user should use the isNull
     // or throwIfNull function in case of doubt.
-    ScalarColumn();
+    ScalarColumn(Bool isWritable = True);
 
     // Construct the scalar column object for the table column.
-    ScalarColumn (const Table&, const String& columnName);
+    ScalarColumn (const Table&, const String& columnName, Bool isWritable = True);
 
     // Construct from the given table column.
     // This constructor is useful if first a table column was constructed,
     // its type is determined and thereafter used to construct the
     // correct column object.
-    ScalarColumn (const TableColumn&);
+    ScalarColumn (const TableColumn&, Bool isWritable = True);
 
     // Copy constructor (reference semantics).
     ScalarColumn (const ScalarColumn<T>&);
@@ -376,6 +376,8 @@ private:
     void reference (const TableColumn&);
     void putColumn (const ROTableColumn&);
     // </group>
+
+    Bool isWritable_p;
 };
 
 

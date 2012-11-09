@@ -193,34 +193,42 @@ void ROScalarColumn<T>::getColumnCells (const RefRows& rownrs,
     baseColPtr_p->getScalarColumnCells (rownrs, &vec);
 }
 
-
+#define ThrowIfScalarColumnNotWritable() \
+    { if (! isWritable_p){ \
+        throw AipsError ("ScalarColumn not writable", __FILE__, __LINE__); \
+      }\
+    }
 
 template<class T>
-ScalarColumn<T>::ScalarColumn()
+ScalarColumn<T>::ScalarColumn(Bool isWritable)
 : ROTableColumn     (),
   ROScalarColumn<T> (),
-  TableColumn       ()
+  TableColumn       (),
+  isWritable_p (isWritable)
 {}
 
 template<class T>
-ScalarColumn<T>::ScalarColumn (const Table& tab, const String& columnName)
+ScalarColumn<T>::ScalarColumn (const Table& tab, const String& columnName, Bool isWritable)
 : ROTableColumn     (tab, columnName),
   ROScalarColumn<T> (tab, columnName),
-  TableColumn       (tab, columnName)
+  TableColumn       (tab, columnName),
+  isWritable_p (isWritable)
 {}
 
 template<class T>
-ScalarColumn<T>::ScalarColumn (const TableColumn& column)
+ScalarColumn<T>::ScalarColumn (const TableColumn& column, Bool isWritable)
 : ROTableColumn     (column),
   ROScalarColumn<T> (column),
-  TableColumn       (column)
+  TableColumn       (column),
+  isWritable_p (isWritable)
 {}
 
 template<class T>
 ScalarColumn<T>::ScalarColumn (const ScalarColumn<T>& that)
 : ROTableColumn     (that),
   ROScalarColumn<T> (that),
-  TableColumn       (that)
+  TableColumn       (that),
+  isWritable_p (that.isWritable_p)
 {}
 
 template<class T>
@@ -241,6 +249,8 @@ template<class T>
 void ScalarColumn<T>::put (uInt thisRownr, const ROScalarColumn<T>& that,
 			   uInt thatRownr)
 {
+    ThrowIfScalarColumnNotWritable();
+
     put (thisRownr, that(thatRownr));
 }
 
@@ -248,6 +258,8 @@ template<class T>
 void ScalarColumn<T>::put (uInt thisRownr, const ROTableColumn& that,
 			   uInt thatRownr)
 {
+    ThrowIfScalarColumnNotWritable();
+
     T value;
     that.getScalarValue (thatRownr, &value, columnDesc().dataTypeId());
     put (thisRownr, value);
@@ -256,6 +268,8 @@ void ScalarColumn<T>::put (uInt thisRownr, const ROTableColumn& that,
 template<class T>
 void ScalarColumn<T>::putColumn (const Vector<T>& vec)
 {
+    ThrowIfScalarColumnNotWritable();
+
     uInt nrrow = nrow();
     //# Check the vector length.
     if (vec.nelements() != nrrow) {
@@ -281,6 +295,8 @@ template<class T>
 void ScalarColumn<T>::putColumnRange (const Slicer& rowRange,
 				      const Vector<T>& vec)
 {
+    ThrowIfScalarColumnNotWritable();
+
     uInt nrrow = nrow();
     IPosition shp, blc, trc, inc;
     shp = rowRange.inferShapeFromSource (IPosition(1,nrrow), blc, trc, inc);
@@ -296,6 +312,8 @@ template<class T>
 void ScalarColumn<T>::putColumnCells (const RefRows& rownrs,
 				      const Vector<T>& vec)
 {
+    ThrowIfScalarColumnNotWritable();
+
     //# Check the vector length.
     uInt nrrow = rownrs.nrow();
     if (vec.nelements() != nrrow) {
@@ -310,6 +328,8 @@ void ScalarColumn<T>::putColumnCells (const RefRows& rownrs,
 template<class T>
 void ScalarColumn<T>::fillColumn (const T& value)
 {
+    ThrowIfScalarColumnNotWritable();
+
     uInt nrrow = nrow();
     for (uInt i=0; i<nrrow; i++) {
 	put (i, value);
@@ -319,6 +339,8 @@ void ScalarColumn<T>::fillColumn (const T& value)
 template<class T>
 void ScalarColumn<T>::putColumn (const ROScalarColumn<T>& that)
 {
+    ThrowIfScalarColumnNotWritable();
+
     //# Check the column lengths.
     uInt nrrow = nrow();
     if (nrrow != that.nrow()) {
