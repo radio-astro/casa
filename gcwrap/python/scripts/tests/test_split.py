@@ -1162,7 +1162,7 @@ class split_test_sw_and_fc(SplitChecker):
 
     def test_rf_noavg(self):
         """REF_FREQUENCY after selection, but no averaging."""
-        check_eq(self.records[('1:12~115', '1')]['rf'], 22142369695.726768)
+        check_eq(self.records[('1:12~115', '1')]['rf'], 22141747338.809235)
 
     def test_nchan_noavg(self):
         """# of channels after selection, but no averaging."""
@@ -1202,7 +1202,7 @@ class split_test_sw_and_fc(SplitChecker):
 
     def test_rf_wavg(self):
         """REF_FREQUENCY after averaging, but no selection."""
-        check_eq(self.records[('1', '3')]['rf'], 22142369695.726768)
+        check_eq(self.records[('1', '3')]['rf'], 22141613056.030632)
 
     def test_res_wavg(self):
         """RESOLUTION after averaging and simple selection."""
