@@ -465,16 +465,16 @@ public:
     // when operating on a null object. It was felt it was too expensive
     // to test on null over and over again. The user should use the isNull
     // or throwIfNull function in case of doubt.
-    ArrayColumn();
+    ArrayColumn(Bool isWritable = True);
 
     // Construct the array column object for the table column.
-    ArrayColumn (const Table&, const String& columnName);
+    ArrayColumn (const Table&, const String& columnName, Bool isWritable = True);
 
     // Construct from the given table column.
     // This constructor is useful if first a table column was constructed,
     // its type is determined and thereafter used to construct the
     // correct column object.
-    ArrayColumn (const TableColumn&);
+    ArrayColumn (const TableColumn&, Bool isWritable = True);
 
     // A const ArrayColumn can only be copied as a ROArrayColumn.
     ArrayColumn (const ArrayColumn<T>&);
@@ -621,6 +621,8 @@ private:
     // putColumn (with copy semantics) exist.
     // Declaring this operator private, makes it unusable.
     ArrayColumn<T>& operator= (const ArrayColumn<T>&);
+
+    Bool isWritable_p;
 
     // Referencing any other typed column cannot be done.
     // If we do not put this function here, the conversion constructor
