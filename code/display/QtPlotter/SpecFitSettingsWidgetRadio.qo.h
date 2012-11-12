@@ -85,6 +85,8 @@ private:
 	void setCanvas( QtCanvas* canvas );
 	void doFit( float startVal, float endVal, uint gaussCount, bool fitPoly, int polyN );
 	String getChannels( float startVal, float endVal, const Vector<Float>& specValues ) const;
+	void getFitBounds( Float& startVal, Float& endVal ) const;
+	int getFitCount(Int& startChannelIndex, Int& endChannelIndex );
 	void clearEstimates();
 	void clear();
 	void resolveOutputLogFile( );
@@ -116,7 +118,6 @@ private:
     QString displayYUnits;
     QString imageYUnits;
     QList<QList<SpecFit*> > curveList;
-    int POINT_COUNT;
     int SUM_FIT_INDEX;
 
     volatile bool fitCancelled;
