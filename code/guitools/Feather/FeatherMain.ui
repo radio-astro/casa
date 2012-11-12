@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>579</height>
+    <width>984</width>
+    <height>486</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,7 +20,7 @@
    <string>Feather</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
@@ -81,7 +81,7 @@
           <property name="maximumSize">
            <size>
             <width>64</width>
-            <height>64</height>
+            <height>25</height>
            </size>
           </property>
           <property name="font">
@@ -101,6 +101,12 @@
         </item>
         <item>
          <widget class="QLabel" name="featherBottomLabel">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>25</height>
+           </size>
+          </property>
           <property name="text">
            <string/>
           </property>
@@ -140,7 +146,10 @@
      </layout>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_6">
+      <property name="spacing">
+       <number>1</number>
+      </property>
       <item>
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
@@ -162,7 +171,7 @@
         <property name="checkable">
          <bool>false</bool>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
           <widget class="QLabel" name="label">
            <property name="text">
@@ -171,7 +180,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="dishDiameterXLineEdit"/>
+          <widget class="QLineEdit" name="dishDiameterXLineEdit">
+           <property name="toolTip">
+            <string>A low resolution dish diameter in the horizontal direction.  This field can be left blank and a default will be used.</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -190,11 +203,69 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="featherButton">
-        <property name="text">
-         <string>Feather</string>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="spacing">
+         <number>1</number>
         </property>
-       </widget>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Low Resolution Scale Factor:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="singleDishFactorLineEdit">
+            <property name="toolTip">
+             <string>The low resolution scale factor.  If this field is left blank, 1 will be used.</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="featherButton">
+            <property name="toolTip">
+             <string>Feather together the specified high resolution and low resolution image in the Fourier plane.</string>
+            </property>
+            <property name="text">
+             <string>Feather</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_7">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </item>
       <item>
        <spacer name="horizontalSpacer_10">
@@ -203,7 +274,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>40</width>
+          <width>17</width>
           <height>20</height>
          </size>
         </property>
@@ -211,6 +282,9 @@
       </item>
       <item>
        <widget class="QGroupBox" name="yGroupBox">
+        <property name="toolTip">
+         <string>Select this group box to specify an elliptical dish diameter.</string>
+        </property>
         <property name="title">
          <string>Y</string>
         </property>
@@ -229,7 +303,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="dishDiameterYLineEdit"/>
+          <widget class="QLineEdit" name="dishDiameterYLineEdit">
+           <property name="toolTip">
+            <string>A low resolution dish diameter in the vertical direction.  This field can be left blank and a default will be used.</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -257,6 +335,12 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>200</height>
+       </size>
+      </property>
      </widget>
     </item>
    </layout>
@@ -281,6 +365,9 @@
    <addaction name="actionImageFiles"/>
    <addaction name="actionPreferences"/>
    <addaction name="actionPreferencesColor"/>
+   <addaction name="separator"/>
+   <addaction name="actionRectangleZoom"/>
+   <addaction name="actionDiameterSelector"/>
   </widget>
   <action name="actionImageFiles">
    <property name="icon">
@@ -288,10 +375,10 @@
      <normaloff>:/images/fileFolder.png</normaloff>:/images/fileFolder.png</iconset>
    </property>
    <property name="text">
-    <string>Specify the low and high resolution input images and the low resolution output image.</string>
+    <string>Specify the low and high resolution input images files and the feathered output image file.</string>
    </property>
    <property name="toolTip">
-    <string>Specify the low and high resolution input images and the low resolution output image.</string>
+    <string>Specify the low and high resolution input images files and the feathered output image file.</string>
    </property>
   </action>
   <action name="actionPreferences">
@@ -316,6 +403,30 @@
    </property>
    <property name="toolTip">
     <string>Customize color preferences.</string>
+   </property>
+  </action>
+  <action name="actionRectangleZoom">
+   <property name="icon">
+    <iconset resource="Feather.qrc">
+     <normaloff>:/images/zoom.png</normaloff>:/images/zoom.png</iconset>
+   </property>
+   <property name="text">
+    <string>Click to use the left mouse button to select a rectangular zoom region.</string>
+   </property>
+   <property name="toolTip">
+    <string>Click to use the left mouse button to select a rectangular zoom region.</string>
+   </property>
+  </action>
+  <action name="actionDiameterSelector">
+   <property name="icon">
+    <iconset resource="Feather.qrc">
+     <normaloff>:/images/diameterSelector.png</normaloff>:/images/diameterSelector.png</iconset>
+   </property>
+   <property name="text">
+    <string>Click to use the left mouse button to graphically select a dish diameter.</string>
+   </property>
+   <property name="toolTip">
+    <string>Click to use the left mouse button to graphically select a dish diameter.</string>
    </property>
   </action>
  </widget>

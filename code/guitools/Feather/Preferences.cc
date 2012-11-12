@@ -1,3 +1,27 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #include "Preferences.qo.h"
 #include <QSettings>
 
@@ -7,17 +31,19 @@ const QString Preferences::ORGANIZATION = "NRAO/CASA";
 const QString Preferences::APPLICATION = "Feather";
 const QString Preferences::LINE_THICKNESS = "Plot Line Thickness";
 const QString Preferences::DISPLAY_ORIGINAL_FUNCTIONS = "Display Original Functions";
-const QString Preferences::DISPLAY_ORIGINAL_LEGEND = "Display Original Legend";
+const QString Preferences::DISPLAY_LEGEND = "Display Legend";
 const QString Preferences::DISPLAY_OUTPUT_FUNCTIONS = "Display Output Functions";
-const QString Preferences::DISPLAY_OUTPUT_LEGEND = "Display Output Legend";
+const QString Preferences::DISPLAY_OUTPUT_SCATTERPLOT = "Display Output Scatter Plot";
+const QString Preferences::DISPLAY_X_ONLY = "Display Only X Plots";
 
 Preferences::Preferences(QWidget *parent)
     : QDialog(parent),
       lineThickness( 1 ),
       displayOriginalFunctions(false),
-      displayOriginalLegend(true),
       displayOutputFunctions( true ),
-      displayOutputLegend( true ){
+      displayOutputScatterPlot( false ),
+      displayXOnly( false ),
+      displayLegend(true){
 
 	ui.setupUi(this);
 	setWindowTitle( "Feather Plot Display");
@@ -28,8 +54,6 @@ Preferences::Preferences(QWidget *parent)
 	initializeCustomSettings();
 	reset();
 
-	connect( ui.originalCheckBox, SIGNAL(stateChanged(int)), this, SLOT(originalPlotVisibilityChanged(int)));
-	connect( ui.outputCheckBox, SIGNAL(stateChanged(int)), this, SLOT(outputPlotVisibilityChanged(int)));
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(preferencesAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(preferencesRejected()));
 }
@@ -40,35 +64,28 @@ void Preferences::initializeCustomSettings(){
 	QSettings settings( ORGANIZATION, APPLICATION );
 	lineThickness = settings.value( LINE_THICKNESS, lineThickness).toInt();
 	displayOriginalFunctions = settings.value( DISPLAY_ORIGINAL_FUNCTIONS, displayOriginalFunctions).toBool();
-	displayOriginalLegend = settings.value( DISPLAY_ORIGINAL_LEGEND, displayOriginalLegend ).toBool();
+	displayLegend = settings.value( DISPLAY_LEGEND, displayLegend ).toBool();
 	displayOutputFunctions = settings.value( DISPLAY_OUTPUT_FUNCTIONS, displayOutputFunctions ).toBool();
-	displayOutputLegend = settings.value( DISPLAY_OUTPUT_LEGEND, displayOutputLegend ).toBool();
-	originalPlotVisibilityChanged( displayOriginalFunctions );
-	outputPlotVisibilityChanged( displayOutputFunctions );
+	displayOutputScatterPlot = settings.value( DISPLAY_OUTPUT_SCATTERPLOT, displayOutputScatterPlot).toBool();
+	displayXOnly = settings.value( DISPLAY_X_ONLY, displayXOnly ).toBool();
 }
-
-void Preferences::originalPlotVisibilityChanged( int checked ){
-	ui.originalLegendCheckBox->setEnabled( checked );
+bool Preferences::isDisplayOutputFunctions() const {
+	return displayOutputFunctions;
 }
-
-void Preferences::outputPlotVisibilityChanged( int checked ){
-	ui.outputLegendCheckBox->setEnabled( checked );
-}
-
 bool Preferences::isDisplayOriginalFunctions() const {
 	return displayOriginalFunctions;
 }
 
-bool Preferences::isDisplayOriginalLegend() const {
-	return displayOriginalLegend;
+bool Preferences::isDisplayLegend() const {
+	return displayLegend;
 }
 
-bool Preferences::isDisplayOutputFunctions() const {
-	return displayOutputFunctions;
+bool Preferences::isDisplayOutputScatterPlot() const {
+	return displayOutputScatterPlot;
 }
 
-bool Preferences::isDisplayOutputLegend() const {
-	return displayOutputLegend;
+bool Preferences::isDisplayXOnly() const {
+	return displayXOnly;
 }
 
 int Preferences::getLineThickness() const {
@@ -90,11 +107,11 @@ void Preferences::preferencesRejected(){
 void Preferences::reset(){
 	ui.lineThicknessSpinBox->setValue( lineThickness );
 	ui.originalCheckBox->setChecked( displayOriginalFunctions );
-	ui.originalLegendCheckBox->setChecked( displayOriginalLegend );
+	ui.legendCheckBox->setChecked( displayLegend );
 	ui.outputCheckBox->setChecked( displayOutputFunctions );
-	ui.outputLegendCheckBox->setChecked( displayOutputLegend );
-	originalPlotVisibilityChanged( displayOriginalFunctions );
-	outputPlotVisibilityChanged( displayOutputFunctions );
+	ui.outputScatterCheckBox->setChecked( displayOutputScatterPlot );
+	ui.onlyXPlotCheckBox->setChecked( displayXOnly );
+
 }
 
 void Preferences::persist(){
@@ -106,17 +123,20 @@ void Preferences::persist(){
 	displayOriginalFunctions = ui.originalCheckBox->isChecked();
 	settings.setValue( DISPLAY_ORIGINAL_FUNCTIONS, displayOriginalFunctions );
 
-	displayOriginalLegend = ui.originalLegendCheckBox->isChecked();
-	settings.setValue( DISPLAY_ORIGINAL_LEGEND, displayOriginalLegend );
+	displayLegend = ui.legendCheckBox->isChecked();
+	settings.setValue( DISPLAY_LEGEND, displayLegend );
 
 	displayOutputFunctions = ui.outputCheckBox->isChecked();
 	settings.setValue( DISPLAY_OUTPUT_FUNCTIONS, displayOutputFunctions );
 
-	displayOutputLegend = ui.outputLegendCheckBox->isChecked();
-	settings.setValue( DISPLAY_OUTPUT_LEGEND, displayOutputLegend );
+	displayOutputScatterPlot = ui.outputScatterCheckBox->isChecked();
+	settings.setValue( DISPLAY_OUTPUT_SCATTERPLOT, displayOutputScatterPlot );
+
+	displayXOnly = ui.onlyXPlotCheckBox->isChecked();
+	settings.setValue( DISPLAY_X_ONLY, displayXOnly );
 }
 
 Preferences::~Preferences(){
-
 }
+
 }
