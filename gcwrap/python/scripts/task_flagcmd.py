@@ -4,9 +4,6 @@ import os
 import sys
 import flaghelper as fh
 
-debug = False
-
-
 def flagcmd(
     vis=None,
     inpmode=None,
@@ -39,8 +36,7 @@ def flagcmd(
 
     aflocal = casac.agentflagger()
     mslocal = casac.ms()
-    mslocal2 = casac.ms()
-
+    mslocal2 = casac.ms()           
 
     try:
         # Use a default ntime to open the MS. The user-set ntime will be
@@ -54,321 +50,365 @@ def flagcmd(
             raise Exception, \
                 'Visibility data set not found - please verify the name'
 
-        # Get overall MS time range for later use (if needed)
-#        try:
-            # this might take too long for large MS
-        mslocal2.open(vis)
-        timd = mslocal2.range(['time'])
-        mslocal2.close()
 
-        ms_startmjds = timd['time'][0]
-        ms_endmjds = timd['time'][1]
-        t = qa.quantity(ms_startmjds, 's')
-        t1sdata = t['value']
-        ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
-        ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
-        t0 = qa.totime(ms_startdate + '/00:00:00.00')
-        t0d = qa.convert(t0, 'd')
-        t0s = qa.convert(t0, 's')
-        t = qa.quantity(ms_endmjds, 's')
-        t2sdata = t['value']
-        ms_endtime = qa.time(t, form='ymd', prec=9)[0]
-        # NOTE: could also use values from OBSERVATION table col TIME_RANGE
-        casalog.post('MS spans timerange ' + ms_starttime + ' to '
-                     + ms_endtime)
-
-        myflagcmd = {}
-        cmdlist = []
-
-        if action == 'clear':
-            casalog.post('Action "clear" will disregard inpmode (no reading)')
-        elif inpmode == 'table':
-
-            casalog.post('Reading from FLAG_CMD table')
-            # Read from FLAG_CMD table into command list
-            if inpfile == '':
-                msfile = vis
-            else:
-                msfile = inpfile
-
-            # Read only the selected rows for action = apply and
-            # always read all rows with APPLIED=True for action = unapply
-            if action == 'unapply':
-                myflagcmd = readFromTable(msfile, useapplied=True,
-                        myreason=reason)
-            else:
-                myflagcmd = readFromTable(msfile, myflagrows=tablerows,
-                        useapplied=useapplied, myreason=reason)
-
-            listmode = 'cmd'
-        elif inpmode == 'list':
-
-            # ##### TO DO: take time ranges calculation into account ??????
-            # Parse the input file
-            try:
-                if inpfile == '' or inpfile == []:
-                    casalog.post('Input list is empty', 'ERROR')
-                    
-                elif isinstance(inpfile, list):
-                    casalog.post('Reading from input list')
-                    cmdlist = inpfile
-        
-                    casalog.post('Input ' + str(cmdlist.__len__())
-                                 + ' lines from input list')
-                    # Make a FLAG_CMD compatible dictionary and select by reason
-                    myflagcmd = fh.makeDict(cmdlist, reason)
-
-                    listmode = ''
-                elif isinstance(inpfile, str):
-    
-                    casalog.post('Reading from input file')
-                    cmdlist = fh.readFile(inpfile)
-    
-                    # Make a FLAG_CMD compatible dictionary and select by reason
-                    myflagcmd = fh.makeDict(cmdlist, reason)
-                    listmode = 'file'
-                    
-                else:
-                    casalog.post('Unsupported input file type', 'ERROR')
-    
-            except:
-
-                raise Exception, 'Error reading the input list %s' %inpfile
-
-            # List of command keys in dictionary
-            vrows = myflagcmd.keys()
-            casalog.post('Read ' + str(vrows.__len__())
-                         + ' lines from list')
-
-        elif inpmode == 'xml':
-
-            casalog.post('Reading from Flag.xml')
-            # Read from Flag.xml (also needs Antenna.xml)
-            if inpfile == '':
-                flagtable = vis
-            else:
-                flagtable = inpfile
-
-            # Actually parse table. Fail if Flag.xml or Antenna.xml is not found
-            try:
-                myflags = fh.readXML(flagtable, mytbuff=tbuff)            
-            except:
-                raise Exception
-
-            casalog.post('%s' % myflags, 'DEBUG')
-
-            # Construct flags per antenna, selecting by reason if desired
-            # Never sort!
-            if ants != '' or reason != '':
-                myflagcmd = selectFlags(myflags, myantenna=ants,
-                        myreason=reason, myflagsort='')
-            else:
-                myflagcmd = myflags
-
-            listmode = 'online'
+        # Check if vis is a cal table:
+        # typevis = 1 --> cal table
+        # typevis = 0 --> MS
+        # typevis = 2 --> MMS
+        iscal = False
+        typevis = fh.isCalTable(vis)
+        if typevis == 1:
+            iscal = True
             
-        else:
-            casalog.post('Input type is not supported', 'ERROR')
-#        else:
-#
-#            # command strings
-#            cmdlist = command
-#            casalog.post('Input ' + str(cmdlist.__len__())
-#                         + ' lines from input list')
-#
-#            if cmdlist.__len__() > 0:
-#                myflagcmd = fh.makeDict(cmdlist, 'any')
-#
-#            listmode = ''
-
-
-        casalog.post('Flagcmd dictionary is: %s'%myflagcmd, 'DEBUG')
-        
-        # Specific for some actions
-        # Get the commands as a list of strings with reason back in
-        # TODO: maybe this is not needed anymore!!!!!!!!!!!!!!!
-        if action == 'apply' or action == 'unapply' or action == 'list':
-            # If there are no flag commands, exit
-            if myflagcmd.__len__() == 0:
-                casalog.post('There are no flag commands in input',
-                             'WARN')
-                return
-
-            # Turn into command string list (add reason back in)
-            mycmdlist = []
-            keylist = myflagcmd.keys()
-            if keylist.__len__() > 0:
-                for key in keylist:
-                    cmdstr = myflagcmd[key]['command']
-                    if myflagcmd[key]['reason'] != '':
-                        cmdstr += " reason='" + myflagcmd[key]['reason'
-                                ] + "'"
-                    mycmdlist.append(cmdstr)
-
-            casalog.post('Extracted ' + str(mycmdlist.__len__())
-                         + ' flag commands', 'DEBUG')
-
-            casalog.post('%s' % mycmdlist, 'DEBUG')
-            casalog.post('%s' % myflagcmd, 'DEBUG')
-
-        #
-        # ACTION to perform on input file
-        #
-        casalog.post('Executing action = ' + action)
-
-        # TODO: add row selection
-        # List the flag commands from inpfile on the screen
-        # and save them or not to outfile
-        if action == 'list':
-
-            # List the flag cmds on the screen
-#            listFlagCmd(myflagcmd, myantenna=ants, myreason=reason, myoutfile='',
-#                            listmode=listmode)
-            listFlagCmd(myflagcmd, myoutfile='', listmode=listmode)
-
-            # Save the flag cmds to the outfile
+            if action != 'apply' and action != 'list':
+                raise ValueError, 'Unsupported action for cal tables. Only apply and list are supported.'
+            
+            if inpmode == 'table' and isinstance(inpfile, str) and inpfile == '':
+                raise ValueError, 'inpmode=\'table\' needs an MS as inpfile'
+                                 
+            flagcmds = {}       
+            if inpmode == 'table' and fh.isCalTable(inpfile) == 0:
+                # Read flag cmds from the MS
+                flagcmds = readCalCmds(vis, inpfile, [], tablerows, reason, useapplied)
+                listmode = 'cmd'
+                
+            elif inpmode == 'list':
+                # Read flag cmds from a list
+                flagcmds = readCalCmds(vis, '', inpfile, [], reason, True)  
+                listmode = ''              
+            else:
+                raise ValueError, 'Unsupported inpmode for cal tables'
+                        
+            # Apply flag cmds
+            if flagcmds.keys().__len__() == 0:
+                raise Exception, 'There is 0 flag cmds in input'
+            
+            # List flags on the screen/logger
+            if action == 'list':
+                casalog.post('Executing action = list')
+                listFlagCmd(myflags=flagcmds, myoutfile='', listmode=listmode)
+                
+            elif action == 'apply':
+                casalog.post('Executing action = apply')
+                applyCalCmds(aflocal, vis, flagcmds, tablerows, flagbackup, outfile)
+                
+            # Save the flag cmds to an output file
             if savepars:
                 # These cmds came from the internal FLAG_CMD, only list on the screen
                 if outfile == '':
-                    if inpmode == 'table' and inpfile == '':
-                        pass
-                    else:
-                        casalog.post('Saving commands to FLAG_CMD')
-                        fh.writeFlagCmd(vis, myflagcmd, vrows=keylist,
-                                applied=False, add_reason='', outfile='')
+                    casalog.post('Saving to FLAG_CMD is not supported', 'WARN')
+                        
                 else:
                     casalog.post('Saving commands to ' + outfile)
-                    fh.writeFlagCmd(vis, myflagcmd, vrows=keylist,
+                    fh.writeFlagCmd(vis, flagcmds, vrows=tablerows,
                                     applied=False, add_reason='', outfile=outfile)
-                    
-        elif action == 'apply' or action == 'unapply':
 
-            # Apply/Unapply the flag commands to the data
-            apply = True
+                                
+                                
+        else:
+            # Input vis is an MS
 
-            # Preserve the order of the cmd list. When unapply, the order
-            # should not be preserved, because the unapply list should run
-            # before the re-apply list in the FlagAgentList.apply() method
-            preserve_order = True
-
-            # Get the list of parameters
+            # Get overall MS time range for later use (if needed)
+            mslocal2.open(vis)
+            timd = mslocal2.range(['time'])
+            mslocal2.close()
+    
+            ms_startmjds = timd['time'][0]
+            ms_endmjds = timd['time'][1]
+            t = qa.quantity(ms_startmjds, 's')
+            t1sdata = t['value']
+            ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
+            ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
+            t0 = qa.totime(ms_startdate + '/00:00:00.00')
+            t0d = qa.convert(t0, 'd')
+            t0s = qa.convert(t0, 's')
+            t = qa.quantity(ms_endmjds, 's')
+            t2sdata = t['value']
+            ms_endtime = qa.time(t, form='ymd', prec=9)[0]
+            # NOTE: could also use values from OBSERVATION table col TIME_RANGE
+            casalog.post('MS spans timerange ' + ms_starttime + ' to '
+                         + ms_endtime)
+    
+            myflagcmd = {}
             cmdlist = []
-            cmdkeys = myflagcmd.keys()
-            for key in cmdkeys:
-                cmdline = myflagcmd[key]['command']
-                cmdlist.append(cmdline)
-
-            # Select the data
-
-            # Select a loose union of the data selection from the list.
-            # The loose union will be calculated for field and spw only.
-            # Antenna, correlation and timerange should be handled by the agent
-            unionpars = {}
-            if cmdlist.__len__() > 1:
-                unionpars = fh.getUnion(vis, myflagcmd)
-                if len(unionpars.keys()) > 0:
-                    casalog.post('Pre-selecting a subset of the MS: ')
-                    casalog.post('%s' % unionpars)
+    
+            if action == 'clear':
+                casalog.post('Action "clear" will disregard inpmode (no reading)')
+                # Clear flag commands from FLAG_CMD in vis
+                msfile = vis
+    
+                if clearall:
+                    casalog.post('Deleting all rows from FLAG_CMD in MS '
+                                 + msfile)
+                    clearFlagCmd(msfile, myrowlist=rowlist)
                 else:
-                    casalog.post('Iterating through the entire MS')
+                    casalog.post('Safety Mode: you chose not to set clearall=True, no action'
+                                 )
+                return
+            
+            elif inpmode == 'table':
+    
+                casalog.post('Reading from FLAG_CMD table')
+                # Read from FLAG_CMD table into command list
+                if inpfile == '':
+                    msfile = vis
+                else:
+                    msfile = inpfile
+    
+                # Read only the selected rows for action = apply and
+                # always read all rows with APPLIED=True for action = unapply
+                if action == 'unapply':
+                    myflagcmd = readFromTable(msfile, useapplied=True,
+                            myreason=reason)
+                else:
+                    myflagcmd = readFromTable(msfile, myflagrows=tablerows,
+                            useapplied=useapplied, myreason=reason)
+    
+                listmode = 'cmd'
+            elif inpmode == 'list':
+    
+                # ##### TO DO: take time ranges calculation into account ??????
+                # Parse the input file
+                try:
+                    if inpfile == '' or inpfile == []:
+                        casalog.post('Input list is empty', 'ERROR')
+                        
+                    elif isinstance(inpfile, list):
+                        casalog.post('Reading from input list')
+                        cmdlist = inpfile
+            
+                        casalog.post('Input ' + str(cmdlist.__len__())
+                                     + ' lines from input list')
+                        # Make a FLAG_CMD compatible dictionary and select by reason
+                        myflagcmd = fh.makeDict(cmdlist, reason)
+    
+                        listmode = ''
+                    elif isinstance(inpfile, str):
+        
+                        casalog.post('Reading from input file')
+                        cmdlist = fh.readFile(inpfile)
+        
+                        # Make a FLAG_CMD compatible dictionary and select by reason
+                        myflagcmd = fh.makeDict(cmdlist, reason)
+                        listmode = 'file'
+                        
+                    else:
+                        casalog.post('Unsupported input file type', 'ERROR')
+        
+                except:
+    
+                    raise Exception, 'Error reading the input list %s' %inpfile
+    
+                # List of command keys in dictionary
+                vrows = myflagcmd.keys()
+                casalog.post('Read ' + str(vrows.__len__())
+                             + ' lines from list')
+    
+            elif inpmode == 'xml':
+    
+                casalog.post('Reading from Flag.xml')
+                # Read from Flag.xml (also needs Antenna.xml)
+                if inpfile == '':
+                    flagtable = vis
+                else:
+                    flagtable = inpfile
+    
+                # Actually parse table. Fail if Flag.xml or Antenna.xml is not found
+                try:
+                    myflags = fh.readXML(flagtable, mytbuff=tbuff)            
+                except:
+                    raise Exception
+    
+                casalog.post('%s' % myflags, 'DEBUG')
+    
+                # Construct flags per antenna, selecting by reason if desired
+                # Never sort!
+                if ants != '' or reason != '':
+                    myflagcmd = selectFlags(myflags, myantenna=ants,
+                            myreason=reason, myflagsort='')
+                else:
+                    myflagcmd = myflags
+    
+                listmode = 'online'
+                
+            else:
+                raise Exception, 'Input type is not supported'
 
-#                mslocal.close()
-            elif cmdlist.__len__() == 1:
-
-            # Get all the selection parameters, but set correlation to ''
-                cmd0 = myflagcmd[cmdkeys[0]]['command']
-                unionpars = fh.getSelectionPars(cmd0)
-                casalog.post('The selected subset of the MS will be: ')
-                casalog.post('%s' % unionpars)
-
-            aflocal.selectdata(unionpars)
-
-            # Parse the agents parameters
-            if action == 'unapply':
-                apply = False
-                preserve_order = False
-
-            list2save = fh.setupAgent(aflocal, myflagcmd, tablerows,
-                    apply, True)
-
-            # Initialize the Agents
-            aflocal.init()
-
-            # Backup the flags before running
-            if flagbackup:
-                fh.backupFlags(vis, 'flagcmd')
-
-            # Run the tool
-            stats = aflocal.run(True, preserve_order)
-
-            aflocal.done()
-
-            # Update the APPLIED column
-            valid_rows = list2save.keys()
-            if valid_rows.__len__ > 0:
-
+            # Before performing any action on the flag cmds, check them!    
+            if myflagcmd.__len__() == 0:
+                raise Exception, 'There are no flag commands in input'
+            
+            casalog.post('Flagcmd dictionary is: %s'%myflagcmd, 'DEBUG')
+            
+            # Specific for some actions
+            # Get the commands as a list of strings with reason back in
+            # TODO: maybe this is not needed anymore!!!!!!!!!!!!!!!
+            if action == 'apply' or action == 'unapply' or action == 'list':
+    
+                # Turn into command string list (add reason back in)
+                mycmdlist = []
+                keylist = myflagcmd.keys()
+                if keylist.__len__() > 0:
+                    for key in keylist:
+                        cmdstr = myflagcmd[key]['command']
+                        if myflagcmd[key]['reason'] != '':
+                            cmdstr += " reason='" + myflagcmd[key]['reason'
+                                    ] + "'"
+                        mycmdlist.append(cmdstr)
+    
+                casalog.post('Extracted ' + str(mycmdlist.__len__())
+                             + ' flag commands', 'DEBUG')
+    
+                casalog.post('%s' % mycmdlist, 'DEBUG')
+                casalog.post('%s' % myflagcmd, 'DEBUG')
+    
+            #
+            # ACTION to perform on input file
+            #
+            casalog.post('Executing action = ' + action)
+    
+            # List the flag commands from inpfile on the screen
+            # and save them or not to outfile
+            if action == 'list':
+    
+                # List the flag cmds on the screen
+                listFlagCmd(myflagcmd, myoutfile='', listmode=listmode)
+    
+                # Save the flag cmds to the outfile
                 if savepars:
-                    # These flags came from internal FLAG_CMD. Always update APPLIED
+                    # These cmds came from the internal FLAG_CMD, only list on the screen
                     if outfile == '':
                         if inpmode == 'table' and inpfile == '':
-                            updateTable(vis, mycol='APPLIED',
-                                    myval=apply, myrowlist=valid_rows)
+                            pass
                         else:
-                            # save to FLAG_CMD
                             casalog.post('Saving commands to FLAG_CMD')
+                            fh.writeFlagCmd(vis, myflagcmd, vrows=keylist,
+                                    applied=False, add_reason='', outfile='')
+                    else:
+                        casalog.post('Saving commands to ' + outfile)
+                        fh.writeFlagCmd(vis, myflagcmd, vrows=keylist,
+                                        applied=False, add_reason='', outfile=outfile)
+                        
+            elif action == 'apply' or action == 'unapply':
+    
+                # Apply/Unapply the flag commands to the data
+                apply = True
+    
+                # Preserve the order of the cmd list. When unapply, the order
+                # should not be preserved, because the unapply list should run
+                # before the re-apply list in the FlagAgentList.apply() method
+                preserve_order = True
+    
+                # Get the list of parameters
+                cmdlist = []
+                cmdkeys = myflagcmd.keys()
+                for key in cmdkeys:
+                    cmdline = myflagcmd[key]['command']
+                    cmdlist.append(cmdline)
+    
+                # Select the data
+    
+                # Select a loose union of the data selection from the list.
+                # The loose union will be calculated for field and spw only.
+                # Antenna, correlation and timerange should be handled by the agent
+                unionpars = {}
+                if cmdlist.__len__() > 1:
+                    unionpars = fh.getUnion(vis, myflagcmd)
+                    if len(unionpars.keys()) > 0:
+                        casalog.post('Pre-selecting a subset of the MS: ')
+                        casalog.post('%s' % unionpars)
+                    else:
+                        casalog.post('Iterating through the entire MS')
+    
+                elif cmdlist.__len__() == 1:
+    
+                # Get all the selection parameters, but set correlation to ''
+                    cmd0 = myflagcmd[cmdkeys[0]]['command']
+                    unionpars = fh.getSelectionPars(cmd0)
+                    casalog.post('The selected subset of the MS will be: ')
+                    casalog.post('%s' % unionpars)
+    
+                aflocal.selectdata(unionpars)
+    
+                # Parse the agents parameters
+                if action == 'unapply':
+                    apply = False
+                    preserve_order = False
+    
+                list2save = fh.setupAgent(aflocal, myflagcmd, tablerows,
+                        apply, True)
+                if list2save == {}:
+                    raise Exception, 'Cannot setup the agent(s)'
+    
+                # Initialize the Agents
+                aflocal.init()
+    
+                # Backup the flags before running
+                if flagbackup:
+                    fh.backupFlags(aflocal, msfile='', prename='flagcmd')
+    
+                # Run the tool
+                stats = aflocal.run(True, preserve_order)
+    
+                aflocal.done()
+    
+                # Update the APPLIED column
+                valid_rows = list2save.keys()
+                if valid_rows.__len__ > 0:
+    
+                    if savepars:
+                        # These flags came from internal FLAG_CMD. Always update APPLIED
+                        if outfile == '':
+                            if inpmode == 'table' and inpfile == '':
+                                updateTable(vis, mycol='APPLIED',
+                                        myval=apply, myrowlist=valid_rows)
+                            else:
+                                # save to FLAG_CMD
+                                casalog.post('Saving commands to FLAG_CMD')
+                                fh.writeFlagCmd(vis, myflagcmd,
+                                        vrows=valid_rows, applied=apply,
+                                        add_reason='', outfile='')
+                        else:
+    
+                        # Save to a file
+                            # Still need to update APPLIED column
+                            if inpmode == 'table' and inpfile == '':
+                                updateTable(vis, mycol='APPLIED',
+                                        myval=apply, myrowlist=valid_rows)
+    
+                            casalog.post('Saving commands to file '
+                                    + outfile)
                             fh.writeFlagCmd(vis, myflagcmd,
                                     vrows=valid_rows, applied=apply,
-                                    add_reason='', outfile='')
+                                    add_reason='', outfile=outfile)
                     else:
-
-                    # Save to a file
-                        # Still need to update APPLIED column
+    
+                    # Do not save cmds but maybe update APPLIED
                         if inpmode == 'table' and inpfile == '':
-                            updateTable(vis, mycol='APPLIED',
-                                    myval=apply, myrowlist=valid_rows)
-
-                        casalog.post('Saving commands to file '
-                                + outfile)
-                        fh.writeFlagCmd(vis, myflagcmd,
-                                vrows=valid_rows, applied=apply,
-                                add_reason='', outfile=outfile)
+                            updateTable(vis, mycol='APPLIED', myval=apply,
+                                        myrowlist=valid_rows)
                 else:
-
-                # Do not save cmds but maybe update APPLIED
-                    if inpmode == 'table' and inpfile == '':
-                        updateTable(vis, mycol='APPLIED', myval=apply,
-                                    myrowlist=valid_rows)
-            else:
-
-                casalog.post('There are no valid commands to save',
-                             'WARN')
-        elif action == 'clear':
-
-            # Clear flag commands from FLAG_CMD in vis
-            msfile = vis
-
-            if clearall:
-                casalog.post('Deleting all rows from FLAG_CMD in MS '
-                             + msfile)
-                clearFlagCmd(msfile, myrowlist=rowlist)
-            else:
-                casalog.post('Safety Mode: you chose not to set clearall=True, no action'
-                             )
-        elif action == 'plot':
-
-            keylist = myflagcmd.keys()
-            if keylist.__len__() > 0:
-                # Plot flag commands from FLAG_CMD or xml
-                casalog.post('Warning: will only reliably plot individual per-antenna flags'
-                             )
-                newplotflags(myflagcmd, plotfile, t1sdata, t2sdata)
-            else:
-                casalog.post('Warning: empty flag dictionary, nothing to plot'
-                             )
-        elif action == 'extract':
-            # Output flag dictionary
-            casalog.post('Returning extracted dictionary')
-            return myflagcmd
+    
+                    casalog.post('There are no valid commands to save',
+                                 'WARN')
+                    
+            elif action == 'plot':
+    
+                keylist = myflagcmd.keys()
+                if keylist.__len__() > 0:
+                    # Plot flag commands from FLAG_CMD or xml
+                    casalog.post('Warning: will only reliably plot individual per-antenna flags'
+                                 )
+                    newplotflags(myflagcmd, plotfile, t1sdata, t2sdata)
+                else:
+                    casalog.post('Warning: empty flag dictionary, nothing to plot'
+                                 )
+            elif action == 'extract':
+                # Output flag dictionary
+                casalog.post('Returning extracted dictionary')
+                return myflagcmd
+            
+    
     except Exception, instance:
 
         aflocal.done()
@@ -376,27 +416,24 @@ def flagcmd(
         raise
 
     # write history
-    try:
-        mslocal.open(vis, nomodify=False)
-        mslocal.writehistory(message='taskname = flagcmd',
-                             origin='flagcmd')
-        mslocal.writehistory(message='vis      = "' + str(vis) + '"',
-                             origin='flagcmd')
-        mslocal.writehistory(message='inpmode = "' + str(inpmode) + '"'
-                             , origin='flagcmd')
-        if inpmode == 'list':
-            mslocal.writehistory(message="inpfile = '%s'"%inpfile, origin='flagcmd')
-#            mslocal.writehistory(message='inpfile = "' + str(inpfile)
-#                                 + '"', origin='flagcmd')
-#        elif inpmode == 'cmd':
-#            for cmd in command:
-#                mslocal.writehistory(message='command  = "' + str(cmd)
-#                        + '"', origin='flagcmd')
-        mslocal.close()
-    except:
-        casalog.post('Cannot open vis for history, ignoring', 'WARN')
+    if not iscal:
+        try:
+            mslocal.open(vis, nomodify=False)
+            mslocal.writehistory(message='taskname = flagcmd',
+                                 origin='flagcmd')
+            mslocal.writehistory(message='vis      = "' + str(vis) + '"',
+                                 origin='flagcmd')
+            mslocal.writehistory(message='action   = "' + str(action) + '"'
+                                 , origin='flagcmd')
 
-    return
+            mslocal.writehistory(message='inpmode  = "' + str(inpmode) + '"'
+                                 , origin='flagcmd')
+
+            mslocal.close()
+        except:
+            casalog.post('Cannot open vis for history, ignoring', 'WARN')
+
+    return 
 
 
 # ************************************************************************
@@ -1990,5 +2027,97 @@ def isModeValid(line):
 
     # No mode means manual
     return True
+
+def readCalCmds(caltable, msfile, flaglist, rows, reason, useapplied):
+    '''Flag a cal table
+    
+    caltable    cal table name
+    msfile      optional MS with flag cmds
+    flagcmds    list with flag cmds or [] when msfile is given
+    reason      select only flag cmds with this reason(s)
+    useapplied  select APPLIED true or false
+    '''
+            
+    myflagcmd = {}
+    if msfile != '':   
+        casalog.post('Reading flag cmds from FLAG_CMD table of MS')    
+        # Read only the selected rows for action = apply and
+        myflagcmd = readFromTable(msfile, myflagrows=rows, useapplied=useapplied, myreason=reason)
+            
+    elif flaglist != []:    
+        # Parse the input file                    
+        if isinstance(flaglist, list):
+            casalog.post('Reading from input list')
+            cmdlist = flaglist
+
+            casalog.post('Input ' + str(cmdlist.__len__())
+                         + ' lines from input list')
+            # Make a FLAG_CMD compatible dictionary and select by reason
+            myflagcmd = fh.makeDict(cmdlist, reason)
+
+        elif isinstance(flaglist, str):
+
+            casalog.post('Reading from input file')
+            cmdlist = fh.readFile(flaglist)
+
+            # Make a FLAG_CMD compatible dictionary and select by reason
+            myflagcmd = fh.makeDict(cmdlist, reason)
+            
+        else:
+            casalog.post('Unsupported inpfile type', 'ERROR')
+                                            
+    return myflagcmd
+
+def applyCalCmds(aflocal, caltable, myflagcmd, tablerows, flagbackup, outfile):
+    
+    # Get the list of parameters
+    cmdlist = []
+    cmdkeys = myflagcmd.keys()
+    for key in cmdkeys:
+        cmdline = myflagcmd[key]['command']
+        cmdlist.append(cmdline)
+    
+    # Select the data
+    selpars = {}    
+    if cmdlist.__len__() == 1:   
+        # Get all the selection parameters, but set correlation to ''
+        cmd0 = myflagcmd[cmdkeys[0]]['command']
+        selpars = fh.getSelectionPars(cmd0)
+        casalog.post('The selected subset of the MS will be: ')
+        casalog.post('%s' % selpars)
+    
+    aflocal.selectdata(selpars)
+        
+    list2save = fh.setupAgent(aflocal, myflagcmd, tablerows, True, True)
+    if list2save == {}:
+        raise Exception, 'Cannot setup the agent(s)'
+    
+    # Initialize the Agents
+    aflocal.init()
+    
+    # Backup the flags before running
+    if flagbackup:
+        fh.backupFlags(aflocal, msfile='', prename='flagcmd')
+    
+    # Run the tool
+    aflocal.run(True, True)
+    
+    aflocal.done()
+     
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

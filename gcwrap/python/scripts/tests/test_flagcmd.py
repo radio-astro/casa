@@ -124,9 +124,23 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        default(flagdata)
         flagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(flagcmd)
 
+    def setUp_bpass_case(self):
+        self.vis = "cal.fewscans.bpass"
+
+        if os.path.exists(self.vis):
+            print "The CalTable is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                        os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        default(flagcmd)
         
 class test_manual(test_base):
     '''Test manual selections'''
@@ -573,15 +587,6 @@ class test_actions(test_base):
         if os.path.exists('fourplot.png'):
             os.remove('fourplot.png')
         
-    def test_plot_empty(self):
-        '''flagcmd: Test action=plot. Nothing to plot'''        
-        outplot = 'fourplot.png'
-        flagcmd(vis=self.vis, action='clear', clearall=True)
-        flagcmd(vis=self.vis, inpmode='table', useapplied=True, action='plot',
-                plotfile=outplot)
-        
-        self.assertFalse(os.path.exists(outplot),'Plot file should not exist')
-
     def test_plot(self):
         '''flagcmd: Test action=plot'''
         outplot = 'fourplot.png'
@@ -621,7 +626,142 @@ class test_actions(test_base):
          res=flagdata(vis=self.vis, mode='summary')
          self.assertEqual(res['flagged'],1099776)  
         
-#################################################
+class test_cmdbandpass(test_base):
+    """Flagcmd:: Test flagging task with Bpass-based CalTable """
+    
+    def setUp(self):
+        self.setUp_bpass_case()
+
+    def test_unsupported_mode_in_list(self):
+        '''Flagcmd: elevation and shadow are not supported in cal tables'''
+        res = flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='elevation'",
+                                                             "spw='1'"])
+        
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['spw']['1']['flagged'], 83200)
+
+    def test_default_cparam(self):
+        '''Flagcmd: flag CPARAM as the default column'''
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipzeros=True"])
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 10534, 'Should use CPARAM as the default column')
+        
+    def test_manual_field_selection_for_bpass(self):
+        """Flagcmd:: Manually flag a bpass-based CalTable using field selection"""
+        
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["field='3C286_A'"])
+        summary=flagdata(vis=self.vis, mode='summary')
+        
+        self.assertEqual(summary['field']['3C286_A']['flagged'], 499200.0)
+        self.assertEqual(summary['field']['3C286_B']['flagged'], 0)
+        self.assertEqual(summary['field']['3C286_C']['flagged'], 0)
+        self.assertEqual(summary['field']['3C286_D']['flagged'], 0)
+
+    def test_list_field_Selection_for_bpass(self):
+        """Flagcmd:: Manually flag a bpass-based CalTable using file in list mode """
+        
+        input = "field='3C286_A'"
+        filename = create_input(input)
+
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename)
+        summary=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(summary['field']['3C286_A']['flagged'], 499200.0)
+        self.assertEqual(summary['field']['3C286_B']['flagged'], 0)
+        self.assertEqual(summary['field']['3C286_C']['flagged'], 0)
+        self.assertEqual(summary['field']['3C286_D']['flagged'], 0)
+
+    def test_MS_flagcmds(self):
+        """Flagcmd:: Save flags to MS and apply to cal table"""
+        self.setUp_data4rflag()
+        msfile = self.vis
+        flagcmd(vis=msfile, action='clear', clearall=True)
+        flagdata(vis=msfile, antenna='ea09', action='', savepars=True)
+        
+        self.setUp_bpass_case()
+        flagcmd(vis=self.vis, inpfile=msfile, action='apply')
+        summary=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(summary['antenna']['ea09']['flagged'], 48000.0)
+        self.assertEqual(summary['antenna']['ea10']['flagged'], 0.0)
+        
+    def test_clip_one_list(self):
+        '''Flagcmd: Flag one solution using one command in a list'''
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1'"])
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 309388)
+        self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
+                
+    def test_flagbackup(self):
+        '''Flagcmd: backup cal table flags'''
+        # Create a local copy of the tool
+        aflocal = casac.agentflagger()
+        flagmanager(vis=self.vis, mode='list')
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 3)
+        aflocal.done()
+
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["spw='3'"])
+        flagmanager(vis=self.vis, mode='list')
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        aflocal.done()
+
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["spw='4'"], flagbackup=False)
+        flagmanager(vis=self.vis, mode='list')
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        aflocal.done()
+        
+        newname = 'BackupBeforeSpwFlags'
+
+        flagmanager(vis=self.vis, mode='rename', oldname='flagcmd_1', versionname=newname, 
+                    comment='Backup of flags before applying flags on spw')
+        flagmanager(vis=self.vis, mode='list')
+        aflocal.open(self.vis)
+        self.assertEqual(len(aflocal.getflagversionlist()), 4)
+        aflocal.done()
+        
+        # Apply spw=5 flags
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["spw='5'"], flagbackup=True)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['spw']['3']['flagged'], 83200)
+        self.assertEqual(res['spw']['4']['flagged'], 83200)
+        self.assertEqual(res['spw']['5']['flagged'], 83200)
+        self.assertEqual(res['flagged'], 83200*3)
+        
+        # Restore backup
+        flagmanager(vis=self.vis, mode='restore', versionname='BackupBeforeSpwFlags', merge='replace')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['spw']['5']['flagged'], 0)
+        self.assertEqual(res['flagged'], 0)
+
+    def test_save_cal(self):
+        '''Flagcmd: list flag cmds from MS and save to a file'''
+        self.setUp_data4rflag()
+        msfile = self.vis
+        flagcmd(vis=msfile, action='clear', clearall=True)
+        
+        # Save cmds to FLAG_CMD table
+        flagcmd(vis=msfile, inpmode='list', inpfile=["spw='1,3",
+                                                     "mode='clip' clipminmax=[0,500] datacolumn='SNR'"], 
+                action='list', savepars=True)
+        
+        self.setUp_bpass_case()
+        flagcmds = 'calflags.txt'
+        if os.path.exists(flagcmds):
+            os.system('rm -rf '+flagcmds)
+            
+        # Apply to cal table and save to an external file
+        flagcmd(vis=self.vis, inpmode='table', inpfile=msfile, savepars=True, outfile=flagcmds)
+        self.assertTrue(os.path.exists(flagcmds))
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 246315)
+        
+        # Apply from list in file and compare
+        flagdata(vis=self.vis, mode='unflag')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=flagcmds, action='apply')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'], 246315)
+
         
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -633,6 +773,7 @@ class cleanup(test_base):
         os.system('rm -rf Four_ants*.ms*')
         os.system('rm -rf shadowtest*.ms*')
         os.system('rm -rf tosr0001_scan3*.ms*')
+        os.system('rm -rf cal.fewscans.bpass*')
 
 
     def test1(self):
@@ -649,6 +790,7 @@ def suite():
             test_shadow,
             test_rflag,
             test_actions,
+            test_cmdbandpass,
             cleanup]
         
         

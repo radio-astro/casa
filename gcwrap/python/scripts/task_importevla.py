@@ -301,9 +301,9 @@ def importevla(
                 # Initialize the agents
                 aflocal.init()
 
-                # Backup the flags
-                if flagbackup:
-                    fh.backupFlags(viso, 'importevla')
+                # Backup the flags. Already done in the beginning of the task
+#                if flagbackup:
+#                    fh.backupFlags(aflocal=aflocal, msfile='', prename='importevla')
 
                 # Run the tool
                 stats = aflocal.run(True, True)

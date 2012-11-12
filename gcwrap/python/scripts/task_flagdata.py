@@ -108,7 +108,7 @@ def flagdata(vis,
     # an error happens that prevents the flagger tool from running.    
     if (mode != 'summary' and flagbackup):
         casalog.post('Backup original flags before applying new flags')
-        fh.backupFlags(vis, 'flagdata')
+        fh.backupFlags(aflocal=None, msfile=vis, prename='flagdata')
         # Set flagbackup to False because only the controller
         # should create a backup
         flagbackup = False
