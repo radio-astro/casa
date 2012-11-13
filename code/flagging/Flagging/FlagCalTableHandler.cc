@@ -592,11 +592,9 @@ FlagCalTableHandler::checkIfColumnExists(String column)
 //////// CTBuffer implementation ////////
 //////////////////////////////////////////
 
-CTBuffer::CTBuffer(CTIter *calIter): calIter_p(calIter), This(this)
+CTBuffer::CTBuffer(CTIter *calIter): calIter_p(calIter),This(this)
 {
 	invalidate();
-	CTnRowOK_p = False;
-	nRow();
 }
 
 CTBuffer::~CTBuffer()
@@ -604,11 +602,16 @@ CTBuffer::~CTBuffer()
 
 }
 
+Int CTBuffer::arrayId() const
+{
+	return -1;
+}
 Int CTBuffer::fieldId() const
 {
 	return This->fillFieldId();
 }
 
+// Convenience methods to by-pass const issues
 Int& CTBuffer::fillFieldId()
 {
 	if (!CTfieldIdOK_p)
@@ -630,6 +633,7 @@ Int& CTBuffer::spectralWindow()
 	return This->fillSpectralWindow();
 }
 
+// Convenience methods to by-pass const issues
 Int& CTBuffer::fillSpectralWindow()
 {
 	if (!CTspectralWindowOK_p)
@@ -707,9 +711,15 @@ Cube<Bool>& CTBuffer::flagCube()
 		CTflagCubeOk_p = True;
 
 		// Also fill shapes (nCorr cannot be retrieved at access time because of the VisBuffer nrowChunk signature, which is const)
+		nRow_p = flagCube_p.shape()[2];
 		nRowChunk_p = flagCube_p.shape()[2];
 		nChannel_p = flagCube_p.shape()[1];
 		nCorr_p = flagCube_p.shape()[0];
+
+		CTnRowOK_p = True;
+		CTnRowChunkOK_p = True;
+		CTnChannelOK_p = True;
+		CTnCorrOK_p = True;
 	}
 
 	return flagCube_p;
@@ -801,25 +811,7 @@ Cube<Complex>& CTBuffer::correctedVisCube()
 {
 	if (!CTcorrectedVisCubeOK_p)
 	{
-//		Cube<Float> tmp = calIter_p->paramErr();
 		Cube<Complex> tmp = calIter_p->cparam();
-
-		// Transform Cube<Float> into Cube<Complex>
-/*
-		Cube<Complex> tmpTrans(tmp.shape());
-		for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
-		{
-			for (uInt idx2=0;idx2<tmp.shape()[1];idx2++)
-			{
-				for (uInt idx3=0;idx3<tmp.shape()[2];idx3++)
-				{
-					tmpTrans(idx1,idx2,idx3) = Complex(tmp(idx1,idx2,idx3),0);
-				}
-			}
-		}
-*/
-
-
 		cparam_p.resize(tmp.shape(),False);
 		cparam_p = tmp;
 		CTcorrectedVisCubeOK_p = True;
@@ -859,7 +851,9 @@ Int& CTBuffer::nRow()
 {
 	if (!CTnRowOK_p)
 	{
-		nRow_p = calIter_p->nrow();
+		if (!CTflagCubeOk_p) flagCube();
+		nRow_p = flagCube_p.shape()[2];
+		CTnRowOK_p = True;
 	}
 
 	return nRow_p;
@@ -867,6 +861,18 @@ Int& CTBuffer::nRow()
 
 Int CTBuffer::nRowChunk() const
 {
+	return This->fillnRowChunk();
+}
+
+Int& CTBuffer::fillnRowChunk()
+{
+	if (!CTnRowChunkOK_p)
+	{
+		if (!CTflagCubeOk_p) flagCube();
+		nRowChunk_p = flagCube_p.shape()[2];
+		CTnRowChunkOK_p = True;
+	}
+
 	return nRowChunk_p;
 }
 
@@ -888,6 +894,7 @@ Int& CTBuffer::nCorr()
 	{
 		if (!CTflagCubeOk_p) flagCube();
 		nCorr_p = flagCube_p.shape()[0];
+		CTnCorrOK_p = True;
 	}
 
 	return nCorr_p;
@@ -909,6 +916,7 @@ void CTBuffer::invalidate()
 	CTVisCubeOK_p = False;
 	CTcorrectedVisCubeOK_p = False;
 	CTmodelVisCubeOK_p = False;
+	CTnRowOK_p = False;
 	CTnRowChunkOK_p = False;
 	CTnChannelOK_p = False;
 	CTnCorrOK_p = False;

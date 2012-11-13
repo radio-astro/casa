@@ -644,7 +644,7 @@ class test_cmdbandpass(test_base):
         '''Flagcmd: flag CPARAM as the default column'''
         flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipzeros=True"])
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 10534, 'Should use CPARAM as the default column')
+        self.assertEqual(res['flagged'], 9950, 'Should use CPARAM as the default column')
         
     def test_manual_field_selection_for_bpass(self):
         """Flagcmd:: Manually flag a bpass-based CalTable using field selection"""

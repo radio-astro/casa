@@ -1620,13 +1620,13 @@ class test_bandpass(test_base):
         '''Flagdata: flag CPARAM as the default column'''
         flagdata(vis=self.vis, mode='clip', clipzeros=True)
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 10534, 'Should use CPARAM as the default column')
+        self.assertEqual(res['flagged'], 9950, 'Should use CPARAM as the default column')
 
     def test_invalid_datacol(self):
         '''Flagdata: invalida data column should fall back to default'''
         flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='PARAMERR')
         res=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 10534)
+        self.assertEqual(res['flagged'], 9950)
                 
         
     def test_manual_field_selection_for_bpass(self):
@@ -1682,9 +1682,9 @@ class test_bandpass(test_base):
 
         flagdata(vis=self.vis, mode='clip',clipzeros=True, clipminmax=[0,0.3], datacolumn='CPARAM')
         summary=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(summary['flagged'], 10631)
+        self.assertEqual(summary['flagged'], 10047)
         self.assertEqual(summary['total'], 1248000)
-        self.assertEqual(summary['correlation']['Sol1']['flagged'], 10592)
+        self.assertEqual(summary['correlation']['Sol1']['flagged'], 10008)
         self.assertEqual(summary['correlation']['Sol2']['flagged'], 39)
 
     def test_clip_minmax_snr_all_for_bpass(self):
@@ -1695,8 +1695,8 @@ class test_bandpass(test_base):
                  correlation='')
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['total'], 1248000.0)
-        self.assertEqual(summary['flagged'], 63570.0)
-        self.assertEqual(summary['correlation']['Sol1']['flagged'], 25526.0)
+        self.assertEqual(summary['flagged'], 73174.0)
+        self.assertEqual(summary['correlation']['Sol1']['flagged'], 35130.0)
         self.assertEqual(summary['correlation']['Sol1']['total'], 624000.0)
         self.assertEqual(summary['correlation']['Sol2']['flagged'], 38044.0)
         self.assertEqual(summary['correlation']['Sol2']['total'], 624000.0)
@@ -1720,28 +1720,30 @@ class test_bandpass(test_base):
     def test_tfcrop_cparam_all_for_bpass(self):
         """Flagdata:: Test tfcrop in REAL_ALL calibration solutions of CPARAM column"""
 
+        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='REAL_ALL',clipzeros=True)
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='REAL_ALL')
         summary=flagdata(vis=self.vis, mode='summary')
 #        self.assertTrue(abs(summary['flagged'] - 63861.0) <= 5)
 #        self.assertEqual(abs(summary['flagged'] - 69369) <= 5)
-        self.assertEqual(summary['flagged'], 69369)
-        assert abs(summary['correlation']['Sol1']['flagged'] - 36312) <= 5
+        assert abs(summary['flagged'] - 79318) <= 10
+        assert abs(summary['correlation']['Sol1']['flagged'] - 46261) <= 5
         assert abs(summary['correlation']['Sol2']['flagged'] - 33057) <= 5
 
     def test_tfcrop_cparam_sol1_extension_for_bpass(self):
         """Flagdata:: Test tfcrop first calibration solution product of CPARAM column, 
         and then extend to the other solution for bpass CalTable"""
 
+        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='Sol1',clipzeros=True)
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='Sol1')
         pre=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(pre['correlation']['Sol1']['flagged'],19348)
-        self.assertEqual(pre['flagged'],19348)
+        assert abs(pre['flagged'] - 29299) <= 5
+        assert abs(pre['correlation']['Sol1']['flagged'] - 29299) <= 5
         
         # Extend to other solution
         flagdata(vis=self.vis, mode='extend', extendpols=True, growfreq=0.0, growtime=0.0)
         pos=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(pos['flagged'], 19348*2)
-        self.assertEqual(pos['correlation']['Sol2']['flagged'],19348)
+        assert abs(pos['flagged'] - 2*29299) <= 10
+        assert abs(pos['correlation']['Sol2']['flagged'] - 29299) <= 5        
 
     def test_caltable_flagbackup(self):
         '''Flagmanager:: cal table mode=list, flagbackup=True/False'''
