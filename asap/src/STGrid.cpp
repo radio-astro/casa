@@ -1939,7 +1939,17 @@ void STGrid::prepareTable( Table &tab, String &name )
   // 2012/02/13 TN
   // explicitly copy subtables since no rows including subtables are 
   // copied by Table::deepCopy with noRows=True
-  TableCopy::copySubTables( tab, t ) ;
+  //TableCopy::copySubTables( tab, t ) ;
+  const TableRecord &inrec = t.keywordSet();
+  TableRecord &outrec = tab.rwKeywordSet();
+  for (uInt i = 0 ; i < inrec.nfields() ; i++) {
+    if (inrec.type(i) == TpTable) {
+      String name = inrec.name(i);
+      Table intable = inrec.asTable(name);
+      Table outtable = outrec.asTable(name);
+      TableCopy::copyRows(outtable, intable);
+    }
+  }
 }
 
 void STGrid::fillTable( Table &tab )
