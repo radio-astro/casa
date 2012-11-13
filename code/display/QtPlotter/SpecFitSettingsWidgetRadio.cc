@@ -602,7 +602,9 @@ int SpecFitSettingsWidgetRadio::getFitCount(Int& startChannelIndex, Int& endChan
 	CanvasCurve curve = pixelCanvas->getCurve( curveName );
 	Vector<float> curveXValues = curve.getXValues();
 	findChannelRange( startVal, endVal, curveXValues, startChannelIndex, endChannelIndex );
-	int includeCount = endChannelIndex - startChannelIndex + 1;
+	//int includeCount = endChannelIndex - startChannelIndex + 1;
+	int multiplier = ui.fitRatioSpinBox->value();
+	int includeCount = (endChannelIndex - startChannelIndex) * multiplier + 1;
 	return includeCount;
 }
 
@@ -639,13 +641,28 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 			Int startChannelIndex = -1;
 			Int endChannelIndex = -1;
 			findChannelRange( startVal, endVal, curveXValues, startChannelIndex, endChannelIndex );
-			int includeCount = endChannelIndex - startChannelIndex + 1;
+			int fitRatio = ui.fitRatioSpinBox->value();
+			int includeCount = (endChannelIndex - startChannelIndex)*fitRatio + 1;
 			Vector<Float> xValues(includeCount);
 			Vector<Float> xValuesPix(includeCount);
 			for ( int i = startChannelIndex; i <= endChannelIndex; i++ ){
-				if ( curveXValues[i] >= startVal && curveXValues[i]<=endVal){
-					xValues[i - startChannelIndex] = curveXValues[i];
-					xValuesPix[i - startChannelIndex] = toPixels( curveXValues[i] );
+				int startBaseIndex = (i - startChannelIndex) * fitRatio;
+				xValues[startBaseIndex] = curveXValues[i];
+				xValuesPix[startBaseIndex] = toPixels( curveXValues[i] );
+
+				//Cut the interval into pieces to get a higher resolution fit
+				if ( i < endChannelIndex && fitRatio > 1 ){
+					float startX = xValues[startBaseIndex];
+					float endX = curveXValues[i+1];
+					float startXPixel = toPixels( startX);
+					float endXPixel = toPixels(endX);
+					float intervalWidth = abs( endX - startX ) / fitRatio;
+					float intervalWidthPixels = abs( endXPixel - startXPixel ) / fitRatio;
+					for ( int j = 1; j < fitRatio; j++ ){
+						float nextXValue = startX + intervalWidth * j;
+						xValues[startBaseIndex + j] = nextXValue;
+						xValuesPix[startBaseIndex + j] = startXPixel + intervalWidthPixels*j;
+					}
 				}
 			}
 
