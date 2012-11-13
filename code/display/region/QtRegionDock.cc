@@ -42,8 +42,7 @@ namespace casa {
 	QtRegionDock::QtRegionDock( QtDisplayPanelGui *d, QWidget* parent ) :
 					QDockWidget(parent), Ui::QtRegionDock( ),
 					dpg(d), current_dd(0), current_tab_state(-1,-1),
-					current_color_index(6), /*** magenta ***/
-					dismissed(false) {
+					current_color_index(6 /*** magenta ***/ ), dismissed(false) {
 	    setupUi(this);
 
 	    // there are two standard Qt, dismiss icons...
@@ -154,6 +153,20 @@ namespace casa {
 	    state->nowVisible( );
 	}
 
+	void QtRegionDock::selectedCountUpdateNeeded( ) {
+		selected_region_list_.clear( );
+		selected_region_set_.clear( );
+		for ( region_list_t::iterator it = region_list.begin( ); it != region_list.end( ); ++it ) {
+			(*it)->statisticsUpdateNeeded( );
+			Region *r = dynamic_cast<Region*>(*it);
+			if ( r && r->marked( ) ) {
+				selected_region_list_.push_back(r);
+				selected_region_set_.insert(r);
+			}
+		}
+
+	}
+
 	void QtRegionDock::dismiss( ) {
 	    hide( );
 	    dismissed = true;
@@ -247,7 +260,8 @@ namespace casa {
 	    QtRegionState *state = dynamic_cast<QtRegionState*>(current_widget);
 	    if ( state == 0 )
 		throw internal_error("region state corruption");
-	    state->justExposed( );
+
+		state->justExposed( );
 
 	    if ( QtRegion::getWeakSelection( ) != 0 ) {
 		// stack changes when new region is created... but we're only interested in

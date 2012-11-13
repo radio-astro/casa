@@ -901,6 +901,8 @@ namespace casa {
 	    }
 
 		ImageInterface<Float> *image = padd->imageinterface( );
+		if ( image == 0 ) return 0;
+
 		Vector<Int> dispAxes = padd->displayAxes( );
 		dispAxes.resize(2,True);
 

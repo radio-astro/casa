@@ -5,19 +5,22 @@
 
 namespace casa {
 
-    class QtDisplayPanelGui;
+	class QtDisplayPanelGui;
 
-    namespace viewer {
+	namespace viewer {
 
-	class QtRegionSourceFactory : public RegionSourceFactory {
-	    public:
-		RegionSource *newSource( RegionCreator *rc );
-		QtRegionSourceFactory( QtDisplayPanelGui *panel ) : panel_(panel) { }
-		~QtRegionSourceFactory( ) { }
-	    private:
-		RegionSource::shared_kernel_ptr_type kernel_;
-		QtDisplayPanelGui *panel_;
-	};
+		class QtRegionDock;
+
+		class QtRegionSourceFactory : public RegionSourceFactory {
+			public:
+				RegionSource *newSource( RegionCreator *rc );
+				QtRegionSourceFactory( QtDisplayPanelGui *panel ) : panel_(panel) { }
+				~QtRegionSourceFactory( ) { }
+				QtRegionDock *regionDock( );
+			private:
+				RegionSource::shared_kernel_ptr_type kernel_;
+				QtDisplayPanelGui *panel_;
+		};
     }
 }
 

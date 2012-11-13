@@ -33,6 +33,7 @@
 #include <display/region/QtRegionDock.ui.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
+#include <display/region/Region.h>
 
 namespace casa {
 
@@ -44,6 +45,7 @@ namespace casa {
 	class QtRegion;
 	class QtRegionState;
 	class ds9writer;
+	class Region;
 
 	class QtRegionDock : public QDockWidget, protected Ui::QtRegionDock {
 	    Q_OBJECT
@@ -67,9 +69,16 @@ namespace casa {
 		QString &loadDir( ) { return current_load_dir; }
 		int &colorIndex( ) { return current_color_index; }
 
+		// called to signal that selected region state needs to be updated...
+		void selectedCountUpdateNeeded( );
+		// retrieve the selected region state...
+		size_t selectedRegionCount( ) { return selected_region_list_.size( ); }
+		const std::list<Region*> &selectedRegions( ) { return selected_region_list_; }
+		const Region::region_list_type &selectedRegionSet( ) { return selected_region_set_; }
+
 		void dismiss( );
 
-		std::list<QtRegion*> regions( ) { return region_list; }
+		std::list<QtRegion*> regions( ) const { return region_list; }
 		// zero length string indicates OK!
 		std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file,
 					   std::string format, std::string ds9_csys="pixel" );
@@ -123,6 +132,12 @@ namespace casa {
 		region_list_t region_list;
 		typedef std::map<QtRegionState*,QtRegion*> region_map_t;
 		region_map_t region_map;
+
+		// maintain a count of selected regions, information which is used
+		// to determine the corner treatment when drawing regions...
+		std::list<Region*> selected_region_list_;
+		Region::region_list_type selected_region_set_;
+		void update_selected_region_info( );
 
 	};
     }

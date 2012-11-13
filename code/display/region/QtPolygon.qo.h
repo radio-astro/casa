@@ -111,6 +111,8 @@ namespace casa {
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
 		// is this region weakly or temporarily selected?
 		bool weaklySelected( ) const { return QtRegion::weaklySelected( ); }
+		void weaklySelect( ) { QtRegion::weaklySelect( ); }
+		void weaklyUnselect( ) { QtRegion::weaklyUnselect( ); }
 
 		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
 		void setLabelPosition( TextPosition pos ) { QtRegion::setLabelPosition(pos); }
@@ -138,6 +140,8 @@ namespace casa {
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Polygon::generate_dds_statistics( ); }
 		ImageRegion *get_image_region( DisplayData *dd ) const { return Polygon::get_image_region( dd ); }
+		const std::list<Region*> &get_selected_regions( ) { return QtRegion::get_selected_regions( ); }
+		size_t selected_region_count( ) { return QtRegion::selected_region_count( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const 

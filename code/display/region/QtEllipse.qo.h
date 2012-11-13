@@ -101,6 +101,8 @@ namespace casa {
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
 		// is this region weakly or temporarily selected?
 		bool weaklySelected( ) const { return QtRegion::weaklySelected( ); }
+		void weaklySelect( ) { QtRegion::weaklySelect( ); }
+		void weaklyUnselect( ) { QtRegion::weaklyUnselect( ); }
 
 		// indicates that region movement requires that the statistcs be updated...
 		void updateStateInfo( bool region_modified, Region::RegionChanges change ) { QtRegion::updateStateInfo( region_modified, change ); }
@@ -136,6 +138,8 @@ namespace casa {
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Ellipse::generate_dds_statistics( ); }
 		ImageRegion *get_image_region( DisplayData *dd ) const { return Ellipse::get_image_region( dd ); }
+		const std::list<Region*> &get_selected_regions( ) { return QtRegion::get_selected_regions( ); }
+		size_t selected_region_count( ) { return QtRegion::selected_region_count( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 

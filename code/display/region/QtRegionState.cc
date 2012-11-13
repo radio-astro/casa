@@ -156,20 +156,20 @@ QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::P
 	connect( bounding_width, SIGNAL(editingFinished( )), SLOT(resize_x( )) );
 	connect( bounding_height, SIGNAL(editingFinished( )), SLOT(resize_y( )) );
 
-	// update line characteristics...
-	connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
-	connect( line_style, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
-	connect( line_width, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
-	connect( text_position, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
-	connect( text_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
-	connect( font_name, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
-	connect( font_size, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
-	connect( x_off, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
-	connect( y_off, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
-	connect( font_italic, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
-	connect( font_bold, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
-	connect( region_mark, SIGNAL(stateChanged(int)), SLOT(state_change(int)) );
-	connect( marker_scale, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
+	    // update line characteristics...
+	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
+	    connect( line_style, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
+	    connect( line_width, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
+	    connect( text_position, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
+	    connect( text_color, SIGNAL(currentIndexChanged(int)), SLOT(color_state_change(int)) );
+	    connect( font_name, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
+	    connect( font_size, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
+	    connect( x_off, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
+	    connect( y_off, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
+	    connect( font_italic, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
+	    connect( font_bold, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
+	    connect( region_mark, SIGNAL(stateChanged(int)), SLOT(state_change_region_mark(int)) );
+	    connect( marker_scale, SIGNAL(valueChanged(int)), SLOT(state_change(int)) );
 
 	connect( save_file_name_browse, SIGNAL(clicked(bool)), SLOT(save_browser(bool)) );
 	connect( load_file_name_browse, SIGNAL(clicked(bool)), SLOT(load_browser(bool)) );
@@ -207,7 +207,9 @@ QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::P
 
 }
 
-QtRegionState::~QtRegionState( ) { }
+	QtRegionState::~QtRegionState( ) {
+		region_->selectedCountUpdateNeeded( );
+	}
 
 void QtRegionState::reset( const QString &n, QtRegion *r ) {
 	region_type->setText(QApplication::translate("QtRegionState", n.toAscii( ).constData( ), 0, QApplication::UnicodeUTF8));
@@ -549,15 +551,22 @@ void QtRegionState::stackChange( QWidget *top ) {
 	}
 }
 
-void QtRegionState::state_change( int ) {
-	emit refreshCanvas( );
-	// type of state change could be made specific (when needed)
-	// with QObject::sender( ) as in color_state_change...
-	emit regionChange( region_, "state" );
-}
-void QtRegionState::color_state_change( int index ) {
-	emit refreshCanvas( );
-	region_->colorIndex( ) = index;
+	void QtRegionState::state_change( int ) {
+	    emit refreshCanvas( );
+	    // type of state change could be made specific (when needed)
+	    // with QObject::sender( ) as in color_state_change...
+	    emit regionChange( region_, "state" );
+	}
+	void QtRegionState::state_change_region_mark( int ) {
+		region_->selectedCountUpdateNeeded( );
+	    emit refreshCanvas( );
+	    // type of state change could be made specific (when needed)
+	    // with QObject::sender( ) as in color_state_change...
+	    emit regionChange( region_, "state" );
+	}
+	void QtRegionState::color_state_change( int index ) {
+	    emit refreshCanvas( );
+	    region_->colorIndex( ) = index;
 
 	QObject *sender = QObject::sender( );
 	emit regionChange( region_, sender == line_color ? "state: line color" : sender == text_color ? "state: text color" : "state" );
@@ -736,11 +745,11 @@ void QtRegionState::category_change( int index ) {
 	QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
 	tab_state.first = index;
 
-	QString cat = categories->tabText(index);
-	if ( cat == "stats" )
-		emit statisticsVisible( true );
-	else
-		emit statisticsVisible( false );
+	    QString cat = categories->tabText(index);
+		if ( cat == "stats" )
+			emit statisticsVisible( true );
+		else
+			emit statisticsVisible( false );
 }
 
 void QtRegionState::states_change( int ) {
@@ -926,7 +935,19 @@ void QtRegionState::noOutputNotify( ) {
 	save_now->setFocus(Qt::OtherFocusReason);
 }
 
-void QtRegionState::save_browser(bool) {
+	void QtRegionState::mark( bool set ) {
+		region_->selectedCountUpdateNeeded( );
+		region_mark->setChecked( set );
+	}
+
+	bool QtRegionState::mark_toggle( ) {
+		region_->selectedCountUpdateNeeded( );
+		bool newstate = region_mark->isChecked( ) ? false : true;
+		region_mark->setChecked( newstate );
+		return newstate;
+	}
+
+	void QtRegionState::save_browser(bool) {
 
 	QFileDialog *dlg = new QFileDialog( 0, "Select a Region File for Output", region_->getSaveDir( ) );
 	dlg->setModal(true);

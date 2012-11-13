@@ -38,6 +38,7 @@
 #include <display/Utilities/dtor.h>
 #include <display/Display/MouseToolState.h>
 #include <display/Utilities/VOID.h>
+#include <stdexcept>
 
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
@@ -95,6 +96,20 @@ namespace casa {
 	void linear_offset_to_pixel_offset( WorldCanvas *wc_, double, double, double &, double & );
 
 	MDirection::Types get_coordinate_type( const CoordinateSystem &wc );
+
+
+	class ImageRegion_state {
+		public:
+			ImageRegion_state( ImageRegion *ir, size_t region_count ) : imageregion(ir), count_(region_count) { }
+			ImageRegion_state( const ImageRegion_state &other ) : imageregion(other.imageregion), count_(other.count_) { }
+			operator ImageRegion *( ) { return imageregion; }
+			size_t regionCount( ) const { return count_; }
+		private:
+			void* operator new (std::size_t) throw (std::logic_error)
+						{ throw std::logic_error("allocating an object not intended for dynamic allocation"); }
+			ImageRegion *imageregion;
+			size_t count_;
+	};
 
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
@@ -237,6 +252,8 @@ namespace casa {
 		bool selected( ) const { return selected_; }
 
 		virtual bool weaklySelected( ) const = 0;
+		virtual void weaklySelect( ) = 0;
+		virtual void weaklyUnselect( ) = 0;
 		// indicates that the user has selected this rectangle...
 		// ...may need to scroll region dock
 		virtual void selectedInCanvas( ) DISPLAY_PURE_VIRTUAL(Region::selectedInCanvas,);
@@ -275,9 +292,17 @@ namespace casa {
 			DISPLAY_PURE_VIRTUAL(Region::emitUpdate,);
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( );
+		// hook to allow generate_dds_statistics( ) to generate statistics
+		// for rectangular measurement set regions...
 		virtual void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
+
 		virtual ImageRegion *get_image_region( DisplayData* ) const
 			DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);
+		virtual ImageRegion_state get_image_selected_region( DisplayData* );
+
+		virtual const std::list<Region*> &get_selected_regions( ) = 0;
+		virtual size_t selected_region_count( )
+			DISPLAY_PURE_VIRTUAL(Region::selected_region_count,0);
 
 		virtual std::list<RegionInfo> *generate_dds_centers(bool )
 			DISPLAY_PURE_VIRTUAL(Region::generate_dds_centers, new std::list<RegionInfo>( ));
@@ -293,7 +318,7 @@ namespace casa {
 		Coord current_region_coordsys( ) const;
 		MDirection::Types current_casa_coordsys( ) const;
 
-		virtual void drawRegion( bool /*selected*/ ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
+		virtual void drawRegion( bool /*selected*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
 
 		virtual void setCenter(double &, double &, double &, double &) DISPLAY_PURE_VIRTUAL(Region::setCenter,);
