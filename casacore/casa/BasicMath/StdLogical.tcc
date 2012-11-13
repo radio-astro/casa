@@ -25,26 +25,14 @@
 
 #include <casa/BasicMath/StdLogical.h>
 
-#include <math.h>
-
+#include <casa/BasicMath/Functors.h>
 namespace casa { 
 
 template<typename T, typename U> Bool allNearAbs(const T &l, const T &r, const U tolerance) {
-
 	if (l.size() != r.size()) {
 		return False;
 	}
-	U tol = fabs(tolerance);
-	typename T::const_iterator liter = l.begin();
-	typename T::const_iterator riter = r.begin();
-	while (riter != r.end()) {
-		if (fabs(*riter - *liter) > tol) {
-			return False;
-		}
-		riter++;
-		liter++;
-	}
-	return True;
+    return compareAll (l.begin(), l.end(), r.begin(), NearAbs<U>(tolerance));
 }
 
 } // end namespace casa
