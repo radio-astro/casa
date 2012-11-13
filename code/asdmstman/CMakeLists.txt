@@ -38,6 +38,4 @@ install (FILES
 
 casa_add_assay( asdmstman
   test/tAsdmStMan.cc)
-casa_add_assay( asdmstman
-  test/makeAsdmIndex.cc)
 

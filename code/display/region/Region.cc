@@ -26,6 +26,7 @@
 //# $Id: $
 
 #include <display/region/Region.h>
+#include <images/Regions/WCUnion.h>
 #include <casa/Quanta/MVAngle.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
@@ -234,46 +235,46 @@ namespace casa {
 	}
 
 	void Region::draw( bool other_selected ) {
-	    visible_ = true;
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) {
-		visible_ = false;
-		return;
-	    }
+		visible_ = true;
+		if ( wc_ == 0 || wc_->csMaster() == 0 ) {
+			visible_ = false;
+			return;
+		}
 
-	    if ( ! within_drawing_area( ) ) {
-		visible_ = false;
-		return;
-	    }
+		if ( ! within_drawing_area( ) ) {
+			visible_ = false;
+			return;
+		}
 
 	    // When stepping through a cube, this detects that a different plane is being displayed...
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-	    int new_z_index = wc_->zIndex( );
-	    int z_min, z_max;
-	    zRange(z_min,z_max);
+		int new_z_index = wc_->zIndex( );
+		int z_min, z_max;
+		zRange(z_min,z_max);
 
-	    if ( new_z_index < z_min || new_z_index > z_max ) {
-		visible_ = false;
-		clearStatistics( );
-		return;
-	    } else {
-		visible_ = true;
-	    }
+		if ( new_z_index < z_min || new_z_index > z_max ) {
+			visible_ = false;
+			clearStatistics( );
+			return;
+		} else {
+			visible_ = true;
+		}
 
-	    if ( new_z_index != last_z_index ) {
-		updateStateInfo( true, RegionChangeNewChannel );
-		invalidateCenterInfo( );
-	    }
-	    last_z_index = new_z_index;
-	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+		if ( new_z_index != last_z_index ) {
+			updateStateInfo( true, RegionChangeNewChannel );
+			invalidateCenterInfo( );
+		}
+		last_z_index = new_z_index;
+		// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-	    setDrawingEnv( );
-	    drawRegion( (! other_selected && selected( )) || marked( ) || weaklySelected( ) );
-	    //if (draw_center_) cout << "center drawn" << endl; else cout << "center NOT drawn" << endl;
-	    resetDrawingEnv( );
+		setDrawingEnv( );
+		drawRegion( (! other_selected && selected( )) || marked( ) || weaklySelected( ) );
+		//if (draw_center_) cout << "center drawn" << endl; else cout << "center NOT drawn" << endl;
+		resetDrawingEnv( );
 
-	    setTextEnv( );
-	    drawText( );
-	    resetTextEnv( );
+		setTextEnv( );
+		drawText( );
+		resetTextEnv( );
 	}
 
 	void Region::drawText( ) {
@@ -1827,6 +1828,112 @@ if (!markCenter()) return;
 		  return 0;
 	  }
 
+	ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
+		const std::list<Region*> &selected_regions = get_selected_regions( );
+		ImageRegion *result = 0;
+		size_t count = 0;
+
+		if ( selected_regions.size( ) <= 0 ) {
+			//*
+			//* there were no selected regions...
+			//*
+			result = get_image_region( dd );
+			count = 1;
+
+		} else {
+			//*
+			//* create a compound region...
+			//*
+
+			// does the selected region list contain this region?
+			bool contains_this = false;
+			for ( std::list<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it ) {
+				if ( *it == this ) {
+					contains_this = true;
+					break;
+				}
+			}
+
+			// initialize compound region...
+			PtrBlock<const ImageRegion*> rgns(selected_regions.size( ) + (contains_this ? 0 : 1));
+			if ( contains_this == false )
+				rgns[count++] = get_image_region( dd );
+			
+			for ( std::list<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it )
+				rgns[count++] = (*it)->get_image_region( dd );
+
+			try {
+				WCUnion compound( rgns );
+				result = new ImageRegion(compound);
+			} catch(...) { }
+		}
+		return ImageRegion_state(result,count);
+	}
+
+
+	std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
+		std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
+
+		if( wc_==0 ) return region_statistics;
+
+		Int zindex = 0;
+		if (wc_->restrictionBuffer()->exists("zIndex")) {
+			wc_->restrictionBuffer()->getValue("zIndex", zindex);
+		}
+
+		DisplayData *dd = 0;
+		const std::list<DisplayData*> &dds = wc_->displaylist( );
+
+		ImageRegion_state imageregion_state = get_image_selected_region( wc_->csMaster( ) );
+		ImageRegion *imageregion = imageregion_state;
+		char region_component_count[128];
+		sprintf( region_component_count, "%lu", imageregion_state.regionCount( ) );
+
+		std::string errMsg_;
+		std::map<String,bool> processed;
+		for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+			dd = *ddi;
+			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+			if (padd==0) {
+				generate_nonimage_statistics( dd, region_statistics );
+				continue;
+			}
+
+			try {
+				//We should display the region statistics for any
+				//image that is registered.
+				/*if ( ! padd->conformsTo(*wc_) ){
+					continue;
+				}*/
+
+				ImageInterface<Float> *image = padd->imageinterface( );
+
+				if ( image == 0 ) continue;
+
+				String full_image_name = image->name(false);
+				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				if (repeat != processed.end()) continue;
+				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+
+				if ( imageregion == 0 ) continue;
+				RegionInfo::stats_t *dd_stats = getLayerStats(padd,image,*imageregion);
+				if ( dd_stats ) {
+					dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
+					region_statistics->push_back(ImageRegionInfo(image->name(true),dd_stats));
+				}
+			} catch (const casa::AipsError& err) {
+				errMsg_ = err.getMesg();
+				continue;
+			} catch (...) {
+				errMsg_ = "Unknown error converting region";
+				continue;
+			}
+	    }
+
+		delete imageregion;
+		return region_statistics;
+	}
+
    RegionInfo::stats_t *Region::getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg ) {
 
 	    // Compute and print statistics on DD's image for
@@ -1899,7 +2006,6 @@ if (!markCenter()) return;
 		    //	 begin collecting statistics...
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    RegionInfo::stats_t *layerstats = new RegionInfo::stats_t( );
-
 		    String zLabel="";
 		    String hLabel="";
 		    Vector<Double> tPix,tWrld;

@@ -583,7 +583,6 @@ void QPCanvas::setCursor(PlotCursor cursor) {
 void QPCanvas::refresh() {
     logMethod(CLASS_NAME, "refresh", true);
     PRE_REPLOT
-    QApplication::processEvents();
     m_canvas.replot();
     POST_REPLOT
     logMethod(CLASS_NAME, "refresh", false);
@@ -595,7 +594,6 @@ void QPCanvas::refresh(int drawLayersFlag) {
     
     if(drawLayersFlag != 0) {
         PRE_REPLOT
-        QApplication::processEvents();
         m_canvas.setLayersChanged(drawLayersFlag);
         m_canvas.replot();
         POST_REPLOT
@@ -1200,7 +1198,6 @@ void QPCanvas::holdDrawing() {
 void QPCanvas::releaseDrawing() {
     logMethod(CLASS_NAME, "releaseDrawing", true);
     PRE_REPLOT
-    QApplication::processEvents();
     m_canvas.releaseDrawing();
     POST_REPLOT
     logMethod(CLASS_NAME, "releaseDrawing", false);

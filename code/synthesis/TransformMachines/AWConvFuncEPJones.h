@@ -49,8 +49,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     AWConvFuncEPJones(const CountedPtr<ATerm> ATerm,
 		      const CountedPtr<PSTerm> psTerm,
-		      const CountedPtr<WTerm> wTerm):
-      AWConvFunc(ATerm,psTerm,wTerm), imageDC_p(),imageObsInfo_p()
+		      const CountedPtr<WTerm> wTerm,
+		      const Bool narrowBand=True):
+      AWConvFunc(ATerm,psTerm,wTerm,narrowBand), imageDC_p(),imageObsInfo_p()
     {};
     ~AWConvFuncEPJones() {};
     AWConvFuncEPJones& operator=(const AWConvFuncEPJones& other);

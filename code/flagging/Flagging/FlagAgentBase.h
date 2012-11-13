@@ -265,6 +265,8 @@ protected:
 	bool isNaN(Float number);
 	bool isZero(Double number);
 	bool isZero(Float number);
+	bool isNaNOrZero(Float number);
+	bool isNaNOrZero(Double number);
 
 	// Check if buffer has to be processed
 	bool checkIfProcessBuffer();

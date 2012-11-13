@@ -158,7 +158,7 @@ namespace casa {
 	std::pair<int,int> &QtRegion::tabState( ) { return dock_->tabState( ); }
 	std::map<std::string,int> &QtRegion::coordState( ) { return dock_->coordState( ); }
 	int &QtRegion::colorIndex( ) { return dock_->colorIndex( ); }
-      
+	void QtRegion::selectedCountUpdateNeeded( ) { dock_->selectedCountUpdateNeeded( ); }
 
 	QString QtRegion::getSaveDir( ) {
 	    if ( dock_->saveDir( ).isNull( ) ) {
@@ -197,46 +197,51 @@ namespace casa {
 		mystate->setCenterBackground(QString("#a9a9a9"));
 	}
 
+	void QtRegion::weaklySelect( ) {
+		dock_->selectRegion(mystate);
+		setWeakSelection(mystate);
+	}
+
         // indicates that region movement requires that the statistcs be updated...
-      void QtRegion::updateStateInfo( bool region_modified, Region::RegionChanges change ) {
+	void QtRegion::updateStateInfo( bool region_modified, Region::RegionChanges change ) {
 
-	    signal_region_change( change );
+		signal_region_change( change );
 
-	    // update statistics, when needed...
-	    if ( statistics_visible == false ) {
-		if ( region_modified ) statistics_update_needed = true;
-	    } else if ( (statistics_update_needed || region_modified) && regionVisible( ) ) {
-		reload_statistics_event( );
-	    }
-
-	    // update position, when needed...
-	    if ( position_visible == false ) {
-		if ( region_modified ) position_update_needed = true;
-	    } else if ( (position_update_needed || region_modified) && regionVisible( ) ) {
-		Region::Coord c;
-		Region::Units xu,yu;
-		std::string whu;
-		std::string x, y, angle;
-		double width, height;
-		mystate->getCoordinatesAndUnits( c, xu, yu, whu );
-		getPositionString( x, y, angle, width, height, c, xu, yu, whu );
-
-		QString qwidth;
-		QString qheight;
-		if ( width < 0.001 && height < 0.001 ) {
-		    qwidth = QString("%1").arg(width,0,'g',5);
-		    qheight = QString("%1").arg(height,0,'g',5);
-		} else {
-		    qwidth = QString("%1").arg(width);
-		    qheight = QString("%1").arg(height);
+		// update statistics, when needed...
+		if ( statistics_visible == false ) {
+			if ( region_modified ) statistics_update_needed = true;
+		} else if ( (statistics_update_needed || region_modified ) && regionVisible( ) ) {
+			reload_statistics_event( );
 		}
-				  
-		mystate->updatePosition( QString::fromStdString(x),
-					 QString::fromStdString(y),
-					 QString::fromStdString(angle),
-					 qwidth, qheight );
 
-	    }
+		// update position, when needed...
+		if ( position_visible == false ) {
+			if ( region_modified ) position_update_needed = true;
+		} else if ( (position_update_needed || region_modified) && regionVisible( ) ) {
+			Region::Coord c;
+			Region::Units xu,yu;
+			std::string whu;
+			std::string x, y, angle;
+			double width, height;
+			mystate->getCoordinatesAndUnits( c, xu, yu, whu );
+			getPositionString( x, y, angle, width, height, c, xu, yu, whu );
+
+			QString qwidth;
+			QString qheight;
+			if ( width < 0.001 && height < 0.001 ) {
+				qwidth = QString("%1").arg(width,0,'g',5);
+				qheight = QString("%1").arg(height,0,'g',5);
+			} else {
+				qwidth = QString("%1").arg(width);
+				qheight = QString("%1").arg(height);
+			}
+
+			mystate->updatePosition( QString::fromStdString(x),
+									 QString::fromStdString(y),
+									 QString::fromStdString(angle),
+									 qwidth, qheight );
+
+		}
 
 	}
 
@@ -346,7 +351,7 @@ namespace casa {
 		if ( delta[0] != 0 || delta[1] != 0 ) {
 		    ann->setLabelOffset(delta);
 		}
-		
+
 
 		ann->setFontStyle( font_style & Region::ItalicText && font_style & Region::BoldText ? AnnotationBase::ITALIC_BOLD :
 				   font_style & Region::ItalicText ? AnnotationBase::ITALIC :
@@ -385,6 +390,20 @@ namespace casa {
 	    }
 
 	}
+
+	const std::list<Region*> &QtRegion::get_selected_regions( ) {
+		// std::list<QtRegion*> regions = dock_->regions( );
+		// for ( std::list<QtRegion*>::iterator it=regions.begin( ); it != regions.end( ); ++it ) {
+		// 	if ( (*it)->marked( ) ) {
+		// 		Region *r = dynamic_cast<Region*>(*it);
+		// 		if ( r ) result->push_back(r);
+		// 	}
+		// }
+		// return result;
+		return dock_->selectedRegions( );
+	}
+
+	size_t QtRegion::selected_region_count( ) { return dock_->selectedRegionCount( ); }
 
 	void QtRegion::signal_region_change( Region::RegionChanges change ) {
 

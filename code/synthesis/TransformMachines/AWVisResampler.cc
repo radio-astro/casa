@@ -142,8 +142,8 @@ namespace casa{
     //
     // !!!!! Compute cfArea for high precision work
     //
-    // cfArea = getCFArea(convFuncV, wVal, scaledSupport, scaledSampling,
-    // 		       off, convOrigin, cfShape, sinDPA,cosDPA);
+     cfArea = getCFArea(convFuncV, wVal, scaledSupport, scaledSampling,
+     		       off, convOrigin, cfShape, sinDPA,cosDPA);
     // cerr << "Cfarea = " << cfArea << endl;
 
 
@@ -456,6 +456,7 @@ namespace casa{
 							       off, convOrigin, cfShape, loc, igrdpos,
 							       sinDPA, cosDPA,finitePointingOffsets,accumWts);
 				    }
+				  /////// TODO : For no conjugate beams, use convFuncC instead of conjConvFuncV
 				  else  // UUU : Without conjugate beams....
 				    {
 				      // // REMOVE THIS CODE
@@ -577,7 +578,8 @@ namespace casa{
 	    cfb.getParams(cfRefFreq,s,support(0),support(1),0,wndx,0);
 	    sampling(0) = sampling(1) = s;
 
-	    cfScale = cfRefFreq/freq[ichan];
+	    //cfScale = cfRefFreq/freq[ichan];
+	    cfScale = 1; 
 
 	    scaledSampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
 	    scaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);

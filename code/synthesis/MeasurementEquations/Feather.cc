@@ -42,6 +42,8 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
 #include <components/ComponentModels/GaussianBeam.h>
+#include <images/Images/TempImage.h>
+#include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageUtilities.h>
@@ -53,6 +55,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/Projection.h>
 #include <coordinates/Coordinates/ObsInfo.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
@@ -61,130 +64,370 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	Feather::Feather(){
 
-	}
+  Feather::Feather(): dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(1.0){
+    highIm_p=NULL;
+    lowIm_p=NULL;
+    cwImage_p=NULL;
+    cwHighIm_p=NULL;
+  }
+  Feather::Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdscale) : dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(sdscale) {
+    
+    //    ImageInfo highInfo=INTImage.imageInfo();
+    //   hBeam_p=highInfo.restoringBeam();
+    // ImageInfo lowInfo=SDImage.imageInfo();
+    //highIm_p= INTImage.cloneII();
+    setINTImage(INTImage);
+    // ImageInfo lowInfo=SDImage.imageInfo();
+    //lBeam_p=lowInfo.restoringBeam();
+    //lowIm_p=SDImage.cloneII();
+    setSDImage(SDImage);
+    
+    cwImage_p=NULL;
+    cwHighIm_p=NULL;
 
-	Feather::~Feather(){
+  }
+  Feather::~Feather(){
+    highIm_p=NULL;
+    lowIm_p=NULL;
+    cwImage_p=NULL;
+  }
+  
+  void Feather::setSDImage(const ImageInterface<Float>& SDImage){
+    if(highIm_p.null())
+      throw(AipsError("High res image has to be defined before SD image"));
+    ImageInfo lowInfo=SDImage.imageInfo();
+    lBeam_p=lowInfo.restoringBeam();
+    if(lBeam_p.isNull())
+      throw(AipsError("No Single dish restoring beam info in image"));
+    CoordinateSystem csyslow=SDImage.coordinates();
+    Vector<Stokes::StokesTypes> stokesvec;
+    if(CoordinateUtil::findStokesAxis(stokesvec, csyslow) <0)
+      CoordinateUtil::addIAxis(csyslow);
+    if(CoordinateUtil::findSpectralAxis(csyslow) <0)
+      CoordinateUtil::addFreqAxis(csyslow);
+    TempImage<Float> sdcopy(SDImage.shape(), csyslow);
+    sdcopy.copyData(SDImage);
+    lowIm_p=new TempImage<Float>(highIm_p->shape(), csysHigh_p);
+    // regrid the single dish image
+    {
+      Vector<Int> dirAxes=CoordinateUtil::findDirectionAxes(csysHigh_p);
+      IPosition axes(3,dirAxes(0),dirAxes(1),2);
+      Int spectralAxisIndex=CoordinateUtil::findSpectralAxis(csysHigh_p);
+      axes(2)=spectralAxisIndex;
+    
+      ImageRegrid<Float> ir;
+      ir.regrid(*lowIm_p, Interpolate2D::LINEAR, axes,  sdcopy);
+    }
+	    
 
-	}
-	Feather::Feather(const ImageInterface<Float>& /*SDImage*/, const ImageInterface<Float>& /*INTImage*/){
+    
+  }
+  void Feather::setINTImage(const ImageInterface<Float>& INTImage){
+    ImageInfo highInfo=INTImage.imageInfo();
+    hBeam_p=highInfo.restoringBeam();
+    if(hBeam_p.isNull())
+      throw(AipsError("No Single dish restoring beam info in image"));
+    csysHigh_p=INTImage.coordinates();
+    Vector<Stokes::StokesTypes> stokesvec;
+    if(CoordinateUtil::findStokesAxis(stokesvec, csysHigh_p) <0)
+      CoordinateUtil::addIAxis(csysHigh_p);
+    if(CoordinateUtil::findSpectralAxis(csysHigh_p) <0)
+      CoordinateUtil::addFreqAxis(csysHigh_p);
+    IPosition myshap=INTImage.shape();
+    if(INTImage.shape().nelements()==2)
+      myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),1,1);
+    if(INTImage.shape().nelements()==3)
+      myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),INTImage.shape()(2),1);
+    highIm_p=new TempImage<Float>(myshap, csysHigh_p);
+    highIm_p->copyData(INTImage);
+    ImageUtilities::copyMiscellaneous(*highIm_p, INTImage);
+  }
 
-	 }
+  Bool Feather::setEffectiveDishDiam(const Float xdiam, const Float ydiam){
+    dishDiam_p=min(xdiam, ydiam);
+    
+    //Change the beam of SD image
+    Double freq  = worldFreq(lowIm_p->coordinates(), 0);
+    //cerr << "Freq " << freq << endl;
+    Quantity halfpb=Quantity(1.22*C::c/freq/dishDiam_p, "rad");
+    GaussianBeam newBeam(halfpb, halfpb, Quantity(0.0, "deg"));
+    GaussianBeam toBeUsed;
+    try {
+      lBeam_p.deconvolve(toBeUsed, newBeam);
+    }
+    catch (const AipsError& x) {
+      throw(AipsError("Beam due to new effective diameter may be smaller than the beam of original dish image"));
+    }
+    
+    StokesImageUtil::Convolve(*lowIm_p, toBeUsed, False);
+    lBeam_p=newBeam; 
+    //reset cweight if it was calculated already
+    cweightCalced_p=False;
+    cweightApplied_p=False;
 
-	 Bool Feather::setEffectiveDishDiam(const Float /*xdiam*/, const Float /*ydiam=-1.0*/){
-		 return true;
-	 }
+    return True;
+  }
+  void Feather::getEffectiveDishDiam(Float& xdiam, Float& ydiam){
+    xdiam=dishDiam_p;
+    ydiam=dishDiam_p;
+  }
+  void Feather::setSDScale(Float sdscale){
+    sdScale_p=sdscale;
+  }
+  
+  void Feather::getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+    
+    TempImage<Complex> cimagelow(lowIm_p->shape(), lowIm_p->coordinates() );
+    StokesImageUtil::From(cimagelow, *lowIm_p);
+    LatticeFFT::cfft2d( cimagelow );
+    getCutXY(ux, xamp, uy, yamp, cimagelow);
+    
+  }
+  void Feather::getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+    TempImage<Complex> cimagehigh(highIm_p->shape(), highIm_p->coordinates() );
+    StokesImageUtil::From(cimagehigh, *highIm_p);
+    LatticeFFT::cfft2d( cimagehigh );
+    getCutXY(ux, xamp, uy, yamp, cimagehigh);
 
-	 void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
-		 uy.resize( 13 );
-				 yamp.resize( 13 );
-				 ux.resize( 13 );
-				 xamp.resize(13);
-				fillXVectors( ux, uy );
-				 xamp[0]=yamp[0] = 1;
-				 xamp[1]=yamp[1] = 1;
-				 xamp[2]=yamp[2] = 0.9;
-				 xamp[3]=yamp[3] = 0.8;
-				 xamp[4]=yamp[4] = 0.7;
-				 xamp[5]=yamp[5] = 0.6;
-				 xamp[6]=yamp[6] = 0.5;
-				 xamp[7]=yamp[7] = 0.4;
-				 xamp[8]=yamp[8] = 0.3;
-				 xamp[9]=yamp[9] = 0.2;
-				 xamp[10]=yamp[10] = 0.1;
-				 xamp[11]=yamp[11] = 0.05;
-				 xamp[12]=yamp[12] = 0;
-	 }
+  }
+  void Feather::getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
 
-	 void Feather::fillXVectors( Vector<Float>& ux, Vector<Float>& uy ) const{
-		 ux[0]=uy[0] = 0;
-		 ux[1]=uy[1] = 5;
-		 ux[2]=uy[2] = 10;
-		 ux[3]=uy[3] = 20;
-		 ux[4]=uy[4] = 30;
-		 ux[5]=uy[5] = 40;
-		 ux[6]=uy[6] = 50;
-		 ux[7]=uy[7] = 60;
-		 ux[8]=uy[8] = 70;
-		 ux[9]=uy[9] = 80;
-		 ux[10]=uy[10]= 90;
-		 ux[11]=uy[11] = 100;
-		 ux[12]=uy[12] = 1800;
-	 }
+    calcCWeightImage();
+    getCutXY(ux, xamp, uy, yamp, *cwImage_p);
+    
+  }
+  void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+    calcCWeightImage();
+    Vector<Float> xampInt, yampInt;
+    getCutXY(ux, xampInt, uy, yampInt, *cwImage_p);
+    xamp.resize();
+    xamp=(Float(1.0) - xampInt)*Float(sdScale_p);
+    yamp.resize();
+    yamp=(Float(1.0) - yampInt)*Float(sdScale_p);
 
-	 void Feather::getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
-		 uy.resize( 13 );
-		 yamp.resize( 13 );
-		 ux.resize( 13 );
-		 xamp.resize(13);
-		 fillXVectors( ux, uy );
-		 xamp[0]=yamp[0] = 0;
-		 xamp[1]=yamp[1] = 0.05;
-		 xamp[2]=yamp[2] = 0.1;
-		 xamp[3]=yamp[3] = 0.2;
-		 xamp[4]=yamp[4] = 0.3;
-		 xamp[5]=yamp[5] = 0.4;
-		 xamp[6]=yamp[6] = 0.5;
-		 xamp[7]=yamp[7] = 0.6;
-		 xamp[8]=yamp[8] = 0.7;
-		 xamp[9]=yamp[9] = 0.8;
-		 xamp[10]=yamp[10] = 0.9;
-		 xamp[11]=yamp[11] = 1;
-		 xamp[12]=yamp[12] = 1;
-	 }
+  }
+  void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
 
+    getFTCutSDImage(ux, xamp, uy,yamp);
+  }
+  
+  void Feather::getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+    applyFeather();
+    getCutXY(ux, xamp, uy, yamp, *cwHighIm_p);
+  }
 
-	 void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
-		 uy.resize( 13 );
-		 yamp.resize( 13 );
-		 ux.resize( 13 );
-		 xamp.resize(13);
-		 fillXVectors( ux, uy );
-		 for ( int i = 0; i < 13; i++ ){
-			    		 xamp[i] = rand() % 100;
-			    		 yamp[i] = rand() % 100;
-			    	 }
-
-	 }
-	    void Feather::getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
-	    	 uy.resize( 13 );
-	    	 yamp.resize( 13 );
-	    	 ux.resize( 13 );
-	    	 xamp.resize(13);
-	    	 fillXVectors( ux, uy );
-	    	 for ( int i = 0; i < 13; i++ ){
-	    		 xamp[i] = rand() % 100;
-	    		 yamp[i] = rand() % 100;
-	    	 }
+  void Feather::applyFeather(){
+    if(cweightApplied_p)
+      return;
+    calcCWeightImage();
+    if(highIm_p.null())
+      throw(AipsError("No high resolution image set"));
+    cwHighIm_p=new TempImage<Complex>(highIm_p->shape(), highIm_p->coordinates() );
+    StokesImageUtil::From(*cwHighIm_p, *highIm_p);
+    LatticeFFT::cfft2d( *cwHighIm_p );
+    Vector<Int> extraAxes(cwHighIm_p->shape().nelements()-2);
+    if(extraAxes.nelements() > 0){
+      
+      if(extraAxes.nelements() ==2){
+	Int n3=cwHighIm_p->shape()(2);
+	Int n4=cwHighIm_p->shape()(3);
+	IPosition blc(cwHighIm_p->shape());
+	IPosition trc(cwHighIm_p->shape());
+	blc(0)=0; blc(1)=0;
+	trc(0)=cwHighIm_p->shape()(0)-1;
+	trc(1)=cwHighIm_p->shape()(1)-1;
+	for (Int j=0; j < n3; ++j){
+	  for (Int k=0; k < n4 ; ++k){
+	    blc(2)=j; trc(2)=j;
+	      blc(3)=k; trc(3)=k;
+	      Slicer sl(blc, trc, Slicer::endIsLast);
+	      SubImage<Complex> cimagehighSub(*cwHighIm_p, sl, True);
+	      cimagehighSub.copyData(  (LatticeExpr<Complex>)((cimagehighSub * (*cwImage_p))));
 	    }
+	  }
+	}
+      }
+      else{
+	cwHighIm_p->copyData(  
+			     (LatticeExpr<Complex>)(((*cwHighIm_p) * (*cwImage_p) )));
+      }
+    cweightApplied_p=True;
 
-	    void Feather::getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
-	    	uy.resize( 13 );
-	    	yamp.resize( 13 );
-	    	ux.resize( 13 );
-	    	xamp.resize(13);
-	    	fillXVectors( ux, uy );
-	    	for ( int i = 0; i < 13; i++ ){
-	    		xamp[i] = rand() % 100;
-	    		yamp[i] = rand() % 100;
-	    	}
-	    }
-	        void Feather::getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
-	        	uy.resize( 13 );
-	        	yamp.resize( 13 );
-	        	ux.resize( 13 );
-	        	xamp.resize(13);
-	        	fillXVectors( ux, uy );
-	        	 for ( int i = 0; i < 13; i++ ){
-	        		    		 xamp[i] = rand() % 100;
-	        		    		 yamp[i] = rand() % 100;
-	        		    	 }
-	        }
+  }
 
-	        Bool Feather::saveFeatheredImage(const String& imagename){
-	        	return true;
-	        }
+  void Feather::calcCWeightImage(){
+    if(cweightCalced_p)
+      return;
+    if(highIm_p.null())
+      throw(AipsError("No Interferometer image was defined"));
+    IPosition myshap(highIm_p->shape());
+    Vector<Int> dirAxes;
+    dirAxes=CoordinateUtil::findDirectionAxes(highIm_p->coordinates());
+    for( uInt k=0; k< myshap.nelements(); ++k){
+      if( (Int(k) != dirAxes[0]) && (Int(k) != dirAxes[1]))
+	myshap(k)=1;
+    }
+      
+    cwImage_p=new TempImage<Complex>(myshap, highIm_p->coordinates());
+    {
+      TempImage<Float> lowpsf(myshap, cwImage_p->coordinates());
+      lowpsf.set(0.0);
+      IPosition center(4, Int((myshap(0)/4)*2), 
+		       Int((myshap(1)/4)*2),0,0);
+      lowpsf.putAt(1.0, center);
+      StokesImageUtil::Convolve(lowpsf, lBeam_p, False);
+      StokesImageUtil::From(*cwImage_p, lowpsf);
+    }
+    LatticeFFT::cfft2d( *cwImage_p );
+    LatticeExprNode node = max( *cwImage_p );
+    Float fmax = abs(node.getComplex());
+    cwImage_p->copyData(  (LatticeExpr<Complex>)( 1.0f - (*cwImage_p)/fmax ) );
+    cweightCalced_p=True;
+  }
+  
+  void Feather::getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
+			 Vector<Float>& uy, Vector<Float>& yamp, ImageInterface<Complex>& ftimage){
+
+    CoordinateSystem ftCoords(ftimage.coordinates());
+    Double freq=worldFreq(ftCoords, 0);
+	////
+    Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(ftCoords);
+    Int spectralIndex=CoordinateUtil::findSpectralAxis(ftCoords);
+    Array<Complex> tmpval;
+    Vector<Complex> meanval;
+    IPosition start=ftimage.shape();
+    IPosition shape=ftimage.shape();
+    shape[directionIndex(0)]=shape[directionIndex(0)]/2;
+    shape[directionIndex(1)]=shape[directionIndex(1)]/2;
+    for(uInt k=0; k < shape.nelements(); ++k){
+      start[k]=0;
+      if((k != uInt(directionIndex(1))) && (k != uInt(spectralIndex)))
+	shape[k]=1;
+    }
+    start[directionIndex(1)]=ftimage.shape()[directionIndex(1)]/2;
+    start[directionIndex(0)]=ftimage.shape()[directionIndex(0)]/2;
+    ftimage.getSlice(tmpval, start, shape, True);
+    if(shape[spectralIndex] >1){
+      meanval.resize(shape[directionIndex(1)]);
+      Matrix<Complex> retmpval(tmpval);
+      Bool colOrRow=spectralIndex > directionIndex(1);
+      for (uInt k=0; k < meanval.nelements(); ++k){
+	meanval[k]=colOrRow ? mean(retmpval.row(k)) : mean(retmpval.column(k));
+      }
+    }
+    else{
+      meanval=tmpval;
+    }
+    xamp.resize();
+    xamp=amplitude(meanval);
+    tmpval.resize();
+    shape=ftimage.shape();
+    shape[directionIndex(0)]=shape[directionIndex(0)]/2;
+    shape[directionIndex(1)]=shape[directionIndex(1)]/2;
+    for(uInt k=0; k < shape.nelements(); ++k){
+      start[k]=0;
+      if((k != uInt(directionIndex(0))) && (k != uInt(spectralIndex)))
+	shape[k]=1;
+    }
+    start[directionIndex(1)]=ftimage.shape()[directionIndex(1)]/2;
+    start[directionIndex(0)]=ftimage.shape()[directionIndex(0)]/2;
+    ftimage.getSlice(tmpval, start, shape, True);
+    if(shape[spectralIndex] >1){
+      meanval.resize(shape[directionIndex(0)]);
+      Bool colOrRow=spectralIndex > directionIndex(0);
+      Matrix<Complex> retmpval(tmpval);
+      for (uInt k=0; k < meanval.nelements(); ++k){
+	meanval[k]=colOrRow ? mean(retmpval.row(k)) : mean(retmpval.column(k));
+      }
+    }
+    else{
+      meanval=tmpval;
+    }
+    yamp.resize();
+    yamp=amplitude(meanval); 
+    Int dirCoordIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+    DirectionCoordinate dc=ftCoords.directionCoordinate(dirCoordIndex);
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
+    Vector<Int> elshape(2); 
+    elshape(0)=ftimage.shape()[directionIndex(0)];
+    elshape(1)=ftimage.shape()[directionIndex(1)];
+    Coordinate* ftdc=dc.makeFourierCoordinate(axes,elshape);	
+    Vector<Double> xpix(xamp.nelements());
+    indgen(xpix);
+    xpix +=Double(ftimage.shape()[directionIndex(0)])/2.0;
+    Matrix<Double> pix(2, xpix.nelements());
+    Matrix<Double> world(2, xpix.nelements());
+    Vector<Bool> failures;
+    pix.row(1)=elshape(0)/2;
+    pix.row(0)=xpix;
+    ftdc->toWorldMany(world, pix, failures);
+    xpix=world.row(0);
+	//cerr << "xpix " << xpix << endl;
+    xpix=fabs(xpix)*(C::c)/freq;
+    Vector<Double> ypix(yamp.nelements());
+    indgen(ypix);
+    ypix +=Double(ftimage.shape()[directionIndex(1)])/2.0;
+    pix.resize(2, ypix.nelements());
+    world.resize();
+    pix.row(1)=ypix;
+    pix.row(0)=elshape(1)/2;
+    ftdc->toWorldMany(world, pix, failures);
+    ypix=world.row(1);
+    ypix=fabs(ypix)*(C::c/freq);
+    ux.resize(xpix.nelements());
+    uy.resize(ypix.nelements());
+    convertArray(ux, xpix);
+    convertArray(uy, ypix);
+    
+
+  } 
+  
+	
+
+  Bool Feather::saveFeatheredImage(const String& imagename){
+    applyFeather();
+    Int stokesAxis, spectralAxis;
+    spectralAxis=CoordinateUtil::findSpectralAxis(csysHigh_p);
+    Vector<Stokes::StokesTypes> stokesvec;
+    stokesAxis=CoordinateUtil::findStokesAxis(stokesvec, csysHigh_p);
+    Vector<Int> dirAxes=CoordinateUtil::findDirectionAxes(csysHigh_p);
+    Int n3=highIm_p->shape()(stokesAxis);
+    Int n4=highIm_p->shape()(spectralAxis);
+    IPosition blc(highIm_p->shape());
+    IPosition trc(highIm_p->shape());
+    blc(dirAxes(0))=0; blc(dirAxes(1))=0;
+    trc(dirAxes(0))=highIm_p->shape()(dirAxes(0))-1;
+    trc(dirAxes(1))=highIm_p->shape()(dirAxes(1))-1;
+    TempImage<Complex>cimagelow(lowIm_p->shape(), lowIm_p->coordinates());
+    StokesImageUtil::From(cimagelow, *lowIm_p);
+    LatticeFFT::cfft2d( cimagelow);
+    Float sdScaling  = sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2");
+    for (Int j=0; j < n3; ++j){
+      for (Int k=0; k < n4 ; ++k){
+	blc(stokesAxis)=j; trc(stokesAxis)=j;
+	blc(spectralAxis)=k; trc(spectralAxis)=k;
+	Slicer sl(blc, trc, Slicer::endIsLast);
+	SubImage<Complex> cimagehighSub(*cwHighIm_p, sl, True);
+	SubImage<Complex> cimagelowSub(cimagelow, sl, True);
+	cimagelowSub.copyData(  (LatticeExpr<Complex>)((cimagehighSub + cimagelowSub * sdScaling)));
+      }
+    }
+    // FT back to image plane
+    LatticeFFT::cfft2d( cimagelow, False);
+    
+    // write to output image
+    PagedImage<Float> featherImage(highIm_p->shape(), highIm_p->coordinates(), imagename );
+    StokesImageUtil::To(featherImage, cimagelow);
+    ImageUtilities::copyMiscellaneous(featherImage, *highIm_p);
+    
+    
+      
+    
+
+
+    return true;
+  }
 
   void Feather::applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& fftim, Vector<Quantity>& extraconv){
     /*

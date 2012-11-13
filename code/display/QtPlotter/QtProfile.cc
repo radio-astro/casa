@@ -175,17 +175,11 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
 	yUnit = QString(img->units().getName().chars());
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
-	QStringList yUnitsList =(QStringList()<< "Jy/beam" << "Jy/arcsec^2" << "MJy/sr" << "Fraction of Peak" << "Kelvin");
-	for ( int i = 0; i < yUnitsList.size(); i++ ){
-		yAxisCombo->addItem( yUnitsList[i] );
-	}
+	adjustPlotUnits();
 	yAxisCombo->setCurrentIndex( 0 );
 	setDisplayYUnits( yAxisCombo->currentText() );
 	initializeSolidAngle();
 	connect( yAxisCombo, SIGNAL( currentIndexChanged(const QString&)), this , SLOT( setDisplayYUnits(const QString&)));
-
-
-
 
 	pixelCanvas->setAutoScaleX(true);
 	pixelCanvas->setAutoScaleY(true);
@@ -621,6 +615,46 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	pixelCanvas->clearCurve();
 }
 
+void QtProfile::adjustPlotUnits(){
+	yAxisCombo->clear();
+	QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
+				ConverterIntensity::JY_ARCSEC << ConverterIntensity::JY_SR <<
+				ConverterIntensity::FRACTION_OF_PEAK<<ConverterIntensity::KELVIN);
+
+	// remove the "/beam" in case of plotting flux
+	const QString PER_BEAM = "/beam";
+	if( itsPlotType==QtProfile::PFLUX){
+		Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
+		if(pos>-1){
+			yUnit.remove(pos,5);
+			yUnitsList[0] = yUnit;
+		}
+	}
+	//Add *pixels in case of sum
+	else if ( itsPlotType==QtProfile::PSUM ){
+		Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
+		if(pos>-1){
+			yUnit = yUnit + ConverterIntensity::TIMES_PIXELS;
+			for ( int i = 0; i < yUnitsList.size(); i++ ){
+				if ( yUnitsList[i] != ConverterIntensity::FRACTION_OF_PEAK ){
+					yUnitsList[i] = yUnitsList[i] + ConverterIntensity::TIMES_PIXELS;
+				}
+			}
+		}
+	}
+
+	//Adapt the yAxis combo to display appropriate units/transformations
+	if ( itsPlotType==QtProfile::PFLUX ){
+		yAxisCombo->addItem( yUnitsList[0] );
+		yAxisCombo->addItem( ConverterIntensity::FRACTION_OF_PEAK );
+	}
+	else {
+		for ( int i = 0; i < yUnitsList.size(); i++ ){
+			yAxisCombo->addItem( yUnitsList[i]);
+		}
+	}
+}
+
 void QtProfile::wcChanged( const String c,
 		const Vector<Double> px, const Vector<Double> py,
 		const Vector<Double> wx, const Vector<Double> wy,
@@ -682,6 +716,7 @@ void QtProfile::wcChanged( const String c,
 
 	setPositionStatus( pxv,pyv,wxv,wyv );
 
+
 	//Get Profile Flux density v/s coordinateType
 	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
 	if ( !ok ){
@@ -696,14 +731,8 @@ void QtProfile::wcChanged( const String c,
 	// scale for better display
 	Int ordersOfM = scaleAxis();
 
-	// remove the "/beam" in case of plotting flux
-	if(itsPlotType==QtProfile::PFLUX){
-		Int pos = yUnit.indexOf("/beam",0,Qt::CaseInsensitive);
-		if(pos>-1){
-			yUnit.remove(pos,5);
-			setPixelCanvasYUnits( yUnitPrefix, yUnit);
-		}
-	}
+	adjustPlotUnits();
+	setPixelCanvasYUnits( yUnitPrefix, yUnit);
 
 	// plot the graph
 	plotMainCurve();
@@ -726,8 +755,7 @@ void QtProfile::changePlotType(const QString &text) {
 	CoordinateSystem cSys = image->coordinates();
 	yUnit = QString(image->units().getName().chars());
 
-	switch (itsPlotType)
-	{
+	switch (itsPlotType){
 	case QtProfile::PMEAN:
 		if (npoints !=1 && errorMode->findText("rmse") < 0)
 			errorMode->insertItem(1, "rmse");
@@ -1118,14 +1146,8 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 	ok = setErrorPlotting( wxv, wyv);
 
 	Int ordersOfM = scaleAxis();
-	//remove the "/beam" in case of plotting flux
-	if (itsPlotType==QtProfile::PFLUX){
-		Int pos = yUnit.indexOf("/beam", 0, Qt::CaseInsensitive);
-		if ( pos > -1 ){
-			yUnit.remove(pos,5);
-			setPixelCanvasYUnits( yUnitPrefix, yUnit);
-		}
-	}
+	adjustPlotUnits( );
+
 
 	// plot the graph
 	plotMainCurve();
@@ -2030,7 +2052,11 @@ Int QtProfile::scaleAxis(){
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
 	bool unitsAcceptable = ConverterIntensity::isSupportedUnits( yUnit );
 	setYUnitConversionVisibility( unitsAcceptable );
+	if ( unitsAcceptable ){
+		yAxisCombo->setCurrentIndex( 0 );
+	}
 	specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
+	pixelCanvas->setDisplayYUnits( "" );
 	pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 }
 

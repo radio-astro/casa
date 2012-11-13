@@ -1263,8 +1263,12 @@ FlagAgentBase::setAgentParameters(Record config)
 		{
 			expression_p = "ABS ALL";
 		}
-		else
+		else if (dataColumn_p.compare("CPARAM") == 0)
 		{
+			// CPARAM is a complex column
+			expression_p = "ABS ALL";
+		}
+		else {
 			expression_p = "REAL ALL";
 		}
 
@@ -1274,8 +1278,8 @@ FlagAgentBase::setAgentParameters(Record config)
 
 		expression_p.upcase();
 
+		// These are the float columns that do not support complex operators
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
-				(dataColumn_p.compare("CPARAM") == 0) or
 				(dataColumn_p.compare("SNR") == 0) )
 		{
 			// Check if expression is one of the supported operators
@@ -1286,8 +1290,8 @@ FlagAgentBase::setAgentParameters(Record config)
 			{
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
-							<< ", selecting REAL ALL by default. "
-							<< " Keep in mind that complex operators are not supported for FPARAM/CPARAM/SNR"
+							<< "; selecting REAL ALL by default. "
+							<< " Keep in mind that complex operators are not supported for FPARAM/SNR"
 							<< LogIO::POST;
 				expression_p = "REAL ALL";
 			}
@@ -1309,7 +1313,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			{
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported complex operator: " << expression_p
-							<< ", using ABS by default. "
+							<< "; using ABS by default. "
 							<< " Supported expressions: REAL,IMAG,ARG,ABS,NORM."
 							<< LogIO::POST;
 				expression_p = "ABS " + expression_p;
@@ -1585,29 +1589,139 @@ FlagAgentBase::indigen(vector<uInt> &index, uInt size)
 bool
 FlagAgentBase::isZero(Float number)
 {
-	return !number;
+	int type = fpclassify(number);
+	switch (type)
+	{
+		case FP_NORMAL:
+			return false;
+		case FP_ZERO:
+			return true;
+		case FP_SUBNORMAL:
+			return true;
+		case FP_INFINITE:
+			return false;
+		case FP_NAN:
+			return false;
+		default:
+			return false;
+	}
 }
 
 bool
 FlagAgentBase::isZero(Double number)
 {
-	return !number;
+	int type = fpclassify(number);
+	switch (type)
+	{
+		case FP_NORMAL:
+			return false;
+		case FP_ZERO:
+			return true;
+		case FP_SUBNORMAL:
+			return true;
+		case FP_INFINITE:
+			return false;
+		case FP_NAN:
+			return false;
+		default:
+			return false;
+	}
 }
 
 bool
 FlagAgentBase::isNaN(Float number)
 {
-	bool result = !isfinite(number);
-	chunkNaNs_p += result;
-	return result;
+	int type = fpclassify(number);
+	switch (type)
+	{
+		case FP_NORMAL:
+			return false;
+		case FP_ZERO:
+			return false;
+		case FP_SUBNORMAL:
+			return false;
+		case FP_INFINITE:
+			chunkNaNs_p += 1;
+			return true;
+		case FP_NAN:
+			chunkNaNs_p += 1;
+			return true;
+		default:
+			chunkNaNs_p += 1;
+			return true;
+	}
 }
 
 bool
 FlagAgentBase::isNaN(Double number)
 {
-	bool result = !isfinite(number);
-	chunkNaNs_p += result;
-	return result;
+	int type = fpclassify(number);
+	switch (type)
+	{
+		case FP_NORMAL:
+			return false;
+		case FP_ZERO:
+			return false;
+		case FP_SUBNORMAL:
+			return false;
+		case FP_INFINITE:
+			chunkNaNs_p += 1;
+			return true;
+		case FP_NAN:
+			chunkNaNs_p += 1;
+			return true;
+		default:
+			chunkNaNs_p += 1;
+			return true;
+	}
+}
+
+bool
+FlagAgentBase::isNaNOrZero(Float number)
+{
+	int type = fpclassify(number);
+	switch (type)
+	{
+		case FP_NORMAL:
+			return false;
+		case FP_ZERO:
+			return true;
+		case FP_SUBNORMAL:
+			return true;
+		case FP_INFINITE:
+			chunkNaNs_p += 1;
+			return true;
+		case FP_NAN:
+			chunkNaNs_p += 1;
+			return true;
+		default:
+			chunkNaNs_p += 1;
+			return true;
+	}
+}
+
+bool
+FlagAgentBase::isNaNOrZero(Double number)
+{
+	int type = fpclassify(number);
+	switch (type)
+	{
+		case FP_NORMAL:
+			return false;
+		case FP_ZERO:
+			return true;
+		case FP_SUBNORMAL:
+			return true;
+		case FP_INFINITE:
+			chunkNaNs_p += 1;
+			return true;
+		case FP_NAN:
+			chunkNaNs_p += 1;
+			return true;
+		default:
+			chunkNaNs_p += 1;
+			return true;
+	}
 }
 
 void

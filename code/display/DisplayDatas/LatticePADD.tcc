@@ -1150,7 +1150,8 @@ void LatticePADisplayData<T>::SetUpBeamData_() {
 
     if(itsBaseImagePtr==0) return;
 
-    viewer::ImageProperties info(itsBaseImagePtr);
+    viewer::ImageProperties info;
+	try { info = itsBaseImagePtr; } catch(...) { }
     beams_ = info.restoringBeams( );
 
 

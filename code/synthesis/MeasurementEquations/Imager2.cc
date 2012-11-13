@@ -184,8 +184,10 @@
 #include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/AWProjectWBFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines/NewMultiTermFT.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
 #include <synthesis/TransformMachines/AWConvFuncEPJones.h>
+#include <synthesis/TransformMachines/NoOpATerm.h>
 
 using namespace std;
 
@@ -2103,7 +2105,20 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
       nomemory=True;
       
     }
-    
+   
+
+      // If msmfs, calculate Coeff Residuals
+      if(doWideBand_p && ntaylor_p>1)
+	{
+	  sm_p->calculateCoeffResiduals(); 
+	  // Re-fill them into the output residual images.
+	  for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+	    (residuals_p[k])->copyData(sm_p->getResidual(k));
+	   }
+
+	}
+
+ 
     Bool dorestore=False;
     if(  beam_p.nelements() >0 )
       dorestore=True;
@@ -2800,7 +2815,7 @@ Bool Imager::createFTMachine()
   //===============================================================
   // A-Projection FTMachine code start here
   //===============================================================
-  else if (ftmachine_p == "awproject"){
+  else if ((ftmachine_p == "awproject")) {
     if (wprojPlanes_p<=1)
       {
 	os << LogIO::NORMAL
@@ -2817,21 +2832,24 @@ Bool Imager::createFTMachine()
       }
 
     useDoublePrecGrid=False;
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p, aTermOn_p);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
     
     //
     // Selectively switch off CFTerms.
     //
-    if (aTermOn_p == False) apertureFunction->setOpCode(CFTerms::NOOP);
+    if (aTermOn_p == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
     if (psTermOn_p == False) psTerm->setOpCode(CFTerms::NOOP);
 
     //
     // Construct the CF object with appropriate CFTerms.
     //
     CountedPtr<ConvolutionFunction> awConvFunc;
-    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP_p);
+    //    if (ftmachine_p=="wbmosaic") 
+    //   awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm);
+    // else
+      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP_p);
 
     //
     // Construct the appropriate re-sampler.
@@ -2871,7 +2889,7 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
 
   }
-  else if ((ftmachine_p == "wbawp") || (ftmachine_p == "wbmosaic")){
+  else if ((ftmachine_p == "wbawp")){
 
     if (wprojPlanes_p<=1)
       {
@@ -2896,7 +2914,7 @@ Bool Imager::createFTMachine()
     //                            skyPosThreshold_p);
     //   }
     useDoublePrecGrid=False;
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
     //    psTerm->setOpCode(CFTerms::NOOP);
@@ -2993,7 +3011,7 @@ Bool Imager::createFTMachine()
       // 	}
       //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
       useDoublePrecGrid=False;
-      CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+      CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
       CountedPtr<PSTerm> psTerm = new PSTerm();
       CountedPtr<WTerm> wTerm = new WTerm();
       psTerm->setOpCode(CFTerms::NOOP);
@@ -3117,8 +3135,16 @@ Bool Imager::createFTMachine()
   // Currently, Multi-Term applies only to wideband imaging.
   if( ntaylor_p > 1 )
   { 
-    //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
-    FTMachine *tempftm = new MultiTermFT(ft_p, ft_p->name(), ntaylor_p, reffreq_p);
+    //cout << "UUU : Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
+    FTMachine *tempftm;
+    if ( useNewMTFT_p == False ) 
+      {
+	tempftm = new MultiTermFT(ft_p, ft_p->name(), ntaylor_p, reffreq_p);
+      }
+    else
+      {
+	tempftm = new NewMultiTermFT(ft_p, ntaylor_p, reffreq_p);
+      }
      ft_p = tempftm;
   }
   /******* End MTFT code ********/
@@ -4477,17 +4503,22 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
   }
   
 }
-ATerm* Imager::createTelescopeATerm(MeasurementSet& ms)
+ATerm* Imager::createTelescopeATerm(MeasurementSet& ms, const Bool& isATermOn)
 {
   LogIO log_l(LogOrigin("Imager", "createTelescopeATerm"));
+
+  if (!isATermOn) return new NoOpATerm();
+
   ROMSObservationColumns msoc(ms.observation());
   String ObsName=msoc.telescopeName()(0);
   if ((ObsName == "EVLA") || (ObsName == "VLA"))
     return new EVLAAperture();
   else
-    log_l << "Telescope name ('"+
-      ObsName+"') in the MS not recognized to create the telescope specific ATerm"
-	  << LogIO::EXCEPTION;
+    {
+      log_l << "Telescope name ('"+
+	ObsName+"') in the MS not recognized to create the telescope specific ATerm" 
+	    << LogIO::WARN;
+    }
 
   return NULL;
 }

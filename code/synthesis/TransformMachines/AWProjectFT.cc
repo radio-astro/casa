@@ -117,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doPBCorrection(True), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
-      visResampler_p(), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p(""),
+      visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
       rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), paNdxProcessed_p()
   {
     convSize=0;
@@ -170,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
-      visResampler_p(visResampler), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p(""),
+      visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
       rotatedConvFunc_p()
   {
     convSize=0;
@@ -1231,7 +1231,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// normalizeImage( *(modelImageVec[0]) , weightsVec[0],  *(weightImageVec[0]), 
 	// 		False, (Float)pbLimit_p, (Int)4);
       }
-    log_p << "Total flux model image (after avgPB normalization): " 
+    log_p << "Total flux in model image (after avgPB normalization): " 
 	  << sum((*(modelImageVec[0])).get()) << LogIO::POST;
     
     // Convert from Stokes planes to Correlation planes
@@ -1774,10 +1774,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// method, normalizeImage also needs to work with Lattices
 	// (rather than ImageInterface).
 	//
-	// UUU //normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
+	// //normalizeImage(*lattice,sumWeight,*avgPB_p,fftNormalization);
         //	normalizeImage(*lattice,sumWeight,*avgPB_p, *avgPBSq_p, fftNormalization);
 
-	// UUU nx ny normalization from GridFT...
+	// nx ny normalization from GridFT...
 	{
 	  Int inx = lattice->shape()(0);
 	  Int iny = lattice->shape()(1);

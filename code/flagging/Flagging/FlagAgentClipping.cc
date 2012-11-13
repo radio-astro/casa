@@ -278,13 +278,9 @@ FlagAgentClipping::checkVisForClipOutsideAndZeros(Float visExpression)
 	{
 		return true;
 	}
-	else if ((clipzeros_p) and isZero(visExpression))
-	{
-		return true;
-	}
 	else
 	{
-		return isNaN(visExpression);
+		return isNaNOrZero(visExpression);
 	}
 }
 
@@ -295,13 +291,9 @@ FlagAgentClipping::checkVisForClipInsideAndZeros(Float visExpression)
 	{
 		return true;
 	}
-	else if ((clipzeros_p) and isZero(visExpression))
-	{
-		return true;
-	}
 	else
 	{
-		return isNaN(visExpression);
+		return isNaNOrZero(visExpression);
 	}
 }
 
@@ -314,7 +306,7 @@ FlagAgentClipping::checkVisForNaNs(Float visExpression)
 bool
 FlagAgentClipping::checkVisForNaNsAndZeros(Float visExpression)
 {
-	return (isZero(visExpression) or isNaN(visExpression));
+	return isNaNOrZero(visExpression);
 }
 
 } //# NAMESPACE CASA - END

@@ -71,29 +71,29 @@ const int QtDisplayPanel::TOP_MARGIN_SPACE_DEFAULT = 4;
 const int QtDisplayPanel::RIGHT_MARGIN_SPACE_DEFAULT = 4;
 
 QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const std::list<std::string> &args) : 
-				QWidget(parent),
+						QWidget(parent),
 
-				panel_(panel),
-				pd_(0), pc_(0),
-				qdds_(),
-				toolmgr(0),
-				zoom_(0), panner_(0),
-				ocrosshair_(0), ortregion_(0), oelregion_(0), optregion_(0),
-				region_source_factory(0),
-				polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
-				mouseToolNames_(),
-				tracking_(True),
-				modeZ_(True),
-				zLen_(1), bLen_(1),
-				zIndex_(0), bIndex_(0),
-				animRate_(10), minRate_(1), maxRate_(50), animating_(0),
-				blankCBPanel_(0), mainPanelSize_(1.),
-				hasRgn_(False), rgnExtent_(0), qsm_(0),
-				lastMotionEvent_(0), bkgdClrOpt_(0),
-				extChan_(""), extPol_("")  ,
-				printStats(True), useRegion(False),PGP_MARGIN_UNIT(65),
-				zStart_(0), zEnd_(1), zStep_(1),
-				bStart_(0), bEnd_(1), bStep_(1){
+						panel_(panel),
+						pd_(0), pc_(0),
+						qdds_(),
+						toolmgr(0),
+						zoom_(0), panner_(0),
+						ocrosshair_(0), ortregion_(0), oelregion_(0), optregion_(0),
+						region_source_factory(0),
+						polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
+						mouseToolNames_(),
+						tracking_(True),
+						modeZ_(True),
+						zLen_(1), bLen_(1),
+						zIndex_(0), bIndex_(0),
+						animRate_(10), minRate_(1), maxRate_(50), animating_(0),
+						blankCBPanel_(0), mainPanelSize_(1.),
+						hasRgn_(False), rgnExtent_(0), qsm_(0),
+						lastMotionEvent_(0), bkgdClrOpt_(0),
+						extChan_(""), extPol_("")  ,
+						printStats(True), useRegion(False),PGP_MARGIN_UNIT(65),
+						zStart_(0), zEnd_(1), zStep_(1),
+						bStart_(0), bEnd_(1), bStep_(1){
 
 	setWindowTitle("Viewer Display Panel");
 
@@ -521,11 +521,11 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 		DisplayData*    dd = qdd->dd();
 
 		if ( dd->classType()==Display::Annotation ||
-					dd->classType()==Display::CanvasAnnotation) continue;
-			// (Tracking information is not provided for these dd types).
+				dd->classType()==Display::CanvasAnnotation) continue;
+		// (Tracking information is not provided for these dd types).
 		Record trackingRec;
 		pair<String,String> trackInfo;
-	    if ( bLen_ > 1 && pd_->isBlinkDD(dd) && ! dd->conformsTo(wc) ){
+		if ( bLen_ > 1 && pd_->isBlinkDD(dd) && ! dd->conformsTo(wc) ){
 			trackInfo = qdd->trackingInfo( ev );
 			trackingRec.define( qdd->name(), trackInfo.first + principalTrackInfo.second );
 		}
@@ -1131,7 +1131,7 @@ void QtDisplayPanel::setOptions(Record opts, Bool emitAll) {
 
 
 		Bool needsRefresh = pd_->setOptions(opts, chgdOpts);
-
+		pd_->setBlinkMode( !modeZ_ );
 		installEventHandlers_();
 
 
@@ -1168,10 +1168,10 @@ void QtDisplayPanel::setOptions(Record opts, Bool emitAll) {
 		if(chgdOpts.nfields()!=0) emit optionsChanged(chgdOpts);
 
 		if(needsRefresh) pd_->refresh();
-
-		release();  }
-
-	catch (...) {  }  }
+		
+	release();}
+	catch (...) {  }
+}
 
 
 
@@ -1663,6 +1663,7 @@ void QtDisplayPanel::setPanelGeometry( PanelDisplay* pd, float orgn, float siz )
 	geom.define(settingsMap[SIZE],   siz);
 	geom.define(settingsMap[LENGTH_SIDE_SIZE],   1.f);
 	pd->setGeometry(geom);
+
 }
 
 void QtDisplayPanel::setLabelFontSize(  ){
@@ -2380,7 +2381,7 @@ Bool QtDisplayPanel::setPanelState(QDomDocument& restoredoc,
 
 				if(dd->hasColormap()) {
 					QDomElement cmopt = ddelem.elementsByTagName("colormap")
-				    		.item(0).toElement();
+				    				.item(0).toElement();
 					String shSl = cmopt.attribute("shiftslope", "#").toStdString(),
 							brCnt = cmopt.attribute("brtcont",    "#").toStdString();
 

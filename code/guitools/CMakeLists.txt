@@ -37,6 +37,7 @@ include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
 
 qt4_wrap_cpp( outfiles_qoh
+  Feather/PlotHolder.qo.h
   Feather/FeatherMain.qo.h
   Feather/FileLoader.qo.h
   Feather/FeatherPlotWidget.qo.h
@@ -45,6 +46,7 @@ qt4_wrap_cpp( outfiles_qoh
   )
 
 casa_qt4_wrap_ui( outfiles_ui
+  Feather/PlotHolder.ui
   Feather/FeatherMain.ui
   Feather/FileLoader.ui
   Feather/FeatherPlotWidget.ui
@@ -58,12 +60,18 @@ casa_qt4_add_resources( outfiles_qrc Feather/Feather.qrc OPTIONS -name Feather )
 
 casa_add_library( guitools
   ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
+  Feather/PlotHolder.cc
   Feather/FeatherMain.cc
   Feather/FeatherPlotWidget.cc
   Feather/FileLoader.cc
   Feather/Preferences.cc
   Feather/PreferencesColor.cc
   Feather/FeatherPlot.cc
+  Feather/ExternalAxis.cc
+  Feather/ExternalAxisWidget.cc
+  Feather/ExternalAxisWidgetLeft.cc
+  Feather/ExternalAxisWidgetRight.cc
+  Feather/ExternalAxisWidgetBottom.cc
   )
 
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )

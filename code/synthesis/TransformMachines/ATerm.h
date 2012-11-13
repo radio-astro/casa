@@ -39,6 +39,10 @@
 #include <synthesis/TransformMachines/CFTerms.h>
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/CFStore2.h>
+#define CONVSIZE (1024*2)
+#define CONVWTSIZEFACTOR 1
+#define OVERSAMPLING 20
+#define THRESHOLD 1E-4
 
 namespace casa{
   // <summary>  
@@ -95,18 +99,28 @@ namespace casa{
     // and for all arrays where not all antenna aperture illuminations
     // can be treated as identical.
     //
-    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) = 0;
     virtual Int makePBPolnCoords(const VisBuffer& vb,
 				 const Int& convSize,
 				 const Int& convSampling,
 				 const CoordinateSystem& skyCoord,
 				 const Int& skyNx, const Int& skyNy,
-				 CoordinateSystem& feedCoord) = 0;
+				 CoordinateSystem& feedCoord);
 
-    virtual Int getConvSize() = 0;
-    virtual Int getOversampling() = 0;
-    virtual Float getConvWeightSizeFactor() = 0;
-    virtual Float getSupportThreshold() = 0;
+    virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique)
+    {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
+
+    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
+    virtual Vector<Int> getAntTypeList() {Vector<Int> tt(1);tt(0)=0;return tt;};
+    virtual Int getConvSize() {return CONVSIZE;};
+    virtual Int getOversampling() {return OVERSAMPLING;}
+    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
+    virtual Float getSupportThreshold() {return THRESHOLD;};
+
+    // virtual Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) = 0;
+    // virtual Int getConvSize() = 0;
+    // virtual Int getOversampling() = 0;
+    // virtual Float getConvWeightSizeFactor() = 0;
+    // virtual Float getSupportThreshold() = 0;
 
     virtual void normalizeImage(Lattice<Complex>& skyImage,
 				const Matrix<Float>& weights) 
@@ -125,10 +139,8 @@ namespace casa{
     // set the map for the ATerm object.
     //
     virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
-    virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
     //    virtual void rotate(const VisBuffer& vb, CFStore2& cfs)=0;
     virtual void rotate(const VisBuffer& vb, CFCell& cfs)=0;
-    virtual Vector<Int> getAntTypeList() {Vector<Int> tt(1);tt(0)=0;return tt;};
     virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
   protected:
     LogIO& logIO() {return logIO_p;}

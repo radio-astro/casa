@@ -37,7 +37,10 @@ namespace casa {
   {}
   Bool AsdmColumn::isWritable() const
   {
-    return False;
+    // We return True even though the column is not writable. If an actual write is done, 
+    // an exception will be thrown. This ensures that the AsdmStMan will work with MSMainColumns.
+    // The alternative solutions would cause too much code duplication.
+    return True;
   }
   void AsdmColumn::setShapeColumn (const IPosition&)
   {}

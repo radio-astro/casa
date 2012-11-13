@@ -1,3 +1,27 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #include "PreferencesColor.qo.h"
 #include <guitools/Feather/Preferences.qo.h>
 #include <QColorDialog>
@@ -7,30 +31,28 @@ namespace casa {
 const QString PreferencesColor::FUNCTION_COLOR = "Function Color";
 
 PreferencesColor::PreferencesColor(QWidget *parent)
-    : QDialog(parent), SCATTER_INDEX(-1){
+    : QDialog(parent), SCATTER_INDEX(-1), DISH_DIAMETER_INDEX(-2){
 
 	ui.setupUi(this);
 	setWindowTitle( "Feather Plot Color Preferences");
 
 	//Default colors
-	colorMap.insert( SD_WEIGHT_COLOR, QColor( "#0000FF"));
-	colorMap.insert( SD_ORIGINAL_COLOR, QColor("#1E90FF"));
-	colorMap.insert( SD_OUTPUT_COLOR, QColor("#87CEEB"));
-	colorMap.insert( INT_WEIGHT_COLOR, QColor("#FF0000"));
-	colorMap.insert( INT_ORIGINAL_COLOR, QColor("#8B0000"));
-	colorMap.insert( INT_OUTPUT_COLOR, QColor("#FF1493"));
+	colorMap.insert( SD_WEIGHT_COLOR, QColor( "#8B4513"));
+	colorMap.insert( SD_SLICE_COLOR, QColor("#DEB887"));
+	colorMap.insert( INT_WEIGHT_COLOR, QColor("#008080"));
+	colorMap.insert( INT_SLICE_COLOR, QColor("#4682B4"));
 	scatterPlotColor = Qt::black;
+	dishDiameterLineColor = Qt::black;
 
 	initializeUserColors();
 	resetColors();
 
 	connect( ui.scatterColorButton, SIGNAL(clicked()), this, SLOT(selectScatterPlotColor()));
+	connect( ui.dishDiameterColorButton, SIGNAL(clicked()), this, SLOT( selectDishDiameterLineColor()));
 	connect( ui.singleDishWeightColorButton, SIGNAL(clicked()), this, SLOT(selectSDWeightColor()));
-	connect( ui.singleDishOriginalColorButton, SIGNAL(clicked()), this, SLOT(selectSDOriginalColor()));
-	connect( ui.singleDishOutputColorButton, SIGNAL(clicked()), this, SLOT(selectSDOutputColor()));
+	connect( ui.singleDishSliceColorButton, SIGNAL(clicked()), this, SLOT(selectSDSliceColor()));
 	connect( ui.interferometerWeightColorButton, SIGNAL(clicked()), this, SLOT(selectINTWeightColor()));
-	connect( ui.interferometerOriginalColorButton, SIGNAL(clicked()), this, SLOT(selectINTOriginalColor()));
-	connect( ui.interferometerOutputColorButton, SIGNAL(clicked()), this, SLOT(selectINTOutputColor()));
+	connect( ui.interferometerSliceColorButton, SIGNAL(clicked()), this, SLOT(selectINTSliceColor()));
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(colorsAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(colorsRejected()));
@@ -51,6 +73,11 @@ void PreferencesColor::initializeUserColors(){
 	if ( scatterColorName.length() > 0 ){
 		scatterPlotColor = QColor( scatterColorName );
 	}
+
+	QString dishDiameterColorName = readCustomColor( settings, DISH_DIAMETER_INDEX );
+	if ( dishDiameterColorName.length() > 0 ){
+		dishDiameterLineColor = QColor( dishDiameterColorName );
+	}
 }
 
 QMap<PreferencesColor::FunctionColor,QColor> PreferencesColor::getFunctionColors( ) const {
@@ -59,6 +86,10 @@ QMap<PreferencesColor::FunctionColor,QColor> PreferencesColor::getFunctionColors
 
 QColor PreferencesColor::getScatterPlotColor() const{
 	return scatterPlotColor;
+}
+
+QColor PreferencesColor::getDishDiameterLineColor() const {
+	return dishDiameterLineColor;
 }
 
 void PreferencesColor::storeCustomColor( QSettings& settings, FunctionColor index ){
@@ -82,13 +113,13 @@ void PreferencesColor::storeMapColor( QPushButton* button, FunctionColor colorTy
 void PreferencesColor::persistColors(){
 	//Copy the colors from the buttons into the map.
 	storeMapColor( ui.singleDishWeightColorButton, SD_WEIGHT_COLOR);
-	storeMapColor( ui.singleDishOriginalColorButton, SD_ORIGINAL_COLOR);
-	storeMapColor( ui.singleDishOutputColorButton, SD_OUTPUT_COLOR);
-	storeMapColor( ui.interferometerWeightColorButton, INT_WEIGHT_COLOR);
-	storeMapColor( ui.interferometerOriginalColorButton, INT_ORIGINAL_COLOR);
-	storeMapColor( ui.interferometerOutputColorButton, INT_OUTPUT_COLOR);
-	scatterPlotColor = getButtonColor( ui.scatterColorButton );
+	storeMapColor( ui.singleDishSliceColorButton, SD_SLICE_COLOR);
 
+	storeMapColor( ui.interferometerWeightColorButton, INT_WEIGHT_COLOR);
+	storeMapColor( ui.interferometerSliceColorButton, INT_SLICE_COLOR);
+
+	scatterPlotColor = getButtonColor( ui.scatterColorButton );
+	dishDiameterLineColor = getButtonColor( ui.dishDiameterColorButton );
 
 	//Save the colors in the map
 	QSettings settings( Preferences::ORGANIZATION, Preferences::APPLICATION );
@@ -96,8 +127,12 @@ void PreferencesColor::persistColors(){
 	for ( int i = 0; i < END_COLOR; i++ ){
 		storeCustomColor( settings, static_cast<FunctionColor>(i) );
 	}
+
 	QString scatterKey = FUNCTION_COLOR + QString::number( SCATTER_INDEX );
 	settings.setValue( scatterKey, scatterPlotColor.name() );
+
+	QString dishDiameterKey = FUNCTION_COLOR + QString::number( DISH_DIAMETER_INDEX );
+	settings.setValue( dishDiameterKey, dishDiameterLineColor.name());
 }
 
 void PreferencesColor::colorsAccepted(){
@@ -114,12 +149,11 @@ void PreferencesColor::colorsRejected(){
 void PreferencesColor::resetColors(){
 	setButtonColor( ui.scatterColorButton, Qt::black );
 	setButtonColor( ui.singleDishWeightColorButton, colorMap[SD_WEIGHT_COLOR]);
-	setButtonColor( ui.singleDishOriginalColorButton, colorMap[SD_ORIGINAL_COLOR]);
-	setButtonColor( ui.singleDishOutputColorButton, colorMap[SD_OUTPUT_COLOR]);
+	setButtonColor( ui.singleDishSliceColorButton, colorMap[SD_SLICE_COLOR]);
 	setButtonColor( ui.interferometerWeightColorButton, colorMap[INT_WEIGHT_COLOR]);
-	setButtonColor( ui.interferometerOriginalColorButton, colorMap[INT_ORIGINAL_COLOR]);
-	setButtonColor( ui.interferometerOutputColorButton, colorMap[INT_OUTPUT_COLOR]);
+	setButtonColor( ui.interferometerSliceColorButton, colorMap[INT_SLICE_COLOR]);
 	setButtonColor( ui.scatterColorButton, scatterPlotColor );
+	setButtonColor( ui.dishDiameterColorButton, dishDiameterLineColor );
 }
 
 void PreferencesColor::setButtonColor( QPushButton* button, QColor color ){
@@ -147,28 +181,24 @@ void PreferencesColor::selectSDWeightColor(){
 	showColorDialog( ui.singleDishWeightColorButton );
 }
 
-void PreferencesColor::selectSDOriginalColor(){
-	showColorDialog( ui.singleDishOriginalColorButton );
-}
-
-void PreferencesColor::selectSDOutputColor(){
-	showColorDialog( ui.singleDishOutputColorButton );
+void PreferencesColor::selectSDSliceColor(){
+	showColorDialog( ui.singleDishSliceColorButton );
 }
 
 void PreferencesColor::selectINTWeightColor(){
 	showColorDialog( ui.interferometerWeightColorButton );
 }
 
-void PreferencesColor::selectINTOriginalColor(){
-	showColorDialog( ui.interferometerOriginalColorButton );
-}
-
-void PreferencesColor::selectINTOutputColor(){
-	showColorDialog( ui.interferometerOutputColorButton );
+void PreferencesColor::selectINTSliceColor(){
+	showColorDialog( ui.interferometerSliceColorButton );
 }
 
 void PreferencesColor::selectScatterPlotColor(){
 	showColorDialog( ui.scatterColorButton );
+}
+
+void PreferencesColor::selectDishDiameterLineColor(){
+	showColorDialog( ui.dishDiameterColorButton );
 }
 
 PreferencesColor::~PreferencesColor(){

@@ -38,6 +38,7 @@ namespace casa {
     class PanelDisplay;
     class AnnotationBase;
     class MSAsRaster;
+    class DisplayData;
 
     namespace viewer {
 
@@ -48,7 +49,8 @@ namespace casa {
 	    public:
 		~Rectangle( );
 		Rectangle( WorldCanvas *wc, double x1, double y1, double x2, double y2) : Region( wc ),
-		    blc_x(x1<x2?x1:x2), blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1) { complete = true; }
+			blc_x(x1<x2?x1:x2), blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1),
+			mouse_in_region(false) { complete = true; }
 
 		bool clickWithin( double x, double y ) const
 		    { return x > blc_x && x < trc_x && y > blc_y && y < trc_y; }
@@ -83,8 +85,9 @@ namespace casa {
 
 	    protected:
 		RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
-		std::list<RegionInfo> *generate_dds_statistics( );
+		void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
 		std::list<RegionInfo> *generate_dds_centers( );
+		ImageRegion *get_image_region( DisplayData* ) const;
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;
@@ -103,6 +106,7 @@ namespace casa {
 	    private:
 		bool within_vertex_handle( double x, double y ) const;
 		unsigned int check_handle( double x, double y ) const;
+		bool mouse_in_region;
 
 	};
     }

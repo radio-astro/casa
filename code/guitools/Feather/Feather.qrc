@@ -5,5 +5,7 @@
         <file>images/featherFlipped.png</file>
         <file>images/settings.png</file>
         <file>images/colorWheel.png</file>
+        <file>images/diameterSelector.png</file>
+        <file>images/zoom.png</file>
     </qresource>
 </RCC>

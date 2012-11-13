@@ -1734,6 +1734,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         --outChan;
 
         msSpW.chanFreq().put(min_k, chanFreqOut);
+	msSpW.refFrequency().put(min_k, min(chanFreqOut[0],chanFreqOut[chanFreqOut.size()-1]));
         msSpW.resolution().put(min_k, spwResolOut);
         msSpW.numChan().put(min_k, nOutChan);
         msSpW.chanWidth().put(min_k, chanWidthOut);
@@ -1742,6 +1743,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
       else{
 	msSpW.chanFreq().put(min_k, inSpWCols.chanFreq()(spw_p[k]));
+	msSpW.refFrequency().put(min_k, inSpWCols.refFrequency()(spw_p[k]));
 	msSpW.resolution().put(min_k, inSpWCols.resolution()(spw_p[k]));
 	msSpW.numChan().put(min_k, inSpWCols.numChan()(spw_p[k]));    
 	msSpW.chanWidth().put(min_k, inSpWCols.chanWidth()(spw_p[k]));
@@ -1753,7 +1755,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       msSpW.freqGroup().put(min_k, inSpWCols.freqGroup()(spw_p[k]));
       msSpW.freqGroupName().put(min_k, inSpWCols.freqGroupName()(spw_p[k]));
       msSpW.ifConvChain().put(min_k, inSpWCols.ifConvChain()(spw_p[k]));
-      msSpW.refFrequency().put(min_k, inSpWCols.refFrequency()(spw_p[k]));
       msSpW.measFreqRef().put(min_k, inSpWCols.measFreqRef()(spw_p[k]));
       msSpW.name().put(min_k, inSpWCols.name()(spw_p[k]));
       msSpW.netSideband().put(min_k, inSpWCols.netSideband()(spw_p[k]));

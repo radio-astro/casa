@@ -39,6 +39,7 @@ namespace casa {
 
     class AnnotationBase;
     class RegionTextList;
+    class DisplayData;
 
     namespace viewer {
 
@@ -118,10 +119,14 @@ namespace casa {
 		static void setWeakSelection(QtRegionState*s) { weak_selection = s; }
 		static QtRegionState *getWeakSelection( ) { return weak_selection; }
 		bool weaklySelected( ) const { return mystate == weak_selection; }
+		void weaklySelect( );
+		void weaklyUnselect( ) { if ( mystate == weak_selection ) setWeakSelection(0); }
 
 		// indicates that region movement requires the update of state information...
 		void updateStateInfo( bool region_modified, Region::RegionChanges );
 		void clearStatistics( );
+		void statisticsUpdateNeeded( ) { statistics_update_needed = true; }
+
 
 		virtual void getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units,
 						     std::string &width_height_units ) const = 0; //DISPLAY_PURE_VIRTUAL(Region::getCoordinatesAndUnits,);
@@ -158,6 +163,9 @@ namespace casa {
 		std::map<std::string,int> &coordState( );
 		// used to synchronize the default color for all of the RegionDock's RegionState objects...
 		int &colorIndex( );
+		// forward state update information to the dock wherere a count of selected regions, information
+		// is maintained. This is used to determine the corner treatment when drawing regions...
+		void selectedCountUpdateNeeded( );
 
 		// used to synchronize all region directories per QtDisplayPanelGUI...
 		QString getSaveDir( );
@@ -213,6 +221,9 @@ namespace casa {
 
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);
+		virtual ImageRegion *get_image_region( DisplayData* ) const = 0; /*DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);*/
+		const std::list<Region*> &get_selected_regions( );
+		size_t selected_region_count( );
 		// At the base of this inheritance hierarchy is a class that uses
 		// multiple inheritance. We are QtRegion is one base class, and we
 		// need to be able to retrieve our peer (the non-GUI dependent)

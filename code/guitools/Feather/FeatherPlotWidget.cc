@@ -1,72 +1,64 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #include "FeatherPlotWidget.qo.h"
 
 #include <QDebug>
-#include <QContextMenuEvent>
-
+#include <QGridLayout>
+#include <QMouseEvent>
+#include <qwt_plot_picker.h>
 namespace casa {
-FeatherPlotWidget::FeatherPlotWidget(const QString& title, bool origData, QWidget *parent)
+FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent)
     : QWidget(parent), plot( NULL ),
       singleDishWeightColor(Qt::cyan), singleDishDataColor(Qt::green),
       interferometerWeightColor( Qt::magenta), interferometerDataColor(Qt::blue),
-      plotTypeAction( "Scatter Plot", this ), zoom90Action( "Zoom 90% of Amplitude", this),
-      zoomNeutralAction( "Zoom Neutral", this ),contextMenu( this ),
-      singleDishFunction( "Single Dish"), interferometerFunction( "Interferometer"),
-      singleDishWeightFunction("Single Dish Weight"), interferometerWeightFunction( "Interferometer Weight"),
-      singleDishDataFunction("Single Dish Slice Cut"), interferometerDataFunction( "Interferometer Slice Cut"),
 
-      mouseMove( false ), legendVisible( true ), originalData( origData ), lineThickness(1),
-      plotTitle(title){
+      singleDishFunction( "Low Resolution Slice"), interferometerFunction( "High Resolution Slice"),
+      singleDishWeightFunction("Low Resolution Weight"), interferometerWeightFunction( "High Resolution Weight"),
+      legendVisible( true ), permanentScatter( false ), lineThickness(1), plotTitle(title){
+
 	ui.setupUi(this);
 
-	if ( !originalData ){
-		resetPlot( FeatherPlot::SLICE_CUT );
-	}
-	else {
-		resetPlot( FeatherPlot::ORIGINAL );
-	}
-	initializeActions();
+	sliceAxis = QwtPlot::yLeft;
+	weightAxis = QwtPlot::yRight;
+
+	resetPlot( plotType );
+
+	zoomer = NULL;
+	initializeZooming();
 }
 
-void FeatherPlotWidget::initializeActions(){
-
-	plotTypeAction.setStatusTip( "Toggle between a single-dish/interferometer amplitude scatter plot and function slice cuts.");
-	plotTypeAction.setCheckable( true );
-	connect( &plotTypeAction, SIGNAL(triggered()), this, SLOT(changePlotType()));
-
-	zoom90Action.setStatusTip( "Selecting this will zoom to include 90% of amplitude.");
-	zoom90Action.setCheckable( true );
-	connect( &zoom90Action, SIGNAL(triggered()), this, SLOT(changeZoom90()));
-
-	zoomNeutralAction.setStatusTip( "Restore the graph back to its original non-zoomed state");
-	connect( &zoomNeutralAction, SIGNAL(triggered()), this, SLOT(zoomNeutral()));
-
-	if ( !originalData ){
-		contextMenu.addAction( &plotTypeAction );
-		contextMenu.addAction( &zoom90Action );
-	}
-	contextMenu.addAction( &zoomNeutralAction );
-}
-
-bool FeatherPlotWidget::getPracticalLegendVisibility() const {
-	//Whether or not we actual show a legend depends on the plot type (scatter plots
-	//don't need a legend) and on whether the user wants one.
-	bool scatterPlot = plotTypeAction.isChecked();
-	bool actualVisibility = legendVisible && !scatterPlot;
-	return actualVisibility;
-}
-
-void FeatherPlotWidget::changePlotType(){
-	bool scatterPlot = plotTypeAction.isChecked();
-	zoom90Action.setEnabled( !scatterPlot );
-	if ( scatterPlot ){
-		resetPlot( FeatherPlot::SCATTER_PLOT );
-		addZoomNeutralScatterPlot();
-		zoom90Action.setChecked( false );
-		qDebug() << "Scatter plot";
-	}
-	else {
-		resetPlot( FeatherPlot::SLICE_CUT );
-		addZoomNeutralCurves();
+void FeatherPlotWidget::changePlotType( FeatherPlot::PlotType newPlotType ){
+	//Scatter plots do not change type.
+	if ( !permanentScatter ){
+		resetPlot( newPlotType );
+		if ( newPlotType ==FeatherPlot::SCATTER_PLOT ){
+			addScatterData();
+		}
+		else {
+			addZoomNeutralCurves();
+		}
 	}
 }
 
@@ -76,30 +68,97 @@ void FeatherPlotWidget::setLineThickness( int thickness ){
 	plot->replot();
 }
 
+void FeatherPlotWidget::setDishDiameter( double value ){
+	plot->setDiameterPosition( value );
+}
+
 void FeatherPlotWidget::setLegendVisibility( bool visible ){
 	legendVisible = visible;
-	//Override if we are displaying a scatter plot.  Scatter plots
-	//should never have a legend.
-	bool actualVisibility = this->getPracticalLegendVisibility();
-	plot->setLegendVisibility( actualVisibility );
+	plot->setLegendVisibility( visible );
 	plot->replot();
 }
 
-void FeatherPlotWidget::setPlotColors( QColor dataSDColor, QColor dataINTColor,
-		QColor weightSDColor, QColor weightINTColor, QColor scatterPlotColor ){
-	singleDishDataColor = dataSDColor;
-	interferometerDataColor = dataINTColor;
-	singleDishWeightColor = weightSDColor;
-	interferometerWeightColor = weightINTColor;
-	this->scatterPlotColor = scatterPlotColor;
+void FeatherPlotWidget::setPermanentScatter( bool scatter ){
+	permanentScatter = scatter;
+}
+
+void FeatherPlotWidget::setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
+		const QColor& scatterColor, const QColor& dishDiameterColor ){
+	singleDishDataColor = colorMap[PreferencesColor::SD_SLICE_COLOR];
+	interferometerDataColor = colorMap[PreferencesColor::INT_SLICE_COLOR];
+	singleDishWeightColor = colorMap[PreferencesColor::SD_WEIGHT_COLOR];
+	interferometerWeightColor = colorMap[PreferencesColor::INT_WEIGHT_COLOR];
+	scatterPlotColor = scatterColor;
+	dishDiameterLineColor = dishDiameterColor;
 	resetColors();
+}
+void FeatherPlotWidget::resizeEvent( QResizeEvent* event ){
+	QWidget::resizeEvent( event );
+	plot->setDiameterPosition();
+}
+
+void FeatherPlotWidget::initializeZooming(){
+	if ( zoomer == NULL ){
+		zoomer = new QwtPlotPicker(plot->canvas());
+		QPen pen(Qt::black );
+		pen.setWidth( 2 );
+		zoomer -> setTrackerPen( pen );
+		zoomer -> setAxis(QwtPlot::xBottom, QwtPlot::yLeft);
+		zoomer -> setSelectionFlags(QwtPlotPicker::RectSelection | QwtPlotPicker::DragSelection);
+		zoomer -> setRubberBand( QwtPlotPicker::RectRubberBand );
+		zoomer->setTrackerMode( QwtPlotPicker::AlwaysOff );
+		zoomer->setMousePattern( QwtEventPattern::MouseSelect1, Qt::LeftButton );
+		connect( zoomer, SIGNAL(selected ( const QwtDoubleRect& )), this, SLOT(zoomRectangleSelected( const QwtDoubleRect& )));
+	}
+}
+
+void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
+	double firstPoint = zoomRect.x();
+	double secondPoint = firstPoint + zoomRect.width();
+
+	//If we are a scatter plot, we don't have to let anyone know about
+	//the zoom, just update our own coordinates.
+	if ( plot->getPlotType() == FeatherPlot::SCATTER_PLOT ){
+
+	}
+	//Tell the plot holder about the zoom so all the plots can zoom in sync.
+	else {
+		emit rectangleZoomed( firstPoint, secondPoint );
+	}
+}
+
+
+void FeatherPlotWidget::mouseReleaseEvent( QMouseEvent* event ){
+	//Check to see if the mouse release represents a change in the dish
+	//diameter.
+	Qt::KeyboardModifiers modifiers = event->modifiers();
+	bool diameterPlacement = false;
+	if ( modifiers & Qt::ShiftModifier ){
+		diameterPlacement = true;
+	}
+	else if ( plot->isDiameterSelectorMode() ){
+		diameterPlacement = true;
+	}
+
+	//We could be changing the dish diameter.  If so, let all the plots
+	//know about the change by percolating the event upward.
+	if ( diameterPlacement ){
+		bool diameterMoved = plot->moveDiameterMarker( event->pos() );
+		if ( diameterMoved ){
+			double dishDiameter = plot->getDishDiameter();
+			if ( dishDiameter >= 0 ){
+				emit dishDiameterChanged( dishDiameter);
+			}
+		}
+	}
+	QWidget::mouseReleaseEvent( event );
 }
 
 void FeatherPlotWidget::resetColors(){
 	FeatherPlot::PlotType plotType = plot->getPlotType();
 	if ( plotType == FeatherPlot::SLICE_CUT ){
-		plot->setFunctionColor( singleDishDataFunction, singleDishDataColor );
-		plot->setFunctionColor( interferometerDataFunction, interferometerDataColor );
+		plot->setFunctionColor( singleDishFunction, singleDishDataColor );
+		plot->setFunctionColor( interferometerFunction, interferometerDataColor );
 		plot->setFunctionColor( singleDishWeightFunction, singleDishWeightColor );
 		plot->setFunctionColor( interferometerWeightFunction, interferometerWeightColor );
 	}
@@ -110,6 +169,7 @@ void FeatherPlotWidget::resetColors(){
 		plot->setFunctionColor( this->singleDishFunction, singleDishDataColor );
 		plot->setFunctionColor( this->interferometerFunction, interferometerDataColor );
 	}
+	plot->setDishDiameterLineColor( dishDiameterLineColor );
 	plot->replot();
 }
 
@@ -129,10 +189,60 @@ pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const
 	return minMaxPair;
 }
 
-void FeatherPlotWidget::changeZoom90(){
-	qDebug() << "Changing 90% zoom level";
-	if ( zoom90Action.isChecked()){
-		//plot->zoomNeutral();
+void FeatherPlotWidget::zoomRectangle( double minX, double maxX ){
+	QVector<double> singleDishX;
+	QVector<double> singleDishY;
+	initializeDomainLimitedData( minX, maxX, singleDishX, singleDishY, singleDishDataXValues, singleDishDataYValues );
+	plot->addCurve( singleDishX, singleDishY, singleDishDataColor, singleDishFunction, sliceAxis );
+
+	QVector<double> interferometerX;
+	QVector<double> interferometerY;
+	initializeDomainLimitedData( minX, maxX, interferometerX, interferometerY, interferometerDataXValues, interferometerDataYValues );
+	plot->addCurve( interferometerX, interferometerY, interferometerDataColor, interferometerFunction, sliceAxis );
+
+	if ( plot->getPlotType() == FeatherPlot::SLICE_CUT ){
+		QVector<double> singleDishWeightX;
+		QVector<double> singleDishWeightY;
+		initializeDomainLimitedData( minX, maxX, singleDishWeightX, singleDishWeightY, singleDishWeightXValues, singleDishWeightYValues );
+		plot->addCurve( singleDishWeightX, singleDishWeightY, singleDishWeightColor, singleDishWeightFunction, weightAxis );
+
+		QVector<double> interferometerWeightX;
+		QVector<double> interferometerWeightY;
+		initializeDomainLimitedData( minX, maxX, interferometerWeightX, interferometerWeightY, interferometerWeightXValues, interferometerWeightYValues );
+		plot->addCurve( interferometerWeightX, interferometerWeightY, interferometerWeightColor, interferometerWeightFunction, weightAxis );
+
+	}
+	plot->replot();
+}
+
+/*void FeatherPlotWidget::zoomRectangleScatter( double minX, double maxX, double minY, double maxY ){
+	int count = qMin( singleDishDataYValues.size(), interferometerDataYValues.size());
+	int dataCount = 0;
+	for ( int i = 0; i < count; i++ ){
+		if ( minX <= singleDishDataYValues[i] && singleDishDataYValues[i] <= maxX ){
+			if ( minY <= interferometerDataYValues[i] && interferometerDataYValues[i] <= maxY ){
+				dataCount++;
+			}
+		}
+	}
+
+	xValues.resize( domainCount );
+	yValues.resize( domainCount );
+	int j = 0;
+	for ( int i = 0; i < count; i++ ){
+		if ( minValue <= originalXValues[i] && originalXValues[i] <= maxValue ){
+			xValues[j] = originalXValues[i];
+			yValues[j] = originalYValues[i];
+			j++;
+		}
+	}
+	plot->addCurve( singleDishDataYValues, interferometerDataYValues, scatterPlotColor, "", sliceAxis );
+}*/
+
+void FeatherPlotWidget::changeZoom90(bool zoom ){
+	if ( zoom ){
+
+		//Calculate the yValues that represent 90% of the amplitude.
 		pair<double,double> singleDishMinMax = getMaxMin( singleDishWeightYValues );
 		pair<double,double> interferometerMinMax = getMaxMin( interferometerWeightYValues );
 		double minValue = qMin( singleDishMinMax.first, interferometerMinMax.first );
@@ -140,32 +250,39 @@ void FeatherPlotWidget::changeZoom90(){
 		double increase = (maxValue - minValue) * .25;
 		minValue = minValue + increase;
 		maxValue = maxValue - increase;
-		qDebug() << "New minValue="<<minValue<<" new maxValue="<<maxValue;
 
+		FeatherPlot::PlotType plotType = plot->getPlotType();
+
+		//Reset the weight values to 90% of the yRange while figuring out the
+		//xcut off values minX and maxX.
 		Double minX = numeric_limits<double>::max();
 		Double maxX = numeric_limits<double>::min();
 		QVector<double> singleDishXZoom;
 		QVector<double> singleDishYZoom;
 		initializeRangeLimitedData( minValue, maxValue, singleDishXZoom, singleDishYZoom,
 				singleDishWeightXValues, singleDishWeightYValues, &minX, &maxX );
-		plot->addCurve( singleDishXZoom, singleDishYZoom, singleDishWeightColor, singleDishWeightFunction, QwtPlot::yLeft );
+		if ( plotType == FeatherPlot::SLICE_CUT ){
+			plot->addCurve( singleDishXZoom, singleDishYZoom, singleDishWeightColor, singleDishWeightFunction, weightAxis );
+		}
 
 		QVector<double> interferometerXZoom;
 		QVector<double> interferometerYZoom;
 		initializeRangeLimitedData( minValue, maxValue, interferometerXZoom, interferometerYZoom,
 					interferometerWeightXValues, interferometerWeightYValues, &minX, &maxX );
-		plot->addCurve( interferometerXZoom, interferometerYZoom, interferometerWeightColor, interferometerWeightFunction, QwtPlot::yLeft );
+		if ( plotType == FeatherPlot::SLICE_CUT ){
+			plot->addCurve( interferometerXZoom, interferometerYZoom, interferometerWeightColor, interferometerWeightFunction, weightAxis );
+		}
 
-		qDebug() << "Minx="<<minX<<" maxx="<<maxX;
+		//Use the xbounds to redo the slice cut data.
 		QVector<double> singleDishX;
 		QVector<double> singleDishY;
 		initializeDomainLimitedData( minX, maxX, singleDishX, singleDishY, singleDishDataXValues, singleDishDataYValues );
-		plot->addCurve( singleDishX, singleDishY, singleDishDataColor, singleDishDataFunction, QwtPlot::yRight );
+		plot->addCurve( singleDishX, singleDishY, singleDishDataColor, singleDishFunction, sliceAxis );
 
 		QVector<double> interferometerX;
 		QVector<double> interferometerY;
 		initializeDomainLimitedData( minX, maxX, interferometerX, interferometerY, interferometerDataXValues, interferometerDataYValues );
-		plot->addCurve( interferometerX, interferometerY, interferometerDataColor, interferometerDataFunction, QwtPlot::yRight );
+		plot->addCurve( interferometerX, interferometerY, interferometerDataColor, interferometerFunction, sliceAxis );
 		plot->replot();
 	}
 	else {
@@ -173,10 +290,6 @@ void FeatherPlotWidget::changeZoom90(){
 	}
 }
 
-
-void FeatherPlotWidget::contextMenuEvent( QContextMenuEvent* event ){
-	contextMenu.exec( event->globalPos());
-}
 
 void FeatherPlotWidget::initializeRangeLimitedData( double minValue, double maxValue,
 		QVector<double>& xValues, QVector<double>& yValues,
@@ -189,16 +302,14 @@ void FeatherPlotWidget::initializeRangeLimitedData( double minValue, double maxV
 			rangeCount++;
 		}
 	}
-	qDebug() << "oldCount="<<count<<" rangeCount="<<rangeCount;
+
 	xValues.resize( rangeCount );
 	yValues.resize( rangeCount );
-	qDebug() << "Finished resize";
 	int j = 0;
 	for ( int i = 0; i < count; i++ ){
 		if ( minValue <= originalYValues[i] && originalYValues[i] <= maxValue ){
 			xValues[j] = originalXValues[i];
 			yValues[j] = originalYValues[i];
-			qDebug() << "Added yValue="<<yValues[j]<<" xValue="<<xValues[j];
 			if ( xValues[j] < *minX ){
 				*minX = xValues[j];
 			}
@@ -220,16 +331,14 @@ void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double max
 			domainCount++;
 		}
 	}
-	qDebug() << "oldCount="<<count<<" rangeCount="<<domainCount;
+
 	xValues.resize( domainCount );
 	yValues.resize( domainCount );
-	qDebug() << "Finished resize";
 	int j = 0;
 	for ( int i = 0; i < count; i++ ){
 		if ( minValue <= originalXValues[i] && originalXValues[i] <= maxValue ){
 			xValues[j] = originalXValues[i];
 			yValues[j] = originalYValues[i];
-			qDebug() << "Added yValue="<<yValues[j]<<" xValue="<<xValues[j];
 			j++;
 		}
 	}
@@ -243,40 +352,53 @@ void FeatherPlotWidget::zoomNeutral(){
 		addZoomNeutralCurves();
 	}
 	else {
-		addZoomNeutralScatterPlot();
+		addScatterData();
 	}
-	zoom90Action.setChecked( false );
 }
 
-void FeatherPlotWidget::addZoomNeutralScatterPlot(){
-	plot->addCurve( singleDishDataYValues, interferometerDataYValues, scatterPlotColor, "", QwtPlot::yLeft );
+void FeatherPlotWidget::addScatterData(){
+	plot->addCurve( singleDishDataYValues, interferometerDataYValues, scatterPlotColor, "", sliceAxis );
 	plot->replot();
 }
 
 void FeatherPlotWidget::addZoomNeutralCurves(){
-	plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, QwtPlot::yLeft );
-	plot->addCurve( interferometerWeightXValues, interferometerWeightYValues, interferometerWeightColor, interferometerWeightFunction, QwtPlot::yLeft );
-	plot->addCurve( singleDishDataXValues, singleDishDataYValues, singleDishDataColor, singleDishDataFunction, QwtPlot::yRight );
-	plot->addCurve( interferometerDataXValues, interferometerDataYValues, interferometerDataColor, interferometerDataFunction, QwtPlot::yRight );
+	FeatherPlot::PlotType plotType = plot->getPlotType();
+	if ( plotType != FeatherPlot::ORIGINAL ){
+		plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, weightAxis );
+		plot->addCurve( interferometerWeightXValues, interferometerWeightYValues, interferometerWeightColor, interferometerWeightFunction, weightAxis );
+	}
+	plot->addCurve( singleDishDataXValues, singleDishDataYValues, singleDishDataColor, singleDishFunction, sliceAxis );
+	plot->addCurve( interferometerDataXValues, interferometerDataYValues, interferometerDataColor, interferometerFunction, sliceAxis );
 	plot->replot();
 }
 
+QWidget* FeatherPlotWidget::getExternalAxisWidget( QwtPlot::Axis position ){
+	return plot->getExternalAxisWidget( position );
+}
 
 void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
-	QLayout* layout = ui.frame->layout();
-	if ( layout == NULL ){
-		layout = new QHBoxLayout( ui.frame );
+
+	if ( plot == NULL ){
+		QLayout* layoutPlot = layout();
+		if ( layoutPlot == NULL ){
+			layoutPlot = new QHBoxLayout( this );
+		}
+		plot = new FeatherPlot( this );
+		plot->setLegendVisibility( legendVisible );
+		plot->setLineThickness( lineThickness );
+		layoutPlot->addWidget( plot );
+		layoutPlot->setContentsMargins(0,0,0,0);
+		setLayout( layoutPlot );
 	}
 	else {
-		layout->removeWidget( plot );
-		delete plot;
+		plot->clearCurves();
 	}
-	plot = new FeatherPlot( this );
-	layout->addWidget( plot );
 	plot->initializePlot( plotTitle, plotType );
-	plot->setLegendVisibility( getPracticalLegendVisibility() );
-	plot->setLineThickness( lineThickness );
-	ui.frame->setLayout( layout );
+
+}
+
+void FeatherPlotWidget::insertLegend( QWidget* parent ){
+	plot->insertSingleLegend( parent );
 }
 
 void FeatherPlotWidget::setSingleDishWeight( const Vector<Float>& xValues, const Vector<Float>& yValues ){
@@ -287,8 +409,11 @@ void FeatherPlotWidget::setSingleDishWeight( const Vector<Float>& xValues, const
 		singleDishWeightXValues[i] = xValues[i];
 		singleDishWeightYValues[i] = yValues[i];
 	}
-	plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, QwtPlot::yLeft );
-	plot->replot();
+	FeatherPlot::PlotType plotType = plot->getPlotType();
+	if ( plotType == FeatherPlot::SLICE_CUT ){
+		plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, weightAxis );
+		plot->replot();
+	}
 }
 
 void FeatherPlotWidget::setSingleDishData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
@@ -299,12 +424,7 @@ void FeatherPlotWidget::setSingleDishData( const Vector<Float>& xValues, const V
 		singleDishDataXValues[i] = xValues[i];
 		singleDishDataYValues[i] = yValues[i];
 	}
-	if ( !originalData ){
-		plot->addCurve( singleDishDataXValues, singleDishDataYValues, singleDishDataColor, singleDishDataFunction, QwtPlot::yRight );
-	}
-	else {
-		plot->addCurve( singleDishDataXValues, singleDishDataYValues, singleDishDataColor, singleDishFunction, QwtPlot::yLeft );
-	}
+	plot->addCurve( singleDishDataXValues, singleDishDataYValues, singleDishDataColor, singleDishFunction, sliceAxis );
 	plot->replot();
 }
 
@@ -316,8 +436,11 @@ void FeatherPlotWidget::setInterferometerWeight( const Vector<Float>& xValues, c
 		interferometerWeightXValues[i] = xValues[i];
 		interferometerWeightYValues[i] = yValues[i];
 	}
-	plot->addCurve( interferometerWeightXValues, interferometerWeightYValues, interferometerWeightColor, interferometerWeightFunction, QwtPlot::yLeft );
-	plot->replot();
+	FeatherPlot::PlotType plotType = plot->getPlotType();
+	if ( plotType == FeatherPlot::SLICE_CUT ){
+		plot->addCurve( interferometerWeightXValues, interferometerWeightYValues, interferometerWeightColor, interferometerWeightFunction, weightAxis );
+		plot->replot();
+	}
 }
 
 void FeatherPlotWidget::setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
@@ -328,17 +451,13 @@ void FeatherPlotWidget::setInterferometerData( const Vector<Float>& xValues, con
 		interferometerDataXValues[i] = xValues[i];
 		interferometerDataYValues[i] = yValues[i];
 	}
-	if ( !originalData ){
-		plot->addCurve( interferometerDataXValues, interferometerDataYValues, interferometerDataColor, interferometerDataFunction, QwtPlot::yRight );
-	}
-	else {
-		plot->addCurve( interferometerDataXValues, interferometerDataYValues, interferometerDataColor, interferometerFunction, QwtPlot::yLeft );
-	}
+
+	plot->addCurve( interferometerDataXValues, interferometerDataYValues, interferometerDataColor, interferometerFunction, sliceAxis );
 	plot->replot();
 }
 
 
 FeatherPlotWidget::~FeatherPlotWidget(){
-
+	//delete plot;
 }
 }

@@ -113,15 +113,11 @@ namespace casa {
 		// unified selection and manipulation of the various region types...
 		/* void mark( bool set=true ) { region_mark->setCheckState( set ? Qt::Checked : Qt::Unchecked ); } */
 		/* bool marked( ) const { return region_mark->checkState( ) == Qt::Checked ? true : false; } */
-		void mark( bool set=true ) { region_mark->setChecked( set ); }
+		void mark( bool set=true );
 		bool marked( ) const { return region_mark->isChecked( ); }
 		bool markCenter( ) const { return (markcenter_chk->checkState()==Qt::Checked); }
 		bool skyComponent() const { return (skycomp_chk->checkState()==Qt::Checked); };
-		bool mark_toggle( ) {
-		    bool newstate = region_mark->isChecked( ) ? false : true;
-		    region_mark->setChecked( newstate );
-		    return newstate;
-		}
+		bool mark_toggle( );
 
 		void nowVisible( );
 		QPushButton *getFitButton(){return imfit_fit;};
@@ -150,6 +146,7 @@ namespace casa {
 	    protected slots:
 		// updates canvas with any line changes
 		void state_change( int );
+		void state_change_region_mark( int );
 		void color_state_change( int );
 		void state_change( bool );
 		void state_change( const QString & );
@@ -196,6 +193,7 @@ namespace casa {
 	    private:
 		unsigned int setting_combo_box;
 		int pre_dd_change_statistics_count;
+
 	};
     }
 }

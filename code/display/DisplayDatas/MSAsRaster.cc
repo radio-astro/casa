@@ -349,7 +349,7 @@ void MSAsRaster::selectVS_( const viewer::DisplayDataOptions &ddo ) {
    
   if ( ddo.size( ) > 0 ) {
       // user selection from GUI or arguments when opening...
-      mssel_ = new MeasurementSet( );
+      mssel_ = new MeasurementSet( *itsMS );
       Vector<Vector<Slice> > chansel;
       Vector<Vector<Slice> > corrsel;
       /*bool res =*/ mssSetData( *itsMS, *mssel_, chansel, corrsel, "",
@@ -783,8 +783,18 @@ void MSAsRaster::constructParameters_() {
   axisName_[SP_W] = "Spectral Window";
 	// (these are essentially static const strings...).
 
-  visTypeName_(OBSERVED)="Observed"; visTypeName_(CORRECTED)="Corrected";
-  visTypeName_(MODEL)="Model"; visTypeName_(RESIDUAL)="Residual";
+  Vector<String> cols = itsMS->tableDesc().columnNames();
+  bool has_model = false, has_corrected = false;
+  for ( size_t i = 0; i < cols.size( ); ++i ) {
+	  if ( cols[i] == "CORRECTED_DATA" ) has_corrected = true;
+	  if ( cols[i] == "MODEL_DATA" ) has_model = true;
+  }
+  visTypeName_(OBSERVED)="Observed";
+  if ( has_model && has_corrected ) {
+	  visTypeName_(CORRECTED)="Corrected";
+	  visTypeName_(MODEL)="Model";
+	  visTypeName_(RESIDUAL)="Residual";
+  }
   // (later)  visTypeName_(RATIO)="Ratio";
 
   visCompName_(AMPLITUDE)="Amplitude"; visCompName_(PHASE)="Phase";

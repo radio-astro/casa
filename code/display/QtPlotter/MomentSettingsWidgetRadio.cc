@@ -28,12 +28,13 @@
 #include <images/Images/ImageAnalysis.h>
 
 #include <display/QtPlotter/ProfileTaskMonitor.h>
-#include <display/QtPlotter/MomentCollapseThreadRadio.h>
+//#include <display/QtPlotter/MomentCollapseThreadRadio.h>
 #include <display/QtPlotter/ThresholdingBinPlotDialog.qo.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/Util.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 #include <ms/MeasurementSets/MS1ToMS2Converter.h>
+#include <display/Display/Options.h>
 
 #include <QFileDialog>
 #include <QTime>
@@ -41,6 +42,150 @@
 #include <QTemporaryFile>
 
 namespace casa {
+
+MomentCollapseThreadRadio::MomentCollapseThreadRadio( ImageAnalysis* imageAnalysis ):
+		analysis( imageAnalysis ), stepSize( 10 ), collapseError(false){
+	imageAnalysis->setMomentsProgressMonitor( this );
+}
+
+bool MomentCollapseThreadRadio::isSuccess() const{
+	bool success = false;
+	if ( collapseResults.size() > 0 && !collapseError ){
+		success = true;
+	}
+	return success;
+}
+
+void MomentCollapseThreadRadio::setStepCount( int count ){
+	//We don't want to send too many notifications.
+	const int STEP_LIMIT = 100;
+	stepSize = count / STEP_LIMIT;
+	const int BASE_STEP = 10;
+	if ( stepSize < BASE_STEP ){
+		stepSize = BASE_STEP;
+	}
+	int adjustedCount = count / stepSize + 1;
+	emit stepCountChanged( adjustedCount );
+}
+
+void MomentCollapseThreadRadio::setStepsCompleted( int count ){
+	if ( count % stepSize == 0 ){
+		int adjustedCount = count / stepSize;
+		emit stepsCompletedChanged( adjustedCount );
+	}
+}
+
+void MomentCollapseThreadRadio::done(){
+}
+
+String MomentCollapseThreadRadio::getErrorMessage() const {
+	return errorMsg;
+}
+
+void MomentCollapseThreadRadio::setData(const Vector<Int>& mments, const Int axis, Record& region,
+    	const String& maskStr, const Vector<String>& methodVec,
+    	const Vector<Int>& smoothaxesVec,
+    	const Vector<String>& smoothtypesVec,
+        const Vector<Quantity>& smoothwidthsVec,
+        const Vector<Float>& includepixVec,
+        const Vector<Float>& excludepixVec,
+        const Double peaksnr, const Double stddev,
+        const String& doppler, const String& baseName){
+	moments.resize( mments.size());
+
+	moments = mments;
+	this->axis = axis;
+	this->region = region;
+	mask = maskStr;
+	method = methodVec;
+	smoothaxes = smoothaxesVec;
+	smoothtypes = smoothtypesVec;
+	smoothwidths = smoothwidthsVec;
+	includepix = includepixVec;
+	excludepix = excludepixVec;
+	this->peaksnr = peaksnr;
+	this->stddev = stddev;
+	this->doppler = doppler;
+	this->baseName = baseName;
+}
+
+std::vector<CollapseResult> MomentCollapseThreadRadio::getResults() const {
+	return collapseResults;
+}
+
+void MomentCollapseThreadRadio::setChannelStr( String str ){
+	channelStr = str;
+}
+
+void MomentCollapseThreadRadio::setOutputFileName( QString name ){
+	outputFileName = name;
+}
+
+void MomentCollapseThreadRadio::setMomentNames( const Vector<QString>& momentNames ){
+	this->momentNames = momentNames;
+}
+
+bool MomentCollapseThreadRadio::getOutputFileName( String& outName,
+		int moment, const String& channelStr ) const {
+
+	bool tmpFile = true;
+	//Use a default base name
+	if (outputFileName.isEmpty()){
+		outName = baseName;
+	}
+	//Use the user specified name
+	else {
+		outName = outputFileName.toStdString();
+		tmpFile = false;
+	}
+
+	//Append the channel and moment used to make it descriptive.
+	outName = outName + "_" + String(momentNames[moment].toStdString());
+	if ( channelStr != ""){
+		outName = outName + "_"+channelStr;
+	}
+	if ( tmpFile ){
+		outName = viewer::options.temporaryPath( outName );
+	}
+	return tmpFile;
+}
+
+
+void MomentCollapseThreadRadio::run(){
+	try {
+		//casa::utilj::ThreadTimes t1;
+		for ( int i = 0; i < static_cast<int>(moments.size()); i++ ){
+			Vector<int> whichMoments(1);
+			whichMoments[0] = moments[i];
+
+			//Output file
+			String outFile;
+			bool outputFileTemporary = getOutputFileName( outFile, i, channelStr );
+
+
+			ImageInterface<Float>* newImage = analysis->moments( whichMoments, axis, region,
+						mask, method,
+						smoothaxes, smoothtypes, smoothwidths,
+						includepix,excludepix,
+						peaksnr, stddev, "RADIO", outFile, "", "");
+			if ( newImage != NULL ){
+				CollapseResult result( outFile, outputFileTemporary, newImage );
+				collapseResults.push_back( result );
+			}
+		}
+		//casa::utilj::ThreadTimes t2;
+		//casa::utilj::DeltaThreadTimes dt = t2 - t1;
+		//qDebug() << "Elapsed time moment="<<moments[0]<< " elapsed="<<dt.elapsed()<<" cpu="<<dt.cpu();
+	}
+	catch( AipsError& error ){
+		errorMsg = error.getLastMessage();
+		collapseError = true;
+	}
+}
+
+MomentCollapseThreadRadio::~MomentCollapseThreadRadio() {
+}
+
 
 MomentSettingsWidgetRadio::MomentSettingsWidgetRadio(QWidget *parent)
     : QWidget(parent), imageAnalysis( NULL ), collapseThread( NULL ),
@@ -289,12 +434,13 @@ void MomentSettingsWidgetRadio::collapseImage(){
 	if ( imageAnalysis == NULL ){
 		imageAnalysis = new ImageAnalysis( image );
 	}
-	imageAnalysis->setMomentsProgressMonitor( this );
 
 	//Set up the thread that will do the work.
 	delete collapseThread;
 	collapseThread = new MomentCollapseThreadRadio( imageAnalysis );
 	connect( collapseThread, SIGNAL( finished() ), this, SLOT(collapseDone()));
+	connect( collapseThread, SIGNAL(stepCountChanged(int)), this, SLOT(setStepCount(int)));
+	connect( collapseThread, SIGNAL(stepsCompletedChanged(int)), this, SLOT(setStepsCompleted(int)));
 
 	//Do a collapse image for each of the moments.
 	Vector<QString> momentNames;
@@ -321,6 +467,7 @@ void MomentSettingsWidgetRadio::collapseImage(){
 
 void MomentSettingsWidgetRadio::collapseDone(){
 	//Update the viewer with the collapsed image.
+	emit momentsFinished();
 	if ( collapseThread != NULL && collapseThread->isSuccess()){
 		std::vector<CollapseResult> results = collapseThread->getResults();
 		for ( int i = 0; i < static_cast<int>(results.size()); i++ ){
@@ -332,7 +479,7 @@ void MomentSettingsWidgetRadio::collapseDone(){
 		taskMonitor->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE );
 	}
 	else {
-		emit momentsFinished();
+
 		QString msg( "Moment calculation failed.");
 		String errorMsg = collapseThread->getErrorMessage();
 		if ( ! errorMsg.empty() ){
@@ -463,7 +610,9 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 		ui.minThresholdLineEdit->clear();
 		ui.maxThresholdLineEdit->clear();
 	}
-	ui.graphThresholdButton->setEnabled( enabled );
+	//Until we get to qwt6
+	ui.graphThresholdButton->setEnabled( false );
+	ui.graphThresholdButton->setVisible( false );
 }
 
 
@@ -532,6 +681,8 @@ void MomentSettingsWidgetRadio::thresholdSpecified(){
 	}
 }
 
+
+
 void MomentSettingsWidgetRadio::graphicalThreshold(){
 	if ( thresholdingBinDialog == NULL ){
 		QString yUnits = this->getYUnit();
@@ -547,8 +698,6 @@ void MomentSettingsWidgetRadio::graphicalThreshold(){
 	double maxValue = maxValueStr.toDouble();
 	thresholdingBinDialog->setInterval( minValue, maxValue );
 }
-
-
 //*************************************************************************
 //       Methods from the ImageMomentsProgressMonitor interface
 //*************************************************************************
@@ -573,9 +722,7 @@ void MomentSettingsWidgetRadio::graphicalThreshold(){
 	 emit updateProgress( taskCount );
  }
 
- void MomentSettingsWidgetRadio::done(){
-	 emit momentsFinished();
- }
+
 
 MomentSettingsWidgetRadio::~MomentSettingsWidgetRadio(){
 	if ( imageAnalysis != NULL ){

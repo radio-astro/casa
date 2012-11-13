@@ -44,6 +44,7 @@ casa_add_library( synthesis
   TransformMachines/HetArrayConvFunc.cc
   TransformMachines/MosaicFT.cc
   TransformMachines/MultiTermFT.cc	
+  TransformMachines/NewMultiTermFT.cc	
   TransformMachines/PBMath1DAiry.cc
   TransformMachines/PBMath1D.cc
   TransformMachines/PBMath1DCosPoly.cc
@@ -68,6 +69,7 @@ casa_add_library( synthesis
   TransformMachines/WProjectFT.cc
   TransformMachines/WPConvFunc.cc
   TransformMachines/EVLAConvFunc.cc
+  TransformMachines/ATerm.cc
   TransformMachines/EVLAAperture.cc
   TransformMachines/AzElAperture.cc
   fortran/fgridft.f		
@@ -212,6 +214,7 @@ casa_add_library( synthesis
  MeasurementComponents/DJones.cc
  MeasurementComponents/EJones.cc
  MeasurementComponents/EPJones.cc
+ MeasurementComponents/EVLASwPow.cc
  MeasurementComponents/GlobalFTMachineCallbacks.cc
  MeasurementComponents/GridBoth.cc
  MeasurementComponents/GSpline.cc
@@ -605,6 +608,7 @@ install (FILES
 	TransformMachines/HetArrayConvFunc.h
 	TransformMachines/MosaicFT.h
 	TransformMachines/MultiTermFT.h
+	TransformMachines/NewMultiTermFT.h
 	TransformMachines/PBMath.h
 	TransformMachines/PBMath1D.h
 	TransformMachines/PBMath1DAiry.h
@@ -629,6 +633,7 @@ install (FILES
 	TransformMachines/WPConvFunc.h
 	TransformMachines/WProjectFT.h
         TransformMachines/ATerm.h
+        TransformMachines/NoOpATerm.h
         TransformMachines/AWConvFunc.h
         TransformMachines/AWConvFuncEPJones.h
         TransformMachines/AWProjectFT.h
@@ -681,6 +686,7 @@ casa_add_assay( synthesis MeasurementEquations/test/tCEMemModel.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tClarkCleanLatModel.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tClarkCleanModel.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tConvolutionEquation.cc )
+casa_add_assay( synthesis MeasurementEquations/test/tFeather.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tImager.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tIncCEMemModel.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tLatConvEquation.cc )

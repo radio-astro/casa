@@ -58,7 +58,12 @@ namespace casa {
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_centers(  );
-		std::list<RegionInfo> *generate_dds_statistics( );
+		ImageRegion *get_image_region( DisplayData* ) const;
+		// Ellipse is derived from Rectangle, but we have no way to generate ellipse
+		// statistics for a measurement set (our only non-image display data)... so
+		// we have to define this to prevent MS info being reported for the bounding
+		// rectangle of an Ellipse...
+		void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;

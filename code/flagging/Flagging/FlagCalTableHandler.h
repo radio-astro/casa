@@ -39,6 +39,9 @@ public:
 	CTBuffer(CTIter *calIter);
 	~CTBuffer();
 
+	// jagonzal: ArrayId is necessary for summary
+	Int arrayId() const;
+
 	Int fieldId() const;
 	Int& spectralWindow();
 	Int spectralWindow() const;
@@ -111,9 +114,11 @@ private:
 	Bool CTnChannelOK_p;
 	Bool CTnCorrOK_p;
 
+	// Convenience methods and members to by-pass const methods issues
 	CTBuffer* This;
 	Int& fillSpectralWindow();
 	Int& fillFieldId();
+	Int& fillnRowChunk();
 
 };
 

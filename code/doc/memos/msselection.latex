@@ -332,20 +332,35 @@ comma-separated list.
 \subsubsection{Baseline specification}
 \label{BASELINE_SPEC}
 
-A baseline specification consists of an ANT, an ANT followed by an
+A baseline specification consists of an ANT followed by an
 operator or a pair of antenna specifications separated by an operator.
-Operator can be one, two or three ampersands ({\tt '\&'}) -- {\tt
-  '\&'} selects {\it only} cross-correlation baselines, {\tt '\&\&'}
-selection cross- {\it and} auto-correlation baselines and {\tt
-  '\&\&\&'} selection {\it only} auto-correlation baselines.
-Formally, baseline specification is of the form {\tt
-  [!]ANT[$<$OP$>$[ANT]]} (where the parts in square brackets are
-optional and {\tt $<$OP$>$} can be {\tt '\&', '\&\&'} or {\tt
-  '\&\&\&'}).
+Operator can be one, two or three ampersands ({\tt '\&'}):
+
+\begin{table}[h!]
+\begin{center}
+\begin{tabular}{|c|l|}
+\hline
+{\bf The operator} & {\bf Operation}\\
+\hline
+{\tt \&} & Select only cross-correlation data\\
+\hline
+{\tt \&\&} & Select cross- {\it and} auto-correlation data\\
+\hline
+{\tt \&\&\&} & selection {\it only} auto-correlation data\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Table of allowed baseline selection operators and their meaning.} 
+\label{BASELINEOP:TAB}
+\end{table}
+
+%  {\tt
+%   '\&'} selects {\it only} cross-correlation baselines, {\tt '\&\&'}
+% selection cross- {\it and} auto-correlation baselines and {\tt
+%   '\&\&\&'} selection {\it only} auto-correlation baselines.
 
 Possible forms of baseline specifications are tabulated in
 Table~\ref{BASELINE:TAB}.
-
 \begin{table}[h!]
 \begin{center}
 \begin{tabular}{|l|l|}
@@ -389,6 +404,11 @@ Table~\ref{BASELINE:TAB}.
   comma-separated list of antennas.} 
 \label{BASELINE:TAB}
 \end{table}
+Formally, baseline specification is of the form {\tt
+  [!]ANT[$<$OP$>$[ANT]]} (where the parts in square brackets are
+optional and {\tt $<$OP$>$} can be {\tt '\&', '\&\&'} or {\tt
+  '\&\&\&'}).
+
 
 \subsubsection{Baseline negation operator}
 

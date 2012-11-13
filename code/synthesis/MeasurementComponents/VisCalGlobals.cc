@@ -36,6 +36,7 @@
 #include <synthesis/MeasurementComponents/LJJones.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
 #include <synthesis/MeasurementComponents/TsysGainCal.h>
+#include <synthesis/MeasurementComponents/EVLASwPow.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -169,8 +170,8 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("TSYS"))
     return new StandardTsys(vs);
 
-  else if (uptype.contains("EVLAGAIN"))
-    return new EVLAGainTsys(vs);
+  else if (uptype.contains("EVLASWP"))
+    return new EVLASwPow(vs);
 
   else if (uptype=="TFOPAC")  // Not yet solvable (even though an SVJ)
     return new TfOpac(vs);
@@ -181,6 +182,9 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("GAINCURVE"))  // Not yet solvable (even though an SVJ)
     return new EGainCurve(vs);
   
+  else if (uptype.contains("EVLAGAIN"))
+    throw(AipsError("Please regenerate EVLA Sw Pow table using gencal."));
+
   else {
     cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));

@@ -189,25 +189,33 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  if( !isSolveable(getModelIndex(field,0)) ) 
 	  {
 		  os << "No more processing on this field" << LogIO::POST;
-		  return True;
+		  return False;
 	  }
+
+	///cout << "Using New FTMs ? : " << se.isNewFTM() << endl;
 	
+	//------------------------------- For 'active'  ---------------------------------------------------------------///
 	/* Calculate the initial residual image for all models. */
-	if(!donePSF_p)
-	{
-	   os << "Calculating initial residual images..." << LogIO::POST;
-	   solveResiduals(se,(numberIterations()<1)?True:False);
-	}
-	else
-	{
-	  if(numbermajorcycles_p>0) 
-	    {
-	      os << "RE-Calculating residual images because previous residuals have been modified in-place during restoration to be 'coefficient residuals'." << LogIO::POST;
-	      solveResiduals(se,(numberIterations()<1)?True:False);
-	    }
-	}
-
-
+	if( se.isNewFTM() == False )
+	  {
+	    if(!donePSF_p)
+	      {
+		os << "Calculating initial residual images..." << LogIO::POST;
+		solveResiduals(se,(numberIterations()<1)?True:False);
+	      }
+	    else
+	      {
+		/*
+		if(numbermajorcycles_p>0) 
+		  {
+		    os << "RE-Calculating residual images because previous residuals have been modified in-place during restoration to be 'coefficient residuals'." << LogIO::POST;
+		    solveResiduals(se,(numberIterations()<1)?True:False);
+		  }
+		*/
+	      }
+	  }
+	//------------------------------- For 'active'  ---------------------------------------------------------------///
+	
 	/* Create the Point Spread Functions */
 	if(!donePSF_p)
 	{
@@ -278,6 +286,21 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 
 	    donePSF_p=True;
 	}
+
+
+	//------------------------------ For new FTMs --------------------------------------------------------------//
+	///// Consider doing lc_p.setmodel and getmodel instead of dividing/multiplying the avgPB in NewMTFT::initializeToVis
+	if( se.isNewFTM() == True )
+	  {
+	    /* Calculate the initial residual image for all models. */
+	    if( numbermajorcycles_p==0 )
+	      {
+		os << "Calculating initial residual images..." << LogIO::POST;
+		solveResiduals(se,(numberIterations()<1)?True:False);
+	      }
+
+	  }
+	//------------------------------- For new FTMs -------------------------------------------------------------//
 
 	/* Return if niter=0 */
 	/* Check if this is an interactive-clean run, or if niter=0 */
@@ -414,13 +437,23 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 		os << "Calculating new residual images..." << LogIO::POST;
 		solveResiduals(se);
 	      }
-	    
+
+	    /*	    
+	    if( se.isNewFTM() == True )
+	      {
+		// The model will get PB-corrected in-place before prediction.
+		// This needs to be reset to what the preceeding minor cycle got, 
+		//    for incremental additions in the next cycle.
+		saveCurrentModels();
+	      }
+	    */
+
 	  } 
 	/******************* END MAJOR CYCLE LOOP *****************/
 	
 	/* Compute and write alpha,beta results to disk */
 	///writeResultsToDisk();
-	calculateCoeffResiduals();
+	//	calculateCoeffResiduals();
 	
 	/* stopflag=1 -> stopped because the user-threshold was reached */
         /* stopflag=-1 -> stopped because number of iterations was reached */
@@ -429,6 +462,23 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	if(stopflag>0) return(True);
 	else return(False);
 } // END OF SOLVE
+
+
+Float WBCleanImageSkyModel::saveCurrentModels()
+{
+  
+  for(Int thismodel=0;thismodel<nfields_p;thismodel++)
+    {
+      /* Get out the updated model */
+      for (Int order=0;order<ntaylor_p;order++)
+	{
+	  Int index = getModelIndex(thismodel,order);
+	  Matrix<Float> tempMod;
+	  lc_p[thismodel].getmodel(order,tempMod);
+	  image(index).put(tempMod);
+	}           
+    }// end of model loop
+}// end of saveCurrentModels
 
 
 /* Calculate stopping threshold for the current set of minor-cycle iterations */
@@ -508,6 +558,7 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
   Int index=0;
   Bool writeerror=True;
   
+
   for(Int field=0;field<nfields_p;field++)
     {
       Int baseindex = getModelIndex(field,0);
@@ -889,6 +940,9 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  
 	  // UUU
 	  //	  LatticeExpr<Float> le(iif(ggS(baseindex)>(0.0), -gS(index)/ggS(baseindex), 0.0));
+
+	  ///cout << "WBC : makeNRs : isnormalized : " << isImageNormalized() << endl;
+
 	  if (isImageNormalized()) le = LatticeExpr<Float>(gS(index));
 	  else                   le = LatticeExpr<Float>(iif(ggS(baseindex)>(0.0), 
 							     -gS(index)/ggS(baseindex), 0.0));

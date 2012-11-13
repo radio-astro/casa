@@ -1,4 +1,4 @@
-//# TsysGainCal.h: Declaration of Tsys-/Gain-scaling components
+//# TsysGainCal.h: Declaration of Tsys calibration
 //# Copyright (C) 1996,1997,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -102,87 +102,6 @@ private:
 
 
 };
-
-
-// **********************************************************
-//  EVLA switched power Gain and Tsys
-//
-
-
-class EVLAGainTsys : public GJones {
-public:
-
-  // Constructor
-  EVLAGainTsys(VisSet& vs);
-  EVLAGainTsys(const Int& nAnt);
-
-  virtual ~EVLAGainTsys();
-
-  // Return the type enum (for now, pretend we are G)
-  virtual Type type() { return VisCal::G; };
-
-  // EVLA Gain and Tsys are Float parameters
-  virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
-
-  // Return type name as string (ditto)
-  virtual String typeName()     { return "G EVLAGAIN"; };
-  virtual String longTypeName() { return "G EVLAGAIN (Switched-power gain)"; };
-
-  // Local setSpecify
-  using GJones::setSpecify;
-  virtual void setSpecify(const Record& specify);
-
-  // Specific specify() that reads the SYSCAL subtable
-  virtual void specify(const Record& specify);
-
-  // In general, we are freq-dep
-  virtual Bool freqDepPar() { return False; };
-
-
-protected:
-
-  // There are 4 parameters (Gain and Tsys for each pol)
-  virtual Int nPar() { return 4; };  
-
-  // The parameter array is not (just) the Jones matrix element array
-  virtual Bool trivialJonesElem() { return False; };
-
-  // Local version to extract integration time and bandwidth
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
-  
-  // Calculate Jones matrix elements (slice out the gains)
-  virtual void calcAllJones();
-
-  // Synchronize the weight-scaling factors
-  //  Weights are multiplied by G*G/Tsys per antenna
-  virtual void syncWtScale();
-
-  // Experimenting with updateWt
-  //  virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
-
-private:
-
-  // Fill the Tcals from the CALDEVICE table
-  void fillTcals();
-
-  // The name of the SYSCAL table
-  String sysPowTabName_,calDevTabName_;
-
-  // Tcal storage
-  Cube<Float> tcals_;
-
-  // Digital factors for the EVLA
-  Float correff_;      // net corr efficiency (lossy)
-  Float frgrotscale_;  // fringe rotation scale (lossless)
-  Float nyquist_;      // 2*dt*dv
-
-  // Effective per-chan BW, per spw for weight calculation
-  Vector<Double> effChBW_;
-
-};
-
-
-
 
 } //# NAMESPACE CASA - END
 

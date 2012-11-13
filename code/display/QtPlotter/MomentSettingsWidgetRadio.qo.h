@@ -27,7 +27,9 @@
 
 #include <QtGui/QWidget>
 #include <QMap>
+#include <QThread>
 #include <QProgressDialog>
+#include <casa/Quanta/Quantum.h>
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/MomentSettingsWidgetRadio.ui.h>
 #include <images/Images/ImageMomentsProgressMonitor.h>
@@ -38,17 +40,96 @@ class ImageAnalysis;
 class MomentCollapseThreadRadio;
 class ThresholdingBinPlotDialog;
 class Converter;
+template <class T> class ImageInterface;
+
+class CollapseResult {
+
+public:
+	CollapseResult( const String& outputName, bool tmp, ImageInterface<Float>* img ):
+		outputFileName(outputName),
+		temporary( tmp ),
+		image(img) {}
+	String getOutputFileName() const { return outputFileName; }
+	bool isTemporaryOutput() const { return temporary; }
+	ImageInterface<Float>* getImage() const { return image; }
+
+private:
+	String outputFileName;
+	bool temporary;
+	ImageInterface<Float>* image;
+};
+
+
+//Note:  ImageMomentsProgressMonitor is an interface that provides this class
+//with updates concerning the progress of the moment calculation task.
+
+/**
+ * Responsible for running the collapse algorithm in
+ * the background so that we don't freeze the GUI.
+ */
+class MomentCollapseThreadRadio : public QThread, public ImageMomentsProgressMonitor {
+	Q_OBJECT
+public:
+	MomentCollapseThreadRadio( ImageAnalysis* imageAnalysis );
+	bool isSuccess() const;
+	void setChannelStr( String str );
+	void setMomentNames( const Vector<QString>& momentNames );
+	void setOutputFileName( QString name );
+	String getErrorMessage() const;
+	std::vector<CollapseResult> getResults() const;
+	void setData(const Vector<Int>& moments, const Int axis, Record& region,
+	    	const String& mask, const Vector<String>& method,
+	    	const Vector<Int>& smoothaxes,
+	    	const Vector<String>& smoothtypes,
+	        const Vector<Quantity>& smoothwidths,
+	        const Vector<Float>& includepix,
+	        const Vector<Float>& excludepix,
+	        const Double peaksnr, const Double stddev,
+	        const String& doppler = "RADIO", const String& baseName = "");
+	void run();
+
+	//Methods from the ImageMomentsProgressMonitor interface
+	void setStepCount( int count );
+	void setStepsCompleted( int count );
+	void done();
+	~MomentCollapseThreadRadio();
+
+signals:
+	void stepCountChanged( int count );
+	void stepsCompletedChanged( int count );
+
+private:
+	bool getOutputFileName( String& outName, int moment, const String& channelStr ) const;
+	ImageAnalysis* analysis;
+	Vector<Int> moments;
+	Vector<QString> momentNames;
+	Int axis;
+	Record region;
+	String mask;
+	String channelStr;
+	Vector<String> method;
+	Vector<Int> smoothaxes;
+	Vector<String> smoothtypes;
+	Vector<Quantity> smoothwidths;
+	Vector<Float> includepix;
+	Vector<Float> excludepix;
+	Double peaksnr;
+	Double stddev;
+	String doppler;
+	String baseName;
+	QString outputFileName;
+	int stepSize;
+	std::vector<CollapseResult> collapseResults;
+	String errorMsg;
+	bool collapseError;
+};
 
 //Note: ProfileTaskFacilitator abstracts out some of the common functionality
 //needed for calculating moments and spectral line fitting into a single
 //base class
 
-//Note:  ImageMomentsProgressMonitor is an interface that provides this class
-//with updates concerning the progress of the moment calculation task.
 
-class MomentSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator,
-	public ImageMomentsProgressMonitor
-{
+class MomentSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator{
     Q_OBJECT
 
 public:
@@ -59,16 +140,13 @@ public:
     void reset();
     ~MomentSettingsWidgetRadio();
 
-    //Methods from the ImageMomentsProgressMonitor interface
-    void setStepCount( int count );
-    void setStepsCompleted( int count );
-    void done();
-
 signals:
 	void updateProgress(int);
 	void momentsFinished();
 
 private slots:
+	void setStepCount( int count );
+	void setStepsCompleted( int count );
 	void thresholdingChanged();
 	void thresholdSpecified();
 	void adjustTableRows( int count );

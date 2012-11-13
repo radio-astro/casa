@@ -758,7 +758,7 @@ protected:
 			 const Vector<String>& mask,
 			 const Vector<String>& fluxMask,
 			 const String complist="");
-  ATerm* createTelescopeATerm(MeasurementSet& ms);
+  ATerm* createTelescopeATerm(MeasurementSet& ms, const Bool& isATermOn=True);
   void destroySkyEquation();
 
   //add residual to the private vars or create residual images
@@ -873,6 +873,7 @@ protected:
   Int nscales_p;
   Int ntaylor_p;
   Double reffreq_p;
+  Bool useNewMTFT_p;
   Vector<Float> userScaleSizes_p;
   Bool scaleInfoValid_p;  // This means that we have set the information, not the scale beams
   Float smallScaleBias_p; //ms-clean

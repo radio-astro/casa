@@ -1,3 +1,27 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #include "FileLoader.qo.h"
 #include <QFileSystemModel>
 #include <QMessageBox>
@@ -15,12 +39,10 @@ FileLoader::FileLoader(QWidget *parent)
 	//Initialize the file browsing tree
 	fileModel = new QFileSystemModel( ui.treeWidget );
 	QString initialDir = QDir::currentPath();
-	qDebug() << "Setting directory to "<<initialDir;
 	ui.treeWidget->setModel( fileModel );
 	QString rootDir = QDir::rootPath();
 	fileModel->setRootPath(rootDir );
 	QModelIndex initialIndex = fileModel->index( initialDir );
-	qDebug() <<"File index="<<initialIndex.row()<<" col="<<initialIndex.column();
 	ui.treeWidget->setCurrentIndex( initialIndex );
 	ui.treeWidget->setColumnHidden( 1, true );
 	ui.treeWidget->setColumnHidden( 2, true );
@@ -92,19 +114,16 @@ void FileLoader::directoryChanged(const QModelIndex& modelIndex ){
 
 
 void FileLoader::fileHighResolutionChanged(){
-	qDebug() << "High resolution file changed";
 	QString emptyWarning( "Please select a high resolution image file.");
 	fileChanged( ui.highResolutionLineEdit, emptyWarning, false );
 }
 
 void FileLoader::fileLowResolutionChanged(){
-	qDebug() << "Low resolution file changed.";
 	QString emptyWarning( "Please select a low resolution image file.");
 	fileChanged( ui.lowResolutionLineEdit, emptyWarning, false );
 }
 
 void FileLoader::outputDirectoryChanged(){
-	qDebug() << "Ouput directory changed";
 	QString emptyWarning( "Please select a directory for the output image file.");
 	fileChanged( ui.outputImageDirectoryLineEdit, emptyWarning, true );
 }
@@ -112,7 +131,6 @@ void FileLoader::outputDirectoryChanged(){
 void FileLoader::fileChanged( QLineEdit* destinationLineEdit,
 		const QString& emptyWarning, bool directory ){
 	QModelIndex currentIndex = ui.treeWidget->currentIndex();
-	qDebug() << "Current index valid="<<currentIndex.isValid();
 	bool validPath = currentIndex.isValid();
 	QString path;
 	if ( validPath ){
@@ -126,7 +144,6 @@ void FileLoader::fileChanged( QLineEdit* destinationLineEdit,
 	}
 
 	if ( validPath ){
-		qDebug() << "Path "<<path;
 		destinationLineEdit->setText( path );
 	}
 	else {
@@ -142,7 +159,6 @@ bool FileLoader::validatePath( QLineEdit* lineEdit, const QString& errorPrefix, 
 	if ( !file ){
 		QDir imageDir( filePath );
 		valid = imageDir.exists();
-		qDebug() << "Image directory valid="<<valid<<" for path "<<filePath;
 	}
 	if ( !valid ){
 		QString warningMsg = errorPrefix + filePath + " is not valid.";

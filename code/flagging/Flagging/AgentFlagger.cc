@@ -359,11 +359,10 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 
 		String datacolumn = validateDataColumn(dc);
 		if (datacolumn.compare("") == 0){
-			os << LogIO::WARN << "Data column " << dc << " is not supported for this input " << LogIO::POST;
 			return false;
 		}
 
-		os << LogIO::NORMAL << "Will use data column "<< datacolumn << LogIO::POST;
+		os << LogIO::NORMAL << "Will use data column "<< datacolumn <<  LogIO::POST;
 		agentParams_p.define("datacolumn", datacolumn);
 	}
 
@@ -426,11 +425,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 
 		if (not agentParams_p.isDefined("correlation")) {
 			// Default for tfcrop
-			if (isMS_p)
-				correlation = "ABS_ALL";
-			else
-				correlation = "REAL_ALL";
-
+			correlation = "ABS_ALL";
 			agentParams_p.define("correlation", correlation);
 		}
 		if (dbg){
@@ -1051,6 +1046,8 @@ AgentFlagger::validateDataColumn(String datacol)
 	Bool checkcol = false;
 	datacol.upcase();
 
+	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__, WHERE));
+
 	// The validation depends on the type of input
 	if (isMS_p) {
 		if (datacol.compare("DATA") == 0 or datacol.compare("CORRECTED") == 0 or
@@ -1068,9 +1065,6 @@ AgentFlagger::validateDataColumn(String datacol)
 				(datacol.compare("SNR") == 0)) {
 			checkcol = fdh_p->checkIfColumnExists(datacol);
 		}
-//		else {
-//			checkcol = false;
-//		}
 		if (!checkcol){
 			//Assign a default column
 			if (fdh_p->checkIfColumnExists("FPARAM"))
@@ -1079,6 +1073,8 @@ AgentFlagger::validateDataColumn(String datacol)
 				ret = "CPARAM";
 			else
 				ret = "";
+			os << LogIO::WARN <<"Only FPARAM, CPARAM and SNR are supported for cal tables"<<LogIO::POST;
+
 		}
 		if (checkcol)
 			ret = datacol;

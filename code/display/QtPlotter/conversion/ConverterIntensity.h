@@ -40,7 +40,12 @@ class ConverterIntensity {
 public:
 	static const QString FRACTION_OF_PEAK;
 	static const QString KELVIN;
+	static const QString JY_SR;
+	static const QString JY_ARCSEC;
+	static const QString JY_BEAM;
+	static const QString JY;
 	static const QString ADU;
+	static const QString TIMES_PIXELS;
 	static bool isSupportedUnits( const QString& yUnit );
 	//Hertz values are needed corresponding to the values for Jy/Beam Kelvin conversions
 	//only.  Both oldUnits and newUnits refer to the old and new units of the values
@@ -55,6 +60,7 @@ public:
 
 	//Converts between Jy/Beam units.  For example, MJy/Beam <-> Jy/Beam
 	static double convertJyBeams( const QString& sourceUnits, const QString& destUnits, double value );
+	static double convertJY( const QString& oldUnits, const QString& newUnits, double value );
 	virtual ~ConverterIntensity();
 
 private:
@@ -63,9 +69,13 @@ private:
 	static double valueToPercent( double yValue, double maxValue );
 	static double convertQuantity( double yValue, double frequencyValue,
 			const QString& oldUnits, const QString& newUnits );
-
+	static void convertJansky( Vector<float>& values, const QString& oldUnits,
+			const QString& newUnits );
+	static bool isJansky( const QString& units );
+	static QString getJanskyBaseUnits( const QString& units );
+	static QString stripPixels( const QString& units );
 	static const QList<QString> BEAM_UNITS;
-	static const QString JY_BEAM;
+	static const QList<QString> JY_UNITS;
 	static double beamSolidAngle;
 	static const double SPEED_LIGHT_FACTOR;
 	static const double FREQUENCY_FACTOR;

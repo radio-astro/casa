@@ -1,3 +1,27 @@
+//# Copyright (C) 2005
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 #ifndef PREFERENCES_QO_H
 #define PREFERENCES_QO_H
 
@@ -15,9 +39,10 @@ public:
     const static QString APPLICATION;
     Preferences(QWidget *parent = 0);
     bool isDisplayOriginalFunctions() const;
-    bool isDisplayOriginalLegend() const;
     bool isDisplayOutputFunctions() const;
-    bool isDisplayOutputLegend() const;
+    bool isDisplayLegend() const;
+    bool isDisplayOutputScatterPlot() const;
+    bool isDisplayXOnly() const;
     int getLineThickness() const;
     ~Preferences();
 
@@ -28,8 +53,6 @@ signals:
 private slots:
 	void preferencesAccepted();
 	void preferencesRejected();
-	void originalPlotVisibilityChanged( int checked );
-	void outputPlotVisibilityChanged( int checked );
 
 private:
 	void initializeCustomSettings();
@@ -38,16 +61,18 @@ private:
 
 	const static QString LINE_THICKNESS;
 	const static QString DISPLAY_ORIGINAL_FUNCTIONS;
-	const static QString DISPLAY_ORIGINAL_LEGEND;
 	const static QString DISPLAY_OUTPUT_FUNCTIONS;
-	const static QString DISPLAY_OUTPUT_LEGEND;
+	const static QString DISPLAY_LEGEND;
+	const static QString DISPLAY_OUTPUT_SCATTERPLOT;
+	const static QString DISPLAY_X_ONLY;
 
     Ui::PreferencesClass ui;
     int lineThickness;
     bool displayOriginalFunctions;
-    bool displayOriginalLegend;
     bool displayOutputFunctions;
-    bool displayOutputLegend;
+    bool displayOutputScatterPlot;
+    bool displayXOnly;
+    bool displayLegend;
 };
 
 }

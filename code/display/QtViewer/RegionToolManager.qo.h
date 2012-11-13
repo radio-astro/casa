@@ -79,7 +79,7 @@ namespace casa {
 		tool_map tools;
 
 		// members for keeping track of marked (sticky-selected) regions...
-		region_list_type marked_regions;
+		/* region_list_type marked_regions; */
 
 		// members for state when moving selected region...
 		bool inDrawArea( WorldCanvas *wc, const linear_point_type &new_blc, const linear_point_type &new_trc ) const;
@@ -100,6 +100,11 @@ namespace casa {
 		void setup_moving_regions_state( double linx, double liny );
 		void translate_moving_regions( WorldCanvas *wc, double dx, double dy );
 		bool process_double_click( RegionTool::State &state );
+
+		// region source factory is needed to retrieve the region dock
+		// which can provide a list of selected regions...
+		QtRegionSourceFactory *factory;
+
 	};
     }
 }

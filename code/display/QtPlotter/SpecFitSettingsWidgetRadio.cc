@@ -115,7 +115,7 @@ void SpecFitThread::run(){
 SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
     : QWidget(parent), fitter( NULL ), specFitThread( NULL ),
       progressDialog("Calculating fit(s)...", "Cancel", 0, 100, this),
-      gaussEstimateDialog( this ), POINT_COUNT(20), SUM_FIT_INDEX(-1)
+      gaussEstimateDialog( this ), SUM_FIT_INDEX(-1)
 {
 	ui.setupUi(this);
 
@@ -595,6 +595,19 @@ QString SpecFitSettingsWidgetRadio::settingsToString() const {
 	return logMessage;
 }
 
+int SpecFitSettingsWidgetRadio::getFitCount(Int& startChannelIndex, Int& endChannelIndex ){
+	float startVal = specFitThread->getStartValue();
+	float endVal = specFitThread->getEndValue();
+	QString curveName = ui.curveComboBox->currentText();
+	CanvasCurve curve = pixelCanvas->getCurve( curveName );
+	Vector<float> curveXValues = curve.getXValues();
+	findChannelRange( startVal, endVal, curveXValues, startChannelIndex, endChannelIndex );
+	//int includeCount = endChannelIndex - startChannelIndex + 1;
+	int multiplier = ui.fitRatioSpinBox->value();
+	int includeCount = (endChannelIndex - startChannelIndex) * multiplier + 1;
+	return includeCount;
+}
+
 void SpecFitSettingsWidgetRadio::fitDone(){
 	float finishedProgress = 10;
 	const int PROGRESS_END = 100;
@@ -620,14 +633,37 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 
 			//Initialize the x-values.  In the case of a polynomial fit, the
 			//x values need to be in pixels.
-			Vector<Float> xValues( POINT_COUNT );
-			Vector<Float> xValuesPix( POINT_COUNT );
 			float startVal = specFitThread->getStartValue();
 			float endVal = specFitThread->getEndValue();
-			float dx = (endVal - startVal) / POINT_COUNT;
-			for( int i = 0; i < POINT_COUNT; i++ ){
-				xValues[i] = startVal + i * dx;
-				xValuesPix[i] = toPixels( xValues[i] );
+			QString curveName = ui.curveComboBox->currentText();
+			CanvasCurve curve = pixelCanvas->getCurve( curveName );
+			Vector<float> curveXValues = curve.getXValues();
+			Int startChannelIndex = -1;
+			Int endChannelIndex = -1;
+			findChannelRange( startVal, endVal, curveXValues, startChannelIndex, endChannelIndex );
+			int fitRatio = ui.fitRatioSpinBox->value();
+			int includeCount = (endChannelIndex - startChannelIndex)*fitRatio + 1;
+			Vector<Float> xValues(includeCount);
+			Vector<Float> xValuesPix(includeCount);
+			for ( int i = startChannelIndex; i <= endChannelIndex; i++ ){
+				int startBaseIndex = (i - startChannelIndex) * fitRatio;
+				xValues[startBaseIndex] = curveXValues[i];
+				xValuesPix[startBaseIndex] = toPixels( curveXValues[i] );
+
+				//Cut the interval into pieces to get a higher resolution fit
+				if ( i < endChannelIndex && fitRatio > 1 ){
+					float startX = xValues[startBaseIndex];
+					float endX = curveXValues[i+1];
+					float startXPixel = toPixels( startX);
+					float endXPixel = toPixels(endX);
+					float intervalWidth = abs( endX - startX ) / fitRatio;
+					float intervalWidthPixels = abs( endXPixel - startXPixel ) / fitRatio;
+					for ( int j = 1; j < fitRatio; j++ ){
+						float nextXValue = startX + intervalWidth * j;
+						xValues[startBaseIndex + j] = nextXValue;
+						xValuesPix[startBaseIndex + j] = startXPixel + intervalWidthPixels*j;
+					}
+				}
 			}
 
 			//Go through each of the fits.  This could be 1 if multifit is not
@@ -695,7 +731,10 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 	}
 
 	//Compute the yValues for the fit.
-	Vector<Float> yCumValues(POINT_COUNT, 0);
+	Int startIndex = -1;
+	Int endIndex = -1;
+	int count = getFitCount( startIndex, endIndex );
+	Vector<Float> yCumValues(count, 0);
 
 	for ( int k = 0; k < curveList.size(); k++ ){
 
@@ -710,7 +749,7 @@ void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 
 				//Send the curve to the canvas for plotting.
 				pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
-				for ( int i = 0; i < POINT_COUNT; i++ ){
+				for ( int i = 0; i < count; i++ ){
 					yCumValues[i] = yCumValues[i]+yValues[i];
 				}
 			}
@@ -874,21 +913,28 @@ void SpecFitSettingsWidgetRadio::cancelFit(){
 	fitCancelled = true;
 }
 
+void SpecFitSettingsWidgetRadio::getFitBounds( Float& startVal, Float& endVal ) const {
+	// convert input values to Float
+	startVal = ui.minLineEdit->text().toFloat();
+	endVal   = ui.maxLineEdit->text().toFloat();
+	if ( endVal < startVal ){
+		//Switch them around - the code expects the startVal
+		//to be less than the endVal;
+		float tempVal = startVal;
+		startVal = endVal;
+		endVal = tempVal;
+	}
+}
+
 void SpecFitSettingsWidgetRadio::specLineFit(){
 	*logger << LogOrigin("SpecFitOptical", "specLineFit");
 	bool validMin = isValidChannelRangeValue( ui.minLineEdit->text(), "Start" );
 	bool validMax = isValidChannelRangeValue( ui.maxLineEdit->text(), "End" );
 	if ( validMin && validMax ){
 		// convert input values to Float
-		float startVal=ui.minLineEdit->text().toFloat();
-		float endVal  =ui.maxLineEdit->text().toFloat();
-		if ( endVal < startVal ){
-			//Switch them around - the code expects the startVal
-			//to be less than the endVal;
-			float tempVal = startVal;
-			startVal = endVal;
-			endVal = tempVal;
-		}
+		Float startVal = 0;
+		Float endVal = 0;
+		getFitBounds( startVal, endVal );
 
 		//Determine what combination of Gauss & Polynomial fits we
 		//are doing.

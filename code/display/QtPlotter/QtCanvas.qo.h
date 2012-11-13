@@ -396,6 +396,7 @@ private:
 	const int MARGIN_TOP;
 	const int MARGIN_RIGHT;
 	const int FRACZOOM;
+	const double ZERO_LIMIT;
 
 	GraphLabel title;
 	GraphLabel xLabel[2];
