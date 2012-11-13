@@ -258,13 +258,12 @@ class ImageAnalysis
 
     Vector<Bool> haslock();
 
-    Bool histograms(
-    	Record& histout, const Vector<Int>& axes, Record& region,
+    Record histograms(
+    	const Vector<Int>& axes, Record& region,
         const String& mask, const Int nbins,
         const Vector<Double>& includepix, const Bool gauss,
         const Bool cumu, const Bool log, const Bool list,
-        const String& plotter, const Int nx, const Int ny,
-        const Vector<Int>& size, const Bool force=False,
+        const Bool force=False,
         const Bool disk=False, const Bool extendMask=False
     );
 

@@ -1715,6 +1715,16 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 
   RecordFieldId antField(antIndxName);
   RecordFieldId spwField(spwIndxName);
+
+
+  if(!feedCols.focusLengthQuant().isNull() && otherFeedCols.focusLengthQuant().isNull()){
+    os << LogIO::WARN << "MS appended to has optional column FOCUS_LENGTH in FEED table, but MS to be appended does not.\n" 
+       << "Potential new rows in FEED will have FOCUS_LENGTH zero." << LogIO::POST;
+  }
+  else if(feedCols.focusLengthQuant().isNull() && !otherFeedCols.focusLengthQuant().isNull()){
+    os << LogIO::WARN << "MS appended to does not have optional column FOCUS_LENGTH in FEED table, but MS to be appended does.\n" 
+       << "Output FEED table will not have a FOCUS_LENGTH column." << LogIO::POST;
+  }
   
   for (uInt a = 0; a < nAntIds; a++) {
     const Int newAntId = antCols.matchAntennaAndStation(otherAntCols.name()(a),

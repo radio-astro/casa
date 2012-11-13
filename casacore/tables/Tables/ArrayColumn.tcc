@@ -309,12 +309,9 @@ ROArrayColumn<T>::getSliceForRows (const RefRows & rows,
         row = rowNumbers [0] - increment; // allows preincrement before first use
     }
 
+    Bool isCube = destination.shape().nelements() == 3;
+
     for (uInt i = 0; i < rows.nrows(); i++){
-
-        // Create a section of the destination array that will hold the
-        // data for this row ([s1, ...,sN, nR] --> [s1,...,sN].
-
-        Array<T> destinationSection = destination [i];
 
         if (rows.isSliced()){
             row += increment;
@@ -323,7 +320,22 @@ ROArrayColumn<T>::getSliceForRows (const RefRows & rows,
             row = rowNumbers (i);
         }
 
-        getSlice (row, arraySlices, destinationSection, False);
+        // Create a section of the destination array that will hold the
+        // data for this row ([s1, ...,sN, nR] --> [s1,...,sN].
+
+        if (isCube){ // optimize the cube case
+
+            Cube<T> * destinationCube = dynamic_cast<Cube<T> *> (& destination);
+            Matrix<T> destinationSection = destinationCube->xyPlane(i);
+
+            getSlice (row, arraySlices, destinationSection, False);
+        }
+        else {
+
+            Array<T> destinationSection = destination [i];
+
+            getSlice (row, arraySlices, destinationSection, False);
+        }
     }
 }
 
@@ -610,35 +622,43 @@ void ROArrayColumn<T>::getColumnCells (const RefRows& rownrs,
 				       &arr);
 }
 
-
+#define ThrowIfArrayColumnNotWritable() \
+    { if (! isWritable_p){ \
+        throw AipsError ("ArrayColumn not writable", __FILE__, __LINE__); \
+      }\
+    }
 
 
 template<class T>
-ArrayColumn<T>::ArrayColumn()
+ArrayColumn<T>::ArrayColumn(Bool isWritable)
 : ROTableColumn    (),
   ROArrayColumn<T> (),
-  TableColumn      ()
+  TableColumn      (),
+  isWritable_p (isWritable)
 {}
 
 template<class T>
-ArrayColumn<T>::ArrayColumn (const Table& tab, const String& columnName)
+ArrayColumn<T>::ArrayColumn (const Table& tab, const String& columnName, Bool isWritable)
 : ROTableColumn    (tab, columnName),
   ROArrayColumn<T> (tab, columnName),
-  TableColumn      (tab, columnName)
+  TableColumn      (tab, columnName),
+  isWritable_p (isWritable)
 {}
 
 template<class T>
-ArrayColumn<T>::ArrayColumn (const TableColumn& column)
+ArrayColumn<T>::ArrayColumn (const TableColumn& column, Bool isWritable)
 : ROTableColumn    (column),
   ROArrayColumn<T> (column),
-  TableColumn      (column)
+  TableColumn      (column),
+  isWritable_p (isWritable)
 {}
 
 template<class T>
 ArrayColumn<T>::ArrayColumn (const ArrayColumn<T>& that)
 : ROTableColumn    (that),
   ROArrayColumn<T> (that),
-  TableColumn      (that)
+  TableColumn      (that),
+  isWritable_p (that.isWritable_p)
 {}
 
 template<class T>
@@ -659,6 +679,7 @@ ArrayColumn<T>::~ArrayColumn()
 template<class T>
 void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape)
 {
+    ThrowIfArrayColumnNotWritable();
     TABLECOLUMNCHECKROW(rownr); 
     //# Set shape if not defined yet or if changed (if possible).
     //# Throw exception if already defined with a different shape.
@@ -678,6 +699,7 @@ template<class T>
 void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape,
 			       const IPosition& tileShape)
 {
+    ThrowIfArrayColumnNotWritable();
     TABLECOLUMNCHECKROW(rownr); 
     //# Only set shape if not defined yet.
     //# Throw exception if already defined with a different shape.
@@ -696,6 +718,7 @@ void ArrayColumn<T>::setShape (uInt rownr, const IPosition& shape,
 template<class T>
 void ArrayColumn<T>::put (uInt rownr, const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
     TABLECOLUMNCHECKROW(rownr); 
     //# Define the shape if not defined yet.
     //# If defined, check if shape conforms.
@@ -718,6 +741,7 @@ template<class T>
 void ArrayColumn<T>::putSlice (uInt rownr, const Slicer& arraySection,
 			       const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
     TABLECOLUMNCHECKROW(rownr); 
     //# Check the array conformance.
     IPosition arrayShape (shape(rownr));
@@ -749,6 +773,7 @@ void ArrayColumn<T>::putSlice (uInt rownr,
                                const Vector<Vector<Slice> >& arraySlices,
 			       const Array<T>& arr)
 {
+  ThrowIfArrayColumnNotWritable();
   TABLECOLUMNCHECKROW(rownr);
   // Use shape of the row.
   IPosition colShp = shape(rownr);
@@ -772,6 +797,8 @@ void ArrayColumn<T>::putSliceFromRows (const RefRows & rows,
                                        const Vector<Vector<Slice> >& arraySlices,
                                        const Array<T>& source)
 {
+    ThrowIfArrayColumnNotWritable();
+
     // Empty the destination array one row at a time.
 
     const Vector<uInt>& rowNumbers = rows.rowVector();
@@ -812,12 +839,16 @@ template<class T>
 void ArrayColumn<T>::put (uInt thisRownr, const ROTableColumn& that,
 			  uInt thatRownr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     TableColumn::put (thisRownr, that, thatRownr);
 }
 
 template<class T>
 void ArrayColumn<T>::putColumn (const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     //# First check if number of rows matches.
     uInt nrrow = nrow();
     IPosition shp  = arr.shape();
@@ -866,6 +897,8 @@ void ArrayColumn<T>::putColumn (const Array<T>& arr)
 template<class T>
 void ArrayColumn<T>::putColumn (const Slicer& arraySection, const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     uInt nrrow = nrow();
     //# First check if number of rows matches.
     IPosition arrshp = arr.shape();
@@ -913,6 +946,8 @@ template<class T>
 void ArrayColumn<T>::putColumn (const Vector<Vector<Slice> >& arraySlices,
                                 const Array<T>& arr)
 {
+  ThrowIfArrayColumnNotWritable();
+
   uInt nrrow = nrow();
   // Get total shape.
   // Use shape of first row (if there) as overall array shape.
@@ -943,6 +978,8 @@ template<class T>
 void ArrayColumn<T>::putColumnRange (const Slicer& rowRange,
 				     const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     uInt nrrow = nrow();
     IPosition shp, blc, trc, inc;
     shp = rowRange.inferShapeFromSource (IPosition(1,nrrow), blc, trc, inc);
@@ -958,6 +995,8 @@ template<class T>
 void ArrayColumn<T>::putColumnCells (const RefRows& rownrs,
 				     const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     //# First check if number of rows matches.
     uInt nrrow = rownrs.nrow();
     IPosition arrshp  = arr.shape();
@@ -1000,6 +1039,8 @@ void ArrayColumn<T>::putColumnRange (const Slicer& rowRange,
 				     const Slicer& arraySection,
 				     const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     uInt nrrow = nrow();
     IPosition shp, blc, trc, inc;
     shp = rowRange.inferShapeFromSource (IPosition(1,nrrow), blc, trc, inc);
@@ -1016,6 +1057,8 @@ void ArrayColumn<T>::putColumnCells (const RefRows& rownrs,
 				     const Slicer& arraySection,
 				     const Array<T>& arr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     //# First check if number of rows matches.
     uInt nrrow = rownrs.nrow();
     IPosition arrshp = arr.shape();
@@ -1048,6 +1091,8 @@ template<class T>
 void ArrayColumn<T>::put (uInt thisRownr, const ROArrayColumn<T>& that,
 			  uInt thatRownr)
 {
+    ThrowIfArrayColumnNotWritable();
+
     put (thisRownr, that(thatRownr));
 }
 
@@ -1058,6 +1103,8 @@ void ArrayColumn<T>::put (uInt thisRownr, const ROArrayColumn<T>& that,
 template<class T>
 void ArrayColumn<T>::fillColumn (const Array<T>& value)
 {
+    ThrowIfArrayColumnNotWritable();
+
     uInt nrrow = nrow();
     for (uInt i=0; i<nrrow; i++) {
 	put (i, value);
@@ -1067,6 +1114,8 @@ void ArrayColumn<T>::fillColumn (const Array<T>& value)
 template<class T>
 void ArrayColumn<T>::putColumn (const ROArrayColumn<T>& that)
 {
+    ThrowIfArrayColumnNotWritable();
+
     //# Check the column lengths.
     uInt nrrow = nrow();
     if (nrrow != that.nrow()) {

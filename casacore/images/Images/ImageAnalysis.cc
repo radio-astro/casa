@@ -2212,13 +2212,12 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
-Bool ImageAnalysis::histograms(
-	Record& histout, const Vector<Int>& axes,
+Record ImageAnalysis::histograms(
+	const Vector<Int>& axes,
 	Record& regionRec, const String& sMask, const Int nbins,
 	const Vector<Double>& includepix, const Bool gauss,
 	const Bool cumu, const Bool log, const Bool list,
-	const String&, const Int nx, const Int ny,
-	const Vector<Int>& size, const Bool force,
+	const Bool force,
 	const Bool disk, const Bool extendMask
 ) {
 	*_log << LogOrigin(className(), __FUNCTION__);
@@ -2331,40 +2330,15 @@ Bool ImageAnalysis::histograms(
 	if (!_histograms->setStatsList(list)) {
 		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
 	}
-	// Make plots
-	String pgdevice("/NULL");
-	PGPlotter plotter;
-	if (!pgdevice.empty()) {
-		//      try {
-		plotter = PGPlotter(pgdevice, 2, 100, size[0], size[1]);
-		//      } catch (AipsError x) {
-		//	*_log << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-		//	return False;
-		//      }
-		Vector<Int> nxy(2);
-		nxy(0) = nx;
-		nxy(1) = ny;
-		if (nx < 0 || ny < 0) {
-			nxy.resize(0);
-		}
-		if (!_histograms->setPlotting(plotter, nxy)) {
-			*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-		}
-	}
-	if (plotter.isAttached()) {
-		if (!_histograms->display()) {
-			*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
-		}
-		_histograms->closePlotting();
-	}
 
 	Array<Float> values, counts;
 	if (!_histograms->getHistograms(values, counts)) {
 		*_log << _histograms->errorMessage() << LogIO::EXCEPTION;
 	}
-	histout.define(RecordFieldId("values"), values);
-	histout.define(RecordFieldId("counts"), counts);
-	return True;
+	Record rec;
+	rec.define(RecordFieldId("values"), values);
+	rec.define(RecordFieldId("counts"), counts);
+	return rec;
 }
 
 Vector<String> ImageAnalysis::history(const Bool list, const Bool browse) {
@@ -2900,6 +2874,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	// Create moments
 	PtrBlock<MaskedLattice<Float>*> images;
 	momentMaker.createMoments(images, doTemp, out, removeAxis);
+
 	momentMaker.closePlotting();
 	// Return handle of first image
 	ImageInterface<Float>* pIm =

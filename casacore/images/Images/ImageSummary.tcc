@@ -29,7 +29,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/IPosition.h>
+#include <casa/Arrays/ArrayPosIter.h>
 #include <coordinates/Coordinates.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <images/Images/ImageInterface.h>
@@ -523,10 +523,9 @@ void ImageSummary<T>::_listMultiBeam(
 		IPosition axisPath = hasSpectral && hasStokes
 				? IPosition(2, 1, 0)
 						: IPosition(1, 0);
-		for (
-			IPosition pos(beams.ndim(), 0); pos < beamsShape;
-			pos.next(beamsShape, axisPath, False)
-		) {
+        ArrayPositionIterator iter(beamsShape, axisPath, False);
+        while (! iter.pastEnd()) {
+            const IPosition pos = iter.pos();
 			if (hasSpectral) {
 				_chanInfoToStream(
 					os.output(), spCoord, pos[0], chanWidth,
@@ -541,6 +540,7 @@ void ImageSummary<T>::_listMultiBeam(
 			}
 			_beamToStream(os.output(), beams(pos), u);
 			os.output() << endl;
+            iter.next();
 		}
 	}
 	else {
