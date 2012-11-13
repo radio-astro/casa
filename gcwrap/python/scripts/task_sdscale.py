@@ -6,72 +6,68 @@ import asap as sd
 from asap.scantable import is_scantable, is_ms
 
 def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
+    
+    casalog.origin('sdscale')
+    
+    try:
+        worker = sdscale_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+        
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-        casalog.origin('sdscale')
+class sdscale_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdscale_worker,self).__init__(**kwargs)
+        self.suffix = '_scaled%s'%(self.factor)
+        self.outform = self.__get_outform()
 
+    def parameter_check(self):
+        if isinstance( self.factor, str ):
+            casalog.post( 'read factor from \'%s\'' %self.factor )
+            f = open( self.factor )
+            lines = f.readlines()
+            f.close()
+            del f
+            for i in range( len(lines) ):
+                lines[i] = lines[i].rstrip('\n')
+                lines[i] = lines[i].split()
+                for j in range( len(lines[i]) ):
+                    lines[i][j] = float( lines[i][j] )
+            self.factor = lines        
 
-        try:
-            # no scaling
-            if factor == 1.0:
-                casalog.post( "scaling factor is %s. No scaling" % factor )
-                return
+    def initialize_scan(self):
+        self.scan = sd.scantable(self.infile, average=False, antenna=self.antenna)
 
-            #load the data with or without averaging
-            sdutil.assert_infile_exists(infile)
+    def execute(self):
+        # no scaling
+        if self.factor == 1.0:
+            casalog.post( "scaling factor is 1.0. No scaling" )
+            return
 
-            #check the format of the infile
-            if is_scantable(infile):
-                outform = 'ASAP'
-            elif is_ms(infile):
-                outform = 'MS2'
-            else:
-                outform = 'SDFITS'
+        s2 = self.scan.scale(self.factor, self.scaletsys, False)
+        casalog.post( "Scaled spectra and Tsys by "+str(self.factor) )
 
-            project = sdutil.get_default_outfile_name(infile,
-                                                      outfile,
-                                                      '_scaled'+str(factor))
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
-                                                              outform,
-                                                              overwrite)
+        if self.scaletsys:
+            oldtsys=self.scan._row_callback(self.scan._gettsys, "Original Tsys")
+            newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
+        else:
+            oldtsys=s2._row_callback(s2._gettsys, "Tsys (not scaled)")
+        self.scan = s2
 
-            s = doscale(infile, antenna, factor, scaletsys)
+    def save(self):
+        sdutil.save(self.scan, self.outfile, self.outform, self.overwrite)
+        casalog.post( "Wrote scaled data to %s file, %s " % (self.outform, self.outfile) )
 
-            sdutil.save(s, outfile, outform, overwrite)
-            casalog.post( "Wrote scaled data to %s file, %s " % (outform, outfile) )
-            del s
+    def __get_outform(self):
+        if is_scantable(self.infile):
+            outform = 'ASAP'
+        elif is_ms(infile):
+            outform = 'MS2'
+        else:
+            outform = 'SDFITS'
+        return outform
 
-            # DONE
-
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
-
-
-def doscale(infile, antenna, factor, scaletsys):
-    s=sd.scantable(infile,average=False,antenna=antenna)
-
-    if isinstance( factor, str ):
-        casalog.post( 'read factor from \'%s\'' %factor )
-        f = open( factor )
-        lines = f.readlines()
-        f.close()
-        del f
-        for i in range( len(lines) ):
-            lines[i] = lines[i].rstrip('\n')
-            lines[i] = lines[i].split()
-            for j in range( len(lines[i]) ):
-                lines[i][j] = float( lines[i][j] )
-        thefactor = lines
-    else:
-        thefactor = factor
-
-    s2 = s.scale(thefactor, scaletsys, False)
-    casalog.post( "Scaled spectra and Tsys by "+str(factor) )
-
-    if scaletsys:
-        oldtsys=s._row_callback(s._gettsys, "Original Tsys")
-        newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
-    else:
-        oldtsys=s2._row_callback(s2._gettsys, "Tsys (not scaled)")
-    return s2

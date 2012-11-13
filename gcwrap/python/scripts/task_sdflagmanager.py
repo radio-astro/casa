@@ -6,18 +6,62 @@ import task_flagmanager
 import sdutil
 
 def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
-        casalog.origin('sdflagmanager')
-	fg.done()
 
-	try:
-                sdutil.assert_infile_exists(infile)
-                infilename=sdutil.get_abspath(infile)
+    casalog.origin('sdflagmanager')
+    
+    try:
+        worker = sdflagmanager_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+    
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-                domanage(infilename, mode.lower(), versionname, oldname, comment, merge)
+class sdflagmanager_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdflagmanager_worker,self).__init__(**kwargs)
+        self.infile_abs = sdutil.get_abspath(self.infile)
 
-	except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
+    def parameter_check(self):
+        availablemodes = ['list', 'save', 'restore', 'delete', 'rename']
+        if not (self.mode in availablemodes):
+            raise Exception, "Unknown mode" + str(mode)
+
+        namer = filenamer('sdflagmanager', self.infile_abs)
+        self.msfile = namer.configure_name(kind='temp',suffix='ms')
+        self.sdfverfile = namer.flagversion_name(self.infile_abs)
+        self.msfverfile = namer.flagversion_name(self.msfile)
+        self.backupfile = namer.configure_name(kind='backup',suffix='asap')
+
+    def initialize_scan(self):
+        self.scan = sd.scantable(self.infile_abs, average=False)
+
+        fg.done()
+
+    def execute(self):
+        if os.path.exists(self.sdfverfile):
+            move(self.sdfverfile, self.msfverfile)
+
+        sdutil.save(self.scan, self.msfile, 'MS2', False)
+        task_flagmanager.flagmanager(self.msfile,
+                                     self.mode,
+                                     self.versionname,
+                                     self.oldname,
+                                     self.comment,
+                                     self.merge)
+
+        if self.mode=='restore':
+            # if a directory with the same name as backupinfile exists, rename it for backup
+            del self.scan
+            move(self.infile_abs, self.backupfile)
+            sdutil.save(sd.scantable(self.msfile,False), self.infile_abs, 'ASAP', False)
+
+        move(self.msfverfile, self.sdfverfile)
+
+    def cleanup(self):
+        remove(self.msfile)
 
 def domanage(infilename, mode, versionname, oldname, comment, merge):
     availablemodes = ['list','save','restore','delete','rename']

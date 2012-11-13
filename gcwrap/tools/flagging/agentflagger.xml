@@ -21,14 +21,13 @@ The {\tt agentflagger} tool performs manual as well as automatic synthesis
 flagging operations within casapy. The {\tt agentflagger} tool can operate on
 one measurement set at a time.
 
- \medskip\noindent\textbf{Open the Measurement Set and Attach it to the Tool}
+ \medskip\noindent\textbf{Open the Measurement Set or Calibration Table and Attach it to the Tool}
 
-  The first thing to do is to open the Ms and attach it to the agentflagger tool.
+  The first thing to do is to open the MS or calibration table and attach it to the agentflagger tool.
   Use the af.open method, which requires the MS name and optionally the time interval,
   over which to buffer data before running the algorithm. The time interval is set by
   default to 0.0, which means a 'scan' length. The 'ntime' parameter is important for
-  the modes tfcrop, rflag and extend. From version 3.4 on, it is also possible to
-  flag CAL tables. Give the CAL table name instead of the MS.
+  the modes tfcrop, rflag and extend. 
 
 \begin{verbatim}
   af.open('uid_X002.ms')
@@ -55,7 +54,7 @@ one measurement set at a time.
      af.selectdata(myrecord)
 \end{verbatim}
 
-   2) Parse the parameters names directly to the function.
+   2) Parse the parameter names directly to the function.
 \begin{verbatim}
      af.selectdata(scan='1~3', spw='0:1~10')
 \end{verbatim}
@@ -127,7 +126,7 @@ one measurement set at a time.
 
  \medskip\noindent\textbf{Initialize the Agents}
 
-  The above step creates a list of the agents that the tool will use to process the data.
+  The above step create a list of the agents that the tool will use to process the data.
   This step will check several parameters and apply constraints. It will set the iteration approach
   to COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY if the agent is either tfcrop or extend and combinescans
   is set to True. Otherwise it will set it to COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY.
@@ -148,8 +147,8 @@ one measurement set at a time.
 
   Run the tool to apply or unapply the flags. The run method takes two parameters, writeflags and sequential.
   The parameter writeflags controls whether to write the flags or not to the MS. By default it is set to True.
-  The sequential parameter tells to apply/unapply the flags in parallel or not. By default it is set to False,
-  which means that the agents will run in parallel.
+  The sequential parameter tells to apply/unapply the flags in parallel or not. By default it is set to True,
+  which means that the agents will run in sequential.
 
   The run method gathers several reports, depending on wich agents are run. The display and summary agents
   produce reports that can be retrieved from calling the run method. The reports are returned via a Python
@@ -177,7 +176,7 @@ one measurement set at a time.
    <shortdescription>Construct a flag tool</shortdescription>
    
 <description>
-Create a {\tt agentflagger} tool, and initializes some variables.
+Create a {\tt agentflagger} tool, and initialize some variables.
 </description>
 <input>
 
@@ -193,7 +192,7 @@ af.agentflagger()
 <!-- ********************************************************************** -->
 
    <method type="function" name="done">
-   <shortdescription>Destroys the flag tool</shortdescription>
+   <shortdescription>Destroy the flag tool</shortdescription>
    
 <returns type="bool"/>
 <example>
@@ -205,12 +204,12 @@ af.done()
 <!-- ********************************************************************** -->
 
    <method type="function" name="open">
-   <shortdescription>Opens the MS and attaches it to the tool.</shortdescription>
+   <shortdescription>Open the MS or a calibration table and attach it to the tool.</shortdescription>
 
 <input>
 
      <param type="string" name="msname">
-     <description>Measurement set to be processed. Default:  </description>
+     <description>Measurement set or calibration table to be processed. Default:  </description>
      <value></value>
      </param>
      <param type="double" name="ntime">
@@ -230,9 +229,9 @@ af.open(msname,ntime)
 
  
    <method type="function" name="selectdata">
-   <shortdescription>Selects the data based on the given parameters.
+   <shortdescription>Select the data based on the given parameters.
 For unspecified parameters, the full data range is assumed.
-All data selection parameters follow the ms-selection syntax.
+All data selection parameters follow the MS Selection syntax.
     </shortdescription>
 
 <input>
@@ -241,7 +240,7 @@ All data selection parameters follow the ms-selection syntax.
      <param type="record" name="config"> 
      <description>The record (dictionary) config may be given or not. If it is not given, 
      \n and no specific parameter is given either, the whole MS will be selected. The record 
-     \n may contain any data selection parameters supported by MSSelection such as:\n
+     \n may contain any data selection parameters supported by MS Selection such as:\n
      </description>     
      <value type="record"></value>
      </param>
@@ -287,7 +286,7 @@ All data selection parameters follow the ms-selection syntax.
      </param>
 
      <param type="string" name="correlation">
-     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
+     <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX,Sol1'</description>
      <value></value>
      </param>
 
@@ -325,7 +324,7 @@ af.selectdata(scan='3~5', spw='0')
 <!-- ********************************************************************** -->
 
    <method type="function" name="parseagentparameters">
-   <shortdescription>Parses the parameters for the agent (flagging mode).</shortdescription>
+   <shortdescription>Parse the parameters for the agent (flagging mode).</shortdescription>
    
 <description>The specific data selection parameters for the agent (flagging mode)
 are parsed. These parameters are the data selection and mode-specific parameters.
@@ -336,7 +335,7 @@ See the example below:
 
      <param type="record" name="aparams">
      <description>It takes a record (dictionary) with the specific parameters for the flagging mode. 
-     \n The record may contain any data selection parameters supported by MSSelection, as well as 
+     \n The record may contain any data selection parameters supported by MS Selection, as well as 
      \n mode-specific parameters such as:\n
      \n (1) array,feed,scan,field,spw,intent,correlation,antenna,uvrange,observation
      \n (2) mode (which can be: manual,clip,quack,shadow,elevation,tfcrop,extendflags,unflag or summary)
@@ -349,7 +348,7 @@ myrecord['mode']='clip'\n
 myrecord['scan']='1~3'\n
 myrecord['clipminmax']=[0.02,0.3]\n
 myrecord['apply']=True\n
-af.parseAgentParameters(myrecord)\n
+af.parseagentparameters(myrecord)\n
      
      </description>
      </param>
@@ -361,7 +360,7 @@ myrecord['mode']='clip'
 myrecord['scan']='1~3'
 myrecord['clipminmax']=[0.02,0.3]
 myrecord['apply']=True
-af.parseAgentParameters(myrecord)
+af.parseagentparameters(myrecord)
 </example>
 <returns type="bool"/> 
 </method>
@@ -387,10 +386,11 @@ af.init()
 <!-- ********************************************************************** -->
 
    <method type="function" name="run">
-   <shortdescription>Executes a flagging run</shortdescription>
+   <shortdescription>Execute a list of flagging agents</shortdescription>
    
 <description>
-Executes a flagging run.
+Execute a list of flagging agents and write or not to the MS/cal table. The parameter
+writeflags controls whether or not to write to the MS.
 </description>
 <input>
      <param type="bool" name="writeflags">
@@ -399,7 +399,7 @@ Executes a flagging run.
      </param>
 
      <param type="bool" name="sequential">
-     <description>Run the task in sequential or parallel mode</description>
+     <description>Run the task in sequential or in parallel.</description>
      <value>true</value>
      </param>
 
@@ -512,7 +512,7 @@ Print out a list of current flag selections.
 <!-- ********************************************************************** -->
 
    <method type="function" name="parsemanualparameters">
-   <shortdescription>Parses data selection parameters and specific parameters
+   <shortdescription>Parse data selection parameters and specific parameters
 for the manual mode.
     </shortdescription>
 
@@ -597,7 +597,7 @@ af.parsemanualparameters(autocorr=True)
 <!-- ********************************************************************** -->
 
    <method type="function" name="parseclipparameters">
-   <shortdescription>Parses data selection parameters and specific parameters
+   <shortdescription>Parse data selection parameters and specific parameters
 for the clip mode.
     </shortdescription>
 
@@ -660,7 +660,8 @@ for the clip mode.
      </param>
     
      <param type="string" name="datacolumn">
-     <description>Data column to use for clipping. Example: 'DATA'. Default:
+     <description>Data column to use for clipping. Supported columns for cal tables are
+                  FPARAM,CPARAM,SNR. Example: 'DATA'. Default:
      </description>
      <value>DATA</value>
      </param>
@@ -703,6 +704,10 @@ The operator should be written only once and it will affect all the polarization
 given in the string. See the example below:
 
 af.parseclipparameters(clipzeros=True, clipminmax=[0.,4.], correlation='ABS_XX,XY')
+
+or for a calibration table:
+af.parseclipparameters(clipzeros=True, clipminmax=[0.,4.], correlation='Sol1')
+
 </example>
 
 <returns type="bool"/> 
@@ -711,7 +716,7 @@ af.parseclipparameters(clipzeros=True, clipminmax=[0.,4.], correlation='ABS_XX,X
 <!-- ********************************************************************** -->
 
    <method type="function" name="parsequackparameters">
-   <shortdescription>Parses data selection parameters and specific parameters
+   <shortdescription>Parse data selection parameters and specific parameters
 for the quack mode.
     </shortdescription>
 
@@ -806,7 +811,7 @@ af.parsequackparameters(scan='1~3', quackmode='beg', quackinterval=1)
 <!-- ********************************************************************** -->
 
    <method type="function" name="parseelevationparameters">
-   <shortdescription>Parses data selection parameters and specific parameters
+   <shortdescription>Parse data selection parameters and specific parameters
 for the elevation mode.
     </shortdescription>
 
@@ -899,7 +904,7 @@ af.parseelevationparameters(upperlimit=50.,lowerlimit=10.0, apply=False)
 <!-- ********************************************************************** -->
 
    <method type="function" name="parsetfcropparameters">
-   <shortdescription>Parses data selection parameters and specific parameters
+   <shortdescription>Parse data selection parameters and specific parameters
 for the time and frequency mode.
     </shortdescription>
 
@@ -1031,7 +1036,7 @@ af.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='AB
 <!-- ********************************************************************** -->
 
    <method type="function" name="parseextendparameters">
-   <shortdescription>Parses data selection parameters and specific parameters
+   <shortdescription>Parse data selection parameters and specific parameters
 for the extend mode.
     </shortdescription>
 
@@ -1146,7 +1151,7 @@ af.parseextendparameters(extendpols=True)
 <!-- ********************************************************************** -->
 
    <method type="function" name="parsesummaryparameters">
-   <shortdescription>Parses data selection parameters and specific parameters
+   <shortdescription>Parse data selection parameters and specific parameters
 for the summary mode.
     </shortdescription>
 

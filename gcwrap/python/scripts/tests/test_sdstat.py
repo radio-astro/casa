@@ -421,7 +421,7 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
 
     def test10( self ):
         """Test 10: invert = True"""
-        tid="07"
+        tid="10"
         outfile = self.outroot+tid+self.outsuff
         iflist = [0]
         specunit = 'channel'

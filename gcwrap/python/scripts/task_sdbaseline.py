@@ -10,215 +10,187 @@ import math
 import pylab as pl
 
 def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+    
+    casalog.origin('sdbaseline')
+    
+    try:
+        worker = sdbaseline_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 	
-	casalog.origin('sdbaseline')
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-	try:
-		sdutil.assert_infile_exists(infile)
+class sdbaseline_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdbaseline_worker,self).__init__(**kwargs)
+        self.suffix = '_bs'
 
-		project = sdutil.get_default_outfile_name(infile, outfile, "_bs")
-		sdutil.assert_outfile_canoverwrite_or_nonexistent(project, outform, overwrite)
+    def parameter_check(self):
+        if (self.order < 0) and (self.blfunc in ['poly', 'chevishev']):
+            msg = 'Negative order of baseline polynomial given. Exit without baselining.'
+            casalog.post(msg, priority = 'SEVERE')
+            raise Exception(msg)
 
-		sorg = sd.scantable(infile, average=False, antenna=antenna)
+        if (self.npiece <= 0) and (self.blfunc == 'cspline'):
+            msg = 'The parameter npiece must be greater than 0. Exit without baselining.'
+            casalog.post(msg, priority='SEVERE')
+            raise Exception(msg)            
 
-		prior_plot(sorg, plotlevel)
-		
-		# check if the data contains spectra
-		if (sorg.nchan()==1):
-			s = "Cannot process the input data. It contains only single channel data."
-			raise Exception, s
-                
-                sel = sdutil.get_selector(scanlist, iflist, pollist, field)
-                sorg.set_selection(sel)
-                del sel
-
-		# Copy scantable when usign disk storage not to modify
-		# the original table.
-		if is_scantable(infile) and \
-                       sd.rcParams['scantable.storage'] == 'disk':
-			s = sorg.copy()
-		else:
-			s = sorg
-		del sorg
-
-		# set restfreq
-		modified_molid = False
-		if (specunit == 'km/s'):
-			if (restfreq == '') and (len(s.get_restfreqs()[0]) == 0):
-				mesg = "Restfreq must be given."
-				raise Exception, mesg
-			elif (len(str(restfreq)) > 0):
-				molids = s._getmolidcol_list()
-				s.set_restfreqs(sdutil.normalise_restfreq(restfreq))
-				modified_molid = True
-
-
-		
-                # convert flux
-                sdutil.set_fluxunit(s, fluxunit, telescopeparm, insitu=True)
-                
-		#unit_in = s.get_unit()
-		# set default spectral axis unit
-                sdutil.set_spectral_unit(s, specunit)
-
-		# reset frame and doppler if needed
-                sdutil.set_freqframe(s, frame)
-		sdutil.set_doppler(s, doppler)
-		
-		
-		scanns = s.getscannos()
-		sn=list(scanns)
-		casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
-		
-		# Warning for multi-IF data
-		#if ( len(s.getifnos()) > 1 and not maskmode == 'auto' ):
-		if ( len(s.getifnos()) > 1 and isinstance(masklist,list) and not maskmode == 'auto' ):
-			casalog.post( 'The scantable contains multiple IF data.', priority = 'WARN' )
-			casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority = 'WARN' )
-			casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.' % (s.getif(0)), priority = 'WARN' )
-		
-		# do opacity (atmospheric optical depth) correction
-                sdutil.doopacity(s, tau)
-
-		if (order < 0):
-			casalog.post('Negative order of baseline polynomial given. Exit without baselining.', priority = 'WARN')
-			return
-                blfile = init_blfile(s, infile, project, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, bloutput, blformat)
-
-                dobaseline(s, blfile, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, blformat, showprogress, minnrow)
-
-		# Plot final spectrum
-                posterior_plot(s, project, plotlevel)
-
-		#restore the original spectral axis unit
-		#s.set_unit(unit_in)
-		#restore the original moleculeID column
-		if modified_molid:
-			s._setmolidcol_list(molids)
-                        
-		# Now save the spectrum and write out final ms
-		sdutil.save(s, project, outform, overwrite)
-		
-                del s
-	
-	except Exception, instance:
-                sdutil.process_exception(instance)
-		raise Exception, instance
-
-
-def init_blfile(s, infile, project, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, bloutput, blformat):
-        if bloutput:
-                blfile = project + "_blparam.txt"
-
-                if (blformat.lower() != "csv"):
-                        blf = open(blfile, "w")
-
-                        # Header data for saving parameters of baseline fit
-                        header =  "Source Table: "+infile+"\n"
-                        header += " Output File: "+project+"\n"
-                        header += "   Flux Unit: "+s.get_fluxunit()+"\n"
-                        header += "    Abscissa: "+s.get_unit()+"\n"
-                        header += "    Function: "+blfunc+"\n"
-                        if blfunc == 'poly':
-                                header += "   Fit order: %d\n"%(order)
-                        elif blfunc == 'chebyshev':
-                                header += "   Fit order: %d\n"%(order)
-                                header += "  clipThresh: %f\n"%(clipthresh)
-                                header += "   clipNIter: %d\n"%(clipniter)
-                        elif blfunc == 'cspline':
-                                header += "      nPiece: %d\n"%(npiece)
-                                header += "  clipThresh: %f\n"%(clipthresh)
-                                header += "   clipNIter: %d\n"%(clipniter)
-                        elif blfunc == 'sinusoid':
-                                header += "    applyFFT: "+str(applyfft)+"\n"
-                                header += "   fftMethod: "+fftmethod+"\n"
-                                header += "   fftThresh: "+str(fftthresh)+"\n"
-                                header += "    addWaveN: "+str(addwn)+"\n"
-                                header += "    rejWaveN: "+str(rejwn)+"\n"
-                                header += "  clipThresh: %f\n"%(clipthresh)
-                                header += "   clipNIter: %d\n"%(clipniter)
-                        header += "   Mask mode: "+maskmode+"\n"
-                        if maskmode == 'auto':
-                                header += "   Threshold: %f\n"%(thresh)
-                                header += "   avg_limit: %d\n"%(avg_limit)
-                                header += "        Edge: "+str(edge)+"\n"
-                        elif maskmode == 'list':
-                                header += "   Fit Range: "+str(masklist)+"\n"
-
-                        separator = "#"*60 + "\n"
-
-                        blf.write(separator)
-                        blf.write(header)
-                        blf.write(separator)
-                        blf.close()
-        else:
-                blfile = ""
-        return blfile
+    def initialize_scan(self):
+        sorg = sd.scantable(self.infile, average=False, antenna=self.antenna)
         
+        sel = self.get_selector()
+        sorg.set_selection(sel)
+        del sel
 
-def dobaseline(s, blfile, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, blformat, showprogress, minnrow):
-        if (order < 0):
-                casalog.post('Negative order of baseline polynomial given. Exit without baselining.', priority = 'WARN')
-                return
+        # Copy scantable when usign disk storage not to modify
+        # the original table.
+        if is_scantable(self.infile) and self.is_disk_storage:
+            self.scan = sorg.copy()
+        else:
+            self.scan = sorg
+        del sorg
 
-        csvformat = (blformat.lower() == "csv")
+    def execute(self):
+        engine = sdbaseline_engine(self)
+        engine.prologue()
 
-        nrow = s.nrow()
+        # check if the data contains spectra
+        if (self.scan.nchan()==1):
+           s = "Cannot process the input data. It contains only single channel data."
+           raise Exception, s
+   
+        # set various attributes to self.scan
+        self.set_to_scan()
+        
+        scanns = self.scan.getscannos()
+        sn=list(scanns)
+        casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
+        
+        # Warning for multi-IF data
+        #if ( len(s.getifnos()) > 1 and not maskmode == 'auto' ):
+        if ( len(self.scan.getifnos()) > 1 and isinstance(self.masklist,list) and not self.maskmode == 'auto' ):
+            casalog.post( 'The scantable contains multiple IF data.', priority = 'WARN' )
+            casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority = 'WARN' )
+            casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.' % (self.scan.getif(0)), priority = 'WARN' )
+            
+        # do opacity (atmospheric optical depth) correction
+        sdutil.doopacity(self.scan, self.tau)
+    
+        if (self.order < 0):
+            casalog.post('Negative order of baseline polynomial given. Exit without baselining.', priority = 'WARN')
+            return
+        engine.drive()
+
+        # Plot final spectrum
+        engine.epilogue()
+
+    def save(self):
+        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+
+class sdbaseline_engine(sdutil.sdtask_engine):
+    def __init__(self, worker):
+        super(sdbaseline_engine,self).__init__(worker)
+
+        clip_keys = ['clipthresh', 'clipniter']
+        self.poly_keys = ['order']
+        self.chevishev_keys = self.poly_keys + clip_keys
+        self.cspline_keys = ['npiece'] + clip_keys
+        self.sinusoid_keys = ['applyfft', 'fftmethod', 'fftthresh', 'addwn', 'rejwn'] + clip_keys
+        self.auto_keys = ['thresh', 'avg_limit', 'edge']
+        self.list_keys = ['masklist']
+        self.interact_keys = []
+
+        self.baseline_param = sdutil.parameter_registration(self)
+        self.baseline_func = None
+
+    def __del__(self):
+        del self.baseline_param
+
+    def __register(self, key, attr=None):
+        self.baseline_param.register(key, attr)
+
+    def __get_param(self):
+        return self.baseline_param.get_registered()
+
+    def prologue(self):
+        if ( abs(self.plotlevel) > 1 ):
+            casalog.post( "Initial Raw Scantable:" )
+            self.worker.scan._summary()
+
+    def drive(self):
+        scan = self.worker.scan
+        self.__init_blfile()
+
+        nrow = scan.nrow()
 
         # parse string masklist
-        if isinstance(masklist,list):
-                maskdict = {'': masklist}
+        if isinstance(self.masklist,list):
+                maskdict = {'': self.masklist}
         else:
-                maskdict = s.parse_maskexpr(masklist)
-        basesel = s.get_selection()
+                maskdict = scan.parse_maskexpr(self.masklist)
+        basesel = scan.get_selection()
+
+        # configure baseline function and its parameters
+        self.__configure_baseline()
+        
         for sif, lmask in maskdict.iteritems():
-                if len(sif) > 0:
-                        #s.set_selection(selection=(basesel+sd.selector(ifs=[int(sif)])))
-                        sel = sd.selector(basesel)
-                        sel.set_ifs([int(sif)])
-                        s.set_selection(sel)
-                        del sel
-                        msg = "Working on IF%s" % (sif)
-                        casalog.post(msg)
-                        if (maskmode == 'interact'): print "===%s===" % (msg)
-                        del msg
+            if len(sif) > 0:
+                #s.set_selection(selection=(basesel+sd.selector(ifs=[int(sif)])))
+                sel = sd.selector(basesel)
+                sel.set_ifs([int(sif)])
+                scan.set_selection(sel)
+                del sel
+                msg = "Working on IF%s" % (sif)
+                casalog.post(msg)
+                if (self.maskmode == 'interact'): print "===%s===" % (msg)
+                del msg
 
-                msk = None
+            msk = None
 
-                if (maskmode == 'interact'):
-                        msk = sdutil.interactive_mask(s, lmask, False, purpose='to baseline spectra')
-                        msks = s.get_masklist(msk)
-                        if len(msks) < 1:
-                                casalog.post( 'No channel is selected. Exit without baselining.', priority = 'WARN' )
-                                return
+            if (self.maskmode == 'interact'):
+                msk = sdutil.interactive_mask(scan, lmask, False, purpose='to baseline spectra')
+                msks = scan.get_masklist(msk)
+                if len(msks) < 1:
+                    msg = 'No channel is selected. Exit without baselining.'
+                    casalog.post(msg, priorigy='SEVERE')
+                    raise Exception(msg)
 
-                        casalog.post( 'final mask list ('+s._getabcissalabel()+') ='+str(msks) )
-                        #header += "   Fit Range: "+str(msks)+"\n"
-                        del msks
-                else:
-                        # Use baseline mask for regions to INCLUDE in baseline fit
-                        # Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
-                        if (len(lmask) > 0): msk = s.create_mask(lmask)
+                casalog.post( 'final mask list ('+scan._getabcissalabel()+') ='+str(msks) )
+                #header += "   Fit Range: "+str(msks)+"\n"
+                del msks
+            else:
+                # Use baseline mask for regions to INCLUDE in baseline fit
+                # Create mask using list, e.g. masklist=[[500,3500],[5000,7500]]
+                if (len(lmask) > 0): msk = scan.create_mask(lmask)
 
+            # register IF dependent mask
+            self.__register('mask', msk)
 
-                if (maskmode == 'auto'):
-                        if (blfunc == 'poly'):
-                                s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
-                        elif (blfunc == 'chebyshev'):
-                                s.auto_chebyshev_baseline(mask=msk,order=order,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
-                        elif (blfunc == 'cspline'):
-                                s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
-                        elif (blfunc == 'sinusoid'):
-                                s.auto_sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
-                else:
-                        if (blfunc == 'poly'):
-                                s.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
-                        elif (blfunc == 'chebyshev'):
-                                s.chebyshev_baseline(mask=msk,order=order,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
-                        elif (blfunc == 'cspline'):
-                                s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
-                        elif (blfunc == 'sinusoid'):
-                                s.sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+            # call target baseline function with appropriate parameter set 
+            self.baseline_func(**self.__get_param())
+
+##             if (maskmode == 'auto'):
+##                 if (blfunc == 'poly'):
+##                     scan.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+##                 elif (blfunc == 'chebyshev'):
+##                     scan.auto_chebyshev_baseline(mask=msk,order=order,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+##                 elif (blfunc == 'cspline'):
+##                     scan.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+##                 elif (blfunc == 'sinusoid'):
+##                     scan.auto_sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+##             else:
+##                 if (blfunc == 'poly'):
+##                     scan.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+##                 elif (blfunc == 'chebyshev'):
+##                     scan.chebyshev_baseline(mask=msk,order=order,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+##                 elif (blfunc == 'cspline'):
+##                     scan.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
+##                 elif (blfunc == 'sinusoid'):
+##                     scan.sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile,csvformat=csvformat,insitu=True)
 
                 # the above 14 lines will eventually shrink into the following 2 commands:
                 #
@@ -242,20 +214,90 @@ def dobaseline(s, blfile, masklist, maskmode, thresh, avg_limit, edge, blfunc, o
                 # clipinfo should be:
                 #     clipinfo = {'clipthresh':clipthresh, 'clipniter':clipniter}
 
-                del msk
+            # reset selection
+            if len(sif) > 0: scan.set_selection(basesel)
+            
+    def epilogue(self):
+        if ( abs(self.plotlevel) > 0 ):
+            pltfile=self.project+'_bsspec.eps'
+            sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel)
 
-                # reset selection
-                if len(sif) > 0: s.set_selection(basesel)
+    def __configure_baseline(self):
+        # determine what baseline function should be called
+        funcname = '%s_baseline'%(getattr(self,'blfunc').lower())
+        if self.maskmode.lower() == 'auto':
+            funcname = 'auto_' + funcname
+        self.baseline_func = getattr(self.worker.scan,funcname)
 
-        ### END of IF loop
-        del basesel
+        # register parameters for baseline function
+        # parameters for auto mode
+        if self.maskmode.lower() == 'auto':
+            self.__register('threshold', 'thresh')
+            self.__register('chan_avg_limit', 'avg_limit')
+            self.__register('edge')
 
-def prior_plot(s, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        casalog.post( "Initial Raw Scantable:" )
-        s._summary()
+        # parameters that depends on baseline function
+        keys = getattr(self, '%s_keys'%(self.blfunc.lower()))
+        for k in keys:
+            self.__register(k)
 
-def posterior_plot(s, project, plotlevel):
-    if ( abs(plotlevel) > 0 ):
-        pltfile=project+'_bsspec.eps'
-        sdutil.plot_scantable(s, pltfile, plotlevel)
+        # common parameters
+        self.__register('plot', 'verify')
+        self.__register('showprogress')
+        self.__register('minnrow')
+        self.__register('outlog', 'verbose')
+        self.__register('blfile')
+        self.__register('csvformat', (self.blformat.lower() == "csv"))
+        self.__register('insitu', True)
+
+##         for (k,v) in self.__get_param().items():
+##             casalog.post('%s=%s'%(k,v),'WARN')
+
+    def __init_blfile(self):
+        if self.bloutput:
+            self.blfile = self.project + "_blparam.txt"
+
+            if (self.blformat.lower() != "csv"):
+                f = open(self.blfile, "w")
+
+                blf = self.blfunc.lower()
+                mm = self.maskmode.lower()
+                if blf == 'poly':
+                    ftitles = ['Fit order']
+                elif blf == 'chevishev':
+                    ftitles = ['Fit order', 'clipThresh', 'clipNIter']
+                elif blf == 'cspline':
+                    ftitles = ['nPiece', 'clipThresh', 'clipNIter']
+                else: # sinusoid
+                    ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN', 'clipThresh', 'clipNIter']
+                if mm == 'auto':
+                    mtitles = ['Threshold', 'avg_limit', 'Edge']
+                elif mm == 'list':
+                    mtitles = ['Fit Range']
+                else: # interact
+                    mtitles = []
+                    
+                fkeys = getattr(self, '%s_keys'%(self.blfunc))
+                mkeys = getattr(self, '%s_keys'%(self.maskmode))
+
+                info = [['Source Table', self.infile],
+                        ['Output File', self.project],
+                        ['Flux Unit', self.worker.scan.get_fluxunit()],
+                        ['Abscissa', self.worker.scan.get_unit()],
+                        ['Function', self.blfunc]]
+                for i in xrange(len(ftitles)):
+                    info.append([ftitles[i],getattr(self,fkeys[i])])
+                info.append(['Mask mode', self.maskmode])
+                for i in xrange(len(mtitles)):
+                    info.append([mtitles[i],getattr(self,mkeys[i])])
+
+                separator = "#"*60 + "\n"
+                
+                f.write(separator)
+                for i in xrange(len(info)):
+                    f.write('%12s: %s\n'%tuple(info[i]))
+                f.write(separator)
+                f.close()
+        else:
+            self.blfile = ""        
+

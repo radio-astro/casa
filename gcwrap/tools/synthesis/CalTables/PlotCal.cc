@@ -474,7 +474,7 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
   if(calType_p=="G" || calType_p=="T" || calType_p=="GSPLINE" || 
      calType_p=="B" || calType_p=="BPOLY"  ||
      calType_p=="M" || calType_p=="MF" || calType_p=="A" || 
-     calType_p=="D" || calType_p=="X" || calType_p=="EVLAGAIN" || calType_p=="TSYS")
+     calType_p=="D" || calType_p=="X" || calType_p=="EVLASWPOW" || calType_p=="TSYS")
     return doPlot();
 
   else if(calType_p=="K")
@@ -649,7 +649,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Gain Phase POLN Difference (deg)";
       }
       else if (axis.contains("TSYS")) {
-	if (calType_p.contains("EVLAGAIN")) {
+	if (calType_p.contains("EVLASWPOW")) {
   	  if (isNCT_p) 
 	    taql = "(FPARAM[2,"+chansel+"]/FPARAM[4,"+chansel+"])";
 	  else 
@@ -685,7 +685,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	    calType_p=="MF" || 
 	    calType_p=="BPOLY" || 
 	    calType_p=="GSPLINE" ||
-	    calType_p=="EVLAGAIN" || calType_p.contains("TSYS"))
+	    calType_p=="EVLASWPOW" || calType_p.contains("TSYS"))
 	  throw(AipsError("Specified table doesn't support SNR plots."));
 	taql = "(SNR[1,]/SNR[2,])";
 	label = "Solution SNR POLN Ratio";
@@ -722,7 +722,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Gain Phase (deg)";
       }
       else if (axis.contains("TSYS")) {
-	if (calType_p.contains("EVLAGAIN")) {
+	if (calType_p.contains("EVLASWPOW")) {
 	  if (polType_p=="R") polsel="2";
 	  else if (polType_p=="L") polsel="4";
 	  else polsel="2:4:2";
@@ -752,7 +752,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	label = "Delay (nsec)";
       }
       else if (axis.contains("SNR") ) {
-	if (calType_p=="M" || calType_p=="MF" || calType_p=="A" || calType_p=="EVLAGAIN" || calType_p.contains("TSYS"))
+	if (calType_p=="M" || calType_p=="MF" || calType_p=="A" || calType_p=="EVLASWPOW" || calType_p.contains("TSYS"))
 	  throw(AipsError("Specified table doesn't support SNR plots."));
 	taql = "(SNR["+polsel+",])";
 	label = "Solution SNR";
@@ -781,7 +781,7 @@ Bool PlotCal::doPlot(){
     if(calType_p=="G" || 
        calType_p=="T" || 
        calType_p=="M" || calType_p=="A" || 
-       calType_p=="GSPLINE" || calType_p=="EVLAGAIN") 
+       calType_p=="GSPLINE" || calType_p=="EVLASWPOW") 
       xAxis_p="TIME";
     else if (calType_p=="D")
       xAxis_p="ANTENNA";
@@ -791,7 +791,7 @@ Bool PlotCal::doPlot(){
   if (yAxis_p=="") {
     if (calType_p=="D")
       yAxis_p="AMP";
-    else if (calType_p=="EVLAGAIN")
+    else if (calType_p=="EVLASWPOW")
       yAxis_p="SPGAIN";
     else if (calType_p=="TSYS")
       yAxis_p="TSYS";
@@ -805,8 +805,8 @@ Bool PlotCal::doPlot(){
     if (yAxis_p=="AMP") yAxis_p="TSYS";
   }
 
-  // AMP means SPGAIN for EVLAGAIN
-  if (calType_p=="EVLAGAIN") {
+  // AMP means SPGAIN for EVLASWPOW
+  if (calType_p=="EVLASWPOW") {
     if (xAxis_p=="AMP") xAxis_p="SPGAIN";
     if (yAxis_p=="AMP") yAxis_p="SPGAIN";
   }
@@ -1203,8 +1203,8 @@ Int PlotCal::multiTables(const Table& tablein,
     String subType[2];
     split(tab_p.tableInfo().subType(), subType, 2, String(" "));
  
-    if (subType[1].contains("EVLAGAIN")) {
-      calType_p="EVLAGAIN";
+    if (subType[1].contains("EVLASWPOW")) {
+      calType_p="EVLASWPOW";
     }
     else if (subType[1].contains("TSYS")) {
       calType_p="TSYS";

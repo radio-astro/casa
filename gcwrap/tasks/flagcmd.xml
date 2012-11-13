@@ -24,7 +24,7 @@
         </description>
         <input>
                 <param type="string" name="vis" mustexist="true">
-                        <description>Name of MS file to flag</description>
+                        <description>Name of MS file or calibration table to flag</description>
                         <value></value>
                 </param>
 
@@ -163,7 +163,7 @@
     (also explained below).  The available modes are: manual, clip, shadow, quack, 
     elevation,  tfcrop, rflag, extend and unflag.
 
-    The flagcmd task will flag data based on the commands input on inpmode :
+    The flagcmd task will flag data based on the commands input on inpmode:
         table = input from FLAG_CMD table in MS
         list  = input from a file or a (Python) list of command strings
         xml   = input from Flag.xml in the MS given by vis
@@ -175,20 +175,35 @@
                possible but carries a risk that in future releases these parameters maybe renamed
                or changed their default values. Use it at your own risk! There will be no automatic
                way to rename any parameter that changes in the future.
+               
+    NOTE on flagging calibration tables.
+    -----------------------------------
+    
+    It is possible to flag cal tables using this task, although we recommend using the flagdata
+    task for this.
+    
+    When using this task to flag cal tables, only the apply and list actions are supported. 
+    Because cal tables do not have a FLAG_CMD sub-table, the default inpmode='table' can only 
+    be used if an MS is given in the inpfile parameter so that flags from the MS are applied to 
+    the cal table. Otherwise, the flag commands must be given using inpmode='list', either from a 
+    file or from a list of strings. See below for more information about these parameters. 
+    Data selection for calibration tables is limited to field, antenna and spw at the moment. 
 
 
     Keyword arguments:
 
-    vis -- Name of input visibility file
-            default: none example: vis='ngc5921.ms'
+    vis -- Name of input visibility file or calibration table.
+            default: '' (none) 
+            example1: vis='uid___A002_X2a5c2f_X54.ms' or
+            example2: vis='cal-X54.B1'
 
-    --INPUT--
+    -- INPUT of flag commands --
 
-    inpmode -- Input mode for flags
+    inpmode -- Input mode for flag commands.
             options: 'table','list','xml'
             default: 'table'
 
-       inpmode "table" --  input commands from FLAG_CMD table of MS
+       inpmode "table" --  input commands from FLAG_CMD table of MS.
    
           inpfile -- path to MS containing FLAG_CMD
                default: '' (read from FLAG_CMD table in the MS specified via 'vis')
@@ -196,6 +211,11 @@
                Main use is to read flags from internal FLAG_CMD,
                but by setting inpfile to a different MS you can 
                use this to copy the flags from one MS to another.
+               
+               One use case is to read the flag commands from an MS given in
+               inpfile and apply them to a cal table given in vis. Example:
+             
+             flagcmd(vis='cal-X54.B1', inpmode='table', inpfile='uid___A002_X2a5c2f_X54.ms', action='apply')
 
           tablerows -- list of rows of the FLAG_CMD table to read
                default: [] (read all rows)
@@ -263,7 +283,8 @@
                matches this compound reason string only
 
    
-       inpmode "xml" -- input online flags from Flag.xml file in the MS
+       inpmode "xml" -- input online flags from Flag.xml file in the MS. This mode
+                        is not available for cal tables.
    
           tbuff -- (float) time padding buffer (seconds, default=1.0)
    
@@ -288,17 +309,17 @@
             options: 'apply','clear','list','plot','unapply','extract'
             default: 'apply'
 
-       action "apply" --  apply flags to MS
+       action "apply" --  apply flags to MS or cal table.
    
           This operation will apply the commands chosen by inpmode.       
           If inpmode='table' it will set the APPLIED column to True.
           
-          flagbackup -- Automatically backup MS FLAG column before applying?
+          flagbackup -- Automatically backup MS/cal table FLAG column before applying.
                options: True,False
                default: True
 
    
-       action "unapply" --  unapply flags in MS
+       action "unapply" --  unapply flags in MS. (Not available for cal tables)
 
           This operation will unapply the commands chosen by inpmode.
           If inpmode='table' it will set the APPLIED column to False. 
@@ -315,7 +336,7 @@
                default: True
 
 
-       action "list" --  list and/or save flag commands
+       action "list" --  list and/or save flag commands. 
 
           This operation will list the commands chosen by inpmode on the screen
           and save them to the MS or to a file without applying. It will save the commands
@@ -323,7 +344,7 @@
           will save the commands to the MS given in vis.
 
 
-       action "plot" --  plot flags (ant vs time)
+       action "plot" --  plot flags (ant vs. time). (Not available for cal tables)
 
           This operation will plot the flags chosen by inpmode to a 
           matplotlib gui or to a file.  These will be sorted by
@@ -336,7 +357,7 @@
                WARNING: will only reliably plot individual flags
                per antenna and timerange (e.g. direct from xml)
    
-       action "clear" --  clear flags from FLAG_CMD in vis
+       action "clear" --  clear flags from FLAG_CMD in MS. (Not available for cal tables)
 
           This operation will delete the selected flag rows from
           the internal FLAG_CMD table of the MS.
@@ -365,7 +386,7 @@
           redo it). This action will NOT unapply the commands.
 
 
-       action "extract" -- extract internal flag dictionary
+       action "extract" -- extract internal flag dictionary. (Not available for cal tables)
 
           This option will return the internal flagging dictionary to
           python.
@@ -428,6 +449,14 @@
         as already applied and then they don't show up when you re-run
         (e.g. in 'list').  Set useapplied=True so that it will use these
         anyway.
+        
+       * To apply the flag commands from an MS to a calibration table.
+       
+       vis = 'mycaltable'
+       inpmode = 'table'
+       inpfile = 'myMS.ms' 
+       action = 'apply'
+       
 
      -- Online flag input inpmode useage --
 

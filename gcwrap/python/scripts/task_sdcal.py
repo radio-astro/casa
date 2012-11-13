@@ -5,165 +5,128 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 from asap import _to_list
+from asap.scantable import is_scantable
 import sdutil
 
-#def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, align, reftime, interp, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
 def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+    
+    casalog.origin('sdcal')
+    
+    ###
+    ### Now the actual task code
+    ###
+    
+    restorer = None
+    
+    try:
+        worker = sdcal_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
-        casalog.origin('sdcal')
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-        ###
-        ### Now the actual task code
-        ###
+class sdcal_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdcal_worker,self).__init__(**kwargs)
+        self.suffix = '_cal'
 
-        restorer = None
+    def initialize_scan(self):
+        sorg=sd.scantable(self.infile,average=False,antenna=self.antenna)
+
+        if not isinstance(sorg,Scantable):
+            raise Exception, 'Scantable data %s, is not found'
+
+        # A scantable selection
+        sel = self.get_selector()
+        sorg.set_selection(sel)
         
-        try:
-            #load the data with or without averaging
-            if infile=='':
-                    raise Exception, 'infile is undefined'
-
-            sdutil.assert_infile_exists(infile)
-
-            project = sdutil.get_default_outfile_name(infile,
-                                                      outfile,
-                                                      '_cal')
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
-                                                              outform,
-                                                              overwrite)
-
-            #s=sd.scantable(infile,average=scanaverage,antenna=antenna)
-            s=sd.scantable(infile,average=False,antenna=antenna)
-
-            if not isinstance(s,Scantable):
-                    raise Exception, 'Scantable data %s, is not found'
-
-            prior_plot(s, plotlevel)
-
-            # prepare for restore scantable
-            restorer = sdutil.scantable_restore_factory(s,
-                                                        infile,
-                                                        fluxunit,
-                                                        specunit,
-                                                        frame,
-                                                        doppler)
-
-            # set default spectral axis unit
-            sdutil.set_spectral_unit(s, specunit)
-
-            # reset frame and doppler if needed
-            sdutil.set_freqframe(s, frame)
-            sdutil.set_doppler(s, doppler)
-
-            # A scantable selection
-            sel = sdutil.get_selector(scanlist, iflist, pollist,
-                                      field)
-            #Apply the selection
-            s.set_selection(sel)
-            del sel
-
-
-            # calibration
-            scal = docalibration(s, calmode, fraction, noff, width,
-                                 elongated, markonly, plotpointings, verify)
-
-            # Done with scantable s - clean up to free memory
-            del s
-
-	    # channel splitting
-            sdutil.dochannelrange(scal, channelrange)
-
-            # convert flux
-            sdutil.set_fluxunit(scal, fluxunit, telescopeparm, insitu=True)
-
-            # do opacity (atmospheric optical depth) correction
-            sdutil.doopacity(scal, tau)
-
-            # Align frequencies if desired
-            #if ( align ):
-            #        if reftime == '': reftime=None
-            #        scal.freq_align(reftime=reftime,method=interp,insitu=True)
-
-            # Average in time if desired
-            spave = sdutil.doaverage(scal, scanaverage, timeaverage,
-                                     tweight, polaverage, pweight,
-                                     averageall)
-
-            posterior_plot(spave, project, plotlevel)
-
-
-            # Now save the spectrum and write out final ms
-            sdutil.save(spave, project, outform, overwrite)
-
-            # Clean up scantable
-            del spave
-
-            # DONE
-
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
-        finally:
-                if restorer is not None:
-                        restorer.restore()
-                        del restorer
-
-def docalibration(s, calmode, fraction, noff, width, elongated,
-                  markonly, plotpointings, verify=False):
-    scanns = s.getscannos()
-    sn=list(scanns)
-    casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
-    if calmode == 'otf' or calmode=='otfraster':
-        s2 = _mark( s,
-                    (calmode=='otfraster'),
-                    fraction=fraction,
-                    npts=noff,
-                    width=width,
-                    elongated=elongated,
-                    plot=plotpointings )
-        if markonly:
-            scal = s2
+        # Copy scantable when usign disk storage not to modify
+        # the original table.
+        if is_scantable(self.infile) and self.is_disk_storage:
+            self.scan = sorg.copy()
         else:
-            scal = sd.asapmath.calibrate( s2,
-                                          scannos=sn,
-                                          calmode='ps',
-                                          verify=verify )
-    else:
-        scal = sd.asapmath.calibrate( s,
-                                      scannos=sn,
-                                      calmode=calmode,
-                                      verify=verify )
-    return scal
+            self.scan = sorg
+        del sorg
 
-def prior_plot(s, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        # print summary of input data
-        #print "Initial Raw Scantable:"
-        #print s
-        casalog.post( "Initial Raw Scantable:" )
-        #casalog.post( s._summary() )
-        s._summary()
+    def execute(self):
+        engine = sdcal_engine(self)
+        engine.prologue()
+        
+        # apply inputs to scan
+        self.set_to_scan()
 
-def posterior_plot(s, project, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        # print summary of calibrated data
-        #print "Final Calibrated Scantable:"
-        #print spave
-        casalog.post( "Final Calibrated Scantable:" )
-        #casalog.post( spave._summary() )
-        s._summary()
+##         # do opacity (atmospheric optical depth) correction
+##         sdutil.doopacity(self.scan, self.tau)
 
-    # Plot final spectrum
-    if ( abs(plotlevel) > 0 ):
-        pltfile = project + '_calspec.eps'
-        sdutil.plot_scantable(s, pltfile, plotlevel)
+##         # channel splitting
+##         sdutil.dochannelrange(self.scan, self.channelrange)
 
-def _mark(s, israster, *args, **kwargs):
-        marker = sd.edgemarker( israster=israster )
-        marker.setdata( s )
-        marker.setoption( *args, **kwargs )
+        # Actual implementation is defined outside the class
+        # since those are used in task_sdreduce.
+        engine.drive()
+        
+        # do opacity (atmospheric optical depth) correction
+        sdutil.doopacity(self.scan, self.tau)
+
+        # channel splitting
+        sdutil.dochannelrange(self.scan, self.channelrange)
+
+        # Average data if necessary
+        self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight, self.averageall)
+
+        engine.epilogue()
+
+    def save(self):
+        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+        
+
+class sdcal_engine(sdutil.sdtask_engine):
+    def __init__(self, worker):
+        super(sdcal_engine,self).__init__(worker)
+
+    def prologue(self):
+        if ( abs(self.plotlevel) > 1 ):
+            casalog.post( "Initial Raw Scantable:" )
+            self.worker.scan._summary()
+
+    def drive(self):
+        scanns = self.worker.scan.getscannos()
+        sn=list(scanns)
+        casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
+        if self.calmode == 'otf' or self.calmode=='otfraster':
+            self.__mark()
+            if not self.markonly:
+                self.worker.scan = sd.asapmath.calibrate( self.worker.scan,
+                                                          scannos=sn,
+                                                          calmode='ps',
+                                                          verify=self.verify )
+        else:
+            self.worker.scan = sd.asapmath.calibrate( self.worker.scan,
+                                                      scannos=sn,
+                                                      calmode=self.calmode,
+                                                      verify=self.verify )
+
+    def epilogue(self):
+        if ( abs(self.plotlevel) > 1 ):
+            casalog.post( "Final Calibrated Scantable:" )
+            self.worker.scan._summary()
+
+        # Plot final spectrum
+        if ( abs(self.plotlevel) > 0 ):
+            pltfile = project + '_calspec.eps'
+            sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel)
+
+    def __mark(self):
+        israster = (self.calmode == 'otfraster')
+        marker = sd.edgemarker(israster=israster)
+        marker.setdata(self.worker.scan)
+        self.npts = self.noff
+        marker.setoption(**self.__dict__)
         marker.mark()
-        if kwargs.has_key('plot') and kwargs['plot']:
-                marker.plot()
-        return marker.getresult()
+        if self.plotpointings:
+            marker.plot()
+        self.worker.scan = marker.getresult()
+        

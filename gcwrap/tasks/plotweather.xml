@@ -26,11 +26,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <value>True</value>
 </param>
 
-</input>
+<param type="string" name="plotName">
+<description>(Optional) the name of the plot file</description>
+<value></value>
+</param>
 
-<returns name="tauZ" type="double">
-<description>meanTau</description>
-</returns>
+
+</input>
 
 
 <example>
@@ -39,7 +41,9 @@ By default the returned opacity is the mean of these predictions, but this can b
 
 These methods and models are described in detail in EVLA Memo 143, VLA Test Memo 232, VLA Scientific Memo 176, and references therein.
 
-Saves the plot to the following file:  MS name + .plotweather.png
+Saves the plot to the following default file:  MS name + .plotweather.png
+Custom plot filenames must end in one of: .png, .pdf, .ps, .eps or .svg
+
 If run as a function, will return the mean zenith opacity per spectral window
 
 Written by Josh Marvil, revised 02/06/12

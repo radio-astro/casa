@@ -55,8 +55,10 @@ def isCalTable(msname):
     msname --> filename
     Return 1 for cal table, 0 for and 2 for MMS'''
     
-    if not tblocal.open(msname):
-        raise ValueError, "Unable to open MS %s," % msname
+    try:
+        tblocal.open(msname)
+    except:
+        raise ValueError, "Unable to open MS %s" % msname
     
     tbinfo = tblocal.info()
     tblocal.close()
@@ -74,6 +76,7 @@ def isCalTable(msname):
             retval = 0            
     else:
         retval = 0
+        
     
     return retval
 
@@ -612,6 +615,171 @@ def readXML(sdmfile, mytbuff):
     return flags
 
 
+def readFlagCmdTable(msfile,myflagrows=[],useapplied=True,myreason='any'):
+    '''Read flag commands from rows of the FLAG_CMD table of msfile
+    If useapplied=False then include only rows with APPLIED=False
+    If myreason is anything other than '', then select on that'''
+
+    #
+    # Return flagcmd structure:
+    #
+    # The flagcmd key is the integer row number from FLAG_CMD
+    #
+    #   Dictionary structure:
+    #   key : 'id' (string)
+    #         'mode' (string)         flag mode '','clip','shadow','quack'
+    #         'antenna' (string)
+    #         'timerange' (string)
+    #         'reason' (string)
+    #         'time' (float)          in mjd seconds
+    #         'interval' (float)      in mjd seconds
+    #         'cmd' (string)          string (for COMMAND col in FLAG_CMD)
+    #         'type' (string)         'FLAG' / 'UNFLAG'
+    #         'applied' (bool)        set to True here on read-in
+    #         'level' (int)           set to 0 here on read-in
+    #         'severity' (int)        set to 0 here on read-in
+
+    # Open and read columns from FLAG_CMD
+    mstable = msfile + '/FLAG_CMD'
+
+    # Note, tb.getcol doesn't allow random row access, read all
+
+    try:
+        tb.open(mstable)
+        f_time = tb.getcol('TIME')
+        f_interval = tb.getcol('INTERVAL')
+        f_type = tb.getcol('TYPE')
+        f_reas = tb.getcol('REASON')
+        f_level = tb.getcol('LEVEL')
+        f_severity = tb.getcol('SEVERITY')
+        f_applied = tb.getcol('APPLIED')
+        f_cmd = tb.getcol('COMMAND')
+        tb.close()
+    except:
+        casalog.post('Error reading table ' + mstable, 'ERROR')
+        raise Exception
+
+    nrows = f_time.__len__()
+
+    myreaslist = []
+
+    # Parse myreason
+    if type(myreason) == str:
+        if myreason != 'any':
+            myreaslist.append(myreason)
+    elif type(myreason) == list:
+        myreaslist = myreason
+    else:
+        casalog.post('Cannot read reason; it contains unknown variable types'
+                     , 'ERROR')
+        return
+
+    myflagcmd = {}
+    if nrows > 0:
+        nflagd = 0
+        if myflagrows.__len__() > 0:
+            rowlist = myflagrows
+        else:
+            rowlist = range(nrows)
+        # Prune rows if needed
+        if not useapplied:
+            rowl = []
+            for i in rowlist:
+                if not f_applied[i]:
+                    rowl.append(i)
+            rowlist = rowl
+        if myreaslist.__len__() > 0:
+            rowl = []
+            for i in rowlist:
+                if myreaslist.count(f_reas[i]) > 0:
+                    rowl.append(i)
+            rowlist = rowl
+
+        for i in rowlist:
+            flagd = {}
+            cmd = f_cmd[i]
+            if cmd == '':
+                casalog.post('Ignoring empty COMMAND string', 'WARN')
+                continue
+
+            # Extract antenna and timerange strings from cmd
+            antstr = ''
+            timstr = ''
+
+            flagd['id'] = str(i)
+            flagd['antenna'] = ''
+            flagd['mode'] = ''
+            flagd['time'] = f_time[i]
+            flagd['interval'] = f_interval[i]
+            flagd['type'] = f_type[i]
+            flagd['reason'] = f_reas[i]
+            flagd['level'] = f_level[i]
+            flagd['severity'] = f_severity[i]
+            flagd['applied'] = f_applied[i]
+
+            # If shadow, remove the addantenna dictionary
+            if cmd.__contains__('shadow') \
+                and cmd.__contains__('addantenna'):
+                i0 = cmd.rfind('addantenna')
+                if cmd[i0 + 11] == '{':
+                    # It is a dictionary. Remove it from line
+                    i1 = cmd.rfind('}')
+                    antpar = cmd[i0 + 11:i1 + 1]
+                    temp = cmd[i0:i1 + 1]
+                    newcmd = cmd.replace(temp, '')
+                    antpardict = fh.convertStringToDict(antpar)
+                    flagd['addantenna'] = antpardict
+                    cmd = newcmd
+
+            flagd['command'] = cmd
+
+            keyvlist = cmd.split()
+            if keyvlist.__len__() > 0:
+                for keyv in keyvlist:
+                    try:
+                        (xkey, val) = keyv.split('=')
+                    except:
+                        print 'Error: not key=value pair for ' + keyv
+                        break
+                    xval = val
+                # strip quotes from value
+                    if xval.count("'") > 0:
+                        xval = xval.strip("'")
+                    if xval.count('"') > 0:
+                        xval = xval.strip('"')
+
+                    if xkey == 'mode':
+                        flagd['mode'] = xval
+                    elif xkey == 'timerange':
+                        timstr = xval
+                    elif xkey == 'antenna':
+                        flagd['antenna'] = xval
+                    elif xkey == 'id':
+                        flagd['id'] = xval
+
+            # STM 2010-12-08 Do not put timerange if not in command
+            # if timstr=='':
+            # ....    # Construct timerange from time,interval
+            # ....    centertime = f_time[i]
+            # ....    interval = f_interval[i]
+            # ....    startmjds = centertime - 0.5*interval
+            # ....    t = qa.quantity(startmjds,'s')
+            # ....    starttime = qa.time(t,form="ymd",prec=9)
+            # ....    endmjds = centertime + 0.5*interval
+            # ....    t = qa.quantity(endmjds,'s')
+            # ....    endtime = qa.time(t,form="ymd",prec=9)
+            # ....    timstr = starttime+'~'+endtime
+            flagd['timerange'] = timstr
+            # Keep original key index, might need this later
+            myflagcmd[i] = flagd
+            nflagd += 1
+        casalog.post('Read ' + str(nflagd)
+                     + ' rows from FLAG_CMD table in ' + msfile)
+    else:
+        casalog.post('FLAG_CMD table in %s is empty, no flags extracted'
+                      % msfile, 'WARN')
+
+    return myflagcmd
 
 #def getUnion(mslocal, vis, cmddict):
 def getUnion(vis, cmddict):
@@ -1663,18 +1831,32 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
     return savelist
 
 
-def backupFlags(msfile, prename):
-    '''
+def backupFlags(aflocal=None, msfile='', prename='flagbackup'):
+    '''Create a backup of the FLAG column
+    
+    aflocal    local version of the agentflagger tool or
+    msfile     name of MS/cal table to backup
+    prename    prefix for name of flag backup file
+    
+    If msfile is given, aflocal will not be used
+    
          Create names like this:
          flags.flagcmd_1,
-         flags.tflagdata_1,
+         flags.flagdata_1,
         
         Generally  <task>_<i>, where i is the smallest
         integer giving a name, which does not already exist'''
+    
+    if msfile != '':
+        # open msfile and attach it to tool
+        aflocal = aftool()
+        aflocal.open(msfile)
+    
+    elif aflocal == None:
+        casalog.post('Need an MS or a copy of the agentflagger tool to create a backup','WARN')
+        return
         
     prefix = prename
-    aflocal = aftool()
-    aflocal.open(msfile)
     try:
         existing = aflocal.getflagversionlist(printflags=False)
     
@@ -1696,7 +1878,8 @@ def backupFlags(msfile, prename):
         aflocal.saveflagversion(versionname=versionname,
                                 comment='Flags autosave on ' + time_string, merge='replace')
     finally:
-        aflocal.done()
+        if msfile != '':
+            aflocal.done()
         
     return
 

@@ -5221,27 +5221,7 @@ and acquires just a read lock.
      <description>If T then list some statistics as well</description>
      <value>true</value>
      </param>
-  
-     <param type="string"  name="plotter">
-     <description>The PGPLOT device name to make plots on.  Default is no plotting.</description>
-     <value></value>
-     </param>
-  
-     <param type="int"  name="nx">
-     <description>The number of subplots per page in the x direction, &gt; 0</description>
-     <value>1</value>
-     </param>
-  
-     <param type="int"  name="ny">
-	     <description>The number of subplots per page in the y direction; &gt; 0</description>
-     <value>1</value>
-     </param>
-  
-     <param type="intArray"  name="size">
-     <description>Size of plotter.  Default is [600, 450].</description>
-     <value type="vector"><value>600</value><value>450</value></value>
-     </param>
-  
+
      <param type="bool"  name="force">
      <description>If T then force the stored statistical accumulations to be regenerated</description>
      <value>false</value>

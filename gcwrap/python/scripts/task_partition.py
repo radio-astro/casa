@@ -623,7 +623,7 @@ def partition(vis,
         # Create a backup of the flags that are in the MMS
         casalog.origin('partition')
         casalog.post('Create a backup of the flags that are in the MMS')
-        fh.backupFlags(outputvis, 'partition')    
+        fh.backupFlags(aflocal=None, msfile=outputvis, prename='partition')    
 
         return
 

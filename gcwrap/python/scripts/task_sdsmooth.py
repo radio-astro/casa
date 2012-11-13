@@ -9,108 +9,114 @@ import sdutil
 
 def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, chanwidth, verify, outfile, outform, overwrite, plotlevel):
 
-        casalog.origin('sdsmooth')
-
-
-        try:
-            #load the data with or without averaging
-            if infile=='':
-                    raise Exception, 'infile is undefined'
-            
-            sdutil.assert_infile_exists(infile)
-
-            # Default file name
-            project = sdutil.get_default_outfile_name(infile,
-                                                      outfile,
-                                                      '_sm')
-            sdutil.assert_outfile_canoverwrite_or_nonexistent(project,
-                                                              outform,
-                                                              overwrite)
-
-            sorg=sd.scantable(infile,average=False,antenna=antenna)
-            if not (isinstance(sorg,Scantable)):
-                    raise Exception, 'infile=%s is not found' % infile
-
-
-            # A scantable selection
-            sel = sdutil.get_selector(scanlist, iflist, pollist,
-                                      field)
-            #Apply the selection
-            sorg.set_selection(sel)
-            del sel
-
-            # Copy scantable when usign disk storage not to modify
-            # the original table.
-            if is_scantable(infile) and \
-                   sd.rcParams['scantable.storage'] == 'disk':
-                    s = sorg.copy()
-            else:
-                    s = sorg
-            del sorg
-
-            #Average within each scan
-            if scanaverage:
-                    s = sdutil.doaverage(s, scanaverage, True, 'tint',
-                                         false, 'none')
-
-            # Smooth the spectrum
-            if kernel=='' or kernel=='none':
-                errstr = "kernel need to be specified"
-                raise Exception, errstr
-            elif kernel!='hanning' and kwidth<=0:
-                errstr = "kernel should be > 0"
-                raise Exception, errstr
-            else:
-                    prior_plot(s, project, plotlevel)
-
-                    dosmooth(s, kernel, kwidth, chanwidth, verify)
-
-                    posterior_plot(s, project, plotlevel)
-
-            sdutil.save(s, project, outform, overwrite)
-
-            del s
-
-        except Exception, instance:
-                sdutil.process_exception(instance)
-                raise Exception, instance
-                return
-
-
-def dosmooth(s, kernel, kwidth, chanwidth, verify):
-    if kernel == 'regrid':
-        if not qa.isquantity(chanwidth):
-            errstr = "Invalid quantity chanwidth "+chanwidth
-            raise Exception, errstr
-        qchw = qa.quantity(chanwidth)
-        oldUnit = s.get_unit()
-        if qchw['unit'] in ("", "channel", "pixel"):
-            s.set_unit("channel")
-        elif qa.compare(chanwidth,"1Hz") or \
-                 qa.compare(chanwidth,"1m/s"):
-            s.set_unit(qchw['unit'])
-        else:
-            errstr = "Invalid dimension of quantity chanwidth "+chanwidth
-            raise Exception, errstr
-        casalog.post( "Regridding spectra in width "+chanwidth )
-        s.regrid_channel(width=qchw['value'],plot=verify,insitu=True)
-        s.set_unit(oldUnit)
-    else:
-        casalog.post( "Smoothing spectra with kernel "+kernel )
-        s.smooth(kernel=kernel,width=kwidth,plot=verify,insitu=True)
-
-def prior_plot(s, project, plotlevel):
-    if ( abs(plotlevel) > 1 ):
-        # print summary of input data
-        casalog.post( "Initial Scantable:" )
-        #casalog.post( s._summary() )
-        s._summary()
+    casalog.origin('sdsmooth')
+    
+    try:
+        worker = sdsmooth_worker(**locals())
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
-    if ( abs(plotlevel) > 0 ):
-        pltfile=project+'_rawspec.eps'
-        sdutil.plot_scantable(s, pltfile, plotlevel, 'Raw spectra')
+    except Exception, instance:
+        sdutil.process_exception(instance)
+        raise Exception, instance
 
-def posterior_plot(s, project, plotlevel):
-    if ( abs(plotlevel) > 0 ):
-        pltfile=project+'_smspec.eps'
-        sdutil.plot_scantable(s, pltfile, plotlevel, 'Smoothed spectra')
+class sdsmooth_worker(sdutil.sdtask_template):
+    def __init__(self, **kwargs):
+        super(sdsmooth_worker,self).__init__(**kwargs)
+        self.suffix = '_sm'
+
+    def initialize_scan(self):
+        sorg=sd.scantable(self.infile,average=False,antenna=self.antenna)
+        if not (isinstance(sorg,Scantable)):
+            raise Exception, 'infile=%s is not found' % self.infile
+
+        # A scantable selection
+        sel = self.get_selector()
+        sorg.set_selection(sel)
+
+        # Copy scantable when usign disk storage not to modify
+        # the original table.
+        if is_scantable(self.infile) and self.is_disk_storage:
+            self.scan = sorg.copy()
+        else:
+            self.scan = sorg
+        del sorg
+
+    def parameter_check(self):
+        if self.kernel=='' or self.kernel=='none':
+            errstr = "kernel need to be specified"
+            raise Exception, errstr
+        elif self.kernel!='hanning' and self.kwidth<=0:
+            errstr = "kernel should be > 0"
+            raise Exception, errstr
+            
+    def execute(self):
+        engine = sdsmooth_engine(self)
+        engine.prologue()
+            
+        # set various attributes to self.scan
+        self.set_to_scan()
+
+        #Average within each scan
+        if self.scanaverage:
+            self.scan = sdutil.doaverage(self.scan,
+                                         self.scanaverage,
+                                         True,
+                                         'tint',
+                                         false,
+                                         'none')
+
+        # Actual implementation is defined outside the class
+        # since those are used in task_sdreduce.
+        engine.drive()
+
+        engine.epilogue()
+
+    def save(self):
+        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+
+
+class sdsmooth_engine(sdutil.sdtask_engine):
+    def __init__(self, worker):
+        super(sdsmooth_engine,self).__init__(worker)
+
+    def prologue(self):
+        if ( abs(self.plotlevel) > 1 ):
+            # print summary of input data
+            casalog.post( "Initial Scantable:" )
+            #casalog.post( s._summary() )
+            self.worker.scan._summary()
+
+        if ( abs(self.plotlevel) > 0 ):
+            pltfile=self.project+'_rawspec.eps'
+            sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel, 'Raw spectra')
+
+    def drive(self):
+        scan = self.worker.scan
+        if self.kernel == 'regrid':
+            if not qa.isquantity(self.chanwidth):
+                errstr = "Invalid quantity chanwidth "+self.chanwidth
+                raise Exception, errstr
+            qchw = qa.quantity(self.chanwidth)
+            oldUnit = scan.get_unit()
+            if qchw['unit'] in ("", "channel", "pixel"):
+                scan.set_unit("channel")
+            elif qa.compare(self.chanwidth,"1Hz") or \
+                     qa.compare(self.chanwidth,"1m/s"):
+                scan.set_unit(qchw['unit'])
+            else:
+                errstr = "Invalid dimension of quantity chanwidth "+self.chanwidth
+                raise Exception, errstr
+            casalog.post( "Regridding spectra in width "+self.chanwidth )
+            scan.regrid_channel(width=qchw['value'],plot=self.verify,insitu=True)
+            scan.set_unit(oldUnit)
+        else:
+            casalog.post( "Smoothing spectra with kernel "+self.kernel )
+            scan.smooth(kernel=self.kernel,width=self.kwidth,plot=self.verify,insitu=True)
+
+    def epilogue(self):
+        if ( abs(self.plotlevel) > 0 ):
+            pltfile=self.project+'_smspec.eps'
+            sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel, 'Smoothed spectra')
+        
