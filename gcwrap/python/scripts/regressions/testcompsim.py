@@ -52,6 +52,7 @@ image              =  True
 vis                =  "default"
 imsize             =  300
 imdirection        =  direction
+cell               = "0.043294054arcsec"
 niter              =  500
 threshold          =  "0.1mJy"
 analyze            =  True
