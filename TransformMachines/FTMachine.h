@@ -326,6 +326,9 @@ public:
   //get and set numthreads
   void setnumthreads(Int n);
   Int getnumthreads();
+
+  String getCacheDir() { return cfCache_p->getCacheDir(); };
+
 protected:
 
   friend class VisModelData;

@@ -540,7 +540,7 @@ namespace casa{
   {
     (void)uvGrid; (void)dNU; (void)vb;
     Vector<Double> fValues;
-    if (narrowBand_p)
+    if (wbAWP_p==False)
       {
 	fValues.resize(1);
 	fValues[0]=imRefFreq_p;
@@ -729,7 +729,7 @@ namespace casa{
     // If w-term is unity, we can scale the A-term with frequency.  So
     // compute it only for the highest frequency involved.
     //
-    log_l << "Disabled scaling of CFs" << LogIO::WARN << LogIO::POST;
+    //log_l << "Disabled scaling of CFs" << LogIO::WARN << LogIO::POST;
     // if (wConvSize <= 1)
     //   {
     // 	Double rFreq = max(freqValues);

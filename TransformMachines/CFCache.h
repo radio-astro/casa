@@ -146,7 +146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       memCache_p(), memCacheWt_p(), cfCacheTable_p(), XSup(), YSup(), paList(), 
       paList_p(), key2IndexMap(),
       cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False),
-      avgPBReadyQualifier_p("")
+      avgPBReadyQualifier_p(""),Dir("")
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();

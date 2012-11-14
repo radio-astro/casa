@@ -209,6 +209,7 @@ protected:
   Float pblimit_p;
   Block<CountedPtr<ImageInterface<Float> > > sensitivitymaps_p;
   PtrBlock<SubImage<Float>* > pbcoeffs_p;
+  String cacheDir_p;
 
   Bool dbg_p,dotime_p;
   Timer tmr_p;
