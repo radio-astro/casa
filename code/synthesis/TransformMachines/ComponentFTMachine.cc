@@ -43,12 +43,13 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <measures/Measures/UVWMachine.h>
+#include <ms/MeasurementSets/MSColumns.h>
 #include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //---------------------------------------------------------------------- 
-ComponentFTMachine::ComponentFTMachine()
+  ComponentFTMachine::ComponentFTMachine() : numthreads_p(-1)
 {
 }
 
@@ -73,6 +74,10 @@ ComponentFTMachine::ComponentFTMachine(const ComponentFTMachine& other)
 ComponentFTMachine::~ComponentFTMachine() {
 }
 
+void ComponentFTMachine::setnumthreads(const Int numthreads){
+    numthreads_p=numthreads;
+}
+
 void ComponentFTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 				   const VisBuffer& vb,
 				   const MDirection& mDesired)
@@ -85,7 +90,12 @@ void ComponentFTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
   // the Sun on the specified epoch, expressed in J2000 coordinates.
   // We also add an MPosition as well so that for compact arrays we
   // can specify images in e.g. AZEL or HADEC.
-  MeasFrame mFrame((MEpoch(Quantity(vb.time()(0), "s"))), mLocation_p);
+  
+
+  MeasFrame mFrame((MEpoch(Quantity(vb.time()(0), 
+				    vb.msColumns().timeQuant()(0).getUnit() ), 
+			   vb.msColumns().timeMeas()(0).getRef())), 
+		   vb.msColumns().antenna().positionMeas()(0));
 
   UVWMachine uvwMachine(mDesired, vb.phaseCenter(), mFrame,
 			False, True);
@@ -100,6 +110,37 @@ void ComponentFTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
     for (i=0;i<3;i++) thisRow(i)=uvw(i,row);
     uvwMachine.convertUVW(dphase(row), thisRow);
     for (i=0;i<3;i++) uvw(i,row)=thisRow(i);
+  }
+
+}
+
+void ComponentFTMachine::rotateUVW(Double*& uvw, Double*& dphase, const Int nrows, 
+				   const VisBuffer& vb,
+				   const MDirection& mDesired)
+{
+
+  // 1. We need to convert this type (e.g. MDirection::SUN to the
+  // type observed (e.g. MDirection::J2000). So first we get
+  // the type and combine it with the specified frame that includes
+  // the observing epoch. So we end up with e.g. the position of
+  // the Sun on the specified epoch, expressed in J2000 coordinates.
+  // We also add an MPosition as well so that for compact arrays we
+  // can specify images in e.g. AZEL or HADEC.
+  MeasFrame mFrame((MEpoch(Quantity(vb.time()(0), vb.msColumns().timeQuant()(0).getUnit()), vb.msColumns().timeMeas()(0).getRef())), vb.msColumns().antenna().positionMeas()(0));
+
+
+  UVWMachine uvwMachine(mDesired, vb.phaseCenter(), mFrame,
+			False, True);
+
+  // Now we convert all rows and also calculate the
+  // change in phase
+  Vector<Double> thisRow(3);
+  thisRow=0.0;
+  uInt i;
+  for (Int row=0;row<nrows;row++) {
+    for (i=0;i<3;i++) thisRow(i)=uvw[row*3+i];
+    uvwMachine.convertUVW(dphase[row], thisRow);
+    for (i=0;i<3;i++) uvw[row*3+i]=thisRow(i);
   }
 
 }
