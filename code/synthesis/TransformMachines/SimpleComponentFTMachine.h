@@ -90,6 +90,21 @@ public:
   virtual void get(VisBuffer& vb, SkyComponent& skycomponent, Int row=-1);
 
 protected:
+  void applyPhasor(const Int part, const Block<Int>& startrow, 
+		   const Vector<uInt>& nRowp,  
+		   const Vector<Double>& dphase,  const Vector<Double>& invLambda, 
+		   const Int npol, const Int nchan, 
+		   const Vector<Int>& corrType, 
+		   const Cube<DComplex>& dVis, Complex*& modData);
+  
+  void predictVis(Complex*& modData, const Vector<Double>& invLambda, 
+		  const Vector<Double>& frequency, 
+		  const ComponentList& compList, 
+		  ComponentType::Polarisation poltype, const Vector<Int>& corrType, 
+		  const uInt startrow, const uInt nrows, 
+		  const uInt nchan, const uInt npol, 
+		  const Block<Matrix<Double> > & uvwcomp, 
+		  const Block<Vector<Double> > & dphasecomp);
 
 };
 

@@ -5753,9 +5753,9 @@ Bool Imager::plotvis(const String& type, const Int increment)
     Bool hasCorrected=!(msc.correctedData().isNull());
     Bool hasModel= True; //with virtual model data service model data is always there
     //why bother if it is not requested
-    if((type != "all") || (type!="model") || (type != "residual"))
+    if(!((type == "all") || (type=="model") || (type == "residual")))
       hasModel=False;
-    if((type != "all") || (type!="corrected") || (type != "residual"))
+    if(!((type == "all") || (type=="corrected") || (type == "residual")))
       hasCorrected=False;
     
 
@@ -5824,6 +5824,7 @@ Bool Imager::plotvis(const String& type, const Int increment)
     if(!hasCorrected || !hasModel)
       residualAmp.resize();
     
+
     Float maxuvDistance=0.0;
     Float maxAmp=0.0;
     Float maxCorrectedAmp=0.0;
@@ -5900,6 +5901,8 @@ Bool Imager::plotvis(const String& type, const Int increment)
       }
     }
     
+
+
     if(maxuvDistance==0.0) {
       os << LogIO::SEVERE << "Maximum uv distance is zero" << LogIO::POST;
       this->unlock();

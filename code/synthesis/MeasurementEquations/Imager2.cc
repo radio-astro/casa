@@ -3118,6 +3118,7 @@ Bool Imager::createFTMachine()
     
   }
   ft_p->setnumthreads(numthreads_p);
+  cft_p->setnumthreads(numthreads_p);
   ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
   ft_p->setFreqInterpolation(freqInterpMethod_p);
   if(doTrackSource_p){
@@ -3428,7 +3429,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
   AlwaysAssert(rvi_p, AipsError);
   AlwaysAssert(ft_p, AipsError);
   AlwaysAssert(cft_p, AipsError);
-
+ 
   // Setup the sky equation
   setSkyEquation();
 
