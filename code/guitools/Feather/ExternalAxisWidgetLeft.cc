@@ -31,10 +31,11 @@
 
 namespace casa {
 
-ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
+ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent/*, bool manageTicksManually*/):
 	ExternalAxisWidget( parent ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
 	setFixedWidth( AXIS_SMALL_SIDE );
+	//manageTicks = manageTicksManually;
 }
 
 int ExternalAxisWidgetLeft::getStartY() const {
@@ -84,7 +85,6 @@ void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength){
 	//We don't want to draw too many ticks so adjust the number
 	//of ticks we draw accordingly.
 	int tickIncrement = getTickIncrement( originalTickCount, false );
-	//int tickCount = originalTickCount / tickIncrement;
 	int yIncrement = canvas->height() / (originalTickCount + 1);
 	for ( int i = tickIncrement - 1; i < originalTickCount; i = i + tickIncrement ){
 		int tickPosition = startPixelY + (i+1)*yIncrement;

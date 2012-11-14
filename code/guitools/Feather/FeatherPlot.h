@@ -31,12 +31,8 @@
 #include <qwt_plot.h>
 #include <qwt_legend.h>
 
-class QwtPlotZoomer;
 class QwtPlotCurve;
-class QwtPlotMarker;
-class QwtPlotPicker;
 class QGridLayout;
-class QMouseEvent;
 
 namespace casa {
 
@@ -53,48 +49,40 @@ public:
 	enum PlotType { ORIGINAL, SLICE_CUT, SCATTER_PLOT, NO_TYPE };
 	virtual ~FeatherPlot();
 	void clearCurves();
+	bool isEmpty() const;
+	bool isScatterPlot() const;
+	bool isSliceCut() const;
+	bool isSliceCutOriginal() const;
 	void addCurve( QVector<double> xValues, QVector<double> yValues,
 			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis );
 	void initializePlot( const QString& title, PlotType plotType );
 
-	FeatherPlot::PlotType getPlotType() const;
+
 	void setFunctionColor( const QString& curveID, const QColor& color );
-	void setDishDiameterLineColor( const QColor& color );
 	void setLineThickness( int thickness );
 	void setLegendVisibility( bool visible );
-	void setDiameterPosition( double position = -1 );
+
 	void insertSingleLegend( QWidget* parent );
 
 	QWidget* getExternalAxisWidget( QwtPlot::Axis position );
-	bool moveDiameterMarker( const QPoint& pos );
-	double getDishDiameter() const;
-	bool isDiameterSelectorMode() const;
+	FeatherPlot::PlotType getPlotType() const;
 
 private:
-	bool isScatterPlot() const;
+
+
 	int getCurveIndex( const QString& curveTitle ) const;
 	void setCurveLineThickness( int curveIndex );
 	void updateAxes();
 	void setAxisLabels();
-
-	void initializeDiameterMarker();
-	void initializeDiameterSelector();
-
 	QwtLegend* legend;
 
 	PlotType plotType;
 	bool legendVisible;
 	int lineThickness;
 
-	enum LeftMouseMode { RECTANGLE_ZOOM, DIAMETER_SELECTION };
-	LeftMouseMode leftMouseMode;
 	const int DOT_FACTOR;
 	const int AXIS_COUNT;
-	const int MARKER_WIDTH;
-	QwtPlotMarker* diameterMarker;
-	QwtPlotPicker* diameterSelector;
-	//QwtPlotPicker *zoomer;
-	//QwtPlotZoomer *zoomerRight;
+
     QList<QwtPlotCurve*> curves;
 
     QList<QString> axisLabels;

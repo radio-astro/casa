@@ -32,7 +32,7 @@ namespace casa {
 
 class ExternalAxisWidgetLeft : public ExternalAxisWidget {
 public:
-	ExternalAxisWidgetLeft(QWidget* parent);
+	ExternalAxisWidgetLeft(QWidget* parent/*, bool manageTicksManually = false*/);
 	virtual ~ExternalAxisWidgetLeft();
 protected:
 	virtual void defineAxis( QLine& axisLine );

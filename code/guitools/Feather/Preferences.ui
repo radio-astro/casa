@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>266</width>
-    <height>265</height>
+    <width>342</width>
+    <height>315</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,7 +39,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Plot Display Preferences</string>
+        <string>Plot Preferences</string>
        </property>
       </widget>
      </item>
@@ -66,7 +66,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>9</height>
       </size>
      </property>
     </spacer>
@@ -85,7 +85,7 @@
         <string>A plot of the original feather data will be shown if this box is checked.</string>
        </property>
        <property name="text">
-        <string>Original Slice Plot</string>
+        <string>Display Original Slice Plot</string>
        </property>
        <property name="checked">
         <bool>true</bool>
@@ -115,7 +115,7 @@
         <string>A plot of the feather output functions will be shown if this box is checked.</string>
        </property>
        <property name="text">
-        <string>Average Visibility Slice Plot</string>
+        <string>Display Average Visibility Slice Plot</string>
        </property>
        <property name="checked">
         <bool>true</bool>
@@ -140,12 +140,12 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
-      <widget class="QCheckBox" name="onlyXPlotCheckBox">
+      <widget class="QCheckBox" name="yPlotCheckBox">
        <property name="toolTip">
         <string>Checking this box will remove the Y plots from the display.</string>
        </property>
        <property name="text">
-        <string>Only X Plots</string>
+        <string>Display Y Plots</string>
        </property>
       </widget>
      </item>
@@ -172,7 +172,7 @@
         <string>Display a separate scatter plot of the average visibility amplitudes.</string>
        </property>
        <property name="text">
-        <string>Average Visibility Scatter Plot</string>
+        <string>Display Average Visibility Scatter Plot</string>
        </property>
       </widget>
      </item>
@@ -205,7 +205,7 @@
         <string>The oridinal data plot will include a legend if this box is checked.</string>
        </property>
        <property name="text">
-        <string>Legend</string>
+        <string>Display Legend</string>
        </property>
        <property name="checked">
         <bool>true</bool>
@@ -228,43 +228,98 @@
     </layout>
    </item>
    <item>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>1</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <spacer name="horizontalSpacer_17">
+      <spacer name="horizontalSpacer_4">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>13</width>
-         <height>20</height>
+         <height>17</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Plot Line Thickness:</string>
-       </property>
-      </widget>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Line Width (Slice Plots):</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QSpinBox" name="lineThicknessSpinBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>53</width>
+           <height>21</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Select a point size for drawing lines and dots on the plot(s).</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>&lt;font color='black'&gt;Marker Size(Scatter Plots):&lt;/font&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="dotSizeSpinBox">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>53</width>
+           <height>21</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QSpinBox" name="lineThicknessSpinBox">
-       <property name="toolTip">
-        <string>Select a point size for drawing lines and dots on the plot(s).</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_5">
+      <spacer name="horizontalSpacer_6">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>17</width>
-         <height>20</height>
+         <width>13</width>
+         <height>17</height>
         </size>
        </property>
       </spacer>
@@ -279,7 +334,7 @@
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>40</height>
+       <height>10</height>
       </size>
      </property>
     </spacer>

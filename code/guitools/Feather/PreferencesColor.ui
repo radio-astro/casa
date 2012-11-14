@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>397</width>
-    <height>295</height>
+    <height>328</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -80,7 +80,7 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
+         <width>18</width>
          <height>20</height>
         </size>
        </property>
@@ -156,8 +156,49 @@
            <height>25</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Click to specify a color to use when drawing the line showing the value of the dish diameter.</string>
+         </property>
          <property name="text">
-          <string> </string>
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Zoom Rectangle:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="zoomRectangleColorButton">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>113</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>113</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Click to specify a color to use in drawing the zoom rectangle.</string>
+         </property>
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>
