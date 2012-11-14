@@ -119,7 +119,12 @@ public:
   // desired phase center.
   void rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 		 const VisBuffer& vb, const MDirection& mDesired);
-
+  // A version that use pointers to contigous matrix and vector 
+  void rotateUVW(Double*& uvw, Double*& dphase, const Int nrows,
+		 const VisBuffer& vb, const MDirection& mDesired);
+  // Set number of threads to use when predicting. Setting it to -1 
+  // basically tell openmp to use the number it can get
+  void setnumthreads(const Int numthreads);
 protected:
 
   LogIO logIO_p;
@@ -128,8 +133,9 @@ protected:
 
   // Default Position used for phase rotations
   MPosition mLocation_p;
-
+  
   virtual void ok();
+  Int numthreads_p;
 
 };
 
