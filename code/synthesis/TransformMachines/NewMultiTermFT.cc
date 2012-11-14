@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   NewMultiTermFT::NewMultiTermFT(FTMachine *subftm,  Int nterms, Double reffreq)
     :FTMachine(), nterms_p(nterms), donePSF_p(False),doingPSF_p(False),
      reffreq_p(reffreq), imweights_p(Matrix<Float>(0,0)), machineName_p("NewMultiTermFT"),
-     pblimit_p((Float)1e-04), doWideBandPBCorrection_p(False)
+     pblimit_p((Float)1e-04), doWideBandPBCorrection_p(False), cacheDir_p(".")
   {
     dbg_p=False;
 
@@ -102,6 +102,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   << " and pblimit : " << pblimit_p << endl;
 
     pblimit_p = 1e-07;
+
+    cacheDir_p = subftm->getCacheDir();
 
     time_get=0.0;
     time_put=0.0;
@@ -154,6 +156,7 @@ NewMultiTermFT& NewMultiTermFT::operator=(const NewMultiTermFT& other)
          donePSF_p=other.donePSF_p;
 	 doWideBandPBCorrection_p = other.doWideBandPBCorrection_p;
          pblimit_p = other.pblimit_p;
+	 cacheDir_p = other.cacheDir_p;
 
 	 // Make the list of subftms
 	 subftms_p.resize(other.subftms_p.nelements());
@@ -612,7 +615,7 @@ void NewMultiTermFT::normAvgPBs(PtrBlock<SubImage<Float> *>& weightImageVec)
 	  cout << "Normalizing pb : " << taylor << " by peak of zeroth : " << rmaxval << endl;
 	  sensitivitymaps_p[taylor] = new TempImage<Float>( (weightImageVec[taylor])->shape() ,(weightImageVec[taylor])->coordinates() );
 	  sensitivitymaps_p[taylor]->copyData( (LatticeExpr<Float>) ( (*(weightImageVec[taylor]))/rmaxval ) );
-	  storeAsImg("sensitivityPB_"+String::toString(taylor) , *(sensitivitymaps_p[taylor]) );
+	  storeAsImg(cacheDir_p+"/sensitivityPB_"+String::toString(taylor) , *(sensitivitymaps_p[taylor]) );
 	}
     }
 
