@@ -217,25 +217,15 @@ class sdtask_template_imaging(sdtask_interface):
         self.pointing_table = get_subtable_name(keys['POINTING'])
         self.data_desc_table = get_subtable_name(keys['DATA_DESCRIPTION'])
 
-class sdtask_engine(object):
+class sdtask_engine(sdtask_interface):
     def __init__(self, worker):
         # set worker instance to work with
         self.worker = worker
 
         # copy worker attributes except scan
         # use worker.scan to access scantable
-        for (k,v) in self.worker.__dict__.items():
-            if k == 'scan': continue
-            setattr(self, k, v)
-
-    def prologue(self):
-        pass
-
-    def drive(self):
-        pass
-
-    def epilogue(self):
-        pass
+        super(sdtask_engine,self).__init__(**self.worker.__dict__)
+        if hasattr(self,'scan'): del self.scan
     
 class parameter_registration(object):
     def __init__(self, worker, arg_is_value=False):
