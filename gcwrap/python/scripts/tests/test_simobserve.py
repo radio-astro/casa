@@ -25,6 +25,7 @@ class simobserve_unittest_base:
     Base class of simobserve unit test.
     The class defines common variables and test methods.
     """
+    graphics = "file"
     # Variables
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/simobserve/'
     thistask = "simobserve"
@@ -67,6 +68,7 @@ class simobserve_unittest_base:
             compkeys = self.imkeys
         else:
             compkeys = ref.keys()
+        print("Comparing image statistics of '%s' with reference" % name)
         for key in compkeys:
             message="image statistic '%s' does not match" % key
             if type(stats[key])==str:
@@ -80,15 +82,18 @@ class simobserve_unittest_base:
     def _check_msstats(self,name,ref):
         # ref: a dictionary of reference statistics or reference MS name
         # name: the name of MS to compare statistics
+        column = "DATA"
+        compval = "real"
         if type(ref) == str:
             # get statistics of reference MS
-            ref=self._get_msstats(ref)
-        stats=self._get_msstats(name)
+            ref=self._get_msstats(ref,column,compval)
+        stats=self._get_msstats(name,column,compval)
+        # define statistics to compare
         if hasattr(self,'mskeys'):
             compkeys = self.mskeys
         else:
             compkeys = ref.keys()
-        # define statistics to compare
+        print("Comparing MS statistics of '%s' with reference" % name)
         for key in compkeys:
             message="MS statistic '%s' does not match" % key
             ret=numpy.allclose([stats[key]],[ref[key]],
@@ -125,107 +130,171 @@ class simobserve_unittest_base:
             foo=cfgname.replace(';','_')
         else:
             foo = cfgname
-            foo=foo.replace(".cfg","")
-            sfoo=foo.split('/')
-            if len(sfoo)>1: foo=sfoo[-1]
+
+        foo=foo.replace(".cfg","")
+        sfoo=foo.split('/')
+        if len(sfoo)>1: foo=sfoo[-1]
 
         return project+"."+foo
 
-# ########################################################################
-# #
-# # Test skymodel only simulations
-# #
-# class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
-#     """
-#     Test skymodel simulations
-#     - Single step at a time
-#     - All steps with 2D, 3D and 4D input skymodel
-#     """
-#     inmodel = ""
-#     refmod = datapath+"" # reference modified skymodel
-#     # reference simulated MS
-#     refsdms = datapath+"" 
-#     refintms = datapath+"" 
-#     refnoisysdms = datapath+""
-#     refnoisyintms = datapath+""
-#     project = simobserve_unittest_base.thistask+"_sky"
+########################################################################
+#
+# Test skymodel only simulations
+#
+class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
+    """
+    Test skymodel simulations
+    - Single step at a time
+    - All steps with 2D, 3D and 4D input skymodel
+    """
+    project = simobserve_unittest_base.thistask+"_sky"
+    inmodel = "core5ps.skymodel4mod"
+    sdantlist = "aca.tp.cfg"
+    antlist = "alma.out01.cfg"
 
-#     # Reserved methods
-#     def setUp(self):
-#         if os.path.exists(self.infile):
-#             shutil.rmtree(self.infile)
-#         shutil.copytree(self.datapath+self.infile, self.infile)
+    refproj = "ref_sky"
+    refpref = simobserve_unittest_base.datapath + refproj + "/"
 
-#         default(simobserve)
+    # Reserved methods
+    def setUp(self):
+        #if os.path.exists(self.infile):
+        #    shutil.rmtree(self.infile)
+        #shutil.copytree(self.datapath+self.infile, self.infile)
+        print("")
+        default(simobserve)
+        self.refpref_sd = self.refpref + \
+                          self._get_data_prefix(self.sdantlist,self.refproj)
+        self.refpref_int = self.refpref + \
+                           self._get_data_prefix(self.antlist,self.refproj)
+        self.refmodel = self.refpref_sd+".skymodel" # reference modified skymodel
+        # reference simulated MS
+        self.refms_sd = self.refpref_sd+".sd.ms"
+        self.refms_int = self.refpref_int+".ms"
 
-#     def tearDown(self):
-#         if (os.path.exists(self.infile)):
-#             shutil.rmtree(self.infile)
-#         shutil.rmtree(self.project)
+    def tearDown(self):
+        #if (os.path.exists(self.infile)):
+        #    shutil.rmtree(self.infile)
+        shutil.rmtree(self.project)
+        #pass
+
+    # Tests of skymodel simulations
+    def testSky_skymodel(self):
+        """Test skymodel simulation: only modify model"""
+        skymodel = self.inmodel
+        self._copy_input(skymodel)
+        inbright = "5.95565834e-05Jy/pixel"
+        indirection = "J2000 19h00m00 -23d00m00"
+        incell = "0.043080964943481216arcsec"
+        incenter = "345GHz"
+        inwidth = "10MHz"
+        #setpointings = False
+        #ptgfile =   # necessary even if only modifymodel
+        obsmode = ""
+        antennalist="alma.out01.cfg" # necessary even if only modifymodel
+        res = simobserve(project=self.project,skymodel=skymodel,
+                         inbright=inbright,indirection=indirection,
+                         incell=incell,incenter=incenter,inwidth=inwidth,
+                         setpointings=True,obsmode=obsmode,
+                         antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare skymodel
+        currmodel = self.project + "/" + \
+                    self._get_data_prefix(antennalist,self.project)+".skymodel"
+        self._check_imstats(currmodel, self.refmodel)
+
+    def testSky_almaptg(self):
+        """Test skymodel simulation: only setpointing (maptype='ALMA')"""
+        skymodel = self.refmodel
+        setpointings = True
+        maptype = "ALMA"
+        obsmode = ""
+        antennalist = "alma.out01.cfg"
+        res = simobserve(project=self.project,skymodel=skymodel,
+                         setpointings=setpointings,maptype=maptype,
+                         obsmode=obsmode,antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # TODO: need to compare pointing file
+        refptg = "alma.alma.out01.ptg.txt"
+
+    def testSky_hexptg(self):
+        """Test skymodel simulation: only setpointing (maptype='hexagonal')"""
+        skymodel = self.refmodel
+        setpointings = True
+        maptype = "hexagonal"
+        obsmode = ""
+        antennalist = "aca.i.cfg"
+        res = simobserve(project=self.project,skymodel=skymodel,
+                         setpointings=setpointings,maptype=maptype,
+                         obsmode=obsmode,antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # TODO: need to compare pointing file
+        refptg = "hex.aca.i.ptg.txt"
+
+    def testSky_sqptg(self):
+        """Test skymodel simulation: only setpointing (maptype='square')"""
+        skymodel = self.refmodel
+        setpointings = True
+        maptype = "square"
+        obsmode = ""
+        antennalist = ""
+        sdantlist = self.sdantlist
+        res = simobserve(project=self.project,skymodel=skymodel,
+                         setpointings=setpointings,maptype=maptype,
+                         obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # TODO: need to compare pointing file
+        refptg = "square.aca.tp.ptg.txt"
+
+    def testSky_sdObs(self):
+        """Test skymodel simulation: only observation (SD)"""
+        skymodel = self.refmodel
+        setpointings = False
+        ptgfile = self.refpref_sd + ".ptg.txt"
+        integration = "4s"
+        obsmode = "sd"
+        sdantlist = self.sdantlist
+        totaltime = "144s"
+        thermalnoise = ""
+        res = simobserve(project=self.project,skymodel=skymodel,
+                         setpointings=setpointings,ptgfile=ptgfile,
+                         integration=integration,obsmode=obsmode,
+                         sdantlist=sdantlist,totaltime=totaltime,
+                         thermalnoise=thermalnoise,graphics=self.graphics)
+        self.assertTrue(res)
+        # compare output MS
+        currms = self.project + "/" + \
+                 self._get_data_prefix(sdantlist,self.project)+".sd.ms"
+        self._check_msstats(currms,self.refms_sd)
         
-#     # Tests of skymodel simulations
-#     def testSky_skymodel(self):
-#         """Test skymodel simulation: only modify model"""
-#         skymodel = self.inmodel
-#         # params
-#         setpointings = False
-#         ptgfile = self.ptg
-#         obsmode = ""
-#         thermalnoise = ""
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
 
-#     def testSky_pointing(self):
-#         """Test skymodel simulation: only setpointing"""
-#         skymodel = self.refmod
-#         setpointings = True
-#         # params
-#         obsmode = ""
-#         thermalnoise = ""
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
-        
-#     # Tests of Single dish simulations
-#     def testSky_sdAll(self):
-#         """Test skymodel simulation: single dish"""
-#         skymodel = self.inmodel
-#         obsmode = "sd"
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          obsmode=obsmode)
-    
-#     def testSky_sdObs(self):
-#         """Test skymodel simulation: only observation (SD)"""
-#         skymodel = self.refmod
-#         setpointings = False
-#         obsmode = "sd"
-#         thermalnoise = ""
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
-    
-#     # Tests of interferometer simulation
-#     def testSky_intAll(self):
-#         """Test skymodel simulation: interferometer"""
-#         skymodel = self.inmodel
-#         obsmode = "int"
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          obsmode=obsmode)
+    def testSky_intObs(self):
+        """Test skymodel simulation: only observation (INT)"""
+        skymodel = self.refmodel
+        setpointings = False
+        ptgfile = self.refpref_int + ".ptg.txt"
+        integration = "4s"
+        obsmode = "int"
+        antennalist = 'alma.out01.cfg'
+        totaltime = "28s"
+        res = simobserve(project=self.project,skymodel=skymodel,
+                         setpointings=setpointings,ptgfile=ptgfile,
+                         integration=integration,obsmode=obsmode,
+                         antennalist=antennalist,totaltime=totaltime,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare output MS
+        currms = self.project + "/" + \
+                 self._get_data_prefix(antennalist,self.project)+".ms"
+        self._check_msstats(currms,self.refms_sd)
 
-#     def testSky_intObs(self):
-#         """Test skymodel simulation: only observation (INT)"""
-#         skymodel = self.refmod
-#         setpointings = False
-#         obsmode = "int"
-#         thermalnoise = ""
-#         res = simobserve(project=self.project,skymodel=skymodel,
-#                          setpointings=setpointings,ptgfile=ptgfile,
-#                          obsmode=obsmode,thermalnoise=thermalnoise)
-    
 #     def testSky_intLeak(self):
 #         """Test skymodel simulation: only observation (INT)"""
-#         skymodel = self.refmod
+#         skymodel = self.refmodel
 #         setpointings = False
 #         obsmode = ""
 #         thermalnoise = ""
@@ -233,9 +302,65 @@ class simobserve_unittest_base:
 #         res = simobserve(project=self.project,skymodel=skymodel,
 #                          setpointings=setpointings,ptgfile=ptgfile,
 #                          obsmode=obsmode,thermalnoise=thermalnoise,
-#                          leakage=leakage)
+#                          leakage=leakage,graphics=self.graphics)
 
-    
+    def testSky_sdAll(self):
+        """Test skymodel simulation: single dish"""
+        skymodel = self.inmodel
+        inbright = "5.95565834e-05Jy/pixel"
+        indirection = "J2000 19h00m00 -23d00m00"
+        incell = "0.043080964943481216arcsec"
+        incenter = "345GHz"
+        inwidth = "10MHz"
+        integration = "4s"
+        mapsize = ["60arcsec", "60arcsec"]
+        maptype = "square"
+        obsmode = "sd"
+        sdantlist = "aca.tp.cfg"
+        totaltime = "144s"
+        res = simobserve(project=self.project,skymodel=skymodel,
+                   inbright=inbright,indirection=indirection,
+                   incell=incell,incenter=incenter,inwidth=inwidth,
+                   setpointings=True,integration=integration,
+                   mapsize=mapsize,maptype=maptype,obsmode=obsmode,
+                   totaltime=totaltime,antennalist="",sdantlist=sdantlist,
+                   thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare outputs
+        currpref = self.project + "/" + \
+                 self._get_data_prefix(sdantlist,self.project)
+        self._check_imstats(currpref+".skymodel", self.refmodel)
+        # TODO: need to compare pointing file
+        self._check_msstats(currpref+".sd.ms",self.refms_sd)
+
+    def testSky_intAll(self):
+        """Test skymodel simulation: interferometer"""
+        skymodel = self.inmodel
+        inbright = "5.95565834e-05Jy/pixel"
+        indirection = "J2000 19h00m00 -23d00m00"
+        incell = "0.043080964943481216arcsec"
+        incenter = "345GHz"
+        inwidth = "10MHz"
+        integration = "4s"
+        mapsize = ['20arcsec', '20arcsec']
+        maptype = "ALMA"
+        obsmode = 'int'
+        antennalist = 'alma.out01.cfg'
+        totaltime = "28s"
+        res = simobserve(project=self.project,skymodel=skymodel,
+                         inbright=inbright,indirection=indirection,
+                         incell=incell,incenter=incenter,inwidth=inwidth,
+                         setpointings=True,integration=integration,
+                         mapsize=mapsize,maptype=maptype,obsmode=obsmode,
+                         totaltime=totaltime,antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare outputs
+        currpref = self.project + "/" + \
+                 self._get_data_prefix(antennalist,self.project)
+        self._check_imstats(currpref+".skymodel", self.refmodel)
+        # TODO: need to compare pointing file
+        self._check_msstats(currpref+".ms",self.refms_int)
     
 
 # ########################################################################
@@ -771,56 +896,6 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
                at.getWetOpacity(spwid=0)['value'][0]
         return tsky, tau0
 
-    #def testNZ_genSd(self):
-    #    self._generate_sd_input()
-    def _generate_sd_input(self):
-        project = self.project
-        inimage = "flatoneimage.model"
-        indirection = 'J2000 19h00m00 -23d00m00'
-        incenter = "345GHz"
-        inwidth = "10MHz"
-        tint = "4s"
-        tottime = "1800s" # 30min
-        mapsize = ["5arcsec","5arcsec"] # single pointing
-        pointingspacing = "10arcsec"
-        sdantlist = "aca.tp.cfg"
-        self._copy_input(inimage)
-        simobserve(project=project,skymodel=inimage,indirection=indirection,
-                   incenter=incenter,inwidth=inwidth,setpointings=True,
-                   integration=tint,mapsize=mapsize,
-                   pointingspacing=pointingspacing,
-                   obsmode='sd',sdantlist=sdantlist,antennalist="",
-                   totaltime=tottime,thermalnoise="",graphics="none")
-        basename = project + "/" + self._get_data_prefix(sdantlist,project=project)
-        shutil.move(basename+".skymodel", basename+".model")
-        # only *.model, *.ms, and *.ptg.txt is necessary
-
-    #def testNZ_genInt(self):
-    #    self._generate_int_input()
-    def _generate_int_input(self):
-        project = self.project_int
-        inimage = "flatoneimage.model"
-        indirection = 'J2000 19h00m00 -23d00m00'
-        incenter = "345GHz"
-        inwidth = "10MHz"
-        incell = "1arcsec"
-        tint = "4s"
-        tottime = "1800s" # 30min
-        mapsize = ["5arcsec","5arcsec"] # single pointing
-        pointingspacing = "10arcsec"
-        antlist = "aca_cycle1.cfg"
-        totaltime = "100s"
-        self._copy_input(inimage)
-        simobserve(project=project,skymodel=inimage,indirection=indirection,
-                   incenter=incenter,inwidth=inwidth,incell=incell,
-                   setpointings=True,integration=tint,mapsize=mapsize,
-                   pointingspacing=pointingspacing,
-                   obsmode='int',sdantlist="",antennalist=antlist,
-                   totaltime=totaltime,thermalnoise="",graphics="none")
-        basename = project + "/" + self._get_data_prefix(antlist,project=project)
-        shutil.move(basename+".skymodel", basename+".model")
-        # only *.model, *.ms, and *.ptg.txt is necessary
-
 
 ########################################################################
 #
@@ -944,7 +1019,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         indirection=self.baddir
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
-                         indirection=indirection)
+                         indirection=indirection,graphics=self.graphics)
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
@@ -968,7 +1043,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
-                         incenter=incenter)
+                         incenter=incenter,graphics=self.graphics)
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
         
@@ -979,7 +1054,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
-                         inwidth=inwidth)
+                         inwidth=inwidth,graphics=self.graphics)
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
@@ -1075,7 +1150,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
-                         direction=direction)
+                         direction=direction,graphics=self.graphics)
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
@@ -1153,7 +1228,7 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
 
         res = simobserve(project=self.project,skymodel=self.inimage,
                          totaltime=self.tottime,mapsize=self.mapsize,
-                         caldirection=caldirection)
+                         caldirection=caldirection,graphics=self.graphics)
         self.assertTrue(res)
         # Need to compare MS with one generated with J2000
 
@@ -1356,73 +1431,6 @@ class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
         
     
 def suite():
-    return [simobserve_noise, simobserve_badinputs]
-#     return [simobserve_sdsky, simobserve_sdcomp, simobserve_sdcompsky,
+    return [simobserve_sky, simobserve_noise, simobserve_badinputs]
+#     return [simobserve_sky, simobserve_comp, simobserve_compsky,
 #             simobserve_noise,simobserve_badinputs]
-
-
-########################################################################
-# How to generate input data
-# 
-# 1. Generate a component list with
-#    a Gaussian (20 arcsec) + 5 point-like sources
-# 
-#     cl.open()
-#     cl.rename("core5ps.clist")
-#     cl.addcomponent(flux=[2.,0.,0.,0.],fluxunit="Jy",polarization="stokes",\
-#                     dir='J2000 19h00m00 -23d00m00',shape="gaussian",\
-#                     majoraxis="20arcsec",minoraxis="20arcsec",\
-#                     positionangle="0deg",freq="345.0GHz",\
-#                     spectrumtype="constant")
-#     ### - Point like sources
-#     ### Note: the last 2 sources are dummy 0Jy sources to make
-#     ###       compskymodel larger (80arcsec^2)
-#     directions = ['J2000 18h59m59.379275 -23d00m10.374590',
-#                   'J2000 19h00m0.063002 -22d59m48.826670',
-#                   'J2000 19h00m0.386715 -23d00m2.973792',
-#                   'J2000 19h00m0.711507 -22d59m57.302818',
-#                   'J2000 18h59m59.918234 -22d59m57.740534',
-#                   'J2000 19h00m2.666667 -23d00m40.000000',
-#                   'J2000 18h59m57.333333 -22d59m20.000000']
-#     fluxes = [[0.004347,0.,0.,0.],[0.003808,0.,0.,0.],[0.004571,0.,0.,0.],
-#               [0.008541,0.,0.,0.],[0.005158,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]]
-#     for idx in range(len(directions)):
-#         cl.addcomponent(flux=fluxes[idx],fluxunit="Jy",shape="gaussian",\
-#                         majoraxis="0.5arcsec",minoraxis="0.5arcsec",\
-#                         positionangle="0deg",\
-#                         polarization="stokes",dir=directions[idx],\
-#                         freq="345.0GHz",spectrumtype="constant")
-#     cl.done()
-#
-# 2. Generate a CASA image of the components list using simobserve
-#     simobserve(project="simCore5ps",complist='core5ps.clist',\
-#                compwidth="10MHz",direction='J2000 19h00m00 -23d00m00',\
-#                obsmode='int',mapsize=['80arcsec','80arcsec'],totaltime='1')
-#  simobserve generates a skymodel image,
-#    "$project/$project.alma_out10.compskymodel" [1873,1873] pixels
-#  This image is renamed as "core5ps.skymodel" and used in skymodel tests
-#  
-# 3. Remove dummy components from list
-#
-#       cl.open("core5ps.clist")
-#       numcore = cl.length()
-#       cl.remove([numcore-2, numcore-1])
-#       cl.close()
-# 4. Generate ptgfiles
-#    [I] TP pointing
-#     simobserve(project="simSDPtgCore5ps",complist='core5ps.clist',\
-#                compwidth="10MHz",direction='J2000 19h00m00 -23d00m00',\
-#                maptype='square',mapsize=['40arcsec','40arcsec'],\
-#                totaltime='1',obsmode='',sdantlist='aca.tp.cfg',antennalist='')
-#     simobserve generates a skymodel image,
-#       "$project/$project.alma_out10.ptg.txt" with 16 pointings
-#     This image is renamed as "core5ps.sd40asec.ptg.txt" and used in skymodel tests
-#    [II] INT pointing
-#     simobserve(project="simINTPtgCore5ps",complist='core5ps.clist',\
-#                compwidth="10MHz",direction='J2000 19h00m00 -23d00m00',\
-#                maptype='ALMA',mapsize=['5arcsec','5arcsec'],totaltime='1',\
-#                obsmode='',sdantlist='',antennalist='alma.out01.cfg')
-#     simobserve generates a skymodel image,
-#       "$project/$project.alma_out10.ptg.txt" with single pointing
-#     This image is renamed as "core5ps.single.ptg.txt" and used in skymodel tests
-########################################################################
