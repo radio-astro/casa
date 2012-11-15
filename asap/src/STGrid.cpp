@@ -2083,6 +2083,22 @@ void STGrid::fillMainColumns( Table &tab )
   }
 }
 
+vector<int> STGrid::getResultantMapSize()
+{
+  vector<int> r(2);
+  r[0] = nx_;
+  r[1] = ny_;
+  return r;
+}
+
+vector<double> STGrid::getResultantCellSize()
+{
+  vector<double> r(2);
+  r[0] = cellx_;
+  r[1] = celly_;
+  return r;
+}
+
 // STGrid2
 STGrid2::STGrid2()
   : STGrid()

@@ -347,15 +347,14 @@ class sbseparator:
         mapy = dirarr[1].max() - dirarr[1].min()
         nx = max(1, numpy.ceil(mapx/self.dirtol[0]))
         ny = max(1, numpy.ceil(mapy/self.dirtol[0]))
-        
+
         asaplog.push("Regrid output scantable with cell = [%s, %s]" % \
                      (cellx, celly))
         gridder.defineImage(nx=nx, ny=ny, cellx=cellx, celly=celly)
-        gridder.setFunc(func='box', width=1)
+        gridder.setFunc(func='box', convsupport=1)
         gridder.setWeight(weightType='uniform')
         gridder.grid()
         return gridder.getResult()
-        
 
     @asaplog_post_dec
     def _get_specarray(self, polid=None, beamid=None, dir=None):
@@ -494,7 +493,6 @@ class sbseparator:
             if itab > 0:
                 if byname:
                     stab = scantable(self.intables[itab],average=False)
-                    self.intables.append(stab)
                 else:
                     stab = self.intables[itab]
                 unit_org = stab.get_unit()
@@ -513,7 +511,7 @@ class sbseparator:
                 asaplog.post()
                 asaplog.push("table contains multiple beams. It may not be handled properly.")
                 asaplog.push("WARN")
-            
+
             for ifno in stab.getifnos():
                 stab.set_selection(ifs=[ifno])
                 spx = stab._getabcissa()

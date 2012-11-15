@@ -77,6 +77,10 @@ public:
   // support function to know how grid function looks like
   vector<float> getConvFunc();
 
+  // for plotting
+  vector<int> getResultantMapSize();
+  vector<double> getResultantCellSize();
+
 //private:
 protected:
   void init() ;

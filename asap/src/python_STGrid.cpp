@@ -42,6 +42,8 @@ void python_STGrid() {
     .def("_disableclip", &STGrid::disableClip) 
     .def("_save", &STGrid::saveData)
     .def("_getfunc", &STGrid::getConvFunc)
+    .def("_get_resultant_map_size", &STGrid::getResultantMapSize)
+    .def("_get_resultant_cell_size", &STGrid::getResultantCellSize)
     ;
 
   class_<STGrid2>("stgrid2")

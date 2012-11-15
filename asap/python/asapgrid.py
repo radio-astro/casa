@@ -305,7 +305,10 @@ class asapgrid(asapgrid_base):
         # to load scantable on disk
         storg = rcParams['scantable.storage']
         rcParams['scantable.storage'] = 'disk'
-        plotter = _SDGridPlotter( self.infile, self.outfile, self.ifno )
+        [nx,ny] = self.gridder._get_resultant_map_size()
+        [cellx,celly] = self.gridder._get_resultant_cell_size()
+        plotter = _SDGridPlotter( self.infile, self.outfile, self.ifno,
+                                  nx=nx, ny=ny, cellx=cellx, celly=celly )
         plotter.plot( chan=plotchan, pol=plotpol, plotobs=plotobs, plotgrid=plotgrid )
         # back to original setup
         rcParams['scantable.storage'] = storg
@@ -375,7 +378,7 @@ class asapgrid2(asapgrid_base):
         return scantable( self.gridder._get( tp ), average=False )    
 
 class _SDGridPlotter:
-    def __init__( self, infile, outfile=None, ifno=-1 ):
+    def __init__( self, infile, outfile=None, ifno=-1, nx=-1, ny=-1, cellx=0.0, celly=0.0 ):
         if isinstance( infile, str ):
             self.infile = [infile]
         else:
@@ -383,13 +386,13 @@ class _SDGridPlotter:
         self.outfile = outfile
         if self.outfile is None:
             self.outfile = self.infile[0].rstrip('/')+'.grid'
-        self.nx = -1
-        self.ny = -1
+        self.nx = nx
+        self.ny = ny if ny > 0 else nx
         self.nchan = 0
         self.npol = 0
         self.pollist = []
-        self.cellx = 0.0
-        self.celly = 0.0
+        self.cellx = cellx
+        self.celly = celly if celly > 0.0 else cellx
         self.center = [0.0,0.0]
         self.nonzero = [[0.0],[0.0]]
         self.ifno = ifno
@@ -413,31 +416,34 @@ class _SDGridPlotter:
         #print 'npol=',self.npol
         #print 'nrow=',nrow
 
-        idx = 1
-        d0 = s.get_direction( 0 ).split()[-2]
-        d = s.get_direction(self.npol*idx)
-        while( d is not None \
-               and d.split()[-2] != d0):
-            idx += 1
+        if self.nx <= 0 or self.ny <= 0:
+            idx = 1
+            d0 = s.get_direction( 0 ).split()[-2]
             d = s.get_direction(self.npol*idx)
+            while( d is not None \
+                   and d.split()[-2] != d0):
+                idx += 1
+                d = s.get_direction(self.npol*idx)
         
-        self.nx = idx
-        self.ny = nrow / (self.npol * idx )
-        #print 'nx,ny=',self.nx,self.ny
+            self.nx = idx
+            self.ny = nrow / (self.npol * idx )
+            #print 'nx,ny=',self.nx,self.ny
 
         self.blc = s.get_directionval( 0 )
         self.trc = s.get_directionval( nrow-self.npol )
         #print self.blc
         #print self.trc
-        if nrow > 1:
-            incrx = s.get_directionval( self.npol )
-            incry = s.get_directionval( self.nx*self.npol )
-        else:
-            incrx = [0.0,0.0]
-            incry = [0.0,0.0]
-        self.cellx = abs( self.blc[0] - incrx[0] )
-        self.celly = abs( self.blc[1] - incry[1] )
-        #print 'cellx,celly=',self.cellx,self.celly
+
+        if self.cellx <= 0.0 or self.celly <= 0.0:
+            if nrow > 1:
+                incrx = s.get_directionval( self.npol )
+                incry = s.get_directionval( self.nx*self.npol )
+            else:
+                incrx = [0.0,0.0]
+                incry = [0.0,0.0]
+            self.cellx = abs( self.blc[0] - incrx[0] )
+            self.celly = abs( self.blc[1] - incry[1] )
+            #print 'cellx,celly=',self.cellx,self.celly
 
     def plot( self, chan=-1, pol=-1, plotobs=False, plotgrid=False ):
         if pol < 0:
