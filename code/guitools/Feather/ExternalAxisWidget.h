@@ -34,6 +34,11 @@ class QwtScaleDiv;
 
 namespace casa {
 
+/**
+ * Base class for classes that use the QwtScaleDiv information
+ * to draw their own axis.
+ */
+
 class ExternalAxisWidget : public QWidget {
 public:
 	ExternalAxisWidget(QWidget* parent);

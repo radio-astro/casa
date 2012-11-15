@@ -40,7 +40,7 @@ const QString Preferences::DISPLAY_Y_PLOTS = "Display Y Plots";
 Preferences::Preferences(QWidget *parent)
     : QDialog(parent),
       lineThickness( 1 ),
-      dotSize( 1 ),
+      dotSize( 2 ),
       displayOriginalFunctions(false),
       displayOutputFunctions( true ),
       displayOutputScatterPlot( false ),
@@ -53,7 +53,7 @@ Preferences::Preferences(QWidget *parent)
 	ui.lineThicknessSpinBox->setMinimum( 1 );
 	ui.lineThicknessSpinBox->setMaximum( 5 );
 	ui.dotSizeSpinBox->setMinimum( 1 );
-	ui.dotSizeSpinBox->setMaximum( 5 );
+	ui.dotSizeSpinBox->setMaximum( 10 );
 
 	initializeCustomSettings();
 	reset();

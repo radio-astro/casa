@@ -63,6 +63,7 @@ public:
 
     //Preference changes
     void setLineThickness( int thickness );
+    void setDotSize( int dotSize );
     void setLegendVisibility( bool visible );
     void setDisplayScatterPlot( bool visible );
     void setDisplayOutputSlice( bool visible );
@@ -77,9 +78,8 @@ public:
     void dishDiameterXChanged( double value );
     void dishDiameterYChanged( double value );
 
-
-
     ~PlotHolder();
+
 signals:
 	void dishDiameterChangedX( double newValue);
 	void dishDiameterChangedY( double newValue);
@@ -88,7 +88,6 @@ public slots:
 	//Left mouse modes
  	 void setRectangleZoomMode();
  	 void setDiameterSelectorMode();
-
 
 private slots:
 	void changePlotType();

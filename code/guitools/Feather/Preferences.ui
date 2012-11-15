@@ -282,12 +282,15 @@
           </size>
          </property>
          <property name="toolTip">
-          <string>Select a point size for drawing lines and dots on the plot(s).</string>
+          <string>Select a width for drawing curves on the plot(s).</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label">
+         <property name="toolTip">
+          <string>Select a size for point markers on scatter plots.</string>
+         </property>
          <property name="text">
           <string>&lt;font color='black'&gt;Marker Size(Scatter Plots):&lt;/font&gt;</string>
          </property>

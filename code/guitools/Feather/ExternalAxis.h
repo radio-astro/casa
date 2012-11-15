@@ -32,6 +32,11 @@ class QPainter;
 
 namespace casa {
 
+/**
+ * Overrides methods of QwtScaleDraw so that the axis can be enabled
+ * (supported) but the one drawn by the plot will take up no space and
+ * be invisible so that we can draw our own.
+ */
 class ExternalAxis : public QwtScaleDraw {
 public:
 	ExternalAxis( );

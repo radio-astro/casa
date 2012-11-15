@@ -123,8 +123,6 @@ private slots:
 	void preferencesChanged();
 	void featheringDone();
 
-
-
 private:
 	void clearPlots();
 	bool isInputImagesChanged();
@@ -134,6 +132,7 @@ private:
 	float populateSDFactor() const;
 	bool loadImages();
 	void addOriginalDataToPlots();
+	void resetDishDiameters();
 
 	const static int DISH_DIAMETER_DEFAULT;
 	const static int SINGLE_DISH_FACTOR_DEFAULT;

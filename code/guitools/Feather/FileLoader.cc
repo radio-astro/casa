@@ -63,7 +63,7 @@ FileLoader::FileLoader(QWidget *parent)
 	//Takeout
 	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_gbt.im" );
 	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_vlamem.im");
-	//ui.saveOutputCheckBox->setChecked( false );
+	ui.saveOutputCheckBox->setChecked( false );
 }
 
 void FileLoader::keyPressEvent( QKeyEvent* event ){

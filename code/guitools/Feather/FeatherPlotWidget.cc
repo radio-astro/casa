@@ -39,8 +39,7 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
       interferometerWeightColor( Qt::magenta), interferometerDataColor(Qt::blue),
       singleDishFunction( "Low Resolution Slice"), interferometerFunction( "High Resolution Slice"),
       singleDishWeightFunction("Low Resolution Weight"), interferometerWeightFunction( "High Resolution Weight"),
-      legendVisible( true ), permanentScatter( false ),
-      lineThickness(1), plotTitle(title), MARKER_WIDTH(2){
+      permanentScatter( false ),plotTitle(title), MARKER_WIDTH(2){
 
 	ui.setupUi(this);
 
@@ -89,8 +88,6 @@ void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 			layoutPlot = new QHBoxLayout( this );
 		}
 		plot = new FeatherPlot( this );
-		plot->setLegendVisibility( legendVisible );
-		plot->setLineThickness( lineThickness );
 		layoutPlot->addWidget( plot );
 		layoutPlot->setContentsMargins(0,0,0,0);
 		setLayout( layoutPlot );
@@ -99,7 +96,6 @@ void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 		plot->clearCurves();
 	}
 	plot->initializePlot( plotTitle, plotType );
-
 }
 
 //-----------------------------------------------------------------------------
@@ -107,13 +103,16 @@ void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 //----------------------------------------------------------------------------
 
 void FeatherPlotWidget::setLineThickness( int thickness ){
-	lineThickness = thickness;
 	plot->setLineThickness( thickness );
 	plot->replot();
 }
 
+void FeatherPlotWidget::setDotSize( int size ){
+	plot->setDotSize( size );
+	plot->replot();
+}
+
 void FeatherPlotWidget::setLegendVisibility( bool visible ){
-	legendVisible = visible;
 	plot->setLegendVisibility( visible );
 	plot->replot();
 }
@@ -406,7 +405,7 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 		QVector<double> interferometerX;
 		QVector<double> interferometerY;
 		initializeDomainLimitedData( minX, maxX, interferometerX, interferometerY, interferometerDataXValues, interferometerDataYValues );
-		if ( plot->isScatterPlot() ){
+		if ( !plot->isScatterPlot() ){
 			plot->addCurve( singleDishX, singleDishY, singleDishDataColor, singleDishFunction, sliceAxis );
 			plot->addCurve( interferometerX, interferometerY, interferometerDataColor, interferometerFunction, sliceAxis );
 		}
@@ -542,6 +541,10 @@ void FeatherPlotWidget::clearPlot(){
 	removeMarkers();
 	plot->clearCurves();
 	plot->replot();
+}
+
+void FeatherPlotWidget::clearLegend(){
+	plot->clearLegend();
 }
 
 

@@ -111,12 +111,11 @@ void FeatherMain::ySupportChanged( bool ySupport ){
 		ui.dishDiameterYLineEdit->setText( ui.dishDiameterXLineEdit->text());
 	}
 }
+
 void FeatherMain::dishDiameterXChanged( double value ){
 	QString diameterStr = QString::number( value );
 	ui.dishDiameterXLineEdit->setText( diameterStr );
 }
-
-
 
 void FeatherMain::dishDiameterYChanged( double value ){
 	QString diameterStr = QString::number( value );
@@ -127,6 +126,7 @@ void FeatherMain::dishDiameterYChanged( double value ){
 		ui.dishDiameterXLineEdit->setText( diameterStr );
 	}
 }
+
 void FeatherMain::dishDiameterXChanged( const QString& xDiameter ){
 	if ( !ui.dishDiameterYLineEdit->isEnabled() ){
 		ui.dishDiameterYLineEdit->setText( xDiameter );
@@ -147,6 +147,9 @@ void FeatherMain::preferencesChanged(){
 	//Line thickness
 	int lineThickness = preferences.getLineThickness();
 	plotHolder->setLineThickness( lineThickness );
+
+	int dotSize = preferences.getDotSize();
+	plotHolder->setDotSize( dotSize );
 
 	//Legend visibility
 	bool legendVisible = preferences.isDisplayLegend();
@@ -183,8 +186,29 @@ void FeatherMain::imageFilesChanged(){
 	}
 	else {
 		clearPlots();
+
 		//Load the original data into the plot
 		addOriginalDataToPlots();
+
+		//Reset the dish diameters from the images
+		resetDishDiameters();
+	}
+}
+
+void FeatherMain::resetDishDiameters(){
+	const int DEFAULT_DISH = -1;
+	Float xDiam = DEFAULT_DISH;
+	Float yDiam = DEFAULT_DISH;
+	featherWorker.getEffectiveDishDiam( xDiam, yDiam );
+	//qDebug() << "Effective dish diameters were: "<<xDiam<<" and "<<yDiam;
+	if ( xDiam != DEFAULT_DISH ){
+		ui.dishDiameterXLineEdit->setText( QString::number( xDiam ));
+	}
+	if ( yDiam != DEFAULT_DISH ){
+		ui.dishDiameterYLineEdit->setText( QString::number( yDiam ));
+	}
+	if ( xDiam != yDiam ){
+		ui.yGroupBox->setChecked( true );
 	}
 }
 
