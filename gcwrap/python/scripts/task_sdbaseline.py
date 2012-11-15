@@ -56,7 +56,7 @@ class sdbaseline_worker(sdutil.sdtask_template):
 
     def execute(self):
         engine = sdbaseline_engine(self)
-        engine.prologue()
+        engine.initialize()
 
         # check if the data contains spectra
         if (self.scan.nchan()==1):
@@ -83,10 +83,10 @@ class sdbaseline_worker(sdutil.sdtask_template):
         if (self.order < 0):
             casalog.post('Negative order of baseline polynomial given. Exit without baselining.', priority = 'WARN')
             return
-        engine.drive()
+        engine.execute()
 
         # Plot final spectrum
-        engine.epilogue()
+        engine.finalize()
 
     def save(self):
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
@@ -116,12 +116,12 @@ class sdbaseline_engine(sdutil.sdtask_engine):
     def __get_param(self):
         return self.baseline_param.get_registered()
 
-    def prologue(self):
+    def initialize(self):
         if ( abs(self.plotlevel) > 1 ):
             casalog.post( "Initial Raw Scantable:" )
             self.worker.scan._summary()
 
-    def drive(self):
+    def execute(self):
         scan = self.worker.scan
         self.__init_blfile()
 
@@ -217,7 +217,7 @@ class sdbaseline_engine(sdutil.sdtask_engine):
             # reset selection
             if len(sif) > 0: scan.set_selection(basesel)
             
-    def epilogue(self):
+    def finalize(self):
         if ( abs(self.plotlevel) > 0 ):
             pltfile=self.project+'_bsspec.eps'
             sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel)

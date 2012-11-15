@@ -53,7 +53,7 @@ class sdsmooth_worker(sdutil.sdtask_template):
             
     def execute(self):
         engine = sdsmooth_engine(self)
-        engine.prologue()
+        engine.initialize()
             
         # set various attributes to self.scan
         self.set_to_scan()
@@ -69,9 +69,9 @@ class sdsmooth_worker(sdutil.sdtask_template):
 
         # Actual implementation is defined outside the class
         # since those are used in task_sdreduce.
-        engine.drive()
+        engine.execute()
 
-        engine.epilogue()
+        engine.finalize()
 
     def save(self):
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
@@ -81,7 +81,7 @@ class sdsmooth_engine(sdutil.sdtask_engine):
     def __init__(self, worker):
         super(sdsmooth_engine,self).__init__(worker)
 
-    def prologue(self):
+    def initialize(self):
         if ( abs(self.plotlevel) > 1 ):
             # print summary of input data
             casalog.post( "Initial Scantable:" )
@@ -92,7 +92,7 @@ class sdsmooth_engine(sdutil.sdtask_engine):
             pltfile=self.project+'_rawspec.eps'
             sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel, 'Raw spectra')
 
-    def drive(self):
+    def execute(self):
         scan = self.worker.scan
         if self.kernel == 'regrid':
             if not qa.isquantity(self.chanwidth):
@@ -115,7 +115,7 @@ class sdsmooth_engine(sdutil.sdtask_engine):
             casalog.post( "Smoothing spectra with kernel "+self.kernel )
             scan.smooth(kernel=self.kernel,width=self.kwidth,plot=self.verify,insitu=True)
 
-    def epilogue(self):
+    def finalize(self):
         if ( abs(self.plotlevel) > 0 ):
             pltfile=self.project+'_smspec.eps'
             sdutil.plot_scantable(self.worker.scan, pltfile, self.plotlevel, 'Smoothed spectra')

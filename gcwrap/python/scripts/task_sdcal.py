@@ -53,7 +53,7 @@ class sdcal_worker(sdutil.sdtask_template):
 
     def execute(self):
         engine = sdcal_engine(self)
-        engine.prologue()
+        engine.initialize()
         
         # apply inputs to scan
         self.set_to_scan()
@@ -66,7 +66,7 @@ class sdcal_worker(sdutil.sdtask_template):
 
         # Actual implementation is defined outside the class
         # since those are used in task_sdreduce.
-        engine.drive()
+        engine.execute()
         
         # do opacity (atmospheric optical depth) correction
         sdutil.doopacity(self.scan, self.tau)
@@ -77,7 +77,7 @@ class sdcal_worker(sdutil.sdtask_template):
         # Average data if necessary
         self.scan = sdutil.doaverage(self.scan, self.scanaverage, self.timeaverage, self.tweight, self.polaverage, self.pweight, self.averageall)
 
-        engine.epilogue()
+        engine.finalize()
 
     def save(self):
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
@@ -87,12 +87,12 @@ class sdcal_engine(sdutil.sdtask_engine):
     def __init__(self, worker):
         super(sdcal_engine,self).__init__(worker)
 
-    def prologue(self):
+    def initialize(self):
         if ( abs(self.plotlevel) > 1 ):
             casalog.post( "Initial Raw Scantable:" )
             self.worker.scan._summary()
 
-    def drive(self):
+    def execute(self):
         scanns = self.worker.scan.getscannos()
         sn=list(scanns)
         casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
@@ -109,7 +109,7 @@ class sdcal_engine(sdutil.sdtask_engine):
                                                       calmode=self.calmode,
                                                       verify=self.verify )
 
-    def epilogue(self):
+    def finalize(self):
         if ( abs(self.plotlevel) > 1 ):
             casalog.post( "Final Calibrated Scantable:" )
             self.worker.scan._summary()
