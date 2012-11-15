@@ -20,7 +20,7 @@ else:
 #
 # Unit test of simobserve task.
 # 
-class simobserve_unittest_base:
+class simobserve_unittest_base(unittest.TestCase):
     """
     Base class of simobserve unit test.
     The class defines common variables and test methods.
@@ -36,19 +36,20 @@ class simobserve_unittest_base:
     atol = 1.0e8 
 
     # Test methods
-    def _check_file( self, name ):
+    def _check_file(self, name, msg=""):
         isthere = os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='output file %s was not created because of the task failure'%(name))
+        if len(msg) == 0:
+            msg = "output file %s was not created because of the task failure"%(name)
+        self.assertEqual(isthere, True, msg=msg)
 
-    def _get_imstats( self, name ):
+    def _get_imstats(self, name):
             self._check_file(name)
             ia.open(name)
             stats = ia.statistics()
             ia.close()
             return stats
 
-    def _get_msstats( self, name, column, compval):
+    def _get_msstats(self, name, column, compval):
         self._check_file(name)
         ms.open(name)
         stats = ms.statistics(column, compval)
@@ -100,6 +101,40 @@ class simobserve_unittest_base:
                                rtol=self.rtol,atol=self.atol)
             self.assertEqual(ret,True,msg=message)
 
+    def _check_ptgfile(self, name, refname):
+        # name: the name of pointing file to test
+        # refname: the name of reference pointing file to compare
+        self._check_file(name, "Pointing file %s does not exist" % name)
+        self._check_file(refname,\
+                         "Reference pointing file %s does not exist" % refname)
+        myutil = simutil()
+        npts_ref, dirs_ref, times_ref = myutil.read_pointings(refname)
+        npts, dirs, times = myutil.read_pointings(name)
+        self.assertEqual(npts, npts_ref,\
+                         msg="The nuber of pointings differs: %d (expected: %d)" % (npts, npts_ref))
+        print("Comparing %d pointings" % npts)
+        timetol = 1.e-3
+        dirtol = qa.convert("0.1arcsec", "deg")['value']
+        for ipts in range(npts):
+            # time (string -> float)
+            if times[ipts] != times_ref[ipts]:
+                tc = float(times[ipts])
+                tr = float(times_ref[ipts])
+                reldiff = abs(tc - tr)/tr
+                self.assertTrue(reldiff < timetol,\
+                                msg="Integration time differs (%dth point): %f (expected: %f)" % (ipts, tc, tr))
+            # direction (string -> double)
+            if dirs[ipts] == dirs_ref[ipts]:
+                continue
+            ec, xc, yc = myutil.direction_splitter(dirs[ipts])
+            er, xr, yr = myutil.direction_splitter(dirs_ref[ipts])
+            self.assertEqual(ec, er, msg="The epoch differs (%dth point): %s (expected: %s)" % (ipts, ec, er))
+            self.assertTrue(abs(xc-xr) < dirtol,\
+                            msg="R.A. of %dth point differs" % ipts)
+            self.assertTrue(abs(yc-yr) < dirtol,\
+                            msg="Dec of %dth point differs" % ipts)
+
+
     # common helper methods
     def _copy_input(self,datanames=None):
         if not datanames:
@@ -141,7 +176,7 @@ class simobserve_unittest_base:
 #
 # Test skymodel only simulations
 #
-class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
+class simobserve_sky(simobserve_unittest_base):#,unittest.TestCase):
     """
     Test skymodel simulations
     - Single step at a time
@@ -157,9 +192,6 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
 
     # Reserved methods
     def setUp(self):
-        #if os.path.exists(self.infile):
-        #    shutil.rmtree(self.infile)
-        #shutil.copytree(self.datapath+self.infile, self.infile)
         print("")
         default(simobserve)
         self.refpref_sd = self.refpref + \
@@ -172,8 +204,6 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
         self.refms_int = self.refpref_int+".ms"
 
     def tearDown(self):
-        #if (os.path.exists(self.infile)):
-        #    shutil.rmtree(self.infile)
         shutil.rmtree(self.project)
         #pass
 
@@ -215,8 +245,11 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
                          obsmode=obsmode,antennalist=antennalist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
-        # TODO: need to compare pointing file
-        refptg = "alma.alma.out01.ptg.txt"
+        # compare pointing files
+        currptg = self.project + "/" + \
+                  self._get_data_prefix(antennalist,self.project)+".ptg.txt"
+        refptg = self.refpref + "alma.alma.out01.ptg.txt"
+        self._check_ptgfile(currptg, refptg)
 
     def testSky_hexptg(self):
         """Test skymodel simulation: only setpointing (maptype='hexagonal')"""
@@ -230,8 +263,11 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
                          obsmode=obsmode,antennalist=antennalist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
-        # TODO: need to compare pointing file
-        refptg = "hex.aca.i.ptg.txt"
+        # compare pointing files
+        currptg = self.project + "/" + \
+                  self._get_data_prefix(antennalist,self.project)+".ptg.txt"
+        refptg = self.refpref + "hex.aca.i.ptg.txt"
+        self._check_ptgfile(currptg, refptg)
 
     def testSky_sqptg(self):
         """Test skymodel simulation: only setpointing (maptype='square')"""
@@ -247,8 +283,11 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
                          sdantlist=sdantlist,
                          thermalnoise="",graphics=self.graphics)
         self.assertTrue(res)
-        # TODO: need to compare pointing file
-        refptg = "square.aca.tp.ptg.txt"
+        # compare pointing files
+        currptg = self.project + "/" + \
+                  self._get_data_prefix(sdantlist,self.project)+".ptg.txt"
+        refptg = self.refpref + "square.aca.tp.ptg.txt"
+        self._check_ptgfile(currptg, refptg)
 
     def testSky_sdObs(self):
         """Test skymodel simulation: only observation (SD)"""
@@ -330,7 +369,7 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
         currpref = self.project + "/" + \
                  self._get_data_prefix(sdantlist,self.project)
         self._check_imstats(currpref+".skymodel", self.refmodel)
-        # TODO: need to compare pointing file
+        self._check_ptgfile(currpref+".ptg.txt", self.refpref_sd+".ptg.txt")
         self._check_msstats(currpref+".sd.ms",self.refms_sd)
 
     def testSky_intAll(self):
@@ -359,7 +398,7 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
         currpref = self.project + "/" + \
                  self._get_data_prefix(antennalist,self.project)
         self._check_imstats(currpref+".skymodel", self.refmodel)
-        # TODO: need to compare pointing file
+        self._check_ptgfile(currpref+".ptg.txt", self.refpref_int+".ptg.txt")
         self._check_msstats(currpref+".ms",self.refms_int)
     
 
@@ -385,7 +424,7 @@ class simobserve_sky(simobserve_unittest_base,unittest.TestCase):
 #
 # Test noise calculations
 #
-class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
+class simobserve_noise(simobserve_unittest_base):#,unittest.TestCase):
     """
     Test noise level of simulated MS
     """
@@ -395,12 +434,8 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
     indata = [inimage, ptgfile]
 
     # standard parameter settings
-    #project = simobserve_unittest_base.thistask+"_nz"
     project = "noise_sd"
     project_int = "noise_int"
-    #indirection = 'J2000 19h00m00 -23d00m00'
-    #incenter = "345GHz"
-    #inwidth = "10MHz"
     tint = "4s"
     tottime = "1800s" # 30min
     mapsize = ["5arcsec","5arcsec"] # single pointing
@@ -901,7 +936,7 @@ class simobserve_noise(simobserve_unittest_base,unittest.TestCase):
 #
 # Tests on bad input parameter settings
 #
-class simobserve_badinputs(simobserve_unittest_base,unittest.TestCase):
+class simobserve_badinputs(simobserve_unittest_base):#,unittest.TestCase):
     """
     Tests on bad input parameter setting
     """
