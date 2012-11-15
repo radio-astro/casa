@@ -73,8 +73,14 @@ namespace casa {
 		void selectedCountUpdateNeeded( );
 		// retrieve the selected region state...
 		size_t selectedRegionCount( ) { return selected_region_list_.size( ); }
+		size_t markedRegionCount( ) { return marked_region_set_.size( ); }
 		const std::list<Region*> &selectedRegions( ) { return selected_region_list_; }
 		const Region::region_list_type &selectedRegionSet( ) { return selected_region_set_; }
+		const Region::region_list_type &weaklySelectedRegionSet( ) { return weakly_selected_region_set_; }
+		void clearWeaklySelectedRegionSet( );
+		bool isWeaklySelectedRegion( const QtRegion * ) const;
+		void addWeaklySelectedRegion( QtRegion * );
+		void removeWeaklySelectedRegion( QtRegion * );
 
 		void dismiss( );
 
@@ -137,6 +143,8 @@ namespace casa {
 		// to determine the corner treatment when drawing regions...
 		std::list<Region*> selected_region_list_;
 		Region::region_list_type selected_region_set_;
+		Region::region_list_type weakly_selected_region_set_;
+		Region::region_list_type marked_region_set_;
 		void update_selected_region_info( );
 
 	};

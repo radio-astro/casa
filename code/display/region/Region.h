@@ -216,7 +216,7 @@ namespace casa {
 
 		virtual ~Region( ) { }
 
-		Region( ) : wc_(0), selected_(false), visible_(true) { }
+		Region( ) : wc_(0), selected_(false), visible_(true), mouse_in_region(false) { }
 		Region( WorldCanvas *wc );
 
 		// is this region degenerate?
@@ -279,6 +279,8 @@ namespace casa {
 		// returns the new state...
 		virtual bool mark_toggle( ) = 0;
 
+		void clearMouseInRegion( ) { mouse_in_region = false; }
+
 		virtual bool markCenter( ) const DISPLAY_PURE_VIRTUAL(Region::markCenter,true);
 
 		virtual bool skyComponent( ) const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
@@ -303,6 +305,8 @@ namespace casa {
 		virtual const std::list<Region*> &get_selected_regions( ) = 0;
 		virtual size_t selected_region_count( )
 			DISPLAY_PURE_VIRTUAL(Region::selected_region_count,0);
+		virtual size_t marked_region_count( ) = 0;
+			/* DISPLAY_PURE_VIRTUAL(Region::marked_region_count,0); */
 
 		virtual std::list<RegionInfo> *generate_dds_centers(bool )
 			DISPLAY_PURE_VIRTUAL(Region::generate_dds_centers, new std::list<RegionInfo>( ));
@@ -342,6 +346,10 @@ namespace casa {
 		// Should this region be considered complete?
 		// Set to true by derived classes...
 		bool complete;
+
+		// Derived classes set this to true and clear it when the mouse
+		// enters and exits this regions bounding box...
+		bool mouse_in_region;
 
 	    private:
 		void set_line_style(const ls_ele&);

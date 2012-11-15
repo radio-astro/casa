@@ -355,7 +355,7 @@ namespace casa {
 			if (s) {
 				pushDrawingEnv( Region::SolidLine);
 				if ( weaklySelected( ) ) {
-					if ( selected_region_count( ) > 0 && mouse_in_region ) {
+					if ( marked_region_count( ) > 0 && mouse_in_region ) {
 						pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
 						pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
 						pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
@@ -409,7 +409,7 @@ namespace casa {
 
 		//if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
 		if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
-			weaklySelect( );
+			if ( mouse_in_region == false ) weaklySelect( );
 			mouse_in_region = true;
 			result |= MouseSelected;
 			result |= MouseRefresh;
@@ -421,7 +421,7 @@ namespace casa {
 				selectedInCanvas( );
 			}
 		} else {
-			weaklyUnselect( );
+			if ( mouse_in_region == true ) weaklyUnselect( );
 			mouse_in_region = false;
 			if ( selected_ == true ) {
 				selected_ = false;

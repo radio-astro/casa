@@ -63,7 +63,7 @@ namespace casa {
 	    connect( region_stack, SIGNAL(currentChanged(int)), SLOT(stack_changed(int)) );
 	    connect( region_stack, SIGNAL(widgetRemoved(int)), SLOT(stack_changed(int)) );
 
-	    connect( region_scroll, SIGNAL(valueChanged(int)), SLOT(change_stack(int)) );
+	    connect( region_scroll, SIGNAL(sliderMoved(int)), SLOT(change_stack(int)) );
 
 	    connect( dismiss_region, SIGNAL(clicked(bool)), SLOT(delete_current_region(bool)) );
 	    connect( reset_regions, SIGNAL(clicked(bool)), SLOT(delete_all_regions(bool)) );
@@ -77,18 +77,35 @@ namespace casa {
 	// void QtRegionDock::showStats( const QString &stats ) { }
 
 	void QtRegionDock::enterEvent( QEvent* ) {
-	    if ( region_stack->count( ) > 0 ) {
-		QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
-		QtRegion::setWeakSelection(current_selection);
-		if ( current_selection ) current_selection->emitRefresh( );
+		if ( region_stack->count( ) > 0 ) {
+			QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
+			if ( current_selection ) {
+				QtRegion *region = current_selection->region( );
+				if ( region ) {
+					clearWeaklySelectedRegionSet( );
+					addWeaklySelectedRegion(region);
+				}
+				// there seems to be a lag where due to processing time etc. the signal of the cursor
+				// moving out of one or more regions is lost. This ensures that at least when the
+				// cursor moves into the dock, all regions will be marked as clear of the mouse...
+				for ( region_list_t::iterator it = region_list.begin( ); it != region_list.end( ); ++it ) {
+					Region *r = dynamic_cast<Region*>(*it);
+					if ( r ) r->clearMouseInRegion( );
+				}
+			}
 	    }
 	}
 
 	void QtRegionDock::leaveEvent( QEvent* ) {
-	    QtRegion::setWeakSelection(0);
-	    if ( region_stack->count( ) > 0 ) {
-		QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
-		if ( current_selection ) current_selection->emitRefresh( );
+		if ( region_stack->count( ) > 0 ) {
+			QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
+			if ( current_selection ) {
+				current_selection->emitRefresh( );
+				QtRegion *region = current_selection->region( );
+				if ( region) {
+					clearWeaklySelectedRegionSet( );
+				}
+			}
 	    }
 	}
 
@@ -156,15 +173,41 @@ namespace casa {
 	void QtRegionDock::selectedCountUpdateNeeded( ) {
 		selected_region_list_.clear( );
 		selected_region_set_.clear( );
+		marked_region_set_.clear( );
 		for ( region_list_t::iterator it = region_list.begin( ); it != region_list.end( ); ++it ) {
 			(*it)->statisticsUpdateNeeded( );
 			Region *r = dynamic_cast<Region*>(*it);
-			if ( r && r->marked( ) ) {
-				selected_region_list_.push_back(r);
-				selected_region_set_.insert(r);
+			if ( r ) {
+				if (  r->marked( ) ) {
+					selected_region_list_.push_back(r);
+					selected_region_set_.insert(r);
+					marked_region_set_.insert(r);
+				} else if ( r->weaklySelected( ) ) {
+					selected_region_list_.push_back(r);
+					selected_region_set_.insert(r);
+				}
 			}
 		}
 
+	}
+
+	void QtRegionDock::clearWeaklySelectedRegionSet( ) {
+		weakly_selected_region_set_.clear( );
+		selectedCountUpdateNeeded( );
+	}
+	bool QtRegionDock::isWeaklySelectedRegion( const QtRegion *qtregion ) const {
+		const Region *region = dynamic_cast<const Region*>(qtregion);
+		return weakly_selected_region_set_.find((Region*)region) == weakly_selected_region_set_.end( ) ? false : true;
+	}
+	void QtRegionDock::addWeaklySelectedRegion( QtRegion *qtregion ) {
+		Region *region = dynamic_cast<Region*>(qtregion);
+		weakly_selected_region_set_.insert( region );
+		selectedCountUpdateNeeded( );
+	}
+	void QtRegionDock::removeWeaklySelectedRegion( QtRegion *qtregion ) {
+		Region *region = dynamic_cast<Region*>(qtregion);
+		weakly_selected_region_set_.erase(region);
+		selectedCountUpdateNeeded( );
 	}
 
 	void QtRegionDock::dismiss( ) {
@@ -197,9 +240,20 @@ namespace casa {
 	}
 
 	void QtRegionDock::change_stack( int index ) {
-	    int size = region_stack->count( );
-	    if ( index >= 0 && index <= size - 1 )
-		region_stack->setCurrentIndex( index );
+		int size = region_stack->count( );
+		if ( index >= 0 && index <= size - 1 ) {
+			region_stack->setCurrentIndex( index );
+			QtRegionState *current_state = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
+			if ( current_state ) {
+				QtRegion *region = current_state->region( );
+				if ( region ) {
+					clearWeaklySelectedRegionSet( );
+					addWeaklySelectedRegion(region);
+					current_state->emitRefresh( );
+					updateRegionStats( );
+				}
+			}
+		}
 	}
 
 	void QtRegionDock::updateRegionState( QtDisplayData *dd ) {
@@ -263,6 +317,7 @@ namespace casa {
 
 		state->justExposed( );
 
+#if 0
 	    if ( QtRegion::getWeakSelection( ) != 0 ) {
 		// stack changes when new region is created... but we're only interested in
 		// changes which happen due to user scrolling (in which case, the mouse has
@@ -270,7 +325,7 @@ namespace casa {
 		QtRegion::setWeakSelection(state);
 		state->emitRefresh( );
 	    }
-
+#endif
 	    last_index = index;
 	}
 

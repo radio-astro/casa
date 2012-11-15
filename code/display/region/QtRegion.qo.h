@@ -116,17 +116,13 @@ namespace casa {
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( );
 		// is this region weakly or temporarily selected?
-		static void setWeakSelection(QtRegionState*s) { weak_selection = s; }
-		static QtRegionState *getWeakSelection( ) { return weak_selection; }
-		bool weaklySelected( ) const { return mystate == weak_selection; }
+		bool weaklySelected( ) const;
 		void weaklySelect( );
-		void weaklyUnselect( ) { if ( mystate == weak_selection ) setWeakSelection(0); }
-
+		void weaklyUnselect( );
 		// indicates that region movement requires the update of state information...
 		void updateStateInfo( bool region_modified, Region::RegionChanges );
 		void clearStatistics( );
 		void statisticsUpdateNeeded( ) { statistics_update_needed = true; }
-
 
 		virtual void getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units,
 						     std::string &width_height_units ) const = 0; //DISPLAY_PURE_VIRTUAL(Region::getCoordinatesAndUnits,);
@@ -224,6 +220,7 @@ namespace casa {
 		virtual ImageRegion *get_image_region( DisplayData* ) const = 0; /*DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);*/
 		const std::list<Region*> &get_selected_regions( );
 		size_t selected_region_count( );
+		size_t marked_region_count( );
 		// At the base of this inheritance hierarchy is a class that uses
 		// multiple inheritance. We are QtRegion is one base class, and we
 		// need to be able to retrieve our peer (the non-GUI dependent)
@@ -252,10 +249,6 @@ namespace casa {
 		QtRegionState *mystate;
 		QString name_;
 		QString color_;
-
-		// used to indicate that a region is weakly selected e.g. by
-		// entering (and/or scrolling through) the region stack...
-		static QtRegionState *weak_selection;
 
 	    private:
 		std::map<Region::RegionChanges,bool> held_signals;

@@ -40,8 +40,6 @@
 namespace casa {
     namespace viewer {
 
-	QtRegionState *QtRegion::weak_selection = 0;
-
 	QtRegion::QtRegion( QtRegionSourceKernel *factory ) :
 			source_(factory), dock_(factory->dock( )), name_(""), hold_signals(0),
 			z_index_within_range(true), id_(QtId::get_id( )) {
@@ -197,9 +195,28 @@ namespace casa {
 		mystate->setCenterBackground(QString("#a9a9a9"));
 	}
 
+	bool QtRegion::weaklySelected( ) const {
+		return dock_->isWeaklySelectedRegion(this);
+	}
 	void QtRegion::weaklySelect( ) {
+		dock_->addWeaklySelectedRegion(this);
 		dock_->selectRegion(mystate);
-		setWeakSelection(mystate);
+	}
+	void QtRegion::weaklyUnselect( ) {
+		dock_->removeWeaklySelectedRegion(this);
+		const Region::region_list_type &weak = dock_->weaklySelectedRegionSet( );
+		if ( weak.size( ) > 0 ) {
+			QtRegion *region = dynamic_cast<QtRegion*>(*weak.begin( ));
+			if ( region ) dock_->selectRegion(region->state( ));
+		} else {
+			const Region::region_list_type &marked = dock_->selectedRegionSet( );
+			if ( marked.size( ) > 0 ) {
+				QtRegion *region = dynamic_cast<QtRegion*>(*marked.begin( ));
+				if ( region ) dock_->selectRegion(region->state( ));
+			} else {
+				updateStateInfo( false, Region::RegionChangeFocus );
+			}
+		}
 	}
 
         // indicates that region movement requires that the statistcs be updated...
@@ -404,6 +421,7 @@ namespace casa {
 	}
 
 	size_t QtRegion::selected_region_count( ) { return dock_->selectedRegionCount( ); }
+	size_t QtRegion::marked_region_count( ) { return dock_->markedRegionCount( ); }
 
 	void QtRegion::signal_region_change( Region::RegionChanges change ) {
 
