@@ -31,7 +31,8 @@ namespace casa {
 const QString PreferencesColor::FUNCTION_COLOR = "Function Color";
 
 PreferencesColor::PreferencesColor(QWidget *parent)
-    : QDialog(parent), SCATTER_INDEX(-1), DISH_DIAMETER_INDEX(-2){
+    : QDialog(parent), SCATTER_INDEX(-1), DISH_DIAMETER_INDEX(-2),
+      ZOOM_INDEX( -3 ){
 
 	ui.setupUi(this);
 	setWindowTitle( "Feather Plot Color Preferences");
@@ -42,11 +43,13 @@ PreferencesColor::PreferencesColor(QWidget *parent)
 	colorMap.insert( INT_WEIGHT_COLOR, QColor("#008080"));
 	colorMap.insert( INT_SLICE_COLOR, QColor("#4682B4"));
 	scatterPlotColor = Qt::black;
-	dishDiameterLineColor = Qt::black;
+	zoomRectColor = QColor("#6A5ACD");
+	dishDiameterLineColor = QColor( "#483D8B");
 
 	initializeUserColors();
 	resetColors();
 
+	connect( ui.zoomRectangleColorButton, SIGNAL(clicked()), this, SLOT(selectZoomRectColor()));
 	connect( ui.scatterColorButton, SIGNAL(clicked()), this, SLOT(selectScatterPlotColor()));
 	connect( ui.dishDiameterColorButton, SIGNAL(clicked()), this, SLOT( selectDishDiameterLineColor()));
 	connect( ui.singleDishWeightColorButton, SIGNAL(clicked()), this, SLOT(selectSDWeightColor()));
@@ -78,6 +81,11 @@ void PreferencesColor::initializeUserColors(){
 	if ( dishDiameterColorName.length() > 0 ){
 		dishDiameterLineColor = QColor( dishDiameterColorName );
 	}
+
+	QString zoomRectColorName = readCustomColor( settings, ZOOM_INDEX );
+	if ( zoomRectColorName.length() > 0 ){
+		zoomRectColor = QColor( zoomRectColorName );
+	}
 }
 
 QMap<PreferencesColor::FunctionColor,QColor> PreferencesColor::getFunctionColors( ) const {
@@ -90,6 +98,10 @@ QColor PreferencesColor::getScatterPlotColor() const{
 
 QColor PreferencesColor::getDishDiameterLineColor() const {
 	return dishDiameterLineColor;
+}
+
+QColor PreferencesColor::getZoomRectColor() const {
+	return zoomRectColor;
 }
 
 void PreferencesColor::storeCustomColor( QSettings& settings, FunctionColor index ){
@@ -120,6 +132,7 @@ void PreferencesColor::persistColors(){
 
 	scatterPlotColor = getButtonColor( ui.scatterColorButton );
 	dishDiameterLineColor = getButtonColor( ui.dishDiameterColorButton );
+	zoomRectColor = getButtonColor( ui.zoomRectangleColorButton );
 
 	//Save the colors in the map
 	QSettings settings( Preferences::ORGANIZATION, Preferences::APPLICATION );
@@ -133,6 +146,9 @@ void PreferencesColor::persistColors(){
 
 	QString dishDiameterKey = FUNCTION_COLOR + QString::number( DISH_DIAMETER_INDEX );
 	settings.setValue( dishDiameterKey, dishDiameterLineColor.name());
+
+	QString zoomRectKey = FUNCTION_COLOR + QString::number( ZOOM_INDEX );
+	settings.setValue( zoomRectKey, zoomRectColor.name());
 }
 
 void PreferencesColor::colorsAccepted(){
@@ -154,6 +170,7 @@ void PreferencesColor::resetColors(){
 	setButtonColor( ui.interferometerSliceColorButton, colorMap[INT_SLICE_COLOR]);
 	setButtonColor( ui.scatterColorButton, scatterPlotColor );
 	setButtonColor( ui.dishDiameterColorButton, dishDiameterLineColor );
+	setButtonColor( ui.zoomRectangleColorButton, zoomRectColor );
 }
 
 void PreferencesColor::setButtonColor( QPushButton* button, QColor color ){
@@ -199,6 +216,10 @@ void PreferencesColor::selectScatterPlotColor(){
 
 void PreferencesColor::selectDishDiameterLineColor(){
 	showColorDialog( ui.dishDiameterColorButton );
+}
+
+void PreferencesColor::selectZoomRectColor(){
+	showColorDialog( ui.zoomRectangleColorButton );
 }
 
 PreferencesColor::~PreferencesColor(){

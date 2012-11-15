@@ -57,9 +57,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWConvFunc(const CountedPtr<ATerm> ATerm,
 	       const CountedPtr<PSTerm> psTerm,
 	       const CountedPtr<WTerm> wTerm,
-	       const Bool narrowBand=True):
+	       const Bool wbAWP=False):
       ConvolutionFunction(),aTerm_p(ATerm),psTerm_p(psTerm), wTerm_p(wTerm), pixFieldGrad_p(), 
-      narrowBand_p(narrowBand)
+      wbAWP_p(wbAWP)
     {pixFieldGrad_p.resize(2);pixFieldGrad_p=0.0;}
 
     ~AWConvFunc() {};
@@ -133,7 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<WTerm> wTerm_p;
     Vector<Double> thePix_p, pixFieldGrad_p;
     Double imRefFreq_p;
-    Bool narrowBand_p;
+    Bool wbAWP_p;
   };
   //
   //-------------------------------------------------------------------------------------------

@@ -35,11 +35,6 @@ ExternalAxisWidget::ExternalAxisWidget(QWidget* parent) :QWidget( parent ),
 		canvas( NULL ), scaleDiv( NULL ),
 		AXIS_SMALL_SIDE(100),
 		FONT_SIZE(9), FONT_SIZE_AXIS_LABEL(10){
-
-	/*QPalette drawPalette = palette();
-	drawPalette.setColor( QPalette::Background, Qt::green );
-	setPalette( drawPalette );
-	setAutoFillBackground( true );*/
 }
 
 void ExternalAxisWidget::setScaleDiv( QwtScaleDiv* axisScaleDiv ){
@@ -49,16 +44,6 @@ void ExternalAxisWidget::setScaleDiv( QwtScaleDiv* axisScaleDiv ){
 void ExternalAxisWidget::setPlotCanvas( QwtPlotCanvas* plotCanvas ){
 	canvas = plotCanvas;
 }
-
-/*int ExternalAxisWidget::getSmallestDivisor( int value ){
-	int smallestDivisor = 2;
-	if ( value % 2 != 0 ){
-		if ( value % 3 == 0 ){
-			smallestDivisor = 3;
-		}
-	}
-	return smallestDivisor;
-}*/
 
 
 int ExternalAxisWidget::getTickIncrement( int tickCount, bool horizontal ) const {
@@ -70,7 +55,7 @@ int ExternalAxisWidget::getTickIncrement( int tickCount, bool horizontal ) const
 	if ( horizontal ){
 		spaceLimit = width();
 	}
-	//qDebug() << "Space limit="<<spaceLimit<<" horizontal="<<horizontal;
+
 	const int SPACE_MINIMUM = 300;
 	const int SPACE_INCREMENT = 200;
 	const int TICK_INCREMENT = 5;
@@ -78,7 +63,6 @@ int ExternalAxisWidget::getTickIncrement( int tickCount, bool horizontal ) const
 	if ( spaceAdjustment > 0 ){
 		TICK_LIMIT = TICK_LIMIT + TICK_INCREMENT * spaceAdjustment;
 	}
-	//qDebug()<<"TICK_LIMIT="<<TICK_LIMIT;
 
 	//Decrease our count until we are withen the allowable
 	//limit
@@ -89,7 +73,6 @@ int ExternalAxisWidget::getTickIncrement( int tickCount, bool horizontal ) const
 		increment = increment * DIVISOR;
 		dynamicCount = dynamicCount / DIVISOR;
 	}
-	//qDebug() << " original tickCount="<<tickCount<<" newCount="<<dynamicCount<<" increment="<<increment;
 	return increment;
 }
 

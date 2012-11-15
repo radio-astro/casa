@@ -39,6 +39,7 @@
 using namespace std;
 
 class QwtPlotPicker;
+class QwtPlotMarker;
 
 namespace casa {
 class FeatherPlotWidget : public QWidget
@@ -54,40 +55,63 @@ public:
     void setSingleDishData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void addScatterData();
+    void clearPlot();
 
     //Preferences
     void setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
-    		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor );
+    		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
+    		const QColor& zoomRectColor );
     void setLineThickness( int thickness );
     void setLegendVisibility( bool v );
 
     //Actions
     void setPermanentScatter( bool permanentScatter );
     void changePlotType( FeatherPlot::PlotType revertType);
-    void changeZoom90( bool zoom );
-    void zoomRectangle( double minX, double maxX );
-    void zoomNeutral();
 
-    void setDishDiameter( double value );
+    //Zooming
+    void changeZoom90( bool zoom );
+    void zoomRectangle( double minX, double maxX, double minY, double maxY );
+    void zoomRectangleScatter( double minX, double maxX, double minY, double maxY );
+    void zoomNeutral();
+    void resetZoomRectangleColor();
 
     QWidget* getExternalAxisWidget( QwtPlot::Axis position );
 
     void insertLegend( QWidget* parent );
     ~FeatherPlotWidget();
+
+    //Dish diameter marker
+	bool moveDiameterMarker( const QPoint& pos );
+	double getDishDiameter() const;
+	bool isDiameterSelectorMode() const;
+	void setDishDiameter( double value = -1);
+	void resetDishDiameterLineColor();
+
+	//Left mouse mode
+	void setRectangleZoomMode();
+	void setDiameterSelectorMode();
+
 signals:
 	void dishDiameterChanged( double newValue);
-	void rectangleZoomed( double firstValue, double secondValue );
+	void rectangleZoomed( double minX, double maxX, double minY, double maxY );
+
 private slots:
 	void zoomRectangleSelected( const QwtDoubleRect& rect );
+	void diameterSelected( const QwtDoublePoint& pos );
 
 protected:
     void resizeEvent( QResizeEvent* event );
-    void mouseReleaseEvent( QMouseEvent* event );
+
+
 private:
 	void resetColors();
 	void resetPlot( FeatherPlot::PlotType plotType );
 	void initializeZooming();
-
+	void initializeDiameterMarker();
+	void initializeDiameterSelector();
+	void initializeMarkers();
+	void removeMarkers();
+	void changeLeftMouseMode();
     void initializeRangeLimitedData( double minValue, double maxValue,
     		QVector<double>& xValues, QVector<double>& yValues,
     		const QVector<double>& originalXValues, const QVector<double>& originalYValues,
@@ -95,7 +119,12 @@ private:
     void initializeDomainLimitedData( double minValue, double maxValue,
         		QVector<double>& xValues, QVector<double>& yValues,
         		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
+    void initializeDomainRangeLimitedData( double minXValue, double maxXValue,
+    		double minYValue, double maxYValue,
+    		QVector<double>& xValues, QVector<double>& yValues,
+    		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
     pair<double,double> getMaxMin( QVector<double> values ) const;
+    void zoomRectangleWeight( double minX, double maxX, double minY, double maxY );
     void addZoomNeutralCurves();
 
 
@@ -107,6 +136,7 @@ private:
     QColor interferometerDataColor;
     QColor scatterPlotColor;
     QColor dishDiameterLineColor;
+    QColor zoomRectColor;
 
     QVector<double> singleDishWeightXValues;
     QVector<double> singleDishWeightYValues;
@@ -124,14 +154,19 @@ private:
 
     bool mouseMove;
     bool legendVisible;
-    //bool originalData;
     bool permanentScatter;
     int lineThickness;
     QString plotTitle;
+    const int MARKER_WIDTH;
 
     QwtPlot::Axis sliceAxis;
     QwtPlot::Axis weightAxis;
     QwtPlotPicker* zoomer;
+    QwtPlotMarker* diameterMarker;
+    QwtPlotPicker* diameterSelector;
+
+    enum LeftMouseMode { RECTANGLE_ZOOM, DIAMETER_SELECTION };
+    LeftMouseMode leftMouseMode;
     Ui::FeatherPlotWidgetClass ui;
 };
 

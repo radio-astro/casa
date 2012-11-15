@@ -30,13 +30,9 @@
 #include <guitools/Feather/ExternalAxisWidgetRight.h>
 #include <guitools/Feather/ExternalAxisWidgetBottom.h>
 #include <QDebug>
-#include <QMouseEvent>
 #include <QHBoxLayout>
 #include <qwt_plot_curve.h>
-#include <qwt_plot_zoomer.h>
 #include <qwt_plot_panner.h>
-#include <qwt_plot_marker.h>
-#include <qwt_plot_picker.h>
 #include <qwt_symbol.h>
 #include <qwt_scale_draw.h>
 
@@ -44,19 +40,15 @@ namespace casa {
 
 FeatherPlot::FeatherPlot(QWidget* parent):QwtPlot( parent ),
 	legend( NULL), legendVisible(true), lineThickness(1),
-	DOT_FACTOR( 3 ), AXIS_COUNT(3), MARKER_WIDTH(2){
+	DOT_FACTOR( 3 ), AXIS_COUNT(3){
 
-	this->setAxisAutoScale( QwtPlot::xBottom);
+	this->setAxisAutoScale( QwtPlot::xBottom );
+	//this->setAxisAutoScale( QwtPlot::yLeft );
 	for ( int i = 0; i < AXIS_COUNT; i++ ){
 		axisBlanks.append( new ExternalAxis() );
 		axisWidgets.append( NULL );
 		axisLabels.append( "" );
 	}
-
-	diameterMarker = NULL;
-	diameterSelector = NULL;
-	//zoomer = NULL;
-	//zoomerRight = NULL;
 
 	//Panning with Ctrl+Left
 	/*QwtPlotPanner* panner = new QwtPlotPanner( this->canvas() );
@@ -64,66 +56,8 @@ FeatherPlot::FeatherPlot(QWidget* parent):QwtPlot( parent ),
 	*/
 	setCanvasBackground( Qt::white );
 
-	leftMouseMode = RECTANGLE_ZOOM;
+
 }
-
-void FeatherPlot::initializeDiameterSelector(){
-	//This is what draws the rectangle while it is being dragged.
-	if ( diameterSelector == NULL ){
-		diameterSelector = new QwtPlotPicker(canvas());
-		QPen pen(Qt::black );
-		pen.setWidth( MARKER_WIDTH );
-		diameterSelector -> setTrackerPen( pen );
-		diameterSelector -> setAxis(QwtPlot::xBottom, QwtPlot::yLeft);
-		diameterSelector->setSelectionFlags(QwtPlotPicker::PointSelection | QwtPlotPicker::DragSelection);
-		diameterSelector->setRubberBand( QwtPlotPicker::VLineRubberBand );
-		diameterSelector->setTrackerMode( QwtPlotPicker::AlwaysOff );
-		diameterSelector->setMousePattern( QwtEventPattern::MouseSelect1, Qt::LeftButton, Qt::ShiftModifier );
-	}
-	if ( plotType == SCATTER_PLOT ){
-		diameterSelector->setMousePattern( QwtEventPattern::MouseSelect1, Qt::NoButton, Qt::ShiftModifier );
-	}
-	else {
-		diameterSelector->setMousePattern( QwtEventPattern::MouseSelect1, Qt::LeftButton, Qt::ShiftModifier );
-	}
-}
-
-void FeatherPlot::initializeDiameterMarker(){
-	//The diameter marker draws a line on the plot indicating the
-	//effective dish diameter.
-	if ( diameterMarker == NULL ){
-		diameterMarker = new QwtPlotMarker();
-		QwtSymbol* symbol = new QwtSymbol();
-		QPen pen( Qt::black );
-		pen.setWidth( MARKER_WIDTH );
-		symbol->setPen( pen );
-		symbol->setBrush( Qt::blue );
-		symbol->setStyle( QwtSymbol::VLine );
-		diameterMarker->setSymbol( *symbol );
-		diameterMarker->setXAxis( QwtPlot::xBottom );
-		diameterMarker->setYAxis( QwtPlot::yLeft );
-		diameterMarker->hide();
-	}
-	if ( plotType == SCATTER_PLOT ){
-		diameterMarker->detach();
-	}
-	else {
-		diameterMarker->attach( this );
-	}
-}
-
-bool FeatherPlot::moveDiameterMarker( const QPoint& pos ){
-	bool moved = false;
-	double value = invTransform( QwtPlot::xBottom, pos.x() );
-	this->setDiameterPosition( value );
-	if ( plotType != SCATTER_PLOT ){
-		moved = true;
-	}
-	return moved;
-}
-
-
-
 
 void FeatherPlot::updateAxes(){
 	for ( int i = 0; i < AXIS_COUNT; i++ ){
@@ -142,7 +76,12 @@ QWidget* FeatherPlot::getExternalAxisWidget( QwtPlot::Axis position ){
 				axisWidgets[position] = new ExternalAxisWidgetBottom( NULL );
 			}
 			else if ( position == QwtPlot::yLeft ){
-				axisWidgets[position] = new ExternalAxisWidgetLeft( NULL );
+				if ( isScatterPlot() ){
+					axisWidgets[position] = new ExternalAxisWidgetLeft( NULL);
+				}
+				else {
+					axisWidgets[position] = new ExternalAxisWidgetLeft( NULL );
+				}
 			}
 			else {
 				axisWidgets[position] = new ExternalAxisWidgetRight( NULL );
@@ -200,11 +139,16 @@ void FeatherPlot::initializePlot( const QString& graphTitle, PlotType plotType )
 		useRightYAxis = true;
 		setAxisScaleDraw( QwtPlot::yRight, axisBlanks[QwtPlot::yRight] );
 	}
+	//enableAxis( QwtPlot::yLeft, true );
 	enableAxis( QwtPlot::yRight, useRightYAxis );
+}
 
-	initializeDiameterMarker();
-	initializeDiameterSelector();
-	//initializeZooming();
+bool FeatherPlot::isEmpty() const {
+	bool empty = false;
+	if ( curves.size() == 0 ){
+		empty = true;
+	}
+	return empty;
 }
 
 void FeatherPlot::clearCurves(){
@@ -237,10 +181,10 @@ void FeatherPlot::setLineThickness( int thickness ){
 	}
 }
 
-
-
 void FeatherPlot::insertSingleLegend( QWidget* parent ){
-	legend = new QwtLegend( parent );
+	if ( legend == NULL ){
+		legend = new QwtLegend( );
+	}
 	insertLegend( legend, QwtPlot::ExternalLegend );
 	if ( parent != NULL ){
 		QLayout* parentLayout = parent->layout();
@@ -269,17 +213,7 @@ void FeatherPlot::setFunctionColor( const QString& curveID, const QColor& color 
 	}
 }
 
-void FeatherPlot::setDishDiameterLineColor( const QColor& color ){
-	if ( diameterMarker != NULL && diameterSelector != NULL ){
-		QwtSymbol diameterSymbol = diameterMarker->symbol();
-		QPen pen = diameterSymbol.pen();
-		pen.setColor( color );
-		diameterSymbol.setPen( pen );
-		diameterMarker->setSymbol( diameterSymbol );
-		diameterMarker->setLinePen( pen );
-		diameterSelector->setRubberBandPen( pen );
-	}
-}
+
 
 int FeatherPlot::getCurveIndex( const QString& curveTitle ) const {
 	int curveIndex = -1;
@@ -323,6 +257,7 @@ void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
 	if ( curveIndex < 0 ){
 		curves.append( curve );
 		int index = curves.size() - 1;
+
 		setFunctionColor( curveTitle, curveColor );
 		setCurveLineThickness( index );
 	}
@@ -340,35 +275,19 @@ bool FeatherPlot::isScatterPlot() const{
 	return scatterPlot;
 }
 
-double FeatherPlot::getDishDiameter() const {
-	double position = -1;
-	if ( diameterMarker != NULL ){
-		position = diameterMarker->xValue();
+bool FeatherPlot::isSliceCut() const {
+	bool sliceCut = false;
+	if ( plotType == SLICE_CUT ){
+		sliceCut = true;
 	}
-	return position;
+	return sliceCut;
 }
-
-void FeatherPlot::setDiameterPosition( double position ){
-
-	//Set the position
-	if ( position >= 0 ){
-		//Set the size
-		QwtSymbol symbol = diameterMarker->symbol();
-		int canvasHeight = height();
-		symbol.setSize( 2 * canvasHeight );
-		diameterMarker->setSymbol( symbol );
-		diameterMarker->setXValue( position );
-		if ( plotType != SCATTER_PLOT ){
-			diameterMarker->show();
-		}
+bool FeatherPlot::isSliceCutOriginal() const {
+	bool sliceCut = false;
+	if ( plotType == ORIGINAL ){
+		sliceCut = true;
 	}
-	else {
-		diameterMarker->hide();
-	}
-	replot();
-}
-bool FeatherPlot::isDiameterSelectorMode() const {
-	return false;
+	return sliceCut;
 }
 FeatherPlot::~FeatherPlot() {
 	for ( int i = 0; i < axisWidgets.size(); i++ ){
@@ -377,9 +296,5 @@ FeatherPlot::~FeatherPlot() {
 	}
 	delete legend;
 	legend = NULL;
-	delete diameterMarker;
-	diameterMarker = NULL;
-	delete diameterSelector;
-	diameterSelector = NULL;
 }
 } /* namespace casa */

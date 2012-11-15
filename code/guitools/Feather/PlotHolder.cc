@@ -39,30 +39,7 @@ PlotHolder::PlotHolder(QWidget *parent)
       displayScatter( false ), tempScatterPlot(false), displayYGraphs( false ){
 	ui.setupUi(this);
 
-	//Add the plots to the array
-	FeatherPlotWidget* origXWidget = new FeatherPlotWidget( "Original Data Slice X", FeatherPlot::ORIGINAL);
-	connect( origXWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
-	connect( origXWidget, SIGNAL(rectangleZoomed(double,double)), this, SLOT(rectangleZoomed(double,double)));
-	plots.append( origXWidget );
-	FeatherPlotWidget* origYWidget = new FeatherPlotWidget("Original Data Slice Y", FeatherPlot::ORIGINAL);
-	connect( origYWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
-	connect( origYWidget, SIGNAL(rectangleZoomed(double,double)), this, SLOT(rectangleZoomed(double,double)));
-	plots.append( origYWidget );
-	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Average Visibility Slice X", FeatherPlot::SLICE_CUT);
-	connect( xWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
-	connect( xWidget, SIGNAL(rectangleZoomed(double,double)), this, SLOT(rectangleZoomed(double,double)));
-	plots.append( xWidget );
-	FeatherPlotWidget* yWidget = new FeatherPlotWidget( "Average Visibility Slice Y", FeatherPlot::SLICE_CUT);
-	connect( yWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
-	connect( yWidget, SIGNAL(rectangleZoomed(double,double)), this, SLOT(rectangleZoomed(double,double)));
-	plots.append( yWidget );
-	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter X", FeatherPlot::SCATTER_PLOT);
-	xWidgetScatter->setPermanentScatter( true );
-	plots.append( xWidgetScatter );
-	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter Y", FeatherPlot::SCATTER_PLOT);
-	yWidgetScatter->setPermanentScatter( true );
-	plots.append( yWidgetScatter );
-
+	initializePlots();
 	initializeActions();
 }
 
@@ -87,9 +64,36 @@ void PlotHolder::initializeActions(){
 	connect( this, SIGNAL(customContextMenuRequested( const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
 }
 
-void PlotHolder::rectangleZoomed( double firstValue, double secondValue ){
+void PlotHolder::initializePlots(){
+	//Add the plots to the array
+	FeatherPlotWidget* origXWidget = new FeatherPlotWidget( "Original Data Slice X", FeatherPlot::ORIGINAL);
+	connect( origXWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
+	connect( origXWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
+	plots.append( origXWidget );
+	FeatherPlotWidget* origYWidget = new FeatherPlotWidget("Original Data Slice Y", FeatherPlot::ORIGINAL);
+	connect( origYWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
+	connect( origYWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
+	plots.append( origYWidget );
+	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Average Visibility Slice X", FeatherPlot::SLICE_CUT);
+	connect( xWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
+	connect( xWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
+	plots.append( xWidget );
+	FeatherPlotWidget* yWidget = new FeatherPlotWidget( "Average Visibility Slice Y", FeatherPlot::SLICE_CUT);
+	connect( yWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
+	connect( yWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
+	plots.append( yWidget );
+	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter X", FeatherPlot::SCATTER_PLOT);
+	xWidgetScatter->setPermanentScatter( true );
+	plots.append( xWidgetScatter );
+	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter Y", FeatherPlot::SCATTER_PLOT);
+	yWidgetScatter->setPermanentScatter( true );
+	plots.append( yWidgetScatter );
+
+}
+
+void PlotHolder::rectangleZoomed( double minX, double maxX, double minY, double maxY ){
 	for ( int i = 0; i < SCATTER_X; i++ ){
-		plots[i]->zoomRectangle( firstValue, secondValue );
+		plots[i]->zoomRectangle( minX, maxX, minY, maxY );
 	}
 }
 
@@ -161,27 +165,51 @@ void PlotHolder::setDisplayYGraphs( bool visible ){
 	displayYGraphs = visible;
 }
 
+void PlotHolder::setRectangleZoomMode(){
+	for ( int i = 0; i < SCATTER_X; i++ ){
+		plots[i]->setRectangleZoomMode();
+	}
+}
+void PlotHolder::setDiameterSelectorMode(){
+	for ( int i = 0; i < SCATTER_X; i++ ){
+		plots[i]->setDiameterSelectorMode();
+	}
+}
+
 void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
-		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor){
+		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
+		const QColor& zoomRectColor ){
 	for ( int i = 0; i < plots.size(); i++ ){
-		plots[i]->setPlotColors( colorMap, scatterPlotColor, dishDiameterLineColor );
+		plots[i]->setPlotColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor );
 	}
 }
 
 void PlotHolder::setSingleDishWeight( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
 		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
-	plots[SLICE_X]->setSingleDishWeight( sDx, sDxAmp);
-	plots[SLICE_Y]->setSingleDishWeight( sDy, sDyAmp);
-	plots[SLICE_X_ORIGINAL]->setSingleDishWeight( sDx, sDxAmp);
-	plots[SLICE_Y_ORIGINAL]->setSingleDishWeight( sDy, sDyAmp);
+	//Everyone needs the weight data so they can zoom to 90%
+	for ( int i = 0; i < plots.size(); i++ ){
+		int remainder = i % 2;
+		if ( remainder == 0 ){
+			plots[i]->setSingleDishWeight( sDx, sDxAmp );
+		}
+		else {
+			plots[i]->setSingleDishWeight( sDy, sDyAmp );
+		}
+	}
 }
 
 void PlotHolder::setInterferometerWeight( const Vector<Float>& intx, const Vector<Float>& intxAmp,
 		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
-	plots[SLICE_X]->setInterferometerWeight( intx, intxAmp );
-	plots[SLICE_Y]->setInterferometerWeight( inty, intyAmp );
-	plots[SLICE_X_ORIGINAL]->setInterferometerWeight( intx, intxAmp );
-	plots[SLICE_Y_ORIGINAL]->setInterferometerWeight( inty, intyAmp );
+	//Everyone needs the weight data so they can zoom to 90%
+	for ( int i = 0; i < plots.size(); i++ ){
+		int remainder = i % 2;
+		if ( remainder == 0 ){
+			plots[i]->setInterferometerWeight( intx, intxAmp );
+		}
+		else {
+			plots[i]->setInterferometerWeight( inty, intyAmp );
+		}
+	}
 }
 
 void PlotHolder::setSingleDishData( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
@@ -241,6 +269,22 @@ void PlotHolder::addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout
 }
 
 void PlotHolder::emptyLayout(QLayout* layout ){
+	//Take the legend out of the legend holder so it doesn't get
+	//deleted with the legend holder.  The plot the legend came from
+	//should be responsible for deleting the legend.
+	if ( legendHolder != NULL ){
+		QLayout* legendLayout = legendHolder->layout();
+		if ( legendLayout != NULL ){
+			QLayoutItem* layoutItem = legendLayout->itemAt( 0 );
+			if ( layoutItem != NULL ){
+				QWidget* childWidget = layoutItem->widget();
+				if ( childWidget != NULL ){
+					childWidget->setParent( NULL );
+				}
+			}
+		}
+	}
+
 	QLayoutItem* layoutItem = layout->itemAt( 0 );
 	while( layoutItem != NULL ){
 		layout->removeItem( layoutItem );
@@ -253,6 +297,7 @@ void PlotHolder::emptyLayout(QLayout* layout ){
 	for ( int i = 0; i < plots.size(); i++ ){
 		plots[i]->setParent( NULL );
 	}
+
 	delete legendHolder;
 	legendHolder = NULL;
 }
@@ -302,7 +347,12 @@ void PlotHolder::layoutPlotWidgets(){
 		if ( !tempScatterPlot ){
 			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_X );
 		}
-		basePlotIndex = 1;
+		//Use the original slice axis for the bottom axis if it is present.
+		//That way when the original data is loaded (with the image files)
+		//the bottom axis will be correct.
+		if ( !displayOriginalSlice ){
+			basePlotIndex = 1;
+		}
 		rowCount++;
 	}
 
@@ -334,10 +384,12 @@ void PlotHolder::layoutPlotWidgets(){
 
 	//Add the legend/remove legend.  We don't need a legend if all we
 	//are looking at is scatter plots.
-	if ( legendVisible && !tempScatterPlot ){
-		legendHolder = new QWidget( this);
-		legendHolder->setMinimumSize( 800, 50 );
-		legendHolder->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
+	if ( legendVisible && !tempScatterPlot && (displayOutputSlice || displayOriginalSlice) ){
+		if ( legendHolder == NULL ){
+			legendHolder = new QWidget( this);
+			legendHolder->setMinimumSize( 800, 50 );
+			legendHolder->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
+		}
 		gridLayout->addWidget(legendHolder,rowCount, 0, 1, columnCount, Qt::AlignHCenter);
 		if ( displayOutputSlice ){
 			plots[SLICE_X]->insertLegend( legendHolder );
@@ -348,6 +400,12 @@ void PlotHolder::layoutPlotWidgets(){
 	}
 
 	setLayout( gridLayout );
+}
+
+void PlotHolder::clearPlots(){
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->clearPlot();
+	}
 }
 
 

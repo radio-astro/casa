@@ -44,6 +44,7 @@ public:
     bool isDisplayOutputScatterPlot() const;
     bool isDisplayXOnly() const;
     int getLineThickness() const;
+    int getDotSize() const;
     ~Preferences();
 
 
@@ -64,14 +65,16 @@ private:
 	const static QString DISPLAY_OUTPUT_FUNCTIONS;
 	const static QString DISPLAY_LEGEND;
 	const static QString DISPLAY_OUTPUT_SCATTERPLOT;
-	const static QString DISPLAY_X_ONLY;
+	const static QString DISPLAY_Y_PLOTS;
+	const static QString DOT_SIZE;
 
     Ui::PreferencesClass ui;
     int lineThickness;
+    int dotSize;
     bool displayOriginalFunctions;
     bool displayOutputFunctions;
     bool displayOutputScatterPlot;
-    bool displayXOnly;
+    bool displayYPlots;
     bool displayLegend;
 };
 

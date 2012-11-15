@@ -86,17 +86,6 @@ private:
 	Vector<Float> intyCut;
 	Vector<Float> intyAmpCut;
 
-	Vector<Float> sDxOrig;
-	Vector<Float> sDxAmpOrig;
-	Vector<Float> sDyOrig;
-	Vector<Float> sDyAmpOrig;
-
-	Vector<Float> intxOrig;
-	Vector<Float> intxAmpOrig;
-	Vector<Float> intyOrig;
-	Vector<Float> intyAmpOrig;
-
-
 	bool saveOutput;
 	bool fileSaved;
 	QString saveFilePath;
@@ -137,11 +126,14 @@ private slots:
 
 
 private:
+	void clearPlots();
 	bool isInputImagesChanged();
 	bool generateInputImage( const String& lowResImagePath, const String& highResImagePath,
 			ImageInterface<Float>*& lowResImage, ImageInterface<Float>*& highResImage );
 	pair<float,float> populateDishDiameters(Bool& validDiameters);
 	float populateSDFactor() const;
+	bool loadImages();
+	void addOriginalDataToPlots();
 
 	const static int DISH_DIAMETER_DEFAULT;
 	const static int SINGLE_DISH_FACTOR_DEFAULT;

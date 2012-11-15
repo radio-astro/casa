@@ -39,9 +39,6 @@ const int FeatherMain::SINGLE_DISH_FACTOR_DEFAULT = 1;
 void FeatherThread::run(){
 
 	//Initialize the data
-	featherWorker->getFTCutSDImage( sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
-	featherWorker->getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
-
 	featherWorker->getFeatherSD( sDxWeight, sDxAmpWeight, sDyWeight, sDyAmpWeight );
 	featherWorker->getFeatherINT( intxWeight, intxAmpWeight, intyWeight, intyAmpWeight );
 
@@ -84,27 +81,30 @@ FeatherMain::FeatherMain(QWidget *parent)
 	connect( ui.dishDiameterXLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(dishDiameterXChanged(const QString&)));
 	connect( ui.dishDiameterYLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(dishDiameterYChanged(const QString&)));
 
-
-	//Takeout
-	//ui.highResolutionLabel->setText( "/home/uniblab/casa/active/test/orion_vlamem.im");
-	//ui.lowResolutionLabel->setText( "/home/uniblab/casa/active/test/orion_gbt.im");
-	//ui.outputLabel->setText("/home/uniblab/casa/active/test/feather.image");
 	ui.featherButton->setEnabled( false );
 
 	functionColorsChanged();
 	preferencesChanged();
 
+	QActionGroup* paletteGroup = new QActionGroup(this );
+	ui.actionDiameterSelector->setActionGroup( paletteGroup );
+	ui.actionRectangleZoom->setActionGroup( paletteGroup );
+	ui.actionDiameterSelector->setCheckable( true );
+	ui.actionRectangleZoom->setCheckable( true );
+	ui.actionRectangleZoom->setChecked( true );
 	connect(ui.actionPreferences, SIGNAL(triggered()), this, SLOT(openPreferences()));
 	connect(ui.actionImageFiles, SIGNAL(triggered()), this, SLOT(openFileLoader()));
 	connect(ui.actionPreferencesColor, SIGNAL(triggered()), this, SLOT(openPreferencesColor()));
-	//connect(ui.actionRectangleZoom, SIGNAL(triggered()), this, SLOT(setRectangleZoomMode()));
-	//connect(ui.actionDiameterSelector, SIGNAL(triggered()), this, SLOT(setDiameterSelectorMode()));
+	connect(ui.actionRectangleZoom, SIGNAL(triggered()), plotHolder, SLOT(setRectangleZoomMode()));
+	connect(ui.actionDiameterSelector, SIGNAL(triggered()), plotHolder, SLOT(setDiameterSelectorMode()));
+
 	connect( &fileLoader, SIGNAL(imageFilesChanged()), this, SLOT(imageFilesChanged()));
 	connect( &preferencesColor,SIGNAL(colorsChanged()), this, SLOT(functionColorsChanged()));
 	connect(ui.featherButton, SIGNAL(clicked()), this, SLOT( featherImages()));
 	connect( ui.yGroupBox, SIGNAL(toggled(bool)), this, SLOT(ySupportChanged(bool)));
 	connect(&preferences, SIGNAL(preferencesChanged()), this, SLOT(preferencesChanged()));
 }
+
 
 void FeatherMain::ySupportChanged( bool ySupport ){
 	if ( !ySupport ){
@@ -163,17 +163,29 @@ void FeatherMain::functionColorsChanged(){
 	QMap<PreferencesColor::FunctionColor,QColor> colorMap = preferencesColor.getFunctionColors();
 	QColor scatterPlotColor = preferencesColor.getScatterPlotColor();
 	QColor dishDiameterLineColor = preferencesColor.getDishDiameterLineColor();
-	plotHolder->setColors( colorMap, scatterPlotColor, dishDiameterLineColor );
+	QColor zoomRectColor = preferencesColor.getZoomRectColor();
+	plotHolder->setColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor );
 }
 
 void FeatherMain::imageFilesChanged(){
 	QString lowResolutionPath = fileLoader.getFilePathLowResolution();
 	QString highResolutionPath = fileLoader.getFilePathHighResolution();
 	QString outputPath = fileLoader.getFilePathOutput();
+
 	ui.lowResolutionLabel->setText( lowResolutionPath );
 	ui.highResolutionLabel->setText( highResolutionPath );
 	ui.outputLabel->setText( outputPath );
-	ui.featherButton->setEnabled( true );
+	bool imagesOK = loadImages();
+	ui.featherButton->setEnabled( imagesOK );
+	if ( !imagesOK ){
+		QString msg( "Please check the images. They may not be appropriate to use with feather.");
+		QMessageBox::warning( this, "Image Processing Problem", msg );
+	}
+	else {
+		clearPlots();
+		//Load the original data into the plot
+		addOriginalDataToPlots();
+	}
 }
 
 void FeatherMain::openFileLoader(){
@@ -188,85 +200,95 @@ void FeatherMain::openPreferencesColor(){
 	preferencesColor.exec();
 }
 
-bool FeatherMain::isInputImagesChanged(){
-	bool imagesChanged = false;
-	if ( ui.lowResolutionLabel->text() != lowResImagePath ){
-		imagesChanged = true;
-	}
-	else if ( ui.highResolutionLabel->text() != highResImagePath ){
-		imagesChanged = true;
-	}
-	return imagesChanged;
-}
-
-void FeatherMain::featherImages() {
-	bool imagesChanged = isInputImagesChanged();
+bool FeatherMain::loadImages(){
 	bool imagesGenerated = true;
-	if ( imagesChanged ){
-		lowResImagePath = ui.lowResolutionLabel->text();
-		highResImagePath = ui.highResolutionLabel->text();
-		if ( lowResImage != NULL ){
-			delete lowResImage;
-			lowResImage = NULL;
-		}
-		if ( highResImage != NULL ){
-			delete highResImage;
-			highResImage = NULL;
-		}
-		try {
-			imagesGenerated = generateInputImage( lowResImagePath.toStdString(), highResImagePath.toStdString(), lowResImage, highResImage );
-		}
-		catch( AipsError& error ){
-			imagesGenerated = false;
-
-		}
+	lowResImagePath = ui.lowResolutionLabel->text();
+	highResImagePath = ui.highResolutionLabel->text();
+	if ( lowResImage != NULL ){
+		delete lowResImage;
+		lowResImage = NULL;
+	}
+	if ( highResImage != NULL ){
+		delete highResImage;
+		highResImage = NULL;
+	}
+	try {
+		imagesGenerated = generateInputImage( lowResImagePath.toStdString(), highResImagePath.toStdString(), lowResImage, highResImage );
+	}
+	catch( AipsError& error ){
+		imagesGenerated = false;
 	}
 
 	if ( imagesGenerated ){
-		if ( imagesChanged ){
-			//Note:  high resolution image must be defined before low resolution
-			//image or we get an exception.
-			featherWorker.setINTImage( *highResImage );
-			featherWorker.setSDImage( *lowResImage );
-		}
+		//Note:  high resolution image must be defined before low resolution
+		//image or we get an exception.
+		featherWorker.setINTImage( *highResImage );
+		featherWorker.setSDImage( *lowResImage );
+	}
+	return imagesGenerated;
+}
 
-		Bool validDishDiameters = true;
-		pair<float,float> dishDiameters = populateDishDiameters( validDishDiameters );
+void FeatherMain::addOriginalDataToPlots(){
+	Vector<Float> sDxOrig;
+	Vector<Float> sDxAmpOrig;
+	Vector<Float> sDyOrig;
+	Vector<Float> sDyAmpOrig;
+	featherWorker.getFTCutSDImage( sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
+	plotHolder->setSingleDishDataOriginal(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
 
-		if ( dishDiameters.first != DISH_DIAMETER_DEFAULT && validDishDiameters ){
+	Vector<Float> intxOrig;
+	Vector<Float> intxAmpOrig;
+	Vector<Float> intyOrig;
+	Vector<Float> intyAmpOrig;
+	featherWorker.getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
+	plotHolder->setInterferometerDataOriginal( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
+}
+
+void FeatherMain::clearPlots(){
+	plotHolder->clearPlots();
+}
+
+void FeatherMain::featherImages() {
+
+	Bool validDishDiameters = true;
+	pair<float,float> dishDiameters = populateDishDiameters( validDishDiameters );
+
+	if ( dishDiameters.first != DISH_DIAMETER_DEFAULT && validDishDiameters ){
+		try {
+			//At the moment, Feather.cc setEffectiveDishDiam always returns true,
+			//and instead throws an exception if something is wrong, but we will
+			//check the return value in case the code changes.
 			validDishDiameters = featherWorker.setEffectiveDishDiam( dishDiameters.first, dishDiameters.second );
 		}
-		if ( validDishDiameters ){
-
-			float sdFactor = populateSDFactor();
-			//sdFactor = 0.999f;
-			featherWorker.setSDScale( sdFactor );
-
-			if ( thread != NULL ){
-				delete thread;
-				thread = NULL;
-			}
-			thread = new FeatherThread();
-			connect( thread, SIGNAL( finished() ), this, SLOT(featheringDone()));
-			thread->setFeatherWorker( &featherWorker );
-			QString outputImagePath = ui.outputLabel->text();
-			thread->setSaveOutput( fileLoader.isOutputSaved(), outputImagePath );
-			thread->start();
-			//Getting the data should not take any time at all unless the images
-			//changed.
-			if ( imagesChanged ){
-				progressMeter.show();
-			}
+		catch( AipsError& error ){
+			String msg = error.getMesg();
+			QString userMessage( msg.c_str() );
+			QMessageBox::warning( this, "Invalid Dish Diameter", userMessage );
+			return;
 		}
-		else {
-			QString msg("Effective dish diameter had a finer resolution than the original data.");
-			QMessageBox::warning( this, "Resolution Problem", msg );
+	}
+	if ( validDishDiameters ){
+
+		float sdFactor = populateSDFactor();
+		featherWorker.setSDScale( sdFactor );
+
+		if ( thread != NULL ){
+			delete thread;
+			thread = NULL;
 		}
+		thread = new FeatherThread();
+		connect( thread, SIGNAL( finished() ), this, SLOT(featheringDone()));
+		thread->setFeatherWorker( &featherWorker );
+		QString outputImagePath = ui.outputLabel->text();
+		thread->setSaveOutput( fileLoader.isOutputSaved(), outputImagePath );
+		thread->start();
+		progressMeter.show();
 	}
 	else {
-		QString msg( "Please check the images. They may not be appropriate to use with feather.");
-		QMessageBox::warning( this, "Image Processing Problem", msg );
+		QString msg("Effective dish diameter had a finer resolution than the original data.");
+		QMessageBox::warning( this, "Resolution Problem", msg );
 	}
+
 }
 
 void FeatherMain::featheringDone(){
@@ -277,10 +299,7 @@ void FeatherMain::featheringDone(){
 	plotHolder->setInterferometerWeight( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight );
 	plotHolder->setSingleDishData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut );
 	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );
-	plotHolder->setSingleDishDataOriginal( thread->sDxOrig, thread->sDxAmpOrig, thread->sDyOrig, thread->sDyAmpOrig );
-	plotHolder->setInterferometerDataOriginal( thread->intxOrig, thread->intxAmpOrig, thread->intyOrig, thread->intyAmpOrig );
 	plotHolder->updateScatterData();
-
 
 	//Post a message if we could not save the output image.
 	if ( fileLoader.isOutputSaved() ){

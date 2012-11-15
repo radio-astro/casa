@@ -48,7 +48,6 @@ protected:
 	virtual void defineAxis( QLine& axisLine ) = 0;
 	virtual void drawAxisLabel( QPainter* painter ) = 0;
 	int getTickIncrement( int tickCount, bool horizontal ) const;
-	//static int getSmallestDivisor( int value );
 	QwtPlotCanvas* canvas;
 	QwtScaleDiv* scaleDiv;
 	QString axisLabel;

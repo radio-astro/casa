@@ -411,10 +411,10 @@
      <normaloff>:/images/zoom.png</normaloff>:/images/zoom.png</iconset>
    </property>
    <property name="text">
-    <string>Click to use the left mouse button to select a rectangular zoom region.</string>
+    <string>Press to set rectangular zoom mode with the left mouse button (shift+left mouse in dish diameter mode).</string>
    </property>
    <property name="toolTip">
-    <string>Click to use the left mouse button to select a rectangular zoom region.</string>
+    <string>Press to set rectangular zoom mode with the left mouse button (shift+left mouse in dish diameter mode).</string>
    </property>
   </action>
   <action name="actionDiameterSelector">
@@ -423,10 +423,10 @@
      <normaloff>:/images/diameterSelector.png</normaloff>:/images/diameterSelector.png</iconset>
    </property>
    <property name="text">
-    <string>Click to use the left mouse button to graphically select a dish diameter.</string>
+    <string>Press to set dish diameter selection mode with the left mouse button (shift+left mouse in zoom mode).</string>
    </property>
    <property name="toolTip">
-    <string>Click to use the left mouse button to graphically select a dish diameter.</string>
+    <string>Press to set dish diameter selection mode with the left mouse button (shift+left mouse in zoom mode).</string>
    </property>
   </action>
  </widget>

@@ -74,6 +74,7 @@ void ExternalAxisWidgetBottom::drawTicks( QPainter* painter, int tickLength ){
 	//Middle ticks
 	const QList<double> axisTicks = scaleDiv->ticks(QwtPlot::yLeft);
 	int originalTickCount = axisTicks.size();
+
 	//We don't want to draw too many ticks so adjust the number
 	//of ticks we draw accordingly.
 	int tickIncrement = getTickIncrement( originalTickCount, true );

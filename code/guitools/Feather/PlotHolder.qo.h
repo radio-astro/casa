@@ -59,6 +59,7 @@ public:
     void setInterferometerDataOriginal( const Vector<Float>& intx, const Vector<Float>& intxAmp,
     		const Vector<Float>& inty, const Vector<Float>& intyAmp );
     void updateScatterData( );
+    void clearPlots();
 
     //Preference changes
     void setLineThickness( int thickness );
@@ -68,25 +69,37 @@ public:
     void setDisplayOriginalSlice( bool visible );
     void setDisplayYGraphs( bool visible );
     void setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
-    		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor );
+    		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
+    		const QColor& zoomRectColor );
     void layoutPlotWidgets();
 
     //Dish changes
     void dishDiameterXChanged( double value );
     void dishDiameterYChanged( double value );
+
+
+
     ~PlotHolder();
 signals:
 	void dishDiameterChangedX( double newValue);
 	void dishDiameterChangedY( double newValue);
+
+public slots:
+	//Left mouse modes
+ 	 void setRectangleZoomMode();
+ 	 void setDiameterSelectorMode();
+
+
 private slots:
 	void changePlotType();
 	void changeZoom90();
 	void zoomNeutral();
 	void showContextMenu( const QPoint& pt );
-	void rectangleZoomed( double firstValue, double secondValue );
-private:
+	void rectangleZoomed( double minX, double maxX, double minY, double maxY );
 
-	 enum Plots {  SLICE_X_ORIGINAL, SLICE_Y_ORIGINAL, SLICE_X, SLICE_Y, SCATTER_X, SCATTER_Y };
+private:
+	enum Plots {  SLICE_X_ORIGINAL, SLICE_Y_ORIGINAL, SLICE_X, SLICE_Y, SCATTER_X, SCATTER_Y };
+	void initializePlots();
 	void initializeActions();
 	void emptyLayout(QLayout* layout );
 	void addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout, QwtPlot::Axis axis, int basePlotIndex );
