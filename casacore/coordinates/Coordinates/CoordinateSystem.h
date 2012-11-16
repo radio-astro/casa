@@ -424,8 +424,13 @@ public:
     // <group>
     virtual Bool toWorld(Vector<Double> &world, 
 			 const Vector<Double> &pixel) const;
+    // This one throws an exception rather than returning False. After all, that's
+    // what exceptions are for.
+    virtual Vector<Double> toWorld(const Vector<Double> &pixel) const;
     virtual Bool toPixel(Vector<Double> &pixel, 
 			 const Vector<Double> &world) const;
+    // This one throws an exception rather than returning False.
+    virtual Vector<Double> toPixel(const Vector<Double> &world) const;
     // </group>
 
     // convert a pixel "length" to a world "length"

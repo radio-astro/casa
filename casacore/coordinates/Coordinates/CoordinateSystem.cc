@@ -1016,6 +1016,14 @@ uInt CoordinateSystem::nPixelAxes() const
     return count;
 }
 
+Vector<Double> CoordinateSystem::toWorld(const Vector<Double> &pixel) const {
+	Vector<Double> world;
+	if (! toWorld(world, pixel)) {
+		throw AipsError("Cannot convert pixel to world coordinates");
+	}
+	return world;
+}
+
 Bool CoordinateSystem::toWorld(Vector<Double> &world, 
 			       const Vector<Double> &pixel) const
 {
@@ -1076,7 +1084,13 @@ Bool CoordinateSystem::toWorld(Vector<Double> &world,
     return ok;
 }
 
-
+Vector<Double> CoordinateSystem::toPixel(const Vector<Double> &world) const {
+	Vector<Double> pixel;
+	if (! toPixel(pixel, world)) {
+		throw AipsError("Cannot convert world to pixel coordinates");
+	}
+	return pixel;
+}
 
 Bool CoordinateSystem::toWorld(Vector<Double> &world, 
 			       const IPosition &pixel) const
