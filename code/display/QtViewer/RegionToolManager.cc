@@ -104,10 +104,18 @@ namespace casa {
 
 	void RegionToolManager::clear_mark_select( RegionTool::State & ) {
 		const std::list<Region*> &selected_regions = factory->regionDock( )->selectedRegions( );
-		// marking these as not selected changes the selection list...
-		while ( selected_regions.size( ) > 0 ) {
-			std::list<Region*>::const_iterator it = selected_regions.begin( );
-			(*it)->mark(false);
+		// marking these as not selected can changes the selection list...
+		std::set<Region*> processed;
+		while ( true ) {
+			bool do_break = true;
+			for ( std::list<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it ) {
+				if ( processed.find(*it) == processed.end( ) ) {
+					processed.insert(*it);
+					(*it)->mark(false);
+					do_break = false;
+				}
+			}
+			if ( do_break ) break;
 		}
 	}
 
