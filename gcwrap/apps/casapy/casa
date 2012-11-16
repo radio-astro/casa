@@ -247,14 +247,20 @@ function set_CASA_INSTALLATION_DIRECTORY {
             exit_with_error_message -1 "Unable to detect CASA_INSTALLATION_DIRECTORY.\nPlease report this to CASA developers immediately."
         fi
     else
-        local casa_root=$(echo $CASAPATH | awk '{printf "%s", $1}')
-        local casa_os=$(echo $CASAPATH | awk '{printf "%s", $2}')
-        if [ "$OS_TYPE" = "Darwin" ]; then
-            result="${casa_root%/*/*}/${casa_os}"
-        elif [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${casa_root}/${casa_os}"
+        if [ "$CASA_INSTALLATION_TYPE" = "unknown" ]; then
+            # Assume installation directory is parent of script directory.
+            # This may not always be true...
+            result=${SCRIPT_DIRECTORY%/bin}
         else
-            result="$casa_root"
+            local casa_root=$(echo $CASAPATH | awk '{printf "%s", $1}')
+            local casa_os=$(echo $CASAPATH | awk '{printf "%s", $2}')
+            if [ "$OS_TYPE" = "Darwin" ]; then
+                result="${casa_root%/*/*}/${casa_os}"
+            elif [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+                result="${casa_root}/${casa_os}"
+            else
+                result="$casa_root"
+            fi
         fi
     fi
     readonly CASA_INSTALLATION_DIRECTORY="$result"
