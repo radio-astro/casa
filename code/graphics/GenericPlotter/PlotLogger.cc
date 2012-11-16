@@ -531,7 +531,7 @@ void PlotLogger::setSinkLocation(const String& logFile) {
                        false);
         else
             m_logger = new StreamLogSink(LogMessage::NORMAL,
-                       new ofstream(logFile.c_str(), ios::app));
+                       new ofstream(logFile.c_str(), ios::app), true);
         m_logger->filter(m_filter);
         m_loggerLocation = logFile;
     } catch(...) {
