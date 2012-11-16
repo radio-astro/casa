@@ -35,6 +35,7 @@
 
 namespace casa {
     namespace dbus {
+	std::string adaptor_object( const std::string &name );
 	std::string object( const std::string &name );
 	std::string path( const std::string &name );
 
