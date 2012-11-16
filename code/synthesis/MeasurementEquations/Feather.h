@@ -84,6 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   private:
     CountedPtr<ImageInterface<Float> > lowIm_p;
+    CountedPtr<ImageInterface<Float> > lowImOrig_p;
     CountedPtr<ImageInterface<Float> > highIm_p;
     CountedPtr<ImageInterface<Complex> > cwImage_p;
     CountedPtr<ImageInterface<Complex> > cwHighIm_p;
@@ -94,6 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void applyFeather();
     GaussianBeam hBeam_p;
     GaussianBeam lBeam_p;
+    GaussianBeam lBeamOrig_p;
     Float dishDiam_p;
     Bool cweightCalced_p;
     Bool cweightApplied_p;

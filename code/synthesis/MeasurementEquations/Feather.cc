@@ -68,24 +68,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Feather::Feather(): dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(1.0){
     highIm_p=NULL;
     lowIm_p=NULL;
+    lowImOrig_p=NULL;
     cwImage_p=NULL;
     cwHighIm_p=NULL;
   }
-  Feather::Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdscale) : dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(sdscale) {
+  Feather::Feather(const ImageInterface<Float>& SDImage, const ImageInterface<Float>& INTImage, Float sdscale) : dishDiam_p(-1.0), cweightCalced_p(False), cweightApplied_p(False), sdScale_p(sdscale){
     
-    //    ImageInfo highInfo=INTImage.imageInfo();
-    //   hBeam_p=highInfo.restoringBeam();
-    // ImageInfo lowInfo=SDImage.imageInfo();
-    //highIm_p= INTImage.cloneII();
     setINTImage(INTImage);
-    // ImageInfo lowInfo=SDImage.imageInfo();
-    //lBeam_p=lowInfo.restoringBeam();
-    //lowIm_p=SDImage.cloneII();
+    lowImOrig_p=NULL;
     setSDImage(SDImage);
     
     cwImage_p=NULL;
     cwHighIm_p=NULL;
-
+    
   }
   Feather::~Feather(){
     highIm_p=NULL;
@@ -120,6 +115,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ir.regrid(*lowIm_p, Interpolate2D::LINEAR, axes,  sdcopy);
     }
 	    
+    if(lowImOrig_p.null()){
+      lowImOrig_p=new TempImage<Float>(lowIm_p->shape(), lowIm_p->coordinates(),0);
+      lowImOrig_p->copyData(*lowIm_p);
+      lBeamOrig_p=lBeam_p;
+    }
 
     
   }
@@ -145,8 +145,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   Bool Feather::setEffectiveDishDiam(const Float xdiam, const Float ydiam){
-    dishDiam_p=min(xdiam, ydiam);
-    
+    dishDiam_p=ydiam >0 ? min(xdiam, ydiam) : xdiam;
+    {//reset to the original SD image
+      lowIm_p->copyData(*lowImOrig_p);
+      lBeam_p=lBeamOrig_p;
+    }
     //Change the beam of SD image
     Double freq  = worldFreq(lowIm_p->coordinates(), 0);
     //cerr << "Freq " << freq << endl;
@@ -160,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       throw(AipsError("Beam due to new effective diameter may be smaller than the beam of original dish image"));
     }
     
-    StokesImageUtil::Convolve(*lowIm_p, toBeUsed, False);
+    StokesImageUtil::Convolve(*lowIm_p, toBeUsed, True);
     lBeam_p=newBeam; 
     //reset cweight if it was calculated already
     cweightCalced_p=False;
@@ -169,6 +172,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
   void Feather::getEffectiveDishDiam(Float& xdiam, Float& ydiam){
+    if(dishDiam_p <0){
+      if(lBeam_p.isNull())
+	throw(AipsError("No Single dish restoring beam info in image"));
+      Double maj=lBeam_p.getMajor("rad");
+      Double freq  = worldFreq(csysHigh_p, 0);
+    //cerr << "Freq " << freq << endl;
+      dishDiam_p=1.22*C::c/freq/maj;
+    }
     xdiam=dishDiam_p;
     ydiam=dishDiam_p;
   }
