@@ -790,9 +790,13 @@ void MSAsRaster::constructParameters_() {
 	  if ( cols[i] == "MODEL_DATA" ) has_model = true;
   }
   visTypeName_(OBSERVED)="Observed";
-  if ( has_model && has_corrected ) {
-	  visTypeName_(CORRECTED)="Corrected";
+  if ( has_model ) {
 	  visTypeName_(MODEL)="Model";
+  }
+  if ( has_corrected ) {
+	  visTypeName_(CORRECTED)="Corrected";
+  }
+  if ( has_model && has_corrected) {
 	  visTypeName_(RESIDUAL)="Residual";
   }
   // (later)  visTypeName_(RATIO)="Ratio";
