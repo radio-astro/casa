@@ -42,6 +42,8 @@ test_ia_histograms              dmehring@nrao.edu
 test_ia_imageconcat             dmehring@nrao.edu
 test_ia_isconform               dmehring@nrao.edu
 test_ia_modify                  dmehring@nrao.edu
+test_ia_pad                     dmehring@nrao.edu
+test_ia_pv                      dmehring@nrao.edu
 test_ia_rebin                   dmehring@nrao.edu
 test_ia_replacemaskedpixels     dmehring@nrao.edu
 test_ia_restoringbeam           dmehring@nrao.edu
