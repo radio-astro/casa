@@ -99,7 +99,7 @@ function ensure_directory_exists {
     if [ -d "$1" ]; then
         display_debugging_message "$2 found at: $1"
     else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
+        exit_with_error_message -1 "Directory $2 not found!  Looked at: $1"
     fi
 }
 
@@ -110,7 +110,7 @@ function ensure_executable_exists {
     if [ -x "$1" ]; then
         display_debugging_message "$2 found at: $1"
     else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
+        exit_with_error_message -1 "Executable $2 not found!  Looked at: $1"
     fi
 }
 
