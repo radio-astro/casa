@@ -32,12 +32,12 @@
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
 #include <images/Images/FITSImage.h>
+#include <images/Images/ImageAnalysis.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
-
-#include <memory>
 
 namespace casa {
 
@@ -230,6 +230,47 @@ void ImageTask::setLogfileAppend(const Bool a) {
 	}
 	_logfileAppend = a;
 }
+
+std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
+    const ImageInterface<Float> *const subImage,
+    const Array<Float> *const values,
+    const ArrayLattice<Bool> *const mask,
+	const IPosition *const outShape,
+	const CoordinateSystem *const coordsys
+) const {
+
+	IPosition oShape = outShape == 0 ? subImage->shape() : *outShape;
+	CoordinateSystem csys = coordsys == 0 ? subImage->coordinates() : *coordsys;
+	std::auto_ptr<ImageInterface<Float> > outImage(
+		new TempImage<Float>(
+			TiledShape(oShape), csys
+		)
+	);
+	std::auto_ptr<ArrayLattice<Bool> >mymask;
+	if (mask != 0) {
+		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
+	}
+	else if (subImage->hasPixelMask()) {
+		mymask.reset(new ArrayLattice<Bool>(subImage->pixelMask().get()));
+	}
+	if (mymask.get() != 0 && ! allTrue(mymask->get())) {
+		dynamic_cast<TempImage<Float> *>(outImage.get())->attachMask(*mymask);
+	}
+	ImageUtilities::copyMiscellaneous(*outImage, *subImage);
+	if (! _getOutname().empty()) {
+		_removeExistingOutfileIfNecessary();
+		ImageAnalysis ia(outImage.get());
+		String emptyMask = "";
+		Record empty;
+		outImage.reset(
+			ia.subimage(_getOutname(), empty, emptyMask, False, False)
+		);
+	}
+	outImage->put(values == 0 ? subImage->get() : *values);
+	return outImage;
+}
+
+
 
 
 }
