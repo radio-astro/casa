@@ -162,8 +162,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     catch (const AipsError& x) {
       throw(AipsError("Beam due to new effective diameter may be smaller than the beam of original dish image"));
     }
-    
-    StokesImageUtil::Convolve(*lowIm_p, toBeUsed, True);
+    try{
+      //cerr <<"To be used " << toBeUsed.getMajor() << "  " << toBeUsed.getMinor() <<
+      //"  " << toBeUsed.getPA() << endl;
+      StokesImageUtil::Convolve(*lowIm_p, toBeUsed, True);
+    }
+    catch(const AipsError& x){
+      throw(AipsError("Could not convolve SD image for some reason; try a smaller effective diameter may be"));
+    }
     lBeam_p=newBeam; 
     //reset cweight if it was calculated already
     cweightCalced_p=False;
@@ -221,6 +227,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
 
     getFTCutSDImage(ux, xamp, uy,yamp);
+    xamp *=sdScale_p;
+    yamp *=sdScale_p;
   }
   
   void Feather::getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
@@ -537,16 +545,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
+  /*
   void Feather::feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low0, const Float& sdScale, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, Float effDiam, const Bool doPlot){
 
     LogIO os(LogOrigin("Feather", "feather()", WHERE));
    try {
 
    
-
-
-
-
       GaussianBeam hBeam , lBeam;
       Vector<Quantity> extraconv;
       ImageInfo highInfo=high.imageInfo();
@@ -919,6 +924,152 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    }
     
 
+
+  }
+  */
+ void Feather::feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low0, const Float& sdScale, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, Float effDiam, const Bool doHiPassFilterOnSD){
+
+   Feather plume;
+   plume.setINTImage(high);
+   ImageInfo lowInfo=low0.imageInfo();
+   GaussianBeam lBeam=lowInfo.restoringBeam();
+   if(lBeam.isNull()) {
+     getLowBeam(low0, lowPSF, useDefaultPB, vpTableStr, lBeam);
+     if(lBeam.isNull())
+       throw(AipsError("Do not have low resolution beam info "));
+     TempImage<Float> newLow(low0.shape(), low0.coordinates());
+     newLow.copyData(low0);
+     lowInfo.removeRestoringBeam();
+     lowInfo.setRestoringBeam(lBeam);
+     newLow.setImageInfo(lowInfo);
+     plume.setSDImage(newLow);    
+   }
+   else{
+     plume.setSDImage(low0);
+   }
+   plume.setSDScale(sdScale);
+   if(effDiam >0.0){
+     plume.setEffectiveDishDiam(effDiam, effDiam);
+   }
+   else if(doHiPassFilterOnSD){
+     Float xdiam, ydiam;
+     plume.getEffectiveDishDiam(xdiam, ydiam);
+     plume.setEffectiveDishDiam(xdiam, ydiam);
+   }
+   plume.saveFeatheredImage(image);
+
+ }
+  
+
+  void Feather::getLowBeam(const ImageInterface<Float>& low0, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, GaussianBeam& lBeam){
+    LogIO os(LogOrigin("Feather", "getLowBeam()", WHERE));
+    PBMath * myPBp = 0;
+    if((lowPSF=="") && lBeam.isNull()) {
+      // create the low res's PBMath object, needed to apply PB 
+      // to make high res Fourier weight image
+      if (useDefaultPB) {
+	// look up the telescope in ObsInfo
+	ObsInfo oi = low0.coordinates().obsInfo();
+	String myTelescope = oi.telescope();
+	if (myTelescope == "") {
+	  os << LogIO::SEVERE << "No telescope imbedded in low res image" 
+	     << LogIO::POST;
+	  os << LogIO::SEVERE << "Create a PB description with the vpmanager"
+	     << LogIO::EXCEPTION;
+	}
+	Quantity qFreq;
+	{
+	  Double freq  = worldFreq(low0.coordinates(), 0);
+	  qFreq = Quantity( freq, "Hz" );
+	}
+	String band;
+	PBMath::CommonPB whichPB;
+	String pbName;
+	// get freq from coordinates
+	PBMath::whichCommonPBtoUse (myTelescope, qFreq, band, whichPB, 
+				    pbName);
+	if (whichPB  == PBMath::UNKNOWN) {
+	  os << LogIO::SEVERE << "Unknown telescope for PB type: " 
+	     << myTelescope << LogIO::EXCEPTION;
+	}
+	myPBp = new PBMath(whichPB);
+      } else {
+	// get the PB from the vpTable
+	Table vpTable( vpTableStr );
+	ROScalarColumn<TableRecord> recCol(vpTable, (String)"pbdescription");
+	myPBp = new PBMath(recCol(0));
+      }
+      AlwaysAssert((myPBp != 0), AipsError);
+    }
+
+   
+    // get image center direction
+    MDirection wcenter;  
+    {
+      Int directionIndex=
+	low0.coordinates().findCoordinate(Coordinate::DIRECTION);
+      AlwaysAssert(directionIndex>=0, AipsError);
+      DirectionCoordinate
+	directionCoord=low0.coordinates().directionCoordinate(directionIndex);
+      Vector<Double> pcenter(2);
+      pcenter(0) = low0.shape()(0)/2;
+      pcenter(1) = low0.shape()(1)/2;    
+      directionCoord.toWorld( wcenter, pcenter );
+    }
+    
+    // make the weight image 
+      IPosition myshap(low0.shape());
+      for( uInt k=2; k< myshap.nelements(); ++k){
+	myshap(k)=1;
+      }
+      
+      TempImage<Float> lowpsf0;
+      TempImage<Complex> cweight(myshap, low0.coordinates());
+      if(lowPSF=="") {
+	os << LogIO::NORMAL // Loglevel INFO
+           << "Using primary beam to determine weighting.\n" << LogIO::POST;
+	cweight.set(1.0);
+	if (myPBp != 0) {
+	  myPBp->applyPB(cweight, cweight, wcenter, Quantity(0.0, "deg"), 
+			 BeamSquint::NONE);
+	  
+	  lowpsf0=TempImage<Float>(cweight.shape(), cweight.coordinates());
+	  
+	  os << LogIO::NORMAL // Loglevel INFO
+	     << "Determining scaling from SD Primary Beam.\n"
+	     << LogIO::POST;
+	  StokesImageUtil::To(lowpsf0, cweight);
+	  StokesImageUtil::FitGaussianPSF(lowpsf0, 
+					  lBeam);
+	}
+	delete myPBp;	
+      }
+      else {
+	os << LogIO::NORMAL // Loglevel INFO
+           << "Using specified low resolution PSF to determine weighting.\n" 
+	   << LogIO::POST;
+	// regrid the single dish psf
+	PagedImage<Float> lowpsfDisk(lowPSF);
+	IPosition lshape(lowpsfDisk.shape());
+	lshape.resize(4);
+	lshape(2)=1; lshape(3)=1;
+	TempImage<Float>lowpsf(lshape,lowpsfDisk.coordinates());
+	IPosition blc(lowpsfDisk.shape());
+	IPosition trc(lowpsfDisk.shape());
+	blc(0)=0; blc(1)=0;
+	trc(0)=lowpsfDisk.shape()(0)-1;
+	trc(1)=lowpsfDisk.shape()(1)-1;
+	for( uInt k=2; k < lowpsfDisk.shape().nelements(); ++k){
+	  blc(k)=0; trc(k)=0;	  	  
+	}// taking first plane
+	Slicer sl(blc, trc, Slicer::endIsLast);
+	lowpsf.copyData(SubImage<Float>(lowpsfDisk, sl, False));
+	os << LogIO::NORMAL // Loglevel INFO
+	   << "Determining scaling from low resolution PSF.\n" << LogIO::POST;
+	StokesImageUtil::FitGaussianPSF(lowpsf, lBeam);
+      }
+       
+ 
 
   }
 
