@@ -206,6 +206,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // {inc.resize(4);inc[0]=1, inc[1]=inc[0]*n[0], inc[2]=inc[1]*n[1], inc[3]=inc[2]*n[2];(void)n[3];}
 
 
+    // The following method is also called from the inner loop, but
+    // does not use CASA Vector (which are not thread safe, I (SB) am
+    // told).
+    inline Complex getFrom4DArray(const Complex *__restrict__& store,
+    				  const Int* iPos, const Int* inc)
+    {
+      return *(store+(iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]));
+      //      return store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]];
+    };
+
     // The following two methods are called in the innermost loop.
     inline Complex getFrom4DArray(const Complex *__restrict__& store,
     				  const Vector<Int>& iPos, const Vector<Int>& inc)
@@ -247,7 +257,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Int& ipol, uInt& mRow);
     void cachePhaseGrad_p(const Vector<Double>& pointingOffset,
 			  const Vector<Int>&cfShape,
-			  const Vector<Int>& convOrigin);
+			  const Vector<Int>& convOrigin,
+			  const Double& cfRefFreq,
+			  const Double& imRefFreq);
   };
 }; //# NAMESPACE CASA - END
 
