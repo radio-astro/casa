@@ -197,10 +197,10 @@ namespace casa{
     	)
       {
 	log_l << "Computing phase gradiant for pointing offset " 
-	      << pointingOffset << cfShape << " "
-	      << cfRefFreq/imRefFreq << " " 
-	      << convOrigin << " " 
-	      << cached_phaseGrad_p.shape()
+	      << pointingOffset << cfShape 
+	      // << " " << cfRefFreq/imRefFreq << " " 
+	      // << convOrigin << " " 
+	      // << cached_phaseGrad_p.shape()
 	      <<LogIO::POST;
 	Int nx=cfShape(0), ny=cfShape(1);
 	Double grad;
@@ -395,6 +395,7 @@ namespace casa{
 
 	      if (onGrid(nx, ny, nw, loc, support)) 
 		{
+		  // Loop over all image-plane polarization planes.
 		  for(Int ipol=0; ipol< nDataPol; ipol++) 
 		    { 
 		      if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan))))
@@ -414,14 +415,28 @@ namespace casa{
 					  (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
 			  
 			      norm = 0.0;
-			      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++)
+			      // Loop over all relevant elements of
+			      // the Mueller matrix for the
+			      // polarization ipol.
+			      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
 				{
 				  Complex* convFuncV;
-				  Complex* conjConvFuncV;
-				  convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
-							  wndx, mNdx, conjMNdx, ipol,  mRow);
-				  conjConvFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
+				  Vector<Float> sampling;
+				  Vector<Int> support;
+				  if ( (!dopsf) && (CONJBEAMS==True)) // UUU : With conjugate beams...
+				    {
+				      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
 							      wndx, mNdx, conjMNdx, ipol,  mRow);
+				      support.reference(conjScaledSupport);
+				      sampling.reference(conjScaledSampling);
+				    }
+				  else// UUU : Without conjugate beams...
+				    {
+				      convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
+							      wndx, mNdx, conjMNdx, ipol,  mRow);
+				      support.reference(scaledSupport);
+				      sampling.reference(scaledSampling);
+				    }
 				  
 				  convOrigin=cfShape/2;
 
@@ -430,23 +445,10 @@ namespace casa{
 				  
 				  cacheAxisIncrements(cfShape, cfInc_p);
 
-				  if( (!dopsf) && (CONJBEAMS==True) )  // UUU : With conjugate beams...
-				    {
-				      norm += accumulateOnGrid(grid,conjConvFuncV,nvalue,wVal,
-							       conjScaledSupport,conjScaledSampling,
-							       off, convOrigin, cfShape, loc, igrdpos,
-							       sinDPA, cosDPA,finitePointingOffsets,accumWts);
-				    }
-				  /////// TODO : For no conjugate beams, use convFuncC instead of conjConvFuncV
-				  else  // UUU : Without conjugate beams....
-				    {
-				      // // REMOVE THIS CODE
-				      // if(useConjFreqCF==True)  // UUU : With conjugate beams...
-				      norm += accumulateOnGrid(grid,conjConvFuncV,nvalue,wVal,
-							       conjScaledSupport,conjScaledSampling,
-							       off, convOrigin, cfShape, loc, igrdpos, 
-							       sinDPA, cosDPA,finitePointingOffsets,accumWts);
-				    }
+				  norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
+							   support,sampling,
+							   off, convOrigin, cfShape, loc, igrdpos,
+							   sinDPA, cosDPA,finitePointingOffsets,accumWts);
 				}
 			      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
 		      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
