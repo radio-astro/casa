@@ -5978,6 +5978,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt mainTabRow = sortedI(mainTabRowI);
       uInt newMainTabRow = 0;
       uInt nIncompleteCoverage = 0; // number of rows with incomplete SPW coverage
+
+      Int prevNewMainTabRow = -1; // needed to reduce redundant warning output
+      vector<Int> prevFailedAvChans;
+      vector<Int> prevFailedAvCorrs;
+
       // prepare progress meter
       Float progress = 0.4;
       Float progressStep = 0.4;
@@ -6194,7 +6199,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  
 	  // merge data columns from all rows found using the averaging info from above
 	  // averageN[], averageWhichSPW[], averageWhichChan[], averageChanFrac[]
-	  
+
+	  Bool failedAv = False;	  
+	  vector<Int> failedAvChans;
+	  vector<Int> failedAvCorrs;
+
 	  // loop over new channels
 	  for(uInt i=0; i<newNUM_CHAN; i++){
 	    // initialise special treatment for Bool columns
@@ -6240,14 +6249,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 		     && spwCount(averageWhichSPW[i][j])%2!=0     // the number of channels with non-unity overlap is odd
 		     && modAverageChanFrac[j][k]!=1.){           // this contributor j has non-unity overlap
 		    //cout << "spw count " << averageWhichSPW[i][j] << " " << spwCount(averageWhichSPW[i][j]) << endl;
-		    //cout << "not using i j k spw frac " << i << " " << j << " " << k << " " << averageWhichSPW[i][j] << " " << modAverageChanFrac[j][k] << endl;
+		    //cout << "not using i j k spw frac " << i << " " << j << " " << k << " " 
+                    //     << averageWhichSPW[i][j] << " " << modAverageChanFrac[j][k] << endl;
 		    modNorm(k) -= modAverageChanFrac[j][k];
 		    modAverageChanFrac[j][k] = 0.;
 		    if(modNorm(k)<=0.){ // should only occur in rare cases
 		      if(FLAGColIsOK && !newFlag(k,i)){
-			os << LogIO::WARN << "In intermediate SPW combination output row " << newMainTabRow << " the averaging failed for channel " << i 
-			   << ", correlation " << k << ". Visibility will be flagged." << LogIO::POST;
+			failedAv = True;
 			newFlag(k,i) = True;
+			if(prevNewMainTabRow<0){
+			  prevNewMainTabRow = newMainTabRow;
+			}
+			failedAvChans.push_back(i);
+			failedAvCorrs.push_back(k);
 		      }
 		      modNorm(k) += averageChanFrac[i][j];
 		      modAverageChanFrac[j][k] = averageChanFrac[i][j];
@@ -6325,6 +6339,28 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    } // if there is coverage for this channel 
 	  } // end for i=0, loop over new channels
 
+	  // give warnings about channels with averaging problems
+	  if(prevNewMainTabRow>=0){ // may need to issue warnings
+	    if(!failedAv 
+	       || mainTabRowI==nMainTabRows-1
+	       || (prevFailedAvChans.size()>0 && !((failedAvChans==prevFailedAvChans) && (failedAvCorrs==prevFailedAvCorrs)))
+	       ){
+	      uInt lastRow = newMainTabRow-1;
+	      if(mainTabRowI==nMainTabRows-1){
+		lastRow = newMainTabRow;
+	      }
+	      os << LogIO::WARN << "Averaging failed for the following channel/correllation pairs from output row " 
+		 << prevNewMainTabRow << " up to " << lastRow << ". Corresponding visibilities will be flagged: " << endl;
+	      for(uInt iii=0; iii<prevFailedAvChans.size(); iii++){
+		os << "(" << prevFailedAvChans[iii] << ", " << prevFailedAvCorrs[iii] << ") ";
+	      }
+	      os << LogIO::POST;
+	      prevNewMainTabRow = -1;
+	    }
+	    prevFailedAvChans = failedAvChans;
+	    prevFailedAvCorrs = failedAvCorrs;
+	  }     
+	    
 	  // calculate FLAG_ROW as logical OR of all input rows
 	  newFlagRow = newFlagRowI[0];
 	  for(uInt i=1; i<nMatchingRows; i++){
