@@ -74,7 +74,6 @@ class sdplot_unittest_base:
         retdic['ylabel'] = ax0.get_ylabel()
         retdic['ylim'] = ax0.get_ylim()
         retdic['title0'] = ax0.get_title()
-        print ax0.get_lines()
         retdic['label0'] = ax0.get_lines()[0].get_label()
         return retdic
 
