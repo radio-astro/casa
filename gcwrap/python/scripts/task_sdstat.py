@@ -16,7 +16,7 @@ def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
     worker.execute()
     worker.finalize()
     
-    return  worker.statistics
+    return worker.result
         
 
 class sdstat_worker(sdutil.sdtask_template):
@@ -100,9 +100,9 @@ class sdstat_worker(sdutil.sdtask_template):
 
         # reshape statsdict for return
         for k in ['min','max']:
-            self.statistics['%s_abscissa'%(k)] = qa.quantity(self.statistics.pop('%s_abc'%(k)),self.xunit)
+            self.result['%s_abscissa'%(k)] = qa.quantity(self.result.pop('%s_abc'%(k)),self.xunit)
         for (k,u) in [('eqw',self.xunit),('totint',self.intunit)]:
-            self.statistics[k] = qa.quantity(self.statistics[k],u)
+            self.result[k] = qa.quantity(self.result[k],u)
 
     def save(self):
         if ( len(self.outfile) > 0 ):
@@ -126,7 +126,7 @@ class sdstat_worker(sdutil.sdtask_template):
         usr = get_user()
         tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
         self.resultstats = ''
-        self.statistics = {}
+        self.result = {}
 
         # calculate regular statistics
         statsname = ['max', 'min', 'max_abc', 'min_abc',
@@ -134,7 +134,7 @@ class sdstat_worker(sdutil.sdtask_template):
                      'stddev']
         for name in statsname:
             v = self.scan.stats(name,self.msk,self.format_string)
-            self.statistics[name] = list(v) if len(v) > 1 else v[0]
+            self.result[name] = list(v) if len(v) > 1 else v[0]
             if sd.rcParams['verbose']:
                 self.resultstats += get_text_from_file(tmpfile)
 
@@ -156,9 +156,9 @@ class sdstat_worker(sdutil.sdtask_template):
     def __calc_eqw_and_integf(self):
         eqw = None
         integratef = None
-        if isinstance(self.statistics['max'],list):
+        if isinstance(self.result['max'],list):
             # User selected multiple scans,ifs
-            ns = len(self.statistics['max'])
+            ns = len(self.result['max'])
             eqw=[]
             integratef=[]
             for i in range(ns):
@@ -166,27 +166,27 @@ class sdstat_worker(sdutil.sdtask_template):
                 abcissa, lbl = self.scan.get_abcissa(rowno=i)
                 dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
                 # Construct equivalent width (=sum/max)
-                eqw = eqw + [get_eqw(self.statistics['max'][i],
-                                     self.statistics['min'][i],
-                                     self.statistics['sum'][i],
+                eqw = eqw + [get_eqw(self.result['max'][i],
+                                     self.result['min'][i],
+                                     self.result['sum'][i],
                                      dabc)]
                 # Construct integrated flux
-                integratef = integratef + [get_integf(self.statistics['sum'][i], dabc)]
+                integratef = integratef + [get_integf(self.result['sum'][i], dabc)]
         else:
             # Single scantable only
             abcissa, lbl = self.scan.get_abcissa(rowno=0)
             dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
         
             # Construct equivalent width (=sum/max)
-            eqw = get_eqw(self.statistics['max'],
-                          self.statistics['min'],
-                          self.statistics['sum'],
+            eqw = get_eqw(self.result['max'],
+                          self.result['min'],
+                          self.result['sum'],
                           dabc)
 
             # Construct integrated flux
-            integratef = get_integf(self.statistics['sum'], dabc)
-        self.statistics['eqw'] = eqw
-        self.statistics['totint'] = integratef
+            integratef = get_integf(self.result['sum'], dabc)
+        self.result['eqw'] = eqw
+        self.result['totint'] = integratef
 
     def __set_mask(self):
         self.msk = None
@@ -241,7 +241,7 @@ class sdstat_worker(sdutil.sdtask_template):
         head = string.join([sep,string.join([" ","%s ["%(title),label,"]"]," "),sep],'\n')
         tail = ''
         out = head + '\n'
-        val = self.statistics[key]
+        val = self.result[key]
         if isinstance(val,list):
             ns = len(val)
             for i in xrange(ns):

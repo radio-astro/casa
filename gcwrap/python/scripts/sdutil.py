@@ -107,6 +107,8 @@ class sdtask_template(sdtask_interface):
         if not hasattr(self, 'outform'):
             self.outform = 'undefined'
         self.is_disk_storage = (sd.rcParams['scantable.storage'] == 'disk')
+        # attribute for tasks that return any result
+        self.result = None
 
     def initialize(self):
         if hasattr(self, 'infile'):
