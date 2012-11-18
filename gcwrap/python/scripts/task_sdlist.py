@@ -4,19 +4,13 @@ from taskinit import *
 import asap as sd
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdlist(infile, antenna, scanaverage, outfile, overwrite):
+    worker = sdlist_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
 
-    casalog.origin('sdlist')
-    
-    try:
-        worker = sdlist_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdlist_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

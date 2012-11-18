@@ -9,22 +9,13 @@ from asap.scantable import is_scantable
 import pylab as pl
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
-
-    casalog.origin('sdmath')
-
-    ###
-    ### Now the actual task code
-    ###
-    try:
-        worker = sdmath_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdmath_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdmath_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

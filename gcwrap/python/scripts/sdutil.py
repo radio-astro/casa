@@ -8,8 +8,61 @@ import numpy as np
 import traceback
 import string
 from taskinit import gentools
+import functools
+import re
 
 qatl = casac.quanta()
+
+
+def sdtask_decorator(func):
+    """
+    This is a decorator function for sd tasks. 
+    Currently the decorator does:
+
+       1) set origin to the logger 
+       2) handle exception
+
+    So, you don't need to set origin in the task any more. 
+    Also, you don't need to write anything about error 
+    handling in the task. If you have something to do 
+    at the end of the task execution, those should be 
+    written in the destructor of worker class, not in 
+    the 'finally' block.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # set origin
+        casalog.origin(func.__name__)
+
+        retval = None
+        # Any errors are handled outside the task.
+        # however, the implementation below is effectively 
+        # equivalent to handling it inside the task.
+        try:
+            # execute task 
+            retval = func(*args, **kwargs)
+        except Exception, e:
+            traceback_info = format_trace(traceback.format_exc())
+            casalog.post(traceback_info,'SEVERE')
+            casalog.post(str(e),'ERROR')
+            raise Exception, e
+        return retval
+    return wrapper
+
+def format_trace(s):
+    wexists=True
+    regex='.*sdutil\.py.*in wrapper.*'
+    retval = s
+    while wexists:
+        ss = retval.split('\n')
+        wexists = False
+        for i in xrange(len(ss)):
+            if re.match(regex,ss[i]):
+                ss = ss[:i] + ss[i+2:]
+                wexists = True
+                break
+        retval = string.join(ss,'\n')
+    return retval
 
 class sdtask_interface(object):
     """
@@ -753,10 +806,6 @@ def get_interactive_mask(obj, purpose=None):
 def finalize_interactive_mask(obj):
     obj.finish_selection()
     
-def process_exception(e):
-    casalog.post(traceback.format_exc(),'SEVERE')
-    casalog.post(str(e),'ERROR')
-
 def get_plotter(plotlevel=0):
     from matplotlib import rc as rcp
     rcp('lines', linewidth=1)
@@ -823,3 +872,4 @@ def __to_quantity_string(v,unit='arcsec'):
 
 def get_subtable_name(v):
     return v.replace('Table:','').strip()
+

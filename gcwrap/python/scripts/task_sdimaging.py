@@ -6,19 +6,13 @@ import asap as sd
 from taskinit import *
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
-
-        casalog.origin('sdimaging')
-        try:
-            worker = sdimaging_worker(**locals())
-            worker.initialize()
-            worker.execute()
-            worker.finalize()
-
-        except Exception, instance:
-            im.close()
-            sdutil.process_exception(instance)
-            raise Exception, instance
+    worker = sdimaging_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
+    
 
 class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __init__(self, **kwargs):

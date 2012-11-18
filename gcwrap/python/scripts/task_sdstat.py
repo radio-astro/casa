@@ -9,24 +9,15 @@ from asap.scantable import is_scantable
 import pylab as pl
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
-
-    casalog.origin('sdstat')
+    worker = sdstat_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
     
-    ###
-    ### Now the actual task code
-    ###
-    try:
-        worker = sdstat_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    return  worker.statistics
         
-        return  worker.statistics
-        
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdstat_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

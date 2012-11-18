@@ -5,19 +5,13 @@ import asap as sd
 import task_flagmanager
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
-
-    casalog.origin('sdflagmanager')
+    worker = sdflagmanager_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
     
-    try:
-        worker = sdflagmanager_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-    
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdflagmanager_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

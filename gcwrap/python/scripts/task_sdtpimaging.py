@@ -11,19 +11,14 @@ interactive=False
 # This is a task version of the script originally made for reducing ATF raster scan data 
 # in total power mode. Still experimental...
 # 
+@sdutil.sdtask_decorator
 def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, spw, stokes, createimage, outfile, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
     # NEED to include spw, src? name for movingsource param. in function argument
-    # put implementation here....
-    casalog.origin('sdtpimaging')
-    try:
-        worker = sdtpimaging_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdtpimaging_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
 
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdtpimaging_worker(sdutil.sdtask_template_imaging):
     # list of ephemeris objects that CASA supports

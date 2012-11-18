@@ -6,23 +6,13 @@ from asap.scantable import is_scantable
 import pylab as pl
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdcoadd(infiles, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
+    worker = sdcoadd_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
 
-    casalog.origin('sdcoadd')
-
-    ###
-    ### Now the actual task code
-    ###
-    
-    try:
-        worker = sdcoadd_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-    
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdcoadd_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

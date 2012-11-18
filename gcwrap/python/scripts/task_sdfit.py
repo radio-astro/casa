@@ -7,21 +7,15 @@ import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
-    
-    casalog.origin('sdfit')
-    
-    try:
-        worker = sdfit_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdfit_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-        return worker.fitresult
+    return worker.fitresult
 
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdfit_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

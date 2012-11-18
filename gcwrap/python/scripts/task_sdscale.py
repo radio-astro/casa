@@ -5,19 +5,13 @@ import sdutil
 import asap as sd
 from asap.scantable import is_scantable, is_ms
 
+@sdutil.sdtask_decorator
 def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
-    
-    casalog.origin('sdscale')
-    
-    try:
-        worker = sdscale_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdscale_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdscale_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

@@ -7,23 +7,24 @@ from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
 
-    casalog.origin('sdplot')
+#    casalog.origin('sdplot')
 
     ###
     ### Now the actual task code
     ###
-    try:
+#    try:
         # Plotting
         worker = sdplot_worker(**locals())
         worker.initialize()
         worker.execute()
         worker.finalize()
 
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
+#    except Exception, instance:
+#        sdutil.process_exception(instance)
+#        raise Exception, instance
 
 class sdplot_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
@@ -143,7 +144,7 @@ class sdplot_worker(sdutil.sdtask_template):
         crad = None
         spacing = None
         if self.center != '':
-            epoch, ra, dec = center.split(' ')
+            epoch, ra, dec = self.center.split(' ')
             cme = me.direction(epoch, ra, dec)
             crad = [qa.convert(cme['m0'],'rad')['value'], \
                     qa.convert(cme['m1'],'rad')['value']]
@@ -186,7 +187,7 @@ class sdplot_worker(sdutil.sdtask_template):
         sd.plotter.set_mode(stacking=self.stack,panelling=self.panel,refresh=refresh)
         ncolor = 0
         if self.colormap != 'none': 
-            colmap = colormap
+            colmap = self.colormap
             ncolor=len(colmap.split())
         elif self.linestyles == 'none': 
             colmap = "green red black cyan magenta orange blue purple yellow pink"
@@ -196,7 +197,7 @@ class sdplot_worker(sdutil.sdtask_template):
             del ucm
         else: colmap=None
 
-        if self.linestyles != 'none': lines=linestyles
+        if self.linestyles != 'none': lines=self.linestyles
         elif ncolor <= 1: 
             lines = "line dashed dotted dashdot"
             uls = sd.rcParams['plotter.linestyles']
@@ -250,7 +251,7 @@ class sdplot_worker(sdutil.sdtask_template):
 
         # legend position
         loc=1
-        if self.plotstyle: loc=legendloc
+        if self.plotstyle: loc=self.legendloc
         sd.plotter.set_legend(mode=loc,refresh=refresh) 
 
     def __overlay_linecatalog(self):
