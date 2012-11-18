@@ -161,13 +161,22 @@ namespace casa{
 	    iloc[0]=(Int)((scaledSampling[0]*ix+off[0])-1);//+convOrigin[0];
 	    igrdpos[0]=loc[0]+ix;
 	    tiloc=iloc;
+	    //
+	    // reindex() is for historical reasons and does three
+	    // operations: (1) rotate the co-ord. sys. using
+	    // sin/cosDPA, (2) add convOrigin to iloc and return the
+	    // result in tiloc and add convOrigin to tiloc, and (3)
+	    // return True if tiloc lines with in the cfShape.
+	    //
 	    if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
 	      {
 		wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
 				    tiloc,cfInc_p)/cfArea;
 		if (wVal > 0.0) {wt = conj(wt);}
 		norm += real(wt);
-		if (finitePointingOffset) wt *= cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l[0],iloc[1]+phaseGradOrigin_l[1]);
+		if (finitePointingOffset) 
+		  wt *= cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l[0],
+					   iloc[1]+phaseGradOrigin_l[1]);
 		// The following uses raw index on the 4D grid
 		addTo4DArray(gridStore,iGrdPosPtr,gridInc_p, nvalue,wt);
 	      }
