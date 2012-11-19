@@ -136,6 +136,7 @@ class CubeSkyEquation : public SkyEquation {
 
   // DT aInitGrad, aGetChanSel, aCheckVisRows, aGetFreq, aOrigChunks, aVBInValid, aInitGetSlice, aInitPutSlice, aPutSlice, aFinalizeGetSlice, aFinalizePutSlice, aChangeStokes, aInitModel, aGetSlice, aSetModel, aGetRes, aExtra;
 
+
 };
 
 } //# NAMESPACE CASA - ENDf

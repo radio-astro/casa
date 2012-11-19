@@ -308,6 +308,7 @@ traceEvent(1,"Entering imager::defaults",25);
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
+  
 
 }
 
@@ -3514,6 +3515,11 @@ Record Imager::clean(const String& algorithm,
 #ifdef PABLO_IO
   traceEvent(1,"Entering Imager::clean",22);
 #endif
+
+
+
+
+
   Record retval;
   Bool converged=True;
   retval.define("converged", False);
@@ -3956,6 +3962,7 @@ Record Imager::clean(const String& algorithm,
     catch(exception& x){
       
       this->unlock();
+      destroySkyEquation();
       os << LogIO::WARN << "Caught exception: " << x.what()
 	 << LogIO::POST;
       os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
@@ -3965,6 +3972,7 @@ Record Imager::clean(const String& algorithm,
     }
     catch(...){
       this->unlock();
+      destroySkyEquation();
       os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
       os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
 	 <<LogIO::POST;
@@ -3989,17 +3997,18 @@ Record Imager::clean(const String& algorithm,
     }  
   catch (exception &x) { 
     this->unlock();
+    destroySkyEquation();
     throw(AipsError(x.what()));
 
 #ifdef PABLO_IO
     traceEvent(1,"Exiting Imager::clean",21);
 #endif
-
     return retval;
   } 
 
   catch(...){
     this->unlock();
+    destroySkyEquation();
     //Unknown exception...
     throw(AipsError("Unknown exception caught ...imager/casa may need to be exited"));
   }
