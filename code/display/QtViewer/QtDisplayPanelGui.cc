@@ -676,6 +676,7 @@ void QtDisplayPanelGui::updateFrameInformation(){
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	int displayDataCount = rdds.len();
 	animationHolder->setModeEnabled( displayDataCount );
+	qdp_->setBlen_(displayDataCount );
 	ListIter<QtDisplayData*> iter(rdds );
 	int i = 0;
 	int maxChannels = -1;
