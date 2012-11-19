@@ -9,22 +9,11 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
+    worker = sdplot_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
 
-#    casalog.origin('sdplot')
-
-    ###
-    ### Now the actual task code
-    ###
-#    try:
-        # Plotting
-        worker = sdplot_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-
-#    except Exception, instance:
-#        sdutil.process_exception(instance)
-#        raise Exception, instance
 
 class sdplot_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
