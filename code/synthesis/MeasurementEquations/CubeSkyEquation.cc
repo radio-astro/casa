@@ -62,7 +62,7 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/TransformMachines/Utils.h>
-
+#include <synthesis/Utilities/SigHandler.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 
@@ -525,6 +525,7 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
 
     Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
+    SigHandler myStopSig;
     ft_->setNoPadding(noModelCol_p);
     isPSFWork_p= True; // avoid PB correction etc for PSF estimation
     Bool doPSF=True;
@@ -572,6 +573,8 @@ void CubeSkyEquation::makeSimplePSF(PtrBlock<ImageInterface<Float> * >& psfs) {
 
         for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
             for (vi.origin(); vi.more(); vi++) {
+	      if(myStopSig.gotStopSignal())
+		throw(AipsError("Terminating...."));
                 if(noModelCol_p) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
@@ -684,6 +687,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
 
+    SigHandler myStopSig;
     ////if people want to use model but it isn't there
 
     if(!noModelCol_p)
@@ -798,7 +802,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 	Int oldmsid=-1;
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
-
+	      if(myStopSig.gotStopSignal())
+		throw(AipsError("Terminating..."));
                 //	      Timers tInitModel=Timers::getTime();
                 if(!incremental && !predictedComp) {
                     //This here forces the modelVisCube shape and prevents reading model column
@@ -1653,65 +1658,65 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
                               Int slice, Int nslice){
   //bypass this for now
   return False;
-  // Enforce that all SPWs are in the same frequency frame.
-  //
-  // If all the SPWs in the MS are in LSRK frame, we can do data
-  // selection (since image is always in LSRK).
-  //
-  // If not all SPWs in the MS are in the same frequency frame and
-  // in LSRK frame, for now, disable data selection since the
-  // mapping between image (in LSRK) and MS channels will be time
-  // variable.
-  VisBufferAutoPtr vb (vi);
-  ROScalarMeasColumn<MFrequency> freqFrame=vb->msColumns().spectralWindow().refFrequencyMeas();
-  uInt nrows=vb->msColumns().spectralWindow().nrow();
-  String firstString = freqFrame(0).getRefString();
-  Bool allFramesSame=True;
-  for (uInt i=0;i<nrows;i++)
-    if (freqFrame(i).getRefString() != firstString)
-      {allFramesSame = False;break;}
-  
-  if (!allFramesSame || (firstString!="LSRK"))
-    return False;
-  
-  // Only one slice lets keep what the user selected
-  if(nslice==1)
-    return False;
-  
-  Double start=0.0; 
-  Double end=0.0;
-  Double chanwidth=1.0;
-  Int specIndex=coords.findCoordinate(Coordinate::SPECTRAL);
-  SpectralCoordinate specCoord=coords.spectralCoordinate(specIndex);
-  Vector<Int>spectralPixelAxis=coords.pixelAxes(specIndex);
-  if(nchanPerSlice_p>0){
-    specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
-    specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))+0.5);
-    chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
-  }
-  if(end < start){
-    Double tempoo=start;
-    start=end;
-    end=tempoo;
-  }
-  
-  Block<Vector<Int> > spwb;
-  Block<Vector<Int> > startb;
-  Block<Vector<Int> > nchanb;
-  Block<Vector<Int> > incrb=blockChanInc_p;
-  vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
-  // cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
-  // 	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
-  if(spwb.nelements()==0)
-    return False;
-  
-  //cerr << "Original is " << blockChanStart_p[0] <<  "   " << blockChanWidth_p[0] << "  " <<  blockChanInc_p[0] << "   " 
-  //	 <<  blockSpw_p[0] << endl;
-  //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
-  vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
-  
-  return True;
-  
+    // Enforce that all SPWs are in the same frequency frame.
+    //
+    // If all the SPWs in the MS are in LSRK frame, we can do data
+    // selection (since image is always in LSRK).
+    //
+    // If not all SPWs in the MS are in the same frequency frame and
+    // in LSRK frame, for now, disable data selection since the
+    // mapping between image (in LSRK) and MS channels will be time
+    // variable.
+    VisBufferAutoPtr vb (vi);
+    ROScalarMeasColumn<MFrequency> freqFrame=vb->msColumns().spectralWindow().refFrequencyMeas();
+    uInt nrows=vb->msColumns().spectralWindow().nrow();
+    String firstString = freqFrame(0).getRefString();
+    Bool allFramesSame=True;
+    for (uInt i=0;i<nrows;i++)
+        if (freqFrame(i).getRefString() != firstString)
+        {allFramesSame = False;break;}
+
+    if (!allFramesSame || (firstString!="LSRK"))
+        return False;
+
+    // Only one slice lets keep what the user selected
+    if(nslice==1)
+        return False;
+
+    Double start=0.0; 
+    Double end=0.0;
+    Double chanwidth=1.0;
+    Int specIndex=coords.findCoordinate(Coordinate::SPECTRAL);
+    SpectralCoordinate specCoord=coords.spectralCoordinate(specIndex);
+    Vector<Int>spectralPixelAxis=coords.pixelAxes(specIndex);
+    if(nchanPerSlice_p>0){
+        specCoord.toWorld(start,Double(slice*nchanPerSlice_p)-0.5);
+        specCoord.toWorld(end, Double(nchanPerSlice_p*(slice+1))+0.5);
+        chanwidth=fabs(end-start)/Double(nchanPerSlice_p);
+    }
+    if(end < start){
+        Double tempoo=start;
+        start=end;
+        end=tempoo;
+    }
+
+    Block<Vector<Int> > spwb;
+    Block<Vector<Int> > startb;
+    Block<Vector<Int> > nchanb;
+    Block<Vector<Int> > incrb=blockChanInc_p;
+    vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
+    cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
+     	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
+    if(spwb.nelements()==0)
+        return False;
+
+    //cerr << "Original is " << blockChanStart_p[0] <<  "   " << blockChanWidth_p[0] << "  " <<  blockChanInc_p[0] << "   " 
+    //	 <<  blockSpw_p[0] << endl;
+    //vi.selectChannel(1, startb[0][0], nchanb[0][0], 1, spwb[0][0]); 
+    vi.selectChannel(blockNumChanGroup_p, startb, nchanb, incrb, spwb); 
+
+    return True;
+
 }
 
 void CubeSkyEquation::fixImageScale()

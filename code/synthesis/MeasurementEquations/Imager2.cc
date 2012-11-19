@@ -3810,6 +3810,10 @@ Bool Imager::unlock(){
       residuals_p[thismodel]->table().relinquishAutoLocks(True);
       residuals_p[thismodel]->table().unlock();
     }
+    if ((masks_p.nelements()> uInt(thismodel)) && (!masks_p[thismodel].null())) {
+      masks_p[thismodel]->table().relinquishAutoLocks(True);
+      masks_p[thismodel]->table().unlock();
+    }
   }
   if(lockCounter_p > 0 )
     --lockCounter_p;
