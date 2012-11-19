@@ -357,150 +357,154 @@ namespace casa{
 
       // 	  if (allPolsDone && allChansDone) break;
       // 	}
-
-
-      if(!(*(rowFlag_ptr+irow))){   
-	for(Int ichan=startChan; ichan< endChan; ichan++){
-	  if (*(imgWts_ptr + ichan+irow*nDataChan)!=0.0) {  
-	    targetIMChan=chanMap_p[ichan];
-	    
-	    if((targetIMChan>=0) && (targetIMChan<nGridChan)) {
-	      Double conjFreq=sqrt(2*conjRefFreq*conjRefFreq - freq[ichan]*freq[ichan]);
-	      Double wVal = vbs.vb_p->uvw()(irow)(2);
-	      Int wndx = cfb.nearestWNdx(abs(wVal)*freq[ichan]/C::c);
-	      Int fndx = cfb.nearestFreqNdx(freq[ichan]),
-		conjFNdx =cfb.nearestFreqNdx(conjFreq);
-	      
-	      Float s;
-	      //
-	      //------------------------------------------------------------------------------
-	      //
-	      // Using the int-index version for Freq, W and Muellerelements
-	      //	      cfb.getParams(cfRefFreq, s, support(0), support(1),0,wndx,0);
-	      cfb.getParams(cfRefFreq, s, support(0), support(1),fndx,wndx,0);
-	      sampling(0) = sampling(1) = s;
-
-	      cfScale = cfRefFreq/freq[ichan];
-	      cfScale = 1.0;
-	      scaledSampling[0] = (sampling[0]*cfScale);
-	      scaledSampling[1] = (sampling[1]*cfScale);
-	      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
-	      scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
-	      //
-	      //------------------------------------------------------------------------------
-	      //
-	      cfb.getParams(cfRefFreq, s, support(0), support(1),conjFNdx,wndx,0);
-	      sampling(0) = sampling(1) = s;
-	      cfScale = cfRefFreq/conjRefFreq;
-	      cfScale = 1.0;
-
-	      conjScaledSampling[0] = (sampling[0]*cfScale);
-	      conjScaledSampling[1] = (sampling[1]*cfScale);
-	      conjScaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
-	      conjScaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
-
-	      sgrid(pos,loc,off, phasor, irow, vbs.uvw_p, dphase_p[irow], freq[ichan], 
-		    uvwScale_p, offset_p, scaledSampling);
-
-	      if (onGrid(nx, ny, nw, loc, support)) 
-		{
-		  // Loop over all image-plane polarization planes.
-		  for(Int ipol=0; ipol< nDataPol; ipol++) 
-		    { 
-		      if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan))))
-			{  
-			  targetIMPol=polMap_p(ipol);
-			  if ((targetIMPol>=0) && (targetIMPol<nGridPol)) 
-			    {
-			      igrdpos[2]=targetIMPol; igrdpos[3]=targetIMChan;
-
-			      if(accumCFs)     allPolNChanDone_l(ipol,ichan,irow)=True;
-
-			      ConjPlane = cfMap_p[ipol];
-			      PolnPlane = conjCFMap_p[ipol];
-
-			      if(dopsf) nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
-			      else      nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
-					  (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
-			  
-			      norm = 0.0;
-			      // Loop over all relevant elements of
-			      // the Mueller matrix for the
-			      // polarization ipol.
-			      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
-				{
-				  Complex* convFuncV;
-				  Vector<Float> sampling;
-				  Vector<Int> support;
-				  if ( (!dopsf) && (CONJBEAMS==True)) // UUU : With conjugate beams...
+      
+      
+      if(!(*(rowFlag_ptr+irow)))
+	{   
+	  for(Int ichan=startChan; ichan< endChan; ichan++)
+	    {
+	      if (*(imgWts_ptr + ichan+irow*nDataChan)!=0.0) 
+		{  
+		  targetIMChan=chanMap_p[ichan];
+		  
+		  if((targetIMChan>=0) && (targetIMChan<nGridChan)) 
+		    {
+		      Double conjFreq=sqrt(2*conjRefFreq*conjRefFreq - freq[ichan]*freq[ichan]);
+		      Double wVal = vbs.vb_p->uvw()(irow)(2);
+		      Int wndx = cfb.nearestWNdx(abs(wVal)*freq[ichan]/C::c);
+		      Int fndx = cfb.nearestFreqNdx(freq[ichan]),
+			conjFNdx =cfb.nearestFreqNdx(conjFreq);
+		      
+		      Float s;
+		      //
+		      //------------------------------------------------------------------------------
+		      //
+		      // Using the int-index version for Freq, W and Muellerelements
+		      //	      cfb.getParams(cfRefFreq, s, support(0), support(1),0,wndx,0);
+		      cfb.getParams(cfRefFreq, s, support(0), support(1),fndx,wndx,0);
+		      sampling(0) = sampling(1) = s;
+		      
+		      cfScale = cfRefFreq/freq[ichan];
+		      cfScale = 1.0;
+		      scaledSampling[0] = (sampling[0]*cfScale);
+		      scaledSampling[1] = (sampling[1]*cfScale);
+		      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
+		      scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
+		      //
+		      //------------------------------------------------------------------------------
+		      //
+		      cfb.getParams(cfRefFreq, s, support(0), support(1),conjFNdx,wndx,0);
+		      sampling(0) = sampling(1) = s;
+		      cfScale = cfRefFreq/conjRefFreq;
+		      cfScale = 1.0;
+		      
+		      conjScaledSampling[0] = (sampling[0]*cfScale);
+		      conjScaledSampling[1] = (sampling[1]*cfScale);
+		      conjScaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
+		      conjScaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
+		      
+		      sgrid(pos,loc,off, phasor, irow, vbs.uvw_p, dphase_p[irow], freq[ichan], 
+			    uvwScale_p, offset_p, scaledSampling);
+		      
+		      if (onGrid(nx, ny, nw, loc, support)) 
+			{
+			  // Loop over all image-plane polarization planes.
+			  for(Int ipol=0; ipol< nDataPol; ipol++) 
+			    { 
+			      if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan))))
+				{  
+				  targetIMPol=polMap_p(ipol);
+				  if ((targetIMPol>=0) && (targetIMPol<nGridPol)) 
 				    {
-				      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
-							      wndx, mNdx, conjMNdx, ipol,  mRow);
-				      support.reference(conjScaledSupport);
-				      sampling.reference(conjScaledSampling);
+				      igrdpos[2]=targetIMPol; igrdpos[3]=targetIMChan;
+				      
+				      if(accumCFs)     allPolNChanDone_l(ipol,ichan,irow)=True;
+				      
+				      ConjPlane = cfMap_p[ipol];
+				      PolnPlane = conjCFMap_p[ipol];
+				      
+				      if(dopsf) nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
+				      else      nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
+						  (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
+				      
+				      norm = 0.0;
+				      // Loop over all relevant elements of
+				      // the Mueller matrix for the
+				      // polarization ipol.
+				      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
+					{
+					  Complex* convFuncV;
+					  Vector<Float> sampling;
+					  Vector<Int> support;
+					  if ( (!dopsf) && (CONJBEAMS==True)) // UUU : With conjugate beams...
+					    {
+					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
+								      wndx, mNdx, conjMNdx, ipol,  mRow);
+					      support.reference(conjScaledSupport);
+					      sampling.reference(conjScaledSampling);
+					    }
+					  else// UUU : Without conjugate beams...
+					    {
+					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
+								      wndx, mNdx, conjMNdx, ipol,  mRow);
+					      support.reference(scaledSupport);
+					      sampling.reference(scaledSampling);
+					    }
+					  
+					  convOrigin=cfShape/2;
+					  
+					  if (finitePointingOffsets)
+					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
+					  
+					  cacheAxisIncrements(cfShape, cfInc_p);
+					  
+					  norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
+								   support,sampling,
+								   off, convOrigin, cfShape, loc, igrdpos,
+								   sinDPA, cosDPA,finitePointingOffsets,accumWts);
+					}
+				      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
+				      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
 				    }
-				  else// UUU : Without conjugate beams...
-				    {
-				      convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
-							      wndx, mNdx, conjMNdx, ipol,  mRow);
-				      support.reference(scaledSupport);
-				      sampling.reference(scaledSampling);
-				    }
-				  
-				  convOrigin=cfShape/2;
-
-				  if (finitePointingOffsets)
-				    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
-				  
-				  cacheAxisIncrements(cfShape, cfInc_p);
-
-				  norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
-							   support,sampling,
-							   off, convOrigin, cfShape, loc, igrdpos,
-							   sinDPA, cosDPA,finitePointingOffsets,accumWts);
 				}
-			      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
-		      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
-			    }
+			    } // End poln-loop
 			}
-		    } // End poln-loop
+		    }
 		}
-	    }
-	  }
-	} // End chan-loop
-      }
+	    } // End chan-loop
+	}
     } // End row-loop
     // exit(0);
     T *tt=(T *)gridStore;
     grid.putStorage(tt,gDummy);
-}
+  }
   //
   //-----------------------------------------------------------------------------------
   // Re-sample VisBuffer to a regular grid (griddedData) (a.k.a. de-gridding)
   //
   void AWVisResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
   {
-
+    
     //    static int junk=0;
-
+    
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw, nCFFreq;
     Int achan, apol, rbeg, rend, PolnPlane, ConjPlane;
     Vector<Float> sampling(2),scaledSampling(2);
     Vector<Int> support(2),loc(3), iloc(4),tiloc(4), scaledSupport(2);
     Vector<Double> pos(2), off(3);
-
+    
     IPosition grdpos(4);
-
+    
     Vector<Complex> norm(4,0.0);
     Complex phasor, nvalue, wt;
     Vector<Int> cfShape=vbRow2CFBMap_p(0)->getStorage()(0,0,0)->getStorage()->shape().asVector();
     Vector<Double> pointingOffset((*vbRow2CFBMap_p(0)).getPointingOffset());
-
+    
     //    Vector<Int> convOrigin = (cfShape-1)/2;
     Vector<Int> convOrigin = (cfShape)/2;
     Double sinDPA=0.0, cosDPA=1.0, cfScale, cfRefFreq;
     //    Int wndx = 0, fndx=0;
-
+    
     rbeg=0;
     rend=vbs.nRow_p;
     rbeg = vbs.beginRow_p;
@@ -508,10 +512,10 @@ namespace casa{
     nx       = grid.shape()[0]; ny        = grid.shape()[1];
     nw       = cfShape[2];
     nGridPol = grid.shape()[2]; nGridChan = grid.shape()[3];
-
+    
     nDataPol  = vbs.flagCube_p.shape()[0];
     nDataChan = vbs.flagCube_p.shape()[1];
-
+    
     //
     // The following code reduces most array accesses to the simplest
     // possible to improve performance.  However this made no
@@ -523,13 +527,13 @@ namespace casa{
     Vector<Int> igrdpos(4);
     Double *freq=vbs.freq_p.getStorage(Dummy);
     Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
-
+    
     Matrix<Double>& uvw=vbs.uvw_p;
     Cube<Complex>&  visCube=vbs.visCube_p;
     Cube<Bool>&     flagCube=vbs.flagCube_p;
-
+    
     Vector<Int> gridInc, cfInc;
-
+    
     cacheAxisIncrements(grid.shape().asVector(), gridInc_p);
     cacheAxisIncrements(cfShape, cfInc_p);
     // Initialize the co-ordinates used for reading the CF values The
@@ -541,7 +545,7 @@ namespace casa{
 			       (fabs(pointingOffset(0))>0) ||  
 			       (fabs(pointingOffset(1))>0)
 			       );
-
+    
     for(Int irow=rbeg; irow<rend; irow++) {
       if(!rowFlag[irow]) {
 	CFBuffer& cfb = *vbRow2CFBMap_p(irow);
@@ -550,18 +554,18 @@ namespace casa{
 	cfb.getCoordList(fVals,wVals,mNdx, mVals, conjMNdx, conjMVals, fIncr, wIncr);
 	nw = wVals.nelements();
 	nCFFreq = fVals.nelements()-1;
-
+	
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
 	  achan=chanMap_p[ichan];
-
+	  
 	  if((achan>=0) && (achan<nGridChan)) {
 	    //	    lambda = C::c/freq[ichan];
 	    Double wVal = abs(vbs.vb_p->uvw()(irow)(2));
 	    Int wndx = cfb.nearestWNdx(wVal*freq[ichan]/C::c);
 	    Int fndx = cfb.nearestFreqNdx(freq[ichan]);
-
+	    
 	    //	    cerr << "Grid: " << ichan << " " << freq[ichan] << " " << fndx << endl;
-
+	    
 	    // if (nw > 1) wndx=SynthesisUtils::nint((wVal*freq[ichan]/C::c)/wIncr-1);
 	    // if (nCFFreq > 0) fndx = SynthesisUtils::nint((freq[ichan])/fIncr-1);
 	    Float s;
@@ -569,35 +573,35 @@ namespace casa{
 	    // cfb.getParams(cs,s,support(0),support(1),0,wndx,0);
 	    cfb.getParams(cfRefFreq,s,support(0),support(1),0,wndx,0);
 	    sampling(0) = sampling(1) = s;
-
+	    
 	    //cfScale = cfRefFreq/freq[ichan];
 	    cfScale = 1; 
 	    cfScale=1.0;
-
+	    
 	    scaledSampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
 	    scaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
 	    scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
 	    scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
-
+	    
 	    sgrid(pos,loc,off,phasor,irow,uvw,dphase_p[irow],freq[ichan],
 		  uvwScale_p,offset_p,sampling);
-
+	    
 	    //	    iloc[2]=max(0, min(nw, loc[2]));
-
+	    
 	    Bool isOnGrid;
 	    if (isOnGrid=onGrid(nx, ny, nw, loc, support)) {
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
-
+		
 		if(!flagCube(ipol,ichan,irow)) { 
 		  apol=polMap_p[ipol];
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
 		    igrdpos[2]=apol; igrdpos[3]=achan;
 		    nvalue=0.0;      norm(apol)=0.0;
-
+		    
 		    ConjPlane = cfMap_p(ipol);
 		    PolnPlane = conjCFMap_p(ipol);
-
+		    
 		    // With VBRow2CFMap in use, CF for each pol. plane is a separate 2D Array.  
 		    //		    iloc[3]=0;
 		    for (uInt mRow=0; mRow<conjMNdx[ipol].nelements(); mRow++)
@@ -617,7 +621,7 @@ namespace casa{
 			convOrigin = (cfShape)/2;
 			if (finitePointingOffset)
 			  cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
-
+			
 			//
 			// ALERT: The -1 in the expression for iloc
 			// was determined by comparing with a working
@@ -630,34 +634,34 @@ namespace casa{
 					   cfShape, loc, phasor, sinDPA, cosDPA, 
 					   finitePointingOffset, cached_phaseGrad_p);
 			/*
-			for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+			  for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
 			  {
-			    //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
-			    iloc(1)=(scaledSampling[1]*iy+off[1]);//+convOrigin[1];
-			    igrdpos[1]=loc[1]+iy;
-			    for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
-			      {
-				//				iloc(0)=(Int)(scaledSampling[0]*ix+off[0]-1);//+convOrigin[0];
-				iloc(0)=(scaledSampling[0]*ix+off[0]);//+convOrigin[0];
-				igrdpos[0]=loc[0]+ix;
-				tiloc=iloc;
-				if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
-				  {
-				    wt=getFrom4DArray((const Complex * __restrict__ &)convFuncV,
-						      tiloc,cfInc_p);
-				    if (wVal > 0.0) wt = conj(wt);
-				    norm(apol)+=(wt);
-				    if (finitePointingOffset) wt *= cached_phaseGrad_p(tiloc[0], tiloc[1]);
-				    // nvalue+=wt*grid(grdpos);
-				    // The following uses raw index on the 4D grid
-				    // nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
-				    nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
-				  }
-			      }
+			  //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
+			  iloc(1)=(scaledSampling[1]*iy+off[1]);//+convOrigin[1];
+			  igrdpos[1]=loc[1]+iy;
+			  for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+			  {
+			  //				iloc(0)=(Int)(scaledSampling[0]*ix+off[0]-1);//+convOrigin[0];
+			  iloc(0)=(scaledSampling[0]*ix+off[0]);//+convOrigin[0];
+			  igrdpos[0]=loc[0]+ix;
+			  tiloc=iloc;
+			  if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
+			  {
+			  wt=getFrom4DArray((const Complex * __restrict__ &)convFuncV,
+			  tiloc,cfInc_p);
+			  if (wVal > 0.0) wt = conj(wt);
+			  norm(apol)+=(wt);
+			  if (finitePointingOffset) wt *= cached_phaseGrad_p(tiloc[0], tiloc[1]);
+			  // nvalue+=wt*grid(grdpos);
+			  // The following uses raw index on the 4D grid
+			  // nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
+			  nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
 			  }
-		      }
+			  }
+			  }
+			  }
 			*/
-		    //		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
+			//		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
 		      }
 		    visCube(ipol,ichan,irow)=nvalue;
 		  }
@@ -687,11 +691,11 @@ namespace casa{
     Vector<Double> uvw_l(3,0); // This allows gridding of weights
 			       // centered on the uv-origin
     if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
-
+    
     pos(2)=sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
     loc(2)=SynthesisUtils::nint(pos[2]);
     off(2)=0;
-
+    
     for(Int idim=0;idim<2;idim++)
       {
 	pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+offset[idim];
@@ -700,7 +704,7 @@ namespace casa{
 	// The +1 below is a fix from Cyril Tasse <cyril.tasse@obspm.fr>
 	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
       }
-
+    
     if (dphase != 0.0)
       {
 	phase=-2.0*C::pi*dphase*freq/C::c;
@@ -726,12 +730,12 @@ namespace casa{
       }
     out[0]=ix+Origin[0];
     out[1]=iy+Origin[1];
-
+    
     onGrid = ((out[0] >= 0) && (out[0] < size[0]) &&
 	      (out[1] >= 0) && (out[1] < size[1]));
     return onGrid;
   }
-
+  
   template 
   void AWVisResampler::addTo4DArray(DComplex* __restrict__ & store,
 				    const Int* __restrict__ & iPos, 
@@ -742,7 +746,7 @@ namespace casa{
 				    const Int* __restrict__ & iPos, 
 				    const Vector<Int>& inc, 
   				    Complex& nvalue, Complex& wt) __restrict__;
-
+  
   // void lineCFArea(const Int& th,
   // 		  const Double& sinDPA,
   // 		  const Double& cosDPA,
@@ -772,7 +776,7 @@ namespace casa{
   // 	  }
   //     }
   // }
-
+  
   Complex AWVisResampler::getCFArea(Complex* __restrict__& convFuncV, 
 				    Double& wVal, 
 				    Vector<Int>& scaledSupport, 
@@ -792,7 +796,7 @@ namespace casa{
     Int Nth=1;
     Vector<Complex> cfAreaArr(Nth);
     Complex *cfAreaArrPtr=cfAreaArr.getStorage(dummy);
-
+    
     for(Int iy=-supportPtr[1]; iy <= supportPtr[1]; iy++) 
       {
 	iloc(1)=(Int)((samplingPtr[1]*iy+offPtr[1])-1);//+convOrigin[1];
