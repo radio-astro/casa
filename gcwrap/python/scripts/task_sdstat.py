@@ -282,8 +282,9 @@ def get_integf(suml, dabc):
     return suml * dabc
 
 def get_text_from_file(filename):
-    f = open(filename,'r')
-    rlines = f.readlines()
-    f.close()
-    return string.join(rlines,'')
+    text = ''
+    with open(filename, 'r') as f:
+        for line in f:
+            text += line
+    return text
 

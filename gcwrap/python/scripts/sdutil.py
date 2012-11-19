@@ -875,3 +875,14 @@ def __to_quantity_string(v,unit='arcsec'):
 def get_subtable_name(v):
     return v.replace('Table:','').strip()
 
+def read_factor_file(filename):
+    factor_list = []
+    with open(filename, 'r') as f:
+        for line in f:
+            split_line = line.split()
+            nelem = len(split_line)
+            factor = [0] * nelem
+            for j in xrange(nelem):
+                factor[j] = float(split_line[j])
+            factor_list.append(factor)
+    return factor_list

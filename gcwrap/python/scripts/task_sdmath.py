@@ -80,16 +80,7 @@ class sdmath_worker(sdutil.sdtask_template):
                 
             if isfactor:
                 # variable
-                f = open( self.filenames[i] )
-                lines = f.readlines()
-                f.close()
-                del f
-                for lin in range( len(lines) ):
-                    lines[lin] = lines[lin].rstrip('\n')
-                    lines[lin] = lines[lin].split()
-                    for ljn in range( len(lines[lin]) ):
-                        lines[lin][ljn] = float( lines[lin][ljn] )
-                scanlist[skey] = lines
+                scanlist[skey] = sdutil.read_factor_file(self.filenames[i])
             else:
                 # scantable
                 thisscan=sd.scantable(self.filenames[i],average=False,antenna=self.antenna)

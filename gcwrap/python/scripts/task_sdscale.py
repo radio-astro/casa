@@ -22,16 +22,7 @@ class sdscale_worker(sdutil.sdtask_template):
     def parameter_check(self):
         if isinstance( self.factor, str ):
             casalog.post( 'read factor from \'%s\'' %self.factor )
-            f = open( self.factor )
-            lines = f.readlines()
-            f.close()
-            del f
-            for i in range( len(lines) ):
-                lines[i] = lines[i].rstrip('\n')
-                lines[i] = lines[i].split()
-                for j in range( len(lines[i]) ):
-                    lines[i][j] = float( lines[i][j] )
-            self.factor = lines        
+            self.factor = sdutil.read_factor_file(self.factor)
 
     def initialize_scan(self):
         self.scan = sd.scantable(self.infile, average=False, antenna=self.antenna)
