@@ -37,4 +37,5 @@ def feather(imagename=None,highres=None,lowres=None, sdfactor=None, effdishdiam=
 		del imFea
 	except Exception, instance:
 		print '*** Error ***',instance
+		raise Exception, instance
 
