@@ -48,8 +48,8 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	  statsource -- Compute the statistics (Phase RMS, Disc) on this source only						
 	               default: '' (all)             										
 																
-	  smooth -- Smooth WVR data by this many samples before applying the correction						
-	             default: 1 (no smoothing) example: 3									
+	  smooth -- Smooth the calibration solution on the given timescale 
+	             default: '' (no smoothing), example: '3s' smooth on a timescale of 3 seconds									
 																
 	  scale -- Scale the entire phase correction by this factor								
 	             default: 1. (no scaling)											
@@ -69,19 +69,6 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	try:
 		casalog.origin('wvrgcal')
 
-		# compile parameter summary
-		
-		parsummary = 'vis=\"'+str(vis)+'\", caltable=\"'+str(caltable)+'\", toffset='+str(toffset)+','
-		casalog.post(parsummary)
-		parsummary = 'nsol='+str(nsol)+', segsource='+str(segsource)+', reversespw=\"'+str(reversespw)+'\",'
-		casalog.post(parsummary)
-		parsummary = 'disperse='+str(disperse)+', cont='+str(cont)+', wvrflag=\"'+str(wvrflag)+'\",'
-		casalog.post(parsummary)
-		parsummary = 'sourceflag=\"'+str(sourceflag)+'\", statfield='+str(statfield)+', statsource=\"'+str(statsource)+'\",'
-		casalog.post(parsummary)
-		parsummary = 'tie=\"'+str(tie)+'\", smooth='+str(smooth)+', scale='+str(scale)
-		casalog.post(parsummary)
-
 		if not (type(vis)==str) or not (os.path.exists(vis)):
 			raise Exception, 'Visibility data set not found - please verify the name'
 		
@@ -91,8 +78,17 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		if os.path.exists(caltable):
 			raise Exception, "Output gaintable %s already exists - will not overwrite." % caltable
 
-		execute_string=  '--ms ' + vis 
-		execute_string+= ' --output ' + caltable + ' --toffset ' + str(toffset)
+		execute_string=  '--ms ' + vis
+
+		smoothing = -1
+		if (type(smooth)==str and smooth!=''):
+			smoothing = qa.convert(qa.quantity(smooth), 's')['value']
+			execute_string+= ' --output ' + caltable + '_unsmoothed'
+		else:
+			execute_string+= ' --output ' + caltable
+
+		
+		execute_string+= ' --toffset ' + str(toffset)
 
 		if nsol>1:
 			if not segsource:
@@ -159,9 +155,6 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		if not (statsource==None or statsource=="") and type(statsource)==str:
 			execute_string += ' --statsource \"'+ statsource + '\"'
 
-		if (smooth > 1):
-			execute_string+= ' --smooth ' + str(smooth)
-
 		if (scale != 1.):
 			execute_string+= ' --scale ' + str(scale)
 		
@@ -185,6 +178,12 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		os.system('rm -rf '+templogfile)
 
 		if(rval == 0):
+			if (smoothing>0):
+				mycb = cbtool()
+				mycb.open(filename=vis, compress=False, addcorr=False, addmodel=False)
+				mycb.smooth(tablein=caltable+'_unsmoothed', tableout=caltable,
+					    smoothtype='mean', smoothtime=smoothing)
+				mycb.close()
 			return True
 		else:
 			if(rval < 32512):
