@@ -997,7 +997,7 @@ void QtProfile::plotMainCurve(){
 
 int QtProfile::findNearestChannel( float xval ) const {
 	//This finds the channel closest to the passed in value.
-	int channel_num = static_cast<unsigned int>(z_xval[0]);
+	int channel_num = 0;
 	bool forward = false;
 	int size = z_xval.size();
 	if(  z_xval[0] < z_xval[size-1] ){
