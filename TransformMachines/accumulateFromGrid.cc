@@ -75,15 +75,16 @@
       *locPtr=loc.getStorage(dummy),
       *cfInc_pPtr=cfInc_p.getStorage(dummy),
       *convOriginPtr=convOrigin.getStorage(dummy),
-      *gridInc_pPtr=gridInc_p.getStorage(dummy);
+      *gridInc_pPtr=gridInc_p.getStorage(dummy),
+      *phaseGradOriginPtr;
     Float *scaledSamplingPtr=scaledSampling.getStorage(dummy);
     Double *offsetPtr=offset.getStorage(dummy);
     Complex *cached_phaseGrad_pPtr=cached_phaseGrad_p.getStorage(dummy);
     Int phaseGradNx=cached_phaseGrad_p.shape()[0],
       phaseGradNy=cached_phaseGrad_p.shape()[1];
     Vector<Int> phaseGradOrigin_l; 
-    phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
-    phaseGradOriginPtr = phaseGradOrigin_l.getStorage(Dummy);
+    phaseGradOrigin_l = cached_phaseGrad_p.shape().asVector()/2;
+    phaseGradOriginPtr = phaseGradOrigin_l.getStorage(dummy);
     //---------Multi-threading related code ends-----------------
     Int Nth = 1;
 #ifdef HAS_OMP
