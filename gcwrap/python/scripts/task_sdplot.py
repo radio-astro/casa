@@ -19,6 +19,9 @@ class sdplot_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdplot_worker,self).__init__(**kwargs)
 
+    def __del__(self):
+        self.cleanup()
+
     def initialize_scan(self):
         isScantable = is_scantable(self.infile)
 
@@ -85,7 +88,10 @@ class sdplot_worker(sdutil.sdtask_template):
         if (self.outfile != '' ) and not ( self.plottype in ['azel','pointing']):
             # currently no way w/o screen display first
             sd.plotter.save(self.outfile)
-        
+
+    def cleanup(self):
+        sd.plotter._data = None
+
     def plot_pointing(self):
         kw = {'scan': self.scan}
         if self.outfile != '': kw['outfile'] = self.outfile
