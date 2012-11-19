@@ -1,4 +1,5 @@
-#if (1)
+#define _LOCAL_SINGLETHREADED True
+#if (_LOCAL_SINGLETHREADED)
   template <class T>
   void AWVisResampler::accumulateFromGrid(T& nvalue, 
      const T* __restrict__& grid, Vector<Int>& iGrdPos,
@@ -16,6 +17,8 @@
     // 	 << offset << endl
     // 	 << cfShape << endl
     // 	 << convOrigin << endl;
+    IPosition phaseGradOrigin_l; 
+    phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
     
     for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
       {
@@ -34,8 +37,9 @@
 	      if (wVal > 0.0) wt = conj(wt);
 
 	      norm+=(wt);
-	      if (finitePointingOffset) wt *= cached_phaseGrad_p(iCFPos[0],
-	       							 iCFPos[1]);
+	      if (finitePointingOffset) 
+		wt *= cached_phaseGrad_p(iCFPos[0]+phaseGradOrigin_l[0],
+					 iCFPos[1]+phaseGradOrigin_l[1]);
 	      //	      nvalue+=wt*grid(iGrdPos);
 	      nvalue +=  wt * getFrom4DArray(grid, iGrdPos, gridInc_p);
 	    }
@@ -77,6 +81,9 @@
     Complex *cached_phaseGrad_pPtr=cached_phaseGrad_p.getStorage(dummy);
     Int phaseGradNx=cached_phaseGrad_p.shape()[0],
       phaseGradNy=cached_phaseGrad_p.shape()[1];
+    Vector<Int> phaseGradOrigin_l; 
+    phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
+    phaseGradOriginPtr = phaseGradOrigin_l.getStorage(Dummy);
     //---------Multi-threading related code ends-----------------
     Int Nth = 1;
 #ifdef HAS_OMP
@@ -101,7 +108,7 @@
   private(wt,thID) \
   shared(scaledSupportPtr, scaledSamplingPtr, convOriginPtr, offsetPtr,\
 	 locPtr,cached_phaseGrad_pPtr, phaseGradNx, phaseGradNy,gridInc_pPtr, \
-	 cfInc_pPtr,iTHNValue, iTHNorm)					\
+	 cfInc_pPtr,iTHNValue, iTHNorm,phaseGradOriginPtr)		\
   num_threads(Nth)
 	{
 	  //=================================================================
@@ -135,8 +142,9 @@
 	      // 							 iCFPosPtr[1]);
 
 	      // Using raw indexing to make it thread safe
-	      if (finitePointingOffset) wt *= cached_phaseGrad_pPtr[localCFPos[0]*phaseGradNx+
-								    localCFPos[1]*phaseGradNy];
+	      if (finitePointingOffset) 
+		wt *= cached_phaseGrad_pPtr[(localCFPos[0]+phaseGradOriginPtr[0])*phaseGradNx+
+					    (localCFPos[1]+phaseGradOriginPtr[1])*phaseGradNy];
 	      //	      nvalue+=wt*grid(iGrdPos);
 	      //	      nvalue +=  wt * getFrom4DArray(grid, iGrdPosPtr, gridInc_pPtr);
 	 
