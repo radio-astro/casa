@@ -50,8 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWConvFuncEPJones(const CountedPtr<ATerm> ATerm,
 		      const CountedPtr<PSTerm> psTerm,
 		      const CountedPtr<WTerm> wTerm,
-		      const Bool narrowBand=True):
-      AWConvFunc(ATerm,psTerm,wTerm,narrowBand), imageDC_p(),imageObsInfo_p()
+		      const Bool wbAWP=False):
+      AWConvFunc(ATerm,psTerm,wTerm,wbAWP), imageDC_p(),imageObsInfo_p()
     {};
     ~AWConvFuncEPJones() {};
     AWConvFuncEPJones& operator=(const AWConvFuncEPJones& other);
