@@ -609,6 +609,10 @@ string QtDisplayPanelGui::addAnimationDockWidget(){
 void QtDisplayPanelGui::initAnimationHolder(){
 	if ( animationHolder == NULL ){
 		animationHolder = new AnimatorHolder( this );
+		connect(animationHolder, SIGNAL(lowerBoundAnimatorChannelChanged(int)), qdp_, SLOT(lowerBoundAnimatorChannelChanged(int)));
+		connect(animationHolder, SIGNAL(upperBoundAnimatorChannelChanged(int)), qdp_, SLOT(upperBoundAnimatorChannelChanged(int)));
+		connect(animationHolder, SIGNAL(lowerBoundAnimatorImageChanged(int)), qdp_, SLOT(lowerBoundAnimatorImageChanged(int)));
+		connect(animationHolder, SIGNAL(upperBoundAnimatorImageChanged(int)), qdp_, SLOT(upperBoundAnimatorImageChanged(int)));
 		connect(animationHolder, SIGNAL(goTo(int)), qdp_, SLOT(goTo(int)));
 		connect(animationHolder, SIGNAL(frameNumberEdited(int)), qdp_, SLOT(goTo(int)));
 		connect(animationHolder,  SIGNAL(setRate(int)), qdp_, SLOT(setRate(int)));
