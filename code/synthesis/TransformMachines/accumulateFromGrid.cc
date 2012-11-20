@@ -90,8 +90,8 @@
 #ifdef HAS_OMP
     Nth=max(omp_get_max_threads()-2,1);
 #endif
-    T iTHNValue[Nth];
-    Complex iTHNorm[Nth];
+    T *iTHNValue = new T[Nth];
+    Complex *iTHNorm = new Complex[Nth];
     // cerr << scaledSupport << endl
     // 	 << scaledSampling << endl
     // 	 << offset << endl
@@ -159,5 +159,7 @@
 	for (Int th=0;th<Nth;th++) {nvalue += iTHNValue[th]; norm += iTHNorm[th];}
       }
     nvalue *= conj(phasor)/norm;
+    delete [] iTHNorm;
+    delete [] iTHNValue;
   }
 #endif
