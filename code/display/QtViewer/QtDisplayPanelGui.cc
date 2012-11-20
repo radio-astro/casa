@@ -590,7 +590,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect( status_bar, SIGNAL(leave( )), this, SLOT(clear_status_bar( )) );
 
 	status_bar_timer->setSingleShot( true );
-	status_bar_timer->setInterval( 30000 );
+	status_bar_timer->setInterval( 15000 );
 	connect( status_bar_timer, SIGNAL(timeout()), this, SLOT(clear_status_bar( )) );
 
 }
