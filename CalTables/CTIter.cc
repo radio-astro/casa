@@ -38,6 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 ROCTIter::ROCTIter(NewCalTable tab, const Block<String>& sortcol) :
   sortCols_(sortcol,sortcol.nelements()),
   singleSpw_(False),
+  parentNCT_(tab),
   calCol_(tab),
   ti_(NULL),
   inct_(NULL),
@@ -82,6 +83,11 @@ void ROCTIter::next() {
   // attach accessors to new iteration
   this->attach();
 
+};
+
+void ROCTIter::next0() { 
+  // Advance the TableIterator
+  ti_->next();
 };
 
 Double ROCTIter::thisTime() const { return iROCTMainCols_->time()(0); };
