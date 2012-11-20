@@ -165,12 +165,16 @@ function set_A_ARCH {
 
 function set_A_ROOT {
     # Ignore any previous values.
-    local result="`echo ${CASAPATH} | awk '{print $1}'`"
-    if [ "x$result" = "x" ]; then
-        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${CASA_INSTALLATION_DIRECTORY%/*}"
-        else
-            result="${CASA_INSTALLATION_DIRECTORY}"
+    if  [ "$CASA_INSTALLATION_TYPE" = "unknown" ]; then
+        result="${CASA_INSTALLATION_DIRECTORY}"
+    else
+        local result="`echo ${CASAPATH} | awk '{print $1}'`"
+        if [ "x$result" = "x" ]; then
+            if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
+                result="${CASA_INSTALLATION_DIRECTORY%/*}"
+            else
+                result="${CASA_INSTALLATION_DIRECTORY}"
+            fi
         fi
     fi
     # On some platforms, A_ROOT ends with an ugly "<name>/..".  Strip if off.
