@@ -918,6 +918,12 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     void title(const string& value) ;
 
     /**
+     * Returns the byte order of the binary parts.
+     * @return a pointer of a ByteOrder instance.
+     */
+    const ByteOrder* byteOrder() const;
+
+    /**
      * Returns the start time.
      * @return a long long.
      */
@@ -1324,6 +1330,14 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     /**
      *
+     * Returns the position (0-based, relative to the beginning of the file) of this part when it has been read in a file.
+     * Has no meaning otherwise.
+     *
+     */
+    uint64_t actualDurationsPosition() const;
+
+    /**
+     *
      * Set ptr to the adress of the array of ActualTimes and returns the number of ActualTimes.
      * @param ptr a reference to a pointer on long long.
      * @return the number of ActualTimes.
@@ -1333,12 +1347,28 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     /**
      *
+     * Returns the position (0-based, relative to the beginning of the file) of this part when it has been read in a file.
+     * Has no meaning otherwise.
+     *
+     */
+    uint64_t actualTimesPosition() const;
+
+    /**
+     *
      * Set ptr to the adress of the array of AutoData and returns the number of AutoData.
      * @param ptr a reference to a pointer on float.
      * @return the number of AutoData.
      *
      */
     unsigned long int autoData(const AUTODATATYPE* & ptr) const ;
+
+    /**
+     *
+     * Returns the position (0-based, relative to the beginning of the file) of this part when it has been read in a file.
+     * Has no meaning otherwise.
+     *
+     */
+    uint64_t autoDataPosition() const;
 
     /**
      *
@@ -1369,6 +1399,14 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
     unsigned long int crossData(const FLOATCROSSDATATYPE* & ptr) const;
 
     /**
+     *
+     * Returns the position (0-based, relative to the beginning of the file) of this part when it has been read in a file.
+     * Has no meaning otherwise.
+     *
+     */
+    uint64_t crossDataPosition() const;
+
+    /**
      * Return the type of cross data values.
      * @return a value of the enumeration PrimitiveDataTypeMod::PrimitiveDataType.
      *
@@ -1388,12 +1426,28 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     /**
      *
+     * Returns the position (0-based, relative to the beginning of the file) of this part when it has been read in a file.
+     * Has no meaning otherwise.
+     *
+     */
+    uint64_t flagsPosition() const;
+
+    /**
+     *
      * Set ptr to the adress of the array of ZeroLags and returns the number of ZeroLags.
      * @param ptr a reference to a pointer on float.
      * @return the number of autoData.
      *
      */
     unsigned long int zeroLags(const ZEROLAGSTYPE* & ptr) const;
+
+    /**
+     *
+     * Returns the position (0-based, relative to the beginning of the file) of this part when it has been read in a file.
+     * Has no meaning otherwise.
+     *
+     */
+    uint64_t zeroLagsPosition() const;
 
     /**
      * Returns true if and only if this corresponds to an aborted [sub]integration.
@@ -1435,18 +1489,24 @@ form an SDMDataObject which is in turn converted into a MIME message, </li>
 
     const ACTUALTIMESTYPE * actualTimes_;
     unsigned long int nActualTimes_;
+    uint64_t actualTimesPosition_;
     const ACTUALDURATIONSTYPE * actualDurations_;
     unsigned long int nActualDurations_;
+    uint64_t actualDurationsPosition_;
     const ZEROLAGSTYPE* zeroLags_;
     unsigned long int nZeroLags_;
+    uint64_t zeroLagsPosition_;
     const FLAGSTYPE* flags_;    
     unsigned long int nFlags_;
+    uint64_t flagsPosition_;
     const INTCROSSDATATYPE* longCrossData_;
     const SHORTCROSSDATATYPE* shortCrossData_;
     const FLOATCROSSDATATYPE* floatCrossData_;
     unsigned long int nCrossData_;
+    uint64_t crossDataPosition_;
     const AUTODATATYPE* autoData_;
     unsigned long int nAutoData_;
+    uint64_t autoDataPosition_;
 
     string xsiType() const;
 

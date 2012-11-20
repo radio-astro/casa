@@ -458,6 +458,8 @@ namespace asdmbinaries {
   string SDMDataObject::title() const { TSTVALID(); return title_; }
   void SDMDataObject::title(const string& value) { title_ = value; }
 
+  const ByteOrder* SDMDataObject::byteOrder() const { TSTVALID(); return byteOrder_; }
+
   unsigned long long SDMDataObject::startTime() const {TSTVALID(); return startTime_; }
   void SDMDataObject::startTime(unsigned long long value) { startTime_ = value; }
   
@@ -1180,8 +1182,11 @@ namespace asdmbinaries {
 
    
   unsigned long int SDMDataSubset::actualDurations(const ACTUALDURATIONSTYPE* & ptr) const {ptr = actualDurations_; return nActualDurations_;}
+  uint64_t SDMDataSubset::actualDurationsPosition() const { return actualDurationsPosition_; }
   unsigned long int SDMDataSubset::actualTimes(const ACTUALTIMESTYPE* & ptr) const { ptr = actualTimes_; return nActualTimes_;}
+  uint64_t SDMDataSubset::actualTimesPosition() const { return actualTimesPosition_; }
   unsigned long int SDMDataSubset::autoData(const AUTODATATYPE* & ptr)const  { ptr = autoData_; return nAutoData_; }
+  uint64_t SDMDataSubset::autoDataPosition() const { return autoDataPosition_; }
   unsigned long int SDMDataSubset::crossData(const SHORTCROSSDATATYPE* & ptr) const { 
     if (owner_ && (owner_->isTP() || owner_->correlationMode() == AUTO_ONLY)) Utils::invalidCall("SDMDataSubset::crossData", owner_);
     ptr = shortCrossData_; return nCrossData_; 
@@ -1199,13 +1204,15 @@ namespace asdmbinaries {
     if (owner_ && (owner_->isTP() || owner_->correlationMode() == AUTO_ONLY)) Utils::invalidCall("SDMDataSubset::crossData", owner_);
     ptr = floatCrossData_; return nCrossData_; 
   }
-
+  uint64_t SDMDataSubset::crossDataPosition() const { return crossDataPosition_; }
   unsigned long int SDMDataSubset::flags(const FLAGSTYPE* & ptr) const { ptr = flags_; return nFlags_; }
+  uint64_t SDMDataSubset::flagsPosition() const { return flagsPosition_; }
 
   unsigned long int SDMDataSubset::zeroLags(const ZEROLAGSTYPE* & ptr) const { 
     if (owner_ && owner_->isTP()) Utils::invalidCall("SDMDataSubset::zeroLags", owner_);
     ptr = zeroLags_; return nZeroLags_;
   }
+  uint64_t SDMDataSubset::zeroLagsPosition() const { return zeroLagsPosition_; }
   
   bool SDMDataSubset::aborted() const {return aborted_; }
   unsigned long long SDMDataSubset::abortTime() const {return abortTime_; }  
