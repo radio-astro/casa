@@ -59,6 +59,8 @@ namespace casa {
 		void removeRegion(QtRegionState*);
 		void selectRegion(QtRegionState*);
 
+		void status( const std::string &msg, const std::string &type="info" );
+
 		/* QStackedWidget *regionStack( ) { return regions; } */
 
 		/* void showStats( const QString &stats ); */

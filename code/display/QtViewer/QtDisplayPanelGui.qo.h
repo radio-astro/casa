@@ -36,6 +36,7 @@
 #include <QTextEdit>
 #include <QHash>
 #include <QFont>
+
    //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
    //#   because they'll have Qt includes.
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
@@ -100,6 +101,9 @@ class QtDisplayPanelGui : public QtPanelBase {
 
   // access our logger...
   LogIO &logIO( ) { return logger; }
+
+  // enter status information...
+  void status( const std::string &s, const std::string &type="info" );
   
   // access to graphics panel 'base'....
   QtDisplayPanel* displayPanel() { return qdp_;  }
@@ -522,8 +526,14 @@ class QtDisplayPanelGui : public QtPanelBase {
   QDockWidget*  trkgDockWidget_;
   QWidget*    trkgWidget_;
 
+  QTimer *status_bar_timer;
+  QString status_bar_state;
+  QString status_bar_stylesheet;
+
  private slots:
   void incrementMovieChannel();
+  void clear_status_bar( );
+  void reset_status_bar( );
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
 
@@ -588,7 +598,26 @@ class TrackBox : public QGroupBox {
 
 };
 
-  
+
+namespace viewer {
+	namespace hidden {
+		// Qt's meta object features not supported for nested classes...
+		// so this class cannot be nested in QtDisplayPanelGui...
+		class display_panel_gui_status : public QStatusBar {
+			Q_OBJECT;
+			public:
+				display_panel_gui_status( QWidget *parent = 0 ) : QStatusBar(parent) { }
+				~display_panel_gui_status( ) { }
+			signals:
+				void enter( );
+				void leave( );
+
+		    protected:
+				void enterEvent( QEvent* );
+				void leaveEvent( QEvent* );
+		};
+	}
+}
 
 
 } //# NAMESPACE CASA - END

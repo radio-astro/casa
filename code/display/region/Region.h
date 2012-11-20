@@ -281,6 +281,9 @@ namespace casa {
 
 		void clearMouseInRegion( ) { mouse_in_region = false; }
 
+		// update status information...
+		virtual void status( const std::string &msg, const std::string &type="info" ) = 0;
+
 		virtual bool markCenter( ) const DISPLAY_PURE_VIRTUAL(Region::markCenter,true);
 
 		virtual bool skyComponent( ) const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);

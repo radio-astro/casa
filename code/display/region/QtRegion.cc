@@ -106,6 +106,8 @@ namespace casa {
 	    }
 	}
 
+		void QtRegion::status( const std::string &msg, const std::string &type ) { dock_->status(msg,type); }
+
 	bool QtRegion::mark_toggle( ) {
 	    bool result = mystate->mark_toggle( );
 	    emit selectionChanged(this,result);
