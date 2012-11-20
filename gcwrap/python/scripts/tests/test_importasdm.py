@@ -155,9 +155,17 @@ class test_base(unittest.TestCase):
         default(importasdm)
 
     def setUp_xosro(self):
-#        self.asdm = 'X_osro_scan1'
         self.asdm = 'X_osro_013.55979.93803716435'
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/flagdata/'
+        if(not os.path.lexists(self.asdm)):
+            os.system('ln -s '+datapath+self.asdm +' '+self.asdm)
+            
+        default(importasdm)
+
+
+    def setUp_autocorr(self):
+        self.asdm = 'AutocorrASDM'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/importasdm/'
         if(not os.path.lexists(self.asdm)):
             os.system('ln -s '+datapath+self.asdm +' '+self.asdm)
             
@@ -365,8 +373,40 @@ class asdm_import2(test_base):
         self.assertTrue(flagcmddict, 'Some XML file may contain white spaces not handled by readXML')
         
         self.assertEqual(flagcmddict.keys().__len__(),214)
+
+class asdm_import3(test_base):
+    
+    def setUp(self):
+        self.setUp_autocorr()
+        
+    def tearDown(self):
+        os.system('rm -rf '+self.asdm)
+        os.system('rm -rf x54.ms*')
+        os.system('rm -rf scan3.ms*')
+        
+    def test_autocorr(self):
+        '''importasdm: auto-correlations should be written to online flags'''
+        outfile='scan3flags.txt'
+        importasdm(asdm=self.asdm, vis='x54.ms', scans='3', savecmds=True, outfile=outfile)
+        self.assertTrue(os.path.exists(outfile))
+        ff = open(outfile,'r')
+        cmds = ff.readlines()
+        self.assertEqual(cmds.__len__(), 2832)
+        
+        # auto-correlation should have been written to online flags               
+        self.assertTrue(cmds[0].__contains__('&&*'))
+        
+    def test_flagautocorr(self):
+        '''importasdm: test that auto-correlations from online flags are correctly flagged'''        
+        importasdm(asdm=self.asdm, vis='scan3.ms', scans='3', applyflags=True)
+        res = flagdata('scan3.ms',mode='summary', basecnt=True)
+        self.assertEqual(res['flagged'], 298)
+        self.assertEqual(res['baseline']['DA44&&DA44']['flagged'], 76)
+        self.assertEqual(res['baseline']['PM03&&PM03']['flagged'], 16)
+
+        
         
 def suite():
-    return [asdm_import1,asdm_import2]        
+    return [asdm_import1, asdm_import2, asdm_import3]        
         
     

@@ -462,7 +462,7 @@ def readXML(sdmfile, mytbuff):
         flagdict[fid]['id'] = fidstr
         rowid = rownode.getElementsByTagName('antennaId')
         antid = rowid[0].childNodes[0].nodeValue
-    # check if there is a numAntenna specified (new format)
+        # check if there is a numAntenna specified (new format)
         rownant = rownode.getElementsByTagName('numAntenna')
         antname = ''
         if rownant.__len__() > 0:
@@ -472,7 +472,17 @@ def readXML(sdmfile, mytbuff):
                 casalog.post('Found numAntenna=' + str(nant)
                              + ' must be a new style SDM')
             newsdm = 1
-            if nant > 0:
+            # CAS-4698. Flag auto-correlations when there is
+            # only one antenna
+            if nant == 1:
+                aid = xid[2]
+                ana = antdict[aid]
+                if antname == '':
+                    antname = ana+'&&*'
+                else:
+                    antname += ',' + ana
+                    
+            elif nant > 1:
                 for ia in range(nant):
                     aid = xid[2 + ia]
                     ana = antdict[aid]
@@ -485,7 +495,7 @@ def readXML(sdmfile, mytbuff):
                 antname = ''
         else:
             if newsdm < 0:
-                casalog.post('No numAntenna entry found, must be a old style SDM'
+                casalog.post('No numAntenna entry found, must be an old style SDM'
                              )
             newsdm = 0
             nant = 1
