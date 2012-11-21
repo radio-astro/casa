@@ -58,7 +58,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                          itsInteractiveIterDone(0),
                          itsMajorDone(0),                         
                          itsUpdatedModelFlag(false),
-                         itsModelFlux(0),
                          itsSummaryMinor(IPosition(2,5,0)),
                          itsSummaryMajor(IPosition(1,0))
 
