@@ -207,7 +207,7 @@
     confusing way!  Generally, if fluxdensity[0] (Stokes I) is &lt;= 0, it
     will be ignored.  If it is &lt; 0, standard (which has a default) will
     be used to calculate flux density as a function of frequency, even if
-    modimage is specified.  If is is exactly 0 and modimage is given, the
+    modimage is specified.  If it is exactly 0 and modimage is given, the
     brightness of the model image will be used as is.  If fluxdensity([0])
     is &gt; 0, it will be used.  The latter two options come at the price of
     disabling frequency scaling, i.e. the same fluxdensity will be used for
