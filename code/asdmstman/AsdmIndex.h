@@ -69,8 +69,7 @@ struct AsdmIndex
 
   // Get number of rows spanned by the data blocks.
   uInt nrow() const
-  //{ return nBl*nSpw; }
-  { return nBl; } // 19 Nov 2012 . Michel Caillat
+  { return nBl*nSpw; } 
 
   //# Data members.
   uInt  fileNr;
