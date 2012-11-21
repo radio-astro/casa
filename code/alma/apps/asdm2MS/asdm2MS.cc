@@ -1777,8 +1777,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	  if (correlationMode == CROSS_AND_AUTO || correlationMode == CROSS_ONLY) {
 	    for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
 	      unsigned int ddIndex = dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()];
-	      for (unsigned int iA1 = 0; iA1 < antennaIds.size() - 1; iA1++)
-		for (unsigned int iA2 = iA1 + 1; iA2 < antennaIds.size(); iA2++) {
+	      for (unsigned int iA2 = 1; iA2 < antennaIds.size(); iA2++)
+		for (unsigned int iA1 = 0; iA1 < iA2; iA1++) {
 		  cross_antenna1_vv[iDD].push_back(antennaIds[iA1].getTagValue());
 		  cross_antenna2_vv[iDD].push_back(antennaIds[iA2].getTagValue());
 		  cross_dataDescId_vv[iDD].push_back(ddIndex);
