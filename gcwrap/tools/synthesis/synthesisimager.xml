@@ -168,6 +168,19 @@ Define the image coordinate systems, image shapes and the number of images (mult
 
 <!-- ===================================== -->
 
+   <method type="function" name="cleanComplete">
+   <shortdescription>Return true when we have completed this clean</shortdescription>
+
+<description>
+</description>
+<input>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
 <!-- 
 
    <method type="function" name="initloops">
@@ -190,15 +203,8 @@ Define the image coordinate systems, image shapes and the number of images (mult
 
 <description>
 </description>
-<input>
-
-     <param type="record" name="loopcontrols"> 
-     <description> Loop Controls</description>     
-     <value type="record"></value>
-     </param>
-
-</input>
-<returns type="bool"/>
+<input/>
+<returns type="record"/>
 </method>
 
 <!-- ===================================== -->
@@ -208,15 +214,8 @@ Define the image coordinate systems, image shapes and the number of images (mult
 
 <description>
 </description>
-<input>
-
-     <param type="record" name="loopcontrols"> 
-     <description> Loop Controls</description>     
-<!--     <value type="record"></value> -->
-     </param>
-
-</input>
-<returns type="record"/>
+<input/>
+<returns type="bool"/>
 </method>
 
 <!-- ===================================== -->
@@ -227,14 +226,31 @@ Define the image coordinate systems, image shapes and the number of images (mult
 
 <description>
 </description>
-<input>
+<input/>
+<returns type="bool"/>
+</method>
 
-     <param type="record" name="loopcontrols"> 
-     <description> Loop Controls</description>     
-<!--      <value type="record"></value> -->
-     </param>
+<!-- ===================================== -->
 
-</input>
+
+   <method type="function" name="getiterationdetails">
+   <shortdescription>Return a record with the details of the iteration</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+
+   <method type="function" name="getiterationsummary">
+   <shortdescription>Return a record with a summary of the iteration</shortdescription>
+
+<description>
+</description>
+<input/>
 <returns type="record"/>
 </method>
 

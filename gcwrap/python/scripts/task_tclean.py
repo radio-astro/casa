@@ -16,7 +16,9 @@ import copy
 def tclean(vis='', field='', spw='',
            imagename='',nchan=1,
            startmodel='',
-           niter=0, threshold=0.0, loopgain=0.1, maxcycleniter=-1, cyclefactor=1, minpsffraction=0.05, maxpsffraction=0.8,
+           niter=0, threshold=0.0, loopgain=0.1,
+           maxcycleniter=-1, cyclefactor=1,
+           minpsffraction=0.05, maxpsffraction=0.8,
            usescratch=True, clusterdef=''):
 
     #casalog.post('This is an empty task. It is meant only to build/test/maintain the interface for the refactored imaging code. When ready, it will be offered to users for testing.','WARN')
@@ -27,7 +29,7 @@ def tclean(vis='', field='', spw='',
     params['imagedefinition']={'imagename':imagename, 'nchan':nchan}
     params['imaging']={'startmodel':startmodel}
     params['deconvolution']={}
-    params['iteration']={'niter':niter, 'threshold':threshold, 'loopgain':loopgain, 'maxcycleniter':maxcycleniter, 'cyclefactor':cyclefactor , 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction}
+    params['iteration']={'niter':niter, 'threshold':threshold, 'loopgain':loopgain, 'cycleniter':maxcycleniter, 'cyclefactor':cyclefactor , 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction}
     params['other']={'clusterdef':clusterdef}
 
     # Instantiate the Imager class
@@ -64,7 +66,6 @@ class PySynthesisImager:
         self.toolsi=None #gentools(['si'])[0]
         self.casalog = casalog
         self.params = params
-        self.loopcontrols = {}
         self.listofimagedefinitions = []
         self.casalog.origin('tclean')
 
@@ -74,10 +75,8 @@ class PySynthesisImager:
         self.casalog.post('Verifying Input Parameters')
         # Init the error-string
         errs = "" 
-
-        errs = errs + self.checkAndFixSelectionPars( self.params['dataselection'] )
-
-        errs = errs + self.checkAndFixImageCoordPars( self.params['imagedefinition'] )
+        errs += self.checkAndFixSelectionPars( self.params['dataselection'] )
+        errs += self.checkAndFixImageCoordPars(self.params['imagedefinition'] )
 
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
@@ -88,11 +87,9 @@ class PySynthesisImager:
     def initialize(self, toolsi=None):
         self.casalog.origin('tclean.initialize')
         if toolsi==None:
-            #self.toolsi = gentools(['si'])[0]
-            self.toolsi = casac.synthesisimager() ##gentools(['si'])[0]
+            self.toolsi = casac.synthesisimager() 
             toolsi = self.toolsi
         toolsi.selectdata(selpars=self.params['dataselection'])
-
         impars = copy.deepcopy( self.params['imagedefinition'] )
 
         ## Start a loop on 'multi-fields' here....
@@ -106,40 +103,40 @@ class PySynthesisImager:
             toolsi.initmapper()
         ## End loop on 'multi-fields' here....
 
-        self.loopcontrols = toolsi.setupiteration(iterpars=self.params['iteration'] ) # From ParClean loopcontrols gets overwritten, but it is always with the same thing. Try to clean this up. 
-
-        ##toolsi.initcycles()
+        toolsi.setupiteration(iterpars=self.params['iteration'])
+        # From ParClean loopcontrols gets overwritten, but it is always with the same thing. Try to clean this up. 
 
 
     def runMajorCycle(self,toolsi=None):
         self.casalog.origin('tclean.runMajorCycle')
         if toolsi==None:
             toolsi = self.toolsi
-        self.loopcontrols.update( toolsi.runmajorcycle( self.loopcontrols ) ) 
-        # In this prev statement, send in updated model to override default.
-
+        toolsi.runmajorcycle()
 
     def runMinorCycle(self, toolsi=None):
         self.casalog.origin('tclean.runMinorCycle')
         if toolsi==None:
             toolsi = self.toolsi
-        self.loopcontrols.update( toolsi.runminorcycle( self.loopcontrols ) )
+        toolsi.runminorcycle()
 
-    def runLoops(self):
+    def runLoops(self, toolsi=None):
         self.casalog.origin('tclean.runLoops')
+        if toolsi==None:
+            toolsi = self.toolsi
         self.runMajorCycle()
-        while not self.loopcontrols['stop']:  # Make the tool take loopcontrols as in/out ( not const ! )
+        while not toolsi.cleanComplete():
             self.runMinorCycle()
             self.runMajorCycle()
 
     def finalize(self, toolsi=None):
         if toolsi==None:
             toolsi = self.toolsi
-        toolsi.endloops( self.loopcontrols )
-        #toolsi.done()
+        toolsi.endloops()
 
-    def returninfo(self):
-        return self.loopcontrols
+    def returninfo(self, toolsi=None):
+        if toolsi==None:
+            toolsi = self.toolsi
+        return toolsi.getiterationsummary()
 
 
     ###### Start : Parameter-checking functions ##################
@@ -196,7 +193,10 @@ class PySynthesisImager:
 ###################################################
 
 class ParallelPySynthesisImager(PySynthesisImager):
-    """ Class to do imaging and deconvolution, with major cycles distributed across cluster nodes """
+    '''
+    Class to do imaging and deconvolution, with major cycles
+    distributed across cluster nodes
+    '''
 
     def __init__(self,casalog,params):
         PySynthesisImager.__init__(self,casalog,params)
@@ -205,9 +205,7 @@ class ParallelPySynthesisImager(PySynthesisImager):
         # Initialize a list of synthesisimager tools
         self.toollist = []
         for ch in range(0,self.nchunks):
-            #self.toollist.append( gentools(['si'])[0]  )
-            self.toollist.append( casac.synthesisimager() ) ## gentools(['si'])[0]  )
-
+            self.toollist.append( casac.synthesisimager() ) 
 
     def initialize(self):
         selpars = copy.deepcopy( self.params['dataselection'] )
@@ -216,16 +214,15 @@ class ParallelPySynthesisImager(PySynthesisImager):
             casalog.post('Initialize for chunk '+str(ch))
 
             for dat in range(0,len( selpars['spw'] )):
-                self.params['dataselection']['spw'][dat] = selpars['spw'][dat] + ':'+str(ch)
+                self.params['dataselection']['spw'][dat] =  selpars['spw'][dat] + ':'+str(ch)
 
             PySynthesisImager.initialize(self, self.toollist[ch] )
         self.params['dataselection'] = copy.deepcopy(selpars)
 
     def runMajorCycle(self):
-        lcontrols = copy.deepcopy( self.loopcontrols )
         for ch in range(0,self.nchunks):
-            self.loopcontrols = copy.deepcopy( lcontrols )
-            PySynthesisImager.runMajorCycle(self, self.toollist[ch] )  # Send in updated model as startmodel..
+            # Send in updated model as startmodel..
+            PySynthesisImager.runMajorCycle(self, self.toollist[ch])
         self.gatherImages()
 
     def runMinorCycle(self):
@@ -236,9 +233,7 @@ class ParallelPySynthesisImager(PySynthesisImager):
         casalog.post('Mark updated model as input to all major cycles') 
 
     def finalize(self):
-        self.toollist[0].endloops( self.loopcontrols )
-        #for ch in range(0,self.nchunks):
-        #    self.toollist[ch].done()
+        self.toollist[0].endloops()
 
     def gatherImages(self):
         casalog.origin('parallel.tclean.gatherimages')

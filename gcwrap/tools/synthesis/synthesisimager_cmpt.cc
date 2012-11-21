@@ -113,16 +113,13 @@ synthesisimager::defineimage(const casac::record& impars)
   return rstat;
 }
 
-casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
+casac::record* synthesisimager::getiterationdetails()
 {
-  //Bool rstat(False);
   casac::record* rstat(0);
 
   try 
     {
-      casa::Record recpars = *toRecord( iterpars );
-      casa::SIIterBot loopcontrols = itsImager->setupIteration( recpars );
-      rstat=fromRecord(loopcontrols);
+      rstat=fromRecord(itsImager->getIterationDetails());
     } 
   catch  (AipsError x) 
     {
@@ -130,6 +127,39 @@ casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
     }
   
   return rstat;
+}
+
+casac::record* synthesisimager::getiterationsummary()
+{
+  casac::record* rstat(0);
+
+  try 
+    {
+      rstat=fromRecord(itsImager->getIterationSummary());
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+
+
+casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
+{
+
+  try 
+    {
+      casa::Record recpars = *toRecord( iterpars );
+      itsImager->setupIteration( recpars );
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return getiterationdetails();
 }
 
 bool synthesisimager::initmapper()
@@ -164,56 +194,13 @@ bool synthesisimager::initcycles()
   return rstat;
 }
 
-   /*
-casac::record* synthesisimager::initloops()
+bool synthesisimager::cleanComplete()
 {
-  casac::record* rstat(0);
-
-  try 
-    {
-      Record loopcontrols = itsImager->initLoops();
-      rstat=fromRecord(loopcontrols);
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-   */
-
-  bool synthesisimager::endloops(const casac::record& loopcontrols)
-  {
   Bool rstat(False);
 
   try 
     {
-      casa::Record rec = *toRecord(loopcontrols);
-      casa::SIIterBot lcrec(rec);
-      itsImager->endLoops(lcrec);
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-  }
-
-  casac::record* synthesisimager::runmajorcycle(const ::casac::record& loopcontrols)
-{
-    casac::record* rstat(0);
-    //bool rstat(0);
-
-  try 
-    {
-      casa::Record inrec = *toRecord(loopcontrols);
-      casa::SIIterBot lcrec(inrec);
-      itsImager->runMajorCycle(lcrec);
-      rstat=fromRecord(lcrec);
-      //      loopcontrols = *fromRecord(inrec);
-
+      rstat = itsImager->cleanComplete( );
     } 
   catch  (AipsError x) 
     {
@@ -223,25 +210,51 @@ casac::record* synthesisimager::initloops()
   return rstat;
 }
 
-  casac::record* synthesisimager::runminorcycle(const ::casac::record& loopcontrols)
-{
-   casac::record* rstat(0);
-   //bool rstat(0);
 
+   casac::record* synthesisimager::endloops()
+  {
   try 
     {
-      casa::Record inrec = *toRecord(loopcontrols);
-      casa::SIIterBot lcrec(inrec);
-      itsImager->runMinorCycle(lcrec);
-      rstat=fromRecord(lcrec);
-      //      loopcontrols = *fromRecord(inrec);
+      itsImager->endLoops();
     } 
   catch  (AipsError x) 
     {
       RETHROW(x);
     }
+  
+  return getiterationdetails();
+  }
 
-   return rstat;
+bool synthesisimager::runmajorcycle()
+{
+  Bool rstat(False);
+
+  try 
+    {
+      itsImager->runMajorCycle();
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+
+bool synthesisimager::runminorcycle()
+{
+  Bool rstat(False);
+  
+  try 
+    {
+      itsImager->runMinorCycle();
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
 }
 
 bool
