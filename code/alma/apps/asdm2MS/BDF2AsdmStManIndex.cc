@@ -122,7 +122,7 @@ void BDF2AsdmStManIndex::appendAutoIndex(unsigned int           iDD,
   asdmIndex.row		 = 0;   // Temporarily because we do not know yet how the MS MAIN DATA is going to be ordered.
   asdmIndex.scaleFactors = scaleFactors;
   asdmIndex.fileOffset	 = fileOffset;
-  asdmIndex.blockOffset  = iDD * nChan * nPol * numberOfBytesPerValue;
+  asdmIndex.blockOffset  = iDD * nChan * nPol;
   asdmIndex.dataType     = 10;
 
   autoIndexes_vv[iDD].push_back(asdmIndex);
@@ -153,7 +153,7 @@ void BDF2AsdmStManIndex::appendWVRIndex(unsigned int            iDD,
   asdmIndex.row		 = 0;   // Temporarily because we do not know yet how the MS MAIN DATA is going to be ordered.
   asdmIndex.scaleFactors = scaleFactors;
   asdmIndex.fileOffset	 = fileOffset;
-  asdmIndex.blockOffset  = iDD * nChan * nPol * numberOfBytesPerValue;
+  asdmIndex.blockOffset  = iDD * nChan * nPol;
   asdmIndex.dataType     = 10;  // was 11.
 
   autoIndexes_vv[iDD].push_back(asdmIndex);
@@ -186,7 +186,7 @@ void BDF2AsdmStManIndex::appendCrossIndex(unsigned int          iDD,
   asdmIndex.row		 = 0;   // Temporarily because we do not know yet how the MS MAIN DATA is going to be ordered.
   asdmIndex.scaleFactors = scaleFactors;
   asdmIndex.fileOffset	 = fileOffset;
-  asdmIndex.blockOffset  = iDD * nChan * nPol * numberOfBytesPerValue;
+  asdmIndex.blockOffset  = iDD * nChan * nPol;
   switch (dataType) {
   case INT16_TYPE : asdmIndex.dataType = 0; break;
   case INT32_TYPE : asdmIndex.dataType = 1; break;
