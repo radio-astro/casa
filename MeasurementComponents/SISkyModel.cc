@@ -78,18 +78,19 @@ SISkyModel::~SISkyModel()
   {
     LogIO os( LogOrigin("SISkyModel","runMinorCycle",WHERE) );
 
-    loopcontrols.setPeakResidual( mappers.findPeakResidual() );
-    loopcontrols.setPsfSidelobe( mappers.findMaxPsfSidelobe() );
-    loopcontrols.calculateCycleThreshold();
+    Float peakResidual = mappers.findPeakResidual();
 
-    os << "Start Minor-Cycle iterations with peak residual = " << loopcontrols.getPeakResidual();
-    os << " and model flux = " << loopcontrols.getModelFlux() << LogIO::POST;
+    loopcontrols.setMaxPsfSidelobe( mappers.findMaxPsfSidelobe() );
+    loopcontrols.updateCycleThreshold(peakResidual);
+
+
+    os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
+    os << " and model flux = " << mappers.addIntegratedFlux() << LogIO::POST;
 
     os << " [ cyclethreshold = " << loopcontrols.getCycleThreshold() ;
-    os << " max iter per field/chan/pol = " << loopcontrols.getMaxCycleNiter() ;
+    os << " max iter per field/chan/pol = " << loopcontrols.getCycleNiter() ;
     os << " loopgain = " << loopcontrols.getLoopGain() ;
     os << " ]" << LogIO::POST;
-
 
     pauseForUserInteraction( mappers, loopcontrols );
 
@@ -101,11 +102,13 @@ SISkyModel::~SISkyModel()
 
 	startiter = loopcontrols.getCompletedNiter();
 	mappers.getMapper(mp)->deconvolve( loopcontrols );
+        loopcontrols.resetCycleIter();
 	stopiter = loopcontrols.getCompletedNiter();
 
 	if( startiter != stopiter)
 	  {
-	    os << "Mapper " << mp << " : iterations " << startiter+1 << " to " << stopiter << LogIO::POST;
+	    os << "Mapper " << mp << " : iterations " << startiter+1 
+               << " to " << stopiter << LogIO::POST;
 	  }
 	else
 	  {
@@ -114,15 +117,13 @@ SISkyModel::~SISkyModel()
 
       }    
 
+
     // Get/sync peak residual and sum of flux over all fields.
-    loopcontrols.setPeakResidual( mappers.findPeakResidual() );
-    loopcontrols.setModelFlux( mappers.addIntegratedFlux() );
-    loopcontrols.setIsModelUpdated( mappers.anyUpdatedModel() );
+    loopcontrols.setUpdatedModelFlag( mappers.anyUpdatedModel() );
     
-    //os << "Stopping at iteration " << loopcontrols.getCompletedNiter() << " with peak residual = " << loopcontrols.getPeakResidual() << " and model flux = " << loopcontrols.getModelFlux() << LogIO::POST;
-    os << "Stopping minor cycles with peak residual (before last iter) = " << loopcontrols.getPeakResidual();
-    os << " and model flux = " << loopcontrols.getModelFlux() << LogIO::POST;
-    
+    os << "Stopping at iteration " << loopcontrols.getCompletedNiter() 
+       << " with peak residual = " << mappers.findPeakResidual() 
+       << " and model flux = " << mappers.addIntegratedFlux() << LogIO::POST;  
   }
 
 
@@ -141,7 +142,8 @@ SISkyModel::~SISkyModel()
 
   }// end of restore
 
-  void SISkyModel::pauseForUserInteraction( SIMapperCollection &mappers, SIIterBot &loopcontrols )
+  void SISkyModel::pauseForUserInteraction( SIMapperCollection &mappers, 
+                                            SIIterBot &loopcontrols )
   {
     LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
 
