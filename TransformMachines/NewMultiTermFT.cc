@@ -58,8 +58,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-#define PSOURCE True
-#define psource (IPosition(4,512,512,0,0))
+#define PSOURCE False
+#define psource (IPosition(4,nX/2,nY/2,0,0))
 
 //---------------------------------------------------------------------- 
 //-------------------- constructors and descructors ---------------------- 
@@ -319,7 +319,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 
 	// Normalize the model image by the sensitivity image only (from Taylor0)
  	    //AlwaysAssert( sensitivitymaps_p.nelements() > 0 , AipsError );
-	cout << "Divide the models by the weightimage before prediction" << endl;
+	if(PSOURCE) cout << "Divide the models by the weightimage before prediction" << endl;
 	    for(uInt taylor=0;taylor<nterms_p;taylor++)
 	      {
 		normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);
@@ -346,7 +346,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
     time_get=0.0;
 
     /// Multiply the model with the avgPB again, so that it's ready for the minor cycle incremental accumulation
-    cout << "Multiplying the models by the weightimage to reset it to flat-noise for the minor cycle" << endl;
+    if(PSOURCE) cout << "Multiplying the models by the weightimage to reset it to flat-noise for the minor cycle" << endl;
     for(uInt taylor=0;taylor<nterms_p;taylor++)
       {
 	normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
@@ -606,11 +606,12 @@ void NewMultiTermFT::normAvgPBs(PtrBlock<SubImage<Float> *>& weightImageVec)
       for(uInt taylor=0;taylor<2*nterms_p-1;taylor++)
 	{
           Float rmaxval = maxval;
-          //if(taylor>0) rmaxval = maxval*21.0;
 	  cout << "Normalizing pb : " << taylor << " by peak of zeroth : " << rmaxval << endl;
-	  sensitivitymaps_p[taylor] = new TempImage<Float>( (weightImageVec[taylor])->shape() ,(weightImageVec[taylor])->coordinates() );
+
+	  //	  sensitivitymaps_p[taylor] = new TempImage<Float>( (weightImageVec[taylor])->shape() ,(weightImageVec[taylor])->coordinates() );
+	  sensitivitymaps_p[taylor] = new PagedImage<Float>( (weightImageVec[taylor])->shape() , (weightImageVec[taylor])->coordinates() , cacheDir_p+"/sensitivityPB_"+String::toString(taylor)  );
 	  sensitivitymaps_p[taylor]->copyData( (LatticeExpr<Float>) ( (*(weightImageVec[taylor]))/rmaxval ) );
-	  storeAsImg(cacheDir_p+"/sensitivityPB_"+String::toString(taylor) , *(sensitivitymaps_p[taylor]) );
+	  //storeAsImg(cacheDir_p+"/sensitivityPB_"+String::toString(taylor) , *(sensitivitymaps_p[taylor]) );
 	}
     }
 
