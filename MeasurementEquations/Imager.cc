@@ -1828,6 +1828,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Int numthreads,
 			const Bool psTermOn,
 			const Bool aTermOn,
+			const Bool mTermOn,
 			const Bool wbawp)
 {
 
@@ -1877,6 +1878,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   pbLimit_p = pbLimit;
   psTermOn_p=psTermOn;
   aTermOn_p=aTermOn;
+  mTermOn_p=mTermOn;
   wbAWP_p=wbawp;
   freqInterpMethod_p=interpMeth;
   imageTileVol_p=imageTileVol;

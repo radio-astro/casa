@@ -2815,7 +2815,7 @@ Bool Imager::createFTMachine()
   //===============================================================
   // A-Projection FTMachine code start here
   //===============================================================
-  else if ((ftmachine_p == "awproject")) {
+  else if ((ftmachine_p == "awproject") || (ftmachine_p == "mawproject")){
     if (wprojPlanes_p<=1)
       {
 	os << LogIO::NORMAL
@@ -2846,9 +2846,10 @@ Bool Imager::createFTMachine()
     // Construct the CF object with appropriate CFTerms.
     //
     CountedPtr<ConvolutionFunction> awConvFunc;
-    //    if (ftmachine_p=="wbmosaic") 
-    //   awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm);
-    // else
+    //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP_p);
+    if ((ftmachine_p=="mawproject") || (mTermOn_p))
+      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP_p);
+    else
       awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP_p);
 
     //
@@ -2889,189 +2890,6 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
 
   }
-  else if ((ftmachine_p == "wbawp")){
-
-    if (wprojPlanes_p<=1)
-      {
-	os << LogIO::NORMAL
-	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
-      }
-    if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
-      {
-	os << LogIO::WARN
-	   << "No. of w-planes set too low for W projection - recommend at least 128"
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
-      }
-
-    // if(!gvp_p) 
-    //   {
-    // 	os << LogIO::NORMAL // Loglevel INFO
-    //        << "Using defaults for primary beams used in gridding" << LogIO::POST;
-    // 	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
-    //                            skyPosThreshold_p);
-    //   }
-    useDoublePrecGrid=False;
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
-    CountedPtr<PSTerm> psTerm = new PSTerm();
-    CountedPtr<WTerm> wTerm = new WTerm();
-    //    psTerm->setOpCode(CFTerms::NOOP);
-    CountedPtr<ConvolutionFunction> awConvFunc;
-    if (ftmachine_p=="wbawp") awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm);
-    else                      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm);
-
-    CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
-
-    //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
-
-    // CountedPtr<VisibilityResamplerBase> mthVisResampler = 
-    //   new MultiThreadedVisibilityResampler(useDoublePrecGrid, visResampler);
-    CountedPtr<CFCache> cfcache = new CFCache();
-    cfcache->setCacheDir(cfCacheDirName_p.data());
-    cerr << "cfcache->initCache2()" << endl;
-    cfcache->initCache2();
-
-    ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
-			     cfcache, awConvFunc, 
-			     //			     mthVisResampler,
-			     visResampler,
-			     /*True */doPointing, doPBCorr, 
-			     tile_p, paStep_p, pbLimit_p, True);
-      
-    ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
-    //
-    // Explicit type casting of ft_p does not look good.  It does not
-    // pick up the setPAIncrement() method of PBWProjectFT without
-    // this
-    //
-    // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
-    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
-
-    if (doPointing) 
-      {
-	try
-	  {
-	    // Warn users we are have temporarily disabled pointing cal
-	    //	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
-	    //  TBD: Bring this up-to-date with new VisCal mechanisms
-	    VisSet elVS(*rvi_p);
-	    epJ = new EPJones(elVS, *ms_p);
-	    RecordDesc applyRecDesc;
-	    applyRecDesc.addField("table", TpString);
-	    applyRecDesc.addField("interp",TpString);
-	    Record applyRec(applyRecDesc);
-	    applyRec.define("table",epJTableName_p);
-	    applyRec.define("interp", "nearest");
-	    epJ->setApply(applyRec);
-	    ((AWProjectFT *)ft_p)->setEPJones(epJ);
-	  }
-	catch(AipsError& x)
-	  {
-	    //
-	    // Add some more useful info. to the message and translate
-	    // the generic AipsError exception object to a more specific
-	    // SynthesisError object.
-	    //
-	    String mesg = x.getMesg();
-	    mesg += ". Error in loading pointing offset table.";
-	    SynthesisError err(mesg);
-	    throw(err);
-	  }
-      }
-    AlwaysAssert(ft_p, AipsError);
-    cft_p = new SimpleComponentFTMachine();
-    AlwaysAssert(cft_p, AipsError);
-
-  }
-  else if (ftmachine_p == "awp")
-    {
-      if (wprojPlanes_p<=1)
-	{
-	  os << LogIO::NORMAL
-	     << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
-	     << LogIO::POST;
-	  os << LogIO::NORMAL << "Performing A-Projection" << LogIO::POST; // Loglevel PROGRESS
-	}
-      if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
-	{
-	  os << LogIO::WARN
-	     << "No. of w-planes set too low for W projection - recommend at least 128"
-	     << LogIO::POST;
-	  os << LogIO::NORMAL << "Performing AW-Projection"
-	     << LogIO::POST; // Loglevel PROGRESS
-	}
-      // if(!gvp_p) 
-      // 	{
-      // 	  os << LogIO::NORMAL // Loglevel INFO
-      // 	     << "Using defaults for primary beams used in gridding" << LogIO::POST;
-      // 	  gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
-      // 				 skyPosThreshold_p);
-      // 	}
-      //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
-      useDoublePrecGrid=False;
-      CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
-      CountedPtr<PSTerm> psTerm = new PSTerm();
-      CountedPtr<WTerm> wTerm = new WTerm();
-      psTerm->setOpCode(CFTerms::NOOP);
-      CountedPtr<ConvolutionFunction> awConvFunc=new AWConvFunc(apertureFunction,psTerm,wTerm);
-      CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
-      //      CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
-      // CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
-      // 												 visResampler);
-      CountedPtr<CFCache> cfcache=new CFCache();
-      cfcache->setCacheDir(cfCacheDirName_p.data());
-      cfcache->initCache2();
-      ft_p = new AWProjectFT(wprojPlanes_p, cache_p/2,
-			     cfcache, awConvFunc, 
-			     //			     mthVisResampler,
-			     visResampler,
-			     doPointing, doPBCorr,
-			     tile_p, pbLimit_p, True);
-      ((AWProjectFT *)ft_p)->setObservatoryLocation(mLocation_p);
-      //
-      // Explicit type casting of ft_p does not look good.  It does not
-      // pick up the setPAIncrement() method of PBWProjectFT without
-      // this
-      //
-      Quantity paInc(paStep_p,"deg");
-      // os << LogIO::NORMAL << "Setting PA increment to " 
-      // 	 << paInc.getValue("deg") << " deg" << endl;
-      ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
-
-      if (doPointing) 
-	{
-	  try
-	    {
-	      VisSet elVS(*rvi_p);
-	      epJ = new EPJones(elVS, *ms_p);
-	      RecordDesc applyRecDesc;
-	      applyRecDesc.addField("table", TpString);
-	      applyRecDesc.addField("interp",TpString);
-	      Record applyRec(applyRecDesc);
-	      applyRec.define("table",epJTableName_p);
-	      applyRec.define("interp", "nearest");
-	      epJ->setApply(applyRec);
-	      ((AWProjectFT *)ft_p)->setEPJones(epJ);
-	  }
-	  catch(AipsError& x)
-	    {
-	      //
-	      // Add some more useful info. to the message and translate
-	      // the generic AipsError exception object to a more specific
-	      // SynthesisError object.
-	      //
-	      String mesg = x.getMesg();
-	      mesg += ". Error in loading pointing offset table.";
-	      SynthesisError err(mesg);
-	      throw(err);
-	    }
-	}
-      AlwaysAssert(ft_p, AipsError);
-      cft_p = new SimpleComponentFTMachine();
-      AlwaysAssert(cft_p, AipsError);
-    }
   //===============================================================
   // A-Projection FTMachine code end here
   //===============================================================
@@ -4758,3 +4576,186 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 
 
 
+  // else if ((ftmachine_p == "wbawp") || (ftmachine_p == "wbmosaic")){
+
+  //   if (wprojPlanes_p<=1)
+  //     {
+  // 	os << LogIO::NORMAL
+  // 	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+  // 	   << LogIO::POST;
+  // 	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
+  //     }
+  //   if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+  //     {
+  // 	os << LogIO::WARN
+  // 	   << "No. of w-planes set too low for W projection - recommend at least 128"
+  // 	   << LogIO::POST;
+  // 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
+  //     }
+
+  //   // if(!gvp_p) 
+  //   //   {
+  //   // 	os << LogIO::NORMAL // Loglevel INFO
+  //   //        << "Using defaults for primary beams used in gridding" << LogIO::POST;
+  //   // 	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+  //   //                            skyPosThreshold_p);
+  //   //   }
+  //   useDoublePrecGrid=False;
+  //   CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
+  //   CountedPtr<PSTerm> psTerm = new PSTerm();
+  //   CountedPtr<WTerm> wTerm = new WTerm();
+  //   //    psTerm->setOpCode(CFTerms::NOOP);
+  //   CountedPtr<ConvolutionFunction> awConvFunc;
+  //   if (ftmachine_p=="wbawp") awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm);
+  //   else                      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm);
+
+  //   CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+
+  //   //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
+
+  //   // CountedPtr<VisibilityResamplerBase> mthVisResampler = 
+  //   //   new MultiThreadedVisibilityResampler(useDoublePrecGrid, visResampler);
+  //   CountedPtr<CFCache> cfcache = new CFCache();
+  //   cfcache->setCacheDir(cfCacheDirName_p.data());
+  //   cerr << "cfcache->initCache2()" << endl;
+  //   cfcache->initCache2();
+
+  //   ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
+  // 			     cfcache, awConvFunc, 
+  // 			     //			     mthVisResampler,
+  // 			     visResampler,
+  // 			     /*True */doPointing, doPBCorr, 
+  // 			     tile_p, paStep_p, pbLimit_p, True);
+      
+  //   ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
+  //   //
+  //   // Explicit type casting of ft_p does not look good.  It does not
+  //   // pick up the setPAIncrement() method of PBWProjectFT without
+  //   // this
+  //   //
+  //   // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
+  //   ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+  //   if (doPointing) 
+  //     {
+  // 	try
+  // 	  {
+  // 	    // Warn users we are have temporarily disabled pointing cal
+  // 	    //	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
+  // 	    //  TBD: Bring this up-to-date with new VisCal mechanisms
+  // 	    VisSet elVS(*rvi_p);
+  // 	    epJ = new EPJones(elVS, *ms_p);
+  // 	    RecordDesc applyRecDesc;
+  // 	    applyRecDesc.addField("table", TpString);
+  // 	    applyRecDesc.addField("interp",TpString);
+  // 	    Record applyRec(applyRecDesc);
+  // 	    applyRec.define("table",epJTableName_p);
+  // 	    applyRec.define("interp", "nearest");
+  // 	    epJ->setApply(applyRec);
+  // 	    ((AWProjectFT *)ft_p)->setEPJones(epJ);
+  // 	  }
+  // 	catch(AipsError& x)
+  // 	  {
+  // 	    //
+  // 	    // Add some more useful info. to the message and translate
+  // 	    // the generic AipsError exception object to a more specific
+  // 	    // SynthesisError object.
+  // 	    //
+  // 	    String mesg = x.getMesg();
+  // 	    mesg += ". Error in loading pointing offset table.";
+  // 	    SynthesisError err(mesg);
+  // 	    throw(err);
+  // 	  }
+  //     }
+  //   AlwaysAssert(ft_p, AipsError);
+  //   cft_p = new SimpleComponentFTMachine();
+  //   AlwaysAssert(cft_p, AipsError);
+
+  // }
+  // else if (ftmachine_p == "awp")
+  //   {
+  //     if (wprojPlanes_p<=1)
+  // 	{
+  // 	  os << LogIO::NORMAL
+  // 	     << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+  // 	     << LogIO::POST;
+  // 	  os << LogIO::NORMAL << "Performing A-Projection" << LogIO::POST; // Loglevel PROGRESS
+  // 	}
+  //     if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+  // 	{
+  // 	  os << LogIO::WARN
+  // 	     << "No. of w-planes set too low for W projection - recommend at least 128"
+  // 	     << LogIO::POST;
+  // 	  os << LogIO::NORMAL << "Performing AW-Projection"
+  // 	     << LogIO::POST; // Loglevel PROGRESS
+  // 	}
+  //     // if(!gvp_p) 
+  //     // 	{
+  //     // 	  os << LogIO::NORMAL // Loglevel INFO
+  //     // 	     << "Using defaults for primary beams used in gridding" << LogIO::POST;
+  //     // 	  gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+  //     // 				 skyPosThreshold_p);
+  //     // 	}
+  //     //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
+  //     useDoublePrecGrid=False;
+  //     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p,True);
+  //     CountedPtr<PSTerm> psTerm = new PSTerm();
+  //     CountedPtr<WTerm> wTerm = new WTerm();
+  //     psTerm->setOpCode(CFTerms::NOOP);
+  //     CountedPtr<ConvolutionFunction> awConvFunc=new AWConvFunc(apertureFunction,psTerm,wTerm);
+  //     CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+  //     //      CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
+  //     // CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+  //     // 												 visResampler);
+  //     CountedPtr<CFCache> cfcache=new CFCache();
+  //     cfcache->setCacheDir(cfCacheDirName_p.data());
+  //     cfcache->initCache2();
+  //     ft_p = new AWProjectFT(wprojPlanes_p, cache_p/2,
+  // 			     cfcache, awConvFunc, 
+  // 			     //			     mthVisResampler,
+  // 			     visResampler,
+  // 			     doPointing, doPBCorr,
+  // 			     tile_p, pbLimit_p, True);
+  //     ((AWProjectFT *)ft_p)->setObservatoryLocation(mLocation_p);
+  //     //
+  //     // Explicit type casting of ft_p does not look good.  It does not
+  //     // pick up the setPAIncrement() method of PBWProjectFT without
+  //     // this
+  //     //
+  //     Quantity paInc(paStep_p,"deg");
+  //     // os << LogIO::NORMAL << "Setting PA increment to " 
+  //     // 	 << paInc.getValue("deg") << " deg" << endl;
+  //     ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+  //     if (doPointing) 
+  // 	{
+  // 	  try
+  // 	    {
+  // 	      VisSet elVS(*rvi_p);
+  // 	      epJ = new EPJones(elVS, *ms_p);
+  // 	      RecordDesc applyRecDesc;
+  // 	      applyRecDesc.addField("table", TpString);
+  // 	      applyRecDesc.addField("interp",TpString);
+  // 	      Record applyRec(applyRecDesc);
+  // 	      applyRec.define("table",epJTableName_p);
+  // 	      applyRec.define("interp", "nearest");
+  // 	      epJ->setApply(applyRec);
+  // 	      ((AWProjectFT *)ft_p)->setEPJones(epJ);
+  // 	  }
+  // 	  catch(AipsError& x)
+  // 	    {
+  // 	      //
+  // 	      // Add some more useful info. to the message and translate
+  // 	      // the generic AipsError exception object to a more specific
+  // 	      // SynthesisError object.
+  // 	      //
+  // 	      String mesg = x.getMesg();
+  // 	      mesg += ". Error in loading pointing offset table.";
+  // 	      SynthesisError err(mesg);
+  // 	      throw(err);
+  // 	    }
+  // 	}
+  //     AlwaysAssert(ft_p, AipsError);
+  //     cft_p = new SimpleComponentFTMachine();
+  //     AlwaysAssert(cft_p, AipsError);
+  //   }

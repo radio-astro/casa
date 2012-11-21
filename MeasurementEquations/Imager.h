@@ -253,6 +253,7 @@ class Imager
 		  const Int numthreads=-1,
 		  const Bool psTermOn=True,
 		  const Bool aTermOn=True,
+		  const Bool mTermOn=False,
 		  const Bool wbAWP=False);
 
   // Set the single dish processing options
@@ -905,7 +906,7 @@ protected:
   //
   EPJones *epJ;
   String epJTableName_p, cfCacheDirName_p;
-  Bool doPointing, doPBCorr, psTermOn_p, aTermOn_p, wbAWP_p;
+  Bool doPointing, doPBCorr, psTermOn_p, aTermOn_p, mTermOn_p, wbAWP_p;
   //SimplePlotterPtr plotter_p;
   Record interactiveState_p;
 
