@@ -85,18 +85,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	model = model + comp;
 
 	loopcontrols.incrementMinorCycleCount( );
-
 	loopcontrols.addSummaryMinor( mapperid, model, residual );
       }
 
-	Bool updatedmodel = iters>0; // This info is recorded per model/mapper
+    Bool updatedmodel = iters>0; // This info is recorded per model/mapper
 
     return updatedmodel;
 }
 
-  Bool SIDeconvolver::checkStop( SIIterBot &loopcontrols, Int currentiteration, Float currentresidual )
+  Bool SIDeconvolver::checkStop( SIIterBot &loopcontrols, Int /*currentiteration*/, Float currentresidual )
   {
-    return loopcontrols.checkMinorStop( currentiteration, currentresidual );
+    return loopcontrols.majorCycleRequired(currentresidual);
   }
   
 

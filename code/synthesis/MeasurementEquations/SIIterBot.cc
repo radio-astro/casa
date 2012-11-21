@@ -22,6 +22,14 @@
 
 #include <synthesis/MeasurementEquations/SIIterBot.h>
 
+/* Include file for the lock guard */
+#include <boost/thread/locks.hpp>
+
+/* Records Interface */
+#include <casa/Containers/Record.h>
+
+#include <math.h> // For FLT_MAX
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   
@@ -30,303 +38,403 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////////////////////////////////////
   
   // All SIIterBots must have 'type' and 'name' defined.
-  SIIterBot::SIIterBot():Record()
+  SIIterBot::SIIterBot():
+                         itsNiter(0),
+                         itsCycleNiter(0),
+                         itsInteractiveNiter(0),
+                         itsThreshold(0),
+                         itsCycleThreshold(0.0),
+                         itsInteractiveThreshold(0.0),
+                         itsCycleFactor(1.0),
+                         itsLoopGain(0.1),
+                         itsMinPsfFraction(0.05),
+                         itsMaxPsfFraction(0.8),
+                         itsMaxPsfSidelobe(0.1),
+                         itsStopFlag(false),
+                         itsPauseFlag(false),
+                         itsInteractiveMode(false),
+                         itsIterDone(0),
+                         itsCycleIterDone(0),
+                         itsInteractiveIterDone(0),
+                         itsMajorDone(0),                         
+                         itsUpdatedModelFlag(false),
+                         itsModelFlux(0),
+                         itsSummaryMinor(IPosition(2,5,0)),
+                         itsSummaryMajor(IPosition(1,0))
+
   {
     LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
     
-    verifyFields();
-    
   }
-  
-  
-  SIIterBot::SIIterBot(Record &other)
-  {
-    LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
     
-    assign(other);
-    verifyFields();
-  }
-  
   SIIterBot::~SIIterBot()
   {
   }
-  
-  // Check that all required fields have valid values.
-  Bool  SIIterBot::verifyFields()
-  {
-    LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
 
-    // Input variables
-
-    if( ! isDefined("niter") ){ define( RecordFieldId("niter"), (Int) 0 ); }
-    else {/*check datatype*/}
+  bool SIIterBot::majorCycleRequired(Float currentPeakResidual){
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     
-    if( ! isDefined("threshold") ){ define( RecordFieldId("threshold"), (Double) 0.0 ); }
-    else 
-      {/*check datatype*/ }
-
-    if( ! isDefined("loopgain") ){ define( RecordFieldId("loopgain"), (Double) 0.1 ); }
-    else 
-      {/*check datatype*/}
-
-    if( ! isDefined("maxcycleniter") ){ define( RecordFieldId("maxcycleniter"), 0  ); }
-    else {/*check datatype*/}
+    if (cleanComplete(currentPeakResidual))
+      /* We are done cleaning, this should return true as well */
+      return true;
     
-    if( ! isDefined("cyclefactor") ){ define( RecordFieldId("cyclefactor"), (Double) 1.0 ); }
-    else 
-      {/*check datatype*/ }
+    if (itsCycleIterDone >= itsCycleNiter ||
+        currentPeakResidual <= itsCycleThreshold)
+      return true;
 
-    if( ! isDefined("cyclethreshold") ){ define( RecordFieldId("cyclethreshold"), (Double) 0.0 ); }
-    else 
-      {/*check datatype*/ }
-
-    // Output variables
-
-    if( ! isDefined("stop") ){ define( RecordFieldId("stop"), (Bool) False ); }
-    else {/*check datatype*/}
-    
-    if( ! isDefined("converged") ){ define( RecordFieldId("converged"), (Bool) False ); }
-    else {/*check datatype*/}
-    
-    if( ! isDefined("updatedmodel") ){ define( RecordFieldId("updatedmodel"), (Bool) False ); }
-    else {/*check datatype*/}
-    
-    if( ! isDefined("niterdone") ){ define( RecordFieldId("niterdone"), (Int) 0 ); }
-    else {/*check datatype*/}
-
-    if( ! isDefined("peakresidual") ){ define( RecordFieldId("peakresidual"), (Double) 1e+20 ); }
-    else {/*check datatype*/}
-    
-    if( ! isDefined("modelflux") ){ define( RecordFieldId("modelflux"), (Double) 0.0 ); }
-    else {/*check datatype*/}
-    
-    if( ! isDefined("nmajordone") ){ define( RecordFieldId("nmajordone"), (Int) 0 ); }
-    else {/*check datatype*/}
-
-    if( ! isDefined("summaryminor") ){ define( RecordFieldId("summaryminor"), Array<Double>(IPosition(2,5,0)) ); }
-    else {/*check datatype*/}
-
-    if( ! isDefined("summarymajor") ){ define( RecordFieldId("summarymajor"), Array<Int>( IPosition(1,0) ) ); }
-    else {/*check datatype*/}
-
-    return True;
-    
-  }// end of verifyFields()
-  
-
-  void SIIterBot::incrementMajorCycleCount()
-  {
-    verifyFields();
-    define( RecordFieldId("nmajordone") ,  isDefined("nmajordone")? 1+asInt( RecordFieldId("nmajordone") )  : 1 );
-
-
+    /* Otherwise */
+    return false;
   }
 
-  void SIIterBot::incrementMinorCycleCount()
-  {
-    verifyFields(); // Check Performance !
-    define( RecordFieldId("niterdone") ,  isDefined("niterdone")? 1+asInt( RecordFieldId("niterdone") )  : 1 );
+  bool SIIterBot::cleanComplete(Float currentPeakResidual){
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 
-    /// CHECK for modified parameters here.... 
+    if (itsIterDone >= itsNiter || 
+        currentPeakResidual <= itsThreshold ||
+        itsStopFlag)
+      return true;
 
-  }
-
-  // TODO : Optimize this storage and resizing ? Or call this only now and then... ?
-  void SIIterBot::addSummaryMinor(Int mapperid, Float model, Float peakresidual)
-  {
-    Array<Double> summaryminor = asArrayDouble( RecordFieldId("summaryminor") );
-    
-    IPosition shp = summaryminor.shape();
-    if( shp.nelements() != 2 && shp[0] != 5 ) throw( AipsError("Internal error in shape of minor-cycle summary record") );
-
-    Int niterdone = asInt( RecordFieldId("niterdone") );
-
-    summaryminor.resize( IPosition( 2, 5, shp[1]+1 ) , True );
-    summaryminor( IPosition(2, 0, shp[1] ) ) = asInt( RecordFieldId("niterdone") );
-    summaryminor( IPosition(2, 1, shp[1] ) ) = (Double) peakresidual;
-    summaryminor( IPosition(2, 2, shp[1] ) ) = (Double) model;
-    summaryminor( IPosition(2, 3, shp[1] ) ) = mapperid;
-    summaryminor( IPosition(2, 4, shp[1] ) ) = getCycleThreshold();
-
-    define( RecordFieldId("summaryminor") , summaryminor );
-
-  }// end of addSummaryMinor
-
-  void SIIterBot::addSummaryMajor()
-  {
-    Array<Int> summarymajor = asArrayInt( RecordFieldId("summarymajor") );
-    Int nmajordone = asInt( RecordFieldId("nmajordone") );
-
-    IPosition shp = summarymajor.shape();
-    if( shp.nelements() != 1 ) throw( AipsError("Internal error in shape of major-cycle summary record") );
-
-    summarymajor.resize( IPosition( 1, shp[0]+1 ) , True );
-    summarymajor( IPosition(1, shp[0] ) ) = asInt( RecordFieldId("niterdone") );
-
-    define( RecordFieldId("summarymajor") , summarymajor );
-
-  }// end of addSummaryMajor
-
-
-  void SIIterBot::checkStop()
-  {
-    verifyFields();
-
-    Bool niterstop = (isDefined("niterdone")&&isDefined("niter"))?  asInt( RecordFieldId("niterdone") ) >= asInt( RecordFieldId("niter") ) : False ;
-    Bool thresholdstop = (isDefined("peakresidual")&&isDefined("threshold"))?  asFloat( RecordFieldId("peakresidual") ) <= asFloat( RecordFieldId("threshold") ) : False ;
-
-    define( RecordFieldId("stop") , niterstop || thresholdstop );
-
-    define( RecordFieldId("converged") , thresholdstop );
-
-  }
-
-  Bool SIIterBot::checkMinorStop( Int iters, Float currentpeakresidual )
-  {
-    verifyFields();
-   
-    Float cyclethreshold = getCycleThreshold();
-    Float maxcycleniter = asFloat( RecordFieldId("maxcycleniter") );
-
-    Int niterdone = asInt( RecordFieldId("niterdone") );
-    Int niter = asInt( RecordFieldId("niter") );
-
-    //    cout << currentpeakresidual << " : " << cyclethreshold << " : " << iters << " : " << maxcycleniter << " : " << niterdone << " : " << niter << endl;
-
-    Bool stopnow = currentpeakresidual < cyclethreshold;
-    stopnow |= niterdone>=niter;
-    if(maxcycleniter>0) stopnow |= iters>maxcycleniter;
-
-    return stopnow;
-
-  }
-
-
-  Int SIIterBot::getRemainingNiter()
-  {
-    verifyFields();
-    return asInt( RecordFieldId("niter") ) - asInt( RecordFieldId("niterdone") );
-  }
-
-  Int SIIterBot::getCompletedNiter()
-  {
-    verifyFields();
-    return asInt( RecordFieldId("niterdone") );
+    return false;
   }
   
-    
-  Int SIIterBot::getMaxCycleNiter()
+  void SIIterBot::changeNiter( Int niter )
   {
-    return asInt( RecordFieldId("maxcycleniter") );
-   }
-  
-
-  void SIIterBot::setPsfSidelobe(Float maxpsfsidelobe)
-  {
-    verifyFields();
-    define( RecordFieldId("psfsidelobe") , (Double) maxpsfsidelobe );
-
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsNiter = niter;
   }
 
-  void SIIterBot::calculateCycleThreshold()
+  void SIIterBot::changeCycleNiter( Int cycleniter )
   {
-    //verifyFields();
-
-    Float minpsffraction = asFloat( RecordFieldId("minpsffraction") );
-    Float maxpsffraction = asFloat( RecordFieldId("maxpsffraction") );
-    Float psfsidelobe = asFloat( RecordFieldId("psfsidelobe") );
-
-    Float psffraction = psfsidelobe * asFloat( RecordFieldId("cyclefactor") );
-    psffraction = ( psffraction < minpsffraction ) ? minpsffraction : psffraction;
-    psffraction = ( psffraction > maxpsffraction ) ? maxpsffraction : psffraction;
-
-    Float cyclethreshold = asFloat( RecordFieldId("peakresidual") ) * psffraction ;
-
-    define( RecordFieldId("cyclethreshold"), (Double) cyclethreshold );
-
+     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+     if (cycleniter < 0)
+       itsCycleNiter = itsNiter;
+     else
+       itsCycleNiter = cycleniter;
   }
 
-
-  Float SIIterBot::getCycleThreshold()
+  void SIIterBot::changeInteractiveNiter( Int interactiveNiter )
   {
-    Float userthreshold = asFloat( RecordFieldId("threshold") );
-    Float cyclethreshold = asFloat( RecordFieldId("cyclethreshold") );
-    return userthreshold > cyclethreshold ? userthreshold : cyclethreshold;
-  }
-
-
-  Float SIIterBot::getLoopGain()
-  {
-    //verifyFields();
-    return asFloat( RecordFieldId("loopgain") );
-  }
-
-
-  Float SIIterBot::getPeakResidual()
-  {
-    return asFloat( RecordFieldId("peakresidual") );
-  }
-
-  void SIIterBot::setPeakResidual(Float peakresidual)
-  {
-    define( RecordFieldId("peakresidual") , (Double)peakresidual ) ;
-  }
-
-  Float SIIterBot::getModelFlux()
-  {
-    return asFloat( RecordFieldId("modelflux") );
-  }
-
-  void SIIterBot::setModelFlux(Float modelflux)
-  {
-    define( RecordFieldId("modelflux") , (Double)modelflux ) ;
-  }
-
-
-  Bool SIIterBot::getIsModelUpdated()
-  {
-    return asBool( RecordFieldId("updatedmodel") );
-  }
-  
-  void SIIterBot::setIsModelUpdated(Bool updatedmodel)
-  {
-    define( RecordFieldId("updatedmodel") , updatedmodel ) ;
-  }
-
-
-  /////////////////////////////////////////////////////////////////////////////////////////
-  //// START //// Functions for runtime parameter-modification
-
-
-  void SIIterBot::changeCycleThreshold( Float cyclethreshold )
-  {
-    define( RecordFieldId("cyclethreshold") , cyclethreshold );
+     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+     itsInteractiveNiter = interactiveNiter;
   }
 
   void SIIterBot::changeThreshold( Float threshold )
   {
-    define( RecordFieldId("threshold") , threshold );
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsThreshold = threshold;
   }
 
-  void SIIterBot::changeNiter( Int niter )
+  void SIIterBot::changeCycleThreshold( Float cyclethreshold )
   {
-    define( RecordFieldId("niter") , niter );
+     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+     itsCycleThreshold = cyclethreshold;
   }
 
-  void SIIterBot::changeMaxCycleNiter( Int maxcycleniter )
+  void SIIterBot::changeInteractiveThreshold( Float interactivethreshold )
   {
-    define( RecordFieldId("maxcycleniter") , maxcycleniter );
+     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+     itsInteractiveThreshold = interactivethreshold;
   }
 
   void SIIterBot::changeLoopGain( Float loopgain )
   {
-    define( RecordFieldId("loopgain") , loopgain );
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    itsLoopGain = loopgain;
   }
 
-  //// END //// Functions for runtime parameter-modification
-  /////////////////////////////////////////////////////////////////////////////////////////
+  void SIIterBot::changeCycleFactor(Float cyclefactor)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsCycleFactor = cyclefactor;
+  }
+
+  void SIIterBot::changeInteractiveMode(Bool interactiveEnabled)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsInteractiveMode = interactiveEnabled;
+  }
+
+  void SIIterBot::changePauseFlag(Bool pauseEnabled)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsPauseFlag = pauseEnabled;
+  }
+
+  void SIIterBot::changeStopFlag(Bool stopEnabled)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsStopFlag = stopEnabled;
+  }
+
+  void SIIterBot::setControlsFromRecord(Record &recordIn) {
+    LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+
+    /* Note it is important that niter get set first as we catch
+       negative values in the cycleniter, and set it equal to niter */
+    if (recordIn.isDefined("niter"))
+      changeNiter(recordIn.asInt( RecordFieldId("niter")));
+
+    if (recordIn.isDefined("cycleniter"))
+      changeCycleNiter(recordIn.asInt( RecordFieldId("cycleniter")));
+
+    if (recordIn.isDefined("interactiveniter"))
+      changeInteractiveNiter(recordIn.
+                             asInt(RecordFieldId("interactiveniter")));
+    
+    if (recordIn.isDefined("threshold")) 
+      changeThreshold(recordIn.asFloat( RecordFieldId("threshold")));
+        
+    if (recordIn.isDefined("cyclethreshold")) 
+      changeCycleThreshold(recordIn.asFloat( RecordFieldId("cyclethreshold")));
+    
+    if (recordIn.isDefined("interactivethreshold")) 
+      changeInteractiveThreshold(recordIn.asFloat
+                                 (RecordFieldId("interactivethreshold")));
+
+    if (recordIn.isDefined("loopgain")) 
+      changeLoopGain(recordIn.asDouble( RecordFieldId("loopgain")));;
+
+    if (recordIn.isDefined("cyclefactor"))
+      changeCycleFactor(recordIn.asFloat( RecordFieldId("cyclefactor")));
+  }
+
+  /* ------------ Getters for Control Variables ---------------- */
+  Int SIIterBot::getNiter()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsNiter;
+  }
+
+  Int SIIterBot::getCycleNiter()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsCycleNiter;
+  }
+
+  Int SIIterBot::getInteractiveNiter()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsInteractiveNiter;
+  }
+
+  Float SIIterBot::getThreshold()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    return itsThreshold;
+  }
+
+  Float SIIterBot::getCycleThreshold()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return max(itsCycleThreshold,itsThreshold);
+  }
+
+  Float SIIterBot::getInteractiveThreshold()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsInteractiveThreshold;
+  }
+
+  Float SIIterBot::getLoopGain()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsLoopGain;
+  }
+
+  Float SIIterBot::getCycleFactor()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsCycleFactor;
+  }
+
+  Bool SIIterBot::getInteractiveMode()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsInteractiveMode;
+  }
+
+  Bool SIIterBot::getPauseFlag()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsPauseFlag;
+  }
+
+  Bool SIIterBot::getStopFlag()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsStopFlag;
+  }
+  /* ------------ End of runtime parameter getters -------- */
+  Int SIIterBot::getRemainingNiter()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsNiter - itsIterDone;
+  }
+
+  Int SIIterBot::getCompletedNiter()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsIterDone;
+  }
+
+  void SIIterBot::incrementMajorCycleCount()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    itsMajorDone++;
+    itsCycleIterDone = 0;
+  }
+
+  void SIIterBot::incrementMinorCycleCount()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    itsIterDone++;
+    itsCycleIterDone++;
+    itsInteractiveIterDone++;
+  }
+
+  Int SIIterBot::getMajorCycleCount()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    return itsMajorDone;
+  }
+
+  Record SIIterBot::getDetailsRecord() {
+    LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    Record returnRecord;
+
+    /* Control Variables */
+    returnRecord.define(RecordFieldId("niter"), itsNiter);
+    returnRecord.define(RecordFieldId("cycleniter"), itsCycleNiter);
+    returnRecord.define(RecordFieldId("interactiveniter"),itsInteractiveNiter);
+
+    returnRecord.define( RecordFieldId("threshold"),  itsThreshold);    
+    returnRecord.define( RecordFieldId("cyclethreshold"),itsCycleThreshold);
+    returnRecord.define( RecordFieldId("interactivethreshold"),
+                         itsInteractiveThreshold);  
+
+    returnRecord.define( RecordFieldId("loopgain"),  itsLoopGain);
+    returnRecord.define( RecordFieldId("cyclefactor"), itsCycleFactor);
+
+    returnRecord.define( RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
+    returnRecord.define( RecordFieldId("maxpsffraction"), itsMaxPsfFraction);
+    returnRecord.define( RecordFieldId("minpsffraction"), itsMinPsfFraction);
+
+    /* Status Reporting Variables */
+    returnRecord.define( RecordFieldId("nmajordone"),  itsMajorDone);
+    returnRecord.define( RecordFieldId("iterdone"),  itsIterDone);
+    returnRecord.define( RecordFieldId("cycleiterdone"),  itsCycleIterDone);
+    returnRecord.define( RecordFieldId("interactiveiterdone"), 
+                         itsInteractiveIterDone);
+    
+    return returnRecord;
+  }
+  
+  Record SIIterBot::getSummaryRecord() {
+    LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    Record returnRecord = getDetailsRecord();
+
+    returnRecord.define( RecordFieldId("summaryminor"), itsSummaryMinor);
+    returnRecord.define( RecordFieldId("summarymajor"), itsSummaryMajor);
+
+    return returnRecord;
+  }
 
 
+  // TODO : Optimize this storage and resizing ? Or call this only now and then... ?
+  void SIIterBot::addSummaryMinor(Int mapperid, Float model, Float peakresidual)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    
+    IPosition shp = itsSummaryMinor.shape();
+    if( shp.nelements() != 2 && shp[0] != 5 ) 
+      throw(AipsError("Internal error in shape of minor-cycle summary record"));
+
+     itsSummaryMinor.resize( IPosition( 2, 5, shp[1]+1 ) , True );
+     itsSummaryMinor( IPosition(2, 0, shp[1] ) ) = itsIterDone;
+     itsSummaryMinor( IPosition(2, 1, shp[1] ) ) = (Double) peakresidual;
+     itsSummaryMinor( IPosition(2, 2, shp[1] ) ) = (Double) model;
+     itsSummaryMinor( IPosition(2, 3, shp[1] ) ) = mapperid;
+     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = getCycleThreshold();
+  }// end of addSummaryMinor
+
+  void SIIterBot::addSummaryMajor()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+
+     IPosition shp = itsSummaryMajor.shape();
+     if( shp.nelements() != 1 ) 
+       throw(AipsError("Internal error in shape of major-cycle summary record"));
+
+     itsSummaryMajor.resize( IPosition( 1, shp[0]+1 ) , True );
+     itsSummaryMajor( IPosition(1, shp[0] ) ) = itsIterDone;
+  }// end of addSummaryMajor
+  
+  void SIIterBot::updateCycleThreshold(Float PeakResidual) {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    
+    Float psffraction = itsMaxPsfSidelobe * itsCycleFactor;
+    
+    psffraction = max(psffraction, itsMinPsfFraction);
+    psffraction = min(psffraction, itsMaxPsfFraction);
+    
+    itsCycleThreshold = PeakResidual * psffraction;
+  }
+
+  void SIIterBot::resetCycleIter(){
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsCycleIterDone = 0;
+  }
+
+  Float SIIterBot::getMaxPsfSidelobe()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsMaxPsfSidelobe;
+  }
+
+  void SIIterBot::setMaxPsfSidelobe(Float maxSidelobe)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsMaxPsfSidelobe = maxSidelobe;
+  }
+
+  Float SIIterBot::getMaxPsfFraction()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsMaxPsfFraction;
+  }
+
+  void SIIterBot::setMaxPsfFraction(Float maxPsfFraction)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsMaxPsfFraction = maxPsfFraction;
+  }
+
+  Float SIIterBot::getMinPsfFraction()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsMinPsfFraction;
+  }
+
+  void SIIterBot::setMinPsfFraction(Float minPsfFraction)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsMinPsfFraction = minPsfFraction;
+  }
+
+  Bool SIIterBot::getUpdatedModelFlag()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+    return itsUpdatedModelFlag;
+  }
+  
+  void SIIterBot::setUpdatedModelFlag(Bool updatedmodel)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsUpdatedModelFlag = updatedmodel;
+  }
 
 } //# NAMESPACE CASA - END
 

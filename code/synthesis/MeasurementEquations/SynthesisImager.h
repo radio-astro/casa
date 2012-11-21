@@ -67,15 +67,25 @@ class SynthesisImager
   void defineImage(Record impars);
   void setupImaging(Record gridpars);
   void setupDeconvolution(Record recpars);
-  SIIterBot setupIteration(Record iterpars);
+  void setupIteration(Record iterpars);
+
+  void   setIterationDetails(Record iterpars);
+  Record getIterationDetails();
+  Record getIterationSummary();
+
   void initMapper();
   void initCycles();
   // Record initLoops();
-  //  void endLoops(Record& loopcontrols){SIIterBot lc(loopcontrols); endLoops(lc); }
-  void endLoops(SIIterBot& loopcontrols);
+  // void endLoops(Record& loopcontrols){SIIterBot lc(loopcontrols); endLoops(lc); }
+  bool cleanComplete();
+
+  void endLoops();//SIIterBot& loopcontrols);
   //  void runMajorCycle(){SIIterBot rec; runMajorCycle(rec);}
-  void runMajorCycle(SIIterBot& loopcontrols);
-  void runMinorCycle(SIIterBot& loopcontrols);
+  void runMajorCycle();//SIIterBot& loopcontrols);
+  void runMinorCycle();//SIIterBot& loopcontrols);
+
+  /* Access method to the Loop Controller held in this class */
+  //SIIterBot& getLoopControls();
 
 protected:
 
@@ -93,7 +103,7 @@ protected:
   SISkyModel itsSkyModel;
   SISkyEquation itsSkyEquation;
 
-  ///SIIterBot itsLoopController;
+  SIIterBot itsLoopController;
 
   /////////////// All input parameters
 
