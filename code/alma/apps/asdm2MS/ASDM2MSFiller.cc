@@ -680,7 +680,8 @@ void ASDM2MSFiller::addData (bool                      complexData,
 			     int                       scanNumber_,
 			     int                       arrayId_,
 			     int                       observationId_,
-			     vector<int>               &stateId_){
+			     vector<int>               &stateId_,
+			     vector<pair<int, int> >   &nChanNPol_){
   
   unsigned int theSize = time_.size();
   Bool *flag_row__  = new Bool[theSize];
@@ -743,6 +744,22 @@ void ASDM2MSFiller::addData (bool                      complexData,
   itsMSCol->stateId().putColumnRange(slicer, stateId);
   //  itsMSCol->uvw().putColumnRange(slicer, uvw);
   itsMSCol->flagRow().putColumnRange(slicer, flagRow); 
+
+  int cRow0 = 0;
+  for (unsigned int cRow = itsMSMainRow; cRow < itsMSMainRow+theSize; cRow++) {      
+    int numChan = nChanNPol_[cRow0].first;
+    int numCorr = nChanNPol_[cRow0].second;
+
+    Vector<float>   ones(IPosition(1, numCorr), 1.0);
+
+    // Sigma and Weight set to arrays of 1.0
+    itsMSCol->sigma().put(cRow, ones);
+    itsMSCol->weight().put(cRow, ones);
+
+    // The flag cell (an array) is put at false.
+    itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));
+    cRow0++;
+  }
 
 #if 0  
   // All the columns that could not be written in one shot are now filled row by row.

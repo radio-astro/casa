@@ -1648,24 +1648,29 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
       }
             
       //
+      // Prepare a pair<int, int> to transport the shape of some cells
+      //
+      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels, numberOfPolarizations);
+
+      //
       // Now delegate to bdf2AsdmStManIndex the creation of the AsmdIndex 'es.
       // 
       if (processorType == RADIOMETER) {
 
 	//
 	// Declare some containers required to populate the columns of the MS MAIN table in a non lazy way.
-	vector<vector<int> >     antenna1_vv(dataDescriptionIds.size());      // Column ANTENNA1
-	vector<vector<int> >     antenna2_vv(dataDescriptionIds.size());      // Column ANTENNA2
-	vector<vector<int> >     dataDescId_vv(dataDescriptionIds.size());    // Column DATA_DESC_ID
-	vector<vector<double> >  exposure_vv(dataDescriptionIds.size());      // Column EXPOSURE
-	vector<vector<double> >  interval_vv(dataDescriptionIds.size());      // Column INTERVAL
-	vector<vector<double> >  time_vv(dataDescriptionIds.size());          // Column TIME    
-	vector<vector<int> >     feed1_vv(dataDescriptionIds.size());         // Column FEED1
-	vector<vector<int> >     feed2_vv(dataDescriptionIds.size());         // Column FEED2
-	vector<vector<bool> >    flagRow_vv(dataDescriptionIds.size());       // Column FLAG_ROW
-	vector<vector<int> >     stateId_vv(dataDescriptionIds.size());       // Column STATE_ID
-	vector<vector<double> >  timeCentroid_vv(dataDescriptionIds.size());  // Column TIME_CENTROID
-
+	vector<vector<int> >           antenna1_vv(dataDescriptionIds.size());	// Column ANTENNA1
+	vector<vector<int> >           antenna2_vv(dataDescriptionIds.size());	// Column ANTENNA2
+	vector<vector<int> >           dataDescId_vv(dataDescriptionIds.size());	// Column DATA_DESC_ID
+	vector<vector<double> >        exposure_vv(dataDescriptionIds.size());	// Column EXPOSURE
+	vector<vector<double> >        interval_vv(dataDescriptionIds.size());	// Column INTERVAL
+	vector<vector<double> >        time_vv(dataDescriptionIds.size());	// Column TIME    
+	vector<vector<int> >           feed1_vv(dataDescriptionIds.size());	// Column FEED1
+	vector<vector<int> >           feed2_vv(dataDescriptionIds.size());	// Column FEED2
+	vector<vector<bool> >          flagRow_vv(dataDescriptionIds.size());	// Column FLAG_ROW
+	vector<vector<int> >           stateId_vv(dataDescriptionIds.size());	// Column STATE_ID
+	vector<vector<double> >        timeCentroid_vv(dataDescriptionIds.size());	// Column TIME_CENTROID
+	vector<vector<pair<int, int> > >    nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
 	//
 	// Everything is contained in *one* SDMDataSubset.
 	//
@@ -1675,11 +1680,10 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	int64_t startTime = (int64_t)sdmDataSubset.time() -  (int64_t)sdmDataSubset.interval()/2LL + deltaTime/2LL;
 	double   interval = deltaTime / 1000000000.0;
 	
-	int	k		= 0;
+	int k = 0;
 	for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
 	  for (unsigned int itime = 0; itime < sdosr.numTime(); itime++) {
 	    for (unsigned int iA = 0; iA < antennaIds.size(); iA++) {
-	      //k			= itime*antennaIds.size()*dataDescriptionIds.size() + iDD*antennaIds.size() + iA;
 	      antenna1_vv[iDD].push_back(antennaIds[iA].getTagValue());
 	      antenna2_vv[iDD].push_back(antennaIds[iA].getTagValue());
 	      dataDescId_vv[iDD].push_back(dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()]);
@@ -1691,6 +1695,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	      flagRow_vv[iDD].push_back(false);
 	      stateId_vv[iDD].push_back(stateIdx2Idx[*iter]);
 	      timeCentroid_vv[iDD].push_back(time_vv[iDD].back());
+	      nChanNPol_vv[iDD].push_back(nChanNPol);
 	    }
 	    bdf2AsdmStManIndex.appendWVRIndex(iDD,
 					      bdfNames[iRow],
@@ -1726,7 +1731,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					     scanNumber, 
 					     arrayId,
 					     observationId,
-					     stateId_vv[iDD]);
+					     stateId_vv[iDD],
+					     nChanNPol_vv[iDD]);
 	}
       }
 
@@ -1749,6 +1755,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<bool> >    cross_flagRow_vv(dataDescriptionIds.size());       // Column FLAG_ROW per Data Description
 	vector<vector<int> >     cross_stateId_vv(dataDescriptionIds.size());       // Column STATE_ID per Data Description
 	vector<vector<double> >  cross_timeCentroid_vv(dataDescriptionIds.size());  // Column TIME_CENTROID per Data Description
+	vector<vector<pair<int, int> > >    cross_nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
 
 	vector<vector<int> >     auto_antenna1_vv(dataDescriptionIds.size());      // Column ANTENNA1 per Data Description
 	vector<vector<int> >     auto_antenna2_vv(dataDescriptionIds.size());      // Column ANTENNA2 per Data Description
@@ -1761,9 +1768,12 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<bool> >    auto_flagRow_vv(dataDescriptionIds.size());       // Column FLAG_ROW per Data Description
 	vector<vector<int> >     auto_stateId_vv(dataDescriptionIds.size());       // Column STATE_ID per Data Description
 	vector<vector<double> >  auto_timeCentroid_vv(dataDescriptionIds.size());  // Column TIME_CENTROID per Data Description
+	vector<vector<pair<int, int> > >    auto_nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
+	
 	//
 	// Traverse all the integrations.
 	//
+	
 	while (sdosr.hasSubset()) {
 
 	  const SDMDataSubset& sdmDataSubset = sdosr.getSubset();
@@ -1790,6 +1800,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 		  cross_flagRow_vv[iDD].push_back(false);
 		  cross_stateId_vv[iDD].push_back(stateIdx2Idx[*iter]);
 		  cross_timeCentroid_vv[iDD].push_back(time);
+		  cross_nChanNPol_vv[iDD].push_back(nChanNPol);
 		}
 	      
 	      bdf2AsdmStManIndex.appendCrossIndex(iDD,
@@ -1825,6 +1836,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 		auto_flagRow_vv[iDD].push_back(false);
 		auto_stateId_vv[iDD].push_back(stateIdx2Idx[*iter]);
 		auto_timeCentroid_vv[iDD].push_back(time);
+		auto_nChanNPol_vv[iDD].push_back(nChanNPol);
 	      }
 
 	      bdf2AsdmStManIndex.appendAutoIndex(iDD,
@@ -1863,7 +1875,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					     scanNumber, 
 					     arrayId,
 					     observationId,
-					     auto_stateId_vv[iDD]);
+					     auto_stateId_vv[iDD],
+					     auto_nChanNPol_vv[iDD]);
 	  msFillers[AP_UNCORRECTED]->addData(true,             // Yes ! these are complex data.
 					     cross_time_vv[iDD],
 					     cross_antenna1_vv[iDD],
@@ -1879,7 +1892,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					     scanNumber, 
 					     arrayId,
 					     observationId,
-					     cross_stateId_vv[iDD]);      
+					     cross_stateId_vv[iDD],
+					     cross_nChanNPol_vv[iDD]);      
 	}
       }
       else 
