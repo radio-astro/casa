@@ -30,7 +30,7 @@
 
 #include <vector>
 #include <string>
-#include <casadbus/viewer/ViewerProxy.dbusproxy.h>
+#include <casadbus/viewer/ViewerProxy.proxy.h>
 #include <casadbus/utilities/Conversion.h>
 #include <casa/Containers/Record.h>
 #include <stdcasa/variant.h>

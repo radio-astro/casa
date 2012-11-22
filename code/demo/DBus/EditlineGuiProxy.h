@@ -5,7 +5,7 @@
 #include <string>
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
-#include "EditlineGuiProxy.dbusproxy.h"
+#include "EditlineGuiProxy.proxy.h"
 
 namespace casa {
 

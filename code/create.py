@@ -54,13 +54,13 @@ for mod in modules:
         cml.write("endif()\n\n")
 
     if mod == "casadbus":
-        cml.write("casa_add_dbus_interface( " +
+        cml.write("casa_add_dbus_proxy( " +
                   "plotserver/PlotServerProxy.dbusproxy.h " +
                   "implement/plotserver/PlotServerProxy.dbusproxy.xml )\n")
-        cml.write("casa_add_dbus_interface( " +
+        cml.write("casa_add_dbus_proxy( " +
                   "session/DBusSession.dbusproxy.h " +
                   "implement/session/DBusSession.dbusproxy.xml )\n")
-        cml.write("casa_add_dbus_interface( " +
+        cml.write("casa_add_dbus_proxy( " +
                   "viewer/ViewerProxy.dbusproxy.h " +
                   "implement/viewer/ViewerProxy.dbusproxy.xml )\n")
         cml.write("\n")

@@ -30,7 +30,7 @@
 
 #include <vector>
 #include <string>
-#include <casadbus/session/DBusSession.dbusproxy.h>
+#include <casadbus/session/DBusSession.proxy.h>
 #include <casadbus/session/Dispatcher.h>
 
 namespace casa {
