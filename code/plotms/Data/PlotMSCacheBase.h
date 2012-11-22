@@ -1,4 +1,4 @@
-//# PlotMSCache2.h: Data cache for plotms.
+//# PlotMSCacheBase.h: Generic Data cache for plotms.
 //# Copyright (C) 2009
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,21 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-#ifndef PLOTMSCACHE2_H_
-#define PLOTMSCACHE2_H_
+#ifndef PLOTMSCACHEBASE_H_
+#define PLOTMSCACHEBASE_H_
 
 #include <plotms/PlotMS/PlotMSAveraging.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 #include <plotms/PlotMS/PlotMSFlagging.h>
 #include <plotms/Actions/PlotMSCacheThread.qo.h>
-#include <plotms/Data/PlotMSVBAverager.h>
+//#include <plotms/Data/PlotMSIndexer.h>
 
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
-#include <synthesis/MSVis/VisIterator.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisBufferUtil.h>
 
 namespace casa {
 
@@ -46,72 +43,48 @@ namespace casa {
 class PlotMSApp;
 class PlotMSIndexer;
 
-class PMSCacheVolMeter {
 
-public:
+class PlotMSCacheBase {
+  
+  // Friend class declarations.
+  friend class PlotMSIndexer;
 
-  // Constructor/Destructor
-  PMSCacheVolMeter();
-  PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave,
-		   const Vector<Vector<Slice> >& chansel,
-		   const Vector<Vector<Slice> >& corrsel);
-  ~PMSCacheVolMeter();
-
-  // reset (as if default ctor was run)
-  void reset();
-
-  // add in via a VisBuffer
-  void add(const VisBuffer& vb);
-
-  // add in via counts
-  void add(Int DDID,Int nRows);
-
-  // evaluate the volume for specified axes, and complain if 
-  String evalVolume(map<PMS::Axis,Bool> axes,Vector<Bool> axesmask);
-
-private:
-
-  // The number of DATA_DESCRIPTIONs
-  Int nDDID_;
-
-  // Counters
-  Vector<uInt64> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
-
-  // The number of antennas (max)
-  Int nAnt_;
-
-};
-
-class PlotMSCache2 {
-    
-    // Friend class declarations.
-    friend class PlotMSData;
-    friend class PlotMSIndexer;
+  //TBD:    friend class PlotMSData;
 
 public:    
 
-    // Varieties of cache
-    enum Type {MS, CAL};
-
-    static const PMS::Axis METADATA[];
-    static const unsigned int N_METADATA;
+  // Varieties of cache
+  // TBD: move to PlotMSConstants?
+  enum Type {MS, CAL};
+  
+  static const unsigned int THREAD_SEGMENT;
+  static const PMS::Axis METADATA[];
+  static const unsigned int N_METADATA;
     
-    static bool axisIsMetaData(PMS::Axis axis);
-    
-    static const unsigned int THREAD_SEGMENT;
+  static bool axisIsMetaData(PMS::Axis axis);
 
+  
   // Constructor which takes parent PlotMS.
-  PlotMSCache2(PlotMSApp* parent);
+  PlotMSCacheBase(PlotMSApp* parent);
   
   // Destructor
-  virtual ~PlotMSCache2();
+  virtual ~PlotMSCacheBase();
 
   // Identify myself
-  PlotMSCache2::Type cacheType() { return PlotMSCache2::MS; };
+  //  pure virtual
+  virtual PlotMSCacheBase::Type cacheType()=0;
 
+  // Access to pol names
+  virtual String polname(Int ipol)=0;
+
+  // Meta axes info
+  int nmetadata() const {return N_METADATA;};
+  PMS::Axis metadata(int i) {return METADATA[i];};
+  
   // Reference an indexer
   Int nIter() { return indexer_.nelements(); };
   PlotMSIndexer& indexer(uInt i) {return (*indexer_[i]);};
+  PlotMSIndexer& indexer0() { return *indexer0_; };
 
   // Report the number of chunks
   Int nChunk() const { return nChunk_; };
@@ -127,6 +100,7 @@ public:
   inline Bool goodChunk(Int ichunk) {return goodChunk_(ichunk); };
 
   // Is there a reference value for the specified axis?
+  // TBD: actually make this axis-dep?
   inline bool hasReferenceValue(PMS::Axis axis) { return (axis==PMS::TIME && cacheReady()); };
   inline double referenceValue(PMS::Axis axis) { return (hasReferenceValue(axis) ? refTime() : 0.0); };
   
@@ -145,9 +119,6 @@ public:
   // Access to transformations state in the cache
   PlotMSTransformations& transformations() { return transformations_; }
 
-  // Access to channel averaging bounds
-  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
-
   // Loads the cache for the given axes and data
   // columns.  IMPORTANT: this method assumes that any currently loaded data is
   // valid for the given VisIter; i.e., if the meta-information or either of
@@ -157,7 +128,7 @@ public:
   // progress information.
   virtual void load(const vector<PMS::Axis>& axes,
 		    const vector<PMS::DataColumn>& data,
-		    const String& msname,
+		    const String& filename,
 		    const PlotMSSelection& selection,
 		    const PlotMSAveraging& averaging,
 		    const PlotMSTransformations& transformations,
@@ -224,61 +195,34 @@ public:
   inline Double getEl(Int chnk,Int irel)      { return *(el_[chnk]->data()+irel); };
   inline Double getParAng(Int chnk,Int irel)  { return *(parang_[chnk]->data()+irel); };
 
+  // These support generic non-complex calibration
+  inline Double getPar(Int chnk,Int irel)  { return *(par_[chnk]->data()+irel); };
+
+
 protected:
     
   // Forbid copy for now
-  PlotMSCache2(const PlotMSCache2& mc);
+  PlotMSCacheBase(const PlotMSCacheBase&);
 
   // Increase the number of chunks
   void increaseChunks(Int nc=0);
 
+  // Specialized method for loading the cache
+  //  (pure virtual: implemented specifically in child classes)
+  virtual void loadIt(vector<PMS::Axis>& loadAxes,
+		      vector<PMS::DataColumn>& loadData,
+		      PlotMSCacheThread* thread = NULL)=0;
+
+  virtual void flagToDisk(const PlotMSFlagging& flagging,
+			  Vector<Int>& chunks, 
+			  Vector<Int>& relids,
+			  Bool flag,
+			  PlotMSIndexer* indexer)=0;
+  
   // Clean up the PtrBlocks
   void deleteCache();
   void deleteIndexer();
 
-  // Setup the VisIter
-  void setUpVisIter(const String& msname,
-		    const PlotMSSelection& selection,
-		    Bool readonly=True,
-		    Bool chanselect=True,
-		    Bool corrselect=True);
-
-  // Count the chunks required in the cache
-  void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);  // old
-  void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
-		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
-
-  // Trap attempt to use to much memory (too many points)
-  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
-
-  // Loop over VisIter, filling the cache
-  void loadChunks(ROVisibilityIterator& vi,
-		  const vector<PMS::Axis> loadAxes,
-		  const vector<PMS::DataColumn> loadData,
-		  const PlotMSAveraging& averaging,
-		  PlotMSCacheThread* thread);
-  void loadChunks(ROVisibilityIterator& vi,
-		  const PlotMSAveraging& averaging,
-		  const Vector<Int>& nIterPerAve,
-		  const vector<PMS::Axis> loadAxes,
-		  const vector<PMS::DataColumn> loadData,
-		  PlotMSCacheThread* thread);
-
-  // Force read on vb for requested axes 
-  //   (so pre-cache averaging treats all data it should)
-  void forceVBread(VisBuffer& vb,
-		   vector<PMS::Axis> loadAxes,
-		   vector<PMS::DataColumn> loadData);
-
-  // Tell time averager which data column to read
-  void discernData(vector<PMS::Axis> loadAxes,
-		   vector<PMS::DataColumn> loadData,
-		   PlotMSVBAverager& vba);
-
-  // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
-		PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
-  
   // Set the net axes mask (defines how to collapse flags for the chosen plot axes)
   void setAxesMask(PMS::Axis axis,Vector<Bool>& axismask);
 
@@ -291,13 +235,6 @@ protected:
 
   // Delete the whole plot mask
   void deletePlotMask();
-
-  // Set flags in the MS
-  virtual void flagToDisk(const PlotMSFlagging& flagging,
-			  Vector<Int>& chunks, 
-			  Vector<Int>& relids,
-			  Bool flag,
-			  PlotMSIndexer* indexer);
 
   // Returns the number of points loaded for the given axis or 0 if not loaded.
   unsigned int nPointsForAxis(PMS::Axis axis) const;
@@ -330,9 +267,12 @@ protected:
   //  (used only for access to logger, so far)
   PlotMSApp* plotms_;
 
+  // An empty indexer (its an empty PlotData object used for initialization)
+  PlotMSIndexer* indexer0_;
+
   // The indexer into the cache
   PtrBlock<PlotMSIndexer*> indexer_;
-
+  
   // The number of chunks in the cache
   Int nChunk_;
 
@@ -374,17 +314,20 @@ protected:
 
   Vector<Double> az0_,el0_,ha0_,pa0_;
 
+  PtrBlock<Array<Float>*> par_;
+
   // Current setup/state.
   bool dataLoaded_;
   PMS::Axis currentX_, currentY_;
   map<PMS::Axis, bool> loadedAxes_;
   map<PMS::Axis, PMS::DataColumn> loadedAxesData_;
+  map<PMS::Axis, bool> pendingLoadAxes_;
 
   // Global ranges
   Double xminG_,yminG_,xflminG_,yflminG_,xmaxG_,ymaxG_,xflmaxG_,yflmaxG_;
 
   // A copy of the Data parameters 
-  String msname_;
+  String filename_;
   PlotMSSelection selection_;
   PlotMSAveraging averaging_;
   PlotMSTransformations transformations_;
@@ -401,27 +344,10 @@ protected:
   Vector<String> antstanames_; 	 
   Vector<String> fldnames_; 	 
 
-  // A container for channel averaging bounds
-  Vector<Matrix<Int> > chanAveBounds_p;
-
-  // Provisional flagging helpers
-  Vector<Int> nVBPerAve_;
-
-  // VisIterator pointer
-  ROVisIterator* rvi_p;
-  VisIterator* wvi_p;
-
-  // VisBufferUtil for freq/vel calculations
-  VisBufferUtil vbu_;
-
-  // Volume meter for volume calculation
-  PMSCacheVolMeter vm_;
-
-    
 };
-typedef CountedPtr<PlotMSCache2> PlotMSCache2Ptr;
+typedef CountedPtr<PlotMSCacheBase> PlotMSCacheBasePtr;
 
 
 }
 
-#endif /* PLOTMSCACHE2_H_ */
+#endif /* PLOTMSCACHEBASE_H_ */

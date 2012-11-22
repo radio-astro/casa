@@ -30,9 +30,12 @@
 #include <plotms/GuiTabs/PlotMSPlotTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Data/PlotMSCache2.h>
+#include <plotms/Data/MSCache.h>
+#include <plotms/Data/CalCache.h>
 
 #include <casaqt/QwtPlotter/QPOptions.h>
+
+#define THREADLOAD True
 
 namespace casa {
 
@@ -82,7 +85,10 @@ void PlotMSIterPlot::makeParameters(PlotMSPlotParameters& params,
 
 // Constructors/Destructors //
 
-  PlotMSIterPlot::PlotMSIterPlot(PlotMSApp* parent) : PlotMSPlot(parent),iter_(-1) {
+PlotMSIterPlot::PlotMSIterPlot(PlotMSApp* parent) : 
+  PlotMSPlot(parent),
+  iter_(-1) 
+{
   constructorSetup(); }
 
 PlotMSIterPlot::~PlotMSIterPlot() { }
@@ -181,7 +187,7 @@ bool PlotMSIterPlot::initializePlot() {
 
   //  cout << " PMSIP::initializePlot" << endl;
 
-    PlotMaskedPointDataPtr data(&itsData_, false);
+    PlotMaskedPointDataPtr data(&(itsCache_->indexer0()), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     
     setColors();
@@ -250,6 +256,7 @@ PlotMSRegions PlotMSIterPlot::selectedRegions(
 void PlotMSIterPlot::constructorSetup() {
     PlotMSPlot::constructorSetup();
     makeParameters(itsParams_, itsParent_);
+
 }
 
 
@@ -296,15 +303,54 @@ bool PlotMSIterPlot::updateCache() {
             PMS::LOG_ORIGIN_LOAD_CACHE, PMS::LOG_EVENT_LOAD_CACHE);
     itsTCLParams_.endCacheLog = true;
 
-    PlotMSCacheThread* ct = new PlotMSCacheThread(this, &itsCache2_, axes, data,
-						  d->filename(), 
-						  d->selection(), 
-						  d->averaging(), 
-						  d->transformations(), 
-						  false, 
-						  &PlotMSIterPlot::cacheLoaded, this);
-    itsParent_->getPlotter()->doThreadedOperation(ct);
-    
+    // Detect existence and type of the specified table...
+    {
+      if (Table::isReadable(d->filename())) {
+	Table tab(d->filename());
+
+	// Delete existing cache if it doesn't match
+	if (itsCache_ &&
+	    (itsCache_->cacheType()==PlotMSCacheBase::CAL &&
+	     tab.tableInfo().type()!="Calibration") ||
+	    (itsCache_->cacheType()==PlotMSCacheBase::MS &&
+	     tab.tableInfo().type()=="Calibration")) {
+	  delete itsCache_;
+	  itsCache_=NULL;
+	}
+
+	// Construct proper empty cache if necessary
+	if (!itsCache_) {
+	  if (tab.tableInfo().type()=="Calibration")
+	    itsCache_ = new CalCache(itsParent_);
+	  else
+	    itsCache_ = new MSCache(itsParent_);
+	}
+      }
+    }
+	
+    if (THREADLOAD) {
+      //cout << "Doing threaded load" << endl;
+      PlotMSCacheThread* ct = new PlotMSCacheThread(this, itsCache_, 
+						    axes, data,
+						    d->filename(), 
+						    d->selection(), 
+						    d->averaging(), 
+						    d->transformations(), 
+						    false, 
+						    &PlotMSIterPlot::cacheLoaded, this);
+      itsParent_->getPlotter()->doThreadedOperation(ct);
+    }
+    else {
+
+      //cout << "Doing NON-threaded load" << endl;
+      
+      // Now load it
+      itsCache_->load(axes, data,
+		      d->filename(),d->selection(),
+		      d->averaging(),d->transformations());
+      this->cacheLoaded_(false);
+      
+    }
     return true;
 }
 
@@ -321,7 +367,7 @@ bool PlotMSIterPlot::updateIndexing() {
        << endl;
   */
 
-  itsCache2_.setUpIndexer(it->iterationAxis(),
+  itsCache_->setUpIndexer(it->iterationAxis(),
 			  it->globalXRange(),it->globalYRange());
 
   return true;
@@ -330,14 +376,14 @@ bool PlotMSIterPlot::updateIndexing() {
 
 bool PlotMSIterPlot::firstIter() {
 
-  Int nIter=itsCache2_.nIter();  
+  Int nIter=itsCache_->nIter();  
 
   // If more than one iteration and not already at first one
   if (nIter>0 && iter_!=0) {
     detachFromCanvases();
     iter_=0;
     logIter(iter_,nIter);
-    PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
+    PlotMaskedPointDataPtr data(&(itsCache_->indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
     //    itsTCLParams_.updateDisplay=True;  // needed?
@@ -362,14 +408,14 @@ bool PlotMSIterPlot::firstIter() {
 
 bool PlotMSIterPlot::prevIter() {
 
-  Int nIter=itsCache2_.nIter();
+  Int nIter=itsCache_->nIter();
 
   // If more than one iteration and not already at first one
   if (nIter>0 && iter_> 0) {
     detachFromCanvases();
     iter_-=1;
     logIter(iter_,nIter);
-    PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
+    PlotMaskedPointDataPtr data(&(itsCache_->indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
     //    itsTCLParams_.updateDisplay=True;  // needed?
@@ -392,14 +438,14 @@ bool PlotMSIterPlot::prevIter() {
 
 bool PlotMSIterPlot::nextIter() {
 
-  Int nIter=itsCache2_.nIter();
+  Int nIter=itsCache_->nIter();
 
   // If more than one iteration and not already at end
   if (nIter>0 && iter_<nIter-1) {
     detachFromCanvases();
     iter_+=1;
     logIter(iter_,nIter);
-    PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
+    PlotMaskedPointDataPtr data(&(itsCache_->indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
     //    itsTCLParams_.updateDisplay=True;  // needed?
@@ -422,14 +468,14 @@ bool PlotMSIterPlot::nextIter() {
 
 bool PlotMSIterPlot::lastIter() {
 
-  Int nIter=itsCache2_.nIter();
+  Int nIter=itsCache_->nIter();
 
   // If more than one iteration and not already at last one
   if (nIter>0 && iter_!=(nIter-1)) {
     detachFromCanvases();
     iter_=nIter-1;
     logIter(iter_,nIter);
-    PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
+    PlotMaskedPointDataPtr data(&(itsCache_->indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
     //    itsTCLParams_.updateDisplay=True;  // needed?
@@ -453,13 +499,13 @@ bool PlotMSIterPlot::lastIter() {
 
 bool PlotMSIterPlot::resetIter() {
 
-  Int nIter=itsCache2_.nIter();
+  Int nIter=itsCache_->nIter();
 
-  if (itsCache2_.nIter()>0) {
+  if (itsCache_->nIter()>0) {
     detachFromCanvases();
     iter_=0;
     logIter(iter_,nIter);
-    PlotMaskedPointDataPtr data(&(itsCache2_.indexer(iter_)), false);
+    PlotMaskedPointDataPtr data(&(itsCache_->indexer(iter_)), false);
     itsPlot_ = itsFactory_->maskedPlot(data);
     setColors();
     itsTCLParams_.updateDisplay=True;
@@ -490,8 +536,8 @@ bool PlotMSIterPlot::updateCanvas() {
         if(a== NULL || d== NULL || c== NULL || it==NULL) return false; // shouldn't happen
 	
 	String itertxt="";
-	if (it->iterationAxis()!=PMS::NONE && itsCache2_.nIter()>0)
-	  itertxt=itsCache2_.indexer(iter_).iterLabel();
+	if (it->iterationAxis()!=PMS::NONE && itsCache_->nIter()>0)
+	  itertxt=itsCache_->indexer(iter_).iterLabel();
 
         PlotAxis cx = a->xAxis(); 
         PlotAxis cy = a->yAxis();
@@ -503,10 +549,10 @@ bool PlotMSIterPlot::updateCanvas() {
         itsCanvas_->setAxisScale(cy, PMS::axisScale(y));
         
         // Set reference values.
-        bool xref = itsCache2_.hasReferenceValue(x),
-             yref = itsCache2_.hasReferenceValue(y);
-        double xrefval = itsCache2_.referenceValue(x),
-               yrefval = itsCache2_.referenceValue(y);
+        bool xref = itsCache_->hasReferenceValue(x),
+             yref = itsCache_->hasReferenceValue(y);
+        double xrefval = itsCache_->referenceValue(x),
+               yrefval = itsCache_->referenceValue(y);
         itsCanvas_->setAxisReferenceValue(cx, xref, xrefval);
         itsCanvas_->setAxisReferenceValue(cy, yref, yrefval);
         
@@ -583,7 +629,7 @@ bool PlotMSIterPlot::updateDisplay() {
         PlotSymbolPtr symbolUnmasked =
             PlotSymbolPtr(new QPSymbol(*d->unflaggedSymbol()));
         if(symbolUnmasked->symbol() == PlotSymbol::AUTOSCALING) {
-            uInt data_size = itsCache2_.indexer(iter_).sizeUnmasked();
+            uInt data_size = itsCache_->indexer(iter_).sizeUnmasked();
             if(data_size > pixelThreshold) {
                 symbolUnmasked->setSymbol(PlotSymbol::PIXEL);
                 symbolUnmasked->setSize(1, 1);
@@ -604,7 +650,7 @@ bool PlotMSIterPlot::updateDisplay() {
         PlotSymbolPtr symbolMasked =
             PlotSymbolPtr(new QPSymbol(*d->flaggedSymbol()));
         if(symbolMasked->symbol() == PlotSymbol::AUTOSCALING) {
-            uInt data_size = itsCache2_.indexer(iter_).sizeMasked();
+            uInt data_size = itsCache_->indexer(iter_).sizeMasked();
             if(data_size > pixelThreshold) {
                 symbolMasked->setSymbol(PlotSymbol::PIXEL);
                 symbolMasked->setSize(1, 1);
@@ -636,8 +682,8 @@ bool PlotMSIterPlot::updateDisplay() {
         itsPlot_->setMaskedSymbol(symbolMasked);
         
         // Colorize, and set data changed if redraw is needed.
-	if(itsCache2_.nIter()>0 && 
-	   itsCache2_.indexer(iter_).colorize(d->colorizeFlag(), d->colorizeAxis()))
+	if(itsCache_->nIter()>0 && 
+	   itsCache_->indexer(iter_).colorize(d->colorizeFlag(), d->colorizeAxis()))
 	  itsPlot_->dataChanged();
         
         // Set item axes.
@@ -646,8 +692,8 @@ bool PlotMSIterPlot::updateDisplay() {
         // Set plot title.
         PMS::Axis x = h->xAxis(), y = h->yAxis();
         itsPlot_->setTitle(d->titleFormat().getLabel(x,y,
-                itsCache2_.hasReferenceValue(x), itsCache2_.referenceValue(x),
-                itsCache2_.hasReferenceValue(y), itsCache2_.referenceValue(y)));
+                itsCache_->hasReferenceValue(x), itsCache_->referenceValue(x),
+                itsCache_->hasReferenceValue(y), itsCache_->referenceValue(y)));
         return true;
     } catch(AipsError& err) {
         itsParent_->showError("Could not update plot: " + err.getMesg());
@@ -666,23 +712,23 @@ void PlotMSIterPlot::cacheLoaded_(bool wasCanceled) {
        << "  itsTCLParams_.updateCanvas=" << itsTCLParams_.updateCanvas << endl
        << "  itsTCLParams_.updateDisplay=" << itsTCLParams_.updateDisplay << endl
        << "  itsTCLParams_.releaseWhenDone=" << itsTCLParams_.releaseWhenDone << endl
-       << "  itsCache2_.cacheReady() = " << itsCache2_.cacheReady() 
+       << "  itsCache_->cacheReady() = " << itsCache_->cacheReady() 
        << endl; 
   */
   // Ensure we fail gracefully if cache loading yielded nothing
   //   or was cancelled
-  if (!itsCache2_.cacheReady() || wasCanceled) {
+  if (!itsCache_->cacheReady() || wasCanceled) {
     detachFromCanvases();
     initializePlot();
     releaseDrawing();
-    itsCache2_.clear();
+    itsCache_->clear();
     return;
   }
 
   // Make this more specific than canvas-triggered
   if (!wasCanceled && itsTCLParams_.updateCanvas) updateIndexing();
 
-  //  cout << "itsCache2_.nIter() = " << boolalpha << itsCache2_.nIter() << endl;
+  //  cout << "itsCache_->nIter() = " << boolalpha << itsCache_->nIter() << endl;
 
   // Reset the iterator (if data are new)
   //  if (itsTCLParams_.resetIter)
@@ -731,9 +777,9 @@ void PlotMSIterPlot::logPoints() {
   
   stringstream ss;
   ss << "Plotting ";
-  if (showUnflagged) ss << itsCache2_.indexer(iter_).sizeUnmasked() << " unflagged"
+  if (showUnflagged) ss << itsCache_->indexer(iter_).sizeUnmasked() << " unflagged"
 			<< (showFlagged ? ", " : "");
-  if (showFlagged) ss << itsCache2_.indexer(iter_).sizeMasked() << " flagged";
+  if (showFlagged) ss << itsCache_->indexer(iter_).sizeMasked() << " flagged";
   ss << " points.";
       
   itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
@@ -746,7 +792,7 @@ void PlotMSIterPlot::logIter(Int iter,Int nIter) {
     stringstream ss;
     ss << "Stepping to iteration = " << iter 
        << " (of " << nIter << "): " 
-       << itsCache2_.indexer(iter).iterLabel() << endl;
+       << itsCache_->indexer(iter).iterLabel() << endl;
     itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
 					 PMS::LOG_ORIGIN_PLOT, 
 					 ss.str(), 

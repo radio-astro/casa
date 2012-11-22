@@ -166,6 +166,13 @@ def plotms(vis=None,
         synonyms['parang'] = synonyms['parallacticangle'] = 'parangle'
         synonyms['hourang'] = 'hourangle'
         synonyms['ant-parallacticangle']=synonyms['ant-parang'] = 'ant-parangle'
+        synonyms['gamp']=synonyms['gainamp']='gainamp'
+        synonyms['gphase']=synonyms['gainphase']='gainphase'
+        synonyms['greal']=synonyms['gainreal']='gainreal'
+        synonyms['gimag']=synonyms['gainimag']='gainimag'
+        synonyms['swp']=synonyms['swpower']=synonyms['switchedpower']='swpower'
+        synonyms['opac']=synonyms['opacity']='opac'
+        synonyms['del']=synonyms['delay']='delay'
         
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]

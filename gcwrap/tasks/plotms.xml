@@ -76,6 +76,13 @@ MS Parameters
       <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
+      <value>gainamp</value><value>gamp</value>
+      <value>gainphase</value><value>gphase</value>
+      <value>gainreal</value><value>greal</value>
+      <value>gainimag</value><value>gimag</value>
+      <value>delay</value><value>del</value>
+      <value>opac</value><value>opacity</value>
+      <value>swp</value><value>swpower</value><value>switchedpower</value>
     </allowed>
   </param>
   
@@ -134,6 +141,13 @@ MS Parameters
       <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
+      <value>gainamp</value><value>gamp</value>
+      <value>gainphase</value><value>gphase</value>
+      <value>gainreal</value><value>greal</value>
+      <value>gainimag</value><value>gimag</value>
+      <value>delay</value><value>del</value>
+      <value>opac</value><value>opacity</value>
+      <value>swp</value><value>swpower</value><value>switchedpower</value>
     </allowed>  
     </param>
     
@@ -1130,6 +1144,16 @@ Constraints
                  'ant-azimuth' 
                  'ant-elevation'
                  'ant-parang'='ant-parangle'
+
+               Calibration:
+                 'gainamp'='gamp'
+                 'gainphase'='gphase'
+                 'gainreal'='greal'
+                 'gainimag'='gimag'
+                 'delay'='del'
+                 'opacity'='opac'
+                 'swpower'='swp'='switchedpower'
+
 
       &gt;&gt;&gt; xaxis, yaxis expandable parameters
         xdatacolumn, 

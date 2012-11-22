@@ -118,6 +118,8 @@ public:
 	      UVDIST,UVDIST_L,U,V,W,UWAVE,VWAVE,WWAVE,
 	      AZ0,EL0,HA0,PA0,
 	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
+	      GAMP,GPHASE,GREAL,GIMAG,
+	      DELAY,SWP,TSYS,OPAC,
 	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
@@ -129,6 +131,8 @@ public:
 	      "UVdist","UVwave","U","V","W","Uwave","Vwave","Wwave",
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
+	      "GainAmp","GainPhase","GainReal","GainImag",
+	      "Delay","SwPower","Tsys","Opac",
 	      "None")
 
     // </group>

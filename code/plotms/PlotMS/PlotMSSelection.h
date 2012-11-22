@@ -39,7 +39,7 @@ namespace casa {
 
 //# Forward declarations
 class MeasurementSet;
-
+class NewCalTable;
 
 // Specifies an MS selection.  See the mssSetData method in
 // ms/MeasurementSets/MSSelectionTools.h for details.
@@ -89,6 +89,11 @@ public:
     void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
                Vector<Vector<Slice> >& chansel,
 	       Vector<Vector<Slice> >& corrsel) const;
+        
+    // Applies this selection to a NewCaltable
+    void apply(NewCalTable& ct, NewCalTable& selectedCT,
+               Vector<Vector<Slice> >& chansel,
+    	       Vector<Vector<Slice> >& corrsel) const;
         
     // Gets/Sets the value for the given selection field.
     // <group>

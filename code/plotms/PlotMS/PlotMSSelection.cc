@@ -28,6 +28,8 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+#include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CTInterface.h>
 
 namespace casa {
 
@@ -82,6 +84,50 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
 	       timerange(), antenna(), field(), spw(),
 	       uvrange(), msselect(), corr(), scan(), array(),
 	       "", observation());
+}
+
+void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
+  		            Vector<Vector<Slice> >& chansel,
+  		            Vector<Vector<Slice> >& corrsel) const {    
+
+
+  // Trap unsupported selections
+
+  if (uvrange().length()>0)
+    throw(AipsError("Selection by uvrange not supported for NewCalTable"));
+  if (corr().length()>0)
+    throw(AipsError("Selection by corr not supported for NewCalTable"));
+  if (array().length()>0)
+    throw(AipsError("Selection by array not supported for NewCalTable"));
+  if (observation().length()>0)
+    throw(AipsError("Selection by observation not supported for NewCalTable"));
+
+  // Set the selected NewCalTable to be the same initially as the input
+  // NewCalTable
+  selCT = ct;
+
+  //cout << "Whole NCT nrows    = " << ct.nrow() << endl;
+
+  CTInterface cti(ct);
+  MSSelection mss;
+  //mss.setTimeExpr(timerange());
+  //mss.setScanExpr(scan());
+  mss.setSpwExpr(spw());
+  mss.setFieldExpr(field());
+  mss.setAntennaExpr(antenna());
+  TableExprNode ten=mss.toTableExprNode(&cti);
+  try {
+    getSelectedTable(selCT,ct,ten,"");
+  } catch (AipsError x) {
+    //    logSink() << x.getMesg() << LogIO::SEVERE;
+    throw(AipsError("Error selecing on caltable: "+ct.tableName()));
+  }
+
+  // TBD: fill chansel, corrsel
+
+
+  //cout << "Selected NCT nrows = " << selCT.nrow() << endl;
+
 }
 
 

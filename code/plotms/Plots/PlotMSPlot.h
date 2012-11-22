@@ -28,9 +28,7 @@
 #define PLOTMSPLOT_H_
 
 #include <graphics/GenericPlotter/PlotFactory.h>
-#include <plotms/Data/PlotMSData.h>
-#include <plotms/Data/PlotMSCache2.h>
-#include <plotms/Data/PlotMSIndexer.h>
+#include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/PlotMS/PlotMSRegions.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
 
@@ -129,12 +127,8 @@ public:
     
     // Gets the plot's data source.
     // <group>
-    virtual PlotMSData& data() { return itsData_; };
-    virtual const PlotMSData& data() const { return itsData_; };
-    virtual PlotMSCache& cache() { return itsCache_; };
-    virtual const PlotMSCache& cache() const { return itsCache_; };
-    virtual PlotMSCache2& cache2() { return itsCache2_; };
-    virtual const PlotMSCache2& cache2() const { return itsCache2_; };
+    virtual PlotMSCacheBase& cache() { return *itsCache_; };
+    virtual const PlotMSCacheBase& cache() const { return *itsCache_; };
     virtual Int iter() { return 0; };
     // </group>
     
@@ -200,7 +194,7 @@ protected:
     virtual void constructorSetup();
     
     // Force data update by clearing the cache
-    virtual bool updateData() { itsData_.clearCache(); return True; };   
+    virtual bool updateData() { itsCache_->clear(); return True; };   
     
     // Returns true if drawing is currently being held on all plot canvases,
     // false otherwise.
@@ -224,10 +218,8 @@ protected:
     // Parameters.
     PlotMSPlotParameters itsParams_;
     
-    // Data.
-    PlotMSData itsData_;
-    PlotMSCache itsCache_;
-    PlotMSCache2 itsCache2_;
+    // Cache.
+    PlotMSCacheBase* itsCache_;
     
 private:
     // Disable copy constructor and operator for now.

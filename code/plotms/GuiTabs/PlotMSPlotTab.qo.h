@@ -45,7 +45,6 @@ class PlotMSDataTab;
 class PlotMSDisplayTab;
 class PlotMSIterateTab;
 class PlotMSExportTab;
-class PlotMSMultiAxesTab;
 class PlotMSTransformationsTab;
 class PlotMSPlotTab;
 
@@ -103,10 +102,8 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
     Q_OBJECT
     
     //# Friend class declarations.
-    friend class PlotMSMultiPlot;
     friend class PlotMSPlot;
     friend class PlotMSPlotter;
-    friend class PlotMSSinglePlot;
     friend class PlotMSIterPlot;
     
 public:
@@ -195,8 +192,6 @@ protected:
     PlotMSIterateTab* insertIterateSubtab(int index);
     PlotMSExportTab* addExportSubtab();
     PlotMSExportTab* insertExportSubtab(int index);
-    PlotMSMultiAxesTab* addMultiAxesSubtab();
-    PlotMSMultiAxesTab* insertMultiAxesSubtab(int index);
     PlotMSTransformationsTab* addTransformationsSubtab();
     PlotMSTransformationsTab* insertTransformationsSubtab(int index);
 

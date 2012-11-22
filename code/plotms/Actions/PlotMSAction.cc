@@ -35,6 +35,8 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Data/MSCache.h>
+#include <plotms/Data/PlotMSIndexer.h>
 
 #include <iomanip>
 
@@ -177,7 +179,6 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        // Get parameters.
 	        PlotMSPlotParameters& params = plot->parameters();
 	        PMS_PP_Cache* c = params.typedGroup<PMS_PP_Cache>();
-	        PlotMSData& data = plot->data();
 
 		// Detect if we are showing flagged/unflagged points (for locate)
 	        PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
@@ -201,23 +202,12 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	            PlotLogMessage* m = NULL;
 	            try {
 	                if(itsType_ == SEL_LOCATE) {
-			  if (plot->spectype()=="Iter")
-			    m = plot->cache2().indexer(plot->iter()).locateRange(Vector<PlotRegion>(regions),
-										 showUnflagged,showFlagged);
-			  else
-			    m = data.locateRange(Vector<PlotRegion>(regions));
-			  
-			  
-			  
+			  m = plot->cache().indexer(plot->iter()).locateRange(Vector<PlotRegion>(regions),
+									      showUnflagged,showFlagged);
 	                } else {
-			  if (plot->spectype()=="Iter")
-			    m = plot->cache2().indexer(plot->iter()).flagRange(flagging,
-									       Vector<PlotRegion>(regions),
-									       itsType_ == SEL_FLAG);
-			  else
-			    m = data.flagRange(flagging,
-					       Vector<PlotRegion>(regions),
-					       itsType_ == SEL_FLAG);
+			  m = plot->cache().indexer(plot->iter()).flagRange(flagging,
+									    Vector<PlotRegion>(regions),
+									    itsType_ == SEL_FLAG);
 	                }
 	                
 	            // ...and catch any reported errors.
@@ -460,13 +450,13 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        return false;
 	    }
 
-	    PlotMSData& data = plot->data();
+	    PlotMSCacheBase& cache = plot->cache();
 	    vector<PMS::Axis> a;
 
 	    // Remove any duplicates or axes.  If loading, also make sure that the
 	    // given axes are not already loaded.  If releasing, make sure that the
 	    // axes are loaded.
-	    vector<pair<PMS::Axis, unsigned int> > loaded = data.loadedAxes();
+	    vector<pair<PMS::Axis, unsigned int> > loaded = cache.loadedAxes();
 	    bool valid;
 	    for(unsigned int i = 0; i < axes.size(); i++) {
 	        valid = true;
@@ -496,7 +486,7 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        bool removed = false;
 	        PMS::Axis x = paramsCache->xAxis(), y = paramsCache->yAxis();
 	        for(int i = 0; i < (int)a.size(); i++) {
-	            if(a[i]== x || a[i]== y || PlotMSCache::axisIsMetaData(a[i])) {
+	            if(a[i]== x || a[i]== y || MSCache::axisIsMetaData(a[i])) {
 	                if(removed) ss << ',';
 	                ss << ' ' << PMS::axis(a[i]);
 	                a.erase(a.begin() + i);
@@ -519,7 +509,7 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	        if(itsType_ == CACHE_LOAD) {
 
 		  //		  cout << "    calling PlotMSCacheThread from PlotMSAction" << endl;
-	            ct = new PlotMSCacheThread(plot, &plot->data(), a,
+	            ct = new PlotMSCacheThread(plot, &plot->cache(), a,
 	                    vector<PMS::DataColumn>(a.size(), PMS::DEFAULT_DATACOLUMN),
 	                    paramsData->filename(),paramsData->selection(),
 			    paramsData->averaging(), paramsData->transformations(),
@@ -855,7 +845,6 @@ bool PlotMSAction::doActionWithResponse(PlotMSApp* plotms, Record &retval) {
 
             // Get parameters.
             PlotMSPlotParameters& params = plot->parameters();
-            PlotMSData& data = plot->data();
 
             // Detect if we are showing flagged/unflagged points (for locate)
             PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
@@ -877,13 +866,8 @@ bool PlotMSAction::doActionWithResponse(PlotMSApp* plotms, Record &retval) {
 	            
                 // Actually do locate/flag/unflag...
                 try {
-                    if (plot->spectype()=="Iter") {
-                        retval = plot->cache2().indexer(plot->iter()).locateInfo(
-                            Vector<PlotRegion>(regions), showUnflagged, showFlagged);
-                    }
-                    else {
-                        retval = data.locateInfo(Vector<PlotRegion>(regions));
-                    }
+		  retval = plot->cache().indexer(plot->iter()).locateInfo(Vector<PlotRegion>(regions), showUnflagged, showFlagged);
+									  
                     // int n = retval.nfields();
                     // for(uInt r = 0; r < d.nfields(); ++r) {
                     //     retval.defineRecord(n+r, d.subRecord(r));

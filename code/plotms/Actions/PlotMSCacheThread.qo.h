@@ -42,9 +42,7 @@
 namespace casa {
 
 //# Forward Declarations
-class PlotMSData;
-class PlotMSCache;
-class PlotMSCache2;
+class PlotMSCacheBase;
 class PlotMSPlot;
 
 // Subclass of PlotMSThread for loading axes in a PlotMSCache.
@@ -52,36 +50,16 @@ class PlotMSCacheThread : public PlotMSThread {
     Q_OBJECT
     
     //# Friend class declarations.
-    friend class PlotMSCache;
-    friend class PlotMSCache2;
-    friend class PlotCalCache;
+    friend class PlotMSCacheBase;
+    friend class MSCache;
+    friend class CalCache;
     friend class PlotMSCacheThreadHelper;
     
 public:
     // LOADING constructor which takes the PlotMSPlot, the PlotMSData, the axes
     // and data columns, the averaging, a flag for whether to call setupPlot
     // after the loading, and optional post-thread method parameters.
-    PlotMSCacheThread(PlotMSPlot* plot, PlotMSData* data,
-		      const vector<PMS::Axis>& axes, 
-		      const vector<PMS::DataColumn>& data2,
-		      const String& msname, 
-		      const PlotMSSelection& selection, 
-		      const PlotMSAveraging& averaging, 
-		      const PlotMSTransformations& transformations, 
-		      bool setupPlot = false,
-		      PMSPTMethod postThreadMethod = NULL,
-		      PMSPTObject postThreadObject = NULL);
-    PlotMSCacheThread(PlotMSPlot* plot, PlotMSCache* cache,
-		      const vector<PMS::Axis>& axes, 
-		      const vector<PMS::DataColumn>& data2,
-		      const String& msname, 
-		      const PlotMSSelection& selection, 
-		      const PlotMSAveraging& averaging, 
-		      const PlotMSTransformations& transformations, 
-		      bool setupPlot = false,
-		      PMSPTMethod postThreadMethod = NULL,
-		      PMSPTObject postThreadObject = NULL);
-    PlotMSCacheThread(PlotMSPlot* plot, PlotMSCache2* cache,
+    PlotMSCacheThread(PlotMSPlot* plot, PlotMSCacheBase* cache,
 		      const vector<PMS::Axis>& axes, 
 		      const vector<PMS::DataColumn>& data2,
 		      const String& msname, 
@@ -138,9 +116,7 @@ private:
     PlotMSPlot* itsPlot_;
     
     // Data.
-    PlotMSData* itsData_;
-    PlotMSCache* itsCache_;
-    PlotMSCache2* itsCache2_;
+    PlotMSCacheBase* itsCache_;
     
     // Load (true) or release (false) axes.
     bool itsLoad_;

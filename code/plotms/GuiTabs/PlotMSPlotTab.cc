@@ -34,12 +34,9 @@
 #include <plotms/GuiTabs/PlotMSDisplayTab.qo.h>
 #include <plotms/GuiTabs/PlotMSIterateTab.qo.h>
 #include <plotms/GuiTabs/PlotMSExportTab.qo.h>
-#include <plotms/GuiTabs/PlotMSMultiAxesTab.qo.h>
 #include <plotms/GuiTabs/PlotMSTransformationsTab.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
-#include <plotms/Plots/PlotMSMultiPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSSinglePlot.h>
 #include <plotms/Plots/PlotMSIterPlot.h>
 
 namespace casa {
@@ -247,7 +244,7 @@ void PlotMSPlotTab::plot() {
 		//
 		// note as of Aug 2010: .casheReady() seems to return false even if cache was cancelled.
         bool paramsChanged = params != *itsCurrentParameters_;
-        bool cancelledCache = !itsCurrentPlot_->data().cacheReady();
+        bool cancelledCache = !itsCurrentPlot_->cache().cacheReady();
 
         if (its_force_reload)    {
 			forceReloadCounter_++;   
@@ -487,30 +484,6 @@ PlotMSExportTab*  PlotMSPlotTab::insertExportSubtab (int index)
      insertSubtab (index, tab);
      return tab;
 }
-
-
-
-
-PlotMSMultiAxesTab*  PlotMSPlotTab::addMultiAxesSubtab ()
-{
-     return insertMultiAxesSubtab (itsSubtabs_.size ());
-}
-
-
-PlotMSMultiAxesTab*  PlotMSPlotTab::insertMultiAxesSubtab (int index)
-{
-     PlotMSMultiAxesTab *tab = NULL;
-     foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
-          tab = dynamic_cast < PlotMSMultiAxesTab * >(t);
-          if (tab != NULL)
-               break;
-     }
-     if (tab == NULL)
-          tab = new PlotMSMultiAxesTab (this, itsPlotter_);
-     insertSubtab (index, tab);
-     return tab;
-}
-
 
 
 PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab ()

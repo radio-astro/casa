@@ -31,6 +31,7 @@
 
 #include <casa/namespace.h>
 #include <plotms/Data/PlotMSIndexer.h>
+#include <plotms/Data/MSCache.h>
 
 namespace casa {
 
@@ -133,7 +134,7 @@ protected:
     void constructorSetup();
 
     // Clear the underlying data cache
-    virtual bool updateData() { itsCache2_.clear();  return True; };   
+    virtual bool updateData() { itsCache_->clear();  return True; };   
 
 
 private:    

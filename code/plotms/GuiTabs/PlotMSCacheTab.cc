@@ -69,10 +69,10 @@ void PlotMSCacheTab::update(const PlotMSPlot& plot) {
     availableTable->sortItems(0);
     availableTable->resizeRowsToContents();
     
-    vector<pair<PMS::Axis, unsigned int> > laxes = plot.data().loadedAxes();
+    vector<pair<PMS::Axis, unsigned int> > laxes = plot.cache().loadedAxes();
     unsigned int nmeta = 0, nloaded = 0;
     for(unsigned int i = 0; i < laxes.size(); i++) {
-        if(PlotMSCache::axisIsMetaData(laxes[i].first)) nmeta++;
+        if(PlotMSCacheBase::axisIsMetaData(laxes[i].first)) nmeta++;
         else                                            nloaded++;
     }
     metaTable->setRowCount(nmeta);
@@ -82,7 +82,7 @@ void PlotMSCacheTab::update(const PlotMSPlot& plot) {
     QString qaxis;
     unsigned int imeta = 0, iloaded = 0;
     for(unsigned int i = 0; i < laxes.size(); i++) {
-        if(PlotMSCache::axisIsMetaData(laxes[i].first)) {
+        if(PlotMSCacheBase::axisIsMetaData(laxes[i].first)) {
             tw = metaTable;   ti = imeta;   imeta++;
         } else {
             tw = loadedTable; ti = iloaded; iloaded++;
@@ -130,7 +130,7 @@ vector<PMS::Axis> PlotMSCacheTab::selectedLoadOrReleaseAxes(bool load) const {
     for(int i = 0; i < sel.size(); i++) {
         for(int r = sel[i].bottomRow(); r <= sel[i].topRow(); r++) {
             axis = PMS::axis(tw->item(r, 0)->text().toStdString(), &ok);
-            if(ok && !PlotMSCache::axisIsMetaData(axis)) axes.push_back(axis);
+            if(ok && !PlotMSCacheBase::axisIsMetaData(axis)) axes.push_back(axis);
         }
     }
     return axes;

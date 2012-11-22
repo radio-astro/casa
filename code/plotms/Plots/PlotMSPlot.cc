@@ -29,6 +29,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
+#include <plotms/Data/MSCache.h>
 
 namespace casa {
 
@@ -53,14 +54,25 @@ void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* /*plotm
 
 // Constructors/Destructors //
 
-PlotMSPlot::PlotMSPlot(PlotMSApp* parent) : itsParent_(parent),
-        itsFactory_(parent->getPlotter()->getFactory()),
-        itsParams_(itsFactory_), itsData_(parent),itsCache_(parent),itsCache2_(parent) { }
+PlotMSPlot::PlotMSPlot(PlotMSApp* parent) : 
+  itsParent_(parent),
+  itsFactory_(parent->getPlotter()->getFactory()),
+  itsParams_(itsFactory_),
+  itsCache_(NULL) { 
+  
+  itsCache_ = new MSCache(itsParent_);
+
+}
 
 PlotMSPlot::~PlotMSPlot() {
     
     // Clean up plots
     // detachFromCanvases();
+
+  if (itsCache_)
+    delete itsCache_;
+  itsCache_=NULL;
+
 }
 
 
@@ -162,7 +174,7 @@ void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
 
     // If something went wrong, clear the cache and plots.
     if(!dataSuccess) {
-        itsData_.clearCache();
+        itsCache_->clear();
         plotDataChanged();
     }
     
@@ -244,54 +256,3 @@ void PlotMSPlot::releaseDrawing() {
 }
 
 
-  /*  in the following, VisSet is commented
-bool PlotMSPlot::updateData() {
-    
-    PMS_PP_MSData* d = parameters().typedGroup<PMS_PP_MSData>();
-    if(d == NULL) return false; // shouldn't happen
-    
-    try {
-        // Clear cache.
-        itsData_.clearCache();
-        
-        // Open MS and lock until we're done.
-        itsMS_ = MeasurementSet(d->filename(),
-                TableLock(TableLock::AutoLocking), Table::Update);
-
-        // Apply the MS selection.
-        Matrix<Int> chansel;
-	OrderedMap<Int, Vector<Vector<Int> > > corrsel(Vector<Vector<Int> >(0));
-        d->selection().apply(itsMS_, itsSelectedMS_, chansel,corrsel);
-
-        // Sort appropriately.
-        double solint(DBL_MAX);
-        double interval(max(solint, DBL_MIN));
-        if(solint < 0) interval = 0;
-      
-        Block<Int> columns(5);
-        columns[0]=MS::ARRAY_ID;
-        columns[1]=MS::SCAN_NUMBER;  // force scan boundaries
-        columns[2]=MS::FIELD_ID;      
-        columns[3]=MS::DATA_DESC_ID;  // force 
-        columns[4]=MS::TIME;
-        
-        // Open VisSet.
-        itsVisSet_ = new VisSet(itsSelectedMS_, columns, Matrix<int>(),False,
-                                interval);
-	//        itsVisSet_->selectChannel(chansel);
-
-	itsVisSet_->iter().selectChannel(chansel);
-	itsVisSet_->iter().selectCorrelation(corrsel);
-
-
-        return true;
-        
-    } catch(AipsError& err) {
-        itsParent_->showError("Could not open MS: " + err.getMesg());
-        return false;
-    } catch(...) {
-        itsParent_->showError("Could not open MS, for unknown reasons!");
-        return false;
-    }
-}
-  */
