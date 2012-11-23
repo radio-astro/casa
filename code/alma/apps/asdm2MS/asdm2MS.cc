@@ -1558,6 +1558,10 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
   oss << RODataManAccessor(*tab_p, "DATA", True).dataManagerSeqNr();
   BDF2AsdmStManIndex bdf2AsdmStManIndex(bdfNames, isBigEndian, tab_p->tableName() + "/table.f" + String(oss.str()));
   
+  // Initialize an UVW coordinates engine.
+  UvwCoords uvwCoords(ds_p);
+
+
   // Now traverse the BDFs : 
   //   * to write the indexes for asdmstman
   //   * to populate all the columns other than the DATA's one in the non lazy way.
@@ -1671,6 +1675,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<int> >           stateId_vv(dataDescriptionIds.size());	// Column STATE_ID
 	vector<vector<double> >        timeCentroid_vv(dataDescriptionIds.size());	// Column TIME_CENTROID
 	vector<vector<pair<int, int> > >    nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
+	vector<vector<double> >        uvw_vv(dataDescriptionIds.size());       // Column UVW
 	//
 	// Everything is contained in *one* SDMDataSubset.
 	//
@@ -1696,6 +1701,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	      stateId_vv[iDD].push_back(stateIdx2Idx[*iter]);
 	      timeCentroid_vv[iDD].push_back(time_vv[iDD].back());
 	      nChanNPol_vv[iDD].push_back(nChanNPol);
+	      uvw_vv[iDD].push_back(0.0);uvw_vv[iDD].push_back(0.0);uvw_vv[iDD].push_back(0.0);
 	    }
 	    bdf2AsdmStManIndex.appendWVRIndex(iDD,
 					      bdfNames[iRow],
@@ -1732,7 +1738,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					     arrayId,
 					     observationId,
 					     stateId_vv[iDD],
-					     nChanNPol_vv[iDD]);
+					     nChanNPol_vv[iDD],
+					     uvw_vv[iDD]);
 	}
       }
 
@@ -1756,6 +1763,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<int> >     cross_stateId_vv(dataDescriptionIds.size());       // Column STATE_ID per Data Description
 	vector<vector<double> >  cross_timeCentroid_vv(dataDescriptionIds.size());  // Column TIME_CENTROID per Data Description
 	vector<vector<pair<int, int> > >    cross_nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
+	vector<vector<double> >  cross_uvw_vv(dataDescriptionIds.size());          // Column UVW
 
 	vector<vector<int> >     auto_antenna1_vv(dataDescriptionIds.size());      // Column ANTENNA1 per Data Description
 	vector<vector<int> >     auto_antenna2_vv(dataDescriptionIds.size());      // Column ANTENNA2 per Data Description
@@ -1769,6 +1777,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<int> >     auto_stateId_vv(dataDescriptionIds.size());       // Column STATE_ID per Data Description
 	vector<vector<double> >  auto_timeCentroid_vv(dataDescriptionIds.size());  // Column TIME_CENTROID per Data Description
 	vector<vector<pair<int, int> > >    auto_nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
+	vector<vector<double> >  auto_uvw_vv(dataDescriptionIds.size());           // Column UVW
 	
 	//
 	// Traverse all the integrations.
@@ -1781,11 +1790,32 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	  string time_s = ArrayTime((int64_t) sdmDataSubset.time()).toFITS();
 	  double time = ArrayTime((int64_t) sdmDataSubset.time()).getMJD() * 86400.0;
 	  double interval =  sdmDataSubset.interval() / 1000000000.0;
+
+	  pair<bool, bool> dataOrder(true, false);  // 1st: reverse bls YES, 2nd: autotrailing NO
+	  vector<Vector<casa::Double> > vv_uvw;
+	  vector<double> time_v(dataDescriptionIds.size() * (numberOfBaselines + numberOfAntennas),
+				time);
+	  uvwCoords.uvw_bl(*iter,
+			   time_v, 
+			   correlationMode,
+			   dataOrder,
+			   vv_uvw);
+	  
+	  //
+	  // If we have autocorrelations, ignore the numberOfAntennas * dataDescriptionIds.size()
+	  // first element of vv_uvw
+	  // 
+	  unsigned int uvwIndexBase = 0;
+	  if (correlationMode == CROSS_AND_AUTO || correlationMode == AUTO_ONLY) {
+	    uvwIndexBase += numberOfAntennas * dataDescriptionIds.size();
+	  }
+
 	  //
 	  // Do we have cross data ?
 	  //
 	  if (correlationMode == CROSS_AND_AUTO || correlationMode == CROSS_ONLY) {
 	    for (unsigned int iDD = 0; iDD < dataDescriptionIds.size(); iDD++) {
+	      unsigned int uvwIndex = uvwIndexBase + iDD;
 	      unsigned int ddIndex = dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()];
 	      for (unsigned int iA2 = 1; iA2 < antennaIds.size(); iA2++)
 		for (unsigned int iA1 = 0; iA1 < iA2; iA1++) {
@@ -1801,6 +1831,10 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 		  cross_stateId_vv[iDD].push_back(stateIdx2Idx[*iter]);
 		  cross_timeCentroid_vv[iDD].push_back(time);
 		  cross_nChanNPol_vv[iDD].push_back(nChanNPol);
+		  cross_uvw_vv[iDD].push_back(vv_uvw[uvwIndex](0));
+		  cross_uvw_vv[iDD].push_back(vv_uvw[uvwIndex](1));
+		  cross_uvw_vv[iDD].push_back(vv_uvw[uvwIndex](2));
+		  uvwIndex += dataDescriptionIds.size();
 		}
 	      
 	      bdf2AsdmStManIndex.appendCrossIndex(iDD,
@@ -1837,6 +1871,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 		auto_stateId_vv[iDD].push_back(stateIdx2Idx[*iter]);
 		auto_timeCentroid_vv[iDD].push_back(time);
 		auto_nChanNPol_vv[iDD].push_back(nChanNPol);
+		auto_uvw_vv[iDD].push_back(0.0);auto_uvw_vv[iDD].push_back(0.0);auto_uvw_vv[iDD].push_back(0.0);
 	      }
 
 	      bdf2AsdmStManIndex.appendAutoIndex(iDD,
@@ -1876,7 +1911,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					     arrayId,
 					     observationId,
 					     auto_stateId_vv[iDD],
-					     auto_nChanNPol_vv[iDD]);
+					     auto_nChanNPol_vv[iDD],
+					     auto_uvw_vv[iDD]);
 	  msFillers[AP_UNCORRECTED]->addData(true,             // Yes ! these are complex data.
 					     cross_time_vv[iDD],
 					     cross_antenna1_vv[iDD],
@@ -1893,7 +1929,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					     arrayId,
 					     observationId,
 					     cross_stateId_vv[iDD],
-					     cross_nChanNPol_vv[iDD]);      
+					     cross_nChanNPol_vv[iDD],
+					     cross_uvw_vv[iDD]);      
 	}
       }
       else 

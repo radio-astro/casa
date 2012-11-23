@@ -681,7 +681,8 @@ void ASDM2MSFiller::addData (bool                      complexData,
 			     int                       arrayId_,
 			     int                       observationId_,
 			     vector<int>               &stateId_,
-			     vector<pair<int, int> >   &nChanNPol_){
+			     vector<pair<int, int> >   &nChanNPol_,
+			     vector<double>            &uvw_){
   
   unsigned int theSize = time_.size();
   Bool *flag_row__  = new Bool[theSize];
@@ -705,7 +706,7 @@ void ASDM2MSFiller::addData (bool                      complexData,
   Vector<Int>    arrayId(IPosition(1, theSize), arrayId_);
   Vector<Int>    observationId(IPosition(1, theSize), observationId_);
   Vector<Int>    stateId(IPosition(1, theSize), &stateId_.at(0), SHARE);
-  //  Matrix<Double> uvw(IPosition(2, 3, theSize), &uvw_.at(0), SHARE);
+  Matrix<Double> uvw(IPosition(2, 3, theSize), &uvw_.at(0), SHARE);
   Vector<Bool>   flagRow(IPosition(1, theSize), flag_row__, SHARE);
 
   // UVW takes its contents directly from the argument uvw_.
@@ -742,7 +743,7 @@ void ASDM2MSFiller::addData (bool                      complexData,
   itsMSCol->arrayId().putColumnRange(slicer, arrayId);
   itsMSCol->observationId().putColumnRange(slicer, observationId);
   itsMSCol->stateId().putColumnRange(slicer, stateId);
-  //  itsMSCol->uvw().putColumnRange(slicer, uvw);
+  itsMSCol->uvw().putColumnRange(slicer, uvw);
   itsMSCol->flagRow().putColumnRange(slicer, flagRow); 
 
   int cRow0 = 0;
