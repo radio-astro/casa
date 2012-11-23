@@ -107,8 +107,7 @@ void BDF2AsdmStManIndex::appendAutoIndex(unsigned int           iDD,
 					 unsigned int		stepBl,
 					 unsigned int		stepSpw,
 					 const vector<double>&	scaleFactors,
-					 uint64_t		fileOffset,
-					 unsigned int           numberOfBytesPerValue) {
+					 uint64_t		fileOffset) {
   LOGENTER("BDF2AsdmStManIndex::appendAutoIndex");
   AsdmIndex							asdmIndex;
 
@@ -138,8 +137,7 @@ void BDF2AsdmStManIndex::appendWVRIndex(unsigned int            iDD,
 					unsigned int		stepBl,
 					unsigned int		stepSpw,
 					const vector<double>&	scaleFactors,
-					uint64_t		fileOffset,
-					unsigned int            numberOfBytesPerValue) {
+					uint64_t		fileOffset) {
   LOGENTER("BDF2AsdmStManIndex::appendWVRIndex");
   AsdmIndex							asdmIndex;
 
@@ -171,8 +169,7 @@ void BDF2AsdmStManIndex::appendCrossIndex(unsigned int          iDD,
 					  unsigned int		stepSpw,
 					  const vector<double>&	scaleFactors,
 					  uint64_t		fileOffset,
-					  PrimitiveDataType     dataType,
-					  unsigned int          numberOfBytesPerValue) {
+					  PrimitiveDataType     dataType) {
   LOGENTER("BDF2AsdmStManIndex::appendCrossIndex");
   AsdmIndex							asdmIndex;
 

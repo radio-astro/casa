@@ -1561,19 +1561,24 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
   // Initialize an UVW coordinates engine.
   UvwCoords uvwCoords(ds_p);
 
+  //
+  // Some informations
+  // 
+  infostream.str("");
+  infostream << "The dataset has " << mainT.size() << " main(s)...";
+  infostream << v.size() << " of them in the selected exec blocks / scans." << endl;
+  info(infostream.str());
 
   // Now traverse the BDFs : 
   //   * to write the indexes for asdmstman
   //   * to populate all the columns other than the DATA's one in the non lazy way.
   //
-  unsigned int iRow = 0;
-  unsigned int mainRowNum = 0;
+  unsigned int	iRow	    = 0;
+  uInt		lastMSNrows = 0;
   try {
 
-    uInt MainRowNum = 0;
     for (vector<MainRow *>::iterator iter=v.begin(); iter!=v.end(); iter++) {
 
-   
       /**
        * Take care of the MS State table prior to the Main.
        */
@@ -1591,6 +1596,10 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
       int			processorId	   = cdR->getProcessorId().getTagValue();
       int			scanNumber	   = (*iter)->getScanNumber();
       int			arrayId		   = 0;
+      
+      infostream.str("");
+      infostream << "ASDM Main row #" << mainRowIndex[iter-v.begin()] << " - BDF file size is " << (*iter)->getDataSize() << " bytes for " << (*iter)->getNumIntegration() << " integrations.";
+      infostream.str("");
 
       bdf2AsdmStManIndex.setNumberOfDataDescriptions(dataDescriptionIds.size());
 
@@ -1603,6 +1612,10 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
       unsigned int numberOfBaselines = numberOfAntennas * (numberOfAntennas - 1) / 2 ;
       
       ProcessorType processorType = sdosr.processorType();
+      infostream.str("");
+      infostream << "ASDM Main row #" << mainRowIndex[iter-v.begin()] << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
+      info(infostream.str());
+
       CorrelationMode correlationMode = sdosr.correlationMode();
       
       const SDMDataObject::DataStruct& dataStruct = sdosr.dataStruct();
@@ -1712,9 +1725,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					      numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
 					      numberOfChannels * numberOfPolarizations,
 					      autoScaleFactors,
-					      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * numberOfSpectralWindows * numberOfChannels * numberOfPolarizations * sizeof(AUTODATATYPE),
-					      sizeof(AUTODATATYPE)
-					      );
+					      sdmDataSubset.autoDataPosition() + itime * numberOfAntennas * numberOfSpectralWindows * numberOfChannels * numberOfPolarizations * sizeof(AUTODATATYPE));
 	  }
 	}
 
@@ -1847,8 +1858,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 						  numberOfChannels * numberOfPolarizations,
 						  crossScaleFactors,
 						  sdmDataSubset.crossDataPosition(),
-						  sdmDataSubset.crossDataType(),
-						  2 * sizeof(sdmDataSubset.crossDataType()));
+						  sdmDataSubset.crossDataType());
 	    }
 	  }
 	  
@@ -1883,8 +1893,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 						 numberOfSpectralWindows * numberOfChannels * numberOfPolarizations,
 						 numberOfChannels * numberOfPolarizations,
 						 autoScaleFactors,
-						 sdmDataSubset.autoDataPosition(),
-						 sizeof(AUTODATATYPE));
+						 sdmDataSubset.autoDataPosition());
 	    }	      
 	  }
 	}
@@ -1938,7 +1947,15 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
       
       sdosr.close();
       iRow++;
+
+      infostream.str("");
+      infostream << "ASDM Main row #" << mainRowIndex[iter-v.begin()] << " produced a total of " << msFillers[AP_UNCORRECTED]->ms()->nrow() - lastMSNrows << " MS Main rows." << endl;
+      info(infostream.str());
+      lastMSNrows = msFillers[AP_UNCORRECTED]->ms()->nrow(); 
     }
+    infostream.str("");
+    infostream << "The MS main table for wvr uncorrected data contains " << msFillers[AP_UNCORRECTED]->ms()->nrow() << " rows.";
+    info(infostream.str());
   }
   catch (SDMDataObjectStreamReaderException e) {
     cout << e.getMessage() << endl;
