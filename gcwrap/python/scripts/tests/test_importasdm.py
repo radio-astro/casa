@@ -28,6 +28,7 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
+import testhelper as th
 import unittest
 
 myname = 'asdm-import_regression'
@@ -261,6 +262,178 @@ class asdm_import1(test_base):
             if not results:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table MAIN failed'
+    
+            expected = [
+    # old values using TAI     ['UVW',       638, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
+                         ['UVW',       638, [-65.14758508, 1.13423277, -33.51712451], 1E-7],
+                         ['EXPOSURE',  638, 1.008, 0],
+                         ['DATA',      638, [ [0.00362284+0.00340279j] ], 1E-8]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table MAIN failed'
+            
+            name = "ANTENNA"
+            expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
+                         ['POSITION',     1, [2202242.5520, -5445215.1570, -2485305.0920], 0.0001],
+                         ['DISH_DIAMETER',1, 12.0, 0]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table ANTENNA failed'
+            
+            name = "POINTING"
+            expected = [ ['DIRECTION',       10, [[ 1.94681283],[ 1.19702955]], 1E-8],
+                         ['INTERVAL',        10, 0.048, 0],
+                         ['TARGET',          10, [[ 1.94681283], [ 1.19702955]], 1E-8],
+                         ['TIME',            10, 4758823736.016000, 1E-6],
+                         ['TIME_ORIGIN',     10, 0., 0],
+                         ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
+                         ['ENCODER',         10, [ 1.94851533,  1.19867576], 1E-8 ]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table POINTING failed'
+                
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+                
+        myvis = myms_dataset_name
+        os.system('rm -rf exportasdm-output.asdm myinput.ms')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        default('exportasdm')
+        try:
+            print "\n>>>> Test of exportasdm v3: input MS  is ", myvis
+            print "(a simulated input MS with pointing table)"
+            rval = exportasdm(
+                vis = 'myinput.ms',
+                asdm = 'exportasdm-output.asdm',
+                archiveid="S002",
+                apcorrected=False,
+                useversion='v3'
+                )
+            print "rval is ", rval
+            if not rval:
+                raise Exception
+            os.system('rm -rf '+asdmname+'; mv exportasdm-output.asdm '+asdmname)
+            verify_asdm(asdmname, True)
+        except:
+            print myname, ': *** Unexpected error exporting MS to ASDM, regression failed ***'   
+            raise
+            
+        try:
+            print "Reimporting the created ASDM (v3)...."
+            importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no', useversion='v3')
+            print "Testing existence of reimported MS ...."
+            if(not os.path.exists(reimp_msname)):
+                print "MS ", reimp_msname, " doesn't exist."
+                raise Exception
+            print "Testing equivalence of the original and the reimported MS."
+            tb.open(myms_dataset_name)
+            nrowsorig = tb.nrows()
+            print "Original MS contains ", nrowsorig, "integrations."
+            tb.close()
+            tb.open(reimp_msname)
+            nrowsreimp = tb.nrows()
+            tb.close()
+            print "Reimported MS contains ", nrowsreimp, "integrations."
+            if(not nrowsreimp==nrowsorig):
+                print "Numbers of integrations disagree."
+                raise Exception
+        except:
+            print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
+            raise
+
+class asdm_import1(test_base):
+    
+    def setUp(self):
+        self.setUp_m51()
+        
+    def tearDown(self):
+        shutil.rmtree(myasdm_dataset_name)
+        shutil.rmtree(myms_dataset_name)
+        shutil.rmtree(msname,ignore_errors=True)
+        shutil.rmtree(msname+'.flagversions',ignore_errors=True)
+        
+                
+    def test1(self):
+        '''Asdm-import: Test good v1.2 input with filler v3 and inverse filler v3 '''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        self.res = importasdm(myasdm_dataset_name, useversion='v3')
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f0",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", msname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            # check main table first
+            name = ""
+            #             col name, row number, expected value, tolerance
+            expected = [
+                         ['UVW',       42, [ 0., 0., 0. ], 1E-8],
+                         ['EXPOSURE',  42, 1.008, 0],
+                         ['DATA',      42, [ [10.5526886+0.0j] ], 1E-7]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table MAIN failed'
             else:
                 retValue['success']=True
     
@@ -404,9 +577,133 @@ class asdm_import3(test_base):
         self.assertEqual(res['baseline']['DA44&&DA44']['flagged'], 76)
         self.assertEqual(res['baseline']['PM03&&PM03']['flagged'], 16)
 
+class asdm_import4(test_base):
+    
+    def setUp(self):
+        self.setUp_m51()
         
+    def tearDown(self):
+        shutil.rmtree(myasdm_dataset_name)
+        shutil.rmtree(myms_dataset_name)
+        shutil.rmtree(msname,ignore_errors=True)
+        shutil.rmtree(msname+'.flagversions',ignore_errors=True)
+        
+                
+    def test1(self):
+        '''Asdm-import: Test good v1.2 input with default filler in lazy mode'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        self.res = importasdm(myasdm_dataset_name, lazy=True)
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["table.f17asdmindex",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", msname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            importasdm(asdm=myasdm_dataset_name, vis='reference.ms', lazy=False, overwrite=True)
+
+            if(os.path.exists('reference.ms')):
+                retValue['success'] = th.compTables('reference.ms', msname, ['FLAG', 'FLAG_CATEGORY', 'DATA','WEIGHT_SPECTRUM'], 
+                                                    0.001) 
+                retValue['success'] = th.compVarColTables('reference.ms', msname, 'DATA',1E-5) 
+                retValue['success'] = th.compVarColTables('reference.ms', msname, 'FLAG') 
+
+                for subtname in ["ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POINTING",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL",
+                                 "ANTENNA",
+                                 "DATA_DESCRIPTION",
+                                 "FEED",
+                                 "FIELD",
+                                 "FLAG_CMD",
+                                 "HISTORY",
+                                 "OBSERVATION",
+                                 "POINTING",
+                                 "POLARIZATION",
+                                 "PROCESSOR",
+                                 "SOURCE",
+                                 "SPECTRAL_WINDOW",
+                                 "STATE",
+                                 "SYSCAL"]:
+                    
+                    print "Subtable ",subtname
+                    excllist = []
+                    if subtname=='SOURCE':
+                        excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
+                    if subtname=='SPECTRAL_WINDOW':
+                        excllist=['CHAN_FREQ', 'CHAN_WIDTH', 'EFFECTIVE_BW', 'RESOLUTION']
+                        for colname in excllist: 
+                            retValue['success'] = th.compVarColTables('reference.ms/SPECTRAL_WINDOW',
+                                                                      msname+'/SPECTRAL_WINDOW', colname, 0.01) and retValue['success']
+                        
+                    try:    
+                        retValue['success'] = th.compTables('reference.ms/'+subtname,
+                                                            msname+'/'+subtname, excllist, 
+                                                            0.01) and retValue['success']
+                    except:
+                        retValue['success'] = False
+                        print "ERROR for table ", subtname
+            
+                
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+                
         
 def suite():
-    return [asdm_import1, asdm_import2, asdm_import3]        
+    return [asdm_import1, asdm_import2, asdm_import3, asdm_import4]        
         
     

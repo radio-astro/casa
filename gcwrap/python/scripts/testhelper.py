@@ -45,7 +45,14 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
             if c in excludecols:
                 continue
             print c
-            a = tb.getcol(c)
+            a = 0
+            try:
+                a = tb.getcol(c)
+            except:
+                rval = False
+                print 'Error accessing column ', c, ' in table ', referencetab
+                print sys.exc_info()[0]
+                break
             #print a
             b = 0
             try:
@@ -117,7 +124,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
     return rval
 
 
-def compVarColTables(referencetab, testtab, varcol):
+def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
     '''Compare a variable column of two tables.
        referencetab  --> a reference table
        testtab       --> a table to verify
@@ -135,28 +142,49 @@ def compVarColTables(referencetab, testtab, varcol):
     col = varcol
     if tb.isvarcol(col) and tb2.isvarcol(col):
         try:
-            rcol = tb.getvarcol('DATA')
-            tcol = tb2.getvarcol('DATA')
-            rk = rcol.keys()
-            tk = tcol.keys()
-            
             # First check
-            if len(rk) != len(tk):
+            if tb.nrows() != tb2.nrows():
                 print 'Length of %s differ from %s, %s!=%s'%(referencetab,testtab,len(rk),len(tk))
                 retval = False
-                
-            for k in rk:
-                rdata = rcol[k]
-                tdata = tcol[k]
-                if not (rdata==tdata).all():
-                    print 'ERROR: Column %s of %s and %s do not agree'%(col,referencetab, testtab)
-                    retval = False
-                    break
+            else:
+                for therow in xrange(tb.nrows()):
+            
+                    rdata = tb.getcell(col,therow)
+                    tdata = tb2.getcell(col,therow)
+
+                    if not (rdata==tdata).all():
+                        if (tolerance>0.):
+                            differs=False
+                            for j in range(0,len(rdata)):
+                                if (type(rdata[j])==float or type(rdata[j])==int):
+                                    if (abs(rdata[j]-tdata[j]) > tolerance*abs(rdata[j]+tdata[j])):
+                                        print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
+                                        print therow, j
+                                        print rdata[j]
+                                        print tdata[j]
+                                        differs = True
+                                elif (type(rdata[j])==list or type(rdata[j])==np.ndarray):
+                                    for k in range(0,len(rdata[j])):
+                                        if (abs(rdata[j][k]-tdata[j][k]) > tolerance*abs(rdata[j][k]+tdata[j][k])):
+                                            print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
+                                            print therow, j, k
+                                            print rdata[j][k]
+                                            print tdata[j][k]
+                                            differs = True
+                                if differs:
+                                    print 'ERROR: Column %s of %s and %s do not agree within tolerance %s'%(col,referencetab, testtab, tolerance)
+                                    retval = False
+                                    break
+                        else:
+                            print 'ERROR: Column %s of %s and %s do not agree'%(col,referencetab, testtab)
+                            retval = False
+                            break
         finally:
             tb.close()
             tb2.close()
     
     else:
+        print 'Columns are not varcolumns.'
         retval = False
 
     if retval:

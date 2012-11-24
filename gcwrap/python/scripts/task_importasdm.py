@@ -15,6 +15,7 @@ def importasdm(
     time_sampling=None,
     ocorr_mode=None,
     compression=None,
+    lazy=None,
     asis=None,
     wvr_corrected_data=None,
     scans=None,
@@ -68,6 +69,10 @@ def importasdm(
 ........ default: ca
 ........ 
 ....   compression  -- produces comrpressed columns in the resulting measurement set.
+                 default: False
+
+       lazy         -- Make the MS DATA column read the ASDM Binary data directly
+                       (faster import, smaller MS)
                  default: False
 
 ....   asis         --  creates verbatim copies of the ASDM tables in 
@@ -279,11 +284,14 @@ def importasdm(
 
         if compression:
             execute_string = execute_string + ' --compression'
+        elif lazy:
+            execute_string = execute_string + ' --lazy'
+            
         if verbose:
             execute_string = execute_string + ' --verbose'
         if not overwrite and os.path.exists(viso):
             raise Exception, \
-                'You have specified and existing ms and have indicated you do not wish to overwrite it'
+                'You have specified an existing MS and have indicated you do not wish to overwrite it'
 
         #
         # If viso+".flagversions" then process differently depending on the value of overwrite..
