@@ -193,12 +193,6 @@ void ROScalarColumn<T>::getColumnCells (const RefRows& rownrs,
     baseColPtr_p->getScalarColumnCells (rownrs, &vec);
 }
 
-#define ThrowIfScalarColumnNotWritable() \
-    { if (! isWritable_p){ \
-        throw AipsError ("ScalarColumn not writable", __FILE__, __LINE__); \
-      }\
-    }
-
 template<class T>
 ScalarColumn<T>::ScalarColumn(Bool isWritable)
 : ROTableColumn     (),
