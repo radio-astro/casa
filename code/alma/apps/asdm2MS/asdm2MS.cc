@@ -1482,7 +1482,7 @@ void fillState(MainRow* r_p) {
 	      <<", scanNumber="<< r_p->getScanNumber()
 	      <<", subscanNum=" << r_p->getSubscanNumber() << "). Aborting. "
 	      << endl;
-    error(errstream.str());
+    throw ASDM2MSException(errstream.str());
   }	  
 
   SubscanIntent subscanIntent = sscanR_p->getSubscanIntent();
@@ -4850,10 +4850,6 @@ int main(int argc, char *argv[]) {
     // For each selected main row.
     for (int32_t i = 0; i < nMain; i++) {
       try {
-        //cerr<<"Check again 2. msFillers_v.size="<<msFillers_v.size()<<endl;
-	// Populate the State table.
-	fillState(v[i]);
-
 	// What's the processor for this Main row ?
 	Tag cdId = v[i]->getConfigDescriptionId();
 	ConfigDescriptionTable& cT = ds->getConfigDescription();
@@ -4866,8 +4862,9 @@ int main(int argc, char *argv[]) {
 	infostream << "ASDM Main row #" << mainRowIndex[i] << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
 	info(infostream.str());
 
+	string absBDFpath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy(v[i]->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
 	infostream.str("");
-	infostream << "ASDM Main row #" << mainRowIndex[i] << " - BDF file size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
+	infostream << "ASDM Main row #" << mainRowIndex[i] << " - BDF file '" << absBDFpath << "' - Size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
 	info(infostream.str());
 
         if(v[i]->getNumIntegration()==0 ||v[i]->getDataSize()==0) {
@@ -4877,6 +4874,8 @@ int main(int argc, char *argv[]) {
           continue;
         } 
 
+	// Populate the State table.
+	fillState(v[i]);
 
 	if (processorType == RADIOMETER) {
 	  if (!sdmBinData.acceptMainRow(v[i])) {
@@ -4998,6 +4997,11 @@ int main(int argc, char *argv[]) {
 	infostream << e.getMessage();
 	info(infostream.str());
       }
+      catch ( SDMDataObjectParserException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
       catch ( SDMDataObjectStreamReaderException& e ) {
 	infostream.str("");
 	infostream << e.getMessage();
@@ -5008,7 +5012,12 @@ int main(int argc, char *argv[]) {
 	infostream << e.getMessage();
 	info(infostream.str());
       }
-      catch (ConversionException e) {
+      catch (ConversionException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch (ASDM2MSException& e) {
 	infostream.str("");
 	infostream << e.getMessage();
 	info(infostream.str());
