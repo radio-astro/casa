@@ -108,6 +108,19 @@ casa_add_library( synthesis
   MSVis/VisibilityIteratorImpl.cc
   MSVis/VisibilityIteratorImplAsync.cc
   MSVis/VisibilityProcessing.cc 
+####   MSVis/AsynchronousInterface2.cc
+  MSVis/VisBuffer2.cc
+  MSVis/VisBufferImpl2.cc
+####  MSVis/VisBufferImplAsync2.cc
+####  MSVis/VisBufferAsyncWrapper2.cc
+  MSVis/VisBufferComponents2.cc
+  MSVis/ViFrequencySelection.cc
+  MSVis/ViImplementation2.cc
+  MSVis/VisibilityIterator2.cc
+  MSVis/VisibilityIteratorImpl2.cc
+  MSVis/TransformingVi2.cc
+  MSVis/FinalTvi2.cc
+####  MSVis/VisibilityIteratorImplAsync2.cc
   MSVis/VisImagingWeight.cc
   MSVis/VisIterator.cc
   MSVis/VisSet.cc
@@ -415,6 +428,7 @@ install (FILES
 	)
 install (FILES
 	MSVis/AsynchronousInterface.h
+	MSVis/AsynchronousInterface2.h
 	MSVis/AsynchronousTools.h
 	MSVis/CalVisBuffer.h
 	MSVis/GroupProcessor.h
@@ -455,6 +469,20 @@ install (FILES
 	MSVis/VisibilityIterator.h
 	MSVis/VisibilityIteratorImpl.h
 	MSVis/VisibilityIteratorImplAsync.h
+        MSVis/AsynchronousInterface2.h
+        MSVis/VisBuffer2Adapter.h
+        MSVis/VisBuffer2.h
+        MSVis/VisBufferAsyncWrapper2.h
+        MSVis/VisBufferComponents2.h
+        MSVis/VisBufferImpl2.h
+        MSVis/VisBufferImplAsync2.h
+        MSVis/ViFrequencySelection.h
+        MSVis/ViImplementation2.h
+        MSVis/VisibilityIterator2.h
+        MSVis/VisibilityIteratorImpl2.h
+        MSVis/VisibilityIteratorImplAsync2.h
+        MSVis/TransformingVi2.h
+	MSVis/FinalTvi2.h
 	MSVis/VisibilityProcessing.h
 	MSVis/MSMoments.tcc
 	MSVis/VisBuffer.tcc
@@ -667,6 +695,7 @@ casa_add_assay( synthesis MSVis/test/tUVSub.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIterator.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIteratorAsync.cc )
 casa_add_assay( synthesis MSVis/test/VisibilityProcessing_Test.cc )
+casa_add_assay( synthesis MSVis/test/tVisIterator.cc )
 casa_add_assay( synthesis MSVis/test/tVisIter.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
