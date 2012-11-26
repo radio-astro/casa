@@ -73,12 +73,14 @@ void AnimatorWidget::blockSignals( bool block ){
 void AnimatorWidget::setFrameInformation( int frm, int len ){
 	frameCount = len;
 	blockSignals( true );
-
 	//If we are changing the number of frames, we need to reset
 	//the properties that depend on the number of frames.
 	int oldMax = ui.endSpinBox->maximum();
 	if ( oldMax + 1 != len ){
 		int maxValue = len - 1;
+		if ( maxValue < 0 ){
+			maxValue = 0;
+		}
 		ui.endSpinBox->setMaximum( maxValue );
 		ui.endSpinBox->setValue( maxValue );
 		ui.startSpinBox->setMaximum( maxValue );
@@ -218,6 +220,7 @@ void AnimatorWidget::movieLimitUpperChanged( int limit ){
 	if ( sliderValue > limit ){
 		ui.frameSlider_->setValue( limit );
 	}
+
 	//Recalculate the step size based on the new upper bound
 	if ( ui.endToEndCheckBox->isChecked() ){
 		endToEndMode( true );

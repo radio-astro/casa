@@ -1943,11 +1943,11 @@ void QtDisplayPanel::setBlen_(Int len) {
 }
 
 void QtDisplayPanel::lowerBoundAnimatorImageChanged( int bound ){
-	// assert ( bound <= bLen_ );
+	assert ( bound <= bLen_ );
 	bStart_= max(0, bound);
 }
 void QtDisplayPanel::upperBoundAnimatorImageChanged(int bound ){
-	// assert ( bound >= 0 );
+	assert ( bound >= 0 );
 	bEnd_ = min( bLen_, bound+1);
 }
 void QtDisplayPanel::stepSizeAnimatorImageChanged(int step ){
