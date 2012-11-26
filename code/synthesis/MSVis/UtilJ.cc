@@ -210,6 +210,46 @@ sleepMs (Int milliseconds)
 
 }
 
+vector<String>
+split (const String & string, const String & splitter, Bool ignoreConsecutiveSplitters)
+{
+    vector<String> result;
+
+    Int start = 0;
+
+    while (True){
+
+        Int matchStart = string.find (splitter, start);
+
+        if (matchStart == (int) String::npos){
+
+            // No match: put rest of string into the result
+
+            String text = string.substr (start);
+
+            if (! text.empty()){
+
+                result.push_back (string.substr (start));
+            }
+
+            break;
+        }
+
+        String text = string.substr (start, matchStart - start);
+
+        if (! (text.empty() &&  ignoreConsecutiveSplitters)){
+
+            // If the text is nonempty or we're not ignored consecutive
+            // occurrences of splitters, then push text onto the result.
+
+            result.push_back (text);
+        }
+
+        start = matchStart + splitter.length();
+    }
+
+    return result;
+}
 
 void
 toStdError (const String & m, const String & prefix)
@@ -394,6 +434,139 @@ MemoryStatistics::update ()
 
     is.close ();
 }
+
+IoStatistics::IoStatistics ()
+{
+    Int pid = getpid();
+    ostringstream os;
+
+    statFile_p = String::format ("/proc/%d/io", pid);
+
+    capture ();
+}
+
+IoStatistics
+IoStatistics::operator- (const IoStatistics & other) const
+{
+    IoStatistics result;
+    result.nBytesRead_p = nBytesRead_p - other.nBytesRead_p;
+    result.nBytesWritten_p = nBytesWritten_p - other.nBytesWritten_p;
+    result.nReads_p = nReads_p - other.nReads_p;
+    result.nWrites_p = nWrites_p - other.nWrites_p;
+
+    return result;
+}
+
+IoStatistics
+IoStatistics::operator+ (const IoStatistics & other) const
+{
+    IoStatistics result;
+
+    result.nBytesRead_p = nBytesRead_p + other.nBytesRead_p;
+    result.nBytesWritten_p = nBytesWritten_p + other.nBytesWritten_p;
+    result.nReads_p = nReads_p + other.nReads_p;
+    result.nWrites_p = nWrites_p + other.nWrites_p;
+
+    return result;
+}
+
+IoStatistics
+IoStatistics::operator* (Double f) const
+{
+    IoStatistics result;
+
+    result.nBytesRead_p = nBytesRead_p * f;
+    result.nBytesWritten_p = nBytesWritten_p * f;
+    result.nReads_p = nReads_p * f;
+    result.nWrites_p = nWrites_p * f;
+
+    return result;
+}
+
+IoStatistics
+IoStatistics::operator/ (const IoStatistics & other) const
+{
+    IoStatistics result;
+
+    result.nBytesRead_p = nBytesRead_p / other.nBytesRead_p;
+    result.nBytesWritten_p = nBytesWritten_p / other.nBytesWritten_p;
+    result.nReads_p = nReads_p / other.nReads_p;
+    result.nWrites_p = nWrites_p / other.nWrites_p;
+
+    return result;
+}
+
+
+void
+IoStatistics::capture ()
+{
+    ifstream is (statFile_p.c_str());
+
+    ThrowIf (! is.good(), String::format ("Failed to open %s file", statFile_p.c_str()));
+
+    String tag;
+
+    is >> tag;
+    ThrowIf (tag != "rchar:",
+             String::format ("Expected 'rchar:', got '%s'", tag.c_str()));
+    is >> nBytesRead_p;
+
+    is >> tag;
+    ThrowIf (tag != "wchar:",
+             String::format ("Expected 'wchar:', got '%s'", tag.c_str()));
+    is >> nBytesWritten_p;
+
+
+    is >> tag;
+    ThrowIf (tag != "syscr:",
+             String::format ("Expected 'syscr:', got '%s'", tag.c_str()));
+    is >> nReads_p;
+
+
+    is >> tag;
+    ThrowIf (tag != "syscw:",
+             String::format ("Expected 'syscw:', got '%s'", tag.c_str()));
+    is >> nWrites_p;
+
+    is.close();
+}
+
+Double
+IoStatistics::getBytesRead () const
+{
+    return nBytesRead_p;
+}
+
+Double
+IoStatistics::getBytesWritten () const
+{
+    return nBytesWritten_p;
+}
+
+Double
+IoStatistics::getNReads () const
+{
+    return nReads_p;
+}
+
+Double
+IoStatistics::getNWrites () const
+{
+    return nWrites_p;
+}
+
+String
+IoStatistics::report (float scale, const String & scaleTag) const
+{
+    IoStatistics t = (* this) * scale;
+
+    return String::format ("read: %.3f %sB, %.3f %sOps; write: %.3f %sB, %.3f %sOps",
+                           t.nBytesRead_p, scaleTag.c_str(), t.nReads_p, scaleTag.c_str(),
+                           t.nBytesWritten_p, scaleTag.c_str(), t.nWrites_p, scaleTag.c_str());
+
+
+}
+
 
 
 } // end namespace utilj

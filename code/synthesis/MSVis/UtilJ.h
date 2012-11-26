@@ -188,6 +188,8 @@ String getTimestamp ();
 
 Bool isEnvDefined (const String & name);
 
+std::vector<String> split (const String & string, const String & splitter,
+                           Bool ignoreConsecutiveSplitters = False);
 
 template <typename Itr>
 String
@@ -322,6 +324,35 @@ private:
     int pageSize_p;
     int64_t rssPages_p; // in pages
     int64_t vmPages_p; // in pages
+};
+
+class IoStatistics {
+
+public:
+
+    IoStatistics ();
+
+    IoStatistics operator- (const IoStatistics &) const;
+    IoStatistics operator+ (const IoStatistics &) const;
+    IoStatistics operator/ (const IoStatistics &) const;
+    IoStatistics operator* (Double factor) const;
+
+    void capture ();
+
+    Double getBytesRead () const;
+    Double getBytesWritten () const;
+    Double getNReads () const;
+    Double getNWrites () const;
+
+    String report (float scale = .001, const String & scaleTag = String ("K")) const;
+
+private:
+
+    Double nBytesRead_p;
+    Double nBytesWritten_p;
+    Double nReads_p;
+    Double nWrites_p;
+    String statFile_p;
 };
 
 
