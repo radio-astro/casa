@@ -495,7 +495,7 @@ public:
     // This is in fact only a shorthand for 
     // <br><src> reference (ArrayColumn<T> (table, columnName)); </src>
     void attach (const Table& table, const String& columnName)
-	{ reference (ArrayColumn<T> (table, columnName)); }
+	{ reference (ArrayColumn<T> (table, columnName, isWritable_p)); }
 
     // Set the shape of the array in the given row.
     // Setting the shape is needed if the array is put in slices,

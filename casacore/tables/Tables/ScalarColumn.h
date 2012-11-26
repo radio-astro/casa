@@ -213,6 +213,11 @@ protected:
 };
 
 
+#define ThrowIfScalarColumnNotWritable() \
+    { if (! isWritable_p){ \
+        throw AipsError ("ScalarColumn not writable", __FILE__, __LINE__); \
+      }\
+    }
 
 
 // <summary>
@@ -302,12 +307,12 @@ public:
     // This is in fact only a shorthand for 
     // <br><src> reference (ScalarColumn<T> (table, columnName)); </src>
     void attach (const Table& table, const String& columnName)
-	{ reference (ScalarColumn<T> (table, columnName)); }
+	{ reference (ScalarColumn<T> (table, columnName, isWritable_p)); }
 
     // Put the value in a particular cell (i.e. table row).
     // The row numbers count from 0 until #rows-1.
     void put (uInt rownr, const T& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->put (rownr, &value); }
+	{ ThrowIfScalarColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->put (rownr, &value); }
 
     // Copy the value of a cell of that column to a cell of this column.
     // The data types of both columns must be the same.

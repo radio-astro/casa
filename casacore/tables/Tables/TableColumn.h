@@ -51,6 +51,8 @@ class BaseTable;
 # define TABLECOLUMNCHECKROW(ROWNR)
 #endif
 
+#define ThrowIfTableColumnNotWritable() \
+{ if (! isWritable_p) throw (AipsError ("Table is readonly", __FILE__, __LINE__)); }
 
 // <summary>
 // Readonly access to a table column
@@ -394,7 +396,7 @@ public:
     TableColumn();
 
     // Construct the object for a column in the table using its name.
-    TableColumn (const Table&, const String& columnName);
+    TableColumn (const Table&, const String& columnName, Bool isWritable = True);
 
     // Construct the object for a column in the table using its index.
     // This allows to loop through all columns in a table as:
@@ -403,7 +405,7 @@ public:
     //        TableColumn tabcol(tab,i);
     //    }
     // </srcblock>
-    TableColumn (const Table&, uInt columnIndex);
+    TableColumn (const Table&, uInt columnIndex, Bool isWritable = True);
 
     // Copy constructor (reference semantics).
     TableColumn (const TableColumn&);
@@ -437,7 +439,7 @@ public:
     // <group>
     // Use the same row numbers for both cells.
     void put (uInt rownr, const ROTableColumn& that)
-	{ TABLECOLUMNCHECKROW(rownr); put (rownr, that, rownr); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); put (rownr, that, rownr); }
     // Use possibly different row numbers for that (i.e. input) and
     // and this (i.e. output) cell.
     virtual void put (uInt thisRownr, const ROTableColumn& that,
@@ -458,29 +460,29 @@ public:
     // These functions only work for the standard data types.
     // <group>
     void putScalar (uInt rownr, const Bool& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const uChar& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const Short& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const uShort& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const Int& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const uInt& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const float& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const double& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const Complex& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const DComplex& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const String& value)
-	{ TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
+	{ ThrowIfTableColumnNotWritable(); TABLECOLUMNCHECKROW(rownr); baseColPtr_p->putScalar (rownr, value); }
     void putScalar (uInt rownr, const Char* value)
-	{ putScalar (rownr, String(value)); }
+	{ ThrowIfTableColumnNotWritable(); putScalar (rownr, String(value)); }
     // </group>
 
     //# The following routines add/remove/rename columns for the
@@ -510,6 +512,8 @@ private:
     // putColumn (with copy semantics) exist.
     // Declaring this operator private, makes it unusable.
     TableColumn& operator= (const TableColumn&);
+
+    Bool isWritable_p;
 };
 
 

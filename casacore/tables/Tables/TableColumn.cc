@@ -219,31 +219,34 @@ String ROTableColumn::asString (uInt rownr) const
     return value;
 }
 
-
 TableColumn::TableColumn()
-: ROTableColumn()
+: ROTableColumn(),
+  isWritable_p (True)
 {}
 
-TableColumn::TableColumn (const Table& tab, const String& columnName)
-: ROTableColumn(tab, columnName)
+TableColumn::TableColumn (const Table& tab, const String& columnName, Bool isWritable)
+: ROTableColumn(tab, columnName),
+  isWritable_p (isWritable)
 {
-    if (! tab.isColumnWritable (columnName)) {
+    if (! tab.isColumnWritable (columnName) && isWritable_p) {
 	throw (TableInvOper
 	       (columnName + " is readonly (use the ROxxxColumn class)"));
     }
 }
 
-TableColumn::TableColumn (const Table& tab, uInt columnIndex)
-: ROTableColumn(tab, columnIndex)
+TableColumn::TableColumn (const Table& tab, uInt columnIndex, Bool isWritable)
+: ROTableColumn(tab, columnIndex),
+  isWritable_p (isWritable)
 {
-    if (! tab.isColumnWritable (columnIndex)) {
+    if (! tab.isColumnWritable (columnIndex) && isWritable_p) {
 	throw (TableInvOper
 	       ("column is readonly (use the ROxxxColumn class)"));
     }
 }
 
 TableColumn::TableColumn (const TableColumn& that)
-: ROTableColumn (that)
+: ROTableColumn (that),
+  isWritable_p (that.isWritable_p)
 {}
 
 ROTableColumn* TableColumn::clone() const
@@ -258,9 +261,12 @@ TableColumn::~TableColumn()
 {}
 
 
+
 void TableColumn::put (uInt thisRownr, const ROTableColumn& that,
 		       uInt thatRownr)
 {
+    ThrowIfTableColumnNotWritable ();
+
     TABLECOLUMNCHECKROW(thisRownr); 
     if (columnDesc().isScalar()) {
 	switch (columnDesc().dataType()) {
@@ -396,6 +402,8 @@ void TableColumn::put (uInt thisRownr, const ROTableColumn& that,
 //# It should check if types are equal and take advantage of that.
 void TableColumn::putColumn (const ROTableColumn& that)
 {
+    ThrowIfTableColumnNotWritable ();
+
     uInt nrrow = nrow();
     if (nrrow != that.nrow()) {
 	throw (TableConformanceError ("TableColumn::putColumn"));
