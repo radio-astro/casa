@@ -263,6 +263,13 @@ public:
 
 private:
 
+  // LsiIntermediate is a helper class to allow LogSinkInterface to implement
+  // semantics that allow causing all classes accessing the log sink to be
+  // aimed at a different sink object.  This used to be done by using an
+  // odd "replace" method in CountedPtr; however, this is functionality is
+  // being removed to CountedPtr as it is modernized so this class was
+  // created to serve this narrow purpose.
+
   class LsiIntermediate {
 
   public:
@@ -279,6 +286,11 @@ private:
       void replace (LogSinkInterface * newLsi) { delete logSinkInterface_p; logSinkInterface_p = newLsi;}
 
   private:
+
+      // Copy ctor and op= are private and not defined to prevent double-delete.
+
+      LsiIntermediate (const LsiIntermediate &);
+      LsiIntermediate & operator= (const LsiIntermediate &);
 
       LogSinkInterface * logSinkInterface_p;
 
