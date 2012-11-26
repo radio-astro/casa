@@ -139,6 +139,10 @@ void AsdmStMan::registerClass()
   DataManager::registerCtor ("AsdmStMan", makeObject);
 }
 
+Bool AsdmStMan::isRegular() const
+{
+  return False;
+}
 Bool AsdmStMan::canAddRow() const
 {
   return True;

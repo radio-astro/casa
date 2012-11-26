@@ -144,6 +144,11 @@ public:
   // Record a record containing data manager specifications.
   virtual Record dataManagerSpec() const;
 
+  // Is this a regular storage manager?
+  // It is regular if it allows addition of rows and writing dara in them.
+  // <br>We need to return False here.
+  virtual Bool isRegular() const;
+
   // The storage manager can add rows, but does nothing.
   virtual Bool canAddRow() const;
   
