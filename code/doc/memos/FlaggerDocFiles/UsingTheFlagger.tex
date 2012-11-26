@@ -214,9 +214,6 @@ of RFI.
 \caption{LEFT : This screenshot represents a run where 'tfcrop' was run on a spw='9' with mainly narrow-band RFI.  RIGHT : An example of protecting a spectral line (in this case, demonstrated on an RFI spike) by setting the spw-selection to spw='0:0~45;53~63'.   In both figures, the top row indicates the data before flagging, and the bottom row after flagging.}
 \end{figure}
 
-{\red
-FIG2 : Broad-band RFI
-}
 
 
 \subsubsection{RFlag}
@@ -254,8 +251,6 @@ For each chunk, calculate local
 \end{enumerate}
 
 \end{enumerate}
-
-{\red Add info about how to use 'writeflags' + 'display' + output thresholds, etc...}
 
 Reports and plots are generated from rflag (when writeflags=False), to display
 the mean deviations for each channel, as well as the mean variance of 
@@ -302,8 +297,6 @@ Below are some examples.
 \includegraphics[scale=0.8]{rflag.before.after.png}
 \caption{Example of rflag on narrow-band RFI}
 \end{figure}
-
-{\red Add figures of the new report plots.}
 
 \subsubsection{Extend}
 
@@ -544,10 +537,6 @@ Screenshot of runtime flag
 \includegraphics[scale=0.7]{flag.screenshot.logger.png}
 \caption{Example of runtime logger summary of flag counts per agent}
 \end{figure}
-
-Flag count dictionaries : {\red verbatim output of part of one...}
-
-
 
 \subsubsection{Flag Reports/Views}
 
@@ -909,6 +898,7 @@ CASA <12>: summary
 \section{Frequently Asked Questions}\label{Sec:FAQ}
 
 \subsection{Obtaining summaries per reason}
+
 \begin{verbatim}
 
 ########################################
@@ -1067,11 +1057,11 @@ What are the advantages and disadvantages ?  What types of RFI are the defaults 
 
 
 
-\subsection{Effect of Hanning-smoothing on RFI}
-When does it help, when does it hurt.... 
+%\subsection{Effect of Hanning-smoothing on RFI}
+%When does it help, when does it hurt.... 
 
-\subsection{Is auto-flagging good-enough for imaging ?}
-A comparison of images and flag-summary counts,  with only autoflag runs, and with more careful hand-flagging. 
+%\subsection{Is auto-flagging good-enough for imaging ?}
+%A comparison of images and flag-summary counts,  with only autoflag runs, and with more careful hand-flagging. 
 
 
 
