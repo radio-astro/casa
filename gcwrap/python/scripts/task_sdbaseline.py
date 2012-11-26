@@ -107,9 +107,6 @@ class sdbaseline_engine(sdutil.sdtask_engine):
     def __register(self, key, attr=None):
         self.baseline_param.register(key, attr)
 
-    def __get_param(self):
-        return self.baseline_param.get_registered()
-
     def initialize(self):
         if ( abs(self.plotlevel) > 1 ):
             casalog.post( "Initial Raw Scantable:" )
@@ -165,7 +162,7 @@ class sdbaseline_engine(sdutil.sdtask_engine):
             self.__register('mask', msk)
 
             # call target baseline function with appropriate parameter set 
-            self.baseline_func(**self.__get_param())
+            self.baseline_func(**self.baseline_param)
 
 ##             if (maskmode == 'auto'):
 ##                 if (blfunc == 'poly'):

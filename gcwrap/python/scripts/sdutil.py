@@ -282,10 +282,9 @@ class sdtask_engine(sdtask_interface):
         super(sdtask_engine,self).__init__(**self.worker.__dict__)
         if hasattr(self,'scan'): del self.scan
     
-class parameter_registration(object):
+class parameter_registration(dict):
     def __init__(self, worker, arg_is_value=False):
         self.worker = worker
-        self.registered = {}
         self.arg_is_value = arg_is_value
 
     def register(self, key, *args, **kwargs):
@@ -296,25 +295,15 @@ class parameter_registration(object):
         if not arg_is_none:
             attr = args[0]
             if arg_is_value:
-                self.__register(key, attr)
+                self[key] = attr
             elif isinstance(attr, str) and hasattr(self.worker, attr):
-                self.__register(key, getattr(self.worker, attr))
+                self[key] = getattr(self.worker, attr)
             else:
-                self.__register(key, attr)
+                self[key] = attr
         elif hasattr(self.worker, key):
-            self.__register(key, getattr(self.worker, key))
+            self[key] = getattr(self.worker, key)
         else:
-            self.__register(key, None)
-
-    def __register(self, key, val):
-        self.registered[key] = val
-
-    def clear(self):
-        self.registered.clear()
-
-    def get_registered(self):
-        return self.registered
-        
+            self[key] = None
 
 def get_abspath(filename):
     return os.path.abspath(expand_path(filename))

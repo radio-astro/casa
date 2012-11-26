@@ -25,9 +25,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __register(self, key, attr=None):
         self.imager_param.register(key,attr)
 
-    def __get_param(self):
-        return self.imager_param.get_registered()
-
     def parameter_check(self):
         # outfile check
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
@@ -169,7 +166,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.open_imager(self.infile)
         self.imager.selectvis(field=self.fieldid, spw=self.spwid, nchan=-1, start=0, step=1, baseline=self.antenna, scan=self.scanlist)
         #self.imager.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
-        self.imager.defineimage(**self.__get_param())
+        self.imager.defineimage(**self.imager_param)#self.__get_param())
 ##         if self.dochannelmap:
 ##             self.imager.defineimage(mode=self.mode, nx=self.nx, ny=self.ny, cellx=self.cellx, celly=self.celly, nchan=self.nchan, start=self.startval, step=self.stepval, restfreq=self.restfreq, phasecenter=self.phasecenter, spw=self.spwid, stokes=self.stokes, movingsource=self.ephemsrcname)
 ##         else:
