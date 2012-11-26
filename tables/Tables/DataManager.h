@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.h 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: DataManager.h 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #ifndef TABLES_DATAMANAGER_H
 #define TABLES_DATAMANAGER_H
@@ -302,6 +302,11 @@ public:
 
     // Get the AipsIO option of the underlying file.
     ByteIO::OpenOption fileOption() const;
+
+    // Is this a regular storage manager?
+    // It is regular if it allows addition of rows and writing data to them.
+    // <br>The default implementation returns True.
+    virtual Bool isRegular() const;
 
     // Get the table this object is associated with.
     Table& table() const

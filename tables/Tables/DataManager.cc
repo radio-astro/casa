@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: DataManager.cc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 
 //# Includes
@@ -206,6 +206,8 @@ String DataManager::fileName() const
 ByteIO::OpenOption DataManager::fileOption() const
     { return PlainTable::toAipsIOFoption (table_p->tableOption()); }
 
+Bool DataManager::isRegular() const
+    { return True; }
 
 void DataManager::linkToTable (Table& tab)
 {

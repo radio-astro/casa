@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManInfo.cc 20889 2010-05-17 06:53:39Z gervandiepen $
+//# $Id: DataManInfo.cc 21149 2011-11-30 15:14:25Z gervandiepen $
 
 
 //# Includes
@@ -191,12 +191,14 @@ Record DataManInfo::adjustStMan (const Record& dminfo, const String& dmType,
     String exName = rec.asString("NAME");
     String exType = rec.asString("TYPE");
     DataManager* dmptr = DataManager::getCtor(exType) (exName, Record());
-    if ((dmptr->isStorageManager()  &&  !dmptr->canAddRow())  ||
+    if ((dmptr->isStorageManager()  &&
+         !(dmptr->canAddRow()  ||  dmptr->isRegular()))  ||
         (replaceMSM  &&  exType == "MemoryStMan")) {
       // A non-writable storage manager; use given storage manager instead.
       rec.define ("TYPE", dmType);
       rec.define ("NAME", exName);
     }
+    delete dmptr;
     newdm.defineRecord (j, rec);
   }
   return newdm;
