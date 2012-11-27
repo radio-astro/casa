@@ -163,8 +163,6 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   if (psupport%2 != 0) psupport -= 1;
 
 
-  //UUU
-
   // Full image
   //psfsupport_p = IPosition(2,MIN(nx_p,ny_p),MIN(nx_p,ny_p));
   //psfpeak_p = IPosition(2,nx_p/2, ny_p/2);
@@ -226,6 +224,8 @@ Bool MultiTermMatrixCleaner::buildImagePatches()
 
    /* Reconcile box sizes/locations with the image size */
    makeBoxesSameSize(blc_p,trc_p,blcPsf_p,trcPsf_p);
+
+   //cout << "maxpos : " << globalmaxpos_p <<  "  blc : " << blc_p << " trc : " << trc_p << "  blcPsf : " << blcPsf_p << " trcPsf : " << trcPsf_p << endl;
 
 }
 
@@ -370,7 +370,6 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
 	  trc_p = IPosition(2,nx_p-1,ny_p-1);
 	}
 
-
       Int scale=0;
       Int ntaylor=ntaylor_p;
       IPosition blc(blc_p), trc(trc_p);
@@ -403,6 +402,7 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
 	  current globalmaxval and psfsupport.
           This patch is over which the next-iteration's solveMatrixEqn is computed */
        buildImagePatches();
+
 
         /* Update the current solution by this chosen step */
         updateModelAndRHS(loopgain);
@@ -459,7 +459,8 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
     {
 	vecDirty_p[taylor] =  matR_p[IND2(taylor,0)] ; // This is the one that gets updated during iters.
     }
-
+  
+  //UUU cout << "major " << totalIters_p << endl;
 
   /* Return the number of minor-cycle iterations completed in this run */
   return(itercount_p+1);
@@ -1407,7 +1408,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     }
     else
     {
-      // if(1)
+      //       if(1)
 	if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
        {
 	 
@@ -1426,6 +1427,9 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
                    os << (matR_p[IND2(taylor,maxscaleindex_p)])(globalmaxpos_p) << "  ";
 	      }
             os << LogIO::POST;
+
+	    //UUU cout << "minor " << totalIters_p << " " << (vecModel_p[0])( IPosition(2,nx_p/2, ny_p/2) ) << " " << (vecModel_p[1])( IPosition(2,nx_p/2, ny_p/2) ) << "  " << (matR_p[0])( IPosition(2,nx_p/2, ny_p/2) ) <<  endl;
+
         }
     }
 
@@ -1460,6 +1464,13 @@ Bool MultiTermMatrixCleaner::computeprincipalsolution()
   LogIO os(LogOrigin("MultiTermMatrixCleaner", "computeprincipalsolution()", WHERE));
 
   os << "MTMC :: Computing principal solution on residuals" << LogIO::POST;
+
+  /// If this is being called with niter=0, the Hessian won't exist. So, make it.
+  if( doneCONV_p == False )
+    {
+      if( computeHessianPeak() == -2 )
+	return False;
+    }
 
 	AlwaysAssert((vecDirty_p.nelements()>0), AipsError);
 
