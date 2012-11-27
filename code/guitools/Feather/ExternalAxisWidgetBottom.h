@@ -39,7 +39,7 @@ protected:
 	virtual void drawTicks( QPainter* painter, int tickLength);
 	virtual void drawAxisLabel( QPainter* painter );
 private:
-	void drawTick( QPainter* painter, int xPixel, double value, int tickLength);
+	void drawTick( QPainter* painter, double xPixel, double value, int tickLength);
 };
 
 } /* namespace casa */

@@ -33,7 +33,7 @@ namespace casa {
 
 PlotHolder::PlotHolder(QWidget *parent)
     : QWidget(parent),
-      plotTypeAction( "Scatter Plot", this ), zoom90Action( "Zoom 90% of Amplitude", this),
+      plotTypeAction( "Scatter Plot", this ), zoom90Action( "Auto Zoom", this),
       zoomNeutralAction( "Zoom Neutral", this ),contextMenu( this ), legendHolder( NULL ),
       legendVisible( false ),
       displayOutputSlice(false),displayOriginalSlice( false),
@@ -50,7 +50,6 @@ void PlotHolder::initializeActions(){
 	plotTypeAction.setCheckable( true );
 	connect( &plotTypeAction, SIGNAL(triggered()), this, SLOT(changePlotType()));
 
-	zoom90Action.setStatusTip( "Selecting this will zoom to include 90% of amplitude.");
 	zoom90Action.setCheckable( true );
 	connect( &zoom90Action, SIGNAL(triggered()), this, SLOT(changeZoom90()));
 
@@ -67,26 +66,26 @@ void PlotHolder::initializeActions(){
 
 void PlotHolder::initializePlots(){
 	//Add the plots to the array
-	FeatherPlotWidget* origXWidget = new FeatherPlotWidget( "Original Data Slice X", FeatherPlot::ORIGINAL);
+	FeatherPlotWidget* origXWidget = new FeatherPlotWidget( "Original Data Slice U", FeatherPlot::ORIGINAL);
 	connect( origXWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
 	connect( origXWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( origXWidget );
-	FeatherPlotWidget* origYWidget = new FeatherPlotWidget("Original Data Slice Y", FeatherPlot::ORIGINAL);
+	FeatherPlotWidget* origYWidget = new FeatherPlotWidget("Original Data Slice V", FeatherPlot::ORIGINAL);
 	connect( origYWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( origYWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( origYWidget );
-	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Average Visibility Slice X", FeatherPlot::SLICE_CUT);
+	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Average Visibility Slice U", FeatherPlot::SLICE_CUT);
 	connect( xWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
 	connect( xWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( xWidget );
-	FeatherPlotWidget* yWidget = new FeatherPlotWidget( "Average Visibility Slice Y", FeatherPlot::SLICE_CUT);
+	FeatherPlotWidget* yWidget = new FeatherPlotWidget( "Average Visibility Slice V", FeatherPlot::SLICE_CUT);
 	connect( yWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( yWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( yWidget );
-	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter X", FeatherPlot::SCATTER_PLOT);
+	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter U", FeatherPlot::SCATTER_PLOT);
 	xWidgetScatter->setPermanentScatter( true );
 	plots.append( xWidgetScatter );
-	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter Y", FeatherPlot::SCATTER_PLOT);
+	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter V", FeatherPlot::SCATTER_PLOT);
 	yWidgetScatter->setPermanentScatter( true );
 	plots.append( yWidgetScatter );
 }
@@ -164,7 +163,7 @@ void PlotHolder::setDiameterSelectorMode(){
 //---------------------------------------------------------------------
 
 void PlotHolder::setLineThickness( int lineThickness ){
-	for ( int i = 0; i < SCATTER_X; i++ ){
+	for ( int i = 0; i < plots.size(); i++ ){
 		plots[i]->setLineThickness( lineThickness );
 	}
 }
@@ -214,30 +213,14 @@ void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& 
 
 void PlotHolder::setSingleDishWeight( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
 		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
-	//Everyone needs the weight data so they can zoom to 90%
-	for ( int i = 0; i < plots.size(); i++ ){
-		int remainder = i % 2;
-		if ( remainder == 0 ){
-			plots[i]->setSingleDishWeight( sDx, sDxAmp );
-		}
-		else {
-			plots[i]->setSingleDishWeight( sDy, sDyAmp );
-		}
-	}
+	plots[SLICE_X]->setSingleDishWeight( sDx, sDxAmp );
+	plots[SLICE_Y]->setSingleDishWeight( sDy, sDyAmp );
 }
 
 void PlotHolder::setInterferometerWeight( const Vector<Float>& intx, const Vector<Float>& intxAmp,
 		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
-	//Everyone needs the weight data so they can zoom to 90%
-	for ( int i = 0; i < plots.size(); i++ ){
-		int remainder = i % 2;
-		if ( remainder == 0 ){
-			plots[i]->setInterferometerWeight( intx, intxAmp );
-		}
-		else {
-			plots[i]->setInterferometerWeight( inty, intyAmp );
-		}
-	}
+	plots[SLICE_X]->setInterferometerWeight( intx, intxAmp );
+	plots[SLICE_Y]->setInterferometerWeight( inty, intyAmp );
 }
 
 void PlotHolder::setSingleDishData( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
@@ -363,6 +346,9 @@ void PlotHolder::layoutPlotWidgets(){
 	if ( displayOriginalSlice ){
 		addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X_ORIGINAL );
 		addPlots( gridLayout, displayYGraphs, rowCount, SLICE_X_ORIGINAL );
+		if ( tempScatterPlot ){
+			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y_ORIGINAL );
+		}
 		rowCount++;
 	}
 
@@ -370,9 +356,10 @@ void PlotHolder::layoutPlotWidgets(){
 	if ( displayOutputSlice ){
 		addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X );
 		addPlots( gridLayout, displayYGraphs, rowCount, SLICE_X );
-		if ( !tempScatterPlot ){
-			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_X );
-		}
+		//if ( !tempScatterPlot ){
+			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y );
+		//}
+
 		//Use the original slice axis for the bottom axis if it is present.
 		//That way when the original data is loaded (with the image files)
 		//the bottom axis will be correct.
@@ -398,6 +385,9 @@ void PlotHolder::layoutPlotWidgets(){
 	if ( displayScatter && !tempScatterPlot ){
 		addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SCATTER_X );
 		addPlots( gridLayout, displayYGraphs, rowCount, SCATTER_X );
+		if ( displayYGraphs ){
+			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SCATTER_Y);
+		}
 		rowCount++;
 
 		//Add the bottom axis for the scatter plots

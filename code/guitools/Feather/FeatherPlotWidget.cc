@@ -45,6 +45,7 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
 
 	sliceAxis  = QwtPlot::yLeft;
 	weightAxis = QwtPlot::yRight;
+	scatterAxis = QwtPlot::yLeft;
 
 	resetPlot( plotType );
 
@@ -103,6 +104,18 @@ void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 //----------------------------------------------------------------------------
 
 void FeatherPlotWidget::setLineThickness( int thickness ){
+	if ( diameterSelector != NULL ){
+		QPen pen = diameterSelector->trackerPen();
+		pen.setWidth( thickness );
+		diameterSelector -> setTrackerPen( pen );
+	}
+	if ( diameterMarker != NULL ){
+		QwtSymbol symbol = diameterMarker->symbol();
+		QPen pen = symbol.pen();
+		pen.setWidth( thickness );
+		symbol.setPen( pen );
+		diameterMarker->setSymbol( symbol );
+	}
 	plot->setLineThickness( thickness );
 	plot->replot();
 }
@@ -161,6 +174,7 @@ void FeatherPlotWidget::resetColors(){
 	}
 	else if ( plot->isScatterPlot() ){
 		plot->setFunctionColor( "", scatterPlotColor );
+		plot->setFunctionColor( FeatherPlot::Y_EQUALS_X, dishDiameterLineColor );
 	}
 	else {
 		plot->setFunctionColor( this->singleDishFunction, singleDishDataColor );
@@ -227,14 +241,16 @@ void FeatherPlotWidget::diameterSelected( const QwtDoublePoint& pos ){
 }
 
 void FeatherPlotWidget::resetDishDiameterLineColor(){
-	if ( diameterMarker != NULL && diameterSelector != NULL ){
+	if ( diameterMarker != NULL){
 		QwtSymbol diameterSymbol = diameterMarker->symbol();
 		QPen pen = diameterSymbol.pen();
 		pen.setColor( dishDiameterLineColor );
 		diameterSymbol.setPen( pen );
 		diameterMarker->setSymbol( diameterSymbol );
 		diameterMarker->setLinePen( pen );
-		diameterSelector->setRubberBandPen( pen );
+		if ( diameterSelector != NULL ){
+			diameterSelector->setRubberBandPen( pen );
+		}
 	}
 }
 
@@ -251,10 +267,10 @@ void FeatherPlotWidget::setDishDiameter( double position ){
 	QwtSymbol symbol = diameterMarker->symbol();
 	int canvasHeight = height();
 	symbol.setSize( 2 * canvasHeight );
+	diameterMarker->setSymbol( symbol );
 
 	//Set the position
 	if ( position >= 0 ){
-		diameterMarker->setSymbol( symbol );
 		diameterMarker->setXValue( position );
 		if ( !plot->isScatterPlot() ){
 			diameterMarker->show();
@@ -289,53 +305,56 @@ void FeatherPlotWidget::initializeZooming(){
 }
 
 void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
-	double minX = zoomRect.x();
-	double maxX = minX + zoomRect.width();
-	double minY = zoomRect.y();
-	double maxY = minY + zoomRect.height();
+	if ( zoomRect.width() > 0 && zoomRect.height() > 0 ){
+		double minX = zoomRect.x();
+		if ( minX < 0 ){
+			minX = 0;
+		}
+		double maxX = minX + zoomRect.width();
+		double minY = zoomRect.y();
+		if ( minY < 0 ){
+			minY = 0;
+		}
+		double maxY = minY + zoomRect.height();
 
-	//If we are a scatter plot, we don't have to let anyone know about
-	//the zoom, just update our own coordinates.
-	if ( plot->isScatterPlot() ){
-		zoomRectangleScatter( minX, maxX, minY, maxY );
-	}
-	//Tell the plot holder about the zoom so all the plots can zoom in sync.
-	else {
-		emit rectangleZoomed( minX, maxX, minY, maxY );
+		//If we are a scatter plot, we don't have to let anyone know about
+		//the zoom, just update our own coordinates.
+		if ( plot->isScatterPlot() ){
+			zoomRectangleScatter( minX, maxX, minY, maxY );
+		}
+		//Tell the plot holder about the zoom so all the plots can zoom in sync.
+		else {
+			emit rectangleZoomed( minX, maxX, minY, maxY );
+		}
 	}
 }
 
-void FeatherPlotWidget::zoomRectangleWeight( double minX, double maxX, double minY, double maxY ){
-	//The y-values are in terms of the left axis.  Weight functions use the right axis.  We
-	//must translate the bounds to corresponding bounds on the right axis.
-	int minYPixels = plot->transform( sliceAxis, minY );
-	int maxYPixels = plot->transform( sliceAxis, maxY );
-	double minYWeight = plot->invTransform( weightAxis, minYPixels );
-	double maxYWeight = plot->invTransform( weightAxis, maxYPixels );
+void FeatherPlotWidget::zoomRectangleWeight( double minX, double maxX  ){
 
 	QVector<double> singleDishWeightX;
 	QVector<double> singleDishWeightY;
-	initializeDomainRangeLimitedData( minX, maxX, minYWeight, maxYWeight, singleDishWeightX, singleDishWeightY, singleDishWeightXValues, singleDishWeightYValues );
+	initializeDomainLimitedData( minX, maxX, singleDishWeightX, singleDishWeightY, singleDishWeightXValues, singleDishWeightYValues );
 	plot->addCurve( singleDishWeightX, singleDishWeightY, singleDishWeightColor, singleDishWeightFunction, weightAxis );
 
 	QVector<double> interferometerWeightX;
 	QVector<double> interferometerWeightY;
-	initializeDomainRangeLimitedData( minX, maxX, minYWeight, maxYWeight, interferometerWeightX, interferometerWeightY, interferometerWeightXValues, interferometerWeightYValues );
+	initializeDomainLimitedData( minX, maxX, interferometerWeightX, interferometerWeightY, interferometerWeightXValues, interferometerWeightYValues );
 	plot->addCurve( interferometerWeightX, interferometerWeightY, interferometerWeightColor, interferometerWeightFunction, weightAxis );
 }
 
-void FeatherPlotWidget::zoomRectangle( double minX, double maxX, double minY, double maxY ){
+void FeatherPlotWidget::zoomRectangle( double minX, double maxX, double /*minY*/, double /*maxY*/ ){
+	plot->clearCurves();
 	if ( plot->isSliceCut() ){
-		zoomRectangleWeight( minX, maxX, minY, maxY );
+		zoomRectangleWeight( minX, maxX );
 	}
 	QVector<double> singleDishX;
 	QVector<double> singleDishY;
-	initializeDomainRangeLimitedData( minX, maxX, minY, maxY, singleDishX, singleDishY, singleDishDataXValues, singleDishDataYValues );
+	initializeDomainLimitedData( minX, maxX, singleDishX, singleDishY, singleDishDataXValues, singleDishDataYValues );
 	plot->addCurve( singleDishX, singleDishY, singleDishDataColor, singleDishFunction, sliceAxis );
 
 	QVector<double> interferometerX;
 	QVector<double> interferometerY;
-	initializeDomainRangeLimitedData( minX, maxX, minY, maxY, interferometerX, interferometerY, interferometerDataXValues, interferometerDataYValues );
+	initializeDomainLimitedData( minX, maxX, interferometerX, interferometerY, interferometerDataXValues, interferometerDataYValues );
 	plot->addCurve( interferometerX, interferometerY, interferometerDataColor, interferometerFunction, sliceAxis );
 	plot->replot();
 }
@@ -364,7 +383,8 @@ void FeatherPlotWidget::zoomRectangleScatter( double minX, double maxX, double m
 		}
 	}
 	plot->clearCurves();
-	plot->addCurve( xValues, yValues, scatterPlotColor, "", sliceAxis );
+	plot->addCurve( xValues, yValues, scatterPlotColor, "", scatterAxis );
+	plot->addDiagonal( xValues, dishDiameterLineColor, scatterAxis );
 	plot->replot();
 }
 
@@ -372,49 +392,82 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 	if ( zoom ){
 		plot->clearCurves();
 
-		//Calculate the yValues that represent 90% of the amplitude.
-		pair<double,double> singleDishMinMax = getMaxMin( singleDishWeightYValues );
-		pair<double,double> interferometerMinMax = getMaxMin( interferometerWeightYValues );
-		double minValue = qMin( singleDishMinMax.first, interferometerMinMax.first );
-		double maxValue = qMax( singleDishMinMax.second, interferometerMinMax.second );
-		double increase = (maxValue - minValue) * .25;
-		minValue = minValue + increase;
-		maxValue = maxValue - increase;
+		//See if we know the dish position.  We want to take the dish position,
+		//plus another 1/3 of it, if it is available.  If it is not, we will just
+		//zoom in on the x-axis by 1/3.
+		double dishPosition = 0;
+		if ( diameterMarker != NULL ){
+			dishPosition = diameterMarker->xValue();
+			dishPosition = dishPosition + dishPosition / 3;
+		}
+		if ( dishPosition == 0 ){
+			pair<double,double> minMaxPair = getMaxMin( singleDishDataYValues );
+			dishPosition = minMaxPair.second / 3;
+		}
 
-		//Reset the weight values to 90% of the yRange while figuring out the
-		//xcut off values minX and maxX.
-		Double minX = numeric_limits<double>::max();
-		Double maxX = numeric_limits<double>::min();
-		QVector<double> singleDishXZoom;
-		QVector<double> singleDishYZoom;
-		initializeRangeLimitedData( minValue, maxValue, singleDishXZoom, singleDishYZoom,
-				singleDishWeightXValues, singleDishWeightYValues, &minX, &maxX );
-		QVector<double> interferometerXZoom;
-		QVector<double> interferometerYZoom;
-		initializeRangeLimitedData( minValue, maxValue, interferometerXZoom, interferometerYZoom,
-					interferometerWeightXValues, interferometerWeightYValues, &minX, &maxX );
+		//Add in the zoomed weight functions
 		if ( plot->isSliceCut() ){
-			plot->addCurve( singleDishXZoom, singleDishYZoom, singleDishWeightColor, singleDishWeightFunction, weightAxis );
-			plot->addCurve( interferometerXZoom, interferometerYZoom, interferometerWeightColor, interferometerWeightFunction, weightAxis );
+			QVector<double> singleDishWeightZoomX;
+			QVector<double> singleDishWeightZoomY;
+			for ( int i = 0; i < singleDishWeightXValues.size(); i++ ){
+				if ( singleDishWeightXValues[i] < dishPosition ){
+					singleDishWeightZoomX.append( singleDishWeightXValues[i] );
+					singleDishWeightZoomY.append( singleDishWeightYValues[i] );
+				}
+			}
+			QVector<double> interferometerWeightZoomX;
+			QVector<double> interferometerWeightZoomY;
+			for ( int i = 0; i < interferometerWeightXValues.size(); i++ ){
+				if ( interferometerWeightXValues[i] < dishPosition ){
+					interferometerWeightZoomX.append( interferometerWeightXValues[i] );
+					interferometerWeightZoomY.append( interferometerWeightYValues[i] );
+				}
+			}
+			plot->addCurve( singleDishWeightZoomX, singleDishWeightZoomY, singleDishWeightColor, singleDishWeightFunction, weightAxis );
+			plot->addCurve( interferometerWeightZoomX, interferometerWeightZoomY, interferometerWeightColor, interferometerWeightFunction, weightAxis );
 		}
 
-		//Use the xbounds to redo the slice cut data.
-		QVector<double> singleDishX;
-		QVector<double> singleDishY;
-		initializeDomainLimitedData( minX, maxX, singleDishX, singleDishY, singleDishDataXValues, singleDishDataYValues );
-		QVector<double> interferometerX;
-		QVector<double> interferometerY;
-		initializeDomainLimitedData( minX, maxX, interferometerX, interferometerY, interferometerDataXValues, interferometerDataYValues );
+		//Now take all the x,y values where the x values is less than the dish position.
+		QVector<double> singleDishZoomDataX;
+		QVector<double> singleDishZoomDataY;
+		for ( int i = 0; i < static_cast<int>(singleDishDataXValues.size()); i++ ){
+			if ( singleDishDataXValues[i] < dishPosition ){
+				singleDishZoomDataX.append( singleDishDataXValues[i] );
+				singleDishZoomDataY.append( singleDishDataYValues[i] );
+			}
+		}
+		QVector<double> interferometerZoomDataX;
+		QVector<double> interferometerZoomDataY;
+		for ( int i = 0; i < interferometerDataXValues.size(); i++ ){
+			if ( interferometerDataXValues[i] < dishPosition ){
+				interferometerZoomDataX.append( interferometerDataXValues[i] );
+				interferometerZoomDataY.append( interferometerDataYValues[i] );
+			}
+		}
 		if ( !plot->isScatterPlot() ){
-			plot->addCurve( singleDishX, singleDishY, singleDishDataColor, singleDishFunction, sliceAxis );
-			plot->addCurve( interferometerX, interferometerY, interferometerDataColor, interferometerFunction, sliceAxis );
+			plot->addCurve( singleDishZoomDataX, singleDishZoomDataY, singleDishDataColor, singleDishFunction, sliceAxis );
+			plot->addCurve( interferometerZoomDataX, interferometerZoomDataY, interferometerDataColor, interferometerFunction, sliceAxis );
 		}
-
-		//Finally use the generated ydata from the slice cut to zoom the scatterplot
 		else {
-			plot->addCurve(singleDishY, interferometerY, scatterPlotColor, "", sliceAxis );
+			//The plot needs to have the same values in both directions.
+			pair<double,double> singleDishMinMax = getMaxMin( singleDishZoomDataY );
+			pair<double,double> interferometerMinMax = getMaxMin( interferometerZoomDataY );
+			double valueMax = qMin( singleDishMinMax.second, interferometerMinMax.second);
+			double valueMin = qMax( singleDishMinMax.first, interferometerMinMax.first );
+			QVector<double> restrictX;
+			QVector<double> restrictY;
+			for ( int i = 0; i < singleDishZoomDataY.size(); i++ ){
+				if ( valueMin <= singleDishZoomDataY[i] && singleDishZoomDataY[i]<= valueMax ){
+					if ( valueMin <= interferometerZoomDataY[i] && interferometerZoomDataY[i] <= valueMax ){
+						restrictX.append( singleDishZoomDataY[i]);
+						restrictY.append( interferometerZoomDataY[i]);
+					}
+				}
+			}
+			plot->addCurve( restrictX, restrictY, scatterPlotColor, "", scatterAxis );
+			restrictX.append( valueMax );
+			plot->addDiagonal( restrictX, dishDiameterLineColor, scatterAxis );
 		}
-
 		plot->replot();
 	}
 	else {
@@ -460,7 +513,6 @@ void FeatherPlotWidget::resetZoomRectangleColor(){
 void FeatherPlotWidget::initializeMarkers(){
 	if ( !plot->isScatterPlot() ){
 		diameterMarker->attach( plot );
-
 	}
 	this->changeLeftMouseMode();
 }
@@ -471,8 +523,33 @@ void FeatherPlotWidget::removeMarkers(){
 	zoomer->setMousePattern( QwtEventPattern::MouseSelect1, Qt::NoButton );
 }
 
+
 void FeatherPlotWidget::addScatterData(){
-	plot->addCurve( singleDishDataYValues, interferometerDataYValues, scatterPlotColor, "", sliceAxis );
+	//The scatter plot data needs to be on the same scale.
+	//Find the max value of each data set, and choose the smallest of the
+	//two upper bounds as the limit.
+	pair<double,double> singleDishMinMax = getMaxMin( singleDishDataYValues );
+	pair<double,double> interferometerMinMax = getMaxMin( interferometerDataYValues );
+	double valueLimit = qMin( singleDishMinMax.second, interferometerMinMax.second );
+	QVector<double> scatterXValues;
+	QVector<double> scatterYValues;
+	double actualLimit = numeric_limits<double>::min();
+	for ( int i = 0; i < singleDishDataYValues.size(); i++ ){
+		if ( singleDishDataYValues[i] <= valueLimit && interferometerDataYValues[i] <= valueLimit ){
+			scatterXValues.append( singleDishDataYValues[i]);
+			scatterYValues.append( interferometerDataYValues[i]);
+			if ( singleDishDataYValues[i] > actualLimit ){
+				actualLimit = singleDishDataYValues[i];
+			}
+			if ( interferometerDataYValues[i] > actualLimit ){
+				actualLimit = interferometerDataYValues[i];
+			}
+		}
+	}
+
+	plot->addCurve( scatterXValues, scatterYValues, scatterPlotColor, "", scatterAxis );
+	scatterXValues.append(actualLimit);
+	plot->addDiagonal( scatterXValues, dishDiameterLineColor, scatterAxis );
 	initializeMarkers();
 	plot->replot();
 }
@@ -552,33 +629,7 @@ void FeatherPlotWidget::clearLegend(){
 //                             Utility
 //-------------------------------------------------------------------------------------
 
-void FeatherPlotWidget::initializeDomainRangeLimitedData( double minXValue, double maxXValue,
-		double minYValue, double maxYValue,
-		QVector<double>& xValues, QVector<double>& yValues,
-		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const{
-	int count = qMin( originalXValues.size(), originalYValues.size());
-	int domainCount = 0;
-	for ( int i = 0; i < count; i++ ){
-		if ( minXValue <= originalXValues[i] && originalXValues[i] <= maxXValue ){
-			if ( minYValue <= originalYValues[i] && originalYValues[i] <= maxYValue ){
-				domainCount++;
-			}
-		}
-	}
 
-	xValues.resize( domainCount );
-	yValues.resize( domainCount );
-	int j = 0;
-	for ( int i = 0; i < count; i++ ){
-		if ( minXValue <= originalXValues[i] && originalXValues[i] <= maxXValue ){
-			if ( minYValue <= originalYValues[i] && originalYValues[i] <= maxYValue ){
-				xValues[j] = originalXValues[i];
-				yValues[j] = originalYValues[i];
-				j++;
-			}
-		}
-	}
-}
 
 void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double maxValue,
 		QVector<double>& xValues, QVector<double>& yValues,
@@ -603,35 +654,7 @@ void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double max
 	}
 }
 
-void FeatherPlotWidget::initializeRangeLimitedData( double minValue, double maxValue,
-		QVector<double>& xValues, QVector<double>& yValues,
-		const QVector<double>& originalXValues, const QVector<double>& originalYValues,
-		Double* minX, Double* maxX) const{
-	int count = qMin( originalXValues.size(), originalYValues.size());
-	int rangeCount = 0;
-	for ( int i = 0; i < count; i++ ){
-		if ( minValue <= originalYValues[i] && originalYValues[i] <= maxValue ){
-			rangeCount++;
-		}
-	}
 
-	xValues.resize( rangeCount );
-	yValues.resize( rangeCount );
-	int j = 0;
-	for ( int i = 0; i < count; i++ ){
-		if ( minValue <= originalYValues[i] && originalYValues[i] <= maxValue ){
-			xValues[j] = originalXValues[i];
-			yValues[j] = originalYValues[i];
-			if ( xValues[j] < *minX ){
-				*minX = xValues[j];
-			}
-			else if (xValues[j] > *maxX ){
-				*maxX = xValues[j];
-			}
-			j++;
-		}
-	}
-}
 
 pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const {
 	double minValue = numeric_limits<double>::max();
@@ -640,7 +663,7 @@ pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const
 		if ( values[i]< minValue ){
 			minValue = values[i];
 		}
-		else if ( values[i] > maxValue ){
+		if ( values[i] > maxValue ){
 			maxValue = values[i];
 		}
 	}

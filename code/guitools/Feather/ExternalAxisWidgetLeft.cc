@@ -26,19 +26,20 @@
 #include "ExternalAxisWidgetLeft.h"
 #include <QDebug>
 #include <QPainter>
+#include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_div.h>
 
 namespace casa {
 
-ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent/*, bool manageTicksManually*/):
+ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
 	ExternalAxisWidget( parent ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
 	setFixedWidth( AXIS_SMALL_SIDE );
-	//manageTicks = manageTicksManually;
 }
 
 int ExternalAxisWidgetLeft::getStartY() const {
+	QwtPlotCanvas* canvas = plot->canvas();
 	return height() - canvas->height();
 }
 
@@ -53,13 +54,14 @@ void ExternalAxisWidgetLeft::defineAxis( QLine& line ){
 	line.setP2( secondPt );
 }
 
-void ExternalAxisWidgetLeft::drawTick( QPainter* painter, int yPixel, double value,
+void ExternalAxisWidgetLeft::drawTick( QPainter* painter, float yPixel, double value,
 		int tickLength ){
 
 	//Draw the tick
 	int xEnd = width();
 	int tickStart = xEnd - tickLength;
-	painter->drawLine( tickStart, yPixel, xEnd, yPixel  );
+	int yValue = static_cast<int>( yPixel );
+	painter->drawLine( tickStart, yValue, xEnd, yValue  );
 
 	//Draw the tick label
 	QString numberStr = QString::number( value );
@@ -67,40 +69,57 @@ void ExternalAxisWidgetLeft::drawTick( QPainter* painter, int yPixel, double val
 	QRect fontBoundingRect = QFontMetrics(font).boundingRect( numberStr );
 	int labelStart = tickStart - fontBoundingRect.width() - 5;
 	int letterHeight = fontBoundingRect.height();
-	painter->drawText( labelStart, yPixel + letterHeight/3, numberStr);
+	int position = static_cast<int>(yPixel + letterHeight/3);
+	painter->drawText( labelStart, position, numberStr);
 }
 
+void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength ){
 
+	//Figure out how far out to start drawing ticks.
+	double startPixelY = getTickStartPixel(QwtPlot::yLeft);
 
-void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength){
-
-	//First tick
-	double upperBound = scaleDiv->upperBound();
-	int startPixelY = getStartY();
-	drawTick( painter, startPixelY, upperBound, tickLength);
-
-	//Middle ticks
-	const QList<double> axisTicks = scaleDiv->ticks(QwtPlot::yLeft);
-	int originalTickCount = axisTicks.size();
 	//We don't want to draw too many ticks so adjust the number
 	//of ticks we draw accordingly.
-	int tickIncrement = getTickIncrement( originalTickCount, false );
-	int yIncrement = canvas->height() / (originalTickCount + 1);
-	for ( int i = tickIncrement - 1; i < originalTickCount; i = i + tickIncrement ){
-		int tickPosition = startPixelY + (i+1)*yIncrement;
-		drawTick( painter, tickPosition, axisTicks[originalTickCount - i - 1],
-				tickLength);
+	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( QwtPlot::yLeft );
+	const QList<double> axisTicks = scaleDiv->ticks(QwtPlot::yLeft);
+	int originalTickCount = axisTicks.size();
+	int tickIncrement = getTickIncrement( originalTickCount );
+
+	//Now figure out the yIncrement, how far apart the ticks should be.
+	double tickDistance = getTickDistance( QwtPlot::yLeft);
+	double yIncrement = getTickIncrement( tickDistance, QwtPlot::yLeft );
+	for ( int i = 0; i < originalTickCount; i = i + tickIncrement ){
+		//Sometimes the automatic tick system puts uneven number of ticks in.
+		//Definitely weird - but that is why the incrementCount;
+		int incrementCount = qRound((axisTicks[i] - axisTicks[0]) / tickDistance);
+		double tickPosition = startPixelY + incrementCount * yIncrement;
+		int tickIndex = originalTickCount - i - 1;
+		drawTick( painter, tickPosition, axisTicks[tickIndex], tickLength);
 	}
 }
 
 void ExternalAxisWidgetLeft::drawAxisLabel( QPainter* painter ){
 	  QFont font = painter->font();
-	  QRect fontBoundingRect = QFontMetrics(font).boundingRect( axisLabel );
+	  int unitIndex = axisLabel.indexOf( "(");
+	  QString mainLabel = axisLabel.left( unitIndex ).trimmed();
+	  QString unitLabel = axisLabel.right( axisLabel.size() - unitIndex );
+
 	  painter->rotate(-90);
+
+	  //Draw the main label
+	  QRect fontBoundingRect = QFontMetrics(font).boundingRect( mainLabel );
 	  int yPosition = fontBoundingRect.height() / 2;
 	  int xPosition = -height() + (height() - fontBoundingRect.width())/2;
 	  painter->drawText( xPosition, yPosition, fontBoundingRect.width(),
-			  fontBoundingRect.height(), Qt::AlignHCenter|Qt::AlignTop, axisLabel);
+			  fontBoundingRect.height(), Qt::AlignHCenter|Qt::AlignTop, mainLabel);
+
+	  //Draw the units
+	  fontBoundingRect = QFontMetrics(font).boundingRect( unitLabel );
+	  yPosition = yPosition + fontBoundingRect.height();
+	  xPosition = -height() + (height() - fontBoundingRect.width())/2;
+	  painter->drawText( xPosition, yPosition, fontBoundingRect.width(),
+			  fontBoundingRect.height(), Qt::AlignHCenter|Qt::AlignTop, unitLabel);
+
 	  painter->rotate(90);
 }
 

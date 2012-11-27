@@ -44,6 +44,10 @@ class ExternalAxis;
 
 class FeatherPlot : public QwtPlot {
 
+friend class ExternalAxisWidgetBottom;
+friend class ExternalAxisWidgetRight;
+friend class ExternalAxisWidgetLeft;
+
 public:
 	FeatherPlot(QWidget* parent );
 	enum PlotType { ORIGINAL, SLICE_CUT, SCATTER_PLOT, NO_TYPE };
@@ -52,6 +56,7 @@ public:
 	void clearLegend();
 	void addCurve( QVector<double> xValues, QVector<double> yValues,
 			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis );
+	void addDiagonal( QVector<double> xValues, QColor lineColor, QwtPlot::Axis yAxis );
 	void initializePlot( const QString& title, PlotType plotType );
 
 	//Preferences
@@ -71,17 +76,25 @@ public:
 	bool isSliceCut() const;
 	bool isSliceCutOriginal() const;
 
+	static const QString Y_EQUALS_X;
+
 private:
+	void setCurvePenColor( int curveIndex, const QColor& color );
 	int getCurveIndex( const QString& curveTitle ) const;
 	void setCurveSize( int curveIndex );
 	void updateAxes();
 	void setAxisLabels();
+	void adjustPlotBounds( const QVector<double>& values, QwtPlot::Axis yAxis );
+	void resetPlotBounds();
+	void initAxes( );
 	QwtLegend* legend;
 
 	PlotType plotType;
 	int lineThickness;
 	int dotSize;
+
 	const int AXIS_COUNT;
+
 
     QList<QwtPlotCurve*> curves;
 
@@ -89,6 +102,12 @@ private:
     QList<QString> axisLabels;
     QList<ExternalAxisWidget*> axisWidgets;
     QList<ExternalAxis*> axisBlanks;
+
+    double minX;
+    double maxX;
+    double minY;
+    double maxY;
+
 };
 
 } /* namespace casa */

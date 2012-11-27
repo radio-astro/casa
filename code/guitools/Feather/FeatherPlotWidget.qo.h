@@ -114,19 +114,11 @@ private:
 	void initializeMarkers();
 	void removeMarkers();
 	void changeLeftMouseMode();
-    void initializeRangeLimitedData( double minValue, double maxValue,
-    		QVector<double>& xValues, QVector<double>& yValues,
-    		const QVector<double>& originalXValues, const QVector<double>& originalYValues,
-    		Double* xMin, Double* xMax ) const;
     void initializeDomainLimitedData( double minValue, double maxValue,
         		QVector<double>& xValues, QVector<double>& yValues,
         		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
-    void initializeDomainRangeLimitedData( double minXValue, double maxXValue,
-    		double minYValue, double maxYValue,
-    		QVector<double>& xValues, QVector<double>& yValues,
-    		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
     pair<double,double> getMaxMin( QVector<double> values ) const;
-    void zoomRectangleWeight( double minX, double maxX, double minY, double maxY );
+    void zoomRectangleWeight( double minX, double maxX );
     void addZoomNeutralCurves();
 
 
@@ -160,6 +152,7 @@ private:
 
     QwtPlot::Axis sliceAxis;
     QwtPlot::Axis weightAxis;
+    QwtPlot::Axis scatterAxis;
     QwtPlotPicker* zoomer;
     QwtPlotMarker* diameterMarker;
     QwtPlotPicker* diameterSelector;
