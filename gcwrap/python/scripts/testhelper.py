@@ -158,7 +158,7 @@ def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
                             for j in range(0,len(rdata)):
                                 if (type(rdata[j])==float or type(rdata[j])==int):
                                     if (abs(rdata[j]-tdata[j]) > tolerance*abs(rdata[j]+tdata[j])):
-                                        print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
+                                        print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
                                         print therow, j
                                         print rdata[j]
                                         print tdata[j]
@@ -166,7 +166,7 @@ def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
                                 elif (type(rdata[j])==list or type(rdata[j])==np.ndarray):
                                     for k in range(0,len(rdata[j])):
                                         if (abs(rdata[j][k]-tdata[j][k]) > tolerance*abs(rdata[j][k]+tdata[j][k])):
-                                            print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
+                                            print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
                                             print therow, j, k
                                             print rdata[j][k]
                                             print tdata[j][k]
