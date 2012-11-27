@@ -28,54 +28,82 @@
 #ifndef CASA_DBUS_DIAGNOSTIC_H_
 #define CASA_DBUS_DIAGNOSTIC_H_
 #include <string>
+#include <stdarg.h>
 
 namespace casa {
-    namespace dbus {
+	namespace dbus {
 
-	class Diagnostic {
-	    public:
-		friend class init_diagnostic_object_t;
-		void argv( int argc_, const char *argv_[] ) {
-		    kernel_t &k = lock_kernel( );
-		    if ( k.do_log( ) ) k.argv(argc_,argv_);
-		    release_kernel( );
-		}
-		void argv( int argc_, char *argv_[] ) {
-		    kernel_t &k = lock_kernel( );
-		    if ( k.do_log( ) ) k.argv(argc_,argv_);
-		    release_kernel( );
-		}
-		Diagnostic( ) { }
-		virtual ~Diagnostic( ) { }
-	    private:
-		struct kernel_t {
-		    kernel_t( );
-		    kernel_t( FILE *f );
-		    bool do_log( ) const { return fptr != 0; }
-		    ~kernel_t( ) { if ( fptr ) fclose(fptr); }
-		    void argv( int argc_, const char *argv_[] );
-		    void argv( int argc_, char *argv_[] );
-		    FILE *fptr;
-		    pid_t pid;
-		    std::string name;  /**** any non-argv messages should include 'name' ****/
+		class Diagnostic {
+			public:
+				friend class init_diagnostic_object_t;
+				void argv( int argc_, const char *argv_[] ) {
+					kernel_t &k = lock_kernel( );
+					if ( k.do_log( ) ) k.argv(argc_,argv_);
+					release_kernel( );
+				}
+				void argv( int argc_, char *argv_[] ) {
+					kernel_t &k = lock_kernel( );
+					if ( k.do_log( ) ) k.argv(argc_,argv_);
+					release_kernel( );
+				}
+				Diagnostic( ) { }
+				virtual ~Diagnostic( ) { }
+
+				void error(const char *fmt, ...) {
+					kernel_t &k = lock_kernel( );
+					if ( k.do_log( ) ) {
+						va_list argp;
+						va_start(argp, fmt);
+						verror(k, fmt, argp);
+						va_end(argp);
+					}
+				}
+
+				void info(const char *fmt, ...) {
+					kernel_t &k = lock_kernel( );
+					if ( k.do_log( ) ) {
+						va_list argp;
+						va_start(argp, fmt);
+						vinfo(k, fmt, argp);
+						va_end(argp);
+					}
+				}
+
+			private:
+
+				struct kernel_t {
+					kernel_t( );
+					kernel_t( FILE *f );
+					bool do_log( ) const { return fptr != 0; }
+					~kernel_t( ) { if ( fptr ) fclose(fptr); }
+					void argv( int argc_, const char *argv_[] );
+					void argv( int argc_, char *argv_[] );
+					FILE *fptr;
+					pid_t pid;
+					std::string name;  /**** any non-argv messages should include 'name' ****/
+				};
+
+				/* void verror(Diagnostic::kernel_t &, const char *fmt, va_list argp); */
+				/* void vinfo(Diagnostic::kernel_t &, const char *fmt, va_list argp); */
+				void verror(kernel_t &, const char *fmt, va_list argp);
+				void vinfo(kernel_t &, const char *fmt, va_list argp);
+
+				kernel_t &lock_kernel( );
+				void release_kernel( ) { }
+				void output_prologue( );
+				void output_epilogue( );
 		};
-		kernel_t &lock_kernel( );
-		void release_kernel( ) { }
-		void output_prologue( );
-		void output_epilogue( );
-	};
 
-	Diagnostic diagnostic;
+		Diagnostic diagnostic;
 
-	static class init_diagnostic_object_t {
-	    public:
-		init_diagnostic_object_t( ) { if ( count++ == 0 ) diagnostic.output_prologue( ); }
-		~init_diagnostic_object_t( ) { if ( --count == 0 ) { diagnostic.output_epilogue( ); } }
-	    private:
-		static unsigned long count;
-	} init_diagnostic_object_;
-
-    }
+		static class init_diagnostic_object_t {
+			public:
+				init_diagnostic_object_t( ) { if ( count++ == 0 ) diagnostic.output_prologue( ); }
+				~init_diagnostic_object_t( ) { if ( --count == 0 ) { diagnostic.output_epilogue( ); } }
+			private:
+				static unsigned long count;
+		} init_diagnostic_object_;
+	}
 }
 
 #endif
