@@ -186,7 +186,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       return (((loc(0)-support[0]) >= 0 ) && ((loc(0)+support[0]) < nx) &&
     	      ((loc(1)-support[1]) >= 0 ) && ((loc(1)+support[1]) < ny) &&
-    	      (loc(2) >= 0) && (loc(2) < nw));
+    	      (loc(2) >= 0) && (loc(2) <= nw));
     };
 
     // Array assignment operator in CASACore requires lhs.nelements()
