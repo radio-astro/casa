@@ -48,6 +48,7 @@
 
 #include <cpgplot.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String WorldCanvasHolder::BLINK_MODE = "bIndex";
@@ -483,8 +484,15 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	 for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 	 			  iter != itsDisplayList.end(); ++iter, ++dd ) {
 	 	if ( conforms[dd] && (*iter)->isDisplayable( )){
-	 		if ( (*iter)->labelAxes(ev)){
-	 			break;
+	 		String className = (*iter)->className();
+	 		//In blink mode, we don't show contours, vectors, or markers
+	 		//separately.
+	 		if ( className.find("Contour")==String::npos &&
+	 				className.find( "Vector") == String::npos &&
+	 				className.find( "Marker") == String::npos ){
+	 			if ( (*iter)->labelAxes(ev)){
+	 				break;
+	 			}
 	 		}
 	 	}
 	  }

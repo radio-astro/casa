@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <string> 
+#include <QSet>
 #include <casa/BasicSL/String.h>
 #include <display/Utilities/StringUtil.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
@@ -725,14 +726,18 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 void QtDisplayPanelGui::updateFrameInformation(){
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	int displayDataCount = rdds.len();
-	animationHolder->setModeEnabled( displayDataCount );
-	qdp_->setBlen_(displayDataCount );
 	ListIter<QtDisplayData*> iter(rdds );
 	int i = 0;
 	int maxChannels = -1;
+	QSet<QString> uniqueImages;
 	while ( i < displayDataCount ){
 		QtDisplayData* rdd = iter.getRight();
 		const viewer::ImageProperties & imgProperties = rdd->imageProperties( );
+		const string imagePath = imgProperties.path();
+		//In the image animator, don't cycle over contours, markers,
+		//or vectors.
+		QString imagePathStr( imagePath.c_str());
+		uniqueImages.insert( imagePathStr );
 		if ( imgProperties.hasSpectralAxis() ){
 			int spectralAxisNum = imgProperties.spectralAxisNumber();
 			const Vector<int> imgShape = imgProperties.shape();
@@ -749,6 +754,8 @@ void QtDisplayPanelGui::updateFrameInformation(){
 	if ( maxChannels > 0 ){
 		animationHolder->setChannelModeEnabled( maxChannels );
 	}
+	animationHolder->setModeEnabled( uniqueImages.size() );
+	//qdp_->setBlen_(displayDataCount );
 }
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
