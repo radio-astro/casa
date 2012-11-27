@@ -37,11 +37,13 @@ Annotations/RegionTextList.cc
 ImageAnalysis/ImageCollapser.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImagePadder.cc
 ImageAnalysis/ImagePrimaryBeamCorrector.cc
 ImageAnalysis/ImageProfileFitter.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/ImageTask.cc
+ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
 ImageAnalysis/SpectralFitter.cc
 
@@ -81,10 +83,12 @@ install (FILES
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImagePadder.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
 	ImageAnalysis/ImageProfileFitter.h
 	ImageAnalysis/ImageStatsCalculator.h
 	ImageAnalysis/ImageTask.h
+	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/ImageTransposer.h
 	ImageAnalysis/SpectralCollapser.h
 	DESTINATION include/casacode/imageanalysis/ImageAnalysis

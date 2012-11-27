@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool saveFeatheredImage(const String& imagename);
 
     ///////////////Old methods left for now till new version is implemented
-    static void feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low, const Float& sdScale=1.0, const String& lowPSF="", const Bool useDefault=True, const String& vpTable="" , Float effSDDiam=-1.0, const Bool doPlot=False);
+    static void feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low, const Float& sdScale=1.0, const String& lowPSF="", const Bool useDefault=True, const String& vpTable="" , Float effSDDiam=-1.0, const Bool lowpassfiltersd=False);
 
     static Double worldFreq(const CoordinateSystem& cs, Int spectralpix=0);
   private:
@@ -91,6 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
 		  Vector<Float>& uy, Vector<Float>& yamp, ImageInterface<Complex>& ftimage);
     //calculate the complex weight image to apply on the interf image
+    static void getLowBeam(const ImageInterface<Float>& low0, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, GaussianBeam& lBeam);
     void calcCWeightImage();
     void applyFeather();
     GaussianBeam hBeam_p;

@@ -31,9 +31,13 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casa/OS/Timer.h>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 //#include <casa/BasicMath/Functors.h>
 namespace casa{
 
@@ -112,7 +116,7 @@ namespace casa{
     // lot of grief. --Sanjay).
     //
     // if (wndx != 1)
-    //   cerr << "F, W, M: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << wVal << endl;
+    //    cerr << "F, W, M: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << wVal << endl;
     if (wVal > 0.0) 
       convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
     else
@@ -145,7 +149,8 @@ namespace casa{
      cfArea = getCFArea(convFuncV, wVal, scaledSupport, scaledSampling,
      		       off, convOrigin, cfShape, sinDPA,cosDPA);
     // cerr << "Cfarea = " << cfArea << endl;
-
+     IPosition phaseGradOrigin_l; 
+     phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
 
     for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
       {
@@ -156,13 +161,22 @@ namespace casa{
 	    iloc[0]=(Int)((scaledSampling[0]*ix+off[0])-1);//+convOrigin[0];
 	    igrdpos[0]=loc[0]+ix;
 	    tiloc=iloc;
+	    //
+	    // reindex() is for historical reasons and does three
+	    // operations: (1) rotate the co-ord. sys. using
+	    // sin/cosDPA, (2) add convOrigin to iloc and return the
+	    // result in tiloc and add convOrigin to tiloc, and (3)
+	    // return True if tiloc lines with in the cfShape.
+	    //
 	    if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
 	      {
 		wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
 				    tiloc,cfInc_p)/cfArea;
 		if (wVal > 0.0) {wt = conj(wt);}
 		norm += real(wt);
-		if (finitePointingOffset) wt *= cached_phaseGrad_p(tiloc[0],tiloc[1]);
+		if (finitePointingOffset) 
+		  wt *= cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l[0],
+					   iloc[1]+phaseGradOrigin_l[1]);
 		// The following uses raw index on the 4D grid
 		addTo4DArray(gridStore,iGrdPosPtr,gridInc_p, nvalue,wt);
 	      }
@@ -170,66 +184,37 @@ namespace casa{
       }
     return norm;
   }
-  //
-  //-----------------------------------------------------------------------------------
-  //
-  template <class T>
-  void AWVisResampler::accumulateFromGrid(T& nvalue, const T* __restrict__& grid, 
-					  Vector<Int>& iGrdPos,
-					  Complex* __restrict__& convFuncV, 
-					  Double& wVal, Vector<Int>& scaledSupport, 
-					  Vector<Float>& scaledSampling, Vector<Double>& offset,
-					  Vector<Int>& convOrigin, Vector<Int>& cfShape,
-					  Vector<Int>& loc, 
-					  Complex& phasor, 
-					  Double& sinDPA, Double& cosDPA,
-					  Bool& finitePointingOffset, 
-					  Matrix<Complex>& cached_phaseGrad_p)
-  {
-    Complex wt, norm=0.0;
-    Vector<Int> iCFPos(4,0);
-  
-    for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
-      {
-	iCFPos[1]=(scaledSampling[1]*iy+offset[1])+convOrigin[1];
-	iGrdPos[1]=loc[1]+iy;
-	for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
-	  {
-	    iCFPos[0]=(scaledSampling[0]*ix+offset[0])+convOrigin[0];
-	    iGrdPos[0]=loc[0]+ix;
-	    {
-	      wt = getFrom4DArray((const Complex* __restrict__ &) convFuncV,iCFPos,cfInc_p);
-	      //	      wt = convFuncV(iCFPos);
-	      if (wVal > 0.0) wt = conj(wt);
-	      norm+=(wt);
-	      if (finitePointingOffset) wt *= cached_phaseGrad_p(iCFPos[0], iCFPos[1]);
-	      //	      nvalue+=wt*grid(iGrdPos);
-	      nvalue +=  wt * getFrom4DArray(grid, iGrdPos, gridInc_p);
-	    }
-	  }
-      }
-    nvalue *= conj(phasor)/norm;
-    //    data=(nvalue*conj(phasor))/norm;
-  }
+  // Moved the accumulateFromGrid() method to file to play with
+  // multi-threading it to not clutter this file.  Both versions
+  // (threaded and non-threaded) are in this file.
+#include "accumulateFromGrid.cc"
   //
   //-----------------------------------------------------------------------------------
   //
   void AWVisResampler::cachePhaseGrad_p(const Vector<Double>& pointingOffset,
-				      const Vector<Int>&cfShape,
-				      const Vector<Int>& convOrigin)
+					const Vector<Int>&cfShape,
+					const Vector<Int>& convOrigin,
+					const Double& cfRefFreq,
+					const Double& imRefFreq)
   {
     LogIO log_l(LogOrigin("AWVisResampler","cachePhaseGrad[R&D]"));
-    if ((fabs(sum(pointingOffset-cached_PointingOffset_p)) > 1e-6) ||
-	((cached_phaseGrad_p.shape()[0] < cfShape[0]) && (cached_phaseGrad_p.shape()[1] < cfShape[1]))
-	)
+    //cout << "# " << cfRefFreq << " " << imRefFreq << endl;
+    if (
+    	(sum(fabs(pointingOffset-cached_PointingOffset_p)) > 1e-6) ||
+    	(cached_phaseGrad_p.shape()[0] < cfShape[0])              ||
+    	(cached_phaseGrad_p.shape()[1] < cfShape[1])
+    	)
       {
 	log_l << "Computing phase gradiant for pointing offset " 
-	      << pointingOffset << cfShape
+	      << pointingOffset << cfShape 
+	      // << " " << cfRefFreq/imRefFreq << " " 
+	      // << convOrigin << " " 
+	      // << cached_phaseGrad_p.shape()
 	      <<LogIO::POST;
 	Int nx=cfShape(0), ny=cfShape(1);
 	Double grad;
 	Complex phx,phy;
-	
+
 	cached_phaseGrad_p.resize(nx,ny);
 	cached_PointingOffset_p = pointingOffset;
 	
@@ -270,6 +255,7 @@ namespace casa{
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					Bool useConjFreqCF)
   {
+    LogIO log_l(LogOrigin("AWVisResampler[R&D]","DataToGridImpl_p"));
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny, nw, nCFFreq;
     Int targetIMChan, targetIMPol, rbeg, rend, PolnPlane, ConjPlane;
     Int startChan, endChan;
@@ -281,10 +267,12 @@ namespace casa{
 
     Complex phasor, nvalue, wt;
     Double norm;
-    Vector<Int> cfShape=vbRow2CFBMap_p(0)->getStorage()(0,0,0)->getStorage()->shape().asVector();
+    Vector<Int> cfShape;
+    cfShape=vbRow2CFBMap_p(0)->getStorage()(0,0,0)->getStorage()->shape().asVector();
     Vector<Int> convOrigin = (cfShape)/2;
     Double sinDPA=0.0, cosDPA=1.0;
     Double cfScale, cfRefFreq;
+
     rbeg = 0;       rend = vbs.nRow_p;
     rbeg = vbs.beginRow_p;
     rend = vbs.endRow_p;
@@ -305,7 +293,7 @@ namespace casa{
     Double *freq=vbs.freq_p.getStorage(Dummy);
 
     cacheAxisIncrements(grid.shape().asVector(), gridInc_p);
-    cacheAxisIncrements(cfShape, cfInc_p);
+    //cacheAxisIncrements(cfShape, cfInc_p);
 
     Bool * __restrict__ flagCube_ptr=vbs.flagCube_p.getStorage(Dummy);
     Bool * __restrict__ rowFlag_ptr = vbs.rowFlag_p.getStorage(Dummy);;
@@ -318,7 +306,7 @@ namespace casa{
     CFBuffer& cfb = *vbRow2CFBMap_p(0);
     cfb.getCoordList(fVals,wVals,mNdx, mVals, conjMNdx, conjMVals, fIncr, wIncr);
     Vector<Double> pointingOffset(cfb.getPointingOffset());
-
+    
     //    cfb.show("Test: ",cout);
 
     nw = wVals.nelements();
@@ -416,6 +404,7 @@ namespace casa{
 
 	      if (onGrid(nx, ny, nw, loc, support)) 
 		{
+		  // Loop over all image-plane polarization planes.
 		  for(Int ipol=0; ipol< nDataPol; ipol++) 
 		    { 
 		      if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan))))
@@ -435,37 +424,40 @@ namespace casa{
 					  (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
 			  
 			      norm = 0.0;
-			      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++)
+			      // Loop over all relevant elements of
+			      // the Mueller matrix for the
+			      // polarization ipol.
+			      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
 				{
 				  Complex* convFuncV;
-				  Complex* conjConvFuncV;
-				  convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
-							  wndx, mNdx, conjMNdx, ipol,  mRow);
-				  conjConvFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
+				  Vector<Float> sampling;
+				  Vector<Int> support;
+				  if ( (!dopsf) && (CONJBEAMS==True)) // UUU : With conjugate beams...
+				    {
+				      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
 							      wndx, mNdx, conjMNdx, ipol,  mRow);
+				      support.reference(conjScaledSupport);
+				      sampling.reference(conjScaledSampling);
+				    }
+				  else// UUU : Without conjugate beams...
+				    {
+				      convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
+							      wndx, mNdx, conjMNdx, ipol,  mRow);
+				      support.reference(scaledSupport);
+				      sampling.reference(scaledSampling);
+				    }
 				  
-				  if (finitePointingOffsets)
-				    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin);
-			  
-				  cacheAxisIncrements(cfShape, cfInc_p);
 				  convOrigin=cfShape/2;
-				  if( (!dopsf) && (CONJBEAMS==True) )  // UUU : With conjugate beams...
-				    {
-				      norm += accumulateOnGrid(grid,conjConvFuncV,nvalue,wVal,
-							       conjScaledSupport,conjScaledSampling,
-							       off, convOrigin, cfShape, loc, igrdpos,
-							       sinDPA, cosDPA,finitePointingOffsets,accumWts);
-				    }
-				  /////// TODO : For no conjugate beams, use convFuncC instead of conjConvFuncV
-				  else  // UUU : Without conjugate beams....
-				    {
-				      // // REMOVE THIS CODE
-				      // if(useConjFreqCF==True)  // UUU : With conjugate beams...
-				      norm += accumulateOnGrid(grid,conjConvFuncV,nvalue,wVal,
-							       conjScaledSupport,conjScaledSampling,
-							       off, convOrigin, cfShape, loc, igrdpos, 
-							       sinDPA, cosDPA,finitePointingOffsets,accumWts);
-				    }
+
+				  if (finitePointingOffsets)
+				    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
+				  
+				  cacheAxisIncrements(cfShape, cfInc_p);
+
+				  norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
+							   support,sampling,
+							   off, convOrigin, cfShape, loc, igrdpos,
+							   sinDPA, cosDPA,finitePointingOffsets,accumWts);
 				}
 			      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
 		      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
@@ -580,6 +572,7 @@ namespace casa{
 
 	    //cfScale = cfRefFreq/freq[ichan];
 	    cfScale = 1; 
+	    cfScale=1.0;
 
 	    scaledSampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
 	    scaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
@@ -623,7 +616,7 @@ namespace casa{
 			cacheAxisIncrements(cfShape, cfInc_p);
 			convOrigin = (cfShape)/2;
 			if (finitePointingOffset)
-			  cachePhaseGrad_p(pointingOffset, cfShape, convOrigin);
+			  cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
 
 			//
 			// ALERT: The -1 in the expression for iloc
@@ -632,11 +625,11 @@ namespace casa{
 			//
 			// Complex tt=0.0;
 			// int nn=0;
-			// accumulateFromGrid(nvalue, gridStore, igrdpos, convFuncV, wVal,
-			// 		   scaledSupport, scaledSampling, off, convOrigin, 
-			// 		   cfShape, loc, phasor, sinDPA, cosDPA, 
-			// 		   finitePointingOffset, cached_phaseGrad_p);
-
+			accumulateFromGrid(nvalue, gridStore, igrdpos, convFuncV, wVal,
+					   scaledSupport, scaledSampling, off, convOrigin, 
+					   cfShape, loc, phasor, sinDPA, cosDPA, 
+					   finitePointingOffset, cached_phaseGrad_p);
+			/*
 			for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
 			  {
 			    //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
@@ -663,9 +656,10 @@ namespace casa{
 			      }
 			  }
 		      }
-		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
-		    //   }
-		    // visCube(ipol,ichan,irow)=nvalue;
+			*/
+		    //		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
+		      }
+		    visCube(ipol,ichan,irow)=nvalue;
 		  }
 		}
 	      }
@@ -749,6 +743,36 @@ namespace casa{
 				    const Vector<Int>& inc, 
   				    Complex& nvalue, Complex& wt) __restrict__;
 
+  // void lineCFArea(const Int& th,
+  // 		  const Double& sinDPA,
+  // 		  const Double& cosDPA,
+  // 		  const Complex*__restrict__& convFuncV,
+  // 		  const Vector<Int>& cfShape,
+  // 		  const Vector<Int>& convOrigin,
+  // 		  const Int& cfInc,
+  // 		  Vector<Int>& iloc,
+  // 		  Vector<Int>& tiloc,
+  // 		  const Int* supportPtr,
+  // 		  const Float* samplingPtr,
+  // 		  const Double* offPtr,
+  // 		  Complex *cfAreaArrPtr)
+  // {
+  //   cfAreaArrPtr[th]=0.0;
+  //   for(Int ix=-supportPtr[0]; ix <= supportPtr[0]; ix++) 
+  //     {
+  // 	iloc[0]=(Int)((samplingPtr[0]*ix+offPtr[0])-1);//+convOrigin[0];
+  // 	tiloc=iloc;
+  // 	if (reindex(iloc,tiloc,sinDPA, cosDPA, 
+  // 		    convOrigin, cfShape))
+  // 	  {
+  // 	    wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
+  // 				tiloc,cfInc);
+  // 	    if (wVal > 0.0) wt = conj(wt);
+  // 	    cfAreaArrPtr[th] += wt;
+  // 	  }
+  //     }
+  // }
+
   Complex AWVisResampler::getCFArea(Complex* __restrict__& convFuncV, 
 				    Double& wVal, 
 				    Vector<Int>& scaledSupport, 
@@ -761,22 +785,35 @@ namespace casa{
   {
     Vector<Int> iloc(4,0),tiloc(4);
     Complex cfArea=0, wt;
-    for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+    Bool dummy;
+    Int *supportPtr=scaledSupport.getStorage(dummy);
+    Double *offPtr=off.getStorage(dummy);
+    Float *samplingPtr=scaledSampling.getStorage(dummy);
+    Int Nth=1;
+    Vector<Complex> cfAreaArr(Nth);
+    Complex *cfAreaArrPtr=cfAreaArr.getStorage(dummy);
+
+    for(Int iy=-supportPtr[1]; iy <= supportPtr[1]; iy++) 
       {
-	iloc(1)=(Int)((scaledSampling[1]*iy+off[1])-1);//+convOrigin[1];
-	for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+	iloc(1)=(Int)((samplingPtr[1]*iy+offPtr[1])-1);//+convOrigin[1];
+	for (Int th=0;th<Nth;th++)
 	  {
-	    iloc[0]=(Int)((scaledSampling[0]*ix+off[0])-1);//+convOrigin[0];
-	    tiloc=iloc;
-	    if (reindex(iloc,tiloc,sinDPA, cosDPA, 
-			convOrigin, cfShape))
+	    cfAreaArr[th]=0.0;
+	    for(Int ix=-supportPtr[0]; ix <= supportPtr[0]; ix++) 
 	      {
-		wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
-				    tiloc,cfInc_p);
-		if (wVal > 0.0) wt = conj(wt);
-		cfArea += wt;
+		iloc[0]=(Int)((samplingPtr[0]*ix+offPtr[0])-1);//+convOrigin[0];
+		tiloc=iloc;
+		if (reindex(iloc,tiloc,sinDPA, cosDPA, 
+			    convOrigin, cfShape))
+		  {
+		    wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
+					tiloc,cfInc_p);
+		    if (wVal > 0.0) wt = conj(wt);
+		    cfAreaArrPtr[th] += wt;
+		  }
 	      }
 	  }
+	cfArea += sum(cfAreaArr);
       }
     //    cerr << "cfArea: " << scaledSupport << " " << scaledSampling << " " << cfShape << " " << convOrigin << " " << cfArea << endl;
     return cfArea;

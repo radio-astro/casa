@@ -2222,7 +2222,7 @@ Bool Imager::clipimage(const String& image, const Quantity& threshold)
 
 // Add together low and high resolution images in the Fourier plane
 Bool Imager::feather(const String& image, const String& highRes,
-		     const String& lowRes, const String& lowPSF, const Float effDishDiam, const Bool showPlot)
+		     const String& lowRes, const String& lowPSF, const Float effDishDiam, const Bool lowPassFilterSD)
 {
   
   Float effDiam=effDishDiam;
@@ -2284,7 +2284,7 @@ Bool Imager::feather(const String& image, const String& highRes,
       PagedImage<Float> high(outHighRes);
       PagedImage<Float> low0(outLowRes);
       
-      Feather::feather(image, high, low0, sdScale_p, lowPSF, doDefaultVP_p, vpTableStr_p, effDiam, showPlot);
+      Feather::feather(image, high, low0, sdScale_p, lowPSF, doDefaultVP_p, vpTableStr_p, effDiam, lowPassFilterSD);
     }
   
     if(noStokes){

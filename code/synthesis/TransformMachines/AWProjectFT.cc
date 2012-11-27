@@ -52,6 +52,7 @@
 #include <scimath/Mathematics/MathFunc.h>
 #include <measures/Measures/MeasTable.h>
 #include <casa/iostream.h>
+#include <casa/OS/Timer.h>
 
 #define CONVSIZE (1024*2)
 #define CONVWTSIZEFACTOR 1.0
@@ -118,7 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), paNdxProcessed_p()
+      rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), paNdxProcessed_p(), runTime(0.0)
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -171,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p()
+      rotatedConvFunc_p(), runTime(0.0)
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -330,6 +331,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cfs2_p = other.cfs2_p;
 	cfwts2_p = other.cfwts2_p;
 	paNdxProcessed_p = other.paNdxProcessed_p;
+	runTime= other.runTime;
+	imRefFreq_p = other.imRefFreq_p;
       };
     return *this;
   };
@@ -435,6 +438,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    vpSJ->reset();
     paChangeDetector.reset();
     makingPSF = False;
+    
+    //cerr << "Current runTime = " << runTime << endl;
   }
   //
   //---------------------------------------------------------------
@@ -1402,6 +1407,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::finalizeToVis()
   {
     LogIO log_l(LogOrigin("AWProjectFT", "finalizeToVis[R&D]"));
+    
+    //cerr << "Run time = " << runTime << endl;
+    //runTime=0.0;
 
     if(isTiled) 
       {
@@ -1718,7 +1726,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       const VisBuffer& /*vb*/)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData[R&D]"));
+    //    Timer tim;
+    //    tim.mark();
     visResampler_p->GridToData(vbs, griddedData_l);
+    //    runTime+=tim.user();
   }
   //
   //---------------------------------------------------------------
@@ -2160,7 +2171,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.uvw_p.reference(uvw);
     vbs.imagingWeight_p.reference(imagingweight);
     vbs.visCube_p.reference(visData);
-    vbs.freq_p.reference(interpVisFreq_p);
+    //    vbs.freq_p.reference(interpVisFreq_p);
+    vbs.freq_p.reference(vb.frequency());
     //    vbs.rowFlag_p.assign(vb.flagRow());  
     vbs.rowFlag_p.reference(vb.flagRow());
     if(!usezero_p) 
