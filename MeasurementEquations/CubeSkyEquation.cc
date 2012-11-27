@@ -782,7 +782,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         //vb->invalidate();
 
         //	Timers tInitGetSlice=Timers::getTime();
-	//if(!isEmpty) 
+	//		if(!isEmpty) 
+	if( ! isNewFTM() ||  ! isEmpty )
 	{
             initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
         }
