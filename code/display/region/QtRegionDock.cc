@@ -165,6 +165,10 @@ namespace casa {
 	    if ( gonner ) emit regionChange( gonner, "deleted" );
 	}
 
+	void QtRegionDock::status( const std::string &msg, const std::string &type ) {
+		dpg->status(msg,type);
+	}
+
 	void QtRegionDock::selectRegion(QtRegionState *state) {
 	    region_stack->setCurrentWidget(state);
 	    state->nowVisible( );

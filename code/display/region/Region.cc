@@ -64,8 +64,8 @@ namespace casa {
 								  { strcpy(buf,other.buf); }
 	    ~strip_white_space( ) { delete [] buf; }
 	    void operator( )( char c ) { if ( ! isspace(c) ) buf[off++] = c; };
-	    operator std::string( ) { buf[off+1] = '\0'; return std::string(buf); }
-	    operator String( ) { buf[off+1] = '\0'; return String(buf); }
+	    operator std::string( ) { buf[off] = '\0'; return std::string(buf); }
+	    operator String( ) { buf[off] = '\0'; return String(buf); }
 	    size_t size;
 	    size_t off;
 	    char *buf;
@@ -616,7 +616,18 @@ if (!markCenter()) return;
 
 	    double new_center_x, new_center_y;
 	    if ( x_units == "pixel" ) {
-		try { pixel_to_linear( wc_, atof(x.c_str( )), 0, new_center_x, new_center_y ); } catch(...) { return false; }
+			try { 
+				pixel_to_linear( wc_, atof(x.c_str( )), 0, new_center_x, new_center_y );
+			} catch( const casa::AipsError &err) {
+				status( "coordinate conversion failed: " + err.getMesg( ), "error" );
+				return false;
+			} catch( const std::exception &exc ) {
+				status( std::string("coordinate conversion failed: ") + exc.what( ), "error" );
+				return false;;
+			} catch(...) {
+				status( "coordinate conversion failed...", "error" );
+				return false;
+			}
 	    } else {
 		Quantity xq;
 		if ( x_units == "sexagesimal" ) {
@@ -627,6 +638,7 @@ if (!markCenter()) return;
 		} else if ( x_units == "radians" ) {
 		    xq = Quantity( atof(x.c_str( )), "rad" );
 		} else {
+			status( "unknown units: " + x_units, "error" );
 		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
@@ -640,6 +652,7 @@ if (!markCenter()) return;
 		linearv(0) = cur_center_x;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
+			status( "linear to world coordinate converison failed...", "error" );
 		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
@@ -663,6 +676,7 @@ if (!markCenter()) return;
 		}
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
+			status( "world to linear coordinate converison failed...", "error" );
 		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
@@ -672,10 +686,11 @@ if (!markCenter()) return;
 
 
 	    // trap attempts to move region out of visible area...
-	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
-		updateStateInfo( true, RegionChangeReset );	// error: reset
-		return false;
-	    }
+		if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
+			status( "translation moves region outside of image...", "error" );
+			updateStateInfo( true, RegionChangeReset );	// error: reset
+			return false;
+		}
 
 	    // move region...
 	    move( new_center_x - cur_center_x, new_center_y - cur_center_y );
@@ -695,7 +710,18 @@ if (!markCenter()) return;
 
 	    double new_center_x, new_center_y;
 	    if ( y_units == "pixel" ) {
-		try { pixel_to_linear( wc_, 0, atof(y.c_str( )), new_center_x, new_center_y ); } catch(...) { return false; }
+			try {
+				pixel_to_linear( wc_, 0, atof(y.c_str( )), new_center_x, new_center_y );
+			} catch( const casa::AipsError &err) {
+				status( "coordinate conversion failed: " + err.getMesg( ), "error" );
+				return false;
+			} catch( const std::exception &exc ) {
+				status( std::string("coordinate conversion failed: ") + exc.what( ), "error" );
+				return false;;
+			} catch(...) {
+				status( "coordinate conversion failed...", "error" );
+				return false;
+			}
 	    } else {
 		Quantity yq;
 		if ( y_units == "sexagesimal" ) {
@@ -718,6 +744,7 @@ if (!markCenter()) return;
 		linearv(0) = cur_center_x;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
+			status( "linear to world coordinate converison failed...", "error" );
 		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
@@ -740,6 +767,7 @@ if (!markCenter()) return;
 		}
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
+			status( "world to linear coordinate converison failed...", "error" );
 		    updateStateInfo( true, RegionChangeReset );	// error: reset
 		    return false;
 		}
@@ -748,10 +776,11 @@ if (!markCenter()) return;
 	    }
 
 	    // trap attempts to move region out of visible area...
-	    if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
-		updateStateInfo( true, RegionChangeReset );	// error: reset
-		return false;
-	    }
+		if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
+			status( "translation moves region outside of image...", "error" );
+			updateStateInfo( true, RegionChangeReset );	// error: reset
+			return false;
+		}
 
 	    // move region...
 	    move( new_center_x - cur_center_x, new_center_y - cur_center_y );

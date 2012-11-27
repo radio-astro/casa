@@ -46,6 +46,7 @@
 #  include <QtCore>
 #  include <QtGui>
 #  include <QTimer>
+#  include <QDebug>
 #  include <QtXml>
 #include <graphics/X11/X_exit.h>
 
@@ -447,7 +448,7 @@ public:
   virtual void refresh() {
     pd_->refresh();
     refreshCBPanels_();  }
-    
+  virtual void setBlen_(Int len);
  
 
  signals:
@@ -579,8 +580,8 @@ public:
     if(modeZ()) setZlen_(len);
     else        setBlen_(len);  }
   virtual void setZlen_(Int len);
-  virtual void setBlen_(Int len);
   
+
   virtual void stop_();
   virtual void goTo_(Int frm) { if(modeZ()) goToZ_(frm); else goToB_(frm);  }
   virtual void goToZ_(Int frm);

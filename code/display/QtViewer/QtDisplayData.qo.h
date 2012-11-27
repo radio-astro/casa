@@ -372,8 +372,6 @@ class QtDisplayData : public QObject {
   // Can this QDD use a color bar?
   virtual Bool usesColorBar_() { return displayType_=="raster";  }
 
-  std::string regrid_image( const std::string&/*path*/, const std::string&/*method*/, QtDisplayData*/*other*/ );
-
   typedef std::map<const DisplayData*,QtDisplayData*> data_to_qtdata_map_type;
   static data_to_qtdata_map_type dd_source_map;
 

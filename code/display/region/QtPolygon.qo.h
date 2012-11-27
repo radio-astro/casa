@@ -129,6 +129,8 @@ namespace casa {
 		bool marked( ) const { return QtRegion::marked( ); }
 		bool mark_toggle( ) { return QtRegion::mark_toggle( ); }
 
+		void status( const std::string &msg, const std::string &type="info" ) { QtRegion::status(msg,type); }
+
 		bool markCenter() const { return QtRegion::markCenter( ); }
 
 		bool skyComponent() const { return QtRegion::skyComponent( ); }

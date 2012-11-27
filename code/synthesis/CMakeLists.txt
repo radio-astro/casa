@@ -299,6 +299,7 @@ casa_add_library( synthesis
  Parallel/PabloIO.cc
  Parallel/SerialTransport.cc
  Utilities/FixVis.cc
+ Utilities/SigHandler.cc
  Utilities/ThreadCoordinator.cc
  fortran/fpbmos.f	
  fortran/fpbwproj.f	

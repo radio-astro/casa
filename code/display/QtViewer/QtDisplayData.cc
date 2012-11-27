@@ -230,6 +230,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 						ImageAnalysis ia(im_);
 						// need an option to delete temporary files on exit...
 						std::string outpath = viewer::options.temporaryPath(Path(path_).baseName());
+						panel_->status( "generating temporary image: " + outpath );
 						panel_->logIO( ) << "generating temporary image \'" << outpath << "'" << LogIO::POST;
 						ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
 						std::auto_ptr<ImageInterface<Float> > imptr(im_);
@@ -1037,11 +1038,6 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 	// emit qddOK();
 }
 
-
-
-std::string QtDisplayData::regrid_image( const std::string &/*path*/, const std::string &/*method*/, QtDisplayData */*other*/ ) {
-	return "";
-}
 
 
 bool QtDisplayData::isValidColormap( const QString &name ) const {

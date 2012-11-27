@@ -53,6 +53,18 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	namespace viewer {
+		namespace hidden {
+			void display_panel_gui_status::enterEvent( QEvent * ) {
+				emit enter( );
+			}
+			void display_panel_gui_status::leaveEvent( QEvent * ) {
+				emit leave( );
+			}
+		}
+	}
+
+
 bool QtDisplayPanelGui::logger_did_region_warning = false;;
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
@@ -64,7 +76,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
-								   controlling_dd(0), preferences(0), regionDock_(0), autoDDOptionsShow(True) {
+								   controlling_dd(0), preferences(0), regionDock_(0),
+								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True) {
 
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
@@ -567,7 +580,19 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		}
 		// To do: use a QSetting, to preserve size.
 	}
+
+
 	connect( &movieTimer, SIGNAL(timeout()), this, SLOT(incrementMovieChannel()));
+
+	viewer::hidden::display_panel_gui_status *status_bar = new viewer::hidden::display_panel_gui_status( );
+	setStatusBar( status_bar );
+	connect( status_bar, SIGNAL(enter( )), this, SLOT(reset_status_bar( )) );
+	connect( status_bar, SIGNAL(leave( )), this, SLOT(clear_status_bar( )) );
+
+	status_bar_timer->setSingleShot( true );
+	status_bar_timer->setInterval( 15000 );
+	connect( status_bar_timer, SIGNAL(timeout()), this, SLOT(clear_status_bar( )) );
+
 }
 
 string QtDisplayPanelGui::addAnimationDockWidget(){
@@ -624,6 +649,23 @@ int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
 	return v_->mouseBtns( )->getButtonState(tool);
 }
 
+void QtDisplayPanelGui::status( const std::string &s, const std::string &type ) {
+	status_bar_state = QString::fromStdString(s);
+	status_bar_stylesheet = (type == "error" ? "QStatusBar { color: rgb(255, 53, 43) }" : "QStatusBar { }");
+	reset_status_bar( );
+}
+
+void QtDisplayPanelGui::clear_status_bar( ) {
+	statusBar( )->clearMessage( );
+}
+
+void QtDisplayPanelGui::reset_status_bar( ) {
+	statusBar( )->setStyleSheet( status_bar_stylesheet );
+	statusBar( )->showMessage( status_bar_state );
+	QCoreApplication::processEvents( );
+	status_bar_timer->start( );
+}
+
 bool QtDisplayPanelGui::supports( SCRIPTING_OPTION ) const {
 	return false;
 }
@@ -651,8 +693,10 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 		Bool autoRegister, QtDisplayData* qdd, const viewer::DisplayDataOptions& /*ddo*/){
 	if(qdd->isEmpty()) {
 		errMsg_ = qdd->errMsg();
+		status( "display data creation failed: " + errMsg_ );
 		emit createDDFailed(errMsg_, path, dataType, displayType);
-		return 0;  }
+		return 0;
+	}
 
 	// Be sure name is unique by adding numerical suffix if necessary.
 
@@ -660,6 +704,7 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	for(Int i=2; dd(name)!=0; i++) {
 		name=qdd->name() + " <" + viewer::to_string( i ) + ">";  }
 	qdd->setName(name);
+	status( "loaded: " + qdd->path( ) );
 
 	ListIter<QtDisplayData* > qdds(qdds_);
 	qdds.toEnd();
@@ -676,6 +721,7 @@ void QtDisplayPanelGui::updateFrameInformation(){
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	int displayDataCount = rdds.len();
 	animationHolder->setModeEnabled( displayDataCount );
+	qdp_->setBlen_(displayDataCount );
 	ListIter<QtDisplayData*> iter(rdds );
 	int i = 0;
 	int maxChannels = -1;

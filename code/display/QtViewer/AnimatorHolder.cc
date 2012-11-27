@@ -242,12 +242,14 @@ void AnimatorHolder::setModeEnabled( int imageCount ){
 			ui.imageGroupBox->setCheckable( true );
 			ui.imageGroupBox->setChecked( false );
 		}
+
 		addRemoveChannelAnimatorBasedOnFrameCount();
 		int displayCount = getAnimationCount();
 		if ( displayCount == 1 ){
 			ui.imageGroupBox->setChecked( true );
 		}
 	}
+	animatorImage->setFrameInformation( 0, imageCount );
 	if ( modeChanged ){
 		modeChange();
 	}
@@ -255,6 +257,7 @@ void AnimatorHolder::setModeEnabled( int imageCount ){
 
 void AnimatorHolder::addRemoveChannelAnimatorBasedOnFrameCount(){
 	if ( animatorChannel->getFrameCount() > 1 ){
+		addChannelGroupBox();
 		animatorChannel->setModeEnabled( true );
 		ui.channelGroupBox->setCheckable( true );
 		changePalette( ui.channelGroupBox, selectedColor );

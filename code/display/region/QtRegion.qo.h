@@ -147,6 +147,8 @@ namespace casa {
 		bool marked( ) const { return mystate->marked( ); }
 		bool mark_toggle( );
 
+		void status( const std::string &msg, const std::string &type="info" );
+
 		bool markCenter( ) const { return mystate->markCenter( ); }
 
 		bool skyComponent( ) const {return mystate->skyComponent();};

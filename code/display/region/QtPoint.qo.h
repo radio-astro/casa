@@ -131,6 +131,8 @@ namespace casa {
 
 		int markerScale( ) const { return QtRegion::markerScale( ); }
 
+		void status( const std::string &msg, const std::string &type="info" ) { QtRegion::status(msg,type); }
+
 		bool markCenter() const { return QtRegion::markCenter( ); }
 
 		bool skyComponent() const { return QtRegion::skyComponent( ); }
