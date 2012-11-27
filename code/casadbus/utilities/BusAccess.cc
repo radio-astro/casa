@@ -162,5 +162,12 @@ namespace casa {
 	    std::string oname = opath.substr(strlen(CASA_PREFIX));
 	    return std::string( CASA_PATH + oname );
 	}
+
+	std::string adaptor_object( const std::string &name ) {
+	    casa::DBusSession &session = casa::DBusSession::instance( );
+	    std::string obj(CASA_PREFIX + name);
+	    session.connection( ).request_name( obj.c_str( ) );
+	    return std::string( CASA_PATH + name );
+	}
     }
 }

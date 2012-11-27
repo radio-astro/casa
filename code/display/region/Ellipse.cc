@@ -108,100 +108,108 @@ namespace casa {
 
 
 	void Ellipse::drawRegion( bool selected ) {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+		if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-	    PixelCanvas *pc = wc_->pixelCanvas();
-	    if(pc==0) return;
+		PixelCanvas *pc = wc_->pixelCanvas();
+		if(pc==0) return;
 
-	    double center_x, center_y;
-	    linearCenter( center_x, center_y );
+		double center_x, center_y;
+		linearCenter( center_x, center_y );
 
-	    int x1, y1, x2, y2;
-	    int cx, cy;
-	    try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
-	    try { linear_to_screen( wc_, center_x, center_y, cx, cy ); } catch(...) { return; }
+		int x1, y1, x2, y2;
+		int cx, cy;
+		try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
+		try { linear_to_screen( wc_, center_x, center_y, cx, cy ); } catch(...) { return; }
 
-	    pc->drawEllipse(cx, cy, cx - x1, cy - y1, 0.0, True, 1.0, 1.0);
+		pc->drawEllipse(cx, cy, cx - x1, cy - y1, 0.0, True, 1.0, 1.0);
 
-	    if (getDrawCenter())
-	   	 drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
+		if (getDrawCenter())
+			drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
 
-	    if ( selected ) {
+		if ( selected ) {
 
-		// draw outline rectangle for resizing the ellipse...
-		pushDrawingEnv(DotLine);
-		pc->drawRectangle( x1, y1, x2, y2 );
-		popDrawingEnv( );
+			// draw outline rectangle for resizing the ellipse...
+			pushDrawingEnv(DotLine);
+			pc->drawRectangle( x1, y1, x2, y2 );
+			popDrawingEnv( );
 
-		Int w = x2 - x1;
-		Int h = y2 - y1;
+			Int w = x2 - x1;
+			Int h = y2 - y1;
 
-		Int s = 0;		// handle size
-		if (w>=18 && h>=18) s = 6;
-		else if (w>=15 && h>=15) s = 5;
-		else if (w>=12 && h>=12) s = 4;
-		else if (w>=9 && h>=9) s = 3;
+			Int s = 0;		// handle size
+			if (w>=18 && h>=18) s = 6;
+			else if (w>=15 && h>=15) s = 5;
+			else if (w>=12 && h>=12) s = 4;
+			else if (w>=9 && h>=9) s = 3;
 
-		double xdx, ydy;
-		try { screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy ); } catch(...) { return; }
-		handle_delta_x = xdx - blc_x;
-		handle_delta_y = ydy - blc_y;
+			double xdx, ydy;
+			try { screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy ); } catch(...) { return; }
+			handle_delta_x = xdx - blc_x;
+			handle_delta_y = ydy - blc_y;
 
-		int hx0 = x1;
-		int hx1 = x1 + s;
-		int hx2 = x2 - s;
-		int hx3 = x2;
-		int hy0 = y1;
-		int hy1 = y1 + s;
-		int hy2 = y2 - s;
-		int hy3 = y2;	// set handle coordinates
-		if (s) {
-		    pushDrawingEnv( Region::SolidLine);
-		    if ( weaklySelected( ) ) {
-			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
-		    } else if ( marked( ) ) {
-			pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-			pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-			pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-			pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
-		    } else {
-			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
-		    }
-		  popDrawingEnv( );
+			int hx0 = x1;
+			int hx1 = x1 + s;
+			int hx2 = x2 - s;
+			int hx3 = x2;
+			int hy0 = y1;
+			int hy1 = y1 + s;
+			int hy2 = y2 - s;
+			int hy3 = y2;	// set handle coordinates
+			if (s) {
+				pushDrawingEnv( Region::SolidLine);
+				if ( weaklySelected( ) ) {
+					if ( marked_region_count( ) > 0 && mouse_in_region ) {
+						pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+						pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+						pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+						pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+					} else {
+						pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+						pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+						pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+						pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+					}
+				} else if ( marked( ) ) {
+					pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+					pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+					pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+					pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+				} else {
+					pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+					pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+					pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+					pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+				}
+				popDrawingEnv( );
+			}
 		}
-
-	    }
-
 	}
 
 	unsigned int Ellipse::mouseMovement( double x, double y, bool other_selected ) {
-	    unsigned int result = 0;
+		unsigned int result = 0;
 
-	    if ( visible_ == false ) return result;
+		if ( visible_ == false ) return result;
 
-	    //if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
-	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
-		result |= MouseSelected;
-		result |= MouseRefresh;
-		selected_ = true;
-		draw( other_selected );
-		if ( other_selected == false ) {
-		    // mark flag as this is the region (how to mix in other shapes)
-		    // of interest for statistics updates...
-		    selectedInCanvas( );
+		if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
+			if ( mouse_in_region == false ) weaklySelect( );
+			mouse_in_region = true;
+			result |= MouseSelected;
+			result |= MouseRefresh;
+			selected_ = true;
+			draw( other_selected );
+			if ( other_selected == false ) {
+				// mark flag as this is the region (how to mix in other shapes)
+				// of interest for statistics updates...
+				selectedInCanvas( );
+			}
+		} else if ( selected_ == true ) {
+			if ( mouse_in_region == true ) weaklyUnselect( );
+			mouse_in_region = false;
+			selected_ = false;
+			draw( other_selected );
+			result |= MouseRefresh;
 		}
-	    } else if ( selected_ == true ) {
-		selected_ = false;
-		draw( other_selected );
-		result |= MouseRefresh;
-	    }
-	    return result;
+		return result;
 	}
 
 	std::list<RegionInfo> *Ellipse::generate_dds_centers( ){

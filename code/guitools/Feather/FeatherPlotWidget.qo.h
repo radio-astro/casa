@@ -56,6 +56,7 @@ public:
     void setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void addScatterData();
     void clearPlot();
+    void clearLegend();
 
     //Preferences
     void setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
@@ -63,6 +64,7 @@ public:
     		const QColor& zoomRectColor );
     void setLineThickness( int thickness );
     void setLegendVisibility( bool v );
+    void setDotSize( int size );
 
     //Actions
     void setPermanentScatter( bool permanentScatter );
@@ -152,10 +154,7 @@ private:
     QString singleDishWeightFunction;
     QString interferometerWeightFunction;
 
-    bool mouseMove;
-    bool legendVisible;
     bool permanentScatter;
-    int lineThickness;
     QString plotTitle;
     const int MARKER_WIDTH;
 

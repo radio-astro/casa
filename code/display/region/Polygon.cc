@@ -139,30 +139,34 @@ namespace casa {
 	    return PointInfo( x, y, result == 0 ? (unsigned int) PointOutside : result, handle );
 	}
 
-        // returns mouse movement state
+	// returns mouse movement state
 	unsigned int Polygon::mouseMovement( double x, double y, bool other_selected ) {
-	    unsigned int result = 0;
+		unsigned int result = 0;
 
-	    if ( visible_ == false ) return result;
+		if ( visible_ == false ) return result;
 
-	    double blc_x, blc_y, trc_x, trc_y;
-	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
-	    if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y || within_vertex_handle( x, y ) ) {
-		result |= MouseSelected;
-		result |= MouseRefresh;
-		selected_ = true;
-		draw( other_selected );		// this draw may not be necessary (?)...
-		if ( other_selected == false ) {
-		    // mark flag as this is the region (how to mix in other shapes)
-		    // of interest for statistics updates...
-		    selectedInCanvas( );
+		double blc_x, blc_y, trc_x, trc_y;
+		boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+		if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y || within_vertex_handle( x, y ) ) {
+			if ( mouse_in_region == false ) weaklySelect( );
+			mouse_in_region = true;
+			result |= MouseSelected;
+			result |= MouseRefresh;
+			selected_ = true;
+			draw( other_selected );		// this draw may not be necessary (?)...
+			if ( other_selected == false ) {
+				// mark flag as this is the region (how to mix in other shapes)
+				// of interest for statistics updates...
+				selectedInCanvas( );
+			}
+		} else if ( selected_ == true ) {
+			if ( mouse_in_region == true ) weaklyUnselect( );
+			mouse_in_region = false;
+			selected_ = false;
+			draw( other_selected );		// this draw may not be necessary (?)...
+			result |= MouseRefresh;
 		}
-	    } else if ( selected_ == true ) {
-		selected_ = false;
-		draw( other_selected );		// this draw may not be necessary (?)...
-		result |= MouseRefresh;
-	    }
-	    return result;
+		return result;
 	}
 
 	bool Polygon::clickWithin( double x, double y ) const {
@@ -504,103 +508,109 @@ namespace casa {
 	}
 
 	void Polygon::drawRegion( bool selected ) {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+		if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-	    PixelCanvas *pc = wc_->pixelCanvas();
-	    if(pc==0) return;
+		PixelCanvas *pc = wc_->pixelCanvas();
+		if(pc==0) return;
 
-	    if ( _drawing_points_.size( ) == 0 ) return;
+		if ( _drawing_points_.size( ) == 0 ) return;
 
-	    int x1, y1, x2, y2;
-	    try { linear_to_screen( wc_, _drawing_points_[0].first, _drawing_points_[0].second, x1, y1 ); } catch(...) { return; }
+		int x1, y1, x2, y2;
+		try { linear_to_screen( wc_, _drawing_points_[0].first, _drawing_points_[0].second, x1, y1 ); } catch(...) { return; }
 
-	    // draw the center
-	    if (getDrawCenter())
-	   	 drawCenter( _center_x, _center_y, _center_delta_x, _center_delta_y);
+		// draw the center
+		if (getDrawCenter())
+			drawCenter( _center_x, _center_y, _center_delta_x, _center_delta_y);
 
-	    int first_x = x1, first_y = y1;
-	    for ( unsigned int i=1; i < _drawing_points_.size( ); ++i ) {
-		try { linear_to_screen( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x2, y2 ); } catch(...) { return; }
-		pc->drawLine(x1,y1,x2,y2);
-		x1 = x2;
-		y1 = y2;
-	    }
-	    if ( complete ) pc->drawLine( x1, y1, first_x, first_y );
-
-
-	    if ( selected ) {
-
-		// get bounding rectangle...
-		double blc_x, blc_y, trc_x, trc_y;
-		boundingRectangle( blc_x, blc_y, trc_x, trc_y );
-		try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
-
-		// compute handle size...
-		Int w = x2 - x1;
-		Int h = y2 - y1;
-
-		Int s = 0;
-		if (w>=18 && h>=18) s = 6;
-		else if (w>=15 && h>=15) s = 5;
-		else if (w>=12 && h>=12) s = 4;
-		else if (w>=9 && h>=9) s = 3;
-
-		// get handle size in linear coordinates...
-		double xdx, ydy;
-		try { screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy ); } catch(...) { return; }
-		handle_delta_x = xdx - blc_x;
-		handle_delta_y = ydy - blc_y;
-
-		// draw outline rectangle for resizing whole polygon...
-		pushDrawingEnv(DotLine);
-		pc->drawRectangle( x1, y1, x2, y2 );
-		popDrawingEnv( );
-
-		// get resizing rectangle handle bounding values...
-		int hx0 = x1;
-		int hx1 = x1 + s;
-		int hx2 = x2 - s;
-		int hx3 = x2;
-		int hy0 = y1;
-		int hy1 = y1 + s;
-		int hy2 = y2 - s;
-		int hy3 = y2;	// set handle coordinates
-
-		if (s) {
-		    // draw handles of outline rectangle for resizing whole polygon...
-		    pushDrawingEnv( Region::SolidLine);
-		    if ( weaklySelected( ) ) {
-			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
-		    } else if ( marked( ) ) {
-			pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-			pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-			pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-			pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
-		    } else {
-			pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-			pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-			pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
-
-			for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
-			    int h_blc_x, h_blc_y, h_trc_x, h_trc_y;
-			    try { linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
-						    _drawing_points_[i].second - handle_delta_y / 2.0,
-						    _drawing_points_[i].first + handle_delta_x / 2.0, 
-						    _drawing_points_[i].second + handle_delta_y / 2.0,
-						    h_blc_x, h_blc_y, h_trc_x, h_trc_y );
-			    } catch(...) { return; }
-
-			    pc->drawFilledRectangle( h_blc_x, h_blc_y, h_trc_x, h_trc_y );
-			}
-		    }
-
-		    popDrawingEnv( );
+		int first_x = x1, first_y = y1;
+		for ( unsigned int i=1; i < _drawing_points_.size( ); ++i ) {
+			try { linear_to_screen( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x2, y2 ); } catch(...) { return; }
+			pc->drawLine(x1,y1,x2,y2);
+			x1 = x2;
+			y1 = y2;
 		}
-	    }
+		if ( complete ) pc->drawLine( x1, y1, first_x, first_y );
+
+		if ( selected ) {
+
+			// get bounding rectangle...
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+			try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
+
+			// compute handle size...
+			Int w = x2 - x1;
+			Int h = y2 - y1;
+
+			Int s = 0;
+			if (w>=18 && h>=18) s = 6;
+			else if (w>=15 && h>=15) s = 5;
+			else if (w>=12 && h>=12) s = 4;
+			else if (w>=9 && h>=9) s = 3;
+
+			// get handle size in linear coordinates...
+			double xdx, ydy;
+			try { screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy ); } catch(...) { return; }
+			handle_delta_x = xdx - blc_x;
+			handle_delta_y = ydy - blc_y;
+
+			// draw outline rectangle for resizing whole polygon...
+			pushDrawingEnv(DotLine);
+			pc->drawRectangle( x1, y1, x2, y2 );
+			popDrawingEnv( );
+
+			// get resizing rectangle handle bounding values...
+			int hx0 = x1;
+			int hx1 = x1 + s;
+			int hx2 = x2 - s;
+			int hx3 = x2;
+			int hy0 = y1;
+			int hy1 = y1 + s;
+			int hy2 = y2 - s;
+			int hy3 = y2;	// set handle coordinates
+
+			if (s) {
+				// draw handles of outline rectangle for resizing whole polygon...
+				pushDrawingEnv( Region::SolidLine);
+				if ( weaklySelected( ) ) {
+					if ( marked_region_count( ) > 0 && mouse_in_region ) {
+						pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+						pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+						pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+						pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+					} else {
+						pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+						pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+						pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+						pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+					}
+				} else if ( marked( ) ) {
+					pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+					pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+					pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+					pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+				} else {
+					pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
+					pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
+					pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
+					pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+
+					for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
+						int h_blc_x, h_blc_y, h_trc_x, h_trc_y;
+						try { linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
+												_drawing_points_[i].second - handle_delta_y / 2.0,
+												_drawing_points_[i].first + handle_delta_x / 2.0, 
+												_drawing_points_[i].second + handle_delta_y / 2.0,
+												h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+						} catch(...) { return; }
+
+						pc->drawFilledRectangle( h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+					}
+				}
+
+				popDrawingEnv( );
+			}
+		}
 	}
 
 	AnnotationBase *Polygon::annotation( ) const {

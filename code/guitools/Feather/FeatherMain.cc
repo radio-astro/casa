@@ -74,10 +74,12 @@ FeatherMain::FeatherMain(QWidget *parent)
 	connect( this, SIGNAL( featherFinished()), &progressMeter, SLOT(cancel()));
 
 	//Put a validator on the effective dish diameter.
-	QDoubleValidator* doubleValidator = new QDoubleValidator( 0, std::numeric_limits<double>::max(), 10, this );
-	ui.dishDiameterXLineEdit->setValidator( doubleValidator );
-	ui.dishDiameterYLineEdit->setValidator( doubleValidator );
-	ui.singleDishFactorLineEdit->setValidator( doubleValidator );
+	QDoubleValidator* validator = new QDoubleValidator( 0, std::numeric_limits<double>::max(), 10, this );
+	ui.dishDiameterXLineEdit->setValidator( validator );
+	ui.dishDiameterYLineEdit->setValidator( validator );
+	ui.singleDishFactorLineEdit->setValidator( validator );
+	initializeDishDiameterLimit( ui.dishDiameterXLimitLabel );
+	initializeDishDiameterLimit( ui.dishDiameterYLimitLabel );
 	connect( ui.dishDiameterXLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(dishDiameterXChanged(const QString&)));
 	connect( ui.dishDiameterYLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(dishDiameterYChanged(const QString&)));
 
@@ -105,18 +107,27 @@ FeatherMain::FeatherMain(QWidget *parent)
 	connect(&preferences, SIGNAL(preferencesChanged()), this, SLOT(preferencesChanged()));
 }
 
+void FeatherMain::initializeDishDiameterLimit( QLabel* diamLimitLabel ){
+	QFont font = diamLimitLabel->font();
+	font.setBold( true );
+	diamLimitLabel->setFont( font );
+	QPalette palette = diamLimitLabel->palette();
+	palette.setColor(QPalette::Foreground, Qt::red );
+	diamLimitLabel->setPalette( palette );
+	diamLimitLabel->setVisible( false );
+}
+
 
 void FeatherMain::ySupportChanged( bool ySupport ){
 	if ( !ySupport ){
 		ui.dishDiameterYLineEdit->setText( ui.dishDiameterXLineEdit->text());
 	}
 }
+
 void FeatherMain::dishDiameterXChanged( double value ){
 	QString diameterStr = QString::number( value );
 	ui.dishDiameterXLineEdit->setText( diameterStr );
 }
-
-
 
 void FeatherMain::dishDiameterYChanged( double value ){
 	QString diameterStr = QString::number( value );
@@ -127,6 +138,7 @@ void FeatherMain::dishDiameterYChanged( double value ){
 		ui.dishDiameterXLineEdit->setText( diameterStr );
 	}
 }
+
 void FeatherMain::dishDiameterXChanged( const QString& xDiameter ){
 	if ( !ui.dishDiameterYLineEdit->isEnabled() ){
 		ui.dishDiameterYLineEdit->setText( xDiameter );
@@ -147,6 +159,9 @@ void FeatherMain::preferencesChanged(){
 	//Line thickness
 	int lineThickness = preferences.getLineThickness();
 	plotHolder->setLineThickness( lineThickness );
+
+	int dotSize = preferences.getDotSize();
+	plotHolder->setDotSize( dotSize );
 
 	//Legend visibility
 	bool legendVisible = preferences.isDisplayLegend();
@@ -183,8 +198,43 @@ void FeatherMain::imageFilesChanged(){
 	}
 	else {
 		clearPlots();
+
 		//Load the original data into the plot
 		addOriginalDataToPlots();
+
+		//Reset the dish diameters from the images
+		resetDishDiameters();
+	}
+}
+
+void FeatherMain::resetDishDiameters(){
+	const int DEFAULT_DISH = -1;
+	Float xDiam = DEFAULT_DISH;
+	Float yDiam = DEFAULT_DISH;
+	featherWorker.getEffectiveDishDiam( xDiam, yDiam );
+	//qDebug() << "Effective dish diameters were: "<<xDiam<<" and "<<yDiam;
+	resetDishDiameter( ui.dishDiameterXLineEdit,
+			ui.dishDiameterXLimitLabel, xDiam, DEFAULT_DISH);
+	resetDishDiameter( ui.dishDiameterYLineEdit,
+			ui.dishDiameterYLimitLabel, yDiam, DEFAULT_DISH);
+
+	if ( xDiam != yDiam ){
+		ui.yGroupBox->setChecked( true );
+	}
+}
+
+void FeatherMain::resetDishDiameter( QLineEdit* dishEdit, QLabel* diamLimit,
+		float value, float defaultValue ){
+	if ( value != defaultValue ){
+		QString diamValue = QString::number( value );
+		dishEdit->setText( diamValue );
+		diamLimit->setText( "<="+diamValue );
+		diamLimit->setVisible( true );
+	}
+	else {
+		dishEdit->setText( "" );
+		diamLimit->setText( "" );
+		diamLimit->setVisible( false );
 	}
 }
 

@@ -142,6 +142,7 @@ namespace casa {
 		ImageRegion *get_image_region( DisplayData *dd ) const { return Polygon::get_image_region( dd ); }
 		const std::list<Region*> &get_selected_regions( ) { return QtRegion::get_selected_regions( ); }
 		size_t selected_region_count( ) { return QtRegion::selected_region_count( ); }
+		size_t marked_region_count( ) { return QtRegion::marked_region_count( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const 

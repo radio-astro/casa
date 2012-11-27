@@ -869,7 +869,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 		}
 		catch (const AipsError& x) {
 			fitSuccess = False;
-			Bool isPointSource = True;
+			isPointSource = True;
 		}
 		size << "Image component size (deconvolved from beam) ---" << endl;
 		Angular2DGaussian decon;

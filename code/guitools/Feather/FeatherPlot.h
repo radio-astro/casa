@@ -26,7 +26,7 @@
 #ifndef FEATHERPLOT_H_
 #define FEATHERPLOT_H_
 
-#include <QMenu>
+//#include <QMenu>
 #include <QList>
 #include <qwt_plot.h>
 #include <qwt_legend.h>
@@ -49,42 +49,43 @@ public:
 	enum PlotType { ORIGINAL, SLICE_CUT, SCATTER_PLOT, NO_TYPE };
 	virtual ~FeatherPlot();
 	void clearCurves();
-	bool isEmpty() const;
-	bool isScatterPlot() const;
-	bool isSliceCut() const;
-	bool isSliceCutOriginal() const;
+	void clearLegend();
 	void addCurve( QVector<double> xValues, QVector<double> yValues,
 			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis );
 	void initializePlot( const QString& title, PlotType plotType );
 
-
+	//Preferences
 	void setFunctionColor( const QString& curveID, const QColor& color );
 	void setLineThickness( int thickness );
+	void setDotSize( int dotSize );
 	void setLegendVisibility( bool visible );
 
+	//Legend
 	void insertSingleLegend( QWidget* parent );
-
 	QWidget* getExternalAxisWidget( QwtPlot::Axis position );
+
+	//Accessors
 	FeatherPlot::PlotType getPlotType() const;
+	bool isEmpty() const;
+	bool isScatterPlot() const;
+	bool isSliceCut() const;
+	bool isSliceCutOriginal() const;
 
 private:
-
-
 	int getCurveIndex( const QString& curveTitle ) const;
-	void setCurveLineThickness( int curveIndex );
+	void setCurveSize( int curveIndex );
 	void updateAxes();
 	void setAxisLabels();
 	QwtLegend* legend;
 
 	PlotType plotType;
-	bool legendVisible;
 	int lineThickness;
-
-	const int DOT_FACTOR;
+	int dotSize;
 	const int AXIS_COUNT;
 
     QList<QwtPlotCurve*> curves;
 
+    //External axis drawing support
     QList<QString> axisLabels;
     QList<ExternalAxisWidget*> axisWidgets;
     QList<ExternalAxis*> axisBlanks;

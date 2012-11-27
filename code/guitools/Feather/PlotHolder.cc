@@ -28,6 +28,7 @@
 #include <QContextMenuEvent>
 #include <guitools/Feather/FeatherPlotWidget.qo.h>
 #include <guitools/Feather/ExternalAxisWidgetLeft.h>
+
 namespace casa {
 
 PlotHolder::PlotHolder(QWidget *parent)
@@ -88,8 +89,19 @@ void PlotHolder::initializePlots(){
 	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter Y", FeatherPlot::SCATTER_PLOT);
 	yWidgetScatter->setPermanentScatter( true );
 	plots.append( yWidgetScatter );
-
 }
+
+
+PlotHolder::~PlotHolder(){
+	for ( int i = 0; i < plots.size(); i++ ){
+		delete plots[i];
+	}
+	delete legendHolder;
+	legendHolder = NULL;
+}
+//------------------------------------------------------------------------
+//                   Plot events
+//------------------------------------------------------------------------
 
 void PlotHolder::rectangleZoomed( double minX, double maxX, double minY, double maxY ){
 	for ( int i = 0; i < SCATTER_X; i++ ){
@@ -135,18 +147,38 @@ void PlotHolder::showContextMenu( const QPoint& pt ){
 	contextMenu.exec( globalPos );
 }
 
+void PlotHolder::setRectangleZoomMode(){
+	for ( int i = 0; i < SCATTER_X; i++ ){
+		plots[i]->setRectangleZoomMode();
+	}
+}
+
+void PlotHolder::setDiameterSelectorMode(){
+	for ( int i = 0; i < SCATTER_X; i++ ){
+		plots[i]->setDiameterSelectorMode();
+	}
+}
+
+//---------------------------------------------------------------------
+//                Preferences
+//---------------------------------------------------------------------
+
 void PlotHolder::setLineThickness( int lineThickness ){
-	for ( int i = 0; i < plots.size(); i++ ){
+	for ( int i = 0; i < SCATTER_X; i++ ){
 		plots[i]->setLineThickness( lineThickness );
+	}
+}
+
+void PlotHolder::setDotSize( int dotSize ){
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->setDotSize( dotSize );
 	}
 }
 
 void PlotHolder::setLegendVisibility( bool visible ){
 	legendVisible = visible;
-	//if ( !visible ){
 	plots[SLICE_X_ORIGINAL]->setLegendVisibility( visible );
 	plots[SLICE_Y_ORIGINAL]->setLegendVisibility( visible );
-
 	plots[SLICE_X]->setLegendVisibility( visible );
 	plots[SLICE_Y]->setLegendVisibility( visible );
 }
@@ -154,26 +186,17 @@ void PlotHolder::setLegendVisibility( bool visible ){
 void PlotHolder::setDisplayScatterPlot( bool visible ){
 	displayScatter = visible;
 }
+
 void PlotHolder::setDisplayOutputSlice( bool visible ){
 	displayOutputSlice = visible;
 }
+
 void PlotHolder::setDisplayOriginalSlice( bool visible ){
 	displayOriginalSlice = visible;
 }
 
 void PlotHolder::setDisplayYGraphs( bool visible ){
 	displayYGraphs = visible;
-}
-
-void PlotHolder::setRectangleZoomMode(){
-	for ( int i = 0; i < SCATTER_X; i++ ){
-		plots[i]->setRectangleZoomMode();
-	}
-}
-void PlotHolder::setDiameterSelectorMode(){
-	for ( int i = 0; i < SCATTER_X; i++ ){
-		plots[i]->setDiameterSelectorMode();
-	}
 }
 
 void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
@@ -183,6 +206,11 @@ void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& 
 		plots[i]->setPlotColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor );
 	}
 }
+
+
+//------------------------------------------------------------------------
+//                          Data
+//------------------------------------------------------------------------
 
 void PlotHolder::setSingleDishWeight( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
 		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
@@ -255,6 +283,10 @@ void PlotHolder::dishDiameterYChanged( double value ){
 	plots[SLICE_Y_ORIGINAL]->setDishDiameter( value );
 }
 
+//----------------------------------------------------------------------
+//                        Layout
+//----------------------------------------------------------------------
+
 void PlotHolder::addPlots( QGridLayout*& layout, bool displayYGraphs, int rowIndex, int basePlotIndex ){
 	layout->addWidget( plots[basePlotIndex], rowIndex, 1 );
 	if ( displayYGraphs ){
@@ -269,22 +301,15 @@ void PlotHolder::addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout
 }
 
 void PlotHolder::emptyLayout(QLayout* layout ){
-	//Take the legend out of the legend holder so it doesn't get
-	//deleted with the legend holder.  The plot the legend came from
-	//should be responsible for deleting the legend.
-	if ( legendHolder != NULL ){
-		QLayout* legendLayout = legendHolder->layout();
-		if ( legendLayout != NULL ){
-			QLayoutItem* layoutItem = legendLayout->itemAt( 0 );
-			if ( layoutItem != NULL ){
-				QWidget* childWidget = layoutItem->widget();
-				if ( childWidget != NULL ){
-					childWidget->setParent( NULL );
-				}
-			}
-		}
+	//Take the legend external legend out of the plot.
+	//Needed because otherwise the external legend is displayed
+	//as a separate dialog when all the plots are removed.
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->clearLegend();
 	}
 
+	//Empty everything out of the layout and set parents
+	//of widgets to NULL.
 	QLayoutItem* layoutItem = layout->itemAt( 0 );
 	while( layoutItem != NULL ){
 		layout->removeItem( layoutItem );
@@ -298,6 +323,7 @@ void PlotHolder::emptyLayout(QLayout* layout ){
 		plots[i]->setParent( NULL );
 	}
 
+	//Get rid of the widget holding the legend.
 	delete legendHolder;
 	legendHolder = NULL;
 }
@@ -409,12 +435,5 @@ void PlotHolder::clearPlots(){
 }
 
 
-PlotHolder::~PlotHolder(){
-	for ( int i = 0; i < plots.size(); i++ ){
-		delete plots[i];
-	}
-	delete legendHolder;
-	legendHolder = NULL;
-}
 
 }

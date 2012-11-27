@@ -123,9 +123,8 @@ private slots:
 	void preferencesChanged();
 	void featheringDone();
 
-
-
 private:
+	void initializeDishDiameterLimit( QLabel* diamLimitLabel );
 	void clearPlots();
 	bool isInputImagesChanged();
 	bool generateInputImage( const String& lowResImagePath, const String& highResImagePath,
@@ -134,6 +133,9 @@ private:
 	float populateSDFactor() const;
 	bool loadImages();
 	void addOriginalDataToPlots();
+	void resetDishDiameters();
+	void resetDishDiameter( QLineEdit* dishEdit, QLabel* diamLimit,
+			float value, float defaultValue );
 
 	const static int DISH_DIAMETER_DEFAULT;
 	const static int SINGLE_DISH_FACTOR_DEFAULT;
@@ -153,6 +155,7 @@ private:
     PlotHolder* plotHolder;
     QProgressDialog progressMeter;
     LogIO logger;
+
 };
 }
 #endif // FEATHERMAIN_QO_H

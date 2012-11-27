@@ -32,18 +32,17 @@
 #include <QDebug>
 #include <QHBoxLayout>
 #include <qwt_plot_curve.h>
-#include <qwt_plot_panner.h>
+//#include <qwt_plot_panner.h>
 #include <qwt_symbol.h>
 #include <qwt_scale_draw.h>
 
 namespace casa {
 
 FeatherPlot::FeatherPlot(QWidget* parent):QwtPlot( parent ),
-	legend( NULL), legendVisible(true), lineThickness(1),
-	DOT_FACTOR( 3 ), AXIS_COUNT(3){
+	legend( NULL), lineThickness(1),
+	dotSize(1), AXIS_COUNT(3){
 
 	this->setAxisAutoScale( QwtPlot::xBottom );
-	//this->setAxisAutoScale( QwtPlot::yLeft );
 	for ( int i = 0; i < AXIS_COUNT; i++ ){
 		axisBlanks.append( new ExternalAxis() );
 		axisWidgets.append( NULL );
@@ -55,18 +54,59 @@ FeatherPlot::FeatherPlot(QWidget* parent):QwtPlot( parent ),
 	panner->setMouseButton( Qt::LeftButton, Qt::ControlModifier );
 	*/
 	setCanvasBackground( Qt::white );
-
-
 }
 
-void FeatherPlot::updateAxes(){
-	for ( int i = 0; i < AXIS_COUNT; i++ ){
-		if ( axisWidgets[i] != NULL ){
-			axisWidgets[i]->setAxisLabel( axisLabels[i] );
-			axisWidgets[i]->update();
-		}
+void FeatherPlot::initializePlot( const QString& graphTitle, PlotType plotType ){
+
+	//Store what type of plot we are.
+	this->plotType = plotType;
+
+	//Set the title of the plot
+	setTitle( graphTitle );
+	QwtText titleText = title();
+	QFont titleFont = titleText.font();
+	titleFont.setPointSize(10);
+	titleText.setFont( titleFont );
+	setTitle( titleText );
+
+	//Set up the axis scales and labels
+	setAxisLabels();
+	setAxisScaleDraw( QwtPlot::xBottom, axisBlanks[QwtPlot::xBottom] );
+	setAxisScaleDraw( QwtPlot::yLeft, axisBlanks[QwtPlot::yLeft] );
+	bool useRightYAxis = false;
+	if ( plotType == FeatherPlot::SLICE_CUT ){
+		useRightYAxis = true;
+		setAxisScaleDraw( QwtPlot::yRight, axisBlanks[QwtPlot::yRight] );
+	}
+	enableAxis( QwtPlot::yRight, useRightYAxis );
+}
+
+void FeatherPlot::setAxisLabels(){
+	const QString AMPLITUDE = "Amplitude";
+	const QString DISTANCE = "Distance(m)";
+	if ( plotType==SCATTER_PLOT ){
+		axisLabels[QwtPlot::xBottom] = "Low Resolution " + AMPLITUDE;
+		axisLabels[QwtPlot::yLeft] = "High Resolution "+AMPLITUDE;
+	}
+	else {
+		axisLabels[QwtPlot::xBottom] = DISTANCE;
+		axisLabels[QwtPlot::yLeft] = "Slice "+AMPLITUDE;
+		axisLabels[QwtPlot::yRight] = "Weight "+AMPLITUDE;
 	}
 }
+
+FeatherPlot::~FeatherPlot() {
+	for ( int i = 0; i < axisWidgets.size(); i++ ){
+		delete axisWidgets[i];
+		axisWidgets[i] = NULL;
+	}
+	delete legend;
+	legend = NULL;
+}
+
+//--------------------------------------------------------------------------
+//                     External Axis
+//-------------------------------------------------------------------------
 
 QWidget* FeatherPlot::getExternalAxisWidget( QwtPlot::Axis position ){
 	QWidget* axisWidget = NULL;
@@ -98,86 +138,24 @@ QWidget* FeatherPlot::getExternalAxisWidget( QwtPlot::Axis position ){
 	return axisWidget;
 }
 
-FeatherPlot::PlotType FeatherPlot::getPlotType() const{
-	return plotType;
-}
-
-void FeatherPlot::setAxisLabels(){
-	const QString AMPLITUDE = "Amplitude";
-	const QString DISTANCE = "Distance(m)";
-
-	if ( plotType==SCATTER_PLOT ){
-		axisLabels[QwtPlot::xBottom] = "Low Resolution " + AMPLITUDE;
-		axisLabels[QwtPlot::yLeft] = "High Resolution "+AMPLITUDE;
-	}
-	else {
-		axisLabels[QwtPlot::xBottom] = DISTANCE;
-		axisLabels[QwtPlot::yLeft] = "Slice "+AMPLITUDE;
-		axisLabels[QwtPlot::yRight] = "Weight "+AMPLITUDE;
+void FeatherPlot::updateAxes(){
+	for ( int i = 0; i < AXIS_COUNT; i++ ){
+		if ( axisWidgets[i] != NULL ){
+			axisWidgets[i]->setAxisLabel( axisLabels[i] );
+			axisWidgets[i]->update();
+		}
 	}
 }
 
-void FeatherPlot::initializePlot( const QString& graphTitle, PlotType plotType ){
+//-----------------------------------------------------------------
+//                        Legend
+//-----------------------------------------------------------------
 
-	//Store what type of plot we are.
-	this->plotType = plotType;
-
-	//Set the title of the plot
-	setTitle( graphTitle );
-	QwtText titleText = title();
-	QFont titleFont = titleText.font();
-	titleFont.setPointSize(10);
-	titleText.setFont( titleFont );
-	setTitle( titleText );
-
-	//Set up the axis scales and labels
-	setAxisLabels();
-	setAxisScaleDraw( QwtPlot::xBottom, axisBlanks[QwtPlot::xBottom] );
-	setAxisScaleDraw( QwtPlot::yLeft, axisBlanks[QwtPlot::yLeft] );
-	bool useRightYAxis = false;
-	if ( plotType == FeatherPlot::SLICE_CUT ){
-		useRightYAxis = true;
-		setAxisScaleDraw( QwtPlot::yRight, axisBlanks[QwtPlot::yRight] );
-	}
-	//enableAxis( QwtPlot::yLeft, true );
-	enableAxis( QwtPlot::yRight, useRightYAxis );
-}
-
-bool FeatherPlot::isEmpty() const {
-	bool empty = false;
-	if ( curves.size() == 0 ){
-		empty = true;
-	}
-	return empty;
-}
-
-void FeatherPlot::clearCurves(){
-	int count = curves.size();
-	for( int i = 0; i < count; i++ ){
-		QwtPlotCurve* curve = curves[i];
-		curve->detach();
-		delete curve;
-		curves[i] = NULL;
-	}
-	curves.clear();
-}
-
-void FeatherPlot::setCurveLineThickness( int curveIndex ){
-	QPen curvePen = curves[curveIndex]->pen();
-	QString curveTitle = curves[curveIndex]->title().text();
-	if ( curveTitle.length() > 0 ){
-		curvePen.setWidth( lineThickness );
-	}
-	else {
-		curvePen.setWidth( lineThickness * DOT_FACTOR );
-	}
-	curves[curveIndex]->setPen( curvePen );
-}
-
-void FeatherPlot::setLineThickness( int thickness ){
-	lineThickness = thickness;
-	for ( int i = 0; i < curves.size(); i++ ){
-		setCurveLineThickness( i );
+void FeatherPlot::clearLegend(){
+	if ( legend != NULL ){
+		insertLegend( NULL, QwtPlot::ExternalLegend );
+		delete legend;
+		legend = NULL;
 	}
 }
 
@@ -204,67 +182,20 @@ void FeatherPlot::setLegendVisibility( bool visible ){
 	}
 }
 
-void FeatherPlot::setFunctionColor( const QString& curveID, const QColor& color ){
-	int curveIndex = getCurveIndex( curveID );
-	if ( curveIndex >= 0 ){
-		QPen curvePen = curves[curveIndex]->pen();
-		curvePen.setColor( color );
-		curves[curveIndex]->setPen( curvePen );
-	}
+//---------------------------------------------------------------------------
+//                        Accessors
+//---------------------------------------------------------------------------
+
+FeatherPlot::PlotType FeatherPlot::getPlotType() const{
+	return plotType;
 }
 
-
-
-int FeatherPlot::getCurveIndex( const QString& curveTitle ) const {
-	int curveIndex = -1;
-	for ( int i = 0; i < curves.size(); i++ ){
-		QString existingTitle = curves[i]->title().text();
-		if ( existingTitle == curveTitle ){
-			curveIndex = i;
-			break;
-		}
+bool FeatherPlot::isEmpty() const {
+	bool empty = false;
+	if ( curves.size() == 0 ){
+		empty = true;
 	}
-	return curveIndex;
-}
-
-
-
-void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
-		QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis ){
-
-	//See if we already have the curve
-	int curveIndex = getCurveIndex( curveTitle);
-
-	//Set the data into the curve
-	QwtPlotCurve* curve = NULL;
-	//We need to make a new curve
-	if ( curveIndex < 0 ){
-	    curve  = new QwtPlotCurve();
-		curve->setTitle( curveTitle );
-		curve->setAxis( QwtPlot::xBottom, yAxis );
-		curve->attach( this );
-		if ( plotType == SCATTER_PLOT ){
-			curve->setStyle( QwtPlotCurve::Dots );
-		}
-	}
-	//We are just going to change the data in an existing curve
-	else {
-		curve = curves[curveIndex];
-	}
-	curve->setData( xValues, yValues );
-
-	//Store the curve if it is not already there
-	if ( curveIndex < 0 ){
-		curves.append( curve );
-		int index = curves.size() - 1;
-
-		setFunctionColor( curveTitle, curveColor );
-		setCurveLineThickness( index );
-	}
-
-	//Because the scales on the plots may have changed, we need to
-	//update the external axes.
-	updateAxes();
+	return empty;
 }
 
 bool FeatherPlot::isScatterPlot() const{
@@ -282,6 +213,7 @@ bool FeatherPlot::isSliceCut() const {
 	}
 	return sliceCut;
 }
+
 bool FeatherPlot::isSliceCutOriginal() const {
 	bool sliceCut = false;
 	if ( plotType == ORIGINAL ){
@@ -289,12 +221,118 @@ bool FeatherPlot::isSliceCutOriginal() const {
 	}
 	return sliceCut;
 }
-FeatherPlot::~FeatherPlot() {
-	for ( int i = 0; i < axisWidgets.size(); i++ ){
-		delete axisWidgets[i];
-		axisWidgets[i] = NULL;
+//--------------------------------------------------------------------------
+//                      Curves
+//--------------------------------------------------------------------------
+
+void FeatherPlot::setCurveSize( int curveIndex ){
+	QPen curvePen = curves[curveIndex]->pen();
+	QString curveTitle = curves[curveIndex]->title().text();
+	if ( isScatterPlot() ){
+		QwtSymbol symbol = curves[curveIndex]->symbol();
+		symbol.setSize( dotSize, dotSize );
+		curves[curveIndex]->setSymbol( symbol );
 	}
-	delete legend;
-	legend = NULL;
+	else {
+		curvePen.setWidth( lineThickness );
+		curves[curveIndex]->setPen( curvePen );
+	}
+}
+
+void FeatherPlot::setLineThickness( int thickness ){
+	lineThickness = thickness;
+	for ( int i = 0; i < curves.size(); i++ ){
+		setCurveSize( i );
+	}
+}
+
+void FeatherPlot::setDotSize( int size ){
+	dotSize = size;
+	for ( int i = 0; i < curves.size(); i++ ){
+		setCurveSize( i );
+	}
+}
+
+void FeatherPlot::clearCurves(){
+	int count = curves.size();
+	for( int i = 0; i < count; i++ ){
+		QwtPlotCurve* curve = curves[i];
+		curve->detach();
+		delete curve;
+		curves[i] = NULL;
+	}
+	curves.clear();
+}
+
+void FeatherPlot::setFunctionColor( const QString& curveID, const QColor& color ){
+	int curveIndex = getCurveIndex( curveID );
+	if ( curveIndex >= 0 ){
+		if ( !isScatterPlot() ){
+			QPen curvePen = curves[curveIndex]->pen();
+			curvePen.setColor( color );
+			curves[curveIndex]->setPen( curvePen );
+		}
+		else {
+			QwtSymbol curveSymbol = curves[curveIndex]->symbol();
+			QPen curvePen = curveSymbol.pen();
+			curvePen.setColor( color );
+			curveSymbol.setPen( curvePen );
+			curves[curveIndex]->setSymbol( curveSymbol );
+		}
+	}
+}
+
+int FeatherPlot::getCurveIndex( const QString& curveTitle ) const {
+	int curveIndex = -1;
+	for ( int i = 0; i < curves.size(); i++ ){
+		QString existingTitle = curves[i]->title().text();
+		if ( existingTitle == curveTitle ){
+			curveIndex = i;
+			break;
+		}
+	}
+	return curveIndex;
+}
+
+void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
+		QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis ){
+
+	//See if we already have the curve
+	int curveIndex = getCurveIndex( curveTitle);
+
+	//Set the data into the curve
+	QwtPlotCurve* curve = NULL;
+	//We need to make a new curve
+	if ( curveIndex < 0 ){
+	    curve  = new QwtPlotCurve();
+		curve->setTitle( curveTitle );
+		curve->setAxis( QwtPlot::xBottom, yAxis );
+		curve->attach( this );
+		if ( isScatterPlot() ){
+			curve->setStyle( QwtPlotCurve::Dots );
+			QwtSymbol* symbol = new QwtSymbol();
+			symbol->setSize( dotSize, dotSize );
+			symbol->setStyle( QwtSymbol::XCross );
+			curve->setSymbol( *symbol );
+		}
+	}
+	//We are just going to change the data in an existing curve
+	else {
+		curve = curves[curveIndex];
+	}
+	curve->setData( xValues, yValues );
+
+	//Store the curve if it is not already there
+	if ( curveIndex < 0 ){
+		curves.append( curve );
+		int index = curves.size() - 1;
+
+		setFunctionColor( curveTitle, curveColor );
+		setCurveSize( index );
+	}
+
+	//Because the scales on the plots may have changed, we need to
+	//update the external axes.
+	updateAxes();
 }
 } /* namespace casa */
