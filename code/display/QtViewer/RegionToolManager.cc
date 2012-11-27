@@ -270,9 +270,19 @@ namespace casa {
 				}
 			} else if ( ev.key( ) == Display::K_Escape ) {
 				const Region::region_list_type &marked_region_set = factory->regionDock( )->selectedRegionSet( );
-				if ( marked_region_set.size( ) > 0 ) {
-					// escape clears marked regions...
+				const Region::region_list_type &weak_region_set = factory->regionDock( )->weaklySelectedRegionSet( );
+				Region::region_list_type non_weak_set;
+				std::set_difference( marked_region_set.begin( ), marked_region_set.end( ),
+									 weak_region_set.begin( ), weak_region_set.end( ),
+									 std::insert_iterator<region_list_type>(non_weak_set,non_weak_set.begin( )) );
+				if ( non_weak_set.size( ) > 0 ) {
+					// escape clears marked regions... first...
 					clear_mark_select(state);
+					return;
+				} else if ( weak_region_set.size( ) > 0 ) {
+					// if cursor is within one or more regions (i.e. there's weakly
+					// selected regions) then esc deletes the weakly selected regions...
+					factory->regionDock( )->deleteRegions( weak_region_set );
 					return;
 				} else if ( moving_regions.size( ) > 0 ) {
 					// escape while moving regions has no effect...
