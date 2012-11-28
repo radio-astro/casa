@@ -782,7 +782,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         //vb->invalidate();
 
         //	Timers tInitGetSlice=Timers::getTime();
-	//        if(!isEmpty) 
+	//if(!isEmpty) 
 	{
             initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
         }
@@ -1451,6 +1451,7 @@ void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb,
 	    sliceCube(modelSliceVec[taylor], sm_->deltaImage(model), cubeSlice, nCubeSlice);
 	  else
 	    sliceCube(modelSliceVec[taylor], sm_->image(model), cubeSlice, nCubeSlice);
+
 	  sliceCube(fluxScaleVec[taylor], sm_->fluxScale(model), cubeSlice, nCubeSlice);
 	  sliceCube(weightSliceVec[taylor], sm_->ggS(model), cubeSlice, nCubeSlice);
 	  sliceCube(imGetSlice_p[model], model, cubeSlice, nCubeSlice, 1);
@@ -1462,7 +1463,8 @@ void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb,
       //U// LatticeExprNode LEN = max( *(modelSliceVec[0] ) );
       //U// cout << "CubeSkyEq  : Peak in image to be predicted : " << LEN.getFloat() << endl;
       
-      ftm_p[field]->initializeToVis(imGetSliceVec, modelSliceVec, weightSliceVec, fluxScaleVec, weightVec,vb);
+      ftm_p[field]->initializeToVis(imGetSliceVec, modelSliceVec, weightSliceVec, 
+				    fluxScaleVec, weightVec,vb);
       
       for (Int taylor=0; taylor < sm_->numberOfTaylorTerms(); ++taylor)
 	{
@@ -1883,6 +1885,8 @@ void CubeSkyEquation::fixImageScale()
 void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 {
   LogIO os(LogOrigin("CubeSkyEquation", "tmpNormalizeImage"));
+
+  if (dopsf) return;
   
   SubImage<Float> *gSSliceVec;
   SubImage<Float> *ggSSliceVec;
@@ -1891,7 +1895,6 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
   Int ntaylors = sm_->numberOfTaylorTerms();
   isLargeCube(sm_->cImage(0), nCubeSlice);
   
-  //  if (!sm_->isImageNormalized()) return;
   // PSFs are normalized in makeApproxPSF()
   if(dopsf) ntaylors = 2 * sm_->numberOfTaylorTerms() - 1;
   

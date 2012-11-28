@@ -161,6 +161,9 @@ class NewCalTable : public Table
    // Complex parameters?  (else Float)
    Bool isComplex();
 
+   // Report the polarization basis (from header record)
+   String polBasis();
+
    // Get a row from cal_main
    Record getRowMain (const Int& jrow);
     

@@ -58,6 +58,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+#define PSOURCE True
+#define psource (IPosition(4,512,512,0,0))
+
 //---------------------------------------------------------------------- 
 //-------------------- constructors and descructors ---------------------- 
 //---------------------------------------------------------------------- 
@@ -300,9 +303,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 
 	Int nX=modelImageVec[0]->shape()(0);
 	Int nY=modelImageVec[0]->shape()(1);
-	///IPosition psource(4,nX/2,nY/2,0,0);
-	IPosition psource(4,256,184,0,0);
-	cout << "------ before de-gridding norm : " << modelImageVec[0]->getAt(psource) << "," << modelImageVec[1]->getAt(psource) << endl;
+	if(PSOURCE) cout << "------ model, before de-gridding norm : " << modelImageVec[0]->getAt(psource) << "," << modelImageVec[1]->getAt(psource) << endl;
 
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	  {
@@ -327,8 +328,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 	//	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	//  storeAsImg("flattenedModel_"+String::toString(taylor) , *(modelImageVec[taylor]) );
 
-	// PSOURCE
-	cout << "------ after de-gridding norm : " << modelImageVec[0]->getAt(psource) << "," << modelImageVec[1]->getAt(psource) << endl;
+	    if(PSOURCE) cout << "------ model, after de-gridding norm : " << modelImageVec[0]->getAt(psource) << "," << modelImageVec[1]->getAt(psource) << endl;
 
 
 
@@ -346,7 +346,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
     time_get=0.0;
 
     /// Multiply the model with the avgPB again, so that it's ready for the minor cycle incremental accumulation
-    cout << "Multiplying the models by the weightimage" << endl;
+    cout << "Multiplying the models by the weightimage to reset it to flat-noise for the minor cycle" << endl;
     for(uInt taylor=0;taylor<nterms_p;taylor++)
       {
 	normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
@@ -504,12 +504,9 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
       }// end for taylor  
 
 
-    // PSOURCE
     Int nX=resImageVec[0]->shape()(0);
       Int nY=resImageVec[0]->shape()(1);
-      //IPosition psource(4,nX/2,nY/2,0,0);
-	IPosition psource(4,256,184,0,0);
-      cout << "------ before normalization : " << resImageVec[0]->getAt(psource) << "," << resImageVec[1]->getAt(psource) << endl;
+      if(PSOURCE) cout << "------ residual, before normalization : " << resImageVec[0]->getAt(psource) << "," << resImageVec[1]->getAt(psource) << endl;
 
     
 
@@ -519,7 +516,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 	normAvgPBs(weightImageVec);
 
 
-	/* //// Will need this only for computing pbcoeffs once for post-deconv wbpbcorrecion of model
+	 //// Will need this only for computing pbcoeffs once for post-deconv wbpbcorrecion of model
 	    // Reconnect these pointers to the skymodel images
 	    ///if(sensitivitymaps_p.nelements() != nterms_p) sensitivitymaps_p.resize(nterms_p);
 	    if(pbcoeffs_p.nelements() != nterms_p) pbcoeffs_p.resize(nterms_p);
@@ -538,13 +535,12 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 
 		cout << "MTFT::finalizeToSky for PSF and Weights : Calculating PB coefficients" << endl;
 		calculateTaylorPBs();
+		if(PSOURCE) cout << " PB 0 : " << pbcoeffs_p[0]->getAt(psource) << " PB 1 : " <<  pbcoeffs_p[1]->getAt(psource)  << endl;
+	
 		
 	      }// if dopsf
 
 
-	    // PSOURCE
-	    cout << " PB 0 : " << pbcoeffs_p[0]->getAt(psource) << " PB 1 : " <<  pbcoeffs_p[1]->getAt(psource)  << endl;
-	*/
 
 	/*
 	    // Normalize all by the Taylor0 weights
@@ -556,8 +552,7 @@ void NewMultiTermFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > 
 	      }// end for taylor  
 	*/
 
-    // PSOURCE
-    cout << "------ after normalization : " << resImageVec[0]->getAt(psource) << "," << resImageVec[1]->getAt(psource) << endl;
+	    if(PSOURCE) cout << "------ residual, after normalization : " << resImageVec[0]->getAt(psource) << "," << resImageVec[1]->getAt(psource) << endl;
   
 
     
@@ -783,7 +778,7 @@ void NewMultiTermFT::normalizeWideBandPB2(PtrBlock<SubImage<Float> *> &resImageV
 // Use sumwts to make a Hessian, invert it, apply to weight images, fill in pbcoeffs_p
 void NewMultiTermFT::calculateTaylorPBs()
 {
-  //  AlwaysAssert( sensitivitymaps_p.nelements()==nterms_p , AipsError );
+  AlwaysAssert( sensitivitymaps_p.nelements()>=nterms_p , AipsError );
   AlwaysAssert( pbcoeffs_p.nelements()==nterms_p, AipsError );
   AlwaysAssert( sumweights_p.nelements()==2*nterms_p-1, AipsError );
   
@@ -832,7 +827,7 @@ void NewMultiTermFT::calculateTaylorPBs()
       
       pbcoeffs_p[taylor1]->copyData(LatticeExpr<Float> (iif( abs(len)<pblimit_p*pblimit_p , 0.0 , len   )) );
       ///pbcoeffs_p[taylor1]->copyData(LatticeExpr<Float> (len) );
-      storeAsImg("coeffPB_"+String::toString(taylor1) , *(pbcoeffs_p[taylor1]) );
+      storeAsImg(cacheDir_p+"/coeffPB_"+String::toString(taylor1) , *(pbcoeffs_p[taylor1]) );
     }// for taylor1
   
   return;

@@ -84,6 +84,7 @@ public:
   inline void reset() { ti_->reset(); this->attach(); };
   inline Bool pastEnd() { return ti_->pastEnd(); };
   void next();
+  void next0();
 
   // Return the current table iteration
   NewCalTable table() const { return NewCalTable(ti_->table()); };
@@ -169,6 +170,10 @@ public:
   // If true, spw is unique per iteration, and it is
   //   safe to access channel axis info
   Bool singleSpw_;
+
+  // The parent NewCalTable (Table) object 
+  //  (stays in scope for the life of the CTIter)
+  NewCalTable parentNCT_;
 
   // Access to subtables (e.g., for frequencies)
   ROCTColumns calCol_;

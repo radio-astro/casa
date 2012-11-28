@@ -134,7 +134,7 @@ namespace casa{
 					Vector<Int>& cfShape, Vector<Int>& loc, Vector<Int>& igrdpos,
 					Double& sinDPA, Double& cosDPA,
 					Bool& finitePointingOffset,
-					Bool dopsf)
+					Bool doPSFOnly)
   {
     Vector<Int> iloc(4,0), tiloc(4);
     Bool Dummy;
@@ -174,7 +174,7 @@ namespace casa{
 				    tiloc,cfInc_p)/cfArea;
 		if (wVal > 0.0) {wt = conj(wt);}
 		norm += real(wt);
-		if (finitePointingOffset) 
+		if (finitePointingOffset && !doPSFOnly) 
 		  wt *= cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l[0],
 					   iloc[1]+phaseGradOrigin_l[1]);
 		// The following uses raw index on the 4D grid
@@ -434,9 +434,10 @@ namespace casa{
 				      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
 					{
 					  Complex* convFuncV;
-					  Vector<Float> sampling;
-					  Vector<Int> support;
-					  if ( (!dopsf) && (CONJBEAMS==True)) // UUU : With conjugate beams...
+					  // Vector<Float> sampling;
+					  // Vector<Int> support;
+					  if ( //(!dopsf) && 
+					      (CONJBEAMS==True)) // UUU : With conjugate beams...
 					    {
 					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
 								      wndx, mNdx, conjMNdx, ipol,  mRow);
@@ -452,8 +453,8 @@ namespace casa{
 					    }
 					  
 					  convOrigin=cfShape/2;
-					  
-					  if (finitePointingOffsets)
+					  Bool psfOnly=((dopsf==True) && (accumCFs==False));
+					  if (finitePointingOffsets && !psfOnly)
 					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
 					  
 					  cacheAxisIncrements(cfShape, cfInc_p);
@@ -461,7 +462,7 @@ namespace casa{
 					  norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
 								   support,sampling,
 								   off, convOrigin, cfShape, loc, igrdpos,
-								   sinDPA, cosDPA,finitePointingOffsets,accumWts);
+								   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
 					}
 				      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
 				      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);

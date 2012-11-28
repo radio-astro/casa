@@ -285,18 +285,19 @@ void NewCalTable::createSubTables() {
 //----------------------------------------------------------------------------
 void NewCalTable::attachSubTables()
 {
-  if (this->keywordSet().isDefined("ANTENNA")){
+
+  if (this->keywordSet().isDefined("ANTENNA"))
     antenna_p = CTAntenna(this->keywordSet().asTable("ANTENNA"));
-  }
-  if (this->keywordSet().isDefined("FIELD")){
+
+  if (this->keywordSet().isDefined("FIELD"))
     field_p = CTField(this->keywordSet().asTable("FIELD"));
-  }
-  if (this->keywordSet().isDefined("SPECTRAL_WINDOW")){
+
+  if (this->keywordSet().isDefined("SPECTRAL_WINDOW"))
     spectralWindow_p = CTSpectralWindow(this->keywordSet().asTable("SPECTRAL_WINDOW"));
-  }
-  if (this->keywordSet().isDefined("HISTORY")){
+
+  if (this->keywordSet().isDefined("HISTORY"))
     history_p = CTHistory(this->keywordSet().asTable("HISTORY"));
-  }
+
 }
 
 //----------------------------------------------------------------------------
@@ -327,6 +328,11 @@ void NewCalTable::copyMemCalSubtable(const Table & otherCalsubtable, Table & cal
 //----------------------------------------------------------------------------
 Bool NewCalTable::isComplex() {
   return (this->keywordSet().asString("ParType")=="Complex");
+}
+
+//----------------------------------------------------------------------------
+String NewCalTable::polBasis() {
+  return this->keywordSet().asString("PolBasis");
 }
 
 //----------------------------------------------------------------------------
@@ -676,9 +682,9 @@ void NewCalTable::setSpwFreqs(Int spw, const Vector<Double>& freq,
 
   MSSpWindowColumns spwcol(this->spectralWindow());
 
-  AlwaysAssert( (spw<spwcol.nrow()), AipsError );
+  AlwaysAssert( (spw<Int(spwcol.nrow())), AipsError );
   
-  Int nchan=freq.nelements();
+  uInt nchan=freq.nelements();
   IPosition sh(1,nchan);
 
   spwcol.numChan().put(spw,nchan);

@@ -1,4 +1,5 @@
-#define _LOCAL_SINGLETHREADED True
+#define _LOCAL_SINGLETHREADED 1
+
 #if (_LOCAL_SINGLETHREADED)
   template <class T>
   void AWVisResampler::accumulateFromGrid(T& nvalue, 
@@ -10,7 +11,7 @@
      Bool& finitePointingOffset, Matrix<Complex>& cached_phaseGrad_p)
   {
     Complex wt, norm=0.0;
-    Vector<Int> iCFPos(4,0);
+    Vector<Int> iCFPos(4,0),iLoc(4,0);
 
     // cerr << scaledSupport << endl
     // 	 << scaledSampling << endl
@@ -19,16 +20,18 @@
     // 	 << convOrigin << endl;
     IPosition phaseGradOrigin_l; 
     phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
-    
+
     for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
       {
-	iCFPos[1]=(scaledSampling[1]*iy+offset[1])+convOrigin[1];
-	iGrdPos[1]=loc[1]+iy;
+	iLoc[1]    = (scaledSampling[1]*iy+offset[1]);
+	iCFPos[1]  = iLoc[1] + convOrigin[1];
+	iGrdPos[1] = loc[1]+iy;
 
 	for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
 	  {
-	    iCFPos[0]=(scaledSampling[0]*ix+offset[0])+convOrigin[0];
-	    iGrdPos[0]=loc[0]+ix;
+	    iLoc[0]    = (scaledSampling[0]*ix+offset[0]);
+	    iCFPos[0]  = iLoc[0] + convOrigin[0];
+	    iGrdPos[0] = loc[0]+ix;
 
 	    {
 	      wt = getFrom4DArray((const Complex* __restrict__ &) convFuncV,
@@ -38,8 +41,8 @@
 
 	      norm+=(wt);
 	      if (finitePointingOffset) 
-		wt *= cached_phaseGrad_p(iCFPos[0]+phaseGradOrigin_l[0],
-					 iCFPos[1]+phaseGradOrigin_l[1]);
+		wt *= cached_phaseGrad_p(iLoc[0]+phaseGradOrigin_l[0],
+					 iLoc[1]+phaseGradOrigin_l[1]);
 	      //	      nvalue+=wt*grid(iGrdPos);
 	      nvalue +=  wt * getFrom4DArray(grid, iGrdPos, gridInc_p);
 	    }
