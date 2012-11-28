@@ -56,6 +56,7 @@ class simobserve_unittest_base(unittest.TestCase):
         ms.close()
         return stats[column]
 
+    # TODO: need to check image axes
     def _check_imstats(self, name, ref):
         # ref: a dictionary of reference statistics or reference image name
         # name: the name of image to compare statistics
@@ -176,11 +177,11 @@ class simobserve_unittest_base(unittest.TestCase):
 #
 # Test skymodel only simulations
 #
-class simobserve_sky(simobserve_unittest_base):#,unittest.TestCase):
+class simobserve_sky(simobserve_unittest_base):
     """
     Test skymodel simulations
     - Single step at a time
-    - All steps with 2D, 3D and 4D input skymodel
+    - All steps for obsmode = 'int' and 'sd'
     """
     project = simobserve_unittest_base.thistask+"_sky"
     inmodel = "core5ps.skymodel4mod"
@@ -402,29 +403,257 @@ class simobserve_sky(simobserve_unittest_base):#,unittest.TestCase):
         self._check_msstats(currpref+".ms",self.refms_int)
     
 
-# ########################################################################
-# #
-# # Test components list only simulations
-# #
-# class simobserve_comp(simobserve_unittest_base,unittest.TestCase):
-#     """
-#     Test components list simulations
-#     """
+########################################################################
+#
+# Test components list only simulations
+#
+class simobserve_comp(simobserve_unittest_base):
+    """
+    Test components list simulations
+    """
+    """
+    Test components list simulations
+    - Single step at a time
+    - All steps for obsmode = 'int' and 'sd'
+    """
+    project = simobserve_unittest_base.thistask+"_comp"
+    incomp = "core5ps.clist"
+    compwidth = "10MHz"
+    direction = "J2000 19h00m00 -23d00m00"
+    sdantlist = "aca.tp.cfg"
+    antlist = "alma.out01.cfg"
+
+    refproj = "ref_comp"
+    refpref = simobserve_unittest_base.datapath + refproj + "/"
+
+    # Reserved methods
+    def setUp(self):
+        print("")
+        default(simobserve)
+        self.refpref_sd = self.refpref + \
+                          self._get_data_prefix(self.sdantlist,self.refproj)
+        self.refpref_int = self.refpref + \
+                           self._get_data_prefix(self.antlist,self.refproj)
+        self.refmodel = self.refpref_sd+".compskymodel" # reference skymodel
+        self.refmodel_int = self.refpref_int+".compskymodel" # reference skymodel
+        # reference simulated MS
+        self.refms_sd = self.refpref_sd+".sd.ms"
+        self.refms_int = self.refpref_int+".ms"
+        # copy input components list
+        self._copy_input(self.incomp)
+
+    def tearDown(self):
+        shutil.rmtree(self.project)
+        #pass
+
+    # Tests of complist simulations
+    def testComp_complist(self):
+        """Test complist simulation: only generating input model"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        obsmode = ""
+        antennalist="alma.out01.cfg" # necessary even if only modifymodel
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,
+                         setpointings=True,obsmode=obsmode,
+                         antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare compskymodel
+        currmodel = self.project + "/" + \
+                    self._get_data_prefix(antennalist,self.project)+".compskymodel"
+        self._check_imstats(currmodel, self.refmodel_int)
+
+    def testComp_almaptg(self):
+        """Test complist simulation: only setpointing (maptype='ALMA')"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        setpointings = True
+        maptype = "ALMA"
+        obsmode = ""
+        antennalist = "alma.out01.cfg"
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,
+                         setpointings=setpointings,maptype=maptype,
+                         obsmode=obsmode,antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare pointing files
+        currptg = self.project + "/" + \
+                  self._get_data_prefix(antennalist,self.project)+".ptg.txt"
+        refptg = self.refpref + "alma.alma.out01.ptg.txt"
+        self._check_ptgfile(currptg, refptg)
+
+    def testComp_hexptg(self):
+        """Test complist simulation: only setpointing (maptype='hexagonal')"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        setpointings = True
+        maptype = "hexagonal"
+        obsmode = ""
+        antennalist = "aca.i.cfg"
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,
+                         setpointings=setpointings,maptype=maptype,
+                         obsmode=obsmode,antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare pointing files
+        currptg = self.project + "/" + \
+                  self._get_data_prefix(antennalist,self.project)+".ptg.txt"
+        refptg = self.refpref + "hex.aca.i.ptg.txt"
+        self._check_ptgfile(currptg, refptg)
+
+    def testComp_sqptg(self):
+        """Test complist simulation: only setpointing (maptype='square')"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        setpointings = True
+        maptype = "square"
+        obsmode = ""
+        antennalist = ""
+        sdantlist = self.sdantlist
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,
+                         setpointings=setpointings,maptype=maptype,
+                         obsmode=obsmode,antennalist=antennalist,
+                         sdantlist=sdantlist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare pointing files
+        currptg = self.project + "/" + \
+                  self._get_data_prefix(sdantlist,self.project)+".ptg.txt"
+        refptg = self.refpref + "square.aca.tp.ptg.txt"
+        self._check_ptgfile(currptg, refptg)
+
+    def testComp_sdObs(self):
+        """Test complist simulation: only observation (SD)"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        setpointings = False
+        ptgfile = self.refpref_sd + ".ptg.txt"
+        integration = "4s"
+        obsmode = "sd"
+        sdantlist = self.sdantlist
+        totaltime = "144s"
+        thermalnoise = ""
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,
+                         setpointings=setpointings,ptgfile=ptgfile,
+                         integration=integration,obsmode=obsmode,
+                         sdantlist=sdantlist,totaltime=totaltime,
+                         thermalnoise=thermalnoise,graphics=self.graphics)
+        self.assertTrue(res)
+        # compare output MS
+        currms = self.project + "/" + \
+                 self._get_data_prefix(sdantlist,self.project)+".sd.ms"
+        self._check_msstats(currms,self.refms_sd)
+        
+
+    def testComp_intObs(self):
+        """Test complist simulation: only observation (INT)"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        setpointings = False
+        ptgfile = self.refpref_int + ".ptg.txt"
+        integration = "4s"
+        obsmode = "int"
+        antennalist = 'alma.out01.cfg'
+        totaltime = "28s"
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,
+                         setpointings=setpointings,ptgfile=ptgfile,
+                         integration=integration,obsmode=obsmode,
+                         antennalist=antennalist,totaltime=totaltime,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare output MS
+        currms = self.project + "/" + \
+                 self._get_data_prefix(antennalist,self.project)+".ms"
+        self._check_msstats(currms,self.refms_sd)
+
+#     def testComp_intLeak(self):
+#         """Test complist simulation: only observation (INT)"""
+#         complist = self.incomp
+#         compwidth = self.compwidth
+#         setpointings = False
+#         obsmode = ""
+#         thermalnoise = ""
+#         leakage = 0.5
+#         res = simobserve(project=self.project,complist=complist,
+#                          compwidth = compwidth,
+#                          setpointings=setpointings,ptgfile=ptgfile,
+#                          obsmode=obsmode,thermalnoise=thermalnoise,
+#                          leakage=leakage,graphics=self.graphics)
+
+    def testComp_sdAll(self):
+        """Test complist simulation: single dish"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        integration = "4s"
+        direction = self.direction
+        mapsize = ["60arcsec", "60arcsec"]
+        maptype = "square"
+        obsmode = "sd"
+        sdantlist = "aca.tp.cfg"
+        totaltime = "144s"
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,setpointings=True,
+                         integration=integration,direction=direction,
+                         mapsize=mapsize,maptype=maptype,obsmode=obsmode,
+                         totaltime=totaltime,antennalist="",sdantlist=sdantlist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare outputs
+        currpref = self.project + "/" + \
+                 self._get_data_prefix(sdantlist,self.project)
+        self._check_imstats(currpref+".compskymodel", self.refmodel)
+        self._check_ptgfile(currpref+".ptg.txt", self.refpref_sd+".ptg.txt")
+        self._check_msstats(currpref+".sd.ms",self.refms_sd)
+
+    def testComp_intAll(self):
+        """Test complist simulation: interferometer"""
+        complist = self.incomp
+        compwidth = self.compwidth
+        integration = "4s"
+        direction = self.direction
+        mapsize = ['20arcsec', '20arcsec']
+        maptype = "ALMA"
+        obsmode = 'int'
+        antennalist = 'alma.out01.cfg'
+        totaltime = "28s"
+        res = simobserve(project=self.project,complist=complist,
+                         compwidth = compwidth,setpointings=True,
+                         integration=integration,direction=direction,
+                         mapsize=mapsize,maptype=maptype,obsmode=obsmode,
+                         totaltime=totaltime,antennalist=antennalist,
+                         thermalnoise="",graphics=self.graphics)
+        self.assertTrue(res)
+        # compare outputs
+        currpref = self.project + "/" + \
+                 self._get_data_prefix(antennalist,self.project)
+        self._check_imstats(currpref+".compskymodel", self.refmodel_int)
+        self._check_ptgfile(currpref+".ptg.txt", self.refpref_int+".ptg.txt")
+        self._check_msstats(currpref+".ms",self.refms_int)
+
+
 
 # ########################################################################
 # #
 # # Test skymodel + components list simulations
 # #
-# class simobserve_skycomp(simobserve_unittest_base,unittest.TestCase):
+# class simobserve_skycomp(simobserve_unittest_base):
 #     """
 #     Test skymodel + components list simulations
+#     - Single step at a time
+#     - All steps for obsmode = 'int' and 'sd'
 #     """
 
 ########################################################################
 #
 # Test noise calculations
 #
-class simobserve_noise(simobserve_unittest_base):#,unittest.TestCase):
+class simobserve_noise(simobserve_unittest_base):
     """
     Test noise level of simulated MS
     """
@@ -626,8 +855,8 @@ class simobserve_noise(simobserve_unittest_base):#,unittest.TestCase):
         origms = msdict['original']
         msnoise = self._get_noise(noisyms, origms)
         ananoise = self._calc_alma_noise(mode="manual",sd=True,dir=-53.)
-        print "MS noise:", msnoise
-        print "Analytic:", ananoise
+        #print "MS noise:", msnoise
+        #print "Analytic:", ananoise
         # Now compare the result
         refval = 6.0450620991
         self.assertTrue(abs((msnoise-refval)/refval) < 5.e-2,\
@@ -936,7 +1165,7 @@ class simobserve_noise(simobserve_unittest_base):#,unittest.TestCase):
 #
 # Tests on bad input parameter settings
 #
-class simobserve_badinputs(simobserve_unittest_base):#,unittest.TestCase):
+class simobserve_badinputs(simobserve_unittest_base):
     """
     Tests on bad input parameter setting
     """
@@ -1466,6 +1695,7 @@ class simobserve_badinputs(simobserve_unittest_base):#,unittest.TestCase):
         
     
 def suite():
-    return [simobserve_sky, simobserve_noise, simobserve_badinputs]
+    return [simobserve_sky, simobserve_comp,\
+            simobserve_noise, simobserve_badinputs]
 #     return [simobserve_sky, simobserve_comp, simobserve_compsky,
 #             simobserve_noise,simobserve_badinputs]
