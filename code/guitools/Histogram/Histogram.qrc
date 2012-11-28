@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/fileFolder.png</file>
+        <file>images/colorWheel.png</file>
+    </qresource>
+</RCC>
