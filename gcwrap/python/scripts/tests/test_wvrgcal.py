@@ -40,7 +40,7 @@ class wvrgcal_test(unittest.TestCase):
 ## 6   'wvrgcalctest_wvrflag2.W': '--wvrflag DV03 --wvrflag PM02',
 ## 7   'wvrgcalctest_reverse.W': '--reverse', 
 ## 8   'wvrgcalctest_reversespw.W': '--reversespw 1', ................... test4
-## 9   'wvrgcalctest_smooth.W':'--smooth 3', ............................ test5
+## 9   'wvrgcalctest_smooth.W':'smooth 3 seconds',........................ test5
 ## 10   'wvrgcalctest_scale.W':'--scale 0.8', ............................ test6
 ## 11   'wvrgcalctest_tie1.W':'--segsource --tie 0,1,2', ................. test7
 ## 12   'wvrgcalctest_tie2.W':'--segsource --tie 0,3 --tie 1,2', ......... test8
@@ -139,9 +139,16 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, smooth=3, segsource=False, toffset=0.)
+        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, smooth='3s', segsource=False, toffset=0.)
+        self.assertTrue(os.path.exists(self.out))
+        self.assertTrue(os.path.exists(self.out+'_unsmoothed'))
+        smoothcal(vis = "myinput.ms",
+		  tablein = self.out+'_unsmoothed',
+		  caltable = self.out+'_ref',
+		  smoothtype = 'mean',
+		  smoothtime = 3.)
         if(self.rval):
-            self.rval = th.compTables(self.ref[9], self.out, ['WEIGHT'], # ignore WEIGHT because it is empty
+            self.rval = th.compTables(self.out+'_ref', self.out, ['WEIGHT'], # ignore WEIGHT because it is empty
                                       0.01) # tolerance 1 % to accomodate differences between Linux and Mac OSX
         self.assertTrue(self.rval)
 

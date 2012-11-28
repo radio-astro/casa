@@ -205,7 +205,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, err:
-            pos=str(err).find("Output file '%s' exist." % self.outfile)
+            pos=str(err).find("Output file '%s' exists." % self.outfile)
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(err)))
     def test_badSelection( self ):

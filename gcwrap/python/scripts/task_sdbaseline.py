@@ -9,19 +9,12 @@ from asap.scantable import is_scantable
 import math
 import pylab as pl
 
+@sdutil.sdtask_decorator
 def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
-    
-    casalog.origin('sdbaseline')
-    
-    try:
-        worker = sdbaseline_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-	
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
+    worker = sdbaseline_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
 
 class sdbaseline_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
@@ -92,17 +85,18 @@ class sdbaseline_worker(sdutil.sdtask_template):
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
 class sdbaseline_engine(sdutil.sdtask_engine):
+    # keywords for each baseline function
+    clip_keys = ['clipthresh', 'clipniter']
+    poly_keys = ['order']
+    chevishev_keys = poly_keys
+    cspline_keys = ['npiece']
+    sinusoid_keys = ['applyfft', 'fftmethod', 'fftthresh', 'addwn', 'rejwn']
+    auto_keys = ['thresh', 'avg_limit', 'edge']
+    list_keys = ['masklist']
+    interact_keys = []
+
     def __init__(self, worker):
         super(sdbaseline_engine,self).__init__(worker)
-
-        clip_keys = ['clipthresh', 'clipniter']
-        self.poly_keys = ['order']
-        self.chevishev_keys = self.poly_keys + clip_keys
-        self.cspline_keys = ['npiece'] + clip_keys
-        self.sinusoid_keys = ['applyfft', 'fftmethod', 'fftthresh', 'addwn', 'rejwn'] + clip_keys
-        self.auto_keys = ['thresh', 'avg_limit', 'edge']
-        self.list_keys = ['masklist']
-        self.interact_keys = []
 
         self.baseline_param = sdutil.parameter_registration(self)
         self.baseline_func = None
@@ -112,9 +106,6 @@ class sdbaseline_engine(sdutil.sdtask_engine):
 
     def __register(self, key, attr=None):
         self.baseline_param.register(key, attr)
-
-    def __get_param(self):
-        return self.baseline_param.get_registered()
 
     def initialize(self):
         if ( abs(self.plotlevel) > 1 ):
@@ -171,7 +162,7 @@ class sdbaseline_engine(sdutil.sdtask_engine):
             self.__register('mask', msk)
 
             # call target baseline function with appropriate parameter set 
-            self.baseline_func(**self.__get_param())
+            self.baseline_func(**self.baseline_param)
 
 ##             if (maskmode == 'auto'):
 ##                 if (blfunc == 'poly'):
@@ -236,6 +227,11 @@ class sdbaseline_engine(sdutil.sdtask_engine):
             self.__register('chan_avg_limit', 'avg_limit')
             self.__register('edge')
 
+        # clipping is implemented except (auto_)poly_baseline
+        if self.blfunc.lower() != 'poly':
+            for k in self.clip_keys:
+                self.__register(k)
+
         # parameters that depends on baseline function
         keys = getattr(self, '%s_keys'%(self.blfunc.lower()))
         for k in keys:
@@ -265,18 +261,19 @@ class sdbaseline_engine(sdutil.sdtask_engine):
                 if blf == 'poly':
                     ftitles = ['Fit order']
                 elif blf == 'chevishev':
-                    ftitles = ['Fit order', 'clipThresh', 'clipNIter']
+                    ftitles = ['Fit order']
                 elif blf == 'cspline':
-                    ftitles = ['nPiece', 'clipThresh', 'clipNIter']
+                    ftitles = ['nPiece']
                 else: # sinusoid
-                    ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN', 'clipThresh', 'clipNIter']
+                    ftitles = ['applyFFT', 'fftMethod', 'fftThresh', 'addWaveN', 'rejWaveN']
                 if mm == 'auto':
                     mtitles = ['Threshold', 'avg_limit', 'Edge']
                 elif mm == 'list':
                     mtitles = ['Fit Range']
                 else: # interact
                     mtitles = []
-                    
+                ctitles = ['clipThresh', 'clipNIter']
+
                 fkeys = getattr(self, '%s_keys'%(self.blfunc))
                 mkeys = getattr(self, '%s_keys'%(self.maskmode))
 
@@ -287,6 +284,9 @@ class sdbaseline_engine(sdutil.sdtask_engine):
                         ['Function', self.blfunc]]
                 for i in xrange(len(ftitles)):
                     info.append([ftitles[i],getattr(self,fkeys[i])])
+                if blf != 'poly':
+                    for i in xrange(len(ctitles)):
+                        info.append([ctitles[i],self.clip_keys[i]])
                 info.append(['Mask mode', self.maskmode])
                 for i in xrange(len(mtitles)):
                     info.append([mtitles[i],getattr(self,mkeys[i])])

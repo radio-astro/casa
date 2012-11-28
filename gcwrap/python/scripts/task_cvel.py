@@ -150,8 +150,9 @@ def cvel(vis, outputvis,
                  example some VLA spectral line data).  For example for
                  NH_3 (1,1) put restfreq='23.694496GHz'
     
-          outframe -- output reference frame
-                 default='' (keep original reference frame) ; example: outframe='bary'     
+          outframe -- output reference frame (not case-sensitive)
+               possible values: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
+               default='' (keep original reference frame) ; example: outframe='BARY' 
     
           veltype -- definition of velocity (in mode)
                  default = 'radio'

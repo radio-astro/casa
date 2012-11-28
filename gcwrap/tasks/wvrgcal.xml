@@ -67,9 +67,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value></value>
       </param>
       
-      <param type="int" name="smooth">
-	<description>Smooth WVR data by this many samples before applying the correction</description>
-	<value>1</value>
+      <param type="string" name="smooth">
+	<description>Smooth calibration solution on the given timescale</description>
+	<value></value>
       </param>
       
       <param type="double" name="scale">
@@ -155,8 +155,8 @@ WVRGCAL correction should not be used.
   statsource -- Compute the statistics (Phase RMS, Disc) on this source only
                default: '' (all)             
 
-  smooth -- Smooth WVR data by this many samples before applying the correction
-             default: 1 (no smoothing) example: 3
+  smooth -- Smooth the calibration solution on the given timescale 
+	     default: '' (no smoothing), example: '3s' smooth on a timescale of 3 seconds									
 
   scale -- Scale the entire phase correction by this factor
              default: 1. (no scaling)

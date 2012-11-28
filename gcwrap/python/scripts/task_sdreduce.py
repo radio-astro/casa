@@ -16,23 +16,13 @@ import task_sdcal
 import task_sdsmooth
 import task_sdbaseline
 
+@sdutil.sdtask_decorator
 def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+    worker = sdreduce_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
 
-    casalog.origin('sdreduce')
-    
-    ###
-    ### Now the actual task code
-    ###
-    
-    try:
-        worker = sdreduce_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdreduce_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
@@ -64,8 +54,8 @@ class sdreduce_worker(sdutil.sdtask_template):
         casalog.post( "*** sdcal stage ***" )
         self.verify = self.verifycal
         engine = task_sdcal.sdcal_engine(self)
-        engine.prologue()
-        engine.drive()
+        engine.initialize()
+        engine.execute()
 ##         self.scan = engine.get_result()
 ##         task_sdcal.prior_plot(self.scan, self.plotlevel)
 ##         self.scan = task_sdcal.docalibration(self.scan, self.calmode,
@@ -93,7 +83,7 @@ class sdreduce_worker(sdutil.sdtask_template):
         else:
             casalog.post( "No averaging was applied..." )
 ##         task_sdcal.posterior_plot(self.scan, self.project, self.plotlevel)
-        engine.epilogue()
+        engine.finalize()
         del engine
         
         # smoothing stage
@@ -102,10 +92,10 @@ class sdreduce_worker(sdutil.sdtask_template):
         if self.kernel != 'none':
             self.verify = self.verifysm
             engine = task_sdsmooth.sdsmooth_engine(self)
-            engine.prologue()
-            engine.drive()
+            engine.initialize()
+            engine.execute()
 ##             self.scan = engine.get_result()
-            engine.epilogue()
+            engine.finalize()
             del engine
         else:
             casalog.post( "No smoothing was applied..." )
@@ -118,10 +108,10 @@ class sdreduce_worker(sdutil.sdtask_template):
             self.verify = self.verifybl
             self.verbose = self.verbosebl
             engine = task_sdbaseline.sdbaseline_engine(self)
-            engine.prologue()
-            engine.drive()
+            engine.initialize()
+            engine.execute()
 ##             self.scan = engine.get_result()
-            engine.epilogue()
+            engine.finalize()
             del engine
         else:
             casalog.post( "No baseline subtraction was applied..." )

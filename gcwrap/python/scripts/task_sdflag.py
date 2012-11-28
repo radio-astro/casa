@@ -8,19 +8,13 @@ from asap.flagplotter import flagplotter
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
+@sdutil.sdtask_decorator
 def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
+    worker = sdflag_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
 
-    casalog.origin('sdflag')
-    
-    try:
-        worker = sdflag_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-        
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdflag_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

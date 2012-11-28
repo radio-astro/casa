@@ -8,8 +8,61 @@ import numpy as np
 import traceback
 import string
 from taskinit import gentools
+import functools
+import re
 
 qatl = casac.quanta()
+
+
+def sdtask_decorator(func):
+    """
+    This is a decorator function for sd tasks. 
+    Currently the decorator does:
+
+       1) set origin to the logger 
+       2) handle exception
+
+    So, you don't need to set origin in the task any more. 
+    Also, you don't need to write anything about error 
+    handling in the task. If you have something to do 
+    at the end of the task execution, those should be 
+    written in the destructor of worker class, not in 
+    the 'finally' block.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # set origin
+        casalog.origin(func.__name__)
+
+        retval = None
+        # Any errors are handled outside the task.
+        # however, the implementation below is effectively 
+        # equivalent to handling it inside the task.
+        try:
+            # execute task 
+            retval = func(*args, **kwargs)
+        except Exception, e:
+            traceback_info = format_trace(traceback.format_exc())
+            casalog.post(traceback_info,'SEVERE')
+            casalog.post(str(e),'ERROR')
+            raise Exception, e
+        return retval
+    return wrapper
+
+def format_trace(s):
+    wexists=True
+    regex='.*sdutil\.py.*in wrapper.*'
+    retval = s
+    while wexists:
+        ss = retval.split('\n')
+        wexists = False
+        for i in xrange(len(ss)):
+            if re.match(regex,ss[i]):
+                ss = ss[:i] + ss[i+2:]
+                wexists = True
+                break
+        retval = string.join(ss,'\n')
+    return retval
 
 class sdtask_interface(object):
     """
@@ -54,6 +107,8 @@ class sdtask_template(sdtask_interface):
         if not hasattr(self, 'outform'):
             self.outform = 'undefined'
         self.is_disk_storage = (sd.rcParams['scantable.storage'] == 'disk')
+        # attribute for tasks that return any result
+        self.result = None
 
     def initialize(self):
         if hasattr(self, 'infile'):
@@ -227,10 +282,9 @@ class sdtask_engine(sdtask_interface):
         super(sdtask_engine,self).__init__(**self.worker.__dict__)
         if hasattr(self,'scan'): del self.scan
     
-class parameter_registration(object):
+class parameter_registration(dict):
     def __init__(self, worker, arg_is_value=False):
         self.worker = worker
-        self.registered = {}
         self.arg_is_value = arg_is_value
 
     def register(self, key, *args, **kwargs):
@@ -241,25 +295,15 @@ class parameter_registration(object):
         if not arg_is_none:
             attr = args[0]
             if arg_is_value:
-                self.__register(key, attr)
+                self[key] = attr
             elif isinstance(attr, str) and hasattr(self.worker, attr):
-                self.__register(key, getattr(self.worker, attr))
+                self[key] = getattr(self.worker, attr)
             else:
-                self.__register(key, attr)
+                self[key] = attr
         elif hasattr(self.worker, key):
-            self.__register(key, getattr(self.worker, key))
+            self[key] = getattr(self.worker, key)
         else:
-            self.__register(key, None)
-
-    def __register(self, key, val):
-        self.registered[key] = val
-
-    def clear(self):
-        self.registered.clear()
-
-    def get_registered(self):
-        return self.registered
-        
+            self[key] = None
 
 def get_abspath(filename):
     return os.path.abspath(expand_path(filename))
@@ -753,10 +797,6 @@ def get_interactive_mask(obj, purpose=None):
 def finalize_interactive_mask(obj):
     obj.finish_selection()
     
-def process_exception(e):
-    casalog.post(traceback.format_exc(),'SEVERE')
-    casalog.post(str(e),'ERROR')
-
 def get_plotter(plotlevel=0):
     from matplotlib import rc as rcp
     rcp('lines', linewidth=1)
@@ -823,3 +863,15 @@ def __to_quantity_string(v,unit='arcsec'):
 
 def get_subtable_name(v):
     return v.replace('Table:','').strip()
+
+def read_factor_file(filename):
+    factor_list = []
+    with open(filename, 'r') as f:
+        for line in f:
+            split_line = line.split()
+            nelem = len(split_line)
+            factor = [0] * nelem
+            for j in xrange(nelem):
+                factor[j] = float(split_line[j])
+            factor_list.append(factor)
+    return factor_list

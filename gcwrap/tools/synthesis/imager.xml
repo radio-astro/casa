@@ -1280,8 +1280,8 @@ and composite numbers. You may use <link anchor="image:image.subimage.function">
      <value>-1.0</value>
      </param>
 
-     <param type="bool" name="showplot">
-     <description>Plot the feather function</description>
+     <param type="bool" name="lowpassfiltersd">
+     <description>Reject the high spatial frequency of the SD image</description>
      <value>false</value>
      </param>
 

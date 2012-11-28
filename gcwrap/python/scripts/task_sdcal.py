@@ -8,25 +8,13 @@ from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdcal(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
-    
-    casalog.origin('sdcal')
-    
-    ###
-    ### Now the actual task code
-    ###
-    
-    restorer = None
-    
-    try:
-        worker = sdcal_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
-        
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
+    worker = sdcal_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
+
 
 class sdcal_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

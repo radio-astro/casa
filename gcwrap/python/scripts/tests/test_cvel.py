@@ -133,7 +133,7 @@ class cvel_test(unittest.TestCase):
                     passall = True
                     )
         self.assertNotEqual(rval,False)
-        ret = (verify_ms(outfile, 2, 64, 0))
+        ret = (verify_ms(outfile, 1, 64, 0))
         self.assertTrue(ret[0],ret[1])
 
     def test6(self):
@@ -145,10 +145,12 @@ class cvel_test(unittest.TestCase):
             outputvis = outfile,
             field = '1',
             spw = '0',
+            nchan = 32,
+            start = 10,
             passall = True
             )
         self.assertNotEqual(rval,False)
-        ret = (verify_ms(outfile, 2, 64, 0))
+        ret = (verify_ms(outfile, 2, 32, 0))
         self.assertTrue(ret[0],ret[1])
 
     ## # Tests with more than one spectral window ###################

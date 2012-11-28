@@ -6529,6 +6529,81 @@ The {\stff open} function first closes the old \imagefile.
 </example>
 </method>
 
+<method type="function" name="pad">
+    <shortdescription>Pad the perimeter of the direction plane with a number of pixels of specified value and mask.</shortdescription>
+    <input>
+        <param type="string" name="outfile">
+            <description>Output image name. If not specified, no persistent image is created.</description>
+            <value/>
+        </param>
+        <param type="int" name="npixels">
+            <description>Number of pixels with which to pad each side of the direction plane.</description>
+            <value>1</value>
+        </param>
+        <param type="double" name="value">
+            <description>Value given to the padding pixels.</description>
+            <value>0</value>
+        </param>
+        <param type="bool" name="padmask">
+            <description>Value of the mask for the padding pixels. True=>good (unmasked), False=>bad (masked).</description>
+            <value>false</value>
+        </param>
+        <param type="bool"  name="overwrite">
+            <description>Overwrite the output if it exists? Default False</description>
+            <value>false</value>
+        </param>
+        <param type="any"  name="region">
+            <any type="variant"/>
+            <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
+            <value></value>
+        </param>
+        <param type="string" name="box">
+            <value></value>
+            <description>Rectangular region in the directional plane to select. Default is to use the entire directional plane.</description>
+        </param>
+        <param type="string" name="chans">
+            <description>Spectral selection. Default is the entire spectral range.</description>
+            <value></value>
+        </param>
+        
+        <param type="string" name="stokes">
+            <description>Polarization selection. Default is all.</description>
+            <value/>
+        </param>
+        <param type="string" name="mask">
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value/>
+        </param>
+        <param type="bool" name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <value>false</value>
+        </param>
+        <param type="bool" name="wantreturn">
+            <description>Return an image analysis tool attached to the created subimage?</description>
+            <value>true</value>
+        </param>
+    </input>
+    <returns type="image"/>
+    <description>
+        This method pads the directional plane of an image with a specified number of pixels on each side. The
+        numerical and mask values of the padding pixels may also be specified. If a region is selected, a subimage
+        of that region is created and then padded with the specified pixel parameters. Thus, padding an image of
+        shape (ra, dec, freq) = (512, 512, 10) specifying npixels = 3 results in an image of size (518, 518, 10), with
+        the blc of the directional plane of the original pixel set corresponding to the directional pixel of (3, 3)
+        in the output.
+        If wantreturn is True, an image analysis tool attached to the output image is returned. If False, none is
+        returned.
+    </description>
+    <example>
+        ia.fromshape("",[50, 50, 10])
+        # pad it with 5 pixels of value 2.5 all unmasked
+        padded = ia.pad(npixels=5, value=2.5, padmask=True)
+        ia.done()
+        # returns [60, 60, 10]
+        paddedshape = padded.shape()
+        padded.done()
+    </example>
+</method>
  
    <method type="function" name="pixelvalue">
    <shortdescription>Get value of image and mask at specified pixel coordinate</shortdescription>
@@ -8880,7 +8955,11 @@ ia.twopointcorrelation()   # Output image is virtual
      </param>
      <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? </description>
-     <value>false</value>
+        <value>false</value>
+     </param>
+     <param type="bool" name="wantreturn">
+        <description>Return an image analysis tool attached to the created subimage</description>
+        <value>true</value>
      </param>
 </input>
 <returns type="image"/>
@@ -9987,6 +10066,80 @@ used to create a 2D temporary image.
         ia.pbcor(pbimage="mypb.im", outname="pbcorred.im", mode="divide", cutoff=0.1)
     </example>
 </method>
+  
+  
+<method type="function" name="pv">
+    <shortdescription>
+        Construct a position-velocity image by choosing two points in the direction plane.
+    </shortdescription>
+    <input>
+        <param type="string"  name="outfile">
+            <description>Output image name. If empty, no image is written. Default ""</description>
+            <value/>
+        </param>
+        <param type="doubleArray" name="start">
+            <description>The starting pixel in the direction plane (array of two values)</description>
+            <value/>
+        </param>
+        <param type="doubleArray" name="end">
+            <description>The ending pixel in the direction plane (array of two values)</description>
+            <value/>
+        </param>
+        <param type="int" name="halfwidth">
+            <description>Half width expressed in pixels perpendicular to the slice for averaging pixels. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
+            <value>0</value>
+        </param>
+        <param type="bool"  name="overwrite">
+            <description>Overwrite the output if it exists? Default False</description>
+            <value>false</value>
+        </param>
+        <param type="any"  name="region">
+            <any type="variant"/>
+            <description>Region selection. Default is entire image. No selection is permitted in the direction plane.</description>
+            <value></value>
+        </param>
+        <param type="string"  name="mask">
+            <any type="variant"/>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
+        </param>
+        <param type="bool"  name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <value>false</value>
+        </param>
+        <param type="bool" name="wantreturn">
+            <description>Return an image analysis tool attached to the created image?</description>
+            <value>true</value>
+        </param>
+    </input>
+    <returns type="image"/>
+    <description>
+        Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
+        coordinate. The spectral
+        extent of the resulting image will be that provided by the region specification or the entire spectral
+        range of the input image if no region is specified. One may not specify a region in direction space,
+        since that is accomplished by
+        specifying the start and end points of the slice. One may specify an optional half width, which is the number
+        of pixels on either side and perpendicular to the direction slice that are used for averaging along the
+        slice (default, 0, represents no averaging).
+        A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
+        image should be returned. Nothing is returned if it is false, but then outfile should be specified (unless
+        perhaps you are debugging).
+    </description>
+    <example>
+        ia.open("my_spectral_cube.im")
+        # create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
+        # in the input image
+        mypv = ia.pv(outfile="", start=[45,50], end=[100,120], wantreturn=true)
+        ia.done()
+        # do stuff with the pv image, such as get statistics
+        pv.statistics()
+        # when done, close the tool to release system resources
+        pv.done()
+    </example>
+</method>
+  
+  
   
   
    <method type="function" name="makearray">

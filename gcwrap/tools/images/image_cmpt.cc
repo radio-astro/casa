@@ -72,20 +72,20 @@
 #include <tables/LogTables/NewFile.h>
 
 #include <components/SpectralComponents/SpectralListFactory.h>
-
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
+#include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
+#include <imageanalysis/ImageAnalysis/PVGenerator.h>
 
 #include <stdcasa/version.h>
 
 #include <casa/namespace.h>
 
 #include <memory>
-
 
 using namespace std;
 
@@ -2171,9 +2171,46 @@ bool image::open(const casa::ImageInterface<casa::Float>* inImage) {
 		*_log << _ORIGIN;
 		_image.reset(new ImageAnalysis(inImage));
 		return True;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+image* image::pad(
+	const string& outfile, int npixels, double value, bool padmask,
+	bool overwrite, const variant& region, const string& box,
+	const string& chans, const string& stokes, const string& mask,
+	bool  stretch, bool wantreturn
+) {
+	try {
+		*_log << _ORIGIN;
+		if (detached()) {
+			return 0;
+		}
+		if (npixels <= 0) {
+			*_log << "Value of npixels must be greater than zero" << LogIO::EXCEPTION;
+		}
+		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+
+		ImagePadder padder(
+			_image->getImage(), regionPtr.get(), box,
+			chans, stokes, mask, outfile, overwrite
+		);
+		padder.setStretch(stretch);
+		padder.setPaddingPixels(npixels, value, padmask);
+		cout << "wantreturn " << wantreturn << endl;
+		std::auto_ptr<ImageInterface<Float> > out(padder.pad(wantreturn));
+		if (wantreturn) {
+			return new image(out.get());
+		}
+		return 0;
+
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }
@@ -2320,7 +2357,51 @@ bool image::putregion(const ::casac::variant& v_pixels,
 	return rstat;
 }
 
-::casac::image* image::rebin(
+image* image::pv(
+	const string& outfile, const vector<double>& start,
+	const vector<double>& end, const int halfwidth, const bool overwrite,
+	const variant& region, const string& mask, const bool stretch,
+	const bool wantreturn
+) {
+	if (detached()) {
+		return 0;
+	}
+	try {
+		*_log << _ORIGIN;
+		if (start.size() != 2) {
+			*_log << "start must have exactly two elements" << LogIO::EXCEPTION;
+		}
+		if (end.size() != 2) {
+			*_log << "end must have exactly two elements" << LogIO::EXCEPTION;
+		}
+		if (halfwidth < 0) {
+			*_log << "halfwidth must be nonnegative." << LogIO::EXCEPTION;
+		}
+		if (outfile.empty() && ! wantreturn) {
+			*_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
+				<< "The resulting image will be inaccessible" << LogIO::POST;
+		}
+		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+		PVGenerator pv(
+			_image->getImage(), "", regionPtr.get(),
+			"", "", mask, outfile, overwrite
+		);
+		pv.setEndpoints(start[0], start[1], end[0], end[1]);
+		pv.setStretch(stretch);
+		pv.setHalfWidth(halfwidth);
+		std::auto_ptr<ImageInterface<Float> > resImage(pv.generate(wantreturn));
+		image *ret = wantreturn ? new image(resImage.get()) : 0;
+		return ret;
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+
+image* image::rebin(
 	const std::string& outfile, const std::vector<int>& bin,
 	const ::casac::record& region, const ::casac::variant& vmask,
 	const bool dropdeg, const bool overwrite, const bool /* async */,
@@ -2347,7 +2428,7 @@ bool image::putregion(const ::casac::variant& v_pixels,
 		);
 		return new ::casac::image(pImOut.get());
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -2847,7 +2928,8 @@ bool image::twopointcorrelation(
 ::casac::image* image::subimage(
 	const string& outfile, const variant& region,
 	const variant& vmask, const bool dropDegenerateAxes,
-	const bool overwrite, const bool list, const bool stretch
+	const bool overwrite, const bool list, const bool stretch,
+	const bool wantreturn
 ) {
 	try {
 		*_log << _ORIGIN;
@@ -2862,14 +2944,20 @@ bool image::twopointcorrelation(
 		if (mask == "[]") {
 			mask = "";
 		}
+		if (outfile.empty() && ! wantreturn) {
+			*_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
+				<< "The resulting image will be inaccessible" << LogIO::POST;
+		}
 		std::auto_ptr<ImageInterface<Float> > tmpIm(
 			_image->subimage(
 				outfile, *regionRec, mask, dropDegenerateAxes,
 				overwrite, list, stretch
 			)
 		);
-		return new image(tmpIm.get());
-	} catch (AipsError x) {
+		image *res = wantreturn ? new image(tmpIm.get()) : 0;
+		return res;
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

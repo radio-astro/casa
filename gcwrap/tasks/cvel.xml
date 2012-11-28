@@ -138,10 +138,11 @@ Hanning smoothing may not be necessary.
         </param>
 	
 	<param type="string" name="outframe" ignorecase="True">
-		<description>Output frame (\'\'=keep input frame)</description>
+		<description>Output frame (not case-sensitive, \'\'=keep input frame)</description>
 		<value></value>
 		<allowed kind="enum">
 			<value>topo</value>
+			<value>geo</value>
 			<value>lsrk</value>
 			<value>lsrd</value>
 			<value>bary</value>
@@ -372,8 +373,9 @@ Hanning smoothing may not be necessary.
                example some VLA spectral line data).  For example for
                NH_3 (1,1) put restfreq='23.694496GHz'
 
-      outframe -- output reference frame
-               default='' (keep original reference frame) ; example: outframe='bary'     
+      outframe -- output reference frame (not case-sensitive)
+               possible values: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
+               default='' (keep original reference frame) ; example: outframe='BARY'     
 
       veltype -- definition of velocity (in mode)
                default = 'radio'

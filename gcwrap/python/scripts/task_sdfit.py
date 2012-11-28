@@ -7,21 +7,15 @@ import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
-    
-    casalog.origin('sdfit')
-    
-    try:
-        worker = sdfit_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdfit_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-        return worker.fitresult
+    return worker.result
 
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdfit_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
@@ -90,7 +84,7 @@ class sdfit_worker(sdutil.sdtask_template):
     def __fit(self):
         # initialize fitter
         self.fitter = sd.fitter()
-        self.fitresult = dict.fromkeys(['nfit','peak','cent','fwhm'],[])
+        self.result = dict.fromkeys(['nfit','peak','cent','fwhm'],[])
         self.fitparams = []
         if abs(self.plotlevel) > 0:
             self.__init_plot()
@@ -109,7 +103,7 @@ class sdfit_worker(sdutil.sdtask_template):
 
             if numlines == 0:
                 self.fitparams.append([[0,0,0]])
-                self.fitresult['nfit']+=[-1]
+                self.result['nfit']+=[-1]
                 self.__warn_fit_failed(irow,'No lines detected.')
                 continue
                 
@@ -129,7 +123,7 @@ class sdfit_worker(sdutil.sdtask_template):
 
             if numfit <= 0:
                 self.fitparams.append([[0,0,0]])
-                self.fitresult['nfit']+=[-1]
+                self.result['nfit']+=[-1]
                 self.__warn_fit_failed(irow,'Fit failed.')
                 continue
 
@@ -157,7 +151,7 @@ class sdfit_worker(sdutil.sdtask_template):
                 self.__update_params(ncomps)
             else:
                 # Did not converge
-                self.fitresult['nfit'] += [-ncomps]
+                self.result['nfit'] += [-ncomps]
                 self.fitparams.append([[0,0,0]])
                 self.__warn_fit_failed(irow,'Fit failed to converge')
 
@@ -205,7 +199,7 @@ class sdfit_worker(sdutil.sdtask_template):
 
     def __update_params(self, ncomps):
         # Retrieve fit parameters
-        self.fitresult['nfit'] = self.fitresult['nfit'] + [ncomps]
+        self.result['nfit'] = self.result['nfit'] + [ncomps]
         keys = ['peak','cent','fwhm']
         retl = dict.fromkeys(keys,[])
         nkeys = len(keys)
@@ -219,7 +213,7 @@ class sdfit_worker(sdutil.sdtask_template):
                 retl[key] = retl[key] + [[params[offset+j],\
                                           errors[offset+j]]]
         for key in keys:
-            self.fitresult[key] = self.fitresult[key] + [retl[key]]
+            self.result[key] = self.result[key] + [retl[key]]
         pars = parameters['params']
         npars = len(pars) / ncomps
         self.fitparams.append(list(array(pars).reshape((ncomps,npars))))

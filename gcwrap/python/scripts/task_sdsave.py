@@ -5,23 +5,13 @@ import asap as sd
 from asap.scantable import is_scantable
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, restfreq, outfile, outform, overwrite):
-    
-    casalog.origin('sdsave')
-    
-    ###
-    ### Now the actual task code
-    ###
-    
-    try:
-        worker = sdsave_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdsave_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdsave_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

@@ -6,19 +6,13 @@ import asap as sd
 from taskinit import *
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
-
-    casalog.origin('sdgrid')
-    
-    try:
-        worker = sdgrid_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdgrid_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdgrid_worker(sdutil.sdtask_interface):
     def __init__(self, **kwargs):

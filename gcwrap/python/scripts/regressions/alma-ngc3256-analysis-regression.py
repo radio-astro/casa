@@ -156,7 +156,7 @@ if(mystep in thesteps):
 	wvrgcal(vis=name+'.ms', caltable='cal-'+name+'.Wnew',  
                 toffset=-1, segsource=True,
 		tie=["Titan,1037-295,NGC3256"], statsource="1037-295",
-                smooth=3)
+                smooth=str(3*1.15)*'s')
 
     if makeplots:
         for spw in ['1','3','5','7']:

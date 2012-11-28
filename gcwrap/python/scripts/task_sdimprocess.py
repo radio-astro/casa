@@ -8,21 +8,14 @@ from taskinit import *
 import time
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklist, tmax, tmin, outfile, overwrite):
-    
-    casalog.origin('sdimprocess')
-    
-    try:
-        worker = sdimprocess_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdimprocess_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        casalog.post( str(instance), priority = 'ERROR' )
-        raise Exception, instance
-
+    
 class sdimprocess_worker(sdutil.sdtask_interface):
     def __init__(self, **kwargs):
         super(sdimprocess_worker,self).__init__(**kwargs)

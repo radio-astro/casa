@@ -7,19 +7,13 @@ from asap import _to_list
 from asap.scantable import is_scantable
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, chanwidth, verify, outfile, outform, overwrite, plotlevel):
-
-    casalog.origin('sdsmooth')
-    
-    try:
-        worker = sdsmooth_worker(**locals())
-        worker.initialize()
-        worker.execute()
-        worker.finalize()
+    worker = sdsmooth_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
         
-    except Exception, instance:
-        sdutil.process_exception(instance)
-        raise Exception, instance
 
 class sdsmooth_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):

@@ -6,19 +6,13 @@ import asap as sd
 from taskinit import *
 import sdutil
 
+@sdutil.sdtask_decorator
 def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
-
-        casalog.origin('sdimaging')
-        try:
-            worker = sdimaging_worker(**locals())
-            worker.initialize()
-            worker.execute()
-            worker.finalize()
-
-        except Exception, instance:
-            im.close()
-            sdutil.process_exception(instance)
-            raise Exception, instance
+    worker = sdimaging_worker(**locals())
+    worker.initialize()
+    worker.execute()
+    worker.finalize()
+    
 
 class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __init__(self, **kwargs):
@@ -31,9 +25,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __register(self, key, attr=None):
         self.imager_param.register(key,attr)
 
-    def __get_param(self):
-        return self.imager_param.get_registered()
-
     def parameter_check(self):
         # outfile check
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
@@ -44,15 +35,15 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # imaging mode
         spunit = self.specunit.lower()
         if spunit == 'channel' or len(spunit) == 0:
-            self.mode = 'channel'
+            mode = 'channel'
         elif spunit == 'km/s':
-            self.mode = 'velocity'
+            mode = 'velocity'
         else:
-            self.mode = 'frequency'
-        if not self.dochannelmap and self.mode != 'channel':
+            mode = 'frequency'
+        if not self.dochannelmap and mode != 'channel':
             casalog.post('Setting imaging mode as \'channel\'','INFO')
-            self.mode = 'channel'
-        self.__register('mode')
+            mode = 'channel'
+        self.__register('mode',mode)
 
         # scanlist
 
@@ -130,37 +121,37 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             os.system('rm -rf %s'%(self.outfile))
 
         # imsize
-        (self.nx,self.ny) = sdutil.get_nx_ny(self.imsize)
-        self.__register('nx')
-        self.__register('ny')
+        (nx,ny) = sdutil.get_nx_ny(self.imsize)
+        self.__register('nx',nx)
+        self.__register('ny',ny)
 
         # cell
-        (self.cellx,self.celly) = sdutil.get_cellx_celly(self.cell,
-                                                         unit='arcmin')
-        self.__register('cellx')
-        self.__register('celly')
+        (cellx,celly) = sdutil.get_cellx_celly(self.cell,
+                                               unit='arcmin')
+        self.__register('cellx',cellx)
+        self.__register('celly',celly)
 
         # channel map
         if self.dochannelmap:
             # start
-            if self.mode == 'velocity':
-                self.startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
-            elif self.mode == 'frequency':
-                self.startval = '%s%s'%(self.start,self.specunit)
+            if mode == 'velocity':
+                startval = ['LSRK', '%s%s'%(self.start,self.specunit)]
+            elif mode == 'frequency':
+                startval = '%s%s'%(self.start,self.specunit)
             else:
-                self.startval = self.start
+                startval = self.start
 
             # step
-            if self.mode in ['velocity', 'frequency']:
-                self.stepval = '%s%s'%(self.step,self.specunit)
+            if mode in ['velocity', 'frequency']:
+                stepval = '%s%s'%(self.step,self.specunit)
             else:
-                self.stepval = self.step
+                stepval = self.step
         else:
-            self.startval = 0
-            self.stepval = self.allchannels
+            startval = 0
+            stepval = self.allchannels
             self.nchan = 1
-        self.__register('start','startval')
-        self.__register('step', 'stepval')
+        self.__register('start',startval)
+        self.__register('step', stepval)
         self.__register('nchan')
                 
         # phasecenter
@@ -175,7 +166,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.open_imager(self.infile)
         self.imager.selectvis(field=self.fieldid, spw=self.spwid, nchan=-1, start=0, step=1, baseline=self.antenna, scan=self.scanlist)
         #self.imager.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
-        self.imager.defineimage(**self.__get_param())
+        self.imager.defineimage(**self.imager_param)#self.__get_param())
 ##         if self.dochannelmap:
 ##             self.imager.defineimage(mode=self.mode, nx=self.nx, ny=self.ny, cellx=self.cellx, celly=self.celly, nchan=self.nchan, start=self.startval, step=self.stepval, restfreq=self.restfreq, phasecenter=self.phasecenter, spw=self.spwid, stokes=self.stokes, movingsource=self.ephemsrcname)
 ##         else:

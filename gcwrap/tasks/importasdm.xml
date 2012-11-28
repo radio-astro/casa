@@ -57,8 +57,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	       <value>ca</value>
 	    </allowed>
     </param>
+
     <param type="bool" name="compression">
 	    <description>Flag for turning on data compression</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="lazy">
+	    <description>Make the MS DATA column read the ASDM Binary data directly (faster import, smaller MS)</description>
 	    <value>False</value>
     </param>
 
@@ -206,10 +212,12 @@ ocorr_mode    -- output data for correlation mode AUTO_ONLY
                  (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
 		 default: 'ca'
 		 
-
 compression  -- produces comrpressed columns in the resulting measurement set.
                 default: False
 
+lazy         -- Make the MS DATA column read the ASDM Binary data directly
+                (faster import, smaller MS)
+                default: False
 
 asis         --  creates verbatim copies of the ASDM tables in 
                  the output measurement set. The value given to
