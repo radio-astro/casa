@@ -166,7 +166,7 @@
       <item>
        <widget class="QGroupBox" name="xGroupBox">
         <property name="title">
-         <string>X</string>
+         <string>U</string>
         </property>
         <property name="checkable">
          <bool>false</bool>
@@ -305,7 +305,7 @@
          <string>Select this group box to specify an elliptical dish diameter.</string>
         </property>
         <property name="title">
-         <string>Y</string>
+         <string>V</string>
         </property>
         <property name="checkable">
          <bool>true</bool>

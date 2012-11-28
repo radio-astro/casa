@@ -345,10 +345,13 @@ void FeatherMain::featheringDone(){
 	emit featherFinished();
 
 	//Put the data into the graphs.
+	plotHolder->clearPlots();
 	plotHolder->setSingleDishWeight( thread->sDxWeight, thread->sDxAmpWeight, thread->sDyWeight, thread->sDyAmpWeight );
 	plotHolder->setInterferometerWeight( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight );
 	plotHolder->setSingleDishData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut );
 	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );
+	//In case we are zoomed on the original data, this will reload it, unzoomed.
+	addOriginalDataToPlots();
 	plotHolder->updateScatterData();
 
 	//Post a message if we could not save the output image.

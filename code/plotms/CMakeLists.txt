@@ -43,7 +43,7 @@ qt4_wrap_cpp( outfiles_qoh
   GuiTabs/PlotMSIterateTab.qo.h
   GuiTabs/PlotMSExportTab.qo.h
   GuiTabs/PlotMSFlaggingTab.qo.h
-  GuiTabs/PlotMSMultiAxesTab.qo.h
+#  GuiTabs/PlotMSMultiAxesTab.qo.h
   GuiTabs/PlotMSOptionsTab.qo.h
   GuiTabs/PlotMSPlotTab.qo.h
   GuiTabs/PlotMSTab.qo.h
@@ -67,7 +67,7 @@ casa_qt4_wrap_ui( outfiles_ui
   GuiTabs/PlotMSIterateTab.ui
   GuiTabs/PlotMSExportTab.ui
   GuiTabs/PlotMSFlaggingTab.ui
-  GuiTabs/PlotMSMultiAxesTab.ui
+#  GuiTabs/PlotMSMultiAxesTab.ui
   GuiTabs/PlotMSOptionsTab.ui
   GuiTabs/PlotMSPlotTab.ui
   GuiTabs/PlotMSToolsTab.ui
@@ -86,12 +86,11 @@ casa_add_library( plotms
   Actions/PlotMSDrawThread.cc
   Actions/PlotMSExportThread.cc
   Actions/PlotMSThread.cc
-  Data/PlotCalCache.cc
-  Data/PlotMSCache.cc
-  Data/PlotMSCache2.cc
+  Data/PlotMSCacheBase.cc
+  Data/MSCache.cc
+  Data/MSCacheVolMeter.cc
+  Data/CalCache.cc
   Data/PlotMSIndexer.cc
-  Data/PlotMSCacheIndexer.cc
-  Data/PlotMSData.cc
   Data/PlotMSVBAverager.cc
   Gui/PlotMSAnnotator.cc
   Gui/PlotMSAveragingWidget.cc
@@ -111,7 +110,6 @@ casa_add_library( plotms
   GuiTabs/PlotMSIterateTab.cc
   GuiTabs/PlotMSExportTab.cc
   GuiTabs/PlotMSFlaggingTab.cc
-  GuiTabs/PlotMSMultiAxesTab.cc
   GuiTabs/PlotMSOptionsTab.cc
   GuiTabs/PlotMSPlotTab.cc
   GuiTabs/PlotMSTab.cc
@@ -129,14 +127,12 @@ casa_add_library( plotms
   PlotMS/PlotMSSelection.cc
   PlotMS/PlotMSTransformations.cc
   PlotMS/PlotMSWatchedParameters.cc
-  Plots/PlotMSMultiPlot.cc
+  Plots/PlotMSIterPlot.cc
   Plots/PlotMSPage.cc
   Plots/PlotMSPlot.cc
   Plots/PlotMSPlotManager.cc
   Plots/PlotMSPlotParameterGroups.cc
   Plots/PlotMSPlotParameters.cc
-  Plots/PlotMSSinglePlot.cc
-  Plots/PlotMSIterPlot.cc
   )
 
 INSTALL (FILES
@@ -148,11 +144,6 @@ INSTALL (FILES
 	DESTINATION include/casacode/plotms/Actions )
 
 INSTALL (FILES
-        Data/PlotCalCache.h
-        Data/PlotMSCache.h
-        Data/PlotMSCache2.h
-        Data/PlotMSCacheIndexer.h
-        Data/PlotMSData.h
         Data/PlotMSIndexer.h
         Data/PlotMSVBAverager.h
 	DESTINATION include/casacode/plotms/Data )
@@ -179,7 +170,6 @@ INSTALL (FILES
         GuiTabs/PlotMSExportTab.qo.h
         GuiTabs/PlotMSFlaggingTab.qo.h
         GuiTabs/PlotMSIterateTab.qo.h
-        GuiTabs/PlotMSMultiAxesTab.qo.h
         GuiTabs/PlotMSOptionsTab.qo.h
         GuiTabs/PlotMSPlotTab.qo.h
         GuiTabs/PlotMSTab.qo.h
@@ -204,13 +194,11 @@ INSTALL (FILES
 
 INSTALL (FILES
         Plots/PlotMSIterPlot.h
-        Plots/PlotMSMultiPlot.h
         Plots/PlotMSPage.h
         Plots/PlotMSPlot.h
         Plots/PlotMSPlotManager.h
         Plots/PlotMSPlotParameterGroups.h
         Plots/PlotMSPlotParameters.h
-        Plots/PlotMSSinglePlot.h
 	DESTINATION include/casacode/plotms/Plots )
 
 

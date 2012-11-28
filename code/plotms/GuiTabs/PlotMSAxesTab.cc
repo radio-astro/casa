@@ -118,7 +118,7 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
     if(d == NULL || c == NULL || c2 == NULL || a == NULL || a2 == NULL) return;
     
     // Update "in cache" for widgets.
-    vector<pair<PMS::Axis,unsigned int> > laxes = plot.data().loadedAxes();
+    vector<pair<PMS::Axis,unsigned int> > laxes = plot.cache().loadedAxes();
     bool found = false;
     for(unsigned int i = 0; !found && i < laxes.size(); i++)
         if(laxes[i].first == c2->xAxis()) found = true;

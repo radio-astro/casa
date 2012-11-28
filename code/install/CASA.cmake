@@ -49,7 +49,7 @@ endmacro()
 # How to generate .h from .xml for DBUS
 #
 
-macro( casa_add_dbus_interface _header _interface)
+macro( casa_add_dbus_proxy _header _interface)
     get_filename_component(_infile ${_interface} ABSOLUTE)
     get_filename_component(_out_path ${_header} PATH)
 
@@ -59,6 +59,20 @@ macro( casa_add_dbus_interface _header _interface)
       OUTPUT ${_header}
       COMMAND mkdir -p ${_out_path}
       COMMAND ${DBUS_dbusxx-xml2cpp_EXECUTABLE} ${_infile} --proxy=${_header}
+      DEPENDS ${_infile}
+      )
+endmacro()
+
+macro( casa_add_dbus_adaptor _header _interface)
+    get_filename_component(_infile ${_interface} ABSOLUTE)
+    get_filename_component(_out_path ${_header} PATH)
+
+    # The output directory needs to exist, 
+    # or dbus-xml2cpp will silently fail
+    add_custom_command( 
+      OUTPUT ${_header}
+      COMMAND mkdir -p ${_out_path}
+      COMMAND ${DBUS_dbusxx-xml2cpp_EXECUTABLE} ${_infile} --adaptor=${_header}
       DEPENDS ${_infile}
       )
 endmacro()

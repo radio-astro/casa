@@ -119,10 +119,10 @@ public:
     PlotMSPlotManager& getPlotManager();
     
     // See PlotMSPlotManager::addSinglePlot().
-    PlotMSSinglePlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
+    PlotMSPlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
     
     // See PlotMSPlotManager::addMultiPlot();
-    PlotMSMultiPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
+    PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
 
     // See PlotMSPlotManager::addIterPlot();
     PlotMSIterPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);

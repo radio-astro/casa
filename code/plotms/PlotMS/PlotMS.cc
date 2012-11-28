@@ -110,10 +110,10 @@ void PlotMSApp::parametersHaveChanged(const PlotMSWatchedParameters& params,
 PlotLoggerPtr PlotMSApp::getLogger() { return itsLogger_; }
 PlotMSPlotManager& PlotMSApp::getPlotManager() { return itsPlotManager_; }
 
-PlotMSSinglePlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
+PlotMSPlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addSinglePlot(p); }
 
-PlotMSMultiPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
+PlotMSPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addMultiPlot(p); }
 
 PlotMSIterPlot* PlotMSApp::addIterPlot(const PlotMSPlotParameters* p) {

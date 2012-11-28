@@ -33,7 +33,7 @@
 #include <graphics/GenericPlotter/PlotData.h>
 
 #include <plotms/PlotMS/PlotMSConstants.h>
-#include <plotms/Data/PlotMSCache2.h>
+#include <plotms/Data/PlotMSCacheBase.h>
 
 namespace casa {
 
@@ -41,7 +41,7 @@ namespace casa {
 class PlotMSApp;
 class PlotMSIndexer;  // needed for method pointer typedefs
 
-typedef Double(PlotMSCache2::*PlotMSCache2MemPtr)(Int,Int);
+typedef Double(PlotMSCacheBase::*CacheMemPtr)(Int,Int);
 typedef    Int(PlotMSIndexer::*IndexerMethPtr)(Int,Int);
 typedef   void(PlotMSIndexer::*CollapseMethPtr)(Int,Array<Bool>&);
  
@@ -56,10 +56,9 @@ public:
   PlotMSIndexer();
     
   // Constructor which takes parent PlotMSCache, x and y axes (non-iteration)
-  PlotMSIndexer(PlotMSCache2* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis);
-
+  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis);
   // Constructor which supports iteration
-  PlotMSIndexer(PlotMSCache2* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis,
+  PlotMSIndexer(PlotMSCacheBase* plotmscache, PMS::Axis xAxis, PMS::Axis yAxis,
                 PMS::Axis iterAxis, Int iterValue);
   
   // Destructor
@@ -164,7 +163,7 @@ private:
   // Forbid copy for now
   PlotMSIndexer(const PlotMSIndexer& mc);
 
-  void setMethod(PlotMSCache2MemPtr& getmethod, PMS::Axis axis);
+  void setMethod(CacheMemPtr& getmethod, PMS::Axis axis);
   void setIndexer(IndexerMethPtr& indexmethod, PMS::Axis axis);
   //  void setCollapser(CollapseMethPtr& collmethod, PMS::Axis axis);
 
@@ -213,10 +212,10 @@ private:
   // Private data
    
   // Parent plotms.
-  PlotMSCache2* plotmscache_;
+  PlotMSCacheBase* plotmscache_;
 
   // Pointers to methods for axis flexibility
-  PlotMSCache2MemPtr getXFromCache_, getYFromCache_,getColFromCache_;
+  CacheMemPtr getXFromCache_, getYFromCache_,getColFromCache_;
   IndexerMethPtr XIndexer_, YIndexer_, ColIndexer_;
   //  CollapseMethPtr collapseXMask_, collapseYMask_;
 

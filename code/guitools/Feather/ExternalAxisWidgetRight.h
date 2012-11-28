@@ -33,6 +33,7 @@ namespace casa {
 class ExternalAxisWidgetRight : public ExternalAxisWidget {
 public:
 	ExternalAxisWidgetRight(QWidget* parent );
+	void setUseLeftScale( bool b );
 	virtual ~ExternalAxisWidgetRight();
 protected:
 	virtual void defineAxis( QLine& axisLine );
@@ -40,7 +41,8 @@ protected:
 	virtual void drawAxisLabel( QPainter* painter );
 private:
 	int getStartY() const;
-	void drawTick( QPainter* painter, int yPixel, double value, int tickLength);
+	bool useLeftScale;
+	void drawTick( QPainter* painter, double yPixel, double value, int tickLength);
 };
 
 } /* namespace casa */

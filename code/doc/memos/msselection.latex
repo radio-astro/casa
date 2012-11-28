@@ -346,7 +346,7 @@ Operator can be one, two or three ampersands ({\tt '\&'}):
 \hline
 {\tt \&\&} & Select cross- {\it and} auto-correlation data\\
 \hline
-{\tt \&\&\&} & selection {\it only} auto-correlation data\\
+{\tt \&\&\&} & Select {\it only} auto-correlation data\\
 \hline
 \end{tabular}
 \end{center}

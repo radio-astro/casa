@@ -29,8 +29,6 @@
 #include <QWidget>
 #include <qwt_plot.h>
 
-class QwtPlotCanvas;
-class QwtScaleDiv;
 
 namespace casa {
 
@@ -42,9 +40,8 @@ namespace casa {
 class ExternalAxisWidget : public QWidget {
 public:
 	ExternalAxisWidget(QWidget* parent);
-	void setScaleDiv( QwtScaleDiv* scaleDiv );
 	void setAxisLabel( const QString& label );
-	void setPlotCanvas( QwtPlotCanvas* canvas );
+	void setPlot( QwtPlot* canvas );
 	virtual void paintEvent( QPaintEvent* event );
 	virtual ~ExternalAxisWidget();
 
@@ -52,11 +49,14 @@ protected:
 	virtual void drawTicks( QPainter* painter, int tickLength ) = 0;
 	virtual void defineAxis( QLine& axisLine ) = 0;
 	virtual void drawAxisLabel( QPainter* painter ) = 0;
-	int getTickIncrement( int tickCount, bool horizontal ) const;
-	QwtPlotCanvas* canvas;
-	QwtScaleDiv* scaleDiv;
+	int getTickIncrement( int tickCount ) const;
+	double getTickStartPixel( QwtPlot::Axis axis );
+	double getTickDistance( QwtPlot::Axis axis );
+	double getTickIncrement( double tickDistance, QwtPlot::Axis axis );
+	QwtPlot* plot;
 	QString axisLabel;
 	const int AXIS_SMALL_SIDE;
+	const int MARGIN;
 
 private:
 	void drawBackBone( QPainter* painter );

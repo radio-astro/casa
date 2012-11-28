@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <string> 
+#include <QSet>
 #include <casa/BasicSL/String.h>
 #include <display/Utilities/StringUtil.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
@@ -716,25 +717,31 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 
 	emit ddCreated(qdd, autoRegister);
 	updateFrameInformation();
-	if ( regionDock_ )
+	if ( regionDock_ ){
 	    regionDock_->updateRegionStats( );
+	}
 	return qdd;
 }
 
 void QtDisplayPanelGui::updateFrameInformation(){
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	int displayDataCount = rdds.len();
-	animationHolder->setModeEnabled( displayDataCount );
-	qdp_->setBlen_(displayDataCount );
 	ListIter<QtDisplayData*> iter(rdds );
 	int i = 0;
 	int maxChannels = -1;
+	QSet<QString> uniqueImages;
 	while ( i < displayDataCount ){
 		QtDisplayData* rdd = iter.getRight();
 		const viewer::ImageProperties & imgProperties = rdd->imageProperties( );
-		const Vector<int> imgShape = imgProperties.shape();
-		if ( imgShape.size() >= 3 ){
-			int channelCount = imgShape[2];
+		const string imagePath = imgProperties.path();
+		//In the image animator, don't cycle over contours, markers,
+		//or vectors.
+		QString imagePathStr( imagePath.c_str());
+		uniqueImages.insert( imagePathStr );
+		if ( imgProperties.hasSpectralAxis() ){
+			int spectralAxisNum = imgProperties.spectralAxisNumber();
+			const Vector<int> imgShape = imgProperties.shape();
+			int channelCount = imgShape[spectralAxisNum];
 			if ( channelCount > 1 ){
 				if ( channelCount > maxChannels ){
 					maxChannels = channelCount;
@@ -747,6 +754,8 @@ void QtDisplayPanelGui::updateFrameInformation(){
 	if ( maxChannels > 0 ){
 		animationHolder->setChannelModeEnabled( maxChannels );
 	}
+	animationHolder->setModeEnabled( uniqueImages.size() );
+	//qdp_->setBlen_(displayDataCount );
 }
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
@@ -857,6 +866,9 @@ void QtDisplayPanelGui::removeAllDDs() {
 		qdd->done();
 		delete qdd;
 	}
+	if ( qdds_.len() == 0 ){
+		this->controlling_dd = NULL;
+	}
 	updateFrameInformation();
 }
 
@@ -874,6 +886,9 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
 			delete qdd;
 			return True;
 		}
+	}
+	if ( qdds_.len() == 0 ){
+		this->controlling_dd = NULL;
 	}
 	updateFrameInformation();
 	return False;
@@ -2363,9 +2378,10 @@ void QtDisplayPanelGui::controlling_dd_update(QtDisplayData*) {
 	}
 
 	if ( ctrld != controlling_dd ) {
-		if ( controlling_dd != 0 )
+		if ( controlling_dd != 0 ){
 			disconnect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 					this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+		}
 		controlling_dd = ctrld;
 		emit axisToolUpdate( controlling_dd );
 		if ( controlling_dd != 0 )

@@ -28,8 +28,6 @@
 
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
-#include <plotms/Plots/PlotMSMultiPlot.h>
-#include <plotms/Plots/PlotMSSinglePlot.h>
 #include <plotms/Plots/PlotMSIterPlot.h>
 
 namespace casa {
@@ -100,14 +98,6 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
-PlotMSSinglePlot* PlotMSPlotManager::addSinglePlot(
-        const PlotMSPlotParameters* params) {
-    if(itsParent_ == NULL) return NULL;
-    PlotMSSinglePlot* plot = new PlotMSSinglePlot(itsParent_);
-    addPlot(plot, params);
-    return plot;
-}
-
 PlotMSIterPlot* PlotMSPlotManager::addIterPlot(
         const PlotMSPlotParameters* params) {
     if(itsParent_ == NULL) return NULL;
@@ -116,12 +106,16 @@ PlotMSIterPlot* PlotMSPlotManager::addIterPlot(
     return plot;
 }
 
-PlotMSMultiPlot* PlotMSPlotManager::addMultiPlot(
+PlotMSPlot* PlotMSPlotManager::addSinglePlot(
         const PlotMSPlotParameters* params) {
-    if(itsParent_ == NULL) return NULL;
-    PlotMSMultiPlot* plot = new PlotMSMultiPlot(itsParent_);
-    addPlot(plot, params);
-    return plot;
+  throw(AipsError("SinglePlot deprecated!"));
+    return NULL;
+}
+
+PlotMSPlot* PlotMSPlotManager::addMultiPlot(
+        const PlotMSPlotParameters* params) {
+  throw(AipsError("SinglePlot deprecated!"));
+    return NULL;
 }
 
 void PlotMSPlotManager::clearPlotsAndCanvases() {

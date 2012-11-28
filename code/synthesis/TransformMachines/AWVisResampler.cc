@@ -154,11 +154,11 @@ namespace casa{
 
     for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
       {
-	iloc(1)=(Int)((scaledSampling[1]*iy+off[1])-1);//+convOrigin[1];
+	iloc(1)=(Int)((scaledSampling[1]*iy+off[1]));//+convOrigin[1];
 	igrdpos[1]=loc[1]+iy;
 	for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
 	  {
-	    iloc[0]=(Int)((scaledSampling[0]*ix+off[0])-1);//+convOrigin[0];
+	    iloc[0]=(Int)((scaledSampling[0]*ix+off[0]));//+convOrigin[0];
 	    igrdpos[0]=loc[0]+ix;
 	    tiloc=iloc;
 	    //
@@ -699,10 +699,9 @@ namespace casa{
     
     for(Int idim=0;idim<2;idim++)
       {
-	pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+offset[idim];
+	pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+(offset[idim]);
 	loc[idim]=SynthesisUtils::nint(pos[idim]);
 	//	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
-	// The +1 below is a fix from Cyril Tasse <cyril.tasse@obspm.fr>
 	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
       }
     
@@ -713,6 +712,8 @@ namespace casa{
       }
     else
       phasor=Complex(1.0);
+    // cerr << "### " << pos[0] << " " << offset[0] << " " << loc[0] << " " << off[0] << " " << uvw_l(0) << endl;
+    // exit(0);
   }
   //
   //-----------------------------------------------------------------------------------

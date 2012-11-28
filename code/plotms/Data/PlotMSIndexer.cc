@@ -31,6 +31,7 @@
 #include <casa/OS/Timer.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>
+#include <measures/Measures/Stokes.h>
 
 namespace casa {
 
@@ -75,7 +76,7 @@ PlotMSIndexer::PlotMSIndexer():
   self(const_cast<PlotMSIndexer*>(this))
   {}
   
-PlotMSIndexer::PlotMSIndexer(PlotMSCache2* parent, PMS::Axis xAxis, PMS::Axis yAxis):
+PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis, PMS::Axis yAxis):
   plotmscache_(parent),
   currChunk_(0),
   irel_(0),
@@ -118,7 +119,7 @@ PlotMSIndexer::PlotMSIndexer(PlotMSCache2* parent, PMS::Axis xAxis, PMS::Axis yA
   setUpIndexing();
 }
   
-PlotMSIndexer::PlotMSIndexer(PlotMSCache2* parent, PMS::Axis xAxis, PMS::Axis yAxis,
+PlotMSIndexer::PlotMSIndexer(PlotMSCacheBase* parent, PMS::Axis xAxis, PMS::Axis yAxis,
                              PMS::Axis iterAxis, Int iterValue):
   plotmscache_(parent),
   currChunk_(0),
@@ -189,6 +190,9 @@ void PlotMSIndexer::xAndYAt(unsigned int index,
 }
 bool PlotMSIndexer::minsMaxes(double& xMin, double& xMax, 
 			      double& yMin, double& yMax) {
+
+  if (this->size()<1) return false;
+
   // return the collective (flagged/unflagged) min/max
   // X:
   if (globalXMinMax_ || (sizeMasked()==0 && sizeUnmasked()==0)) {
@@ -232,6 +236,9 @@ void PlotMSIndexer::xyAndMaskAt(unsigned int index,
 
 bool PlotMSIndexer::maskedMinsMaxes(double& xMin, double& xMax, 
 				    double& yMin, double& yMax) {
+
+  if (this->size()<1) return false;
+
   // return the collective (flagged) min/max
   // X:
   if (globalXMinMax_ || sizeMasked()==0) {
@@ -266,6 +273,8 @@ bool PlotMSIndexer::maskedMinsMaxes(double& xMin, double& xMax,
 bool PlotMSIndexer::maskedMinsMaxesRaw(double& xMin, double& xMax, 
 				       double& yMin, double& yMax) {
 
+  if (this->size()<1) return false;
+
   xMin=xflmin_;
   xMax=xflmax_;
   yMin=yflmin_;
@@ -276,6 +285,9 @@ bool PlotMSIndexer::maskedMinsMaxesRaw(double& xMin, double& xMax,
 
 bool PlotMSIndexer::unmaskedMinsMaxes(double& xMin, double& xMax, 
 				      double& yMin, double& yMax) {
+
+  if (this->size()<1) return false;
+
   // return the collective (unflagged) min/max
   // X:
   if (globalXMinMax_ || sizeUnmasked()==0 ) {
@@ -309,6 +321,9 @@ bool PlotMSIndexer::unmaskedMinsMaxes(double& xMin, double& xMax,
 
 bool PlotMSIndexer::unmaskedMinsMaxesRaw(double& xMin, double& xMax, 
 					 double& yMin, double& yMax) {
+
+  if (this->size()<1) return false;
+
   xMin=xmin_;
   xMax=xmax_;
   yMin=ymin_;
@@ -619,127 +634,138 @@ void PlotMSIndexer::setChunk(uInt i) const {
 
 }
 
-void PlotMSIndexer::setMethod(PlotMSCache2MemPtr& getmethod,PMS::Axis axis) {
+void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 
   // Set axis-specific get methods
   switch(axis) {
     // Degenerate ones
   case PMS::SCAN:
-    getmethod = &PlotMSCache2::getScan;
+    getmethod = &PlotMSCacheBase::getScan;
     break;
   case PMS::FIELD:
-    getmethod = &PlotMSCache2::getField;
+    getmethod = &PlotMSCacheBase::getField;
     break;
   case PMS::TIME:
-    getmethod = &PlotMSCache2::getTime;
+    getmethod = &PlotMSCacheBase::getTime;
     break;
   case PMS::TIME_INTERVAL:
-    getmethod = &PlotMSCache2::getTimeIntr;
+    getmethod = &PlotMSCacheBase::getTimeIntr;
     break;
   case PMS::SPW:
-    getmethod = &PlotMSCache2::getSpw;
+    getmethod = &PlotMSCacheBase::getSpw;
     break;
 
     // Partial shapes
   case PMS::FREQUENCY:
-    getmethod = &PlotMSCache2::getFreq;
+    getmethod = &PlotMSCacheBase::getFreq;
     break;
   case PMS::VELOCITY:
-    getmethod = &PlotMSCache2::getVel;
+    getmethod = &PlotMSCacheBase::getVel;
     break;
   case PMS::CHANNEL:
-    getmethod = &PlotMSCache2::getChan;
+    getmethod = &PlotMSCacheBase::getChan;
     break;
   case PMS::CORR:
-    getmethod = &PlotMSCache2::getCorr;
+    getmethod = &PlotMSCacheBase::getCorr;
     break;
   case PMS::ANTENNA1:
-    getmethod = &PlotMSCache2::getAnt1;
+    getmethod = &PlotMSCacheBase::getAnt1;
     break;
   case PMS::ANTENNA2:
-    getmethod = &PlotMSCache2::getAnt2;
+    getmethod = &PlotMSCacheBase::getAnt2;
     break;
   case PMS::BASELINE:
-    getmethod = &PlotMSCache2::getBsln;
+    getmethod = &PlotMSCacheBase::getBsln;
     break;
 
   case PMS::UVDIST:
-    getmethod = &PlotMSCache2::getUVDist;
+    getmethod = &PlotMSCacheBase::getUVDist;
     break;
   case PMS::U:
-    getmethod = &PlotMSCache2::getU;
+    getmethod = &PlotMSCacheBase::getU;
     break;
   case PMS::V:
-    getmethod = &PlotMSCache2::getV;
+    getmethod = &PlotMSCacheBase::getV;
     break;
   case PMS::W:
-    getmethod = &PlotMSCache2::getW;
+    getmethod = &PlotMSCacheBase::getW;
     break;
   case PMS::UVDIST_L:
-    getmethod = &PlotMSCache2::getUVDistL;
+    getmethod = &PlotMSCacheBase::getUVDistL;
     break;
   case PMS::UWAVE:
-    getmethod = &PlotMSCache2::getUwave;
+    getmethod = &PlotMSCacheBase::getUwave;
     break;
   case PMS::VWAVE:
-    getmethod = &PlotMSCache2::getVwave;
+    getmethod = &PlotMSCacheBase::getVwave;
     break;
   case PMS::WWAVE:
-    getmethod = &PlotMSCache2::getWwave;
+    getmethod = &PlotMSCacheBase::getWwave;
     break;
 
     // Data
   case PMS::AMP:
-    getmethod = &PlotMSCache2::getAmp;
+  case PMS::GAMP:
+    getmethod = &PlotMSCacheBase::getAmp;
     break;
   case PMS::PHASE:
-    getmethod = &PlotMSCache2::getPha;
+  case PMS::GPHASE:
+    getmethod = &PlotMSCacheBase::getPha;
     break;
   case PMS::REAL:
-    getmethod = &PlotMSCache2::getReal;
+  case PMS::GREAL:
+    getmethod = &PlotMSCacheBase::getReal;
     break;
   case PMS::IMAG:
-    getmethod = &PlotMSCache2::getImag;
+  case PMS::GIMAG:
+    getmethod = &PlotMSCacheBase::getImag;
     break;
   case PMS::FLAG:
-    getmethod = &PlotMSCache2::getFlag;
+    getmethod = &PlotMSCacheBase::getFlag;
     break;
   case PMS::FLAG_ROW:
-    getmethod = &PlotMSCache2::getFlagRow;
+    getmethod = &PlotMSCacheBase::getFlagRow;
     break;
 
   case PMS::WT:
-    getmethod = &PlotMSCache2::getWt;
+    getmethod = &PlotMSCacheBase::getWt;
     break;
 
   case PMS::AZ0:
-    getmethod = &PlotMSCache2::getAz0;
+    getmethod = &PlotMSCacheBase::getAz0;
     break;
   case PMS::EL0:
-    getmethod = &PlotMSCache2::getEl0;
+    getmethod = &PlotMSCacheBase::getEl0;
     break;
   case PMS::HA0:
-    getmethod = &PlotMSCache2::getHA0;
+    getmethod = &PlotMSCacheBase::getHA0;
     break;
   case PMS::PA0:
-    getmethod = &PlotMSCache2::getPA0;
+    getmethod = &PlotMSCacheBase::getPA0;
     break;
 
   case PMS::ANTENNA:
-    getmethod = &PlotMSCache2::getAntenna;
+    getmethod = &PlotMSCacheBase::getAntenna;
     break;
   case PMS::AZIMUTH:
-    getmethod = &PlotMSCache2::getAz;
+    getmethod = &PlotMSCacheBase::getAz;
     break;
   case PMS::ELEVATION:
-    getmethod = &PlotMSCache2::getEl;
+    getmethod = &PlotMSCacheBase::getEl;
     break;
   case PMS::PARANG:
-    getmethod = &PlotMSCache2::getParAng;
+    getmethod = &PlotMSCacheBase::getParAng;
     break;
   case PMS::ROW:
-    getmethod = &PlotMSCache2::getRow;
+    getmethod = &PlotMSCacheBase::getRow;
     break;
+
+  case PMS::DELAY:
+  case PMS::SWP:
+  case PMS::OPAC:
+    getmethod = &PlotMSCacheBase::getPar;
+    break;
+    
   default:
     throw(AipsError("Can't find get method for "+PMS::axis(axis)+"."));
     break;
@@ -777,6 +803,13 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
   case PMS::REAL:
   case PMS::IMAG:
   case PMS::FLAG:
+  case PMS::GAMP:
+  case PMS::GPHASE:
+  case PMS::GREAL:
+  case PMS::GIMAG:
+  case PMS::DELAY:
+  case PMS::SWP:
+  case PMS::OPAC:
     indexmethod = &PlotMSIndexer::getIndex1110;
     break;
 
@@ -923,7 +956,9 @@ Record PlotMSIndexer::getPointMetaData(Int i) {
     Double time = plotmscache_->getTime(currChunk_, 0);
     Int spw = Int(plotmscache_->getSpw(currChunk_, 0));
     Double freq = plotmscache_->getFreq(currChunk_, ichan);
-    String corr = Stokes::name(Stokes::type(Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_)))));
+    Int icorr = Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_)));
+    String corr = plotmscache_->polname(icorr);
+
     Int offset = (currChunk_ > 0 ? (nCumulative_(currChunk_-1)+irel_) : irel_);
     // Collate meta data
     Record r;
@@ -1105,8 +1140,10 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 
     PlotMSAveraging& pmsave(plotmscache_->averaging());
     if (pmsave.channel() && pmsave.channelValue()>1) {
-      Int& lochan=plotmscache_->chanAveBounds(spw)(ichan,0);
-      Int& hichan=plotmscache_->chanAveBounds(spw)(ichan,1);
+      //      Int& lochan=plotmscache_->chanAveBounds(spw)(ichan,0);
+      //      Int& hichan=plotmscache_->chanAveBounds(spw)(ichan,1);
+      Int lochan=99999;
+      Int hichan=99999;
       ss << "<" << lochan << "~" << hichan  << ">";
     }
     else
@@ -1124,7 +1161,7 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
 
   ss << "Corr=";
   if (plotmscache_->netAxesMask_(0))
-    ss << Stokes::name(Stokes::type(Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_)))));
+    ss << plotmscache_->polname(Int(plotmscache_->getCorr(currChunk_,getIndex1000(currChunk_,irel_))));
   else
     ss << "*";
   ss << " ";
@@ -1249,10 +1286,12 @@ String PlotMSIndexer::iterLabel() {
     return itername+": "+plotmscache_->antstanames_(iterValue_);
     break;
   default:
-    return "";
+    return String("");
     //    throw(AipsError("Unsupported iteration axis: "+PMS::axis(iterAxis_)));
     break;
   }
+
+  return String("");
 }
 		  
 

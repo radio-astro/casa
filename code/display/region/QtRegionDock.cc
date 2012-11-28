@@ -333,7 +333,23 @@ namespace casa {
 	    last_index = index;
 	}
 
+	void QtRegionDock::deleteRegions( const Region::region_list_type &rl ) {
+		Region::region_list_type listx(rl);
+		for ( Region::region_list_type::iterator it = listx.begin( ); it != listx.end( ); ++it ) {
+			Region *rr = *it;
+			if ( rr == 0 ) continue;
+			QtRegion *qr = dynamic_cast<QtRegion*>(rr);
+			if ( qr ) {
+				QtRegionState *state = qr->state( );
+				if ( state ) emit deleteRegion(state);
+			}
+		}
+		weakly_selected_region_set_.clear( );
+		selectedCountUpdateNeeded( );
+	}
+
 	void QtRegionDock::delete_current_region(bool) {
+		weakly_selected_region_set_.clear( );
 	    emit deleteRegion(dynamic_cast<QtRegionState*>(region_stack->currentWidget( )));
 	}
 

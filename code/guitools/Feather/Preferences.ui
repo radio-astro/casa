@@ -145,7 +145,7 @@
         <string>Checking this box will remove the Y plots from the display.</string>
        </property>
        <property name="text">
-        <string>Display Y Plots</string>
+        <string>Display V Plots</string>
        </property>
       </widget>
      </item>

@@ -94,6 +94,8 @@ namespace casa {
 		void updateRegionStats( );
 		void emitCreate( QtRegion * );
 
+		void deleteRegions( const Region::region_list_type & );
+
 	    signals:
 		// triggers deletion elsewhere of QtRegion containing this QtRegionState
 		// which then causes the removal of this QtRegionState...

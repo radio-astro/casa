@@ -18,20 +18,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_dbus_interface( plotserver/PlotServerProxy.dbusproxy.h plotserver/PlotServerProxy.dbusproxy.xml )
-casa_add_dbus_interface( session/DBusSession.dbusproxy.h session/DBusSession.dbusproxy.xml )
-casa_add_dbus_interface( viewer/ViewerProxy.dbusproxy.h viewer/ViewerProxy.dbusproxy.xml )
+casa_add_dbus_proxy( plotserver/PlotServerProxy.proxy.h xml/PlotServerProxy.interface.xml )
+casa_add_dbus_proxy( session/DBusSession.proxy.h xml/DBusSession.interface.xml )
+casa_add_dbus_proxy( viewer/ViewerProxy.proxy.h xml/ViewerProxy.interface.xml )
+#casa_add_dbus_adaptor( viewer/ViewerAdaptor.adaptor.h xml/ViewerProxy.interface.xml )
 
 install( FILES 
-	${CMAKE_CURRENT_BINARY_DIR}/plotserver/PlotServerProxy.dbusproxy.h
+	${CMAKE_CURRENT_BINARY_DIR}/plotserver/PlotServerProxy.proxy.h
 	DESTINATION include/casacode/casadbus/plotserver
 	)
 install( FILES 
-	${CMAKE_CURRENT_BINARY_DIR}/viewer/ViewerProxy.dbusproxy.h
+	${CMAKE_CURRENT_BINARY_DIR}/viewer/ViewerProxy.proxy.h
 	DESTINATION include/casacode/casadbus/viewer
 	)
 install( FILES 
-	${CMAKE_CURRENT_BINARY_DIR}/session/DBusSession.dbusproxy.h
+	${CMAKE_CURRENT_BINARY_DIR}/session/DBusSession.proxy.h
 	DESTINATION include/casacode/casadbus/session
 	)
 
@@ -47,9 +48,9 @@ casa_add_library( casadbus
   utilities/Diagnostic.cc
   viewer/ViewerProxy.cc
  
-plotserver/PlotServerProxy.dbusproxy.h
-session/DBusSession.dbusproxy.h
-viewer/ViewerProxy.dbusproxy.h  )
+plotserver/PlotServerProxy.proxy.h
+session/DBusSession.proxy.h
+viewer/ViewerProxy.proxy.h  )
 
 install (FILES
 	plotserver/PlotServerProxy.h

@@ -30,7 +30,7 @@
 
 #include <vector>
 #include <string>
-#include <casadbus/plotserver/PlotServerProxy.dbusproxy.h>
+#include <casadbus/plotserver/PlotServerProxy.proxy.h>
 #include <casadbus/utilities/Conversion.h>
 #include <casa/Containers/Record.h>
 #include <stdcasa/variant.h>

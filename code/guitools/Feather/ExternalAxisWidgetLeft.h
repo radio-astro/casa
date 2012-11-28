@@ -40,7 +40,7 @@ protected:
 	virtual void drawAxisLabel( QPainter* painter );
 private:
 	int getStartY() const;
-	void drawTick( QPainter* painter, int yPixel, double value,
+	void drawTick( QPainter* painter, float yPixel, double value,
 			int tickLength );
 };
 

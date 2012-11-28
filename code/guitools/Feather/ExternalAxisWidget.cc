@@ -32,53 +32,94 @@
 namespace casa {
 
 ExternalAxisWidget::ExternalAxisWidget(QWidget* parent) :QWidget( parent ),
-		canvas( NULL ), scaleDiv( NULL ),
-		AXIS_SMALL_SIDE(100),
-		FONT_SIZE(9), FONT_SIZE_AXIS_LABEL(10){
-}
-
-void ExternalAxisWidget::setScaleDiv( QwtScaleDiv* axisScaleDiv ){
-	scaleDiv = axisScaleDiv;
-}
-
-void ExternalAxisWidget::setPlotCanvas( QwtPlotCanvas* plotCanvas ){
-	canvas = plotCanvas;
+		plot( NULL ), AXIS_SMALL_SIDE(100), MARGIN(5),
+		FONT_SIZE(8), FONT_SIZE_AXIS_LABEL(8){
 }
 
 
-int ExternalAxisWidget::getTickIncrement( int tickCount, bool horizontal ) const {
+void ExternalAxisWidget::setPlot( QwtPlot* plotOwner ){
+	plot = plotOwner;
+}
+
+double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
+	//Figure out where to start the first tick.  There will be a small distance
+	//between the first tick and the start of the axis do to the difference between
+	//the upper bound and the first tick location.
+	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+	double upperBound = scaleDiv->upperBound();
+	double lowerBound = scaleDiv->lowerBound();
+	double axisExtent = upperBound - lowerBound;
+	const QList<double> axisTicks = scaleDiv->ticks(axis);
+	double endDistancePercentage = 0;
+	if ( axisTicks.size() > 0  ){
+		double lowerBoundDistance = qAbs(lowerBound - axisTicks[0]);
+		endDistancePercentage = lowerBoundDistance / axisExtent;
+	}
+	QwtPlotCanvas* plotCanvas = plot->canvas();
+	int canvasBound = plotCanvas->width();
+	if ( axis != QwtPlot::xBottom ){
+		canvasBound = plotCanvas->height();
+	}
+	double startPixel = canvasBound * endDistancePercentage;
+	if ( axis != QwtPlot::xBottom ){
+		startPixel = height() - plotCanvas->height() + startPixel;
+	}
+	return startPixel;
+}
+
+double ExternalAxisWidget::getTickDistance(QwtPlot::Axis axis ){
+	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+	const QList<double> axisTicks = scaleDiv->ticks( axis);
+	double tickDistance = scaleDiv->upperBound() - scaleDiv->lowerBound();
+	for ( int i = 0; i < axisTicks.size() - 1; i++ ){
+		double tDistance = axisTicks[i+1] - axisTicks[i];
+		if ( tDistance < tickDistance ){
+			tickDistance = tDistance;
+		}
+	}
+	return tickDistance;
+}
+
+double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis axis ){
+	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
+	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
+	double tickPercentage = tickDistance / axisExtent;
+	QwtPlotCanvas* plotCanvas = plot->canvas();
+	int canvasLimit = plotCanvas->width();
+	if ( axis != QwtPlot::xBottom ){
+		canvasLimit = plotCanvas->height();
+	}
+	double xIncrement = canvasLimit * tickPercentage;
+	return xIncrement;
+}
+
+int ExternalAxisWidget::getTickIncrement( int tickCount ) const {
 
 	//Adjust the allowable number of ticks by how much space
 	//we have available for them.
 	int TICK_LIMIT = 10;
-	int spaceLimit = height();
-	if ( horizontal ){
-		spaceLimit = width();
-	}
-
-	const int SPACE_MINIMUM = 300;
-	const int SPACE_INCREMENT = 200;
-	const int TICK_INCREMENT = 5;
-	int spaceAdjustment = (spaceLimit - SPACE_MINIMUM) / SPACE_INCREMENT;
-	if ( spaceAdjustment > 0 ){
-		TICK_LIMIT = TICK_LIMIT + TICK_INCREMENT * spaceAdjustment;
-	}
-
-	//Decrease our count until we are withen the allowable
-	//limit
-	int dynamicCount = tickCount;
 	int increment = 1;
-	const int DIVISOR = 2;
-	while ( dynamicCount > TICK_LIMIT ){
-		increment = increment * DIVISOR;
-		dynamicCount = dynamicCount / DIVISOR;
+	int dynamicCount = tickCount;
+	while( dynamicCount > TICK_LIMIT ){
+		if ( dynamicCount % 2 == 0 ){
+			dynamicCount = dynamicCount / 2;
+			increment = increment * 2;
+		}
+		else if ( dynamicCount % 3 == 0 ){
+			dynamicCount = dynamicCount / 3;
+			increment = increment * 3;
+		}
+		else {
+			//Give up.
+			break;
+		}
 	}
 	return increment;
 }
 
 void ExternalAxisWidget::paintEvent( QPaintEvent* event ){
 	QWidget::paintEvent( event );
-	if ( scaleDiv != NULL && canvas != NULL ){
+	if ( plot != NULL ){
 		QPainter painter( this );
 		QPen pen( Qt::black );
 		pen.setWidth( 2 );

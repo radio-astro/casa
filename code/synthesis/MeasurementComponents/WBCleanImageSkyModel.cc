@@ -516,11 +516,15 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
       return 1;
     }
   
-  /* If we detect divergence across major cycles, STOP */
+  /* If we detect divergence across major cycles, warn or STOP */
+  if(fabs( ((maxres - previous_maxresidual_p)/previous_maxresidual_p ) > 10.0 ))
+    {
+      os << "Peak residual : " << maxres << " has increased by more than a factor of 10 across major cycles. Could be diverging. Stopping" << LogIO::POST;
+      return -1;
+    }
   if(fabs( ((maxres - previous_maxresidual_p)/previous_maxresidual_p ) > 2.0 ))
     {
-      os << "Peak residual : " << maxres << " has increased by more than a factor of 2 across major cycles. Could be diverging. Stopping" << LogIO::POST;
-      return -1;
+      os << "Peak residual : " << maxres << " has increased across major cycles. Could be diverging, but continuing..." << LogIO::POST;
     }
   previous_maxresidual_p = maxres;
   
@@ -947,6 +951,11 @@ Bool WBCleanImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool increment
 	  else                   le = LatticeExpr<Float>(iif(ggS(baseindex)>(0.0), 
 							     -gS(index)/ggS(baseindex), 0.0));
 	  residual(index).copyData(le);
+
+	  //LatticeExprNode LEN = max( residual(index) );
+	  //LatticeExprNode len2 = max( ggS(baseindex) );
+	  //cout << "Max Residual : " << LEN.getFloat() << "  Max ggS : " << len2.getFloat() << endl;
+
 
 	  //storeAsImg(String("Weight.")+String::toString(thismodel)+String(".")+String::toString(taylor),ggS(index));
 	  //storeAsImg(String("TstResidual.")+String::toString(thismodel)+String(".")+String::toString(taylor),residual(index));

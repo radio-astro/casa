@@ -31,7 +31,7 @@
 #include <plotms/PlotMS/PlotMSDBusApp.h>
 #include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSSinglePlot.h>
+//-#include <plotms/Plots/PlotMSSinglePlot.h>
 #include <casadbus/utilities/Diagnostic.h>
 
 #include <signal.h>
@@ -55,7 +55,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     PlotMSSelection select;
     PlotMSAveraging averaging;
     bool cachedImageSizeToScreenResolution = false, usePixels = false,
-         casapy = false, debug = false, iterPlot = true, 
+         casapy = false, debug = false,
          nopopups = false;
   
     // Parse arguments.
@@ -164,7 +164,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
             usePixels = true;
 	    continue;            
         } else if(arg2 == ARG_NOITERPLOT) {
-            iterPlot = false;
+	    throw(AipsError("The --noiter parameter is now deprecated."));
 	    continue;            
         } else if(arg2 == ARG_NOPOPUPS) {
             nopopups = true;
@@ -228,12 +228,6 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
         }
     }
     
-    // WARNING ABOUT ITERATE being NEW
-    if (iterPlot)
-      cout << "NB: Iteration-capable plotting is ENABLED, but relatively new and somewhat experimental." << endl;
-    else
-      cout << "NB: Iteration-capable plotting is DISABLED.  You must restart to enable it." << endl;
-
     // If run from casapy, don't let Ctrl-C kill the application.
     if(casapy) signal(SIGINT,SIG_IGN);
     
@@ -274,9 +268,8 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
       plotmsapp.its_want_avoid_popups = true;
     
     // Set up parameters for plot.
-    PlotMSPlotParameters plotparams = iterPlot ?
-            PlotMSIterPlot::makeParameters(&plotmsapp) :
-            PlotMSSinglePlot::makeParameters(&plotmsapp);
+    PlotMSPlotParameters plotparams = PlotMSIterPlot::makeParameters(&plotmsapp);
+
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setSelection, select)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setAveraging, averaging)
@@ -291,8 +284,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     }
     
     // Add the plot to plotms.
-    if(iterPlot) plotmsapp.addIterPlot(&plotparams);
-    else         plotmsapp.addSinglePlot(&plotparams);
+    plotmsapp.addIterPlot(&plotparams);
     
     // If we're connected to DBus, don't quite the application when the window
     // is closed.  This is somewhat risky in that if the remote applications

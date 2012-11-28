@@ -40,79 +40,92 @@ extern "C" char **environ;
 #endif
 
 namespace casa {
-    namespace dbus {
+	namespace dbus {
 
-  	unsigned long init_diagnostic_object_t::count = 0;
+		unsigned long init_diagnostic_object_t::count = 0;
 
-	Diagnostic::kernel_t::kernel_t( ) : fptr(0), pid(getpid( )) { }
-	Diagnostic::kernel_t::kernel_t( FILE *f ) : fptr(f), pid(getpid( )) { }
+		Diagnostic::kernel_t::kernel_t( ) : fptr(0), pid(getpid( )) { }
+		Diagnostic::kernel_t::kernel_t( FILE *f ) : fptr(f), pid(getpid( )) { }
 
-	Diagnostic::kernel_t &Diagnostic::lock_kernel( ) {
-	    // appropriate semaphores can be added when necessary...
-	    static Diagnostic::kernel_t *global_kernel = 0;
-	    if ( global_kernel == 0 ) {
-		char *outfile = getenv("CASA_DIAGNOSTIC_FILE");
-		if ( outfile == NULL )
-		    global_kernel = new kernel_t(0);
-		else
-		    global_kernel = new kernel_t(fopen(outfile,"a"));
-	    }
-	    return *global_kernel;
-	}
+		Diagnostic::kernel_t &Diagnostic::lock_kernel( ) {
+			// appropriate semaphores can be added when necessary...
+			static Diagnostic::kernel_t *global_kernel = 0;
+			if ( global_kernel == 0 ) {
+				char *outfile = getenv("CASA_DIAGNOSTIC_FILE");
+				if ( outfile == NULL )
+					global_kernel = new kernel_t(0);
+				else
+					global_kernel = new kernel_t(fopen(outfile,"a"));
+			}
+			return *global_kernel;
+		}
 
-#define ARGV(TYPE)								\
-	void Diagnostic::kernel_t::argv( int argc_, TYPE *argv_[] ) {		\
-	    if ( fptr ) {							\
-		fprintf( fptr, "%5d argv:   ", pid );				\
-		for ( int i=0; i < argc_; ++i )					\
-		    fprintf( fptr, " %s", argv_[i] );				\
-		fprintf( fptr, "\n" );						\
-		fflush(fptr);							\
-	    }									\
-	    /*** save name for future diagnostic messages... ***/		\
-	    if ( argc_ > 0 ) name = argv_[0];					\
-	}
+#define ARGV(TYPE)														\
+		void Diagnostic::kernel_t::argv( int argc_, TYPE *argv_[] ) {	\
+			if ( fptr ) {												\
+				fprintf( fptr, "%5d argv:\t", pid );					\
+				for ( int i=0; i < argc_; ++i )							\
+					fprintf( fptr, (i==0?"%s":" %s"), argv_[i] );		\
+				fprintf( fptr, "\n" );									\
+				fflush(fptr);											\
+			}															\
+			/*** save name for future diagnostic messages... ***/		\
+			if ( argc_ > 0 ) name = argv_[0];							\
+		}
 
-	ARGV(const char)
-	ARGV(char)
+		ARGV(const char)
+		ARGV(char)
 
-	void Diagnostic::output_prologue( ) {
-	    kernel_t &k = lock_kernel( );
-	    if ( k.fptr ) {
-		char buf[PATH_MAX+1];
-		// --- --- current time    --- --- --- --- --- --- --- ---
-		struct timeval tv = {0,0};
-		gettimeofday( &tv, 0 );
-		strftime( buf, PATH_MAX+1, "begin:   %F %T", localtime(&tv.tv_sec) );
-		fprintf( k.fptr, "%5d %s\n", k.pid, buf );
-		fflush( k.fptr );
-		// --- --- current environment --- --- --- --- --- --- ---
+		void Diagnostic::verror(kernel_t &k, const char *fmt, va_list argp) {
+			fprintf( k.fptr, "%5d error:\t", k.pid );
+			vfprintf( k.fptr, fmt, argp);
+			fprintf( k.fptr, "\n" );
+			fflush( k.fptr );
+		}
+
+		void Diagnostic::vinfo(kernel_t &k, const char *fmt, va_list argp) {
+			fprintf( k.fptr, "%5d info:\t", k.pid );
+			vfprintf( k.fptr, fmt, argp);
+			fprintf( k.fptr, "\n" );
+			fflush( k.fptr );
+		}
+
+		void Diagnostic::output_prologue( ) {
+			kernel_t &k = lock_kernel( );
+			if ( k.fptr ) {
+				char buf[PATH_MAX+1];
+				// --- --- current time    --- --- --- --- --- --- --- ---
+				struct timeval tv = {0,0};
+				gettimeofday( &tv, 0 );
+				strftime( buf, PATH_MAX+1, "begin:\t%F %T", localtime(&tv.tv_sec) );
+				fprintf( k.fptr, "%5d %s\n", k.pid, buf );
+				fflush( k.fptr );
+				// --- --- current environment --- --- --- --- --- --- ---
 #if defined(__APPLE__)
-		char*** envPtr = _NSGetEnviron();	// pointer to the real 'environ'
-		char** environ = *envPtr;
+				char*** envPtr = _NSGetEnviron();	// pointer to the real 'environ'
+				char** environ = *envPtr;
 #endif
-		for ( char **ep=environ; *ep; ++ep )
-		    fprintf( k.fptr, "%5d env:     %s\n", k.pid, *ep );
-		fflush( k.fptr );
-		// --- --- current path    --- --- --- --- --- --- --- ---
-		if ( getcwd(buf,PATH_MAX+1) != NULL )
-		    fprintf( k.fptr, "%5d cwd:     %s\n", k.pid, buf );
-	    }
-	    release_kernel( );
-	}
+				for ( char **ep=environ; *ep; ++ep )
+					fprintf( k.fptr, "%5d env:\t%s\n", k.pid, *ep );
+				fflush( k.fptr );
+				// --- --- current path    --- --- --- --- --- --- --- ---
+				if ( getcwd(buf,PATH_MAX+1) != NULL )
+					fprintf( k.fptr, "%5d cwd:\t%s\n", k.pid, buf );
+			}
+			release_kernel( );
+		}
 
-	void Diagnostic::output_epilogue( ) {
-	    kernel_t &k = lock_kernel( );
-	    if ( k.fptr ) {
-		char buf[2048];
-		struct timeval tv = {0,0};
-		gettimeofday( &tv, 0 );
-		strftime( buf, 2048, "end:     %F %T", localtime(&tv.tv_sec) );
-		fprintf( k.fptr, "%5d %s\n", k.pid, buf );
-		fflush( k.fptr );
-	    }
+		void Diagnostic::output_epilogue( ) {
+			kernel_t &k = lock_kernel( );
+			if ( k.fptr ) {
+				char buf[2048];
+				struct timeval tv = {0,0};
+				gettimeofday( &tv, 0 );
+				strftime( buf, 2048, "end:\t%F %T", localtime(&tv.tv_sec) );
+				fprintf( k.fptr, "%5d %s\n", k.pid, buf );
+				fflush( k.fptr );
+			}
+		}
 	}
-
-    }
 }
 
