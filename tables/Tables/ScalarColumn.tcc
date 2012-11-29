@@ -205,7 +205,7 @@ template<class T>
 ScalarColumn<T>::ScalarColumn (const Table& tab, const String& columnName, Bool isWritable)
 : ROTableColumn     (tab, columnName),
   ROScalarColumn<T> (tab, columnName),
-  TableColumn       (tab, columnName),
+  TableColumn       (tab, columnName, isWritable),
   isWritable_p (isWritable)
 {}
 
