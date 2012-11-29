@@ -273,6 +273,13 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   const Block<uInt> newAntIndices = copyAntennaAndFeed(otherMS.antenna(), 
 						       otherMS.feed()); 
   Bool antIndexTrivial = True;
+  for(uint ii=0; ii<newAntIndices.size(); ii++){
+    //cout << "i, newAntIndices(i) " << ii << " " << newAntIndices[ii] << endl;
+    if(newAntIndices[ii]!=ii){
+      antIndexTrivial=False;
+      break;
+    }
+  }
   {
     uInt addedRows = itsMS.antenna().nrow() - oldRows;
     uInt matchedRows = otherMS.antenna().nrow() - addedRows;
@@ -282,12 +289,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     addedRows = itsMS.feed().nrow() - oldFeedRows;
     log << "Added " << addedRows 
 	<< " rows to the feed subtable" << endl;
-    antIndexTrivial = (addedRows>0);
   }
 
-  //for(uint ii=0; ii<newAntIndices.size(); ii++){
-  //  cout << "i, newAntIndices(i) " << ii << " " << newAntIndices[ii] << endl;
-  //}
 
   // FIELD
   oldRows = itsMS.field().nrow();
