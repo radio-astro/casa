@@ -31,9 +31,9 @@ class simobserve_unittest_base(unittest.TestCase):
     thistask = "simobserve"
     imkeys=['max','mean','min','npts','rms','blc','blcf','trc','trcf','sigma','sum','sumsq']
     # relative and ablsolute tolerance
-    # (atol=1.e8 effectively means to ignore absolute tolerance)
-    rtol = 1.0e-5
-    atol = 1.0e8 
+    # (atol=0. means to ignore absolute tolerance)
+    rtol = 5.0e-3
+    atol = 0.
 
     # Test methods
     def _check_file(self, name, msg=""):
@@ -60,7 +60,9 @@ class simobserve_unittest_base(unittest.TestCase):
     def _check_imstats(self, name, ref):
         # ref: a dictionary of reference statistics or reference image name
         # name: the name of image to compare statistics
+        refname = ""
         if type(ref) == str:
+            refname = ("'%s'" % os.path.basename(ref))
             # get statistics of reference image
             ref = self._get_imstats(ref)
         # get statistics of  image
@@ -70,10 +72,11 @@ class simobserve_unittest_base(unittest.TestCase):
             compkeys = self.imkeys
         else:
             compkeys = ref.keys()
-        print("Comparing image statistics of '%s' with reference" % name)
+        print("Comparing image statistics of '%s' with reference %s" % (name, refname))
         #print("keys = %s" % str(compkeys))
         for key in compkeys:
             message="image statistic '%s' does not match" % key
+            #print("Comparing '%s' (%s): %s (expected: %s)" % (key, type(stats[key]), str(stats[key]), str(ref[key])))
             if type(stats[key])==str:
                 self.assertEqual(stats[key],ref[key],
                                  msg=message)
@@ -87,7 +90,9 @@ class simobserve_unittest_base(unittest.TestCase):
         # name: the name of MS to compare statistics
         column = "DATA"
         compval = "real"
+        refname = ""
         if type(ref) == str:
+            refname = ("'%s'" % os.path.basename(ref))
             # get statistics of reference MS
             ref=self._get_msstats(ref,column,compval)
         stats=self._get_msstats(name,column,compval)
@@ -96,9 +101,11 @@ class simobserve_unittest_base(unittest.TestCase):
             compkeys = self.mskeys
         else:
             compkeys = ref.keys()
-        print("Comparing MS statistics of '%s' with reference" % name)
+        print("Comparing MS statistics of '%s' with reference %s" % (name, refname))
+        #print("keys = %s" % str(compkeys))
         for key in compkeys:
             message="MS statistic '%s' does not match" % key
+            #print("Comparing '%s' : %s (expected: %s)" % (key, str(stats[key]), str(ref[key])))
             ret=numpy.allclose([stats[key]],[ref[key]],
                                rtol=self.rtol,atol=self.atol)
             self.assertEqual(ret,True,msg=message)
@@ -114,7 +121,7 @@ class simobserve_unittest_base(unittest.TestCase):
         npts, dirs, times = myutil.read_pointings(name)
         self.assertEqual(npts, npts_ref,\
                          msg="The nuber of pointings differs: %d (expected: %d)" % (npts, npts_ref))
-        print("Comparing %d pointings" % npts)
+        print("Comparing %d pointings in '%s' with '%s'" % (npts, name, os.path.basename(refname)))
         timetol = 1.e-3
         dirtol = qa.convert("0.1arcsec", "deg")['value']
         for ipts in range(npts):
@@ -331,7 +338,7 @@ class simobserve_sky(simobserve_unittest_base):
         # compare output MS
         currms = self.project + "/" + \
                  self._get_data_prefix(antennalist,self.project)+".ms"
-        self._check_msstats(currms,self.refms_sd)
+        self._check_msstats(currms,self.refms_int)
 
 #     def testSky_intLeak(self):
 #         """Test skymodel simulation: only observation (INT)"""
@@ -348,6 +355,7 @@ class simobserve_sky(simobserve_unittest_base):
     def testSky_sdAll(self):
         """Test skymodel simulation: single dish"""
         skymodel = self.inmodel
+        self._copy_input(skymodel)
         inbright = "5.95565834e-05Jy/pixel"
         indirection = "J2000 19h00m00 -23d00m00"
         incell = "0.043080964943481216arcsec"
@@ -377,6 +385,7 @@ class simobserve_sky(simobserve_unittest_base):
     def testSky_intAll(self):
         """Test skymodel simulation: interferometer"""
         skymodel = self.inmodel
+        self._copy_input(skymodel)
         inbright = "5.95565834e-05Jy/pixel"
         indirection = "J2000 19h00m00 -23d00m00"
         incell = "0.043080964943481216arcsec"
@@ -571,7 +580,7 @@ class simobserve_comp(simobserve_unittest_base):
         # compare output MS
         currms = self.project + "/" + \
                  self._get_data_prefix(antennalist,self.project)+".ms"
-        self._check_msstats(currms,self.refms_sd)
+        self._check_msstats(currms,self.refms_int)
 
 #     def testComp_intLeak(self):
 #         """Test complist simulation: only observation (INT)"""
@@ -668,7 +677,9 @@ class simobserve_skycomp(simobserve_unittest_base):
                           self._get_data_prefix(self.sdantlist,self.refproj)
         self.refpref_int = self.refpref + \
                            self._get_data_prefix(self.antlist,self.refproj)
-        self.refmodel = self.refpref_sd+".skymodel" # reference skymodel
+        #self.refmodel = self.refpref_sd+".skymodel" # reference skymodel
+        #self.refmodel = self.refpref_sd+".skymodel.flat" # reference skymodel
+        self.refmodel = self.datapath + self.inmodel # should be same as input
         # reference simulated MS
         self.refms_sd = self.refpref_sd+".sd.ms"
         self.refms_int = self.refpref_int+".ms"
@@ -676,8 +687,8 @@ class simobserve_skycomp(simobserve_unittest_base):
         self._copy_input([self.incomp, self.inmodel])
 
     def tearDown(self):
-        shutil.rmtree(self.project)
-        #pass
+        #shutil.rmtree(self.project)
+        pass
 
     # Tests of skymodel + components list simulations
     def testSC_skymodel(self):
@@ -698,6 +709,7 @@ class simobserve_skycomp(simobserve_unittest_base):
         # compare skymodel
         currmodel = self.project + "/" + \
                     self._get_data_prefix(antennalist,self.project)+".skymodel"
+                    #self._get_data_prefix(antennalist,self.project)+".skymodel.flat"
         self._check_imstats(currmodel, self.refmodel)
 
     def testSC_almaptg(self):
@@ -811,7 +823,7 @@ class simobserve_skycomp(simobserve_unittest_base):
         # compare output MS
         currms = self.project + "/" + \
                  self._get_data_prefix(antennalist,self.project)+".ms"
-        self._check_msstats(currms,self.refms_sd)
+        self._check_msstats(currms,self.refms_int)
 
 #     def testSC_intLeak(self):
 #         """Test skymodel + complist simulation: only leakage (INT)"""
@@ -1925,5 +1937,5 @@ class simobserve_badinputs(simobserve_unittest_base):
         
 
 def suite():
-    return [simobserve_sky, simobserve_comp, simobserve_skycomp,
+    return [simobserve_sky, simobserve_comp, #simobserve_skycomp,
             simobserve_noise,simobserve_badinputs]
