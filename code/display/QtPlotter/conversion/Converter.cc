@@ -146,8 +146,8 @@ void Converter::convert( Vector<double> &resultValues, int sourceIndex, int dest
 		}
 	}
 	else {
-		qDebug() <<  "Converter: could not convert sourceIndex=" <<
-					sourceIndex << " destIndex=" << destIndex;
+		/*qDebug() <<  "Converter: could not convert sourceIndex=" <<
+					sourceIndex << " destIndex=" << destIndex;*/
 	}
 }
 

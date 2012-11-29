@@ -24,21 +24,21 @@
 //#
 #include "ThresholdingBinPlotDialog.qo.h"
 
-#include <display/QtPlotter/ThresholdingBinPlotWidget.qo.h>
+#include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <images/Images/ImageInterface.h>
 #include <QDebug>
 #include <QKeyEvent>
 
 namespace casa {
 
-ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent)
+ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString /*yAxisUnits*/, QWidget *parent)
     : QDialog(parent){
 	ui.setupUi(this);
 	setWindowTitle( "Graphical Collapse/Moments Threshold Specification");
 
 	//Add the plot widget to the dialog
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
-	plotWidget = new ThresholdingBinPlotWidget( yAxisUnits, this );
+	plotWidget = new BinPlotWidget( true, false, true, this );
 	layout->addWidget( plotWidget );
 	ui.plotWidgetHolder->setLayout( layout );
 

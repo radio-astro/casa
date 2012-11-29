@@ -610,9 +610,9 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 		ui.minThresholdLineEdit->clear();
 		ui.maxThresholdLineEdit->clear();
 	}
-	//Until we get to qwt6
-	ui.graphThresholdButton->setEnabled( false );
-	ui.graphThresholdButton->setVisible( false );
+
+	//ui.graphThresholdButton->setEnabled( false );
+	//ui.graphThresholdButton->setVisible( false );
 }
 
 

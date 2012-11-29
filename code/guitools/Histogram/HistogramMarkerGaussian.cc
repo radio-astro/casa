@@ -32,9 +32,15 @@
 
 namespace casa {
 
-HistogramMarkerGaussian::HistogramMarkerGaussian(){
+HistogramMarkerGaussian::HistogramMarkerGaussian():markerColor(Qt::black){
+	setXAxis( QwtPlot::xBottom );
+	setYAxis( QwtPlot::yLeft );
 	centerPeakSpecified = false;
 	fwhmSpecified = false;
+}
+
+void HistogramMarkerGaussian::setColor( QColor color ){
+	markerColor = color;
 }
 
 void HistogramMarkerGaussian::setCenterPeak( int xVal, int yVal ){
@@ -55,7 +61,6 @@ int HistogramMarkerGaussian::getFWHMHeight() const {
 		QwtPlot* backingPlot = plot();
 		int canvasHeight = backingPlot->canvas()->height();
 		height = (canvasHeight - peak ) / 2 + peak;
-		qDebug() << "Center peak specified height="<<height<<" peak="<<peak;
 	}
 	return height;
 }
@@ -63,7 +68,6 @@ int HistogramMarkerGaussian::getFWHMHeight() const {
 void HistogramMarkerGaussian::draw(QPainter* painter, const QwtScaleMap&,
 		const QwtScaleMap&, const QRect&) const {
 
-	qDebug() << "Drawing Histogram Marker";
 	//If there is nothing to draw get out quick.
 	if ( !centerPeakSpecified && !fwhmSpecified ){
 		return;
@@ -73,7 +77,7 @@ void HistogramMarkerGaussian::draw(QPainter* painter, const QwtScaleMap&,
 	const QPen& pen = painter->pen();
 	QPen penCopy( pen );
 	const int ESTIMATE_SIZE = 3;
-	penCopy.setColor( Qt::red );
+	penCopy.setColor( markerColor );
 	penCopy.setWidth( ESTIMATE_SIZE );
 	painter->setPen(penCopy);
 
@@ -84,7 +88,7 @@ void HistogramMarkerGaussian::draw(QPainter* painter, const QwtScaleMap&,
 
 	//Draw a dot at the FWHM
 	if (fwhmSpecified ){
-		int fhwmHeight = getFWHMHeight();
+		int fwhmHeight = getFWHMHeight();
 		painter->drawPoint( fwhm, fwhmHeight );
 		if ( centerPeakSpecified ){
 			int halfWidth = fwhm - center;

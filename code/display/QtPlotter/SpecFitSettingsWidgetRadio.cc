@@ -1180,7 +1180,7 @@ void SpecFitSettingsWidgetRadio::setDisplayYUnits( const QString& units ){
 			}
 		}
 		else {
-			qDebug() << "SpecFitSettingsWidgetRadio::setDisplayYUnits -What curve didn't have any xValues????";
+			//qDebug() << "SpecFitSettingsWidgetRadio::setDisplayYUnits -What curve didn't have any xValues????";
 		}
 	}
 	displayYUnits = units;

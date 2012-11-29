@@ -34,20 +34,25 @@ HistogramMain::HistogramMain(QWidget *parent)
     : QMainWindow(parent), fileLoader(this),
       plotWidget( NULL ),
       logger(LogOrigin("CASA", "Histogram")){
+
 	ui.setupUi(this);
-	preferencesColor = new ColorPreferences( this );
+
 	QLayout* mainLayout = ui.centralwidget->layout();
 	if ( mainLayout == NULL ){
 		mainLayout = new QHBoxLayout();
 	}
-	plotWidget = new BinPlotWidget( false,false,true,this );
+	plotWidget = new BinPlotWidget( true,false,true,this );
 	mainLayout->addWidget( plotWidget );
 	ui.centralwidget->setLayout( mainLayout );
+
+	//Set-up the initial colors
+	preferencesColor = new ColorPreferences( this );
+	colorsChanged();
 
 	connect(ui.actionImageFile, SIGNAL(triggered()), this, SLOT(openFileLoader()));
 	connect(ui.actionColor, SIGNAL(triggered()), this, SLOT(openColorPreferences()));
 	connect( &fileLoader, SIGNAL(imageFileChanged()), this, SLOT(imageFileChanged()));
-
+	connect( preferencesColor, SIGNAL(colorsChanged()), this, SLOT(colorsChanged()));
 }
 
 void HistogramMain::openFileLoader(){
@@ -58,14 +63,21 @@ void HistogramMain::openColorPreferences(){
 	preferencesColor->exec();
 }
 
+void HistogramMain::colorsChanged(){
+	QColor histogramColor = preferencesColor->getHistogramColor();
+	QColor fitCurveColor = preferencesColor->getFitCurveColor();
+	QColor fitEstimateColor = preferencesColor->getFitEstimateColor();
+	plotWidget->setHistogramColor( histogramColor );
+	plotWidget->setFitCurveColor( fitCurveColor );
+	plotWidget->setFitEstimateColor( fitEstimateColor );
+}
+
 void HistogramMain::imageFileChanged(){
 	QString imageFile = fileLoader.getFilePath();
-	qDebug() << "Image file is "<<imageFile;
 	ImageInterface<Float>* image = NULL;
 	bool success = generateImage( imageFile, image );
 	if ( success ){
 		/*bool histogramSet =*/ plotWidget->setImage( image );
-		qDebug() << "Successfully generated histogram.";
 	}
 	else {
 		QString msg( "Please check that the file "+imageFile+" represents a valid image.");

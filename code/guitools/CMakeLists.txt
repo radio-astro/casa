@@ -70,7 +70,7 @@ casa_qt4_wrap_ui( outfiles_ui
 
 casa_qt4_add_resources( outfiles_qrc Feather/Feather.qrc OPTIONS -name Feather )
 casa_qt4_add_resources( outfiles_qrc Histogram/Histogram.qrc OPTIONS -name Histogram )
-#include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code
+#include_directories( ${CMAKE_CURRENT_BINARY_DIR}/guitools ) # for generated code
 
 casa_add_library( guitools
   ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
@@ -99,8 +99,8 @@ casa_add_library( guitools
   Histogram/RangeControlsWidget.cc
   Histogram/RangePicker.cc
   )
-
+	
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )
 casa_add_executable( guitools casahistogram apps/casahistogram/casahistogram.cc)
-#casa_add_assay( display DisplayEvents/test/tDisplayEvent.cc )
+
 
