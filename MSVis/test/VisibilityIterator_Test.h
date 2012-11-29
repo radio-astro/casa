@@ -648,6 +648,11 @@ public:
 
     void doit (const String &);
 
+protected:
+
+    void copySubtables (MeasurementSet * newMs, const MeasurementSet * oldMs);
+    void setupNewPointing(MeasurementSet * newMs);
+
 };
 
 void printMs (MeasurementSet * ms);

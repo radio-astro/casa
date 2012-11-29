@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <synthesis/MSVis/ViImplementation2.h>
+#include <synthesis/MSVis/ViColumns2.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <synthesis/MSVis/VisImagingWeight.h>
@@ -616,7 +617,7 @@ protected:
 
     // Returns the MS objects that this VI is iterating over.
 
-    std::vector<MeasurementSet> getMeasurementSets () const;
+    Vector <MeasurementSet> getMeasurementSets () const;
 
     // Provides access to the MS-derived values object
 
@@ -814,64 +815,6 @@ protected:
         Double             parangTime_p;
     };
 
-    class Columns {
-
-    public:
-
-        Columns (Bool writable)
-        : antenna1_p (writable),
-          antenna2_p (writable),
-          corrVis_p (writable),
-          exposure_p (writable),
-          feed1_p (writable),
-          feed2_p (writable),
-          flagCategory_p (writable),
-          flagRow_p (writable),
-          flag_p (writable),
-          floatVis_p (writable),
-          modelVis_p (writable),
-          observation_p (writable),
-          processor_p (writable),
-          scan_p (writable),
-          sigma_p (writable),
-          state_p (writable),
-          timeCentroid_p (writable),
-          timeInterval_p (writable),
-          time_p (writable),
-          uvw_p (writable),
-          vis_p (writable),
-          weightSpectrum_p (writable),
-          weight_p (writable)
-        {}
-
-       Columns & operator= (const Columns & other);
-
-       ScalarColumn<Int>    antenna1_p;
-       ScalarColumn<Int>    antenna2_p;
-       ArrayColumn<Complex> corrVis_p;
-       ScalarColumn<Double> exposure_p;
-       ScalarColumn<Int>    feed1_p;
-       ScalarColumn<Int>    feed2_p;
-       ArrayColumn<Bool>    flagCategory_p;
-       ScalarColumn<Bool>   flagRow_p;
-       ArrayColumn<Bool>    flag_p;
-       ArrayColumn<Float>   floatVis_p;
-       ArrayColumn<Complex> modelVis_p;
-       ScalarColumn<Int>    observation_p;
-       ScalarColumn<Int>    processor_p;
-       ScalarColumn<Int>    scan_p;
-       ArrayColumn<Float>   sigma_p;
-       ScalarColumn<Int>    state_p;
-       ScalarColumn<Double> timeCentroid_p;
-       ScalarColumn<Double> timeInterval_p;
-       ScalarColumn<Double> time_p;
-       ArrayColumn<Double>  uvw_p;
-       ArrayColumn<Complex> vis_p;
-       ArrayColumn<Float>   weightSpectrum_p;
-       ArrayColumn<Float>   weight_p;
-
-    };
-
     class PendingChanges {
 
     public:
@@ -900,7 +843,7 @@ protected:
         Int nRowBlocking_p;
     };
 
-    typedef std::vector<MeasurementSet> MeasurementSets;
+    typedef Vector <MeasurementSet> MeasurementSets;
 
     class RowBounds {
     public:
@@ -926,7 +869,7 @@ protected:
     mutable Cache                 cache_p; // general copllection of cached values
     const ChannelSelector *       channelSelector_p; // [use] current channel selector for this MS & Spw
     ChannelSelectorCache *        channelSelectorCache_p; // [own] cache of recently used channel selectors
-    Columns                       columns_p; // The main columns for the current MS
+    ViColumns2                    columns_p; // The main columns for the current MS
     Bool                          floatDataFound_p; // True if a float data column was found
     FrequencySelections *         frequencySelections_p; // [own] Current frequency selection
     VisImagingWeight              imwgt_p;    // object to calculate imaging weight
@@ -951,273 +894,6 @@ protected:
     VisBuffer2 *                  vb_p;  // [own] VisBuffer attached to this VI
     VisibilityIterator2 *         vi_p; // [use] Containing VI
 };
-
-// <summary>
-// VisibilityIterator2 iterates through one or more writable MeasurementSets
-// </summary>
-
-// <use visibility=export>
-
-// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
-// </reviewed>
-
-// <prerequisite>
-//   <li> <linkto class="VisibilityIteratorImpl2">VisibilityIteratorImpl2</linkto>
-// </prerequisite>
-//
-// <etymology>
-// The VisibilityIterator2 is a read/write iterator returning visibilities
-// </etymology>
-//
-// <synopsis>
-// VisibilityIterator2 provides iteration with various sort orders
-// for one or more MSs. It has member functions to retrieve the fields
-// commonly needed in synthesis calibration and imaging. It is
-// derived from the read-only iterator
-// <linkto class="VisibilityIteratorImpl2">VisibilityIteratorImpl2</linkto>.
-//
-// One should use <linkto class="VisBuffer">VisBuffer</linkto>
-// to access chunks of data.
-// </synopsis>
-//
-// <example>
-// <code>
-// //
-// </code>
-// </example>
-//
-// <motivation>
-// For imaging and calibration you need to access an MS in some consistent
-// order (by field, spectralwindow, time interval etc.). This class provides
-// that access.
-// </motivation>
-//
-// #<thrown>
-//
-// #</thrown>
-//
-// <todo asof="1997/05/30">
-//   <li> cleanup the currently dual interface for visibilities and flags
-//   <li> sort out what to do with weights when interpolating
-// </todo>
-
-#if 0
-
-class RWVisibilityIteratorImpl2 {
-
-    friend class VisibilityIterator2;
-
-public:
-
-    typedef VisibilityIterator2::DataColumn DataColumn;
-
-    // Constructors.
-    // Note: The VisibilityIterator2 is not initialized correctly by default, you
-    // need to call origin () before using it to iterate.
-
-    VisibilityIteratorImpl2 (VisibilityIterator2 * vi);
-
-    //VisibilityIteratorImpl2 (VisibilityIterator2 * vi);
-
-    //VisibilityIteratorImpl2 (const VisibilityIteratorImpl2 & other);
-
-    // Destructor
-
-    virtual ~VisibilityIteratorImpl2 ();
-
-    // Members
-
-    virtual VisibilityIteratorImpl2 * clone (VisibilityIterator2 * vi) const;
-
-    virtual Bool isWritable () const {
-        return True;
-    }
-
-    // Write/modify the flags in the data.
-    // This will flag all channels in the original data that contributed to
-    // the output channel in the case of channel averaging.
-    // All polarizations have the same flag value.
-    virtual void writeFlag (const Matrix<Bool> & flag);
-
-    // Write/modify the flags in the data.
-    // This writes the flags as found in the MS, Cube (npol,nchan,nrow),
-    // where nrow is the number of rows in the current iteration (given by
-    // nRow ()).
-    virtual void writeFlag (const Cube<Bool> & flag);
-
-    // Write/modify the flag row column; dimension Vector (nrow)
-    virtual void writeFlagRow (const Vector<Bool> & rowflags);
-
-    void writeFlagCategory(const Array<Bool>& fc);
-
-    // Write/modify the visibilities.
-    // This is possibly only for a 'reference' MS which has a new DATA column.
-    // The first axis of the matrix should equal the selected number of channels
-    // in the original MS.
-    // If the MS does not contain all polarizations, only the parallel
-    // hand polarizations are used.
-    void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
-    void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
-    void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
-
-    // Write/modify the visibilities
-    // This writes the data as found in the MS, Cube (npol,nchan,nrow).
-    virtual void writeVisCorrected (const Cube<Complex> & vis);
-    virtual void writeVisModel (const Cube<Complex> & vis);
-    virtual void writeVisObserved (const Cube<Complex> & vis);
-
-    // Write/modify the weights
-    virtual void writeWeight (const Vector<Float> & wt);
-
-    // Write/modify the weightMat
-    virtual void writeWeightMat (const Matrix<Float> & wtmat);
-
-    // Write/modify the weightSpectrum
-    virtual void writeWeightSpectrum (const Cube<Float> & wtsp);
-
-    // Write/modify the Sigma
-    virtual void writeSigma (const Vector<Float> & sig);
-
-    // Write/modify the ncorr x nrow SigmaMat.
-    virtual void writeSigmaMat (const Matrix<Float> & sigmat);
-
-    virtual void writeBackChanges (VisBuffer2 *);
-
-protected:
-
-    // A BackWriter is a functor that will extract a piece of information out of its VisBuffer
-    // argument and write it out using a "set" method on the supplied VisibilityIterator2.
-    class BackWriter {
-
-    public:
-
-        virtual ~BackWriter () {}
-
-        virtual void operator () (VisibilityIteratorImpl2 * vi, VisBuffer2 * vb) = 0;
-
-    };
-
-    // A simple BackWriterImpl2 uses a nullary accessor on a VisBuffer.
-    template <typename Setter, typename Getter>
-    class BackWriterImpl : public BackWriter {
-    public:
-
-        BackWriterImpl (Setter setter, Getter getter) : getter_p (getter), setter_p (setter) {}
-        void operator () (VisibilityIteratorImpl2 * vi, VisBuffer2 * vb) {
-            (vi ->* setter_p) ((vb ->* getter_p) ());
-        }
-
-    private:
-
-        Getter getter_p;
-        Setter setter_p;
-    };
-
-    // BackWriterImpl2 is slightly more complicated in that it uses a unary accessor.  The argument
-    // to the unary accessor is a member of the VisibilityIterator2 DataColumn enumeration which
-    // specifies which visibilty or visCube type is wanted (e.g., observed, model or corrected).
-    template <typename Setter, typename Getter>
-    class BackWriterImpl2 : public BackWriter {
-    public:
-
-        typedef VisibilityIteratorImpl2::DataColumn DataColumn;
-
-        BackWriterImpl2 (Setter setter, Getter getter, DataColumn dc)
-        : dataColumn_p (dc), getter_p (getter), setter_p (setter)
-        {}
-        void operator () (VisibilityIteratorImpl2 * vi, VisBuffer2 * vb) {
-            (vi ->* setter_p) ((vb ->* getter_p) (), dataColumn_p);
-        }
-
-    private:
-
-        DataColumn dataColumn_p;
-        Getter getter_p;
-        Setter setter_p;
-    };
-
-    // Backwriter(2) creation methods.  These methods make it fairly straightforward to create
-    // a BackWriter object.
-
-    template <typename Ret>
-    static
-    BackWriter *
-    makeBackWriter (void (VisibilityIteratorImpl2::* setter) (Ret), Ret (VisBuffer2::* getter) () const) {
-        return new BackWriterImpl <void (VisibilityIteratorImpl2:: *) (Ret),
-                                   Ret (VisBuffer2:: *) () const >
-        (setter, getter);
-    }
-
-    template <typename Ret>
-    static
-    BackWriter *
-    makeBackWriter2 (void (VisibilityIteratorImpl2::* setter) (Ret, VisibilityIteratorImpl2::DataColumn),
-                     Ret (VisBuffer2::* getter) () const,
-                     VisibilityIterator2::DataColumn dc) {
-
-        // Define the Getter and Setter types
-
-        typedef void (VisibilityIteratorImpl2::* Setter) (Ret, VisibilityIteratorImpl2::DataColumn);
-        typedef Ret (VisBuffer2::* Getter) () const;
-
-        return new BackWriterImpl2 < Setter, Getter> (setter, getter, dc);
-    }
-
-    VisibilityIteratorImpl2 * getImpl ();
-
-    void initializeBackWriters ();
-
-    virtual void attachColumns (const Table & t);
-
-    template <typename T>
-    void putColumnRows (ArrayColumn<T> & column, const Array<T> & array);
-
-    template <typename T>
-    void putColumnRows (ArrayColumn<T> & column, const Matrix<T> & array);
-
-    template <typename T>
-    void putColumnRows (ScalarColumn<T> & column, const Vector <T> & array);
-
-
-//    void setInterpolatedVisFlag (const Cube<Complex> & vis,
-//                                 const Cube<Bool> & flag);
-//    void setInterpolatedWeight (const Matrix<Float> & wt);
-
-    // Write the data column (observed, model or corrected);
-    // deals with Float or Complex observed data (DATA and FLOAT_DATA).
-
-//    void putDataColumn (DataColumn whichOne, const Slicer & slicer,
-//                        const Cube<Complex> & data);
-//    void putDataColumn (DataColumn whichOne, const Cube<Complex> & data);
-//
-//    // column access functions, can be overridden in derived classes
-//    virtual void putCol (ScalarColumn<Bool> & column, const Vector<Bool> & array);
-//    virtual void putCol (ArrayColumn<Bool> & column, const Array<Bool> & array);
-//    virtual void putCol (ArrayColumn<Float> & column, const Array<Float> & array);
-//    virtual void putCol (ArrayColumn<Complex> & column, const Array<Complex> & array);
-//
-//    virtual void putCol (ArrayColumn<Bool> & column, const Slicer & slicer, const Array<Bool> & array);
-//    virtual void putCol (ArrayColumn<Float> & column, const Slicer & slicer, const Array<Float> & array);
-//    virtual void putCol (ArrayColumn<Complex> & column, const Slicer & slicer, const Array<Complex> & array);
-//
-//    // non-virtual, no reason to template this function because Bool is the only type needed
-//    void putColScalar (ScalarColumn<Bool> & column, const Vector<Bool> & array);
-
-    //This puts a model into the descriptor of the actual ms
-    //Set iscomponentlist to True if the record represent a componentlist
-    //if False then it is a FTMachine Record that holds the model image
-    // a [-1] vector in validfields mean the model applies to all fields of the active ms 
-    virtual void putModel(const RecordInterface& rec, Bool iscomponentlist=True, Bool incremental=False);
-
-    void convertVisFromStokes (const Matrix<CStokesVector> & visibilityStokes,
-                               Cube<Complex> & visCube);
-
-private:
-
-    std::map <VisBufferComponent2, BackWriter *> backWriters_p;
-};
-
-#endif // 0
 
 } // end namespace vi
 
