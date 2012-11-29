@@ -160,12 +160,19 @@ void EGainCurve::setSpecify(const Record& specify) {
   obstime_ = timerange(0);
 
   const ROMSSpWindowColumns& spwcol(mscol.spectralWindow());
-  spwfreqs_.resize(nSpw(),0.0);
+  spwfreqs_.resize(nSpw());
+  spwfreqs_.set(0.0);
+  spwbands_.resize(nSpw());
+  spwbands_.set(String("?"));
   for (Int ispw=0;ispw<nSpw();++ispw) {
     Vector<Double> chanfreqs=spwcol.chanFreq()(ispw);
     spwfreqs_(ispw)=chanfreqs(chanfreqs.nelements()/2);
+    String bname=spwcol.name()(ispw);
+    if (bname.contains("EVLA"))
+      spwbands_(ispw)=String(bname.before("#")).after("EVLA_");
   }
   //  cout << "spwfreqs_ = " << spwfreqs_ << endl;
+  //  cout << "spwbands_ = " << spwbands_ << endl;
 
   // Neither applying nor solving in specify context
   setSolved(False);
@@ -256,6 +263,9 @@ void EGainCurve::specify(const Record& specify) {
   // Open raw gain curve source table
   Table rawgaintab(gainCurveSrc_);
 
+  logSink() << "Using " << Path(gainCurveSrc_).absoluteName()
+	    << " nrow=" << rawgaintab.nrow() << LogIO::POST;
+
   // Select on Time
   Table timegaintab = rawgaintab(rawgaintab.col("BTIME") <= obstime_
                                  && rawgaintab.col("ETIME") > obstime_);
@@ -272,21 +282,23 @@ void EGainCurve::specify(const Record& specify) {
     if (dogc) {
 
       // Select on freq:
-      Table freqgaintab = timegaintab(timegaintab.col("BFREQ") <= spwfreqs_(ispw)
-                                    && timegaintab.col("EFREQ") > spwfreqs_(ispw));
+      Table freqgaintab=timegaintab(timegaintab.col("BANDNAME")==spwbands_(ispw));
+
+      // If we fail to select anything by bandname, try to select by freq
+      //   (this can get wrong answer near band edges if center freq "out-of-band")
+      if (freqgaintab.nrow()==0)
+	freqgaintab = timegaintab(timegaintab.col("BFREQ") <= spwfreqs_(ispw)
+				  && timegaintab.col("EFREQ") > spwfreqs_(ispw));
 
       if (freqgaintab.nrow() > 0) {
 
-     /*	
-	{ ostringstream o;
-	  o<< "EGainCurve::specify:"
-	   << "  Found the following gain curve coefficient data" << endl
-	   << "  for spectral window = "  << ispw << " (ref freq="
-	   << spwfreqs_(ispw) << "):";
-	  message.message(o);
-	  logSink().post(message);
+	/*	
+	{ logSink() // << "EGainCurve::specify:"
+		    << "  Found the following gain curve coefficient data" << endl
+		    << "  for spectral window = "  << ispw << " (band=" << spwbands_(ispw) << ", center freq="
+		    << spwfreqs_(ispw) << "):" << LogIO::POST;
 	}
-     */
+	*/
 	// Find nominal gain curve
 	//  Nominal antenna is named "0" (this is a VLA convention)
 	Matrix<Float> nomgain(4,2,0.0);
@@ -317,28 +329,21 @@ void EGainCurve::specify(const Record& specify) {
 	    piter.array().nonDegenerate().reform(nomgain.shape())=nomgain;
 	  }
 
-  /*
-	  { ostringstream o;
-	    o<< "   Antenna=" << antnames_(iant) << ": "
-	     << piter.array().nonDegenerate();
-	    message.message(o);
-	    logSink().post(message);
+	  /*
+	  { 
+	    logSink() << "   Antenna=" << antnames_(iant) << ": "
+		      << piter.array().nonDegenerate() << LogIO::POST;
 	  }
-  */
+	  */
 	}
 	
 	spwOK_(currSpw())=True;
 	
       }
       else {
-     /*
-	ostringstream o;
-	o<< "Could not find gain curve data for Spw="
-	 << ispw << " (reffreq=" << spwfreqs_(ispw)/1.0e9 << " GHz) "
-	 << "Using unit gaincurve.";
-	message.message(o);
-	logSink().post(message);
-     */
+	logSink() << "Could not find gain curve data for Spw="
+		  << ispw << " (reffreq=" << spwfreqs_(ispw)/1.0e9 << " GHz) "
+		  << "Using flat unit gaincurve." << LogIO::POST;
 	// We used to punt here
 	//throw(AipsError(o.str()));
 	
@@ -351,7 +356,7 @@ void EGainCurve::specify(const Record& specify) {
       }
     }
     else {
-      // Use unity
+      // Use unity, flat
       solveAllParOK()=True;
       solveAllRPar().set(0.0);
       solveAllRPar()(Slice(0,1,1),Slice(),Slice()).set(1.0);
@@ -359,6 +364,7 @@ void EGainCurve::specify(const Record& specify) {
       spwOK_(currSpw())=True;
     }
 
+    // Scale by efficiency factor, if requested
     if (doeff) {
       solveAllRPar()*=Float(eff_(ispw));
     }
