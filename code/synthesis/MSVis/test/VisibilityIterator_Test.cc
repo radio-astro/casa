@@ -1,8 +1,12 @@
 #include "VisibilityIterator_Test.h"
 
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casa/aips.h>
+#include <casa/BasicSL.h>
+#include <ms/MeasurementSets.h>
+#include <tables/Tables.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
+#include <tables/Tables/TableCopy.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TiledDataStMan.h>
 #include <tables/Tables/TiledShapeStMan.h>
@@ -16,6 +20,7 @@
 #include <synthesis/MSVis/VisibilityIteratorImpl2.h>
 #include <synthesis/MSVis/FinalTvi2.h>
 #include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/SubMS.h>
 #include <boost/tuple/tuple.hpp>
 
 using namespace std;
@@ -1690,6 +1695,67 @@ PerformanceComparator::sweepViOld (ROVisibilityIterator & vi)
     return sum;
 }
 
+//  MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
+//                                 const Int nCorr, const String& telescop,
+//                                 const Vector<MS::PredefinedColumns>& colNames,
+//                                 const Int obstype,
+//                                 const Bool compress,
+//				 const asdmStManUseAlternatives asdmStManUse)
+
+void
+CopyMs::copySubtables (MeasurementSet * newMs, const MeasurementSet * oldMs)
+{
+    SubMS::copyCols (newMs->antenna(), oldMs->antenna (), True);
+    SubMS::copyCols (newMs->dataDescription(), oldMs->dataDescription (), True);
+    if (! newMs->doppler().isNull()){
+        SubMS::copyCols (newMs->doppler(), oldMs->doppler (), True);
+    }
+    SubMS::copyCols (newMs->feed(), oldMs->feed (), True);
+    SubMS::copyCols (newMs->field(), oldMs->field (), True);
+    SubMS::copyCols (newMs->flagCmd(), oldMs->flagCmd (), True);
+    if (! newMs->freqOffset().isNull()){
+        SubMS::copyCols (newMs->freqOffset(), oldMs->freqOffset (), True);
+    }
+    SubMS::copyCols (newMs->history(), oldMs->history (), True);
+    TableCopy::copyRows (newMs->observation(), oldMs->observation (), True);
+    setupNewPointing (newMs);
+    SubMS::copyCols (newMs->pointing(), oldMs->pointing (), True);
+    SubMS::copyCols (newMs->polarization(), oldMs->polarization (), True);
+    SubMS::copyCols (newMs->processor(), oldMs->processor (), True);
+    if (! newMs->source().isNull()){
+        TableCopy::copyRows (newMs->source(), oldMs->source (), True);
+    }
+    SubMS::copyCols (newMs->spectralWindow(), oldMs->spectralWindow (), True);
+    SubMS::copyCols (newMs->state(), oldMs->state (), True);
+    if (! newMs->sysCal().isNull()){
+        SubMS::copyCols (newMs->sysCal(), oldMs->sysCal (), True);
+    }
+    if (! newMs->weather().isNull()){
+        SubMS::copyCols (newMs->weather(), oldMs->weather (), True);
+    }
+}
+
+void
+CopyMs::setupNewPointing(MeasurementSet * newMs)
+{
+  // Swiped from SubMs so I could get past this problem.
+
+  SetupNewTable pointingSetup(newMs->pointingTableName(),
+                              MSPointing::requiredTableDesc(), Table::New);
+  // POINTING can be large, set some sensible defaults for storageMgrs
+  IncrementalStMan ismPointing ("ISMPointing");
+  StandardStMan ssmPointing("SSMPointing", 32768);
+  pointingSetup.bindAll(ismPointing, True);
+  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
+                           ssmPointing);
+  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),
+                           ssmPointing);
+  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TIME),
+                           ssmPointing);
+  newMs->rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
+                                     Table(pointingSetup));
+  newMs->initRefs();
+}
 
 
 void
@@ -1697,24 +1763,82 @@ CopyMs::doit (const String & oldMsName)
 {
     casa::MeasurementSet oldMs (oldMsName);
 
+//    SubMS subMs (oldMs);
+//
+//    String telescopeName;
+//    Int nCorrelations;
+//    Int nChannels;
+//    Vector<String> columnNames (MS::NUMBER_PREDEFINED_COLUMNS);
+//    {
+//        VisibilityIterator2 viTmp (oldMs);
+//
+//        Int j = 0;
+//        if (oldMs.isColumn (MS::DATA)){
+//            columnNames [j++] = MS::DATA;
+//        }
+//        if (oldMs.isColumn (MS::CORRECTED_DATA)){
+//            columnNames [j++] = MS::CORRECTED_DATA;
+//        }
+//        if (oldMs.isColumn (MS::MODEL_DATA)){
+//            columnNames [j++] = MS::MODEL_DATA;
+//        }
+//        columnNames.resize (j, True);
+//
+//        SubtableColumns sc = viTmp.subtableColumns();
+//
+//        telescopeName = sc.observation().telescopeName()(0);
+//
+//        nCorrelations = sc.polarization().numCorr()(0);
+//
+//        nChannels = sc.spectralWindow().numChan()(0);
+//
+//
+//    }
+
     String newMsName = String::format ("%s.copy", oldMsName.c_str());
 
     system (String::format ("test -d %s && rm -r %s", newMsName.c_str(), newMsName.c_str()).c_str());
+    system ("casapy --nogui -c \"execfile('/home/orion/casa/active/code/synthesis/MSVis/test/makeEmptyCopy.py')\"");
 
-    SetupNewTable newSetup (newMsName, oldMs.tableDesc(), Table::NewNoReplace);
 
-    casa::MeasurementSet newMs (newSetup, 0, False);
-    newMs.createDefaultSubtables(Table::NewNoReplace);
+//    subMs.setmsselect("", "", "", "0");
+//
+//    String all ("ALL");
+//    Bool ok = subMs.makeSubMS(newMsName, all);
+//    ThrowIf (! ok, "Method makeSubMS failed");
+
+
+    MeasurementSet newMs (newMsName, Table::Update);
+//    uInt nRows = newMs.nrow();
+//    Vector<uInt> allRows (nRows);
+//    for (uInt i = 0; i < nRows; i++) allRows [i] = i;
+//    newMs.removeRow (allRows);
+
+
+//    MeasurementSet * newMs = SubMS::setupMS (newMsName, nChannels, nCorrelations, "VLA",
+//                                             columnNames);
+//    // SubMS::createSubtables(* newMs, Table::New);
+//
+//    newMs->closeSubTables();
+//
+//    copySubtables (newMs, & oldMs);
+
+    //SetupNewTable newSetup (newMsName, oldMs.tableDesc(), Table::NewNoReplace);
+
+    //casa::MeasurementSet newMs (newSetup, 0, False);
+    //newMs.createDefaultSubtables(Table::NewNoReplace);
 
     VisibilityIterator2 * vi = VisibilityIterator2::copyingViFactory (oldMs, newMs);
     VisBuffer2 * vb = vi->getVisBuffer ();
 
     for (vi->originChunks (); vi->moreChunks (); vi->nextChunk ()){
-        for (vi->origin (); vi->more (); vi ++){
+        for (vi->origin (); vi->more (); vi->next()){
 
             vb->writeChangesBack ();
         }
     }
+
+    newMs.flush();
 }
 
 } // end namespace test

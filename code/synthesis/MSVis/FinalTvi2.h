@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 #include <ms/MeasurementSets.h>
 #include <synthesis/MSVis/TransformingVi2.h>
+#include <synthesis/MSVis/ViColumns2.h>
 
 #include <boost/noncopyable.hpp>
 #include <map>
@@ -123,6 +124,9 @@ public:
     //   |                                  |
     //   +==================================+
 
+
+    virtual void origin ();
+    virtual void advance ();
 
 //    virtual Bool isWritable () const;
 //
@@ -353,8 +357,16 @@ public:
 
 protected:
 
+    void configureNewSubchunk ();
+
+    void writeDataValues (MeasurementSet & ms, const RefRows & rows);
+    void writeKeyValues (MeasurementSet & ms, const RefRows & rows);
+    void writeMiscellaneousValues (MeasurementSet & ms, const RefRows & rows);
+
 private:
 
+    ViColumns2     columns_p;
+    Bool           columnsAttached_p;
     MeasurementSet ms_p;
 
 };

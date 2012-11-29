@@ -122,8 +122,8 @@ typedef enum {VbPlain, VbAsynchronous} VisBufferType;
 
 class VisBuffer2 : private boost::noncopyable {
 
-    friend class VisibilityIterator;
     friend class VisibilityIteratorImpl2;
+    friend class FinalTvi2;
 
 public:
 
@@ -493,6 +493,7 @@ protected:
                                        Int nRows, Int nChannels, Int nCorrelations) = 0;
     virtual void invalidate() = 0;
     virtual Bool isRekeyable () const = 0;
+    virtual void setFillable (Bool isFillable) = 0;
     virtual void setRekeyable (Bool isRekeable) = 0;
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes

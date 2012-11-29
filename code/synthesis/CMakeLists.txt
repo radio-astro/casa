@@ -114,6 +114,7 @@ casa_add_library( synthesis
 ####  MSVis/VisBufferImplAsync2.cc
 ####  MSVis/VisBufferAsyncWrapper2.cc
   MSVis/VisBufferComponents2.cc
+  MSVis/ViColumns2.cc
   MSVis/ViFrequencySelection.cc
   MSVis/ViImplementation2.cc
   MSVis/VisibilityIterator2.cc
@@ -476,6 +477,7 @@ install (FILES
         MSVis/VisBufferComponents2.h
         MSVis/VisBufferImpl2.h
         MSVis/VisBufferImplAsync2.h
+        MSVis/ViColumns2.h
         MSVis/ViFrequencySelection.h
         MSVis/ViImplementation2.h
         MSVis/VisibilityIterator2.h
