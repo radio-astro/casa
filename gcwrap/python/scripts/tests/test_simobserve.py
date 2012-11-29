@@ -34,6 +34,7 @@ class simobserve_unittest_base(unittest.TestCase):
     # (atol=0. means to ignore absolute tolerance)
     rtol = 5.0e-3
     atol = 0.
+    showcomp = False #True
 
     # Test methods
     def _check_file(self, name, msg=""):
@@ -57,7 +58,7 @@ class simobserve_unittest_base(unittest.TestCase):
         return stats[column]
 
     # TODO: need to check image axes
-    def _check_imstats(self, name, ref):
+    def _check_imstats(self, name, ref, rtol=None, atol=None):
         # ref: a dictionary of reference statistics or reference image name
         # name: the name of image to compare statistics
         refname = ""
@@ -67,25 +68,31 @@ class simobserve_unittest_base(unittest.TestCase):
             ref = self._get_imstats(ref)
         # get statistics of  image
         stats = self._get_imstats(name)
+        # tolerance
+        if not rtol: rtol = self.rtol
+        if not atol: atol = self.atol
         # define statistics to compare
         if hasattr(self,'imkeys'):
             compkeys = self.imkeys
         else:
             compkeys = ref.keys()
-        print("Comparing image statistics of '%s' with reference %s" % (name, refname))
-        #print("keys = %s" % str(compkeys))
+        print("Comparing image statistics of '%s' with reference %s" % \
+              (name, refname))
         for key in compkeys:
-            message="image statistic '%s' does not match" % key
-            #print("Comparing '%s' (%s): %s (expected: %s)" % (key, type(stats[key]), str(stats[key]), str(ref[key])))
+            if self.showcomp:
+                print("Comparing '%s' (%s): %s (expected: %s)" % \
+                      (key, type(stats[key]), str(stats[key]), str(ref[key])))
+            message="image statistic '%s' does not match: %s (expected: %s)" % \
+                     (key, str(stats[key]), str(ref[key]))
             if type(stats[key])==str:
                 self.assertEqual(stats[key],ref[key],
                                  msg=message)
             else:
                 ret=numpy.allclose(stats[key],ref[key],
-                                   rtol=self.rtol,atol=self.atol)
+                                   rtol=rtol,atol=atol)
                 self.assertEqual(ret,True,msg=message)
 
-    def _check_msstats(self,name,ref):
+    def _check_msstats(self,name,ref, rtol=None, atol=None):
         # ref: a dictionary of reference statistics or reference MS name
         # name: the name of MS to compare statistics
         column = "DATA"
@@ -96,18 +103,24 @@ class simobserve_unittest_base(unittest.TestCase):
             # get statistics of reference MS
             ref=self._get_msstats(ref,column,compval)
         stats=self._get_msstats(name,column,compval)
+        # tolerance
+        if not rtol: rtol = self.rtol
+        if not atol: atol = self.atol
         # define statistics to compare
         if hasattr(self,'mskeys'):
             compkeys = self.mskeys
         else:
             compkeys = ref.keys()
-        print("Comparing MS statistics of '%s' with reference %s" % (name, refname))
-        #print("keys = %s" % str(compkeys))
+        print("Comparing MS statistics of '%s' with reference %s" % \
+              (name, refname))
         for key in compkeys:
-            message="MS statistic '%s' does not match" % key
-            #print("Comparing '%s' : %s (expected: %s)" % (key, str(stats[key]), str(ref[key])))
+            if self.showcomp:
+                print("Comparing '%s' : %s (expected: %s)" % \
+                      (key, str(stats[key]), str(ref[key])))
+            message="MS statistic '%s' does not match: %s (expected: %s)" % \
+                     (key, str(stats[key]), str(ref[key]))
             ret=numpy.allclose([stats[key]],[ref[key]],
-                               rtol=self.rtol,atol=self.atol)
+                               rtol=rtol,atol=atol)
             self.assertEqual(ret,True,msg=message)
 
     def _check_ptgfile(self, name, refname):
@@ -131,13 +144,13 @@ class simobserve_unittest_base(unittest.TestCase):
                 tr = float(times_ref[ipts])
                 reldiff = abs(tc - tr)/tr
                 self.assertTrue(reldiff < timetol,\
-                                msg="Integration time differs (%dth point): %f (expected: %f)" % (ipts, tc, tr))
+                                msg="Integration time differs (%d-th point): %f (expected: %f)" % (ipts, tc, tr))
             # direction (string -> double)
             if dirs[ipts] == dirs_ref[ipts]:
                 continue
             ec, xc, yc = myutil.direction_splitter(dirs[ipts])
             er, xr, yr = myutil.direction_splitter(dirs_ref[ipts])
-            self.assertEqual(ec, er, msg="The epoch differs (%dth point): %s (expected: %s)" % (ipts, ec, er))
+            self.assertEqual(ec, er, msg="The epoch differs (%d-th point): %s (expected: %s)" % (ipts, ec, er))
             self.assertTrue(abs(xc['value']-xr['value']) < dirtol,\
                             msg="R.A. of %dth point differs" % ipts)
             self.assertTrue(abs(yc['value']-yr['value']) < dirtol,\
@@ -668,6 +681,12 @@ class simobserve_skycomp(simobserve_unittest_base):
 
     refproj = "ref_sky"
     refpref = simobserve_unittest_base.datapath + refproj + "/"
+    # relative tolerance (larger tolerance to compare with ref_sky)
+    rtol = 2.0e-2        # Image
+    rtol_sdms = 4.0e-2   # SD MS
+    rtol_intms = 1.5e-1  # INT MS (sum and mean give ~13% difference)
+    # types of MS statistics tested
+    mskeys = ["rms", "min", "max", "stddev", "npts", "medabsdevmed", "quartile", "sumsq", "sum", "mean"]#, "median"
 
     # Reserved methods
     def setUp(self):
@@ -677,9 +696,7 @@ class simobserve_skycomp(simobserve_unittest_base):
                           self._get_data_prefix(self.sdantlist,self.refproj)
         self.refpref_int = self.refpref + \
                            self._get_data_prefix(self.antlist,self.refproj)
-        #self.refmodel = self.refpref_sd+".skymodel" # reference skymodel
-        #self.refmodel = self.refpref_sd+".skymodel.flat" # reference skymodel
-        self.refmodel = self.datapath + self.inmodel # should be same as input
+        self.refmodel = self.refpref_sd+".skymodel.flat" # reference flat skymodel
         # reference simulated MS
         self.refms_sd = self.refpref_sd+".sd.ms"
         self.refms_int = self.refpref_int+".ms"
@@ -687,8 +704,8 @@ class simobserve_skycomp(simobserve_unittest_base):
         self._copy_input([self.incomp, self.inmodel])
 
     def tearDown(self):
-        #shutil.rmtree(self.project)
-        pass
+        shutil.rmtree(self.project)
+        #pass
 
     # Tests of skymodel + components list simulations
     def testSC_skymodel(self):
@@ -708,8 +725,8 @@ class simobserve_skycomp(simobserve_unittest_base):
         self.assertTrue(res)
         # compare skymodel
         currmodel = self.project + "/" + \
-                    self._get_data_prefix(antennalist,self.project)+".skymodel"
-                    #self._get_data_prefix(antennalist,self.project)+".skymodel.flat"
+                    self._get_data_prefix(antennalist,self.project)+".skymodel.flat"
+                    #self._get_data_prefix(antennalist,self.project)+".skymodel"
         self._check_imstats(currmodel, self.refmodel)
 
     def testSC_almaptg(self):
@@ -799,7 +816,7 @@ class simobserve_skycomp(simobserve_unittest_base):
         # compare output MS
         currms = self.project + "/" + \
                  self._get_data_prefix(sdantlist,self.project)+".sd.ms"
-        self._check_msstats(currms,self.refms_sd)
+        self._check_msstats(currms,self.refms_sd,rtol=self.rtol_sdms)
         
 
     def testSC_intObs(self):
@@ -823,7 +840,7 @@ class simobserve_skycomp(simobserve_unittest_base):
         # compare output MS
         currms = self.project + "/" + \
                  self._get_data_prefix(antennalist,self.project)+".ms"
-        self._check_msstats(currms,self.refms_int)
+        self._check_msstats(currms,self.refms_int,rtol=self.rtol_intms)
 
 #     def testSC_intLeak(self):
 #         """Test skymodel + complist simulation: only leakage (INT)"""
@@ -861,9 +878,9 @@ class simobserve_skycomp(simobserve_unittest_base):
         # compare outputs
         currpref = self.project + "/" + \
                  self._get_data_prefix(sdantlist,self.project)
-        self._check_imstats(currpref+".skymodel", self.refmodel)
+        self._check_imstats(currpref+".skymodel.flat", self.refmodel)
         self._check_ptgfile(currpref+".ptg.txt", self.refpref_sd+".ptg.txt")
-        self._check_msstats(currpref+".sd.ms",self.refms_sd)
+        self._check_msstats(currpref+".sd.ms",self.refms_sd,rtol=self.rtol_sdms)
 
     def testSC_intAll(self):
         """Test skymodel + complist simulation: interferometer"""
@@ -886,9 +903,9 @@ class simobserve_skycomp(simobserve_unittest_base):
         # compare outputs
         currpref = self.project + "/" + \
                  self._get_data_prefix(antennalist,self.project)
-        self._check_imstats(currpref+".skymodel", self.refmodel)
+        self._check_imstats(currpref+".skymodel.flat", self.refmodel)
         self._check_ptgfile(currpref+".ptg.txt", self.refpref_int+".ptg.txt")
-        self._check_msstats(currpref+".ms",self.refms_int)
+        self._check_msstats(currpref+".ms",self.refms_int,rtol=self.rtol_intms)
     
 
 ########################################################################
@@ -1937,5 +1954,5 @@ class simobserve_badinputs(simobserve_unittest_base):
         
 
 def suite():
-    return [simobserve_sky, simobserve_comp, #simobserve_skycomp,
+    return [simobserve_sky, simobserve_comp, simobserve_skycomp,
             simobserve_noise,simobserve_badinputs]
