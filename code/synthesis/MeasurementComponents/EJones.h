@@ -111,6 +111,9 @@ private:
   // The spw ref frequencies (for selecting gain curves)
   Vector<Double> spwfreqs_;
 
+  // The spw band names (for selecting gain curves)
+  Vector<String> spwbands_;
+
   // Zenith angles
   Vector<Double> za_;
 
