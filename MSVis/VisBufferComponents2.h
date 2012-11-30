@@ -20,6 +20,7 @@ typedef enum {
     BeamOffsets,         // VisBufferAsync use only
     CorrType,
     DataDescriptionId,
+    DataDescriptionIds,
     Direction1,
     Direction2,
     Exposure,
