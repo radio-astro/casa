@@ -3679,6 +3679,10 @@ however not used yet.</description>
        <description>Switch-on the A-Term?</description>
        <value>true</value>
      </param>
+     <param type="bool" name="mterm">
+       <description>Switch-on the M-Term?</description>
+       <value>true</value>
+     </param>
      <param type="bool" name="wbawp">
        <description>Trigger the WB A-Projection algorithm?</description>
        <value>false</value>

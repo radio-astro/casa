@@ -482,6 +482,10 @@ class test_virtualconcat(unittest.TestCase):
     def test8(self):
         '''Virtualconcat 8: two MSs with different antenna tables, copypointing=False'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+
+        os.system('rm -rf ref'+msname)
+        concat(vis = ['sim7.ms','sim8.ms'],
+               concatvis = "ref"+msname, copypointing=False)
         
         self.res = virtualconcat(vis = ['sim7.ms','sim8.ms'],
                           concatvis = msname, copypointing=False)
@@ -504,6 +508,11 @@ class test_virtualconcat(unittest.TestCase):
             retValue['success']=True        
     
             # check Main table
+            tb.open("ref"+msname)
+            ant1ref = tb.getcol('ANTENNA1')
+            ant2ref = tb.getcol('ANTENNA2')
+            tb.close()            
+            
             tb.open('test8.ms')
             ant1 = tb.getcol('ANTENNA1')
             ant2 = tb.getcol('ANTENNA2')
@@ -513,6 +522,16 @@ class test_virtualconcat(unittest.TestCase):
             for i in xrange(0,len(ant1)):
                 if(ant1[i]>ant2[i]):
                     print "Found incorrectly ordered baseline label in row ", i, ": ", ant1, " ", ant2
+                    result = False
+                    break
+
+                if(ant1[i]!=ant1ref[i]):
+                    print "Found disagreement in ANTENNA1 in row ", i, ": ", ant1, " ", ant1ref
+                    result = False
+                    break
+                    
+                if(ant2[i]!=ant2ref[i]):
+                    print "Found disagreement in ANTENNA2 in row ", i, ": ", ant2, " ", ant2ref
                     result = False
                     break
                 

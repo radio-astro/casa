@@ -141,6 +141,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Switch-on the PS-Term?</description>
       <value>True</value>
     </param>
+    <param type="bool" name="mterm" subparam="true">
+      <description>Switch-on the M-Term?</description>
+      <value>False</value>
+    </param>
     <param type="bool" name="wbawp" subparam="true">
       <description>Trigger the wide-band A-Projection algorithm?</description>
       <value>False</value>
@@ -499,14 +503,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		 <!-- <default param="epjtable"><value type="string"></value></default>  -->
               </equals>
 	      <equals value="advancedaprojection">
-		      <!-- <default param="ftmachine"><value type="string">ft</value></default> -->
-		      <default param="wprojplanes"><value>1</value></default>
-		      <default param="cfcache"><value type="string">cfcache.dir</value></default>
-		      <default param="painc"><value>360.0</value></default>
-		      <default param="wbawp"><value>False</value></default>
-		      <default param="aterm"><value>True</value></default>
-		      <default param="psterm"><value>True</value></default>
-		      <default param="epjtable"><value type="string"></value></default>
+		<default param="wprojplanes"><value>1</value></default>
+		<default param="cfcache"><value type="string">cfcache.dir</value></default>
+		<default param="painc"><value>360.0</value></default>
+		<default param="wbawp"><value>False</value></default>
+		<default param="aterm"><value>True</value></default>
+		<default param="psterm"><value>True</value></default>
+		<default param="mterm"><value>False</value></default>
+		<default param="epjtable"><value type="string"></value></default>
               </equals>
 	    </when>
 	    <when param="mode">

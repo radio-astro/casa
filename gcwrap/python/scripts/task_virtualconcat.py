@@ -139,7 +139,8 @@ def virtualconcat(vislist,concatvis,freqtol,dirtol,respectname,
 			shutil.move(vis[0]+'/POINTING', tmptabname)
 			t.open(tmptabname)
 			if(t.nrows()>0): 
-				t.copy(newtablename=tmptabname2, deep=False, valuecopy=True, norows=True)
+				ttab = t.copy(newtablename=tmptabname2, deep=False, valuecopy=True, norows=True)
+				ttab.close()
 				t.close()
 				shutil.rmtree(tmptabname, ignore_errors=True)
 			else: # the POINTING table is already empty

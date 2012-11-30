@@ -163,7 +163,8 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 			shutil.move(theconcatvis+'/POINTING', tmptabname)
 			t.open(tmptabname)
 			if(t.nrows()>0): 
-				t.copy(newtablename=theconcatvis+'/POINTING', deep=False, valuecopy=True, norows=True)
+				ttab = t.copy(newtablename=theconcatvis+'/POINTING', deep=False, valuecopy=True, norows=True)
+				ttab.close()
 				t.close()
 				shutil.rmtree(tmptabname, ignore_errors=True)
 			else: # the POINTING table is already empty
