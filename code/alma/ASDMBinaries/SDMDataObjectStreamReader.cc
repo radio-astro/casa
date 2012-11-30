@@ -60,6 +60,7 @@ namespace asdmbinaries {
   unsigned int SDMDataObjectStreamReader::currentIntegrationIndex() const { checkState(T_QUERY, "currentIntegrationIndex"); return integrationIndex; }
   unsigned long long SDMDataObjectStreamReader::currentIntegrationStartsAt() const { checkState(T_QUERY, "currentIntegrationStartAt"); return integrationStartsAt; }
   string				SDMDataObjectStreamReader::title() const { checkState(T_QUERY, "title"); return sdmDataObject.title(); }
+  const ByteOrder*                      SDMDataObjectStreamReader::byteOrder() const { checkState(T_QUERY, "byteOrder"); return sdmDataObject.byteOrder(); }
   unsigned long long			SDMDataObjectStreamReader::startTime() const { checkState(T_QUERY, "startTime"); return sdmDataObject.startTime(); }
   unsigned int				SDMDataObjectStreamReader::numTime() const { checkState(T_QUERY, "numTime"); return sdmDataObject.numTime(); }
   string				SDMDataObjectStreamReader::dataOID() const { checkState(T_QUERY, "dataOID"); return sdmDataObject.dataOID(); }
@@ -490,6 +491,7 @@ namespace asdmbinaries {
     else
       parser.parseMemoryTPSubsetHeader(sdmDataSubsetHeader, sdmDataSubset);
 
+    attachmentFlags.reset();
     regex BINARYPARTLOC("([0-9]+/)+(actualDurations|actualTimes|autoData|crossData|zeroLags|flags)\\.bin");
     bool done = false;
     while (!done) {
@@ -506,29 +508,40 @@ namespace asdmbinaries {
       if (binaryPartSize.find(binaryPartName) == binaryPartSize.end())
 	throw SDMDataObjectStreamReaderException("The size of '"+binaryPartName+"' was not announced in the data header.!");
 
+      if (binaryPartSize[binaryPartName] == 0)
+	throw SDMDataObjectStreamReaderException("The size of '"+binaryPartName+"' was announced as null. I was not expecting a '"+binaryPartName+"' attachment here.");
+
       skipUntilEmptyLine(10);
       int numberOfCharsPerValue = 0;
       char** binaryPartPtrPtr = 0;
       if (binaryPartName == "actualDurations") {
+	attachmentFlags.set(ACTUALDURATIONS);
 	binaryPartPtrPtr = (char **) &sdmDataSubset.actualDurations_;
 	sdmDataSubset.nActualDurations_ = binaryPartSize[binaryPartName];
+	sdmDataSubset.actualDurationsPosition_ = f.tellg();
 	numberOfCharsPerValue = 8;
       }
       else if (binaryPartName == "actualTimes") {
+	attachmentFlags.set(ACTUALTIMES);
 	binaryPartPtrPtr = (char **) &sdmDataSubset.actualTimes_;
 	sdmDataSubset.nActualTimes_ = binaryPartSize[binaryPartName];
+	sdmDataSubset.actualTimesPosition_ = f.tellg();
 	numberOfCharsPerValue = 8;
       }
       else if (binaryPartName == "autoData") {
+	attachmentFlags.set(AUTODATA);
 	binaryPartPtrPtr = (char **) &sdmDataSubset.autoData_;
 	sdmDataSubset.nAutoData_ = binaryPartSize[binaryPartName];
+	sdmDataSubset.autoDataPosition_ = f.tellg();
 	numberOfCharsPerValue = 4;
       }
       else if (binaryPartName == "crossData") {
+	attachmentFlags.set(CROSSDATA);
 	sdmDataSubset.shortCrossData_ = 0;
 	sdmDataSubset.longCrossData_  = 0;
 	sdmDataSubset.floatCrossData_ = 0;
 	sdmDataSubset.nCrossData_ = binaryPartSize[binaryPartName];
+	sdmDataSubset.crossDataPosition_ = f.tellg();
 	PrimitiveDataType pdt = sdmDataSubset.crossDataType();
 	switch (pdt) {
 	case  INT16_TYPE:
@@ -548,13 +561,17 @@ namespace asdmbinaries {
 	}
       }
       else if (binaryPartName == "flags") {
+	attachmentFlags.set(FLAGS);
 	binaryPartPtrPtr = (char **) &sdmDataSubset.flags_;
 	sdmDataSubset.nFlags_ = binaryPartSize[binaryPartName];
+	sdmDataSubset.flagsPosition_ = f.tellg();
 	numberOfCharsPerValue = 4;
       }
       else if (binaryPartName == "zeroLags") {
+	attachmentFlags.set(ZEROLAGS);
 	binaryPartPtrPtr = (char **) &sdmDataSubset.zeroLags_;
 	sdmDataSubset.nZeroLags_ = binaryPartSize[binaryPartName];
+	sdmDataSubset.zeroLagsPosition_ = f.tellg();
 	numberOfCharsPerValue = 4;
       }
 
@@ -588,6 +605,72 @@ namespace asdmbinaries {
       }
 
       done = line.compare("--" + boundary_2+"--") == 0;
+    }
+
+    // Now check if the binary attachments found are compatible with the correlation mode
+    // and if their sizes are equal to what is announced in the global header.
+    //
+    // The presence of crossData and autoData depends on the correlation mode.
+    
+    switch (sdmDataObject.correlationMode()) {  
+    case CROSS_ONLY:
+      if (!attachmentFlags.test(CROSSDATA)) {
+	ostringstream oss;
+	oss << "Data subset '"<<sdmDataSubset.projectPath()<<"': ";
+	oss << "a binary attachment 'crossData' was expected in integration #" << integrationIndex;
+	throw SDMDataObjectStreamReaderException(oss.str());
+      }
+      
+      if (attachmentFlags.test(AUTODATA)) {
+	ostringstream oss;
+	oss << "Data subset '"<<sdmDataSubset.projectPath()<<"': ";
+	oss << "found an unexpected attachment 'autoData' in integration #" << integrationIndex << ".";
+	throw SDMDataObjectStreamReaderException(oss.str());
+      }
+      break;
+      
+    case AUTO_ONLY:
+      if (!attachmentFlags.test(AUTODATA)) {
+	ostringstream oss;
+	oss << "Data subset '"<<sdmDataSubset.projectPath()<<"': ";
+	oss << "a binary attachment 'autoData' was expected.in integration #" << integrationIndex << ".";
+	throw SDMDataObjectStreamReaderException(oss.str());
+      }
+
+      if (attachmentFlags.test(CROSSDATA)) {
+	ostringstream oss;
+	oss << "Data subset '"<<sdmDataSubset.projectPath()<<"': ";
+	oss << "found an unexpected attachment 'crossData' in integration #" << integrationIndex << ".";
+	throw SDMDataObjectStreamReaderException(oss.str());
+      }
+      break;
+      
+    case CROSS_AND_AUTO:
+      if (!attachmentFlags.test(AUTODATA)) {
+	ostringstream oss;
+	oss << "Data subset '"<<sdmDataSubset.projectPath()<<"': ";
+	oss << "a binary attachment 'autoData' was expected in integration #" << integrationIndex << ".";
+	throw SDMDataObjectStreamReaderException(oss.str());
+      }
+      
+      if (!attachmentFlags.test(CROSSDATA)) {
+	ostringstream oss;
+	oss << "Data subset '"<<sdmDataSubset.projectPath()<<"': ";
+	oss << "a binary attachment 'crossData' was expected in integration #" << integrationIndex << ".";
+	throw SDMDataObjectStreamReaderException(oss.str());
+      }      
+      break;
+
+    default:
+      throw SDMDataObjectStreamReaderException("Data subset '"+sdmDataSubset.projectPath()+"': unrecognized correlation mode");
+      break;
+    }
+    
+    
+    if (attachmentFlags.test(ZEROLAGS)) {
+      // Refuse the zeroLags attachment if it's not a Correlator or if the correlator is a CORRELATOR_FX (ACA).
+      if ((sdmDataObject.processorType_ != CORRELATOR) || (sdmDataObject.correlatorType() == FX))
+	throw SDMDataObjectStreamReaderException("zeroLags are not expected from a correlator CORRELATOR_FX");
     }
   }
 

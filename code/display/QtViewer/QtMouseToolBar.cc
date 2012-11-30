@@ -54,9 +54,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   QtPointToolButton::QtPointToolButton( QWidget *parent ) : QtMouseToolButton(QtMouseToolNames::POINT,parent),
 							    rc(viewer::getrc( )), timer(new QTimer( )) {
-	setContextMenuPolicy( Qt::CustomContextMenu );
-	connect( this, SIGNAL(customContextMenuRequested(const QPoint&)),
-		 this, SLOT(show_context_menu(const QPoint &)) );
 	connect( timer, SIGNAL(timeout( )), SLOT(popup_options_menu( )) );
     }
 

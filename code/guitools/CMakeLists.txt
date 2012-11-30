@@ -43,6 +43,13 @@ qt4_wrap_cpp( outfiles_qoh
   Feather/FeatherPlotWidget.qo.h
   Feather/Preferences.qo.h
   Feather/PreferencesColor.qo.h
+  Histogram/BinPlotWidget.qo.h
+  Histogram/ImageLoader.qo.h
+  Histogram/ColorPreferences.qo.h
+  Histogram/HistogramMain.qo.h
+  Histogram/FitWidget.qo.h
+  Histogram/PlotControlsWidget.qo.h
+  Histogram/RangeControlsWidget.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -52,10 +59,17 @@ casa_qt4_wrap_ui( outfiles_ui
   Feather/FeatherPlotWidget.ui
   Feather/Preferences.ui
   Feather/PreferencesColor.ui
+  Histogram/BinPlotWidget.ui
+  Histogram/ImageLoader.ui
+  Histogram/ColorPreferences.ui
+  Histogram/HistogramMain.ui
+  Histogram/FitWidget.ui
+  Histogram/PlotControlsWidget.ui
+  Histogram/RangeControlsWidget.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc Feather/Feather.qrc OPTIONS -name Feather )
-
+casa_qt4_add_resources( outfiles_qrc Histogram/Histogram.qrc OPTIONS -name Histogram )
 #include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code
 
 casa_add_library( guitools
@@ -72,8 +86,21 @@ casa_add_library( guitools
   Feather/ExternalAxisWidgetLeft.cc
   Feather/ExternalAxisWidgetRight.cc
   Feather/ExternalAxisWidgetBottom.cc
+  Histogram/ColorPreferences.cc
+  Histogram/HistogramMain.cc
+  Histogram/BinPlotWidget.cc
+  Histogram/ImageLoader.cc
+  Histogram/FitWidget.cc
+  Histogram/HistogramMarkerGaussian.cc
+  Histogram/Fitter.cc
+  Histogram/FitterGaussian.cc
+  Histogram/FitterPoisson.cc
+  Histogram/PlotControlsWidget.cc
+  Histogram/RangeControlsWidget.cc
+  Histogram/RangePicker.cc
   )
 
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )
+casa_add_executable( guitools casahistogram apps/casahistogram/casahistogram.cc)
 #casa_add_assay( display DisplayEvents/test/tDisplayEvent.cc )
 

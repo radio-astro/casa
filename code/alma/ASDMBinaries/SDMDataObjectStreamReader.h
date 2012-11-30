@@ -7,7 +7,7 @@
 #include <vector>
 #include <map>
 #include <set>
-
+#include <bitset>
 #include <boost/algorithm/string.hpp>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -71,6 +71,12 @@ namespace asdmbinaries {
      * @return a string.
      */
     string title() const;
+
+    /**
+     * Returns the byte order of the SDMDataObject.
+     * @return a pointer to a ByteOrder instance.
+     */
+    const ByteOrder* byteOrder() const ;
 
     /**
      * Returns the start time.
@@ -262,6 +268,9 @@ namespace asdmbinaries {
      * @return const vector<SDMDataSubset>& 
      */
     const vector<SDMDataSubset>& allRemainingSubsets();
+
+    enum BINATTACHCODES {ACTUALDURATIONS=0, ACTUALTIMES=1, AUTODATA=2, FLAGS=3, CROSSDATA=4, ZEROLAGS=5};
+    bitset<6> attachmentFlags;
 
   private:
     // Enumerations to manage the state of an instance of SDMDataObjectStreamReader.

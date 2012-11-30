@@ -198,7 +198,8 @@ class ASDM2MSFiller
                const string& telName, 
                int maxNumCorr,
                int maxNumChan,
-               bool withCorrectedData=false);
+               bool withCorrectedData=false,
+	       bool useAsdmStMan4DATA=false);
 
   const char** getPolCombinations(int numCorr);
     
@@ -214,7 +215,8 @@ class ASDM2MSFiller
                  const string&  telName, 
                  int            intintmaxNumCorr,
                  int            maxNumChan,
-		 bool		withCorrectedData=false);
+		 bool		withCorrectedData=false,
+		 bool           useAsdmStMan4DATA=false);
   
   // Destructor
   ~ASDM2MSFiller();
@@ -230,6 +232,26 @@ class ASDM2MSFiller
 		 double		 offset_y_,
 		 double		 offset_z_,
 		 float		 dish_diam_);
+
+
+  void addData (bool                      complexData,
+		vector<double>            &time_,
+		vector<int>               &antennaId1_,
+		vector<int>               &antennaId2_,
+		vector<int>               &feedId1_,
+		vector<int>               &feedId2_,
+		vector<int>               &dataDescId_,
+		int                       processorId_,
+		int                       fieldId_,
+		vector<double>            &interval_,
+		vector<double>            &exposure_,
+		vector<double>            &timeCentroid_,
+		int                       scanNumber_,
+		int                       arrayId_,
+		int                       observationId_,
+		vector<int>               &stateId_,
+		vector<pair<int, int> >   &nChanNPol_,
+		vector<double>            &uvw_);
 
   void addData (bool                      complexData,
 		vector<double>            &time_,

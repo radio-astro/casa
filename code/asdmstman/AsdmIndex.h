@@ -69,7 +69,8 @@ struct AsdmIndex
 
   // Get number of rows spanned by the data blocks.
   uInt nrow() const
-    { return nBl*nSpw; }
+  //{ return nBl*nSpw; } 
+  { return nBl; } 
 
   //# Data members.
   uInt  fileNr;
@@ -78,6 +79,7 @@ struct AsdmIndex
   Int64 row;
   vector<double> scaleFactors;    //# crossdata scale factor per spw
   Int64 fileOffset;
+  uInt  blockOffset;
   Short dataType;       //# data type: 0=short 1=int32 3=float cross data
   //                                   10=auto 11=wvr? 12=zerolags
 };
@@ -86,6 +88,8 @@ struct AsdmIndex
   // <group>
   AipsIO& operator<< (AipsIO&, const AsdmIndex&);
   AipsIO& operator>> (AipsIO&, AsdmIndex&);
+
+  std::ostream& operator<<(std::ostream& os, const AsdmIndex& ix);
 
 
 } //# end namespace

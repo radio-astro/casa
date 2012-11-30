@@ -147,7 +147,6 @@ void UvwCoords::uvw_an( double                        timeCentroid,
 
 
 void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool reverse,  vector<Vector<casa::Double> >& v_uvw ){
-
   Vector<casa::Double> uvw; uvw.resize(3);
   Vector<casa::Double> uvw_i, uvw_j;
 
@@ -160,7 +159,7 @@ void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool 
       ritb=v_antennaId.rbegin(),
       rite=v_antennaId.rend();
     rit=ritb;
-    rit_ie = rite--;
+    rit_ie = rite-1; // Michel Caillat replace rite-- by rite-1 the 23rd of Nov 2012
     while( rit!=rit_ie ){
       rit_i=rit;
       rit++;

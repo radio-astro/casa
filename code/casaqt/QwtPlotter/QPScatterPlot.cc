@@ -481,7 +481,7 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
             QRect rect(0, 0, size.width(), size.height());
             size = ((QwtSymbol&)m_maskedSymbol).size();
             QRect mRect(0, 0, size.width(), size.height());
-                        
+
             for(unsigned int i = drawIndex; i < n; i++) {
                 m_maskedData->xyAndMaskAt(i, tempx, tempy, mask);
                 if(drawSymbol && !mask) {
@@ -503,7 +503,7 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                         p->setPen(
                             m_coloredBrushes[m_coloredData->binAt(i)].color());
                     }
-                    m_symbol.draw(p, mRect);
+                    m_maskedSymbol.draw(p, mRect);
                 }
             }
 

@@ -69,7 +69,7 @@ namespace casa {
     // This is version 1 of the index.
     os << Short(1) << ix.dataType << ix.fileNr
        << ix.nBl << ix.nSpw << ix.nChan << ix.nPol
-       << ix.stepBl << ix.stepSpw << ix.row << ix.fileOffset;
+       << ix.stepBl << ix.stepSpw << ix.row << ix.fileOffset << ix.blockOffset;
     os.put (ix.scaleFactors);
     return os;
   }
@@ -79,9 +79,30 @@ namespace casa {
     Short version;
     os >> version >> ix.dataType >> ix.fileNr;
     os >> ix.nBl >> ix.nSpw >> ix.nChan >> ix.nPol
-       >> ix.stepBl >> ix.stepSpw >> ix.row >> ix.fileOffset;
+       >> ix.stepBl >> ix.stepSpw >> ix.row >> ix.fileOffset >> ix.blockOffset;
     os.get (ix.scaleFactors);
     return os;
   }
+
+  std::ostream& operator<<(std::ostream& os, const AsdmIndex& ix) {
+    cout << Short(1)
+	 <<":"  << ix.dataType
+	 << ":" << ix.fileNr
+	 << ":" << ix.nBl
+	 << ":" << ix.nSpw
+	 << ":" << ix.nChan
+	 << ":" << ix.nPol
+	 << ":" << ix.stepBl
+	 << ":" << ix.stepSpw
+	 << ":" << ix.row
+	 << ":" << ix.fileOffset
+	 << ":" << ix.blockOffset;
+    cout << ":";
+    for (unsigned int i = 0; i < ix.scaleFactors.size(); i++)
+      cout << ix.scaleFactors[i] << " ";
+    
+    return os;
+  }
+
 
 } //# end namespace

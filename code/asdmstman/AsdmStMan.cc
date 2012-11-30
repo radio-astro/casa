@@ -285,8 +285,13 @@ const AsdmIndex& AsdmStMan::findIndex (Int64 rownr)
 void AsdmStMan::getShort (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 {
   // Get pointer to the data in the block.
-  Short* data = (reinterpret_cast<Short*>(&(itsData[0])) +
-                 2 * (spw*ix.stepSpw + bl*ix.stepBl));
+  //Short* data = (reinterpret_cast<Short*>(&(itsData[0])) +
+  //             2 * (spw*ix.stepSpw + bl*ix.stepBl));
+  Short* data = (reinterpret_cast<Short*>(&itsData[0]));
+  data = data + 2 * ix.blockOffset + 2 * bl * ix.stepBl ;  // Michel Caillat - 21  Nov 2012
+
+  //cout << "getShort works at this adress : " << (unsigned long long int) data << endl;
+
   if (itsDoSwap) {
     Short real,imag;
     for (uInt j=0; j<ix.nChan; ++j) {
@@ -312,8 +317,10 @@ void AsdmStMan::getShort (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 void AsdmStMan::getInt (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 {
   // Get pointer to the data in the block.
-  Int* data = (reinterpret_cast<Int*>(&(itsData[0])) +
-               2 * (spw*ix.stepSpw + bl*ix.stepBl));
+  //Int* data = (reinterpret_cast<Int*>(&(itsData[0])) +
+  //           2 * (spw*ix.stepSpw + bl*ix.stepBl));
+  Int* data = (reinterpret_cast<Int*>(&(itsData[0])));
+  data = data + 2 * ix.blockOffset + 2 * bl * ix.stepBl;   // 21 Nov 2012 - Michel Caillat
   if (itsDoSwap) {
     Int real,imag;
     for (uInt j=0; j<ix.nChan; ++j) {
@@ -339,8 +346,10 @@ void AsdmStMan::getInt (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 void AsdmStMan::getFloat (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 {
   // Get pointer to the data in the block.
-  Float* data = (reinterpret_cast<Float*>(&(itsData[0])) +
-                 2 * (spw*ix.stepSpw + bl*ix.stepBl));
+  //  Float* data = (reinterpret_cast<Float*>(&(itsData[0])) +
+  //             2 * (spw*ix.stepSpw + bl*ix.stepBl));
+  Float* data = (reinterpret_cast<Float*>(&(itsData[0])));
+  data = data + 2 * ix.blockOffset + 2 * bl * ix.stepBl;   // 21 Nov 2012 Michel Caillat
   if (itsDoSwap) {
     Float real,imag;
     for (uInt j=0; j<ix.nChan; ++j) {
@@ -366,8 +375,11 @@ void AsdmStMan::getFloat (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 void AsdmStMan::getAuto (const AsdmIndex& ix, Complex* buf, uInt bl, uInt spw)
 {
   // Get pointer to the data in the block.
-  Float* data = (reinterpret_cast<Float*>(&(itsData[0])) +
-                 spw*ix.stepSpw + bl*ix.stepBl);
+  //  Float* data = (reinterpret_cast<Float*>(&(itsData[0])) +
+  //             spw*ix.stepSpw + bl*ix.stepBl);
+  Float* data = (reinterpret_cast<Float*>(&(itsData[0])));
+  data = data + ix.blockOffset + bl * ix.stepBl;   // 21 Nov 2012 . Michel Caillat replaced the 
+
   // The autocorr can have 1, 2, 3 or 4 npol.
   // 1 and 2 are XX and/or YY which are real numbers.
   // 3 are all 4 pols with XY a complex number and YX=conj(XY).
@@ -446,6 +458,7 @@ IPosition AsdmStMan::getShape (uInt rownr)
 void AsdmStMan::getData (uInt rownr, Complex* buf)
 {
   const AsdmIndex& ix = findIndex (rownr);
+
   // Open the BDF if needed.
   if (Int(ix.fileNr) != itsOpenBDF) {
     closeBDF();
@@ -461,8 +474,11 @@ void AsdmStMan::getData (uInt rownr, Complex* buf)
   }
   // Determine the spw and baseline from the row.
   // The rows are stored in order of spw,baseline.
-  uInt spw = (rownr - ix.row) / ix.nBl;
+  uInt spw = 0 ; // 19 Nov 2012 : Michel Caillat changed this assignement : (rownr - ix.row) / ix.nBl;
   uInt bl  = (rownr - ix.row) - spw*ix.nBl;
+  //if (rownr >= 110 && rownr <= 113) {
+  //  cout << "rownr = " << rownr << ", bl = " << bl << ", ix = " << ix << endl;
+  //}
   switch (ix.dataType) {
   case 0:
     getShort (ix, buf, bl, spw);
