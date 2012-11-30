@@ -75,6 +75,12 @@
 
 namespace casa { 
 
+const QString QtProfile::PLOT_TYPE_FLUX = "Flux Density";
+const QString QtProfile::PLOT_TYPE_MEAN = "Mean";
+const QString QtProfile::PLOT_TYPE_MEDIAN = "Median";
+const QString QtProfile::PLOT_TYPE_SUM = "Sum";
+
+
 QtProfile::~QtProfile()
 {
 
@@ -102,6 +108,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
 	setBackgroundRole(QPalette::Dark);
 
+	plotMode->addItem( PLOT_TYPE_MEAN );
+	plotMode->addItem( PLOT_TYPE_MEDIAN );
+	plotMode->addItem( PLOT_TYPE_SUM );
+	plotMode->addItem( PLOT_TYPE_FLUX );
 	fillPlotTypes(img);
 	connect(plotMode, SIGNAL(currentIndexChanged(const QString &)),
 			this, SLOT(changePlotType(const QString &)));
@@ -1542,11 +1552,11 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 
 	if (plotMode->count() <1 ){
 		// fill the plot types
-		plotMode->addItem("mean");
-		plotMode->addItem("median");
-		plotMode->addItem("sum");
+		plotMode->addItem( PLOT_TYPE_MEAN );
+		plotMode->addItem( PLOT_TYPE_MEDIAN );
+		plotMode->addItem( PLOT_TYPE_SUM );
 		if (allowFlux)
-			plotMode->addItem("flux");
+			plotMode->addItem( PLOT_TYPE_FLUX );
 
 		// read the preferred plot mode from casarc
 		QString pref_plotMode = read(".plot.type");
@@ -1563,12 +1573,12 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 	else{
 		// add/remove "flux" if necessary
 		if (allowFlux){
-			if (plotMode->findText("flux")<0)
-				plotMode->addItem("flux");
+			if (plotMode->findText( PLOT_TYPE_FLUX )<0)
+				plotMode->addItem( PLOT_TYPE_FLUX );
 		}
 		else{
-			if (plotMode->findText("flux") > -1)
-				plotMode->removeItem(plotMode->findText("flux"));
+			if (plotMode->findText( PLOT_TYPE_FLUX ) > -1)
+				plotMode->removeItem(plotMode->findText( PLOT_TYPE_FLUX ));
 		}
 	}
 
@@ -1629,13 +1639,13 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 void QtProfile::stringToPlotType(const QString &text, QtProfile::PlotType &pType){
 	*itsLog << LogOrigin("QtProfile", "stringToPlotType");
 
-	if (!text.compare(QString("mean")))
+	if (!text.compare(QString( PLOT_TYPE_MEAN )))
 		pType = QtProfile::PMEAN;
-	else if (!text.compare(QString("median")))
+	else if (!text.compare(QString( PLOT_TYPE_MEDIAN )))
 		pType = QtProfile::PMEDIAN;
-	else if (!text.compare(QString("sum")))
+	else if (!text.compare(QString( PLOT_TYPE_SUM )))
 		pType = QtProfile::PSUM;
-	else if (!text.compare(QString("flux")))
+	else if (!text.compare(QString( PLOT_TYPE_FLUX )))
 		pType = QtProfile::PFLUX;
 	//else if (!text.compare(QString("rmse")))
 	//	pType = QtProfile::PVRMSE;

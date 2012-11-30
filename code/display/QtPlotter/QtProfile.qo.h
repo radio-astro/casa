@@ -324,6 +324,11 @@ private:
    Int ordersOfM_;
    Bool newCollapseVals;
 
+   static const QString PLOT_TYPE_FLUX;
+   static const QString PLOT_TYPE_MEAN;
+   static const QString PLOT_TYPE_MEDIAN;
+   static const QString PLOT_TYPE_SUM;
+
    class spectra_info {
    public:
    	spectra_info( ) { }
