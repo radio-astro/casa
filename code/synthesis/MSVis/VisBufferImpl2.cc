@@ -461,6 +461,7 @@ public:
     VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
     VbCacheItemArray <Vector<Int> > corrType_p;
     VbCacheItem <Int> dataDescriptionId_p;
+    VbCacheItemArray <Vector<Int> > dataDescriptionIds_p;
     VbCacheItemArray <Vector<MDirection> > direction1_p; //where the first antenna/feed is pointed to
     VbCacheItemArray <Vector<MDirection> > direction2_p; //where the second antenna/feed is pointed to
     VbCacheItemArray <Vector<Double> > exposure_p;
@@ -643,6 +644,7 @@ VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
                                       VisibilityCorrected, NcNfNr, False);
     corrType_p.initialize (vb, &VisBufferImpl2::fillCorrType, CorrType);
     dataDescriptionId_p.initialize (vb, &VisBufferImpl2::fillDataDescriptionId, DataDescriptionId);
+    dataDescriptionIds_p.initialize (vb, &VisBufferImpl2::fillDataDescriptionIds, DataDescriptionIds);
     direction1_p.initialize (vb, &VisBufferImpl2::fillDirection1, Direction1);
     direction2_p.initialize (vb, &VisBufferImpl2::fillDirection2, Direction2);
     exposure_p.initialize (vb, &VisBufferImpl2::fillExposure, Exposure, Nr);
@@ -1615,6 +1617,12 @@ VisBufferImpl2::dataDescriptionId () const
     return cache_p->dataDescriptionId_p.get ();
 }
 
+const Vector<Int> &
+VisBufferImpl2::dataDescriptionIds () const
+{
+	return cache_p->dataDescriptionIds_p.get ();
+}
+
 void
 VisBufferImpl2::setDataDescriptionId (Int value)
 {
@@ -2220,6 +2228,15 @@ VisBufferImpl2::fillDataDescriptionId  (Int& value) const
 
   value = getViP()->dataDescriptionId ();
 }
+
+void
+VisBufferImpl2::fillDataDescriptionIds  (Vector<Int>& value) const
+{
+  CheckVisIter ();
+
+  getViP()->dataDescriptionIds (value);
+}
+
 
 void
 VisBufferImpl2::fillDirection1 (Vector<MDirection>& value) const

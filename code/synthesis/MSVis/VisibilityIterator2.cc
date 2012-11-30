@@ -252,6 +252,13 @@ VisibilityIterator2::dataDescriptionId () const
     return impl_p->dataDescriptionId ();
 }
 
+void
+VisibilityIterator2::dataDescriptionIds (Vector<Int>& ddis) const
+{
+    CheckImplementationPointerR ();
+    impl_p->dataDescriptionIds (ddis);
+}
+
 Bool
 VisibilityIterator2::existsColumn (VisBufferComponent2 id) const
 {

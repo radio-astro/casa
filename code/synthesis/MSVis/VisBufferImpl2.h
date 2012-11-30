@@ -244,6 +244,7 @@ public:
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
     virtual const Vector<Int> & correlationTypes () const;
     virtual Int dataDescriptionId () const;
+    virtual const Vector<Int> & dataDescriptionIds () const;
     virtual void setDataDescriptionId (Int value);
     virtual const Vector<MDirection> & direction1 () const;
     virtual const Vector<MDirection> & direction2 () const;
@@ -410,6 +411,7 @@ private:
     virtual void fillCubeModel (Cube <Complex> & value) const;
     virtual void fillCubeObserved (Cube <Complex> & value) const;
     virtual void fillDataDescriptionId  (Int& value) const;
+    virtual void fillDataDescriptionIds  (Vector<Int>& value) const;
     virtual void fillDirection1 (Vector<MDirection>& value) const;
     virtual void fillDirection2 (Vector<MDirection>& value) const;
     virtual void fillDirectionAux (Vector<MDirection>& value,
