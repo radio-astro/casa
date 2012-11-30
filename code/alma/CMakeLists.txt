@@ -708,4 +708,6 @@ casa_add_executable( alma bdflags2MS
 casa_add_assay(alma ASDMBinaries/test/tReadBigBDF.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadAllBDFs.cc)
 casa_add_assay(alma ASDM/test/tTableStreamReader.cc)
+casa_add_assay(alma ASDMBinaries/test/tReadSeqBDFs.cc)
+casa_add_assay(alma ASDMBinaries/test/tReadParBDFs.cc)
 
