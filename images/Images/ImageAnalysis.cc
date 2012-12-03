@@ -127,6 +127,9 @@
 
 #include <memory>
 
+#include <iostream>
+using namespace std;
+
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
@@ -6127,7 +6130,8 @@ Bool ImageAnalysis::getFreqProfile(
 		const Int& whichStokes, const Int& whichTabular,
 		const Int& whichLinear, const String& xunits,
 		const String& specFrame, const Int &combineType,
-		const Int& whichQuality, const String& restValue)
+		const Int& whichQuality, const String& restValue,
+		int centralChannel )
 {
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
@@ -6171,7 +6175,14 @@ Bool ImageAnalysis::getFreqProfile(
         // FIXME we need to deal with multi beam images
 		Double beamArea;
         if (_image->imageInfo().hasBeam()) {
-            beamArea = _image->imageInfo().restoringBeam().getArea(pixArea.getUnit());
+        	GaussianBeam beam;
+        	if ( centralChannel == - 1 ){
+        		beam = _image->imageInfo().restoringBeam( );
+        	}
+        	else {
+        		beam = _image->imageInfo().restoringBeam( centralChannel );
+        	}
+            beamArea = beam.getArea(pixArea.getUnit());
         }
         else {
 		    *_log << LogIO::WARN << "Cannot determine solid angle of beam. Will assume beam==1 pixel"
