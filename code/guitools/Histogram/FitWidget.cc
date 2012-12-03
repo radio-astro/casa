@@ -84,6 +84,11 @@ double FitWidget::getFWHM() const {
 	return fwhmVal;
 }
 
+double FitWidget::getLambda() const {
+	double lambdaVal = ui.poissonLambdaLineEdit->text().toDouble();
+	return lambdaVal;
+}
+
 void FitWidget::setCenterPeak( double center, double peak ){
 	resetFWHM( center );
 	ui.gaussCenterLineEdit->setText( QString::number(center));
@@ -148,8 +153,9 @@ void FitWidget::lambdaEdited( const QString& lambdaText ){
 	}
 }
 
-void FitWidget::setXValues( Vector<Float> dataValues ){
-	xValues = dataValues;
+void FitWidget::setValues( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
+	fitterPoisson->setData( dataValuesX, dataValuesY );
+	fitterGaussian->setData( dataValuesX, dataValuesY );
 }
 
 void FitWidget::fitSelected( int index ){
@@ -176,7 +182,6 @@ Vector<Float> FitWidget::getFitValues(){
 }
 
 void FitWidget::doFit() {
-	fitter->setData( xValues );
 	const QString errorMsg;
 	bool successfulFit = fitter->doFit();
 	if ( successfulFit ){

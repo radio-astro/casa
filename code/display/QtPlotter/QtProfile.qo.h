@@ -252,9 +252,16 @@ private:
    			Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
    void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
    								const Vector<double> &wxv, const Vector<double> &wyv );
+   bool getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+   		Vector<Float> &z_xval, Vector<Float> &z_yval,
+   		const String& xytype, const String& specaxis,
+   		const Int& whichStokes, const Int& whichTabular,
+   		const Int& whichLinear, const String& xunits,
+   		const String& specFrame, const Int &combineType,
+   		const Int& whichQuality, const String& restValue );
    bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
-		   const String& coordinateType, const String& xAxisUnit,
-		   Vector<Float> &z_xval, Vector<Float> &z_yval);
+   		   const String& coordinateType, const String& xAxisUnit,
+   		   Vector<Float> &z_xval, Vector<Float> &z_yval );
    bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
    void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 									const Vector<double> wxv, const Vector<double> wyv );

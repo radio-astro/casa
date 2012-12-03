@@ -726,28 +726,13 @@ void QtProfile::wcChanged( const String c,
 
 	setPositionStatus( pxv,pyv,wxv,wyv );
 
-
 	//Get Profile Flux density v/s coordinateType
-	bool ok = false;
-	try {
-		ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
-	}
-	catch( AipsError& error ){
-		//Currently the flux profile throws an exception for images
-		//with channel-dependent beams.
-		ok = false;
-	}
-	if ( !ok ){
-		QString msg("Computing the flux for this spectral profile is not supported.");
-		Util::showUserMessage( msg, this );
-		return;
-	}
+	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
 
 	ok = setErrorPlotting( wxv, wyv );
 	if ( !ok ){
 		return;
 	}
-
 	// scale for better display
 	Int ordersOfM = scaleAxis();
 
@@ -1859,6 +1844,48 @@ void QtProfile::setPositionStatus(const Vector<double> &pxv, const Vector<double
 	profileStatus->showMessage(position);
 }
 
+bool QtProfile::getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+		Vector<Float> &z_xval, Vector<Float> &z_yval,
+		const String& xytype, const String& specaxis,
+		const Int& whichStokes, const Int& whichTabular,
+		const Int& whichLinear, const String& xunits,
+		const String& specFrame, const Int &combineType,
+		const Int& whichQuality, const String& restValue ){
+	bool ok = false;
+	try {
+		ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+						xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
+						combineType, whichQuality, restValue);
+	}
+	catch( AipsError& error ){
+		//Currently the flux profile throws an exception for images
+		//with channel-dependent beams.
+		ok = false;
+		if ( itsPlotType == QtProfile::PFLUX ){
+		//We will try again, this time using the restoring beam from the
+		//central channel.
+			int channelCount = z_xval.size();
+			int centralChannel = channelCount / 2;
+			try {
+				ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+										xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
+										combineType, whichQuality, restValue, centralChannel);
+				if ( ok ){
+					//Post a warning that flux was calculated using a central channel
+					//and the resulting calculation was only an approximation.
+					String warningMsg( "Calculation was performed using a central channel.\n  The result should be considered an approximation.");
+					postStatus( warningMsg );
+				}
+			}
+			catch( AipsError& error ){
+				//qDebug() << "Could not calculate flux using a central channel";
+			}
+		}
+	}
+	return ok;
+}
+
+
 bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
 		const String& coordinateType, const String& xaxisUnit,
 		Vector<Float> &z_xval, Vector<Float> &z_yval){
@@ -1877,10 +1904,10 @@ bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<
 	case QtProfile::PSUM:
 		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-				(Int)QtProfile::SUM, 0, cSysRval);
+				(Int)QtProfile::SUM, 0, cSysRval );
 		break;
 	case QtProfile::PFLUX:
-		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+		ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_yval,
 				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 				(Int)QtProfile::FLUX, 0, cSysRval);
 		break;
@@ -1961,7 +1988,7 @@ bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double
 						(Int)QtProfile::SQRTSUM, 1, cSysRval);
 				break;
 			case QtProfile::PFLUX:
-				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+				ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_eval,
 						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 						(Int)QtProfile::EFLUX, 1, cSysRval);
 				break;
@@ -2118,9 +2145,9 @@ void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<d
 						(Int)QtProfile::PSUM, 0);
 				break;
 			case QtProfile::PFLUX:
-				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+				ok=getFrequencyProfileWrapper( wxv, wyv, xval, yval,
 						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						(Int)QtProfile::PFLUX, 0);
+						(Int)QtProfile::PFLUX, 0, "");
 				break;
 				//case QtProfile::PVRMSE:
 				//	ok=ana->getFreqProfile( wxv, wyv, xval, yval,

@@ -41,6 +41,7 @@ public:
 	void setCenter( double centerValue );
 	void setFWHM( double fwhmValue );
 	virtual bool doFit();
+	virtual void clearFit();
 	virtual ~FitterGaussian();
 private:
 	double peak;

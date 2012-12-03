@@ -47,10 +47,11 @@ public:
     FitWidget(QWidget *parent = 0);
     void setCenterPeak( double center, double peak );
     void setFWHM( double fwhm );
-    void setXValues( Vector<Float> xValues );
+    void setValues( Vector<Float> xValues, Vector<Float> yValues );
     double getCenter() const;
     double getPeak() const;
     double getFWHM() const;
+    double getLambda() const;
     Vector<Float> getFitValues();
     bool isGaussian() const;
     ~FitWidget();
@@ -74,7 +75,6 @@ private:
 	FitWidget& operator=( const FitWidget& );
 	void resetFWHM( double newCenter );
 	enum FitMode {GAUSSIAN_MODE, POISSON_MODE, NO_MODE };
-	Vector<Float> xValues;
 	Fitter* fitter;
 	FitterGaussian* fitterGaussian;
 	FitterPoisson* fitterPoisson;

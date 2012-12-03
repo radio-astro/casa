@@ -27,13 +27,15 @@
 #include <images/Images/SubImage.h>
 #include <guitools/Histogram/FitWidget.qo.h>
 #include <guitools/Histogram/HistogramMarkerGaussian.h>
-#include <guitools/Histogram/PlotControlsWidget.qo.h>
+#include <guitools/Histogram/HistogramMarkerPoisson.h>
 #include <guitools/Histogram/RangeControlsWidget.qo.h>
+#include <guitools/Histogram/PlotModeWidget.qo.h>
 #include <guitools/Histogram/RangePicker.h>
 
 #include <QDebug>
 #include <QPainter>
 #include <QMessageBox>
+#include <QFile>
 #include <QtCore/qmath.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
@@ -42,12 +44,14 @@
 namespace casa {
 
 
-BinPlotWidget::BinPlotWidget( bool plotControls, bool fitControls, bool rangeControls, QWidget* parent ):
+BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
+		bool /*plotModeControls*/, QWidget* parent ):
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
     histogramMaker( NULL ), image( NULL ), binPlot( this ),
     lambdaAction("Lambda",this), centerPeakAction( "(Center,Peak)",this),
-    fwhmAction( "Center +/- FWHM/2", this), contextMenu(this){
+    fwhmAction( "Center +/- FWHM/2", this), contextMenu(this),
+    stepFunctionAction( "Histogram",this), logAction( "Log(Count)", this) {
 
 	ui.setupUi(this);
 
@@ -60,9 +64,10 @@ BinPlotWidget::BinPlotWidget( bool plotControls, bool fitControls, bool rangeCon
 
 	ui.plotHolder->setLayout( layout );
 
+	initializePlotControls();
 	initializeFitWidget( fitControls );
-	initializePlotControls( plotControls );
 	initializeRangeControls( rangeControls );
+	//initializePlotModeControls( plotModeControls );
 
 	displayPlotTitle = false;
 	displayAxisTitles = false;
@@ -76,8 +81,10 @@ void BinPlotWidget::setAxisLabelFont( int size ){
 }
 
 void BinPlotWidget::setDisplayPlotTitle( bool display ){
-	displayPlotTitle = display;
-	resetPlotTitle();
+	if ( displayPlotTitle != display ){
+		displayPlotTitle = display;
+		resetPlotTitle();
+	}
 }
 
 void BinPlotWidget::setDisplayAxisTitles( bool display ){
@@ -107,12 +114,18 @@ void BinPlotWidget::resetAxisTitles(){
 }
 
 void BinPlotWidget::resetPlotTitle(){
-	if ( displayPlotTitle ){
-
+	QString imageNameStr;
+	if ( image != NULL && displayPlotTitle ){
+		String imageName = image->name(True );
+		imageNameStr = imageName.c_str();
 	}
-	else {
-		binPlot.setTitle( "" );
-	}
+	QwtText titleText = binPlot.title();
+	QFont titleFont = titleText.font();
+	titleFont.setPointSize( 9 );
+	titleFont.setBold( true );
+	titleText.setFont( titleFont );
+	titleText.setText( imageNameStr );
+	binPlot.setTitle( titleText );
 }
 
 void BinPlotWidget::setHistogramColor( QColor color ){
@@ -146,25 +159,21 @@ void BinPlotWidget::setFitCurveColor( QColor color ){
 }
 
 //-------------------------------------------------------------------------------
-//                            Plot Controls
+//                            Display Settings
 //-------------------------------------------------------------------------------
 
-void BinPlotWidget::initializePlotControls( bool plotControls ){
+void BinPlotWidget::initializePlotControls(){
 	displayStep = true;
 	displayLog = false;
-	if ( plotControls ){
-		plotControlsWidget = new PlotControlsWidget( this );
-		QHBoxLayout* layout = new QHBoxLayout();
-		layout->addWidget( plotControlsWidget );
-		ui.plotControlsHolder->setLayout( layout );
-		plotControlsWidget->setDisplayStep( displayStep );
-		plotControlsWidget->setDisplayLogs( displayLog );
-		connect( plotControlsWidget, SIGNAL(displayLogChanged(bool)), this, SLOT(setDisplayLog(bool)));
-		connect( plotControlsWidget, SIGNAL(displayStepChanged(bool)), this, SLOT(setDisplayStep( bool)));
-	}
-	else {
-		plotControlsWidget = NULL;
-	}
+	logAction.setCheckable( true );
+	logAction.setChecked( displayLog );
+	stepFunctionAction.setCheckable( true );
+	stepFunctionAction.setChecked( displayStep );
+	contextMenu.addAction( &logAction );
+	contextMenu.addAction( &stepFunctionAction );
+	contextMenu.addSeparator();
+	connect( &logAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayLog(bool)));
+	connect( &stepFunctionAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayStep(bool)));
 }
 
 void BinPlotWidget::setDisplayStep( bool display ){
@@ -247,7 +256,9 @@ pair<double,double> BinPlotWidget::getMinMaxValues() const {
 
 void BinPlotWidget::clearFitMarkers(){
 	delete fitEstimateMarkerGaussian;
+	delete fitEstimateMarkerPoisson;
 	fitEstimateMarkerGaussian = NULL;
+	fitEstimateMarkerPoisson = NULL;
 }
 
 void BinPlotWidget::initializeGaussianFitMarker(){
@@ -256,10 +267,17 @@ void BinPlotWidget::initializeGaussianFitMarker(){
 	fitEstimateMarkerGaussian->setColor( fitEstimateColor );
 }
 
+void BinPlotWidget::initializePoissonFitMarker(){
+	fitEstimateMarkerPoisson = new HistogramMarkerPoisson();
+	fitEstimateMarkerPoisson->attach( &binPlot );
+	fitEstimateMarkerPoisson->setColor( fitEstimateColor );
+}
+
 
 void BinPlotWidget::initializeFitWidget( bool fitControls ){
 	fitCurve = NULL;
 	fitEstimateMarkerGaussian = NULL;
+	fitEstimateMarkerPoisson = NULL;
 	if ( fitControls ){
 		QVBoxLayout* fitLayout = new QVBoxLayout();
 		fitWidget = new FitWidget( this );
@@ -272,6 +290,7 @@ void BinPlotWidget::initializeFitWidget( bool fitControls ){
 		connect( fitWidget, SIGNAL(fitModeChanged()), this, SLOT(fitModeChanged()));
 		connect( fitWidget, SIGNAL(dataFitted()), this, SLOT(fitDone()));
 		connect( fitWidget, SIGNAL(gaussianFitChanged()), this, SLOT(resetGaussianFitMarker()));
+		connect( fitWidget, SIGNAL(poissonFitChanged()), this, SLOT(resetPoissonFitMarker()));
 		connect( &centerPeakAction, SIGNAL(triggered()), this, SLOT(centerPeakSpecified()));
 		connect( &fwhmAction, SIGNAL(triggered()), this, SLOT(fwhmSpecified()));
 		connect( &lambdaAction, SIGNAL(triggered()), this, SLOT(lambdaSpecified()));
@@ -318,11 +337,19 @@ void BinPlotWidget::fwhmSpecified(){
 }
 
 void BinPlotWidget::lambdaSpecified(){
-	qDebug() << "No support yet for specifying lambda";
+	if ( fitEstimateMarkerPoisson == NULL ){
+		initializePoissonFitMarker();
+	}
+	int pixelX = fitPosition.x();
+	fitEstimateMarkerPoisson->setLambda( pixelX );
+	fitEstimateMarkerPoisson->show();
+	binPlot.replot();
 }
 
 void BinPlotWidget::fitModeChanged(){
-	contextMenu.clear();
+	contextMenu.removeAction( &centerPeakAction );
+	contextMenu.removeAction( &fwhmAction );
+	contextMenu.removeAction( &lambdaAction );
 	if ( fitWidget->isGaussian() ){
 		contextMenu.addAction(&centerPeakAction );
 		contextMenu.addAction( &fwhmAction );
@@ -378,6 +405,15 @@ void BinPlotWidget::resetGaussianFitMarker(){
 		int peakPixel = binPlot.transform( QwtPlot::yLeft, peakValue );
 		fitEstimateMarkerGaussian->setCenterPeak( centerPixel, peakPixel );
 		fitEstimateMarkerGaussian->setFWHM( fwhmPixel, peakPixel/2 );
+		binPlot.replot();
+	}
+}
+
+void BinPlotWidget::resetPoissonFitMarker(){
+	if ( this->fitEstimateMarkerPoisson != NULL ){
+		double lambdaValue = fitWidget->getLambda();
+		int lambdaPixel = binPlot.transform( QwtPlot::xBottom, lambdaValue );
+		fitEstimateMarkerPoisson->setLambda( lambdaPixel );
 		binPlot.replot();
 	}
 }
@@ -491,6 +527,7 @@ bool BinPlotWidget::setImageRegion( const ImageRegion& region ){
 
 bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 	image = img;
+
 	bool success = false;
 	if ( img != NULL ){
 		if ( histogramMaker == NULL ){
@@ -501,6 +538,9 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 			histogramMaker->setNewImage( *img );
 		}
 		success = makeHistogram();
+		if ( success ){
+			this->resetPlotTitle();
+		}
 	}
 	return success;
 }
@@ -516,7 +556,7 @@ bool BinPlotWidget::makeHistogram(){
 		defineCurve();
 		setValidatorLimits();
 		if ( fitWidget != NULL ){
-			fitWidget->setXValues( xVector );
+			fitWidget->setValues( xVector, yVector );
 		}
 		update();
 	}
@@ -563,6 +603,7 @@ void BinPlotWidget::resizeEvent( QResizeEvent* event ){
 	QWidget::resizeEvent( event );
 	rectangleSizeChanged();
 	resetGaussianFitMarker();
+	resetPoissonFitMarker();
 }
 
 void BinPlotWidget::rectangleSizeChanged(){
@@ -624,6 +665,43 @@ int BinPlotWidget::getCanvasHeight() {
 	QSize canvasSize = canvas->size();
 	int height = canvasSize.height();
 	return height;
+}
+
+//--------------------------------------------------------------------------
+//                      Saving the File
+//--------------------------------------------------------------------------
+
+void BinPlotWidget::toAscii( const QString& filePath ){
+	QFile file( filePath );
+	bool success = file.open( QIODevice::WriteOnly | QIODevice::Text );
+	if ( success ){
+		QTextStream out( &file );
+		for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
+			const int LEN = 30;
+			QString xStr = QString::number( xVector[i]);
+			xStr.fill( LEN - xStr.length());
+			out << xStr << QString::number( yVector[i]);
+		}
+		file.close();
+	}
+	else {
+		QMessageBox::warning( this, "Save Problem", "There was a problem saving the image.\nPlease check the file path.");
+	}
+}
+void BinPlotWidget::toPing( const QString& filePath ){
+
+	QPixmap pixmap;
+	pixmap.fill(Qt::white );
+	QwtPlotPrintFilter filter;
+	int options = QwtPlotPrintFilter::PrintFrameWithScales | QwtPlotPrintFilter::PrintBackground;
+	filter.setOptions( options );
+	binPlot.print( pixmap );
+	bool imageSaved = pixmap.save( filePath, "png");
+	//qDebug() << "Image saved="<<imageSaved;
+	if ( !imageSaved ){
+		QString msg("There was a problem saving the histogram.\nPlease check the file path.");
+		QMessageBox::warning( this, "Save Problem", msg);
+	}
 }
 
 BinPlotWidget::~BinPlotWidget(){

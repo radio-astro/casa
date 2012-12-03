@@ -41,7 +41,7 @@
         <widget class="QWidget" name="widget" native="true"/>
        </item>
        <item>
-        <widget class="QWidget" name="plotControlsHolder" native="true">
+        <widget class="QWidget" name="plotModeHolder" native="true">
          <property name="minimumSize">
           <size>
            <width>10</width>

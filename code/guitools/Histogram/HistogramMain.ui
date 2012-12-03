@@ -34,6 +34,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionImageFile"/>
+   <addaction name="actionSave"/>
    <addaction name="actionColor"/>
   </widget>
   <action name="actionImageFile">
@@ -58,6 +59,18 @@
    </property>
    <property name="toolTip">
     <string>Specify color preferences for the histogram.</string>
+   </property>
+  </action>
+   <action name="actionSave">
+   <property name="icon">
+    <iconset>
+     <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save the histogram.</string>
+   </property>
+   <property name="toolTip">
+    <string>Save the histogram.</string>
    </property>
   </action>
  </widget>

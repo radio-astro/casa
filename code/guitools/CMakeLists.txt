@@ -48,8 +48,9 @@ qt4_wrap_cpp( outfiles_qoh
   Histogram/ColorPreferences.qo.h
   Histogram/HistogramMain.qo.h
   Histogram/FitWidget.qo.h
-  Histogram/PlotControlsWidget.qo.h
   Histogram/RangeControlsWidget.qo.h
+  Histogram/PlotModeWidget.qo.h
+  Histogram/SaveHistogramWidget.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -64,8 +65,9 @@ casa_qt4_wrap_ui( outfiles_ui
   Histogram/ColorPreferences.ui
   Histogram/HistogramMain.ui
   Histogram/FitWidget.ui
-  Histogram/PlotControlsWidget.ui
   Histogram/RangeControlsWidget.ui
+  Histogram/PlotModeWidget.ui
+  Histogram/SaveHistogramWidget.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc Feather/Feather.qrc OPTIONS -name Feather )
@@ -92,12 +94,14 @@ casa_add_library( guitools
   Histogram/ImageLoader.cc
   Histogram/FitWidget.cc
   Histogram/HistogramMarkerGaussian.cc
+  Histogram/HistogramMarkerPoisson.cc
   Histogram/Fitter.cc
   Histogram/FitterGaussian.cc
   Histogram/FitterPoisson.cc
-  Histogram/PlotControlsWidget.cc
   Histogram/RangeControlsWidget.cc
   Histogram/RangePicker.cc
+  Histogram/SaveHistogramWidget.cc
+  Histogram/PlotModeWidget.cc
   )
 	
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )

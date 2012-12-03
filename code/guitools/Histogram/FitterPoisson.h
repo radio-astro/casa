@@ -38,8 +38,10 @@ public:
 	FitterPoisson();
 	void setLambda( double value );
 	virtual bool doFit();
+	virtual void clearFit();
 	virtual ~FitterPoisson();
 private:
+	bool lambdaSpecified;
 	double lambda;
 };
 
