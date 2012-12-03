@@ -279,7 +279,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	initAnimationHolder();
 	string animloc = addAnimationDockWidget();
 
-	bool showExampleHistogram = true;
+	bool showExampleHistogram = false;
 	if ( showExampleHistogram ){
 		histogramDockWidget_ = new QDockWidget();
 		histogramDockWidget_ ->setObjectName( "Histogram");
