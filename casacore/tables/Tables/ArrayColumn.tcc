@@ -641,7 +641,7 @@ template<class T>
 ArrayColumn<T>::ArrayColumn (const Table& tab, const String& columnName, Bool isWritable)
 : ROTableColumn    (tab, columnName),
   ROArrayColumn<T> (tab, columnName),
-  TableColumn      (tab, columnName),
+  TableColumn      (tab, columnName, isWritable),
   isWritable_p (isWritable)
 {}
 

@@ -1376,7 +1376,7 @@ Bool LatticeStatistics<T>::getLayerStats(
 
 	if ( area > 0 ) {
 	    sprintf( buffer, "%e", sum / area );
-	    stats.push_back(stat_element("Flux",buffer));
+	    stats.push_back(stat_element("FluxDensity",buffer));
 	}
 
 	sprintf( buffer, "%e", mean );
@@ -1494,7 +1494,7 @@ Bool LatticeStatistics<T>::getLayerStats(
 
 		    if (area > 0) {
 			sprintf( buffer, "%e", ord.column(FLUX)(j) );
-			stats.push_back(stat_element("Flux",buffer));
+			stats.push_back(stat_element("FluxDensity",buffer));
 		    }
 
 		    sprintf( buffer, "%e", ord.column(MEAN)(j) );
