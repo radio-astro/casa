@@ -7,6 +7,8 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 
+using namespace casa::utilj;
+
 namespace casa {
 
 namespace vi {

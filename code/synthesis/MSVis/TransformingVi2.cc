@@ -31,6 +31,7 @@
 //#include <tables/Tables/ArrayColumn.h>
 //#include <tables/Tables/ScalarColumn.h>
 
+using namespace casa::utilj;
 
 namespace casa {
 
