@@ -44,8 +44,10 @@ def is_scantable(filename):
         f=open(filename+'/table.info')
         l=f.readline()
         f.close()
-        #if ( l.find('Scantable') != -1 ):
-        if ( l.find('Measurement Set') == -1 ):
+        if ( l.find('Scantable') != -1 ):
+            return True
+        elif ( l.find('Measurement Set') == -1 and 
+               l.find('Image') == -1 ):
             return True
         else:
             return False

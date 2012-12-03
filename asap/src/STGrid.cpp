@@ -2040,6 +2040,7 @@ void STGrid::fillMainColumns( Table &tab )
   // fill columns
   Int nrow = tab.nrow() ;
   ScalarColumn<uInt> ifnoCol( tab, "IFNO" ) ;
+  ScalarColumn<uInt> beamnoCol(tab, "BEAMNO");
   ScalarColumn<uInt> freqIdCol( tab, "FREQ_ID" ) ;
   ScalarColumn<uInt> molIdCol( tab, "MOLECULE_ID" ) ;
   ScalarColumn<uInt> tcalidCol( tab, "TCAL_ID" ) ;
@@ -2061,6 +2062,7 @@ void STGrid::fillMainColumns( Table &tab )
   ScalarColumn<Double> intervalCol( tab, "INTERVAL" ) ;
   for ( Int i = 0 ; i < nrow ; i++ ) {
     ifnoCol.put( i, (uInt)ifno_ ) ;
+    beamnoCol.put(i, 0);
     freqIdCol.put( i, freqId ) ;
     molIdCol.put( i, molId ) ;
     tcalidCol.put( i, tcalId ) ;
