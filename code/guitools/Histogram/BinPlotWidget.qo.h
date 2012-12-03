@@ -29,6 +29,7 @@
 #include <QMenu>
 #include <guitools/Histogram/BinPlotWidget.ui.h>
 #include <guitools/Histogram/HeightSource.h>
+#include <images/Regions/ImageRegion.h>
 #include <casa/aips.h>
 #include <qwt_plot.h>
 #include <qwt_plot_picker.h>
@@ -68,11 +69,18 @@ class BinPlotWidget : public QWidget, public HeightSource {
 public:
     BinPlotWidget( bool plotControls, bool fitControls, bool rangeControls, QWidget* parent = 0 );
     bool setImage( ImageInterface<Float>* img );
+    bool setImageRegion( const ImageRegion& imageRegion );
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
     virtual int getCanvasHeight();
+
+    //Customizing the display
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
+    void setHistogramColor( QColor color );
+    void setFitEstimateColor( QColor color );
+    void setFitCurveColor( QColor color );
+    void setAxisLabelFont( int size );
     ~BinPlotWidget();
 
 public slots:
@@ -102,7 +110,7 @@ private:
 	void initializePlotControls( bool plotControls );
 	void initializeGaussianFitMarker();
 	void initializeRangeControls( bool rangeControls);
-
+	bool makeHistogram();
 	void rectangleSizeChanged();
 	void resetAxisTitles();
 	void resetPlotTitle();
@@ -123,12 +131,15 @@ private:
 
     QColor curveColor;
     QColor selectionColor;
+    QColor fitEstimateColor;
+    QColor fitCurveColor;
 
     //Histogram & data
     vector<float> xVector;
     vector<float> yVector;
     QList<QwtPlotCurve*> curves;
     ImageHistograms<Float>* histogramMaker;
+    ImageInterface<Float>* image;
     QwtPlot binPlot;
 
     //Specifying a range with the histogram

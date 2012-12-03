@@ -52,6 +52,8 @@
 #include <display/QtViewer/Preferences.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
+#include <guitools/Histogram/BinPlotWidget.qo.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	namespace viewer {
@@ -80,6 +82,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   controlling_dd(0), preferences(0), regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True) {
 
+	binPlotWidget = NULL;
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
 	animationHolder = NULL;
@@ -270,6 +273,15 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	animDockWidget_->setWindowTitle("Animator");
 	initAnimationHolder();
 	string animloc = addAnimationDockWidget();
+
+	bool showExampleHistogram = false;
+	if ( showExampleHistogram ){
+		histogramDockWidget_ = new QDockWidget();
+		histogramDockWidget_ ->setObjectName( "Histogram");
+		histogramDockWidget_->setWindowTitle( "Histogram");
+		initHistogramHolder();
+		string histloc = addHistogramDockWidget();
+	}
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 	std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
@@ -607,6 +619,17 @@ string QtDisplayPanelGui::addAnimationDockWidget(){
 	return animloc;
 }
 
+string QtDisplayPanelGui::addHistogramDockWidget(){
+	std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
+	std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
+	addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
+		animloc == "left" ? Qt::LeftDockWidgetArea :
+		animloc == "top" ? Qt::TopDockWidgetArea :
+		Qt::BottomDockWidgetArea, histogramDockWidget_, Qt::Vertical );
+	histogramDockWidget_->setWidget( binPlotWidget );
+	return animloc;
+}
+
 void QtDisplayPanelGui::initAnimationHolder(){
 	if ( animationHolder == NULL ){
 		animationHolder = new AnimatorHolder( this );
@@ -634,6 +657,26 @@ void QtDisplayPanelGui::initAnimationHolder(){
 	}
 }
 
+void QtDisplayPanelGui::initHistogramHolder(){
+	if ( binPlotWidget == NULL ){
+		binPlotWidget = new BinPlotWidget( false, false, false, this );
+		binPlotWidget->setMaximumSize( 400, 300 );
+		connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SLOT(updateHistogram(viewer::QtRegion*,std::string)));
+	}
+}
+
+void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, std::string /*str*/ ){
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	if ( rdds.len() > 0 ){
+		ListIter<QtDisplayData*> iter(rdds );
+		QtDisplayData* rdd = iter.getRight();
+		ImageInterface<float>* img = rdd->imageInterface();
+		binPlotWidget->setImage( img );
+		DisplayData* dd = rdd->dd();
+		ImageRegion* imageRegion = qtRegion->getImageRegion(dd);
+		binPlotWidget->setImageRegion( *imageRegion );
+	}
+}
 
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {

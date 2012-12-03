@@ -41,11 +41,30 @@ class ColorPreferences : public QDialog {
 
 public:
     ColorPreferences(QWidget *parent = 0);
+    QColor getHistogramColor() const;
+    QColor getFitEstimateColor() const;
+    QColor getFitCurveColor() const;
     ~ColorPreferences();
+
+signals:
+	void colorsChanged();
+
+private slots:
+	void colorsAccepted();
+	void colorsRejected();
+	void selectHistogramColor();
+	void selectFitCurveColor();
+	void selectFitEstimateColor();
 
 private:
     void initializeUserColors();
     QString readCustomColor( QSettings& settings, const QString& identifier);
+    void setButtonColor( QPushButton* button, QColor color );
+    QColor getButtonColor( QPushButton* button ) const;
+    void showColorDialog( QPushButton* source );
+    void persistColors();
+    void resetColors();
+
     QColor histogramColor;
     QColor fitEstimateColor;
     QColor fitCurveColor;

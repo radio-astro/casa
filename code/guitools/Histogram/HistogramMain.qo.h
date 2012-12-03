@@ -50,6 +50,7 @@ private slots:
 	void openFileLoader();
 	void imageFileChanged();
 	void openColorPreferences();
+	void colorsChanged();
 
 private:
 	bool generateImage( const QString& imagePath, ImageInterface<Float>*& image );

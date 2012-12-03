@@ -23,6 +23,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "ColorPreferences.qo.h"
+#include <QColorDialog>
+
 namespace casa {
 
 const QString ColorPreferences::APPLICATION = "Histogram";
@@ -38,6 +40,14 @@ ColorPreferences::ColorPreferences(QWidget *parent)
 	setWindowTitle( "Histogram Color Preferences");
 
 	initializeUserColors();
+	resetColors();
+
+	connect( ui.histogramColorButton, SIGNAL(clicked()), this, SLOT(selectHistogramColor()));
+	connect( ui.fitCurveColorButton, SIGNAL(clicked()), this, SLOT(selectFitCurveColor()));
+	connect( ui.fitEstimateColorButton, SIGNAL(clicked()), this, SLOT( selectFitEstimateColor()));
+
+	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(colorsAccepted()));
+	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(colorsRejected()));
 }
 
 void ColorPreferences::initializeUserColors(){
@@ -64,6 +74,82 @@ void ColorPreferences::initializeUserColors(){
 QString ColorPreferences::readCustomColor( QSettings& settings, const QString& identifier){
 	QString colorName = settings.value( identifier, "" ).toString();
 	return colorName;
+}
+
+void ColorPreferences::persistColors(){
+	//Copy the colors from the buttons into color variables
+	histogramColor = getButtonColor( ui.histogramColorButton );
+	fitEstimateColor = getButtonColor( ui.fitEstimateColorButton );
+	fitCurveColor = getButtonColor( ui.fitCurveColorButton );
+
+	//Save the colors in the persistent settings.
+	QSettings settings( ORGANIZATION, APPLICATION );
+	settings.clear();
+	settings.setValue( HISTOGRAM_COLOR, histogramColor.name() );
+	settings.setValue( FIT_ESTIMATE_COLOR, fitEstimateColor.name());
+	settings.setValue( FIT_CURVE_COLOR, fitCurveColor.name());
+}
+
+void ColorPreferences::colorsAccepted(){
+	persistColors();
+	QDialog::close();
+	emit colorsChanged();
+}
+
+void ColorPreferences::colorsRejected(){
+	resetColors();
+	QDialog::close();
+}
+
+void ColorPreferences::resetColors(){
+	setButtonColor( ui.histogramColorButton, histogramColor );
+	setButtonColor( ui.fitEstimateColorButton, fitEstimateColor );
+	setButtonColor( ui.fitCurveColorButton, fitCurveColor );
+}
+
+void ColorPreferences::setButtonColor( QPushButton* button, QColor color ){
+	QPalette p = button->palette();
+	p.setBrush(QPalette::Button, color);
+	button->setPalette( p );
+}
+
+QColor ColorPreferences::getButtonColor( QPushButton* button ) const {
+	QPalette p = button->palette();
+	QBrush brush = p.brush(QPalette::Button );
+	QColor backgroundColor = brush.color();
+	return backgroundColor;
+}
+
+void ColorPreferences::showColorDialog( QPushButton* source ){
+	QColor initialColor = getButtonColor( source );
+	QColor selectedColor = QColorDialog::getColor( initialColor, this );
+	if ( selectedColor.isValid() ){
+		setButtonColor( source, selectedColor );
+	}
+}
+
+void ColorPreferences::selectHistogramColor(){
+	showColorDialog( ui.histogramColorButton );
+}
+
+void ColorPreferences::selectFitCurveColor(){
+	showColorDialog( ui.fitCurveColorButton );
+}
+
+void ColorPreferences::selectFitEstimateColor(){
+	showColorDialog( ui.fitEstimateColorButton );
+}
+
+QColor ColorPreferences::getHistogramColor() const {
+	return histogramColor;
+}
+
+QColor ColorPreferences::getFitEstimateColor() const {
+	return fitEstimateColor;
+}
+
+QColor ColorPreferences::getFitCurveColor() const {
+	return fitCurveColor;
 }
 
 ColorPreferences::~ColorPreferences(){

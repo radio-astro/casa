@@ -718,8 +718,18 @@ void QtProfile::wcChanged( const String c,
 
 
 	//Get Profile Flux density v/s coordinateType
-	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
+	bool ok = false;
+	try {
+		ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
+	}
+	catch( AipsError& error ){
+		//Currently the flux profile throws an exception for images
+		//with channel-dependent beams.
+		ok = false;
+	}
 	if ( !ok ){
+		QString msg("Computing the flux for this spectral profile is not supported.");
+		Util::showUserMessage( msg, this );
 		return;
 	}
 

@@ -55,6 +55,7 @@ namespace casa {
 	//    </ul>
 	class QtRegion : public QObject {
 	    Q_OBJECT
+
 	    public:
 
 		// create a deginerate region just to gain access to the load regions dialog...
@@ -173,6 +174,9 @@ namespace casa {
 
 		// called for existing regions when spectral profile tool is opened...
 		void emitUpdate( );
+		ImageRegion * getImageRegion( DisplayData* dd ) const {
+					return get_image_region( dd );
+				}
 
 	    public slots:
 		/* void name( const QString &newname ); */
@@ -217,9 +221,11 @@ namespace casa {
 		void updateCenterInfo();
 		void invalidateCenterInfo( );
 
+
 	    protected:
-		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);
 		virtual ImageRegion *get_image_region( DisplayData* ) const = 0; /*DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);*/
+		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);
+
 		const std::list<Region*> &get_selected_regions( );
 		size_t selected_region_count( );
 		size_t marked_region_count( );

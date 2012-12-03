@@ -24,6 +24,7 @@
 //#
 #include "BinPlotWidget.qo.h"
 #include <images/Images/ImageHistograms.h>
+#include <images/Images/SubImage.h>
 #include <guitools/Histogram/FitWidget.qo.h>
 #include <guitools/Histogram/HistogramMarkerGaussian.h>
 #include <guitools/Histogram/PlotControlsWidget.qo.h>
@@ -44,7 +45,7 @@ namespace casa {
 BinPlotWidget::BinPlotWidget( bool plotControls, bool fitControls, bool rangeControls, QWidget* parent ):
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
-    histogramMaker( NULL ), binPlot( this ),
+    histogramMaker( NULL ), image( NULL ), binPlot( this ),
     lambdaAction("Lambda",this), centerPeakAction( "(Center,Peak)",this),
     fwhmAction( "Center +/- FWHM/2", this), contextMenu(this){
 
@@ -55,6 +56,8 @@ BinPlotWidget::BinPlotWidget( bool plotControls, bool fitControls, bool rangeCon
 	layout->setContentsMargins( 0, 0, 0, 0 );
 	layout->addWidget( &binPlot );
 	binPlot.setCanvasBackground( Qt::white );
+	setAxisLabelFont( 8);
+
 	ui.plotHolder->setLayout( layout );
 
 	initializeFitWidget( fitControls );
@@ -63,6 +66,13 @@ BinPlotWidget::BinPlotWidget( bool plotControls, bool fitControls, bool rangeCon
 
 	displayPlotTitle = false;
 	displayAxisTitles = false;
+}
+
+void BinPlotWidget::setAxisLabelFont( int size ){
+	QFont font = binPlot.axisFont( QwtPlot::xBottom );
+	font.setPointSize( size );
+	binPlot.setAxisFont( QwtPlot::xBottom, font );
+	binPlot.setAxisFont( QwtPlot::yLeft, font );
 }
 
 void BinPlotWidget::setDisplayPlotTitle( bool display ){
@@ -102,6 +112,36 @@ void BinPlotWidget::resetPlotTitle(){
 	}
 	else {
 		binPlot.setTitle( "" );
+	}
+}
+
+void BinPlotWidget::setHistogramColor( QColor color ){
+	if ( curveColor != color ){
+		curveColor = color;
+		this->clearCurves();
+		this->defineCurve();
+	}
+}
+
+void BinPlotWidget::setFitEstimateColor( QColor color ){
+	if ( fitEstimateColor != color ){
+		fitEstimateColor = color;
+		if ( fitEstimateMarkerGaussian != NULL ){
+			fitEstimateMarkerGaussian->setColor(fitEstimateColor);
+			binPlot.replot();
+		}
+	}
+}
+
+void BinPlotWidget::setFitCurveColor( QColor color ){
+	if ( fitCurveColor != color ){
+		fitCurveColor = color;
+		if ( fitCurve != NULL ){
+			QPen curvePen = fitCurve->pen();
+			curvePen.setColor( fitCurveColor );
+			fitCurve->setPen( curvePen );
+			binPlot.replot();
+		}
 	}
 }
 
@@ -195,7 +235,7 @@ pair<double,double> BinPlotWidget::getMinMaxValues() const {
 		minMaxValues = rangeControlWidget->getMinMaxValues();
 	}
 	else {
-		qDebug() << "Warning:  min/max values won't be valid without range control enabled";
+		qWarning() << "Warning:  min/max values won't be valid without range control enabled";
 	}
 	return minMaxValues;
 }
@@ -212,16 +252,8 @@ void BinPlotWidget::clearFitMarkers(){
 
 void BinPlotWidget::initializeGaussianFitMarker(){
 	fitEstimateMarkerGaussian = new HistogramMarkerGaussian();
-	/*QwtSymbol* symbol = new QwtSymbol();
-	QPen pen( Qt::black );
-	pen.setWidth( MARKER_WIDTH );
-	symbol->setPen( pen );
-	symbol->setBrush( Qt::blue );
-	symbol->setStyle( QwtSymbol::Diamond );
-	fitEstimateMarkerGaussian->setSymbol( *symbol );*/
-	fitEstimateMarkerGaussian->setXAxis( QwtPlot::xBottom );
-	fitEstimateMarkerGaussian->setYAxis( QwtPlot::yLeft );
 	fitEstimateMarkerGaussian->attach( &binPlot );
+	fitEstimateMarkerGaussian->setColor( fitEstimateColor );
 }
 
 
@@ -311,11 +343,8 @@ bool BinPlotWidget::isPlotContains( int x, int y ){
 	int top = plotHolderGeometry.y();
 	int right = left + canvasWidth;
 	int bottom = top + canvasHeight;
-	qDebug() << "left="<<left<<" right="<<right;
-	qDebug() << "top="<<top<<" bottom="<<bottom;
 	if ( left <= x && x <= right ){
 		if ( top <= y && y <= bottom ){
-			qDebug() << "Inside plot";
 			insidePlot = true;
 		}
 	}
@@ -326,14 +355,12 @@ void BinPlotWidget::showContextMenu( const QPoint& pt ){
 	QPoint globalPos = mapToGlobal( pt );
 	int x = pt.x();
 	int y = pt.y();
-	qDebug() << "Point x="<<pt.x()<<" y="<<pt.y();
 	bool ptInPlot = isPlotContains( x, y );
 	if ( ptInPlot ){
 		//Change x by the amount the y-axis takes up.
 		QRect plotGeom = ui.plotHolder->geometry();
 		int yAxisSpace = ui.plotHolder->width() - binPlot.canvas()->width();
 		int adjustedX = x - yAxisSpace - plotGeom.x();
-		qDebug() << "adjustedX="<<adjustedX;
 		int adjustedY = y - plotGeom.y();
 		fitPosition = QPoint( adjustedX, adjustedY);
 		contextMenu.exec( globalPos );
@@ -355,6 +382,7 @@ void BinPlotWidget::resetGaussianFitMarker(){
 	}
 }
 
+
 void BinPlotWidget::fitDone(){
 	Vector<Float> yValues = fitWidget->getFitValues();
 	if ( yValues.size() > 0 ){
@@ -364,12 +392,14 @@ void BinPlotWidget::fitDone(){
 		}
 		QVector<double> curveXValues( xVector.size() );
 		QVector<double> curveYValues( xVector.size() );
-		qDebug() << "Adding curve: "<<yValues.size();
 		for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
 			curveXValues[i] = xVector[i];
 			curveYValues[i] = yValues[i];
 		}
 		fitCurve = addCurve( curveXValues, curveYValues );
+		QPen fitCurvePen = fitCurve->pen();
+		fitCurvePen.setColor( fitCurveColor );
+		fitCurve->setPen( fitCurvePen );
 		binPlot.replot();
 	}
 }
@@ -445,7 +475,22 @@ void BinPlotWidget::defineCurve(){
 	binPlot.replot();
 }
 
+bool BinPlotWidget::setImageRegion( const ImageRegion& region ){
+	bool success = false;
+	if ( image != NULL ){
+		SubImage<Float>* subImage = new SubImage<Float>( *image, region );
+		histogramMaker->setNewImage( *subImage );
+		success = makeHistogram();
+	}
+	else {
+		qWarning() << "Please specify an image before specifying an image region";
+	}
+	return success;
+}
+
+
 bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
+	image = img;
 	bool success = false;
 	if ( img != NULL ){
 		if ( histogramMaker == NULL ){
@@ -455,42 +500,49 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 		else {
 			histogramMaker->setNewImage( *img );
 		}
-		Array<Float> values;
-		Array<Float> counts;
-		success = histogramMaker->getHistograms( values, counts );
-		if ( success ){
-			//Store the data
-			values.tovector( xVector );
-			counts.tovector( yVector );
-			defineCurve();
-			setValidatorLimits();
-			if ( fitWidget != NULL ){
-				fitWidget->setXValues( xVector );
-			}
-			update();
+		success = makeHistogram();
+	}
+	return success;
+}
+
+bool BinPlotWidget::makeHistogram(){
+	Array<Float> values;
+	Array<Float> counts;
+	bool success = histogramMaker->getHistograms( values, counts );
+	if ( success ){
+		//Store the data
+		values.tovector( xVector );
+		counts.tovector( yVector );
+		defineCurve();
+		setValidatorLimits();
+		if ( fitWidget != NULL ){
+			fitWidget->setXValues( xVector );
 		}
-		else {
-			QString msg( "Could not make a histogram from the image.");
-			QMessageBox::warning( this, "Error Making Histogram", msg);
-		}
+		update();
+	}
+	else {
+		QString msg( "Could not make a histogram from the image.");
+		QMessageBox::warning( this, "Error Making Histogram", msg);
 	}
 	return success;
 }
 
 void BinPlotWidget::setValidatorLimits(){
-	int count = xVector.size();
-	if ( count >= 1 ){
-		double minValue = xVector[0];
-		double maxValue = xVector[0];
-		for ( int i = 1; i < count; i++ ){
-			if ( xVector[i] < minValue ){
-				minValue = xVector[i];
+	if ( rangeControlWidget != NULL ){
+		int count = xVector.size();
+		if ( count >= 1 ){
+			double minValue = xVector[0];
+			double maxValue = xVector[0];
+			for ( int i = 1; i < count; i++ ){
+				if ( xVector[i] < minValue ){
+					minValue = xVector[i];
+				}
+				else if ( xVector[i] > maxValue ){
+					maxValue = xVector[i];
+				}
 			}
-			else if ( xVector[i] > maxValue ){
-				maxValue = xVector[i];
-			}
+			rangeControlWidget->setRangeLimits( minValue, maxValue );
 		}
-		rangeControlWidget->setRangeLimits( minValue, maxValue );
 	}
 }
 
@@ -514,8 +566,10 @@ void BinPlotWidget::resizeEvent( QResizeEvent* event ){
 }
 
 void BinPlotWidget::rectangleSizeChanged(){
-	resetRectangleMarker();
-	binPlot.replot();
+	if ( rectMarker != NULL ){
+		resetRectangleMarker();
+		binPlot.replot();
+	}
 }
 
 void BinPlotWidget::rectangleSelected(const QwtDoubleRect & rect){
@@ -528,16 +582,18 @@ void BinPlotWidget::rectangleSelected(const QwtDoubleRect & rect){
 }
 
 void BinPlotWidget::resetRectangleMarker(){
-	QwtSymbol symbol = rectMarker->symbol();
-	int pixelXStart = static_cast<int>( binPlot.transform( QwtPlot::xBottom, rectX ) );
-	int pixelXEnd = static_cast<int>(binPlot.transform( QwtPlot::xBottom, rectX+rectWidth ));
-	int height = getCanvasHeight();
-	int width = pixelXEnd - pixelXStart;
-	symbol.setSize( width, height );
-	rectMarker->setSymbol( symbol );
-	double centerX = rectX + rectWidth / 2;
-	double centerY = binPlot.invTransform( QwtPlot::yLeft, height / 2 );
-	rectMarker->setValue( centerX, centerY );
+	if ( rectMarker != NULL ){
+		QwtSymbol symbol = rectMarker->symbol();
+		int pixelXStart = static_cast<int>( binPlot.transform( QwtPlot::xBottom, rectX ) );
+		int pixelXEnd = static_cast<int>(binPlot.transform( QwtPlot::xBottom, rectX+rectWidth ));
+		int height = getCanvasHeight();
+		int width = pixelXEnd - pixelXStart;
+		symbol.setSize( width, height );
+		rectMarker->setSymbol( symbol );
+		double centerX = rectX + rectWidth / 2;
+		double centerY = binPlot.invTransform( QwtPlot::yLeft, height / 2 );
+		rectMarker->setValue( centerX, centerY );
+	}
 }
 
 
@@ -551,12 +607,12 @@ void BinPlotWidget::minMaxChanged(){
 		binPlot.replot();
 	}
 	else {
-		qDebug() << "Range tools need to be enabled for minMaxChanged";
+		qWarning() << "Range tools need to be enabled for minMaxChanged";
 	}
 }
 
 void BinPlotWidget::clearRange(){
-	if ( rectMarker->isVisible() ){
+	if ( rectMarker != NULL && rectMarker->isVisible() ){
 		rectangleSizeChanged();
 		rectMarker->hide();
 		binPlot.replot();
@@ -575,8 +631,6 @@ BinPlotWidget::~BinPlotWidget(){
 	delete histogramMaker;
 	delete fitEstimateMarkerGaussian;
 }
-
-
 
 }
 

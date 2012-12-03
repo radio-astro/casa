@@ -825,19 +825,7 @@ VisBufferImpl2::construct (VisibilityIterator2 * vi)
 void
 VisBufferImpl2::copy (const VisBuffer2 & otherRaw, Bool fetchIfNeeded)
 {
-    const VisBufferImpl2 * other = dynamic_cast<const VisBufferImpl2 *> (& otherRaw);
-
-    ThrowIf (other == 0,
-             String::format ("Copy between %s and VisBufferImpl2 not implemented.",
-                             typeid (otherRaw).name()));
-
-    for (CacheRegistry::iterator dst = state_p->cacheRegistry_p.begin(),
-                                 src = other->state_p->cacheRegistry_p.begin();
-         dst != state_p->cacheRegistry_p.end();
-         dst ++, src ++){
-
-        (* dst)->copy (* src, fetchIfNeeded);
-    }
+    copyComponents (otherRaw, VisBufferComponents2::all(), fetchIfNeeded);
 }
 
 void
@@ -851,6 +839,9 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
              String::format ("Copy between %s and VisBufferImpl2 not implemented.",
                              typeid (otherRaw).name()));
 
+    Bool wasFillable = isFillable();
+    setFillable (True);
+
     for (CacheRegistry::iterator dst = state_p->cacheRegistry_p.begin(),
                                  src = other->state_p->cacheRegistry_p.begin();
          dst != state_p->cacheRegistry_p.end();
@@ -861,6 +852,8 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
             (* dst)->copy (* src, fetchIfNeeded);
         }
     }
+
+    setFillable (wasFillable);
 }
 
 void

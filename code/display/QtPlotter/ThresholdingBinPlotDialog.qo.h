@@ -35,7 +35,7 @@ using namespace std;
 namespace casa {
 
 template <class T> class ImageInterface;
-class ThresholdingBinPlotWidget;
+class BinPlotWidget;
 
 //This dialog displays a histogram that allows the user
 //to set a minimum/maximum moment collapse threshold graphically.
@@ -57,7 +57,7 @@ protected:
 
 private:
     Ui::ThresholdingBinPlotDialogClass ui;
-    ThresholdingBinPlotWidget* plotWidget;
+    BinPlotWidget* plotWidget;
 
 };
 

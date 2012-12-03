@@ -577,12 +577,12 @@ VisibilityIteratorImpl2::initialize (const Block<MeasurementSet> &mss)
 
     msIndex_p = 0;
 
-    Int numMS = mss.nelements ();
-    measurementSets_p.clear ();
+    Int nMs = mss.nelements ();
+    measurementSets_p.resize (nMs);
 
-    for (Int k = 0; k < numMS; ++k) {
+    for (Int k = 0; k < nMs; ++k) {
 
-        measurementSets_p.push_back (mss [k]);
+        measurementSets_p [k] = mss [k];
     }
 
     // Install default frequency selections.  This will select all
@@ -1534,7 +1534,7 @@ VisibilityIteratorImpl2::findChannelsInRange (Double lowerFrequency, Double uppe
 Int
 VisibilityIteratorImpl2::getNMs () const
 {
-    return measurementSets_p.size();
+    return measurementSets_p.nelements();
 }
 
 
@@ -1824,52 +1824,7 @@ VisibilityIteratorImpl2::usesTiledDataManager (const String & columnName,
 void
 VisibilityIteratorImpl2::attachColumns (const Table & t)
 {
-    const ColumnDescSet & cds = t.tableDesc ().columnDescSet ();
-
-    columns_p.antenna1_p.attach (t, MS::columnName (MS::ANTENNA1));
-    columns_p.antenna2_p.attach (t, MS::columnName (MS::ANTENNA2));
-
-    if (cds.isDefined ("CORRECTED_DATA")) {
-        columns_p.corrVis_p.attach (t, "CORRECTED_DATA");
-    }
-
-    columns_p.exposure_p.attach (t, MS::columnName (MS::EXPOSURE));
-    columns_p.feed1_p.attach (t, MS::columnName (MS::FEED1));
-    columns_p.feed2_p.attach (t, MS::columnName (MS::FEED2));
-    columns_p.flag_p.attach (t, MS::columnName (MS::FLAG));
-    columns_p.flagCategory_p.attach (t, MS::columnName (MS::FLAG_CATEGORY));
-    columns_p.flagRow_p.attach (t, MS::columnName (MS::FLAG_ROW));
-
-    if (cds.isDefined (MS::columnName (MS::FLOAT_DATA))) {
-        columns_p.floatVis_p.attach (t, MS::columnName (MS::FLOAT_DATA));
-        floatDataFound_p = True;
-    } else {
-        floatDataFound_p = False;
-    }
-
-    if (cds.isDefined ("MODEL_DATA")) {
-        columns_p.modelVis_p.attach (t, "MODEL_DATA");
-    }
-
-    columns_p.observation_p.attach (t, MS::columnName (MS::OBSERVATION_ID));
-    columns_p.processor_p.attach (t, MS::columnName (MS::PROCESSOR_ID));
-    columns_p.scan_p.attach (t, MS::columnName (MS::SCAN_NUMBER));
-    columns_p.sigma_p.attach (t, MS::columnName (MS::SIGMA));
-    columns_p.state_p.attach (t, MS::columnName (MS::STATE_ID));
-    columns_p.time_p.attach (t, MS::columnName (MS::TIME));
-    columns_p.timeCentroid_p.attach (t, MS::columnName (MS::TIME_CENTROID));
-    columns_p.timeInterval_p.attach (t, MS::columnName (MS::INTERVAL));
-    columns_p.uvw_p.attach (t, MS::columnName (MS::UVW));
-
-    if (cds.isDefined (MS::columnName (MS::DATA))) {
-        columns_p.vis_p.attach (t, MS::columnName (MS::DATA));
-    }
-
-    columns_p.weight_p.attach (t, MS::columnName (MS::WEIGHT));
-
-    if (cds.isDefined ("WEIGHT_SPECTRUM")) {
-        columns_p.weightSpectrum_p.attach (t, "WEIGHT_SPECTRUM");
-    }
+    columns_p.attachColumns (t);
 }
 
 MEpoch
@@ -2453,7 +2408,7 @@ VisibilityIteratorImpl2::getImagingWeightGenerator () const
     return imwgt_p;
 }
 
-vector<MeasurementSet>
+Vector<MeasurementSet>
 VisibilityIteratorImpl2::getMeasurementSets () const
 {
     return measurementSets_p;
@@ -2984,23 +2939,6 @@ VisibilityIteratorImpl2::initializeBackWriters ()
     backWriters_p [VisibilityCubeModel] =
         makeBackWriter (& VisibilityIteratorImpl2::writeVisModel, & VisBuffer2::visCubeModel);
 
-}
-
-VisibilityIteratorImpl2::Columns &
-VisibilityIteratorImpl2::Columns::operator= (const VisibilityIteratorImpl2::Columns & other)
-{
-    flag_p.reference (other.flag_p);
-    flagCategory_p.reference (other.flagCategory_p);
-    flagRow_p.reference (other.flagRow_p);
-    vis_p.reference (other.vis_p);
-    floatVis_p.reference (other.floatVis_p);
-    modelVis_p.reference (other.modelVis_p);
-    corrVis_p.reference (other.corrVis_p);
-    weight_p.reference (other.weight_p);
-    weightSpectrum_p.reference (other.weightSpectrum_p);
-    sigma_p.reference (other.sigma_p);
-
-    return * this;
 }
 
 VisibilityIteratorImpl2::PendingChanges::PendingChanges ()
