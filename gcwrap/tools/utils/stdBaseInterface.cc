@@ -622,7 +622,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 			   casa::String theval(user.asString());
 			   theval.downcase();
 			   if(user.asString().length()){
-			      if(!theEnums[i].compare(0, user.asString().length(), theval)){
+			      if(!theEnums[i].compare(0, theEnums[i].length(), theval)){
 			         user.asString() = theEnums[i];
 			         break;
 			      }
@@ -632,7 +632,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 			   }
 			}else {
 			   if(user.asString().length()){
-			      if(!theEnums[i].compare(0, user.asString().length(), user.asString())){
+			      if(!theEnums[i].compare(0, theEnums[i].length(), user.asString())){
 			         user.asString() = theEnums[i];
 			         break;
 			      }
@@ -655,7 +655,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		         unsigned int i=0;
 		         while(i<theEnums.size()){
 		            if(userVals[j].length()){
-			    if(!theEnums[i].compare(0, userVals[j].length(), userVals[j]))
+			    if(!theEnums[i].compare(0, theEnums[i].length(), userVals[j]))
 			       break;
 			    } else if(userVals[j] == theEnums[i]){
 			       break;

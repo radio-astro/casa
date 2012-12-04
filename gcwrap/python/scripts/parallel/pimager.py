@@ -878,6 +878,10 @@ class pimager():
         """
 
 
+        if(interactive):
+            majorcycles=niter/npercycle
+            if(majorcycles < 1): 
+                majorcycles=1
         niterpercycle=niter/majorcycles if(majorcycles >0) else niter
         if(niterpercycle == 0):
             niterpercycle=niter
@@ -1033,16 +1037,20 @@ class pimager():
             if (interactive and (intmask==0)):
                 if(maj==0):
                     ia.removefile(maskimage)
-                retdraw=im.drawmask(imagename+'.residual',maskimage, niter=niterpercycle, npercycle=npercycle, threshold=threshold);
+                retdraw=im.drawmask(imagename+'.residual',maskimage, niter=npercycle, npercycle=majorcycles-maj, threshold=threshold);
                 intmask=retdraw['stat']
                     ####The user may want to change these in the gui
+                ###oww shucks the niter and npercycle in drawmask are really 
+                ###npercycle and number of major cycles
                 threshold=retdraw['threshold']
-                niterpercycle=retdraw['niter']
-                npercycle=retdraw['npercycle']
+                niterpercycle=retdraw['niter']*retdraw['npercycle']
+                npercycle=retdraw['niter']
+                majorcycles=retdraw['npercycle']+maj
                 print 'intmask', intmask
                 if(intmask==1):
                     interactive=False
                     im.done()
+                    majorcycles=-1
                 if(intmask==2):
                     interactive=False
                     break;
@@ -1430,8 +1438,13 @@ class pimager():
         if(maskimage==''):
             maskimage=imagename+'.mask'
         residual=imagename+'.residual'
-        ###now deal with interactive and    
-        if(cyclefactor > 0.00000001):
+        ###now deal with interactive but users (Crystal Brogan for e.g)  don't want 
+        ### to see image at major cycle boundaries but at npercycle end.
+        ### so here is the fix
+        majorcycles=niter/npercycle
+        if(majorcycles < 1): majorcycles=1
+        ######
+        if(majorcycles < 1):
             ####after this conclean has to be true
             psf=imagename+'.psf'
             newthresh=threshold
@@ -1488,24 +1501,33 @@ class pimager():
         else: 
             #using majorcycles
             npercycle=niter/majorcycles
-            for k in range(majorcycles):
+            k=0
+            while (k < majorcycles):
                 myim=casac.imager()
-                retdraw=myim.drawmask(imagename+'.residual',maskimage, niter=niter, npercycle=npercycle, threshold=threshold);
+                ###niter and npercycle in drawmask now
+                ### means npercycle and number of majorcycles left
+                retdraw=myim.drawmask(imagename+'.residual',maskimage, niter=npercycle, npercycle=majorcycles-k, threshold=threshold);
                 myim.done()
-                niter=retdraw['niter']
-                npercycle=retdraw['npercycle']
+                niter=retdraw['niter']*retdraw['npercycle']
+                npercycle=retdraw['niter']
+                majorcycles=retdraw['npercycle']+k
                 threshold=retdraw['threshold']
                 retval=retdraw['stat']
                 if(retval==2):
                     break
+                if(retval==1):
+                    npercycle=npercycle*(majorcycles-k)
+                    k=majorcycles-1
                 self.pcube(msname=msname, imagename=imagename, imsize=imsize, pixsize=pixsize, phasecenter=phasecenter, 
                            field=field, spw=spw, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets, hostnames=hostnames, 
-                           numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=0, niter=npercycle, gain=gain, threshold=threshold, alg=alg, scales=scales,
+                           numcpuperhost=numcpuperhost, majorcycles=1, cyclefactor=cyclefactor, niter=npercycle, gain=gain, threshold=threshold, alg=alg, scales=scales,
                            mode=mode, start=start, nchan=nchan, step=step, restfreq=restfreq, stokes=stokes, weight=weight, 
                            robust=robust, npixels=npixels,uvtaper=uvtaper, outertaper=outertaper, timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
                            observation=observation,  pbcorr=pbcorr, minpb=minpb, imagetilevol=imagetilevol,
                            contclean=True, chanchunk=chanchunk, visinmem=visinmem, maskimage=maskimage , numthreads=numthreads,  savemodel=False,
                            painc=painc, pblimit=pblimit, dopbcorr=dopbcorr, applyoffsets=applyoffsets, cfcache=cfcache, epjtablename=epjtablename)
+
+                k+=1
         if(savemodel):
             myim=casac.imager()
             myim.selectvis(vis=msname, spw=spw, field=field)

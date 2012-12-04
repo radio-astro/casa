@@ -353,7 +353,7 @@ class imagecont():
         majcycle = majcycle if (niter/majcycle) >0 else 1
         self.setextraoptions(im, fluxscaleimage=fluxscaleimage, cyclefactor=(0.0 if(majcycle >1) else self.cyclefactor)) 
         #### non simple ft machine...should use mf
-        if(self.ft != 'ft'):
+        if((self.ft != 'ft') or ((majcycle <= 1) and (self.cyclefactor > 0))):
             alg='mf'+alg
         try:
             
@@ -497,18 +497,18 @@ class imagecont():
         if(type(inim) != list):
             inim=[inim]
         ###Temporary bypass of  CAS-4423
-        elbeamo={}
-        for elim in inim:
-            ia.open(elim)
-            beam=ia.restoringbeam()
+        #elbeamo={}
+        #for elim in inim:
+        #    ia.open(elim)
+        #   beam=ia.restoringbeam()
             #if( (len(beam) > 0) and (not beam.has_key('beams'))):
             #    ia.setrestoringbeam(remove=True)
             #   nchan=ia.shape()[3]
             #    for k in range(nchan):
             #        ia.setrestoringbeam(major=beam['major'], minor=beam['minor'], pa=beam['positionangle'], channel=k, polarization=0)
-            ia.setrestoringbeam(remove=True)
-            elbeamo=beam if(not beam.has_key('beams')) else  beam['beams']['*0']['*0']
-            ia.done()
+         #   ia.setrestoringbeam(remove=True)
+         #  elbeamo=beam if(not beam.has_key('beams')) else  beam['beams']['*0']['*0']
+         #  ia.done()
         ####                
         if(len(inim)==1):
             ib=ia.fromimage(ourfile=cubeimage, infile=inim[0], overwrite=True)
@@ -517,8 +517,8 @@ class imagecont():
                               axis=3, relax=True,  overwrite=True)
         ia.done()
         ##### CAS-4423 temp
-        if(len(elbeamo) >0):
-            ib.setrestoringbeam(beam=elbeamo)
+        #if(len(elbeamo) >0):
+        #   ib.setrestoringbeam(beam=elbeamo)
         #####
         if(csys != None):
             ib.setcoordsys(csys=csys.torecord())
