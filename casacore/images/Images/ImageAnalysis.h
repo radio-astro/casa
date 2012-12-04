@@ -568,7 +568,8 @@ class ImageAnalysis
    		 const String& specframe="",
    		 const Int &combineType=0,
    		 const Int& whichQuality=0,
-   		 const String& restValue="");
+   		 const String& restValue="",
+   				 int centralChannel = -1);
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
