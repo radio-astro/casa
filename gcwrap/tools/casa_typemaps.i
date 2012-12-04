@@ -382,45 +382,30 @@ using namespace casac;
 
 %typemap(in) std::vector<double> & {
    std::vector<int> shape;
-   PyObject *mytype = PyObject_Str(PyObject_Type($input));
-   //cerr << PyString_AsString(mytype) << endl;
   
-   if(!$1)
-      $1 = new std::vector<double>(0);
-   else
-      $1->resize(0);
+   $1->resize(0);
    if(casac::pyarray_check($input)){
       //cerr << "numpy2vec" << endl;
       casac::numpy2vector($input, *$1, shape);
    } else {
-      //$1 = &vtmp;
        if (PyString_Check($input)){
-      //cerr << "PyString_AsDouble" << endl;
           $1->push_back(-1);
        } else if (PyInt_Check($input)){
-      //cerr << "PyInt_AsDouble" << endl;
           $1->push_back(double(PyInt_AsLong($input)));
        } else if (PyLong_Check($input)){
-          //cerr << "PyLong_AsDouble" << endl;
           $1->push_back(PyLong_AsDouble($input));
        } else if (PyFloat_Check($input)){
-          //cerr << "PyFloat_AsDouble" << endl;
           $1->push_back(PyFloat_AsDouble($input));
        } else {
-          //cerr << "pylist2vector" << endl;
-         shape.push_back(PyList_Size($input));
+          shape.push_back(PyList_Size($input));
           casac::pylist2vector($input,  *$1, shape);
        }
    }
 }
 
 %typemap(in) std::vector<bool> & {
-   if(!$1)
-      $1 = new std::vector<bool>(0);
-   else
-      $1->resize(0);
+   $1->resize(0);
    std::vector<int> shape;
-   PyObject *mytype = PyObject_Str(PyObject_Type($input));
 
    if(casac::pyarray_check($input)){
       casac::numpy2vector($input, *$1, shape);
@@ -446,17 +431,12 @@ using namespace casac;
 
 
 %typemap(in) std::vector<int> & {
-   if(!$1)
-      $1 = new std::vector<int>(0);
-   else
-      $1->resize(0);
+   $1->resize(0);
    std::vector<int> shape;
-   PyObject *mytype = PyObject_Str(PyObject_Type($input));
 
    if(casac::pyarray_check($input)){
       casac::numpy2vector($input, *$1, shape);
    } else {
-      //$1 = &vtmp;
       if (PyString_Check($input)){
          $1->push_back(-1);
          PyErr_SetString(PyExc_TypeError,"argument $1_name must not be a string");
@@ -468,25 +448,8 @@ using namespace casac;
       } else if (PyFloat_Check($input)){
          $1->push_back(PyInt_AsLong(PyNumber_Int($input)));
       } else {
-/*
          shape.push_back(PyList_Size($input));
-         for(int i=0; i<PyList_Size($input); i++){
-             PyObject *item = PyList_GetItem($input, i);
-             if (PyInt_Check(item)){
-                $1->push_back(int(PyInt_AsLong(item)));
-             } else if (PyLong_Check(item)){
-                $1->push_back(PyLong_AsLong(item));
-             } else if (PyFloat_Check(item)){
-                $1->push_back(PyInt_AsLong(PyNumber_Int(item)));
-             }
-             std::cerr << "i=" << i << " " << (*$1)[i] << std::endl;
-         }
-*/
          casac::pylist2vector($input,  *$1, shape);
-/*
-         for(int i=0;i<shape[0];i++)
-            std::cerr << "i=" << i << " " << (*$1)[i] << std::endl;
-*/
       }
    }
 }
@@ -497,7 +460,7 @@ using namespace casac;
    if(pyarray_check($input)){
       numpy2vector($input, $1->value, $1->shape);
    } else {
-         shape.push_back(PyList_Size($input));
+      shape.push_back(PyList_Size($input));
       pylist2vector($input,  $1->value, $1->shape);
    }
 }
@@ -514,7 +477,6 @@ using namespace casac;
 
 %typemap(out) complex {
    $result = PyComplex_FromDouble($1.real(), $1.imag());
-   //$result = PyComple_FromDouble($1.re, $1.im);
 }
 
 %typemap(out) variant {
@@ -534,6 +496,7 @@ using namespace casac;
      $result = PyString_FromString($1->c_str());
    else
      $result = Py_None;
+   delete $1;
 }
 
 %typemap(out) variant* {
@@ -543,6 +506,7 @@ using namespace casac;
      variant temp_v;
      $result = variant2pyobj(temp_v);
    }
+   delete $1;
 }
 
 %typemap(out) Quantity& {
@@ -567,6 +531,7 @@ using namespace casac;
    PyObject *v = casac::map_vector($1->value);
    PyDict_SetItem($result, PyString_FromString("value"), v);
    Py_DECREF(v);
+   delete $1;
 }
 
 %typemap(out) BoolVec {
@@ -586,14 +551,12 @@ using namespace casac;
 }
 
 %typemap(out) StringVec {
-   //$result = ::map_array($1.value, $1.shape);
    $result = PyList_New($1.size());
    for(int i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
 }
 
 %typemap(out) std::vector<std::string> {
-   //$result = casac::map_vector($1);
    $result = PyList_New($1.size());
    for(int i=0;i<$1.size();i++)
       PyList_SetItem($result, i, PyString_FromString($1[i].c_str()));
@@ -664,6 +627,7 @@ using namespace casac;
          PyDict_SetItem($result, PyString_FromString(key.c_str()), v);
          Py_DECREF(v);
       }
+      delete $1;
    }
 }
 
