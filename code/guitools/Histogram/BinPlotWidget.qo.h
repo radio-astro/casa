@@ -47,9 +47,9 @@ template <class T> class ImageHistograms;
 class FitWidget;
 class RangePicker;
 class HistogramMarkerGaussian;
-class PlotControlsWidget;
+class HistogramMarkerPoisson;
 class RangeControlsWidget;
-
+class PlotModeWidget;
 
 /**
  * Display a histogram of intensity vs count.  Functionality is pluggable
@@ -66,13 +66,21 @@ class RangeControlsWidget;
 class BinPlotWidget : public QWidget, public HeightSource {
     Q_OBJECT
 
+friend class RangePicker;
+
 public:
-    BinPlotWidget( bool plotControls, bool fitControls, bool rangeControls, QWidget* parent = 0 );
+    /**
+     * fitControls: true allows the user to fit curves to the Histogram.
+     * rangeControls: true allows the user to specify a min/max value on the histogram.
+     * plotModeControls: true allows the user to specify whether a histogram should be
+     * 		created for an image, a region, or multiple regions.
+     */
+    BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls, QWidget* parent = 0 );
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( const ImageRegion& imageRegion );
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
-    virtual int getCanvasHeight();
+
 
     //Customizing the display
     void setDisplayPlotTitle( bool display );
@@ -81,12 +89,18 @@ public:
     void setFitEstimateColor( QColor color );
     void setFitCurveColor( QColor color );
     void setAxisLabelFont( int size );
+
+
     ~BinPlotWidget();
 
 public slots:
 	void fitModeChanged();
 	void setDisplayStep( bool display );
 	void setDisplayLog( bool display );
+
+	//Saving the Histogram
+	void toAscii( const QString& filePath );
+	void toPing( const QString& filtPath );
 
 protected:
     void resizeEvent( QResizeEvent* event );
@@ -102,13 +116,15 @@ private slots:
 	void fwhmSpecified();
 	void fitDone();
 	void resetGaussianFitMarker();
+	void resetPoissonFitMarker();
 
 private:
 	BinPlotWidget( const BinPlotWidget& );
 	BinPlotWidget& operator=( const BinPlotWidget& );
 	void initializeFitWidget( bool fitControls );
-	void initializePlotControls( bool plotControls );
+	void initializePlotControls();
 	void initializeGaussianFitMarker();
+	void initializePoissonFitMarker();
 	void initializeRangeControls( bool rangeControls);
 	bool makeHistogram();
 	void rectangleSizeChanged();
@@ -123,7 +139,7 @@ private:
 	double checkLogValue( double value ) const;
 	void setValidatorLimits();
 	bool isPlotContains( int x, int y );
-
+	virtual int getCanvasHeight();
     Ui::BinPlotWidgetClass ui;
 
     bool displayPlotTitle;
@@ -158,11 +174,15 @@ private:
     QwtPlotCurve* fitCurve;
     QPoint fitPosition;
     HistogramMarkerGaussian* fitEstimateMarkerGaussian;
+    HistogramMarkerPoisson* fitEstimateMarkerPoisson;
 
-    //Plot Controls
+    //Plot Display
+    QAction stepFunctionAction;
+    QAction logAction;
     bool displayStep;
     bool displayLog;
-    PlotControlsWidget* plotControlsWidget;
+
+    PlotModeWidget* plotModeWidget;
 };
 
 }

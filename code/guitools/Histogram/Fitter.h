@@ -36,13 +36,17 @@ namespace casa {
 class Fitter {
 public:
 	Fitter();
-	void setData( Vector<Float> xValues );
+	void setData( Vector<Float> xValues, Vector<Float> yValues );
 	Vector<Float> getFitValues();
 	virtual bool doFit() = 0;
+	virtual void clearFit()=0;
 	virtual ~Fitter();
 protected:
 	Vector<Float> xValues;
 	Vector<Float> yValues;
+	Vector<Float> fitValues;
+
+	float getMean() const;
 };
 
 } /* namespace casa */

@@ -53,6 +53,7 @@
 #include <display/region/QtRegionSource.qo.h>
 
 #include <guitools/Histogram/BinPlotWidget.qo.h>
+#include <guitools/Histogram/HistogramMain.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -83,6 +84,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True) {
 
 	binPlotWidget = NULL;
+	histogrammer = NULL;
+
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
 	animationHolder = NULL;
@@ -194,6 +197,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
 	}
 	momentsCollapseAct_ = tlMenu_->addAction("Collapes/Moments...");
+	histogramAct_ = tlMenu_->addAction( "Histogram...");
 
 	vwMenu_       = menuBar()->addMenu("&View");
 	// (populated after creation of toolbars/dockwidgets).
@@ -217,6 +221,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	mainToolBar_->addSeparator();
 	mainToolBar_->addAction(profileAct_);
 	mainToolBar_->addAction(momentsCollapseAct_);
+	mainToolBar_->addAction(histogramAct_);
 	//		    mainToolBar_->addAction(rgnMgrAct_);
 	mainToolBar_->addSeparator();
 	mainToolBar_->addAction(printAct_);
@@ -436,6 +441,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	dpRstrAct_ ->setIcon(QIcon(":/icons/Restore_Panel.png"));
 	profileAct_->setIcon(QIcon(":/icons/Spec_Prof.png"));
 	momentsCollapseAct_->setIcon(QIcon(":/icons/profileMomentCollapse.png"));
+	histogramAct_->setIcon( QIcon(":/icons/hist.png"));
 	// rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
 	printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
 	unzoomAct_ ->setIcon(QIcon(":/icons/Zoom0_OutExt.png"));
@@ -454,6 +460,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	dpSaveAct_ ->setToolTip("Save Display Panel State to File");
 	profileAct_->setToolTip("Open the Spectrum Profiler");
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
+	histogramAct_->setToolTip("Histogram Functionality");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");
 	if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
@@ -496,6 +503,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(dpQuitAct_,  SIGNAL(triggered()),  SLOT(quit()));
 	connect(profileAct_, SIGNAL(triggered()),  SLOT(showSpecFitImageProfile()));
 	connect(momentsCollapseAct_, SIGNAL(triggered()), SLOT(showMomentsCollapseImageProfile()));
+	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 	// connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
 	connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
 	connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
@@ -659,7 +667,7 @@ void QtDisplayPanelGui::initAnimationHolder(){
 
 void QtDisplayPanelGui::initHistogramHolder(){
 	if ( binPlotWidget == NULL ){
-		binPlotWidget = new BinPlotWidget( false, false, false, this );
+		binPlotWidget = new BinPlotWidget( false, false, this );
 		binPlotWidget->setMaximumSize( 400, 300 );
 		connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SLOT(updateHistogram(viewer::QtRegion*,std::string)));
 	}
@@ -1085,6 +1093,7 @@ void QtDisplayPanelGui::hideImageMenus() {
 					if ( annotAct_ ) annotAct_->setEnabled(True);
 					profileAct_->setEnabled(True);
 					momentsCollapseAct_->setEnabled(True);
+					histogramAct_->setEnabled(True);
 					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(True);
 					setUseRegion(False);
 					break;
@@ -1104,6 +1113,7 @@ void QtDisplayPanelGui::hideImageMenus() {
 					if ( annotAct_ ) annotAct_->setEnabled(False);
 					profileAct_->setEnabled(False);
 					momentsCollapseAct_->setEnabled( False );
+					histogramAct_->setEnabled( False );
 					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(False);
 					setUseRegion(False);
 					//cout << "hide image menus" << endl;
@@ -2443,6 +2453,34 @@ void QtDisplayPanelGui::showMomentsCollapseImageProfile(){
 	showImageProfile();
 	if ( profile_ != NULL ){
 		profile_->setPurpose(ProfileTaskMonitor::MOMENTS_COLLAPSE);
+	}
+}
+
+void QtDisplayPanelGui::showHistogram(){
+	if ( histogrammer == NULL ){
+		histogrammer = new HistogramMain(false,true,true,this);
+		histogrammer->setDisplayPlotTitle( true );
+		histogrammer->setDisplayAxisTitles( true );
+		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
+		refreshHistogrammer();
+	}
+	histogrammer->show();
+}
+
+void QtDisplayPanelGui::refreshHistogrammer(){
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+		QtDisplayData* pdd = qdds.getRight();
+		if(pdd != 0 && pdd->dataType() == "image") {
+			ImageInterface<float>* img = pdd->imageInterface();
+			PanelDisplay* ppd = qdp_->panelDisplay();
+			if (ppd != 0 && img != 0) {
+				if (ppd->isCSmaster(pdd->dd())) {
+					histogrammer->setImage( img );
+					break;
+				}
+			}
+		}
 	}
 }
 

@@ -32,12 +32,28 @@ Fitter::Fitter() {
 
 }
 
-void Fitter::setData( Vector<Float> dataValues ){
-	xValues = dataValues;
+void Fitter::setData( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
+	clearFit();
+	fitValues.resize(0);
+	xValues = dataValuesX;
+	yValues = dataValuesY;
 }
 
 Vector<Float> Fitter::getFitValues(){
-	return yValues;
+	return fitValues;
+}
+
+float Fitter::getMean() const {
+	int count = xValues.size();
+	float weightedMean = 0;
+	if ( count > 0 ){
+		float sum = 0;
+		for ( int i = 0; i < count; i++ ){
+			sum = sum + xValues[i] * yValues[i];
+		}
+		weightedMean = sum / count;
+	}
+	return weightedMean;
 }
 
 Fitter::~Fitter() {

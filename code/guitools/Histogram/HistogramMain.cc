@@ -30,7 +30,8 @@
 
 namespace casa {
 
-HistogramMain::HistogramMain(QWidget *parent)
+HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
+		bool rangeControls, bool plotModeControls, QWidget *parent)
     : QMainWindow(parent), fileLoader(this),
       plotWidget( NULL ),
       logger(LogOrigin("CASA", "Histogram")){
@@ -41,7 +42,7 @@ HistogramMain::HistogramMain(QWidget *parent)
 	if ( mainLayout == NULL ){
 		mainLayout = new QHBoxLayout();
 	}
-	plotWidget = new BinPlotWidget( true,false,true,this );
+	plotWidget = new BinPlotWidget( fitControls, rangeControls, plotModeControls, this );
 	mainLayout->addWidget( plotWidget );
 	ui.centralwidget->setLayout( mainLayout );
 
@@ -49,14 +50,39 @@ HistogramMain::HistogramMain(QWidget *parent)
 	preferencesColor = new ColorPreferences( this );
 	colorsChanged();
 
-	connect(ui.actionImageFile, SIGNAL(triggered()), this, SLOT(openFileLoader()));
+	if ( !showFileLoader ){
+		ui.toolBar->removeAction( ui.actionImageFile );
+	}
+	else {
+		connect(ui.actionImageFile, SIGNAL(triggered()), this, SLOT(openFileLoader()));
+		connect( &fileLoader, SIGNAL(imageFileChanged()), this, SLOT(imageFileChanged()));
+	}
 	connect(ui.actionColor, SIGNAL(triggered()), this, SLOT(openColorPreferences()));
-	connect( &fileLoader, SIGNAL(imageFileChanged()), this, SLOT(imageFileChanged()));
 	connect( preferencesColor, SIGNAL(colorsChanged()), this, SLOT(colorsChanged()));
+	connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(openHistogramSaver()));
+	connect( &histogramSaver, SIGNAL(savePing(const QString&)), plotWidget, SLOT(toPing(const QString&)));
+	connect( &histogramSaver, SIGNAL(saveAscii(const QString&)), plotWidget, SLOT(toAscii(const QString&)));
+}
+
+bool HistogramMain::setImage( ImageInterface<Float>* img ){
+	bool imageSet = plotWidget->setImage( img );
+	return imageSet;
+}
+
+void HistogramMain::setDisplayPlotTitle( bool display ){
+	plotWidget->setDisplayPlotTitle( display );
+}
+
+void HistogramMain::setDisplayAxisTitles( bool display ){
+	plotWidget->setDisplayAxisTitles( display );
 }
 
 void HistogramMain::openFileLoader(){
 	fileLoader.exec();
+}
+
+void HistogramMain::openHistogramSaver(){
+	histogramSaver.exec();
 }
 
 void HistogramMain::openColorPreferences(){

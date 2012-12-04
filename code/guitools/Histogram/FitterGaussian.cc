@@ -46,12 +46,16 @@ bool FitterGaussian::doFit(){
 	//Model the fit so that we can give it to the canvas for
 	//drawing.
 	bool fitSuccessful = true;
-	yValues.resize( xValues.size());
+	fitValues.resize( xValues.size());
 	Gaussian1D<Float> gaussFit(peak, center, fwhm );
 	for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
-		yValues[i] = gaussFit.eval(&xValues[i]);
+		fitValues[i] = gaussFit.eval(&xValues[i]);
 	}
 	return fitSuccessful;
+}
+
+void FitterGaussian::clearFit(){
+
 }
 
 FitterGaussian::~FitterGaussian() {

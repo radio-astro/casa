@@ -40,6 +40,8 @@
 #include <vector>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
+#include <transformvis/Transformvis/TransformVisDataHandler.h>
+
 
 #ifndef MSVIS_SUBMS_H
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -100,6 +102,9 @@ template<class T> class ROArrayColumn;
 
 class SubMS
 {
+
+ // jagonzal: Allow TransformVisDataHandler to access protected methods and members of this class
+ friend class TransformVisDataHandler;
 
  public:
 
@@ -688,6 +693,9 @@ class SubMS
   String fitspw_p;           // Selection string for line-free channels.
   String fitoutspw_p;        // Selection string for output channels if doing
                              // continuum subtraction.
+
+  // jagonzal: Allow main table to be left empty, so that it can be filled by another layer.
+  Bool fillMainTable_p;
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;

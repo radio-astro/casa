@@ -224,6 +224,8 @@ public:
 
     virtual Int dataDescriptionId () const = 0;
 
+    virtual void dataDescriptionIds (Vector<Int> & ddis) const = 0;
+
     // Return actual time interval
 
     virtual void  exposure (Vector<Double> & expo) const = 0;

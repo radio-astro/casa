@@ -899,6 +899,12 @@ VisibilityIteratorImpl2::dataDescriptionId () const
     return msIter_p.dataDescriptionId ();
 }
 
+void
+VisibilityIteratorImpl2::dataDescriptionIds (Vector<Int> & ddis) const
+{
+	getColumnRows (columns_p.dataDescription_p, ddis);
+}
+
 Bool
 VisibilityIteratorImpl2::newFieldId () const
 {

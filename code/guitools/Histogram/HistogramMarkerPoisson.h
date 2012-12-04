@@ -22,37 +22,34 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef PLOTCONTROLSWIDGET_QO_H
-#define PLOTCONTROLSWIDGET_QO_H
+#ifndef HISTOGRAM_MARKER_POISSON_H_
+#define HISTOGRAM_MARKER_POISSON_H_
 
-#include <QtGui/QWidget>
-#include <guitools/Histogram/PlotControlsWidget.ui.h>
+#include <QPainter>
+
+#include <qwt_plot_marker.h>
+#include <qwt_scale_map.h>
 
 namespace casa {
 
 /**
- * Pluggable functionality that allows users to customize how
- * the histogram is drawn (step vs line), (counts vs log(counts)), etc.
+ * Marks a lambda estimate on the graph.
  */
 
-class PlotControlsWidget : public QWidget
-{
-    Q_OBJECT
+class HistogramMarkerPoisson : public QwtPlotMarker {
 
 public:
-    PlotControlsWidget(QWidget *parent = 0);
-    void setDisplayStep( bool display );
-    void setDisplayLogs( bool display );
-
-    ~PlotControlsWidget();
-
-signals:
-	void displayLogChanged( bool display );
-	void displayStepChanged( bool display );
+	HistogramMarkerPoisson();
+	void setColor( QColor markerColor );
+	void setLambda( int valueX );
+	virtual void draw(QPainter* painter, const QwtScaleMap& xMap, const QwtScaleMap& yMap, const QRect&) const;
+	virtual ~HistogramMarkerPoisson();
 
 private:
-
-    Ui::PlotControlsWidgetClass ui;
+	bool lambdaSpecified;
+	int lambda;
+	QColor markerColor;
 };
-}
-#endif // PLOTCONTROLSWIDGET_QO_H
+
+} /* namespace casa */
+#endif /* HISTOGRAMMARKERPOISSON_H_ */

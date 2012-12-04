@@ -29,6 +29,7 @@
 #include <images/Images/PagedImage.h>
 #include <guitools/Histogram/HistogramMain.ui.h>
 #include <guitools/Histogram/ImageLoader.qo.h>
+#include <guitools/Histogram/SaveHistogramWidget.qo.h>
 
 namespace casa {
 
@@ -43,11 +44,25 @@ class HistogramMain : public QMainWindow {
     Q_OBJECT
 
 public:
-    HistogramMain(QWidget *parent = 0);
+    /**
+     * showFileLoader:  true, for allowing the user to load image files
+     * 		(as opposed to just setting them programmatically).
+     * fitControls:  true, to allow the user to fit various curves to the
+     *       histogram (Gaussian, Poisson, etc)
+     * rangeControls: true, allows the user to specify a min/max value
+     * plotModeControls: true, allows the user to specify whether to histogram
+     * 		images, a selected region, or multiple regions.
+     */
+    HistogramMain(bool showFileLoader, bool fitControls, bool rangeControls,
+    		bool plotModeControls, QWidget *parent = 0);
+    bool setImage( ImageInterface<Float>* img );
+    void setDisplayPlotTitle( bool display );
+    void setDisplayAxisTitles( bool display );
     ~HistogramMain();
 
 private slots:
 	void openFileLoader();
+	void openHistogramSaver();
 	void imageFileChanged();
 	void openColorPreferences();
 	void colorsChanged();
@@ -56,6 +71,7 @@ private:
 	bool generateImage( const QString& imagePath, ImageInterface<Float>*& image );
 
     ImageLoader fileLoader;
+    SaveHistogramWidget histogramSaver;
     ColorPreferences* preferencesColor;
     BinPlotWidget* plotWidget;
     LogIO logger;

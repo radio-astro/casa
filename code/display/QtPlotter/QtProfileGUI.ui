@@ -296,26 +296,6 @@
         <property name="toolTip">
          <string>Choose the combine type.</string>
         </property>
-        <item>
-         <property name="text">
-          <string>mean</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>median</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>sum</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>flux</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item>

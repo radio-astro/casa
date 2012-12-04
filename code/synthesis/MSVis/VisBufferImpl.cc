@@ -237,6 +237,7 @@ public:
         correctedVisibility_p.initialize (vb, &VisBufferImpl::fillVisibilityCorrected);
         corrType_p.initialize (vb, &VisBufferImpl::fillCorrType);
         dataDescriptionId_p.initialize (vb, &VisBufferImpl::fillDataDescriptionId);
+        dataDescriptionIds_p.initialize (vb, &VisBufferImpl::fillDataDescriptionIds);
         direction1_p.initialize (vb, &VisBufferImpl::fillDirection1);
         direction2_p.initialize (vb, &VisBufferImpl::fillDirection2);
         exposure_p.initialize (vb, &VisBufferImpl::fillExposure);
@@ -292,6 +293,7 @@ public:
     VbCacheItem <Matrix<CStokesVector> > correctedVisibility_p;
     VbCacheItem <Vector<Int> > corrType_p;
     VbCacheItem <Int> dataDescriptionId_p;
+    VbCacheItem <Vector<Int> > dataDescriptionIds_p;
     VbCacheItem <Vector<MDirection> > direction1_p; //where the first antenna/feed is pointed to
     VbCacheItem <Vector<MDirection> > direction2_p; //where the second antenna/feed is pointed to
     VbCacheItem <Vector<Double> > exposure_p;

@@ -73,6 +73,7 @@ class QtExportManager;
 class QtDataOptionsPanel;
 class AnimatorHolder;
 class BinPlotWidget;
+class HistogramMain;
 
 template <class T> class ImageInterface;
 
@@ -482,8 +483,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
-	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_, 
-          *profileAct_, *momentsCollapseAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
+      *profileAct_, *momentsCollapseAct_, *histogramAct_,
+      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -521,6 +523,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   BinPlotWidget* binPlotWidget;
+  HistogramMain* histogrammer;
 
   //Docking/Dock Widgets
   string addAnimationDockWidget();
@@ -542,6 +545,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
   void updateHistogram( viewer::QtRegion* qtRegion, std::string str );
+  void showHistogram();
+  void refreshHistogrammer();
+
  public:
  
   // True by default.  Set False to disable auto-raise of the Data

@@ -22,27 +22,53 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#include "PlotControlsWidget.qo.h"
+#include "HistogramMarkerPoisson.h"
+#include <QPaintEvent>
+#include <QDebug>
+#include <qwt_plot.h>
+#include <qwt_plot_canvas.h>
 
 namespace casa {
 
-PlotControlsWidget::PlotControlsWidget(QWidget *parent)
-    : QWidget(parent)
-{
-	ui.setupUi(this);
-	connect( ui.histogramCheckBox, SIGNAL(toggled(bool)), this, SIGNAL(displayStepChanged(bool)));
-	connect( ui.logCheckBox, SIGNAL(toggled(bool)), this, SIGNAL(displayLogChanged(bool)));
+HistogramMarkerPoisson::HistogramMarkerPoisson():markerColor(Qt::black){
+	setXAxis( QwtPlot::xBottom );
+	setYAxis( QwtPlot::yLeft );
+	lambdaSpecified = false;
 }
 
-void PlotControlsWidget::setDisplayStep( bool display ){
-	ui.histogramCheckBox->setChecked( display );
+void HistogramMarkerPoisson::setColor( QColor color ){
+	markerColor = color;
 }
 
-void PlotControlsWidget::setDisplayLogs( bool display ){
-	ui.logCheckBox->setChecked( display );
+void HistogramMarkerPoisson::setLambda( int valueX ){
+	lambda = valueX;
+	lambdaSpecified = true;
 }
 
-PlotControlsWidget::~PlotControlsWidget(){
+void HistogramMarkerPoisson::draw(QPainter* painter, const QwtScaleMap&,
+		const QwtScaleMap&, const QRect& rect) const {
 
+	//If there is nothing to draw get out quick.
+	if ( !lambdaSpecified ){
+		return;
+	}
+
+	//Set-up the pen
+	const QPen& pen = painter->pen();
+	QPen penCopy( pen );
+	const int ESTIMATE_SIZE = 3;
+	penCopy.setColor( markerColor );
+	penCopy.setWidth( ESTIMATE_SIZE );
+	painter->setPen(penCopy);
+
+	//Draw a vertical line at lambda
+	int height = rect.y() + rect.height();
+	//qDebug() << "HistogramMarkerPoisson height="<<height;
+	painter->drawLine( lambda, 0, lambda, height );
+	painter->setPen( pen );
 }
+
+HistogramMarkerPoisson::~HistogramMarkerPoisson() {
 }
+
+} /* namespace casa */

@@ -75,6 +75,12 @@
 
 namespace casa { 
 
+const QString QtProfile::PLOT_TYPE_FLUX = "Flux Density";
+const QString QtProfile::PLOT_TYPE_MEAN = "Mean";
+const QString QtProfile::PLOT_TYPE_MEDIAN = "Median";
+const QString QtProfile::PLOT_TYPE_SUM = "Sum";
+
+
 QtProfile::~QtProfile()
 {
 
@@ -102,6 +108,10 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
 	setBackgroundRole(QPalette::Dark);
 
+	plotMode->addItem( PLOT_TYPE_MEAN );
+	plotMode->addItem( PLOT_TYPE_MEDIAN );
+	plotMode->addItem( PLOT_TYPE_SUM );
+	plotMode->addItem( PLOT_TYPE_FLUX );
 	fillPlotTypes(img);
 	connect(plotMode, SIGNAL(currentIndexChanged(const QString &)),
 			this, SLOT(changePlotType(const QString &)));
@@ -716,28 +726,13 @@ void QtProfile::wcChanged( const String c,
 
 	setPositionStatus( pxv,pyv,wxv,wyv );
 
-
 	//Get Profile Flux density v/s coordinateType
-	bool ok = false;
-	try {
-		ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
-	}
-	catch( AipsError& error ){
-		//Currently the flux profile throws an exception for images
-		//with channel-dependent beams.
-		ok = false;
-	}
-	if ( !ok ){
-		QString msg("Computing the flux for this spectral profile is not supported.");
-		Util::showUserMessage( msg, this );
-		return;
-	}
+	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
 
 	ok = setErrorPlotting( wxv, wyv );
 	if ( !ok ){
 		return;
 	}
-
 	// scale for better display
 	Int ordersOfM = scaleAxis();
 
@@ -1542,11 +1537,11 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 
 	if (plotMode->count() <1 ){
 		// fill the plot types
-		plotMode->addItem("mean");
-		plotMode->addItem("median");
-		plotMode->addItem("sum");
+		plotMode->addItem( PLOT_TYPE_MEAN );
+		plotMode->addItem( PLOT_TYPE_MEDIAN );
+		plotMode->addItem( PLOT_TYPE_SUM );
 		if (allowFlux)
-			plotMode->addItem("flux");
+			plotMode->addItem( PLOT_TYPE_FLUX );
 
 		// read the preferred plot mode from casarc
 		QString pref_plotMode = read(".plot.type");
@@ -1563,12 +1558,12 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 	else{
 		// add/remove "flux" if necessary
 		if (allowFlux){
-			if (plotMode->findText("flux")<0)
-				plotMode->addItem("flux");
+			if (plotMode->findText( PLOT_TYPE_FLUX )<0)
+				plotMode->addItem( PLOT_TYPE_FLUX );
 		}
 		else{
-			if (plotMode->findText("flux") > -1)
-				plotMode->removeItem(plotMode->findText("flux"));
+			if (plotMode->findText( PLOT_TYPE_FLUX ) > -1)
+				plotMode->removeItem(plotMode->findText( PLOT_TYPE_FLUX ));
 		}
 	}
 
@@ -1629,13 +1624,13 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 void QtProfile::stringToPlotType(const QString &text, QtProfile::PlotType &pType){
 	*itsLog << LogOrigin("QtProfile", "stringToPlotType");
 
-	if (!text.compare(QString("mean")))
+	if (!text.compare(QString( PLOT_TYPE_MEAN )))
 		pType = QtProfile::PMEAN;
-	else if (!text.compare(QString("median")))
+	else if (!text.compare(QString( PLOT_TYPE_MEDIAN )))
 		pType = QtProfile::PMEDIAN;
-	else if (!text.compare(QString("sum")))
+	else if (!text.compare(QString( PLOT_TYPE_SUM )))
 		pType = QtProfile::PSUM;
-	else if (!text.compare(QString("flux")))
+	else if (!text.compare(QString( PLOT_TYPE_FLUX )))
 		pType = QtProfile::PFLUX;
 	//else if (!text.compare(QString("rmse")))
 	//	pType = QtProfile::PVRMSE;
@@ -1849,6 +1844,48 @@ void QtProfile::setPositionStatus(const Vector<double> &pxv, const Vector<double
 	profileStatus->showMessage(position);
 }
 
+bool QtProfile::getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+		Vector<Float> &z_xval, Vector<Float> &z_yval,
+		const String& xytype, const String& specaxis,
+		const Int& whichStokes, const Int& whichTabular,
+		const Int& whichLinear, const String& xunits,
+		const String& specFrame, const Int &combineType,
+		const Int& whichQuality, const String& restValue ){
+	bool ok = false;
+	try {
+		ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+						xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
+						combineType, whichQuality, restValue);
+	}
+	catch( AipsError& error ){
+		//Currently the flux profile throws an exception for images
+		//with channel-dependent beams.
+		ok = false;
+		if ( itsPlotType == QtProfile::PFLUX ){
+		//We will try again, this time using the restoring beam from the
+		//central channel.
+			int channelCount = z_xval.size();
+			int centralChannel = channelCount / 2;
+			try {
+				ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+										xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
+										combineType, whichQuality, restValue, centralChannel);
+				if ( ok ){
+					//Post a warning that flux was calculated using a central channel
+					//and the resulting calculation was only an approximation.
+					String warningMsg( "Calculation was performed using a central channel.\n  The result should be considered an approximation.");
+					postStatus( warningMsg );
+				}
+			}
+			catch( AipsError& error ){
+				//qDebug() << "Could not calculate flux using a central channel";
+			}
+		}
+	}
+	return ok;
+}
+
+
 bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
 		const String& coordinateType, const String& xaxisUnit,
 		Vector<Float> &z_xval, Vector<Float> &z_yval){
@@ -1867,10 +1904,10 @@ bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<
 	case QtProfile::PSUM:
 		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-				(Int)QtProfile::SUM, 0, cSysRval);
+				(Int)QtProfile::SUM, 0, cSysRval );
 		break;
 	case QtProfile::PFLUX:
-		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+		ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_yval,
 				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 				(Int)QtProfile::FLUX, 0, cSysRval);
 		break;
@@ -1951,7 +1988,7 @@ bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double
 						(Int)QtProfile::SQRTSUM, 1, cSysRval);
 				break;
 			case QtProfile::PFLUX:
-				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+				ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_eval,
 						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 						(Int)QtProfile::EFLUX, 1, cSysRval);
 				break;
@@ -2108,9 +2145,9 @@ void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<d
 						(Int)QtProfile::PSUM, 0);
 				break;
 			case QtProfile::PFLUX:
-				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+				ok=getFrequencyProfileWrapper( wxv, wyv, xval, yval,
 						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						(Int)QtProfile::PFLUX, 0);
+						(Int)QtProfile::PFLUX, 0, "");
 				break;
 				//case QtProfile::PVRMSE:
 				//	ok=ana->getFreqProfile( wxv, wyv, xval, yval,

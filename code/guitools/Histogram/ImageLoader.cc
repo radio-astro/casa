@@ -34,7 +34,7 @@ ImageLoader::ImageLoader(QWidget *parent)
     : QDialog(parent), saveOutput( true ){
 
 	ui.setupUi(this);
-	this->setWindowTitle( "Feather Image Loader");
+	this->setWindowTitle( "Histogram Image Loader");
 
 	//Initialize the file browsing tree
 	fileModel = new QFileSystemModel( ui.treeWidget );

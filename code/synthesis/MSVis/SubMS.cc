@@ -131,7 +131,8 @@ Double wtToSigma(Double wt)
     combine_p(""),
     fitorder_p(-1),
     fitspw_p("*"),
-    fitoutspw_p("*")
+    fitoutspw_p("*"),
+    fillMainTable_p(True)
   {
   }
   
@@ -154,7 +155,8 @@ Double wtToSigma(Double wt)
     combine_p(""),
     fitorder_p(-1),
     fitspw_p("*"),
-    fitoutspw_p("*")
+    fitoutspw_p("*"),
+    fillMainTable_p(True)
   {
   }
   
@@ -688,7 +690,11 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
                         const Vector<Int>& tileShape, const String& combine)
   {
     LogIO os(LogOrigin("SubMS", "makeSubMS()"));
+
+    /*
     try{
+    */
+
       if((spw_p.nelements()>0) && (max(spw_p) >= Int(ms_p.spectralWindow().nrow()))){
         os << LogIO::SEVERE 
            << "SpectralWindow selection contains elements that do not exist in "
@@ -842,6 +848,8 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
 
       delete outpointer;
       return True;
+
+    /*
     }
     catch(AipsError x){
       ms_p=MeasurementSet();
@@ -851,6 +859,8 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
       ms_p=MeasurementSet();
       throw(AipsError("Unknown exception caught"));
     }
+    */
+
   }
   
   MeasurementSet* SubMS::makeScratchSubMS(const String& colname,
@@ -1016,11 +1026,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   //sameShape_p = areDataShapesConstant();
 
-  if(fitorder_p < 0 && timeBin_p <= 0.0)
-    success &= writeAllMainRows(datacols);
+  // jagonzal: Allow main table to be left empty, so that it can be filled by another layer.
+  if (fillMainTable_p)
+  {
+	  if(fitorder_p < 0 && timeBin_p <= 0.0)
+	    success &= writeAllMainRows(datacols);
+	  else
+	    success &= writeSomeMainRows(datacols);
+	  return success;
+  }
   else
-    success &= writeSomeMainRows(datacols);
-  return success;
+  {
+	  return success;
+  }
 }
   
   
@@ -5089,31 +5107,41 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       vector<Int> spwsToCombine;
       Vector<Bool> includeIt(origNumSPWs, False);
 
-      if(spwids(0) == -1){
-	for(Int i=0; i<origNumSPWs; i++){
-	  spwsToCombine.push_back(i);
-	  includeIt(i) = True;
-	}
+      // jagonzal: This covers for the case when we want to combine all the input SPWs
+      if(spwids(0) == -1)
+      {
+    	  for(Int i=0; i<origNumSPWs; i++)
+    	  {
+    		  spwsToCombine.push_back(i);
+    		  includeIt(i) = True;
+    	  }
       }
-      else {
-	for(uInt i=0; i<spwids.nelements(); i++){
-	  if(spwids(i)<origNumSPWs && spwids(i)>=0){
-	    spwsToCombine.push_back(spwids(i));
-	    includeIt(spwids(i)) = True;
-	  }
-	  else{
-	    os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i) 
-	       << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
-	    return False;
-	  }
-	}
+      // jagonzal: Nominal case when we want to combine a sub-set of the input SPWs
+      else
+      {
+    	  for(uInt i=0; i<spwids.nelements(); i++)
+    	  {
+    		  if(spwids(i)<origNumSPWs && spwids(i)>=0)
+    		  {
+    			  spwsToCombine.push_back(spwids(i));
+    			  includeIt(spwids(i)) = True;
+    		  }
+    		  else
+    		  {
+    			  os << LogIO::SEVERE << "Invalid SPW ID selected for combination " << spwids(i)
+    					  << "valid range is 0 - " << origNumSPWs-1 << ")" << LogIO::POST;
+    			  return False;
+    		  }
+    	  }
       }
-      if(spwsToCombine.size()<=1){
-	if(verbose){
-	  os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary."
-	     << LogIO::POST;
-	}
-	return True;
+      // jagonzal: Marginal case when there is no actual SPW combination
+      if(spwsToCombine.size()<=1)
+      {
+    	  if(verbose)
+    	  {
+    		  os << LogIO::NORMAL << "Less than two SPWs selected. No combination necessary." << LogIO::POST;
+    	  }
+    	  return True;
       }
       
       // sort the spwids

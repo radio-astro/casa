@@ -22,32 +22,37 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#ifndef SAVEHISTOGRAMWIDGET_QO_H
+#define SAVEHISTOGRAMWIDGET_QO_H
 
-#include "FitterPoisson.h"
+#include <QtGui/QDialog>
+#include <guitools/Histogram/SaveHistogramWidget.ui.h>
+
+class QFileSystemModel;
 
 namespace casa {
+class SaveHistogramWidget : public QDialog {
+    Q_OBJECT
 
-FitterPoisson::FitterPoisson() {
-	lambdaSpecified = false;
+public:
+    SaveHistogramWidget(QWidget *parent = 0);
+    ~SaveHistogramWidget();
+
+signals:
+	void savePing( const QString& filePath );
+	void saveAscii( const QString& filePath );
+
+private slots:
+	void validateDirectory( const QString& str );
+	void directoryChanged(const QModelIndex& modelIndex );
+	void save();
+	void saveCanceled();
+
+private:
+	static const QString SAVE_ASCII;
+	static const QString SAVE_PNG;
+    QFileSystemModel* fileModel;
+    Ui::SaveHistogramWidgetClass ui;
+};
 }
-
-void FitterPoisson::clearFit(){
-	lambdaSpecified = false;
-}
-
-bool FitterPoisson::doFit(){
-	if ( !lambdaSpecified ){
-		lambda = getMean();
-	}
-	return true;
-}
-
-void FitterPoisson::setLambda( double value ){
-	lambda = value;
-	lambdaSpecified = true;
-}
-
-FitterPoisson::~FitterPoisson() {
-}
-
-} /* namespace casa */
+#endif // SAVEHISTOGRAMWIDGET_QO_H

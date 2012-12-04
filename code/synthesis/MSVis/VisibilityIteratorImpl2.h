@@ -381,6 +381,8 @@ public:
     // Return current DataDescription Id
     virtual Int dataDescriptionId () const;
 
+    virtual void dataDescriptionIds (Vector<Int> & ddis) const;
+
     // Return MJD midpoint of interval.
     virtual void time (Vector<Double> & t) const;
 
