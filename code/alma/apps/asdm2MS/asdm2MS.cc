@@ -2663,6 +2663,35 @@ void partitionMS(vector<int> SwIds,
    //cerr<<"msFillers_v.size="<<msFillers_v.size()<<endl;
 }
 
+void checkMSMainRowsInSubscan ( const VMSData* vmsData_p, MainRow* mainRow_p ) {
+  SubscanTable & subscanTable = mainRow_p->getTable().getContainer().getSubscan();
+
+  SubscanRow* subscanRow_p = subscanTable.getRowByKey(mainRow_p->getExecBlockId(),
+						      mainRow_p->getScanNumber(),
+						      mainRow_p->getSubscanNumber());
+  
+  if (subscanRow_p == NULL) {
+    infostream.str("");
+    infostream << "Could not find a row in the subscan table with the key 'execBlockId = "<< mainRow_p->getExecBlockId()
+	       << ", scanNumber = " << mainRow_p->getScanNumber()
+	       << ", subscanNumber = " << mainRow_p->getSubscanNumber()
+	       << "'. I can't check if the BDF contents is in the subscan's time range.";
+    info(infostream.str());
+  }
+
+  // We make the assumption that the content pointed by vmsData_p is ordered by time.
+  double subscanStartTime = subscanRow_p->getStartTime().getMJD()*86400.0;
+  double subscanEndTime   = subscanRow_p->getEndTime().getMJD()*86400.0;
+
+  //
+  // Now detect one of two abnormal situations : the 1st data time is anterior to the subscan start time or the last data time
+  // is posterior to the subscan end time. 
+  if ( (vmsData_p->v_time[0] < subscanStartTime) || (subscanEndTime < vmsData_p->v_time[vmsData_p->v_time.size() - 1])) {
+    infostream.str("");
+    infostream << "The current BDF contains data with timestamp not in the time range of the current scan/subscan" << endl;
+    info(infostream.str());
+  }
+} 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -4930,6 +4959,7 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
+	    checkMSMainRowsInSubscan(vmsDataPtr, v[i]);
 	    numberOfReadIntegrations += numberOfIntegrations;
 	    numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
 	    
@@ -4965,6 +4995,7 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
+	    checkMSMainRowsInSubscan(vmsDataPtr, v[i]);
             if (doparallel) {
               // int ispw = 0;
               // int nspw = SwIds.size();
