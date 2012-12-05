@@ -2664,6 +2664,7 @@ void partitionMS(vector<int> SwIds,
 }
 
 void checkMSMainRowsInSubscan ( const VMSData* vmsData_p, MainRow* mainRow_p ) {
+  LOGENTER("checkMSMainRowsInSubscan");
   SubscanTable & subscanTable = mainRow_p->getTable().getContainer().getSubscan();
 
   SubscanRow* subscanRow_p = subscanTable.getRowByKey(mainRow_p->getExecBlockId(),
@@ -2677,6 +2678,8 @@ void checkMSMainRowsInSubscan ( const VMSData* vmsData_p, MainRow* mainRow_p ) {
 	       << ", subscanNumber = " << mainRow_p->getSubscanNumber()
 	       << "'. I can't check if the BDF contents is in the subscan's time range.";
     info(infostream.str());
+    LOGEXIT("checkMSMainRowsInSubscan");
+    return;
   }
 
   // We make the assumption that the content pointed by vmsData_p is ordered by time.
@@ -2691,6 +2694,7 @@ void checkMSMainRowsInSubscan ( const VMSData* vmsData_p, MainRow* mainRow_p ) {
     infostream << "The current BDF contains data with timestamp not in the time range of the current scan/subscan" << endl;
     info(infostream.str());
   }
+  LOGEXIT("checkMSMainRowsInSubscan");
 } 
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
