@@ -296,7 +296,6 @@ void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &erro
                                     const QString& lbl, ColorCategory level ){
 	QString curveLabel = lbl;
 	bool dupeCurve = duplicateCurve( curveLabel );
-
 	if ( !dupeCurve ){
 		QColor curveColor = getDiscreteColor( level, id );
 		CanvasCurve curve( data, error, curveLabel, curveColor, level );
@@ -370,6 +369,26 @@ QString QtCanvas::getUnits( QtPlotSettings::AxisIndex axisIndex ){
 		unitStr = "";
 	}
 	return unitStr;
+}
+
+void QtCanvas::clearFitCurves(){
+	std::map<int, CanvasCurve>::const_iterator it = curveMap.begin();
+	QList<int> removeKeys;
+	while (it != curveMap.end()){
+		const CanvasCurve & canvasCurve = (*it).second;
+		int curveType = canvasCurve.getCurveType();
+		if ( curveType == CURVE_COLOR_PRIMARY || curveType == CURVE_COLOR_SECONDARY ){
+			removeKeys.append( (*it).first );
+		}
+		it++;
+	}
+	for ( int i = 0; i < removeKeys.size(); i++ ){
+		int removeKey = removeKeys[i];
+		std::map<int,CanvasCurve>::iterator index = curveMap.find( removeKey );
+		curveMap.erase( index );
+	}
+	curveCountPrimary = 0;
+	curveCountSecondary = 0;
 }
 
 void QtCanvas::clearCurve(){

@@ -103,6 +103,7 @@ public:
 	int getLineCount();
 	void curveLabelsChanged();
 	void clearCurve();
+	void clearFitCurves();
 	void clearMolecularLines( bool refresh = true );
 	void setDataRange();
 	void setImageMode(bool);
