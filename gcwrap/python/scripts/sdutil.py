@@ -64,6 +64,23 @@ def format_trace(s):
         retval = string.join(ss,'\n')
     return retval
 
+class sdtask_manager(object):
+    def __init__(self, cls, args):
+        self.cls = cls
+        self.args = args
+
+    def __enter__(self):
+        self.obj = self.cls(**self.args)
+        return self.obj
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.obj.finalize()
+        del self.obj
+        if exc_type:
+            return False
+        else:
+            return True
+
 class sdtask_interface(object):
     """
     The sdtask_interface defines a common interface for sdtask_worker
