@@ -275,7 +275,7 @@ const AsdmIndex& AsdmStMan::findIndex (Int64 rownr)
     const AsdmIndex& ix = itsIndex[itsIndexEntry];
     // Resize to indicate not read yet.
     // Note that reserved size stays the same, so no extra mallocs needed.
-    itsData.resize (0);
+    // itsData.resize (0);  commented out by Michel Caillat 03 Dec 2012
     itsStartRow = ix.row;
     itsEndRow   = ix.row + ix.nrow();
   }
@@ -465,8 +465,19 @@ void AsdmStMan::getData (uInt rownr, Complex* buf)
     itsFD  = LargeFiledesIO::open (itsBDFNames[ix.fileNr].c_str(), False);
     itsBDF = new LargeFiledesIO (itsFD, itsBDFNames[ix.fileNr]);
     itsOpenBDF = ix.fileNr;
+    itsFileOffset = ix.fileOffset;
+    itsData.resize(0);
   }
-  // Read data block if not done yet.
+  
+  // Or we did not have open a new BDF but are aiming at a new position in the same BDF
+  else if ( itsFileOffset != ix.fileOffset ) {
+    itsFileOffset = ix.fileOffset;
+    itsData.resize(0);
+  }
+
+  // Read data block if not done yet, i.e. if and only if we are in a new BDF or in the same
+  // one but at a new position (fileOffset).
+  //
   if (itsData.empty()) {
     itsData.resize (ix.dataSize());
     itsBDF->seek (ix.fileOffset);
@@ -476,9 +487,7 @@ void AsdmStMan::getData (uInt rownr, Complex* buf)
   // The rows are stored in order of spw,baseline.
   uInt spw = 0 ; // 19 Nov 2012 : Michel Caillat changed this assignement : (rownr - ix.row) / ix.nBl;
   uInt bl  = (rownr - ix.row) - spw*ix.nBl;
-  //if (rownr >= 110 && rownr <= 113) {
-  //  cout << "rownr = " << rownr << ", bl = " << bl << ", ix = " << ix << endl;
-  //}
+
   switch (ix.dataType) {
   case 0:
     getShort (ix, buf, bl, spw);

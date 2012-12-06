@@ -281,6 +281,7 @@ private:
   LargeFiledesIO*        itsBDF;
   int                    itsFD;
   int                    itsOpenBDF;
+  Int64                  itsFileOffset;
   Bool   itsDoSwap;       //# True = byte-swapping is needed
   Record itsSpec;         //# Data manager properties
   uInt   itsVersion;      //# Version of AsdmStMan MeasurementSet

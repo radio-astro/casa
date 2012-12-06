@@ -1123,7 +1123,7 @@ namespace asdm {
 	string ASDM::toXML()   {
 		string out;
 		out.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/3/ASDM.xsd\" schemaVersion=\"3\" schemaRevision=\"1.62\"> ");
+		out.append("<ASDM xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:cntnr=\"http://Alma/XASDM/ASDM\" xsi:schemaLocation=\"http://Alma/XASDM/ASDM http://almaobservatory.org/XML/XASDM/3/ASDM.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\"> ");
 
 		if (entity.isNull())
 			throw ConversionException("Container entity cannot be null.","Container");
@@ -1181,11 +1181,15 @@ namespace asdm {
 		s = xml.getElement("<startTimeDurationInXML","/>");
 		if (s.length() != 0) 
 			ArrayTimeInterval::readStartTimeDurationInXML(true);
+		else 
+			ArrayTimeInterval::readStartTimeDurationInXML(false);
 			
 		// Do we have an element startTimeDurationInBin
 		s = xml.getElement("<startTimeDurationInBin","/>");
 		if (s.length() != 0) 
-			ArrayTimeInterval::readStartTimeDurationInBin(true);			 		 
+			ArrayTimeInterval::readStartTimeDurationInBin(true);
+		else 
+			ArrayTimeInterval::readStartTimeDurationInBin(false);			 		 
 
 		// Get each table in the dataset.
 		s = xml.getElementContent("<Table>","</Table>");
