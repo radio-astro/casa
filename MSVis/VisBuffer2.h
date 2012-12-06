@@ -61,6 +61,12 @@ class VisibilityIterator2;
 
 typedef enum {VbPlain, VbAsynchronous} VisBufferType;
 
+// These are options to be applied to a VisBuffer, usually when it's created.
+// The intent is that these form a bit mask so that they can be used as
+// VbWritable | VbRekeyable, etc.  So add the next one in as 2 * theLastOne.
+
+typedef enum {VbNoOptions, VbWritable = 1, VbRekeyable = 2} VisBufferOptions;
+
 //<summary>VisBuffer2s encapsulate one chunk of visibility data for processing.</summary>
 //
 // <use visibility=export>
@@ -130,7 +136,7 @@ public:
     enum {FrameNotSpecified = -2};
 
     VisBuffer2 () {}
-    static VisBuffer2 * factory (VisBufferType t);
+    static VisBuffer2 * factory (VisBufferType t, VisBufferOptions vbOptions = VbNoOptions);
 
     // Destructor (detaches from VisIter)
 
@@ -165,6 +171,7 @@ public:
                                     Bool fetchIfNeeded = True) = 0;
 
     virtual void setShape (Int nCorrelations, Int nChannels, Int nRows) = 0;
+    virtual void validateShapes () const = 0;
 
     // For attached VBs this returns the VI the VB is attached to.  For free
     // VBs this method returns False.
@@ -230,6 +237,7 @@ public:
     // The frequency index is the zero-based index along the frequency axis of
     // a visibility cube.
 
+    virtual Vector<Int> getCorrelationNumbers () const = 0;
     virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex,
                                  Int frame = FrameNotSpecified) const = 0;
     virtual const Vector<Double> & getFrequencies (Int rowInBuffer,
@@ -483,7 +491,7 @@ public:
 
     virtual Int spectralWindow () const = 0;
 
-    static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, Bool isWritable);
+    static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
 
 protected:
 
@@ -491,7 +499,8 @@ protected:
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
-                                       Int nRows, Int nChannels, Int nCorrelations) = 0;
+                                       Int nRows, Int nChannels, Int nCorrelations,
+                                       const Vector<Int> & correlations) = 0;
     virtual void invalidate() = 0;
     virtual Bool isRekeyable () const = 0;
     virtual void setFillable (Bool isFillable) = 0;

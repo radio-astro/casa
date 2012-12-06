@@ -10,6 +10,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 namespace vi {
 
 void
+FrequencySelection::addCorrelationSlices (const Vector <Vector <Slice> > & slices)
+{
+    correlationSlices_p = slices;
+}
+
+void
 FrequencySelection::filterByWindow (Int windowId) const
 {
     filterWindowId_p = windowId;
@@ -38,6 +44,18 @@ FrequencySelection::frameName (Int referenceFrame)
     }
 
     return result;
+}
+
+Vector <Slice>
+FrequencySelection::getCorrelationSlices (Int polarizationId) const
+{
+    if (correlationSlices_p.nelements() == 0){
+        return Vector<Slice> (); // empty vector implies all elements
+    }
+
+    Assert (polarizationId >= 0 && polarizationId < correlationSlices_p.nelements());
+
+    return correlationSlices_p [polarizationId];
 }
 
 Int

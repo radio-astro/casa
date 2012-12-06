@@ -80,6 +80,7 @@ casa_add_library( synthesis
   MSVis/CalVisBuffer.cc
   MSVis/GroupProcessor.cc
   MSVis/GroupWorker.cc
+  MSVis/MeasurementSet2.cc
   MSVis/MSAnalysis.cc
   MSVis/MsAverager.cc
   MSVis/MSCalEnums.cc
@@ -434,6 +435,7 @@ install (FILES
 	MSVis/CalVisBuffer.h
 	MSVis/GroupProcessor.h
 	MSVis/GroupWorker.h
+        MSVis/MeasurementSet2.h
 	MSVis/MSAnalysis.h
 	MSVis/MSCalEnums.h
 	MSVis/MSContinuumSubtractor.h

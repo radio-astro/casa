@@ -462,6 +462,7 @@ public:
     virtual Int getReportingFrameOfReference () const = 0;
     virtual void setReportingFrameOfReference (Int frame) = 0;
 
+    virtual Vector<Int> getCorrelations () const = 0;
     virtual Vector<Int> getChannels (Double time, Int frameOfReference) const = 0;
     virtual Vector<Double> getFrequencies (Double time, Int frameOfReference) const = 0;
 

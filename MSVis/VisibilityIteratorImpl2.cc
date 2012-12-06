@@ -35,9 +35,11 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/Sort.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/MeasurementSet2.h>
 #include <synthesis/MSVis/MSUtil.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/ViFrequencySelection.h>
@@ -165,7 +167,8 @@ public:
     }
 
     Vector<Int>
-    getChannels () const {
+    getChannels () const
+    {
 
         Vector<Int> frequencies (nFrequencies_p); // create result of appropriate size
 
@@ -195,6 +198,33 @@ public:
         }
 
         return frequencies;
+    }
+
+    Vector<Int>
+    getCorrelations () const {
+
+        const Vector<Slice> & correlationSlices = slicer_p [0];
+
+        vector<Int> correlations;
+
+        for (uInt i = 0; i < correlationSlices.nelements(); i ++){
+
+            for (uInt j = 0;
+                 j < correlationSlices [i].length();
+                 j += correlationSlices [i].inc()){
+
+                correlations.push_back (j);
+
+            }
+        }
+
+        Vector<Int> result (correlations.size());
+
+        for (uInt i = 0; i < correlations.size(); i++){
+            result [i] = correlations [i];
+        }
+
+        return result;
     }
 
     Int
@@ -567,8 +597,65 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
 
     vi_p = vi;
 
-    vb_p = VisBuffer2::factory (vi, vbType, isWritable);
+    VisBufferOptions options = isWritable ? VbWritable : VbNoOptions;
+
+    vb_p = VisBuffer2::factory (vi, vbType, options);
 }
+
+void
+VisibilityIteratorImpl2::addDataSelection (const MeasurementSet & ms)
+{
+    const MeasurementSet2 * ms2 = dynamic_cast <const MeasurementSet2 *> (& ms);
+
+    if (ms2 == 0){
+
+        // A normal MS was used so there is no frequency selection attached to
+        // it.  Simply add in an empty selection which will select everything.
+
+        frequencySelections_p->add (FrequencySelectionUsingChannels ());
+    }
+
+
+    // Get the channel and correlation selectin.
+    //
+    // Channel slices are indexed by spectral window ID and correlation slices
+    // by polarization ID
+
+    MSSelection * msSelection = const_cast<MSSelection *> (ms2->getMSSelection());
+        // *KLUGE* -- MSSelection is somewhat sloppy about making methods const
+        // so simply getting the slices requires a non-const object ;-(
+
+    Vector <Vector <Slice> > channelSlices;
+    msSelection->getChanSlices(channelSlices, ms2);
+    Vector <Vector <Slice> > correlationSlices;
+    msSelection->getCorrSlices(correlationSlices, ms2);
+
+    FrequencySelectionUsingChannels selection;
+
+    for (uInt spectralWindow = 0;
+         spectralWindow < channelSlices.nelements();
+         spectralWindow ++){
+
+        // Get the frequency slices for this spectral window
+
+        Vector<Slice> & slices = channelSlices [spectralWindow];
+
+        for (uInt s = 0; s < slices.nelements(); s ++){
+
+            // Add each frequency slice to the selection for this spectral window
+
+            Slice & slice = slices [s];
+
+            selection.add (spectralWindow, slice.start(), slice.length(), slice.inc());
+        }
+    }
+
+
+    selection.addCorrelationSlices (correlationSlices);
+
+    frequencySelections_p->add (selection);
+}
+
 
 void
 VisibilityIteratorImpl2::initialize (const Block<MeasurementSet> &mss)
@@ -577,18 +664,21 @@ VisibilityIteratorImpl2::initialize (const Block<MeasurementSet> &mss)
 
     msIndex_p = 0;
 
+    frequencySelections_p = new FrequencySelections ();
+
     Int nMs = mss.nelements ();
     measurementSets_p.resize (nMs);
 
     for (Int k = 0; k < nMs; ++k) {
 
         measurementSets_p [k] = mss [k];
+
+        addDataSelection (measurementSets_p [k]);
     }
 
     // Install default frequency selections.  This will select all
     // channels in all windows.
 
-    frequencySelections_p = new FrequencySelections ();
 }
 
 VisibilityIteratorImpl2::~VisibilityIteratorImpl2 ()
@@ -748,6 +838,14 @@ VisibilityIteratorImpl2::getChannels (Double /*time*/, Int /*frameOfReference*/)
     assert (channelSelector_p != 0);
 
     return channelSelector_p->getChannels ();
+}
+
+Vector<Int>
+VisibilityIteratorImpl2::getCorrelations () const
+{
+    assert (channelSelector_p != 0);
+
+    return channelSelector_p->getCorrelations ();
 }
 
 
@@ -1263,7 +1361,8 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
                                 isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
-                                channelSelector_p->getNFrequencies(), nPolarizations_p);
+                                channelSelector_p->getNFrequencies(), nPolarizations_p,
+                                channelSelector_p->getCorrelations());
 
 }
 
@@ -1300,7 +1399,7 @@ VisibilityIteratorImpl2::determineChannelSelection (Double time)
 
     if (selection.getFrameOfReference() == FrequencySelection::ByChannel){
         newSelector = makeChannelSelectorC (selection, time, msId (),
-                                            spectralWindowId);
+                                            spectralWindowId, polarizationId());
     }
     else{
         newSelector = makeChannelSelectorF (selection, time, msId (),
@@ -1323,7 +1422,8 @@ vi::ChannelSelector *
 VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & selectionIn,
                                                    Double time,
                                                    Int msId,
-                                                   Int spectralWindowId)
+                                                   Int spectralWindowId,
+                                                   Int polarizationId)
 {
     const FrequencySelectionUsingChannels & selection =
         dynamic_cast<const FrequencySelectionUsingChannels &> (selectionIn);
@@ -1353,6 +1453,9 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
     // Vector<Vector<Slice> > structure.
 
     Vector <Vector <Slice> > slices (2);  // Cell array value is 2D: [nC,nF]
+
+    slices [0] = selection.getCorrelationSlices (polarizationId);
+
     slices [1].resize (frequencySlices.size());
 
     for (Int i = 0; i < (int) frequencySlices.size(); i++){
@@ -1368,7 +1471,7 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
 
 ChannelSelector *
 VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & selectionIn,
-                                                   Double time, Int msId, Int spectralWindowId)
+                                               Double time, Int msId, Int spectralWindowId)
 {
     // Make a ChannelSelector from a frame-based frequency selection.
 

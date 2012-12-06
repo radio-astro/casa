@@ -511,6 +511,15 @@ VisibilityIterator2::getChannels (Double time, Int frameOfReference) const
     return impl_p->getChannels (time, frameOfReference);
 }
 
+Vector<Int>
+VisibilityIterator2::getCorrelations () const
+{
+    CheckImplementationPointerR ();
+    return impl_p->getCorrelations ();
+}
+
+
+
 
 const VisImagingWeight &
 VisibilityIterator2::getImagingWeightGenerator () const
