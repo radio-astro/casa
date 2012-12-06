@@ -566,6 +566,8 @@ public:
 
 protected:
 
+    void addDataSelection (const MeasurementSet & ms);
+
     void attachColumnsSafe (const Table & t);
 
     // attach the column objects to the currently selected table
@@ -614,6 +616,7 @@ protected:
 
     Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
     Vector<Int> getChannels (Double time, Int frameOfReference) const;
+    Vector<Int> getCorrelations () const;
 
     Int getReportingFrameOfReference () const;
 
@@ -646,7 +649,8 @@ protected:
 
     vi::ChannelSelector *
     makeChannelSelectorC (const FrequencySelection & selection,
-                          Double time, Int msId, Int spectralWindowId);
+                          Double time, Int msId, Int spectralWindowId,
+                          Int polarizationId);
 
     vi::ChannelSelector *
     makeChannelSelectorF (const FrequencySelection & selection,

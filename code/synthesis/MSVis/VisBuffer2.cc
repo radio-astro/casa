@@ -15,21 +15,21 @@ namespace casa {
 namespace vi {
 
 VisBuffer2 *
-VisBuffer2:: factory (VisBufferType t)
+VisBuffer2:: factory (VisBufferType t, VisBufferOptions options)
 {
-    return factory (0, t, False);
+    return factory (0, t, options);
 }
 
 VisBuffer2 *
-VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, Bool isWritable)
+VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options)
 {
     VisBuffer2 * result = NULL;
 
     if (t == VbPlain){
-        result = new vi::VisBufferImpl2 (vi, isWritable);
+        result = new VisBufferImpl2 (vi, options);
     }
     else{
-        ThrowIf (true, utilj::format ("Unknown VisBuffer2 type: id=%d", t));
+        ThrowIf (true, utilj::format ("Unknown or unsupported VisBuffer2 type: id=%d", t));
     }
 
     return result;

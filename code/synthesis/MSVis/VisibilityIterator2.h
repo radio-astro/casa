@@ -916,6 +916,16 @@ protected:
 
   virtual void weightSpectrum(Cube<Float>& wtsp) const;
 
+  // Returns a vector of the correlation types that were selected
+  // into the current subchunk's data.  If Vector<Int> c = vi.getCorrelations();
+  // Then c[0] will return the correlation type (as defined in the polarization
+  // table) of the first correlation part of a data item (e.g., for a visCube,
+  // all elements having the first dimension index of zero will be c[0] type
+  // correlations).
+
+  Vector<Int> getCorrelations () const;
+
+
   Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
   Vector<Int> getChannels (Double time, Int frameOfReference) const;
 

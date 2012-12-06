@@ -71,8 +71,10 @@ public:
 
     virtual ~FrequencySelection (){}
 
+    void addCorrelationSlices (const Vector <Vector <Slice> > & slices);
     virtual FrequencySelection * clone () const = 0;
     void filterByWindow (Int windowId = -1) const;
+    Vector <Slice> getCorrelationSlices (Int polarizationId) const;
     Int getFrameOfReference () const;
     virtual set<int> getSelectedWindows () const = 0;
     virtual String toString () const = 0;
@@ -90,6 +92,7 @@ protected:
 
 private:
 
+    Vector <Vector <Slice> > correlationSlices_p; // outer index is polarization id
     mutable Int filterWindowId_p;
     Int referenceFrame_p;
 };
