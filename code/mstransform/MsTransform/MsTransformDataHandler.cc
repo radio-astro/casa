@@ -1,4 +1,4 @@
-//# TransformVisDataHandler.h: This file contains the implementation of the TransformVisDataHandler class.
+//# MsTransformDataHandler.h: This file contains the implementation of the MsTransformDataHandler class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,7 +20,7 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <transformvis/Transformvis/TransformVisDataHandler.h>
+#include <mstransform/MsTransform/MsTransformDataHandler.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -33,13 +33,13 @@ namespace tvf
 }
 
 /////////////////////////////////////////////
-/// TransformVisDataHandler implementation //
+/// MsTransformDataHandler implementation //
 /////////////////////////////////////////////
 
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-TransformVisDataHandler::TransformVisDataHandler()
+MsTransformDataHandler::MsTransformDataHandler()
 {
 	initialize();
 	return;
@@ -49,7 +49,7 @@ TransformVisDataHandler::TransformVisDataHandler()
 // -----------------------------------------------------------------------
 // Configuration constructor
 // -----------------------------------------------------------------------
-TransformVisDataHandler::TransformVisDataHandler(Record configuration)
+MsTransformDataHandler::MsTransformDataHandler(Record configuration)
 {
 	initialize();
 	configure(configuration);
@@ -60,7 +60,7 @@ TransformVisDataHandler::TransformVisDataHandler(Record configuration)
 // -----------------------------------------------------------------------
 // Default destructor
 // -----------------------------------------------------------------------
-TransformVisDataHandler::~TransformVisDataHandler()
+MsTransformDataHandler::~MsTransformDataHandler()
 {
 	if (visibilityIterator_p) delete visibilityIterator_p;
 	if (splitter_p) delete splitter_p;
@@ -71,7 +71,7 @@ TransformVisDataHandler::~TransformVisDataHandler()
 // -----------------------------------------------------------------------
 // Method to initialize members to default values
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::initialize()
+void MsTransformDataHandler::initialize()
 {
 	inputMs_p = NULL;
 	selectedInputMs_p = NULL;
@@ -127,6 +127,7 @@ void TransformVisDataHandler::initialize()
 	fillWeightSpectrum_p = False;
 	correctedToData_p = False;
 	dataColMap_p.clear();
+	baselineMap_p.clear();
 
 	return;
 }
@@ -134,7 +135,7 @@ void TransformVisDataHandler::initialize()
 // -----------------------------------------------------------------------
 // Method to configure (or re-configure) members
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::configure(Record &configuration)
+void MsTransformDataHandler::configure(Record &configuration)
 {
 	int exists = 0;
 
@@ -142,35 +143,35 @@ void TransformVisDataHandler::configure(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (configuration.fieldNumber ("inputms"), inpMsName_p);
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Input file name is " << inpMsName_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Input file name is " << inpMsName_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("outputms");
 	if (exists >= 0)
 	{
 		configuration.get (configuration.fieldNumber ("outputms"), outMsName_p);
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Output file name is " << outMsName_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Output file name is " << outMsName_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("spw");
 	if (exists >= 0)
 	{
 		configuration.get (configuration.fieldNumber ("spw"), spwSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Spectral Window selection is " << spwSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Spectral Window selection is " << spwSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("timebin");
 	if (exists >= 0)
 	{
 		configuration.get (configuration.fieldNumber ("timebin"), timeBin_p);
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Time interval is " << timeBin_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Time interval is " << timeBin_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("combine");
 	if (exists >= 0)
 	{
 		configuration.get (configuration.fieldNumber ("combine"), combine_p);
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Combine axes are " << combine_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Combine axes are " << combine_p << LogIO::POST;
 	}
 
 
@@ -181,7 +182,7 @@ void TransformVisDataHandler::configure(Record &configuration)
 // Method to open the input MS, select the data and create the
 // structure of the output MS filling the auxiliary tables.
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::open()
+void MsTransformDataHandler::open()
 {
 	splitter_p = new SubMS(inpMsName_p,Table::Update);
 
@@ -220,7 +221,7 @@ void TransformVisDataHandler::open()
 // -----------------------------------------------------------------------
 // Close the output MS
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::close()
+void MsTransformDataHandler::close()
 {
 	if (outputMs_p)
 	{
@@ -236,13 +237,13 @@ void TransformVisDataHandler::close()
 // -----------------------------------------------------------------------
 // Method to check if flag category has to be filled
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::checkFillFlagCategory()
+void MsTransformDataHandler::checkFillFlagCategory()
 {
 	fillFlagCategory_p = False;
 	if (!inputMsCols_p->flagCategory().isNull() && inputMsCols_p->flagCategory().isDefined(0))
 	{
 		fillFlagCategory_p = True;
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Optional column FLAG_CATEGORY found in input MS will be written to output MS" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Optional column FLAG_CATEGORY found in input MS will be written to output MS" << LogIO::POST;
 	}
 
 	return;
@@ -251,13 +252,13 @@ void TransformVisDataHandler::checkFillFlagCategory()
 // -----------------------------------------------------------------------
 // Method to check if weight spectrum column has to be filled
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::checkFillWeightSpectrum()
+void MsTransformDataHandler::checkFillWeightSpectrum()
 {
 	fillWeightSpectrum_p = False;
 	if (!inputMsCols_p->weightSpectrum().isNull() && inputMsCols_p->weightSpectrum().isDefined(0))
 	{
 		fillWeightSpectrum_p = True;
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
 	}
 
 	return;
@@ -266,7 +267,7 @@ void TransformVisDataHandler::checkFillWeightSpectrum()
 // -----------------------------------------------------------------------
 // Method to check which data columns have to be filled
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::checkDataColumnsToFill()
+void MsTransformDataHandler::checkDataColumnsToFill()
 {
 	dataColMap_p.clear();
 	if (colname_p.contains("all"))
@@ -274,35 +275,35 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
 		}
 
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
 		{
 			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
 		}
 
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
 		{
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding MODEL_DATA column to output MS "<< LogIO::POST;
 		}
 
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 		{
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
 		}
 
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
 		{
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding LAG_DATA column to output MS "<< LogIO::POST;
 		}
 	}
@@ -311,24 +312,24 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 		{
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"FLOAT_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
@@ -337,12 +338,12 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 		{
 			dataColMap_p[MS::FLOAT_DATA] = MS::FLOAT_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"FLOAT_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
@@ -351,24 +352,24 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 		{
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding LAG_DATA column to output MS "<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"LAG_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
@@ -377,12 +378,12 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
 		{
 			dataColMap_p[MS::LAG_DATA] = MS::LAG_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding LAG_DATA column to output MS "<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"LAG_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
@@ -391,12 +392,12 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			dataColMap_p[MS::DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding DATA column to output MS "<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
@@ -406,12 +407,12 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		{
 			dataColMap_p[MS::CORRECTED_DATA] = MS::DATA;
 			correctedToData_p = True;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding DATA column to output MS from input CORRECTED_DATA column"<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"CORRECTED_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
@@ -421,12 +422,12 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 		{
 			dataColMap_p[MS::MODEL_DATA] = MS::DATA;
 			dataColMap_p[MS::CORRECTED_DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 								"Adding DATA column to output MS from input MODEL_DATA column"<< LogIO::POST;
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__) <<
+			logger_p << LogIO::WARN << LogOrigin("MsTransformDataHandler", __FUNCTION__) <<
 					"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 	}
@@ -437,7 +438,7 @@ void TransformVisDataHandler::checkDataColumnsToFill()
 // -----------------------------------------------------------------------
 // Determine sort columns order
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::setIterationApproach()
+void MsTransformDataHandler::setIterationApproach()
 {
 	uInt nSortColumns = 7;
 
@@ -461,7 +462,7 @@ void TransformVisDataHandler::setIterationApproach()
 	}
 	else
 	{
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Combining data through scans for time average " << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Combining data through scans for time average " << LogIO::POST;
 	}
 
 	if (!combine_p.contains("state"))
@@ -471,7 +472,7 @@ void TransformVisDataHandler::setIterationApproach()
 	}
 	else
 	{
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Combining data through state for time average" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Combining data through state for time average" << LogIO::POST;
 	}
 
 	sortColumns_p[sortColumnIndex] = MS::FIELD_ID;
@@ -484,7 +485,7 @@ void TransformVisDataHandler::setIterationApproach()
 	}
 	else
 	{
-		logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__) << "Combining data from selected spectral windows" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__) << "Combining data from selected spectral windows" << LogIO::POST;
 	}
 
 	sortColumns_p[sortColumnIndex] =  MS::TIME;
@@ -495,7 +496,7 @@ void TransformVisDataHandler::setIterationApproach()
 // -----------------------------------------------------------------------
 // Generate the initial iterator
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::generateIterator()
+void MsTransformDataHandler::generateIterator()
 {
 	visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,sortColumns_p,false,NULL,false,timeBin_p);
 	return;
@@ -504,7 +505,7 @@ void TransformVisDataHandler::generateIterator()
 // -----------------------------------------------------------------------
 // Check configuration and input MS characteristics to determine run parameters
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::setup()
+void MsTransformDataHandler::setup()
 {
 	checkFillFlagCategory();
 	checkFillWeightSpectrum();
@@ -518,44 +519,27 @@ void TransformVisDataHandler::setup()
 // -----------------------------------------------------------------------
 // Fill output MS with data from an input VisBuffer
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
+void MsTransformDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 {
 	// Calculate number of rows to add to the output MS depending on the combination parameters
 	uInt rowsToAdd = 0;
 	if (combine_p.contains("spw"))
 	{
-		Vector<Int> ddis = vb->dataDescriptionIds();
-		map<Int,uInt> spwRowCounters;
-		for (uInt index = 0;index<ddis.size();index++)
+		baselineMap_p.clear();
+		Vector<Int> antenna1 = vb->antenna1();
+		Vector<Int> antenna2 = vb->antenna2();
+		for (uInt row=0;row<antenna1.size();row++)
 		{
-			Int spw = ddis(index);
-			if (spwRowCounters.find(spw) != spwRowCounters.end())
-			{
-				spwRowCounters[spw] += 1;
-			}
-			else
-			{
-				spwRowCounters[spw] = 1;
-			}
+			baselineMap_p[std::make_pair(antenna1(row),antenna2(row))].push_back(row);
 		}
-
-		rowsToAdd = spwRowCounters[ddis(0)];
-		for (map<Int,uInt>::iterator iter = spwRowCounters.begin();iter != spwRowCounters.end();iter++)
-		{
-			if (iter->second != rowsToAdd)
-			{
-				logger_p << LogIO::WARN << LogOrigin("TransformVisDataHandler", __FUNCTION__)
-						<< "Data Description " << iter->first
-						<< " has different number of rows from the rest, skipping" << LogIO::POST;
-			}
-		}
+		rowsToAdd = baselineMap_p.size();
 	}
 	else
 	{
 		rowsToAdd = vb->nRows();
 	}
 
-	logger_p << LogIO::NORMAL << LogOrigin("TransformVisDataHandler", __FUNCTION__)
+	logger_p << LogIO::NORMAL << LogOrigin("MsTransformDataHandler", __FUNCTION__)
 			<< "Adding " << rowsToAdd << " rows to output MS from "
 			<<  vb->nRows() << " rows in input MS selection" << LogIO::POST;
 
@@ -564,7 +548,7 @@ void TransformVisDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 
 	outputMs_p->addRow(rowsToAdd,True);
 
-    fillAuxCols(vb,rowRef);
+	fillIdCols(vb,rowRef);
     fillDataCols(vb,rowRef);
 
     return;
@@ -572,13 +556,11 @@ void TransformVisDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 }
 
 
-// -----------------------------------------------------------------------
-// Fill auxiliary (meta data) columns
-// -----------------------------------------------------------------------
-void TransformVisDataHandler::fillAuxCols(vi::VisBuffer2 *vb,RefRows &rowRef)
+// ----------------------------------------------------------------------------------------
+// Fill auxiliary (meta data) columns which don't depend on the SPW (merely consist of Ids)
+// ----------------------------------------------------------------------------------------
+void MsTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
-    Bool deleteIt = false;
-
     // For row-constant columns we have to create new vectors
 	Vector<Int> tmpInt(rowRef.nrow(),0);
 
@@ -592,109 +574,61 @@ void TransformVisDataHandler::fillAuxCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	outputMsCols_p->dataDescId().putColumnCells(rowRef, tmpInt);
 
 
-	// For row-variable columns we use re-sized vectors re-using the storage
-    IPosition shapeScalarColumns(1,rowRef.nrows());
-
-    Array<Int> antenna1(shapeScalarColumns,const_cast<Int*>(vb->antenna1().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->antenna1().putColumnCells(rowRef, antenna1);
-
-    Array<Int> antenna2(shapeScalarColumns,const_cast<Int*>(vb->antenna2().getStorage(deleteIt)),SHARE);
-	outputMsCols_p->antenna2().putColumnCells(rowRef, antenna2);
-
-	Array<Int> feed1(shapeScalarColumns,const_cast<Int*>(vb->feed1().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->feed1().putColumnCells(rowRef, feed1);
-
-	Array<Int> feed2(shapeScalarColumns,const_cast<Int*>(vb->feed2().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->feed2().putColumnCells(rowRef, feed2);
-
-	Array<Int> processorId(shapeScalarColumns,const_cast<Int*>(vb->processorId().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->processorId().putColumnCells(rowRef, processorId);
-
-	Array<Int> observationId(shapeScalarColumns,const_cast<Int*>(vb->observationId().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->observationId().putColumnCells(rowRef, observationId);
-
-	Array<Int> scan(shapeScalarColumns,const_cast<Int*>(vb->scan().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->scanNumber().putColumnCells(rowRef, scan);
-
-	Array<Int> stateId(shapeScalarColumns,const_cast<Int*>(vb->stateId().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->stateId().putColumnCells(rowRef, stateId);
-
-	Array<Double> time(shapeScalarColumns,const_cast<Double*>(vb->time().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->time().putColumnCells(rowRef, time);
-
-	Array<Double> timeCentroid(shapeScalarColumns,const_cast<Double*>(vb->timeCentroid().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->timeCentroid().putColumnCells(rowRef, timeCentroid);
-
-	Array<Double> timeInterval(shapeScalarColumns,const_cast<Double*>(vb->timeInterval().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->interval().putColumnCells(rowRef, timeInterval);
-
-	Array<Double> exposure(shapeScalarColumns,const_cast<Double*>(vb->exposure().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->exposure().putColumnCells(rowRef, exposure);
-
-    // TODO: UVW has to be re-calculated because it depends on the frequency
-    IPosition shapeUvw(2,3,rowRef.nrow());
-	Array<Double> uvw(shapeUvw,const_cast<Double*>(vb->uvw().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->uvw().putColumnCells(rowRef, uvw);
-
-    // TODO: FLAG_ROW has to be re-calculated because different SPWs may have different flags
-	Array<Bool> flagRow(shapeScalarColumns,const_cast<Bool*>(vb->flagRow().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->flagRow().putColumnCells(rowRef, flagRow);
-
-    // TODO: FLAG has to be re-calculated because different SPWs may have different flags
-    IPosition shapeFlags = vb->flagCube().shape();
-    shapeFlags(2) = rowRef.nrow();
-	Array<Bool> flag(shapeFlags,const_cast<Bool*>(vb->flag().getStorage(deleteIt)),SHARE);
-    outputMsCols_p->flag().putColumnCells(rowRef, flag);
-
-    // TODO: FLAG has to be re-calculated because different SPWs may have different flag categories
-    if (fillFlagCategory_p)
-    {
-        IPosition shapeFlagCategory = vb->flagCategory().shape();
-        shapeFlagCategory(3) = rowRef.nrow();
-        Array<Bool> flagCategory(shapeFlagCategory,const_cast<Bool*>(vb->flagCategory().getStorage(deleteIt)),SHARE);
-    	outputMsCols_p->flagCategory().putColumnCells(rowRef, flagCategory);
-    }
+	// For the row-variable columns we can use the VisBuffer vectors
+	writeVector(vb->antenna1(),outputMsCols_p->antenna1(),rowRef);
+	writeVector(vb->antenna2(),outputMsCols_p->antenna2(),rowRef);
+	writeVector(vb->feed1(),outputMsCols_p->feed1(),rowRef);
+	writeVector(vb->feed2(),outputMsCols_p->feed2(),rowRef);
+	writeVector(vb->processorId(),outputMsCols_p->processorId(),rowRef);
+	writeVector(vb->observationId(),outputMsCols_p->observationId(),rowRef);
+	writeVector(vb->scan(),outputMsCols_p->scanNumber(),rowRef);
+	writeVector(vb->stateId(),outputMsCols_p->stateId(),rowRef);
+	writeVector(vb->time(),outputMsCols_p->time(),rowRef);
+	writeVector(vb->timeCentroid(),outputMsCols_p->timeCentroid(),rowRef);
+	writeVector(vb->timeInterval(),outputMsCols_p->interval(),rowRef);
+	writeVector(vb->exposure(),outputMsCols_p->exposure(),rowRef);
 
 	return;
 }
 
 // -----------------------------------------------------------------------
-// Fill main (data) columns
+//
 // -----------------------------------------------------------------------
-void TransformVisDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
+template <class T> void MsTransformDataHandler::writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputarray, RefRows &rowRef)
 {
-    Bool deleteIt = false;
+	Bool deleteIt = false;
+	IPosition shapeScalarColumns(1,rowRef.nrows());
 
+    Array<T> outputArray(shapeScalarColumns,const_cast<T*>(inputVector.getStorage(deleteIt)),SHARE);
+    outputarray.putColumnCells(rowRef, outputArray);
+
+	return;
+}
+
+
+// ----------------------------------------------------------------------------------------
+// Fill main (data) columns which have to be combined together to produce bigger SPWs
+// ----------------------------------------------------------------------------------------
+void MsTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
+{
 	for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
 	{
 		switch (iter->first)
 		{
 			case MS::DATA:
 			{
-				IPosition shapeCube = vb->visCube().shape();
-				shapeCube(1) = (shapeCube(2)/rowRef.nrow())*shapeCube(1);
-				shapeCube(2) = rowRef.nrow();
-				Array<Complex> visCube(shapeCube,const_cast<Complex*>(vb->visCube().getStorage(deleteIt)),SHARE);
-				outputMsCols_p->data().putColumnCells(rowRef, visCube);
+				writeCube(vb->visCube(),outputMsCols_p->data(),rowRef);
 				break;
 			}
 			case MS::CORRECTED_DATA:
 			{
 				if (iter->second == MS::DATA)
 				{
-					IPosition shapeCube = vb->visCubeCorrected().shape();
-					shapeCube(1) = (shapeCube(2)/rowRef.nrow())*shapeCube(1);
-					shapeCube(2) = rowRef.nrow();
-					Array<Complex> visCube(shapeCube,const_cast<Complex*>(vb->visCubeCorrected().getStorage(deleteIt)),SHARE);
-					outputMsCols_p->data().putColumnCells(rowRef, visCube);
+					writeCube(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef);
 				}
 				else
 				{
-					IPosition shapeCube = vb->visCubeCorrected().shape();
-					shapeCube(1) = (shapeCube(2)/rowRef.nrow())*shapeCube(1);
-					shapeCube(2) = rowRef.nrow();
-					Array<Complex> visCube(shapeCube,const_cast<Complex*>(vb->visCubeCorrected().getStorage(deleteIt)),SHARE);
-					outputMsCols_p->correctedData().putColumnCells(rowRef, visCube);
+					writeCube(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef);
 				}
 				break;
 			}
@@ -702,29 +636,17 @@ void TransformVisDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			{
 				if (iter->second == MS::DATA)
 				{
-					IPosition shapeCube = vb->visCubeCorrected().shape();
-					shapeCube(1) = (shapeCube(2)/rowRef.nrow())*shapeCube(1);
-					shapeCube(2) = rowRef.nrow();
-					Array<Complex> visCube(shapeCube,const_cast<Complex*>(vb->visCubeModel().getStorage(deleteIt)),SHARE);
-					outputMsCols_p->data().putColumnCells(rowRef, visCube);
+					writeCube(vb->visCubeModel(),outputMsCols_p->data(),rowRef);
 				}
 				else
 				{
-					IPosition shapeCube = vb->visCubeCorrected().shape();
-					shapeCube(1) = (shapeCube(2)/rowRef.nrow())*shapeCube(1);
-					shapeCube(2) = rowRef.nrow();
-					Array<Complex> visCube(shapeCube,const_cast<Complex*>(vb->visCubeModel().getStorage(deleteIt)),SHARE);
-					outputMsCols_p->modelData().putColumnCells(rowRef, visCube);
+					writeCube(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef);
 				}
 				break;
 			}
 			case MS::FLOAT_DATA:
 			{
-				IPosition shapeCube = vb->visCubeFloat().shape();
-				shapeCube(1) = (shapeCube(2)/rowRef.nrow())*shapeCube(1);
-				shapeCube(2) = rowRef.nrow();
-				Array<Float> visCube(shapeCube,const_cast<Float*>(vb->visCubeFloat().getStorage(deleteIt)),SHARE);
-				outputMsCols_p->floatData().putColumnCells(rowRef, visCube);
+				writeCube(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef);
 				break;
 			}
 			case MS::LAG_DATA:
@@ -740,7 +662,80 @@ void TransformVisDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 	}
 
+	// Flag cube has to be re-shaped
+    writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
 
+	// Weight Spectrum has to be re-shaped
+    if (fillWeightSpectrum_p)
+    {
+    	writeCube(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef);
+    }
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MsTransformDataHandler::writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputarray,RefRows &rowRef)
+{
+	// Get input cube shape
+	IPosition inputCubeShape = inputCube.shape();
+	uInt nInputCorrelations = inputCubeShape(0);
+	uInt nInputChannels = inputCubeShape(1);
+
+	// Create output plane
+	baselineMap::iterator iter = baselineMap_p.begin();
+	vector<uInt> baselineRows = iter->second;
+	uInt nOutputChannels = nInputChannels*baselineRows.size();
+	IPosition planeShape(2,nInputCorrelations, nOutputChannels);
+	Matrix<T> outputPlane(planeShape,T());
+
+	uInt baseline_index = 0, channelOffset = 0;
+	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+	{
+		// Fill output plane with values from input cube
+		channelOffset = 0;
+		for (vector<uInt>::iterator row = baselineRows.begin();row != baselineRows.end(); row++)
+		{
+			for (uInt chan = 0; chan < nInputChannels; chan++)
+			{
+				uInt outputChannel = chan + channelOffset;
+				for (uInt pol = 0; pol < nInputCorrelations; pol++)
+				{
+					outputPlane(pol,outputChannel) = inputCube(pol,chan,*row);
+				}
+			}
+			channelOffset += nInputChannels;
+		}
+
+		// Write output plane
+		outputarray.setShape(rowRef.firstRow()+baseline_index,planeShape);
+		outputarray.put(rowRef.firstRow()+baseline_index, outputPlane);
+		baseline_index += 1;
+	}
+
+	return;
+}
+
+// ----------------------------------------------------------------------------------------
+// Fill auxiliary (meta data) columns which depend on the SPW and have to be merged
+// ----------------------------------------------------------------------------------------
+void MsTransformDataHandler::fillAuxCols(vi::VisBuffer2 *vb,RefRows &rowRef)
+{
+    Bool deleteIt = false;
+    IPosition shapeScalarColumns(1,rowRef.nrows());
+
+    // TODO: UVW has to be re-calculated because it depends on the frequency
+    IPosition shapeUvw(2,3,rowRef.nrow());
+	Array<Double> uvw(shapeUvw,const_cast<Double*>(vb->uvw().getStorage(deleteIt)),SHARE);
+    outputMsCols_p->uvw().putColumnCells(rowRef, uvw);
+
+    // TODO: FLAG_ROW has to be re-calculated because different SPWs may have different flags
+	Array<Bool> flagRow(shapeScalarColumns,const_cast<Bool*>(vb->flagRow().getStorage(deleteIt)),SHARE);
+    outputMsCols_p->flagRow().putColumnCells(rowRef, flagRow);
+
+	// TODO: Weight Mat has to be re-calculated because different SPWs may have different weights
 	IPosition shapeWeights = vb->weightMat().shape();
 	shapeWeights(1) = rowRef.nrows();
 	Array<Float> weight(shapeWeights,const_cast<Float*>(vb->weightMat().getStorage(deleteIt)),SHARE);
@@ -754,22 +749,23 @@ void TransformVisDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 	else
 	{
+		// TODO: Sigma has to be re-calculated because different SPWs may have different sigma
 		IPosition shapeSigma = vb->sigmaMat().shape();
 		shapeSigma(1) = rowRef.nrows();
 		Array<Float> sigma(shapeSigma,const_cast<Float*>(vb->sigmaMat().getStorage(deleteIt)),SHARE);
 		outputMsCols_p->sigma().putColumnCells(rowRef, sigma);
 	}
 
-
-    if (fillWeightSpectrum_p)
+    // TODO: FLAG has to be re-calculated because different SPWs may have different flag categories
+    if (fillFlagCategory_p)
     {
-		IPosition shapeWeightSpectrum= vb->weightSpectrum().shape();
-		shapeWeightSpectrum(2) = rowRef.nrows();
-		Array<Float> weightSpectrum(shapeWeightSpectrum,const_cast<Float*>(vb->weightSpectrum().getStorage(deleteIt)),SHARE);
-		outputMsCols_p->weightSpectrum().putColumnCells(rowRef, weightSpectrum);
+        IPosition shapeFlagCategory = vb->flagCategory().shape();
+        shapeFlagCategory(3) = rowRef.nrow();
+        Array<Bool> flagCategory(shapeFlagCategory,const_cast<Bool*>(vb->flagCategory().getStorage(deleteIt)),SHARE);
+    	outputMsCols_p->flagCategory().putColumnCells(rowRef, flagCategory);
     }
 
-	return;
+    return;
 }
 
 
