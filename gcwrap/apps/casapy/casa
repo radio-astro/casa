@@ -99,7 +99,7 @@ function ensure_directory_exists {
     if [ -d "$1" ]; then
         display_debugging_message "$2 found at: $1"
     else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
+        exit_with_error_message -1 "Directory $2 not found!  Looked at: $1"
     fi
 }
 
@@ -110,7 +110,7 @@ function ensure_executable_exists {
     if [ -x "$1" ]; then
         display_debugging_message "$2 found at: $1"
     else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
+        exit_with_error_message -1 "Executable $2 not found!  Looked at: $1"
     fi
 }
 
@@ -302,10 +302,11 @@ function set_DEBUGGER {
 }
 
 
-function set_PGPLOT_DIR {
+# function set_PGPLOT_DIR {
     # If it is already set, do not change it.
-    if [ "x$PGPLOT_DIR" = "x" ]; then
-        echo "TBD: set_PGPLOT_DIR"
+    # if [ "x$PGPLOT_DIR" = "x" ]; then
+        # echo "TBD: set_PGPLOT_DIR"
+        # TODO: Things seem to run OK without setting PGPLOT_DIR.  Consider deleting this code.
         #    local result=""
         #    export readonly PGPLOT_DIR="${CASA_3RD_PARTY_DIRECTORY}/lib"
         #    ensure_directory_exists "$PGPLOT_DIR" "PGPLOT_DIR"
@@ -327,8 +328,8 @@ function set_PGPLOT_DIR {
         #        echo
         #        echo
         #    fi
-    fi
-}
+    # fi
+# }
 
 function set_PYTHON_EXECUTABLE {
     # Ignore any previous values.
@@ -464,7 +465,7 @@ set_A_ARCH
 set_A_ROOT
 set_A_SITE
 set_CASAPATH
-set_PGPLOT_DIR
+# set_PGPLOT_DIR
 
 
 #
