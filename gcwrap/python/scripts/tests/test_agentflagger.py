@@ -388,10 +388,10 @@ class test_tsys(test_base):
         aflocal.done() 
 
         self.assertEqual(summary['report0']['total'], 129024.0)
-        self.assertEqual(summary['report0']['flagged'], 0.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['flagged'], 126.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 56.0)
         self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 64512.0)
-        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 70.0)
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 64512.0)
 
     def test_clip_nan_and_inf_fparm_all(self):
@@ -484,7 +484,7 @@ class test_bpass(test_base):
         aflocal.init()
         summary = aflocal.run(writeflags=True)
         aflocal.done() 
-        self.assertEqual(summary['report0']['flagged'], 9950, 'Should use CPARAM as the default column')
+        self.assertEqual(summary['report0']['flagged'], 11078.0, 'Should use CPARAM as the default column')
 
     def test_manual_field_selection_agent_layer_for_bpass_CalTable(self):
         """AgentFlagger:: Manually flag a bpass-based CalTable using flag agent selection engine for field """
@@ -587,9 +587,9 @@ class test_bpass(test_base):
         aflocal.init()
         summary = aflocal.run(writeflags=True)
         aflocal.done() 
-        self.assertEqual(summary['report0']['flagged'], 10047)
+        self.assertEqual(summary['report0']['flagged'], 11175.0)
         self.assertEqual(summary['report0']['total'], 1248000)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 10008)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 11136.0)
         self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 39)
         
     def test_clip_minmax_snr_all_for_bpass_CalTable(self):
@@ -610,8 +610,8 @@ class test_bpass(test_base):
         aflocal.done() 
 
         self.assertEqual(summary['report0']['total'], 1248000.0)
-        self.assertEqual(summary['report0']['flagged'], 73174.0)
-        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 35130.0)
+        self.assertEqual(summary['report0']['flagged'], 74371.0)
+        self.assertEqual(summary['report0']['correlation']['Sol1']['flagged'], 36327.0)
         self.assertEqual(summary['report0']['correlation']['Sol1']['total'], 624000.0)
         self.assertEqual(summary['report0']['correlation']['Sol2']['flagged'], 38044.0)
         self.assertEqual(summary['report0']['correlation']['Sol2']['total'], 624000.0)
@@ -655,13 +655,13 @@ class test_bpass(test_base):
         summary = aflocal.run(writeflags=True)
         aflocal.done()
         
-        # flags from first summary, only tfcrop       
-        assert abs(summary['report0']['flagged'] - 29299) <= 5        
-        assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 29299) <= 5
+        # flags from first summary, only tfcrop     
+        assert abs(summary['report0']['flagged'] - 30427) <= 5        
+        assert abs(summary['report0']['correlation']['Sol1']['flagged'] - 30427) <= 5
         
         # flags from second summary, tfcrop+extend
-        assert abs(summary['report2']['flagged'] - 2*29299) <= 10
-        assert abs(summary['report2']['correlation']['Sol2']['flagged'] - 29299) <= 5        
+        assert abs(summary['report2']['flagged'] - 2*30427) <= 10
+        assert abs(summary['report2']['correlation']['Sol2']['flagged'] - 30427) <= 5        
 
 #class test_MS(test_base):
 #

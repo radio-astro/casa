@@ -1593,7 +1593,14 @@ FlagAgentBase::isZero(Float number)
 	switch (type)
 	{
 		case FP_NORMAL:
-			return false;
+			if (number <= FLT_MIN)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		case FP_ZERO:
 			return true;
 		case FP_SUBNORMAL:
@@ -1614,7 +1621,14 @@ FlagAgentBase::isZero(Double number)
 	switch (type)
 	{
 		case FP_NORMAL:
-			return false;
+			if (number <= FLT_EPSILON)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		case FP_ZERO:
 			return true;
 		case FP_SUBNORMAL:
@@ -1683,7 +1697,14 @@ FlagAgentBase::isNaNOrZero(Float number)
 	switch (type)
 	{
 		case FP_NORMAL:
-			return false;
+			if (number <= FLT_EPSILON)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		case FP_ZERO:
 			return true;
 		case FP_SUBNORMAL:
@@ -1707,7 +1728,14 @@ FlagAgentBase::isNaNOrZero(Double number)
 	switch (type)
 	{
 		case FP_NORMAL:
-			return false;
+			if (number <= FLT_EPSILON)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		case FP_ZERO:
 			return true;
 		case FP_SUBNORMAL:

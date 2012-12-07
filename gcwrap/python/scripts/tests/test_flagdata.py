@@ -1526,10 +1526,10 @@ class test_tsys(test_base):
         res=flagdata(vis=self.vis, mode='summary')
                
         self.assertEqual(res['total'], 129024.0)
-        self.assertEqual(res['flagged'], 0.0)
-        self.assertEqual(res['correlation']['Sol1']['flagged'], 0.0)
+        self.assertEqual(res['flagged'], 126.0)
+        self.assertEqual(res['correlation']['Sol1']['flagged'], 56.0)
         self.assertEqual(res['correlation']['Sol1']['total'], 64512.0)
-        self.assertEqual(res['correlation']['Sol2']['flagged'], 0.0)
+        self.assertEqual(res['correlation']['Sol2']['flagged'], 70.0)
         self.assertEqual(res['correlation']['Sol2']['total'], 64512.0)
 
 
@@ -1620,13 +1620,13 @@ class test_bandpass(test_base):
         '''Flagdata: flag CPARAM as the default column'''
         flagdata(vis=self.vis, mode='clip', clipzeros=True)
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 9950, 'Should use CPARAM as the default column')
+        self.assertEqual(res['flagged'], 11078.0, 'Should use CPARAM as the default column')
 
     def test_invalid_datacol(self):
         '''Flagdata: invalida data column should fall back to default'''
         flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='PARAMERR')
         res=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['flagged'], 9950)
+        self.assertEqual(res['flagged'], 11078.0)
                 
         
     def test_manual_field_selection_for_bpass(self):
@@ -1682,9 +1682,9 @@ class test_bandpass(test_base):
 
         flagdata(vis=self.vis, mode='clip',clipzeros=True, clipminmax=[0,0.3], datacolumn='CPARAM')
         summary=flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(summary['flagged'], 10047)
+        self.assertEqual(summary['flagged'], 11175.0)
         self.assertEqual(summary['total'], 1248000)
-        self.assertEqual(summary['correlation']['Sol1']['flagged'], 10008)
+        self.assertEqual(summary['correlation']['Sol1']['flagged'], 11136.0)
         self.assertEqual(summary['correlation']['Sol2']['flagged'], 39)
 
     def test_clip_minmax_snr_all_for_bpass(self):
@@ -1695,8 +1695,8 @@ class test_bandpass(test_base):
                  correlation='')
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['total'], 1248000.0)
-        self.assertEqual(summary['flagged'], 73174.0)
-        self.assertEqual(summary['correlation']['Sol1']['flagged'], 35130.0)
+        self.assertEqual(summary['flagged'], 74371.0)
+        self.assertEqual(summary['correlation']['Sol1']['flagged'], 36327.0)
         self.assertEqual(summary['correlation']['Sol1']['total'], 624000.0)
         self.assertEqual(summary['correlation']['Sol2']['flagged'], 38044.0)
         self.assertEqual(summary['correlation']['Sol2']['total'], 624000.0)
@@ -1718,16 +1718,16 @@ class test_bandpass(test_base):
         self.assertEqual(summary['correlation']['Sol2']['flagged'], 13197)
 
     def test_tfcrop_cparam_all_for_bpass(self):
-        """Flagdata:: Test tfcrop in REAL_ALL calibration solutions of CPARAM column"""
+        """Flagdata:: Test tfcrop in ABS_ALL calibration solutions of CPARAM column"""
 
-        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='REAL_ALL',clipzeros=True)
-        flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='REAL_ALL')
+        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='ABS_ALL',clipzeros=True)
+        flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='ABS_ALL')
         summary=flagdata(vis=self.vis, mode='summary')
 #        self.assertTrue(abs(summary['flagged'] - 63861.0) <= 5)
 #        self.assertEqual(abs(summary['flagged'] - 69369) <= 5)
-        assert abs(summary['flagged'] - 79318) <= 10
-        assert abs(summary['correlation']['Sol1']['flagged'] - 46261) <= 5
-        assert abs(summary['correlation']['Sol2']['flagged'] - 33057) <= 5
+        assert abs(summary['flagged'] - 49524) <= 5
+        assert abs(summary['correlation']['Sol1']['flagged'] - 30427) <= 5
+        assert abs(summary['correlation']['Sol2']['flagged'] - 19097) <= 5
 
     def test_tfcrop_cparam_sol1_extension_for_bpass(self):
         """Flagdata:: Test tfcrop first calibration solution product of CPARAM column, 
@@ -1736,14 +1736,14 @@ class test_bandpass(test_base):
         flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='Sol1',clipzeros=True)
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='Sol1')
         pre=flagdata(vis=self.vis, mode='summary')
-        assert abs(pre['flagged'] - 29299) <= 5
-        assert abs(pre['correlation']['Sol1']['flagged'] - 29299) <= 5
+        assert abs(pre['flagged'] - 30426) <= 5
+        assert abs(pre['correlation']['Sol1']['flagged'] - 30426) <= 5
         
         # Extend to other solution
         flagdata(vis=self.vis, mode='extend', extendpols=True, growfreq=0.0, growtime=0.0)
         pos=flagdata(vis=self.vis, mode='summary')
-        assert abs(pos['flagged'] - 2*29299) <= 10
-        assert abs(pos['correlation']['Sol2']['flagged'] - 29299) <= 5        
+        assert abs(pos['flagged'] - 2*30426) <= 10
+        assert abs(pos['correlation']['Sol2']['flagged'] - 30426) <= 5        
 
     def test_caltable_flagbackup(self):
         '''Flagmanager:: cal table mode=list, flagbackup=True/False'''
