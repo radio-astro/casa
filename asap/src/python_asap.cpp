@@ -87,6 +87,7 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_STGrid();
   asap::python::python_Iterator();
   asap::python::python_EdgeMarker();
+  asap::python::python_PlotHelper();
 
 #ifndef HAVE_LIBPYRAP
   // Use built-in pyconversions.h

@@ -54,6 +54,7 @@ namespace asap {
     void python_STGrid();
     void python_Iterator();
     void python_EdgeMarker();
+    void python_PlotHelper();
 
   } // python
 } //asap

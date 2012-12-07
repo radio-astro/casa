@@ -68,6 +68,7 @@ set( ASAP_SRCS
      ${SRCDIR}/EdgeDetector.cpp
      ${SRCDIR}/RasterEdgeDetector.cpp
      ${SRCDIR}/GenericEdgeDetector.cpp
+     ${SRCDIR}/PlotHelper.cpp
      ${SRCDIR}/Templates.cpp )
 
 set( ASAP_PYSRCS
@@ -91,6 +92,7 @@ set( ASAP_PYSRCS
      ${SRCDIR}/python_STGrid.cpp
      ${SRCDIR}/python_Iterator.cpp
      ${SRCDIR}/python_EdgeMarker.cpp
+     ${SRCDIR}/python_PlotHelper.cpp
      ${SRCDIR}/python_asap.cpp )
 
 add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} )
