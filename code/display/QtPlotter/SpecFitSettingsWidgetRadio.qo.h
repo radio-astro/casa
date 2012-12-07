@@ -61,13 +61,14 @@ public:
 private slots:
 	void polyFitChanged( int state );
 	void gaussCountChanged( int count );
+	void fitRatioChanged( int count );
 	void clean();
 	void specLineFit();
 	void setOutputLogFile();
 	void viewOutputLogFile();
 	void saveOutputChanged( int state );
 	void specFitEstimateSpecified(double xValue,double yValue, bool centerPeak);
-	void fitDone();
+	void fitDone( bool newData = true );
 	void cancelFit();
 	void specifyGaussianEstimates();
 	void gaussianEstimatesChanged();
@@ -89,6 +90,7 @@ private:
 	int getFitCount(Int& startChannelIndex, Int& endChannelIndex );
 	void clearEstimates();
 	void clear();
+	void emptyCurveList();
 	void resolveOutputLogFile( );
 	/**
 				 * Decides if the units represent velocity, wavelength, or frequency.

@@ -18,13 +18,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-casa_add_library( transformvis
-  Transformvis/TransformVisDataHandler.cc
-   )
+casa_add_library( mstransform 
+ MsTransform/MsTransformDataHandler.cc 
+)
 
 install (FILES
-	Transformvis/TransformVisDataHandler.h
-	DESTINATION include/casacode/transformvis/Transformvis
+	MsTransform/MsTransformDataHandler.h
+	DESTINATION include/casacode/mstransform/MsTransform
 	)
 
-casa_add_test( transformvis Transformvis/test/tTransformVisDataHandler.cc )
+casa_add_test( mstransform MsTransform/test/tMsTransformDataHandler.cc )
+casa_add_executable( mstransform tmstransform MsTransform/test/tMsTransformDataHandler.cc )

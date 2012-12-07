@@ -126,7 +126,7 @@ public:
     // Copy construct, looses synchronization with iterator: only use buffer for
     // current iteration (or reattach).
 
-    VisBufferImpl2(VisibilityIterator2 * iter, Bool isWritable);
+    VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options);
 
     // Destructor (detaches from VisIter)
 
@@ -148,6 +148,7 @@ public:
 
     virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent, Bool fetchIfNeeded = True);
 
+    virtual Vector<Int> getCorrelationNumbers () const;
     virtual String getFillErrorMessage () const;
     virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex, Int frame = FrameNotSpecified) const;
     virtual const Vector<Double> & getFrequencies (Int rowInBuffer,
@@ -161,6 +162,9 @@ public:
 
     virtual Bool isAttached () const;
     virtual Bool isFillable () const;
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows);
+    virtual void validateShapes () const;
+
 
     virtual void writeChangesBack ();
 
@@ -221,7 +225,6 @@ public:
     virtual Bool areCorrelationsSorted() const;
     virtual IPosition getValidShape (Int) const;
     virtual VisModelData getVisModelData() const;
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows);
 
     //////////////////////////////////////////////////////////////////////
     //
@@ -355,7 +358,8 @@ protected:
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
-                                       Int nRows, Int nChannels, Int nCorrelations);
+                                       Int nRows, Int nChannels, Int nCorrelations
+                                       ,const Vector<Int> & correlations);
 
     virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
     virtual void dirtyComponentsAdd (VisBufferComponent2 component);
@@ -377,17 +381,16 @@ protected:
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem);
 
-    void validateShapes () const;
 
 private:
 
     virtual Bool areCorrelationsInCanonicalOrder () const;
     void checkVisIterBase (const char * func, const char * file, int line, const char * extra = "") const;
-    void construct(VisibilityIterator2 * vi);
+    void construct(VisibilityIterator2 * vi, VisBufferOptions options);
     void constructCache();
     void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
                            Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow,
-                           const Subchunk & subchunk);
+                           const Subchunk & subchunk, const Vector<Int> & correlations);
     virtual void validate();
 
     /////////////////////////////////////////

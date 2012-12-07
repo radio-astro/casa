@@ -4,6 +4,7 @@
 
 % JO  2010-10-12 doc created for CASA 3.1.0
 % JO  2012-05-06 Release 3.4 edits
+% JO  2012-11-08 Release 4.0 edits
 
 \chapter[Appendix: Models, Conventions and Reference Frames]
          {Appendix: Models, Conventions, and Reference Frames}
@@ -51,145 +52,238 @@ which observed your FD calibrator closest to the time you observed it at.
 The measurements \underline{are} interpolated in frequency, however, using second to
 fourth degree polynomials of the frequency's logarithm.
 
-\begin{table}[htb]
-\caption{Extragalactic objects recognized by {\tt setjy}\label{table:conventions.fluxdensity.sources}}
+\begin{table}[h!]
+\caption{Recognized Flux Density Calibrators. Note that the VLA uses
+J2000 calibrator names. CASA accepts all strings that contain the
+names below. E.g. 'PKS 1934-638' will be recognized
+        {\label{table:conventions.fluxdensity.sources}}}
 \begin{center}
-\begin{tabular}{ll}
- FD calibrator  &  Aliases                         \\
+\begin{tabular}{|ccccc|} \hline
+ {\bf 3C Name}  & {\bf B1950 Name}& {\bf J2000 Name} & {\bf Alt. J2000
+   Name} & {\bf Standards}\\
+3C48  &  0134+329 &  0137+331 &  J0137+3309 & 1,3,4,5,6  \\
+3C123 &  0433+295 &  0437+296 &  J0437+2940 &      2 \\
+3C138 &  0518+165 &  0521+166 &  J0521+1638 &      1,3,4,5,6\\
+3C147 &  0538+498 &  0542+498 &  J0542+4951 &      1,3,4,5,6\\
+3C196 &  0809+483 &  0813+482 &  J0813+4813 &      1,2 \\
+3C286 &  1328+307 &  1331+305 &  J1331+3030 &      1,2,3,4,5,6\\
+3C295 &  1409+524 &  1411+522 &  J1411+5212 &      1,2,3,4,5,6\\
+ --   &  1934-638 &    --     &  J1939-6342 &      1,3,4,5,6\\
 \hline
- 3C286          &  1328+307, 1331+305, J1331+3030  \\
- 3C48           &  0134+329, 0137+331, J0137+3309  \\
- 3C147          &  0538+498, 0542+498, J0542+4951  \\
- 3C138          &  0518+165, 0521+166, J0521+1638  \\
- 1934-638       &                                  \\
- 3C295          &  1409+524, 1411+522, J1411+5212  \\
- 3C196          &  0809+483, 0813+482, J0813+4813  \\
 \end{tabular}
 \end{center}
+Standards are: (1) Perley-Butler 2010, (2) Perley-Butler 2013, (3) Perley-Taylor 99, (4)
+Perley-Taylor 95, (5) Perley 90, (6) Baars
 \end{table}
 
 
+
 \subsubsection{Baars}
-\label{sec-1.1.1}
+%\label{sec-1.1.1}
 \label{section:conventions.longwavelength.baars}
 
 The only standard to not have the year in the name.  It is \textbf{1977}.
 
-The models are second order polynomials in log$\nu$, valid between 408 MHz and
+The models are second order polynomials in $\log(\nu)$, valid between 408 MHz and
 15 GHz.
 
-The paper is Baars et al. (1977)  (bibliography in
-Sect.\,\ref{section:conventions.fluxreferences}) with a commentary by
-Kellerman (2009).
+The paper is Baars, J. W. M., Genzel, R., Pauliny-Toth, I. I. K., \&
+Witzel, A. 1977, A\&A, 61, 99 with a commentary by 
+Kellermann, K. I. 1999, A\&A 500, 143.
 
 
 \subsubsection{Perley 90}
-\label{sec-1.1.2}
+%\label{sec-1.1.2}
 \label{section:conventions.longwavelength.perley90}
 
 This standard also includes 1934-638 from Reynolds (7/94) and 3C138
-from Baars et al. (1977).
+from Baars, J. W. M., Genzel, R., Pauliny-Toth, I. I. K., \&  Witzel,
+A. 1977, A\&A, 61, 99.
 
-Reference: {\it Website 1} in \ref{section:conventions.fluxreferences} 
+Details can be found at \url{http://www.vla.nrao.edu/astro/calib/manual/baars.html}.
 
 \subsubsection{Perley-Taylor 95}
-\label{sec-1.1.3}
 \label{section:conventions.longwavelength.perleytaylor95}
 
 Perley and Taylor (1995.2); plus Reynolds (1934-638; 7/94)
-
-Reference: {\it Website 1}
+Details can be found at \url{http://www.vla.nrao.edu/astro/calib/manual/baars.html}.
 
 \subsubsection{Perley-Taylor 99}
-%\label{sec-1.1.4}
 \label{section:conventions.longwavelength.perleytaylor99}
 
 Perley and Taylor (1999.2); plus Reynolds (1934-638; 7/94)
+Details can be found at \url{http://www.vla.nrao.edu/astro/calib/manual/baars.html}.
 
-Reference: {\it Website 1}
  
 \subsubsection{Perley-Butler 2010}
-%\label{sec-1.1.5}
 \label{section:conventions.longwavelength.perleybutler10}
 
-Made using VLA (not JVLA!) data.
+A preliminary version of Perley-Butler 2013
+(S\,\ref{section:conventions.longwavelength.perleybutler13}). This
+version has also coefficients for sources that showed some degree of
+variability, see Perley, R. A., \& Butler, B. J. 2012, ApJS, submitted
+(\url{http://arxiv.org/abs/1211.1300}).
 
-Reference: {\it Website 1}
+ 
+\subsubsection{Perley-Butler 2013}
+\label{section:conventions.longwavelength.perleybutler13}
+
+Flux scale for the constant flux sources 3C123, 3C196, 3C286,
+and 3C295.
+
+Reference: Perley, R. A., \& Butler, B. J. 2012, ApJS, submitted\\
+\url{http://arxiv.org/abs/1211.1300}
+
+
 
 \subsection{Short wavelength calibration}
 %\label{sec-1.2}
 \label{section:conventions.shortwavelength}
 
-The usual approach in this regime is to use (nearly) thermal sources in the
-Solar System.  Their apparent brightness of course varies in time with their
-distance from the Earth (and Sun), and orientation if they are not perfect
-spheres with zero obliquity.  However, most of them have almost constant
-surface properties, so once those properties are measured their apparent
-brightness distributions can in principle be predicted for any time, given an
-ephemeris.
-
-In CASA all of the Solar System objects supported by {\tt setjy} are lumped
-under one standard, `Butler-JPL-Horizons 2010', since none of them are covered
-by more than one model yet.  The model uses a uniform temperature disk whose
-semiaxes are set using ephemerides from the JPL-Horizons project.  All of the
-objects are warm enough to put them in the Rayleigh-Jeans regime for ALMA, but
-the FD as a function of frequency is calculated using the full Planck
-equation.  Synchrotron emission (the gas giants) is accounted for by using
-models that smoothly vary the brightness temperature with frequency.
-
-\begin{table}[htb]
-\caption{Notable Solar System objects\label{table:conventions.fluxdensity.solarsystem}}
-\begin{center}
-\begin{tabular}{lp{9cm}}
- Object         &  Notes                                                                                                                                            \\
-\hline
- Mercury        &  Not yet included (phase angle)                                                                                                                   \\
- Venus          &  Not yet included (phase angle)                                                                                                                   \\
- Earth          &  Not yet included (very resolved)                                                                                                                 \\
- Mars           &  Taken to be 210K (JPL ephemeris)                                                                                                                 \\
- Jupiter        &  Model from B. Butler, $\lambda \in [0.1, 6.2]$ cm                                                                                                \\
- Ceres          &  167K (Saint-Pe et al 1993)                                                                                                 \\
- Pallas         &  164K (Not yet scaled for its varying distance from the Sun.  e = 0.231)                                                                          \\
- Juno           &  163K, but it has a large crater and temperature changes. (Lim et al. 2005)                                                   \\
- Io             &  110K (Rathbun et al. 2004)                                                                                               \\
- Europa         &  109K ({\it Website 2})                                                      \\
- Callisto       &  134K ($\pm 11$ K, Moore et al. 2004,)                                                  \\
- Ganymede       &  110K ({Delitsky et al, 1998, J.Geophys.Res. 103 (E13)})              \\
- Saturn         &  Not yet included (the rings, the rings)                                                                                                          \\
- Titan          &  76.6K (B. Butler)                                                                                                                                \\
- Uranus         &  Model from B. Butler, $\lambda \in [0.07, 6.2]$ cm                                                                                               \\
- Uranian moons  &  Not yet included (obliquity issues, esp. since the Voyager era was apx. 1 Uranian season ago.)                                                   \\
- Neptune        &  Model from B. Butler, $\nu \in [4.0, 1000.0]$ GHz (more refs in code comments)                                                                   \\
- Triton         &  38K ({\it Website 3})                                                                 \\
- Pluto          &  35K (Altenhoff et al. 1988 + more refs in code
- comments.)  {\tt setjy} does not check whether Charon was in the field.  \\
-\end{tabular}
-\end{center}
-\end{table}
 
 
-For most Solar System FD calibrators, the temperature reference will also be
-sent to the logger if {\tt casalog.filter('INFO1')} (or lower) is run before
-running {\tt setjy}.  If there is a discrepancy between the logger note and this
-appendix, the logger note is more likely to be up to date.
+%\subsection{Butler JPL Horizons 2010 }
+%\label{section:conventions.shortwavelengths.butlerhorizons2010}
 
-\subsection{References to this Section}
-\label{section:conventions.fluxreferences}
+The usual approach in this regime is to use models that are, to first
+order, thermal sources in the Solar System. Their apparent brightness
+of course varies in time with their distance from the Earth (and Sun),
+and orientation if they are not perfect spheres with zero obliquity.
+However, most of them have almost constant surface properties, so once
+those properties are measured their apparent brightness distributions
+can in principle be predicted for any time, given an
+ephemeris. Planets, in particular, however, have more complex spectra
+and effects such as atmospheric lines, magnetic fields, seasons, polar
+caps and surface features need to be taken into account when they are
+available and significant. In CASA the Solar System objects supported
+by {\tt setjy} are available through the `Butler-JPL-Horizons 2010',
+and 'Butler-JPL-Horizons 2012' standards. The models are described in ALMA
+Memo 594 available on
+\url{https://science.nrao.edu/facilities/alma/aboutALMA/Technology/ALMA_Memo_Series/alma594/abs594}.
 
-\noindent Altenhoff et al. 1988, A\&ALetter, 190, L15\\
-\noindent Baars, J. W. M., Genzel, R., Pauliny-Toth, I. I. K., \&  Witzel,
-A. 1977, A\&A, 61, 99\\
-\noindent Delitsky et al. 1998, J.Geophys.Res. 103 (E13)\footnote{http://trs-new.jpl.nasa.gov/dspace/bitstream/2014/20675/1/98-1725.pdf}\\
-\noindent Kellermann, K. I. 1999, A\&A 500, 143\\
-\noindent Lim et al. 2005, Icarus 173, 385\\
-\noindent Moore et al. 2004, in ``Jupiter: The Planet, Satellites, and Magnetosphere''\\
-\noindent Rathbun et al. 2004, Icarus 169, 127\\
-\noindent Saint-Pe et al. 1993, Icarus 105, 271\\
+% since none of them are covered by more than
+%one model yet.  The model uses a uniform temperature disk whose
+%semiaxes are set using ephemerides from the JPL-Horizons project.  All
+%of the objects are warm enough to put them in the Rayleigh-Jeans
+%regime for ALMA, but the FD as a function of frequency is calculated
+%using the full Planck equation.  Synchrotron emission (the gas giants)
+%is accounted for by using models that smoothly vary the brightness
+%temperature with frequency.
+%
+%\begin{table}[htb]
+%\caption{Notable Solar System objects for Butler JPL Horizons 2012 \label{table:conventions.fluxdensity.solarsystem}}
+%\begin{center}
+%\begin{tabular}{lp{9cm}}
+% Object         &  Notes                                                                                                                                            \\
+%\hline
+% Mercury        &  Not yet included (phase angle)                                                                                                                   \\
+% Venus          &  Not yet included (phase angle)                                                                                                                   \\
+% Earth          &  Not yet included (very resolved)                                                                                                                 \\
+% Mars           &  Taken to be 210K (JPL ephemeris)                                                                                                                 \\
+% Jupiter        &  Model from B. Butler, $\lambda \in [0.1, 6.2]$ cm                                                                                                \\
+% Ceres          &  167K (Saint-Pe et al 1993)                                                                                                 \\
+% Pallas         &  164K (Not yet scaled for its varying distance from the Sun.  e = 0.231)                                                                          \\
+% Juno           &  163K, but it has a large crater and temperature changes. (Lim et al. 2005)                                                   \\
+% Io             &  110K (Rathbun et al. 2004)                                                                                               \\
+% Europa         &  109K ({\it Website 2})                                                      \\
+% Callisto       &  134K ($\pm 11$ K, Moore et al. 2004,)                                                  \\
+% Ganymede       &  110K ({Delitsky et al, 1998, J.Geophys.Res. 103 (E13)})              \\
+% Saturn         &  Not yet included (the rings, the rings)                                                                                                          \\
+% Titan          &  76.6K (B. Butler)                                                                                                                                \\
+% Uranus         &  Model from B. Butler, $\lambda \in [0.07, 6.2]$ cm                                                                                               \\
+% Uranian moons  &  Not yet included (obliquity issues, esp. since the Voyager era was apx. 1 Uranian season ago.)                                                   \\
+% Neptune        &  Model from B. Butler, $\nu \in [4.0, 1000.0]$ GHz (more refs in code comments)                                                                   \\
+% Triton         &  38K ({\it Website 3})                                                                 \\
+% Pluto          &  35K (Altenhoff et al. 1988 + more refs in code
+% comments.)  {\tt setjy} does not check whether Charon was in the field.  \\
+%\end{tabular}
+%\end{center}
+%\end{table}
+%
+%
+%For most Solar System FD calibrators, the temperature reference will also be
+%sent to the logger if {\tt casalog.filter('INFO1')} (or lower) is run before
+%running {\tt setjy}.  If there is a discrepancy between the logger note and this
+%appendix, the logger note is more likely to be up to date.
+%
+%
+%\subsection{Butler JPL Horizons 2012}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012}
+%An updated version of solar system models is provided by the
+%``Butler-JPL-Horizons 2012'' model. Details are provided by a
+%forthcoming memo. The model is applicable to the planets
+%Venus, Mars, Jupiter, Uranus, and Neptune, Jupiter's moons Io, Europa,
+%Ganymede, Callisto, and Saturn's moon Titan, and the Asteroids
+%Ceres, Pallas, Vesta, and Juno.
+%
+%\subsubsection{Venus}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012.venus}
+%This is very similar to Butler JPL Horizons 2010, but a modified
+%atmospheric model was used which extended to higher altitudes, based
+%on the results of Clancy et al. (2012).  The difference between the
+%2010 and 2012 models is tiny.
+%
+%\subsubsection{Mars}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012.mars}
+%A full implementation of the model of Rudy et al. (1988), updated as
+%per \url{http://www.aoc.nrao.edu/\~bbutler/work/mars/model}.  This was
+%calculated as a function of time and frequency, with tabulations every
+%hour and at frequencies of: 30, 80, 115, 150, 200, 230, 260, 300, 330,
+%360, 425, 650, 800, 950, and 1000 GHz.
+%
+%\subsubsection{Jupiter}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012.jupiter}
+%Model from Glenn Orton, from 30-1020 GHz.  Also contains no
+%synchrotron.
+%
+%\subsubsection{Uranus}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012.uranus}
+%Model from Glenn Orton and Raphael Moreno, from 60-1800 GHz.  Also
+%contains no rings or synchrotron.  This model is the so-called “ESA 4”
+%model, which is also used by Herschel for flux density scale
+%calibration.
+%
+%\subsubsection{Neptune}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012.neptune}
+%Model from Glenn Orton and Raphael Moreno, from 2-2000 GHz.  Also
+%contains no rings or synchrotron.  This model is the so-called “ESA 3”
+%model, which is also used by Herschel for flux density scale
+%calibration.
+%
+%
+%\subsubsection{Moons}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012.moons}
+%Values are interpolated from IR flux measurements of Morrison (1977),
+%mm/submm values only from IRAM, PdB, SMA, OVRO and cm values from VLA
+%data (details to be found in the forthcoming memo; please submit a
+%CASA helpdesk ticket if you need the details earlier).
+%
+%\subsubsection{Asteroids}
+%\label{section:conventions.shortwavelengths.butlerhorizons2012.asteroids}
+%Please contact the CASA helpdesk for details.
+%
 
-\noindent {\it Website 1:} \url{http://www.vla.nrao.edu/astro/calib/manual/baars.html}\\
-\noindent {\it Website 2:} \url{http://science.nasa.gov/science-news/science-at-nasa/1998/ast03dec98_1/}\\
-\noindent {\it Website 3:} \url{http://solarsystem.nasa.gov/planets/profile.cfm?Object=Triton}\\
-%\end{document}
+%\subsection{References to this Section}
+%\label{section:conventions.fluxreferences}
+%
+%\noindent Altenhoff et al. 1988, A\&ALetter, 190, L15\\
+%\noindent Baars, J. W. M., Genzel, R., Pauliny-Toth, I. I. K., \&  Witzel,
+%A. 1977, A\&A, 61, 99\\
+%\noindent  Clancy et al. (2012)\\
+%\noindent Delitsky et al. 1998, J.Geophys.Res. 103 (E13)\footnote{http://trs-new.jpl.nasa.gov/dspace/bitstream/2014/20675/1/98-1725.pdf}\\
+%\noindent Kellermann, K. I. 1999, A\&A 500, 143\\
+%\noindent Lim et al. 2005, Icarus 173, 385\\
+%\noindent Moore et al. 2004, in ``Jupiter: The Planet, Satellites, and Magnetosphere''\\
+%\noindent Morrison (1977)\\
+%\noindent Perley, R. A., \& Butler, B. J. 2012, ApJS, submitted \url{http://arxiv.org/abs/1211.1300}
+%\noindent Rathbun et al. 2004, Icarus 169, 127\\
+%\noindent  Rudy et al. (1988)\\
+%\noindent Saint-Pe et al. 1993, Icarus 105, 271\\
+%
+%\noindent {\it Website 1:} \url{http://www.vla.nrao.edu/astro/calib/manual/baars.html}\\
+%\noindent {\it Website 2:} \url{http://science.nasa.gov/science-news/science-at-nasa/1998/ast03dec98_1/}\\
+%\noindent {\it Website 3:} \url{http://solarsystem.nasa.gov/planets/profile.cfm?Object=Triton}\\
+%%\end{document}
 
 
 
@@ -603,7 +697,7 @@ Constant & Name & Value \\
          F      & Faraday const           &  96485.3 C\,mol$^{-1}$  \\
          me     & electron mass           &  9.10939$\times10^{-31}$\, kg  \\
          re     & electron radius         &  2.8179e$\times10^{-15}$\, m  \\
-         a0     & Bohr��s radius            &  5.2918$\times10^{-11}$\, m  \\
+         a0     & Bohr¡¯s radius            &  5.2918$\times10^{-11}$\, m  \\
          R0     & solar radius            &  6.9599$\times10^{8}$\, m  \\
          k2     & IAU grav. const$^{2}$    &  0.000295912
          AU$^{3}$\,d$^{-2}$\,S0$^{-1}$ \\

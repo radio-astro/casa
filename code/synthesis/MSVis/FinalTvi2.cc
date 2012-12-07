@@ -20,7 +20,8 @@ FinalTvi2::FinalTvi2 (ViImplementation2 * inputVi, VisibilityIterator2 * vi,
   columnsAttached_p (False),
   ms_p (finalMs)
 {
-    setVisBuffer (VisBuffer2::factory (vi, VbPlain, isWritable));
+    VisBufferOptions options = isWritable ? VbWritable : VbNoOptions;
+    setVisBuffer (VisBuffer2::factory (vi, VbPlain, options));
 }
 
 FinalTvi2::~FinalTvi2 ()
@@ -42,7 +43,8 @@ FinalTvi2::configureNewSubchunk ()
                                           getSubchunkId (),
                                           nRows(),
                                           nChannels,
-                                          getVii()->nPolarizations());
+                                          getVii()->nPolarizations(),
+                                          getVii()->getCorrelations());
 }
 
 

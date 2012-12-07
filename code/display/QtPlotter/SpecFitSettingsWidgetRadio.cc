@@ -147,6 +147,7 @@ SpecFitSettingsWidgetRadio::SpecFitSettingsWidgetRadio(QWidget *parent)
 	connect( ui.viewButton, SIGNAL(clicked()), this, SLOT(viewOutputLogFile()));
 	connect( ui.saveOutputCheckBox, SIGNAL(stateChanged(int)), this, SLOT(saveOutputChanged(int)));
 	connect( ui.advancedGaussianEstimatesButton, SIGNAL(clicked()), this, SLOT(specifyGaussianEstimates()));
+	connect( ui.fitRatioSpinBox, SIGNAL(valueChanged(int)), this, SLOT(fitRatioChanged(int)));
 	connect( &gaussEstimateDialog, SIGNAL( accepted()), this, SLOT(gaussianEstimatesChanged()));
 
 	ui.viewButton->setEnabled( false );
@@ -229,6 +230,17 @@ bool SpecFitSettingsWidgetRadio::isInRange( double xValue ) const {
 	return validValue;
 }
 
+void SpecFitSettingsWidgetRadio::emptyCurveList(){
+	//Empty the curves and their associated data.
+	while (!curveList.isEmpty()) {
+		QList<SpecFit*> curves = curveList.takeFirst();
+		while( !curves.isEmpty()){
+		    SpecFit* specFit = curves.takeFirst();
+		    delete specFit;
+		}
+	}
+}
+
 void SpecFitSettingsWidgetRadio::reset(){
 	if ( fitter != NULL ){
 		delete fitter;
@@ -238,20 +250,12 @@ void SpecFitSettingsWidgetRadio::reset(){
 		delete specFitThread;
 		specFitThread = NULL;
 	}
-
-	//Empty the curves and their associated data.
-	while (!curveList.isEmpty()) {
-	     QList<SpecFit*> curves = curveList.takeFirst();
-	     while( !curves.isEmpty()){
-	     	SpecFit* specFit = curves.takeFirst();
-	     	delete specFit;
-	     }
-	 }
-
+	emptyCurveList();
 }
 
 void SpecFitSettingsWidgetRadio::clean(){
 	ui.gaussCountSpinBox->setValue( 0 );
+	reset();
 	plotMainCurve();
 
 }
@@ -277,6 +281,16 @@ void SpecFitSettingsWidgetRadio::setUnits( QString units ){
 			units = units.mid(startIndex, endIndex + 1 - startIndex);
 		}
 		ui.rangeGroupBox->setTitle( units );
+	}
+}
+
+void SpecFitSettingsWidgetRadio::fitRatioChanged( int /*count*/ ){
+	//Don't worry about redoing the fit if we haven't done
+	//one already.
+	if ( specFitThread != NULL ){
+		emptyCurveList();
+		pixelCanvas->clearFitCurves();
+		fitDone( false );
 	}
 }
 
@@ -602,16 +616,17 @@ int SpecFitSettingsWidgetRadio::getFitCount(Int& startChannelIndex, Int& endChan
 	CanvasCurve curve = pixelCanvas->getCurve( curveName );
 	Vector<float> curveXValues = curve.getXValues();
 	findChannelRange( startVal, endVal, curveXValues, startChannelIndex, endChannelIndex );
-	//int includeCount = endChannelIndex - startChannelIndex + 1;
 	int multiplier = ui.fitRatioSpinBox->value();
 	int includeCount = (endChannelIndex - startChannelIndex) * multiplier + 1;
 	return includeCount;
 }
 
-void SpecFitSettingsWidgetRadio::fitDone(){
-	float finishedProgress = 10;
+void SpecFitSettingsWidgetRadio::fitDone( bool newData ){
 	const int PROGRESS_END = 100;
-	progressDialog.setValue( static_cast<int>(finishedProgress) );
+	float finishedProgress = 10;
+	if ( newData ){
+		progressDialog.setValue( static_cast<int>(finishedProgress) );
+	}
 
 	String errorMsg = specFitThread->getErrorMessage();
 	if ( errorMsg.length() == 0 ){
@@ -623,13 +638,14 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 		float progressIncrement = 90.0f / ntrue( succeeded );
 		if ( ntrue( succeeded ) > 0 && ntrue( valid ) ){
 
-			//Tell the user basic information about the fit.
-			Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
-			String msg( "Fit(s) succeeded: "+String::toString(ntrue(succeeded))+"   \n");
-			msg.append( "Fit(s) converged: "+String::toString(ntrue(converged))+"   \n");
-			msg.append( "Fit(s) valid: "+String::toString(ntrue(valid))+"   \n");
-			postStatus( msg );
-
+			if ( newData ){
+				//Tell the user basic information about the fit.
+				Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
+				String msg( "Fit(s) succeeded: "+String::toString(ntrue(succeeded))+"   \n");
+				msg.append( "Fit(s) converged: "+String::toString(ntrue(converged))+"   \n");
+				msg.append( "Fit(s) valid: "+String::toString(ntrue(valid))+"   \n");
+				postStatus( msg );
+			}
 
 			//Initialize the x-values.  In the case of a polynomial fit, the
 			//x values need to be in pixels.
@@ -679,12 +695,16 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 					//Initialize a SpecFit curve for the fit.
 					processFitResults( xValues, xValuesPix );
 				}
-				finishedProgress = finishedProgress + progressIncrement;
 
-				progressDialog.setValue( static_cast<int>(finishedProgress) );
+				if ( newData ){
+					finishedProgress = finishedProgress + progressIncrement;
+					progressDialog.setValue( static_cast<int>(finishedProgress) );
+				}
 			}
 
-			progressDialog.setValue( PROGRESS_END );
+			if ( newData ){
+				progressDialog.setValue( PROGRESS_END );
+			}
 			if ( !fitCancelled ){
 				if ( !ui.multiFitCheckBox->isChecked() ){
 					drawCurves(SUM_FIT_INDEX,SUM_FIT_INDEX);
@@ -694,21 +714,28 @@ void SpecFitSettingsWidgetRadio::fitDone(){
 					Util::showUserMessage( msg, this );
 				}
 			}
-			viewOutputLogFile();
+
+			if ( newData ){
+				viewOutputLogFile();
+			}
 		}
 		else {
-			progressDialog.setValue( PROGRESS_END );
-			String msg = String("Data could not be fitted!");
-			QString msgStr(msg.c_str());
-			postStatus(msg);
-			Util::showUserMessage( msgStr, this);
+			if ( newData ){
+				progressDialog.setValue( PROGRESS_END );
+				String msg = String("Data could not be fitted!");
+				QString msgStr(msg.c_str());
+				postStatus(msg);
+				Util::showUserMessage( msgStr, this);
+			}
 		}
 	}
 	else {
-		progressDialog.setValue( PROGRESS_END );
-		QString msg( "Data could not be fitted!\n");
-		msg.append( errorMsg.c_str());
-		Util::showUserMessage( msg, this );
+		if ( newData ){
+			progressDialog.setValue( PROGRESS_END );
+			QString msg( "Data could not be fitted!\n");
+			msg.append( errorMsg.c_str());
+			Util::showUserMessage( msg, this );
+		}
 	}
 }
 
@@ -825,7 +852,6 @@ void SpecFitSettingsWidgetRadio::processFitResults(
 		}
 	}
     ui.viewButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
-	//ui.plotButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
 }
 
 

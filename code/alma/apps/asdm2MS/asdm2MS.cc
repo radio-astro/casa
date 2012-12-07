@@ -149,6 +149,11 @@ void info (const string& message) {
   if (!verbose){
     return;
   }
+
+  LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
+}
+
+void warning (const string& message) {
   LogSink::postGlobally(LogMessage(message, LogOrigin(appName,WHERE), LogMessage::NORMAL));
 }
 
@@ -173,8 +178,8 @@ vector<char> logIndent;
 
 ostringstream errstream;
 ostringstream infostream;
-using namespace std;
 
+using namespace std;
 
 //
 // A class to describe Exceptions.
@@ -2663,14 +2668,34 @@ void partitionMS(vector<int> SwIds,
    //cerr<<"msFillers_v.size="<<msFillers_v.size()<<endl;
 }
 
-void checkMSMainRowsInSubscan ( const VMSData* vmsData_p, MainRow* mainRow_p ) {
-  LOGENTER("checkMSMainRowsInSubscan");
+class MSMainRowsInSubscanChecker {
+public:
+  MSMainRowsInSubscanChecker();
+  virtual ~MSMainRowsInSubscanChecker();
+  void check(const VMSData* vmsData_p, MainRow* mainRow_p, unsigned int mainRowIndex, const string& BDFName);
+  const vector<string>& report() const;
+  void reset();
+
+private:
+  vector<string> report_v;
+};
+
+MSMainRowsInSubscanChecker::MSMainRowsInSubscanChecker() {;}
+MSMainRowsInSubscanChecker::~MSMainRowsInSubscanChecker() {;}
+void MSMainRowsInSubscanChecker::reset() {
+  report_v.clear();
+}
+
+void MSMainRowsInSubscanChecker::check( const VMSData* vmsData_p,
+					MainRow* mainRow_p,
+					unsigned int mainRowIndex,
+					const string& BDFName ) {
+  LOGENTER("MSMainRowsInSubscanChecker::check");
   SubscanTable & subscanTable = mainRow_p->getTable().getContainer().getSubscan();
 
   SubscanRow* subscanRow_p = subscanTable.getRowByKey(mainRow_p->getExecBlockId(),
 						      mainRow_p->getScanNumber(),
 						      mainRow_p->getSubscanNumber());
-  
   if (subscanRow_p == NULL) {
     infostream.str("");
     infostream << "Could not find a row in the subscan table with the key 'execBlockId = "<< mainRow_p->getExecBlockId()
@@ -2678,7 +2703,7 @@ void checkMSMainRowsInSubscan ( const VMSData* vmsData_p, MainRow* mainRow_p ) {
 	       << ", subscanNumber = " << mainRow_p->getSubscanNumber()
 	       << "'. I can't check if the BDF contents is in the subscan's time range.";
     info(infostream.str());
-    LOGEXIT("checkMSMainRowsInSubscan");
+    LOGEXIT("MSMainRowsInSubscanChecker::check");
     return;
   }
 
@@ -2690,12 +2715,21 @@ void checkMSMainRowsInSubscan ( const VMSData* vmsData_p, MainRow* mainRow_p ) {
   // Now detect one of two abnormal situations : the 1st data time is anterior to the subscan start time or the last data time
   // is posterior to the subscan end time. 
   if ( (vmsData_p->v_time[0] < subscanStartTime) || (subscanEndTime < vmsData_p->v_time[vmsData_p->v_time.size() - 1])) {
-    infostream.str("");
-    infostream << "The current BDF contains data with timestamp not in the time range of the current scan/subscan" << endl;
-    info(infostream.str());
+    ostringstream oss;
+    oss << "Main row #" << mainRowIndex
+	<< " - The BDF '" << BDFName << "' contained data not in the time range of scan=" << mainRow_p->getScanNumber()
+	<< ", subscan=" << mainRow_p->getSubscanNumber() << ".";
+    string s = oss.str();
+    if (!(report_v.size() > 0 && s == report_v.back()))
+      report_v.push_back(s);
   }
-  LOGEXIT("checkMSMainRowsInSubscan");
-} 
+  LOGEXIT("MSMainRowsInSubscanChecker::check");
+}
+
+const vector<string>& MSMainRowsInSubscanChecker::report() const {
+  return report_v;
+}
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -4841,7 +4875,6 @@ int main(int argc, char *argv[]) {
 
   // And then finally process the state and the main table.
   //
-  //lazy = true;
   if (lazy) {
     fillMainLazily(dsName, ds, selected_eb_scan_m, msFillers.begin()->second->ms());
   }
@@ -4880,6 +4913,7 @@ int main(int argc, char *argv[]) {
     EnumSet<AtmPhaseCorrection> es_query_ap_uncorrected;
     es_query_ap_uncorrected.fromString("AP_UNCORRECTED");
 
+    MSMainRowsInSubscanChecker msMainRowsInSubscanChecker;
     // For each selected main row.
     for (int32_t i = 0; i < nMain; i++) {
       try {
@@ -4963,7 +4997,7 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);
-	    checkMSMainRowsInSubscan(vmsDataPtr, v[i]);
+	    msMainRowsInSubscanChecker.check(vmsDataPtr, v[i], mainRowIndex[i], absBDFpath);
 	    numberOfReadIntegrations += numberOfIntegrations;
 	    numberOfMSMainRows += vmsDataPtr->v_antennaId1.size();
 	    
@@ -4999,7 +5033,7 @@ int main(int argc, char *argv[]) {
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfRemainingIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfRemainingIntegrations);
-	    checkMSMainRowsInSubscan(vmsDataPtr, v[i]);
+	    msMainRowsInSubscanChecker.check(vmsDataPtr, v[i], mainRowIndex[i], absBDFpath);
             if (doparallel) {
               // int ispw = 0;
               // int nspw = SwIds.size();
@@ -5069,6 +5103,10 @@ int main(int argc, char *argv[]) {
       }
     }
 
+    // Did we have problem with BDF with data not falling in the time range of their scan/subscan pair ?
+    const vector<string>& report = msMainRowsInSubscanChecker.report();
+    for_each(report.begin(), report.end(), bind(warning, _1)); 
+    
     infostream.str("");
     infostream << "The dataset has "  << stateT.size() << " state(s)..." ;
     info(infostream.str());

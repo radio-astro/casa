@@ -1,4 +1,4 @@
-//# TransformVisDataHandler.h: This file contains the interface definition of the TransformVisDataHandler class.
+//# MsTransformDataHandler.h: This file contains the interface definition of the MsTransformDataHandler class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,8 +20,8 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#ifndef TransformVisDataHandler_H_
-#define TransformVisDataHandler_H_
+#ifndef MsTransformDataHandler_H_
+#define MsTransformDataHandler_H_
 
 #include <casacore/casa/aipstype.h>
 #include <casacore/casa/BasicSL/String.h>
@@ -39,6 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
+typedef map< pair<Int,Int>,vector<uInt> > baselineMap;
 
 
 namespace tvf
@@ -47,15 +48,15 @@ namespace tvf
 	Double wtToSigma(Double wt);
 }
 
-class TransformVisDataHandler
+class MsTransformDataHandler
 {
 
 public:
 
-	TransformVisDataHandler();
-	TransformVisDataHandler(Record configuration);
+	MsTransformDataHandler();
+	MsTransformDataHandler(Record configuration);
 
-	~TransformVisDataHandler();
+	~MsTransformDataHandler();
 
 	void initialize();
 	void configure(Record &configuration);
@@ -76,8 +77,12 @@ protected:
 	void setIterationApproach();
 	void generateIterator();
 
+	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillAuxCols(vi::VisBuffer2 *vb,RefRows &rowRef);
+
+	template <class T> void writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputarray, RefRows &rowRef);
+	template <class T> void writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputarray, RefRows &rowRef);
 
 	String inpMsName_p;
 	String outMsName_p;
@@ -114,9 +119,11 @@ protected:
 	Bool correctedToData_p;
 	dataColMap dataColMap_p;
 
+	baselineMap baselineMap_p;
+
 	LogIO logger_p;
 };
 
 } //# NAMESPACE CASA - END
 
-#endif /* TransformVisDataHandler_H_ */
+#endif /* MsTransformDataHandler_H_ */

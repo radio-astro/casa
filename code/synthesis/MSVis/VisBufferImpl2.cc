@@ -601,6 +601,7 @@ public:
 
     Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
     FrequencyCache<Int> channelNumbers_p;
+    Vector<Int> correlations_p;
     VisBufferComponents2 dirtyComponents_p;
     FrequencyCache<Double> frequencies_p;
     Bool isAttached_p;
@@ -711,15 +712,14 @@ using namespace vi;
 VisBufferImpl2::VisBufferImpl2 ()
 : cache_p (0), state_p (0)
 {
-    construct (0);
+    construct (0, VbNoOptions);
 }
 
-VisBufferImpl2::VisBufferImpl2(VisibilityIterator2 * iter, Bool isWritable)
+VisBufferImpl2::VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options)
 : cache_p (0),
   state_p (0)
 {
-  construct ( iter);
-  state_p->isWritable_p = isWritable;
+  construct (iter, options);
 }
 
 VisBufferImpl2::~VisBufferImpl2 ()
@@ -807,7 +807,7 @@ VisBufferImpl2::cacheClear (Bool markAsCached)
 }
 
 void
-VisBufferImpl2::construct (VisibilityIterator2 * vi)
+VisBufferImpl2::construct (VisibilityIterator2 * vi, VisBufferOptions options)
 {
     state_p = new VisBufferState ();
 
@@ -820,6 +820,20 @@ VisBufferImpl2::construct (VisibilityIterator2 * vi)
     state_p->newMs_p = True;
     state_p->vi_p = vi;
     state_p->viC_p = vi;
+
+    // Handle the options
+
+    state_p->isWritable_p = False;
+    state_p->isRekeyable_p = False;
+
+    if (options | VbRekeyable){
+
+        state_p->isWritable_p = True; // rekeyable implies writable
+        state_p->isRekeyable_p = True;
+    }
+    else if (options | VbWritable){
+        state_p->isWritable_p = True;
+    }
 
     cache_p = new VisBufferCache (this);
 }
@@ -872,7 +886,8 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
 
     setIterationInfo (vb->msId(), vb->msName (), vb->isNewMs (),
                       vb->isNewArrayId (), vb->isNewFieldId (), vb->isNewSpectralWindow (),
-                      vb->getSubchunk ());
+                      vb->getSubchunk (),
+                      vb->getCorrelationNumbers());
 
     if(dirDependent){
 
@@ -1034,8 +1049,7 @@ VisBufferImpl2::getChannelNumber (Int rowInBuffer, Int frequencyIndex) const
     return state_p->channelNumbers_p.values_p (frequencyIndex);
 }
 
-const
-Vector<Int> &
+const Vector<Int> &
 VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 {
     Double t = time() (rowInBuffer);
@@ -1044,6 +1058,13 @@ VisBufferImpl2::getChannelNumbers (Int rowInBuffer) const
 
     return state_p->channelNumbers_p.values_p;
 }
+
+Vector<Int>
+VisBufferImpl2::getCorrelationNumbers () const
+{
+    return state_p->correlations_p;
+}
+
 
 String
 VisBufferImpl2::getFillErrorMessage () const
@@ -1280,7 +1301,8 @@ VisBufferImpl2::setIterationInfo (Int msId,
                                   Bool isNewArrayId,
                                   Bool isNewFieldId,
                                   Bool isNewSpectralWindow,
-                                  const Subchunk & subchunk)
+                                  const Subchunk & subchunk,
+                                  const Vector<Int> & correlations)
 {
     // Set the iteration attributes into this VisBuffer
 
@@ -1292,6 +1314,7 @@ VisBufferImpl2::setIterationInfo (Int msId,
     state_p->isNewFieldId_p = isNewFieldId;
     state_p->isNewSpectralWindow_p = isNewSpectralWindow;
     state_p->subchunk_p = subchunk;
+    state_p->correlations_p = correlations;
 }
 
 void
@@ -1312,14 +1335,15 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
                                       const Subchunk & subchunk,
                                       Int nRows,
                                       Int nChannels,
-                                      Int nCorrelations)
+                                      Int nCorrelations,
+                                      const Vector<Int> & correlations)
 {
     // Prepare this VisBuffer for the new subchunk
 
     cacheClear();
 
     setIterationInfo (msId, msName, isNewMs, isNewArrayId, isNewFieldId,
-                      isNewSpectralWindow, subchunk);
+                      isNewSpectralWindow, subchunk, correlations);
 
     setFillable (True); // New subchunk, so it's fillable
 
