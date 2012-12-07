@@ -8,11 +8,10 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
-    worker = sdimaging_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
-    
+    with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()    
 
 class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __init__(self, **kwargs):
@@ -177,4 +176,3 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager.setsdoptions(pointingcolumntouse=self.pointingcolumn, convsupport=self.convsupport, truncate=self.truncate, gwidth=self.gwidth, jwidth=self.jwidth)
         self.imager.makeimage(type='singledish', image=self.outfile)
         self.close_imager()
-

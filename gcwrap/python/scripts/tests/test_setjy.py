@@ -445,17 +445,18 @@ class test_MultipleObservations(SetjyUnitTestBase):
 class test_ModImage(SetjyUnitTestBase):
 
     def setUp(self):
-
         self.inpuvf = datapath + '/ATST2/NGC1333/N1333_1.UVFITS'
         self.inpms = 'unittest/setjy/n1333_1.ms'
         self.field = '0542+498_1'
         self.modelim = '3C147_U.im'
         self.result = {}
-
         if not os.path.exists(self.inpuvf):
             raise EnvironmentError, "Missing input UVFITS file: " + datapath + self.inpuvf
 
         try:
+            if not os.path.exists('unittest/setjy'):
+                print "\nCreate working area..."
+                os.system('mkdir -p unittest/setjy')
             print "Importing", self.inpuvf, "to an MS."
             importuvfits(fitsfile=self.inpuvf, vis=self.inpms,antnamescheme="new")
         except Exception, e:
@@ -463,7 +464,7 @@ class test_ModImage(SetjyUnitTestBase):
             raise e
     
     def test1_UBandModelQithQBandMS(self):
-        """ Test U-Band model with W-Band data to see impact of flus density scale """
+        """ Test U-Band model with W-Band data to see impact of flux density scale """
 
         # The MS is in Q band, so deliberately choose the U band model so that the structure
         # is not too far off, but whether or not its flux density is scaled makes a difference.
