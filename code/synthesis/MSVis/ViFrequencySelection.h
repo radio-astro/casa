@@ -73,6 +73,7 @@ public:
 
     void addCorrelationSlices (const Vector <Vector <Slice> > & slices);
     virtual FrequencySelection * clone () const = 0;
+    virtual Bool empty () const = 0;
     void filterByWindow (Int windowId = -1) const;
     Vector <Slice> getCorrelationSlices (Int polarizationId) const;
     Int getFrameOfReference () const;
@@ -138,6 +139,7 @@ public:
     void add (const MSSelection & msSelection);
     const_iterator begin () const;
     FrequencySelection * clone () const;
+    Bool empty () const;
     const_iterator end () const;
     set<int> getSelectedWindows () const;
     String toString () const;
@@ -201,6 +203,7 @@ public:
     //void add (Int spectralWindow, Double bottomFrequency, Double topFrequency, Double increment);
     const_iterator begin () const;
     FrequencySelection * clone () const;
+    Bool empty () const;
     const_iterator end () const;
     set<int> getSelectedWindows () const;
     String toString () const;

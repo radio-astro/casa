@@ -108,6 +108,12 @@ TransformingVi2::dataDescriptionId ()  const
     return getVii()->dataDescriptionId ();
 }
 
+void
+TransformingVi2::dataDescriptionIds(casa::Vector<int>& ddIds) const
+{
+    return getVii()->dataDescriptionIds (ddIds);
+}
+
 Bool
 TransformingVi2::existsColumn (VisBufferComponent2 id)  const
 {
@@ -196,6 +202,12 @@ Vector<Int>
 TransformingVi2::getChannels (Double time, Int frameOfReference)  const
 {
     return getVii()->getChannels (time, frameOfReference);
+}
+
+Vector<Int>
+TransformingVi2::getCorrelations () const
+{
+    return getVii()->getCorrelations();
 }
 
 MEpoch
