@@ -32,13 +32,13 @@ main (int nArgs, char * args [])
 {
     using namespace casa::vi::test;
 
-    CopyMs msCopier;
-    msCopier.doit ("ngc5921.ms");
-    return 0;
-
     Tester tester;
 
     tester.doTests (nArgs, args);
+
+    CopyMs msCopier;
+    msCopier.doit ("ngc5921.ms");
+    return 0;
 
 //    MsFactory msf ("test.ms");
 //
@@ -789,8 +789,6 @@ Tester::sweepMs (TestWidget & tester)
                 tester.nextChunk (* vi, vb);
 
                 for (vi->origin(); vi->more (); vi->next()){
-
-vb->azel (vb->time()(0));
 
                     nRowsProcessed += vb->nRows();
 
@@ -1762,38 +1760,6 @@ void
 CopyMs::doit (const String & oldMsName)
 {
     casa::MeasurementSet oldMs (oldMsName);
-
-//    SubMS subMs (oldMs);
-//
-//    String telescopeName;
-//    Int nCorrelations;
-//    Int nChannels;
-//    Vector<String> columnNames (MS::NUMBER_PREDEFINED_COLUMNS);
-//    {
-//        VisibilityIterator2 viTmp (oldMs);
-//
-//        Int j = 0;
-//        if (oldMs.isColumn (MS::DATA)){
-//            columnNames [j++] = MS::DATA;
-//        }
-//        if (oldMs.isColumn (MS::CORRECTED_DATA)){
-//            columnNames [j++] = MS::CORRECTED_DATA;
-//        }
-//        if (oldMs.isColumn (MS::MODEL_DATA)){
-//            columnNames [j++] = MS::MODEL_DATA;
-//        }
-//        columnNames.resize (j, True);
-//
-//        SubtableColumns sc = viTmp.subtableColumns();
-//
-//        telescopeName = sc.observation().telescopeName()(0);
-//
-//        nCorrelations = sc.polarization().numCorr()(0);
-//
-//        nChannels = sc.spectralWindow().numChan()(0);
-//
-//
-//    }
 
     String newMsName = String::format ("%s.copy", oldMsName.c_str());
 

@@ -53,7 +53,7 @@ FrequencySelection::getCorrelationSlices (Int polarizationId) const
         return Vector<Slice> (); // empty vector implies all elements
     }
 
-    Assert (polarizationId >= 0 && polarizationId < correlationSlices_p.nelements());
+    Assert (polarizationId >= 0 && polarizationId < (int) correlationSlices_p.nelements());
 
     return correlationSlices_p [polarizationId];
 }
@@ -99,6 +99,13 @@ FrequencySelectionUsingChannels::clone () const
 {
     return new FrequencySelectionUsingChannels (* this);
 }
+
+Bool
+FrequencySelectionUsingChannels::empty () const
+{
+    return elements_p.empty();
+}
+
 
 FrequencySelectionUsingChannels::const_iterator
 FrequencySelectionUsingChannels::end () const
@@ -183,6 +190,13 @@ FrequencySelectionUsingFrame::clone () const
 {
     return new FrequencySelectionUsingFrame (* this);
 }
+
+Bool
+FrequencySelectionUsingFrame::empty () const
+{
+    return elements_p.empty();
+}
+
 
 FrequencySelectionUsingFrame::const_iterator
 FrequencySelectionUsingFrame::end () const
@@ -321,6 +335,12 @@ FrequencySelections::isSpectralWindowSelected (Int msIndex, Int spectralWindowId
     // Empty selections means everything is selected
 
     if (selections_p.empty()){
+        return True;
+    }
+
+    Assert (msIndex >= 0 && msIndex < (int) selections_p.size() && selections_p [msIndex] != 0);
+
+    if (selections_p [msIndex]->empty()){
         return True;
     }
 
