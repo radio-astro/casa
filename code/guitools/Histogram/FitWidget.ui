@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>240</width>
-    <height>192</height>
+    <width>280</width>
+    <height>237</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -43,7 +43,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="fitDistributionComboBox"/>
+      <widget class="QComboBox" name="fitDistributionComboBox">
+       <property name="toolTip">
+        <string>Select a probability distribution for the fit.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
@@ -59,6 +63,20 @@
       </spacer>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_6">
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;font color='black'&gt;Fit estimates can be specified graphically&lt;br/&gt;
+by a Ctrl + Click of the right mouse button&lt;br/&gt;
+on the plot. &lt;/font&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -80,7 +98,7 @@
        <item>
         <widget class="QStackedWidget" name="fitStackedWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="gaussPage">
           <layout class="QHBoxLayout" name="horizontalLayout">
@@ -94,7 +112,11 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QLineEdit" name="gaussCenterLineEdit"/>
+              <widget class="QLineEdit" name="gaussCenterLineEdit">
+               <property name="toolTip">
+                <string>Specify the center of the Gaussian distribution.</string>
+               </property>
+              </widget>
              </item>
              <item row="1" column="0">
               <widget class="QLabel" name="label_3">
@@ -104,7 +126,11 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QLineEdit" name="gaussPeakLineEdit"/>
+              <widget class="QLineEdit" name="gaussPeakLineEdit">
+               <property name="toolTip">
+                <string>Specify the peak of the Gaussian distribution.</string>
+               </property>
+              </widget>
              </item>
              <item row="2" column="0">
               <widget class="QLabel" name="label_4">
@@ -114,7 +140,11 @@
               </widget>
              </item>
              <item row="2" column="1">
-              <widget class="QLineEdit" name="gaussFWHMLineEdit"/>
+              <widget class="QLineEdit" name="gaussFWHMLineEdit">
+               <property name="toolTip">
+                <string>Specify the full width a half maximum value of the Gaussian distribution.</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -130,7 +160,11 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="poissonLambdaLineEdit"/>
+            <widget class="QLineEdit" name="poissonLambdaLineEdit">
+             <property name="toolTip">
+              <string>Specify the mean number of occurrences for the Poisson distribution.</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
@@ -170,8 +204,21 @@
      </item>
      <item>
       <widget class="QPushButton" name="fitButton">
+       <property name="toolTip">
+        <string>Fit the selected distribution to the histogram.</string>
+       </property>
        <property name="text">
         <string>Fit</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="clearFitButton">
+       <property name="toolTip">
+        <string>Clear fit parameters and curves.</string>
+       </property>
+       <property name="text">
+        <string>Clear Fit</string>
        </property>
       </widget>
      </item>

@@ -1,4 +1,4 @@
-//# Copyright (C) 2005,2009,2010
+//# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,51 +22,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+#ifndef TOOLTIPPICKER_H_
+#define TOOLTIPPICKER_H_
 
-#include <ios>
-#include <iostream>
-#include <casa/aips.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <QVector>
+#include <qwt_plot_picker.h>
 
-#include <unistd.h>
-#include <sys/stat.h>
+namespace casa {
 
-#include <guitools/Histogram/HistogramMain.qo.h>
-#include <QApplication>
-#include <casa/namespace.h>
+class ToolTipPicker :QwtPlotPicker {
+public:
+	ToolTipPicker( int xAxis, int yAxis, int selectionFlags, RubberBand rubberBand,
+			DisplayMode trackorMode, QwtPlotCanvas* canvas );
+	void setData( const std::vector<float>& xVal, const std::vector<float>& yVal );
+	void setLogScale( bool logScale );
+	virtual QwtText trackerText( const QwtDoublePoint & pos ) const;
+	virtual ~ToolTipPicker();
+private:
+	std::vector<float> xVector;
+	std::vector<float> yVector;
+	bool logScale;
+};
 
-
-int main( int argc, char *argv[] ) {
-	int stat = 0;
-	QApplication app(argc, argv );
-	app.setOrganizationName( "CASA");
-	app.setApplicationName( "Histogram");
-	try {
-		HistogramMain histogramApplication(true,true,true,false,NULL);
-		histogramApplication.setPlotMode( 1 );
-		histogramApplication.show();
-
-		stat = app.exec();
-		return stat;
-	}
-	catch (const casa::AipsError& err) {
-		cerr<<"**"<<err.getMesg()<<endl;
-	}
-	catch (...) {
-		cerr<<"**non-AipsError exception**"<<endl;
-	}
-	return stat;
-}
-
-
-
-
-
-
-
+} /* namespace casa */
+#endif /* TOOLTIPPICKER_H_ */

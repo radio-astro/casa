@@ -25,44 +25,95 @@
 
 #include "RangePicker.h"
 #include <guitools/Histogram/HeightSource.h>
+
 #include <QPainter>
-#include <qwt_plot_canvas.h>
+#include <QDebug>
+
 #include <qwt_plot.h>
 
 namespace casa {
 
 
-RangePicker::RangePicker( QwtPlotCanvas* canvas):
-	QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
-			QwtPlotPicker::RectSelection | QwtPlotPicker::DragSelection,
-			QwtPlotPicker::RectRubberBand, QwtPlotPicker::AlwaysOn, canvas ){
+RangePicker::RangePicker(){
+	reset();
 }
 
 void RangePicker::setHeightSource( HeightSource* source ){
 	heightSource = source;
 }
 
-void RangePicker::drawRubberBand( QPainter* painter )const {
-	QPolygon polySelect = selection();
-	int count = polySelect.count();
-	if ( count >= 2 ){
-		QPoint firstPoint = polySelect.point(0);
-		QPoint secondPoint = polySelect.point( 1 );
-		int ptX = static_cast<int>( firstPoint.x() );
-		if ( firstPoint.x() > secondPoint.x() ){
-			ptX = static_cast<int>( secondPoint.x() );
+int RangePicker::getLowerBound() const {
+	int value = lowerBound;
+	if ( upperBound < lowerBound ){
+		value = upperBound;
+	}
+	return value;
+}
+
+int RangePicker::getUpperBound() const {
+	int value = upperBound;
+	if ( lowerBound > upperBound ){
+		value = lowerBound;
+	}
+	return value;
+}
+
+void RangePicker::reset(){
+	rangeSet = false;
+	lowerBound = 0;
+	upperBound = 0;
+}
+
+void RangePicker::setBoundaryValues( int minX, int maxX ){
+	lowerBound = minX;
+	upperBound = maxX;
+}
+
+void RangePicker::boundaryLineMoved( const QPoint& pos ){
+	int xValue = pos.x();
+	if ( !rangeSet ){
+		lowerBound = xValue;
+		upperBound = xValue;
+		rangeSet = true;
+	}
+	else {
+		int lowDistance = qAbs( xValue - lowerBound );
+		int highDistance = qAbs( xValue - upperBound );
+		if ( lowDistance <= highDistance ){
+			lowerBound = xValue;
 		}
-		int width = qAbs( firstPoint.x() - secondPoint.x() );
-		QColor shadeColor(100,100,100 );
+		else {
+			upperBound = xValue;
+		}
+	}
+}
+
+void RangePicker::draw (QPainter* painter, const QwtScaleMap & /*xMap*/,
+		const QwtScaleMap& /*yMap*/, const QRect &) const {
+	if ( lowerBound != upperBound ){
+
+		//Draw the rectangle
+		QColor shadeColor( 200,200,200 );
 		shadeColor.setAlpha( 100 );
+		int startX = lowerBound;
+		if ( upperBound < lowerBound ){
+			startX = upperBound;
+		}
 		int rectHeight = heightSource->getCanvasHeight();
-		QRect rect(ptX, 0, width, rectHeight );
+		int rectWidth = qAbs( lowerBound - upperBound );
+		QRect rect( startX, 0, rectWidth, rectHeight );
 		painter->fillRect( rect , shadeColor );
+
+		//Mark the vertical boundary lines of the rectangle
+		QPen oldPen = painter->pen();
+		QPen boundaryPen( Qt::black );
+		painter->setPen( boundaryPen );
+		painter->drawLine( lowerBound, 0, lowerBound, rectHeight );
+		painter->drawLine( upperBound, 0, upperBound, rectHeight );
+		painter->setPen( oldPen );
 	}
 }
 
 RangePicker::~RangePicker(){
 }
-
-
 } /* namespace casa */

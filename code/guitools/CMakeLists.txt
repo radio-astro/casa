@@ -49,7 +49,6 @@ qt4_wrap_cpp( outfiles_qoh
   Histogram/HistogramMain.qo.h
   Histogram/FitWidget.qo.h
   Histogram/RangeControlsWidget.qo.h
-  Histogram/PlotModeWidget.qo.h
   Histogram/SaveHistogramWidget.qo.h
   )
 
@@ -66,7 +65,6 @@ casa_qt4_wrap_ui( outfiles_ui
   Histogram/HistogramMain.ui
   Histogram/FitWidget.ui
   Histogram/RangeControlsWidget.ui
-  Histogram/PlotModeWidget.ui
   Histogram/SaveHistogramWidget.ui
   )
 
@@ -101,7 +99,7 @@ casa_add_library( guitools
   Histogram/RangeControlsWidget.cc
   Histogram/RangePicker.cc
   Histogram/SaveHistogramWidget.cc
-  Histogram/PlotModeWidget.cc
+  Histogram/ToolTipPicker.cc
   )
 	
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )

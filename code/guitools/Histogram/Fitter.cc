@@ -43,21 +43,32 @@ Vector<Float> Fitter::getFitValues(){
 	return fitValues;
 }
 
+QString Fitter::getErrorMessage() const {
+	return errorMsg;
+}
+
+QString Fitter::getStatusMessage() const {
+	return statusMsg;
+}
+
 float Fitter::getMean() const {
 	int count = xValues.size();
+	float totalCount = 0;
 	float weightedMean = 0;
 	if ( count > 0 ){
 		float sum = 0;
 		for ( int i = 0; i < count; i++ ){
 			sum = sum + xValues[i] * yValues[i];
+			totalCount = totalCount + yValues[i];
 		}
-		weightedMean = sum / count;
+		if ( totalCount > 0 ){
+			weightedMean = sum / totalCount;
+		}
 	}
 	return weightedMean;
 }
 
 Fitter::~Fitter() {
-	// TODO Auto-generated destructor stub
 }
 
 } /* namespace casa */

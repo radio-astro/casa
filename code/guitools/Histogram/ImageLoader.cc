@@ -55,7 +55,7 @@ ImageLoader::ImageLoader(QWidget *parent)
 	connect( ui.cancelButton, SIGNAL( clicked()), this, SLOT(fileReset()));
 
 	//TAKE OUT
-	imageFile = "/home/uniblab/casa/active/test/Antennae_NorthMoments.image";
+	//imageFile = "/home/uniblab/casa/active/test/Antennae_NorthMoments.image";
 }
 
 void ImageLoader::keyPressEvent( QKeyEvent* event ){
@@ -90,17 +90,22 @@ void ImageLoader::directoryChanged(const QModelIndex& modelIndex ){
 }
 
 void ImageLoader::fileChanged( ){
-	/*QModelIndex currentIndex = ui.treeWidget->currentIndex();
+	QModelIndex currentIndex = ui.treeWidget->currentIndex();
 	bool validPath = currentIndex.isValid();
-	QString path;
 	if ( validPath ){
-		imageFile = fileModel->filePath( currentIndex );*/
-		emit imageFileChanged();
-		this->close();
-	/*}
+		imageFile = fileModel->filePath( currentIndex );
+		QFileInfo fileInfo( imageFile );
+		if ( fileInfo.isDir() ){
+			emit imageFileChanged();
+			this->close();
+		}
+		else {
+			QMessageBox::warning( this, "Invalid File", "Please check that the file is a valid image.");
+		}
+	}
 	else {
 		QMessageBox::warning( this, "Invalid File", "Please check that a valid file was selected." );
-	}*/
+	}
 }
 
 void ImageLoader::fileReset(){

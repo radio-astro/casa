@@ -44,6 +44,7 @@ public:
 	void setColor( QColor markerColor );
 	void setCenterPeak( int xVal, int yVal );
 	void setFWHM( int fwhm, int fwhmHeight );
+
 	virtual void draw(QPainter* painter, const QwtScaleMap& xMap, const QwtScaleMap& yMap, const QRect&) const;
 
 	virtual ~HistogramMarkerGaussian();

@@ -27,6 +27,8 @@
 #include <guitools/Histogram/FitterGaussian.h>
 #include <guitools/Histogram/FitterPoisson.h>
 #include <QMessageBox>
+#include <QDebug>
+
 namespace casa {
 
 FitWidget::FitWidget(QWidget *parent)
@@ -56,8 +58,9 @@ FitWidget::FitWidget(QWidget *parent)
 	fitterGaussian = new FitterGaussian();
 	fitterPoisson = new FitterPoisson();
 	fitter = fitterGaussian;
+	ui.fitStackedWidget->setCurrentIndex(0);
 	connect( ui.fitButton, SIGNAL(clicked()), this, SLOT(doFit()));
-
+	connect( ui.clearFitButton, SIGNAL(clicked()), this, SLOT(clearFit()));
 }
 
 bool FitWidget::isGaussian() const {
@@ -87,6 +90,11 @@ double FitWidget::getFWHM() const {
 double FitWidget::getLambda() const {
 	double lambdaVal = ui.poissonLambdaLineEdit->text().toDouble();
 	return lambdaVal;
+}
+
+void FitWidget::setLambda( double lambda ){
+	ui.poissonLambdaLineEdit->setText( QString::number(lambda));
+	fitterPoisson->setLambda( lambda );
 }
 
 void FitWidget::setCenterPeak( double center, double peak ){
@@ -182,14 +190,39 @@ Vector<Float> FitWidget::getFitValues(){
 }
 
 void FitWidget::doFit() {
-	const QString errorMsg;
 	bool successfulFit = fitter->doFit();
 	if ( successfulFit ){
-		emit dataFitted();
+		//Since the fitter may have estimate the parameters for the
+		//fit, we should update the estimate boxes with the parameters
+		//user.
+		if ( isGaussian() ){
+			setCenterPeak( fitterGaussian->getCenter(), fitterGaussian->getPeak() );
+			setFWHM( fitterGaussian->getFWHM() );
+		}
+		else {
+			setLambda( fitterPoisson->getLambda() );
+		}
+		QString statusMessage = fitter->getStatusMessage();
+		emit dataFitted(statusMessage);
 	}
 	else {
-		QMessageBox::warning( this, "Problem Fitting Data", errorMsg );
+		QString errorMsg = fitter->getErrorMessage();
+		QString postMessage = "Error fitting the data.";
+		if ( errorMsg.trimmed().length() > 0 ){
+			postMessage = errorMsg;
+		}
+		QMessageBox::warning( this, "Fit Error", postMessage );
 	}
+}
+
+void FitWidget::clearFit(){
+	fitterPoisson->clearFit();
+	fitterGaussian->clearFit();
+	ui.gaussCenterLineEdit->setText("");
+	ui.gaussPeakLineEdit->setText("");
+	ui.gaussFWHMLineEdit->setText("");
+	ui.poissonLambdaLineEdit->setText("");
+	emit fitCleared();
 }
 
 FitWidget::~FitWidget(){

@@ -40,13 +40,22 @@ public:
 	void setPeak( double peakValue );
 	void setCenter( double centerValue );
 	void setFWHM( double fwhmValue );
+	double getPeak() const;
+	double getCenter() const;
+	double getFWHM() const;
 	virtual bool doFit();
 	virtual void clearFit();
 	virtual ~FitterGaussian();
 private:
+	bool estimateCenterPeak();
+	bool estimateFWHM();
+	int getPeakIndex() const;
 	double peak;
 	double center;
 	double fwhm;
+	bool peakSpecified;
+	bool centerSpecified;
+	bool fwhmSpecified;
 };
 
 } /* namespace casa */

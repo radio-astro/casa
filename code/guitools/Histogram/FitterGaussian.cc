@@ -29,17 +29,102 @@
 namespace casa {
 
 FitterGaussian::FitterGaussian() {
-
+	peakSpecified = false;
+	centerSpecified = false;
+	fwhmSpecified = false;
 }
 
 void FitterGaussian::setPeak( double peakValue ){
 	peak = peakValue;
+	peakSpecified = true;
 }
 void FitterGaussian::setCenter( double centerValue ){
 	center = centerValue;
+	centerSpecified = true;
 }
 void FitterGaussian::setFWHM( double fwhmValue ){
 	fwhm = fwhmValue;
+	fwhmSpecified = true;
+}
+
+double FitterGaussian::getPeak() const {
+	return peak;
+}
+
+double FitterGaussian::getCenter() const {
+	return center;
+}
+
+double FitterGaussian::getFWHM() const {
+	return fwhm;
+}
+
+int FitterGaussian::getPeakIndex() const {
+	int maxIndex = -1;
+	double maxValue = std::numeric_limits<float>::min();
+	int dataCount = yValues.size();
+	for ( int i = 0; i < dataCount; i++ ){
+		if ( yValues[i] > maxValue ){
+			maxValue = yValues[i];
+			maxIndex = i;
+		}
+	}
+	return maxIndex;
+}
+
+bool FitterGaussian::estimateFWHM(){
+	bool estimated = true;
+	if ( !fwhmSpecified ){
+		//Find where we are just less than half the peak
+		//from the center.
+		int peakIndex = getPeakIndex();
+		bool foundFwhm = false;
+		if ( peakIndex >= 0 ){
+			float targetValue = yValues[peakIndex] / 2;
+			int startIndex = peakIndex - 1;
+			int endIndex = peakIndex + 1;
+			int dataCount = xValues.size();
+			while ( startIndex >= 0 || endIndex < dataCount ){
+				if ( startIndex >= 0 && yValues[startIndex] < targetValue  ){
+					fwhm = 2 * qAbs( xValues[startIndex] - xValues[peakIndex]);
+					foundFwhm = true;
+					break;
+				}
+				if ( endIndex < dataCount && yValues[endIndex] < targetValue ){
+					fwhm = 2 * qAbs( xValues[endIndex] - xValues[peakIndex]);
+					foundFwhm = true;
+					break;
+				}
+				startIndex--;
+				endIndex++;
+			}
+		}
+		if ( !foundFwhm ){
+			estimated = false;
+			errorMsg = "Could not estimate FWHM from the data.";
+		}
+	}
+	return estimated;
+}
+
+bool FitterGaussian::estimateCenterPeak(){
+	bool estimated = true;
+	if ( !centerSpecified || ! peakSpecified ){
+		int maxIndex = getPeakIndex();
+		if ( maxIndex >= 0 ){
+			if ( !centerSpecified ){
+				center = xValues[maxIndex];
+			}
+			if ( !peakSpecified ){
+				peak = yValues[maxIndex];
+			}
+		}
+		else {
+			errorMsg = "Please check for valid histogram data.";
+			estimated = false;
+		}
+	}
+	return estimated;
 }
 
 bool FitterGaussian::doFit(){
@@ -47,19 +132,33 @@ bool FitterGaussian::doFit(){
 	//drawing.
 	bool fitSuccessful = true;
 	fitValues.resize( xValues.size());
-	Gaussian1D<Float> gaussFit(peak, center, fwhm );
-	for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
-		fitValues[i] = gaussFit.eval(&xValues[i]);
+	fitSuccessful = estimateCenterPeak();
+	if ( fitSuccessful ){
+		fitSuccessful = estimateFWHM();
+		if ( fitSuccessful ){
+			if ( fwhm <= 0 ){
+				fitSuccessful = false;
+				errorMsg = "The full width at half maximum value must be positive.";
+			}
+			else {
+				Gaussian1D<Float> gaussFit(peak, center, fwhm );
+				for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
+					fitValues[i] = gaussFit.eval(&xValues[i]);
+				}
+			}
+		}
 	}
 	return fitSuccessful;
 }
 
 void FitterGaussian::clearFit(){
-
+	errorMsg="";
+	centerSpecified = false;
+	peakSpecified = false;
+	fwhmSpecified = false;
 }
 
 FitterGaussian::~FitterGaussian() {
-	// TODO Auto-generated destructor stub
 }
 
 } /* namespace casa */

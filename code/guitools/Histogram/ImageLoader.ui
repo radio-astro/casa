@@ -108,7 +108,7 @@
      <item>
       <widget class="QPushButton" name="okButton">
        <property name="toolTip">
-        <string>Save the locations of the specified image files and close this dialog.</string>
+        <string>Load the selected image and close this dialog.</string>
        </property>
        <property name="text">
         <string>OK</string>
@@ -118,7 +118,7 @@
      <item>
       <widget class="QPushButton" name="cancelButton">
        <property name="toolTip">
-        <string>Close this  without saving the settings dialog.</string>
+        <string>Close this dialog without loading an image.</string>
        </property>
        <property name="text">
         <string>Cancel</string>

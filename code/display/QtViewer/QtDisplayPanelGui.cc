@@ -279,14 +279,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	initAnimationHolder();
 	string animloc = addAnimationDockWidget();
 
-	bool showExampleHistogram = false;
-	if ( showExampleHistogram ){
-		histogramDockWidget_ = new QDockWidget();
-		histogramDockWidget_ ->setObjectName( "Histogram");
-		histogramDockWidget_->setWindowTitle( "Histogram");
-		initHistogramHolder();
-		string histloc = addHistogramDockWidget();
-	}
+	initHistogramHolder();
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 	std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
@@ -666,23 +659,64 @@ void QtDisplayPanelGui::initAnimationHolder(){
 }
 
 void QtDisplayPanelGui::initHistogramHolder(){
-	if ( binPlotWidget == NULL ){
-		binPlotWidget = new BinPlotWidget( false, false, this );
-		binPlotWidget->setMaximumSize( 400, 300 );
+	bool showExampleHistogram = false;
+	if ( showExampleHistogram ){
+		histogramDockWidget_ = new QDockWidget();
+		histogramDockWidget_ ->setObjectName( "Histogram");
+		histogramDockWidget_->setWindowTitle( "Histogram");
+		initHistogramHolder();
+		addHistogramDockWidget();
+		if ( binPlotWidget == NULL ){
+			binPlotWidget = new BinPlotWidget( false, false, this );
+			binPlotWidget->setMaximumSize( 400, 300 );
+			connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SLOT(updateHistogram(viewer::QtRegion*,std::string)));
+		}
+	}
+
+	if ( histogrammer == NULL ){
+		histogrammer = new HistogramMain(false,true,true,this);
+		histogrammer->setDisplayPlotTitle( true );
+		histogrammer->setDisplayAxisTitles( true );
+		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
 		connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SLOT(updateHistogram(viewer::QtRegion*,std::string)));
+		connect( regionDock_, SIGNAL(regionSelected(int)), this, SLOT(updateHistogramSelection(int)));
+		refreshHistogrammer();
 	}
 }
 
-void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, std::string /*str*/ ){
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
-	if ( rdds.len() > 0 ){
-		ListIter<QtDisplayData*> iter(rdds );
-		QtDisplayData* rdd = iter.getRight();
-		ImageInterface<float>* img = rdd->imageInterface();
-		binPlotWidget->setImage( img );
-		DisplayData* dd = rdd->dd();
-		ImageRegion* imageRegion = qtRegion->getImageRegion(dd);
-		binPlotWidget->setImageRegion( *imageRegion );
+void QtDisplayPanelGui::updateHistogramSelection( int id ){
+	histogrammer->imageRegionSelected( id );
+}
+
+
+void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, std::string str ){
+	if ( qtRegion != NULL ){
+		int regionId = qtRegion->getId();
+		if ( str == "created" ){
+			List<QtDisplayData*> rdds = qdp_->registeredDDs();
+			for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+				QtDisplayData* pdd = qdds.getRight();
+				if(pdd != 0 && pdd->dataType() == "image") {
+					ImageInterface<float>* img = pdd->imageInterface();
+					PanelDisplay* ppd = qdp_->panelDisplay();
+					if (ppd != 0 && img != 0) {
+						DisplayData* displayData = pdd->dd();
+						if (ppd->isCSmaster(displayData)) {
+							ImageRegion* imageRegion = qtRegion->getImageRegion(displayData);
+							if ( imageRegion != NULL ){
+								histogrammer->setImageRegion( imageRegion, regionId );
+							}
+						}
+					}
+				}
+			}
+		}
+		else if ( str == "deleted" ){
+			histogrammer->deleteImageRegion( regionId );
+		}
+	}
+	else {
+		qDebug() << "Update region getting a null region";
 	}
 }
 
@@ -806,7 +840,7 @@ void QtDisplayPanelGui::updateFrameInformation(){
 		animationHolder->setChannelModeEnabled( maxChannels );
 	}
 	animationHolder->setModeEnabled( uniqueImages.size() );
-	//qdp_->setBlen_(displayDataCount );
+	//qdp_->setBlen_(uniqueImages.size() );
 }
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
@@ -2457,13 +2491,6 @@ void QtDisplayPanelGui::showMomentsCollapseImageProfile(){
 }
 
 void QtDisplayPanelGui::showHistogram(){
-	if ( histogrammer == NULL ){
-		histogrammer = new HistogramMain(false,true,true,this);
-		histogrammer->setDisplayPlotTitle( true );
-		histogrammer->setDisplayAxisTitles( true );
-		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
-		refreshHistogrammer();
-	}
 	histogrammer->show();
 }
 

@@ -38,6 +38,7 @@ RangeControlsWidget::RangeControlsWidget(QWidget *parent)
 	ui.maxLineEdit->setValidator( minMaxValidator );
 	connect( ui.minLineEdit, SIGNAL(textChanged(const QString&)), this, SIGNAL(minMaxChanged()));
 	connect( ui.maxLineEdit, SIGNAL(textChanged(const QString&)), this, SIGNAL(minMaxChanged()));
+	connect( ui.clearRangeButton, SIGNAL(clicked()), this, SLOT(clearRange()));
 }
 
 void RangeControlsWidget::setRange( double min, double max ){
@@ -48,6 +49,12 @@ void RangeControlsWidget::setRange( double min, double max ){
 void RangeControlsWidget::setRangeLimits( double min, double max ){
 	minMaxValidator->setBottom( min );
 	minMaxValidator->setTop( max );
+}
+
+void RangeControlsWidget::clearRange(){
+	ui.minLineEdit->setText( "" );
+	ui.maxLineEdit->setText( "" );
+	emit rangeCleared();
 }
 
 pair<double,double> RangeControlsWidget::getMinMaxValues() const {
@@ -64,6 +71,20 @@ pair<double,double> RangeControlsWidget::getMinMaxValues() const {
 	return maxMinValues;
 }
 
+void RangeControlsWidget::setDataLimits( std::vector<float> values ){
+	double min = numeric_limits<float>::max();
+	double max = numeric_limits<float>::min();
+	for ( int i = 0; i < static_cast<int>(values.size()); i++ ){
+		if ( min > values[i] ){
+			min = values[i];
+		}
+		if ( max > values[i] ){
+			max = values[i];
+		}
+	}
+	ui.dataMinLineEdit->setText( QString::number( min ) );
+	ui.dataMaxLineEdit->setText( QString::number( max ) );
+}
 
 RangeControlsWidget::~RangeControlsWidget(){
 

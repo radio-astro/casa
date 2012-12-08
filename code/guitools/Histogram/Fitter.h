@@ -28,6 +28,8 @@
 
 #include <casa/Arrays/Vector.h>
 
+#include <QString>
+
 namespace casa {
 
 /**
@@ -40,12 +42,16 @@ public:
 	Vector<Float> getFitValues();
 	virtual bool doFit() = 0;
 	virtual void clearFit()=0;
+	QString getErrorMessage() const;
+	QString getStatusMessage() const;
 	virtual ~Fitter();
+
 protected:
 	Vector<Float> xValues;
 	Vector<Float> yValues;
 	Vector<Float> fitValues;
-
+	QString errorMsg;
+	QString statusMsg;
 	float getMean() const;
 };
 

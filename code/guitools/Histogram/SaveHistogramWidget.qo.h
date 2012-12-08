@@ -39,12 +39,13 @@ public:
     ~SaveHistogramWidget();
 
 signals:
-	void savePing( const QString& filePath );
+	void savePing( const QString& filePath, int width, int height );
 	void saveAscii( const QString& filePath );
 
 private slots:
 	void validateDirectory( const QString& str );
 	void directoryChanged(const QModelIndex& modelIndex );
+	void suffixChanged( const QString& text );
 	void save();
 	void saveCanceled();
 

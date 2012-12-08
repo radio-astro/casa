@@ -45,6 +45,8 @@ void HistogramMarkerPoisson::setLambda( int valueX ){
 	lambdaSpecified = true;
 }
 
+
+
 void HistogramMarkerPoisson::draw(QPainter* painter, const QwtScaleMap&,
 		const QwtScaleMap&, const QRect& rect) const {
 
@@ -63,7 +65,6 @@ void HistogramMarkerPoisson::draw(QPainter* painter, const QwtScaleMap&,
 
 	//Draw a vertical line at lambda
 	int height = rect.y() + rect.height();
-	//qDebug() << "HistogramMarkerPoisson height="<<height;
 	painter->drawLine( lambda, 0, lambda, height );
 	painter->setPen( pen );
 }

@@ -469,7 +469,8 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   dd = 0;
 
   //Normal mode
-  if ( !blinkMode ){
+  /*if ( !blinkMode ){
+	  cout << "Normal mode"<<endl;
 	  for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
 			  iter != itsDisplayList.rend(); ++iter, ++dd ) {
 		  if ( conforms[dd] && (*iter)->isDisplayable( )){
@@ -480,7 +481,7 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	  }
   }
   //blink mode
-  else {
+  else {*/
 	 for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 	 			  iter != itsDisplayList.end(); ++iter, ++dd ) {
 	 	if ( conforms[dd] && (*iter)->isDisplayable( )){
@@ -496,7 +497,7 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	 		}
 	 	}
 	  }
-  }
+  //}
 
     
   wc->releasePGPLOTdevice();

@@ -177,6 +177,9 @@ namespace casa {
 		ImageRegion * getImageRegion( DisplayData* dd ) const {
 					return get_image_region( dd );
 				}
+		int getId() const {
+			return id_;
+		}
 
 	    public slots:
 		/* void name( const QString &newname ); */

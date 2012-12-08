@@ -27,6 +27,9 @@
 #define FITTERPOISSON_H_
 
 #include <guitools/Histogram/Fitter.h>
+#include <assert.h>
+#include <QtCore/qmath.h>
+#include <QMessageBox>
 
 namespace casa {
 /**
@@ -37,10 +40,14 @@ class FitterPoisson : public Fitter {
 public:
 	FitterPoisson();
 	void setLambda( double value );
+	double getLambda() const;
 	virtual bool doFit();
 	virtual void clearFit();
 	virtual ~FitterPoisson();
 private:
+	int factorial( int n ) const;
+	bool isIntegerValue( float val ) const;
+
 	bool lambdaSpecified;
 	double lambda;
 };

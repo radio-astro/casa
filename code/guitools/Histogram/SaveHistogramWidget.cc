@@ -42,6 +42,13 @@ SaveHistogramWidget::SaveHistogramWidget(QWidget *parent)
 	ui.suffixComboBox->addItem( SAVE_PNG );
 	ui.suffixComboBox->addItem( SAVE_ASCII );
 
+	QIntValidator* intValidator = new QIntValidator(1, std::numeric_limits<int>::max(), this );
+	ui.heightLineEdit->setValidator( intValidator );
+	ui.widthLineEdit->setValidator( intValidator );
+	QString defaultSize = QString::number(200);
+	ui.widthLineEdit->setText( defaultSize );
+	ui.heightLineEdit->setText( defaultSize );
+
 	//Initialize the file browsing tree
 	fileModel = new QFileSystemModel( ui.directoryTreeWidget );
 	QString initialDir = QDir::currentPath();
@@ -59,6 +66,7 @@ SaveHistogramWidget::SaveHistogramWidget(QWidget *parent)
 
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(save()));
 	connect( ui.cancelButton, SIGNAL( clicked()), this, SLOT(saveCanceled()));
+	connect( ui.suffixComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(suffixChanged(const QString&)));
 }
 
 void SaveHistogramWidget::saveCanceled(){
@@ -70,7 +78,7 @@ void SaveHistogramWidget::save(){
 	//Directory
 	QString saveFileName = ui.directoryLineEdit->text();
 	QString directorySeparator = QDir::separator();
-	if ( saveFileName.endsWith( directorySeparator )){
+	if ( !saveFileName.endsWith( directorySeparator )){
 		saveFileName.append( directorySeparator );
 	}
 
@@ -87,12 +95,26 @@ void SaveHistogramWidget::save(){
 	saveFileName = saveFileName + fileName;
 
 	//Suffix
+	const QString TEXT_SUFFIX = "txt";
 	QString suffix = ui.suffixComboBox->currentText();
-	saveFileName = saveFileName + "." + suffix;
-	if ( suffix == SAVE_PNG ){
-		emit savePing( saveFileName );
+	if ( suffix == SAVE_ASCII ){
+		suffix = TEXT_SUFFIX;
 	}
-	else if ( suffix == SAVE_ASCII ){
+	saveFileName = saveFileName + "." + suffix;
+
+	if ( suffix == SAVE_PNG ){
+		QString widthStr = ui.widthLineEdit->text();
+		QString heightStr = ui.heightLineEdit->text();
+		int width = widthStr.toInt();
+		int height = heightStr.toInt();
+		if ( width > 0 && height > 0 ){
+			emit savePing( saveFileName, width, height );
+		}
+		else {
+			QMessageBox::warning( this, "Image size not Specified", "Please specify a valid width and height for the image.");
+		}
+	}
+	else if ( suffix == TEXT_SUFFIX ){
 		emit saveAscii( saveFileName );
 	}
 	else {
@@ -118,7 +140,16 @@ void SaveHistogramWidget::directoryChanged(const QModelIndex& modelIndex ){
 	ui.directoryLineEdit->setText( path );
 }
 
-
+void SaveHistogramWidget::suffixChanged( const QString& text ){
+	bool sizesVisible = true;
+	if ( text == SAVE_ASCII ){
+		sizesVisible = false;
+	}
+	ui.heightLabel->setVisible( sizesVisible );
+	ui.widthLabel->setVisible( sizesVisible );
+	ui.heightLineEdit->setVisible( sizesVisible );
+	ui.widthLineEdit->setVisible( sizesVisible );
+}
 
 SaveHistogramWidget::~SaveHistogramWidget(){
 

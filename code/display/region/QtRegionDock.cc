@@ -172,6 +172,12 @@ namespace casa {
 	void QtRegionDock::selectRegion(QtRegionState *state) {
 	    region_stack->setCurrentWidget(state);
 	    state->nowVisible( );
+	    if ( state != NULL ){
+	    	QtRegion* qtRegion = state->region();
+	    	if ( qtRegion != NULL ){
+	    		emit regionSelected( qtRegion->getId());
+	    	}
+	    }
 	}
 
 	void QtRegionDock::selectedCountUpdateNeeded( ) {
