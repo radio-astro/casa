@@ -49,7 +49,9 @@ public:
 
   static bool gotStopSignal();
   static void setStopSignal(Bool lala);
-
+  //Reset handled signals back to default behavior
+  static void resetSignalHandlers();
+  //Will handle some signals; Abort and Interrupt
   void        setupSignalHandlers();
   static void theHandler(int sig);
   
