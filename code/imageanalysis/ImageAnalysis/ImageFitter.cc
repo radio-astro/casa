@@ -81,10 +81,10 @@ ImageFitter::ImageFitter(
 		image, region, regionRec, box, chanInp, stokes,
 		maskInp, "", False
 	), _regionString(region), _residual(residualInp),_model(modelInp),
-	estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+	_estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 	_compListName(compListName), _bUnit(image->units().getName()),
 	_includePixelRange(includepix),
-	_excludePixelRange(excludepix), estimates(), _fixed(0),
+	_excludePixelRange(excludepix), _estimates(), _fixed(0),
 	_fitDone(False), _noBeam(False),
 	_doZeroLevel(False), _zeroLevelIsFixed(False),
 	_fitConverged(Vector<Bool>(0)), _peakIntensities(),
@@ -123,7 +123,7 @@ ComponentList ImageFitter::fit() {
 			);
 		}
 	}
-	uInt ngauss = estimates.nelements() > 0 ? estimates.nelements() : 1;
+	uInt ngauss = _estimates.nelements() > 0 ? _estimates.nelements() : 1;
 	Vector<String> models(ngauss, "gaussian");
 	if (_doZeroLevel) {
 		models.resize(ngauss+1, True);
@@ -135,11 +135,6 @@ ComponentList ImageFitter::fit() {
 	Bool deconvolve = False;
 	Bool list = True;
 	String errmsg;
-	Record estimatesRecord;
-	if (! estimates.toRecord(errmsg, estimatesRecord)) {
-		*_getLog() << "Could not convert estimates correctly. Check syntax. "
-			<< errmsg << LogIO::EXCEPTION;
-	}
 	ImageAnalysis myImage(_getImage());
 	Record region = *_getRegion();
 	myImage.statistics(
@@ -169,7 +164,7 @@ ComponentList ImageFitter::fit() {
 			_fitsky(
 				fitter, pixels, pixelMask, converged,
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
-				_curChan, models, estimatesRecord,
+				_curChan, models,
 				fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
 		}
@@ -239,6 +234,7 @@ ComponentList ImageFitter::fit() {
 		_fitDone = True;
 		_fitConverged[_curChan - _chanVec[0]] = converged;
 		if(converged) {
+			Record estimatesRecord;
 			_setFluxes();
 			_setSizes();
 			_curResults.toRecord(errmsg, estimatesRecord);
@@ -420,7 +416,6 @@ vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	outputs[0] = residualIm;
 	outputs[1] = modelIm;
 	outputs[2] = newEstFile;
-	// outputs[3] = logFile;
 
 	return outputs;
 }
@@ -457,14 +452,11 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	}
 	else {
 		FitterEstimatesFileParser parser(estimatesFilename, *_getImage());
-		estimates = parser.getEstimates();
-		estimatesString = parser.getContents();
+		_estimates = parser.getEstimates();
+		_estimatesString = parser.getContents();
 		_fixed = parser.getFixed();
-		Record rec;
-		String errmsg;
-		estimates.toRecord(errmsg, rec);
 		*_getLog() << LogIO::NORMAL << "File " << estimatesFilename
-			<< " has " << estimates.nelements()
+			<< " has " << _estimates.nelements()
         	<< " specified, so will attempt to fit that many gaussians "
         	<< LogIO::POST;
 	}
@@ -531,7 +523,7 @@ String ImageFitter::_resultsHeadder() const {
 	summary << "       --- mask:                " << _getMask() << endl;
 	summary << "       --- include pixel ragne: " << _includePixelRange << endl;
 	summary << "       --- exclude pixel ragne: " << _excludePixelRange << endl;
-	summary << "       --- initial estimates:   " << estimatesString << endl;
+	summary << "       --- initial estimates:   " << _estimatesString << endl;
 	return summary.str();
 }
 
@@ -1208,7 +1200,7 @@ void ImageFitter::_fitsky(
 	Fit2D& fitter, Array<Float>& pixels, Array<Bool>& pixelMask,
 	Bool& converged, Double& zeroLevelOffsetSolution,
    	Double& zeroLevelOffsetError, const uInt& chan,
-	const Vector<String>& models, Record& inputEstimate,
+	const Vector<String>& models,
 	const Bool fitIt, const Bool deconvolveIt, const Bool list,
 	const Double zeroLevelEstimate
 ) {
@@ -1216,19 +1208,12 @@ void ImageFitter::_fitsky(
 	*_getLog() << origin;
 	String error;
 	Vector<SkyComponent> estimate;
-	ComponentList compList;
-	if (!compList.fromRecord(error, inputEstimate)) {
-		*_getLog() << LogIO::WARN
-			<< "Can not  convert input parameter to ComponentList "
-			<< error << LogIO::POST;
+	uInt n = _estimates.nelements();
+	estimate.resize(n);
+	for (uInt i = 0; i < n; i++) {
+		estimate(i) = _estimates.component(i);
 	}
-	else {
-		int n = compList.nelements();
-		estimate.resize(n);
-		for (int i = 0; i < n; i++) {
-			estimate(i) = compList.component(i);
-		}
-	}
+
 	converged = False;
 	const uInt nModels = models.nelements();
 	const uInt nGauss = _doZeroLevel ? nModels - 1 : nModels;
@@ -1285,12 +1270,11 @@ void ImageFitter::_fitsky(
 	SubImage<Float> subImage = SubImage<Float>(
 		allAxesSubImage, AxesSpecifier(False)
 	);
+
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
 	Bool xIsLong = CoordinateUtil::isSky(*_getLog(), cSys);
-
 	pixels = subImage.get(True);
-	IPosition shape = pixels.shape();
 	pixelMask = subImage.getMask(True).copy();
 
 	// What Stokes type does this plane hold ?
@@ -1378,9 +1362,7 @@ void ImageFitter::_fitsky(
 			// this if need be by adding or removing component shape parameters
 			ComponentType::Shape estType = estimate(i).shape().type();
 			if (
-				(
-					modelType == Fit2D::GAUSSIAN || modelType == Fit2D::DISK
-				)
+				(modelType == Fit2D::GAUSSIAN || modelType == Fit2D::DISK)
 				&& estType == ComponentType::POINT
 			) {
 				_fitskyExtractBeam(parameters, imageInfo, xIsLong, cSys);
