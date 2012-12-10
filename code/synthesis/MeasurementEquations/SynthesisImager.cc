@@ -45,14 +45,15 @@
 
 #include <casa/OS/HostInfo.h>
 
+#include<synthesis/MeasurementEquations/SIIterBot.h>
 #include <synthesis/MeasurementEquations/SynthesisImager.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
-#include <casadbus/utilities/BusAccess.h>
-#include <casadbus/session/DBusSession.h>
+//#include <casadbus/utilities/BusAccess.h>
+//#include <casadbus/session/DBusSession.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -68,6 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsCurrentMaskHandler(NULL),
 				       itsSkyModel(SISkyModel()),
 				       itsSkyEquation(SISkyEquation()),
+                                       itsLoopController(),
                                        startmodel_p(String("")), 
 				       usescratch_p(True)
   {
@@ -132,6 +134,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     
     os << "Define/construct Image Coordinates" << LogIO::POST;
+
+    /* Use the image name to create a unique service name */
+    try {
+      std::string imagename = impars.asString( RecordFieldId("imagename"));
+      itsLoopController.reset( new SIIterBot("SynthesisImage_" + imagename));
+      // Read and interpret input parameters.
+    } catch(AipsError &x)
+      {
+	throw( AipsError("Error in reading input image-parameters: "+x.getMesg()) );
+      }
+
+      
+
 
     Int nchan=1;
 
@@ -268,7 +283,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","updateIterationDetails",WHERE) );
     try
       {
-        itsLoopController.setControlsFromRecord(iterpars);
+        if (itsLoopController.get() == NULL) 
+          throw( AipsError("Iteration Control un-initialized"));
+                 
+        itsLoopController->setControlsFromRecord(iterpars);
       }
     catch(AipsError &x)
       {
@@ -282,7 +300,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","getIterationDetails",WHERE) );
     Record returnRecord;
     try {
-      returnRecord = itsLoopController.getDetailsRecord();
+        if (itsLoopController.get() == NULL) 
+          throw( AipsError("Iteration Control un-initialized"));
+
+      returnRecord = itsLoopController->getDetailsRecord();
     } catch(AipsError &x) {
       throw( AipsError("Error in retrieving iteration parameters : " +
                        x.getMesg()) );
@@ -295,7 +316,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","getIterationSummary",WHERE) );
     Record returnRecord;
     try {
-      returnRecord = itsLoopController.getSummaryRecord();
+        if (itsLoopController.get() == NULL) 
+          throw( AipsError("Iteration Control un-initialized"));
+
+      returnRecord = itsLoopController->getSummaryRecord();
     } catch(AipsError &x) {
       throw( AipsError("Error in retrieving iteration parameters : " +
                        x.getMesg()) );
@@ -319,6 +343,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   } //end of setupIteration
   
+  void SynthesisImager::setInteractiveMode(Bool interactiveMode) 
+  {
+    LogIO os( LogOrigin("SynthesisImager","setupIteration",WHERE) );
+    os << "Setting intractive mode to " 
+       << ((interactiveMode) ? "Active" : "Inactive") << LogIO::POST;
+    try {
+      if (itsLoopController.get() == NULL) 
+        throw( AipsError("Iteration Control un-initialized"));
+      itsLoopController->changeInteractiveMode(interactiveMode);
+    } catch(AipsError &x) {
+      throw( AipsError("Error Setting Interactive Mode : "+x.getMesg()) );
+    }
+  }
+  
   void SynthesisImager::initCycles()
   {
     LogIO os( LogOrigin("SynthesisImager","initCycles", WHERE) );
@@ -334,7 +372,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   bool SynthesisImager::cleanComplete() {
-    return itsLoopController.cleanComplete(itsMappers.findPeakResidual());
+    bool returnValue;
+    try {
+      if (itsLoopController.get() == NULL) 
+        throw( AipsError("Iteration Control un-initialized"));
+      returnValue=itsLoopController->cleanComplete(itsMappers.findPeakResidual());
+    } catch (AipsError &x) {
+      throw( AipsError("Error checking clean complete state : "+x.getMesg()) );
+    }
+    return returnValue; 
   }
 
   /*
@@ -352,7 +398,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     try
       {
-        if(itsLoopController.getUpdatedModelFlag() ==True)
+        if (itsLoopController.get() == NULL) 
+          throw( AipsError("Iteration Control un-initialized"));
+
+        if(itsLoopController->getUpdatedModelFlag() ==True)
 	  {
 	    os << "Restore Image (and normalize to Flat Sky) " << LogIO::POST;
 	    itsSkyModel.restore( itsMappers );
@@ -370,29 +419,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
     try
       {
- 	if(itsLoopController.getCompletedNiter()==0 &&
+        if (itsLoopController.get() == NULL) 
+          throw( AipsError("Iteration Control un-initialized"));
+
+ 	if(itsLoopController->getCompletedNiter()==0 &&
            startmodel_p.length()>1 )
  	  {
-            itsLoopController.setUpdatedModelFlag(true);
+            itsLoopController->setUpdatedModelFlag(true);
  	  }
 	
-	if(itsLoopController.getMajorCycleCount() ==0)
+	if(itsLoopController->getMajorCycleCount() ==0)
 	  {
 	    os << "Make PSFs, weights and initial dirty/residual images. " ;
 	  }
 	else
 	  {
-	    if(! itsLoopController.getUpdatedModelFlag())
+	    if(! itsLoopController->getUpdatedModelFlag())
 	      {
 		os << "No new model. No need to update residuals in a major cycle." << LogIO::POST;
 		return;
 	      }
 	    os << "Update residual image in major cycle " << 
-              String::toString(itsLoopController.getMajorCycleCount()) << ". ";
+              String::toString(itsLoopController->getMajorCycleCount()) << ". ";
 	  }
 	
-	if(itsLoopController.cleanComplete(itsMappers.findPeakResidual()) &&
-           itsLoopController.getUpdatedModelFlag())
+	if(itsLoopController->cleanComplete(itsMappers.findPeakResidual()) &&
+           itsLoopController->getUpdatedModelFlag())
 	  {
 	    if(usescratch_p==True)
 	      {
@@ -419,8 +471,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {    
 	// se.runMajorCycle(xxxxx . modeltoms = usescratch)
 	itsSkyEquation.runMajorCycle( itsMappers );
-	itsLoopController.incrementMajorCycleCount();
-	itsLoopController.addSummaryMajor();
+	itsLoopController->incrementMajorCycleCount();
+	itsLoopController->addSummaryMajor();
 
 	/* The first time, when PSFs are made, all mappers need to compute 
            PSF parameters ( peak sidelobe level, etc ) 0 and store it inside 
@@ -436,10 +488,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void  SynthesisImager::runMinorCycle() //SIIterBot& loopcontrols)
   {
     LogIO os( LogOrigin("SynthesisImager","runMinorCycle",WHERE) );
-    
+
     try
       {
-        itsSkyModel.runMinorCycle( itsMappers , itsLoopController );
+        if (itsLoopController.get() == NULL) 
+          throw( AipsError("Iteration Control un-initialized"));
+
+        itsSkyModel.runMinorCycle( itsMappers , *itsLoopController );
       }
     catch(AipsError &x)
       {

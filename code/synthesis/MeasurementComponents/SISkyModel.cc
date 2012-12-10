@@ -77,7 +77,7 @@ SISkyModel::~SISkyModel()
 				  SIIterBot &loopcontrols )
   {
     LogIO os( LogOrigin("SISkyModel","runMinorCycle",WHERE) );
-
+   
     Float peakResidual = mappers.findPeakResidual();
 
     loopcontrols.setMaxPsfSidelobe( mappers.findMaxPsfSidelobe() );
@@ -92,8 +92,11 @@ SISkyModel::~SISkyModel()
     os << " loopgain = " << loopcontrols.getLoopGain() ;
     os << " ]" << LogIO::POST;
 
-    pauseForUserInteraction( mappers, loopcontrols );
 
+
+    if (loopcontrols.interactiveInputRequired(peakResidual)) {
+      pauseForUserInteraction( mappers, loopcontrols );
+    }
 
     Int startiter=0,stopiter=0;
 
@@ -147,12 +150,14 @@ SISkyModel::~SISkyModel()
   {
     LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
 
+    os << "Waiting for interactive clean feedback" << LogIO::POST;
+
+    /* This call will make sure that the current values of loop control are
+       available in the GUI and will not return until the user hits the
+       button */
+    loopcontrols.waitForInteractiveInput();
+    
     Int nmappers = mappers.nMappers();
-
-    os << "Show Interactive-clean window and wait for the user to click a button" << LogIO::POST;
-
-    //// SEND current parameter values to the GUI
-
     for(Int mp=0;mp<nmappers;mp++)
       {
 	TempImage<Float> dispresidual, dispmask;
@@ -164,15 +169,6 @@ SISkyModel::~SISkyModel()
 
 	mappers.getMapper(mp)->setMask( dispmask );
       }
-
-    //// RECEIVE updated parameters from the GUI  ( on click-to-continue )
-
-    ///// Modify the contents of the IterBot.
-    // loopcontrols.changeNiter(xxx);
-    // loopcontrols.changeMaxCycleNiter(xxx);
-    // loopcontrols.changeThreshold(xxx);
-    // loopcontrols.changeCycleThreshold(xxx);
-    // loopcontrols.changeLoopGain(xxx);
 
     
   }// end of pauseForUserInteraction
