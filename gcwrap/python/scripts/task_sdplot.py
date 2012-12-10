@@ -90,7 +90,8 @@ class sdplot_worker(sdutil.sdtask_template):
             sd.plotter.save(self.outfile)
 
     def cleanup(self):
-        sd.plotter._data = None
+        pass
+        #sd.plotter._data = None
 
     def plot_pointing(self):
         kw = {'scan': self.scan}
@@ -113,7 +114,8 @@ class sdplot_worker(sdutil.sdtask_template):
 
     def plot_grid(self):
         refresh=False
-        (nx,ny,cellx,celly,mapcenter) = self.__get_grid_parameters()
+        (nx,ny,cellx,celly,mapcenter) = self.__get_grid_parameters(True)
+        #print "Gridding scantable: npix = (%d, %d), cell = (%s, %s), center = %s" % (nx, ny, cellx, celly, mapcenter)
         self.__dogrid(nx, ny, cellx, celly, mapcenter)
 
         # Now set fluxunit, specunit, frame, and doppler
@@ -138,14 +140,18 @@ class sdplot_worker(sdutil.sdtask_template):
         # TODO: need checking epoch and unit of DIRECTION in scantable
         crad = None
         spacing = None
-        if self.center != '':
-            epoch, ra, dec = self.center.split(' ')
+        #if self.center != '':
+            #epoch, ra, dec = self.center.split(' ')
+        if mapcenter != '':
+            epoch, ra, dec = mapcenter.split(' ')
             cme = me.direction(epoch, ra, dec)
             crad = [qa.convert(cme['m0'],'rad')['value'], \
                     qa.convert(cme['m1'],'rad')['value']]
+            #print "Plot center (%frad, %frad)" % (crad[0], crad[1])
         if cellx != '' and celly != '':
             spacing = [qa.convert(cellx, 'rad')['value'], \
                        qa.convert(celly, 'rad')['value']]
+            #print "Plot cell (%frad, %frad)" % (spacing[0], spacing[1])
         sd.plotter.plotgrid(center=crad,spacing=spacing,rows=ny,cols=nx)
 
         self.__print_header(asaplot=True)
@@ -317,10 +323,13 @@ class sdplot_worker(sdutil.sdtask_template):
         self.scan = gridder.getResult()
         del gridder
 
-    def __get_grid_parameters(self):
+    def __get_grid_parameters(self, calc=False):
         (nx,ny) = self.__get_mapsize()
-        (cellx,celly) = sdutil.get_cellx_celly(self.cell)
         mapcenter = sdutil.get_map_center(self.center)
+        (cellx,celly) = sdutil.get_cellx_celly(self.cell)
+        if calc and \
+               ((mapcenter.split() != 3) or not qa.qa.compare(cellx, "rad")):
+            (mapcenter,cellx,celly) = self.__calc_center_and_cell(mapcenter, cellx, celly)
         return (nx,ny,cellx,celly,mapcenter)
         
     def __get_mapsize(self):
@@ -330,4 +339,43 @@ class sdplot_worker(sdutil.sdtask_template):
         nx = (self.subplot % 10)
         ny = int(self.subplot/10)
         return (nx,ny)
+
+    def __calc_center_and_cell(self, center, cellx, celly):
+        from numpy import array
+        # Get map extent (in radian)
+        dirarr = array(self.scan.get_directionval()).transpose()
+        xmin = dirarr[0].min()
+        xmax = dirarr[0].max()
+        ymin = dirarr[1].min()
+        ymax = dirarr[1].max()
+        del dirarr
+        # center of directions
+        dircent = [0.5*(xmax + xmin), 0.5*(ymax + ymin)]
+        centx = None
+        centy = None
+        # center is not specified
+        if center.split() != 3:
+            # set map center (string) to center of directions
+            center = sdutil.get_map_center(dircent, unit= "rad")
+            # direction center in unit of radian
+            (centx, centy) = dircent
+        # cell is not specified
+        if not qa.compare(cellx, "rad"):
+            if not centx:
+                # center is given. Get the value in radian
+                lcent = center.split()
+                centx = qa.convert(qa.toangle(lcent[1]), "rad")
+                centy = qa.convert(qa.toangle(lcent[2]), "rad")
+                # make sure centx is in +-pi of pointing center
+                rotnum = round(abs(centx - dircent[0])/(2*pi))
+                if centx < dircent[0]: rotnum *= -1
+                centx -= rotnum*2*pi
+            wx = 2. * max(abs(xmax-centx), abs(xmin-centx))
+            wy = 2. * max(abs(ymax-centy), abs(ymin-centy))
+            #print "mapsize = [%frad, %frad]" % (wx, wy)
+            from numpy import cos
+            (nx,ny) = self.__get_mapsize()
+            cellx = qa.quantity(wx/float(max(nx-1,1))*cos(centy), "rad")
+            celly = qa.quantity(wy/float(max(ny-1,1)), "rad")
+        return (center, qa.tos(cellx), qa.tos(celly))
 
