@@ -38,8 +38,9 @@
 #include<synthesis/MeasurementEquations/SIMapperCollection.h>
 #include<synthesis/MeasurementComponents/SISkyModel.h>
 #include<synthesis/MeasurementEquations/SISkyEquation.h>
-#include<synthesis/MeasurementEquations/SIIterBot.h>
 #include<synthesis/MeasurementEquations/SIMaskHandler.h>
+
+#include <boost/scoped_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -47,6 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class MeasurementSet;
 class ViewerProxy;
 template<class T> class ImageInterface;
+ class SIIterBot;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -68,6 +70,8 @@ class SynthesisImager
   void setupImaging(Record gridpars);
   void setupDeconvolution(Record recpars);
   void setupIteration(Record iterpars);
+
+  void setInteractiveMode(Bool interactiveMode);
 
   void   setIterationDetails(Record iterpars);
   Record getIterationDetails();
@@ -103,7 +107,7 @@ protected:
   SISkyModel itsSkyModel;
   SISkyEquation itsSkyEquation;
 
-  SIIterBot itsLoopController;
+  boost::scoped_ptr<SIIterBot> itsLoopController;
 
   /////////////// All input parameters
 

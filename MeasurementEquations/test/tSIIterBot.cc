@@ -31,9 +31,11 @@
 #include <deque>
 
 #include <casa/Containers/Record.h>
+#include <casadbus/interfaces/SynthImager.proxy.h>
 
 // Include file for the SIIterBot Class
 #include<synthesis/MeasurementEquations/SIIterBot.h>
+#include <sys/wait.h>
 
 class SIIterBotTest;
 typedef void (SIIterBotTest::* TestFunc)();
@@ -52,6 +54,14 @@ public:
   void testIterationBehavior();
   void testThresholdBehavior();
   void testExportingToRecord();
+  void testInteractiveMode();
+
+  /* DBUS Interface Tests */
+  void testInstanciation();
+  void testServerSideCleanup();
+  void testInteractiveCycle();
+  void testGettingDetailsLocal();
+  void testSettingDetails();
 
 protected:
 
@@ -60,6 +70,9 @@ protected:
   bool compareFloat(float, float, float thresh=1E-12);
 
   void failIf(bool condition, string Message);
+
+  int spawnController(bool, bool, bool);
+  int checkChildState(int);
 
 private:
   std::deque<TestFunc> testFunctions;
@@ -76,6 +89,13 @@ SIIterBotTest::SIIterBotTest(){
   addTestFunction(&SIIterBotTest::testIterationBehavior);
   addTestFunction(&SIIterBotTest::testThresholdBehavior);
   addTestFunction(&SIIterBotTest::testSettingCycleParameters);
+  addTestFunction(&SIIterBotTest::testInteractiveMode);
+
+  addTestFunction(&SIIterBotTest::testInstanciation);
+  addTestFunction(&SIIterBotTest::testServerSideCleanup);
+  addTestFunction(&SIIterBotTest::testInteractiveCycle);
+  addTestFunction(&SIIterBotTest::testGettingDetailsLocal);
+  addTestFunction(&SIIterBotTest::testSettingDetails);
 }
 
 SIIterBotTest::~SIIterBotTest(){}
@@ -88,7 +108,7 @@ void SIIterBotTest::addTestFunction(TestFunc testFunc){
 void SIIterBotTest::failIf(bool condition, string message){
   if (condition) {
     // Test Failed
-    std::cout << "Failure (" << currentTestExecution <<"): " 
+    std::cout << "\tFailure (" << currentTestExecution <<"): " 
               << message << std::endl;
     currentTestFailed = true;
   }
@@ -105,7 +125,10 @@ int SIIterBotTest::runTests() {
   for (; fptr != testFunctions.end(); fptr++) {
     currentTestFailed = false;
     (this->**fptr)();
-    if (!currentTestFailed) successfulTests++;
+    if (!currentTestFailed) {
+      std::cout << "Test "<< currentTestExecution << ": PASSED" << std::endl;
+      successfulTests++;
+    }
   }
   
   if (successfulTests != testFunctions.size()) {
@@ -126,7 +149,7 @@ void SIIterBotTest::testDefaultValues(){
   currentTestExecution = __FUNCTION__;
   /* This test checks to make sure that the getter functions all work
      and that the default values are as expected */
-  casa::SIIterBot siBot;
+  casa::SIIterBot siBot("TestSIService");
 
   failIf(!compareFloat(siBot.getLoopGain(), 0.1),
          "Initial LoopGain incorrect");
@@ -164,7 +187,7 @@ void SIIterBotTest::testSettingControlValues(){
   currentTestExecution = __FUNCTION__;
   /* Test that the various setter methods we have are working properly */
 
-  casa::SIIterBot siBot;
+  casa::SIIterBot siBot("TestSIService");
 
   for (int counter=0; counter < 5; ++counter) {
     failIf(siBot.getMajorCycleCount() != counter,
@@ -231,7 +254,7 @@ void SIIterBotTest::testInitializingFromRecord(){
    controlRec.define( casa::RecordFieldId("cyclefactor"), 4.56);
    controlRec.define( casa::RecordFieldId("loopgain"), 6.78);
 
-   casa::SIIterBot siBot;
+   casa::SIIterBot siBot("TestSIService");
    /* Start with the basic test */
    failIf(siBot.getNiter() != 0,
           "Niter Threshold value incorrect");
@@ -309,7 +332,7 @@ void SIIterBotTest::testSettingCycleParameters() {
   currentTestExecution = __FUNCTION__;
   /* This tests the ability to modify the cycle dependent parameters and
      get the cycle threshold correctly */
-    casa::SIIterBot siBot; 
+    casa::SIIterBot siBot("TestSIService"); 
     
     siBot.setMaxPsfSidelobe(.9);
     failIf(!compareFloat(siBot.getMaxPsfSidelobe(),0.9),
@@ -362,7 +385,7 @@ void SIIterBotTest::testSettingCycleParameters() {
 
 void SIIterBotTest::testIterationBehavior(){
   currentTestExecution = __FUNCTION__;
-  casa::SIIterBot siBot; 
+  casa::SIIterBot siBot("TestSIService"); 
   const int     MaxIter    = 15000; // Maximum
   const int     nIter      = 12345;
   const int     cycleNiter = 345;
@@ -406,7 +429,7 @@ void SIIterBotTest::testThresholdBehavior(){
   /* This test checks the threshold dependent behavior assuming that
      the user is controlling it (e.g. never updating the cycle threshold)
   */
-  casa::SIIterBot siBot; 
+  casa::SIIterBot siBot("TestSIService"); 
   const float cleanStep = 10.0;
   const float threshold = 35.0;
   float cycleThreshold  = 900;
@@ -455,7 +478,7 @@ void SIIterBotTest::testThresholdBehavior(){
 
 void SIIterBotTest::testExportingToRecord(){
   currentTestExecution = __FUNCTION__;
-  casa::SIIterBot siBot; 
+  casa::SIIterBot siBot("TestSIService"); 
 
   siBot.changeNiter(123);
   siBot.changeCycleNiter(456);
@@ -543,7 +566,377 @@ void SIIterBotTest::testExportingToRecord(){
          "incorrect number of minor cycles reported for interactive cycle");
 }
 
-int main(int, char**){
-  SIIterBotTest siBotTest;
-  exit(siBotTest.runTests());
+void SIIterBotTest::testInteractiveMode() {
+  currentTestExecution = __FUNCTION__;
+  casa::SIIterBot siBot("TestSIService"); 
+
+  /* Iter Based Test */
+  siBot.changeInteractiveMode(true);
+  siBot.changeInteractiveNiter(15);
+  siBot.changeCycleNiter(10);
+  siBot.changeNiter(100);
+
+  siBot.changeInteractiveThreshold(0.0); 
+  siBot.changeCycleThreshold(0.0); 
+  siBot.changeThreshold(0.0);
+  
+  /* Assume we have 3 Fields */
+  int FieldCount = 0;
+  while (!siBot.cleanComplete(1.0)) {
+    siBot.incrementMinorCycleCount();
+    if (siBot.majorCycleRequired(1.0)) {
+      FieldCount++;
+      if (FieldCount % 3 == 0) {
+        siBot.incrementMajorCycleCount();
+        if (siBot.interactiveInputRequired(1.0)) {
+          siBot.interactionComplete();
+          failIf(siBot.getCompletedNiter() != 45 &&
+                 siBot.getCompletedNiter() != 90,
+                 "Interactive Break at Incorrect Time");
+        }
+      } else {
+        siBot.resetCycleIter();
+      }
+      
+      if (FieldCount < 4) 
+        failIf(10 * FieldCount != siBot.getCompletedNiter(),
+               "Major Cycle Break at incorrect time");
+      else if (FieldCount < 7)
+        failIf((5 * (FieldCount -3) + 30) != siBot.getCompletedNiter(),
+               "Major Cycle Break at incorrect time");
+      else if (FieldCount <  10) 
+        failIf((10 * (FieldCount - 6) + 45) != siBot.getCompletedNiter(),
+               "Major Cycle Break at incorrect time");
+      else if (FieldCount <  13) 
+        failIf((5 * (FieldCount - 9) + 75) != siBot.getCompletedNiter(),
+               "Major Cycle Break at incorrect time");
+    }
+  }
+}
+
+void SIIterBotTest::testInstanciation() {
+  currentTestExecution = __FUNCTION__;
+  casa::SIIterBot     iterBot("SITestService");
+  /* This could fail because we can't start the service, or because we
+     never clean up.
+  */
+}
+
+void SIIterBotTest::testServerSideCleanup() {
+  currentTestExecution = __FUNCTION__;
+  /* Check that when the service ends, the clients get notified */
+
+  int childPID = 0;
+  
+  {
+    casa::SIIterBot     iterBot("SITestService");
+
+    childPID = spawnController(true, true, false);
+    failIf(childPID < 0, "Failed to spawn child process");
+
+    /* Make sure we're connected */
+    while (iterBot.getNumberOfControllers() == 0) {
+      sleep(1);
+    }
+
+  } // iterbot now out of scope
+
+  failIf(checkChildState(childPID),
+         "Controller did not exit cleanly");
+} 
+
+void SIIterBotTest::testInteractiveCycle() {
+  currentTestExecution = __FUNCTION__;
+  casa::SIIterBot     iterBot("SITestService");
+  
+  int childPID = spawnController(true, true, false);
+  failIf(childPID < 0, "Failed to spawn child process");
+
+  int sleepCount = 10;
+  while (iterBot.getNumberOfControllers() == 0) {
+    sleep(1);
+    if (--sleepCount <= 0) {
+      failIf(true, "Remote Controller failed to connect");
+      return;
+    }
+  }
+  iterBot.waitForInteractiveInput();
+
+  /* Waiting for child process to exit */
+  failIf(checkChildState(childPID),
+         "Controller did not exit cleanly");
+}
+
+void SIIterBotTest::testGettingDetailsLocal() {
+  currentTestExecution = __FUNCTION__;
+  casa::SIIterBot     iterBot("SITestService");
+  
+  std::map<std::string,DBus::Variant> myMap = iterBot.getDetails();
+  failIf(myMap.size() != 15, "Incorrect number of fields in map");
+
+  /* Translate back to a CASA record for simplicity (and a bit of testing) */
+  casa::Record record = casa::DBusThreadedBase::toRecord(myMap);
+
+  /* Just make sure the size is correct, we'll check values when we
+     send in new ones
+  */
+  failIf(myMap.size() != record.nfields(),
+         "Map and Record sizes do not match");
+}
+  
+void SIIterBotTest::testSettingDetails() {
+  currentTestExecution = __FUNCTION__;
+  
+  int childPID; 
+
+  {
+    casa::SIIterBot     iterBot("SITestService");
+    childPID = spawnController(false, true, true);
+    failIf(childPID < 0, "Failed to spawn child process");
+
+    int sleepCount = 10;
+    while (iterBot.getNumberOfControllers() == 0) {
+      sleep(1);
+      if (--sleepCount <= 0) {
+        failIf(true, "Remote Controller failed to connect");
+        return;
+      }
+    }
+
+    iterBot.waitForInteractiveInput();
+    
+    /* Now check that iterBot has the correct values */
+    failIf(iterBot.getNiter() != 123,
+           "Niter Threshold value incorrect");
+    failIf(iterBot.getCycleNiter() != 456,
+           "CycleNiter Threshold value incorrect");
+    failIf(iterBot.getInteractiveNiter() != 789,
+           "InteractiveNiter Threshold value incorrect");
+    failIf(!compareFloat(iterBot.getThreshold(), 5.67),
+           "Threshold value incorrect");
+    failIf(!compareFloat(iterBot.getCycleThreshold(),7.89),
+           "CycleThreshold value incorrect");
+    failIf(!compareFloat(iterBot.getInteractiveThreshold(),8.91),
+           "InteractiveThreshold value incorrect");
+    failIf(!compareFloat(iterBot.getLoopGain(),6.78),
+           "Loop gain value incorrect");
+    failIf(!compareFloat(iterBot.getCycleFactor(),4.56),
+           "Cycle factor value incorrect");
+  }
+  /* Check that the client exited cleanly */
+  failIf(checkChildState(childPID),
+         "Controller did not exit cleanly");
+
+}
+
+
+
+int SIIterBotTest::spawnController(bool interactiveExit,
+                                       bool interactiveResponse,
+                                       bool checkDetails){
+
+  int pid;
+  if ((pid = fork()) == 0) {
+    std::string interactiveExitStr(interactiveExit ? "true":"false");
+    std::string interactiveResponseStr(interactiveResponse ? "true":"false");
+    std::string checkDetailsStr(checkDetails ? "true":"false");
+
+    /* Child Process */
+    execl("/lustre/jkern/code/active/code/build/synthesis/tSIIterBot",
+          "/lustre/jkern/code/active/code/build/synthesis/tSIIterBot", 
+          interactiveExitStr.c_str(),
+          interactiveResponseStr.c_str(),
+          checkDetailsStr.c_str(),
+          NULL);
+    exit(0);
+  }
+
+  return pid;
+}
+
+int SIIterBotTest::checkChildState(int pid) {
+  int pidStatus;
+  int counter = 10;
+  
+  while (waitpid(pid, &pidStatus, WNOHANG) == 0) {
+    counter--;
+    if (counter <= 0)
+      return -1;
+    sleep(1);
+  }
+  return pidStatus;
+
+}
+
+
+
+/* This is a very simple implemenetaion of a Controller used
+   for the testing*/
+class SITestController: public edu::nrao::casa::SynthImager_proxy,
+                        public casa::ServiceProxy
+{
+public:
+  SITestController(const std::string& serviceName,
+                   const bool&        exitOnInteractive,
+                   const bool&        serviceInteractiveRequest,
+                   const bool&        checkDetails):
+    ServiceProxy(serviceName),
+    serviceInteractiveFlag(serviceInteractiveRequest),
+    exitOnInteractiveFlag(exitOnInteractive),
+    checkDetailsFlag(checkDetails),
+    interactiveIRQ(false),
+    checkDetails(false),
+    doneFlag(false),
+    exitCondition(0)
+  {
+      }
+
+  ~SITestController(){
+    decrementController();
+  }
+
+  void interactionRequired(const bool& required){
+    interactiveIRQ = required;
+  }
+  
+  void detailUpdate(const std::map<std::string, DBus::Variant>& updatedParams){
+    if (checkDetails && checkDetailsFlag) {
+      casa::Record recOut = toRecord(updatedParams);
+
+      
+      failIf(!recOut.isDefined("niter"),
+             "niter is not defined in the record");
+      failIf(recOut.asInt(casa::RecordFieldId("niter")) != 123,
+             "niter value incorrect");
+      failIf(!recOut.isDefined("cycleniter"),
+             "cycleniter is not defined in the record");
+      failIf(recOut.asInt(casa::RecordFieldId("cycleniter")) != 456,
+             "cycleniter value incorrect");
+      failIf(!recOut.isDefined("interactiveniter"),
+             "interactiveniter is not defined in the record");
+      failIf(recOut.asInt(casa::RecordFieldId("interactiveniter")) != 789,
+             "interactiveniter value incorrect");
+      
+      failIf(!recOut.isDefined("threshold"),
+             "threshold is not defined in the record");
+      failIf(!compareFloat(recOut.asFloat(casa::RecordFieldId("threshold")),
+                           5.67), "incorrect threshold");
+      failIf(!recOut.isDefined("cyclethreshold"),
+             "cyclethreshold is not defined in the record");
+      failIf(!compareFloat(recOut.asFloat(casa::RecordFieldId("cyclethreshold")),
+                           7.89), "incorrect cyclethreshold");
+      failIf(!recOut.isDefined("interactivethreshold"),
+             "interactivethreshold is not defined in the record");
+      failIf(!compareFloat(recOut.asFloat
+                           (casa::RecordFieldId("interactivethreshold")),8.91),
+             "incorrect interactive threshold");
+      
+      failIf(!recOut.isDefined("loopgain"),
+             "loopgain is not defined in the record");
+      failIf(!compareFloat(recOut.asFloat(casa::RecordFieldId("loopgain")),
+                           6.78),
+             "incorrect loopgain");
+      failIf(!recOut.isDefined("cyclefactor"),
+             "cyclefactor is not defined in the record");
+      failIf(!compareFloat(recOut.asFloat(casa::RecordFieldId("cyclefactor")),
+                           4.56), "incorrect cyclefactor");
+
+    }    
+  }
+
+  void failIf(bool test, std::string message) {
+    if (test) {
+      std::cout << "Child Failure: " << message << std::endl;
+      exitCondition = -1;
+    }
+  }
+
+  bool compareFloat(float value1, float value2, float thresh = 1E-9){
+    return fabs(value1 - value2) < thresh;
+  }
+
+  void sendInteractionComplete() {
+    checkDetails = true;
+
+    casa::Record record;
+    record.define( casa::RecordFieldId("niter"), 123);
+    record.define( casa::RecordFieldId("cycleniter"), 456);
+    record.define( casa::RecordFieldId("interactiveniter"), 789);
+    
+    record.define( casa::RecordFieldId("threshold"), 5.67);
+    record.define( casa::RecordFieldId("cyclethreshold"), 7.89);
+    record.define( casa::RecordFieldId("interactivethreshold"), 8.91);
+    
+    record.define( casa::RecordFieldId("cyclefactor"), 4.56);
+    record.define( casa::RecordFieldId("loopgain"), 6.78);
+
+    std::map<std::string, DBus::Variant> map= fromRecord(record);
+    controlUpdate(map);
+    interactionComplete();
+  }
+
+  void summaryUpdate(const DBus::Variant& summary){
+    std::cout << "Update Summary Signal Recieved" << std::endl;
+  }
+
+  void disconnect(){
+    doneFlag = true;
+  }
+
+  int serviceLoop() {
+    incrementController();
+    while (!doneFlag) {
+      if (interactiveIRQ) {
+        interactiveIRQ = false;
+        if (serviceInteractiveFlag) {
+          sendInteractionComplete();
+        }
+        if (exitOnInteractiveFlag) {
+          doneFlag = true;
+        }
+      }
+      usleep(10000);
+    }
+    return exitCondition;
+  }
+
+protected:
+  /* Control Flags */
+  const bool serviceInteractiveFlag;
+  const bool exitOnInteractiveFlag;
+  const bool checkDetailsFlag;
+
+  /* State Flags */
+  bool interactiveIRQ;
+
+  bool checkDetails;
+  bool doneFlag;
+  int  exitCondition;
+};
+
+/* If called without any arguments the main test program executes
+   if arguments are included then we spawn a Controller process for testing
+*/
+int main(int argc, char** argv){
+  if (argc == 1) {
+    /* Main Program */
+    SIIterBotTest siIterBotTest;
+    exit(siIterBotTest.runTests());
+  } else {
+    /* Controller Process:
+       Behavior is set by the incoming arguments:
+       arg[1]: If true, exit after an interacive cycle
+       arg[2]: If true, respond to interactive requests
+       arg[3]: If true, check the details after the interactive request
+    */
+    
+    SITestController controller("SITestService",
+                                !strcmp(argv[1], "true"),
+                                !strcmp(argv[2], "true"),
+                                !strcmp(argv[3], "true"));
+
+    int exitCondition = controller.serviceLoop();
+    exit(exitCondition);
+
+  }
 }

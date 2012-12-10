@@ -1,4 +1,4 @@
-//# FlagReport.h: This file contains the interface definition of the FlagReport class.
+//# SIIterBot.h: This file contains the interface definition SIIterBot class
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -26,9 +26,6 @@
 // .casarc interface
 #include <casa/System/AipsrcValue.h>
 
-// Records interface
-//#include <casa/Containers/Record.h>
-
 // System utilities (for profiling macros)
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
@@ -38,15 +35,22 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/utility.hpp>
 
+// Include files for the DBus Service
+#include <casadbus/interfaces/SynthImager.adaptor.h>
+#include <casadbus/utilities/DBusBase.h>
+
+
 /* Future Decl */
 class casa::Record;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  class SIIterBot : boost::noncopyable 
+  class SIIterBot : public edu::nrao::casa::SynthImager_adaptor,
+                    public DBusService,
+                    boost::noncopyable 
   {
   public:
-    SIIterBot();
+    SIIterBot(const std::string &serviceName);
     ~SIIterBot();
     
     /* Method to call to determine if we should wait for interactive
@@ -55,8 +59,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          - exceeded interactiveThreshold
          - pause has been pressed
     */
-    //bool interactiveRequired(Float currentPeakResidual);
-    //void waitForInteractive();
+    bool interactiveInputRequired(Float currentPeakResidual);
+    //void interactiveComplete();
+
+    /* Wait for an Interactive Clean Cycle */
+    void waitForInteractiveInput(); 
+
 
     /* Method to call to determine if a major cycle is required, true if
          - We are done (see below)
@@ -73,6 +81,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     bool cleanComplete(Float currentPeakResidual);
 
+
+
+    
+
+
+
     /* ------ Begin functions for runtime parameter modification ------ */
     /* These are the control variables.  We can set them either through these
        method or through the Record interface */
@@ -87,9 +101,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void changeLoopGain(  Float loopgain );
     void changeCycleFactor( Float cyclefactor);
 
-    void changeInteractiveMode(Bool interactiveEnabled);
-    void changePauseFlag(Bool pauseEnabled);
-    void changeStopFlag(Bool stopEnabled);
+    void changeInteractiveMode(const bool& interactiveEnabled);
+    void changePauseFlag(const bool& pauseEnabled);
+    void changeStopFlag(const bool& stopEnabled);
 
     /* As a convience the controls can also be updated from a Record.  
        The following fields are supported:
@@ -159,6 +173,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void addSummaryMinor(Int mapperid, Float model, Float peakresidual);
     void addSummaryMajor();
 
+    /* Publish the current details from the Iterbot to all clients */
+    void pushDetails();
+
+    /* Publish the current summary from the Iterbot to all clients */
+    void pushSummary();
+
+    /* These are the fuctions we provide through the dbus interface */
+    bool incrementController();
+    bool decrementController();
+    int  getNumberOfControllers();
+
+
+    std::map<std::string,DBus::Variant> getDetails();
+    DBus::Variant getSummary();
+    
+    void interactionComplete();
+    void controlUpdate(const std::map<std::string, DBus::Variant>& parameters);
     //// START /// Functions for runtime parameter modification
 
     /* Methods to get the state of the iterbot as a Record*/
@@ -192,7 +223,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record getSummaryRecord();
 
   protected:
-
 
   private:
 
@@ -232,8 +262,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int   itsCycleIterDone;
     Int   itsInteractiveIterDone;
     Int   itsMajorDone;
+
+    /* This variable keeps track of the maximum number of iterations done
+       during a major cycle */
+    Int   itsMaxCycleIterDone;
     
     Bool   itsUpdatedModelFlag;
+
+    /* The number of Controllers Currently Connected */
+    int    itsControllerCount;
+    
+    /*
+      A condition variable used when we're waiting for interaction to 
+      complete
+    */
+     bool                      interactionPending;
+     bool                      updateNeeded;
+     boost::condition_variable interactionCond; 
+     boost::mutex              interactionMutex; 
+
 
     /* Summary variables */
     Array<Double> itsSummaryMinor;

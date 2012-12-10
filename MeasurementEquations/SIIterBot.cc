@@ -38,7 +38,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////////////////////////////////////
   
   // All SIIterBots must have 'type' and 'name' defined.
-  SIIterBot::SIIterBot():
+  SIIterBot::SIIterBot(const std::string &serviceName):
+                         DBusService(serviceName),
                          itsNiter(0),
                          itsCycleNiter(0),
                          itsInteractiveNiter(0),
@@ -56,22 +57,90 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                          itsIterDone(0),
                          itsCycleIterDone(0),
                          itsInteractiveIterDone(0),
-                         itsMajorDone(0),                         
+                         itsMajorDone(0),
+                         itsMaxCycleIterDone(0),
                          itsUpdatedModelFlag(false),
+                         itsControllerCount(0),
                          itsSummaryMinor(IPosition(2,5,0)),
                          itsSummaryMajor(IPosition(1,0))
 
   {
     LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
+    std::cout << "SIIterBot Creation" << std::endl;
     
   }
     
   SIIterBot::~SIIterBot()
   {
+    disconnect();
   }
 
+  bool SIIterBot::interactiveInputRequired(Float currentPeakResidual){
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex); 
+   
+    return (itsInteractiveMode &&
+            (itsMaxCycleIterDone+itsInteractiveIterDone>=itsInteractiveNiter ||
+             currentPeakResidual <= itsInteractiveThreshold ||
+             itsPauseFlag));
+  }
+
+  void SIIterBot::waitForInteractiveInput() {
+    /* Check that we have at least one controller */
+    if (getNumberOfControllers() == 0) {
+      /* Spawn a Viewer set up for interactive */
+      
+    }
+
+    boost::unique_lock<boost::mutex> lock(interactionMutex);
+    if(!interactionPending) {
+      interactionPending = true;
+      pushDetails();
+      interactionRequired(interactionPending);
+    }
+
+    /* Wait on Condition variable */
+    while (interactionPending) {
+      interactionCond.wait(lock);
+    }
+
+    if (updateNeeded) {
+      updateNeeded = false;
+      interactionRequired(false);
+      pushDetails();
+    }
+  }
+
+  void SIIterBot::controlUpdate(const std::map<std::string,
+                                DBus::Variant>& updatedParams) {
+    Record controlRecord=toRecord(updatedParams);
+    setControlsFromRecord(controlRecord);
+    {
+      boost::lock_guard<boost::mutex> lock(interactionMutex);
+      updateNeeded=true;
+    }
+  }
+
+  void SIIterBot::interactionComplete() {
+    changePauseFlag(false);
+    itsInteractiveIterDone = 0;    
+    {
+      boost::lock_guard<boost::mutex> lock(interactionMutex);
+      interactionPending=false;
+      updateNeeded=true;
+    }
+    interactionCond.notify_all();
+  }
+
+
   bool SIIterBot::majorCycleRequired(Float currentPeakResidual){
-    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
+
+    {
+     /* Do a detail update if needed here */
+     boost::lock_guard<boost::mutex> lock(interactionMutex);
+      updateNeeded=false;
+      pushDetails();
+    }
     
     if (cleanComplete(currentPeakResidual))
       /* We are done cleaning, this should return true as well */
@@ -80,6 +149,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (itsCycleIterDone >= itsCycleNiter ||
         currentPeakResidual <= itsCycleThreshold)
       return true;
+
+    if (itsInteractiveMode &&
+        (itsCycleIterDone + itsInteractiveIterDone >= itsInteractiveNiter ||
+         currentPeakResidual <= itsInteractiveThreshold ||
+         itsPauseFlag)) {
+      return true;
+    }
 
     /* Otherwise */
     return false;
@@ -147,23 +223,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCycleFactor = cyclefactor;
   }
 
-  void SIIterBot::changeInteractiveMode(Bool interactiveEnabled)
+  void SIIterBot::changeInteractiveMode(const bool& interactiveEnabled)
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsInteractiveMode = interactiveEnabled;
   }
 
-  void SIIterBot::changePauseFlag(Bool pauseEnabled)
+  void SIIterBot::changePauseFlag(const bool& pauseEnabled)
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsPauseFlag = pauseEnabled;
   }
-
-  void SIIterBot::changeStopFlag(Bool stopEnabled)
+  
+  void SIIterBot::changeStopFlag(const bool& stopEnabled)
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsStopFlag = stopEnabled;
   }
+
+  std::map<std::string,DBus::Variant> SIIterBot::getDetails(){
+    return fromRecord(getDetailsRecord());
+  }
+
+  void SIIterBot::pushDetails() {
+    detailUpdate(fromRecord(getDetailsRecord()));
+  }
+
+  void SIIterBot::pushSummary(){
+    //boost::lock_guard<boost::recursive_mutex> guard(countMutex);
+    std::cout << __FUNCTION__ << "executing" << std::endl;
+    //    summaryUpdate();
+  }
+
+  DBus::Variant SIIterBot::getSummary() {
+    std::cout << __FUNCTION__ << " executing" << std::endl;
+  }
+
+  int SIIterBot::getNumberOfControllers(){
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsControllerCount;
+  }
+
+  bool SIIterBot::incrementController() {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsControllerCount++;
+    return true;
+  }
+
+  bool SIIterBot::decrementController() {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsControllerCount--;
+    return true;
+  } 
+
 
   void SIIterBot::setControlsFromRecord(Record &recordIn) {
     LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
@@ -196,6 +308,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (recordIn.isDefined("cyclefactor"))
       changeCycleFactor(recordIn.asFloat( RecordFieldId("cyclefactor")));
+
+    if (recordIn.isDefined("interactive"))
+      changeInteractiveMode(recordIn.asBool(RecordFieldId("interactive")));
   }
 
   /* ------------ Getters for Control Variables ---------------- */
@@ -281,7 +396,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     itsMajorDone++;
+
+    /* Interactive iteractions update */
+    itsInteractiveIterDone += max(itsMaxCycleIterDone, itsCycleIterDone);
+
+    itsMaxCycleIterDone = 0;
     itsCycleIterDone = 0;
+
   }
 
   void SIIterBot::incrementMinorCycleCount()
@@ -289,7 +410,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     itsIterDone++;
     itsCycleIterDone++;
-    itsInteractiveIterDone++;
   }
 
   Int SIIterBot::getMajorCycleCount()
@@ -325,7 +445,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     returnRecord.define( RecordFieldId("iterdone"),  itsIterDone);
     returnRecord.define( RecordFieldId("cycleiterdone"),  itsCycleIterDone);
     returnRecord.define( RecordFieldId("interactiveiterdone"), 
-                         itsInteractiveIterDone);
+                         itsInteractiveIterDone + itsCycleIterDone);
     
     return returnRecord;
   }
@@ -380,10 +500,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     psffraction = min(psffraction, itsMaxPsfFraction);
     
     itsCycleThreshold = PeakResidual * psffraction;
+    pushDetails();
   }
 
   void SIIterBot::resetCycleIter(){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsMaxCycleIterDone = max(itsCycleIterDone, itsMaxCycleIterDone);
     itsCycleIterDone = 0;
   }
 
