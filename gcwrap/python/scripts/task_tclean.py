@@ -19,7 +19,7 @@ def tclean(vis='', field='', spw='',
            niter=0, threshold=0.0, loopgain=0.1,
            maxcycleniter=-1, cyclefactor=1,
            minpsffraction=0.05, maxpsffraction=0.8,
-           usescratch=True, clusterdef=''):
+           usescratch=True, interact=False, clusterdef=''):
 
     #casalog.post('This is an empty task. It is meant only to build/test/maintain the interface for the refactored imaging code. When ready, it will be offered to users for testing.','WARN')
 
@@ -29,7 +29,7 @@ def tclean(vis='', field='', spw='',
     params['imagedefinition']={'imagename':imagename, 'nchan':nchan}
     params['imaging']={'startmodel':startmodel}
     params['deconvolution']={}
-    params['iteration']={'niter':niter, 'threshold':threshold, 'loopgain':loopgain, 'cycleniter':maxcycleniter, 'cyclefactor':cyclefactor , 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction}
+    params['iteration']={'niter':niter, 'threshold':threshold, 'loopgain':loopgain, 'cycleniter':maxcycleniter, 'cyclefactor':cyclefactor , 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction, 'interactive':interact}
     params['other']={'clusterdef':clusterdef}
 
     # Instantiate the Imager class
@@ -87,7 +87,9 @@ class PySynthesisImager:
     def initialize(self, toolsi=None):
         self.casalog.origin('tclean.initialize')
         if toolsi==None:
-            self.toolsi = casac.synthesisimager() 
+            print "Creating tool"
+            self.toolsi = casac.synthesisimager()
+            print "Back from Creating tool"
             toolsi = self.toolsi
         toolsi.selectdata(selpars=self.params['dataselection'])
         impars = copy.deepcopy( self.params['imagedefinition'] )
