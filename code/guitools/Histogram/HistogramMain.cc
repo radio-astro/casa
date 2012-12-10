@@ -66,6 +66,7 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 	connect( &histogramSaver, SIGNAL(savePing(const QString&,int,int)), plotWidget, SLOT(toPing(const QString&,int,int)));
 	connect( &histogramSaver, SIGNAL(saveAscii(const QString&)), plotWidget, SLOT(toAscii(const QString&)));
 	connect( plotWidget, SIGNAL(postStatusMessage(const QString&)), this, SLOT(postStatusMessage(const QString&)));
+	connect( plotWidget, SIGNAL(rangeChanged()), this, SIGNAL(rangeChanged()));
 
 	plotWidget->addZoomActions( ui.menuZoom );
 	plotWidget->addDisplayActions( ui.menuDisplay );
@@ -94,6 +95,10 @@ void HistogramMain::imageRegionSelected( int id ){
 	plotWidget->imageRegionSelected( id );
 }
 
+pair<double,double> HistogramMain::getRange() const {
+	return plotWidget->getMinMaxValues();
+}
+
 void HistogramMain::setDisplayPlotTitle( bool display ){
 	plotWidget->setDisplayPlotTitle( display );
 }
@@ -111,7 +116,12 @@ void HistogramMain::openFileLoader(){
 }
 
 void HistogramMain::openHistogramSaver(){
-	histogramSaver.exec();
+	if ( ! plotWidget->isEmpty() ){
+		histogramSaver.exec();
+	}
+	else {
+		QMessageBox::warning(this, "Histogram Empty", "There is no data in the histogram to save.");
+	}
 }
 
 void HistogramMain::openColorPreferences(){

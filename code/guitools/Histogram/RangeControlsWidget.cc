@@ -84,6 +84,19 @@ void RangeControlsWidget::setDataLimits( std::vector<float> values ){
 	}
 	ui.dataMinLineEdit->setText( QString::number( min ) );
 	ui.dataMaxLineEdit->setText( QString::number( max ) );
+
+	//Reset the range limits if they don't make sense for the
+	//new data.
+	pair<double, double> minMaxRange = this->getMinMaxValues();
+	double rangeLimitMin = minMaxRange.first;
+	double rangeLimitMax = minMaxRange.second;
+	if ( rangeLimitMin < min || rangeLimitMin > max ){
+		rangeLimitMin = min;
+	}
+	if ( rangeLimitMax < min || rangeLimitMax > max ){
+		rangeLimitMax = max;
+	}
+	this->setRange( rangeLimitMin, rangeLimitMax );
 }
 
 RangeControlsWidget::~RangeControlsWidget(){

@@ -45,7 +45,7 @@ SaveHistogramWidget::SaveHistogramWidget(QWidget *parent)
 	QIntValidator* intValidator = new QIntValidator(1, std::numeric_limits<int>::max(), this );
 	ui.heightLineEdit->setValidator( intValidator );
 	ui.widthLineEdit->setValidator( intValidator );
-	QString defaultSize = QString::number(200);
+	QString defaultSize = QString::number(300);
 	ui.widthLineEdit->setText( defaultSize );
 	ui.heightLineEdit->setText( defaultSize );
 
@@ -112,6 +112,7 @@ void SaveHistogramWidget::save(){
 		}
 		else {
 			QMessageBox::warning( this, "Image size not Specified", "Please specify a valid width and height for the image.");
+			return;
 		}
 	}
 	else if ( suffix == TEXT_SUFFIX ){

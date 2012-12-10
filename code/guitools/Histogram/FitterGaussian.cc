@@ -158,6 +158,12 @@ void FitterGaussian::clearFit(){
 	fwhmSpecified = false;
 }
 
+void FitterGaussian::toAscii( QTextStream& stream ) const {
+	stream << "Center: "<<center<<"\n";
+	stream << "Peak: "<<peak<<"\n";
+	stream << "FWHM: "<<fwhm<<"\n";
+}
+
 FitterGaussian::~FitterGaussian() {
 }
 

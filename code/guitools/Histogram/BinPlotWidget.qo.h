@@ -99,10 +99,12 @@ public:
     void addDisplayActions( QMenu* menu );
     void addPlotModeActions( QMenu* menu );
     void setPlotMode( int mode );
+    bool isEmpty() const;
     ~BinPlotWidget();
 
 signals:
 	void postStatusMessage( const QString& msg );
+	void rangeChanged();
 
 public slots:
 	void fitModeChanged();
@@ -195,6 +197,8 @@ private:
     ImageInterface<Float>* image;
     QMap< int, SubImage<Float>* > regionMap;
     QwtPlot binPlot;
+    const QString NO_DATA;
+    const QString NO_DATA_MESSAGE;
 
     //Specifying a range with the histogram
     QwtPlotPicker* dragLine;

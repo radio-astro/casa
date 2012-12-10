@@ -57,12 +57,16 @@ public:
     		bool plotModeControls, QWidget *parent = 0);
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( const ImageRegion* imageRegion, int id );
+    pair<double,double> getRange() const;
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
     void setPlotMode( int mode );
     ~HistogramMain();
+
+signals:
+	void rangeChanged();
 
 private slots:
 	void openFileLoader();

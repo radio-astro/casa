@@ -212,7 +212,6 @@ void FeatherMain::resetDishDiameters(){
 	Float xDiam = DEFAULT_DISH;
 	Float yDiam = DEFAULT_DISH;
 	featherWorker.getEffectiveDishDiam( xDiam, yDiam );
-	//qDebug() << "Effective dish diameters were: "<<xDiam<<" and "<<yDiam;
 	resetDishDiameter( ui.dishDiameterXLineEdit,
 			ui.dishDiameterXLimitLabel, xDiam, DEFAULT_DISH);
 	resetDishDiameter( ui.dishDiameterYLineEdit,
@@ -272,8 +271,13 @@ bool FeatherMain::loadImages(){
 	if ( imagesGenerated ){
 		//Note:  high resolution image must be defined before low resolution
 		//image or we get an exception.
-		featherWorker.setINTImage( *highResImage );
-		featherWorker.setSDImage( *lowResImage );
+		if ( highResImage != NULL && lowResImage != NULL ){
+			featherWorker.setINTImage( *highResImage );
+			featherWorker.setSDImage( *lowResImage );
+		}
+		else {
+			qDebug() << "Got null images!";
+		}
 	}
 	return imagesGenerated;
 }
@@ -398,7 +402,7 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 		ImageInterface<Float>*& lowResImage, ImageInterface<Float>*& highResImage ){
 	bool success = true;
 	try {
-		bool noStokes=False;
+		//bool noStokes=False;
 		String outLowRes = lowResImagePath;
 		String outHighRes = highResImagePath;
 		logger << LogIO::NORMAL
@@ -407,6 +411,8 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 
 		//Get initial images
 		//Deal with images that don't have stokes.
+		//highResImage = new PagedImage<Float>( highResImagePath );
+		//lowResImage = new PagedImage<Float>( lowResImagePath );
 		PagedImage<Float> highResImageTemp(highResImagePath);
 		PagedImage<Float> lowResImageTemp(lowResImagePath);
 		if(highResImageTemp.shape().nelements() != lowResImageTemp.shape().nelements()){
@@ -416,7 +422,7 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 			success = false;
 		}
 		else {
-			if ( (highResImageTemp.coordinates().findCoordinate(Coordinate::STOKES) < 0) &&
+			/*if ( (highResImageTemp.coordinates().findCoordinate(Coordinate::STOKES) < 0) &&
 					(lowResImageTemp.coordinates().findCoordinate(Coordinate::STOKES) < 0)){
 				noStokes=True;
 				String msg("Making some temporary images as the inputs have no Stokes axis.\n");
@@ -436,18 +442,17 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 						"I", False, False,
 						False);
 
-			}
-
+			}*/
 			lowResImage = new PagedImage<Float>(outLowRes);
 			highResImage = new PagedImage<Float>(outHighRes);
-			if(noStokes){
+			/*if(noStokes){
 				Table::deleteTable(outHighRes);
 				Table::deleteTable(outLowRes);
-			}
+			}*/
 
 		}
 	}
-	catch (AipsError x) {
+	catch (AipsError& x) {
 		String msg = x.getMesg();
 		logger << LogIO::SEVERE << "Caught exception: " << msg<< LogIO::EXCEPTION;
 		success = false;;
