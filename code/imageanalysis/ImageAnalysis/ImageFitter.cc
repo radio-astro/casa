@@ -146,6 +146,7 @@ ComponentList ImageFitter::fit() {
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
 	String resultsString = _resultsHeadder();
+	*_getLog() << LogIO::NORMAL << resultsString << LogIO::POST;
 	ComponentList compList;
 	Bool anyConverged = False;
 	Array<Float> residPixels, modelPixels;
@@ -523,7 +524,10 @@ String ImageFitter::_resultsHeadder() const {
 	summary << "       --- mask:                " << _getMask() << endl;
 	summary << "       --- include pixel ragne: " << _includePixelRange << endl;
 	summary << "       --- exclude pixel ragne: " << _excludePixelRange << endl;
-	summary << "       --- initial estimates:   " << _estimatesString << endl;
+	if (! _estimatesString.empty()) {
+		summary << "       --- initial estimates:   Peak, X, Y, a, b, PA" << endl;
+		summary << "                                " << _estimatesString << endl;
+	}
 	return summary.str();
 }
 
