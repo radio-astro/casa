@@ -104,7 +104,7 @@ FlagAgentElevation::setAgentParameters(Record config)
 }
 
 void
-FlagAgentElevation::preProcessBuffer(const VisBuffer &visBuffer)
+FlagAgentElevation::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 {
 	if (nAgents_p > 1)
 	{
@@ -137,7 +137,7 @@ FlagAgentElevation::preProcessBuffer(const VisBuffer &visBuffer)
 }
 
 void
-FlagAgentElevation::preProcessBufferCore(const VisBuffer &visBuffer)
+FlagAgentElevation::preProcessBufferCore(const vi::VisBuffer2 &visBuffer)
 {
 	Vector<Double> time = visBuffer.time();
 	uInt nRows = time.size();
@@ -162,7 +162,7 @@ FlagAgentElevation::preProcessBufferCore(const VisBuffer &visBuffer)
 }
 
 bool
-FlagAgentElevation::computeRowFlags(const VisBuffer &/*visBuffer*/, FlagMapper &/*flags*/, uInt row)
+FlagAgentElevation::computeRowFlags(const vi::VisBuffer2 &/*visBuffer*/, FlagMapper &/*flags*/, uInt row)
 {
     double antenna1_elevation = antennaPointingMap_p.at(row).at(0);
     double antenna2_elevation = antennaPointingMap_p.at(row).at(1);

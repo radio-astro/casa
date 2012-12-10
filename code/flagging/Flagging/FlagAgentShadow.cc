@@ -40,13 +40,13 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	preProcessingDone_p = false;
 
 	// Request loading antenna1,antenna2 and uvw
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
-	/////flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::TimeCentroid);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::PhaseCenter);
-	/////flagDataHandler_p->preLoadColumn(VisBufferComponents::Direction1);
+	flagDataHandler_p->preLoadColumn(vi::Antenna1);
+	flagDataHandler_p->preLoadColumn(vi::Antenna2);
+	flagDataHandler_p->preLoadColumn(vi::Uvw);
+	/////flagDataHandler_p->preLoadColumn(vi::Time);
+	flagDataHandler_p->preLoadColumn(vi::TimeCentroid);
+	flagDataHandler_p->preLoadColumn(vi::PhaseCenter);
+	/////flagDataHandler_p->preLoadColumn(vi::Direction1);
 
 	// FlagAgentShadow counters and ids to handle static variables
 	staticMembersMutex_p.acquirelock();
@@ -226,7 +226,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   }
   
   void
-  FlagAgentShadow::preProcessBuffer(const VisBuffer &visBuffer)
+  FlagAgentShadow::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
   {
     if (nAgents_p > 1)
       {
@@ -259,7 +259,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   }
   
   void
-  FlagAgentShadow::preProcessBufferCore(const VisBuffer &/*visBuffer*/)
+  FlagAgentShadow::preProcessBufferCore(const vi::VisBuffer2 &visBuffer)
   {
     // This function is empty, because shadowedAntennas_p needs to be re-calculated for
     // every new timestep, and it is done inside computeRowFlags(), whenever the
@@ -278,7 +278,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   //                The only situation where phasecenter is inaccurate, is on-the-fly mosaicing, but
   //                unless one is doing an on-the-fly mosaic of the whole sky, using a single phase-center (!!!)
   //                this will not adversely affect shadow flags. 
-  void FlagAgentShadow::calculateShadowedAntennas(const VisBuffer &visBuffer, Int rownr)
+  void FlagAgentShadow::calculateShadowedAntennas(const vi::VisBuffer2 &visBuffer, Int rownr)
   {
     // Init the list of antennas. 
     shadowedAntennas_p.clear();
@@ -294,7 +294,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
     // This is guaranteed by the sort-order defined for the visIterator.
     Int endrownr = rownr;
     Double timeval = visBuffer.timeCentroid()(rownr) ;
-    for (Int row_i=rownr;row_i<visBuffer.nRow();row_i++)
+    for (Int row_i=rownr;row_i<visBuffer.nRows();row_i++)
       {
 	if(timeval < visBuffer.timeCentroid()(row_i)) // we have touched the next timestep
 	  {
@@ -323,9 +323,9 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
 	
 	// Compute uv distance
-	u = visBuffer.uvw()(row_i)(0);
-	v = visBuffer.uvw()(row_i)(1);
-	w = visBuffer.uvw()(row_i)(2);
+	u = visBuffer.uvw()(0,row_i);
+	v = visBuffer.uvw()(1,row_i);
+	w = visBuffer.uvw()(2,row_i);
 	uvDistance = sqrt(u*u + v*v);
 	
 	decideBaselineShadow(uvDistance, w, antenna1, antenna2);
@@ -413,7 +413,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   ///  -- TOCHECK : Should we use vb.timeCentroid() ??  This gives closest results so far, for real and simulated data.
   /// NOTE : We are using vb.phasecenter() instead of vb.direction() because of a performance hit
   ///            and thread-safety problems with vb.direction1().
-  Bool FlagAgentShadow::computeAntUVW(const VisBuffer &vb, Int rownr)
+  Bool FlagAgentShadow::computeAntUVW(const vi::VisBuffer2 &vb, Int rownr)
   {
     // Get time and timeinterval from the visbuffer.
     Double Time;
@@ -469,7 +469,7 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   
   
   bool
-  FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &/*flags*/, uInt row)
+  FlagAgentShadow::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*flags*/, uInt row)
   {
     // If we have advanced to a new timestep, calculate new antenna UVW values and shadowed antennas
     // This function resets and fills 'shadowedAntennas_p'.

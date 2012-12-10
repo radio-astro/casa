@@ -225,7 +225,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 }
 
 bool
-FlagAgentTimeFreqCrop::computeAntennaPairFlags(const VisBuffer & /*visBuffer*/,
+FlagAgentTimeFreqCrop::computeAntennaPairFlags(const vi::VisBuffer2 & /*visBuffer*/,
                                                VisMapper &visibilities,
                                                FlagMapper &flags,
                                                Int /*antenna1*/,

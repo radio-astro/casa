@@ -443,7 +443,7 @@ FlagAgentBase::runCore()
 			// elevation, shadow, summary
 			case ROWS_PREPROCESS_BUFFER:
 			{
-				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p));
 				iterateRows();
 				break;
 			}
@@ -459,9 +459,9 @@ FlagAgentBase::runCore()
 				if (prepass_p)
 				{
 					prepass_p = false;
-					passIntermediate(*(flagDataHandler_p->visibilityBuffer_p->get()));
+					passIntermediate(*(flagDataHandler_p->visibilityBuffer_p));
 					iterateAntennaPairs();
-					passFinal(*(flagDataHandler_p->visibilityBuffer_p->get()));
+					passFinal(*(flagDataHandler_p->visibilityBuffer_p));
 				}
 
 				break;
@@ -477,7 +477,7 @@ FlagAgentBase::runCore()
 			// display
 			case ANTENNA_PAIRS_INTERACTIVE:
 			{
-				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p));
 				iterateAntennaPairsInteractive(flagDataHandler_p->getAntennaPairMap());
 				break;
 			}
@@ -485,7 +485,7 @@ FlagAgentBase::runCore()
 			// Not used by any of the available agents at the moment
 			case ANTENNA_PAIRS_PREPROCESS_BUFFER:
 			{
-				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p));
 				iterateAntennaPairs();
 				break;
 			}
@@ -493,7 +493,7 @@ FlagAgentBase::runCore()
 			// Not used by any of the available agents at the moment
 			case IN_ROWS_PREPROCESS_BUFFER:
 			{
-				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p));
 				iterateInRows();
 				break;
 			}
@@ -549,7 +549,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load ArrayId
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
+				flagDataHandler_p->preLoadColumn(vi::ArrayId);
 
 				*logger_p << LogIO::DEBUG1 << " array selection is " << arraySelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " array ids are " << arrayList_p << LogIO::POST;
@@ -579,7 +579,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load FieldId
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
+				flagDataHandler_p->preLoadColumn(vi::FieldId);
 
 				*logger_p << LogIO::DEBUG1 << " field selection is " << fieldSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " field ids are " << fieldList_p << LogIO::POST;
@@ -610,7 +610,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load scan
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
+				flagDataHandler_p->preLoadColumn(vi::Scan);
 
 				*logger_p << LogIO::DEBUG1 << " scan selection is " << scanSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " scan ids are " << scanList_p << LogIO::POST;
@@ -640,7 +640,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load time
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
+				flagDataHandler_p->preLoadColumn(vi::Time);
 
 				*logger_p << LogIO::DEBUG1 << " timerange selection is " << timeSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " time ranges in MJD are " << timeList_p << LogIO::POST;
@@ -673,7 +673,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterChannels_p=true;
 
 				// Request to pre-load spw
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+				flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
 
 				*logger_p << LogIO::DEBUG1 << " spw selection is " << spwSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " channel selection are " << channelList_p << LogIO::POST;
@@ -716,8 +716,8 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load antenna1/2
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+				flagDataHandler_p->preLoadColumn(vi::Antenna1);
+				flagDataHandler_p->preLoadColumn(vi::Antenna2);
 
 				*logger_p << LogIO::DEBUG1 << " selected antenna1 list is " << antenna1List_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " selected antenna2 list is " << antenna2List_p << LogIO::POST;
@@ -758,7 +758,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load uvw
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
+				flagDataHandler_p->preLoadColumn(vi::Uvw);
 
 				*logger_p << LogIO::DEBUG1 << " uvrange selection is " << uvwSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " uvrange ids are " << uvwList_p << LogIO::POST;
@@ -808,7 +808,7 @@ FlagAgentBase::setDataSelection(Record config)
 					filterPols_p=true;
 
 					// Request to pre-load CorrType
-					flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
+					flagDataHandler_p->preLoadColumn(vi::CorrType);
 
 					// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
 					ostringstream polarizationListToPrint (ios::in | ios::out);
@@ -848,7 +848,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load ObservationId
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
+				flagDataHandler_p->preLoadColumn(vi::ObservationId);
 
 				*logger_p << LogIO::DEBUG1 << " observation selection is " << observationList_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " observation ids are " << observationList_p << LogIO::POST;
@@ -878,7 +878,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterRows_p=true;
 
 				// Request to pre-load StateId
-				flagDataHandler_p->preLoadColumn(VisBufferComponents::StateId);
+				flagDataHandler_p->preLoadColumn(vi::StateId);
 
 				*logger_p << LogIO::DEBUG1 << " scan intent selection is " << scanIntentList_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " scan intent ids are " << scanIntentList_p << LogIO::POST;
@@ -1187,58 +1187,58 @@ FlagAgentBase::setAgentParameters(Record config)
 			dataReference_p = DATA;
 
 			// Request to pre-load ObservedCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
 		}
 		else if (dataColumn_p.compare("CORRECTED") == 0)
 		{
 			dataReference_p = CORRECTED;
 
 			// Request to pre-load CorrectedCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeCorrected);
 		}
 		else if (dataColumn_p.compare("MODEL") == 0)
 		{
 			dataReference_p = MODEL;
 
 			// Request to pre-load ModelCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
 		}
 		else if (dataColumn_p.compare("RESIDUAL") == 0)
 		{
 			dataReference_p = RESIDUAL;
 
 			// Request to pre-load CorrectedCube and ModelCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeCorrected);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
 		}
 		else if (dataColumn_p.compare("RESIDUAL_DATA") == 0)
 		{
 			dataReference_p = RESIDUAL_DATA;
 
 			// Request to pre-load ObservedCube and ModelCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
 		}
 		else if (dataColumn_p.compare("FPARAM") == 0)
 		{
 			dataReference_p = DATA;
 
 			// Request to pre-load ObservedCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
 		}
 		else if (dataColumn_p.compare("CPARAM") == 0)
 		{
 			dataReference_p = CORRECTED;
 
 			// Request to pre-load CorrectedCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeCorrected);
 		}
 		else if (dataColumn_p.compare("SNR") == 0)
 		{
 			dataReference_p = MODEL;
 
 			// Request to pre-load ModelCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
 		}
 		else
 		{
@@ -1248,7 +1248,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			dataColumn_p = "data";
 
 			// Request to pre-load ObservedCube
-			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
 		}
 
 		*logger_p << logLevel_p << " data column is " << dataColumn_p << LogIO::POST;
@@ -1371,8 +1371,8 @@ FlagAgentBase::setAgentParameters(Record config)
 		*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
 
 		// Request to pre-load spw and corrType
-		flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
-		flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
+		flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
+		flagDataHandler_p->preLoadColumn(vi::CorrType);
 
 
 	}
@@ -1404,7 +1404,7 @@ void
 FlagAgentBase::generateRowsIndex(uInt nRows)
 {
 	// For uvw range filter
-	Vector<casa::RigidVector<casa::Double, 3> > uvw;
+	Matrix<Double> uvw;
 
 	rowsIndex_p.clear();
 	if (filterRows_p)
@@ -1415,35 +1415,35 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 			// Check observation id
 			if ((observationList_p.size()>0) and (find(flagDataHandler_p->sortOrder_p,MS::OBSERVATION_ID)==false) )
 			{
-				if (!find(observationList_p,visibilityBuffer_p->get()->observationId()[row_i])) continue;
+				if (!find(observationList_p,visibilityBuffer_p->observationId()[row_i])) continue;
 			}
 
 			// Check scan intent
 			if (scanIntentList_p.size())
 			{
-				if (!find(scanIntentList_p,visibilityBuffer_p->get()->stateId()[row_i])) continue;
+				if (!find(scanIntentList_p,visibilityBuffer_p->stateId()[row_i])) continue;
 			}
 
 			// Check scan id
 			if ( (scanList_p.size()>0) and (find(flagDataHandler_p->sortOrder_p,MS::SCAN_NUMBER)==false) )
 			{
-				if (!find(scanList_p,visibilityBuffer_p->get()->scan()[row_i])) continue;
+				if (!find(scanList_p,visibilityBuffer_p->scan()[row_i])) continue;
 			}
 
 			// Check time range
 			if ( (timeList_p.size()>0) and (flagDataHandler_p->groupTimeSteps_p==true) )
 			{
-				if (!find(timeList_p,visibilityBuffer_p->get()->time()[row_i])) continue;
+				if (!find(timeList_p,visibilityBuffer_p->time()[row_i])) continue;
 			}
 
 			// Check baseline
 			if (baselineList_p.size() and (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET))
 			{
-				if (!find(baselineList_p,visibilityBuffer_p->get()->antenna1()[row_i],visibilityBuffer_p->get()->antenna2()[row_i])) continue;
+				if (!find(baselineList_p,visibilityBuffer_p->antenna1()[row_i],visibilityBuffer_p->antenna2()[row_i])) continue;
 			}
 			else if (antenna1List_p.size() and (flagDataHandler_p->tableTye_p == FlagDataHandler::CALIBRATION_TABLE))
 			{
-				if (!find(antenna1List_p,visibilityBuffer_p->get()->antenna1()[row_i])) continue;
+				if (!find(antenna1List_p,visibilityBuffer_p->antenna1()[row_i])) continue;
 			}
 
 			// Check uvw range
@@ -1451,15 +1451,15 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 			{
 				// NOTE: uvw from vis buffer is in meters, so we only support uv distance
 				// (MS Selection does not return normalized ranges)
-				uvw = visibilityBuffer_p->get()->uvw();
-				u = uvw(row_i)(0);
-				v = uvw(row_i)(1);
+				uvw = visibilityBuffer_p->uvw();
+				u = uvw(0,row_i);
+				v = uvw(1,row_i);
 				uvDistance = sqrt(u*u + v*v);
 
 				// CAS-4270: Convert uvdist in lambda units
 				if (uvwUnits_p == false)
 				{
-					Int spw = visibilityBuffer_p->get()->spectralWindow();
+					Int spw = visibilityBuffer_p->spectralWindow();
 					Double Lambda = (*flagDataHandler_p->getLambdaMap())[spw];
 					uvDistance /= Lambda;
 				}
@@ -1470,7 +1470,7 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 			// Check autocorrelations
 			if (flagAutoCorrelations_p)
 			{
-				if (visibilityBuffer_p->get()->antenna1()[row_i] != visibilityBuffer_p->get()->antenna2()[row_i]) continue;
+				if (visibilityBuffer_p->antenna1()[row_i] != visibilityBuffer_p->antenna2()[row_i]) continue;
 			}
 
 			// If all the filters passed, add the row to the list
@@ -1492,7 +1492,7 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 	if (filterChannels_p)
 	{
 		// First find channel start and stop for this spw
-		Int currentSpw = visibilityBuffer_p->get()->spectralWindow();
+		Int currentSpw = visibilityBuffer_p->spectralWindow();
 		Int nSpw,width;
 		bool spwFound = false;
 		uInt channelStart = 0,channelStop = UINT_MAX;
@@ -1529,7 +1529,7 @@ FlagAgentBase::generatePolarizationIndex(uInt nPolarizations)
 		// but this functionality is not implemented yet, therefore we are getting
 		// it from the RW Visibility Iterator which is always a conventional one
 		// (not asyn I/O which does not implement it)
-		Int polId = visibilityBuffer_p->get()->polarizationId();
+		Int polId = visibilityBuffer_p->polarizationId();
 		Vector<Int> polarizations = polarizationList_p(polId);
 
 		// Get accepted polarizations
@@ -1868,42 +1868,42 @@ FlagAgentBase::checkIfProcessBuffer()
 
 	if (arrayList_p.size())
 	{
-		if (!find(arrayList_p,visibilityBuffer_p->get()->arrayId())) return false;
+		if (!find(arrayList_p,visibilityBuffer_p->arrayId())) return false;
 	}
 
 	if (fieldList_p.size())
 	{
-		if (!find(fieldList_p,visibilityBuffer_p->get()->fieldId())) return false;
+		if (!find(fieldList_p,visibilityBuffer_p->fieldId())) return false;
 	}
 
 	if (spwList_p.size())
 	{
-		if (!find(spwList_p,visibilityBuffer_p->get()->spectralWindow())) return false;
+		if (!find(spwList_p,visibilityBuffer_p->spectralWindow())) return false;
 	}
 
 	// If scan is constant check only 1st row
 	if ( (scanList_p.size()>0) and (find(flagDataHandler_p->sortOrder_p,MS::SCAN_NUMBER)==true) )
 	{
-		if (!find(scanList_p,visibilityBuffer_p->get()->scan()[0])) return false;
+		if (!find(scanList_p,visibilityBuffer_p->scan()[0])) return false;
 	}
 
 	// If observation is constant check only 1st row
 	if ((observationList_p.size()>0) and (find(flagDataHandler_p->sortOrder_p,MS::OBSERVATION_ID)==true) )
 	{
-		if (!find(observationList_p,visibilityBuffer_p->get()->observationId()[0])) return false;
+		if (!find(observationList_p,visibilityBuffer_p->observationId()[0])) return false;
 	}
 
 	// If time is constant check only 1st row
 	if ( (timeList_p.size()>0) and (flagDataHandler_p->groupTimeSteps_p==false) )
 	{
-		if (!find(timeList_p,visibilityBuffer_p->get()->time()[0])) return false;
+		if (!find(timeList_p,visibilityBuffer_p->time()[0])) return false;
 	}
 
 	return true;
 }
 
 void
-FlagAgentBase::preProcessBuffer(const VisBuffer &/*visBuffer*/)
+FlagAgentBase::preProcessBuffer(const vi::VisBuffer2 &/*visBuffer*/)
 {
 	return;
 }
@@ -1966,7 +1966,7 @@ FlagAgentBase::iterateRows()
 
 		// Compute flags for this row
 		flagRow = false;
-		flagRow = computeRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()), flagsMap,*rowIter);
+		flagRow = computeRowFlags(*(flagDataHandler_p->visibilityBuffer_p), flagsMap,*rowIter);
 		if (flagRow)
 		{
 			flagsMap.applyFlagInRow(*rowIter);
@@ -2038,7 +2038,7 @@ FlagAgentBase::iterateInRows()
 		}
 
 		// Compute flags for this row
-		computeInRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,*rowIter);
+		computeInRowFlags(*(flagDataHandler_p->visibilityBuffer_p),visibilitiesMap,flagsMap,*rowIter);
 
 		// Increment row index
 		rowIdx++;
@@ -2127,7 +2127,7 @@ FlagAgentBase::iterateAntennaPairs()
 		setFlagsMap(antennaRows,&flagsMap);
 
 		// Flag map
-		computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
+		computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
 
 		// Increment antenna pair index
 		antennaPairdIdx++;
@@ -2219,7 +2219,7 @@ FlagAgentBase::iterateAntennaPairsFlags()
 		setFlagsMap(antennaRows,&flagsMap);
 
 		// Flag map
-		computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
+		computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p),flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
 
 		// Increment antenna pair index
 		antennaPairdIdx++;
@@ -2288,7 +2288,7 @@ FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
 				setFlagsMap(antennaRows,&flagsMap);
 
 				// Flag map
-				computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
+				computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
 			}
 		}
 	}
@@ -2301,14 +2301,14 @@ FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
 }
 
 void
-FlagAgentBase::passIntermediate(const VisBuffer & /*visBuffer*/)
+FlagAgentBase::passIntermediate(const vi::VisBuffer2 & /*visBuffer*/)
 {
 	// TODO: This method must be re-implemented in the derived classes
 	return;
 }
 
 void
-FlagAgentBase::passFinal(const VisBuffer & /*visBuffer*/)
+FlagAgentBase::passFinal(const vi::VisBuffer2 & /*visBuffer*/)
 {
 	// TODO: This method must be re-implemented in the derived classes
 	return;
@@ -2324,49 +2324,49 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 	{
 		case DATA:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->visCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCube()));
 			break;
 		}
 		case CORRECTED:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->correctedVisCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeCorrected()));
 			break;
 		}
 		case MODEL:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->modelVisCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeModel()));
 			break;
 		}
 		case RESIDUAL:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->correctedVisCube());
-			rightVisCube = &(visibilityBuffer_p->get()->modelVisCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeCorrected()));
+			rightVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeModel()));
 			break;
 		}
 		case RESIDUAL_DATA:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->visCube());
-			rightVisCube = &(visibilityBuffer_p->get()->modelVisCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCube()));
+			rightVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeModel()));
 			break;
 		}
 		case FPARAM:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->visCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCube()));
 			break;
 		}
 		case CPARAM:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->correctedVisCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeCorrected()));
 			break;
 		}
 		case SNR:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->modelVisCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeModel()));
 			break;
 		}
 		default:
 		{
-			leftVisCube = &(visibilityBuffer_p->get()->visCube());
+			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCube()));
 			break;
 		}
 	}
@@ -2428,7 +2428,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		if (polMap->find(Stokes::I) != polMap->end())
 		{
 			*logger_p << LogIO::DEBUG1 <<  " Detected Water Vapor data in spw (" <<
-					visibilityBuffer_p->get()->spectralWindow() << "), will be flagged" << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << "), will be flagged" << LogIO::POST;
 			return True;
 		}
 		else
@@ -2439,7 +2439,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 	else if (polMap->find(Stokes::I) != polMap->end())
 	{
 		*logger_p << LogIO::DEBUG1 <<  " Detected Water Vapor data in spw (" <<
-					visibilityBuffer_p->get()->spectralWindow() << "), won't be flagged" << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << "), won't be flagged" << LogIO::POST;
 		return False;
 	}
 
@@ -2453,7 +2453,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (XX) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2466,7 +2466,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (YY) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 
@@ -2480,7 +2480,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (XY) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2493,7 +2493,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (YX) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2506,7 +2506,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (RR) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2519,7 +2519,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (LL) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2532,7 +2532,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (LR) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2545,7 +2545,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (RL) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2567,7 +2567,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (I) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2588,7 +2588,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (Q) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2609,7 +2609,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (U) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2630,7 +2630,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (V) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2691,14 +2691,14 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 }
 
 bool
-FlagAgentBase::computeRowFlags(const VisBuffer &/*visBuffer*/, FlagMapper &/*flags*/, uInt /*row*/)
+FlagAgentBase::computeRowFlags(const vi::VisBuffer2 &/*visBuffer*/, FlagMapper &/*flags*/, uInt /*row*/)
 {
 	// TODO: This method must be re-implemented in the derived classes
 	return false;
 }
 
 bool
-FlagAgentBase::computeInRowFlags(const VisBuffer &/*visBuffer*/, VisMapper &/*visibilities*/,
+FlagAgentBase::computeInRowFlags(const vi::VisBuffer2 &/*visBuffer*/, VisMapper &/*visibilities*/,
                                  FlagMapper &/*flags*/, uInt /*row*/)
 {
 	// TODO: This method must be re-implemented in the derived classes
@@ -2706,7 +2706,7 @@ FlagAgentBase::computeInRowFlags(const VisBuffer &/*visBuffer*/, VisMapper &/*vi
 }
 
 bool
-FlagAgentBase::computeAntennaPairFlags(const VisBuffer &/*visBuffer*/, VisMapper &/*visibilities*/,
+FlagAgentBase::computeAntennaPairFlags(const vi::VisBuffer2 &/*visBuffer*/, VisMapper &/*visibilities*/,
                                        FlagMapper &/*flags*/,Int /*antenna1*/,Int /*antenna2*/,
                                        vector<uInt> &/*rows*/)
 {
@@ -2715,7 +2715,7 @@ FlagAgentBase::computeAntennaPairFlags(const VisBuffer &/*visBuffer*/, VisMapper
 }
 
 bool
-FlagAgentBase::computeAntennaPairFlags(const VisBuffer &/*visBuffer*/,FlagMapper &/*flags*/,
+FlagAgentBase::computeAntennaPairFlags(const vi::VisBuffer2 &/*visBuffer*/,FlagMapper &/*flags*/,
                                        Int /*antenna1*/,Int /*antenna2*/,vector<uInt> &/*rows*/)
 {
 	// TODO: This method must be re-implemented in the derived classes

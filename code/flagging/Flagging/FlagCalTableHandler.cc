@@ -237,8 +237,7 @@ FlagCalTableHandler::generateIterator()
 		// NOTE: VisBuferAutoPtr destructor also deletes the VisBuffer inside
 		if (visibilityBuffer_p) delete visibilityBuffer_p;
 		calBuffer_p = new CTBuffer(calIter_p);
-		visibilityBuffer_p = new VisBufferAutoPtr();
-		visibilityBuffer_p->set(calBuffer_p);
+		visibilityBuffer_p = (vi::VisBuffer2 *)calBuffer_p;
 
 		iteratorGenerated_p = true;
 		chunksInitialized_p = false;
@@ -345,7 +344,7 @@ FlagCalTableHandler::nextBuffer()
 	{
 		if (!buffersInitialized_p)
 		{
-			visibilityBuffer_p->get()->invalidate();
+			((CTBuffer *)visibilityBuffer_p)->invalidate();
 			if (!asyncio_enabled_p) preFetchColumns();
 			if (mapPolarizations_p) generatePolarizationsMap();
 			if (mapAntennaPairs_p) generateAntennaPairMap();
@@ -367,7 +366,7 @@ FlagCalTableHandler::nextBuffer()
 	if (moreBuffers)
 	{
 		// Get flag  (WARNING: We have to modify the shape of the cube before re-assigning it)
-		Cube<Bool> curentFlagCube= visibilityBuffer_p->get()->flagCube();
+		Cube<Bool> curentFlagCube= visibilityBuffer_p->flagCube();
 		modifiedFlagCube_p.resize(curentFlagCube.shape());
 		modifiedFlagCube_p = curentFlagCube;
 		originalFlagCube_p.resize(curentFlagCube.shape());
@@ -375,8 +374,8 @@ FlagCalTableHandler::nextBuffer()
 
 		// Get flag row (WARNING: We have to modify the shape of the cube before re-assigning it)
 		// NOTE: There is no FlagRow in CalTables yet, but we have it here for compatibility reasons
-		modifiedFlagRow_p.resize(visibilityBuffer_p->get()->nRow());
-		originalFlagRow_p.resize(visibilityBuffer_p->get()->nRow());
+		modifiedFlagRow_p.resize(visibilityBuffer_p->nRows());
+		originalFlagRow_p.resize(visibilityBuffer_p->nRows());
 
 		// Compute total number of flags per buffer to be used for generating the agents stats
 		Int64 currentBufferCounts = curentFlagCube.shape().product();
@@ -387,14 +386,15 @@ FlagCalTableHandler::nextBuffer()
 		// Print chunk characteristics
 		if (bufferNo == 1)
 		{
-			processedRows += visibilityBuffer_p->get()->nRowChunk();
+			// jagonzal: This is correct because in CalTables there is only one iteration level
+			processedRows += visibilityBuffer_p->nRows();
 
 			if (printChunkSummary_p)
 			{
 				logger_p->origin(LogOrigin("FlagCalTableHandler",""));
-				Vector<Int> scan = visibilityBuffer_p->get()->scan();
+				Vector<Int> scan = visibilityBuffer_p->scan();
 				String corrs = "[ ";
-				for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
+				for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->nCorrelations();corr_i++)
 				{
 					corrs += (*polarizationIndexMap_p)[corr_i] + " ";
 				}
@@ -407,11 +407,11 @@ FlagCalTableHandler::nextBuffer()
 				*logger_p << LogIO::NORMAL <<
 						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
 						", Scan = " << scan[0] << "~" << scan[scan.size()-1] <<
-						", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
-						", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
-						", Channels = " << visibilityBuffer_p->get()->nChannel() <<
+						", Field = " << visibilityBuffer_p->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
+						", Spw = " << visibilityBuffer_p->spectralWindow() <<
+						", Channels = " << visibilityBuffer_p->nChannels() <<
 						", CalSolutions = " << corrs <<
-						", Total Rows = " << visibilityBuffer_p->get()->nRowChunk() << LogIO::POST;
+						", Total Rows = " << visibilityBuffer_p->nRows() << LogIO::POST;
 			}
 		}
 	}
@@ -421,7 +421,7 @@ FlagCalTableHandler::nextBuffer()
 
 
 // -----------------------------------------------------------------------
-// Flush flags to CalTable
+// Generate scan start stop map
 // -----------------------------------------------------------------------
 void
 FlagCalTableHandler::generateScanStartStopMap()
@@ -592,27 +592,22 @@ FlagCalTableHandler::checkIfColumnExists(String column)
 //////// CTBuffer implementation ////////
 //////////////////////////////////////////
 
-CTBuffer::CTBuffer(CTIter *calIter): calIter_p(calIter),This(this)
+CTCache::CTCache(CTIter *calIter): calIter_p(calIter)
 {
 	invalidate();
 }
 
-CTBuffer::~CTBuffer()
+CTCache::~CTCache()
 {
 
 }
 
-Int CTBuffer::arrayId() const
+Int CTCache::arrayId()
 {
 	return -1;
 }
-Int CTBuffer::fieldId() const
-{
-	return This->fillFieldId();
-}
 
-// Convenience methods to by-pass const issues
-Int& CTBuffer::fillFieldId()
+Int CTCache::fieldId()
 {
 	if (!CTfieldIdOK_p)
 	{
@@ -623,18 +618,7 @@ Int& CTBuffer::fillFieldId()
 	return field0_p;
 }
 
-Int CTBuffer::spectralWindow() const
-{
-	return This->fillSpectralWindow();
-}
-
-Int& CTBuffer::spectralWindow()
-{
-	return This->fillSpectralWindow();
-}
-
-// Convenience methods to by-pass const issues
-Int& CTBuffer::fillSpectralWindow()
+Int CTCache::spectralWindow()
 {
 	if (!CTspectralWindowOK_p)
 	{
@@ -648,7 +632,7 @@ Int& CTBuffer::fillSpectralWindow()
 	return spw0_p;
 }
 
-Vector<Int>& CTBuffer::scan()
+Vector<Int>& CTCache::scan()
 {
 	if (!CTscanOK_p)
 	{
@@ -661,7 +645,7 @@ Vector<Int>& CTBuffer::scan()
 	return scan_p;
 }
 
-Vector<Double>& CTBuffer::time()
+Vector<Double>& CTCache::time()
 {
 	if (!CTtimeOK_p)
 	{
@@ -674,7 +658,7 @@ Vector<Double>& CTBuffer::time()
 	return time_p;
 }
 
-Vector<Int>& CTBuffer::antenna1()
+Vector<Int>& CTCache::antenna1()
 {
 	if (!CTantenna1OK_p)
 	{
@@ -687,7 +671,7 @@ Vector<Int>& CTBuffer::antenna1()
 	return antenna1_p;
 }
 
-Vector<Int>& CTBuffer::antenna2()
+Vector<Int>& CTCache::antenna2()
 {
 	if (!CTantenna2OK_p)
 	{
@@ -701,7 +685,7 @@ Vector<Int>& CTBuffer::antenna2()
 	return antenna2_p;
 }
 
-Cube<Bool>& CTBuffer::flagCube()
+Cube<Bool>& CTCache::flagCube()
 {
 	if (!CTflagCubeOk_p)
 	{
@@ -710,7 +694,7 @@ Cube<Bool>& CTBuffer::flagCube()
 		flagCube_p = tmp;
 		CTflagCubeOk_p = True;
 
-		// Also fill shapes (nCorr cannot be retrieved at access time because of the VisBuffer nrowChunk signature, which is const)
+		// Also fill shapes
 		nRow_p = flagCube_p.shape()[2];
 		nRowChunk_p = flagCube_p.shape()[2];
 		nChannel_p = flagCube_p.shape()[1];
@@ -725,7 +709,7 @@ Cube<Bool>& CTBuffer::flagCube()
 	return flagCube_p;
 }
 
-Vector<Int>& CTBuffer::observationId()
+Vector<Int>& CTCache::observationId()
 {
 	if (!CTobservationIdOK_p)
 	{
@@ -738,11 +722,11 @@ Vector<Int>& CTBuffer::observationId()
 	return observationId_p;
 }
 
-Vector<Int>& CTBuffer::corrType()
+Vector<Int>& CTCache::correlationTypes()
 {
 	if (!CTcorrTypeOK_p)
 	{
-		if (!CTnRowOK_p) nCorr();
+		if (!CTnRowOK_p) nCorrelations();
 		corrType_p.resize(nCorr_p,False);
 		for (uInt corr_i=0;corr_i<(uInt) nCorr_p;corr_i++)
 		{
@@ -754,7 +738,7 @@ Vector<Int>& CTBuffer::corrType()
 	return corrType_p;
 }
 
-Vector<Int>& CTBuffer::channel()
+Vector<Int>& CTCache::getChannelNumbers(Int rowInBuffer)
 {
 	if (!CTchannelOK_p)
 	{
@@ -767,7 +751,7 @@ Vector<Int>& CTBuffer::channel()
 	return channel_p;
 }
 
-Vector<Double>& CTBuffer::frequency()
+Vector<Double>& CTCache::getFrequencies(Int rowInBuffer,Int frame)
 {
 	if (!CTfrequencyOK_p)
 	{
@@ -780,7 +764,7 @@ Vector<Double>& CTBuffer::frequency()
 	return frequency_p;
 }
 
-Cube<Complex>& CTBuffer::visCube()
+Cube<Complex>& CTCache::visCube()
 {
 	if (!CTVisCubeOK_p)
 	{
@@ -807,7 +791,7 @@ Cube<Complex>& CTBuffer::visCube()
 	return fparam_p;
 }
 
-Cube<Complex>& CTBuffer::correctedVisCube()
+Cube<Complex>& CTCache::visCubeCorrected()
 {
 	if (!CTcorrectedVisCubeOK_p)
 	{
@@ -820,7 +804,7 @@ Cube<Complex>& CTBuffer::correctedVisCube()
 	return cparam_p;
 }
 
-Cube<Complex>& CTBuffer::modelVisCube()
+Cube<Complex>& CTCache::visCubeModel()
 {
 	if (!CTmodelVisCubeOK_p)
 	{
@@ -847,24 +831,7 @@ Cube<Complex>& CTBuffer::modelVisCube()
 	return snr_p;
 }
 
-Int& CTBuffer::nRow()
-{
-	if (!CTnRowOK_p)
-	{
-		if (!CTflagCubeOk_p) flagCube();
-		nRow_p = flagCube_p.shape()[2];
-		CTnRowOK_p = True;
-	}
-
-	return nRow_p;
-}
-
-Int CTBuffer::nRowChunk() const
-{
-	return This->fillnRowChunk();
-}
-
-Int& CTBuffer::fillnRowChunk()
+Int CTCache::nRowChunk()
 {
 	if (!CTnRowChunkOK_p)
 	{
@@ -876,7 +843,19 @@ Int& CTBuffer::fillnRowChunk()
 	return nRowChunk_p;
 }
 
-Int& CTBuffer::nChannel()
+Int CTCache::nRows()
+{
+	if (!CTnRowOK_p)
+	{
+		if (!CTflagCubeOk_p) flagCube();
+		nRow_p = flagCube_p.shape()[2];
+		CTnRowOK_p = True;
+	}
+
+	return nRow_p;
+}
+
+Int CTCache::nChannels()
 {
 	if (!CTnChannelOK_p)
 	{
@@ -888,7 +867,7 @@ Int& CTBuffer::nChannel()
 	return nChannel_p;
 }
 
-Int& CTBuffer::nCorr()
+Int CTCache::nCorrelations()
 {
 	if (!CTnCorrOK_p)
 	{
@@ -900,7 +879,7 @@ Int& CTBuffer::nCorr()
 	return nCorr_p;
 }
 
-void CTBuffer::invalidate()
+void CTCache::invalidate()
 {
 	CTfieldIdOK_p = False;
 	CTspectralWindowOK_p = False;
@@ -916,8 +895,8 @@ void CTBuffer::invalidate()
 	CTVisCubeOK_p = False;
 	CTcorrectedVisCubeOK_p = False;
 	CTmodelVisCubeOK_p = False;
-	CTnRowOK_p = False;
 	CTnRowChunkOK_p = False;
+	CTnRowOK_p = False;
 	CTnChannelOK_p = False;
 	CTnCorrOK_p = False;
 

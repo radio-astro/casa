@@ -31,9 +31,10 @@
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 
-// Async I/O infrastructure
-#include <synthesis/MSVis/AsynchronousTools.h>
-#include <synthesis/MSVis/VisBufferAsync.h>
+// VI/VB infrastructure
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 // .casarc interface
 #include <casa/System/AipsrcValue.h>
@@ -738,11 +739,11 @@ private:
 // // options are necessary
 
 // // ...for instance in the case of FlagAgentShadow we need Ant1,Ant2,UVW,TimeCentroid and PhaseCenter:
-// flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
-// flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
-// flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
-// flagDataHandler_p->preLoadColumn(VisBufferComponents::TimeCentroid);
-// flagDataHandler_p->preLoadColumn(VisBufferComponents::PhaseCenter);
+// flagDataHandler_p->preLoadColumn(vi::Antenna1);
+// flagDataHandler_p->preLoadColumn(vi::Antenna2);
+// flagDataHandler_p->preLoadColumn(vi::uvw);
+// flagDataHandler_p->preLoadColumn(vi::TimeCentroid);
+// flagDataHandler_p->preLoadColumn(vi::PhaseCenter);
 //
 // // ...and FlagAgentElevation needs to have the antenna pointing information globally available for each chunk:
 // flagDataHandler_p->setMapAntennaPointing(true);
@@ -904,9 +905,8 @@ public:
 	std::vector<String> *corrProducts_p;
 
 	// RO Visibility Iterator
-	casa::asyncio::PrefetchColumns prefetchColumns_p;
+	VisBufferComponents2 *prefetchColumns_p;
 	// Iteration counters
-	uLong maxChunkRows;
 	uLong processedRows;
 	uShort chunkNo;
 	uShort bufferNo;
@@ -926,7 +926,7 @@ public:
 	// referenced variables. Otherwise the VisBuffer is created
 	// and attached, but when it is assigned to the member it is
 	// detached because of the dynamically called destructor
-	VisBufferAutoPtr *visibilityBuffer_p;
+	vi::VisBuffer2 *visibilityBuffer_p;
 
 	// Vis buffer characteristics (constant values)
 	bool groupTimeSteps_p;

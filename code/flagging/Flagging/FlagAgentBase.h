@@ -28,8 +28,7 @@
 #include <flagging/Flagging/FlagReport.h>
 #include <casa/Containers/OrdMapIO.h>
 #include <measures/Measures/Stokes.h>
-
-using namespace casa::async;
+#include <synthesis/MSVis/AsynchronousTools.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -40,8 +39,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <use visibility=export>
 //
 // <prerequisite>
-//   <li> <linkto class="VisBuffer:description">FlagDataHandler</linkto>
-//   <li> <linkto class="VisBuffer:description">FlagReport</linkto>
+//   <li> <linkto class="VisBuffer2:description">FlagDataHandler</linkto>
+//   <li> <linkto class="VisBuffer2:description">FlagReport</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -272,7 +271,7 @@ protected:
 	bool checkIfProcessBuffer();
 
 	// Common functionality for each visBuffer (don't repeat at the row level)
-	virtual void preProcessBuffer(const VisBuffer &visBuffer);
+	virtual void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
 
 	// Iterate trough list of rows
 	void iterateRows();
@@ -291,8 +290,8 @@ protected:
 	virtual void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
 
 	// Iter-passes method
-	virtual void passIntermediate(const VisBuffer &visBuffer);
-	virtual void passFinal(const VisBuffer &visBuffer);
+	virtual void passIntermediate(const vi::VisBuffer2 &visBuffer);
+	virtual void passFinal(const vi::VisBuffer2 &visBuffer);
 
 	// Mapping functions as requested by Urvashi
 	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);
@@ -300,16 +299,16 @@ protected:
 	Bool checkVisExpression(polarizationMap *polMap);
 
 	// Compute flags for a given visibilities point
-	virtual bool computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+	virtual bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual bool computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+	virtual bool computeInRowFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
-	virtual bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	virtual bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Compute flags for a given (time,freq) antenna pair map w/o using visibilities
-	virtual bool computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	virtual bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;
@@ -335,7 +334,7 @@ protected:
 
 private:
 	
-	VisBufferAutoPtr *visibilityBuffer_p;
+	vi::VisBuffer2 *visibilityBuffer_p;
 
 	// MS-related objects
 	Cube<Bool> *commonFlagCube_p;

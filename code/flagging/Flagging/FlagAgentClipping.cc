@@ -182,7 +182,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 }
 
 bool
-FlagAgentClipping::computeInRowFlags(const VisBuffer &/*visBuffer*/, VisMapper &visibilities,
+FlagAgentClipping::computeInRowFlags(const vi::VisBuffer2 &/*visBuffer*/, VisMapper &visibilities,
                                      FlagMapper &flags, uInt row)
 {
 	// Get flag cube size

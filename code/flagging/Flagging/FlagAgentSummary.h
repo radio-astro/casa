@@ -39,10 +39,10 @@ public:
 protected:
 
 	// Common functionality for each visBuffer (don't repeat at the row level)
-	void preProcessBuffer(const VisBuffer &visBuffer);
+	void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
 
 	// Compute flags for a given mapped visibility point
-	bool computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);

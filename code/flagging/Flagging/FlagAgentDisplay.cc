@@ -149,7 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 void
-FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
+FlagAgentDisplay::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 {
 
   getChunkInfo(visBuffer);
@@ -314,7 +314,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
   }
   
   bool
-  FlagAgentDisplay::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+  FlagAgentDisplay::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
   {
     logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     // Gather shapes
@@ -489,7 +489,7 @@ FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
   //----------------------------------------------------------------------------------------------------------
   
  void 
-  FlagAgentDisplay::getChunkInfo(const VisBuffer &visBuffer)
+  FlagAgentDisplay::getChunkInfo(const vi::VisBuffer2 &visBuffer)
   {
     logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     // Read current Field name, SPW id, and scan info.
