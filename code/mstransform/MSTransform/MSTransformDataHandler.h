@@ -1,4 +1,4 @@
-//# MsTransformDataHandler.h: This file contains the interface definition of the MsTransformDataHandler class.
+//# MSTransformDataHandler.h: This file contains the interface definition of the MSTransformDataHandler class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,8 +20,8 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#ifndef MsTransformDataHandler_H_
-#define MsTransformDataHandler_H_
+#ifndef MSTransformDataHandler_H_
+#define MSTransformDataHandler_H_
 
 #include <casacore/casa/aipstype.h>
 #include <casacore/casa/BasicSL/String.h>
@@ -48,15 +48,15 @@ namespace tvf
 	Double wtToSigma(Double wt);
 }
 
-class MsTransformDataHandler
+class MSTransformDataHandler
 {
 
 public:
 
-	MsTransformDataHandler();
-	MsTransformDataHandler(Record configuration);
+	MSTransformDataHandler();
+	MSTransformDataHandler(Record configuration);
 
-	~MsTransformDataHandler();
+	~MSTransformDataHandler();
 
 	void initialize();
 	void configure(Record &configuration);
@@ -126,4 +126,4 @@ protected:
 
 } //# NAMESPACE CASA - END
 
-#endif /* MsTransformDataHandler_H_ */
+#endif /* MSTransformDataHandler_H_ */

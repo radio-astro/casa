@@ -19,13 +19,13 @@
 #
 
 casa_add_library( mstransform 
- MsTransform/MsTransformDataHandler.cc 
+ MSTransform/MSTransformDataHandler.cc 
 )
 
 install (FILES
-	MsTransform/MsTransformDataHandler.h
-	DESTINATION include/casacode/mstransform/MsTransform
+	MSTransform/MSTransformDataHandler.h
+	DESTINATION include/casacode/mstransform/MSTransform
 	)
 
-casa_add_test( mstransform MsTransform/test/tMsTransformDataHandler.cc )
-casa_add_executable( mstransform tmstransform MsTransform/test/tMsTransformDataHandler.cc )
+casa_add_test( mstransform MSTransform/test/tMSTransformDataHandler.cc )
+casa_add_executable( mstransform tmstransform MSTransform/test/tMSTransformDataHandler.cc )

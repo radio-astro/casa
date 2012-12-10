@@ -1,4 +1,4 @@
-//# tMsTransformDataHandlerr.cc: This file contains the unit tests of the MsTransformDataHandler class.
+//# tMSTransformDataHandlerr.cc: This file contains the unit tests of the MsTransformDataHandler class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,7 +20,7 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <mstransform/MsTransform/MsTransformDataHandler.h>
+#include <mstransform/MSTransform/MSTransformDataHandler.h>
 
 #include <string>
 #include <iostream>
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
 
 	// Set up data handler
-	MsTransformDataHandler *tvdh = new MsTransformDataHandler(configuration);
+	MSTransformDataHandler *tvdh = new MSTransformDataHandler(configuration);
 	tvdh->open();
 	tvdh->setup();
 
