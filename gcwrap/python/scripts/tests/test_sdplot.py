@@ -1218,8 +1218,10 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
     header = False
     pollist = [0]
     subplot = 66
-    cell = ["0.033934774957430407rad","0.0080917391193671574rad"]
-    center="J2000 17:17:58.94 +59.30.01.962"
+    #cell = ["0.033934774957430407rad","0.0080917391193671574rad"]
+    cell = ["0.0087400000000000064rad", "0.0094409136746534481rad"]
+    #center="J2000 17:17:58.94 +59.30.01.962"
+    center = "J2000 17:17:58.94 +059.29.20.020"
 
     baseinfo = {'npanel': 36, 'nstack': 1,
                 'rows': 6, 'cols': 6,
@@ -1270,7 +1272,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, header=self.header,
                         outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1325,7 +1327,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         cell=cell,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1342,7 +1344,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, center=center,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1359,7 +1361,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, cell=cell,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
