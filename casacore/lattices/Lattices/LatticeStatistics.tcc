@@ -262,7 +262,6 @@ Bool LatticeStatistics<T>::setAxes (const Vector<Int>& axes)
 
    cursorAxes_p.resize(0);
    cursorAxes_p = axes;
-
    if (cursorAxes_p.nelements() == 0) {
    
 // User didn't give any axes.  Set them to all.
@@ -296,7 +295,6 @@ Bool LatticeStatistics<T>::setAxes (const Vector<Int>& axes)
    displayAxes_p.resize(0);
    displayAxes_p = IPosition::otherAxes(pInLattice_p->ndim(),
                                         cursorAxes_p).asVector();
-//
    return True;
 }
 
@@ -838,7 +836,6 @@ Bool LatticeStatistics<T>::generateStorageLattice()
 // Output has to be a MaskedLattice, so make a writable SubLattice.
 
     Int newOutAxis = pStoreLattice_p->ndim()-1;
-
     SubLattice<AccumType> outLatt (*pStoreLattice_p, True);
     LatticeApply<T,AccumType>::tiledApply(outLatt, *pInLattice_p, 
                                           collapser, IPosition(cursorAxes_p),
@@ -2706,6 +2703,7 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(Array<AccumType>& slice,
       Int ISTAT = Int(type);
       IPosition pos(nDim,0);
       pos(nDim-1) = ISTAT;
+
       pStoreLattice_p->getSlice(slice, pos, sliceShape, 
                                 IPosition(nDim,1), dropDeg);
    }
@@ -3143,20 +3141,18 @@ void StatsTiledCollapser<T,U>::initAccumulator (uInt n1, uInt n3)
 }
 
 template <class T, class U>
-void StatsTiledCollapser<T,U>::process (uInt index1,
-		uInt index3,
-		const T* pInData,
-		const Bool* pInMask,
-		uInt inIncr,
-		uInt nrval,
-		const IPosition& startPos,
-		const IPosition& shape)
+void StatsTiledCollapser<T,U>::process (
+	uInt index1, uInt index3,
+	const T* pInData, const Bool* pInMask,
+	uInt dataIncr, uInt maskIncr,
+	uInt nrval, const IPosition& startPos,
+	const IPosition& shape
+) {
 		//
 		// Process the data in the current chunk.   Everything in this
 		// chunk belongs in one output location in the storage
 		// lattices
 		//
-		{
 	uInt index = index1 + index3*n1_p;
 	U& sum = (*pSum_p)[index];
 	U& sumSq = (*pSumSq_p)[index];
@@ -3176,11 +3172,9 @@ void StatsTiledCollapser<T,U>::process (uInt index1,
 	//
 	T useIt;
 	if (pInMask == 0) {
-
 		// All pixels are good
 
 		if (!noInclude_p) {
-
 			// Inclusion range
 
 			T datum;
@@ -3192,14 +3186,13 @@ void StatsTiledCollapser<T,U>::process (uInt index1,
 										dataMin, dataMax, minLoc, maxLoc, minMaxInit,
 										False, *pInData, i, useIt
 									);
-				pInData += inIncr;
+				pInData += dataIncr;
 			}
 			if (fixedMinMax_p) {
 				dataMin = range_p(0);
 				dataMax = range_p(1);
 			}
 		} else if (!noExclude_p) {
-
 			// Exclusion range
 
 			T datum;
@@ -3211,10 +3204,9 @@ void StatsTiledCollapser<T,U>::process (uInt index1,
 										dataMin, dataMax, minLoc, maxLoc, minMaxInit,
 										False, *pInData, i, useIt
 									);
-				pInData += inIncr;
+				pInData += dataIncr;
 			}
 		} else {
-
 			// All data accepted
 
 			LattStatsSpecialize::setUseItTrue(useIt);
@@ -3224,10 +3216,11 @@ void StatsTiledCollapser<T,U>::process (uInt index1,
 										dataMin, dataMax, minLoc, maxLoc, minMaxInit,
 										False, *pInData, i, useIt
 									);
-				pInData += inIncr;
+				pInData += dataIncr;
 			}
 		}
 	} else {
+
 		// Some pixels are bad
 
 		if (!noInclude_p) {
@@ -3248,8 +3241,8 @@ void StatsTiledCollapser<T,U>::process (uInt index1,
 											False, *pInData, i, useIt
 										);
 				}
-				pInData += inIncr;
-				pInMask += inIncr;
+				pInData += dataIncr;
+				pInMask += maskIncr;
 			}
 			if (fixedMinMax_p) {
 
@@ -3279,8 +3272,8 @@ void StatsTiledCollapser<T,U>::process (uInt index1,
 											False, *pInData, i, useIt
 										);
 				}
-				pInData += inIncr;
-				pInMask += inIncr;
+				pInData += dataIncr;
+				pInMask += maskIncr;
 			}
 		} else {
 
@@ -3295,8 +3288,8 @@ void StatsTiledCollapser<T,U>::process (uInt index1,
 						False, *pInData, i, useIt
 					);
 				}
-				pInData += inIncr;
-				pInMask += inIncr;
+				pInData += dataIncr;
+				pInMask += maskIncr;
 			}
 		}
 	}
