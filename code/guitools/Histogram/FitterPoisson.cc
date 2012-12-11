@@ -24,6 +24,7 @@
 //#
 
 #include "FitterPoisson.h"
+#include <QDebug>
 
 namespace casa {
 
@@ -33,18 +34,69 @@ FitterPoisson::FitterPoisson() {
 
 void FitterPoisson::clearFit(){
 	lambdaSpecified = false;
+	errorMsg = "";
+	statusMsg = "";
+}
+
+bool FitterPoisson::isIntegerValue( float val ) const {
+	bool valueInt = false;
+	if ( qAbs(val - (int)val) < .0000000001 ){
+		valueInt = true;
+	}
+	return valueInt;
+}
+
+int FitterPoisson::factorial( int n ) const {
+	assert( n >= 0 );
+	int factValue = 1;
+	if ( n > 1 ){
+		factValue = n * factorial( n - 1);
+	}
+	return factValue;
 }
 
 bool FitterPoisson::doFit(){
 	if ( !lambdaSpecified ){
 		lambda = getMean();
 	}
-	return true;
+	bool fitSuccessful = true;
+	if ( lambda < 0 ){
+		fitSuccessful = false;
+		QString lambdaStr = QString::number( lambda );
+		errorMsg = "Could not fit a Poisson distribution because the lambda value: "+lambdaStr+" was not positive.";
+	}
+	else {
+		fitValues.resize( xValues.size());
+		bool allInts = true;
+		bool positiveValues = true;
+		for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
+			if ( !isIntegerValue( xValues[i])){
+				allInts = false;
+			}
+			int xVal = (int)( xValues[i]);
+			if ( xVal < 0 ){
+				xVal = 0;
+				positiveValues = false;
+			}
+			fitValues[i] = qPow( lambda, xVal ) * qExp(-1 * lambda ) / factorial( xVal );
+		}
+		if ( !positiveValues ){
+			statusMsg = "Negative domain values were replaced with 0.";
+		}
+		if ( !allInts ){
+			statusMsg = "Floating point domain values were rounded to the nearest integer.";
+		}
+	}
+	return fitSuccessful;
 }
 
 void FitterPoisson::setLambda( double value ){
 	lambda = value;
 	lambdaSpecified = true;
+}
+
+double FitterPoisson::getLambda() const {
+	return lambda;
 }
 
 FitterPoisson::~FitterPoisson() {

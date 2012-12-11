@@ -26,7 +26,7 @@
 #define BINPLOTWIDGET_QO_H
 
 #include <QtGui/QWidget>
-#include <QMenu>
+
 #include <guitools/Histogram/BinPlotWidget.ui.h>
 #include <guitools/Histogram/HeightSource.h>
 #include <images/Regions/ImageRegion.h>
@@ -35,17 +35,21 @@
 #include <qwt_plot_picker.h>
 #include <vector>
 #include <QDebug>
+#include <QMenu>
 using namespace std;
 
 class QwtPlotMarker;
 class QwtPlotCurve;
 
+
 namespace casa {
 
 template <class T> class ImageInterface;
+template <class T> class SubImage;
 template <class T> class ImageHistograms;
 class FitWidget;
 class RangePicker;
+class ToolTipPicker;
 class HistogramMarkerGaussian;
 class HistogramMarkerPoisson;
 class RangeControlsWidget;
@@ -77,7 +81,9 @@ public:
      */
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls, QWidget* parent = 0 );
     bool setImage( ImageInterface<Float>* img );
-    bool setImageRegion( const ImageRegion& imageRegion );
+    bool setImageRegion( const ImageRegion* imageRegion, int id );
+    void deleteImageRegion( int id );
+    void imageRegionSelected( int id );
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
 
@@ -89,24 +95,32 @@ public:
     void setFitEstimateColor( QColor color );
     void setFitCurveColor( QColor color );
     void setAxisLabelFont( int size );
-
-
+    void addZoomActions( QMenu* zoomMenu );
+    void addDisplayActions( QMenu* menu );
+    void addPlotModeActions( QMenu* menu );
+    void setPlotMode( int mode );
     ~BinPlotWidget();
+
+signals:
+	void postStatusMessage( const QString& msg );
 
 public slots:
 	void fitModeChanged();
 	void setDisplayStep( bool display );
 	void setDisplayLog( bool display );
-
+	void clearFit();
 	//Saving the Histogram
 	void toAscii( const QString& filePath );
-	void toPing( const QString& filtPath );
+	void toPing( const QString& filtPath, int width, int height );
+
 
 protected:
-    void resizeEvent( QResizeEvent* event );
+    virtual void resizeEvent( QResizeEvent* event );
+    virtual void keyPressEvent( QKeyEvent* event );
 
 private slots:
-	void rectangleSelected(const QwtDoubleRect & rect);
+	void lineMoved( const QPoint& pt );
+	void lineSelected();
 	void clearRange();
 	void defineCurve();
 	void minMaxChanged();
@@ -114,33 +128,56 @@ private slots:
 	void centerPeakSpecified();
 	void lambdaSpecified();
 	void fwhmSpecified();
-	void fitDone();
+	void fitDone( const QString& msg );
+
 	void resetGaussianFitMarker();
 	void resetPoissonFitMarker();
+	void zoom95( bool zoom );
+	void zoom98( bool zoom );
+	void zoom995( bool zoom );
+	void zoom999( bool zoom );
+	void zoomNeutral( bool zoom );
+	void zoomRange( bool rangeZoom );
+
+	void imageModeSelected( bool enabled );
+	void regionModeSelected( bool enabled );
+	void regionAllModeSelected( bool enabled );
 
 private:
 	BinPlotWidget( const BinPlotWidget& );
 	BinPlotWidget& operator=( const BinPlotWidget& );
 	void initializeFitWidget( bool fitControls );
 	void initializePlotControls();
+	void initializePlotModeControls( bool enable );
 	void initializeGaussianFitMarker();
 	void initializePoissonFitMarker();
 	void initializeRangeControls( bool rangeControls);
+	void clearGaussianFitMarker();
+	void clearPoissonFitMarker();
+	void clearRegionList();
 	bool makeHistogram();
 	void rectangleSizeChanged();
 	void resetAxisTitles();
 	void resetPlotTitle();
+	bool resetImage();
+	bool resetRegion(int id = -1);
 	void resetRectangleMarker();
 	void defineCurveLine();
 	void defineCurveHistogram();
 	QwtPlotCurve* addCurve( QVector<double>& xValues, QVector<double>& yValues );
 	void clearCurves();
-	void clearFitMarkers();
 	double checkLogValue( double value ) const;
 	void setValidatorLimits();
 	bool isPlotContains( int x, int y );
 	virtual int getCanvasHeight();
+	int getPeakIndex() const;
+	float getTotalCount() const;
+	void zoom( float percent );
+	void zoomRangeMarker( double startValue, double endValue );
     Ui::BinPlotWidgetClass ui;
+
+    enum ContextMenuMode{ ZOOM_CONTEXT,DISPLAY_CONTEXT,FIT_CONTEXT };
+    ContextMenuMode contextMenuMode;
 
     bool displayPlotTitle;
     bool displayAxisTitles;
@@ -156,12 +193,21 @@ private:
     QList<QwtPlotCurve*> curves;
     ImageHistograms<Float>* histogramMaker;
     ImageInterface<Float>* image;
+    QMap< int, SubImage<Float>* > regionMap;
     QwtPlot binPlot;
 
     //Specifying a range with the histogram
-    RangePicker* rangeTool;
-    QwtPlotMarker* rectMarker;
+    QwtPlotPicker* dragLine;
+    RangePicker* rectMarker;
+    ToolTipPicker* toolTipPicker;
     RangeControlsWidget* rangeControlWidget;
+    QMenu contextMenuZoom;
+    QAction zoomRangeAction;
+    QAction zoom95Action;
+    QAction zoom98Action;
+    QAction zoom995Action;
+    QAction zoom999Action;
+    QAction zoomNeutralAction;
     double rectX;
     double rectWidth;
 
@@ -179,8 +225,14 @@ private:
     //Plot Display
     QAction stepFunctionAction;
     QAction logAction;
+    QAction regionModeAction;
+    QAction imageModeAction;
+    QAction regionAllModeAction;
     bool displayStep;
     bool displayLog;
+    enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
+    PlotMode plotMode;
+    QMenu contextMenuDisplay;
 
     PlotModeWidget* plotModeWidget;
 };

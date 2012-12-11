@@ -37,17 +37,20 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
       logger(LogOrigin("CASA", "Histogram")){
 
 	ui.setupUi(this);
+	setWindowTitle( "Histogram Tool");
 
 	QLayout* mainLayout = ui.centralwidget->layout();
 	if ( mainLayout == NULL ){
 		mainLayout = new QHBoxLayout();
 	}
+	mainLayout->setContentsMargins(5,1,1,1);
 	plotWidget = new BinPlotWidget( fitControls, rangeControls, plotModeControls, this );
 	mainLayout->addWidget( plotWidget );
 	ui.centralwidget->setLayout( mainLayout );
 
 	//Set-up the initial colors
 	preferencesColor = new ColorPreferences( this );
+	preferencesColor->setFitColorsVisible( fitControls );
 	colorsChanged();
 
 	if ( !showFileLoader ){
@@ -60,13 +63,35 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 	connect(ui.actionColor, SIGNAL(triggered()), this, SLOT(openColorPreferences()));
 	connect( preferencesColor, SIGNAL(colorsChanged()), this, SLOT(colorsChanged()));
 	connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(openHistogramSaver()));
-	connect( &histogramSaver, SIGNAL(savePing(const QString&)), plotWidget, SLOT(toPing(const QString&)));
+	connect( &histogramSaver, SIGNAL(savePing(const QString&,int,int)), plotWidget, SLOT(toPing(const QString&,int,int)));
 	connect( &histogramSaver, SIGNAL(saveAscii(const QString&)), plotWidget, SLOT(toAscii(const QString&)));
+	connect( plotWidget, SIGNAL(postStatusMessage(const QString&)), this, SLOT(postStatusMessage(const QString&)));
+
+	plotWidget->addZoomActions( ui.menuZoom );
+	plotWidget->addDisplayActions( ui.menuDisplay );
+	if ( plotModeControls ){
+		plotWidget->addPlotModeActions( ui.menuDisplay );
+	}
+	plotWidget->setDisplayPlotTitle( true );
+	plotWidget->setDisplayAxisTitles( true );
 }
 
 bool HistogramMain::setImage( ImageInterface<Float>* img ){
 	bool imageSet = plotWidget->setImage( img );
 	return imageSet;
+}
+
+bool HistogramMain::setImageRegion( const ImageRegion* imageRegion, int id ){
+	bool regionSet = plotWidget->setImageRegion( imageRegion, id );
+	return regionSet;
+}
+
+void HistogramMain::deleteImageRegion( int id ){
+	plotWidget->deleteImageRegion( id );
+}
+
+void HistogramMain::imageRegionSelected( int id ){
+	plotWidget->imageRegionSelected( id );
 }
 
 void HistogramMain::setDisplayPlotTitle( bool display ){
@@ -75,6 +100,10 @@ void HistogramMain::setDisplayPlotTitle( bool display ){
 
 void HistogramMain::setDisplayAxisTitles( bool display ){
 	plotWidget->setDisplayAxisTitles( display );
+}
+
+void HistogramMain::setPlotMode( int mode ){
+	plotWidget->setPlotMode( mode );
 }
 
 void HistogramMain::openFileLoader(){
@@ -127,6 +156,10 @@ bool HistogramMain::generateImage( const QString& imagePath,
 		success = false;;
 	}
 	return success;
+}
+
+void HistogramMain::postStatusMessage( const QString& statusMsg ){
+	ui.statusbar->showMessage( statusMsg, 60000 );
 }
 
 

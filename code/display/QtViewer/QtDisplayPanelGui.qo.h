@@ -545,6 +545,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
   void updateHistogram( viewer::QtRegion* qtRegion, std::string str );
+  void updateHistogramSelection( int id );
   void showHistogram();
   void refreshHistogrammer();
 

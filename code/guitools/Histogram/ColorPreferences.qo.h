@@ -26,8 +26,10 @@
 #define HISTOGRAM_COLOR_PREFERENCES_QO_H_2
 
 #include <QtGui/QDialog>
-#include <QSettings>
+
 #include <guitools/Histogram/ColorPreferences.ui.h>
+
+class QSettings;
 
 namespace casa {
 
@@ -41,6 +43,7 @@ class ColorPreferences : public QDialog {
 
 public:
     ColorPreferences(QWidget *parent = 0);
+    void setFitColorsVisible( bool visible );
     QColor getHistogramColor() const;
     QColor getFitEstimateColor() const;
     QColor getFitCurveColor() const;

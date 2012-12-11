@@ -47,11 +47,16 @@ public:
     RangeControlsWidget(QWidget *parent = 0);
     void setRange( double min, double max );
     void setRangeLimits( double min, double max );
+    void setDataLimits( std::vector<float> values );
     pair<double,double> getMinMaxValues() const;
     ~RangeControlsWidget();
 
 signals:
 	void minMaxChanged();
+	void rangeCleared();
+
+private slots:
+	void clearRange();
 
 private:
 	RangeControlsWidget(const RangeControlsWidget& );

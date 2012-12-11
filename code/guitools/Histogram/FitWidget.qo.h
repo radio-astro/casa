@@ -47,6 +47,7 @@ public:
     FitWidget(QWidget *parent = 0);
     void setCenterPeak( double center, double peak );
     void setFWHM( double fwhm );
+    void setLambda( double lambda );
     void setValues( Vector<Float> xValues, Vector<Float> yValues );
     double getCenter() const;
     double getPeak() const;
@@ -58,9 +59,10 @@ public:
 
 signals:
 	void fitModeChanged();
-	void dataFitted();
+	void dataFitted(const QString& msg);
 	void gaussianFitChanged();
 	void poissonFitChanged();
+	void fitCleared();
 
 private slots:
 	void centerEdited( const QString& centerText );
@@ -69,6 +71,7 @@ private slots:
 	void lambdaEdited( const QString& lambdaText );
 	void fitSelected( int index );
 	void doFit();
+	void clearFit();
 
 private:
 	FitWidget( const FitWidget& );

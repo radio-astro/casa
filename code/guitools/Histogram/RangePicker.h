@@ -25,10 +25,9 @@
 #ifndef RANGEPICKER_H_
 #define RANGEPICKER_H_
 
-#include <qwt_plot_picker.h>
+#include <qwt_plot_marker.h>
 
 class QPainter;
-class QwtPlotCanvas;
 
 namespace casa {
 
@@ -38,17 +37,26 @@ class HeightSource;
  * Handles drawing the range selection rectangle for
  * the bin plot.
  */
-class RangePicker : public QwtPlotPicker {
+class RangePicker : public QwtPlotMarker {
 public:
-	RangePicker( QwtPlotCanvas* );
-	virtual void drawRubberBand( QPainter*)const;
+	RangePicker();
+	virtual void draw (QPainter* p, const QwtScaleMap &xMap, const QwtScaleMap
+			&yMap, const QRect &) const;
 	void setHeightSource( HeightSource* heightSource );
+	void boundaryLineMoved( const QPoint& pos );
+	int getLowerBound() const;
+	int getUpperBound() const;
+	void setBoundaryValues( int minX, int maxX );
+	void reset();
 	virtual ~RangePicker();
-
 private:
 	RangePicker( const RangePicker& );
 	RangePicker& operator=( const RangePicker& );
 	HeightSource* heightSource;
+	int lowerBound;
+	int upperBound;
+	bool rangeSet;
+
 };
 
 

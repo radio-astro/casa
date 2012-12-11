@@ -1236,7 +1236,8 @@ void QtDisplayPanel::updateColorBarDDLists_() {
 			// 'True, False, False' == 'does DD conform to this sub-panel's
 			// blink restriction (if any)?'  (dd's Coordinate compatibility
 			// has already been tested farther above).
-			if(pd_->conforms(ccbdd->dd(), True, False, False, panel_i)) {
+			bool blinkRestrictionConforms=pd_->conforms(ccbdd->dd(), True, False, False, panel_i);
+			if( blinkRestrictionConforms ) {
 
 				// dd will display.  Move it off the candidate list, onto the
 				// end of the list of DDs whose colorbars should also display.
@@ -1317,7 +1318,6 @@ Float QtDisplayPanel::cbPanelSpace_(QtDisplayData* dd ) {
 	// Proportion of PC size (again, in the thickness direction)
 	// to use for margins.
 	Float cbmrg = (mrgna_ + marginb_(dd))*marginUnit_ / pcthsz_;
-
 	return  cbth + cbmrg;
 }
 
@@ -1444,7 +1444,9 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
 	for(allcbdds.toStart();  !allcbdds.atEnd();  allcbdds++, i++) {
 		Float cbpsz = cbPanelSpace_(allcbdds.getRight());
 		Int j=i;
-		for(; j>0 && cbpszs[j-1]<cbpsz ; j--) cbpszs[j] = cbpszs[j-1];
+		for(; j>0 && cbpszs[j-1]<cbpsz ; j--){
+			cbpszs[j] = cbpszs[j-1];
+		}
 		cbpszs[j] = cbpsz;
 	}
 
@@ -1629,27 +1631,19 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
 }
 
 void QtDisplayPanel::plotCountChangeAdjustment(){
-	//Fixes a bug where if the number of plots displayed decreases,
-	//and the color bar is displayed, the color bar will not be drawn.
-	int newRowCount = pd_->getRowCount();
-	int newColumnCount = pd_->getColumnCount();
-	int oldCount = oldRowCount + oldColumnCount;
-	int newCount = newRowCount + newColumnCount;
-	oldRowCount = newRowCount;
-	oldColumnCount = newColumnCount;
-	//If the number number of plots decreases
-	if ( oldCount > newCount ){
-		for (ListIter<QtDisplayData*> qtDisplayDataIterator(qdds_); !qtDisplayDataIterator.atEnd(); qtDisplayDataIterator++) {
-			//Determine if we are supposed to be displaying a color bar
-			QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
-			Record record = qtDisplayData->getOptions();
-			String wedgeDisplayStr = record.subRecord(WedgeDD::WEDGE_PREFIX).asString("value");
-			if ( wedgeDisplayStr == QtDisplayData::WEDGE_YES ){
-				//We are supposed to be displaying a color bar, so make sure the
-				//flag is set that indicates the color bar is displayable
-				DisplayData* displayData = qtDisplayData->dd();
-				displayData->setDisplayState( DisplayData::DISPLAYED);
-			}
+	//Fixes a bug where the color bar may not be displayed
+	//even if the user has tweaked the gui indicating they
+	//want it displayed.
+	for (ListIter<QtDisplayData*> qtDisplayDataIterator(qdds_); !qtDisplayDataIterator.atEnd(); qtDisplayDataIterator++) {
+		//Determine if we are supposed to be displaying a color bar
+		QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
+		Record record = qtDisplayData->getOptions();
+		String wedgeDisplayStr = record.subRecord(WedgeDD::WEDGE_PREFIX).asString("value");
+		if ( wedgeDisplayStr == QtDisplayData::WEDGE_YES ){
+			//We are supposed to be displaying a color bar, so make sure the
+			//flag is set that indicates the color bar is displayable
+			DisplayData* displayData = qtDisplayData->dd();
+			displayData->setDisplayState( DisplayData::DISPLAYED);
 		}
 	}
 }

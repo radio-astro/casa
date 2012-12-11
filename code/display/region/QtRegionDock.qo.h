@@ -105,6 +105,7 @@ namespace casa {
 		// also sent when a region is created (see std::string arg)...
 		void regionChange( viewer::QtRegion *, std::string );
 		void deleteAllRegions( );
+		void regionSelected( int id );
 		void saveRegions( std::list<QtRegionState*>, RegionTextList & );
 		void saveRegions( std::list<QtRegionState*>, ds9writer & );
 		void loadRegions( bool &handled, const QString &path, const QString &type );

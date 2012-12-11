@@ -56,8 +56,12 @@ public:
     HistogramMain(bool showFileLoader, bool fitControls, bool rangeControls,
     		bool plotModeControls, QWidget *parent = 0);
     bool setImage( ImageInterface<Float>* img );
+    bool setImageRegion( const ImageRegion* imageRegion, int id );
+    void deleteImageRegion( int id );
+    void imageRegionSelected( int id );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
+    void setPlotMode( int mode );
     ~HistogramMain();
 
 private slots:
@@ -66,6 +70,7 @@ private slots:
 	void imageFileChanged();
 	void openColorPreferences();
 	void colorsChanged();
+	void postStatusMessage( const QString& statusMsg );
 
 private:
 	bool generateImage( const QString& imagePath, ImageInterface<Float>*& image );

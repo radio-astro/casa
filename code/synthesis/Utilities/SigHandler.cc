@@ -52,6 +52,12 @@ namespace casa {
 	   
 	   
   }
+  void SigHandler::resetSignalHandlers(){
+    signal(SIGABRT, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
+    killOn_p=False;
+  }
+
   Bool SigHandler::gotStopSignal(){
     return killOn_p;    
   }

@@ -313,6 +313,7 @@ CubeSkyEquation::~CubeSkyEquation(){
         rvi_p = NULL;
         delete (vb_p.release ()); // free up the associated VisBuffer
     }
+    SigHandler::resetSignalHandlers();
 }
 
 void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {

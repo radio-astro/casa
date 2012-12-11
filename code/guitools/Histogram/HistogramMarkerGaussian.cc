@@ -65,6 +65,8 @@ int HistogramMarkerGaussian::getFWHMHeight() const {
 	return height;
 }
 
+
+
 void HistogramMarkerGaussian::draw(QPainter* painter, const QwtScaleMap&,
 		const QwtScaleMap&, const QRect&) const {
 

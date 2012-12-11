@@ -24,6 +24,7 @@
 //#
 #include "ColorPreferences.qo.h"
 #include <QColorDialog>
+#include <QSettings>
 
 namespace casa {
 
@@ -152,6 +153,12 @@ QColor ColorPreferences::getFitCurveColor() const {
 	return fitCurveColor;
 }
 
+void ColorPreferences::setFitColorsVisible( bool visible ){
+	ui.fitCurveColorButton->setVisible( visible );
+	ui.fitEstimateColorButton->setVisible( visible );
+	ui.fitLabel->setVisible( visible );
+	ui.estimateLabel->setVisible( visible );
+}
 ColorPreferences::~ColorPreferences(){
 
 }
