@@ -1165,7 +1165,7 @@ void STGrid::setupGrid( Int &nx,
         os << "Using default spatial extent (10arcmin) in y" << LogIO::POST ;
         wy = 0.00290888 ;
       }
-      qcellx = Quantum<Double>( wx/nx_, "rad" ) ;
+      qcellx = Quantum<Double>( wx/nx_*cos(center_[1]), "rad" ) ;
       qcelly = Quantum<Double>( wy/ny_, "rad" ) ;
     }
   }

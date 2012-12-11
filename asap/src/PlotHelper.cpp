@@ -19,7 +19,7 @@
 
 #include "PlotHelper.h"
 
-#define KS_DEBUG
+//#define KS_DEBUG
 
 using namespace std ;
 using namespace casa ;
@@ -173,10 +173,10 @@ void PlotHelper::setGridParamVal(const int nx, const int ny, const double cellx,
   dircoord_ = new DirectionCoordinate(mdt, projType,
 				      centX, centY, incX, incY,
 				      xform,
-				      0.5*Double(nx-1), 
-				      0.5*Double(ny-1)) ; // pixel at grid
-// 				      0.5*Double(nx), 
-// 				      0.5*Double(ny)) ; // pixel at center
+				      0.5*Double(nx), 
+				      0.5*Double(ny)) ; // pixel at center
+// 				      0.5*Double(nx-1), 
+// 				      0.5*Double(ny-1)) ; // pixel at grid
 #ifdef KS_DEBUG
   {//Debug outputs
   cout << "Direction coordinate is set: " << endl;
@@ -213,9 +213,6 @@ vector<double>  PlotHelper::getGridPixel(const int whichrow){
 #endif
   // convert pixel to std vector
   pixel.tovector(outvec);
-#ifdef KS_DEBUG
-  cout << "returning vector = [" << outvec[0] << ", " << outvec[1] << "]" << endl;
-#endif
   return outvec;
 };
 
