@@ -72,6 +72,29 @@ from __main__ import *
 import unittest
 import numpy
 
+def run_ia_pv(
+    imagename, outfile, start, end, halfwidth
+):
+    myia = iatool()
+    myia.open(imagename)
+    if (not myia.isopen()):
+        myia.done()
+        raise Exception
+    res = myia.pv(
+        outfile=outfile, start=start, end=end, halfwidth=halfwidth
+    )
+    myia.done()
+    return res
+
+def run_impv(
+    imagename, outfile, start, end, halfwidth
+):
+    return impv(
+        imagename=imagename, outfile=outfile, start=start,
+        end=end, halfwidth=halfwidth
+    )
+
+
 class ia_pv_test(unittest.TestCase):
     
     def setUp(self):
@@ -83,30 +106,49 @@ class ia_pv_test(unittest.TestCase):
     def test_pv(self):
         """ ia.pv(): Test pv()"""
         myia = self.ia
-        myia.fromshape("", [10, 10, 10])
+        imagename = "zxye.im"
+        myia.fromshape(imagename, [10, 10, 10])
         bb = myia.getchunk()
         # basic sanity test, no rotation involved
         for i in range(10):
             bb[i,5,:] = i
-            bb[i,4,:] = i+1
-            bb[i,6,:] = i+2
+            bb[i,0:5,:] = i+1
+            bb[i,6:10,:] = i+2
         myia.putchunk(bb)
-        # no halfwidth
-        pv = myia.pv(start=[1, 5], end=[9, 5])
-        expec = [9, 1, 10]
-        got = pv.shape()
-        self.assertTrue((got == expec).all())
-        expec = numpy.zeros(got)
-        for i in range(10):
-            expec[:,0,i] = range(1,10)
-        got = pv.getchunk()
-        self.assertTrue((got == expec).all())
-        # halfwidth
-        pv = myia.pv(start=[1, 1], end=[9, 1], halfwidth=1)
-        expec = [9, 1, 10]
-        got = pv.shape()
-        self.assertTrue((got == expec).all())
-    
+        expeccoord = myia.toworld([1,5,0])['numeric']
+        myia.done()
+
+        for code in [run_ia_pv, run_impv]:
+            # no halfwidth
+            pv = code(
+                imagename=imagename, outfile="", start=[1, 5],
+                end=[9, 5], halfwidth=0
+            )
+            expec = [9, 1, 10]
+            got = pv.shape()
+            self.assertTrue((got == expec).all())
+            expec = numpy.zeros(got)
+            for i in range(10):
+                expec[:,0,i] = range(1,10)
+            got = pv.getchunk()
+            self.assertTrue((got == expec).all())
+            got = pv.toworld([0,0,0])['numeric']
+            self.assertTrue(abs(got - expeccoord).all() < 1e-6)
+        
+            # halfwidth
+            pv = code(
+                imagename=imagename, outfile="", start=[1, 5],
+                end=[9, 5], halfwidth=1
+            )
+            expec = [9, 1, 10]
+            got = pv.shape()
+            self.assertTrue((got == expec).all())
+            expec = numpy.zeros(got)
+            for i in range(10):
+                expec[:,0,i] = range(2,11)
+            got = pv.getchunk()
+            self.assertTrue((got == expec).all())
+        
     def test_stretch(self):
         """ ia.pv(): Test stretch parameter"""
         yy = iatool()
@@ -115,7 +157,7 @@ class ia_pv_test(unittest.TestCase):
         yy.addnoise()
         yy.done()
         shape = [200,200,1,20]
-        yy.fromshape("", shape)
+        yy.fromshape("kk", shape)
         yy.addnoise()
         self.assertRaises(
             Exception,
@@ -125,8 +167,20 @@ class ia_pv_test(unittest.TestCase):
         zz = yy.pv(
             start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
         )
-        self.assertTrue(zz and type(zz) == type(yy))
+        mytype = type(yy)
+        self.assertTrue(zz and type(zz) == mytype)
         yy.done()
+        zz.done()
+        self.assertFalse(
+            impv(
+                 imagename="kk", start=[0,0], end=[20,0],
+                 mask=mymask + ">0", stretch=False
+            )
+        )
+        zz = impv(
+            imagename="kk", start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
+        )
+        self.assertTrue(zz and type(zz) == mytype)
         zz.done()
     
 def suite():

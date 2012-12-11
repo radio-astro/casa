@@ -406,7 +406,7 @@ class imcollapse_test(unittest.TestCase):
                             self.assertTrue(npts == 24)
 
     def test_CAS_3418(self):
-        """imcollapse: Test seperate code for median due to performance issues"""
+        """imcollapse: Test separate code for median due to performance issues"""
         for i in range(0,4):
             xx = iatool()
             xx.open(good_image)
@@ -430,6 +430,23 @@ class imcollapse_test(unittest.TestCase):
             mytool.done()
             zz.done()
             
+    def test_region(self):
+        """ imcollapse: Test region"""
+        myia = iatool()
+        myia.fromshape("", [10, 10, 10])
+        bb = myia.getchunk()
+        for i in range(10):
+            bb[i,5,:] = i
+            bb[i,0:5,:] = i+1
+            bb[i,6:10,:] = i+2
+        myia.putchunk(bb)
+        res = myia.collapse("mean", 1, box="0,4,9,6")
+        expec = myia.makearray(0, [10, 1, 10])
+        for i in range(10):
+            expec[i, 0, :] = i+1
+        got = res.getchunk()
+        self.assertTrue((expec == got).all())
+        
     def test_stretch(self):
         """ imcollapse: Test stretch parameter"""
         yy = iatool()
