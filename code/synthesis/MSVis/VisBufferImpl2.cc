@@ -257,7 +257,7 @@ public:
     void
     setSpecial (const U & newItem)
     {
-        // For internal use for items which aren't really demand fetched
+        // For internal use for items which aren't really demand-fetched
 
         item_p = newItem;
         isPresent_p = True;
@@ -1314,7 +1314,7 @@ VisBufferImpl2::setIterationInfo (Int msId,
     state_p->isNewFieldId_p = isNewFieldId;
     state_p->isNewSpectralWindow_p = isNewSpectralWindow;
     state_p->subchunk_p = subchunk;
-    state_p->correlations_p = correlations;
+    state_p->correlations_p.assign (correlations);
 }
 
 void

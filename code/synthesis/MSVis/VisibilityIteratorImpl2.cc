@@ -613,8 +613,10 @@ VisibilityIteratorImpl2::addDataSelection (const MeasurementSet & ms)
         // it.  Simply add in an empty selection which will select everything.
 
         frequencySelections_p->add (FrequencySelectionUsingChannels ());
-    }
 
+        return;
+
+    }
 
     // Get the channel and correlation selectin.
     //
@@ -649,7 +651,6 @@ VisibilityIteratorImpl2::addDataSelection (const MeasurementSet & ms)
             selection.add (spectralWindow, slice.start(), slice.length(), slice.inc());
         }
     }
-
 
     selection.addCorrelationSlices (correlationSlices);
 
