@@ -383,7 +383,10 @@ using namespace casac;
 %typemap(in) std::vector<double> & {
    std::vector<int> shape;
   
-   $1->resize(0);
+   if(!$1)
+      $1 = new std::vector<double>(0);
+   else
+      $1->resize(0);
    if(casac::pyarray_check($input)){
       //cerr << "numpy2vec" << endl;
       casac::numpy2vector($input, *$1, shape);
@@ -404,7 +407,10 @@ using namespace casac;
 }
 
 %typemap(in) std::vector<bool> & {
-   $1->resize(0);
+   if(!$1)
+      $1 = new std::vector<bool>(0);
+   else
+      $1->resize(0);
    std::vector<int> shape;
 
    if(casac::pyarray_check($input)){
@@ -431,7 +437,10 @@ using namespace casac;
 
 
 %typemap(in) std::vector<int> & {
-   $1->resize(0);
+   if(!$1)
+      $1 = new std::vector<int>(0);
+   else
+      $1->resize(0);
    std::vector<int> shape;
 
    if(casac::pyarray_check($input)){
