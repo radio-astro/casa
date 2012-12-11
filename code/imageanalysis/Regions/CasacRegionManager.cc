@@ -222,13 +222,18 @@ vector<Double> CasacRegionManager::_setBoxCorners(const String& box) const {
 
 Record CasacRegionManager::fromBCS(
 		String& diagnostics, uInt& nSelectedChannels, String& stokes,
-		const Record  * const regionPtr, const String& regionName,
+		const Record  * const &regionPtr, const String& regionName,
 		const String& chans, const StokesControl stokesControl,
 		const String& box, const IPosition& imShape, const String& imageName
 ) {
 	LogOrigin origin("CasacRegionManager", __FUNCTION__);
 	Record regionRecord;
 	if (! box.empty()) {
+		if (regionPtr != 0 || ! regionName.empty()) {
+			*_getLog()
+				<< "box, regionPtr, and/or regionName cannot be simultaneously specified"
+				<< LogIO::EXCEPTION;
+		}
 		if (box.freq(",") % 4 != 3) {
 			*_getLog() << "box not specified correctly" << LogIO::EXCEPTION;
 		}
@@ -241,6 +246,12 @@ Record CasacRegionManager::fromBCS(
 			<< box << LogIO::POST;
 	}
 	else if (regionPtr != 0) {
+		if (! (regionName.empty() && chans.empty() && stokes.empty())) {
+			*_getLog()
+				<< "regionPtr and regionName, chans, and/or stokes cannot "
+				<< "be simultaneously specified."
+				<< LogIO::EXCEPTION;
+		}
 		_setRegion(regionRecord, diagnostics, regionPtr);
 		*_getLog() << origin;
 		*_getLog() << LogIO::NORMAL << "Set region from supplied region record"
@@ -248,6 +259,12 @@ Record CasacRegionManager::fromBCS(
 		stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	}
 	else if (! regionName.empty()) {
+		if (! chans.empty() || ! stokes.empty()) {
+			*_getLog()
+			<< "regionName and chans and/or stokes cannot "
+			<< "be specified simultaneously"
+			<< LogIO::EXCEPTION;
+		}
 		_setRegion(regionRecord, diagnostics, regionName, imShape, imageName);
 		*_getLog() << origin;
 		*_getLog() << LogIO::NORMAL << diagnostics << LogIO::POST;
@@ -260,7 +277,7 @@ Record CasacRegionManager::fromBCS(
 			chans, stokesControl, box, imShape
 		).toRecord("");
 		*_getLog() << origin;
-		*_getLog() << LogIO::NORMAL << "No region specified. Using full positional plane."
+		*_getLog() << LogIO::NORMAL << "No directional region specified. Using full positional plane."
 				<< LogIO::POST;
 		if (_getCsys()->hasSpectralAxis()) {
 			if (chans.empty()) {

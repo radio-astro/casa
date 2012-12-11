@@ -29,7 +29,6 @@
 #define IMAGES_PVGENERATOR_H
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
-
 #include <casa/namespace.h>
 
 class MDirection;
@@ -67,8 +66,7 @@ public:
 
 	PVGenerator(
 		const ImageInterface<Float> *const image,
-		const String& region, const Record *const regionRec,
-		const String& chanInp,
+		const Record *const &regionRec, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite
 	);
