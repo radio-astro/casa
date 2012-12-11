@@ -633,14 +633,13 @@ public:
     virtual void initAccumulator (uInt n1, uInt n3);
 
 // Process the data in the current chunk. 
-    virtual void process (uInt accumIndex1, 
-                          uInt accumIndex3, 
-                          const T* inData, 
-                          const Bool* inMask,
-                          uInt inIncr, 
-                          uInt nrval,
-                          const IPosition& startPos, 
-                          const IPosition& shape);
+    virtual void process (
+    	uInt accumIndex1, uInt accumIndex3,
+    	const T* inData, const Bool* inMask,
+    	uInt dataIncr, uInt maskIncr,
+    	uInt nrval,	const IPosition& startPos,
+    	const IPosition& shape
+    );
 
 // End the accumulation process and return the result arrays
     virtual void endAccumulator(Array<U>& result,
