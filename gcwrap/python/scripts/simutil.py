@@ -2128,7 +2128,7 @@ class simutil:
                 flatimage=False):  # if nonzero, create mom -1 image 
 
         # new ia tool
-        in_ia=ia.newimagefromfile(inimage)            
+        in_ia=ia.newimagefromfile(inimage)
         in_shape=in_ia.shape()
         in_csys=in_ia.coordsys()
 
@@ -2159,7 +2159,11 @@ class simutil:
                         inb=qinb['value']
                         self.msg("assuming inbright="+str(inbright)+" means "+str(inb)+" Jy/pixel",priority="warn")
                     inbright=inb
-            scalefactor=float(inbright)/pl.nanmax(arr)
+            try:
+                scalefactor=float(inbright)/pl.nanmax(arr)
+            except Exception, e:
+                in_ia.close()
+                raise Exception, e
 
         # check shape characteristics of the input;
         # add degenerate axes as neeed:
@@ -2172,6 +2176,7 @@ class simutil:
         # first check number of pixel axes and raise to 4 if required
         in_nax=arr.shape.__len__()
         if in_nax<2:
+            in_ia.close()
             self.msg("Your input model has fewer than 2 dimensions.  Can't proceed",priority="error")
             return False
         if in_nax==2:            
@@ -2183,17 +2188,23 @@ class simutil:
             in_shape=arr.shape
             in_nax=in_shape.__len__() # which should be 4
         if in_nax>4:
+            in_ia.close()
             self.msg("model image has more than 4 dimensions.  Not sure how to proceed",priority="error")
             return False
 
 
         # make incell a list if not already
-        if type(incell) == type([]):
-            incell =  map(qa.convert,incell,['arcsec','arcsec'])
-        else:
-            incell = qa.abs(qa.convert(incell,'arcsec'))
-            # incell[0]<0 for RA increasing left
-            incell = [qa.mul(incell,-1),incell]
+        try:
+            if type(incell) == type([]):
+                incell =  map(qa.convert,incell,['arcsec','arcsec'])
+            else:
+                incell = qa.abs(qa.convert(incell,'arcsec'))
+                # incell[0]<0 for RA increasing left
+                incell = [qa.mul(incell,-1),incell]
+        except Exception, e:
+            # invalid incell
+            in_ia.close()
+            raise Exception, e
         # later, we can test validity with qa.compare()
 
 
@@ -2249,6 +2260,7 @@ class simutil:
         # try to parse direction using splitter function and override model_refdir 
         if type(indirection)==type([]):
             if len(indirection) > 1:
+                in_ia.close()
                 self.msg("error parsing indirection "+str(indirection)+" -- should be a single direction string")
                 return False
             else:
@@ -2265,6 +2277,7 @@ class simutil:
         else:
             # indirection is not set - is there a direction in the model already?
             if not self.isdirection(model_refdir,halt=False):
+                in_ia.close()
                 self.msg("Cannot determine reference direction in model image.  Valid 'indirection' parameter must be provided.",priority="error")
                 return False
         
@@ -2282,6 +2295,7 @@ class simutil:
                 if qa.compare(model_cell[0],"1arcsec"):
                     valid_modcell=True
             if not valid_modcell:
+                in_ia.close()
                 self.msg("Unable to determine model cell size.  Valid 'incell' parameter must be provided.",priority="error")
                 return False
 
@@ -2347,6 +2361,7 @@ class simutil:
                 if qa.compare(model_center,"1Hz"):
                     valid_modcenter=True
             if not valid_modcenter:
+                in_ia.close()
                 self.msg("Unable to determine model frequency.  Valid 'incenter' parameter must be provided.",priority="error")
                 return False
 
@@ -2364,6 +2379,7 @@ class simutil:
                 if qa.compare(model_width,"1Hz"):
                     valid_modwidth=True
             if not valid_modwidth:
+                in_ia.close()
                 self.msg("Unable to determine model channel or bandwidth.  Valid 'inwidth' parameter must be provided.",priority="error")
                 return False
 
@@ -2390,6 +2406,7 @@ class simutil:
             axmap[2]=foo
             axassigned[foo]=2
             if in_shape[foo]>4:
+                in_ia.close()
                 self.msg("you appear to have more than 4 Stokes components - please edit your header and/or parameters",priority="error")
                 return False                        
             add_stokes_coord=False
@@ -2407,7 +2424,8 @@ class simutil:
             while extra_axis<0 and i<4:
                 if axassigned[i]<0: extra_axis=i
                 i+=1
-            if extra_axis<0:                    
+            if extra_axis<0:
+                in_ia.close()
                 self.msg("I can't find an unused axis to make Spectral [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),priority="error",origin="setup model")
                 return False
 
@@ -2423,13 +2441,15 @@ class simutil:
             while extra_axis<0 and i<4:
                 if axassigned[i]<0: extra_axis=i
                 i+=1
-            if extra_axis<0:                    
+            if extra_axis<0:
+                in_ia.close()
                 self.msg("I can't find an unused axis to make Stokes [%i %i %i %i] " % (axassigned[0],axassigned[1],axassigned[2],axassigned[3]),priority="error",origin="setup model")
                 return False
             axmap[2]=extra_axis
             axassigned[extra_axis]=2                            
 
             if arr.shape[extra_axis]>4:
+                in_ia.close()
                 self.msg("you have %i Stokes parameters in your potential Stokes axis %i.  something is wrong." % (arr.shape[extra_axis],extra_axis),priority="error")
                 return False
             if self.verbose: self.msg("Adding Stokes Coordinate",origin="setup model")
@@ -2493,6 +2513,7 @@ class simutil:
         # first assure that the csys has the expected order 
         expected=['Direction', 'Direction', 'Stokes', 'Spectral']
         if modelcsys.axiscoordinatetypes() != expected:
+            in_ia.close()
             self.msg("internal error with coordinate axis order created by Imager",priority="error")
             self.msg(modelcsys.axiscoordinatetypes().__str__(),priority="error")
             return False
@@ -2500,6 +2521,7 @@ class simutil:
         # more checks:
         foo=pl.array(modelshape)
         if not (pl.array(arr.shape) == pl.array(foo.take(axmap).tolist())).all():
+            in_ia.close()
             self.msg("internal error: I'm confused about the shape if your model data cube",priority="error")
             self.msg("have "+foo.take(axmap).__str__()+", want "+in_shape.__str__(),priority="error")
             return False

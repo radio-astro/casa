@@ -1259,18 +1259,13 @@ myim.done()
             <any type="variant" limittypes="string record"/>
             <description>Region specification. See help par.region. Default is to use the full image.</description>
             <value type="string"></value>
-<!--
-        <param type="string"  name="region">
-            <description>Region specification. See help par.region. Default is to not use a region.</description>
-            <value></value>
-            -->
         </param>
         <param type="string"  name="box">
             <description>Box to use in position plane specified by four numbers "blcx, blcy, trcx, trcy"</description>
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contigous. Default is to use all channels.</description>
+            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
             <value></value>
         </param>
         <param type="string"  name="stokes">
@@ -4792,12 +4787,6 @@ retrieves the pixels or \pixelmask\ from a potentially more complex
 \region.  Function {\stff getchunk} is retained because it is faster
 and therefore preferable for repeated operation in loops if the
 \pixelmask\ is not required and the region is a simple box.
-
-<!--
-If you ask for the pixel mask as well, the return value is
-a record holding two fields, 'pixel' and 'pixelmask'.  If
-you do not ask for the pixel mask (default), the pixels
-are returned directly. -->
 
 If you set getmask=T, the return value is the 'pixelmask' rather than
 the 'pixel' image.
@@ -10067,7 +10056,6 @@ used to create a 2D temporary image.
     </example>
 </method>
   
-  
 <method type="function" name="pv">
     <shortdescription>
         Construct a position-velocity image by choosing two points in the direction plane.
@@ -10086,17 +10074,25 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="int" name="halfwidth">
-            <description>Half width expressed in pixels perpendicular to the slice for averaging pixels. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
+            <description>Half width for averaging expressed in pixels perpendicular to the slice. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
             <value>0</value>
         </param>
         <param type="bool"  name="overwrite">
-            <description>Overwrite the output if it exists? Default False</description>
+            <description>Overwrite the output if it exists?</description>
             <value>false</value>
         </param>
         <param type="any"  name="region">
             <any type="variant"/>
             <description>Region selection. Default is entire image. No selection is permitted in the direction plane.</description>
             <value></value>
+        </param>
+        <param type="string"  name="chans">
+            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
+            <value/>
+        </param>
+        <param type="string"  name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
+            <value/>
         </param>
         <param type="string"  name="mask">
             <any type="variant"/>
@@ -10115,16 +10111,21 @@ used to create a 2D temporary image.
     <returns type="image"/>
     <description>
         Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
-        coordinate. The spectral
-        extent of the resulting image will be that provided by the region specification or the entire spectral
-        range of the input image if no region is specified. One may not specify a region in direction space,
-        since that is accomplished by
-        specifying the start and end points of the slice. One may specify an optional half width, which is the number
-        of pixels on either side and perpendicular to the direction slice that are used for averaging along the
-        slice (default, 0, represents no averaging).
+        coordinate. The spectral extent of the resulting image will be that provided by the region specification
+        or the entire spectral range of the input image if no region is specified. One may not specify a region
+        in direction space; that is accomplished by specifying the start and end points of the slice. One may
+        specify an optional half width, which is the number of pixels on either side and perpendicular to the
+        direction slice that are used for averaging along the slice (0, the default, represents no averaging).
         A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
-        image should be returned. Nothing is returned if it is false, but then outfile should be specified (unless
+        image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified (unless
         perhaps you are debugging).
+        
+        Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
+        be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
+        ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
+        written and/or returned. The coordinate system of the resulting image is valid in the sense that the coordinates
+        of the pixels in the output correspond to those along slice in the input image (ie, the direction coordinate
+        will be rotated with respect to the position axis in the output axis in the output image, in general).
     </description>
     <example>
         ia.open("my_spectral_cube.im")
@@ -10132,15 +10133,12 @@ used to create a 2D temporary image.
         # in the input image
         mypv = ia.pv(outfile="", start=[45,50], end=[100,120], wantreturn=true)
         ia.done()
-        # do stuff with the pv image, such as get statistics
-        pv.statistics()
+        # analyze the pv image, such as get statistics
+        pvstats = mypv.statistics()
         # when done, close the tool to release system resources
-        pv.done()
+        mypv.done()
     </example>
 </method>
-  
-  
-  
   
    <method type="function" name="makearray">
    <shortdescription>Construct an initialized multi-dimensional array.

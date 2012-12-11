@@ -41,7 +41,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--                            Image Definition Parameters                                         -->
 <!--============================================== -->
 
-    <param type="any" name="imagename">
+    <param type="any" name="imagename" required="true">
       <description>Pre-name of output images</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
@@ -70,7 +70,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--============================================== -->
 <!--                            Iteration Control Parameters                                         -->
 <!--============================================== -->
-
     <param type="int" name="niter">
       <description>Maximum number of iterations</description>
       <value type="int">500</value>
@@ -110,6 +109,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--                            Other Operational Parameters                                       -->
 <!--============================================== -->
     <param type="bool" name="usescratch">
+	    <description>True if to save model visibilities in MODEL_DATA column</description>
+	    <value type="bool">False</value>
+    </param>
+
+    <param type="bool" name="interact">
 	    <description>True if to save model visibilities in MODEL_DATA column</description>
 	    <value type="bool">False</value>
     </param>

@@ -32,6 +32,16 @@ class sdplot_unittest_base:
     oldgui = sd.rcParams['plotter.gui']  # store previous GUI setting
     usegui = False   # need to set GUI status constant to compare
 
+    # initialize plotter
+    def _switchPlotterGUI(self, usegui):
+        # explicitly delete scantable set to plotter
+        if sd.plotter._data:
+            del sd.plotter._data
+            sd.plotter._data = None
+        # restore GUI setting
+        sd.rcParams['plotter.gui'] = usegui
+        sd.plotter.__init__()
+
     # compare two figures
     def _checkOutFile( self, filename, compare=False ):
         self.assertTrue(os.path.exists(filename),"'%s' does not exists." % filename)
@@ -174,8 +184,7 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
 
     def setUp( self ):
         # switch on/off GUI
-        sd.rcParams['plotter.gui'] = self.usegui
-        sd.plotter.__init__()
+        self._switchPlotterGUI(self.usegui)
         # Fresh copy of input data
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -183,11 +192,10 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
         default(sdplot)
 
     def tearDown( self ):
+        # restore GUI setting
+        self._switchPlotterGUI(self.oldgui)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        # restore GUI setting
-        sd.rcParams['plotter.gui'] = self.oldgui
-        sd.plotter.__init__()
 
     # Actual tests
     def test_default( self ):
@@ -299,8 +307,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
 
     def setUp( self ):
         # switch on/off GUI
-        sd.rcParams['plotter.gui'] = self.usegui
-        sd.plotter.__init__()
+        self._switchPlotterGUI(self.usegui)
         # Fresh copy of input data
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -319,11 +326,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         default(sdplot)
 
     def tearDown( self ):
+        # restore GUI setting
+        self._switchPlotterGUI(self.oldgui)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        # restore GUI setting
-        sd.rcParams['plotter.gui'] = self.oldgui
-        sd.plotter.__init__()
 
     # Actual tests
     def testplot01( self ):
@@ -998,8 +1004,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
 
     def setUp( self ):
         # switch on/off GUI
-        sd.rcParams['plotter.gui'] = self.usegui
-        sd.plotter.__init__()
+        self._switchPlotterGUI(self.usegui)
         # Fresh copy of input data
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -1018,11 +1023,10 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         default(sdplot)
 
     def tearDown( self ):
+        # restore GUI setting
+        self._switchPlotterGUI(self.oldgui)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        # restore GUI setting
-        sd.rcParams['plotter.gui'] = self.oldgui
-        sd.plotter.__init__()
 
     # helper functions of tests
     def _get_unit_coord( self, scanname ):
@@ -1218,8 +1222,10 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
     header = False
     pollist = [0]
     subplot = 66
-    cell = ["0.033934774957430407rad","0.0080917391193671574rad"]
-    center="J2000 17:17:58.94 +59.30.01.962"
+    #cell = ["0.033934774957430407rad","0.0080917391193671574rad"]
+    cell = ["0.0087400000000000064rad", "0.0094409136746534481rad"]
+    #center="J2000 17:17:58.94 +59.30.01.962"
+    center = "J2000 17:17:58.94 +059.29.20.020"
 
     baseinfo = {'npanel': 36, 'nstack': 1,
                 'rows': 6, 'cols': 6,
@@ -1233,8 +1239,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
     
     def setUp( self ):
         # switch on/off GUI
-        sd.rcParams['plotter.gui'] = self.usegui
-        sd.plotter.__init__()
+        self._switchPlotterGUI(self.usegui)
         # Fresh copy of input data
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -1253,11 +1258,10 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         default(sdplot)
 
     def tearDown( self ):
+        # restore GUI setting
+        self._switchPlotterGUI(self.oldgui)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        # restore GUI setting
-        sd.rcParams['plotter.gui'] = self.oldgui
-        sd.plotter.__init__()
 
     # helper functions of tests
 
@@ -1270,7 +1274,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, header=self.header,
                         outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1325,7 +1329,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         cell=cell,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1342,7 +1346,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, center=center,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1359,7 +1363,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, cell=cell,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': 'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1560,8 +1564,7 @@ class sdplot_selectTest( sdplot_unittest_base, unittest.TestCase ):
     
     def setUp( self ):
         # switch on/off GUI
-        sd.rcParams['plotter.gui'] = self.usegui
-        sd.plotter.__init__()
+        self._switchPlotterGUI(self.usegui)
         # Fresh copy of input data
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
@@ -1580,11 +1583,10 @@ class sdplot_selectTest( sdplot_unittest_base, unittest.TestCase ):
         default(sdplot)
 
     def tearDown( self ):
+        # restore GUI setting
+        self._switchPlotterGUI(self.oldgui)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        # restore GUI setting
-        sd.rcParams['plotter.gui'] = self.oldgui
-        sd.plotter.__init__()
 
     # helper functions of tests
 

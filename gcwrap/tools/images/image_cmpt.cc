@@ -1507,53 +1507,55 @@ image* image::transpose(
 	}
 }
 
-::casac::variant*
-image::getchunk(const std::vector<int>& blc, const std::vector<int>& trc,
-		const std::vector<int>& inc, const std::vector<int>& axes,
-		const bool list, const bool dropdeg, const bool getmask) {
-
-	// Recover some pixels from the image from a simple strided box
-	::casac::variant *rstat = 0;
+variant* image::getchunk(
+	const std::vector<int>& blc, const std::vector<int>& trc,
+	const std::vector<int>& inc, const std::vector<int>& axes,
+	const bool list, const bool dropdeg, const bool getmask
+) {
 	try {
-		*_log << LogOrigin("image", "getchunk");
-		if (detached())
-			return rstat;
+		*_log << _ORIGIN;
+		if (detached()) {
+			return 0;
+		}
 
-		//
 		Array<Float> pixels;
 		Array<Bool> pixelMask;
 		Vector<Int> iaxes(axes);
 		// if default value change it to empty vector
-		if (iaxes.size() == 1) {
-			if (iaxes[0] < 0)
-				iaxes.resize();
+		if (iaxes.size() == 1 && iaxes[0] < 0) {
+			iaxes.resize();
 		}
-		_image->getchunk(pixels, pixelMask, Vector<Int> (blc),
-				Vector<Int> (trc), Vector<Int> (inc), iaxes, list, dropdeg,
-				getmask);
+		_image->getchunk(
+			pixels, pixelMask, Vector<Int>(blc), Vector<Int>(trc),
+			Vector<Int>(inc), iaxes, list, dropdeg, getmask
+		);
 
 		if (getmask) {
 			std::vector<bool> s_pixelmask;
 			std::vector<int> s_shape;
 			pixelMask.tovector(s_pixelmask);
 			pixels.shape().asVector().tovector(s_shape);
-			rstat = new ::casac::variant(s_pixelmask, s_shape);
-		} else {
+			return new variant(s_pixelmask, s_shape);
+		}
+		else {
 			std::vector<int> s_shape;
 			pixels.shape().asVector().tovector(s_shape);
 			std::vector<double> d_pixels(pixels.nelements());
 			int i(0);
-			for (Array<Float>::iterator iter = pixels.begin(); iter
-					!= pixels.end(); iter++)
+			for (
+				Array<Float>::iterator iter = pixels.begin();
+				iter!=pixels.end(); iter++
+			) {
 				d_pixels[i++] = *iter;
-			rstat = new ::casac::variant(d_pixels, s_shape);
+			}
+			return new variant(d_pixels, s_shape);
 		}
-	} catch (AipsError x) {
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 image* image::pbcor(
@@ -2360,8 +2362,8 @@ bool image::putregion(const ::casac::variant& v_pixels,
 image* image::pv(
 	const string& outfile, const vector<double>& start,
 	const vector<double>& end, const int halfwidth, const bool overwrite,
-	const variant& region, const string& mask, const bool stretch,
-	const bool wantreturn
+	const variant& region, const string& chans, const string& stokes,
+	const string& mask, const bool stretch, const bool wantreturn
 ) {
 	if (detached()) {
 		return 0;
@@ -2383,8 +2385,8 @@ image* image::pv(
 		}
 		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
 		PVGenerator pv(
-			_image->getImage(), "", regionPtr.get(),
-			"", "", mask, outfile, overwrite
+			_image->getImage(), regionPtr.get(),
+			chans, stokes, mask, outfile, overwrite
 		);
 		pv.setEndpoints(start[0], start[1], end[0], end[1]);
 		pv.setStretch(stretch);

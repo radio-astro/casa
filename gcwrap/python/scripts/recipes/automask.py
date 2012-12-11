@@ -1,5 +1,6 @@
 from casac import casac
 import os
+import numpy as np
 iaim=casac.image()
 iamask=casac.image()
 qa=casac.quanta()
@@ -19,8 +20,10 @@ def automask(image='', maskimage=''):
         numpix=iaim.shape()[0]/10;
         if(numpix < 5):
             numpix=6
+    #print 'NUMPIX', numpix
     ib=iaim.rebin('__rebin.image', [numpix, numpix, 1, 1], overwrite=True)
-    ic=ib.imagecalc(outfile='__thresh,image', pixels='iif(abs(__rebin.image)> 2*'+str(stat['rms'][0])+',1.0,0.0)', overwrite=True)
+    thresh=5.0*stat['rms'][0]/np.sqrt(float(numpix))
+    ic=ib.imagecalc(outfile='__thresh.image', pixels='iif(abs(__rebin.image)> '+str(thresh)+',1.0,0.0)', overwrite=True)
     ib.remove(done=True, verbose=False)
     ie=ic.regrid(outfile='__threshreg.image', shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
     ic.remove(done=True, verbose=False)
@@ -36,7 +39,9 @@ def automask(image='', maskimage=''):
     iamask.open(maskimage)
     iamask.calc(pixels='iif("'+maskimage+'" >= __newmask.image,"'+maskimage+'", __newmask.image)')
     iamask.done()
+    iaim.done()
     iamask.removefile('__newmask.image')
+    
 
 def automask2(image='', maskimage=''):
     iaim.open(image)
@@ -59,7 +64,7 @@ def automask2(image='', maskimage=''):
         if(iscube):
             cubeblc=ret['blc'][j,2]
             cubetrc=ret['trc'][j,2]
-            print 'cubeblc-trc', cubeblc, cubetrc 
+            #print 'cubeblc-trc', cubeblc, cubetrc 
         arr[ret['blc'][j,0]:ret['trc'][j,0], ret['blc'][j,1]:ret['trc'][j,1], 0, cubeblc:cubetrc]=ret['components'][j,0]
     iamask.putchunk(arr)
     ib=iamask.convolve2d(outfile='masky', major='10pix', minor='10pix', overwrite=True)
