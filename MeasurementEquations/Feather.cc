@@ -31,6 +31,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/Arrays/IPosition.h>
 #include <casa/iostream.h>
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
@@ -89,6 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   void Feather::setSDImage(const ImageInterface<Float>& SDImage){
+    LogIO os(LogOrigin("Feather", "setSDImage()", WHERE));
     if(highIm_p.null())
       throw(AipsError("High res image has to be defined before SD image"));
     ImageInfo lowInfo=SDImage.imageInfo();
@@ -96,13 +98,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(lBeam_p.isNull())
       throw(AipsError("No Single dish restoring beam info in image"));
     CoordinateSystem csyslow=SDImage.coordinates();
+    CountedPtr<ImageInterface<Float> > sdcopy;
+    sdcopy=new TempImage<Float>(SDImage.shape(), csyslow);
+    (*sdcopy).copyData(SDImage);
+    PtrHolder<ImageInterface<Float> > copyPtr;
+    PtrHolder<ImageInterface<Float> > copyPtr2;
+    
+      
     Vector<Stokes::StokesTypes> stokesvec;
-    if(CoordinateUtil::findStokesAxis(stokesvec, csyslow) <0)
+    if(CoordinateUtil::findStokesAxis(stokesvec, csyslow) <0){
       CoordinateUtil::addIAxis(csyslow);
-    if(CoordinateUtil::findSpectralAxis(csyslow) <0)
+      
+      ImageUtilities::addDegenerateAxes (os, copyPtr, *sdcopy, "",
+					 False, False,"I", False, False,
+					 True);
+      sdcopy=CountedPtr<ImageInterface<Float> >(copyPtr.ptr(), False);
+      
+    }
+    if(CoordinateUtil::findSpectralAxis(csyslow) <0){
       CoordinateUtil::addFreqAxis(csyslow);
-    TempImage<Float> sdcopy(SDImage.shape(), csyslow);
-    sdcopy.copyData(SDImage);
+      ImageUtilities::addDegenerateAxes (os, copyPtr2, *sdcopy, "",
+					 False, True,
+					 "", False, False,
+					 True);
+      sdcopy=CountedPtr<ImageInterface<Float> >(copyPtr2.ptr(), False);
+    }
+    //TempImage<Float> sdcopy(SDImage.shape(), csyslow);
+    //sdcopy.copyData(SDImage);
     lowIm_p=new TempImage<Float>(highIm_p->shape(), csysHigh_p);
     // regrid the single dish image
     {
@@ -112,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       axes(2)=spectralAxisIndex;
     
       ImageRegrid<Float> ir;
-      ir.regrid(*lowIm_p, Interpolate2D::LINEAR, axes,  sdcopy);
+      ir.regrid(*lowIm_p, Interpolate2D::LINEAR, axes,  *sdcopy);
     }
 	    
     if(lowImOrig_p.null()){
@@ -135,12 +157,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(CoordinateUtil::findSpectralAxis(csysHigh_p) <0)
       CoordinateUtil::addFreqAxis(csysHigh_p);
     IPosition myshap=INTImage.shape();
-    if(INTImage.shape().nelements()==2)
+    IPosition blcin(4,0,0,0,0);
+    IPosition trcin=INTImage.shape().nelements()==4 ? INTImage.shape()-1 : IPosition(4, 0, 0, 0,0);
+    
+    if(INTImage.shape().nelements()==2){
+      myshap.resize(uInt(4), False);
       myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),1,1);
-    if(INTImage.shape().nelements()==3)
+      trcin=IPosition(4, INTImage.shape()(0)-1, INTImage.shape()(1)-1,0, 0);
+    }
+    if(INTImage.shape().nelements()==3){
+      myshap.resize(uInt(4), False);
       myshap=IPosition(4,INTImage.shape()(0), INTImage.shape()(1),INTImage.shape()(2),1);
+      trcin=IPosition(4, INTImage.shape()(0)-1, INTImage.shape()(1)-1, INTImage.shape()(2)-1, 0);
+    }
+    Slicer slin(blcin, trcin, Slicer::endIsLast);
     highIm_p=new TempImage<Float>(myshap, csysHigh_p);
-    highIm_p->copyData(INTImage);
+    
+    SubImage<Float> subim(*highIm_p, slin, True, AxesSpecifier(IPosition::makeAxisPath(INTImage.shape().nelements())));
+    subim.copyData(INTImage);
     ImageUtilities::copyMiscellaneous(*highIm_p, INTImage);
   }
 
