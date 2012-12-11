@@ -43,6 +43,7 @@ public:
 	double getLambda() const;
 	virtual bool doFit();
 	virtual void clearFit();
+	virtual void toAscii( QTextStream& stream ) const;
 	virtual ~FitterPoisson();
 private:
 	int factorial( int n ) const;

@@ -165,7 +165,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 }
 
 bool
-FlagAgentExtension::computeAntennaPairFlags(const VisBuffer &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+FlagAgentExtension::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// Set logger origin
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));

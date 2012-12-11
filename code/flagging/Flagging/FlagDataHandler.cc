@@ -87,15 +87,15 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 
 	// Initialize Pre-Load columns
 	preLoadColumns_p.clear();
-	preLoadColumns_p.push_back(VisBufferComponents::FieldId);
-	preLoadColumns_p.push_back(VisBufferComponents::SpW);
-	preLoadColumns_p.push_back(VisBufferComponents::Scan);
-	preLoadColumns_p.push_back(VisBufferComponents::ArrayId);
-	preLoadColumns_p.push_back(VisBufferComponents::ObservationId);
+	preLoadColumns_p.push_back(vi::FieldId);
+	preLoadColumns_p.push_back(vi::SpectralWindow);
+	preLoadColumns_p.push_back(vi::Scan);
+	preLoadColumns_p.push_back(vi::ArrayId);
+	preLoadColumns_p.push_back(vi::ObservationId);
 
-	preLoadColumns_p.push_back(VisBufferComponents::NRow);
-	preLoadColumns_p.push_back(VisBufferComponents::NChannel);
-	preLoadColumns_p.push_back(VisBufferComponents::NCorr);
+	preLoadColumns_p.push_back(vi::NRows);
+	preLoadColumns_p.push_back(vi::NChannels);
+	preLoadColumns_p.push_back(vi::NCorrelations);
 
 	// Set the iteration approach based on the agent
 	setIterationApproach(iterationApproach);
@@ -121,7 +121,6 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	buffersInitialized_p = false;
 	iteratorGenerated_p = false;
 	stopIteration_p = false;
-	maxChunkRows = 0;
 	processedRows = 0;
 	chunkNo = 0;
 	bufferNo = 0;
@@ -439,8 +438,8 @@ FlagDataHandler::generateAntennaPairMap()
 	antennaPairMap_p = new antennaPairMap();
 
 	// Retrieve antenna vectors
-	Vector<Int> antenna1Vector = visibilityBuffer_p->get()->antenna1();
-	Vector<Int> antenna2Vector = visibilityBuffer_p->get()->antenna2();
+	Vector<Int> antenna1Vector = visibilityBuffer_p->antenna1();
+	Vector<Int> antenna2Vector = visibilityBuffer_p->antenna2();
 
 	// Fill map
 	Int ant1_i,ant2_i;
@@ -476,7 +475,7 @@ FlagDataHandler::generateSubIntegrationMap()
 	subIntegrationMap_p = new subIntegrationMap();
 
 	// Retrieve antenna vectors
-	Vector<Double> timeVector = visibilityBuffer_p->get()->time();
+	Vector<Double> timeVector = visibilityBuffer_p->time();
 
 	// Fill map
 	uInt nRows = timeVector.size();
@@ -511,7 +510,7 @@ FlagDataHandler::generatePolarizationsMap()
 	polarizationIndexMap_p = new polarizationIndexMap();
 
 	uShort pos = 0;
-	Vector<Int> corrTypes = visibilityBuffer_p->get()->corrType();
+	Vector<Int> corrTypes = visibilityBuffer_p->correlationTypes();
 	*logger_p << LogIO::DEBUG2 << " Correlation type: " <<  corrTypes << LogIO::POST;
 
 	for (Vector<Int>::iterator iter = corrTypes.begin(); iter != corrTypes.end();iter++)
@@ -656,14 +655,14 @@ FlagDataHandler::generateAntennaPointingMap()
 	if (antennaPointingMap_p) delete antennaPointingMap_p;
 	antennaPointingMap_p = new antennaPointingMap();
 
-	Vector<Double> time = visibilityBuffer_p->get()->time();
+	Vector<Double> time = visibilityBuffer_p->time();
 	uInt nRows = time.size();
 	antennaPointingMap_p->reserve(nRows);
 	for (uInt row_i=0;row_i<nRows;row_i++)
 	{
-		Vector<MDirection> azimuth_elevation = visibilityBuffer_p->get()->azel(time[row_i]);
-		Int ant1 = visibilityBuffer_p->get()->antenna1()[row_i];
-		Int ant2 = visibilityBuffer_p->get()->antenna1()[row_i];
+		Vector<MDirection> azimuth_elevation = visibilityBuffer_p->azel(time[row_i]);
+		Int ant1 = visibilityBuffer_p->antenna1()[row_i];
+		Int ant2 = visibilityBuffer_p->antenna1()[row_i];
 
 	    double antenna1_elevation = azimuth_elevation[ant1].getAngle("deg").getValue()[1];
 	    double antenna2_elevation = azimuth_elevation[ant2].getAngle("deg").getValue()[1];
@@ -905,7 +904,7 @@ FlagDataHandler::enableAsyncIO(Bool enable)
 	if (enable)
 	{
 		// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
-		asyncio_enabled_p = ROVisibilityIterator::isAsynchronousIoEnabled();
+		asyncio_enabled_p = vi::VisibilityIterator2::isAsynchronousIoEnabled();
 
 		if (asyncio_enabled_p)
 		{
@@ -976,558 +975,564 @@ FlagDataHandler::preFetchColumns()
 	{
 		switch (*iter)
 		{
-			case VisBufferComponents::Ant1:
+			case vi::Antenna1:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Ant1);
+					prefetchColumns_p->operator +=(vi::Antenna1);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->antenna1();
+					visibilityBuffer_p->antenna1();
 				}
 				break;
 			}
-			case VisBufferComponents::Ant2:
+			case vi::Antenna2:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Ant2);
+					prefetchColumns_p->operator +=(vi::Antenna2);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->antenna2();
+					visibilityBuffer_p->antenna2();
 				}
 				break;
 			}
-			case VisBufferComponents::ArrayId:
+			case vi::ArrayId:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::ArrayId);
+					prefetchColumns_p->operator +=(vi::ArrayId);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->arrayId();
+					visibilityBuffer_p->arrayId();
 				}
 				break;
 			}
-			case VisBufferComponents::Channel:
+			/*
+			case vi::Channel:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Channel);
+					prefetchColumns_p->operator +=(vi::Channel);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->channel();
+					visibilityBuffer_p->getChannelNumbers(0);
 				}
 				break;
 			}
-			case VisBufferComponents::Cjones:
+			*/
+			case vi::JonesC:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Cjones);
+					prefetchColumns_p->operator +=(vi::JonesC);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->CJones();
+					visibilityBuffer_p->cjones();
 				}
 				break;
 			}
-			case VisBufferComponents::CorrType:
+			case vi::CorrType:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::CorrType);
+					prefetchColumns_p->operator +=(vi::CorrType);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->corrType();
+					visibilityBuffer_p->correlationTypes();
 				}
 				break;
 			}
-			case VisBufferComponents::Corrected:
+			case vi::VisibilityCorrected:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Corrected);
+					prefetchColumns_p->operator +=(vi::VisibilityCorrected);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->correctedVisibility();
+					visibilityBuffer_p->visCorrected ();
 				}
 				break;
 			}
-			case VisBufferComponents::CorrectedCube:
+			case vi::VisibilityCubeCorrected:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::CorrectedCube);
+					prefetchColumns_p->operator +=(vi::VisibilityCubeCorrected);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->correctedVisCube();
+					visibilityBuffer_p->visCubeCorrected();
 				}
 				break;
 			}
-			case VisBufferComponents::Direction1:
+			case vi::Direction1:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Direction1);
+					prefetchColumns_p->operator +=(vi::Direction1);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->direction1();
+					visibilityBuffer_p->direction1();
 				}
 				break;
 			}
-			case VisBufferComponents::Direction2:
+			case vi::Direction2:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Direction2);
+					prefetchColumns_p->operator +=(vi::Direction2);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->direction2();
+					visibilityBuffer_p->direction2();
 				}
 				break;
 			}
-			case VisBufferComponents::Exposure:
+			case vi::Exposure:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Exposure);
+					prefetchColumns_p->operator +=(vi::Exposure);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->exposure();
+					visibilityBuffer_p->exposure();
 				}
 				break;
 			}
-			case VisBufferComponents::Feed1:
+			case vi::Feed1:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Feed1);
+					prefetchColumns_p->operator +=(vi::Feed1);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->feed1();
+					visibilityBuffer_p->feed1();
 				}
 				break;
 			}
-			case VisBufferComponents::Feed1_pa:
+			case vi::FeedPa1:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Feed1_pa);
+					prefetchColumns_p->operator +=(vi::FeedPa1);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->feed1_pa();
+					visibilityBuffer_p->feedPa1();
 				}
 				break;
 			}
-			case VisBufferComponents::Feed2:
+			case vi::Feed2:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Feed2);
+					prefetchColumns_p->operator +=(vi::Feed2);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->feed2();
+					visibilityBuffer_p->feed2();
 				}
 				break;
 			}
-			case VisBufferComponents::Feed2_pa:
+			case vi::FeedPa2:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Feed2_pa);
+					prefetchColumns_p->operator +=(vi::FeedPa2);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->feed2_pa();
+					visibilityBuffer_p->feedPa2();
 				}
 				break;
 			}
-			case VisBufferComponents::FieldId:
+			case vi::FieldId:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::FieldId);
+					prefetchColumns_p->operator +=(vi::FieldId);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->fieldId();
+					visibilityBuffer_p->fieldId();
 				}
 				break;
 			}
-			case VisBufferComponents::Flag:
+			case vi::Flag:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Flag);
+					prefetchColumns_p->operator +=(vi::Flag);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->flag();
+					visibilityBuffer_p->flag();
 				}
 				break;
 			}
-			case VisBufferComponents::FlagCategory:
+			case vi::FlagCategory:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::FlagCategory);
+					prefetchColumns_p->operator +=(vi::FlagCategory);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->flagCategory();
+					visibilityBuffer_p->flagCategory();
 				}
 				break;
 			}
-			case VisBufferComponents::FlagCube:
+			case vi::FlagCube:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::FlagCube);
+					prefetchColumns_p->operator +=(vi::FlagCube);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->flagCube();
+					visibilityBuffer_p->flagCube();
 				}
 				break;
 			}
-			case VisBufferComponents::FlagRow:
+			case vi::FlagRow:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::FlagRow);
+					prefetchColumns_p->operator +=(vi::FlagRow);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->flagRow();
+					visibilityBuffer_p->flagRow();
 				}
 				break;
 			}
-			case VisBufferComponents::Freq:
+			/*
+			case vi::Freq:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Freq);
+					prefetchColumns_p->operator +=(vi::Freq);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->frequency();
+					visibilityBuffer_p->getFrequencies(0);
 				}
 				break;
 			}
-			case VisBufferComponents::ImagingWeight:
+			*/
+			case vi::ImagingWeight:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::ImagingWeight);
+					prefetchColumns_p->operator +=(vi::ImagingWeight);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->imagingWeight();
+					visibilityBuffer_p->imagingWeight();
 				}
 				break;
 			}
-			case VisBufferComponents::Model:
+			case vi::VisibilityModel:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Model);
+					prefetchColumns_p->operator +=(vi::VisibilityModel);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->modelVisibility();
+					visibilityBuffer_p->visModel();
 				}
 				break;
 			}
-			case VisBufferComponents::ModelCube:
+			case vi::VisibilityCubeModel:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::ModelCube);
+					prefetchColumns_p->operator +=(vi::VisibilityCubeModel);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->modelVisCube();
+					visibilityBuffer_p->visCubeModel();
 				}
 				break;
 			}
-			case VisBufferComponents::NChannel:
+			case vi::NChannels:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::NChannel);
+					prefetchColumns_p->operator +=(vi::NChannels);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->nChannel();
+					visibilityBuffer_p->nChannels();
 				}
 				break;
 			}
-			case VisBufferComponents::NCorr:
+			case vi::NCorrelations:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::NCorr);
+					prefetchColumns_p->operator +=(vi::NCorrelations);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->nCorr();
+					visibilityBuffer_p->nCorrelations();
 				}
 				break;
 			}
-			case VisBufferComponents::NRow:
+			case vi::NRows:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::NRow);
+					prefetchColumns_p->operator +=(vi::NRows);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->nRow();
+					visibilityBuffer_p->nRows();
 				}
 				break;
 			}
-			case VisBufferComponents::ObservationId:
+			case vi::ObservationId:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::ObservationId);
+					prefetchColumns_p->operator +=(vi::ObservationId);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->observationId();
+					visibilityBuffer_p->observationId();
 				}
 				break;
 			}
-			case VisBufferComponents::Observed:
+			case vi::VisibilityObserved:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Observed);
+					prefetchColumns_p->operator +=(vi::VisibilityObserved);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->visibility();
+					visibilityBuffer_p->vis();
 				}
 				break;
 			}
-			case VisBufferComponents::ObservedCube:
+			case vi::VisibilityCubeObserved:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::ObservedCube);
+					prefetchColumns_p->operator +=(vi::VisibilityCubeObserved);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->visCube();
+					visibilityBuffer_p->visCube();
 				}
 				break;
 			}
-			case VisBufferComponents::PhaseCenter:
+			case vi::PhaseCenter:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::PhaseCenter);
+					prefetchColumns_p->operator +=(vi::PhaseCenter);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->phaseCenter();
+					visibilityBuffer_p->phaseCenter();
 				}
 				break;
 			}
-			case VisBufferComponents::PolFrame:
+			case vi::PolFrame:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::PolFrame);
+					prefetchColumns_p->operator +=(vi::PolFrame);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->polFrame();
+					visibilityBuffer_p->polarizationFrame();
 				}
 				break;
 			}
-			case VisBufferComponents::ProcessorId:
+			case vi::ProcessorId:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::ProcessorId);
+					prefetchColumns_p->operator +=(vi::ProcessorId);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->processorId();
+					visibilityBuffer_p->processorId();
 				}
 				break;
 			}
-			case VisBufferComponents::Scan:
+			case vi::Scan:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Scan);
+					prefetchColumns_p->operator +=(vi::Scan);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->scan();
+					visibilityBuffer_p->scan();
 				}
 				break;
 			}
-			case VisBufferComponents::Sigma:
+			case vi::Sigma:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Sigma);
+					prefetchColumns_p->operator +=(vi::Sigma);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->sigma();
+					visibilityBuffer_p->sigma();
 				}
 				break;
 			}
-			case VisBufferComponents::SigmaMat:
+			case vi::SigmaMat:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::SigmaMat);
+					prefetchColumns_p->operator +=(vi::SigmaMat);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->sigmaMat();
+					visibilityBuffer_p->sigmaMat();
 				}
 				break;
 			}
-			case VisBufferComponents::SpW:
+			case vi::SpectralWindow:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::SpW);
+					prefetchColumns_p->operator +=(vi::SpectralWindow);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->spectralWindow();
+					visibilityBuffer_p->spectralWindow();
 				}
 				break;
 			}
-			case VisBufferComponents::StateId:
+			case vi::StateId:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::StateId);
+					prefetchColumns_p->operator +=(vi::StateId);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->stateId();
+					visibilityBuffer_p->stateId();
 				}
 				break;
 			}
-			case VisBufferComponents::Time:
+			case vi::Time:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Time);
+					prefetchColumns_p->operator +=(vi::Time);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->time();
+					visibilityBuffer_p->time();
 				}
 				break;
 			}
-			case VisBufferComponents::TimeCentroid:
+			case vi::TimeCentroid:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::TimeCentroid);
+					prefetchColumns_p->operator +=(vi::TimeCentroid);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->timeCentroid();
+					visibilityBuffer_p->timeCentroid();
 				}
 				break;
 			}
-			case VisBufferComponents::TimeInterval:
+			case vi::TimeInterval:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::TimeInterval);
+					prefetchColumns_p->operator +=(vi::TimeInterval);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->timeInterval();
+					visibilityBuffer_p->timeInterval();
 				}
 				break;
 			}
-			case VisBufferComponents::Weight:
+			case vi::Weight:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Weight);
+					prefetchColumns_p->operator +=(vi::Weight);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->weight();
+					visibilityBuffer_p->weight();
 				}
 				break;
 			}
-			case VisBufferComponents::WeightMat:
+			case vi::WeightMat:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::WeightMat);
+					prefetchColumns_p->operator +=(vi::WeightMat);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->weightMat();
+					visibilityBuffer_p->weightMat();
 				}
 				break;
 			}
-			case VisBufferComponents::WeightSpectrum:
+			case vi::WeightSpectrum:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::WeightSpectrum);
+					prefetchColumns_p->operator +=(vi::WeightSpectrum);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->weightSpectrum();
+					visibilityBuffer_p->weightSpectrum();
 				}
 				break;
 			}
-			case VisBufferComponents::Uvw:
+			case vi::Uvw:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::Uvw);
+					prefetchColumns_p->operator +=(vi::Uvw);
 				}
 				else
 				{
-					visibilityBuffer_p->get()->uvw();
+					visibilityBuffer_p->uvw();
 				}
 				break;
 			}
-			case VisBufferComponents::UvwMat:
+			/*
+			case vi::UvwMat:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p.insert(VisBufferComponents::UvwMat);
+					prefetchColumns_p + vi::UvwMat;
 				}
 				else
 				{
-					visibilityBuffer_p->get()->uvwMat();
+					visibilityBuffer_p->uvwMat();
 				}
 				break;
 			}
+			*/
 		}
 	}
 
@@ -1543,8 +1548,8 @@ FlagDataHandler::setMapAntennaPairs(bool activated)
 {
 	mapAntennaPairs_p=activated;
 	// Pre-Load antenna1, antenna2
-	preLoadColumn(VisBufferComponents::Ant1);
-	preLoadColumn(VisBufferComponents::Ant2);
+	preLoadColumn(vi::Antenna1);
+	preLoadColumn(vi::Antenna2);
 }
 
 
@@ -1553,7 +1558,7 @@ FlagDataHandler::setMapSubIntegrations(bool activated)
 {
 	mapSubIntegrations_p=activated;
 	// Pre-Load time
-	preLoadColumn(VisBufferComponents::Time);
+	preLoadColumn(vi::Time);
 }
 
 
@@ -1562,7 +1567,7 @@ FlagDataHandler::setMapPolarizations(bool activated)
 {
 	mapPolarizations_p=activated;
 	// Pre-Load corrType
-	preLoadColumn(VisBufferComponents::CorrType);
+	preLoadColumn(vi::CorrType);
 }
 
 
@@ -1576,9 +1581,9 @@ FlagDataHandler::setMapAntennaPointing(bool activated)
 	// Pre-Load time, antenna1 and antenna2
 	// Azel is derived and this only restriction
 	// is that it can be access by 1 thread only
-	preLoadColumn(VisBufferComponents::Time);
-	preLoadColumn(VisBufferComponents::Ant1);
-	preLoadColumn(VisBufferComponents::Ant2);
+	preLoadColumn(vi::Time);
+	preLoadColumn(vi::Antenna1);
+	preLoadColumn(vi::Antenna2);
 }
 
 
@@ -1587,8 +1592,8 @@ FlagDataHandler::setScanStartStopMap(bool activated)
 {
 	mapScanStartStop_p=activated;
 	// Pre-Load scan and time
-	preLoadColumn(VisBufferComponents::Scan);
-	preLoadColumn(VisBufferComponents::Time);
+	preLoadColumn(vi::Scan);
+	preLoadColumn(vi::Time);
 }
 
 
@@ -1597,8 +1602,8 @@ FlagDataHandler::setScanStartStopFlaggedMap(bool activated)
 {
 	mapScanStartStopFlagged_p=activated;
 	// Pre-Load scan and time
-	preLoadColumn(VisBufferComponents::Scan);
-	preLoadColumn(VisBufferComponents::Time);
+	preLoadColumn(vi::Scan);
+	preLoadColumn(vi::Time);
 }
 
 

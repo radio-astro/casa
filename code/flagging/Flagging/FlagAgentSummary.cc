@@ -51,14 +51,14 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 	flagDataHandler_p->setMapPolarizations(true);
 
 	// Request pre-loading array,field,spw, scan, observation, antenna1, antenna2
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Freq);
+	flagDataHandler_p->preLoadColumn(vi::ArrayId);
+	flagDataHandler_p->preLoadColumn(vi::FieldId);
+	flagDataHandler_p->preLoadColumn(vi::Scan);
+	flagDataHandler_p->preLoadColumn(vi::ObservationId);
+	flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
+	flagDataHandler_p->preLoadColumn(vi::Antenna1);
+	flagDataHandler_p->preLoadColumn(vi::Antenna2);
+	//flagDataHandler_p->preLoadColumn(vi::Freq);
 }
 
 FlagAgentSummary::~FlagAgentSummary()
@@ -149,7 +149,7 @@ FlagAgentSummary::setAgentParameters(Record config)
 }
 
 void
-FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
+FlagAgentSummary::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 {
 	arrayId = visBuffer.arrayId();
 	stringstream arrayId_stringStream;
@@ -172,7 +172,7 @@ FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
 
 	// Read in channel-frequencies.
 	// RVU : I'm not sure if this should go here, or in the FlagDataHandler so that all agents get it.
-	Vector<Double> flist(visBuffer.frequency());
+	Vector<Double> flist(visBuffer.getFrequencies(0,MFrequency::TOPO));
 	for(Int i=0;i<(Int) flist.nelements();i++)
 	  frequencyList[spw].push_back(flist[i]);
 
@@ -180,7 +180,7 @@ FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
 }
 
 bool
-FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentSummary::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row)
 {
 	Int antenna1 = visBuffer.antenna1()[row];
 	Int antenna2 = visBuffer.antenna2()[row];

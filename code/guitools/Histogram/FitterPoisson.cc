@@ -99,6 +99,10 @@ double FitterPoisson::getLambda() const {
 	return lambda;
 }
 
+void FitterPoisson::toAscii( QTextStream& stream ) const {
+	stream << "Lambda: "<<lambda<<"\n";
+}
+
 FitterPoisson::~FitterPoisson() {
 }
 

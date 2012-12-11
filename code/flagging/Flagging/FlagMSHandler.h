@@ -80,19 +80,18 @@ private:
 	virtual void generateScanStartStopMap();
 
 	// Swap MS to check what is the maximum RAM memory needed
-	void checkMaxMemory();
+	void preSweep();
 
 	// Apply channel selection for asyn or normal iterator
 	// NOTE: We always have to do this, even if there is no SPW:channel selection
-	void applyChannelSelection(ROVisibilityIterator *roVisIter);
+	void applyChannelSelection(vi::VisibilityIterator2 *visIter);
 
 	// Measurement set section
 	MeasurementSet *selectedMeasurementSet_p;
 	MeasurementSet *originalMeasurementSet_p;
 
 	// RO Visibility Iterator
-	VisibilityIterator *rwVisibilityIterator_p;
-	ROVisibilityIterator *roVisibilityIterator_p;
+	vi::VisibilityIterator2 *visibilityIterator_p;
 
 };
 

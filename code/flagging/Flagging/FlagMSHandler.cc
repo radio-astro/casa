@@ -37,8 +37,7 @@ FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double 
 {
 	selectedMeasurementSet_p = NULL;
 	originalMeasurementSet_p = NULL;
-	rwVisibilityIterator_p = NULL;
-	roVisibilityIterator_p = NULL;
+	visibilityIterator_p = NULL;
 	tableTye_p = MEASUREMENT_SET;
 }
 
@@ -55,10 +54,8 @@ FlagMSHandler::~FlagMSHandler()
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
 
-	// Delete VisBuffers and iterators
-	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	// ROVisIter is in fact RWVisIter
-	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+	// Delete VisibilityIterator
+	if (visibilityIterator_p) delete visibilityIterator_p;
 
 	return;
 }
@@ -358,77 +355,21 @@ FlagMSHandler::parseExpression(MSSelection &parser)
 // Swap MS to check what is the maximum RAM memory needed
 // -----------------------------------------------------------------------
 void
-FlagMSHandler::checkMaxMemory()
+FlagMSHandler::preSweep()
 {
 	logger_p->origin(LogOrigin("FlagMSHandler",__FUNCTION__,WHERE));
 
-	maxChunkRows = 0;
-	double memoryNeeded = 0;
-	double maxMemoryNeeded = 0;
-	// visCube,flagCube
-	double memoryPerVisFlagCubes = 65.0/(1024.0*1024.0);
-	// ant1, ant2, corrType, feed1, feed2, fieldId, frequency, scan, spw, stateId, time, timeInterval, uvw
-	double memoryPerRow = 32*15/(1024.0*1024.0);
-
-	for (rwVisibilityIterator_p->originChunks(); rwVisibilityIterator_p->moreChunks();rwVisibilityIterator_p->nextChunk())
+	for (visibilityIterator_p->originChunks(); visibilityIterator_p->moreChunks();visibilityIterator_p->nextChunk())
 	{
-		// Check if we have to group time steps
-		if (groupTimeSteps_p)
-		{
-			rwVisibilityIterator_p->setRowBlocking(rwVisibilityIterator_p->nRowChunk());
-			if (rwVisibilityIterator_p->nRowChunk() > (Int) maxChunkRows) maxChunkRows = rwVisibilityIterator_p->nRowChunk();
-		}
-
 		// Iterate over vis buffers
-		for (rwVisibilityIterator_p->origin(); rwVisibilityIterator_p->more();(*rwVisibilityIterator_p)++)
+		for (visibilityIterator_p->origin(); visibilityIterator_p->more();visibilityIterator_p->next())
 		{
-			// Check total amount of memory needed for visibilities
-			memoryNeeded = memoryPerVisFlagCubes*(rwVisibilityIterator_p->visibilityShape().product());
-
-			// Add up memory needed for the rest of the columns
-			memoryNeeded += memoryPerRow*(rwVisibilityIterator_p->nRow());
-
-			if (memoryNeeded > maxMemoryNeeded) maxMemoryNeeded = memoryNeeded;
 
 			if (mapScanStartStop_p)
 			{
 				generateScanStartStopMap();
 			}
 		}
-	}
-
-	Int buffers = 1;
-	double memoryFree = HostInfo::memoryFree( )/1024.0;
-	double memoryUsed = 100*maxMemoryNeeded/memoryFree;
-	if (asyncio_enabled_p)
-	{
-		AipsrcValue<Int>::find (buffers,"VisibilityIterator.async.nBuffers", 2);
-		*logger_p << LogIO::NORMAL << " This process needs " << buffers << " (pre-fetched buffers in async mode) x " << maxMemoryNeeded << " MB for loading visibility buffers ("
-				<< memoryUsed << "%) of available free memory (" << memoryFree << " MB)"<< LogIO::POST;
-	}
-	else
-	{
-		*logger_p << LogIO::NORMAL << " This process needs " << maxMemoryNeeded << " MB for loading visibility buffers ("
-				<< memoryUsed << "%) of available free memory (" << memoryFree << " MB)"<< LogIO::POST;
-	}
-
-	if (buffers*maxMemoryNeeded > memoryFree*0.90)
-	{
-		if (asyncio_enabled_p)
-		{
-			*logger_p << LogIO::SEVERE << " This process would need to consume more than 90% ("
-					<< buffers*maxMemoryNeeded << " MB) of the available memory (" << memoryFree
-					<< " MB) for loading vis buffers, aborting. Consider reducing the time interval, or reducing the number of buffers pre-fetched by async I/O (" << buffers
-					<< ") or even switch off async I/O." << LogIO::POST;
-		}
-		else
-		{
-			*logger_p << LogIO::SEVERE << " This process would need to consume more than 90% ("
-					<< buffers*maxMemoryNeeded << " MB) of the available memory (" << memoryFree
-					<< " MB) for loading vis buffers, aborting. Consider reducing the time interval."<< LogIO::POST;
-		}
-
-		throw(AipsError("FlagMSHandler::checkMaxMemory() Not enough memory to process"));
 	}
 
 	if (mapScanStartStop_p)
@@ -448,71 +389,57 @@ FlagMSHandler::generateIterator()
 {
 	if (!iteratorGenerated_p)
 	{
-		// Delete VisBuffer (this implies it self-detaches from VisIter, so we cannot delete VisIter before)
-		if (visibilityBuffer_p) delete visibilityBuffer_p;
-
-		// First create and initialize RW iterator
-		if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
-		rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
-
-		// Set the table data manager (ISM and SSM) cache size to the full column size, for
-		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-		if (slurp_p) rwVisibilityIterator_p->slurp();
-
-		// Apply channel selection (Notice that is not necessary to do this again with the RO iterator in sync mode)
-		// CAS-3959: Channel selection is now going to be handled at the FlagAgent level
-		// applyChannelSelection(rwVisibilityIterator_p);
-
-		if ((mapScanStartStop_p) or (groupTimeSteps_p and asyncio_enabled_p))
+		// Do quack pre-sweep
+		if (mapScanStartStop_p)
 		{
-			checkMaxMemory();
+			if (visibilityIterator_p) delete visibilityIterator_p;
+			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,sortOrder_p,true,NULL,true,timeInterval_p);
+			preSweep();
 		}
 
-		// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
-		// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
-		// With this configuration the Visibility Buffer is attached to the RO async iterator
 		if (asyncio_enabled_p)
 		{
 			// Set preFetchColumns
-			prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,
-																				VisBufferComponents::FlagRow,
-																				VisBufferComponents::NRow,
-																				VisBufferComponents::FieldId);
+			prefetchColumns_p = new VisBufferComponents2();
+			prefetchColumns_p->operator +=(vi::FlagCube);
+			prefetchColumns_p->operator +=(vi::FlagRow);
+			prefetchColumns_p->operator +=(vi::NRows);
+			prefetchColumns_p->operator +=(vi::FieldId);
+
 			preFetchColumns();
 
-
 			// Then create and initialize RO Async iterator
-			if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
-			rwVisibilityIterator_p = new VisibilityIterator(&prefetchColumns_p,*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
-
-			// Cast RW conventional iterator into RO conventional iterator
-			if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-			roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
-
-			// Set the table data manager (ISM and SSM) cache size to the full column size, for
-			// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-			if (slurp_p) roVisibilityIterator_p->slurp();
-
-			// Apply channel selection
-			// CAS-3959: Channel selection is now going to be handled at the FlagAgent level
-			// applyChannelSelection(roVisibilityIterator_p);
-
-			// Set row blocking to a huge number
-			*logger_p << LogIO::NORMAL <<  "Setting row blocking to maximum number of rows in all the chunks swapped: " << maxChunkRows << LogIO::POST;
-			if (groupTimeSteps_p) roVisibilityIterator_p->setRowBlocking(maxChunkRows);
-
-			// Attach Visibility Buffer to Visibility Iterator
-			visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+			if (visibilityIterator_p) delete visibilityIterator_p;
+			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,sortOrder_p,true,prefetchColumns_p,true,timeInterval_p);
 		}
-		else
+		else if (!mapScanStartStop_p)
 		{
-			// Cast RW conventional iterator into RO conventional iterator
-			if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-			roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
-
-			// Finally attach Visibility Buffer to RO conventional iterator
-			visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+			if (visibilityIterator_p) delete visibilityIterator_p;
+			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,sortOrder_p,true,NULL,true,timeInterval_p);
 		}
+
+		// Set the table data manager (ISM and SSM) cache size to the full column size, for
+		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+		if (slurp_p) visibilityIterator_p->slurp();
+
+		// Apply channel selection
+		// CAS-3959: Channel selection is now going to be handled at the FlagAgent level
+		// applyChannelSelection(visibilityIterator_p);
+
+		// Group all the time stamps in one single buffer
+		// NOTE: Otherwise we have to iterate over Visibility Buffers
+		// that contain all the rows with the same time step.
+		if (groupTimeSteps_p)
+		{
+			// Set row blocking to a huge number
+			uLong maxChunkRows = selectedMeasurementSet_p->nrow();
+			visibilityIterator_p->setRowBlocking(maxChunkRows);
+
+			*logger_p << LogIO::NORMAL <<  "Setting row blocking to number of row in selected table: " << maxChunkRows << LogIO::POST;
+		}
+
+		// Get Visibility Buffer reference from VisibilityIterator
+		visibilityBuffer_p = visibilityIterator_p->getVisBuffer();
 
 		iteratorGenerated_p = true;
 		chunksInitialized_p = false;
@@ -539,7 +466,7 @@ FlagMSHandler::generateIterator()
 // therefore this step will in practice do nothing , because the spw and channel lists are empty too.
 // -----------------------------------------------------------------------
 void
-FlagMSHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
+FlagMSHandler::applyChannelSelection(vi::VisibilityIterator2 *visIter)
 {
 	// Apply channel selection (in row selection cannot be done with MSSelection)
 	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
@@ -555,7 +482,8 @@ FlagMSHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
 		channelStop = spwchan(selection_i,2);
 		channelStep = spwchan(selection_i,3);
 		channelWidth = channelStop-channelStart+1;
-		roVisIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
+		// jagonzal (TODO): Use the frequency selection capabilities of the new VI/VB framework
+		// visIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
 	}
 
 	return;
@@ -581,18 +509,18 @@ FlagMSHandler::nextChunk()
 		if (!chunksInitialized_p)
 		{
 			if (!iteratorGenerated_p) generateIterator();
-			roVisibilityIterator_p->originChunks();
+			visibilityIterator_p->originChunks();
 			chunksInitialized_p = true;
 			buffersInitialized_p = false;
 			chunkNo++;
 			bufferNo = 0;
 			moreChunks = true;
-		}
+}
 		else
 		{
-			roVisibilityIterator_p->nextChunk();
+			visibilityIterator_p->nextChunk();
 
-			if (roVisibilityIterator_p->moreChunks())
+			if (visibilityIterator_p->moreChunks())
 			{
 				buffersInitialized_p = false;
 				moreChunks = true;
@@ -626,15 +554,7 @@ FlagMSHandler::nextBuffer()
 	{
 		if (!buffersInitialized_p)
 		{
-			// Group all the time stamps in one single buffer
-			// NOTE: Otherwise we have to iterate over Visibility Buffers
-			// that contain all the rows with the same time step.
-			if ((groupTimeSteps_p) and (!asyncio_enabled_p))
-			{
-				Int nRowChunk = roVisibilityIterator_p->nRowChunk();
-				roVisibilityIterator_p->setRowBlocking(nRowChunk);
-			}
-			roVisibilityIterator_p->origin();
+			visibilityIterator_p->origin();
 			buffersInitialized_p = true;
 
 			if (!asyncio_enabled_p) preFetchColumns();
@@ -652,10 +572,10 @@ FlagMSHandler::nextBuffer()
 			// WARNING: ++ operator is defined for VisibilityIterator class ("advance" function)
 			// but if you define a VisibilityIterator pointer, then  ++ operator does not call
 			// the advance function but increments the pointers.
-			(*roVisibilityIterator_p)++;
+			visibilityIterator_p->next();
 
 			// WARNING: We iterate and afterwards check if the iterator is valid
-			if (roVisibilityIterator_p->more())
+			if (visibilityIterator_p->more())
 			{
 				if (!asyncio_enabled_p) preFetchColumns();
 				if (mapAntennaPairs_p) generateAntennaPairMap();
@@ -674,14 +594,14 @@ FlagMSHandler::nextBuffer()
 	if (moreBuffers)
 	{
 		// Get flag  (WARNING: We have to modify the shape of the cube before re-assigning it)
-		Cube<Bool> curentFlagCube= visibilityBuffer_p->get()->flagCube();
+		Cube<Bool> curentFlagCube= visibilityBuffer_p->flagCube();
 		modifiedFlagCube_p.resize(curentFlagCube.shape());
 		modifiedFlagCube_p = curentFlagCube;
 		originalFlagCube_p.resize(curentFlagCube.shape());
 		originalFlagCube_p = curentFlagCube;
 
 		// Get flag row (WARNING: We have to modify the shape of the cube before re-assigning it)
-		Vector<Bool> curentflagRow= visibilityBuffer_p->get()->flagRow();
+		Vector<Bool> curentflagRow= visibilityBuffer_p->flagRow();
 		modifiedFlagRow_p.resize(curentflagRow.shape());
 		modifiedFlagRow_p = curentflagRow;
 		originalFlagRow_p.resize(curentflagRow.shape());
@@ -696,12 +616,12 @@ FlagMSHandler::nextBuffer()
 		// Print chunk characteristics
 		if (bufferNo == 1)
 		{
-			processedRows += roVisibilityIterator_p->nRowChunk();
+			processedRows += visibilityIterator_p->nRowsInChunk();
 			if (printChunkSummary_p)
 			{
 				logger_p->origin(LogOrigin("FlagMSHandler",""));
 				String corrs = "[ ";
-				for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->get()->nCorr();corr_i++)
+				for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->nCorrelations();corr_i++)
 				{
 					corrs += (*polarizationIndexMap_p)[corr_i] + " ";
 				}
@@ -713,14 +633,14 @@ FlagMSHandler::nextBuffer()
 				  "------------------------------------------------------------------------------------ " << LogIO::POST;
 				*logger_p << LogIO::NORMAL <<
 						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
-						", Observation = " << visibilityBuffer_p->get()->observationId()[0] <<
-						", Array = " << visibilityBuffer_p->get()->arrayId() <<
-						", Scan = " << visibilityBuffer_p->get()->scan0() <<
-						", Field = " << visibilityBuffer_p->get()->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->get()->fieldId()) << ")"
-						", Spw = " << visibilityBuffer_p->get()->spectralWindow() <<
-						", Channels = " << visibilityBuffer_p->get()->nChannel() <<
+						", Observation = " << visibilityBuffer_p->observationId()[0] <<
+						", Array = " << visibilityBuffer_p->arrayId() <<
+						", Scan = " << visibilityBuffer_p->scan()[0] <<
+						", Field = " << visibilityBuffer_p->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
+						", Spw = " << visibilityBuffer_p->spectralWindow() <<
+						", Channels = " << visibilityBuffer_p->nChannels() <<
 						", Corrs = " << corrs <<
-						", Total Rows = " << roVisibilityIterator_p->nRowChunk() << LogIO::POST;
+						", Total Rows = " << visibilityIterator_p->nRowsInChunk() << LogIO::POST;
 			}
 		}
 	}
@@ -748,15 +668,15 @@ FlagMSHandler::generateScanStartStopMap()
 
 	if (scanStartStopMap_p == NULL) scanStartStopMap_p = new scanStartStopMap();
 
-	scans = rwVisibilityIterator_p->scan(scans);
-	times = rwVisibilityIterator_p->time(times);
+	scans = visibilityIterator_p->getVisBuffer()->scan();
+	times = visibilityIterator_p->getVisBuffer()->time();
 
 	// Check if anything is flagged in this buffer
 	scanStartRow = 0;
 	scanStopRow = times.size()-1;
 	if (mapScanStartStopFlagged_p)
 	{
-		flags = rwVisibilityIterator_p->flag(flags);
+		flags = visibilityIterator_p->getVisBuffer()->flagCube();
 		IPosition shape = flags.shape();
 		ncorrs = shape[0];
 		nchannels = shape[1];
@@ -850,13 +770,13 @@ FlagMSHandler::flushFlags()
 {
 	if (flushFlags_p)
 	{
-		rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
+		visibilityIterator_p->writeFlag(modifiedFlagCube_p);
 		flushFlags_p = false;
 	}
 
 	if ((flushFlagRow_p) and (!inrowSelection_p))
 	{
-		rwVisibilityIterator_p->setFlagRow(modifiedFlagRow_p);
+		visibilityIterator_p->writeFlagRow(modifiedFlagRow_p);
 		flushFlagRow_p = false;
 	}
 

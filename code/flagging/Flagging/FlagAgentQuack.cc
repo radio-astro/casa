@@ -127,7 +127,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 }
 
 bool
-FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &/*flags*/, uInt row)
+FlagAgentQuack::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &/*flags*/, uInt row)
 {
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 

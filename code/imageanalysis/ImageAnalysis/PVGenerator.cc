@@ -43,12 +43,12 @@ const String PVGenerator::_class = "PVGenerator";
 
 PVGenerator::PVGenerator(
 	const ImageInterface<Float> *const image,
-	const String& region, const Record *const regionRec,
+	const Record *const &regionRec,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
 	const Bool overwrite
 ) : ImageTask(
-		image, region, regionRec, "", chanInp, stokes,
+		image, "", regionRec, "", chanInp, stokes,
 		maskInp, outname, overwrite
 	), _start(0), _end(0), _halfwidth(0) {
 	_construct();

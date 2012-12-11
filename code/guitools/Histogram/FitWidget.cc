@@ -229,4 +229,10 @@ FitWidget::~FitWidget(){
 	delete fitterGaussian;
 	delete fitterPoisson;
 }
+
+void FitWidget::toAscii( QTextStream& out) const {
+	out << "Fit Information"<<"\n";
+	fitter->toAscii(out);
+
+}
 }

@@ -95,7 +95,6 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		False, AxesSpecifier(), _getStretch()
 	);
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-
 	if (! anyTrue(subImage.getMask())) {
 		*_getLog() << "All selected pixels are masked" << LogIO::EXCEPTION;
 	}
@@ -150,7 +149,8 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		_doMedian(subImage, outImage);
 	}
 	else {
-		if (subImage.getMask().size() > 0) {
+		if (subImage.getMask().size() > 0 && ! allTrue(subImage.getMask())) {
+			// mask with one or more False values, must use lower performance methods
 			LatticeStatsBase::StatisticsTypes lattStatType;
 			switch(_aggType) {
 			case MAX:
@@ -180,10 +180,10 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			default:
 				*_getLog() << "Logic error. Should never have gotten the the bottom of the switch statement"
 					<< LogIO::EXCEPTION;
+				break;
 			}
 			Array<Float> data;
 			Array<Bool> mask;
-			IPosition x;
 			LatticeUtilities::collapse(
 				data, mask, _axes, subImage, False,
 				True, True, lattStatType
@@ -210,17 +210,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 				}
 			}
 			outImage->put(reorderArray(dataCopy, newOrder));
-			Bool needsMask = False;
-			for (
-				Array<Bool>::const_iterator iter = mask.begin();
-				iter != mask.end(); iter++
-			) {
-				if (! *iter) {
-					needsMask = True;
-					break;
-				}
-			}
-			if (needsMask) {
+			if (! allTrue(mask)) {
 				Array<Bool> maskCopy = (
 					_axes.size() <= 1)
 					? mask

@@ -42,6 +42,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
+#include <qwt_text_label.h>
 
 namespace casa {
 
@@ -50,7 +51,8 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 		bool plotModeControls, QWidget* parent ):
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
-    histogramMaker( NULL ), image( NULL ), binPlot( this ), contextMenuZoom(this),
+    histogramMaker( NULL ), image( NULL ), binPlot( this ),
+    NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), contextMenuZoom(this),
     zoomRangeAction( "Zoom Range", this), zoom95Action( "Zoom 95% of Peak", this),
     zoom98Action("Zoom 98% of Peak", this), zoom995Action ( "Zoom 99.5% of Peak", this),
     zoom999Action( "Zoom 99.9% of Peak", this), zoomNeutralAction( "Zoom Neutral", this),
@@ -138,8 +140,12 @@ void BinPlotWidget::resetPlotTitle(){
 void BinPlotWidget::setHistogramColor( QColor color ){
 	if ( curveColor != color ){
 		curveColor = color;
-		this->clearCurves();
-		this->defineCurve();
+		for( int i = 0; i <curves.size(); i++ ){
+			QPen pen = curves[i]->pen();
+			pen.setColor( curveColor );
+			curves[i]->setPen( pen );
+		}
+		binPlot.replot();
 	}
 }
 
@@ -167,6 +173,14 @@ void BinPlotWidget::setFitCurveColor( QColor color ){
 			binPlot.replot();
 		}
 	}
+}
+
+bool BinPlotWidget::isEmpty() const {
+	bool empty = false;
+	if ( xVector.size() == 0 ){
+		empty = true;
+	}
+	return empty;
 }
 
 //-------------------------------------------------------------------------------
@@ -376,6 +390,8 @@ int BinPlotWidget::getPeakIndex() const {
 }
 
 void BinPlotWidget::zoomRangeMarker( double startValue, double endValue ){
+	clearGaussianFitMarker();
+	clearPoissonFitMarker();
 	pair<double,double> worldRange = rangeControlWidget->getMinMaxValues();
 	double worldMin = qMax( worldRange.first, startValue );
 	double worldMax = qMin( worldRange.second, endValue );
@@ -429,18 +445,26 @@ void BinPlotWidget::zoom( float percent ){
 }
 
 void BinPlotWidget::zoomRange( bool rangeZoom ){
-	if ( rangeZoom ){
-		int lowerBound = this->rectMarker->getLowerBound();
-		int upperBound = rectMarker ->getUpperBound();
-		if ( lowerBound < upperBound ){
-			//Change to world coordinates
-			double lowerBoundWorld = binPlot.invTransform( QwtPlot::xBottom, lowerBound );
-			double upperBoundWorld = binPlot.invTransform( QwtPlot::xBottom, upperBound );
-			binPlot.setAxisScale( QwtPlot::xBottom, lowerBoundWorld, upperBoundWorld );
-			zoomRangeMarker( lowerBoundWorld, upperBoundWorld );
-			binPlot.replot();
+	if ( !isEmpty() ){
+		if ( rangeZoom ){
+			int lowerBound = rectMarker->getLowerBound();
+			int upperBound = rectMarker ->getUpperBound();
+			if ( lowerBound < upperBound ){
+				//Change to world coordinates
+				double lowerBoundWorld = binPlot.invTransform( QwtPlot::xBottom, lowerBound );
+				double upperBoundWorld = binPlot.invTransform( QwtPlot::xBottom, upperBound );
+				binPlot.setAxisScale( QwtPlot::xBottom, lowerBoundWorld, upperBoundWorld );
+				zoomRangeMarker( lowerBoundWorld, upperBoundWorld );
+				binPlot.replot();
+			}
+			else {
+				QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
+				zoomNeutralAction.setChecked( true );
+			}
 		}
-		else {
+	}
+	else {
+		if ( rangeZoom ){
 			QMessageBox::warning( this, "Range Not Specified", "Please specify a zoom range on the x-axis by dragging the left mouse.");
 			zoomNeutralAction.setChecked( true );
 		}
@@ -449,35 +473,61 @@ void BinPlotWidget::zoomRange( bool rangeZoom ){
 
 void BinPlotWidget::zoomNeutral( bool neutralZoom ){
 	if ( neutralZoom ){
-		float lastValue = xVector[xVector.size() - 1];
-		float firstValue = xVector[0];
-		binPlot.setAxisScale( QwtPlot::xBottom, firstValue, lastValue);
-		zoomRangeMarker( firstValue, lastValue );
-		binPlot.replot();
+		if ( !isEmpty() ){
+			float lastValue = xVector[xVector.size() - 1];
+			float firstValue = xVector[0];
+			binPlot.setAxisScale( QwtPlot::xBottom, firstValue, lastValue);
+			zoomRangeMarker( firstValue, lastValue );
+			binPlot.replot();
+		}
 	}
 }
 
 void BinPlotWidget::zoom95( bool zoomValues ){
 	if ( zoomValues ){
-		zoom( 0.95f);
+		if ( !isEmpty() ){
+			zoom( 0.95f);
+		}
+		else {
+			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
+			zoomNeutralAction.setChecked( true );
+		}
 	}
 }
 
 void BinPlotWidget::zoom98( bool zoomValues ){
 	if ( zoomValues ){
-		zoom( 0.98f );
+		if ( !isEmpty() ){
+			zoom( 0.98f );
+		}
+		else {
+			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
+			zoomNeutralAction.setChecked( true );
+		}
 	}
 }
 
 void BinPlotWidget::zoom995( bool zoomValues ){
 	if ( zoomValues ){
-		zoom( 0.995f );
+		if ( !isEmpty() ){
+			zoom( 0.995f );
+		}
+		else {
+			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
+			zoomNeutralAction.setChecked( true );
+		}
 	}
 }
 
 void BinPlotWidget::zoom999( bool zoomValues ){
 	if ( zoomValues ){
-		zoom( 0.999f );
+		if ( !isEmpty() ){
+			zoom( 0.999f );
+		}
+		else {
+			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
+			zoomNeutralAction.setChecked( true );
+		}
 	}
 }
 void BinPlotWidget::addZoomActions( QMenu* zoomMenu ){
@@ -543,6 +593,9 @@ void BinPlotWidget::initializeFitWidget( bool fitControls ){
 	fitCurve = NULL;
 	fitEstimateMarkerGaussian = NULL;
 	fitEstimateMarkerPoisson = NULL;
+	setContextMenuPolicy( Qt::CustomContextMenu);
+	connect( this, SIGNAL(customContextMenuRequested( const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
+
 	if ( fitControls ){
 		QVBoxLayout* fitLayout = new QVBoxLayout();
 		fitWidget = new FitWidget( this );
@@ -551,8 +604,6 @@ void BinPlotWidget::initializeFitWidget( bool fitControls ){
 		ui.fitWidgetHolder->setLayout( fitLayout );
 		fitModeChanged();
 
-		setContextMenuPolicy( Qt::CustomContextMenu);
-		connect( this, SIGNAL(customContextMenuRequested( const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
 		connect( fitWidget, SIGNAL(fitModeChanged()), this, SLOT(fitModeChanged()));
 		connect( fitWidget, SIGNAL(fitCleared()), this, SLOT(clearFit()));
 		connect( fitWidget, SIGNAL(dataFitted(const QString&)), this, SLOT(fitDone(const QString&)));
@@ -564,7 +615,6 @@ void BinPlotWidget::initializeFitWidget( bool fitControls ){
 	}
 	else {
 		fitWidget = NULL;
-		setContextMenuPolicy( Qt::NoContextMenu );
 	}
 }
 
@@ -672,17 +722,27 @@ void BinPlotWidget::showContextMenu( const QPoint& pt ){
 		if ( contextMenuMode == FIT_CONTEXT ){
 			//Change x by the amount the y-axis takes up.
 			QRect plotGeom = ui.plotHolder->geometry();
-			int yAxisSpace = ui.plotHolder->width() - binPlot.canvas()->width();
+			QwtPlotCanvas* plotCanvas = binPlot.canvas();
+			int yAxisSpace = binPlot.width() - plotCanvas->width();
+			QwtTextLabel* titleLabel = binPlot.titleLabel();
+			int titleSpace = 0;
+			if ( titleLabel != NULL ){
+				titleSpace = titleLabel->sizeHint().height();
+			}
 			int adjustedX = x - yAxisSpace - plotGeom.x();
-			int adjustedY = y - plotGeom.y();
+			int adjustedY = y - titleSpace - plotGeom.y();
 			fitPosition = QPoint( adjustedX, adjustedY);
-			contextMenu.exec( globalPos );
+			if ( ! isEmpty() ){
+				contextMenu.exec( globalPos );
+			}
 		}
 		else if ( contextMenuMode == DISPLAY_CONTEXT ){
 			contextMenuDisplay.exec( globalPos );
 		}
 		else if ( contextMenuMode == ZOOM_CONTEXT ){
-			contextMenuZoom.exec( globalPos );
+			if ( ! isEmpty() ){
+				contextMenuZoom.exec( globalPos );
+			}
 		}
 	}
 	contextMenuMode = ZOOM_CONTEXT;
@@ -947,7 +1007,7 @@ void BinPlotWidget::setValidatorLimits(){
 
 void BinPlotWidget::clearCurves(){
 	while( ! curves.isEmpty() ){
-		QwtPlotCurve* curve = curves.takeFirst();
+		QwtPlotCurve* curve = curves.takeLast();
 		curve->detach();
 		delete curve;
 	}
@@ -1022,6 +1082,7 @@ void BinPlotWidget::minMaxChanged(){
 	else {
 		qWarning() << "Range tools need to be enabled for minMaxChanged";
 	}
+	emit rangeChanged();
 }
 
 void BinPlotWidget::clearRange(){
@@ -1047,13 +1108,36 @@ int BinPlotWidget::getCanvasHeight() {
 void BinPlotWidget::toAscii( const QString& filePath ){
 	QFile file( filePath );
 	bool success = file.open( QIODevice::WriteOnly | QIODevice::Text );
+	const QString LINE_END( "\n");
 	if ( success ){
+		bool addFitValues = false;
+		Vector<float> fitValues;
+		if ( fitWidget != NULL ){
+			fitValues = fitWidget->getFitValues();
+			if ( fitValues.size() > 0 ){
+				addFitValues = true;
+			}
+		}
 		QTextStream out( &file );
 		out.setFieldWidth( 20 );
-		out << "Intensity" << "Count" << "\n";
+		out << "Intensity" << "Count";
+		if ( addFitValues ){
+			out << "Fit Count";
+		}
+		out << LINE_END;
 		out.flush();
 		for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
-			out << QString::number(xVector[i]) << QString::number( yVector[i]) << '\n';
+			out << QString::number(xVector[i]) << QString::number( yVector[i]);
+			if ( addFitValues ){
+				out << QString::number(fitValues[i]);
+			}
+			out << LINE_END;
+			out.flush();
+		}
+
+		if ( addFitValues ){
+			out << LINE_END << LINE_END;
+			fitWidget->toAscii( out );
 			out.flush();
 		}
 		file.close();
@@ -1062,6 +1146,8 @@ void BinPlotWidget::toAscii( const QString& filePath ){
 		QMessageBox::warning( this, "Save Problem", "There was a problem saving the image.\nPlease check the file path.");
 	}
 }
+
+
 void BinPlotWidget::toPing( const QString& filePath, int width, int height ){
 
 	QPixmap pixmap(width, height);

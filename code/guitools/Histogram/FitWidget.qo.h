@@ -26,6 +26,7 @@
 #define FITWIDGET_QO_H
 
 #include <QtGui/QWidget>
+#include <QTextStream>
 #include <guitools/Histogram/FitWidget.ui.h>
 #include <casa/Arrays/Vector.h>
 
@@ -55,6 +56,7 @@ public:
     double getLambda() const;
     Vector<Float> getFitValues();
     bool isGaussian() const;
+    void toAscii( QTextStream& out) const;
     ~FitWidget();
 
 signals:

@@ -28,7 +28,6 @@
 #include <images/Images/ImageAnalysis.h>
 
 #include <display/QtPlotter/ProfileTaskMonitor.h>
-//#include <display/QtPlotter/MomentCollapseThreadRadio.h>
 #include <display/QtPlotter/ThresholdingBinPlotDialog.qo.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/Util.h>
@@ -603,6 +602,7 @@ void MomentSettingsWidgetRadio::thresholdingChanged( ){
 
 	ui.maxThresholdLineEdit->setEnabled( enabled );
 	ui.symmetricIntervalCheckBox->setEnabled( enabled );
+	ui.graphThresholdButton->setEnabled( enabled );
 	if ( !ui.symmetricIntervalCheckBox->isChecked() ){
 		ui.minThresholdLineEdit->setEnabled( enabled );
 	}

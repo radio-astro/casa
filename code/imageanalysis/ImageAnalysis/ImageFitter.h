@@ -146,9 +146,9 @@ public:
 
 private:
 	String _regionString, _residual, _model,
-		estimatesString, _newEstimatesFileName, _compListName, _bUnit;
+		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
 	Vector<Float> _includePixelRange, _excludePixelRange;
-	ComponentList estimates, _curResults;
+	ComponentList _estimates, _curResults;
 	Vector<String> _fixed;
 	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
 	Vector<Bool> _fitConverged;
@@ -225,7 +225,7 @@ private:
 	    Double& zeroLevelOffsetSolution,
 	    Double& zeroLevelOffsetError,
 	    const uInt& chan,
-		const Vector<String>& models, Record& inputEstimate,
+		const Vector<String>& models,
 		const Bool fitIt,
 		const Bool deconvolveIt, const Bool list,
 		const Double zeroLevelEstimate

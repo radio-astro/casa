@@ -31,8 +31,8 @@ FlagAgentRFlag::FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePri
 	setAgentParameters(config);
 
 	// Request pre-loading spw
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
-	flagDataHandler_p->preLoadColumn(VisBufferComponents::Freq);
+	flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
+	// flagDataHandler_p->preLoadColumn(vi::Freq);
 
 	// Initialize parameters for robust stats (spectral analysis)
 	nIterationsRobust_p = 12;
@@ -1002,7 +1002,7 @@ void FlagAgentRFlag::simpleMedian(	uInt timestep_i,
 }
 
 bool
-FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,
+FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,
                                         FlagMapper &flags,Int /*antenna1*/,Int /*antenna2*/,vector<uInt> &/*rows*/)
 {
 	// Set logger origin
@@ -1063,7 +1063,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 	// Initialize frequency array has to be initialized
 	if (initFreq)
 	{
-		Vector<Double> freqInHz = visBuffer.frequency();
+		Vector<Double> freqInHz = visBuffer.getFrequencies(0,MFrequency::TOPO);
 		// jagonzal (CAS-4312): We have to take into account channel selection for the frequency mapping
 		for (uInt channel_idx=0;channel_idx < channelIndex_p.size();channel_idx++)
 		{
@@ -1110,7 +1110,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &v
 }
 
 void
-FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
+FlagAgentRFlag::passIntermediate(const vi::VisBuffer2 &visBuffer)
 {
 	// Set logger origin
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
@@ -1144,7 +1144,7 @@ FlagAgentRFlag::passIntermediate(const VisBuffer &visBuffer)
 }
 
 void
-FlagAgentRFlag::passFinal(const VisBuffer &visBuffer)
+FlagAgentRFlag::passFinal(const vi::VisBuffer2 &visBuffer)
 {
 
 	// Make field-spw pair

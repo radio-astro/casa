@@ -45,6 +45,7 @@ public:
 	double getFWHM() const;
 	virtual bool doFit();
 	virtual void clearFit();
+	virtual void toAscii( QTextStream& stream ) const;
 	virtual ~FitterGaussian();
 private:
 	bool estimateCenterPeak();

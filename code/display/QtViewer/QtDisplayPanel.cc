@@ -1192,6 +1192,7 @@ void QtDisplayPanel::updateColorBarDDLists_() {
 
 	// Create new allColorBarDDs_ List (paring down from all registered DDs).
 	allColorBarDDs_ = registeredDDs();
+
 	for(ListIter<QtDisplayData*> acbdds(allColorBarDDs_); !acbdds.atEnd(); ) {
 		QtDisplayData* cbdd = acbdds.getRight();
 
@@ -1638,12 +1639,17 @@ void QtDisplayPanel::plotCountChangeAdjustment(){
 		//Determine if we are supposed to be displaying a color bar
 		QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
 		Record record = qtDisplayData->getOptions();
-		String wedgeDisplayStr = record.subRecord(WedgeDD::WEDGE_PREFIX).asString("value");
-		if ( wedgeDisplayStr == QtDisplayData::WEDGE_YES ){
-			//We are supposed to be displaying a color bar, so make sure the
-			//flag is set that indicates the color bar is displayable
-			DisplayData* displayData = qtDisplayData->dd();
-			displayData->setDisplayState( DisplayData::DISPLAYED);
+		try {
+			String wedgeDisplayStr = record.subRecord(WedgeDD::WEDGE_PREFIX).asString("value");
+			if ( wedgeDisplayStr == QtDisplayData::WEDGE_YES ){
+				//We are supposed to be displaying a color bar, so make sure the
+				//flag is set that indicates the color bar is displayable
+				DisplayData* displayData = qtDisplayData->dd();
+				displayData->setDisplayState( DisplayData::DISPLAYED);
+			}
+		}
+		catch( AipsError& error ){
+			//qDebug() <<"Display data "<<qtDisplayData->name().c_str()<<" did not have a wedge";
 		}
 	}
 }

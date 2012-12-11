@@ -49,13 +49,13 @@ protected:
 	void setAgentParameters(Record config);
 
 	// Compute flags for a given (time,freq) map
-	bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Extract automatically computed thresholds to use them in the next pass
-	void passIntermediate(const VisBuffer &visBuffer);
+	void passIntermediate(const vi::VisBuffer2 &visBuffer);
 
 	// Remove automatically computed thresholds for the following scans
-	void passFinal(const VisBuffer &visBuffer);
+	void passFinal(const vi::VisBuffer2 &visBuffer);
 
 	// Convenience function to get simple averages
 	Double mean(vector<Double> &data,vector<Double> &counts);

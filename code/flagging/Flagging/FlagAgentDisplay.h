@@ -53,9 +53,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     
     // Compute flags for a given (time,freq) map
-    bool computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
+    bool computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
 
-    void preProcessBuffer(const VisBuffer &visBuffer);
+    void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
     
     // Choose how to step through the baselines in the current chunk
     void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
@@ -71,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool buildReportPlotWindow();
 
 
-    void getChunkInfo(const VisBuffer &visBuffer);
+    void getChunkInfo(const vi::VisBuffer2 &visBuffer);
     Bool skipBaseline(std::pair<Int,Int> antennaPair);
  
     void getUserInput();
