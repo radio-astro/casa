@@ -142,11 +142,14 @@ public:
 // The position of other values can be calculated from index and shape
 // using function <src>toPositionInArray</src> in class
 // <linkto class=IPosition>IPosition</linkto>.
-    virtual void process (uInt accumIndex1, uInt accumIndex3,
-			  const T* inData, const Bool* inMask,
-			  uInt inIncr, uInt nrval,
-			  const IPosition& startPos,
-			  const IPosition& shape) = 0;
+    virtual void process (
+    	uInt accumIndex1, uInt accumIndex3,
+    	const T* inData, const Bool* inMask,
+    	uInt inDataIncr, uInt inMaskIncr,
+    	uInt nrval,
+    	const IPosition& startPos,
+    	const IPosition& shape
+    ) = 0;
 
 // End the accumulator. It should return the accumulator as an
 // Array of datatype U (e.g. double the precision of type T) 
