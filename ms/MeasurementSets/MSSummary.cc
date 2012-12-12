@@ -78,9 +78,9 @@ MSSummary::MSSummary (const MeasurementSet* ms)
 
 MSSummary::MSSummary (const MeasurementSet* ms, const String msname)
 : pMS(ms),
-  msname_p(msname),
   dashlin1(replicate("-",80)),
-  dashlin2(replicate("=",80))
+  dashlin2(replicate("=",80)),
+  msname_p(msname)
 {}
 //
 // Destructor does nothing
@@ -304,7 +304,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Int widthetime = 10;
 		Int widthFieldId = 5;
 		Int widthField = 20;
-		Int widthObsMode = 20;
 		Int widthnrow = 7;
 		Int widthInttim = 7;
 
@@ -685,7 +684,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 	ROMSColumns msc(*pMS);
 	Double startTime, stopTime;
 	minMax(startTime, stopTime, msc.time().getColumn());
-	Double exposTime = stopTime - startTime;
 
 	MVTime startMVT(startTime/86400.0), stopMVT(stopTime/86400.0);
 
@@ -727,7 +725,6 @@ void MSSummary::getScanSummary (Record& outRec) const
 	TableIterator obsarriter(mstab,icols);
 	//Limiting record length
 	Int recLength=0;
-	const Int maxRecLength=10000; //limiting for speed and size sake
 	// Iterate:
 	while (!obsarriter.pastEnd()) {
 
@@ -736,9 +733,7 @@ void MSSummary::getScanSummary (Record& outRec) const
 
 		// Extract (zero-based) OBSID and ARRID for this iteration:
 		ROTableVector<Int> obsidcol(obsarrtab,"OBSERVATION_ID");
-		Int obsid(obsidcol(0));
 		ROTableVector<Int> arridcol(obsarrtab,"ARRAY_ID");
-		Int arrid(arridcol(0));
 
 		// Report OBSID and ARRID, and header for listing:
 		// 	os << endl << "   ObservationID = " << obsid;
@@ -1667,6 +1662,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		// Define the column widths
 		Int widthLead	=  2;
 		Int widthSpwId       =  7;
+		Int widthName = 10;
 		Int widthFrame      =  6;
 		Int widthFreq	= 12;
 		Int widthFrqNum	= 12;
@@ -1678,6 +1674,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().setf(ios::left, ios::adjustfield);
 		os.output().width(widthLead);	os << "  ";
 		os.output().width(widthSpwId);	os << "SpwID  ";
+		os.output().width(widthName);	os << "Name  ";
 		os.output().setf(ios::right, ios::adjustfield);
 		os.output().width(widthNumChan);	os << "#Chans" << " ";
 		os.output().setf(ios::left, ios::adjustfield);
@@ -1700,26 +1697,30 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os.output().width(widthLead);		os << "  ";
 			// 1th column: Spectral Window Id
 			os.output().width(widthSpwId); os << (spw);
-			// 2nd column: number of channels in the spectral window
+			// 2nd column: SPW name
+			os.output().width(widthName);
+			os << msSWC.name()(spw) << " ";
+
+			// 3rd column: number of channels in the spectral window
 			os.output().setf(ios::right, ios::adjustfield);
 			os.output().width(widthNumChan);		os << msSWC.numChan()(spw) << " ";
-			// 3rd column: Reference Frame info
+			// 4th column: Reference Frame info
 			os.output().setf(ios::left, ios::adjustfield);
 			os.output().width(widthFrame);
 			os<< msSWC.refFrequencyMeas()(spw).getRefString();
-			// 4th column: Chan 1 freq (may be at high freq end of band!)
+			// 5th column: Chan 1 freq (may be at high freq end of band!)
 			os.output().width(widthFrqNum);
 			os<< msSWC.chanFreq()(spw)(IPosition(1,0))/1.0e6;
-			// 5th column: channel resolution
+			// 6th column: channel resolution
 			os.output().width(widthFrqNum+2);
 			os << msSWC.chanWidth()(spw)(IPosition(1,0))/1000;
-			// 6th column: total bandwidth of the spectral window
+			// 7th column: total bandwidth of the spectral window
 			os.output().width(widthFrqNum);
 			os<< msSWC.totalBandwidth()(spw)/1000;
-			// 7th column: reference frequency
+			// 8th column: reference frequency
 			//			os.output().width(widthFrqNum);
 			//			os<< msSWC.refFrequency()(spw)/1.0e6;
-			// 7th column: the correlation type(s)
+			// 9th column: the correlation type(s)
 			for (uInt j=0; j<msPolC.corrType()(pol).nelements(); j++) {
 				os.output().width(widthCorrType);
 				Int index = msPolC.corrType()(pol)(IPosition(1,j));
