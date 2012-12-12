@@ -87,6 +87,7 @@ casa_add_library( tools
  ms/msmetadata_cmpt.cc
  ms/msplot_cmpt.cc
  ms/MSPlot/MsPlot.cc
+ mstransformer/mstransformer_cmpt.cc
  nrao/vlafillertask_cmpt.cc
  plotms/plotms_cmpt.cc
  scimath/fitter_cmpt.cc
@@ -146,6 +147,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  ms/msplot.xml
  ms/ms.xml
  ms/msmetadata.xml
+ mstransformer/mstransformer.xml
  nrao/vlafillertask.xml
  plotms/plotms.xml
  scimath/fitter.xml

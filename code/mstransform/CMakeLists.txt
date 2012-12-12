@@ -20,10 +20,12 @@
 
 casa_add_library( mstransform 
  MSTransform/MSTransformDataHandler.cc 
+ MSTransform/MSTransform.cc
 )
 
 install (FILES
 	MSTransform/MSTransformDataHandler.h
+    MSTransform/MSTransform.h
 	DESTINATION include/casacode/mstransform/MSTransform
 	)
 

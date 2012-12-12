@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="mstransform" category="manipulation" visibility="experimental">
+     <shortdescription>This task can replace applycal, concat, cvel, partition and split.</shortdescription>
+
+<description>
+    mstransform is a task that can do the same functionalities available
+    in concat, cvel, partition and split without the need to read and write
+    the output to the disk multiple times. 
+
+</description>
+
+<input>
+
+    <param type="any" name="vis" mustexist="true">
+        <description>Name of input Measurement set(s) or Multi-MS(s).</description>
+		<any type="variant" limittypes="string stringArray"/>
+        <value type="string"></value>
+    </param>
+
+    <!-- OUTPUT parameters -->    
+    <param type="string" name="outputvis">
+        <description>Name of output Measurement set or Multi-MS.</description>
+        <value></value>
+    </param>
+        <param type="bool" name="createmms">
+            <description>Create a multi-MS output.</description>
+            <value>True</value>
+        </param>
+        <param type="string" name="separationaxis" ignorecase="true" subparam="true">
+            <description>Axis to do parallelization across(scan,spw,both).</description>
+            <value>both</value>
+            <allowed kind="enum" ignorecase="true">
+                <value>both</value>
+                <value>spw</value>
+                <value>scan</value>
+            </allowed>
+        </param>
+        <param type="int" name="numsubms" subparam="true">
+            <description>The number of Sub-MSs to create.</description>
+            <value>64</value>
+        </param>
+
+<!--
+    <param type="string" name="optimizefor">
+        <description>Optimize output for specific case (continuum/spectralimaging).</description>
+        <value></value>
+    </param> -->
+
+    <param type="string" name="tileshape">
+        <description>Tile shape of the disk data columns.</description>
+        <value></value>
+    </param>
+
+    <!-- SELECTION parameters -->    
+    <param type="any" name="field">
+        <description>Select field using ID(s) or name(s).</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="spw">
+        <description>Select spectral window/channels.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="scan" >
+        <description>Select data by scan numbers.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="antenna">
+        <description>Select data based on antenna/baseline.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="correlation">
+        <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'.</description>
+        <any type="variant" limittypes="string stringArray" />
+        <value type="string" />
+    </param>
+
+    <param type="any" name="timerange" >
+        <description>Select data by time range.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="intent" >
+        <description>Select data by scan intent.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="array">
+        <description>Select (sub)array(s) by array ID number.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="uvrange" >
+        <description>Select data by baseline length.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="observation">
+        <description>Select by observation ID(s).</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="feed">
+        <description>Multi-feed numbers: Not yet implemented.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="datacolumn" ignorecase="True">
+        <description>Which data column(s) to process.</description>
+        <value>corrected</value>
+        <allowed kind="enum" ignorecase="True">
+            <value>corrected</value>
+            <value>data</value>
+            <value>model</value>
+            <value>data,model,corrected</value>
+            <value>float_data</value>
+            <value>lag_data</value>
+            <value>float_data,data</value>
+            <value>lag_data,data</value>
+            <value>all</value>
+        </allowed>
+    </param>
+
+        <param type="bool" name="realmodelcol" subparam="true">
+            <description>Make real a virtual MODEL column.</description>
+            <value>False</value>
+        </param>
+
+    <!-- SPW COMBINATION parameters -->
+    <param type="bool" name="combinespws">
+        <description>Combine the input spws into a new output spw.</description>
+        <value>False</value>
+    </param>
+    
+    <!-- FREQUENCY AVERAGING parameters -->
+    <param type="bool" name="freqaverage">
+        <description>Average data in frequency.</description>
+        <value>False</value>
+    </param>
+
+        <param type="int" name="freqbin" subparam="true">
+            <description>Width (bin) of input channels to average to form an output channel.</description>
+            <value type="int">10</value>
+        </param>
+
+        <param type="string" name="useweights" subparam="true">
+            <description>Type of weights to use in average (flags/spectral).</description>
+            <value type="string"></value>
+        </param>
+
+    <!-- HANNING SMOOTHING parameters -->
+    <param type="bool" name="hanning">
+        <description>Hanning smooth data to remove Gibbs ringing.</description>
+        <value>False</value>
+    </param>
+   
+    <!-- REGRID MS parameters -->
+    <param type="bool" name="regridms">
+        <description>Regrid the MS to a new spw, channel structure or frame.</description>
+        <value>False</value>
+    </param>
+
+        <param type="string" name="mode" subparam="true">
+            <description>Regridding mode (channel/velocity/frequency/channel_b).</description>
+            <value>channel</value>
+            <allowed kind="enum">
+            <value>channel</value>
+            <value>velocity</value>
+            <value>frequency</value>
+            <value>channel_b</value>
+            </allowed>
+        </param>
+
+        <param type="int" name="nchan" subparam="true">
+            <description>Number of channels in the output spw (-1=all).</description>
+            <value>-1</value>
+        </param>
+
+        <param type="any" name="start" subparam="true">
+            <description>First channel in input to use.</description>
+            <any type="variant"/>
+            <value type="int">0</value>
+        </param>
+
+        <param type="any" name="width" subparam="true">
+            <description>Number of input channels that are used to create an output channel.</description>
+            <any type="variant"/>
+            <value type="int">1</value>
+        </param>
+
+        <param type="string" name="interpolation" subparam="true" ignorecase="True">
+            <description>Spectral interpolation method.</description>
+            <value>linear</value>
+            <allowed kind="enum">
+               <value>nearest</value>
+               <value>linear</value>
+               <value>cubic</value>
+               <value>spline</value>
+               <value>fftshift</value>
+            </allowed>
+        </param>
+
+        <param type="any" name="phasecenter" subparam="true">
+            <description>Image phase center: position or field index.</description>
+            <any type="variant"/>
+            <value type="string"></value>
+        </param>
+
+        <param type="string" name="restfreq" subparam="true">
+            <description>Rest frequency to use for output.</description>
+            <value></value>
+        </param>
+    
+        <param type="string" name="outframe" subparam="true" ignorecase="True">
+            <description>Output reference frame (\'\'=keep input frame).</description>
+            <value></value>
+            <allowed kind="enum">
+            <value>topo</value>
+            <value>geo</value>
+            <value>lsrk</value>
+            <value>lsrd</value>
+            <value>bary</value>
+            <value>galacto</value>
+            <value>lgroup</value>
+            <value>cmb</value>
+            <value></value>
+            </allowed>
+        </param>
+
+        <param type="string" name="veltype" subparam="true" ignorecase="True">
+            <description>Velocity definition.</description>
+            <value>radio</value>
+            <allowed kind="enum">
+               <value>optical</value>
+               <value>radio</value>
+            </allowed>
+        </param>
+
+    <!-- SPW SEPARATION parameters -->
+    <param type="bool" name="separatespws">
+        <description>Separate spws in the given number.</description>
+        <value>False</value>
+    </param>
+
+        <param type="int" name="nspws" subparam="true">
+            <description>Number of output spws to split each input spw out.</description>
+            <value type="int">2</value>
+        </param>
+
+    <!-- TIME AVERAGING parameters -->
+    <param type="bool" name="timeaverage">
+        <description>Average data in time.</description>
+        <value>False</value>
+    </param>
+    
+        <param type="string" name="timebin" subparam="true">
+            <description>Bin width for time averaging.</description>     
+            <value type="string">0s</value>
+        </param>
+    
+        <param type="any" name="timespan" subparam="true">
+            <description>Let time bins span changes in scan and/or state.</description>
+            <any type="variant" limittypes="string stringArray"/>
+            <value type="string"></value>
+        </param>
+
+        <param type="double" name="quantize_c" subparam="true">
+            <description>Quantize time_centroids to the nearest multiple of short time interval.</description>
+            <value type="double">0.01</value>
+        </param>
+
+        <param type="int" name="minbaselines" subparam="true">
+            <description>Minimum number of baselines for averaging to start.</description>
+            <value type="int">2</value>
+        </param>
+    
+    <constraints>
+          <when param="createmms">
+            <equals type="bool" value="True">
+                  <default param="separationaxis"><value type="string">both</value></default>
+                  <default param="numsubms"><value type="int">64</value></default>
+            </equals>
+            <equals type="bool" value="False"/>
+          </when>
+          <when param="datacolumn">
+            <equals type="string" value="corrected"></equals>
+            <equals type="string" value="model">
+             	  <default param="realmodelcol"><value type="bool">False</value></default>           
+            </equals>         
+          </when>
+          <when param="freqaverage">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                  <default param="freqbin"><value type="int">10</value></default>
+                  <default param="useweights"><value type="string"></value></default>
+            </equals>
+          </when>
+        <when param="regridms">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                <default param="mode"><value type="string">channel</value></default>
+                <default param="nchan"><value type="int">-1</value></default>
+                <default param="start"><value type="int">0</value></default>
+                <default param="width"><value type="int">1</value></default>
+                <default param="interpolation"><value type="string">linear</value></default>
+                <default param="phasecenter"><value type="string"></value></default>
+                <default param="restfreq"><value type="string"></value></default>
+                <default param="outframe"><value type="string"></value></default>
+                <default param="veltype"><value type="string">radio</value></default>
+            </equals>
+          </when>
+        <when param="separatespws">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                <default param="nspws"><value type="int">2</value></default>
+            </equals>
+          </when>          
+        <when param="timeaverage">
+            <equals type="bool" value="False"/>
+            <equals type="bool" value="True">
+                  <default param="timebin"><value type="string">0s</value></default>
+                  <default param="timespan"><value type="string"></value></default>
+                  <default param="quantize_c"><value type="double">0.01</value></default>
+                  <default param="minbaselines"><value type="int">2</value></default>
+            </equals>
+          </when>
+    </constraints>
+
+</input>
+<example>
+
+    Experimental version of task mstransform.
+
+    NOTE: This first version of the task only implements the
+          combinespws transformation.
+
+    The task mstransform can do the same functionalities available
+    in concat, cvel, partition and split without the need to read and write
+    the output to the disk multiple times. The main features of this task
+    are:
+    
+    * multiple input MSs or MMSs
+    * ability to create an output MMS or multiple MSs
+    * spw combination and separation
+    * frequency averaging taking weights into account
+    * time averaging taking a minimum number of baselines
+    * reference frame transformation
+    * hanning smoothing
+    
+    All these transformations will be applied on the fly without any writing to
+    the disk to optimize I/O. When multiple input MSs are given in the input, it will
+    process them in parallel using CASA's cluster infrastructure. See simple_cluster
+    for more information on this.
+
+    This task is implemented in a modular way to preserve the functionalities
+    available in the replaced tasks. One can choose which functionality to apply
+    or apply all of them by setting the corresponding parameters to True. Note 
+    that there is an order in which the transformations are applied to the data that 
+    makes logical sense on the point of view of the data analysis. 
+
+    This task can create a multi-MS as the output. General selection
+    parameters are included, and one or all of the various data columns
+    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
+    CORRECTED_DATA) can be selected. It can also be used to create a normal
+    MS, split based on the given data selection parameters.
+  
+
+    Keyword arguments:
+
+--- Input/Output parameters ---
+    vis -- Name of input visibility file
+        default: ''; example: vis='ngc5921.ms'
+
+    outputvis -- Name of output visibility file
+        default: ''; example: outputvis='ngc5921.mms'
+
+    createmms -- Create a multi-MS as the output.
+        default: True
+
+        If False, it will work like the split task and create a
+        normal MS, split according to the given data selection parameters.
+        Note that, when this parameter is set to False, a simple_cluster
+        will not be created.
+
+        separationaxis -- Axis to do parallelization across. 
+            default: 'both'
+            options: 'scan', 'spw', 'both'
+            The 'both' option will try to partition in both scan and spw axes.
+
+        numsubms -- The number of sub-MSs to create (int).
+            default: 64
+                
+    tileshape -- Tile shape of the disk data columns.
+        default: ''
+
+
+--- Data selection parameters ---
+    field -- Select field using field id(s) or field name(s).
+             [run listobs to obtain the list iof d's or names]
+        default: ''=all fields If field string is a non-negative
+           integer, it is assumed to be a field index
+           otherwise, it is assumed to be a field name
+           field='0~2'; field ids 0,1,2
+           field='0,4,5~7'; field ids 0,4,5,6,7
+           field='3C286,3C295'; fields named 3C286 and 3C295
+           field = '3,4C*'; field id 3, all names starting with 4C
+
+    spw -- Select spectral window/channels
+        default: ''=all spectral windows and channels
+           spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+           spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+           spw='0:5~61'; spw 0, channels 5 to 61
+           spw='0,10,3:3~45'; spw 0,10 all channels, spw 3 - chans 3 to 45.
+           spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+           spw = '*:3~64'  channels 3 through 64 for all sp id's
+                   spw = ' :3~64' will NOT work.
+           spw = '*:0;60~63'  channel 0 and channels 60 to 63 for all IFs 
+                  ';' needed to separate different channel ranges in one spw
+           spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+           spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
+                    spw 1, channels 20-30, and spw 2, channels, 1, 2 and 4
+
+    scan -- Scan number range
+        default: ''=all
+
+    antenna -- Select data based on antenna/baseline
+        default: '' (all)
+            Non-negative integers are assumed to be antenna indices, and
+            anything else is taken as an antenna name.
+
+        examples:
+            antenna='5&amp;6': baseline between antenna index 5 and index 6.
+            antenna='VA05&amp;VA06': baseline between VLA antenna 5 and 6.
+            antenna='5&amp;6;7&amp;8': baselines 5-6 and 7-8
+            antenna='5': all baselines with antenna 5
+            antenna='5,6,10': all baselines including antennas 5, 6, or 10
+            antenna='5,6,10&amp;': all baselines with *only* antennas 5, 6, or
+                                   10.  (cross-correlations only.  Use &amp;&amp;
+                                   to include autocorrelations, and &amp;&amp;&amp;
+                                   to get only autocorrelations.)
+            antenna='!ea03,ea12,ea17': all baselines except those that
+                                       include EVLA antennas ea03, ea12, or
+                                       ea17.
+
+    correlation -- Correlation types or expression.
+        default: '' (all correlations)
+        example: correlation='XX,YY' 
+
+    timerange -- Select data based on time range:
+        default = '' (all); examples,
+           timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+           Note: if YYYY/MM/DD is missing date, timerange defaults to the
+           first day in the dataset
+           timerange='09:14:0~09:54:0' picks 40 min on first day
+           timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 30min
+           on next day
+           timerange='09:44:00' data within one integration of time
+           timerange='&gt;10:24:00' data after this time
+
+    array -- (Sub)array number range
+        default: ''=all
+
+    uvrange -- Select data within uvrange (default units meters)
+        default: ''=all; example:
+            uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+            uvrange='&gt;4klambda';uvranges greater than 4 kilo-lambda
+            uvrange='0~1000km'; uvrange in kilometers
+
+    observation -- Select by observation ID(s)
+        default: ''=all
+
+    feed -- Selection based on the feed - NOT IMPLEMENTED YET
+        default: ''=all
+
+
+    datacolumn -- Which data column to use for processing (case-insensitive).
+        default='corrected'; example: datacolumn='data'
+        options: 'data', 'model', 'corrected', 'all','float_data', 'lag_data', 
+                 'float_data,data', 'lag_data,data'.
+
+            N.B.: 'all' = whichever of the above that are present.
+            Otherwise the selected column will go to CORRECTED in the output.
+
+        realmodelcol -- Make real a virtual MODEL column.
+            default: False
+
+--- SPW combination parameters ---
+    combinespws -- Combine the input spws into a new output spw.
+        default: False
+
+--- Frequency averaging parameters ---
+    freqaverage -- Average data in frequency.
+        default: False
+
+        freqbin -- Bin (width) of input channels to average to create an output
+                   channel (int). 
+            default: 10
+
+        useweights -- Type of weights to use in average.
+            default: ''
+            options: 'flags', 'spectral'
+
+
+--- Hanning smoothing parameters ---
+    hanning -- Hanning smooth frequency channel data to remove Gibbs ringing.
+        default: False
+
+--- Regrid parameters ---
+    regridms -- Regrid the MS to a new spw, channel structure or frame.
+        default: False
+
+        mode -- Regridding mode.
+            default: 'channel'; produces equidistant grid based on first selected channel.
+            options: 'velocity', 'frequency', 'channel_b'.
+
+            When set to velocity or frequency, it means that the channels must be specified
+            in the respective units. When set to channel_b it means an alternative 'channel' 
+            mode that does not force an equidistant grid. It is faster.
+
+        nchan -- Number of channels in the output spw (int).
+            default: -1
+
+        start -- First channel of the input spw.
+            default: 0
+
+        width -- Number of input channels that are used to create an output channel.
+            default: 1
+
+        interpolation -- Spectral interpolation method.
+            default: 'linear'
+            options: 'nearest', 'cubic', 'spline', 'fftshift'
+
+        phasecenter -- Direction measure or FIELD_ID for the mosaic center.
+            default: ''
+
+        restfreq -- Specify rest frequency to use for output.
+            default: ''; occasionally it is necessary to set this.
+            example1 for some VLA spectral line data.
+            example2 for NH_3 (1,1) put restfreq='23.694496GHz'.
+
+        outframe -- Output reference frame (case-insensitive).
+            default: ''; it will keep the input reference frame.
+            options: 'LSRK', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB', 'GEO', 'TOPO'.
+
+        veltype -- Definition of velocity (as used in mode).
+            default: 'radio'
+
+
+--- SPW separation ---
+    separatespws -- Separate spws based on the given number of new spws.
+        default: False
+
+        nspws -- Number of output spws to split each input spw out (int).
+            default: 2
+            example: spw = '0~3' nspws = 2, means that the output MS will
+                     have 8 spws.
+
+
+--- Time averaging parameters ---
+    timeaverage -- Average data in time.
+        default: False
+
+        timebin -- Bin width for time averaging.
+            default: '1s'
+
+        timespan -- Let time bins span changes in scan and/or state.
+            default: '' (separate time bins by both of the above)
+            examples: 
+            timespan = 'scan'; can be useful when the scan number
+                       goes up with each integration as in many WSRT MSs.
+            timespan = ['scan', 'state']: disregard scan and state
+                       numbers when time averaging.
+            timespan = 'state,scan'; same as above.
+
+        quantize_c -- Quantize time_centroids to the nearest multiple of short
+                      time interval (double).
+            default: 0.01
+
+        minbaselines -- Minimum number of baselines for averaging to start (int).
+            default: 2
+
+------ EXAMPLES ------
+
+
+
+</example> 
+</task>
+</casaxml>

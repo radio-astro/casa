@@ -78,6 +78,7 @@ deconvolver = casac.deconvolver()
 vpmanager = casac.vpmanager()
 vlafillertask = casac.vlafillertask()
 atmosphere = casac.atmosphere()
+mstransformer = casac.mstransformer()
 
 from accum import  accum
 from applycal import  applycal
@@ -127,6 +128,8 @@ from listhistory import  listhistory
 from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
+from msmoments import msmoments
+from mstransform import mstransform
 from msview import msview
 from partition import partition
 from peel import  peel
@@ -151,7 +154,6 @@ from viewer import  viewer
 from vishead import  vishead
 from visstat import  visstat
 from widefield import  widefield
-from msmoments import msmoments
 
 
 ##

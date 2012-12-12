@@ -630,6 +630,7 @@ else()
        graphics
        imageanalysis
        miriad
+       mstransform
        nrao
        plotms
        spectrallines

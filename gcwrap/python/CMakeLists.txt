@@ -135,6 +135,7 @@ scripts/taskmanager.py
 scripts/task_makemask.py 
 scripts/task_mosaic.py
 scripts/task_msmoments.py
+scripts/task_mstransform.py
 scripts/task_peel.py
 scripts/task_plotants.py
 scripts/task_plotcal.py
