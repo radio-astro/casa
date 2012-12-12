@@ -185,6 +185,12 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	}
 
         /* Check if each field is solveable (not sure what this means) */
+	/* Note to Urvashi: it means that the user has decided a given model for  
+	   a given field  is perfect [for e.g a well known source model] and is not
+	   to be messed with anymore while others can be messed with...thus returning is 
+	   wrong but should bypass looking for new components for the given field 
+	   that is fixed
+	*/
 	for(Int field=0;field<nfields_p;field++)
 	  if( !isSolveable(getModelIndex(field,0)) ) 
 	  {
