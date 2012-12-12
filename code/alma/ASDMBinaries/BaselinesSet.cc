@@ -110,7 +110,7 @@ unsigned int BaselinesSet::getNumEffAntennas(){ return numEffAntennas_; }
 Tag BaselinesSet::getEffAntennaId(unsigned int na) { // throw (Error){
   if(na>=v_effAntennaIdArray_.size())
     Error(SERIOUS,
-	  "The antenna index, %d, exceeds the maximum limit of %d",
+	  (char *) "The antenna index, %d, exceeds the maximum limit of %d",
 	  na,v_effAntennaIdArray_.size()-1); 
   return v_effAntennaIdArray_[na];
 }
@@ -118,11 +118,11 @@ Tag BaselinesSet::getEffAntennaId(unsigned int na) { // throw (Error){
 int BaselinesSet::getFeedId(unsigned int na, unsigned int nfe) { // throw (Error){
   if(na>=v_effAntennaIdArray_.size())
     Error(SERIOUS,
-	  "The antenna index, %d, exceeds the maximum limit of %d",
+	  (char *) "The antenna index, %d, exceeds the maximum limit of %d",
 	  na,v_effAntennaIdArray_.size()-1);
   if(nfe>=numFeeds_)
     Error(SERIOUS,
-	  "The feed index, %d, exceeds the maximum limit of %d deriving from the number of feeds in the configuration",
+	  (char *) "The feed index, %d, exceeds the maximum limit of %d deriving from the number of feeds in the configuration",
 	  nfe,numFeeds_-1); 
   return v_FeedIdArray_[na*numFeeds_+nfe];
 }
@@ -151,7 +151,7 @@ unsigned int BaselinesSet::baselineIndex( Tag antennaId1, Tag antennaId2) { // t
 unsigned int BaselinesSet::baselineIndex( Tag antennaId ) { // throw (Error){
   for(unsigned int n=0; n<numEffAntennas_; n++)
     if(v_effAntennaIdArray_[n]==antennaId)return n;
-  Error(FATAL,"No baseline index for antennaId=%s",antennaId.toString().c_str());
+  Error(FATAL,(char *) "No baseline index for antennaId=%s",antennaId.toString().c_str());
   return 0;
 }
 
@@ -199,7 +199,7 @@ unsigned int BaselinesSet::antenna1( unsigned int baselineIdx)  { // throw (Erro
       if((m+iIdx)==baselineIdx)return na1;
     }
   }
-  Error(FATAL,"No antenna1 index for the requested baseline index %d",baselineIdx);
+  Error(FATAL,(char *) "No antenna1 index for the requested baseline index %d",baselineIdx);
   return 0;
 }
 
@@ -217,7 +217,7 @@ unsigned int BaselinesSet::antenna2( unsigned int baselineIdx)  { // throw (Erro
       if((m+iIdx)==baselineIdx)return na2;
     }
   }
-  Error(FATAL,"No antenna2 index for the requested baseline index %d",baselineIdx);
+  Error(FATAL,(char *) "No antenna2 index for the requested baseline index %d",baselineIdx);
   return 0;
 }
 
@@ -226,7 +226,7 @@ unsigned int BaselinesSet::feedIndex(Tag antId, int feedId) { // throw (Error){
   for(unsigned int n=0; n<numAntennas_; n++)if(antId==v_AntennaIdArray_[n])na=n;
   if(na<0){
     Error(FATAL,
-	  "Antenna with identifier %s  not in the configuration",
+	  (char *) "Antenna with identifier %s  not in the configuration",
 	  antId.toString().c_str()); 
     return 0;
   }
@@ -234,7 +234,7 @@ unsigned int BaselinesSet::feedIndex(Tag antId, int feedId) { // throw (Error){
   for(unsigned int n=0; n<numFeeds_; n++)if(feedId==v_FeedIdArray_[na*numFeeds_+n])nfe=n;
   if(nfe<0){
     Error(FATAL,
-	  "Feed identifier %d for antenna with the identifier %s not in the configuration",
+	  (char *) "Feed identifier %d for antenna with the identifier %s not in the configuration",
 	  feedId,antId.toString().c_str()); 
     return nfe;
   }

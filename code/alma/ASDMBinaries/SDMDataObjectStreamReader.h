@@ -47,6 +47,15 @@ namespace asdmbinaries {
     void	open(const string& path);
 
     /**
+     * Returns the current position in the BDF file.
+     *
+     * or -1 if it fails to determine the position.
+     *
+     * @return an int64_t 
+     */
+    int64_t position();
+    
+    /**
      * Close the file containing the BDF data and releases all the memory dynamically allocated.
      */
     void close();

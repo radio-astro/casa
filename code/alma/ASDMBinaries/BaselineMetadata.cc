@@ -83,7 +83,7 @@ int         BaselineMetadata::FLAGLIMIT=0;
 
 
 // methods to access a node or sequence of nodes in the tree structure
-int BaselineMetadata::at(int pp, int bin, int bb, int i, int j){
+int BaselineMetadata::at(int pp, int /*bin*/, int bb, int i, int j){  // comment to avoid the unused parameter warning.
   int index=0;
   if(wrongPolProductIndex(pp,bb,i,j))return -1;
   if(i==j){                                                        // metadata for single-dish data
@@ -119,17 +119,17 @@ vector<int> BaselineMetadata::at(int pp, int bb, int i, int j){
   }
 }
 
-vector<int> BaselineMetadata::at(int pp, int bin, int bb){
+vector<int> BaselineMetadata::at(int /*pp*/, int /*bin*/, int /*bb*/){ // comment to avoid the unused parameter warning
   vector<int> v_index;
-  Error(WARNING," This method has not yet been implemented! contact fviallef@maat.obspm.fr");
+  Error(WARNING, (char *) " This method has not yet been implemented! contact fviallef@maat.obspm.fr");
   // TODO
   return v_index;
 }
 
 
-vector<vector<int> > BaselineMetadata::at(int nbin, int nbb){
+vector<vector<int> > BaselineMetadata::at(int /*nbin*/, int /*nbb*/){ // comment to avoid the unused parameter warning
   vector<vector<int> > vv_index;
-  Error(WARNING, "This method has not yet been implemented! contact fviallef@maat.obspm.fr");
+  Error(WARNING, (char *) "This method has not yet been implemented! contact fviallef@maat.obspm.fr");
   // TODO
   return vv_index;
 }
@@ -149,7 +149,7 @@ vector<vector<vector<int> > > BaselineMetadata::at(bool cross, int antIndex){
   if(cross){
 
     if(correlationMode_==1){
-      Error(WARNING, "No cross metadata when correlationMode=1");
+      Error(WARNING, (char *) "No cross metadata when correlationMode=1");
       return vvv_index;
     }
     vv_index.resize(numBaseband_);
@@ -241,7 +241,7 @@ int BaselineMetadata::baselineNum( int na1, int na2) throw(Error){
     n=iNum; if(jNum>iNum)n=jNum; 
     if( ((n*(n-1))/2)>numBaseline_){
       Error(SERIOUS, 
-	    "Cannot find a baselineNum with the antenna indices %d and %d",
+	    (char *) "Cannot find a baselineNum with the antenna indices %d and %d",
 	    na1,na2);
       return -1;
     }
@@ -256,7 +256,7 @@ bool BaselineMetadata::notFor(bool interfero){
   if(interfero){
     if(correlationMode_==1){
       Error(WARNING,
-	    " The baseline metadata were build for single-dish; queries not expected for interferomtry!");
+	    (char *) " The baseline metadata were build for single-dish; queries not expected for interferomtry!");
       return true;
     }
   }else{
@@ -274,21 +274,21 @@ bool BaselineMetadata::wrongBasebandNum(int basebandNum){
   if(basebandNum<numBaseband_)return false;
   else
     Error(SERIOUS,
-	  "The input baseband number, %d, exceeds the number of baseband %d in the configuration",
+	  (char *) "The input baseband number, %d, exceeds the number of baseband %d in the configuration",
 	  basebandNum,numBaseband_);
   if(basebandNum<1)
     Error(FATAL,
-	  "A baseband number must be one-based");
+	  (char *) "A baseband number must be one-based");
   return true;
 } 
 
 bool BaselineMetadata::wrongAntennaIndex(int anti){
   if(anti<0){
-    Error(WARNING, "An antenna index must be a non-negative integer!");
+    Error(WARNING, (char *) "An antenna index must be a non-negative integer!");
     return true;
   }
   if(anti>=numAnt_){
-    Error(WARNING, "Wrong antenna index; it must be < %d; query failed!",numAnt_);
+    Error(WARNING, (char *) "Wrong antenna index; it must be < %d; query failed!",numAnt_);
     return true;
   }
   return false;
@@ -296,11 +296,11 @@ bool BaselineMetadata::wrongAntennaIndex(int anti){
 
 bool BaselineMetadata::wrongBasebandIndex(int bb){
   if(bb<0){
-    Error(WARNING, "A baseband index must be a non-negative integer!");
+    Error(WARNING, (char *) "A baseband index must be a non-negative integer!");
     return true;
   }
   if(bb>=numBaseband_){
-    Error(WARNING, "Wrong baseband index: it must be < %d; query failed!",numBaseband_);
+    Error(WARNING, (char *) "Wrong baseband index: it must be < %d; query failed!",numBaseband_);
     return true;
   }
   return false;
@@ -312,17 +312,17 @@ bool BaselineMetadata::wrongPolProductIndex(int pp,int bb,int i,int j){
   if(wrongAntennaIndex(j))return true;
   if(wrongBasebandIndex(bb))return true;
   if(pp<0){
-    Error(WARNING, "A polProduct index must be a non-negative integer!");
+    Error(WARNING, (char *) "A polProduct index must be a non-negative integer!");
     return true;
   }
   if(i==j){
     if(pp>=v_numAutoPolProduct_[bb]){
-      Error(WARNING, "Wrong polProduct index: it must be < %d; query failed!",v_numAutoPolProduct_[bb]);
+      Error(WARNING, (char *) "Wrong polProduct index: it must be < %d; query failed!",v_numAutoPolProduct_[bb]);
       return true;
     }
   }else{
     if(pp>=v_numPolProduct_[bb]){
-      Error(WARNING, "Wrong polProduct index: it must be < %d; query failed!",v_numPolProduct_[bb]);
+      Error(WARNING, (char *) "Wrong polProduct index: it must be < %d; query failed!",v_numPolProduct_[bb]);
       return true;
     }
   }

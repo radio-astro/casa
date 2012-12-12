@@ -43,6 +43,10 @@ namespace asdmbinaries {
     currentState = S_AT_BEGINNING;
   }
 
+  int64_t SDMDataObjectStreamReader::position() {
+    return (int64_t) f.tellg();
+  }
+
   void SDMDataObjectStreamReader::close() {
     // cout << "SDMDataObjectStreamReader::close -- Entering" << endl;
     if (f.is_open()) {
@@ -516,7 +520,7 @@ namespace asdmbinaries {
       char** binaryPartPtrPtr = 0;
       if (binaryPartName == "actualDurations") {
 	attachmentFlags.set(ACTUALDURATIONS);
-	binaryPartPtrPtr = (char **) &sdmDataSubset.actualDurations_;
+	binaryPartPtrPtr = (char**) &sdmDataSubset.actualDurations_;
 	sdmDataSubset.nActualDurations_ = binaryPartSize[binaryPartName];
 	sdmDataSubset.actualDurationsPosition_ = f.tellg();
 	numberOfCharsPerValue = 8;
