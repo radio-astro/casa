@@ -28,7 +28,6 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <images/Images/ImageAnalysis.h>
 #include <images/Regions/ImageRegion.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
