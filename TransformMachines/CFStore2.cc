@@ -98,9 +98,9 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
-  void CFStore2::setCFBuffer(CFBuffer *dataPtr, 
-			     Quantity pa, 
-			     const Int& ant1, const Int& ant2)
+  void CFStore2::setCFBuffer(CFBuffer* /*dataPtr*/, 
+			     Quantity /*pa*/, 
+			     const Int& /*ant1*/, const Int& /*ant2*/)
   {
     throw(AipsError("setCFBuffer called!"));
     // Vector<Int> pos=resize(pa,ant1,ant2);

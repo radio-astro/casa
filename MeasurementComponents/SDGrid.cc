@@ -84,7 +84,7 @@ SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
+    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0)
 {
   lastIndex_p=0;
 }
@@ -95,7 +95,7 @@ SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
+    truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -107,7 +107,7 @@ SDGrid::SDGrid(Int icachesize, Int itilesize,
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
+    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0)
 {
   lastIndex_p=0;
 }
@@ -118,7 +118,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
-    gwidth_p(0.0), jwidth_p(0.0), truncate_p(-1.0)
+    truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -130,7 +130,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(-1),
-    gwidth_p(gwidth), jwidth_p(jwidth), truncate_p(truncate)
+     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -308,7 +308,8 @@ void SDGrid::init() {
     convSize=convSampling*(2*convSupport+2);
     convFunc.resize(convSize);
     convFunc=0.0;
-    Double r, x, val1, val2;
+    //UNUSED: Double r;
+    Double x, val1, val2;
     Int normalize = 1;
     if (itruncate >= 0) {
       for (Int i = 0 ; i < itruncate ; i++) {

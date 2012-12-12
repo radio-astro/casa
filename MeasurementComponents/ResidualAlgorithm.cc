@@ -180,13 +180,13 @@ void ResidualAlgorithm::task(){
   delete ms_p;
 };
 
-void ResidualAlgorithm::initializePut(const VisBuffer& vb, Int model) {
+void ResidualAlgorithm::initializePut(const VisBuffer& vb, Int /*model*/) {
   ft_p->initializeToSky(*cImage_p, *weight_p,vb);
   // Need to add support for varying SkyJones
 }
 
 
-void ResidualAlgorithm::putResidualVis(VisBuffer& vb, Int model) {
+void ResidualAlgorithm::putResidualVis(VisBuffer& vb, Int /*model*/) {
     Bool dopsf=False;
     // Need to add support for varying SkyJones
     ft_p->put(vb, -1, dopsf);

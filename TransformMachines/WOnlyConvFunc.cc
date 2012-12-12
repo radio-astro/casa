@@ -181,7 +181,7 @@ namespace casa{
     Int ConvFuncOrigin=convFunc.shape()[0]/2;  // Conv. Func. is half that size of convSize
     IPosition ndx(4,ConvFuncOrigin,0,0,0), cfShape(convFunc.shape());
     
-    Int maxConvWtSupport=0, supportBuffer;
+    //UNUSED: Int maxConvWtSupport=0, supportBuffer;
     for (Int iw=0;iw<cfShape[2];iw++)
       {
 	Bool found=False;
@@ -195,7 +195,7 @@ namespace casa{
 	//
 	// Find the support size of the conv. function in pixels
 	//
-	Int wtR;
+	//UNUSED: Int wtR;
 	found = findSupport(convFunc,threshold,ConvFuncOrigin,R);
 	//
 	// Set the support size for each W-plane and for all

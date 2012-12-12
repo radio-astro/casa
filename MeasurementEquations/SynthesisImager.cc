@@ -95,11 +95,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( selpars.isDefined("spw") ) { selpars.get( RecordFieldId("spw") , spwlist ); }
 	
 	
-	Int nms = mslist.nelements();
+	uInt nms = mslist.nelements();
 	if(fieldlist.nelements() != nms){os << LogIO::EXCEPTION << "Need " << nms << " field selection strings, one for each specified MS" << LogIO::POST; }
 	if(spwlist.nelements() != nms){os << LogIO::EXCEPTION << "Need " << nms << " spw selection strings, one for each specified MS" << LogIO::POST; }
 	
-	for(Int sel=0; sel<nms; sel++)
+	for(uInt sel=0; sel<nms; sel++)
 	  {
 	    os << "MS : " << mslist[sel];
 	    os << "   Selection : spw='" << spwlist[sel] << "'";
@@ -219,7 +219,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }// end of setupImaging
   
-  void SynthesisImager::setupDeconvolution(Record decpars)
+  void SynthesisImager::setupDeconvolution(Record /*decpars*/)
   {
     LogIO os( LogOrigin("SynthesisImager","setupDeconvolution",WHERE) );
     os << "Set Deconvolution Options - Construct Deconvolver" << LogIO::POST;

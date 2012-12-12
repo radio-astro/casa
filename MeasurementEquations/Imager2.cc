@@ -3642,8 +3642,8 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 			       String& dataMode, 
 			       Vector<Int>& dataNchan, 
 			       Vector<Int>& dataStart, Vector<Int>& dataStep,
-			       MRadialVelocity& mDataStart, 
-			       MRadialVelocity& mDataStep){
+			       MRadialVelocity& /*mDataStart*/, 
+			       MRadialVelocity& /*mDataStep*/){
 
 
 

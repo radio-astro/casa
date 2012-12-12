@@ -886,8 +886,8 @@ void VisMueller::calcAllMueller() {
 
 }
 
-void VisMueller::calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
-				const Vector<Complex>& par, const Vector<Bool>& pOk) {
+void VisMueller::calcOneMueller(Vector<Complex>& /*mat*/, Vector<Bool>& /*mOk*/,
+				const Vector<Complex>& /*par*/, const Vector<Bool>& /*pOk*/) {
 
   if (prtlev()>10) cout << "        VM::calcOneMueller()" << endl;
 
@@ -1345,8 +1345,8 @@ void VisJones::calcAllJones() {
   }
 }
 
-void VisJones::calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
-			    const Vector<Complex>& par, const Vector<Bool>& pOk ) {
+void VisJones::calcOneJones(Vector<Complex>& /*mat*/, Vector<Bool>& /*mOk*/,
+			    const Vector<Complex>& /*par*/, const Vector<Bool>& /*pOk*/ ) {
 
   if (prtlev()>10) cout << "        VJ::calcOneJones()" << endl;
 

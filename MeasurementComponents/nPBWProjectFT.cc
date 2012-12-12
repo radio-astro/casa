@@ -145,7 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Bool applyPointingOffset,
 			       Bool doPBCorr,
 			       Int itilesize, 
-			       Float paSteps,
+			       Float /*paSteps*/,
 			       Float pbLimit,
 			       Bool usezero)
     : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
@@ -922,7 +922,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   Bool nPBWProjectFT::makeAveragePB0(const VisBuffer& vb, 
 				     const ImageInterface<Complex>& image,
-				     Int& polInUse,
+				     Int& /*polInUse*/,
 				     //TempImage<Float>& thesquintPB,
 				     TempImage<Float>& theavgPB)
   {
@@ -1034,11 +1034,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //          the return value corresponds to the index in the list of
   //          conv. funcs. where this conv. func. should be filled
   //
-  Int nPBWProjectFT::locateConvFunction(Int Nw, Int polInUse,  
-				       const VisBuffer& vb, Float &pa)
+  Int nPBWProjectFT::locateConvFunction(Int Nw, Int /*polInUse*/,  
+                                        const VisBuffer& vb, Float &pa)
   {
     Int i; Bool found;
-    Float dPA = paChangeDetector.getParAngleTolerance().getValue("rad");
+    // Commented out to prevent compiler warning
+    // Float dPA = paChangeDetector.getParAngleTolerance().getValue("rad");
     found = cfCache.searchConvFunction(vb,paChangeDetector,i,pa);
     if (found)
       {
@@ -1654,7 +1655,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    =(twoDPB.getSlice(start, pbSlice, True));
 
 	  IPosition shp(twoDPBSq.shape());
-	  Int bufSize=convWeights.shape()[0], Org=shp[0]/2;
+	  
+          //UNUSED: Int bufSize=convWeights.shape()[0], Org=shp[0]/2;
 	  // IPosition sqStart(4, Org-bufSize/2, Org-bufSize/2, 0, 0),
 	  //   pbSqSlice(4, bufSize-1, bufSize-1, polInUse, 1);
 	  // IPosition sqSliceStart(4,0,0,iw,0), 
@@ -2306,7 +2308,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   //				Cube<Complex>& gradVisAzData,
 				   //				Cube<Complex>& gradVisElData,
 				   //				IPosition& gradS,
-				   Int& Conj,
+                                    Int& /*Conj*/,
 				   Cube<Int>& flags,Vector<Int>& rowFlags,
 				   Int& rownr,Vector<Double>& actualOffset,
 				   Array<Complex>* dataPtr,
@@ -2315,7 +2317,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Double& sigma,
 				   Array<Float>& l_off,
 				   Array<Float>& m_off,
-				   Double area,
+                                   Double area,
 				   Int& doGrad,
 				   Int paIndex)
   {
@@ -2616,7 +2618,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   //				Cube<Complex>& gradVisAzData,
 				   //				Cube<Complex>& gradVisElData,
 				   //				IPosition& gradS,
-				   Int& Conj,
+                                    Int& /*Conj*/,
 				   Cube<Int>& flags,Vector<Int>& rowFlags,
 				   const Matrix<Float>& weight,
 				   Int& rownr,Vector<Double>& actualOffset,
@@ -2628,7 +2630,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   Array<Float>& m_off,
 				   Matrix<Double>& sumWeight,
 				   Double& area,
-				   Int& doGrad,
+                                   Int& doGrad,
 				   Int& doPSF,
 				   Int paIndex)
   {
@@ -3457,7 +3459,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void nPBWProjectFT::get(VisBuffer& vb, Cube<Complex>& modelVis, 
-			 Array<Complex>& griddedVis, Vector<Double>& scale,
+                          Array<Complex>& griddedVis, Vector<Double>& /*scale*/,
 			 Int row)
   {
     Int nX=griddedVis.shape()(0);

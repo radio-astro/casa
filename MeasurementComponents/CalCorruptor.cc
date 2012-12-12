@@ -49,7 +49,7 @@ CalCorruptor::CalCorruptor(const Int nSim) :
 CalCorruptor::~CalCorruptor() {}
 
 
-Complex CalCorruptor::simPar(const VisIter& vi,VisCal::Type type, Int ipar){  
+  Complex CalCorruptor::simPar(const VisIter& /*vi*/,VisCal::Type type, Int /*ipar*/){  
   // per par (e.g. for D,G, nPar=2, could have diff gains for diff polns)
   if (prtlev()>2) cout << "   Corruptor::simPar("<<VisCal::nameOfType(type)<<")" << endl;  
 
@@ -106,7 +106,7 @@ void CalCorruptor::setCurrTime(const Double& time) {
 
 
 
-Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
+  Complex ANoiseCorruptor::simPar(const VisIter& /*vi*/, VisCal::Type type,Int /*ipar*/) {
   if (prtlev()>5) cout << "AN::simPar(vi,type,ipar) ";
   if (type==VisCal::ANoise) {
     if (currAnt() == currAnt2()){
@@ -134,7 +134,7 @@ ANoiseCorruptor::~ANoiseCorruptor() {};
 
 
 
-Complex DJonesCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
+  Complex DJonesCorruptor::simPar(const VisIter& /*vi*/, VisCal::Type type,Int ipar) {
   if (type==VisCal::D) {
     Complex g((*nDist_p)()*camp().real(),(*nDist_p)()*camp().imag());    
     if (prtlev()>5) cout << "D::simPar ";    
@@ -160,16 +160,20 @@ DJonesCorruptor::~DJonesCorruptor() {};
 AtmosCorruptor::AtmosCorruptor() : 
   CalCorruptor(1),  // parent
   mean_pwv_(-1.),
-  airMassValid_(False),airMassTime_(-1000),
-  screen_p(0),itsatm(0),itsSpecGrid(0),itsRIP(0),itsSkyStatus(0)
+  screen_p(0),
+  itsatm(NULL),
+  itsRIP(NULL),
+  itsSkyStatus(NULL),
+  itsSpecGrid(NULL),
+  airMassValid_(False),
+  airMassTime_(-1000)
 {}
 
 AtmosCorruptor::AtmosCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
   mean_pwv_(-1.),
-  airMassValid_(False),airMassTime_(-1000),
-  screen_p(0),itsatm(0),itsSpecGrid(0),itsRIP(0),itsSkyStatus(0)
-{}
+  screen_p(NULL),itsatm(NULL),itsRIP(NULL),itsSkyStatus(NULL),itsSpecGrid(NULL),
+  airMassValid_(False),airMassTime_(-1000){}
 
 AtmosCorruptor::~AtmosCorruptor() {
   if (itsSkyStatus) {
@@ -250,7 +254,7 @@ void AtmosCorruptor::setCurrTime(const Double& time) {
 
 
 
-Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
+  Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int /*ipar*/){
 
   //  LogIO os(LogOrigin("AtmCorr", "simPar("+VisCal::nameOfType(type)+")", WHERE));
   //  if (prtlev()>5) cout << "  Atm::simPar("<<VisCal::nameOfType(type)<<") ipar=" <<ipar<< endl;
@@ -394,11 +398,11 @@ void AtmosCorruptor::initAtm() {
   // but then need chanMap[focusChan() from VisCal] = atm channel
   // fnChan() is vector, # chans in the MS/VisCal as a fn of spw:
   // ATMnChan() is vector, # chans in ATM as a fn of spw:
-  int nChan=fnChan()[0];  
+  uInt nChan=fnChan()[0];  
   if (nChan==1) {
-    ATMnChan()[0]=fWidth()[0]/100.e6;
+    ATMnChan()[0]=static_cast<unsigned int>(fWidth()[0]/100.e6);
     if (ATMnChan()[0]>1e4) {
-     ATMnChan()[0]=1e4;
+      ATMnChan()[0]=static_cast<unsigned int>(1e4);
     }
     if (ATMnChan()[0]<10) {
       ATMnChan()[0]=10;
@@ -442,9 +446,9 @@ void AtmosCorruptor::initAtm() {
 
     nChan=fnChan()[ispw];
     if (nChan==1) {
-      ATMnChan()[ispw]=fWidth()[ispw]/100.e6;
+      ATMnChan()[ispw]=static_cast<unsigned int>(fWidth()[ispw]/100.e6);
       if (ATMnChan()[ispw]>1e4) {
-	ATMnChan()[ispw]=1e4;
+	ATMnChan()[ispw]=static_cast<unsigned int>(1e4);
       }
       if (ATMnChan()[ispw]<10) {
 	ATMnChan()[ispw]=10;
@@ -589,7 +593,7 @@ void AtmosCorruptor::initialize(const Int rxtype) {
 // pass the VisCal::Type to it - the concept of the corruptor taking a VC
 // instead of being a member of it.
 
-void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal::Type type, const Int rxtype) {
+  void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal::Type /*type*/, const Int rxtype) {
 
   LogIO os(LogOrigin("AtmCorr", "init(vi,par,type)", WHERE));
 
@@ -932,7 +936,7 @@ Complex AtmosCorruptor::cphase(const Int ix, const Int iy, const Int ichan) {
   float delay;
   ostringstream o; 
  
-  if (curr_slot()>=0 and curr_slot()<nSim()) {
+  if (curr_slot()>=0 and static_cast<uInt>(curr_slot())<nSim()) {
     // blow
     Int blown(Int(floor( (slot_time(curr_slot())-slot_time(0)) *
 			 windspeed()/pixsize() ))); 
@@ -968,7 +972,7 @@ Complex AtmosCorruptor::cphase(const Int ichan) {
   AlwaysAssert(mode()=="1d" or mode()=="test",AipsError);
   float delay;
   
-  if (curr_slot()>=0 and curr_slot()<nSim()) {
+  if (curr_slot()>=0 and static_cast<uInt>(curr_slot())<nSim()) {
     // if this gets used in the future, 
     // be careful about using freq if not freqDepPar()
     // Float freq = fRefFreq()[currSpw()] + 
@@ -1026,7 +1030,7 @@ void fBM::initialize(const Int seed, const Float beta) {
   IPosition s = data_->shape();
   uInt ndim = s.nelements();
   Float amp,phase,pi=3.14159265358979;
-  uInt i0,j0;
+  //UNUSED: uInt i0,j0;
   
   // FFTServer<Float,Complex> server;
   // This class assumes that a Complex array is stored as
@@ -1156,7 +1160,7 @@ void fBM::initialize(const Int seed, const Float beta) {
 
 //###################################  
 
-Complex GJonesCorruptor::simPar(const VisIter& vi,VisCal::Type type,Int ipar) {    
+  Complex GJonesCorruptor::simPar(const VisIter& /*vi*/,VisCal::Type type,Int ipar) {    
   if (type==VisCal::G || type==VisCal::B) {
     if (mode()=="fbm") {
       return gain(ipar,focusChan());
@@ -1230,8 +1234,9 @@ void GJonesCorruptor::initialize(const Int Seed, const Float Beta, const Float s
 }
 
 
-Complex GJonesCorruptor::gain(const Int icorr,const Int ichan) {
-  if (curr_slot()>=0 and curr_slot()<nSim() and icorr>=0 and icorr<nPar()) {    
+Complex GJonesCorruptor::gain(const Int icorr,const Int /*ichan*/) {
+  if (curr_slot()>=0 and static_cast<uInt>(curr_slot())<nSim()
+      and icorr>=0 and static_cast<uInt>(icorr)<nPar()) {    
     if (currAnt()>drift_p.nelements())
       throw(AipsError("GJonesCorruptor internal error accessing drift()"));  
     Complex delta = (*drift_p[currAnt()])(icorr,curr_slot());    
@@ -1241,10 +1246,5 @@ Complex GJonesCorruptor::gain(const Int icorr,const Int ichan) {
     return Complex(1.);
   }
 }
-
-
-
-
-
 
 } //casa namespace

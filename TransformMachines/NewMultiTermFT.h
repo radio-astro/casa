@@ -70,7 +70,8 @@ public:
 
   // Called at the start of de-gridding : subftm->initializeToVis()
   // Note : Pre-de-gridding model-image divisions by PBs will go here.
-  void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb)
+  void initializeToVis(ImageInterface<Complex>& /*image*/, 
+                       const VisBuffer& /*vb*/)
   {throw(AipsError("NewMultiTermFT::initializeToVis called without vectors !"));};
 
    // Vectorized InitializeToVis
@@ -80,7 +81,8 @@ public:
   void finalizeToVis();
 
   // Called at the start of gridding : subftm->initializeToSky()
-  void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight, const VisBuffer& vb) 
+  void initializeToSky(ImageInterface<Complex>& /*image*/,  
+                       Matrix<Float>& /*weight*/, const VisBuffer& /*vb*/) 
    {throw(AipsError("NewMultiTermFT::initializeToSky() called without vectors!"));};
 
   void initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, Block<Matrix<Float> >& weightsVec, const VisBuffer& vb, const Bool dopsf);
@@ -103,8 +105,8 @@ public:
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
   // Have a const version for compatibility with other FTMs.. Throw an exception if called.
-  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	   FTMachine::Type type=FTMachine::OBSERVED)
+  void put(const VisBuffer& /*vb*/, Int /*row*/=-1, Bool /*dopsf*/=False,
+	   FTMachine::Type /*type*/=FTMachine::OBSERVED)
   {throw(AipsError("NewMultiTermFT::put called with a const vb. This FTM needs to modify the vb."));};
 
   // Calculate residual visibilities if possible.
@@ -125,7 +127,7 @@ public:
   //{return getImage(weights,normalize,0);};
   //ImageInterface<Complex>& getImage(Matrix<Float>& weights, Bool normalize=True, 
   //                                                         const Int taylorindex=0);
-  ImageInterface<Complex>& getImage(Matrix<Float>& weights, Bool normalize=True)
+  ImageInterface<Complex>& getImage(Matrix<Float>& /*weights*/, Bool /*normalize*/=True)
   {throw(AipsError("NewMultiTermFT::getImage() should not be called"));}
  
 
@@ -142,7 +144,7 @@ public:
   //{getWeightImage(weightImage, weights, 0);};
   //void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights, 
   //                                const Int taylorindex);
-  void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights)
+  void getWeightImage(ImageInterface<Float>& /*weightImage*/, Matrix<Float>& /*weights*/)
   {throw(AipsError("NewMultiTermFT::getWeightImage() should not be called"));}
 
   // Save and restore the NewMultiTermFT to and from a record
@@ -158,7 +160,7 @@ public:
   void printFTTypes()
   {
     cout << "** Number of FTs : " << subftms_p.nelements() << " -- " ;
-    for(Int tix=0; tix<(subftms_p).nelements(); tix++)
+    for(uInt tix=0; tix<(subftms_p).nelements(); tix++)
       cout << tix << " : " << (subftms_p[tix])->name() << "   " ;
     cout << endl;
   };

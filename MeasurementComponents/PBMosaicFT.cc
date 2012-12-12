@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
 #define FUNC(a)  (sqrt((a)))
-  PBMosaicFT::PBMosaicFT(MeasurementSet& ms, 
+  PBMosaicFT::PBMosaicFT(MeasurementSet& /*ms*/, 
 			 Int nWPlanes, Long icachesize, 
 			 String& cfCacheDirName,
 			 Bool applyPointingOffset,
@@ -327,9 +327,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  Bool PBMosaicFT::makeAveragePB0(const VisBuffer& vb, 
+  Bool PBMosaicFT::makeAveragePB0(const VisBuffer& /*vb*/, 
 				  const ImageInterface<Complex>& image,
-				  Int& polInUse,
+				  Int& /*polInUse*/,
 				  TempImage<Float>& theavgPB)
   {
     Bool pbMade=False;
@@ -353,7 +353,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //--------------------------------------------------------------------------------
   //
-  void PBMosaicFT::normalizePB(ImageInterface<Float>& pb, const Float& peakValue)
+  void PBMosaicFT::normalizePB(ImageInterface<Float>& /*pb*/, const Float& /*peakValue*/)
   {
   }
   //
@@ -699,7 +699,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void PBMosaicFT::runFortranGet(Matrix<Double>& uvw,Vector<Double>& dphase,
 				 Cube<Complex>& visdata,
 				 IPosition& s,
-				 Int& Conj,
+				 Int& /*Conj*/,
 				 Cube<Int>& flags,Vector<Int>& rowFlags,
 				 Int& rownr,Vector<Double>& actualOffset,
 				 Array<Complex>* dataPtr,
@@ -991,7 +991,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void PBMosaicFT::runFortranPut(Matrix<Double>& uvw,Vector<Double>& dphase,
 				 const Complex& visdata,
 				 IPosition& s,
-				 Int& Conj,
+				 Int& /*Conj*/,
 				 Cube<Int>& flags,Vector<Int>& rowFlags,
 				 const Matrix<Float>& weight,
 				 Int& rownr,Vector<Double>& actualOffset,

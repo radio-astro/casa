@@ -69,8 +69,7 @@ ImageDataSampling& ImageDataSampling::operator=(const ImageDataSampling& other)
 };
 
 //----------------------------------------------------------------------
-ImageDataSampling::ImageDataSampling(const ImageDataSampling& other)
-{
+ImageDataSampling::ImageDataSampling(const ImageDataSampling& other){
   operator=(other);
 }
 

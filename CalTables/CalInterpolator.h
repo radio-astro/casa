@@ -87,7 +87,7 @@ class CalInterpolator
 
   // Compute the interpolated calibration correction for a given 
   // visibility buffer row.
-  virtual Bool getVal (const Int& row, Matrix<Complex>& jonesMatrix){return False;};
+  virtual Bool getVal (const Int& /*row*/, Matrix<Complex>& /*jonesMatrix*/){return False;};
 
  protected:
   // Public construction is prohibited.

@@ -145,7 +145,7 @@ namespace casa{
   //---------------------------------------------------------------
   //
   //  template <class T>  void CFBuffer<T>
-  RigidVector<Int, 3> CFBuffer::setParams(const Int& i, const Int& j, const Int& ipx, const Int& ipy,
+  RigidVector<Int, 3> CFBuffer::setParams(const Int& i, const Int& j, const Int& /*ipx*/, const Int& /*ipy*/,
 					  CoordinateSystem& cs, Float& sampling,
 					  Int& xSupport, Int& ySupport, 
 					  const Double& freqValue, const Double& wValue, 
@@ -176,9 +176,9 @@ namespace casa{
     return ndx;
   }
 			   
-  void CFBuffer::setParams(Int& nx, Int& ny, CoordinateSystem& cs, Float& sampling, 
-			   Int& xSupport, Int& ySupport, const Double& freqValue, 
-			   const Double& wValue, const Int& muellerElement)
+  void CFBuffer::setParams(Int& /*nx*/, Int& /*ny*/, CoordinateSystem& /*cs*/, Float& /*sampling*/, 
+			   Int& /*xSupport*/, Int& /*ySupport*/, const Double& /*freqValue*/, 
+			   const Double& /*wValue*/, const Int& /*muellerElement*/)
   {
     /*
     RigidVector<Int,3> ndx=setParams(cs, sampling, xSupport, ySupport,
@@ -259,7 +259,8 @@ namespace casa{
   {
     RigidVector<Int,3> ndx(-1);
     Int nF=cfCells_p.shape()(0), nW=cfCells_p.shape()(1), nM=cfCells_p.shape()(2);
-    Int i,j,k,di;
+    Int i,j,k;
+    //UNUSED: Int di;
 
     // Double dfMin=0;di=0;
     // for (i=0;i<nF;i++)
@@ -318,7 +319,7 @@ namespace casa{
   //
   Double CFBuffer::nearest(Bool& found, const Double& val,
 			   const Vector<Double>& valList,
-			   const Double& incr)
+			   const Double& /*incr*/)
   {
     Int n=valList.nelements();
     if (n==1) {found=True;return valList[0];}
@@ -330,7 +331,7 @@ namespace casa{
   //---------------------------------------------------------------
   //
   Int CFBuffer::nearestNdx(const Double& val,
-			   const Vector<Double>& valList,
+			   const Vector<Double>& /*valList*/,
 			   const Double& incr)
   {
     return SynthesisUtils::nint(incr*val);

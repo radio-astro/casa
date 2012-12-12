@@ -91,7 +91,7 @@ class CalHistoryBuffer
 
   // Write the current buffer at the end of a specified 
   // cal_history table (NYI)
-  virtual void append (CalTable& calTable) {};
+  virtual void append (CalTable& /*calTable*/) {};
 
   // Data field accessors
   Vector<String>& calParms();

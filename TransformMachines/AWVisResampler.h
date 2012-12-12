@@ -44,9 +44,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class AWVisResampler: public VisibilityResampler
   {
   public: 
-    AWVisResampler(): cached_phaseGrad_p(),
-		      cached_PointingOffset_p(),
-		      VisibilityResampler()
+    AWVisResampler(): VisibilityResampler(),
+		      cached_phaseGrad_p(),
+                      cached_PointingOffset_p()
     {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;};
     //    AWVisResampler(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~AWVisResampler()                                         {};
@@ -172,7 +172,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
 			  Matrix<Double>& sumwt,const Bool& dopsf,
-			  Bool useConjFreqCF);
+			  Bool /*useConjFreqCF*/);
 
     void sgrid(Vector<Double>& pos, Vector<Int>& loc, Vector<Double>& off, 
     	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 

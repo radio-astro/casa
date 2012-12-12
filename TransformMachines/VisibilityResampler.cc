@@ -78,11 +78,11 @@ namespace casa{
   template
   void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
 					     const Bool& dopsf,  Matrix<Double>& sumwt,
-					     Bool useConjFreqCF); // __restrict__;
+					     Bool /*useConjFreqCF*/); // __restrict__;
   template
   void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
   					     const Bool& dopsf,  Matrix<Double>& sumwt,
-					     Bool useConjFreqCF); // __restrict__;
+					     Bool /*useConjFreqCF*/); // __restrict__;
 
   // template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
   // template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
@@ -285,7 +285,7 @@ namespace casa{
     Double *__restrict__ freq=vbs.freq_p.getStorage(Dummy);
     Bool *__restrict__ rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
-    Float * __restrict__ imagingWeight = vbs.imagingWeight_p.getStorage(Dummy);
+    //UNUSED: Float * __restrict__ imagingWeight = vbs.imagingWeight_p.getStorage(Dummy);
     Double * __restrict__ uvw = vbs.uvw_p.getStorage(Dummy);
     Bool * __restrict__ flagCube = vbs.flagCube_p.getStorage(Dummy);
     Complex * __restrict__ visCube = vbs.visCube_p.getStorage(vbcDummy);
@@ -301,8 +301,8 @@ namespace casa{
 
     //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
     cacheAxisIncrements(grid.shape().asVector());
-    Int xSupport_l, ySupport_l;
-    Float sampling_l;
+    //UNUSED: Int xSupport_l, ySupport_l;
+    //UNUSED: Float sampling_l;
     for(Int irow=rbeg; irow < rend; irow++) {
       if(!rowFlag[irow]) {
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
@@ -452,7 +452,7 @@ namespace casa{
   template <class T>
   void VisibilityResampler::DataToGridImpl_p(Array<T>& grid,  VBStore& vbs, const Bool& dopsf,
 					     Matrix<Double>& sumwt,
-					     Bool useConjFreqCF)
+					     Bool /*useConjFreqCF*/)
   {
 
 static Bool beenThereDoneThat = False;
@@ -507,7 +507,7 @@ if (! beenThereDoneThat){
     Double * __restrict__ posPtr=pos.getStorage(Dummy);
     Int * __restrict__ locPtr=loc.getStorage(Dummy);
     Int * __restrict__ offPtr=off.getStorage(Dummy);
-    Double * __restrict__ sumwtPtr = sumwt.getStorage(Dummy);
+    //UNUSED: Double * __restrict__ sumwtPtr = sumwt.getStorage(Dummy);
     Int nDim = vbs.uvw_p.shape()[0];
 
     //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
@@ -518,14 +518,14 @@ if (! beenThereDoneThat){
     Vector<Int> gridIncrements (gridShape.nelements());
 
     gridIncrements[0] = 1;
-    for (int i = 1; i < gridShape.nelements(); i++){
+    for (uint i = 1; i < gridShape.nelements(); i++){
         gridIncrements [i] = gridIncrements[i-1] * gridShape[i-1];
     }
     Vector<Double> convolutionLookupX (2 * support[0] + 1, 0.0);
     Vector<Double> convolutionLookupY (2 * support[1] + 1, 0.0);
-    const Double * const pConvolutionLookupY0 = convolutionLookupY.getStorage (Dummy);
-    const Double * const pConvolutionLookupX0 = convolutionLookupX.getStorage (Dummy);
-    const Double * const pConvolutionLookupXEnd = pConvolutionLookupX0 + convolutionLookupX.size();
+    //UNUSED: const Double * const pConvolutionLookupY0 = convolutionLookupY.getStorage (Dummy);
+    //UNUSED const Double * const pConvolutionLookupX0 = convolutionLookupX.getStorage (Dummy);
+    //UNUSED: const Double * const pConvolutionLookupXEnd = pConvolutionLookupX0 + convolutionLookupX.size();
 
     for(Int irow=rbeg; irow < rend; irow++){          // For all rows
       
@@ -562,7 +562,7 @@ if (! beenThereDoneThat){
         convolutionSumY += convFunc[iConv];
     }
 
-    Double Norm = convolutionSumX * convolutionSumY;
+    //UNUSED: Double Norm = convolutionSumX * convolutionSumY;
 
 		
 		for(Int ipol=0; ipol< nDataPol; ipol++) { // For all polarizations

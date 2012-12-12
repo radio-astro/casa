@@ -87,7 +87,7 @@ void smoothCT(NewCalTable ct,
     if (nSlot>1 && 
 	(selfields.nelements()<1 || anyEQ(selfields,ifld))) {
 
-      Int ispw=ctiter.thisSpw();
+      //UNUSED: Int ispw=ctiter.thisSpw();
       
       vec(0)=nSlot;
       trc(2)=ftrc(2)=nSlot-1;
@@ -236,7 +236,7 @@ void assignCTScanField(NewCalTable& ct, String msName,
 
   }
 
-  Double rTime=timelo(ord(0));
+  //UNUSED: Double rTime=timelo(ord(0));
 
   // Now iterate throught the NCT and set field and scan according to time
   Block<String> cols(1);

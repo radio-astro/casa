@@ -74,7 +74,7 @@ namespace casa{
 
   CoordinateSystem VLACalcIlluminationConvFunc::makeUVCoords(CoordinateSystem& imageCoordSys,
 							     IPosition& shape,
-							     Double refFreq)
+							     Double /*refFreq*/)
   {
     CoordinateSystem FTCoords = imageCoordSys;
 
@@ -189,7 +189,7 @@ namespace casa{
   //
   void VLACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
 						   IPosition& skyShape,
-						   TempImage<Complex>& uvGrid,
+						   TempImage<Complex>& /*uvGrid*/,
 						   const VisBuffer& vb,
 						   Bool doSquint, Int bandID, Double freqVal)
   {
@@ -197,7 +197,7 @@ namespace casa{
     CoordinateSystem skyCoords(skyCS);
 
     Int index;
-    Double timeValue = getCurrentTimeStamp(vb);
+    //UNUSED: Double timeValue = getCurrentTimeStamp(vb);
     Float pa;
     if (bandID != -1) ap.band = bandID;
     AlwaysAssert(ap.band>=-1, AipsError);

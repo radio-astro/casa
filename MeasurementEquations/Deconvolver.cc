@@ -116,8 +116,13 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Deconvolver::Deconvolver() 
-  : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
-    mt_cleaner_p(), mt_nterms_p(-1), mt_valid_p(False)
+  : dirty_p(0),
+    psf_p(0), 
+    convolver_p(0), 
+    cleaner_p(0), 
+    mt_nterms_p(-1), 
+    mt_cleaner_p(), 
+    mt_valid_p(False)
 {
 
   defaults();
@@ -140,7 +145,7 @@ void Deconvolver::defaults()
 
 Deconvolver::Deconvolver(const String& dirty, const String& psf)
   : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
-    mt_cleaner_p(), mt_nterms_p(-1), mt_valid_p(False)
+     mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   LogIO os(LogOrigin("Deconvolver", "Deconvolver(String& dirty, Strong& psf)", WHERE));
   defaults();
@@ -149,7 +154,7 @@ Deconvolver::Deconvolver(const String& dirty, const String& psf)
 
 Deconvolver::Deconvolver(const Deconvolver &other)
   : dirty_p(0), psf_p(0), convolver_p(0), cleaner_p(0), 
-    mt_cleaner_p(), mt_nterms_p(-1), mt_valid_p(False)
+    mt_nterms_p(-1), mt_cleaner_p(), mt_valid_p(False)
 {
   defaults();
   open(other.dirty_p->table().tableName(), other.psf_p->table().tableName());
@@ -2154,7 +2159,7 @@ Bool Deconvolver::mtopen(const Int nTaylor,
     }
 
   mt_nterms_p = nTaylor;
-  Int mt_npsftaylor = 2*nTaylor-1;
+  uInt mt_npsftaylor = 2*nTaylor-1;
 
   // Check if the correct number of PSFs exist.
   if( psfs.nelements() != mt_npsftaylor )
@@ -2204,7 +2209,7 @@ Bool Deconvolver::mtopen(const Int nTaylor,
     } 
 
   // Send the PSFs into the Multi-Term Matrix Cleaner
-  for (Int order=0;order<mt_npsftaylor;order++)
+  for (uInt order=0;order<mt_npsftaylor;order++)
     {
       Matrix<Float> tempMat;
       Array<Float> tempArr;
@@ -2234,7 +2239,7 @@ Bool Deconvolver::mtclean(const Vector<String>& residuals,
 			  const Int niter,
 			  const Float gain, 
 			  const Quantity& threshold, 
-			  const Bool displayProgress,
+			  const Bool /*displayProgress*/,
 			  const String& mask, 
 			  Float& maxResidual, Int& iterationsDone)
 {
@@ -2416,7 +2421,7 @@ Bool Deconvolver::mtcalcpowerlaw(const Vector<String>& images,
 {
   LogIO os(LogOrigin("Deconvolver", "mtcalcpowerlaw()", WHERE));
 
-  Int ntaylor = images.nelements();
+  uInt ntaylor = images.nelements();
 
   if(ntaylor<2)
     {

@@ -95,10 +95,10 @@ namespace casa{
 
     Bool findSupport(Array<Complex>&, Float& ,Int&, Int&) 
     {throw(AipsError("IlluminationConvFunc::findSupport() not implemented"));};
-    virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& image,
-					      const VisBuffer& vb)
+    virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& /*image*/,
+					      const VisBuffer& /*vb*/)
     {throw(AipsError("IlluminationConvFunc::findPointingOffset() not implemented"));};
-    virtual void prepareConvFunction(const VisBuffer& vb, VBRow2CFBMapType& theMap)
+    virtual void prepareConvFunction(const VisBuffer& /*vb*/, VBRow2CFBMapType& /*theMap*/)
     {throw(AipsError("IlluminationConvFunc::prepareConvFunction() not implemented"));};
 
     virtual Bool makeAverageResponse(const VisBuffer&,

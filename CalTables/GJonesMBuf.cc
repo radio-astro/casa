@@ -491,7 +491,7 @@ Vector<String>& GJonesPolyMBuf::phaseUnits()
 
 //----------------------------------------------------------------------------
 
-void GJonesPolyMBuf::fillAttributes (const Vector<Int>& calIndices)
+  void GJonesPolyMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 {
 // Resize all GJonesPoly attribute columns and set to their default values
 // Input:
@@ -877,7 +877,7 @@ Array<Double>& GJonesSplineMBuf::splineKnotsPhase()
 
 //----------------------------------------------------------------------------
 
-void GJonesSplineMBuf::fillAttributes (const Vector<Int>& calIndices)
+  void GJonesSplineMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 {
 // Resize all GJonesSpline attribute columns and set to their default values
 // Input:

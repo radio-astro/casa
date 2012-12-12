@@ -88,7 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   CountedPtr<SIMapper> & SIMapperCollection::getMapper( Int mapindex )
   {
-    if(mapindex>=itsMappers.nelements()) throw(AipsError("Internal Error : Map Index larger than nmappers"));
+    if(static_cast<uInt>(mapindex)>=itsMappers.nelements()) throw(AipsError("Internal Error : Map Index larger than nmappers"));
 
     return itsMappers[mapindex];
   }
@@ -97,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Float SIMapperCollection::findPeakResidual()
   {
     Float peakresidual=0.0, maxpeakresidual=0.0;
-    for(Int mp=0;mp<itsMappers.nelements();mp++)
+    for(uInt mp=0;mp<itsMappers.nelements();mp++)
       {
 	peakresidual = itsMappers[mp]->getPeakResidual();
 	if( peakresidual > maxpeakresidual )
@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
 
     Float modelflux=0.0;
-    for(Int mp=0;mp<itsMappers.nelements();mp++)
+    for(uInt mp=0;mp<itsMappers.nelements();mp++)
       {
 	modelflux += itsMappers[mp]->getModelFlux();
       }
@@ -126,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // Calculate a PSF fraction from the PSFs across all mappers.
     Float psfsidelobe=0.0, maxpsfsidelobe=0.0;
-    for(Int mp=0;mp<itsMappers.nelements();mp++)
+    for(uInt mp=0;mp<itsMappers.nelements();mp++)
       {
 	psfsidelobe = itsMappers[mp]->getPSFSidelobeLevel();
 	if( psfsidelobe > maxpsfsidelobe )
@@ -142,7 +142,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool SIMapperCollection::anyUpdatedModel()
   {
     Bool updatedmodel = False;
-    for(Int mp=0;mp<itsMappers.nelements();mp++)
+    for(uInt mp=0;mp<itsMappers.nelements();mp++)
       {
 	updatedmodel |= itsMappers[mp]->isModelUpdated();
       }

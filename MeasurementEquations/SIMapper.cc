@@ -171,13 +171,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // This is for interactive-clean.
-  void SIMapper::getCopyOfResidualAndMask( TempImage<Float> &residual, TempImage<Float> &mask )
+  void SIMapper::getCopyOfResidualAndMask( TempImage<Float> &/*residual*/,
+                                           TempImage<Float> &/*mask*/ )
   {
+    // Actually all I think we need here are filenames JSK 12/12/12
     // resize/shape and copy the residual image and mask image to these in/out variables.
     // Allocate Memory here.
   }
-  void SIMapper::setMask( TempImage<Float> &mask )
+  void SIMapper::setMask( TempImage<Float> &/*mask*/ )
   {
+    // Here we will just pass in the new names
     // Copy the input mask to the local main image mask
   }
 

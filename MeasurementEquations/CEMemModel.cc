@@ -350,7 +350,7 @@ void CEMemModel::changeAlphaBeta()
 
 
 //----------------------------------------------------------------------
-Bool CEMemModel::checkImage(const Lattice<Float> *im)
+Bool CEMemModel::checkImage(const Lattice<Float>* /*im*/)
 {
   // I guess we don't have anything to do
   return True;

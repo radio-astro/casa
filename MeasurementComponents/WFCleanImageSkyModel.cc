@@ -52,7 +52,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 WFCleanImageSkyModel::WFCleanImageSkyModel():
-  MFCleanImageSkyModel(), facets_p(1), nfacets_p(1), 
+  MFCleanImageSkyModel(),  nfacets_p(1), facets_p(1),
   largeMem_p(False) {
 
   imageImage_p=0;
@@ -61,7 +61,7 @@ WFCleanImageSkyModel::WFCleanImageSkyModel():
 };
 
 WFCleanImageSkyModel::WFCleanImageSkyModel(const Int facets, Bool largeMemory):
-  MFCleanImageSkyModel(), facets_p(facets), nfacets_p(facets*facets), 
+  MFCleanImageSkyModel(), nfacets_p(facets*facets),  facets_p(facets),
   largeMem_p(largeMemory) 
 {
   imageImage_p=0;

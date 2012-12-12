@@ -45,6 +45,7 @@
 #define OVERSAMPLING 10
 #define THRESHOLD 1E-3
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;

@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		       const Double wScale,
 		       const Int inner)
   {
-    Int convSize = screen.shape()(0);
+    //UNUSED: Int convSize = screen.shape()(0);
     if(wPixel>0) 
       {
 	Double wValue=(wPixel*wPixel)/wScale;

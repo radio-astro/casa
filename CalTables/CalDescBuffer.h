@@ -91,7 +91,7 @@ class CalDescBuffer
 
   // Write the current buffer at the end of a specified calibration
   // table cal_desc subtable(NYI)
-  virtual void append (CalTable& calTable) {};
+  virtual void append (CalTable& /*calTable*/) {};
 
   // Data field accessors
   Vector<Int>& numSpw();

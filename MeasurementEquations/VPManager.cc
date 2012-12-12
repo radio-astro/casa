@@ -127,8 +127,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   VPManager::VPManager(Bool verbose):
-    vplist_p(),
     isLocked_p(True),
+    vplist_p(),
     vplistdefaults_p(-1),
     aR_p()
   {
