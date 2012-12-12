@@ -76,6 +76,8 @@ Bool MatrixCleaner::validatePsf(const Matrix<Float> & psf)
  
 MatrixCleaner::MatrixCleaner():
   itsMask(0),
+  itsSmallScaleBias(0.6),
+  itsMaskThreshold(0.9),
   itsDirty(0),
   itsXfr(0),
   itsScaleSizes(0),
@@ -85,12 +87,10 @@ MatrixCleaner::MatrixCleaner():
   itsChoose(True),
   itsDoSpeedup(False),
   itsIgnoreCenterBox(False),
-  itsSmallScaleBias(0.6),
   itsStopAtLargeScaleNegative(False),
   itsStopPointMode(-1),
   itsDidStopPointMode(False),
   itsJustStarting(True),
-  itsMaskThreshold(0.9),
   psfShape_p(0),
   noClean_p(False)
 {
@@ -110,6 +110,7 @@ MatrixCleaner::MatrixCleaner():
 MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
 				  const Matrix<Float> &dirty):
   itsMask(0),
+  itsSmallScaleBias(0.6),
   itsScaleSizes(0),
   itsMaximumResidual(0.0),
   itsStrengthOptimum(0.),
@@ -117,7 +118,6 @@ MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
   itsChoose(True),
   itsDoSpeedup(False),
   itsIgnoreCenterBox(False),
-  itsSmallScaleBias(0.6),
   itsStopAtLargeScaleNegative(False),
   itsStopPointMode(-1),
   itsDidStopPointMode(False),
@@ -306,7 +306,7 @@ void MatrixCleaner::speedup(const Float nDouble)
 
 // Do the clean as set up
 Int MatrixCleaner::clean(Matrix<Float>& model,
-			      Bool showProgress)
+                         Bool /*showProgress*/)
 {
   AlwaysAssert(model.shape()==itsDirty->shape(), AipsError);
 

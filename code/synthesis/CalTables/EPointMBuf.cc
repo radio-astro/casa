@@ -196,7 +196,7 @@ void EPointMBuf::invalidate()
 
 //----------------------------------------------------------------------------
 
-void EPointMBuf::fillAttributes (const Vector<Int>& calIndices)
+  void EPointMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 {
 // Resize all attribute columns and set to their default values
 // Input:

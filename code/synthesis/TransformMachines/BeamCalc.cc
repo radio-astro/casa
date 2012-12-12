@@ -303,7 +303,7 @@ namespace casa{
 
     setBeamCalcGeometries(obsName, antType, obsTime, otherAntRayPath); 
 
-    for(Int i=0; i<BeamCalc_NumBandCodes_p; i++){
+    for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
       if((bandMinFreq_p[i]<=freq)&&(freq<=bandMaxFreq_p[i])){
 	return i;
       }
@@ -517,7 +517,9 @@ namespace casa{
       E[i] = Complex(hhat[i],0) * pol[0] + Complex(vhat[i],0) * pol[1];
   }
   
-  Int BeamCalc::Antennasetfeedpattern(calcAntenna *a, const char *filename, Double scale)
+  Int BeamCalc::Antennasetfeedpattern(calcAntenna* /*a*/, 
+                                      const char* /*filename*/, 
+                                      Double /*scale*/)
   {
 #if 0
     Int i, N, Nmax;
@@ -929,7 +931,7 @@ namespace casa{
     return P;
   }
   
-  Pathology* BeamCalc::newPathologyfromApertureCalcParams(ApertureCalcParams *ap)
+  Pathology* BeamCalc::newPathologyfromApertureCalcParams(ApertureCalcParams* /*ap*/)
   {
     Pathology *P;
     
@@ -1142,7 +1144,7 @@ namespace casa{
   }
   
   /* gain in power */
-  Double BeamCalc::feedgain(const calcAntenna *a, const Ray *ray, const Pathology *p)
+  Double BeamCalc::feedgain(const calcAntenna *a, const Ray *ray, const Pathology */*p*/)
   {
     Double costheta = 0.0;
     Double v[3];
@@ -1422,10 +1424,11 @@ namespace casa{
     Double pac, pas; /* parallactic angle cosine / sine */
     Complex Iota; Iota=Complex(0,1);
 
-    Complex E1[3];
-    Double x,y, r2, L, amp, dP, dA, d0, x1, y1, dx1, dy1, dx2, dy2, dO;
-    Ray *ray, *rayx, *rayy;
-    Int iter, niter=6;
+    //UNUSED: Complex E1[3];
+    //UNUSED: Double x,y, r2, L, amp, dP, dA, d0, x1, y1, dx1, dy1, dx2, dy2, dO;
+    //UNUSED: Ray *ray, *rayx, *rayy;
+    //UNUSED: Int iter;
+    //UNUSED: Int niter=6;
 
     a = newAntennafromApertureCalcParams(ap);
     p = newPathologyfromApertureCalcParams(ap);

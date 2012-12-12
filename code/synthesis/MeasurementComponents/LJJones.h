@@ -146,7 +146,7 @@ public:
   virtual void postSolveMassage(const VisBuffer&);
   virtual void selfGatherAndSolve(VisSet& vs,VisEquation& ve);
   virtual Bool useGenericGatherForSolve() { return False; };
-  virtual Float printFraction(const Int& nSlots) {return 0.1;};
+  virtual Float printFraction(const Int& /*nSlots*/) {return 0.1;};
   Array<Complex> getOffsets(const Int& spw) {return cs().par(spw);}
   Array<Double> getTime(const Int& spw) {return cs().time(spw);}
   void nearest(const Double time, Array<Complex>& vals);

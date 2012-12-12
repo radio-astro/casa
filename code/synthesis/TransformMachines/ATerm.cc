@@ -40,7 +40,7 @@ namespace casa{
 			      const Int& convSize,
 			      const Int& convSampling,
 			      const CoordinateSystem& skyCoord,
-			      const Int& skyNx, const Int& skyNy,
+			      const Int& skyNx, const Int& /*skyNy*/,
 			      CoordinateSystem& feedCoord)
   //				     Vector<Int>& cfStokes)
   {

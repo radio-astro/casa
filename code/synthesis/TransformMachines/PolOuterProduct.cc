@@ -84,7 +84,7 @@ namespace casa{
   {return makePol2CFMat_p(vbPol,vbPol2ImMap, outerProductIndex2VBPolMap_p);}
 
   PolMapType& PolOuterProduct::makeConjPol2CFMat(const Vector<Int>& vbPol, 
-						 const Vector<Int>& vbPol2ImMap)
+						 const Vector<Int>& /*vbPol2ImMap*/)
   {
     Int nVBPol=vbPol.nelements();
     // Resize the conj. index map.
@@ -95,13 +95,13 @@ namespace casa{
     // For each conjOuterProduct entry, find the equivalent entire in outerProductMap.
     // Copy of the assocaited index from outerProductIndex map to conjOuterProductMap
     //
-    for (Int i=0;i<conjOuterProduct2VBPolMap_p.nelements();i++)
-      for (Int j=0;j<conjOuterProduct2VBPolMap_p(i).nelements();j++)
+    for (uInt i=0;i<conjOuterProduct2VBPolMap_p.nelements();i++)
+      for (uInt j=0;j<conjOuterProduct2VBPolMap_p(i).nelements();j++)
 	{
 	  Int el=conjOuterProduct2VBPolMap_p(i)(j);
 
-	  for (Int ii=0;ii<outerProduct2VBPolMap_p.nelements();ii++)
-	    for (Int jj=0;jj<outerProduct2VBPolMap_p(ii).nelements();jj++)
+	  for (uInt ii=0;ii<outerProduct2VBPolMap_p.nelements();ii++)
+	    for (uInt jj=0;jj<outerProduct2VBPolMap_p(ii).nelements();jj++)
 	      if (outerProduct2VBPolMap_p(ii)(jj) == el)
 		{
 		  conjOuterProductIndex2VBPolMap_p(i)(j) = outerProductIndex2VBPolMap_p(ii)(jj); 

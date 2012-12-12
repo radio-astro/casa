@@ -86,8 +86,8 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,
   Cube<Complex> modelData;
   modelData.reference(vb.modelVisCube());
   Vector<Complex> visibility(4);
-  Double phase;
-  Double phaseMult;
+  //UNUSED: Double phase;
+  //UNUSED: Double phaseMult;
   Vector<Double>& frequency = vb.frequency();
   Vector<Double> invLambda = frequency/C::c;
    
@@ -183,10 +183,10 @@ void SimpleComponentFTMachine::applyPhasor(Int part, const Block<Int>& startrow,
     r=startrow[part]+j;
     rowoff=r*nchan*npol; 
     phaseMult = dphase(r);
-    for (uInt chn = 0; chn < nchan; chn++) {
+    for (Int chn = 0; chn < nchan; chn++) {
       phase = phaseMult * invLambda(chn);
       Complex phasor(cos(phase), sin(phase));
-      for (uInt pol=0; pol < npol; pol++) {
+      for (Int pol=0; pol < npol; pol++) {
 	const DComplex& val = dVis(corrType(pol), chn, j);
 	modData[rowoff+chn*npol+pol] = Complex(val.real(), val.imag()) * conj(phasor);
       }
@@ -235,8 +235,8 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
   modelData=0.0;
 
   Vector<Complex> visibility(4);
-  Double phase;
-  Double phaseMult;
+  //UNUSED: Double phase;
+  //UNUSED: Double phaseMult;
   Vector<Double> frequency;
   frequency= vb.frequency();
   Vector<Double> invLambda = frequency/C::c;
@@ -305,7 +305,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
 
 
 
-  Int sumrow=0;
+  //UNUSED: Int sumrow=0;
   Record lala;
   String err;
   compList.toRecord(err, lala);
@@ -351,7 +351,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
       MDirection compdir=component.shape().refDirection();
       Vector<Double> thisRow(3);
       thisRow=0.0;
-      uInt i;
+      //UNUSED: uInt i;
       Matrix<Double> uvw;
       uvw=uvwcomp[icomp];
       Vector<Double> dphase;

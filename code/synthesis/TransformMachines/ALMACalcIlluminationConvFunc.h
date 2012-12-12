@@ -52,7 +52,7 @@ namespace casa{
     ~ALMACalcIlluminationConvFunc() 
       {delete ap.aperture;};
 
-    void setBandID(Int bandID) {/*ap.band=(ALMABeamCalcBandCode)bandID;*/}
+    void setBandID(Int /*bandID*/) {/*ap.band=(ALMABeamCalcBandCode)bandID;*/}
 
     void setAntRayPath(const String& antRayPath) {otherAntRayPath_p = antRayPath;}
 

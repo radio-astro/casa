@@ -199,8 +199,8 @@ Imager::Imager()
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
-     mssFreqSel_p()
+     mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), 
+      prev_image_id_p(0), prev_mask_id_p(0)
 {
   ms_p=0;
   mssel_p=0;
@@ -317,8 +317,8 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
-    mssFreqSel_p()
+    mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+
 {
 
   mssel_p=0;
@@ -339,8 +339,8 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 Imager::Imager(MeasurementSet& theMS, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
-     mssFreqSel_p()
+     mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0),
+     prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
   ms_p=0;

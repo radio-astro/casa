@@ -64,16 +64,16 @@ namespace casa{
 					  Complex& nvalue, Double& wVal, 
 					  Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
 					  Vector<Double>& off, Vector<Int>& convOrigin, 
-					  Vector<Int>& cfShape, Vector<Int>& loc, Vector<Int>& igrdpos,
-					  Double& sinDPA, Double& cosDPA,
+					  Vector<Int>& /*cfShape*/, Vector<Int>& loc, Vector<Int>& igrdpos,
+					  Double& /*sinDPA*/, Double& cosDPA,
 					  Bool& pointingOffset, Bool dopsf);
   template
   Double AWVisResampler::accumulateOnGrid(Array<Complex>& grid, Complex* __restrict__& convFuncV, 
 					  Complex& nvalue, Double& wVal, 
 					  Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
 					  Vector<Double>& off, Vector<Int>& convOrigin, 
-					  Vector<Int>& cfShape, Vector<Int>& loc, Vector<Int>& igrdpos,
-					  Double& sinDPA, Double& cosDPA,
+					  Vector<Int>& /*cfShape*/, Vector<Int>& loc, Vector<Int>& igrdpos,
+					  Double& /*sinDPA*/, Double& cosDPA,
 					  Bool& pointingOffset, Bool dopsf);
   // template
   // void AWVisResampler::accumulateFromGrid(Complex& nvalue, const DComplex* __restrict__& grid, 
@@ -94,10 +94,10 @@ namespace casa{
 					  Complex* __restrict__& convFuncV, 
 					  Double& wVal, Vector<Int>& scaledSupport, 
 					  Vector<Float>& scaledSampling, Vector<Double>& off,
-					  Vector<Int>& convOrigin, Vector<Int>& cfShape,
+					  Vector<Int>& convOrigin, Vector<Int>& /*cfShape*/,
 					  Vector<Int>& loc, 
 					  Complex& phasor, 
-					  Double& sinDPA, Double& cosDPA,
+					  Double& /*sinDPA*/, Double& /*cosDPA*/,
 					  Bool& finitePointingOffset, 
 					  Matrix<Complex>& cached_phaseGrad_p);
   
@@ -132,7 +132,7 @@ namespace casa{
 					Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
 					Vector<Double>& off, Vector<Int>& convOrigin, 
 					Vector<Int>& cfShape, Vector<Int>& loc, Vector<Int>& igrdpos,
-					Double& sinDPA, Double& cosDPA,
+                                          Double& sinDPA, Double& cosDPA,
 					Bool& finitePointingOffset,
 					Bool doPSFOnly)
   {
@@ -194,8 +194,8 @@ namespace casa{
   void AWVisResampler::cachePhaseGrad_p(const Vector<Double>& pointingOffset,
 					const Vector<Int>&cfShape,
 					const Vector<Int>& convOrigin,
-					const Double& cfRefFreq,
-					const Double& imRefFreq)
+					const Double& /*cfRefFreq*/,
+                                        const Double& /*imRefFreq*/)
   {
     LogIO log_l(LogOrigin("AWVisResampler","cachePhaseGrad[R&D]"));
     //cout << "# " << cfRefFreq << " " << imRefFreq << endl;
@@ -253,7 +253,7 @@ namespace casa{
   template <class T>
   void AWVisResampler::DataToGridImpl_p(Array<T>& grid,  VBStore& vbs, 
 					Matrix<Double>& sumwt,const Bool& dopsf,
-					Bool useConjFreqCF)
+					Bool /*useConjFreqCF*/)
   {
     LogIO log_l(LogOrigin("AWVisResampler[R&D]","DataToGridImpl_p"));
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny, nw, nCFFreq;
@@ -284,11 +284,11 @@ namespace casa{
     nDataChan = vbs.flagCube_p.shape()[1];
 
     Bool Dummy, gDummy, 
-      accumCFs=((vbs.uvw_p.nelements() == 0) && dopsf),
-      accumWts=((vbs.uvw_p.nelements() != 0) && dopsf);
+      accumCFs=((vbs.uvw_p.nelements() == 0) && dopsf);
+    //UNUSED: Bool accumWts=((vbs.uvw_p.nelements() != 0) && dopsf);
 
     T* __restrict__ gridStore = grid.getStorage(gDummy);
-    const Int * __restrict__ iGrdPosPtr = igrdpos.getStorage(Dummy);
+    //UNUSED: const Int * __restrict__ iGrdPosPtr = igrdpos.getStorage(Dummy);
       
     Double *freq=vbs.freq_p.getStorage(Dummy);
 
@@ -299,7 +299,7 @@ namespace casa{
     Bool * __restrict__ rowFlag_ptr = vbs.rowFlag_p.getStorage(Dummy);;
     Float * __restrict__ imgWts_ptr = vbs.imagingWeight_p.getStorage(Dummy);
     Complex * __restrict__ visCube_ptr = vbs.visCube_p.getStorage(Dummy);
-    Double * __restrict__ sumWt_ptr = sumwt.getStorage(Dummy);
+    //UNUSED: Double * __restrict__ sumWt_ptr = sumwt.getStorage(Dummy);
 
     Vector<Double> wVals, fVals; PolMapType mVals, mNdx, conjMVals, conjMNdx;
     Double fIncr, wIncr;
@@ -338,7 +338,7 @@ namespace casa{
 	startChan = 0;
 	endChan = nDataChan;
       }
-   Bool done=False;
+   //UNUSED: Bool done=False;
    Bool finitePointingOffsets=(
 			      (fabs(pointingOffset(0))>0) ||  
 			      (fabs(pointingOffset(1))>0)

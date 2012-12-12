@@ -225,7 +225,7 @@ Int Applicator::nextProcessDone(Algorithm &a, Bool &allDone)
 	allDone = False;
       } else {
 	// In the parallel case, the controller is not assigned
-	if (i != comm->controllerRank()) {
+	if (i != static_cast<uInt>(comm->controllerRank())) {
 	  allDone = False;
 	}
       }

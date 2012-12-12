@@ -78,16 +78,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
-  Bool ImagerMultiMS::setDataToMemory(const String& msname, const String& mode, 
+  Bool ImagerMultiMS::setDataToMemory(const String& msname, 
+                                      const String& /*mode*/, 
 				   const Vector<Int>& nchan, 
 				   const Vector<Int>& start,
 				   const Vector<Int>& step,
-				   const Vector<Int>& spectralwindowids,
-				   const Vector<Int>& fieldids,
+                                      const Vector<Int>& /*spectralwindowids*/,
+				   const Vector<Int>& /*fieldids*/,
 				   const String& msSelect,
 				   const String& timerng,
 				   const String& fieldnames,
-				   const Vector<Int>& antIndex,
+                                      const Vector<Int>& /*antIndex*/,
 				   const String& antnames,
 				   const String& spwstring,
 				   const String& uvdist,

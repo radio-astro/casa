@@ -355,7 +355,7 @@ void SolvableVisJonesMBuf::invalidate()
 
 //----------------------------------------------------------------------------
 
-void SolvableVisJonesMBuf::fillAttributes (const Vector<Int>& calIndices)
+void SolvableVisJonesMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 {
 // Resize all attribute columns and set to their default values
 // Input:

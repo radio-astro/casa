@@ -119,7 +119,7 @@ namespace casa {
   // Compute the penalty function (also called the Goodness-of-fit criteria).
   // For us, its the Chi-square function.
   //
-  Double SteepestDescentSolver::getGOF(const VisBuffer& residual, Int& whichPol, Double& sumWt, char* msg)
+  Double SteepestDescentSolver::getGOF(const VisBuffer& residual, Int& whichPol, Double& sumWt, char* /*msg*/)
   {
     Double Chisq=0.0;
     Int nRow=residual.nRow();
@@ -381,7 +381,8 @@ namespace casa {
     Cube<Float> bestSolution;
     Vector<Complex> ResidualVj, dAzVj, dElVj;
     Vector<Bool> antFlagged;
-    Double Chisq, dChisq, bestChisq, sumWt, Time, AzHDiag, ElHDiag,localGain, coVar1, coVar2, 
+    Double Chisq = MAXFLOAT;
+    Double dChisq, bestChisq, sumWt, Time, AzHDiag, ElHDiag,localGain, coVar1, coVar2, 
       stepSize0,stepSize1;
     Int iPol=0, nPol, iter, axis0=0,axis1=0, iCorr;
     Bool Converged=False;
@@ -396,6 +397,7 @@ namespace casa {
     epj.guessPar();
     for(Int ia=0;ia<nAnt;ia++)
       {
+
 	// epj.solveRPar()(0,0,ia) = -0.001;
 	// epj.solveRPar()(2,0,ia) =  0.001;
 	// epj.solveRPar()(1,0,ia) =  0.001;

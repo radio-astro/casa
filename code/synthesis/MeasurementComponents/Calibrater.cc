@@ -1293,7 +1293,7 @@ Calibrater::configureForCorrection ()
     // must also be enabled to use async i/o (see VisibilityIterator.{cc,h}).
 
     Bool isEnabled;
-    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
+    //UNUSED: Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
 
     // isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
     // For now (3/19/12) make asyncio for apply cal be explicitly enabled.

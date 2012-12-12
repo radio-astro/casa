@@ -207,7 +207,7 @@ Bool CTPatchedInterp::interpolate(Int msfld, Int msspw, Double time, const Vecto
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::interpolate(...,freq)" << endl;
 
   // The number of requested channels
-  Int nMSChan=freq.nelements();
+  uInt nMSChan=freq.nelements();
 
   // Ensure freq result Array is properly sized
   if (freqResult_(msspw,msfld).nelements()!=nMSChan) {

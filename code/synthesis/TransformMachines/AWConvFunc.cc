@@ -979,7 +979,7 @@ namespace casa{
       }
 
     maxR[th]=-R;
-    for (Int i=0;i<valsNelements;i++)
+    for (uInt i=0;i<valsNelements;i++)
       if (fabs(vals[i]) > threshold)
 	{
 	  maxR[th]=R;
@@ -1003,7 +1003,7 @@ namespace casa{
     Bool dummy;
     uInt Nth=1, threadID=0;
 
-    for (uInt i=0;i<nCFS;i++)
+    for (Int i=0;i<nCFS;i++)
     	cfShape[i]=func.shape()[i];
     convSize = cfShape[0];
 
@@ -1033,7 +1033,7 @@ namespace casa{
 		}
 	    }///omp 	    
 
-	    for (Int th=0;th<Nth;th++)
+	    for (uInt th=0;th<Nth;th++)
 	      if (maxR[th] > 0)
 		{found=True; radius=maxR[th]; return found;}
       }

@@ -133,7 +133,7 @@ CalInterp::~CalInterp() {
 
 Bool CalInterp::interpolate(const Double& time,
 			    const Int& spw,
-			    const Vector<Double>& freq) {
+			    const Vector<Double>& /*freq*/) {
 
   if (verbose_) cout << endl << "CalInterp::interpolate()" << endl;
 

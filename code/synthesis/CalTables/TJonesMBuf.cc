@@ -478,7 +478,7 @@ Vector<String>& TJonesPolyMBuf::phaseUnits()
 
 //----------------------------------------------------------------------------
 
-void TJonesPolyMBuf::fillAttributes (const Vector<Int>& calIndices)
+  void TJonesPolyMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 {
 // Resize all TJonesPoly attribute columns and set to their default values
 // Input:
@@ -857,7 +857,7 @@ Array<Double>& TJonesSplineMBuf::splineKnotsPhase()
 
 //----------------------------------------------------------------------------
 
-void TJonesSplineMBuf::fillAttributes (const Vector<Int>& calIndices)
+  void TJonesSplineMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 {
 // Resize all TJonesSpline attribute columns and set to their default values
 // Input:

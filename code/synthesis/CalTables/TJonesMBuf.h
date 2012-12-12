@@ -142,8 +142,8 @@ class TJonesPolyMBuf : public TJonesMBuf
   // as non-attribute columns.
   //
   // Use a visibility buffer to define the attribute values (NYI)
-  virtual void fillAttributes(const Vector<Int>& calIndices,
-			      const VisBuffer& vb) {};
+  virtual void fillAttributes(const Vector<Int>& /*calIndices*/,
+			      const VisBuffer& /*vb*/) {};
   //
   // Set default attribute values
   virtual void fillAttributes(const Vector<Int>& calIndices);
@@ -278,8 +278,8 @@ class TJonesSplineMBuf : public TJonesPolyMBuf
   // as non-attribute columns.
   //
   // Use a visibility buffer to define the attribute values (NYI)
-  virtual void fillAttributes(const Vector<Int>& calIndices,
-			      const VisBuffer& vb) {};
+  virtual void fillAttributes(const Vector<Int>& /*calIndices*/,
+			      const VisBuffer& /*vb*/) {};
   //
   // Set default attribute values
   virtual void fillAttributes(const Vector<Int>& calIndices);

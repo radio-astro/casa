@@ -170,19 +170,19 @@ void PredictAlgorithm::task(){
 
 };
 
-void PredictAlgorithm::initializeGet(const VisBuffer& vb, Int row, Int model,
-				     Bool incremental) {
+void PredictAlgorithm::initializeGet(const VisBuffer& vb, Int /*row*/, Int /*model*/,
+				     Bool /*incremental*/) {
 
   // Need to add support for varying SkyJones
   ft_p->initializeToVis(*cImage_p, vb);
 }
 
-VisBuffer& PredictAlgorithm::getModelVis(VisBuffer& result, Int model,
-			    Bool incremental) {
+VisBuffer& PredictAlgorithm::getModelVis(VisBuffer& result, Int /*model*/,
+                                         Bool /*incremental*/) {
   
   // Need to add support for varying SkyJones
 
-  Int nRow=result.nRow();
+  //UNUSED: Int nRow=result.nRow();
   result.modelVisCube(); // get the visibility so vb will have it
   VisBuffer vb(result);
 

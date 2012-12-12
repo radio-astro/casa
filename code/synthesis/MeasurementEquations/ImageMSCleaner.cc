@@ -244,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Int ImageMSCleaner::clean(ImageInterface<Float> & modelimage, const String& algorithm, 
 			    const Int niter,
-			    const Float gain, const Quantity& threshold, const Quantity& fthresh, Bool doPlotProgress){
+			    const Float gain, const Quantity& threshold, const Quantity& fthresh, Bool /*doPlotProgress*/){
 
 
     

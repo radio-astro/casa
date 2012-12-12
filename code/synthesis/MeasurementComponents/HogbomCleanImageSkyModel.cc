@@ -82,7 +82,7 @@ void HogbomCleanImageSkyModelstopnow (Int *yes) {
   }
 }
 
-void HogbomCleanImageSkyModelmsgput(Int *npol, Int* pol, Int* iter, Int* px, Int* py,
+void HogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* px, Int* py,
 				    Float* fMaxVal) {
   LogMessage message(LogOrigin("HogbomCleanImageSkyModel","solve"));
   ostringstream o; 

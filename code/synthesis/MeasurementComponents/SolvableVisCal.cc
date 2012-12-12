@@ -695,7 +695,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     Vector<Int> a2;
     Matrix<Bool> flags;
     
-    ProgressMeter meter(0.,1. , "Simulating "+nameOfType(type())+" ", "", "", "", True, .1);
+    ProgressMeter meter(0.,1. , "Simulating "+nameOfType(type())+" ", "", "", "", True, 1);
 
     // check if it's possible to simulate ACs
     Bool knownACtype(False);

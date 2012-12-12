@@ -92,7 +92,7 @@ class CalBuffer
   virtual void invalidate();
 
   // Write the current buffer at the end of a specified cal table (NYI)
-  virtual void append (CalTable& calTable) {};
+  virtual void append (CalTable& /*calTable*/) {};
 
   // Data field accessors
   Vector<Double>& time();
