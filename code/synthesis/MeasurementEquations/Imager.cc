@@ -6767,6 +6767,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	Vector<String> apsf(psfnames);
 	
 	if(String(algorithm) != "msmfs") ntaylor_p=1; /* masks increment by ntaylor_p only for msmfs */
+	uInt nmods = aresidual.nelements()/ntaylor_p;
 
 	if( (apsf.nelements()==1) && apsf[0]==String(""))
 	  apsf.resize();
@@ -6783,16 +6784,15 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      amask[k]=amodel[k]+String(".mask");
 	    }
 	  }
-	  Vector<Bool> nointerac(amodel.nelements());
+	  Vector<Bool> nointerac(nmods);
 	  nointerac.set(False);
-	  if(fixed.nelements() != amodel.nelements()){
-	    fixed.resize(amodel.nelements());
+	  if(fixed.nelements() != nmods){
+	    fixed.resize(nmods);
 	    fixed.set(False);
 	  }
 	  Bool forceReload=True;
 	  Int nloop=0;
 	  if(npercycle != 0)
-
 	    nloop=niter/npercycle;
 	  Int continter=0;
 	  Int elniter=npercycle;
@@ -6809,7 +6809,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
-	    uInt nmods = aresidual.nelements()/ntaylor_p;
+	    
 	    for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
 		PagedImage<Float> rest(aimage[nIm]);
@@ -6860,7 +6860,6 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      }
 	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
 		Int remainloop=nloop-k-1;
-		uInt nmods = aresidual.nelements()/ntaylor_p;
 		for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 		  if(!nointerac(nIm)){
 		    continter=interactivemask(aresidual[nIm], amask[nIm],
