@@ -144,6 +144,8 @@ MSTransform::configure(Record config)
 	// The datacolumn must exist
 	if (config_p.isDefined("datacolumn")){
 		config_p.get("datacolumn", datacolumn_p);
+		datacolumn_p.upcase();
+		config_p.define("datacolumn", datacolumn_p);
 	}
 	else {
 		// Add the default column to the Record
