@@ -351,7 +351,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     Experimental version of task mstransform.
 
     NOTE: This first version of the task only implements the
-          combinespws transformation.
+          combinespws transformation. Parameters marked with
+          TBI (to-be-implemented) will be implemented later in
+          in this cycle.
 
     The task mstransform can do the same functionalities available
     in concat, cvel, partition and split without the need to read and write
@@ -359,12 +361,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     are:
     
     * multiple input MSs or MMSs
-    * ability to create an output MMS or multiple MSs
+    * ability to create an output MS or MMS
     * spw combination and separation
     * frequency averaging taking weights into account
     * time averaging taking a minimum number of baselines
     * reference frame transformation
-    * hanning smoothing
+    * Hanning smoothing
     
     All these transformations will be applied on the fly without any writing to
     the disk to optimize I/O. When multiple input MSs are given in the input, it will
@@ -409,7 +411,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         numsubms -- The number of sub-MSs to create (int).
             default: 64
                 
-    tileshape -- Tile shape of the disk data columns.
+    tileshape -- Tile shape of the disk data columns. (TBI)
         default: ''
 
 
@@ -507,8 +509,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     combinespws -- Combine the input spws into a new output spw.
         default: False
 
---- Frequency averaging parameters ---
-    freqaverage -- Average data in frequency.
+--- Frequency averaging parameters ---(TBI)
+    freqaverage -- Average data in frequency. 
         default: False
 
         freqbin -- Bin (width) of input channels to average to create an output
@@ -520,11 +522,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             options: 'flags', 'spectral'
 
 
---- Hanning smoothing parameters ---
+--- Hanning smoothing parameters --- (TBI)
     hanning -- Hanning smooth frequency channel data to remove Gibbs ringing.
         default: False
 
---- Regrid parameters ---
+--- Regrid parameters --- (TBI)
     regridms -- Regrid the MS to a new spw, channel structure or frame.
         default: False
 
@@ -565,7 +567,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             default: 'radio'
 
 
---- SPW separation ---
+--- SPW separation --- (TBI)
     separatespws -- Separate spws based on the given number of new spws.
         default: False
 
@@ -575,7 +577,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                      have 8 spws.
 
 
---- Time averaging parameters ---
+--- Time averaging parameters ---(TBI)
     timeaverage -- Average data in time.
         default: False
 

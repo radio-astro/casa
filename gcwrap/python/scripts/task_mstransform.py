@@ -74,7 +74,6 @@ class MSTHelper():
             if v != None and v != "":
                 self.__selpars[k] = v
         
-        print self.__selpars
         return self.__selpars
     
     @dump_args
@@ -85,7 +84,6 @@ class MSTHelper():
         # input is a list of MSs
         if (isinstance(self.__origpars['vis'], list)):
             lsize = self.__origpars['vis'].__len__()
-            print 'lsize=%s'%lsize
             # Check data selection parameters
             for k,v in self.__selpars.items():
                 if not isinstance(v, list):                    
@@ -95,7 +93,7 @@ class MSTHelper():
                         listvalue.append(v)
                         self.__selpars[k] = listvalue
                         
-        print self.__selpars
+        return self.__selpars
             
             
         
@@ -109,9 +107,6 @@ class MSTHelper():
                 fb = v 
             elif k == "useweights":
                 wght = v
-            else:
-                # ignore unknown parameter for this mode
-                pass
         
         # Validate the parameters
         
@@ -202,16 +197,41 @@ def mstransform(
 
         if combinespws:
             casalog.post('Combine spws %s into new output spw'%spw)
+            config['combinespws'] = True
         if freqaverage:
             casalog.post('Frequency averaging is not yet implemented', 'WARN')
+            pass
+            config['freqaverage'] = True
+            config['freqbin'] = freqbin
+            config['useweights'] = useweights
         if hanning:
             casalog.post('Hanning smoothing is not yet implemented', 'WARN')
+            pass
+            config['hanning'] = True
         if regridms:
             casalog.post('MS regridding is not yet implemented', 'WARN')
+            pass
+            config['regridms'] = True
+            config['mode'] = mode
+            config['nchan'] = nchan
+            config['start'] = start
+            config['width'] = width
+            config['interpolation'] = interpolation
+            config['phasecenter'] = phasecenter
+            config['restfreq'] = restfreq
+            config['outframe'] = outframe
+            config['veltype'] = veltype
         if separatespws:
             casalog.post('Separation of spws is not yet implemented', 'WARN')
+            pass
+            config['nspws'] = nspws # this will change
         if timeaverage:
             casalog.post('Time averaging is not yet implemented', 'WARN')
+            pass
+            config['timebin'] = timebin
+            config['timespan'] = timespan
+            config['quantize_c'] = quantize_c
+            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         mtlocal.config(config)
@@ -224,7 +244,7 @@ def mstransform(
         mtlocal.run()        
             
         mtlocal.done()
-            
+                    
     except Exception, instance:
         mtlocal.done()
         raise Exception, instance
