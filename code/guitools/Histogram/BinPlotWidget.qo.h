@@ -81,6 +81,7 @@ public:
      * 		created for an image, a region, or multiple regions.
      */
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls, QWidget* parent = 0 );
+    enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( const ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
@@ -237,7 +238,7 @@ private:
     QAction regionAllModeAction;
     bool displayStep;
     bool displayLog;
-    enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
+
     PlotMode plotMode;
     QMenu contextMenuDisplay;
 
