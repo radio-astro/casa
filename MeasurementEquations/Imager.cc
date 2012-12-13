@@ -5241,13 +5241,11 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   sjy_setRadiusLimit(tmodimage, modimage, model, dircsys);
 
   // for debugging
-  /***
-  PagedImage<Float> checkIm(TiledShape(modimage.shape(),
-                                          modimage.niceCursorShape()),
-                                    modimage.coordinates(),
-                                    "checkImage");
-  checkIm.copyData((LatticeExpr<Float>)(*tmodimage));
-  ***/
+  //PagedImage<Float> checkIm(TiledShape(modimage.shape(),
+  //                                        modimage.niceCursorShape()),
+  //                                  modimage.coordinates(),
+  //                                  "checkImage");
+  //checkIm.copyData((LatticeExpr<Float>)(*tmodimage));
 
   if(fluxdens[0] != 0.0){
     Float sumI = 1.0;
@@ -5289,6 +5287,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     else{
       // Scale factor
       Float scale = fluxUsed[0] / sumI;
+      //for addition of sjy_setRadiusLimit
       //tmodimage->copyData( (LatticeExpr<Float>)(modimage * scale) );	
       tmodimage->copyData( (LatticeExpr<Float>)(*tmodimage * scale) );	
       os << LogIO::NORMAL
@@ -5304,6 +5303,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
  << "Using the model image's original unscaled flux density for visibility prediction."
        << LogIO::POST;
     writeHistory(os);
+    // included in sjy_setRadiusLimit
     //tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
   }
             
@@ -5366,7 +5366,6 @@ Bool Imager::sjy_setRadiusLimit(TempImage<Float>* tmodimage,
     Matrix<Float> circ(1,3);
     Record *imrec=0;
     Matrix<Quantity> blctrcs;
-    //IPosition circoord(3,radius,dircsys.referencePixel()(0), dircsys.referencePixel()(1));
     circ(0,0)=radius;
     circ(0,1)=dircsys.referencePixel()(0);
     circ(0,2)=dircsys.referencePixel()(1);
