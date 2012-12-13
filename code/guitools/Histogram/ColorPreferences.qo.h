@@ -44,9 +44,11 @@ class ColorPreferences : public QDialog {
 public:
     ColorPreferences(QWidget *parent = 0);
     void setFitColorsVisible( bool visible );
+    void setMultipleHistogramColorsVisible( bool visible );
     QColor getHistogramColor() const;
     QColor getFitEstimateColor() const;
     QColor getFitCurveColor() const;
+    QList<QColor> getMultipleHistogramColors() const;
     ~ColorPreferences();
 
 signals:
@@ -58,25 +60,32 @@ private slots:
 	void selectHistogramColor();
 	void selectFitCurveColor();
 	void selectFitEstimateColor();
+	void addHistogramColor();
+	void deleteHistogramColor();
 
 private:
     void initializeUserColors();
-    QString readCustomColor( QSettings& settings, const QString& identifier);
+    QString readCustomColor( QSettings& settings, const QString& identifier, const QString& colorDefaultName);
+    void readCustomColorList( QSettings& settings );
     void setButtonColor( QPushButton* button, QColor color );
+    void addColorToList( QColor color );
     QColor getButtonColor( QPushButton* button ) const;
     void showColorDialog( QPushButton* source );
+    void persistColorList( QSettings& settings );
     void persistColors();
     void resetColors();
 
     QColor histogramColor;
     QColor fitEstimateColor;
     QColor fitCurveColor;
+    QList<QString> multipleHistogramColors;
     Ui::ColorPreferencesClass ui;
     static const QString APPLICATION;
     static const QString ORGANIZATION;
     static const QString HISTOGRAM_COLOR;
     static const QString FIT_ESTIMATE_COLOR;
     static const QString FIT_CURVE_COLOR;
+    static const QString MULTIPLE_HISTOGRAM_COLORS;
 };
 }
 #endif // PREFERENCESCOLOR_QO_H

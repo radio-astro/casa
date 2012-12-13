@@ -27,7 +27,6 @@
 #define FITTER_H_
 
 #include <casa/Arrays/Vector.h>
-
 #include <QString>
 #include <QTextStream>
 
@@ -40,10 +39,12 @@ class Fitter {
 public:
 	Fitter();
 	void setData( Vector<Float> xValues, Vector<Float> yValues );
-	Vector<Float> getFitValues();
+	Vector<Float> getFitValues() const;
+	Vector<Float> getFitValuesX() const;
 	virtual bool doFit() = 0;
 	virtual void clearFit()=0;
-	virtual void toAscii( QTextStream& out ) const = 0;
+	virtual void toAscii( QTextStream& out ) const;
+	bool isFit() const;
 	QString getErrorMessage() const;
 	QString getStatusMessage() const;
 	virtual ~Fitter();
@@ -54,6 +55,7 @@ protected:
 	Vector<Float> fitValues;
 	QString errorMsg;
 	QString statusMsg;
+	bool dataFitted;
 	float getMean() const;
 };
 

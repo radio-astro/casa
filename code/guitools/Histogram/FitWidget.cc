@@ -54,6 +54,7 @@ FitWidget::FitWidget(QWidget *parent)
 	connect( ui.fitDistributionComboBox, SIGNAL( currentIndexChanged( int )),
 			this, SLOT(fitSelected(int)));
 
+	fitId = -1;
 	fitter = NULL;
 	fitterGaussian = new FitterGaussian();
 	fitterPoisson = new FitterPoisson();
@@ -161,7 +162,8 @@ void FitWidget::lambdaEdited( const QString& lambdaText ){
 	}
 }
 
-void FitWidget::setValues( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
+void FitWidget::setValues( int id, Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
+	fitId = id;
 	fitterPoisson->setData( dataValuesX, dataValuesY );
 	fitterGaussian->setData( dataValuesX, dataValuesY );
 }
@@ -181,12 +183,20 @@ void FitWidget::fitSelected( int index ){
 //                    Fitting
 //-----------------------------------------------------------
 
-Vector<Float> FitWidget::getFitValues(){
+Vector<Float> FitWidget::getFitValues() const {
 	Vector<Float> fitValues;
 	if ( fitter != NULL ){
 		fitValues = fitter->getFitValues();
 	}
 	return fitValues;
+}
+
+Vector<Float> FitWidget::getFitValuesX() const {
+	Vector<Float> fitValuesX;
+	if ( fitter != NULL ){
+		fitValuesX = fitter->getFitValuesX();
+	}
+	return fitValuesX;
 }
 
 void FitWidget::doFit() {
@@ -218,6 +228,7 @@ void FitWidget::doFit() {
 void FitWidget::clearFit(){
 	fitterPoisson->clearFit();
 	fitterGaussian->clearFit();
+	fitId = -1;
 	ui.gaussCenterLineEdit->setText("");
 	ui.gaussPeakLineEdit->setText("");
 	ui.gaussFWHMLineEdit->setText("");
@@ -231,8 +242,13 @@ FitWidget::~FitWidget(){
 }
 
 void FitWidget::toAscii( QTextStream& out) const {
-	out << "Fit Information"<<"\n";
-	fitter->toAscii(out);
-
+	if ( fitter->isFit() ){
+		QString fitTitle("Fit Information");
+		if ( fitId != -1 ){
+			fitTitle.append( " for region "+QString::number( fitId) );
+		}
+		out << fitTitle << "\n";
+		fitter->toAscii(out);
+	}
 }
 }

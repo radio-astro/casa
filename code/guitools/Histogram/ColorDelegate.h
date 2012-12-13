@@ -22,46 +22,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef HISTOGRAM_MARKER_GAUSSIAN_H_
-#define HISTOGRAM_MARKER_GAUSSIAN_H_
+#ifndef COLORDELEGATE_H_
+#define COLORDELEGATE_H_
 
-#include <qwt_plot_marker.h>
-#include <qwt_scale_map.h>
-
-class QPainter;
+#include <QStyledItemDelegate>
 
 namespace casa {
 
-/**
- * Marks initial (center,peak) and FWHM Gaussian estimates
- * on the histogram.
- */
-
-class HistogramMarkerGaussian : public QwtPlotMarker {
-
+class ColorDelegate : public QStyledItemDelegate {
 public:
-	HistogramMarkerGaussian();
-	void setColor( QColor markerColor );
-	void setCenterPeak( int xVal, int yVal );
-	void setFWHM( int fwhm, int fwhmHeight );
-
-	virtual void draw(QPainter* painter, const QwtScaleMap& xMap, const QwtScaleMap& yMap, const QRect&) const;
-
-	virtual ~HistogramMarkerGaussian();
-
-private:
-	int getFWHMHeight() const;
-
-	int center;
-	int peak;
-	int fwhm;
-	int fwhmHeight;
-
-	bool centerPeakSpecified;
-	bool fwhmSpecified;
-
-	QColor markerColor;
+	ColorDelegate(QObject* parent = 0);
+	void paint( QPainter * painter, const QStyleOptionViewItem &option,
+			const QModelIndex & index ) const;
+	virtual ~ColorDelegate();
 };
 
 } /* namespace casa */
-#endif /* PROFILEFITMARKER_H_ */
+#endif /* COLORDELEGATE_H_ */

@@ -22,46 +22,46 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef HISTOGRAM_MARKER_GAUSSIAN_H_
-#define HISTOGRAM_MARKER_GAUSSIAN_H_
 
-#include <qwt_plot_marker.h>
-#include <qwt_scale_map.h>
+#ifndef HISTOGRAM_H_
+#define HISTOGRAM_H_
 
-class QPainter;
+#include <casa/aipstype.h>
+#include <casa/vector.h>
+#include <QTextStream>
 
 namespace casa {
 
+template <class T> class ImageInterface;
+class ImageRegion;
+
 /**
- * Marks initial (center,peak) and FWHM Gaussian estimates
- * on the histogram.
+ * Generates and Manages the data corresponding to a histogram.
  */
 
-class HistogramMarkerGaussian : public QwtPlotMarker {
-
+class Histogram {
 public:
-	HistogramMarkerGaussian();
-	void setColor( QColor markerColor );
-	void setCenterPeak( int xVal, int yVal );
-	void setFWHM( int fwhm, int fwhmHeight );
-
-	virtual void draw(QPainter* painter, const QwtScaleMap& xMap, const QwtScaleMap& yMap, const QRect&) const;
-
-	virtual ~HistogramMarkerGaussian();
+	Histogram();
+	int getDataCount() const;
+	std::pair<float,float> getDataRange() const;
+	bool reset(const ImageInterface<Float>* image, const ImageRegion* region);
+	void defineLine( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
+	void defineStepHorizontal( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
+	void defineStepVertical( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
+	std::pair<float,float> getZoomRange( float peakPercent ) const;
+	vector<float> getXValues() const;
+	vector<float> getYValues() const;
+	void toAscii( QTextStream& out ) const;
+	virtual ~Histogram();
 
 private:
-	int getFWHMHeight() const;
+	double computeYValue( double value, bool useLog ) const;
+	int getPeakIndex() const;
+	float getTotalCount() const;
 
-	int center;
-	int peak;
-	int fwhm;
-	int fwhmHeight;
-
-	bool centerPeakSpecified;
-	bool fwhmSpecified;
-
-	QColor markerColor;
+	vector<Float> xValues;
+	vector<Float> yValues;
 };
 
 } /* namespace casa */
-#endif /* PROFILEFITMARKER_H_ */
+#endif /* HISTOGRAM_H_ */

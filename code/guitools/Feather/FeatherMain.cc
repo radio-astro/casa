@@ -276,7 +276,7 @@ bool FeatherMain::loadImages(){
 			featherWorker.setSDImage( *lowResImage );
 		}
 		else {
-			qDebug() << "Got null images!";
+			imagesGenerated = false;
 		}
 	}
 	return imagesGenerated;
@@ -402,17 +402,11 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 		ImageInterface<Float>*& lowResImage, ImageInterface<Float>*& highResImage ){
 	bool success = true;
 	try {
-		//bool noStokes=False;
-		String outLowRes = lowResImagePath;
-		String outHighRes = highResImagePath;
 		logger << LogIO::NORMAL
 				<< "\nFeathering together high and low resolution images.\n"
 				<< LogIO::POST;
 
 		//Get initial images
-		//Deal with images that don't have stokes.
-		//highResImage = new PagedImage<Float>( highResImagePath );
-		//lowResImage = new PagedImage<Float>( lowResImagePath );
 		PagedImage<Float> highResImageTemp(highResImagePath);
 		PagedImage<Float> lowResImageTemp(lowResImagePath);
 		if(highResImageTemp.shape().nelements() != lowResImageTemp.shape().nelements()){
@@ -422,34 +416,8 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 			success = false;
 		}
 		else {
-			/*if ( (highResImageTemp.coordinates().findCoordinate(Coordinate::STOKES) < 0) &&
-					(lowResImageTemp.coordinates().findCoordinate(Coordinate::STOKES) < 0)){
-				noStokes=True;
-				String msg("Making some temporary images as the inputs have no Stokes axis.\n");
-				logger << LogIO::NORMAL << msg << LogIO::POST;
-
-				PtrHolder<ImageInterface<Float> > outImage1;
-				outHighRes= highResImagePath+"_stokes";
-				ImageUtilities::addDegenerateAxes (logger, outImage1, highResImageTemp, outHighRes,
-						False, False,
-						"I", False, False,
-						False);
-
-				PtrHolder<ImageInterface<Float> > outImage2;
-				outLowRes= lowResImagePath+"_stokes";
-				ImageUtilities::addDegenerateAxes (logger, outImage2, lowResImageTemp, outLowRes,
-						False, False,
-						"I", False, False,
-						False);
-
-			}*/
-			lowResImage = new PagedImage<Float>(outLowRes);
-			highResImage = new PagedImage<Float>(outHighRes);
-			/*if(noStokes){
-				Table::deleteTable(outHighRes);
-				Table::deleteTable(outLowRes);
-			}*/
-
+			lowResImage = new PagedImage<Float>(lowResImagePath);
+			highResImage = new PagedImage<Float>(highResImagePath);
 		}
 	}
 	catch (AipsError& x) {

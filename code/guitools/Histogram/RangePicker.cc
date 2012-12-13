@@ -25,14 +25,11 @@
 
 #include "RangePicker.h"
 #include <guitools/Histogram/HeightSource.h>
-
 #include <QPainter>
 #include <QDebug>
-
 #include <qwt_plot.h>
 
 namespace casa {
-
 
 RangePicker::RangePicker(){
 	reset();

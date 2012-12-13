@@ -104,6 +104,7 @@ bool FitterGaussian::estimateFWHM(){
 			errorMsg = "Could not estimate FWHM from the data.";
 		}
 	}
+	fwhmSpecified = true;
 	return estimated;
 }
 
@@ -124,6 +125,8 @@ bool FitterGaussian::estimateCenterPeak(){
 			estimated = false;
 		}
 	}
+	centerSpecified = true;
+	peakSpecified = true;
 	return estimated;
 }
 
@@ -145,6 +148,7 @@ bool FitterGaussian::doFit(){
 				for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
 					fitValues[i] = gaussFit.eval(&xValues[i]);
 				}
+				dataFitted = true;
 			}
 		}
 	}
@@ -153,15 +157,19 @@ bool FitterGaussian::doFit(){
 
 void FitterGaussian::clearFit(){
 	errorMsg="";
+	dataFitted = false;
 	centerSpecified = false;
 	peakSpecified = false;
 	fwhmSpecified = false;
 }
 
 void FitterGaussian::toAscii( QTextStream& stream ) const {
-	stream << "Center: "<<center<<"\n";
-	stream << "Peak: "<<peak<<"\n";
-	stream << "FWHM: "<<fwhm<<"\n";
+	const QString END_LINE( "\n" );
+	stream << "Gaussian Fit" << END_LINE;
+	stream << "Center: "<< center << END_LINE;
+	stream << "Peak: "<< peak << END_LINE;
+	stream << "FWHM: "<< fwhm << END_LINE << END_LINE;
+	Fitter::toAscii( stream );
 }
 
 FitterGaussian::~FitterGaussian() {

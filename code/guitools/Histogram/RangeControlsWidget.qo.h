@@ -47,7 +47,7 @@ public:
     RangeControlsWidget(QWidget *parent = 0);
     void setRange( double min, double max );
     void setRangeLimits( double min, double max );
-    void setDataLimits( std::vector<float> values );
+    void setDataLimits( double min, double max );
     pair<double,double> getMinMaxValues() const;
     ~RangeControlsWidget();
 

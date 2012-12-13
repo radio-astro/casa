@@ -28,19 +28,26 @@
 namespace casa {
 
 Fitter::Fitter() {
-	// TODO Auto-generated constructor stub
-
 }
 
 void Fitter::setData( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
 	clearFit();
-	fitValues.resize(0);
+	//fitValues.resize(0);
+	dataFitted = false;
 	xValues = dataValuesX;
 	yValues = dataValuesY;
 }
 
-Vector<Float> Fitter::getFitValues(){
+bool Fitter::isFit() const {
+	return dataFitted;
+}
+
+Vector<Float> Fitter::getFitValues() const {
 	return fitValues;
+}
+
+Vector<Float> Fitter::getFitValuesX() const {
+	return xValues;
 }
 
 QString Fitter::getErrorMessage() const {
@@ -49,6 +56,17 @@ QString Fitter::getErrorMessage() const {
 
 QString Fitter::getStatusMessage() const {
 	return statusMsg;
+}
+
+void Fitter::toAscii( QTextStream& out ) const {
+	int count = fitValues.size();
+	const QString LINE_END = "\n";
+	out << "Value"<<"Count"<<"Fit Count"<< LINE_END;
+	for ( int i = 0; i < count; i++ ){
+		out << QString::number( xValues[i])
+		<< QString::number( yValues[i])
+		<< QString::number( fitValues[i]) << LINE_END;
+	}
 }
 
 float Fitter::getMean() const {

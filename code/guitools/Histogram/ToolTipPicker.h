@@ -25,7 +25,6 @@
 #ifndef TOOLTIPPICKER_H_
 #define TOOLTIPPICKER_H_
 
-#include <QVector>
 #include <qwt_plot_picker.h>
 
 namespace casa {
