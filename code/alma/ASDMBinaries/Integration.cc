@@ -808,7 +808,7 @@ namespace sdmbin{
     if(floatCrossDataPtr_        ) delete floatCrossDataPtr_;
   }
 
-  DataDump::DataDump(const DataDump& a)
+  DataDump::DataDump(const DataDump& a) : DataStructure(a)
   {
     cout<<"Copy constructor DataDump (deep copy)"<<endl;
     cout<<"ici a.uintFlagsPtr_="<<a.uintFlagsPtr_<<endl;
@@ -1699,7 +1699,7 @@ namespace sdmbin{
   {
   }
 
-  Integration::Integration( const Integration & a)
+  Integration::Integration( const Integration & a) : DataDump(a)
   {
     cout<<"Copy constructor Integration"<<endl;
     vv_numCrossPolProduct_= a.vv_numCrossPolProduct_;

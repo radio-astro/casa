@@ -285,7 +285,7 @@ namespace sdmbin {
 
   }
 
-  DataDescriptionsSet::DataDescriptionsSet(const DataDescriptionsSet & a){
+  DataDescriptionsSet::DataDescriptionsSet(const DataDescriptionsSet & a) : SwitchCyclesList(a){
     //cout << "copy constructor DataDescriptionsSet" << endl;
 
     // attribute in the 'abstract' class SwitchCyclesList

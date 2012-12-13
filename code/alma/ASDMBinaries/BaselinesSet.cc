@@ -42,7 +42,7 @@ BaselinesSet::BaselinesSet( vector<Tag>               v_antennaIdArray,
   if(coutest)cout << "numEffBaselines_=" << numEffBaselines_ << endl;
 }
 
-BaselinesSet::BaselinesSet(const BaselinesSet & a){
+BaselinesSet::BaselinesSet(const BaselinesSet & a) : DataDescriptionsSet(a) {
   cout << "Copy constructor BaselinesSet" << endl;
 
   // attributes inherited from the class SwitchCyclesList:
