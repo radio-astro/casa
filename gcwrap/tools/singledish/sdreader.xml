@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/tools/xml/casa.xsd">
+
+ 
+	<tool name="sdreader" module="singledish">
+        <shortdescription>tool for importing single dish files</shortdescription>
+       
+<code>
+	<include>tools/singledish/sdreader_forward.h</include>
+<private>
+	<include>tools/singledish/sdreader_private.h</include>
+</private>
+</code>
+<needs>sdtable</needs>
+ 
+   <method type="constructor" name="sdreader">
+   <shortdescription>Construct a sdreader tool</shortdescription>
+<input>
+
+     <param type="string" direction="in" name="filename">
+     <description>input file name</description>
+     </param>
+
+     <param type="int" direction="in" name="theif">
+     <description>select a specific IF; the default is all (-1)</description>
+     <value>-1</value>
+     </param>
+
+     <param type="int" direction="in" name="thebeam">
+     <description>select a specific beam; the default is all (-1)</description>
+     <value>-1</value>
+     </param>
+</input>
+<returns type="sdreader"/>
+</method>
+
+ 
+   <method type="function" name="open">
+   <shortdescription>open the file`</shortdescription>
+   
+<input>
+
+     <param type="string" direction="in" name="filename">
+     <description>Input file name</description>
+     </param>
+
+     <param type="int" direction="in" name="theif">
+     <description>select a specific IF</description>
+     <value>-1</value>
+     </param>
+ 
+     <param type="int" direction="in" name="thebeam">
+     <description>select a specific beam </description>
+     <value>-1</value>
+     </param>
+
+</input>
+<returns type="bool"/>
+
+</method>
+
+ 
+   <method type="function" name="read">
+   <shortdescription>read in a specific sequence of integerations.</shortdescription>
+   
+
+<input>
+
+     <param type="intArray" direction="in" name="integrations">
+     <description>a vector of integration numbers.</description>
+     <value>-1</value>
+     </param>
+</input>
+<returns type="int"/>
+</method>
+
+   <method type="function" name="close">
+   <shortdescription>close the sd reader tool</shortdescription>
+<returns type="bool"/>
+</method>
+
+   <method type="function" name="reset">
+   <shortdescription>reset to the beginning of the file</shortdescription>
+<returns type="bool"/>
+</method>
+                                                                                
+ 
+   <method type="function" name="getdata">
+   <shortdescription>get a memory table</shortdescription>
+   <returns type="casasdtable"> 
+</returns>
+</method>
+
+ 
+   <method type="function" name="header">
+   <shortdescription>print a header information</shortdescription>
+<returns type="intArray"/>
+</method>
+ 
+</tool>
+ 
+</casaxml>

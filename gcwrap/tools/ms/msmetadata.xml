@@ -1,0 +1,778 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+    file:///opt/casa/code/tools/xml/casa.xsd"
+>
+
+<!--   
+ ***************************************************************************
+ ** msmetadata.xml:  defines the interface to the measurement set metadata tool.
+ **
+ ** Copyright (C) 2007
+ ** Associated Universities, Inc. Washington DC, USA.
+ **
+ ** This library is free software; you can redistribute it and/or modify it
+ ** under the terms of the GNU Library General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or (at your
+ ** option) any later version.
+ **
+ ** This library is distributed in the hope that it will be useful, but WITHOUT
+ ** ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ ** FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+ ** License for more details.
+ **
+ ** You should have received a copy of the GNU Library General Public License
+ ** along with this library; if not, write to the Free Software Foundation,
+ ** Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+ **
+ ** Correspondence concerning AIPS++ should be addressed as follows:
+ **        Internet email: aips2-request@nrao.edu.
+ **        Postal address: AIPS++ Project Office
+ **                        National Radio Astronomy Observatory
+ **                        520 Edgemont Road
+ **                        Charlottesville, VA 22903-2475 USA
+ **   
+ ***************************************************************************
+-->
+    <tool name="msmetadata" module="msmd">
+        <shortdescription>Operations to retrieve metadata from a measurment set</shortdescription>
+        <keyword>ms</keyword>
+
+        <code>
+            <include>tools/ms/msmetadata_forward.h</include>
+                <private>
+                	<include>tools/ms/msmetadata_private.h</include>
+                </private>
+        </code>
+
+
+
+        <description>
+
+  The msmd tool provides methods to retrieve metadata from measurement sets.
+
+  \medskip\noindent\textbf{Attaching to a Measurement Set}
+
+
+    The simplest and most common way to attach an msmd tool to a
+    measurement set is to use the <link
+    anchor="ms:msmd.open">ms.open</link> method which requires that
+    you specify the name of the measurement set table.
+    
+    NOTE: Any modifications to an MS while an associated msmd tool is open
+    will not be reflected in the msmd tool. You must close and reopen the tool
+    if you want to capture changes made to metadata of an MS if such a change
+    occurs.
+
+    
+            <example>
+	\begin{verbatim}
+Example:
+
+msmd.open("3C273XC1.MS")
+msmd.nspw()
+ms.done()
+	\end{verbatim}
+We open the tool by querying the MS for its metadata. We then get the number of spectral
+windows in the dataset and close the tool.
+            </example>
+        </description>
+
+        <method type="function" name="antennaid">
+            <shortdescription>Get the zero-based antenna ID for the specfied antenna name.</shortdescription>
+             <input>
+                <param type="string" direction="in" name="name">
+                    <description>Zero-based antenna ID for which to get the antenna name.</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="int"/>
+            <description>
+                Get the zero-based antenna ID for the specfied antenna name.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the zero-based antennaID for the antenna named "VB2"
+    antenna_id = msmd.antennaid("VB2")
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="antennaname">
+            <shortdescription>Get the name of the antenna for the specfied zero-based antenna ID.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="antennaid">
+                    <description>Zero-based antenna ID for which to get the antenna name.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="string"/>
+            <description>
+                Get the name of the antenna for the specfied zero-based antenna ID.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the name associated with antenna ID 31
+    antenna_name = msmd.antennaname(31)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="chanavgspws">
+            <shortdescription>Get an array of spectral window IDs used for channel averages. These are windows that do have 1 channel.</shortdescription>
+            <returns type="intArray"/>
+            <description>
+                Get an array of spectral window IDs used for channel averages. These are windows that do have 1 channel.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs used for channel averages.
+    chan_avg_spws = msmd.chanavgspws()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="done">
+            <shortdescription>Close this tool and reclaim system resources associated with it.</shortdescription>
+            <returns type="bool"/>
+            <description>
+                This method will close the tool and reclaim system resources it has been using. Returns true if successful.
+            </description>
+            <example>
+                msmd.open("my.ms")
+                # do things with tool
+                # finish, close tool and free up resources.
+                msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="fdmspws">
+            <shortdescription>Get an array of spectral window IDs used for FDM. These are windows that do not have 64, 128, or 256 channels.</shortdescription>
+            <returns type="intArray"/>
+            <description>
+                Get an array of spectral window IDs used for FDM. These are windows that do not have 64, 128, or 256 channels.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs used for FDM.
+    fdm_spws = msmd.fdmspws()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="fieldsforintent">
+            <shortdescription>Get an array of the unique fields for the specified intent.</shortdescription>
+             <input>
+                <param type="string" direction="in" name="intent">
+                    <description>Intent (case sensitive) for which to return the fields.</description>
+                    <value/>
+                </param>
+                <param type="bool" direction="in" name="asnames">
+                    <description>If true, return the field names. If false, return the zero-based field IDs.</description>
+                    <value>false</value>
+                </param>
+            </input>
+            <returns type="any"/>
+            <description>
+                Get an array of the unique fields for the specified intent.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the field names for intent "observe target"
+    field_names = msmd.fieldsforintent("observe target", True)
+    # get the field IDs for scan number "observe target"
+    field_IDs = msmd.fieldsforintent("observe target", False)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="fieldsforname">
+            <shortdescription>Get an array of the unique, zero-based field IDs for the specified field name.</shortdescription>
+             <input>
+                <param type="string" direction="in" name="name">
+                    <description>Field name (case sensitive) for which to return the fields.</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique, zero-based field IDs for the specified field name.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the field IDs for field name "Enceladus"
+    fields = msmd.fieldsforname("Enceladus")
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="fieldsforscan">
+            <shortdescription>Get an array of the unique fields for the specified scan number.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number for which to return the fields.</description>
+                    <value>-1</value>
+                </param>
+                <param type="bool" direction="in" name="asnames">
+                    <description>If true, return the field names. If false, return the zero-based field IDs.</description>
+                    <value>false</value>
+                </param>
+            </input>
+            <returns type="any"/>
+            <description>
+                Get an array of the unique fields for the specified scan number.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the field names for scan number 5
+    field_names = msmd.fieldsforscan(5, True)
+    # get the field IDs for scan number 5
+    field_IDs = msmd.fieldsforscan(5, False)
+    msmd.done()
+            </example>
+        </method>
+  
+        <method type="function" name="fieldsforscans">
+            <shortdescription>Get an array of the unique fields for the specified scan numbers.</shortdescription>
+             <input>
+                <param type="intArray" direction="in" name="scans">
+                    <description>Scan numbers for which to return the fields.</description>
+                    <value/>
+                </param>
+                <param type="bool" direction="in" name="asnames">
+                    <description>If true, return the field names. If false, return the zero-based field IDs.</description>
+                    <value>false</value>
+                </param>
+            </input>
+            <returns type="any"/>
+            <description>
+                Get an array of the unique fields for the specified scan numbers.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the field names for scan numbers 5 and 10
+    field_names = msmd.fieldsforscan([5, 10], True)
+    # get the field IDs for scan numbers 5 and 10
+    field_IDs = msmd.fieldsforscan([5, 10], False)
+    msmd.done()
+            </example>
+        </method>
+        
+        
+        <method type="function" name="fieldsforspw">
+            <shortdescription>Get an array of the unique fields for the specified spectral window.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Zero-based spectral window ID for which to return the fields.</description>
+                    <value>-1</value>
+                </param>
+                <param type="bool" direction="in" name="asnames">
+                    <description>If true, return the field names. If false, return the zero-based field IDs.</description>
+                    <value>false</value>
+                </param>
+            </input>
+            <returns type="any"/>
+            <description>
+                Get an array of the unique fields for the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the field names for spectral window 1
+    field_names = msmd.fieldsforspw(1, True)
+    # get the field IDs for spectral window 1
+    field_IDs = msmd.fieldsforspw(1, False)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="fieldsfortimes">
+            <shortdescription>Get an array of the unique, zero-based, field IDs for the specified time range (time-tol to time+tol).</shortdescription>
+             <input>
+                <param type="double" direction="in" name="time">
+                    <description>Time at center of time range.</description>
+                    <value>-1</value>
+                </param>
+                <param type="double" direction="in" name="tol">
+                    <description>Time on either side of center for specifying range.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique, zero-based, fieldIDs for the specified time range (time-tol to time+tol).
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the field IDs associated with the specified time range
+    fields = msmd.fieldsfortimes(4.8428293714e+09, 20)
+    msmd.done()
+            </example>
+        </method>
+        
+        
+        <method type="function" name="intents">
+            <shortdescription>Get an array of the unique intents associated with the MS.</shortdescription>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of the unique intents associated with the MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the intents associated with the MS
+    intents = msmd.intents()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="intentsforscan">
+            <shortdescription>Get an array of the unique intents for the specified scan.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number for which to return the intents.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of the unique intents for the specified scan.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the intents associated with scan 4
+    intents = msmd.intentsforscan(4)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="intentsforspw">
+            <shortdescription>Get an array of the unique intents for the specified spectral window ID.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Spectral window ID (>=0) for which to return the intents.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of the unique intents for the specified spectral window ID.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the intents associated with spectral window ID 3
+    intents = msmd.intentsforspw(3)
+    msmd.done()
+            </example>
+        </method>
+        
+         <method type="function" name="nantennas">
+            <shortdescription>Get the number of antennas associated with the MS.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of antennas associated with the MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_antennas = msmd.nantennas()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="nameforfield">
+            <shortdescription>Get the name of the specified field.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="field">
+                    <description>Zero-based field ID for which to get the name.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="string"/>
+            <description>
+                Get the name of the specified field.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the name for field 8.
+    field_names = msmd.fieldsforname(8)
+    msmd.done()
+            </example>
+        </method>
+        
+        
+        <method type="function" name="nfields">
+            <shortdescription>Get the number of fields associated with the MS.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of fields associated with the MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_fields = msmd.nfields()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="nspw">
+            <shortdescription>Get the number of spectral windows associated with the MS.</shortdescription>
+            <returns type="int"/>
+            <description>
+                This method will return the number of spectral windows in the associated MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_spectral_windows = msmd.nspw()
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="nstates">
+            <shortdescription>Get the number of states (from the STATE table) associated with the MS.</shortdescription>
+            <returns type="int"/>
+            <description>
+                This method will return the number of states (number of rows in the STATES table) in the associated MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_states = msmd.nstates()
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="nscans">
+            <shortdescription>Get the number of scans associated with the MS.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of scans associated with the MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_scans = msmd.nscans()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="nvis">
+            <shortdescription>Get the number of visibilities (from the main table) associated with the MS.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of visibilities (from the main table) associated with the MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_visibilities = msmd.nvis()
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="open">
+            <shortdescription>Attach the MS metadata tool to the specified MS</shortdescription>
+            <input>
+                <param type="string" direction="in" name="msfile">
+                    <description>Name of the existing measurement set</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="bool"/>
+            <description>Attach this tool to the specified MS</description>
+            <example>
+                msmd.open("my.ms")
+                # do stuff and close it
+                msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="scannumbers">
+            <shortdescription>Get an array of the unique scan numbers associated with the MS.</shortdescription>
+            <returns type="intArray"/>
+            <description>
+                This method will return an array of unique scan numbers in the associated MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    scan_numbers = msmd.scannumbers()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="scansforfield">
+            <shortdescription>Get an array of the unique scan numbers associated with the specified field.</shortdescription>
+             <input>
+                <param type="any" direction="in" name="intent">
+                    <description>Field ID or field name (case sensitive) for which to return the scan numbers.</description>
+                     <value type="string"/>
+                    <any type="variant" limittypes="string int"/>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique scan numbers associated with the specified field.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the scan numbers associated with field "planet Z"
+    scan_numbers = msmd.scansforfield("planet Z")
+    # get the scan numbers associated with field ID 5
+    scan_numbers = msmd.scansforfield(5)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="scansforintent">
+            <shortdescription>Get an array of the unique scan numbers associated with the specified intent.</shortdescription>
+             <input>
+                <param type="string" direction="in" name="intent">
+                    <description>Intent (case-sensitive) for which to return the scan numbers.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique scan numbers associated with the specified intent.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the scan numbers associated with intent "detect planet X"
+    scan_numbers = msmd.scansforintent("detect planet X")
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="scansforspw">
+            <shortdescription>Get an array of the unique scan numbers associated with the specified zero-based spectral window ID.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Zero-based spectral window ID for which to return the scan numbers.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique scan numbers associated with the specified zero-based spectral window ID.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the scan numbers associated with spectral window ID 14
+    scan_numbers = msmd.scansforspw(14)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="scansforstate">
+            <shortdescription>Get an array of the unique scan numbers for the specified state.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="state">
+                    <description>ID of state for which to return the scan numbers.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique scan numbers for the specified state.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the scan numbers associated with state 2
+    scans = msmd.scansforstate(2)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="scansfortimes">
+            <shortdescription>Get an array of the unique scan numbers for the specified time range (time-tol to time+tol).</shortdescription>
+             <input>
+                <param type="double" direction="in" name="time">
+                    <description>Time at center of time range.</description>
+                    <value>-1</value>
+                </param>
+                <param type="double" direction="in" name="tol">
+                    <description>Time on either side of center for specifying range.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique scan numbers for the specified time range (time-tol to time+tol).
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the scan numbers associated with the specified time range
+    scans = msmd.scansfortimes(4.84282937e+09, 20)
+    msmd.done()
+            </example>
+        </method>
+
+        <method type="function" name="spwsforfield">
+            <shortdescription>Get an array of the unique spectral window IDs for the specified field.</shortdescription>
+             <input>
+                <param type="any" direction="in" name="field">
+                    <description>Field (case sensitive string or zero-based integer ID) for which to return the spectral window IDs.</description>
+                    <value type="string"/>
+                    <any type="variant" limittypes="string int"/>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique spectral window IDs for the specified field.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs associated with field "Fomalhaut"
+    spws = msmd.spwsforfield("Fomalhaut")
+    # get spectral window IDs associated with field ID 2
+    spws = msmd.spwsforfield(2)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="spwsforintent">
+            <shortdescription>Get an array of the unique spectral window IDs for the specified intent.</shortdescription>
+             <input>
+                <param type="string" direction="in" name="intent">
+                    <description>Intent (case sensitive) for which to return the spectral window IDs.</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique spectral window IDs for the specified intent.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs associated with "MY COOL INTENT"
+    spws = msmd.spwsforintent("MY COOL INTENT")
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="spwsforscan">
+            <shortdescription>Get an array of the unique spectral window IDs for the specified scan number.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number for which to return the spectral window IDs.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique spectral window IDs for the specified scan number.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs associated with scan number 20
+    spws = msmd.spwsforscan(20)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="statesforscan">
+            <shortdescription>Get an array of the unique state IDs for the specified scan number.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number for which to return the state IDs.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="intArray"/>
+            <description>
+                Get an array of the unique state IDs for the specified scan number.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the state IDs associated with scan number 251
+    states = msmd.timesforscans(251)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="tdmspws">
+            <shortdescription>Get an array of spectral window IDs used for TDM. These are windows that have 64, 128, or 256 channels.</shortdescription>
+            <returns type="intArray"/>
+            <description>
+                Get an array of spectral window IDs used for TDM. These are windows that have 64, 128, or 256 channels.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs used for TDM.
+    tdm_spws = msmd.tdmspws()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="timesforfield">
+            <shortdescription>Get an array of the unique times for the specified field.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="field">
+                    <description>Zero-based field ID for which to return the times.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="doubleArray"/>
+            <description>
+                Get an array of the unique times for the specified field.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the times associated with field 3
+    times = msmd.timesforfields(3)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="timesforscan">
+            <shortdescription>Get an array of the unique times for the specified scan number.</shortdescription>
+             <input>
+                <param type="int" direction="in" name="scan">
+                    <description>Scan number for which to return the times.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="doubleArray"/>
+            <description>
+                Get an array of the unique times for the specified scan number.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the times associated with scan number 10
+    times = msmd.timesforscans(10)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="timesforscans">
+            <shortdescription>Get an array of the unique times for the specified scan numbers.</shortdescription>
+             <input>
+                <param type="intArray" direction="in" name="scans">
+                    <description>Scan numbers for which to return the times.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="doubleArray"/>
+            <description>
+                Get an array of the unique times for the specified scan numbers.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the times associated with scan numbers 10 and 20
+    times = msmd.timesforscans([10,20])
+    msmd.done()
+            </example>
+        </method>
+        
+        
+        <method type="function" name="wvrspws">
+            <shortdescription>Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.</shortdescription>
+            <returns type="intArray"/>
+            <description>
+                Get an array of spectral window IDs used for WVR. These are windows that have 4 channels.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs used for WVR.
+    wvr_spws = msmd.wvrspws()
+    msmd.done()
+            </example>
+        </method>
+
+    </tool>
+</casaxml>

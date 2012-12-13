@@ -1,0 +1,164 @@
+\documentclass{book}
+\usepackage{html, longtable,epsfig}
+\usepackage{makeidx}
+\makeindex
+\externallabels{../../reference/Glish}{../../reference/Glish/labels.pl}
+\externallabels{../Utility}{../Utility/labels.pl}
+\externallabels{../General}{../General/labels.pl}
+\externallabels{../Display}{../Display/labels.pl}
+\externallabels{../Dish}{../Dish/labels.pl}
+\externallabels{../SynthesisRef}{../SynthesisRef/labels.pl}
+\externallabels{../ALMA}{../ALMA/labels.pl}
+\externallabels{../ATNF}{../ATNF/labels.pl}
+\externallabels{../BIMA}{../BIMA/labels.pl}
+\externallabels{../NFRA}{../NFRA/labels.pl}
+\externallabels{../NRAO}{../NRAO/labels.pl}
+\externallabels{../VO}{../VO/labels.pl}
+\begin{document}
+\newcommand{\starthelptab}{
+\begin{tabular}{|l p{0.25in}p{0.36in}p{2.79in}|}
+}
+\begin{htmlonly}
+\newcommand{\starthelptab}{
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+}
+\end{htmlonly}
+\input{aips2defs}
+
+\title{AIPS++ User Reference Manual}
+\author{AIPS++ Group, eds}
+\maketitle
+\newpage
+\vspace*{\fill}
+\begin{tabbing}
+1234\=1234\=1234\=1234\kill
+\htmlref{General}{general.package}\\
+\input{pmtgeneral.tex}
+\htmlref{Utility}{utility.package}\\
+\input{pmtutility.tex}
+\htmlref{Display}{display.package}\\
+\input{pmtdisplay.tex}
+\htmlref{Synthesis}{synthesis.package}\\
+\input{pmtsynthesis.tex}
+\htmlref{Dish}{dish.package}\\
+\input{pmtdish.tex}
+\htmlref{ALMA}{alma.package}\\
+\input{pmtalma.tex}
+\htmlref{ATNF}{atnf.package}\\
+\input{pmtatnf.tex}
+\htmlref{BIMA}{bima.package}\\
+\input{pmtbima.tex}
+\htmlref{NFRA}{nfra.package}\\
+\input{pmtnfra.tex}
+\htmlref{NRAO}{nrao.package}\\
+\input{pmtnrao.tex}
+\htmlref{VO}{vo.package}\\
+\input{pmtvo.tex}
+\end{tabbing}
+Copyright \copyright 1995-2000 AIPS++ Consortium
+
+\aipspp\ User Reference Manual.
+
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions,
+except that this permission notice may be stated in a translation approved
+by the \aipspp\ Consortium.
+
+The \aipspp\ consortium may be reached by email at aips2-request@nrao.edu.
+The postal address is: \aipspp\ Consortium, c/o NRAO, 520 Edgemont Rd.,
+Charlottesville, Va. 22903-2475 USA. \newpage
+\newpage
+The \aipspp reference Manual is composed of several package.  Each package is comprised of 
+one or more Modules, with each Module containing one or more Tools.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

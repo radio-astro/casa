@@ -1,0 +1,95 @@
+#!/bin/bash
+if [[ -L "$0"  ]]; then
+   real_me=$(stat -f %Y "$0")
+   myDir=$(dirname "$real_me")
+   echo -n '==>  '
+else
+   myDir=$(dirname "$0")
+fi
+#echo ${real_me}
+#echo ${myDir}
+#
+# this script will live in Resources/Scripts so strip that off to just get the Conents directory
+#
+prefix=$(dirname "${myDir}" | sed -e "s/\/Resources.*$//")
+CASAROOT=${prefix}
+appSig=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "${CASAROOT}/Info.plist" )
+thisVersion=$(awk '{print $1}' "${CASAROOT}/Resources/VERSION")
+updateCasa="false"
+linkthese=$(/usr/libexec/PlistBuddy -c "Print :MakeLinks" "${CASAROOT}/Info.plist" | awk '/^ /{print $0}')
+#echo "Executeables to link" ${linkthese}
+
+savedVersion=$(defaults read "${appSig}" "casa.version" 2>/dev/null)
+if [ -n ${savedVersion} ]; then
+	if [ "${savedVersion}" != "${thisVersion}" ]; then
+            updateCasa="true"
+	fi
+else
+   updateCasa="true"
+fi
+
+updateCasa="true"
+
+if [ "${updateCasa}" = "true" ]; then
+   cmdlineLinks=$(defaults read "${appSig}" "casa.setup.linkdir" 2>/dev/null)
+   if [ -n "${cmdlineLinks}" ]; then
+	   message="Update your CASA symbolic links?"
+   else
+	   # Haven't setup command line symbolic links yet
+	   message="Please enter in a directory in your PATH that you wish to install CASA symbolic links"
+   fi
+
+#
+#Here we setup the symbolic links to run shell from a shell
+#
+
+   linkdir=`/usr/bin/osascript 2>/dev/null <<EOT
+tell application "System Events"
+  activate
+  set myReply to text returned of (display dialog "${message}" with title "CASA shell environment setup" default answer "/usr/bin" buttons {"Create Symlinks", "Cancel"} default button 1)
+end tell
+EOT`
+
+cat /dev/null > /tmp/mkcasalinks
+chmod a+x /tmp/mkcasalinks
+   linksGoHere=${linkdir}
+   if [ -n ${linksGoHere} ]; then
+           for file in ${linkthese}
+           do
+              echo "ln -sf ${CASAROOT}/MacOS/${file} ${linksGoHere}" >> /tmp/mkcasalinks
+           done
+	   if [ -d ${linksGoHere} ]; then
+	      if [ -w ${linksGoHere} ]; then
+		      #echo "Create the symbolic links ${linksGoHere}"
+		      /tmp/mkcasalinks
+                      defaults write "${appSig}" "casa.setup.linkdir" "${linksGoHere}"
+                      defaults write "${appSig}" "casa.version" "${thisVersion}"
+                      defaults write "${appSig}" "casa.data.path" "${CASAROOT}/Resources/casa-data"
+	      else
+		     message="Casapy needs your password to set the symbolic links."
+                     admlinkdir=`/usr/bin/osascript <<EOT
+   tell application "System Events"
+   set myReply to text returned of (display dialog "${message}" with title "CASA shell environment setup" default answer "" with hidden answer)
+   end tell
+EOT`
+	      fi
+	      echo "${admlinkdir}" | sudo -S /tmp/mkcasalinks
+	      if [ $? != 0 ]; then
+   oops=`/usr/bin/osascript 2>/dev/null <<EOT
+tell application "System Events"
+  activate
+  display dialog "Error: Failed to create symbolic links. Bad password or not an adminstrator?" with title "CASA shell environment setup"  buttons {"OK"}
+end tell
+EOT`
+              bye=${oops}
+	      fi
+	      rm -f /tmp/mkcasalinks
+              defaults write "${appSig}" "casa.setup.linkdir" "${linksGoHere}"
+              defaults write "${appSig}" "casa.version" "${thisVersion}"
+              defaults write "${appSig}" "casa.data.path" "${CASAROOT}/Resources/casa-data"
+	   else
+	      message="Unable to make symbolic links in ${linksGoHere}. It is not a directory!"
+             /usr/bin/osascript -e "tell app \"System Events\" to display dialog \"${message}\" with title \"CASA shell environment setup\" buttons {\"OK\"} default button 1"
+	   fi
+   fi
+fi

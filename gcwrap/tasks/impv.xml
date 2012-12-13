@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the task interface for impv        -->
+<!--                                                          -->
+
+<task type="function" name="impv" category="analysis">
+
+    <shortdescription>Construct a position-velocity image by choosing two points in the direction plane.</shortdescription>
+    <input>
+        <param type="string" name="imagename" mustexist="true">
+            <description>Name of the input image</description>
+            <value/>
+            <example>imagenam='ngc5921.im'</example>
+        </param>
+        <param type="string" name="outfile">
+            <description>Output image name. If empty, no image is written.</description>
+            <value/>
+        </param>
+        <param type="doubleArray" name="start">
+            <description>The starting pixel in the direction plane (array of two values).</description>
+            <value/>
+            <example>[20, 5]</example>
+        </param>
+        <param type="doubleArray" name="end">
+            <description>The ending pixel in the direction plane (array of two values).</description>
+            <value/>
+            <example>[200,300]</example>
+        </param>
+        <param type="int" name="halfwidth">
+            <description>Half width for averaging expressed in pixels perpendicular to the slice. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
+            <value>0</value>
+            <example>2.5</example>
+        </param>
+        <param type="bool"  name="overwrite" subparam="true">
+            <description>Overwrite the output if it exists?</description>
+            <value>False</value>
+        </param>
+        <param type="any"  name="region" subparam="true">
+            <any type="variant"/>
+            <description>Region selection. Default is entire image. No selection is permitted in the direction plane. See help par.region.</description>
+            <value>""</value>
+        </param>
+        <param type="string"  name="chans">
+            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
+            <value/>
+        </param>
+        <param type="string"  name="stokes">
+            <description>Stokes planes to use. Planes must be contiguous. Default is to use all stokes.</description>
+            <value/>
+        </param>
+        <param type="string"  name="mask">
+            <any type="variant"/>
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
+        </param>
+        <param type="bool"  name="stretch" subparam="true">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <value>False</value>
+        </param>
+        <param type="bool" name="wantreturn">
+            <description>Return an image analysis tool attached to the created image?</description>
+            <value>True</value>
+        </param>
+        <constraints>
+            <when param="outfile">
+                <notequals type="string" value="">
+                    <default param="overwrite">
+                        <value>False</value>
+                    </default>
+                </notequals>
+            </when>
+            <when param="mask">
+                <notequals type="string" value="">
+                    <default param="stretch">
+                        <value>False</value>
+                    </default>
+                </notequals>
+            </when>
+            <when param="chans">
+                <equals type="string" value="">
+                    <default param="region">
+                        <value>""</value>
+                    </default>
+                </equals>
+            </when>
+        </constraints>
+    </input>
+    <returns type="image"/>
+
+    <example>
+PARAMETER SUMMARY
+imagename        Name of the input (CASA, FITS, MIRIAD) image
+outfile          Name of output CASA image. If not specified, no image is written
+                 but an image analysis tool which references the output image is returned
+                 if wantreturn=True.
+start            The starting pixel in the direction plane (array of two values), such as [20, 5].
+end              The ending pixel in the direction plane (array of two values), such as [200, 300].
+halfwidth        Half width for averaging expressed in pixels perpendicular to the slice. Pixels
+                 within one half width perpendicular to the slice will be averaged along the slice.
+                 This value can be non-integral and is determined after rotating the image so the slice
+                 lies horizontally.
+overwrite        If output file is specified, this parameter controls if an already existing file by the
+                 same name can be overwritten. If true, the user is not prompted, the file
+                 if it exists is automatically overwritten.
+region           Region specification. See help par.region. Default is to not use a region. If specified,
+                 the entire direction plane must be specified. If specified do not specify chans or stokes.
+chans            Optional contiguous frequency channel number specification. Default is all channels.
+                 If specified, do not specify region.
+stokes           Contiguous stokes planes specification. If specified, do not specify region.
+mask             Mask to use. See help par.mask. Default is none.
+stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
+                 See help par.stretch.
+wantreturn       If true, return an image analysis tool referencing the collapsed image, if
+                 false, return false.
+
+Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
+coordinate. The spectral extent of the resulting image will be that provided by the region specification
+or the entire spectral range of the input image if no region is specified. One may not specify a region
+in direction space; that is accomplished by specifying the start and end points of the slice. One may
+specify an optional half width, which is the number of pixels on either side and perpendicular to the
+direction slice that are used for averaging along the slice (0, the default, represents no averaging).
+A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
+image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified (unless
+perhaps you are debugging).
+        
+Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
+be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
+ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
+written and/or returned. The coordinate system of the resulting image is valid in the sense that the coordinates
+of the pixels in the output correspond to those along the slice in the input image (ie, the direction coordinate
+will be rotated with respect to the position axis in the output axis in the output image, in general).
+        
+Example
+        
+# create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
+# in the input image
+ia.pv(imagename="my_spectral_cube.im", outfile="pv.im", start=[45,50], end=[100,120], wantreturn=false)
+# analyze the pv image, such as get statistics
+imstat(imagename="pv.im")
+
+    </example>
+
+</task>
+
+</casaxml>

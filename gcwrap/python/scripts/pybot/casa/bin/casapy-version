@@ -1,0 +1,149 @@
+#!/usr/bin/perl
+use local::lib;
+use IO::Select;
+use Expect;
+
+$debug = 0;
+
+########################################
+######### variable used to clean up...
+########################################
+$xvfb_pid = 0;
+$authority = '';
+########################################
+
+END {
+    if ( $xvfb_pid ) {
+	kill 9, $xvfb_pid;
+    }
+    if ( $authority ) {
+	unlink($authority);
+    }
+}
+
+##
+## takes display number & authority file
+sub create_authority {
+    my $display_num = shift;
+    my $file = shift;
+    my $cookie = '';
+    my $seed = 0;
+    for (1..10) {
+	srand(time+$$+$seed);
+	$cookie .= sprintf("%4.5x", ($seed = int(rand(65536))));
+    }
+    $cookie = substr $cookie, 0, 32;
+    open( XAUTH, "xauth -f $file add :$display_num . $cookie 2>&1 |" );
+    print "creating xauthority file $file for display :$display_num...\n" if $debug;
+    while ( <XAUTH> ) {
+	print "   $_" if $debug;
+    }
+    close(XAUTH);
+}
+
+sub launch_xvfb {
+    my $authority = shift;
+    my $display=4;
+    my $failed = 1;
+    while ( $failed ) {
+	$failed = 0;
+	pipe my $read, my $write or die "could not create pipe";
+        ###
+        ### make pipe unbuffered...
+        ###
+	select((select($write), $| = 1)[0]);
+	if ( my $pid = fork( ) ) {
+	    ########################################
+	    #### parent
+	    ########################################
+	    $xvfb_pid = $pid;
+	    close $write;
+	    print "trying to start xvfb on display :$display...\n" if $debug;
+	    my $readable = IO::Select->new($read);
+
+	    while ( my @ready = $readable->can_read(5) ) {
+		foreach $fh ( @ready ) {
+		    my $buf = <$fh>;
+		    if ( $buf ) {
+			# output read
+			print "   $buf" if $debug;
+			if ( $buf =~ m|server.*already active|i ) {
+			    $readable->remove($fh);
+			    close($fh);
+			    $failed = 1;
+			    $display += 1;
+			}
+		    } else {
+			# connection closed
+			$readable->remove($fh);
+			close($fh);
+			$failed = 1;
+			$display += 1;
+		    }
+		}
+	    }
+	} else {
+	    ########################################
+	    #### child
+	    ########################################
+	    close $read;
+	    open(STDERR, ">&=" . fileno($write)) or die "cannot dup to stderr";
+	    open(STDOUT, ">&=" . fileno($write)) or die "cannot dup to stdout";
+	    my @args = ( 'Xvfb', ":$display", "-screen", "0", "2048x2048x24+32", "-auth", $authority );
+	    exec { $args[0] } @args;
+	    die "exec failed...";
+	}
+    }
+    return $display;
+}
+
+###
+### make stdout & stderr unbuffered...
+###
+select((select(STDOUT), $| = 1)[0]);
+select((select(STDERR), $| = 1)[0]);
+
+if ( scalar(@ARGV) == 1 ) {
+    my $e = @ARGV[0];
+    die "initialization file ($e) does not exist, or is not a file" unless -f $e;
+    open(F,"< $e") or die "cannot read $e";
+    my @x = <F>;
+    close(F);
+    eval join('',@x);
+} elsif ( scalar(@ARGV) > 1 ) {
+    die "casapy-version takes at most one argument (an initialization file)...";
+}
+
+$authority = "/tmp/.xauth-$$";
+open( XAUTH, "> $authority" ) or die "cannot create xauth file...";
+close( XAUTH );
+
+$display = launch_xvfb( $authority );
+create_authority( $display, $authority );
+
+$ENV{'DISPLAY'} = "localhost:$display.0";
+$ENV{'XAUTHORITY'} = $authority;
+
+unless ( $casa_pid = fork( ) ) {
+
+    ### all casa processes started are children of this child
+    setpgrp(0,0);
+
+    my @args = ( "--nologger", "--log2term", "--colors=NoColor" );
+    $expect = new Expect( "casapy", @args );
+    $expect->log_stdout(0);
+
+    my $timeout = 30;
+    $expect->expect( $timeout,	[ qr/CASA\s+<\S*?>/ =>	 				sub { ### seems like quick startup/shutdown leaves the viewer dangling
+											      sleep(10); $expect->send("exit\n"); exp_continue; } ],
+				[ qr/leaving casapy.../ =>				sub { my $exp = shift; sleep(5); } ],
+				[ qr/CASA Version\s+(\S+)\s+\(r(\d+)\)/ =>		sub { my @m = $expect->matchlist( ); print "VERSION> $m[0] $m[1]\n";
+											      my $exp = shift; exp_continue; } ],
+				[ timeout =>						sub { $timeout_occurred = 1; } ],
+				[ eof =>						sub { $eof_occurred = 1; } ] );
+
+    exit $expect->exitstatus( );
+}
+
+waitpid( $casa_pid, 0 );
+exit(0);

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/tools/xml/casa.xsd">
+
+ 
+	<tool name="sdwriter" module="singledish">
+        <shortdescription>tool for exporting to single dish files</shortdescription>
+       
+<code>
+	<include>tools/singledish/sdwriter_forward.h</include>
+<private>
+	<include>tools/singledish/sdwriter_private.h</include>
+</private>
+</code>
+
+
+ 
+   <method type="constructor" name="sdwriter">
+   <shortdescription>Construct a sdwriter tool</shortdescription>
+<input>
+
+     <param type="string" direction="in" name="format">
+     <description>output data format</description>
+     <value>SDFITS</value>
+     </param>
+</input>
+<returns type="sdwriter"/>
+</method>
+
+
+
+ 
+   <method type="function" name="setformat">
+   <shortdescription>set the format</shortdescription>
+   
+<input>
+
+     <param type="string" direction="in" name="format">
+     <description>format of output file: SDFIT, FITS, MS2, or ASCII</description>
+     <value>SDFITS</value>
+     </param>
+</input>
+<returns type="int"/>
+
+</method>
+
+ 
+   <method type="function" name="write">
+   <shortdescription>write a memory table to file in the desired format.  </shortdescription>
+
+<input>
+     
+     <param type="string" direction="in" name="intable">
+     <description>input memory table name (Acually this should be counted ptr mem table object)</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="filename">
+     <description>output file name </description>
+     </param>
+
+     <param type="bool" direction="in" name="tostokes">
+     <description>do Stokes conversion? (for FITS or ASCII)</description>
+     </param>
+</input>
+<returns type="int"/>
+</method>
+ 
+</tool>
+ 
+</casaxml>

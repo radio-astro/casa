@@ -1,0 +1,394 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-04-15  tool guide version
+% JO  2011-05-13  Release 3.2 edits
+
+\chapter{Displaying Images}
+\label{chapter:viewer}
+
+This chapter describes how to display data with the {\tt casaviewer}
+either as a stand-alone or through the {\tt viewer} task. You can
+display both images and MeasurementSets.
+
+{\bf Alert:} We started to separate the viewing of images and
+measurement sets into two different, more specialized GUIs/tasks: {\tt imview} and {\tt
+  msview}. {\tt imview} will have all options for
+full scriptability (non-interactive plotting). The syntax is in the
+form of python dictionaries, which are flexible and relatively easy
+to use. The scripting syntax is still under
+development but feel free to play with the current examples provided
+in the online help of {\tt imview}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Starting the casaviewer}
+\label{section:viewer.start}
+
+{\tt casaviewer} is the name of the stand-alone application that is
+available with a CASA installation. You can call this command from the
+command line in the following ways:
+
+Start the {\tt casaviewer} with no default image/MS loaded; it will
+pop up the {\tt Load Data} frame and a blank, standard "Viewer Display
+Panel. Selecting a file on disk in the {\tt Load Data} panel will
+provide options for how to display the data. Images can be displayed
+as: 1) Raster Image, 2) Contour Map, 3) Vector map or 4) Marker
+Map.  MS's can only be displayed as raster.
+
+\small
+\begin{verbatim}
+  > casaviewer &
+\end{verbatim}
+\normalsize
+
+Start the {\tt casaviewer} with the selected image; the image will be
+displayed in the {\tt Viewer Display Panel}. If the image is a cube (more
+than one plane for frequency or polarization) then it will be one the
+first plane of the cube.
+
+\small
+\begin{verbatim}
+  > casaviewer image_filename &
+\end{verbatim}
+\normalsize
+
+Start the {\tt casaviewer} with the selected MeasurementSet; note the
+additional parameter indicating that it is an ms; the default is
+'image'.
+
+\small
+\begin{verbatim}
+  > casaviewer ms_filename ms &
+\end{verbatim}
+\normalsize
+
+In addition, within the casapy environment, there is a {\tt viewer} task
+which can be used to call up an image ({\it Note: currently the
+parameter list of the {\tt viewer} task needs to expand to handle the
+extra parameter to indicate an MS; until then, please use the
+stand-alone invocations for viewing MS's}):
+
+\small
+\begin{verbatim}
+  viewer(imagename=None)
+    View an image or visibility data set:
+    
+    Keyword arguments:
+    imagename -- Name of file to visualize
+            default: <unset>; example: imagename='ngc5921.image'
+\end{verbatim}
+\normalsize
+
+
+The {\tt viewer} can be started as:
+
+\small
+\begin{verbatim}
+    CASA <4>: viewer
+    --------> viewer()
+  or
+  CASA <5>: viewer 'ngc5921_task.image'
+  --------> viewer('ngc5921_task.image')
+\end{verbatim}
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The viewer GUI}
+\label{section:viewer.GUI}
+
+\begin{figure}[ht]
+\gname{viewer0}{4}
+\caption{\label{fig:viewer0} Viewer Display Panel with no data
+  loaded. Each section of the GUI is explained below} 
+\hrulefill
+\end{figure}
+ 
+The main parts of the GUI are the menus:
+
+\begin{itemize}
+\item  Data
+  \begin{itemize}
+      \item  Open - open an image from disk
+      \item  Register - register selected image (menu expands to the
+             right containing all loaded images) 
+      \item  Close - close selected image (menu expands to the right)
+      \item  Adjust - open the adjust panel 
+      \item  Print - print the displayed image
+      \item  Close Panel - close the Viewer Display Panel
+      \item  Quit Viewer - currently disabled
+  \end{itemize}
+\item Display Panel
+  \begin{itemize}
+      \item New Panel - create a new Viewer Display Panel
+      \item Panel Options - open the panel options frame
+      \item Print - print displayed image
+      \item Close Panel - close the Viewer Display Panel
+  \end{itemize}
+\item Tools
+  \begin{itemize}
+      \item Currently blank - will hold annotations and image analysis tools
+  \end{itemize}
+\end{itemize}
+
+Below this are icons for fast access to some of these menu items:
+
+\begin{itemize}
+   \item folder - Data:Open shortcut -- pulls up Load Data panel
+   \item wrench - Data:Adjust shortcut -- pulls up Data Display Options panel
+   \item panels - Data:Register shortcut -- pull up menu of loaded data
+   \item delete - Data:Close shortcut -- closes/unloads selected data
+   \item panel  - Display Panel:New Panel
+   \item panel wrench - Display Panel:Panel Options -- pulls up Viewer Canvas Manager
+   \item print  - Display Panel:Print -- print data
+\end{itemize}
+
+{\bf Important Bug Note: Please use the icon buttons whenever possible
+ instead of the menus.}  The {\tt Register} and {\tt Close menus}
+ especially are known to lead to viewer crashes in some cases.  You'll
+ usually find that the first four icon buttons are all you need.
+ Click on the display panel titlebar then hover over the buttons for
+ brief reminders of their purpose.
+
+
+Below this are the eight mouse control buttons. These allow/show the
+assignment of the mouse buttons for different operations. Clicking in
+one of these buttons will re-assign a mouse button to that operation.
+
+\begin{itemize}
+   \item {\bf Zooming (magnifying glass icon)} Zooming is accomplished
+     by pressing down the selected mouse button at the start point,
+     dragging the mouse away from that point, and releasing the
+     selected mouse button when the zoom box encloses the desired zoom
+     area. Once the button is released, the zoom rectangle can be
+     moved by clicking inside it with the selected mouse button and
+     dragging it around. To zoom in, simply double click with the
+     selected button inside the rectangle. Double clicking outside the
+     rectangle will result in a zoom out.
+   \item {\bf Panning (hand icon)} Panning is accomplished by pressing
+     down on the selected mouse button at the point you wish to move,
+     dragging the mouse to the position where you want the first point
+     moved to, and releasing the selected mouse button. {\it Note: The
+     arrow keys, Page Up, Page Down, Home and End keys, and scroll
+     wheel (if any) can also be used to scroll through your data once
+     you have zoomed in. For these to work, the mouse must be over the
+     display panel drawing area, but no mouse tool need be active.}
+     {\it Note: this is currently not enabled.}
+   \item {\bf Stretch-shift colormap fiddling } 
+   \item {\bf Brightness-contrast colormap fiddling} 
+   \item {\bf Positioning} This enables the user to place a crosshair
+     marker on the image to indicate a position. Depending on the
+     context, the positions may be used to flag MeasurementSet data
+     (not yet enabled) or display image spectral profiles (also not
+     currently enabled). Click on the position to place the crosshair;
+     once placed you can drag it to move to another location. Double
+     click is not needed for this control.
+   \item {\bf Rectangle and Polygon region drawing}
+     A rectangle region is generated exactly the same way as the zoom
+     rectangle, and is set by double clicking within the
+     rectangle. Polygon regions can be constructed by progressively
+     clicking the selected mouse button at the desired location of
+     each vertex, and clicking in the same location twice to complete
+     the polygon. Once constructed, it can be moved by dragging inside
+     the polygon, and reshaped by dragging the various handles at the
+     vertices. 
+   \item {\bf Polyline drawing}
+     A polyline can be constructed with this button selected. It is
+     almost identical to the polygon region tool. Create points by
+     clicking at the positions wanted and then double-click to finish
+     the line.  
+\end{itemize}
+
+Below this area is the actual display surface.
+
+Below the display is the 'tape deck' which provides basic movement
+between image planes along a selected third dimension of an image
+cube. This set of buttons is only enabled when the first-registered
+image reports that it has more than one plane along the 'Z axis'. In
+the most common case, the animator controls the frequency channel
+being viewed. From left to right, the tape deck controls allow the
+user to:
+
+\begin{itemize}
+   \item rewind to the start of the sequence (i.e., the first plane)
+   \item step backwards by one plane
+   \item play backwards, or repetitively step backwards
+   \item stop any current play
+   \item play forward, or repetitively step forward
+   \item step forward by one plane
+   \item fast forward to the end of the sequence
+\end{itemize}
+
+To the right of the tape deck is an editable text box indicating the
+current frame number and a sunken label showing the total number of
+frames. One can type a channel number into the current frame to jump
+to that channel. Below this is a slider for controlling the animation
+speed. To the right of this is the 'Full/Compact' toggle. In full
+mode, additional controls for blinking and for controlling the frame
+value and step are available; the default setting is for compact. In
+'Blink' mode, when more than one raster image is registered in the
+Viewer Display Panel, the tapedeck will control which is being
+displayed at the moment. The images registered should cover the same
+portion of the sky, using the same coordinate projection.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Viewing a raster map}
+\label{section:viewer.raster}
+
+A raster map of an image shows pixel intensities in a two-dimensional
+cross-section of gridded data with colors selected from a finite set
+of (normally) smooth and continuous colors, i.e., a colormap.
+
+Starting the {\tt casaviewer} with an image as a raster map will look
+something like: 
+
+\begin{figure}[ht]
+\gname{viewer1}{3.5}
+\gname{viewer_loaddata}{3.5}
+\caption{\label{fig:viewer1} casaviewer: Illustration of a raster
+  image in the Viewer Display Panel(left) and the Load Data panel
+  (right).} 
+\hrulefill
+\end{figure}
+ 
+
+You will see the GUI which consists of two main windows, entitled
+"Viewer Display Panel" and "Load Data". In the "Load Data" panel, you
+will see all of the files in the current working directory along with
+their type (Image, MeasurementSet, etc).  After selecting a file, you
+are presented with the available data types for these data. Clicking
+on the button {\tt Raster Map} will create a display as above. The main
+parts of the "Viewer Display Panel" GUI are discussed in the following
+Section.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Viewing a contour map}
+\label{section:viewer.contour}
+
+Viewing a contour image is similar the process above. A contour map
+shows lines of equal pixel intensity (e.g., flux density) in a two
+dimensional cross-section of gridded data. Contour maps are
+particularly useful for overlaying on raster images so that two
+different measurements of the same part of the sky can be shown
+simultaneously. 
+
+\begin{figure}[h]
+\gname{viewer5}{3.5}
+\gname{viewer_displaydata5}{3.5}
+\caption{\label{fig:viewer5} casaviewer: Illustration of a raster
+  image in the Viewer Display Panel(left) and the Load Data panel
+  (right).} 
+\hrulefill
+\end{figure}
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Viewing a MeasurementSet with visibility data}
+\label{section:viewer.MS}
+
+Visibility data can also be displayed and flagged directly from the
+viewer ({\it Note: flagging is not currently enabled}). For
+MeasurementSet files the only option for display is 'Raster' (similar
+to AIPS task TVFLG).
+
+\begin{figure}[h]
+\gname{viewer_ms1}{3.5}
+\gname{viewer_ms2}{3.5}
+\caption{\label{fig:viewer_ms1} casaviewer: Display of visibility
+  data. The default axes are time vs. baseline.} 
+\hrulefill
+\end{figure}
+ 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Loading a Multi-Extension Fits File}
+\label{section:viewer.multiextensionfits}
+The {\tt viewer} can also display multi-extension fits. These files
+are automatically recognized and the {\bf Load Data} window will
+show a little triangle right next to the filename. Clicking the
+triangle exposes the different extensions to be selected and viewed.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adjusting Display Parameters}
+\label{section:viewer.adjust}
+
+The data display can be adjusted by the user as needed. The following
+illustrate the available options in the catagories of: 
+\begin{itemize}
+   \item Display axes
+   \item Hidden axes
+   \item Basic Settings
+   \item Position tracking
+   \item Axis labels
+   \item Axis label properties
+\end{itemize}
+
+\begin{figure}[ht]
+\gname{viewer_datadisplay2}{3.5}
+\gname{viewer_datadisplay3}{3.5}
+\caption{\label{fig:datadisplay} casaviewer: Data display options. In
+  the left panel, the Display axes, Hidden axes, and Basic Settings
+  options are shown; in the right panel, the Position tracking and
+  Axis labels options are shown. }
+
+\end{figure}
+\begin{figure}[h]
+\gname{viewer_datadisplay4}{3.5}
+\caption{\label{fig:datadisplay-p3} casaviewer: Data display options. In
+  this final, third panel , the Axis label properties are shown. }
+\hrulefill
+\end{figure}
+ 
+
+This older web page gives details of individual display options.
+Although it has not yet been integrated into the reference manual for
+the newer CASA, it is accurate in most cases: 
+
+\url{http://aips2.nrao.edu/daily/docs/user/Display/node267.html}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adjusting Canvas Parameters/Multi-panel displays}
+\label{section:viewer.canvas}
+
+The display area or Canvas can also be manipulated through two sets of values:
+\begin{itemize}
+   \item Margins - specify the spacing for the left, right, top, and bottom margins
+   \item Number of panels - specify the number of panels in x and y
+         and the spacing between those panels. 
+\end{itemize}
+
+The following illustrates a multi-panel display along with the Viewer
+Canvas Manager settings which created it. 
+
+\begin{figure}[h]
+\gname{viewer_canvas}{3.5}
+\gname{viewer4}{3.5}
+\caption{\label{fig:viewer_canvas} casaviewer: A multi-panel display
+set up through the Viewer Canvas Manager.} 
+\hrulefill
+\end{figure}
+ 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Overlay contours on a raster map}
+\label{section:viewer.contours-on-raster}
+
+Contours of either a second data set or the same data set can be used
+for comparison or to enhance visualization of the data. The Adjust
+Panel will have multiple tabs which allow adjusting each data set
+individually (Note tabs along the top). To enable this simply open up
+the Load Data panel (Use the Data menu or click on the Folder icon),
+select the data set and select Contour. 
+
+\begin{figure}[h]
+\gname{viewer_datadisplay1}{3.5}
+\gname{viewer3}{3.5}
+\caption{\label{fig:viewer_overlay} casaviewer: Display contour
+overlay on top of a raster image.} 
+\hrulefill
+\end{figure}
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

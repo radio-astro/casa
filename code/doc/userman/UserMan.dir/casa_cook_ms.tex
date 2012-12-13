@@ -1,0 +1,125 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% JO  2010-10-12 edits for CASA 3.1.0
+
+%\chapter{Appendix IV. - Measurement Sets}
+\chapter{Under the Hood: Measurement Sets}
+\label{chapter:app.ms}
+
+Visibility data are stored in a CASA table known as a
+Measurement Set (MS).  An MS consists of a main table containing the
+visibility data and associated sub-tables containing auxiliary or
+secondary information.  The most recent specification for the MS
+is {\bf Aips++ MeasurementSet definition version 2.0}
+(\url{http://aips2.nrao.edu/docs/notes/229/229.html}).
+This documentation will eventually be updated to the CASA 
+document system.
+
+Table \ref{tabselect} lists data selection
+parameters which may be used during a typical data reduction session
+while Table \ref{tabmain} identifies the commonly accessed components
+of the {\tt MAIN} table in data sets.
+
+Each row in a data column in the MS (e.g. {\tt DATA}, {\tt ALMA\_PHAS\_CORR},
+{\tt CORRECTED\_DATA}) contains a matrix of observed complex visibilities at
+a single time stamp, for a single baseline in a single spectral
+window.  The shape of the data matrix is given by the number of
+channels and the number of correlations (voltage-products) formed by
+the correlator for an array.  
+
+All CASA data files, including Measurement Sets, are written into
+the current working directory by default, with each CASA table
+represented as a separate sub-directory.  MS names therefore need only
+comply with UNIX file or directory naming conventions, and can be
+referred to from within CASA directly, or via full path names.
+
+\vspace{5mm}
+\begin{table}[h!]
+\caption[Common Data Selection Parameters]
+        {\label{tabselect} Common Data Selection Parameters}
+\begin{center}
+\begin{tabular}{|ll|} \hline
+{\bf Parameter}   &   {\bf Contents}                  \\
+\hline
+\hline
+ANTENNA1      &   First antenna in baseline   \\
+ANTENNA2      &   Second antenna in baseline  \\
+FIELD\_ID      &   Field (source no.) identification  \\
+DATA\_DESC\_ID  &   Spectral window number, polarization identifier pair (IF no.)  \\
+ARRAY\_ID      &   Subarray number                \\
+OBSERVATION\_ID  &   Observation identification   \\
+POLARIZATION\_ID  &   Polarization identification \\ 
+SCAN\_NUMBER   &   Scan number                    \\
+TIME          &   Integration midpoint time      \\
+UVW           &   UVW coordinates                \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\vspace{5mm}
+\begin{table}[h!]
+\caption[Commonly accessed {\tt MAIN} Table components for ALMA data]
+        {\label{tabmain}Commonly accessed {\tt MAIN} Table components for ALMA data}
+\begin{center}
+\begin{tabular}{|ll|} \hline
+  {\bf Column}      &  {\bf Format}        \\         
+                    &  {\bf Comments}      \\        
+  DATA              &  Complex(N$_c$, N$_f$)  \\       
+                    &  Complex visibility matrix  \\
+                    &  =ALMA\_PHASE\_CORR by default  \\
+  WEIGHT\_SPECTRUM   &  Float(N$_c$)    \\            
+                    &  Weight for whole data matrix \\     
+  ALMA\_PHASE\_CORR   &  Complex(N$_c$, N$_f$) \\        
+                    &  On-line phase corrected complex visibility matrix  \\
+                    &  {\it (Not in VLA data)}  \\
+  ALMA\_NO\_PHAS\_CORR  &  Bool(N$_c$, N$_f$)    \\     
+                     & Complex visibility matrix that has not been phase corrected  \\
+                     & {\it (Not in VLA data)}  \\
+  ALMA\_PHAS\_CORR\_FLAG\_ROW  &  Bool(N$_c$, N$_f$)  \\
+                           &  Flag to use phase-corrected data or not, Default=F  \\
+                           &  {\it (not in VLA data)} \\    
+  CORRECTED\_DATA   &  Complex(N$_c$, N$_f$)  \\     
+                   &  Corrected data created by calibrater or imager tools \\ 
+  MODEL\_DATA       &  Complex(N$_c$, N$_f$)      \\ 
+                   &  Model data created by calibrater or imager tools  \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+{\bf Note:} when you examine table entries like {\tt FIELD\_ID} or 
+{\tt DATA\_DESC\_ID} with the table browser, you will see 0-based numbers.
+
+\begin{figure}[h!]
+\gname{jbrowser_ms}{6}
+\caption{\label{fig:tablekeyword} The structure of a Measurement
+  Set. The tables which compose a Measurement Set named ngc5921.ms on
+  disk.}
+\hrulefill
+\end{figure}
+ 
+\begin{figure}[h!]
+\gname{jbrowser1}{6}
+\caption{\label{fig:tablekeyword2} A few of the {\tt MAIN} table columns in a
+  Measurement Set.} 
+\hrulefill
+\end{figure}
+ 
+\begin{figure}[h!]
+\gname{B0319_uvcoverage}{5}
+\caption{\label{fig:matplotlib2} matplotlib plotter. The buttons on the
+  lower left are: 1,2,3) {\bf Home, Back and Forward}. Click to navigate
+  between previously defined views (akin to web navigation), 4)
+  {\bf pan}. Click and drag to pan to a new position, 5) {\bf zoom}. Click to
+  define a rectangular region for zooming, 6) {\bf Subplot
+  Configuration}. Click to configure the parameters of the subplot and
+  spaces for the figures, 7) {\bf Save}. Click to launch a file save
+  dialog box. The cursor readout is on the bottom right.}
+\hrulefill
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

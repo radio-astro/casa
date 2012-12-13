@@ -1,0 +1,51 @@
+CASA Version 2.0 Rev 3119
+  Built on: Mon 2007/08/27 01:15:06 UTC
+
+___________________________________________________________
+Available tasks:
+
+   accum         exportfits      immoments       plotcal
+   almasimmos    exportuvfits    importasdm      plotxy
+   applycal      feather         importfits      (pointcal)
+   bandpass      filecatalog     importuvfits    regridimage
+   blcal         flagautocorr    importvla       restore
+   browsetable   flagdata        invert          setjy
+   clean         flagmanager     listcal         smoothcal
+   clearcal      fluxscale       listhistory     split
+   clearplot     fringecal       listobs         uvcontsub
+   clearstat     ft              makemask        uvmodelfit
+   concat        gaincal         mosaic          viewer
+   deconvolve    imhead          plotants
+ 
+Available tools:
+
+   cb (calibrater)     cp (cal plot)     fg (flagger)
+   ia (image analysis) im (imager)       me (measures)
+   mp (MS plot)        ms (MS)           qa (quanta)
+   sm (simulation      tb (table)        tp (table plot)
+ 
+   pl (pylab functions)
+   sd (ASAP functions - run asap_init() to import into CASA)
+
+___________________________________________________________________
+
+Help :   
+   help taskname          - Full help for task
+   help par.parametername - Full help for parameter name 
+   find string            - Find occurances of string in doc
+   tasklist               - Task list organized by catagory
+   taskhelp               - One line summary of available tasks
+   toolhelp               - One line summary of available tools
+   startup                - The start up screen
+
+___________________________________________________________________
+will execute script AtmosphereTypeTest.py
+Activating auto-logging. Current session state plus future input saved.
+Filename       : ipython.log
+Mode           : backup
+Output logging : False
+Raw input log  : False
+Timestamping   : False
+State          : active
+['1 - tropical', '2 - midlatSummer', '3 - midlatWinter', '4 - subarcticSummer', '5 - subarcticWinter']
+leaving casapy...

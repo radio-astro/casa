@@ -1,0 +1,10 @@
+\documentclass{book}
+\setcounter{tocdepth}{3}
+\usepackage{longtable,epsfig}
+\usepackage{makeidx}
+\usepackage{aips2help}
+\usepackage{hyperref}
+\makeindex
+\begin{document}
+\input{aips2defs}
+

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdcoadd -->
+
+<task type="function" name="sdcoadd" startup="false" category="single dish">
+
+  <shortdescription>ASAP SD task: coadd multiple scantables into one</shortdescription>
+
+  <description>
+        Coadd multiple scantables into one
+
+        Note: only works if the data structures are the same (nif, npol, nchan...)
+        Task Version 2008-01-29 TT
+</description>
+
+  <input>
+
+    <param type="stringArray" name="infiles"  mustexist="True">
+    <description>list of names of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+            <description>antenna name or id (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="fluxunit">
+	    <description>units for line flux (K,Jy) (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="any" name="telescopeparm" subparam='true'>
+	    <description>param of telescope for flux conversion</description>
+            <any type='variant' limittype='string doubleArray'/>
+	    <value type='string'/>
+    </param>
+
+    <param type="string" name="specunit">
+	    <description>units for spectral axis (channel,km/s,GHz)</description>
+	    <value></value>
+	    <allowed kind="enum">
+	    <value></value>
+	    <value>channel</value>
+	    <value>km/s</value>
+	    <value>GHz</value>
+	    <value>MHz</value>
+	    <value>kHz</value>
+	    <value>Hz</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="frame">
+	    <description>frequency reference frame, e.g. LSRK (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="doppler">
+	    <description>doppler convention, e.g. RADIO (''=current)</description>
+	    <value></value>
+    </param>
+
+    <param type="bool" name="scanaverage">
+            <description>average integs within scans (True,False) </description>
+            <value>False</value>
+    </param>
+
+    <param type="bool" name="timeaverage">
+            <description>average scans over time (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="tweight" subparam="true">
+            <description>weighting for time averaging</description>
+            <value>none</value>
+	    <allowed kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+	    <value>tint</value>
+	    <value>tintsys</value>
+	    <value>median</value>
+            </allowed>
+    </param>
+
+    <param type="bool" name="polaverage">
+            <description>average over polarizations (True,False)</description>
+            <value>False</value>
+    </param>
+
+    <param type="string" name="pweight" subparam="true">
+            <description>weighting for polarization averaging</description>
+            <value>none</value>
+	    <allowed kind="enum">
+	    <value>none</value>
+	    <value>var</value>
+	    <value>tsys</value>
+            </allowed>
+    </param>
+
+    <param type="string" name="outfile">
+	    <description>output file name</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="outform">
+	    <description>output file format (ASCII,MS,SDFITS,ASAP)</description>
+	    <value>ASAP</value>
+	    <allowed kind="enum">
+	    <value>ASCII</value>
+	    <value>ascii</value>
+	    <value>MS</value>
+	    <value>ms</value>
+	    <value>MS2</value>
+	    <value>ms2</value>
+	    <value>SDFITS</value>
+	    <value>sdfits</value>
+	    <value>ASAP</value>
+	    <value>asap</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <description>overwrite the output file if already exists</description>
+            <value>False</value>
+    </param>
+
+
+    <constraints>
+	    <when param="fluxunit">
+		<equals value=""/>
+		<equals value="K">
+			<default param="telescopeparm"><value type='string'></value></default>
+		</equals>
+	        <equals value="k">
+			<default param="telescopeparm"><value type='string'></value></default>
+	        </equals>
+	        <equals value="Jy">
+			<default param="telescopeparm"><value type='string'></value></default>
+	        </equals>
+	        <equals value="jy">
+			<default param="telescopeparm"><value type='string'></value></default>
+	        </equals>
+	    </when>
+
+	    <when param="timeaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="tweight"><value type='string'>none</value></default>
+                </equals>
+            </when>
+	    <when param="polaverage">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="pweight"><value type='string'>none</value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+  Keyword arguments:
+        infiles -- list of names of input SD dataset
+        antenna -- antenna name or id (only effective for MS input). 
+        fluxunit -- units for line flux
+                options: 'K','Jy',''
+                default: '' (keep current fluxunit of the first data in the infiles)
+
+            &gt;&gt;&gt; fluxunit expandable parameter
+                 telescopeparm -- the telescope characteristics
+                         options: (str) name or (list) list of gain info
+                         default: '' (none set)
+                         example: if telescopeparm='', it tries to get the telescope
+                                  name from the data.
+                                  Full antenna parameters (diameter,ap.eff.) known
+                                  to ASAP are
+                                  'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                                  'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                                  to 'K' first then convert to a new fluxunit.
+                                  telescopeparm=[104.9,0.43] diameter(m), ap.eff.
+                                  telescopeparm=[0.743] gain in Jy/K
+                                  telescopeparm='FIX' to change default fluxunit
+                                  see description below
+
+        specunit -- units for spectral axis
+                options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
+                default: '' (=current)
+                example: this will be the units for masklist
+        frame -- frequency frame for spectral axis
+                options: (str) 'LSRK','REST','TOPO','LSRD','BARY',
+                         'GEO','GALACTO','LGROUP','CMB'
+                default: currently set frame in scantable
+                WARNING: frame='REST' not yet implemented
+        doppler -- doppler mode
+                options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
+                default: currently set doppler in scantable
+        scanaverage -- average integrations within scans
+                options: (bool) True,False
+                default: False
+                example: if True, this happens in read-in
+                For GBT, set False!
+        timeaverage -- average times for multiple scan cycles
+                options: (bool) True,False
+                default: False
+                example: if True, this happens after calibration
+
+            &gt;&gt;&gt;timeaverage expandable parameter
+                 tweight -- weighting for time average
+                         options: 'none' 
+                                  'var'   (1/var(spec) weighted)
+                                  'tsys'  (1/Tsys**2 weighted)
+                                  'tint'  (integration time weighted)
+                                  'tintsys'  (Tint/Tsys**2)
+                                  'median'  ( median averaging)
+                         default: 'none'
+
+        polaverage -- average polarizations
+                options: (bool) True,False
+                default: False
+
+            &gt;&gt;&gt;polaverage expandable parameter
+                 pweight -- weighting for polarization average
+                         options: 'none'
+                                  'var'  (1/var(spec) weighted)
+                                  'tsys' (1/Tsys**2 weighted)
+                         default: 'none'
+
+        outfile -- Name of output file
+                default: '' (scantable)
+                example:
+        outform -- format of output file
+                options: 'ASCII','SDFITS','MS','ASAP'
+                default: 'ASAP'
+                example: the ASAP format is easiest for further sd
+                         processing; use MS for CASA imaging.
+                         If ASCII, then will append some stuff to
+                         the outfile name
+        overwrite -- overwrite the output file if already exists
+                options: (bool) True,False
+                default: False
+                WARNING: if outform='ASCII', this parameter is ignored 
+
+
+
+        DESCRIPTION:
+
+        Task sdcoadd performs co-add multiple single dish spectral data given by
+        a list of spectral data file names in any of the following formats,
+        ASAP, MS2,SDFITS, and ASCII.
+        The units of line flux, the units of spectral axis, frame, and doppler
+        are assumed to be those of the first one in the infiles if not
+        specified.
+        timaverage and polaverage are used to perform time
+        and polarization averaging over scans on the co-added scantable before
+        saving to a file on disk.
+
+        WARNING for the GBT raw SDFITS format data as input:
+        SDtasks are able to handle GBT raw SDFITS format data since the 
+        data filler is available. However, the functionality is not well 
+        tested yet, so that there may be unknown bugs.  
+
+  </example>
+
+</task>
+
+</casaxml>
