@@ -3916,70 +3916,7 @@ Record Imager::clean(const String& algorithm,
     redoSkyModel_p=False;
     writeFluxScales(fluxscale_p);
     // restoreImages(image); // Moved to iClean so that it happens only once.
-    this->writeHistory(os);
-    try{
-     // write data processing history into image logtable
-      LoggerHolder imagelog (False);
-      LogSink& sink = imagelog.sink();
-      LogOrigin lor( String("imager"), String("clean()") );
-      LogMessage msg(lor);
-      sink.postLocally(msg);
-      
-      ROMSHistoryColumns msHis(ms_p->history());
-      const ROScalarColumn<Double> &time_col = msHis.time();
-      const ROScalarColumn<String> &origin_col = msHis.origin();
-      const ROArrayColumn<String> &cli_col = msHis.cliCommand();
-      const ROScalarColumn<String> &message_col = msHis.message();
-      if (msHis.nrow()>0) {
-	ostringstream oos;
-	uInt nmessages = time_col.nrow();
-	for (uInt i=0; i < nmessages; i++) {
-	  try{
-	  String tmp=frmtTime(time_col(i));
-	  oos << tmp
-	      << "  HISTORY " << origin_col(i);
-	  oos << " " << cli_col(i) << " ";
-	  oos << message_col(i)
-	      << endl;
-	  }
-	  catch(exception& y){
-	    os << LogIO::DEBUG2 << "Skipping history-table row " << i << " while filling output image-header " << LogIO::POST;
-	  }
-
-	}
-	// String historyline(oos);
-	sink.postLocally(msg.message(oos.str()));
-      }
-      for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-	if(Table::isWritable(image(thismodel))){
-	  PagedImage<Float> restoredImage(image(thismodel),
-					  TableLock(TableLock::AutoNoReadLocking));
-	  LoggerHolder& log = restoredImage.logger();
-	  log.append(imagelog);
-	  log.flush();
-	  restoredImage.table().relinquishAutoLocks(True);
-	}
-      }
-    }
-    catch(exception& x){
-      
-      this->unlock();
-      destroySkyEquation();
-      os << LogIO::WARN << "Caught exception: " << x.what()
-	 << LogIO::POST;
-      os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
-	 <<LogIO::POST; 
-      //continue and wrap up this function
-      
-    }
-    catch(...){
-      this->unlock();
-      destroySkyEquation();
-      os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
-      os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
-	 <<LogIO::POST;
-
-    }
+    
     
     this->unlock();
 
@@ -6974,6 +6911,71 @@ Int Imager::interactivemask(const String& image, const String& mask,
 
 	os << "Restoring Image(s) with the clean-beam" << LogIO::POST;
 	restoreImages(aimage);
+	this->writeHistory(os);
+	try{
+	  // write data processing history into image logtable
+	  LoggerHolder imagelog (False);
+	  LogSink& sink = imagelog.sink();
+	  LogOrigin lor( String("imager"), String("clean()") );
+	  LogMessage msg(lor);
+	  sink.postLocally(msg);
+      
+	  ROMSHistoryColumns msHis(ms_p->history());
+	  const ROScalarColumn<Double> &time_col = msHis.time();
+	  const ROScalarColumn<String> &origin_col = msHis.origin();
+	  const ROArrayColumn<String> &cli_col = msHis.cliCommand();
+	  const ROScalarColumn<String> &message_col = msHis.message();
+	  if (msHis.nrow()>0) {
+	    ostringstream oos;
+	    uInt nmessages = time_col.nrow();
+	    for (uInt i=0; i < nmessages; i++) {
+	      try{
+		String tmp=frmtTime(time_col(i));
+		oos << tmp
+		    << "  HISTORY " << origin_col(i);
+		oos << " " << cli_col(i) << " ";
+		oos << message_col(i)
+		    << endl;
+	      }
+	      catch(exception& y){
+		os << LogIO::DEBUG2 << "Skipping history-table row " << i << " while filling output image-header " << LogIO::POST;
+	      }
+	      
+	    }
+	    // String historyline(oos);
+	    sink.postLocally(msg.message(oos.str()));
+	  }
+	  for (Int thismodel=0;thismodel<Int(aimage.nelements());++thismodel) {
+	    if(Table::isWritable(aimage(thismodel))){
+	      PagedImage<Float> restoredImage(aimage(thismodel),
+					      TableLock(TableLock::AutoNoReadLocking));
+	      LoggerHolder& log = restoredImage.logger();
+	      log.append(imagelog);
+	      log.flush();
+	      restoredImage.table().relinquishAutoLocks(True);
+	    }
+	  }
+	}
+	catch(exception& x){
+      
+	  this->unlock();
+	  destroySkyEquation();
+	  os << LogIO::WARN << "Caught exception: " << x.what()
+	     << LogIO::POST;
+	  os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
+	     <<LogIO::POST; 
+	  //continue and wrap up this function
+	  
+	}
+	catch(...){
+	  this->unlock();
+	  destroySkyEquation();
+	  os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
+	  os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
+	     <<LogIO::POST;
+	  
+	}
+
 
        } //catch  (AipsError x) {
        //os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
