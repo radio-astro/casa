@@ -5300,14 +5300,28 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   dircsys.toWorld(mvd,dircsys.referencePixel());
   Double sep = fieldDir.getValue().separation(mvd,"\"").getValue();
 	  
+  //Apply radius limit for 3C286,3C48,3C147 and 3C138
+  sjy_setRadiusLimit(tmodimage, modimage, model, dircsys);
+
+  // for debugging
+  /***
+  PagedImage<Float> checkIm(TiledShape(modimage.shape(),
+                                          modimage.niceCursorShape()),
+                                    modimage.coordinates(),
+                                    "checkImage");
+  checkIm.copyData((LatticeExpr<Float>)(*tmodimage));
+  ***/
+
   if(fluxdens[0] != 0.0){
     Float sumI = 1.0;
 
     // ?: can't handle the different return types.
     if(whichPols.nelements() > 1)
-      sumI = sum(ImagePolarimetry(modimage).stokesI()).getFloat();
+      //sumI = sum(ImagePolarimetry(modimage).stokesI()).getFloat();
+      sumI = sum(ImagePolarimetry(*tmodimage).stokesI()).getFloat();
     else
-      sumI = sum(modimage).getFloat();
+      //sumI = sum(modimage).getFloat();
+      sumI = sum(*tmodimage).getFloat();
 
     if(selspw == 0)
       os << LogIO::NORMAL
@@ -5338,7 +5352,8 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     else{
       // Scale factor
       Float scale = fluxUsed[0] / sumI;
-      tmodimage->copyData( (LatticeExpr<Float>)(modimage * scale) );	
+      //tmodimage->copyData( (LatticeExpr<Float>)(modimage * scale) );	
+      tmodimage->copyData( (LatticeExpr<Float>)(*tmodimage * scale) );	
       os << LogIO::NORMAL
          << "Scaling spw " << selspw << "'s model image to I = "
          << fluxUsed[0] // Loglevel INFO
@@ -5352,7 +5367,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
  << "Using the model image's original unscaled flux density for visibility prediction."
        << LogIO::POST;
     writeHistory(os);
-    tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
+    //tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
   }
             
   if(selspw == 0){
@@ -5374,6 +5389,58 @@ Bool Imager::sjy_regridCubeChans(TempImage<Float>* tmodimage,
   ImageRegrid<Float> ir;
   IPosition axes(1, freqAxis);   // regrid the spectral only
   ir.regrid(*tmodimage, Interpolate2D::LINEAR, axes, modimage);
+  return True;
+}
+
+Bool Imager::sjy_setRadiusLimit(TempImage<Float>* tmodimage,
+                                PagedImage<Float>& modimage, const String& model, DirectionCoordinate& dircsys)
+{
+  Path path(model);
+  String basename=path.baseName();
+  Float arad;
+  // radius limit in arcsec from AIPS
+  if (basename.find("3C286")==0) {
+      arad=3.0;
+  }
+  else if (basename.find("3C48")==0) {
+      arad=0.95;
+  }
+  else if (basename.find("3C147")==0) {
+      arad=0.85;
+  }
+  else if (basename.find("3C138")==0) {
+      arad=0.75;
+  }
+  else {
+      arad=0;
+      tmodimage->copyData(modimage);
+      return True;
+  }
+  try {
+    Quantity qrad(arad,"arcsec");
+    Float prad=Float(qrad.get(Unit("rad")).getValue()/abs(dircsys.increment()(0)));
+    Float radius = (prad >0.5 ? prad: 0.5);
+    String tempmaskname="__tmp_mask_setjy_radiuslimit";
+    PagedImage<Float> maskImage(TiledShape(modimage.shape(),
+                                           modimage.niceCursorShape()),
+                                modimage.coordinates(), tempmaskname);
+
+    maskImage.table().markForDelete();
+    Matrix<Float> circ(1,3);
+    Record *imrec=0;
+    Matrix<Quantity> blctrcs;
+    //IPosition circoord(3,radius,dircsys.referencePixel()(0), dircsys.referencePixel()(1));
+    circ(0,0)=radius;
+    circ(0,1)=dircsys.referencePixel()(0);
+    circ(0,2)=dircsys.referencePixel()(1);
+    Imager::regionToImageMask(tempmaskname,imrec,blctrcs,circ,1.0);
+    PagedImage<Float> tmpmask(tempmaskname);
+    tmpmask.table().markForDelete();
+    tmodimage->copyData( (LatticeExpr<Float>)(tmpmask*modimage));
+  }
+  catch (...) {
+    return False;
+  }
   return True;
 }
 

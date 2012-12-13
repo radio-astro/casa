@@ -821,6 +821,10 @@ protected:
   Bool sjy_regridCubeChans(TempImage<Float>* tmodimage,
                            PagedImage<Float>& modimage, Int freqAxis);
 
+  Bool sjy_setRadiusLimit(TempImage<Float>* tmodimage,
+                          PagedImage<Float>& modimage, const String& model,
+                          DirectionCoordinate& dircsys);
+
   String imageName();
 
   Bool pbguts(ImageInterface<Float>& in,  
