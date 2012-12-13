@@ -154,11 +154,11 @@ namespace casa{
 
     for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
       {
-	iloc(1)=(Int)((scaledSampling[1]*iy+off[1]));//+convOrigin[1];
+	iloc(1)=(Int)((scaledSampling[1]*iy+off[1])-1);//+convOrigin[1];
 	igrdpos[1]=loc[1]+iy;
 	for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
 	  {
-	    iloc[0]=(Int)((scaledSampling[0]*ix+off[0]));//+convOrigin[0];
+	    iloc[0]=(Int)((scaledSampling[0]*ix+off[0])-1);//+convOrigin[0];
 	    igrdpos[0]=loc[0]+ix;
 	    tiloc=iloc;
 	    //
