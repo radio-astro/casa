@@ -16,17 +16,17 @@
 import time
 import os
 
-reuserepos=False
-tempdir="widebandmosaic_regression_data/"
-
 # Data : wbmos_awproject.ms   in  regression/wideband/
 pathname=os.environ.get('CASAPATH').split()[0]
-if (reuserepos==False):
-   os.system("rm -rf "+tempdir)
-   os.mkdir(tempdir)
-   pathname=os.environ.get('CASAPATH').split()[0] + "/data/regression/wideband/wbmos_awproject.ms"
-   os.system("cp -r " + pathname + " " + tempdir)
+tempdir="./"
 
+#tempdir="widebandmosaic_regression_data/"
+#reuserepos=True
+#if (reuserepos==False):
+#   os.system("rm -rf "+tempdir)
+#   os.mkdir(tempdir)
+#   pathname=os.environ.get('CASAPATH').split()[0] + "/data/regression/wideband/wbmos_awproject.ms"
+#   os.system("cp -r " + pathname + " " + tempdir)
 
 # Initialize status flag
 regstate = True;

@@ -61,6 +61,7 @@ casa_add_python( tools tools_regressions_tests_python python/${PYTHONV}/regressi
   third4826-mms.py
   time_then_chan_avg.py
   wideband.py
+  widebandmosaic.py
   wproject_regression.py
   orionmos4sim.py
   sim_m51c.py
