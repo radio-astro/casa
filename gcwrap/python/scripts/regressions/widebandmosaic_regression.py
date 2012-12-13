@@ -16,8 +16,17 @@
 import time
 import os
 
+reuserepos=False
+tempdir="widebandmosaic_regression_data/"
+
 # Data : wbmos_awproject.ms   in  regression/wideband/
 pathname=os.environ.get('CASAPATH').split()[0]
+if (reuserepos==False):
+   os.system("rm -rf "+tempdir)
+   os.mkdir(tempdir)
+   pathname=os.environ.get('CASAPATH').split()[0] + "/data/regression/wideband/wbmos_awproject.ms"
+   os.system("cp -r " + pathname + " " + tempdir)
+
 
 # Initialize status flag
 regstate = True;
@@ -29,20 +38,20 @@ startProc=time.clock()
 # Mark time
 copyTime=time.time()
 
-imname1='reg_widebandmosaic_cs.wbT.atT.mtT.psF'
-imname2= 'reg_widebandmosaic_mtmfs.wbT.atT.mtT.psF'
+imname1=tempdir+'reg_widebandmosaic_cs.wbT.atT.mtT.psF'
+imname2= tempdir+'reg_widebandmosaic_mtmfs.wbT.atT.mtT.psF'
 npix=512
 
 if(regstate):
    # Test (1) : CS clean with wideband A-Projection with freq-conjugate beams.
    print '-- CS Clean with Wideband AProjection and Mosaicing --'
    default('clean')
-   clean( vis='wbmos_awproject.ms', imagename=imname1, field='0,1', spw='', phasecenter='0', nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   clean( vis=tempdir+'wbmos_awproject.ms', imagename=imname1, field='0,1', spw='', phasecenter='0', nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (2) : MTMFS clean with wideband A-Projection with freq-conjugate beams.
    print '-- MTMFS Clean with Wideband AProjection and Mosaicing --'
    default('clean')
-   clean( vis='wbmos_awproject.ms', imagename=imname2, field='0,1', spw='', phasecenter='0', nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   clean( vis=tempdir+'wbmos_awproject.ms', imagename=imname2, field='0,1', spw='', phasecenter='0', nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (3) Mosaic with wbawp=False, and post-deconvolution PB-correction
    #print '-- MTMFS Clean with Reference-Frequency AProjection and Mosaicing + Post Deconv PB-Correction --'
