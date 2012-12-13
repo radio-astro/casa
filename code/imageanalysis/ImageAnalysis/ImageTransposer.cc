@@ -7,7 +7,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>

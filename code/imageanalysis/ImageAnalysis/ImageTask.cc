@@ -32,7 +32,7 @@
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
 #include <images/Images/FITSImage.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Images/PagedImage.h>

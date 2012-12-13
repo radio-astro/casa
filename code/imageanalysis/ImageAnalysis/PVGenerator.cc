@@ -27,9 +27,8 @@
 
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
-//#include <images/Images/TempImage.h>
 #include <measures/Measures/MDirection.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>

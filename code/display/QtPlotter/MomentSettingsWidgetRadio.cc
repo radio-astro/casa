@@ -25,7 +25,7 @@
 
 
 #include "MomentSettingsWidgetRadio.qo.h"
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/ThresholdingBinPlotDialog.qo.h>

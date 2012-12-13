@@ -43,7 +43,7 @@
 #include <components/ComponentModels/SpectralModel.h>
 
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>

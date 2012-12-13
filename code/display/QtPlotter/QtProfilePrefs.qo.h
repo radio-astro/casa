@@ -44,7 +44,7 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageInterface.h>
 #include <measures/Measures/Stokes.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 #include <synthesis/MSVis/StokesVector.h>
 

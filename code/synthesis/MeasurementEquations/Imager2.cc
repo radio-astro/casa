@@ -59,7 +59,7 @@
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImagePolarimetry.h>
 #include <images/Images/ImageBeamSet.h>

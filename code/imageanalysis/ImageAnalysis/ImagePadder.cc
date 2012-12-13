@@ -27,7 +27,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageUtilities.h>

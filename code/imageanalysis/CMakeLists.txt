@@ -34,6 +34,7 @@ Annotations/AnnText.cc
 Annotations/AnnVector.cc
 Annotations/RegionTextList.cc
 
+ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapser.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
@@ -80,6 +81,7 @@ install (FILES
 	DESTINATION include/casacode/imageanalysis/IO
 	)
 install (FILES
+	ImageAnalysis/ImageAnalysis.h
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageInputProcessor.h
@@ -114,6 +116,8 @@ casa_add_assay( imageanalysis Annotations/test/tAnnText.cc )
 casa_add_assay( imageanalysis Annotations/test/tAnnVector.cc )
 casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )

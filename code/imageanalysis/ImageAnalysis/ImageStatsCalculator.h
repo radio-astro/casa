@@ -30,7 +30,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <casa/namespace.h>
 
 #include <memory>

@@ -48,7 +48,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>    
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <display/DisplayEvents/WCPositionEvent.h>
 #include <display/DisplayEvents/WCMotionEvent.h>
 #include <display/DisplayEvents/WCRefreshEvent.h>
