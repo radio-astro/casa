@@ -86,27 +86,7 @@ class Calibrater
 		 const MRadialVelocity& mStep=MRadialVelocity(),
 		 const String& msSelect="");
 
-  // Initialize calibration components to be apply or solved for
-  //  Bool setapply(const String& type, const Record& applypar);
-  Bool setapply (const String& type, 
-		 const Double& t,
-		 const String& table,
-		 const String& interp,
-		 const String& select,
-		 const Bool& calwt,
-		 const Vector<Int>& spwmap,
-		 const Float& opacity);
-
   // Set up to apply calibration (using MSSelection syntax)
-  Bool setapply (const String& type, 
-		 const Double& t,
-		 const String& table,
-		 const String& spw,
-		 const String& field,
-		 const String& interp,
-		 const Bool& calwt,
-		 const Vector<Int>& spwmap,
-		 const Float& opacity);
   Bool setapply (const String& type, 
 		 const Double& t,
 		 const String& table,
@@ -122,17 +102,6 @@ class Calibrater
 
   Bool setmodel(const String& modelImage);
   Bool setModel(const Vector<Double>& stokes);
-
-  //  Arrange to solve
-  Bool setsolve (const String& type, 
-		 const Double& t,
-		 const Double& preavg, 
-		 const Bool& phaseonly,
-		 const Int& refant, 
-		 const String& table,
-		 const Bool& append,
-		 const String& cfCache="",
-		 const Float& paInc=360.0f);
 
   // Arrange to solve (using MSSelection syntax)
   Bool setsolve (const String& type, 
@@ -151,16 +120,6 @@ class Calibrater
 		 const Double painc=360.0,
                  const Int fitorder=0);
 
-  // Arrange to solve for BPOLY
-  Bool setsolvebandpoly(const String& table,
-			const Bool& append,
-			const Vector<Int>& degree,
-			const Bool& visnorm,
-			const Bool& bpnorm,
-			const Int& maskcenter,
-			const Float& maskedge,
-			const Int& refant);
-
   // Arrange to solve for BPOLY (using MSSelection syntax)
   Bool setsolvebandpoly(const String& table,
 			const Bool& append,
@@ -172,16 +131,6 @@ class Calibrater
 			const Int& maskcenter,
 			const Float& maskedge,
 			const String& refant);
-
-  // Arrange to solve for GSPLINE 
-  Bool setsolvegainspline(const String& table,
-			  const Bool& append,
-			  const String& mode,
-			  const Double& splinetime,
-			  const Double& preavg,
-			  const Int& refant,
-			  const Int& numpoint,
-			  const Double& phasewrap);
 
   // Arrange to solve for GSPLINE (using MSSelection syntax)
   Bool setsolvegainspline(const String& table,
@@ -225,18 +174,6 @@ class Calibrater
 			  const Vector<Bool>& vary,
 			  const String& file);
 
-  // Fluxscale
-  void fluxscale(const String& infile, 
-		 const String& outfile,
-		 const Vector<String>& refFields, 
-		 const Vector<Int>& refSpwMap,
-		 const Vector<String>& tranFields,
-		 const Bool& append,
-		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-//		 const String& oListFile);
-		 const String& oListFile,
-                 const Bool& incremental);
-
   // Fluxscale (using MSSelection syntax for fields)
   void fluxscale(const String& infile, 
 		 const String& outfile,
@@ -246,7 +183,6 @@ class Calibrater
 		 const Bool& append,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 		 Vector<Int>& tranidx,
-//		 const String& oListFile);
 		 const String& oListFile,
                  const Bool& incremental);
 
@@ -258,19 +194,8 @@ class Calibrater
 		 const Vector<Int>& tranField,
 		 const Bool& append,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-//		 const String& oListFile);
 		 const String& oListFile,
-                const Bool& incremental);
-
-  // Accumulate (incremental)
-  void accumulate(const String& intab,
-		  const String& incrtab,
-		  const String& outtab,
-		  const Vector<String>& fields,
-		  const Vector<String>& calFields,
-		  const String& interp="linear",
-		  const Double& t=-1.0,
-		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
+		 const Bool& incremental);
 
   // Accumulate (using MSSelection syntax)
   void accumulate(const String& intab,
@@ -281,17 +206,6 @@ class Calibrater
 		  const String& interp="linear",
 		  const Double& t=-1.0,
 		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
-  /*  NEWCALTABLE
-  // Accumululate (via field indices)
-  void accumulate(const String& intab,
-		  const String& incrtab,
-		  const String& outtab,
-		  const Vector<Int>& fields,
-		  const Vector<Int>& calFields,
-		  const String& interp="linear",
-		  const Double& t=-1.0,
-		  const Vector<Int>& spwmap=Vector<Int>(1,-1));
-  */
 
   // Generate cal table from specified values
   void specifycal(const String& type,
@@ -301,13 +215,6 @@ class Calibrater
 		  const String& antenna,
 		  const String& pol,
 		  const Vector<Double>& parameter);
-
-  // Smooth  calibration
-  Bool smooth(const String& infile,
-              String& outfile, 
-	      const String& smoothtype, 
-	      const Double& smoothtime,
-	      const Vector<String>& fields);
 
   // Smooth  calibration (using MSSelection syntax
   Bool smooth(const String& infile,
@@ -405,8 +312,6 @@ class Calibrater
   void getRawPhaseVisSet(Vector<Int>& spwid); 
 
   // The standard solving mechanism
-  Bool standardSolve();
-  Bool standardSolve2();
   Bool genericGatherAndSolve();
 
   // Input MeasurementSet and derived selected MeasurementSet

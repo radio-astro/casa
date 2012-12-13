@@ -29,6 +29,7 @@
 #include <synthesis/MSVis/VisBuffer.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayIter.h>
 //#include <scimath/Mathematics/MatrixMathLA.h>

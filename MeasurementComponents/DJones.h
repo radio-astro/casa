@@ -299,10 +299,8 @@ public:
 
   // X gathers/solves for itself 
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
-  virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
-  virtual void keep(const Int& slot);
 
 protected:
 
@@ -370,7 +368,6 @@ public:
   // When genericall gathering, solve using first VB only in VBGA
   virtual void selfSolveOne(VisBuffGroupAcc& vbga) { this->solveOneVB(vbga(0)); };
 
-  virtual void keep(const Int& slot);
 
 protected:
 

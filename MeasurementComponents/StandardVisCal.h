@@ -408,16 +408,10 @@ public:
 
   // M solves for itself (by copying averaged data)
   virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve) { newselfSolve(vs,ve); };
-  virtual void oldselfSolve(VisSet& vs, VisEquation& ve);  // old-fashioned iterator-driven
   virtual void newselfSolve(VisSet& vs, VisEquation& ve);  // new supports combine
 
   // Local M version only supports normalization
   virtual void globalPostSolveTinker();
-
-  // (At least?) one of the reasons it uses its own keep() is to store 0 to
-  // nChanPar() - 1 of solveCPar() on the channel axis, as opposed to just
-  // focusChan(). 
-  virtual void keep(const Int& slot);
 
   virtual void createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim);
 protected:

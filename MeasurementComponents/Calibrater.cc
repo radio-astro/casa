@@ -298,37 +298,10 @@ void Calibrater::selectvis(const String& time,
     // Apply selection to the original MeasurementSet
     logSink() << "Performing selection on MeasurementSet" << endl;
     
-/* gmoellen 2012/01/30 
-    // Delete VisSet and selected MS
-    if (vs_p) {
-      delete vs_p;
-      vs_p=0;
-    };
-*/
-
     if (mssel_p) {
       delete mssel_p;
       mssel_p=0;
     };
-
-/* gmoellen 2012/01/30
-    
-    // Force a re-sort of the MS
-    if (ms_p->keywordSet().isDefined("SORTED_TABLE")) {
-      ms_p->rwKeywordSet().removeField("SORTED_TABLE");
-    };
-    if (ms_p->keywordSet().isDefined("SORT_COLUMNS")) {
-      ms_p->rwKeywordSet().removeField("SORT_COLUMNS");
-    };
-    
-    // Re-make the sorted table as necessary
-    if (!ms_p->keywordSet().isDefined("SORTED_TABLE")) {
-      Block<int> sort(0);
-      Matrix<Int> noselection;
-      VisSet vs(*ms_p,sort,noselection);
-    }
-    Table sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
-*/    
 
     // Report non-trivial user selections
     if (time!="")
@@ -432,102 +405,6 @@ void Calibrater::selectvis(const String& time,
 };
 
 
-
-
-Bool Calibrater::setapply(const String& type, 
-			  const Double& t,
-			  const String& table,
-			  const String& interp,
-			  const String& select,
-			  const Bool& calwt,
-			  const Vector<Int>& spwmap,
-			  const Float& opacity) 
-{
-  //                           const Vector<Int>& rawspw)
-
-  logSink() << LogOrigin("Calibrater",
-                         "setapply(type, t, table, interp, select, calwt, spwmap, opacity)")
-            << LogIO::NORMAL;
- 
-  // Set record format for calibration table application information
-  RecordDesc applyparDesc;
-  applyparDesc.addField ("t", TpDouble);
-  applyparDesc.addField ("table", TpString);
-  applyparDesc.addField ("interp", TpString);
-  applyparDesc.addField ("select", TpString);
-  applyparDesc.addField ("calwt",TpBool);
-  applyparDesc.addField ("spwmap",TpArrayInt);
-  applyparDesc.addField ("opacity",TpFloat);
-  
-  // Create record with the requisite field values
-  Record applypar(applyparDesc);
-  applypar.define ("t", t);
-  applypar.define ("table", table);
-  applypar.define ("interp", interp);
-  applypar.define ("select", select);
-  applypar.define ("calwt",calwt);
-  applypar.define ("spwmap",spwmap);
-  applypar.define ("opacity", opacity);
-  
-  String upType=type;
-  upType.upcase();
-  if (upType=="")
-    // Get type from table
-    upType = calTableType(table);
-
-  return setapply(upType,applypar);
-
-}
-
-Bool Calibrater::setapply(const String& type, 
-			  const Double& t,
-			  const String& table,
-			  const String& spw,
-			  const String& field,
-			  const String& interp,
-			  const Bool& calwt,
-			  const Vector<Int>& spwmap,
-			  const Float& opacity) 
-{
-  //                           const Vector<Int>& rawspw)
-
-  logSink() << LogOrigin("Calibrater",
-                         "setapply(type, t, table, spw, field, interp, calwt, spwmap, opacity)")
-            << LogIO::NORMAL;
- 
-  // Set record format for calibration table application information
-  RecordDesc applyparDesc;
-  applyparDesc.addField ("t", TpDouble);
-  applyparDesc.addField ("table", TpString);
-  applyparDesc.addField ("interp", TpString);
-  applyparDesc.addField ("spw", TpArrayInt);
-  applyparDesc.addField ("field", TpArrayInt);
-  applyparDesc.addField ("calwt",TpBool);
-  applyparDesc.addField ("spwmap",TpArrayInt);
-  applyparDesc.addField ("opacity",TpFloat);
-  
-  
-
-  // Create record with the requisite field values
-  Record applypar(applyparDesc);
-  applypar.define ("t", t);
-  applypar.define ("table", table);
-  applypar.define ("interp", interp);
-  applypar.define ("spw",getSpwIdx(spw));
-  applypar.define ("field",getFieldIdx(field));
-  applypar.define ("calwt",calwt);
-  applypar.define ("spwmap",spwmap);
-  applypar.define ("opacity", opacity);
-  
-  String upType=type;
-  upType.upcase();
-  if (upType=="")
-    // Get type from table
-    upType = calTableType(table);
-
-  return setapply(upType,applypar);
-
-}
 Bool Calibrater::setapply(const String& type, 
 			  const Double& t,
 			  const String& table,
@@ -664,47 +541,6 @@ Bool Calibrater::setModel(const Vector<Double>& stokes) {
 
 }
 
-
-Bool Calibrater::setsolve (const String& type, 
-			   const Double& t,
-                           const Double& preavg, 
-			   const Bool& phaseonly,
-                           const Int& refant, 
-			   const String& table,
-                           const Bool& append,
-			   const String& cfCache,
-			   const Float& paInc)
-{
-  
-  logSink() << LogOrigin("Calibrater","setsolve") << LogIO::NORMAL;
-  
-  // Create a record description containing the solver parameters
-  RecordDesc solveparDesc;
-  Double dPAInc = paInc;
-  solveparDesc.addField ("t", TpDouble);
-  solveparDesc.addField ("preavg", TpDouble);
-  solveparDesc.addField ("phaseonly", TpBool);
-  solveparDesc.addField ("refant", TpInt);
-  solveparDesc.addField ("table", TpString);
-  solveparDesc.addField ("append", TpBool);
-  solveparDesc.addField ("cfcache", TpString);
-  solveparDesc.addField ("painc", TpDouble);
-  
-  // Create a solver record with the requisite field values
-  Record solvepar(solveparDesc);
-  solvepar.define ("t", t);
-  solvepar.define ("preavg", preavg);
-  solvepar.define ("phaseonly", phaseonly);
-  solvepar.define ("refant", refant);
-  solvepar.define ("table", table);
-  solvepar.define ("append", append);
-  solvepar.define ("cfcache", cfCache);
-  solvepar.define ("painc", dPAInc);
-
-  return setsolve(type,solvepar);
-
-}
-
 Bool Calibrater::setsolve (const String& type, 
 			   const String& solint,
 			   const String& table,
@@ -772,56 +608,6 @@ Bool Calibrater::setsolve (const String& type,
 
 Bool Calibrater::setsolvebandpoly(const String& table,
 				  const Bool& append,
-				  const Vector<Int>& degree,
-				  const Bool& visnorm,
-				  const Bool& bpnorm,
-				  const Int& maskcenter,
-				  const Float& maskedge,
-				  const Int& refant) {
-
-  logSink() << LogOrigin("Calibrater","setsolvebandpoly") << LogIO::NORMAL3;
-
-  // TBD: support solution interval!
-
-    // Create a record description containing the solver parameters
-    RecordDesc solveparDesc;
-    solveparDesc.addField ("table", TpString);
-    solveparDesc.addField ("append", TpBool);
-    solveparDesc.addField ("t", TpDouble);
-    solveparDesc.addField ("degree", TpArrayInt);
-    solveparDesc.addField ("visnorm", TpBool);
-    solveparDesc.addField ("solnorm", TpBool);
-    solveparDesc.addField ("maskcenter", TpInt);
-    solveparDesc.addField ("maskedge", TpFloat);
-    solveparDesc.addField ("refant", TpInt);
-
-    //    solveparDesc.addField ("preavg", TpDouble);
-    //    solveparDesc.addField ("phaseonly", TpBool);
-    
-    // Create a solver record with the requisite field values
-    Record solvepar(solveparDesc);
-    solvepar.define ("table", table);
-    solvepar.define ("append", append);
-    solvepar.define ("t",DBL_MAX);        // no time-dep, for the moment
-    solvepar.define ("degree", degree);
-    solvepar.define ("visnorm", visnorm);
-    solvepar.define ("solnorm", bpnorm);
-    solvepar.define ("maskcenter", maskcenter);
-    solvepar.define ("maskedge", maskedge);
-    solvepar.define ("refant", refant);
-
-
-    //    solvepar.define ("t", t);
-    //    solvepar.define ("preavg", preavg);
-    //    solvepar.define ("phaseonly", phaseonly);
-
-
-    return setsolve("BPOLY",solvepar);
-
-}
-
-Bool Calibrater::setsolvebandpoly(const String& table,
-				  const Bool& append,
 				  const String& solint,
 				  const String& combine,
 				  const Vector<Int>& degree,
@@ -874,45 +660,6 @@ Bool Calibrater::setsolvebandpoly(const String& table,
 
     return setsolve("BPOLY",solvepar);
 
-}
-
-Bool Calibrater::setsolvegainspline(const String& table,
-				    const Bool& append,
-				    const String& mode,
-				    const Double& splinetime,
-				    const Double& preavg,
-				    const Int& refant,
-				    const Int& numpoint,
-				    const Double& phasewrap) {
-  
-  logSink() << LogOrigin("Calibrater","setsolvegainspline") << LogIO::NORMAL3;
-
-  // Create a record description containing the solver parameters
-  RecordDesc solveparDesc;
-  solveparDesc.addField ("table", TpString);
-  solveparDesc.addField ("append", TpBool);
-  solveparDesc.addField ("mode", TpString);
-  solveparDesc.addField ("splinetime", TpDouble);
-  solveparDesc.addField ("preavg", TpDouble);
-  solveparDesc.addField ("refant", TpInt);
-  solveparDesc.addField ("numpoint", TpInt);
-  solveparDesc.addField ("phasewrap", TpDouble);
-  
-  // Create a solver record with the requisite field values
-  Record solvepar(solveparDesc);
-  solvepar.define ("table", table);
-  solvepar.define ("append", append);
-  String upMode=mode;
-  upMode.upcase();
-  solvepar.define ("mode", upMode);
-  solvepar.define ("splinetime",splinetime);
-  solvepar.define ("preavg", preavg);
-  solvepar.define ("refant", refant);
-  solvepar.define ("numpoint",numpoint);
-  solvepar.define ("phasewrap",phasewrap);
-  
-  return setsolve("GSPLINE",solvepar);
-  
 }
 
 Bool Calibrater::setsolvegainspline(const String& table,
@@ -1161,10 +908,7 @@ Calibrater::correct(String mode)
 	//   (and only written if not TRIAL)
 	Bool trialmode=(upmode.contains("TRIAL") || 
 			upmode.contains("FLAGONLY"));
-	/*
-	cout << "mode = " << mode << " (" << upmode << ") trialmode=" 
-	     << boolalpha << trialmode << endl;
-	*/
+
         // Set up VisSet and its VisibilityIterator.
 
         VisibilityIterator::DataColumn whichOutCol = configureForCorrection ();
@@ -1748,7 +1492,6 @@ Bool Calibrater::genericGatherAndSolve() {
 	svc_p->selfSolveOne(vbga);
 
 	// File this solution in the correct slot of the CalSet
-	//	svc_p->keep(slotidx(thisSpw));  NEWCALTABLE
 	svc_p->keepNCT();
 
 	nGood++;
@@ -1783,339 +1526,17 @@ Bool Calibrater::genericGatherAndSolve() {
     // TBD: Remove BPOLY specificity here
     if (svc_p->typeName()!="BPOLY") {
       // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
-
-      //  /* NEWCALTABLE
       svc_p->globalPostSolveTinker();
-      //  */
+
       // write the table
       svc_p->storeNCT();
-      //      svc_p->store();
+
     }
   }
 
   return True;
 
 }
-Bool Calibrater::standardSolve2() {
-
-  // Create the solver
-  VisCalSolver vcs;
-  
-  // Inform logger/history
-  logSink() << "Solving for " << svc_p->typeName()
-	    << LogIO::POST;
-  
-  // Initialize the svc according to current VisSet
-  //  (this counts intervals, sizes CalSet)
-  Vector<Int> nChunkPerSol;
-  Int nSol = svc_p->sizeUpSolve(*vs_p,nChunkPerSol);
-
-  // The iterator, VisBuffer
-  VisIter& vi(vs_p->iter());
-  VisBuffer vb(vi);
-  
-  Vector<Int> slotidx(vs_p->numberSpw(),-1);
-
-  Int nGood(0);
-  vi.originChunks();
-  for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
-
-    // Arrange to accumulate 
-    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
-
-    for (Int ichunk=0;ichunk<nChunkPerSol(isol);++ichunk) {
-    
-      // Current _chunk_'s spw
-      Int spw(vi.spectralWindow());
-    
-      // Abort if we encounter a spw for which a priori cal not available
-      if (!ve_p->spwOK(spw)) 
-	throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
-
-      // Collapse each timestamp in this chunk according to VisEq
-      //  with calibration and averaging
-      for (vi.origin(); vi.more(); vi++) {
-	
-	// Force read of the field Id
-	vb.fieldId();
-
-	// This forces the data/model/wt I/O, and applies
-	//   any prior calibrations
-	ve_p->collapse(vb);
-	
-	// If permitted/required by solvable component, normalize
-	if (svc_p->normalizable()) 
-	  vb.normalize();
-	
-	// If this solve not freqdep, and channels not averaged yet, do so
-	if (!svc_p->freqDepMat() && vb.nChannel()>1)
-	  vb.freqAveCubes();
-
-	// Accumulate collapsed vb in a time average
-	vba.accumulate(vb);
-
-      }
-      // Advance the VisIter, if possible
-      if (vi.moreChunks()) vi.nextChunk();
-
-    }
-    
-    // Finalize the averged VisBuffer
-    vba.finalizeAverage();
-
-    // The VisBuffer to solve with
-    VisBuffer& svb(vba.aveVisBuff()); 
-
-    svc_p->enforceAPonData(svb);
-
-    // Establish meta-data for this interval
-    //  (some of this may be used _during_ solve)
-    //  (this sets currSpw() in the SVC)
-    Bool vbOk=svc_p->syncSolveMeta(svb,-1);
-
-    Int thisSpw=svc_p->spwMap()(svb.spectralWindow());
-    slotidx(thisSpw)++;
-
-    if (vbOk) {
-
-      svc_p->guessPar(svb);
-      //      cout << "Guess = 0.3" << endl;
-      //      svc_p->solveCPar()=Complex(0.3);
-      //      svc_p->solveParOK()=True;
-      
-      // Solve for each parameter channel (in curr Spw)
-      
-      // (NB: force const version of nChanPar()  [why?])
-      //	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
-      Bool totalGoodSol(False);
-      for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
-
-	// If pars chan-dep, SVC mechanisms for only one channel at a time
-	svc_p->focusChan()=ich;
-
-	// Pass VE, SVC, VB to solver
-	Bool goodSoln=vcs.solve(*ve_p,*svc_p,svb);
-
-	// If good... 
-	if (goodSoln) {
-	  totalGoodSol=True;
-
-	  svc_p->formSolveSNR();
-	  svc_p->applySNRThreshold();
-
-	  // ..and file this solution in the correct slot
-	  svc_p->keep(slotidx(thisSpw));
-	  
-	}
-	else 
-	  // report where this failure occured
-	  svc_p->currMetaNote();
-	
-      } // parameter channels
-
-      // Cound good solutions.
-      if (totalGoodSol)	nGood++;
-      
-    } // vbOK
-    
-  } // isol
-
-  logSink() << "  Found good " 
-	    << svc_p->typeName() << " solutions in "
-	    << nGood << " slots."
-	    << LogIO::POST;
-  
-  // Store whole of result in a caltable
-  if (nGood==0)
-    logSink() << "No output calibration table written."
-	      << LogIO::POST;
-  else {
-    
-    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
-    svc_p->globalPostSolveTinker();
-
-    // write the table
-    svc_p->store();
-  }
-
-  return True;
-
-}
-
-Bool Calibrater::standardSolve() {
-  
-  // Create the solver
-  VisCalSolver vcs;
-  
-  // Inform logger/history
-  logSink() << "Solving for " << svc_p->typeName()
-	    << LogIO::POST;
-  
-  // Arrange for iteration over data
-  Block<Int> columns;
-  if (svc_p->interval()==0.0) {
-    // include scan iteration
-    columns.resize(5);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-  } else {
-    // avoid scan iteration
-    columns.resize(4);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::FIELD_ID;
-    columns[2]=MS::DATA_DESC_ID;
-    columns[3]=MS::TIME;
-  }
-  vs_p->resetVisIter(columns,svc_p->interval());
-  VisIter& vi(vs_p->iter());
-  VisBuffer vb(vi);
-
-  // Initialize the svc according to current VisSet
-  //  (this counts intervals, sizes CalSet)
-  svc_p->initSolve(*vs_p);
-  
-  // Solve each solution interval (chunk)
-  Vector<Int> islot(vs_p->numberSpw(),0);
-  Int nGood(0);
-  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-    
-    Int spw(vi.spectralWindow());
-    
-    // Abort if we encounter a spw for which a priori cal not available
-    if (!ve_p->spwOK(spw)) 
-      throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
-
-    // Arrange to accumulate 
-    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
-    
-    // Collapse each timestamp in this chunk according to VisEq
-    //  with calibration and averaging
-    for (vi.origin(); vi.more(); vi++) {
-
-      // This forces the data/model/wt I/O, and applies
-      //   any prior calibrations
-      ve_p->collapse(vb);
-      
-      // If permitted/required by solvable component, normalize
-      if (svc_p->normalizable()) 
-	vb.normalize();
-
-      // If this solve not freqdep, and channels not averaged yet, do so
-      if (!svc_p->freqDepMat() && vb.nChannel()>1)
-	vb.freqAveCubes();
-      
-      // Accumulate collapsed vb in a time average
-      vba.accumulate(vb);
-    }
-    vba.finalizeAverage();
-    
-    // The VisBuffer to solve with
-    VisBuffer& svb(vba.aveVisBuff()); 
-
-    svc_p->enforceAPonData(svb);
-
-    // Establish meta-data for this interval
-    //  (some of this may be used _during_ solve)
-    //  (this sets currSpw() in the SVC)
-    //  (TBD: handle fieldId better)
-    Bool vbOk=svc_p->syncSolveMeta(svb,vi.fieldId());
-    
-    if (vbOk) {
-
-      svc_p->guessPar(svb);
-      //      cout << "Guess = 0.3" << endl;
-      //      svc_p->solveCPar()=Complex(0.3);
-      //      svc_p->solveParOK()=True;
-
-      if (False) {
-	for (Int irow=0;irow<svb.nRow();++irow) {
-	  if (!svb.flagRow()(irow)) {
-	    cout << irow << " "
-		 << svb.antenna1()(irow) << "-"
-		 << svb.antenna2()(irow) << "  "
-		 << amplitude(svb.visCube()(IPosition(3,0,0,irow),
-					    IPosition(3,3,0,irow)).reform(IPosition(1,4))) << " "
-		 << amplitude(svb.modelVisCube()(IPosition(3,0,0,irow),
-						 IPosition(3,3,0,irow)).reform(IPosition(1,4))) << " "
-		 << svb.weightMat()(IPosition(2,0,irow),
-				    IPosition(2,3,irow)).reform(IPosition(1,4)) << " "
-	      
-	      
-		 << endl;
-	  }
-	}
-      }
-    
-      // Solve for each parameter channel (in curr Spw)
-      
-      // (NB: force const version of nChanPar()  [why?])
-      //	for (Int ich=0;ich<((const SolvableVisCal*)svc_p)->nChanPar();++ich) {
-      Bool totalGoodSol(False);
-      for (Int ich=((const SolvableVisCal*)svc_p)->nChanPar()-1;ich>-1;--ich) {
-
-	// If pars chan-dep, SVC mechanisms for only one channel at a time
-	svc_p->focusChan()=ich;
-
-	// Pass VE, SVC, VB to solver
-	Bool goodSoln=vcs.solve(*ve_p,*svc_p,svb);
-
-	// If good... 
-	if (goodSoln) {
-	  totalGoodSol=True;
-	  // ...consider referencing to refant...
-	  //	  if (svc_p->refant()>-1)
-	  //	    svc_p->reReference();
-
-	  svc_p->formSolveSNR();
-	  svc_p->applySNRThreshold();
-
-	  // ..and file this solution in the correct slot
-	  svc_p->keep(islot(spw));
-	  
-	}
-	else 
-	  // report where this failure occured
-	  svc_p->currMetaNote();
-	
-      } // parameter channels
-
-      // Cound good solutions.
-      if (totalGoodSol)	nGood++;
-      
-    } // vbOK
-    
-    islot(spw)++;
-    
-  } // chunks
-
-
-  logSink() << "  Found good " 
-	    << svc_p->typeName() << " solutions in "
-	    << nGood << " slots."
-	    << LogIO::POST;
-  
-  // Store whole of result in a caltable
-  if (nGood==0)
-    logSink() << "No output calibration table written."
-	      << LogIO::POST;
-  else {
-    
-    // Do global post-solve tinkering (e.g., phase-only, normalization, etc.)
-    svc_p->globalPostSolveTinker();
-
-    // write the table
-    svc_p->store();
-  }
-
-  return True;
-
-}
-
-
-
 
 Vector<Double> Calibrater::modelfit(const Int& niter,
 				    const String& stype,
@@ -2165,73 +1586,12 @@ Vector<Double> Calibrater::modelfit(const Int& niter,
 
 void Calibrater::fluxscale(const String& infile, 
 			   const String& outfile,
-			   const Vector<String>& refFields, 
-			   const Vector<Int>& refSpwMap, 
-			   const Vector<String>& tranFields,
-			   const Bool& append,
-			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-			   //const String& oListFile) {
-			   const String& oListFile,
-                           const Bool& incremental) {
-
-  // TBD:  Permit more flexible matching on specified field names
-  //  (Currently, exact matches are required.)
-
-  logSink() << LogOrigin("Calibrater","fluxscale") << LogIO::NORMAL3;
-
-  // Convert refFields/transFields to index lists
-  Vector<Int> refidx(0);
-  Vector<Int> tranidx(0);
-
-  // Field name->index matcher
-  MSFieldIndex msfldidx(ms_p->field());
-
-  Int nf;
-  { 
-    nf=refFields.nelements();
-    if (nf>0) {
-      refidx.resize(nf);
-      for (Int i=0;i<nf;++i) {
-	Vector<Int> idx=msfldidx.matchFieldName(refFields(i));
-	if (idx.nelements()>0)
-	  refidx(i)=idx(0);
-	else
-	  throw(AipsError("Reference field name matching error"));
-      }
-    }
-  }
-
-  { 
-    nf=tranFields.nelements();
-    if (nf>0) {
-      tranidx.resize(nf);
-      for (Int i=0;i<nf;++i) {
-	Vector<Int> idx=msfldidx.matchFieldName(tranFields(i));
-	if (idx.nelements()>0)
-	  tranidx(i)=idx(0);
-	else
-	  throw(AipsError("Transfer field name matching error"));
-      }
-      
-    }
-  }
-
-  // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
-    oListFile,incremental);
-//    oListFile);
-
-}
-
-void Calibrater::fluxscale(const String& infile, 
-			   const String& outfile,
 			   const String& refFields, 
 			   const Vector<Int>& refSpwMap, 
 			   const String& tranFields,
 			   const Bool& append,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   Vector<Int>& tranidx,
-	//		   const String& oListFile) {
 			   const String& oListFile,
                            const Bool& incremental) {
 
@@ -2242,7 +1602,6 @@ void Calibrater::fluxscale(const String& infile,
 
   // Convert refFields/transFields to index lists
   Vector<Int> refidx(0);
-//  Vector<Int> tranidx(0);
 
   if (refFields.length()>0)
     refidx=getFieldIdx(refFields);
@@ -2255,7 +1614,6 @@ void Calibrater::fluxscale(const String& infile,
   // Call Vector<Int> version:
   fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
     oListFile,incremental);
-  //  oListFile);
 
 }
 
@@ -2266,7 +1624,6 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& tranField,
 			   const Bool& append,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
-//			   const String& oListFile) {
 			   const String& oListFile,
                            const Bool& incremental) {
 
@@ -2390,60 +1747,6 @@ void Calibrater::fluxscale(const String& infile,
 
 }
 
-void Calibrater::accumulate(const String& /*intab*/,
-			    const String& /*incrtab*/,
-			    const String& /*outtab*/,
-			    const Vector<String>& fields,
-			    const Vector<String>& calFields,
-			    const String& /*interp*/,
-			    const Double& /*t*/,
-			    const Vector<Int>& /*spwmap*/) {
-
-  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL3;
-
-  // Convert refFields/transFields to index lists
-  Vector<Int> fldidx(0);
-  Vector<Int> cfldidx(0);
-
-  // Field name->index matcher
-  MSFieldIndex msfldidx(ms_p->field());
-
-  Int nfld;
-  { 
-    nfld=fields.nelements();
-    if (nfld>0) {
-      fldidx.resize(nfld);
-      for (Int i=0;i<nfld;++i) {
-	Vector<Int> idx=msfldidx.matchFieldName(fields(i));
-	if (idx.nelements()>0)
-	  fldidx(i)=idx(0);
-	else
-	  throw(AipsError("field name matching error"));
-      }
-    }
-  }
-  { 
-    nfld=calFields.nelements();
-    if (nfld>0) {
-      cfldidx.resize(nfld);
-      for (Int i=0;i<nfld;++i) {
-	Vector<Int> idx=msfldidx.matchFieldName(calFields(i));
-	if (idx.nelements()>0)
-	  cfldidx(i)=idx(0);
-	else
-	  throw(AipsError("calfield name matching error"));
-      }
-      
-    }
-  }
-
-  throw(AipsError("Deprecated version of Calibrater::accumulate(...)!"));
-
-  // Call Vector<Int> version
-  //  accumulate(intab,incrtab,outtab,fldidx,cfldidx,interp,t,spwmap);
-
-}
-
 void Calibrater::accumulate(const String& intab,
 			    const String& incrtab,
 			    const String& outtab,
@@ -2452,37 +1755,6 @@ void Calibrater::accumulate(const String& intab,
 			    const String& interp,
 			    const Double& t,
 			    const Vector<Int>& spwmap) {
-
-/*  NEWCALTABLE
-  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
-
-
-  // Convert refFields/transFields to index lists
-  // These are empty vectors by default
-  Vector<Int> fldidx(0);
-  Vector<Int> cfldidx(0);
-
-  if (fields.length()>0)
-    fldidx=getFieldIdx(fields);
-
-  if (calFields.length()>0)
-    cfldidx=getFieldIdx(calFields);
-
-  // Call Vector<Int> version
-  accumulate(intab,incrtab,outtab,fldidx,cfldidx,interp,t,spwmap);
-
-}
-
-void Calibrater::accumulate(const String& intab,
-			    const String& incrtab,
-			    const String& outtab,
-			    const Vector<Int>& fields,
-			    const Vector<Int>& calFields,
-			    const String& interp,
-			    const Double& t,
-			    const Vector<Int>& spwmap) {
-
-*/
   
   //  logSink() << LogOrigin("Calibrater","accumulate") << LogIO::NORMAL;
 
@@ -2618,7 +1890,6 @@ void Calibrater::accumulate(const String& intab,
     if (outtab != "") 
       incal_->calTableName()=outtab;
 
-    //    incal_->store();   NEWCALTABLE
     incal_->storeNCT();
     
     delete incal_;
@@ -2738,120 +2009,6 @@ Bool Calibrater::smooth(const String& infile,
 			String& outfile,  // const Bool& append,
                         const String& smoothtype,
 			const Double& smoothtime,
-                        const Vector<String>& fields)
-{
-
-  // TBD: support append?
-  // TBD: spw selection?
-
-  logSink() << LogOrigin("Calibrater","smooth") << LogIO::NORMAL;
-
-  logSink() << "Beginning smoothing/interpolating method." << LogIO::POST;
-
-
-  // A pointer to an SVC
-  SolvableVisCal *svc(NULL);
-
-  try {
-    
-    // Handle no in file 
-    if (infile=="")
-      throw(AipsError("Please specify an input calibration table."));
-
-    // Handle bad smoothtype
-    if (smoothtype!="mean" && smoothtype!="median")
-      throw(AipsError("Unrecognized smooth type!"));
-
-    // Handle bad smoothtime
-    if (smoothtime<=0)
-      throw(AipsError("Please specify a strictly positive smoothtime."));
-
-    // Handle no outfile
-    if (outfile=="") {
-      outfile=infile;
-      logSink() << "Will overwrite input file with smoothing result." 
-		<< LogIO::POST;
-    }
-
-
-    svc = createSolvableVisCal(calTableType(infile),*vs_p);
-    
-    if (svc->smoothable()) {
-      
-      // Fill calibration table using setApply
-      RecordDesc applyparDesc;
-      applyparDesc.addField ("table", TpString);
-      Record applypar(applyparDesc);
-      applypar.define ("table", infile);
-      svc->setApply(applypar);
-
-      // Convert refFields/transFields to index lists
-      Vector<Int> fldidx(0);
-
-      // Field name->index matcher
-      MSFieldIndex msfldidx(ms_p->field());
-      
-      Int nfld;
-      { 
-	nfld=fields.nelements();
-	if (nfld>0) {
-	  fldidx.resize(nfld);
-	  for (Int i=0;i<nfld;++i) {
-	    Vector<Int> idx=msfldidx.matchFieldName(fields(i));
-	    if (idx.nelements()>0)
-	      fldidx(i)=idx(0);
-	    else
-	      throw(AipsError("field name matching error"));
-	  }
-	}
-      }
-
-      // Delegate to SVC
-      svc->smooth(fldidx,smoothtype,smoothtime);
-      
-      // Store the result on disk
-      //    if (append) logSink() << "Appending result to " << outfile << LogIO::POST;
-      //else 
-      logSink() << "Storing result in " << outfile << LogIO::POST;
-      
-      
-      if (outfile != "") 
-	svc->calTableName()=outfile;
-
-      svc->storeNCT();
-
-      //TBD:      svc->store(outfile,append);
-      
-      // Clean up
-      if (svc) delete svc; svc=NULL;
-      
-      // Apparently, it worked
-      return True;
-
-    }
-    else
-      throw(AipsError("This type ("+svc->typeName()+") does not support smoothing."));
-
-  } catch (AipsError x) {
-   
-    logSink() << LogIO::SEVERE
-	      << "Caught Exception: "
-	      << x.getMesg()
-	      << LogIO::POST;
-    // Clean up
-    if (svc) delete svc; svc=NULL;
-
-    throw(AipsError("Error in Calibrater::smooth."));
-
-    return False;
-  }
-  return False;
-}
-
-Bool Calibrater::smooth(const String& infile, 
-			String& outfile,  // const Bool& append,
-                        const String& smoothtype,
-			const Double& smoothtime,
                         const String& fields)
 {
 
@@ -2917,8 +2074,6 @@ Bool Calibrater::smooth(const String& infile,
 	svc->calTableName()=outfile;
       svc->storeNCT();
 
-      //TBD:      svc->store(outfile,append);
-      
       // Clean up
       if (svc) delete svc; svc=NULL;
       
