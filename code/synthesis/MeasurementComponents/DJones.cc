@@ -41,6 +41,7 @@
 #include <tables/Tables/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -282,70 +283,7 @@ void DJones::applyRefAnt() {
 
   SolvableVisJones::applyRefAnt();
   return;
-  /*
 
-  if (refant()<0)
-    throw(AipsError("No refant specified."));
-
-  // Get the refant name from the nMS
-  String refantName("none");
-  MeasurementSet ms(msName());
-  ROMSAntennaColumns msantcol(ms.antenna());
-  refantName=msantcol.name()(refant());
-  
-  logSink() << "Applying refant: " << refantName
-            << LogIO::POST;
-
-  Vector<Int> altrefantlist(nAnt());
-  indgen(altrefantlist);
-
-  for (Int ispw=0;ispw<nSpw();++ispw) {
-
-    currSpw()=ispw;
-
-    if (cs().nTime(ispw)>0) {
-
-      // References to ease access to solutions
-      Array<Complex> sol(cs().par(ispw));
-      Array<Bool> sok(cs().parOK(ispw));
-
-      for (Int islot=0;islot<cs().nTime(ispw);++islot) {
-
-	for (Int ich=0;ich<cs().nChan(ispw);++ich) {
-
-	  IPosition ipr(4,0,ich,0,islot);
-
-	  Complex refD1(0.0),refD2(0.0);
-
-	  // Assume user's refant
-	  ipr(2)=refant();
-
-	  // If user's refant unavailable, so find another
-	  if (!cs().parOK(ispw)(ipr)) {
-	    ipr(2)=0;
-	    while (ipr(2)<cs().nElem() &&
-		   !cs().parOK(ispw)(ipr)) ++ipr(2);
-	  }
-
-	  // Found a refant, so use it
-	  if (ipr(2)<nAnt()) {
-
-	    refD1=cs().par(ispw)(ipr);
-	    refD2=conj(refD1);
-
-	    for (Int iant=0;iant<cs().nElem();++iant) {
-	      ipr(2)=iant;
-	      ipr(0)=0;
-	      cs().par(ispw)(ipr)-=refD1;
-	      ipr(0)=1;
-	      cs().par(ispw)(ipr)+=refD2;
-	    }
-	  } // found refant
-	} // ich
-      } // islot
-    } // nTime(ispw)>0
-  } // ispw
-  */
 }
 
 void DJones::logResults() {
@@ -889,7 +827,6 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
       nGood++;
     }
 
-    //    keep(slotidx(thisSpw));  NEWCALTABLE
     keepNCT();
     
   }
@@ -910,160 +847,9 @@ void XMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
     // globalPostSolveTinker();
 
     // write the table
-    //    store();  NEWCALTABLE
     storeNCT();
 
   }
-
-}
-
-void XMueller::oldselfSolve(VisSet& vs, VisEquation& ve) {
-
-  if (prtlev()>4) cout << "   M::selfSolve(ve)" << endl;
-
-  MeasurementSet ms(msName());
-  ROMSFieldColumns msfldcol(ms.field());
-
-  // Arrange for iteration over data
-  Block<Int> columns;
-  if (interval()==0.0) {
-    // include scan iteration
-    // avoid scan iteration
-    columns.resize(5);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::SCAN_NUMBER;
-    columns[2]=MS::FIELD_ID;
-    columns[3]=MS::DATA_DESC_ID;
-    columns[4]=MS::TIME;
-  } else {
-    // avoid scan iteration
-    columns.resize(4);
-    columns[0]=MS::ARRAY_ID;
-    columns[1]=MS::FIELD_ID;
-    columns[2]=MS::DATA_DESC_ID;
-    columns[3]=MS::TIME;
-  }
-  vs.resetVisIter(columns,interval());
-
-  // Initial the solve (sets shapes)
-  initSolve(vs);
-
-  // Solve each solution interval (chunk)
-  Vector<Int> islot(nSpw(),0);
-  VisIter& vi(vs.iter());
-  VisBuffer vb(vi);
-  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-
-    Int spw(vi.spectralWindow());
-    //      cout << "Spw=" << spw << " slot=" << islot(spw) << " field="
-    //           << vi.fieldId() << " " << MVTime(vb.time()(0)/86400.0) << " -------------------" << endl;
-
-    // Arrange to accumulate
-    VisBuffAccumulator vba(nAnt(),preavg(),False);
-
-    // Collapse each timestamp in this chunk according to VisEq
-    //  with calibration and averaging
-
-    for (vi.origin(); vi.more(); vi++) {
-
-      ve.collapse(vb);
-
-      //      vb.normalize();
-
-      // If this solve not freqdep, and channels not averaged yet, do so
-      if (!freqDepMat() && vb.nChannel()>1)
-	vb.freqAveCubes();
-
-      // Accumulate collapsed vb in a time average
-      vba.accumulate(vb);
-     
-    }
-    vba.finalizeAverage();
-
-    // The VisBuffer to solve with
-    VisBuffer& svb(vba.aveVisBuff());
-
-    // Extract meta data from visBuffer
-    syncSolveMeta(svb,vi.fieldId());
-
-    // Fill solveCPar() with 1, nominally, and flagged
-    // TBD: drop unneeded basline-dependence    
-    solveCPar()=Complex(1.0);
-    solveParOK()=False;
-
-    if (svb.nRow()>0) {
-
-      // solve for the R-L phase term in the current VB
-      solveOneVB(svb);
-
-      if (solveParOK()(0,0,0))
-	logSink() << "Position angle offset solution for " 
-		  << msfldcol.name()(currField())
-		  << " (spw = " << currSpw() << ") = "
-		  << arg(solveCPar()(0,0,0))*180.0/C::pi/2.0
-		  << " deg."
-		  << LogIO::POST;
-      else
-	logSink() << "Position angle offset solution for " 
-		  << msfldcol.name()(currField())
-		  << " (spw = " << currSpw() << ") "
-		  << " was not determined (insufficient data)."
-		  << LogIO::POST;
-	
-    }
-
-    keep(islot(spw));
-
-    islot(spw)++;
-
-  }
-  
-  // Store it.
-  store();
-
-}
-
-// File a solved solution (and meta-data) into a slot in the CalSet
-void XMueller::keep(const Int& slot) {
-
-  if (prtlev()>4) cout << " M::keep(i)" << endl;
-
-  if (slot<cs().nTime(currSpw())) {
-    // An available valid slot
-
-   
-    //    cout << "Result: solveCPar() = " << solveCPar() << endl;
-
-    //    cout << "   Amp: " << amplitude(solveCPar()) << endl;
-    //    cout << " Phase: " << phase(solveCPar()/solveCPar()(0,0,0))*180.0/C::pi << endl;
-
-    //    cout << "Result: solveParOK() = " << solveParOK() << endl;
-
-    cs().fieldId(currSpw())(slot)=currField();
-    cs().time(currSpw())(slot)=refTime();
-
-    // Only stop-start diff matters
-    //  TBD: change CalSet to use only the interval
-    //  TBD: change VisBuffAcc to calculate exposure properly
-    cs().startTime(currSpw())(slot)=0.0;
-    cs().stopTime(currSpw())(slot)=interval();
-
-    // For now, just make these non-zero:
-    cs().iFit(currSpw()).column(slot)=1.0;
-    cs().iFitwt(currSpw()).column(slot)=1.0;
-    cs().fit(currSpw())(slot)=1.0;
-    cs().fitwt(currSpw())(slot)=1.0;
-
-    IPosition blc4(4,0,       0,           0,        slot);
-    IPosition trc4(4,nPar()-1,nChanPar()-1,nElem()-1,slot);
-    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
-    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
-
-    cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
-
-  }
-  else
-    throw(AipsError("XMueller::keep: Attempt to store solution in non-existent CalSet slot"));
 
 }
 
@@ -1332,7 +1118,6 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
       nGood++;
     }
 
-    //    keep(slotidx(thisSpw));  NEWCALTABLE
     keepNCT();
     
   }
@@ -1353,56 +1138,11 @@ void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
     // globalPostSolveTinker();
 
     // write the table
-    //    store();  NEWCALTABLE
     storeNCT();
   }
 
 }
 
-
-// File a solved solution (and meta-data) into a slot in the CalSet
-void XJones::keep(const Int& slot) {
-
-  if (prtlev()>4) cout << " M::keep(i)" << endl;
-
-  if (slot<cs().nTime(currSpw())) {
-    // An available valid slot
-
-   
-    //    cout << "Result: solveCPar() = " << solveCPar() << endl;
-
-    //    cout << "   Amp: " << amplitude(solveCPar()) << endl;
-    //    cout << " Phase: " << phase(solveCPar()/solveCPar()(0,0,0))*180.0/C::pi << endl;
-
-    //    cout << "Result: solveParOK() = " << solveParOK() << endl;
-
-    cs().fieldId(currSpw())(slot)=currField();
-    cs().time(currSpw())(slot)=refTime();
-
-    // Only stop-start diff matters
-    //  TBD: change CalSet to use only the interval
-    //  TBD: change VisBuffAcc to calculate exposure properly
-    cs().startTime(currSpw())(slot)=0.0;
-    cs().stopTime(currSpw())(slot)=interval();
-
-    // For now, just make these non-zero:
-    cs().iFit(currSpw()).column(slot)=1.0;
-    cs().iFitwt(currSpw()).column(slot)=1.0;
-    cs().fit(currSpw())(slot)=1.0;
-    cs().fitwt(currSpw())(slot)=1.0;
-
-    IPosition blc4(4,0,       0,           0,        slot);
-    IPosition trc4(4,nPar()-1,nChanPar()-1,nElem()-1,slot);
-    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
-    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
-
-    cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
-
-  }
-  else
-    throw(AipsError("XJones::keep: Attempt to store solution in non-existent CalSet slot"));
-
-}
 
 void XJones::calcAllJones() {
 
@@ -1570,25 +1310,6 @@ void XfJones::initSolvePar() {
   SolvableVisJones::initSolvePar();
   return;
 
-  /*
-  if (prtlev()>3) cout << " XJones::initSolvePar()" << endl;
-
-  for (Int ispw=0;ispw<nSpw();++ispw) {
-
-    currSpw()=ispw;
-
-    solveCPar().resize(nPar(),nChanPar(),nAnt());
-    solveCPar()=Complex(1.0);
-    solveParOK().resize(nPar(),nChanPar(),nAnt());
-    solveParOK()=True;
-    solveParErr().resize(nPar(),nChanPar(),nAnt());
-    solveParErr()=0.0;
-    solveParSNR().resize(nPar(),nChanPar(),nAnt());
-    solveParSNR()=0.0;
-
-  }
-  currSpw()=0;
-  */
 }
 
 

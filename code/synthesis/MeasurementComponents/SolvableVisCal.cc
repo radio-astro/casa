@@ -32,6 +32,7 @@
 #include <synthesis/MSVis/VisBuffer.h>
 
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayIter.h>
 #include <scimath/Mathematics/MatrixMathLA.h>
 #include <scimath/Fitting/LinearFit.h>
@@ -41,6 +42,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/OS/Memory.h>
+#include <casa/OS/File.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
@@ -79,8 +81,6 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   ct_(NULL),
   ci_(NULL),
   spwOK_(vs.numberSpw(),False),
-  cs_(NULL),
-  cint_(NULL),
   maxTimePerSolution_p(0), 
   minTimePerSolution_p(10000000), 
   avgTimePerSolution_p(0),
@@ -141,8 +141,6 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
 SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   VisCal(nAnt),
   corruptor_p(NULL),
-  cs_(NULL),
-  cint_(NULL),
   maxTimePerSolution_p(0), 
   minTimePerSolution_p(10000000), 
   avgTimePerSolution_p(0),
@@ -205,58 +203,9 @@ SolvableVisCal::~SolvableVisCal() {
 
   if (ci_)   delete ci_;   ci_=NULL;
   if (ct_)   delete ct_;   ct_=NULL;
-  if (cs_)   delete cs_;   cs_=NULL;
-  if (cint_) delete cint_; cint_=NULL;
 
 }
 
-void SolvableVisCal::makeCalSet()  { makeCalSet(False); }
-
-void SolvableVisCal::makeCalSet(Bool newtable)
-{
-  switch(parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	
-	if (newtable) 
-	  cs_ = new CalSet<Complex>(nSpw(),nPar(),Vector<Int>(1,1),nElem(),Vector<Int>(1,1));
-	//cs_ = new CalSet<Complex>(nSpw(),nPar(),nChan(),nElem(),nTime());
-	else {
-	  try {
-	    cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-	  }
-	  catch (AipsError x) {
-	    throw(AipsError("Error loading '"+calTableName()+"' with parsed selection: "+calTableSelect()+".\n  "+x.getMesg()));
-	  }
-	}
-	cs().initCalTableDesc(typeName(),parType_);
-	nChanParList() = cs().nChan();
-	startChanList() = cs().startChan();
-
-	// Create CalInterp
-	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
-	ci().setSpwMap(spwMap());
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	if (newtable) 
-	  rcs_ = new CalSet<Float>(nSpw(),nPar(),Vector<Int>(1,1),nElem(),Vector<Int>(1,1));
-	//rcs_ = new CalSet<Float>(nSpw(),nPar(),nChan(),nElem(),nTime());
-	else
-	  rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-	rcs().initCalTableDesc(typeName(),parType_);
-	// Create CalInterp
-// 	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
-// 	ci().setSpwMap(spwMap());
-	break;
-      }
-    default:
-         throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
-			 "COMPLEXREAL found in SolvableVisCal::makeCalSet()"));
-    }    
-}
 
 // Generic setapply
 void SolvableVisCal::setApply() {
@@ -274,31 +223,8 @@ void SolvableVisCal::setApply() {
   setApplied(True);
   setSolved(False);
 
-  // Assemble inflated (but empty) CalSet from current shapes
-  Vector<Int> nTimes(nSpw(),1);
-  switch(parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
-	cs().initCalTableDesc(typeName(),parType_);
-	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs_ = new CalSet<Float>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
-	rcs().initCalTableDesc(typeName(),parType_);
-// 	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
-	break;
-      }
-    default: 
-      throw(AipsError("Internal SVC error: Got invalid VisCalEnum"));
-    }
-  //  cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),nTimes);
+  throw(AipsError("Generic SVC::setApply is currently disabled."));
 
-  // Assemble CalInterp
-  ci().setSpwMap(spwMap());
 }
 
 
@@ -667,7 +593,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
   if (simOnTheFly()) {
 
     calTableName()="<none>";
-    setSpwOK();
 
   } else {
    
@@ -713,11 +638,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
       slotidx(thisSpw)++;
     
       IPosition cparshape=solveCPar().shape();
-
-      /* NEWCALTABLE
-      // this will get changed to True by keep() depending on solveParOK
-      cs().solutionOK(currSpw())(slotidx(thisSpw))=False;  // all Pars, all Chans, all Ants
-      */
 
       Vector<Double> timevec;
       Double starttime,stoptime;
@@ -859,54 +779,10 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 
 	keepNCT();
 
-	/* NEWCALTABLE
-    	if (prtlev()>5) cout << "  about to keep, cs.parshape="<<cs().par(currSpw()).shape()<<endl;
-    	// sigh - need own keep too, to have all chans at once...
-    	{
-    	  if (slotidx(thisSpw)<cs().nTime(currSpw())) {
-    	    // An available valid slot
-    	    
-    	    cs().fieldId(currSpw())(slotidx(thisSpw))=currField();
-    	    cs().time(currSpw())(slotidx(thisSpw))=refTime();
-    	    
-    	    // Only stop-start diff matters
-    	    //  TBD: change CalSet to use only the interval
-    	    //  TBD: change VisBuffAcc to calculate exposure properly
-    	    cs().startTime(currSpw())(slotidx(thisSpw))=0.0;
-    	    cs().stopTime(currSpw())(slotidx(thisSpw))=interval();
-    	    
-    	    // For now, just make these non-zero:
-    	    cs().iFit(currSpw()).column(slotidx(thisSpw))=1.0;
-    	    cs().iFitwt(currSpw()).column(slotidx(thisSpw))=1.0;
-    	    cs().fit(currSpw())(slotidx(thisSpw))=1.0;
-    	    cs().fitwt(currSpw())(slotidx(thisSpw))=1.0;
-    	    
-    	    IPosition blc4(4,0,       0           ,0,        slotidx(thisSpw));
-    	    IPosition trc4(4,nPar()-1,nChanPar()-1,nElem()-1,slotidx(thisSpw));
-    	    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
-    	    
-    	    // TBD:  Handle solveRPar here!
-    	    
-    	    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
-    	    cs().parErr(currSpw())(blc4,trc4).nonDegenerate(3)= solveParErr();
-    	    cs().parSNR(currSpw())(blc4,trc4).nonDegenerate(3)= solveParSNR();
-    	    cs().solutionOK(currSpw())(slotidx(thisSpw)) = anyEQ(solveParOK(),True);
-    	  } else {    
-    	    throw(AipsError("SVC::keep: Attempt to store solution in non-existent CalSet slot"));
-    	  }
-    	}
-    	//keep(slotidx(thisSpw));
-	*/
-
-
-
         }// vi
         if (vi.moreChunks()) vi.nextChunk();
       } // chunk loop
     
-      // is this required?
-      setSpwOK();
-      
       // progress indicator
       meter.update(Double(isim)/nSim);
       
@@ -920,7 +796,6 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
        << endl << LogIO::POST;      
     // write the table
     append()=False; 
-    //    store();   NEWCALTABLE
     storeNCT();
   } else {
     os << LogIO::NORMAL 
@@ -991,7 +866,7 @@ String SolvableVisCal::applyinfo() {
 
 }
 
-
+// NEWCALTABLE ?????
 void SolvableVisCal::setSolve() {
 
   if (prtlev()>2) cout << "SVC::setSolve()" << endl;
@@ -1009,25 +884,8 @@ void SolvableVisCal::setSolve() {
   setApplied(False);
   setSimulated(False);
 
-  // Create a pristine CalSet
-  //  TBD: move this to inflate()?
-  switch (parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	cs_ = new CalSet<Complex>(nSpw());
-	cs().initCalTableDesc(typeName(),parType_);
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs_ = new CalSet<Float>(nSpw());
-	rcs().initCalTableDesc(typeName(),parType_);
-	break;
-      }
-    default:
-      throw(AipsError("Internal SVC::setSolve() error: Got invalide VisCalEnum"));
-    }
+  throw(AipsError("Generic SVC::setSolve() is currently disabled."));
+
 }
 
 void SolvableVisCal::setSolve(const Record& solve) 
@@ -1244,36 +1102,6 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
     // Load the exiting table
     loadMemCalTable(calTableName(),"");
 
- /* NewCalTable
-
-    // Create CalSet, from table
-    switch (parType())
-      {
-      case VisCalEnum::COMPLEX:
-	{
-	  cs_ = new CalSet<Complex>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-	  cs().initCalTableDesc(typeName(), parType_);
-	  nChanParList() = cs().nChan();
-	  startChanList() = cs().startChan();
-	  break;
-	}
-      case VisCalEnum::REAL:
-	{
-	  rcs_ = new CalSet<Float>(calTableName(),calTableSelect(),nSpw(),nPar(),nElem());
-	  rcs().initCalTableDesc(typeName(), parType_);
-	  nChanParList() = rcs().nChan();
-	  startChanList() = rcs().startChan();
-	  break;
-	}
-      default:
-	throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
-      }
-
-
-    // The following should be for trivial types only!    
-    nChanMatList()=nChanParList();
- */
-
     // The following should be for trivial types only!    
     nChanMatList()=nChanParList();
 
@@ -1299,56 +1127,6 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 
     // Inflate it by iteratin over the dataset
     inflateNCTwithMetaData(vs);
-
-
-  /* NEWCALTABLE
-    // Create a pristine CalSet
-    //  TBD: move this to inflate()?
-    switch (parType())
-      {
-      case VisCalEnum::COMPLEX:
-	{
-	  cs_ = new CalSet<Complex>(nSpw());
-	  cs().initCalTableDesc(typeName(),parType_);
-
-	  // Size, inflate CalSet (incl. filling meta data)
-	  setSolveChannelization(vs);
-	  // Override single-channel per solve! (trivial types only)
-	  nChanMatList()=nChanParList();
-
-	  inflate(vs,True);
-
-	  // Set parOK,etc. to true
-	  for (Int ispw=0;ispw<nSpw();ispw++) {
-	    cs().parOK(ispw)=True;
-	    cs().solutionOK(ispw)=True;
-	  }
-	  break;
-	}
-      case VisCalEnum::REAL:
-	{
-	  rcs_ = new CalSet<Float>(nSpw());
-	  rcs().initCalTableDesc(typeName(),parType_);
-
-	  // Size, inflate CalSet (incl. filling meta data)
-	  setSolveChannelization(vs);
-	  // Override single-channel per solve! (trivial types only)
-	  nChanMatList()=nChanParList();
-
-	  inflate(vs,True);
-
-	  // Set parOK,etc. to true
-	  for (Int ispw=0;ispw<nSpw();ispw++) {
-	    rcs().parOK(ispw)=True;
-	    rcs().solutionOK(ispw)=True;
-	  }
-	  break;
-	}
-      default:
-	throw(AipsError("Internal SVC::setAccumulate(...) error: Got invalid VisCalEnum"));
-      }
-
-  */
 
   }
 
@@ -2026,9 +1804,6 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 		      <<" approx size = "<<(nSpw()*(nChanParList().size())*nElem()*nSol*nPar())
 		      <<"x size(complex)"<<endl;
   
-  // makeCalSet(True);
-  // do it ourselves in order to use nchanparlist just set in setsolvechan
-
   if (not simOnTheFly()) {
 
     if (ct_) 
@@ -2037,40 +1812,6 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
     // Make a caltable into which simulated solutions will be deposited
     // !freqDepPar controls channelization in SPW subtable  (T == single channel)
     ct_=new NewCalTable(calTableName()+"_sim_temp",parType(),typeName(),msName(),!freqDepPar());
-
-
-    /*  NEWCALTABLE
-
-  switch(parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	cs_ = new CalSet<Complex>(nSpw(),nPar(),nChanParList(),nElem(),Vector<Int>(nSpw(),nSol));
-	cs().initCalTableDesc(typeName(),parType_);
-	
-	// Create CalInterp
-	cint_ = new CalInterp(cs(),tInterpType(),"nearest");
-	ci().setSpwMap(spwMap());
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs_ = new CalSet<Float>(nSpw(),nPar(),nChanParList(),nElem(),Vector<Int>(nSpw(),nSol));
-	rcs().initCalTableDesc(typeName(),parType_);
-	// Create CalInterp
-	// 	cint_ = new CalInterp(rcs(),tInterpType(),"nearest");
-	// 	ci().setSpwMap(spwMap());
-	break;
-      }
-    default:
-      throw(AipsError("Internal error(Calibrater Module): Unsupported parameter type "
-		      "COMPLEXREAL found in SolvableVisCal::makeCalSet()"));
-    }
-
-
-  if (prtlev()>3) cout<<"   calset of size "<<cs().par(currSpw()).shape()<<" created"<<endl;
-
-    */
 
   }
 
@@ -2118,11 +1859,6 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
      <<  nSol << " solution intervals."
      << LogIO::POST;
   
-  // Inflate the CalSet - RI: redundant with create above?
-  // inflate(nChanParList(),startChanList(),nChunkPerSpw);
-  //os << LogIO::DEBUG1 <<" calset inflated to "<<cs().par(currSpw()).shape() 
-  //   << LogIO::POST;
-
   // Size the solvePar arrays
   // Jones' insists on having 1 channel, but mullers have lots.  
   // initSolvePar();
@@ -2185,45 +1921,12 @@ Int SolvableVisCal::sizeUpSim(VisSet& vs, Vector<Int>& nChunkPerSol, Vector<Doub
 
 }
 
-
-void SolvableVisCal::initSolve(VisSet& vs) {
-
-  if (prtlev()>2) cout << "SVC::initSolve(vs)" << endl;
-
-  // Determine solving channelization according to VisSet & type
-  setSolveChannelization(vs);
-
-  // Nominal spwMap in solve is identity
-  spwMap().resize(vs.numberSpw());
-  indgen(spwMap());
-
-  // Inflate the CalSet according to VisSet
-  inflate(vs);
-
-  switch (parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	cs().initCalTableDesc(typeName(), parType_);
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs().initCalTableDesc(typeName(), parType_);
-	break;
-      }
-    default:
-      throw(AipsError("Internal SVC::initSolve(vs) error: Got invalid VisCalEnum"));
-    }
-
-  // Size the solvePar arrays
-  initSolvePar();
-
-}
-
+// The inflate methods will soon deprecate (gmoellen, 20121212)
+//   (the are assumed to exist only by LJJones and EPJones, which
+//    are not yet NewCalTable-compliant)
 
 // Inflate the internal CalSet according to VisSet info
-void SolvableVisCal::inflate(VisSet& vs, const Bool& fillMeta) {
+void SolvableVisCal::inflate(VisSet& vs, const Bool& /* fillMeta */) {
 
   if (prtlev()>3) cout << " SVC::inflate(vs)" << endl;
 
@@ -2259,41 +1962,21 @@ void SolvableVisCal::inflate(VisSet& vs, const Bool& fillMeta) {
   //  (assumes nChanParList()/startChanList() already valid!)
   inflate(nChanParList(),startChanList(),nSlot);
 
-  // Fill the meta data in the CalSet (according to VisSet)
-  //  (NB: currently, only used in accumulate context)
-  if (fillMeta) fillMetaData(vs);
-
 }
-
 
 
 // Inflate the internal CalSet generically
-void SolvableVisCal::inflate(const Vector<Int>& nChan,
-			     const Vector<Int>& startChan,
-			     const Vector<Int>& nSlot) {
+void SolvableVisCal::inflate(const Vector<Int>& /*nChan*/,
+			     const Vector<Int>& /*startChan*/,
+			     const Vector<Int>& /*nSlot*/) {
 
   if (prtlev()>3) cout << "  SVC::inflate(,,)" << endl;
 
-  // Size up the CalSet
-  
-  switch (parType())
-    {
-    case VisCalEnum::COMPLEX:
-      {
-	cs().resize(nPar(),nChan,nElem(),nSlot);
-	cs().setStartChan(startChan);
-	break;
-      }
-    case VisCalEnum::REAL:
-      {
-	rcs().resize(nPar(),nChan,nElem(),nSlot);
-	rcs().setStartChan(startChan);
-	break;
-      }
-    default:
-      throw(AipsError("Internal SVC::inflate(...) error: Got invalide VisCalEnum"));
-    }
+  throw(AipsError("Attempt to use deprecated SVC::inflate method."));
+
 }
+
+
 
 
 void SolvableVisCal::setSolveChannelization(VisSet& vs) {
@@ -2342,7 +2025,7 @@ void SolvableVisCal::setSolveChannelization(VisSet& vs) {
   // At this point:
   //  1. nChanParList() represents the (per-Spw) overall length of the
   //     output parameter channel axis, appropriate for shaping the
-  //     CalSet.  This value is irrelevant during the solve, since
+  //     output NewCalTable.  This value is irrelevant during the solve, since
   //     we will only solve for one parameter channel at a time (or 
   //     there is only one channel to solver for).
   //  2. nChanMatList() represents the per-Spw  matrix channel axis length to
@@ -2404,57 +2087,6 @@ void SolvableVisCal::setFracChanAve() {
   currSpw()=0;
   //  cout << "nChanParList() = " << nChanParList() << endl;
   //  cout << "chanAveBounds_ = " << chanAveBounds_ << endl;
-}
-
-
-
-// Fill the Calset with meta data
-void SolvableVisCal::fillMetaData(VisSet& vs) {
-
-  if (prtlev()>3) cout << "  SVC::fillMetaData(vs)" << endl;
-
-  // NB: Currently, this is only used for the accumulate
-  //     context; in solve, meta-data is filled on-the-fly
-  //     (this ensures more accurate timestamps, etc.)
-
-  // NB: Assumes CalSet already has correct shape!
-
-  // TODO:
-  // 1. Can we use setRowBlocking() here to avoid in-chunk iterations?
-
-  // Fill the Calset with meta info
-  VisIter& vi(vs.iter());
-  vi.originChunks();
-  VisBuffer vb(vi);
-  Vector<Int> islot(nSpw(),0);
-  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-
-    Int thisSpw=vi.spectralWindow();
-
-    if (islot(thisSpw)>=cs().nTime(thisSpw))
-      throw(AipsError("Error filling CalSet with Meta data."));
-	      
-    // Set field source info
-    cs().fieldId(thisSpw)(islot(thisSpw))  =vi.fieldId();
-    cs().fieldName(thisSpw)(islot(thisSpw)) =vi.fieldName();
-    cs().sourceName(thisSpw)(islot(thisSpw))=vi.sourceName();
-
-    // Set time info
-    vi.origin();
-    cs().startTime(thisSpw)(islot(thisSpw))  =vb.time()(0)-vb.timeInterval()(0)/2.0;
-    Double timeStamp(0.0);
-    Int ntime(0);
-    for (vi.origin(); vi.more(); vi++,ntime++) {
-      timeStamp+=vb.time()(0);
-    }
-    cs().stopTime(thisSpw)(islot(thisSpw)) =vb.time()(0)+vb.timeInterval()(0)/2.0;
-    cs().time(thisSpw)(islot(thisSpw))=timeStamp/ntime;
-
-    // Advance slot counter (per spw)
-    islot(thisSpw)++;
-
-  }
-
 }
 
 // Inflate an empty Caltable w/ meta-data from a VisSet
@@ -3018,27 +2650,10 @@ void SolvableVisCal::smooth(Vector<Int>& fields,
 			    const Double& smtime) {
 
   if (smoothable()) 
-    // Call CalSet's global smooth method
-    //    casa::smooth(cs(),smtype,smtime,fields);
+    // Call NewCalTable's global smooth method
     casa::smoothCT(*ct_,smtype,smtime,fields);
   else
     throw(AipsError("This type "+this->typeName()+" does not support smoothing!"));
-
-}
-
-
-void SolvableVisCal::syncPar(const Int& spw, const Int& slot) {
-
-  if (prtlev()>4) cout << "    SVC::syncPar(spw,slot)" << endl;
-
-  IPosition blc(4,0,0,0,slot);
-  IPosition trc(4,cs().nPar()-1,cs().nChan(spw)-1,cs().nElem()-1,slot);
-
-  currCPar().reference(cs().par(spw)(blc,trc).nonDegenerate(3));;
-  currParOK().reference(cs().parOK(spw)(blc,trc).nonDegenerate(3));
-
-  validateP();
-  invalidateCalMat();
 
 }
 
@@ -3336,50 +2951,6 @@ void SolvableVisCal::keepNCT() {
 
 }
 
-// File a solved solution (and meta-data) into a slot in the CalSet
-void SolvableVisCal::keep(const Int& slot) {
-
-  if (prtlev()>4) cout << " SVC::keep(i)" << endl;
-
-  if (slot<cs().nTime(currSpw())) {
-    // An available valid slot
-
-    cs().fieldId(currSpw())(slot)=currField();
-    cs().time(currSpw())(slot)=refTime();
-
-    // Only stop-start diff matters
-    //  TBD: change CalSet to use only the interval
-    //  TBD: change VisBuffAcc to calculate exposure properly
-    cs().startTime(currSpw())(slot)=0.0;
-    cs().stopTime(currSpw())(slot)=interval();
-
-    // For now, just make these non-zero:
-    cs().iFit(currSpw()).column(slot)=1.0;
-    cs().iFitwt(currSpw()).column(slot)=1.0;
-    cs().fit(currSpw())(slot)=1.0;
-    cs().fitwt(currSpw())(slot)=1.0;
-
-    IPosition blc4(4,0,       focusChan(),0,        slot);
-    IPosition trc4(4,nPar()-1,focusChan(),nElem()-1,slot);
-    if (prtlev()>3) cout<<"keep cspar.shape="<< cs().par(currSpw())(blc4,trc4).nonDegenerate(3).shape()<<"  cparshape="<<solveCPar().shape()<<endl;
-    cs().par(currSpw())(blc4,trc4).nonDegenerate(3) = solveCPar();
-
-    // TBD:  Handle solveRPar here!
-
-    cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
-    cs().parErr(currSpw())(blc4,trc4).nonDegenerate(3)= solveParErr();
-    cs().parSNR(currSpw())(blc4,trc4).nonDegenerate(3)= solveParSNR();
-    cs().solutionOK(currSpw())(slot) = (cs().solutionOK(currSpw())(slot) || anyEQ(solveParOK(),True));
-
-//    if ( cs().solutionOK(currSpw())(slot) != True) 
-//      cout << "soln !OK " << solveCPar().shape() << " : " << solveCPar() << " -> " << solveParOK() << endl;
-  }
-  else {    
-    throw(AipsError("SVJ::keep: Attempt to store solution in non-existent CalSet slot"));
-  }
-
-}
-
 void SolvableVisCal::globalPostSolveTinker() {
 
   // Make solutions phase- or amp-only, if required
@@ -3531,21 +3102,6 @@ void SolvableVisCal::storeNCT() {
 
 }
 
-void SolvableVisCal::store() {
-
-  if (prtlev()>3) cout << " SVC::store()" << endl;
-
-  if (append())
-    logSink() << "Appending solutions to table: " << calTableName()
-	      << LogIO::POST;
-  else
-    logSink() << "Writing solutions to table: " << calTableName()
-	      << LogIO::POST;
-
-  cs().store(calTableName(),typeName(),append(),msName());
-
-}
-
 void SolvableVisCal::storeNCT(const String& table,const Bool& append) {
 
   if (prtlev()>3) cout << " SVC::store(table,append)" << endl;
@@ -3598,20 +3154,6 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
   // This should not be needed anymore (and it breaks portability)
   //  ROMSSpWindowColumns spwcol(ct_->spectralWindow());
   //  nChanParList().assign(spwcol.numChan().getColumn());
-
-}
-
-
-void SolvableVisCal::store(const String& table,const Bool& append) {
-
-  if (prtlev()>3) cout << " SVC::store(table,append)" << endl;
-
-  // Override tablename
-  calTableName()=table;
-  SolvableVisCal::append()=append;
-
-  // Call conventional store
-  store();
 
 }
 
@@ -5348,273 +4890,8 @@ void SolvableVisJones::applyRefAnt() {
 	      << "  a non-zero phase.  This is generally harmless."
 	      << LogIO::POST;
 
-  return;  // NEWCALTABLE
+  return;
 
- /*
-
-  for (Int ispw=0;ispw<nSpw();++ispw) {
-
-    currSpw()=ispw;
-
-    //    cout << "currSpw() = " << currSpw() << " nTime = " << cs().nTime(ispw) << endl;
-
-    // TBD: use spwOK here when spwOK is activated in solve context
-    if (cs().nTime(ispw)>0) {
-
-    // References to ease access to solutions
-    Array<Complex> sol(cs().par(ispw));
-    Array<Bool> sok(cs().parOK(ispw));
-
-    // Find time-ordered slot index
-    Vector<uInt> ord;
-    genSort(ord,cs().time(ispw));
-    Int nslots(ord.nelements());
-
-
-    //    cout << "ord = " << ord << endl;
-
-    //    cout << "sok = " << sok << endl;
-
-    // Reference each channel and par independently (?)
-    for (Int ichan=0;ichan<nChanPar();++ichan) {
-      for (Int ipar=0;ipar<nPar();++ipar) {
-	
-	Int iref=0;
-	Int lastrefant(-1);
-	
-	// Apply refant to first slot
-	if (cs().nTime(ispw)>0) {
-	  
-	  IPosition blc1(4,ipar,ichan,0,ord(0));
-	  IPosition trc1(4,ipar,ichan,nAnt()-1,ord(0));
-	  if (ntrue(sok(blc1,trc1))>0) {
-	    
-	    while ( iref<(nAnt()+nUserRefant+1) &&
-		    !sok(IPosition(4,ipar,ichan,refantchoices(iref),ord(0))) ) {
-	      ++iref;
-	    }
-	    
-	    if (iref<nAnt()+2) {
-	      // found a refant, use it
-	      
-	      if (iref>0) usedaltrefant=True;
-	      
-	      Int currrefant=refantchoices(iref);
-
-	      // Only report if using an alternate refant
-	      if (currrefant!=lastrefant && iref>0) {
-		logSink() 
-			  << "At " 
-			  << MVTime(cs().time(ispw)(ord(0))/C::day).string(MVTime::YMD,7) 
-			  << " ("
-			  << "Spw=" << ispw 
-			  << ", Fld=" << cs().fieldId(ispw)(ord(0))
-			  << ", pol=" << ipar 
-			  << ", chan=" << ichan 
-			  << ")"
-		  //			  << ", using refant " << msantcol.name()(currrefant)
-			  << ", using refant " << csmi.getAntName(currrefant)
-			  << " (id=" << currrefant 
-			  << ")" << " (alternate)"
-			  << LogIO::POST;
-	      }  
-
-	      Complex rph=sol(IPosition(4,ipar,ichan,currrefant,ord(0)));
-
-	      // make reference phasor phase-only
-	      Float amp=abs(rph);
-	      if (amp>0.0) {
-		rph/=Complex(amp);
-
-		// Adjust each good ant by this phasor
-		for (Int iant=0;iant<nAnt();++iant) 
-		  if (sok(IPosition(4,ipar,ichan,iant,ord(0)))) {
-		    sol(IPosition(4,ipar,ichan,iant,ord(0)))/=rph;
-		    // Ensure phase (imag part) is zero)
-		    // This isn't quite right because alt refants won't have zero phase!
-		    //  gmoellen (20091208)
-		    //		    if (iant==currrefant) 
-		    //		      sol(IPosition(4,ipar,ichan,iant,ord(0)))=
-		    //			Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(0)))),0.0);
-
-		  }
-	      }
-	      else
-		// This shouldn't happen
-		cout << "Refant has undefined phase (zero amplitude) " << endl;
-
-	      lastrefant=currrefant;
-
-	    }
-	    else {
-	      // unlikely?
-	      cout << "Couldn't find a refant for the first slot in spw = " << currSpw() << endl;
-	    }
-	  }
-	}
-
-	
-	// Only if time-dep referencing required....
-	if (cs().nTime(ispw) > 1) {
-	  	    
-          Int islot0(0);
-          Int islot1(0);
-
-          IPosition blc0(4,ipar,ichan,0,ord(islot0));
-          IPosition trc0(4,ipar,ichan,nAnt()-1,ord(islot0));
-          IPosition blc1(4,ipar,ichan,0,ord(islot1));
-          IPosition trc1(4,ipar,ichan,nAnt()-1,ord(islot1));
-
-	  while (islot0<nslots && ntrue(sok(blc0,trc0))<1) {
-	    ++islot0;
-	    blc0(3)=trc0(3)=ord(islot0);
-	  }
-	  islot1=islot0+1;
-
-	  // Only if we found more than one good slot
-	  if (islot1<nslots) {
-
-	    Complex rph(1.0);
-	    Float refantph(0.0);
-	    Int currrefant(-1);
-	    while (islot1<nslots) {
-	      
-	      blc1(3)=trc1(3)=ord(islot1);
-	      
-	      // If current slot has good solutions in it,
-	      //  attempt to reference their phases
-	      if (ntrue(sok(blc1,trc1))>0) {
-		
-		iref=0;
-		while ( iref<(nAnt()+2) &&
-			(!sok(IPosition(4,ipar,ichan,refantchoices(iref),ord(islot0))) ||
-			 !sok(IPosition(4,ipar,ichan,refantchoices(iref),ord(islot1))))   ) {
-		  ++iref;
-		}
-		
-		if (iref<nAnt()+2) {
-		  // found a refant, use it
-		  
-		  if (iref>0) usedaltrefant=True;
-		  
-		  currrefant=refantchoices(iref);
-  
-		  // Only report if using an alternate refant
-		  if (currrefant!=lastrefant && iref>0) {
-		    logSink() << LogIO::NORMAL
-			      << "At " 
-			      << MVTime(cs().time(ispw)(ord(islot1))/C::day).string(MVTime::YMD,7) 
-			      << " ("
-			      << "Spw=" << ispw 
-			      << ", Fld=" << cs().fieldId(ispw)(ord(islot1))
-			      << ", pol=" << ipar 
-			      << ", chan=" << ichan 
-			      << ")"
-		      //			      << ", using refant " << msantcol.name()(currrefant)
-			      << ", using refant " << csmi.getAntName(currrefant)
-			      << " (id=" << currrefant 
-			      << ")" << " (alternate)"
-			      << LogIO::POST;
-		  }
-		  
-		  lastrefant=currrefant;
-		  
-		  // 2nd priority refant on next iteration is the one used this iteration
-		  refantchoices(1)=currrefant;
-		  
-		  Complex &r0=sol(IPosition(4,ipar,ichan,currrefant,ord(islot0)));
-		  Complex &r1=sol(IPosition(4,ipar,ichan,currrefant,ord(islot1)));
-		  
-		  // If we can calculate a meaningful ref phasor, do it
-		  if (abs(r0)>0.0f && abs(r1)>0.0f) {
-		    
-		    rph=Complex(DComplex(r1)/DComplex(r0));
-		    rph/=abs(rph);
-		    
-		    // Remember first encountered refant phase
-		    if (refantph==0.0 && iref==0) refantph=arg(r0);
-		    
-		    // TBD: attempt to optimize precision...
-		    //DComplex drph=(DComplex(r1)/DComplex(r0));
-		    //drph/=abs(drph);
-		    
-		    // Adjust each good ant by this phasor
-		    for (Int iant=0;iant<nAnt();++iant) 
-		      if (sok(IPosition(4,ipar,ichan,iant,ord(islot1)))) {
-			sol(IPosition(4,ipar,ichan,iant,ord(islot1)))/=rph;
-
-			// Ensure phase (imag part) is zero)
-			// This isn't quite right because alt refants won't have zero phase!
-			//  gmoellen (20091208)
-			//			if (iant==currrefant) 
-			//			  sol(IPosition(4,ipar,ichan,iant,ord(islot1)))=
-			//			    Complex(abs(sol(IPosition(4,ipar,ichan,iant,ord(islot1)))),0.0);
-			
-			// TBD: attempt to optimize precision
-			//DComplex stmp=sol(IPosition(4,ipar,ichan,iant,ord(islot1)));
-			//stmp/=drph;
-			//sol(IPosition(4,ipar,ichan,iant,ord(islot1)))=Complex(stmp);
-		      }
-		    
-		    //		  cout << " --> " << arg(r1)*180.0/C::pi << endl;
-		    
-		  } // non-zero reference amps
-		  else 
-		    // Should be impossible to reach here!
-		    cout << "Bad referencing phasors." << endl;
-		  
-		  
-		} // refant ok
-		else {
-		  // Continuity broken...
-		  logSink() << LogIO::WARN
-			    << " Phase continuity broken at "
-			    << MVTime(cs().time(ispw)(ord(islot1))/C::day).string(MVTime::YMD,7) 
-			    << " ("
-			    << "Spw=" << ispw 
-			    << ", Fld=" << cs().fieldId(ispw)(ord(islot1))
-			    << ", pol=" << ipar 
-			    << ")" << endl
-			    << "  due to lack of overlapping antennas with previous interval."
-			    << LogIO::POST;
-		}
-		
-		// Good slot is basis for referencing the next slot
-		islot0=islot1;
-		blc0(3)=trc0(3)=ord(islot0);
-		
-	      }
-	      ++islot1;
-	    }
-	    
-	    // Zero initial refant phase
-	    if (refantph!=0.0) {
-	      rph=Complex(cos(refantph),sin(refantph));
-	      for (Int islot=0;islot<nslots;++islot)
-		for (Int iant=0;iant<nAnt();++iant) 
-		  if (sok(IPosition(4,ipar,ichan,iant,ord(islot))))
-		    sol(IPosition(4,ipar,ichan,iant,ord(islot)))/=rph;
-	    }
-	    
-	  } // islot0<nslots
-
-	} // nTime>1
-	
-      } // ipar
-    } // ichan
-    }      
-  } // ispw
-
-
-  if (usedaltrefant)
-    logSink() << LogIO::NORMAL
-	      << " NB: An alternate refant was used at least once to maintain" << endl
-	      << "  phase continuity where the user's refant drops out." << endl
-	      << "  This may introduce apparent phase jumps in " << endl
-	      << "  the reference antenna; these are generally harmless."
-	      << LogIO::POST;
-
- */
 }
 
 
@@ -6387,25 +5664,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
       }
     } // scope
 
-    /*
-    for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
-      if (cs().nTime(iSpw)>0) {
-        for (Int islot=0; islot<cs().nTime(iSpw); islot++) {
-          Int iFld=cs().fieldId(iSpw)(islot);
-          // If this is a tran fld and gainScaleFactor ok
-          if (scaleOK(iSpw,iFld)) {
-            for (Int iAnt=0; iAnt<nElem(); iAnt++) {
-	      for (Int ipar=0; ipar<nPar(); ipar++) {
-		IPosition ip(4,ipar,0,iAnt,islot);
-		if (cs().parOK(iSpw)(ip))
-                  cs().par(iSpw)(ip)/=mgratio(iSpw,iFld);
-              }
-            }
-          }
-        }
-      }
-    }
-    */
     //    cout << "done." << endl;
 
     //    cout << "Cleaning up...";
@@ -6729,7 +5987,7 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
             
 	    // The following is a klugey way to 
 	    // make the times, fields, and gains look like
-	    // what the CalSet used to be
+	    // what the CalTable's used to be
 
 	    Int NTIME=ctiter.nrow()/NANT;
 	    Vector<Double> timelist;

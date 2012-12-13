@@ -40,6 +40,7 @@
 #include <images/Images/ImageInfo.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/MSVis/VisSet.h>
+#include <synthesis/CalTables/CalSet.h>
 #include <casa/OS/Timer.h>
 #include <synthesis/MSVis/VisBuffAccumulator.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
