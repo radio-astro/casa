@@ -107,14 +107,14 @@ PlotMSIterPlot* PlotMSPlotManager::addIterPlot(
 }
 
 PlotMSPlot* PlotMSPlotManager::addSinglePlot(
-        const PlotMSPlotParameters* params) {
-  throw(AipsError("SinglePlot deprecated!"));
+    const PlotMSPlotParameters* /*params*/) {
+    throw(AipsError("SinglePlot deprecated!"));
     return NULL;
 }
 
 PlotMSPlot* PlotMSPlotManager::addMultiPlot(
-        const PlotMSPlotParameters* params) {
-  throw(AipsError("SinglePlot deprecated!"));
+    const PlotMSPlotParameters* /*params*/) {
+    throw(AipsError("SinglePlot deprecated!"));
     return NULL;
 }
 

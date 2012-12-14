@@ -73,7 +73,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
     corcolOk=cds.isDefined("CORRECTED_DATA");
     
     if (!corcolOk) {
-      for (Int i=0;i<loadData.size();++i) {
+      for (uInt i=0;i<loadData.size();++i) {
 	switch (loadData[i]) {
 	case PMS::CORRECTED:
 	case PMS::RESIDUAL: {

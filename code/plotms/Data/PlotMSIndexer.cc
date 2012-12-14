@@ -1496,7 +1496,7 @@ void PlotMSIndexer::computeRanges() {
 }
 
 void PlotMSIndexer::log(const String& method, const String& message,
-        int eventType) {
+                        int /*eventType*/) {
 
   cout << method << ": " << message << endl;
 
