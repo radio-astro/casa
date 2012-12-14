@@ -1874,9 +1874,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LatticeIterator<Float> liy(*avgPB_p,lsx);
     for(lix.reset();!lix.atEnd();lix++) 
       {
-#warning pol and chan need to be investigated
-	Int pol=lix.position()(2);
-	Int chan=lix.position()(3);
+	//Int pol=lix.position()(2);
+	//Int chan=lix.position()(3);
 	//lix.rwCursor()=weights(pol,chan);
 	lix.rwCursor()=liy.rwCursor();
       }
