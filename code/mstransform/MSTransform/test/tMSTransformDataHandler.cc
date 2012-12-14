@@ -35,9 +35,9 @@ int main(int argc, char **argv)
 	Record configuration;
 
 	// Data selection parameters
-	String inputMS,outputMS,combine;
+	String inputMS,outputMS, datacolumn;
+	Bool combinespws;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
-	Double timebin;
 
 	// Parse input parameters
 	for (unsigned short i=0;i<argc-1;i++)
@@ -57,26 +57,25 @@ int main(int argc, char **argv)
 			configuration.define ("outputms", outputMS);
 			cout << "Output file is: " << outputMS << endl;
 		}
+		else if (parameter == string("-datacolumn"))
+		{
+			datacolumn = value;
+			configuration.define ("datacolumn", datacolumn);
+			cout << "Data column is: " << datacolumn << endl;
+		}
+		else if (parameter == string("-combinespws"))
+		{
+			combinespws = Bool(atoi(value.c_str()));
+			configuration.define ("combinespws", combinespws);
+			cout << "Combine Spectral Windows is: " << combinespws << endl;
+		}
 		else if (parameter == string("-spw"))
 		{
 			spw = value;
 			configuration.define ("spw", spw);
 			cout << "Spectral Window selection is: " << spw << endl;
 		}
-		else if (parameter == string("-timebin"))
-		{
-			timebin = strtod(value.c_str(),NULL);
-			configuration.define ("timebin", timebin);
-			cout << "Time interval is: " << timebin << endl;
-		}
-		else if (parameter == string("-combine"))
-		{
-			combine = value;
-			configuration.define ("combine", combine);
-			cout << "Combine axes are: " << combine << endl;
-		}
 	}
-
 
 	// Set up data handler
 	MSTransformDataHandler *tvdh = new MSTransformDataHandler(configuration);

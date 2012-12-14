@@ -309,6 +309,7 @@ MSTransform::run()
 
 	mdh_p->close();
 	delete mdh_p;
+	mdh_p = NULL;
 
 	return Record();
 }
