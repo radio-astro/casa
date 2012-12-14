@@ -1369,6 +1369,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	visResamplerWt_p->finalizeToSky(gwts, sumCFWeight);
 	visResamplerWt_p->releaseBuffers();
       }
+    //cerr << "Run time = " << visResampler_p->runTime_p << endl;
   }
   //
   //---------------------------------------------------------------
