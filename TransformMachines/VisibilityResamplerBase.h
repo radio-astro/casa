@@ -137,6 +137,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				const Vector<Int>& dataPol2ImPolMap,
 				const Vector<Double>& pointingOffset);
 
+    Double runTime_p;
     //
     //------------------------------------------------------------------------------
     //----------------------------Private parts-------------------------------------

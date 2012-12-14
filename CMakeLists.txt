@@ -75,6 +75,8 @@ casa_add_library( synthesis
   fortran/fgridft.f		
   fortran/fmosaic.f
   fortran/wprojgrid.f
+  fortran/faccumulateToGrid.f
+  fortran/faccumulateFromGrid.f
   MSVis/AsynchronousInterface.cc
   MSVis/AsynchronousTools.cc
   MSVis/CalVisBuffer.cc
@@ -501,7 +503,7 @@ install (FILES
 	MeasurementComponents/CEMemImageSkyModel.h
 	MeasurementComponents/CExp.h
 	MeasurementComponents/CExp.new3.h
-	MeasurementComponents/CFDefs.h
+#	MeasurementComponents/CFDefs.h
 	MeasurementComponents/CSCleanImageSkyModel.h
 	MeasurementComponents/CalCorruptor.h
 	MeasurementComponents/Calibrater.h

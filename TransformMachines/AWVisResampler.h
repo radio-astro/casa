@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWVisResampler(): VisibilityResampler(),
 		      cached_phaseGrad_p(),
                       cached_PointingOffset_p()
-    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;};
+    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTime_p=0.0;};
     //    AWVisResampler(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~AWVisResampler()                                         {};
 
@@ -102,9 +102,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Simulating defaulting CFStore arguemnt in the above calls to convFuncStore_p
     //
-    virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
-			    const Bool& dopsf,Bool useConjFreqCF=False)
-    {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,useConjFreqCF);}
+
+    //***TEMP REMOVAL OF DComplex gridder*****
+
+    // virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+    // 			    const Bool& dopsf,Bool useConjFreqCF=False)
+    // {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,useConjFreqCF);}
 
     virtual void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
 			    const Bool& dopsf,Bool useConjFreqCF=False)

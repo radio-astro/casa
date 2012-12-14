@@ -34,6 +34,7 @@
 #include <casa/OS/Timer.h>
 #include <fstream>
 #include <iostream>
+#include <typeinfo>
 #include <iomanip>
 #ifdef HAS_OMP
 #include <omp.h>
@@ -42,6 +43,33 @@
 namespace casa{
 
 #define CONJBEAMS (True)
+  extern "C" 
+  {
+    void faccumulatetogrid_(Complex *grid, Complex *CF, 
+			    Complex *nvalue, Double *wVal, 
+			    Int *scaledSupport, Float *scaledSampling,
+			    Double *off, Int *convOrigin, Int *cfShape, Int *loc,
+			    Int *igrdpos, Double *sinDPA, Double *cosDPA,
+			    Int *finitePointingOffset,
+			    Int *doPSFOnly,
+			    Double *norm,
+			    Complex *phaseGrad,
+			    Int *imNX, Int *imNY, Int *imNP, Int *imNC,
+			    Int *cfNX, Int *cfNY, Int *cfNP, Int *cfNC,
+			    Int *phNX, Int *phNY);
+    void faccumulatefromgrid_(Complex *nvalue, const Complex *grid, Complex *CF, 
+			      Double *wVal, 
+			      Int *scaledSupport, Float *scaledSampling,
+			      Double *off, Int *convOrigin, Int *cfShape, Int *loc,
+			      Int *igrdpos, Double *sinDPA, Double *cosDPA,
+			      Int *finitePointingOffset,
+			      Complex *phaseGrad,
+			      Complex *phasor,
+			      Int *imNX, Int *imNY, Int *imNP, Int *imNC,
+			      Int *cfNX, Int *cfNY, Int *cfNP, Int *cfNC,
+			      Int *phNX, Int *phNY);
+  };
+
 
   //
   //-----------------------------------------------------------------------------------
@@ -50,10 +78,11 @@ namespace casa{
   // Template instantiations for re-sampling onto a double precision
   // or single precision grid.
   //
-  template
-  void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
-					Matrix<Double>& sumwt,const Bool& dopsf,
-					Bool useConjFreqCF); // __restrict__;
+  //***TEMP REMOVAL OF DComplex gridder*****
+  // template
+  // void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
+  // 					Matrix<Double>& sumwt,const Bool& dopsf,
+  // 					Bool useConjFreqCF); // __restrict__;
   template
   void AWVisResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
 					Matrix<Double>& sumwt,const Bool& dopsf,
@@ -94,10 +123,10 @@ namespace casa{
 					  Complex* __restrict__& convFuncV, 
 					  Double& wVal, Vector<Int>& scaledSupport, 
 					  Vector<Float>& scaledSampling, Vector<Double>& off,
-					  Vector<Int>& convOrigin, Vector<Int>& /*cfShape*/,
+					  Vector<Int>& convOrigin, Vector<Int>& cfShape,
 					  Vector<Int>& loc, 
 					  Complex& phasor, 
-					  Double& /*sinDPA*/, Double& /*cosDPA*/,
+					  Double& sinDPA, Double& cosDPA,
 					  Bool& finitePointingOffset, 
 					  Matrix<Complex>& cached_phaseGrad_p);
   
@@ -273,6 +302,8 @@ namespace casa{
     Double sinDPA=0.0, cosDPA=1.0;
     Double cfScale, cfRefFreq;
 
+    // Timer timer;
+    // timer.mark();
     rbeg = 0;       rend = vbs.nRow_p;
     rbeg = vbs.beginRow_p;
     rend = vbs.endRow_p;
@@ -459,10 +490,15 @@ namespace casa{
 					  
 					  cacheAxisIncrements(cfShape, cfInc_p);
 					  
-					  norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
-								   support,sampling,
-								   off, convOrigin, cfShape, loc, igrdpos,
-								   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
+					  // accumulateOnGrid() is a local C++ method with the inner loops.  The include
+					  // file (FortanizedLoopsToGrid.cc) has the interface code to call the inner 
+					  // loops re-written in FORTRAN (in synthesis/fortran/faccumulateOnGrid.f)
+
+					  // norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
+					  // 			   support,sampling,
+					  // 			   off, convOrigin, cfShape, loc, igrdpos,
+					  // 			   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
+					  #include "FortranizedLoopsToGrid.cc"
 					}
 				      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
 				      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
@@ -476,6 +512,7 @@ namespace casa{
 	}
     } // End row-loop
     // exit(0);
+    //    runTime_p += timer.real();
     T *tt=(T *)gridStore;
     grid.putStorage(tt,gDummy);
   }
@@ -525,6 +562,7 @@ namespace casa{
     //
     Bool Dummy;
     const Complex* __restrict__ gridStore = grid.getStorage(Dummy);
+    (void)gridStore;
     Vector<Int> igrdpos(4);
     Double *freq=vbs.freq_p.getStorage(Dummy);
     Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
@@ -630,10 +668,20 @@ namespace casa{
 			//
 			// Complex tt=0.0;
 			// int nn=0;
-			accumulateFromGrid(nvalue, gridStore, igrdpos, convFuncV, wVal,
-					   scaledSupport, scaledSampling, off, convOrigin, 
-					   cfShape, loc, phasor, sinDPA, cosDPA, 
-					   finitePointingOffset, cached_phaseGrad_p);
+
+
+			// accumulateFromGrid() is a local C++ method with the inner loops.  The include
+			// file (FortanizedLoopsFromGrid.cc) has the interface code to call the inner 
+			// loops re-written in FORTRAN (in synthesis/fortran/faccumulateOnGrid.f)
+
+			// accumulateFromGrid(nvalue, gridStore, igrdpos, convFuncV, wVal,
+			// 		   scaledSupport, scaledSampling, off, convOrigin, 
+			// 		   cfShape, loc, phasor, sinDPA, cosDPA, 
+			// 		   finitePointingOffset, cached_phaseGrad_p);
+			#include "FortranizedLoopsFromGrid.cc"
+
+
+
 			/*
 			  for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
 			  {
