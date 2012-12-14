@@ -849,6 +849,8 @@ protected:
 
   virtual Int spectralWindow() const;
 
+  virtual void spectralWindows(Vector<Int>& spws) const;
+
   // Return current Polarization Id
 
   virtual Int polarizationId() const;
