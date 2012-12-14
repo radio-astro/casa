@@ -288,6 +288,7 @@ public:
     virtual void setSigma (const Vector<Float> &);
     virtual const Matrix<Float> & sigmaMat () const;
     virtual Int spectralWindow () const;
+    virtual const Vector<Int> & spectralWindows () const;
     virtual const Vector<Int> & stateId () const;
     virtual void setStateId (const Vector<Int> & value);
     virtual const Vector<Double> & time () const;
@@ -451,6 +452,7 @@ private:
     virtual void fillSigma (Vector<Float>& value) const;
     virtual void fillSigmaMat (Matrix<Float>& value) const;
     virtual void fillSpectralWindow (Int& value) const;
+    virtual void fillSpectralWindows  (Vector<Int>& value) const;
     virtual void fillStateId (Vector<Int>& value) const;
     virtual void fillTime (Vector<Double>& value) const;
     virtual void fillTimeCentroid (Vector<Double>& value) const;

@@ -316,6 +316,8 @@ public:
 
     virtual Int spectralWindow () const = 0;
 
+    virtual void spectralWindows (Vector<Int> & spws) const = 0;
+
     // Return MJD midpoint of interval.
 
     virtual void time (Vector<Double> & t) const = 0;

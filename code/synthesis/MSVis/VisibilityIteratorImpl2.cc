@@ -984,6 +984,21 @@ VisibilityIteratorImpl2::spectralWindow () const
     return msIter_p.spectralWindowId ();
 }
 
+void
+VisibilityIteratorImpl2::spectralWindows (Vector<Int> & spws) const
+{
+	Vector<Int> ddis;
+	dataDescriptionIds(ddis);
+	spws.resize(ddis.size());
+
+	for (uInt idx=0;idx<ddis.size();idx++)
+	{
+		spws(idx) = subtableColumns_p->dataDescription().spectralWindowId()(ddis(idx));
+	}
+
+	return;
+}
+
 // Return current Polarization Id
 Int
 VisibilityIteratorImpl2::polarizationId () const
