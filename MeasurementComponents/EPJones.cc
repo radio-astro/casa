@@ -991,7 +991,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 */
 
-	vb.modelVisCube() -= vb.visCube();  // Residual = VModel - VObs
+//	vb.modelVisCube() -= vb.visCube();  // Residual = VModel - VObs
+	vb.modelVisCube() -= vb.correctedVisCube();  // Residual = VModel - VObs
 
 	resAvgr.accumulate(vb);
 	dRes1Avgr.accumulate(dAZVB);

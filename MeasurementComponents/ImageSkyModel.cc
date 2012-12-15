@@ -128,6 +128,8 @@ Int ImageSkyModel::add(ImageInterface<Float>& image, const Int maxNumXfr)
     workDirOnNFS_p=False;
   }
 
+  workDirOnNFS_p=True;
+
   if(nmodels_p>maxnmodels_p) maxnmodels_p=nmodels_p;
 
   maxNumXFR_p=maxNumXfr;
@@ -314,7 +316,6 @@ Bool ImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool incremental, Boo
       }
     }
   }
-
   modified_p=False;
   return True;
 }
