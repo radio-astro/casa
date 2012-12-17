@@ -1,18 +1,7 @@
 set (datafiles
-CAS-2533.im/logtable/table.info
-CAS-2533.im/logtable/table.lock
-CAS-2533.im/logtable/table.dat
-CAS-2533.im/logtable/table.f0
-CAS-2533.im/table.info
-CAS-2533.im/table.lock
-CAS-2533.im/table.dat
-CAS-2533.im/table.f0_TSM0
-CAS-2533.im/table.f0
-histogram_test.fits
 imageStats.fits
 imagetestimage.fits
 jyperpixelimage.fits
-linearCoords.fits
 mexinputtest.fits
 qualityimage.fits
 ngc5921.clean.fits
@@ -65,8 +54,6 @@ tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
 tImage2DConvolver
-tImageAnalysis
-tImageAnalysis2
 tImageConcat
 tImageConvolver
 tImageDecomposer
