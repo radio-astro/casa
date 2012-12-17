@@ -79,7 +79,11 @@ else:
 #####################################################
    # Truth for v1.0 : 20Nov2012, r22088 : 512x512 image, aliasing errors exist, no PS term.
    # Test 1
-   correct_cs_intensity = 0.721199
+   # 17Dec2012 (SB): 
+   #   Changeing correct_cs_intensity from 0.721199 to 0.80432087183.  code rev.  22329.
+   #   AWProjectWBFT::pbFunc() returns 1.0 since division by avgPB in AWProjectFT::init2Vis()
+   #   is not necessary (the normalization is done via the vectorized version of initi2Vis())
+   correct_cs_intensity = 0.804321
    correct_cs_avgpb = 0.803946
    # Test 2
    correct_mtmfs_intensity = 0.908331
