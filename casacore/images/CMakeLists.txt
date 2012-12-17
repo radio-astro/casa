@@ -47,6 +47,7 @@ Images/FITSErrorImage.cc
 Images/FITSImgParser.cc
 Images/FITSImgParser.cc
 Images/FITSQualityImage.cc
+Images/FITSQualityMask.cc
 Images/PagedImage2.cc
 Images/ImagePolProxy.cc
 Images/ImageExprParse.cc
@@ -94,6 +95,7 @@ Images/FITSImage.h
 Images/FITSErrorImage.h
 Images/FITSImgParser.h
 Images/FITSQualityImage.h
+Images/FITSQualityMask.h
 Images/HDF5Image.h
 Images/HDF5Image.tcc
 Images/Image2DConvolver.h
