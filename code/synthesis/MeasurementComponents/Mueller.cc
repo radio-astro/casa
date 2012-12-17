@@ -104,13 +104,13 @@ void Mueller::apply(VisVector& v) {
   }  
 }
 
-void Mueller::apply(VisVector& v, Bool& vflag) {
+  void Mueller::apply(VisVector& /*v*/, Bool& /*vflag*/) {
 
   throw(AipsError("Mueller::apply(v,vflag) (general) NYI."));
 
 }
 
-void Mueller::applyFlag(Bool& vflag) {
+  void Mueller::applyFlag(Bool& /*vflag*/) {
   throw(AipsError("Mueller::applyFlag(vflag) (general) NYI."));
 }
 

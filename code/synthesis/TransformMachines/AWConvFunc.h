@@ -95,8 +95,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void setPolMap(const Vector<Int>& polMap) {aTerm_p->setPolMap(polMap);};
     //    virtual void setFeedStokes(const Vector<Int>& feedStokes) {aTerm_p->setFeedStokes(feedStokes);};
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
-    virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& image,
-					      const VisBuffer& vb) {Vector<Double> tt(2); tt=0;return tt;};
+    virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& /*image*/,
+					      const VisBuffer& /*vb*/) {Vector<Double> tt(2); tt=0;return tt;};
     virtual Bool setUpCFSupport(Array<Complex>& func, 
 				Int& xSupport, Int& ySupport,
 				const Float& sampling,

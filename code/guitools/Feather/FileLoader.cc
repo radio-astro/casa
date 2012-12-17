@@ -183,18 +183,24 @@ void FileLoader::filesChanged(){
 	if ( saveOutput ){
 		validOutput = validatePath( ui.outputImageDirectoryLineEdit, "Output image directory: ", false, outputDirectory );
 		QString outputFileName = ui.outputImageFileLineEdit->text();
-		if (outputFileName.trimmed().length() == 0 ){
-			validOutput = false;
-			QString errorMsg( "Please specify an output file name.");
-			QMessageBox::warning( this, "Invalid File Path", errorMsg );
+		if ( validOutput ){
+			outputDirectory = ui.outputImageDirectoryLineEdit->text();
+			if ( !outputDirectory.endsWith( QDir::separator())){
+				outputDirectory.append( QDir::separator());
+			}
+
+			if (outputFileName.trimmed().length() == 0 ){
+				validOutput = false;
+				QString errorMsg( "Please specify an output file name.");
+				QMessageBox::warning( this, "Invalid File Path", errorMsg );
+			}
+			else {
+				outputFile = ui.outputImageFileLineEdit->text();
+			}
 		}
-		else {
+		else if ( outputFileName.trimmed().length() > 0 ){
 			outputFile = ui.outputImageFileLineEdit->text();
 		}
-	}
-	else {
-		outputFile = ui.outputImageFileLineEdit->text();
-		outputDirectory = ui.outputImageDirectoryLineEdit->text();
 	}
 
 	//Close the dialog if everything is valid and indicate the change.

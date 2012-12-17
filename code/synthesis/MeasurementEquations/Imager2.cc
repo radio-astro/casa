@@ -59,7 +59,7 @@
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImagePolarimetry.h>
 #include <images/Images/ImageBeamSet.h>
@@ -3642,8 +3642,8 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 			       String& dataMode, 
 			       Vector<Int>& dataNchan, 
 			       Vector<Int>& dataStart, Vector<Int>& dataStep,
-			       MRadialVelocity& mDataStart, 
-			       MRadialVelocity& mDataStep){
+			       MRadialVelocity& /*mDataStart*/, 
+			       MRadialVelocity& /*mDataStep*/){
 
 
 

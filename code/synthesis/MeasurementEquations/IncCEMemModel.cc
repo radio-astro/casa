@@ -434,7 +434,7 @@ void IncCEMemModel::changeAlphaBeta()
 
 
 //----------------------------------------------------------------------
-Bool IncCEMemModel::checkImage(const Lattice<Float> *im)
+Bool IncCEMemModel::checkImage(const Lattice<Float> * /*im*/)
 {
   // I guess we don't have anything to do
   return True;

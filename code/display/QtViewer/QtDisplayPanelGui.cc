@@ -664,13 +664,15 @@ void QtDisplayPanelGui::initHistogramHolder(){
 		histogramDockWidget_ = new QDockWidget();
 		histogramDockWidget_ ->setObjectName( "Histogram");
 		histogramDockWidget_->setWindowTitle( "Histogram");
-		initHistogramHolder();
-		addHistogramDockWidget();
 		if ( binPlotWidget == NULL ){
-			binPlotWidget = new BinPlotWidget( false, false, this );
+			binPlotWidget = new BinPlotWidget( false, false, false, this );
+			binPlotWidget->setPlotMode( BinPlotWidget::REGION_MODE );
 			binPlotWidget->setMaximumSize( 400, 300 );
+			refreshHistogrammer();
 			connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SLOT(updateHistogram(viewer::QtRegion*,std::string)));
+			connect( regionDock_, SIGNAL(regionSelected(int)), this, SLOT(updateHistogramSelection(int)));
 		}
+		addHistogramDockWidget();
 	}
 
 	if ( histogrammer == NULL ){
@@ -686,6 +688,9 @@ void QtDisplayPanelGui::initHistogramHolder(){
 
 void QtDisplayPanelGui::updateHistogramSelection( int id ){
 	histogrammer->imageRegionSelected( id );
+	if ( binPlotWidget != NULL ){
+		binPlotWidget->imageRegionSelected( id );
+	}
 }
 
 
@@ -705,6 +710,9 @@ void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, std::string
 							ImageRegion* imageRegion = qtRegion->getImageRegion(displayData);
 							if ( imageRegion != NULL ){
 								histogrammer->setImageRegion( imageRegion, regionId );
+								if ( binPlotWidget != NULL ){
+									binPlotWidget->setImageRegion( imageRegion, regionId );
+								}
 							}
 						}
 					}
@@ -2504,6 +2512,9 @@ void QtDisplayPanelGui::refreshHistogrammer(){
 			if (ppd != 0 && img != 0) {
 				if (ppd->isCSmaster(pdd->dd())) {
 					histogrammer->setImage( img );
+					if ( binPlotWidget != NULL ){
+						binPlotWidget->setImage( img );
+					}
 					break;
 				}
 			}

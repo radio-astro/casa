@@ -97,7 +97,7 @@ void MSTransformDataHandler::initialize()
 	observationSelection_p = String("");
 
 	// By default operate on data column
-	colname_p = String("data");
+	colname_p = String("corrected");
 
 	// By default don't combine across scan/state
 	combine_p = String("");
@@ -158,6 +158,13 @@ void MSTransformDataHandler::configure(Record &configuration)
 	{
 		configuration.get (configuration.fieldNumber ("spw"), spwSelection_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Spectral Window selection is " << spwSelection_p << LogIO::POST;
+	}
+
+	exists = configuration.fieldNumber ("datacolumn");
+	if (exists >= 0)
+	{
+		configuration.get (configuration.fieldNumber ("datacolumn"), colname_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Data column is " << colname_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("timebin");

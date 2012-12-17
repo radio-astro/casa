@@ -299,11 +299,12 @@ namespace sdmbin {
     ConfigDescriptionTable& cT = mainRowPtr->getTable().getContainer().getConfigDescription();
     ConfigDescriptionRow* cR = cT.getRowByKey(cdId);
     Tag pId = cR->getProcessorId();
-    ProcessorTable& pT =  mainRowPtr->getTable().getContainer().getProcessor();
-    ProcessorRow* pR = pT.getRowByKey(pId);
+    
+    
     ProcessorType processorType =  mainRowPtr->getTable().getContainer().getProcessor().getRowByKey(pId)->getProcessorType();
-    return processorType;
+
     if (verbose_) cout << "SDMBinData::processorType(MainRow* const mainRowPtr) : exiting" << endl;
+    return processorType;
   }
 
   bool SDMBinData::acceptMainRow( MainRow* const mainRowPtr){
@@ -1776,7 +1777,7 @@ namespace sdmbin {
     int                        fieldId    = mainRowPtr_->getFieldUsingFieldId()->getFieldId().getTagValue();
     vector<vector<Angle> >     phaseDir   = mainRowPtr_->getFieldUsingFieldId()->getPhaseDir();
 
-    unsigned int               subscanNum = mainRowPtr_->getSubscanNumber();
+
     vector<Tag>                v_stateId;
 
 //     unsigned int nd;
@@ -2278,8 +2279,8 @@ namespace sdmbin {
   }
 
 
-  MSData* SDMBinData::getData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2,
-			       unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
+  MSData* SDMBinData::getData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int /*nfe2*/, // comment to avoid the unused parameter warning.
+ 			       unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
 			       float scaleFactor){
     unsigned int nfe=nfe1;                                  // TODO multi-beam
 
@@ -2334,10 +2335,10 @@ namespace sdmbin {
     return msDataPtr_;
   }
 
-  MSData* SDMBinData::getCalibratedData( unsigned int na1, unsigned int nfe1, unsigned int na2, unsigned int nfe2,
-					 unsigned int ndd, unsigned int nbin, vector<unsigned int> v_napc,
-					 float scaleFactor,
-					 pair<bool,vector<vector<float> > > p_tsys){
+  MSData* SDMBinData::getCalibratedData( unsigned int /*na1*/, unsigned int /*nfe1*/, unsigned int /*na2*/, unsigned int /*nfe2*/,
+					 unsigned int /*ndd*/, unsigned int /*nbin*/, vector<unsigned int> /*v_napc*/,
+					 float /*scaleFactor*/,
+					 pair<bool,vector<vector<float> > > /*p_tsys*/){  // comment to avoid the unused parameter warning.
 #if 1
     return 0;
 #else
@@ -2426,18 +2427,18 @@ namespace sdmbin {
 
 
 
-  MSData*          SDMBinData::getData( Tag antId, int feedId,
-					Tag dataDescId,
-					AtmPhaseCorrection apc,
-					unsigned int  binNum){
+  MSData*          SDMBinData::getData( Tag /*antId*/, int /*feedId*/,
+					Tag /*dataDescId*/,
+					AtmPhaseCorrection /*apc*/,
+					unsigned int  /*binNum*/){ // comment to avoid the unused parameter warning.
     return msDataPtr_;
   }
 
-  MSData*          SDMBinData::getData( Tag antId1, int feedId1,
-					Tag antId2, int feedId2,
-					Tag dataDescId,
-					vector<AtmPhaseCorrection> v_apc,
-					unsigned int  binNum){
+  MSData*          SDMBinData::getData( Tag /*antId1*/, int /*feedId1*/,
+					Tag /*antId2*/, int /*feedId2*/,
+					Tag /*dataDescId*/,
+					vector<AtmPhaseCorrection> /*v_apc*/,
+					unsigned int  /*binNum*/){
     return msDataPtr_;
   }
 
@@ -2956,7 +2957,7 @@ namespace sdmbin {
     int                        fieldId    = mainRowPtr_->getFieldUsingFieldId()->getFieldId().getTagValue();
     vector<vector<Angle> >     phaseDir   = mainRowPtr_->getFieldUsingFieldId()->getPhaseDir();
 
-    unsigned int               subscanNum = mainRowPtr_->getSubscanNumber();
+    
     vector<Tag>                v_stateId;
 
     if ( verbose_ ) cout <<"ici AA: e_qcm_="<<e_qcm_.str()<<endl;

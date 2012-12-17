@@ -23,8 +23,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "ColorPreferences.qo.h"
+#include <guitools/Histogram/ColorDelegate.h>
 #include <QColorDialog>
 #include <QSettings>
+#include <QMessageBox>
 
 namespace casa {
 
@@ -33,6 +35,7 @@ const QString ColorPreferences::ORGANIZATION = "NRAO/CASA";
 const QString ColorPreferences::HISTOGRAM_COLOR = "Histogram Color";
 const QString ColorPreferences::FIT_ESTIMATE_COLOR = "Histogram Fit Estimate Color";
 const QString ColorPreferences::FIT_CURVE_COLOR = "Histogram Fit Curve Color";
+const QString ColorPreferences::MULTIPLE_HISTOGRAM_COLORS = "Multiple Histogram Colors";
 
 ColorPreferences::ColorPreferences(QWidget *parent)
     : QDialog(parent),
@@ -40,12 +43,20 @@ ColorPreferences::ColorPreferences(QWidget *parent)
 	ui.setupUi(this);
 	setWindowTitle( "Histogram Color Preferences");
 
+	//Color list for multiple histogram
+	ui.multipleHistogramColorList->setSelectionBehavior(QAbstractItemView::SelectRows);
+	ui.multipleHistogramColorList->setSelectionMode( QAbstractItemView::SingleSelection );
+	ui.multipleHistogramColorList->setItemDelegate( new ColorDelegate( this ));
+	multipleHistogramColors << "#800000"<<"#FF00FF" << "#FFFF00" << "#FF6600";
+
 	initializeUserColors();
 	resetColors();
 
 	connect( ui.histogramColorButton, SIGNAL(clicked()), this, SLOT(selectHistogramColor()));
 	connect( ui.fitCurveColorButton, SIGNAL(clicked()), this, SLOT(selectFitCurveColor()));
 	connect( ui.fitEstimateColorButton, SIGNAL(clicked()), this, SLOT( selectFitEstimateColor()));
+	connect( ui.addHistogramColorButton, SIGNAL(clicked()), this, SLOT( addHistogramColor()));
+	connect( ui.deleteHistogramColorButton, SIGNAL(clicked()), this, SLOT( deleteHistogramColor()));
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(colorsAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(colorsRejected()));
@@ -56,25 +67,54 @@ void ColorPreferences::initializeUserColors(){
 	//any preferences.
 	QSettings settings( ORGANIZATION, APPLICATION );
 
-	QString histogramColorName = readCustomColor( settings, HISTOGRAM_COLOR );
+	QString histogramColorName = readCustomColor( settings, HISTOGRAM_COLOR, histogramColor.name() );
 	if ( histogramColorName.length() > 0 ){
 		histogramColor = QColor( histogramColorName );
 	}
 
-	QString fitEstimateColorName = readCustomColor( settings, FIT_ESTIMATE_COLOR );
+	QString fitEstimateColorName = readCustomColor( settings, FIT_ESTIMATE_COLOR, fitEstimateColor.name() );
 	if ( fitEstimateColorName.length() > 0 ){
 		fitEstimateColor = QColor( fitEstimateColorName );
 	}
 
-	QString fitCurveColorName = readCustomColor( settings, FIT_CURVE_COLOR );
+	QString fitCurveColorName = readCustomColor( settings, FIT_CURVE_COLOR, fitCurveColor.name() );
 	if ( fitCurveColorName.length() > 0 ){
 		fitCurveColor = QColor( fitCurveColorName );
 	}
+
+	readCustomColorList( settings );
 }
 
-QString ColorPreferences::readCustomColor( QSettings& settings, const QString& identifier){
-	QString colorName = settings.value( identifier, "" ).toString();
+QString ColorPreferences::readCustomColor( QSettings& settings,
+		const QString& identifier, const QString& defaultColor){
+	QString colorName = settings.value( identifier, defaultColor ).toString();
 	return colorName;
+}
+
+void ColorPreferences::readCustomColorList( QSettings& settings){
+	int colorCount = settings.value( MULTIPLE_HISTOGRAM_COLORS, 0 ).toInt();
+	if ( colorCount > 0 ){
+		multipleHistogramColors.clear();
+		for ( int i = 0; i < colorCount; i++ ){
+			QString lookupStr = MULTIPLE_HISTOGRAM_COLORS + QString::number(i);
+			QString colorName = settings.value( lookupStr ).toString();
+			multipleHistogramColors.append( colorName );
+		}
+	}
+}
+
+void ColorPreferences::persistColorList( QSettings& settings ){
+	int colorCount = ui.multipleHistogramColorList->count();
+	settings.setValue( MULTIPLE_HISTOGRAM_COLORS, colorCount );
+	for ( int i = 0; i < colorCount; i++ ){
+		QString persistStr = MULTIPLE_HISTOGRAM_COLORS + QString::number(i);
+		QListWidgetItem* listItem = ui.multipleHistogramColorList->item(i);
+		if ( listItem != NULL ){
+			QColor listColor = listItem->backgroundColor();
+			QString colorStr = listColor.name();
+			settings.setValue( persistStr, colorStr );
+		}
+	}
 }
 
 void ColorPreferences::persistColors(){
@@ -89,6 +129,21 @@ void ColorPreferences::persistColors(){
 	settings.setValue( HISTOGRAM_COLOR, histogramColor.name() );
 	settings.setValue( FIT_ESTIMATE_COLOR, fitEstimateColor.name());
 	settings.setValue( FIT_CURVE_COLOR, fitCurveColor.name());
+
+	//Persist and save colors associated with multiple histograms
+	multipleHistogramColors.clear();
+	int colorCount = ui.multipleHistogramColorList->count();
+	settings.setValue( MULTIPLE_HISTOGRAM_COLORS, colorCount );
+	for ( int i = 0; i < colorCount; i++ ){
+		QListWidgetItem* listItem = ui.multipleHistogramColorList->item(i);
+		if ( listItem != NULL ){
+			QColor listColor = listItem->backgroundColor();
+			QString colorStr = listColor.name();
+			multipleHistogramColors.append( colorStr );
+			QString persistStr = MULTIPLE_HISTOGRAM_COLORS + QString::number(i);
+			settings.setValue( persistStr, colorStr );
+		}
+	}
 }
 
 void ColorPreferences::colorsAccepted(){
@@ -106,6 +161,12 @@ void ColorPreferences::resetColors(){
 	setButtonColor( ui.histogramColorButton, histogramColor );
 	setButtonColor( ui.fitEstimateColorButton, fitEstimateColor );
 	setButtonColor( ui.fitCurveColorButton, fitCurveColor );
+	ui.multipleHistogramColorList->clear();
+	for( int i = 0; i < multipleHistogramColors.size(); i++ ){
+		QColor itemColor;
+		itemColor.setNamedColor( multipleHistogramColors[i] );
+		addColorToList( itemColor );
+	}
 }
 
 void ColorPreferences::setButtonColor( QPushButton* button, QColor color ){
@@ -153,12 +214,61 @@ QColor ColorPreferences::getFitCurveColor() const {
 	return fitCurveColor;
 }
 
+QList<QColor> ColorPreferences::getMultipleHistogramColors() const {
+	int count = multipleHistogramColors.size();
+	QList<QColor> colorList;
+	for ( int i = 0; i < count; i++ ){
+		colorList.append( QColor( multipleHistogramColors[i]));
+	}
+	return colorList;
+}
+
 void ColorPreferences::setFitColorsVisible( bool visible ){
 	ui.fitCurveColorButton->setVisible( visible );
 	ui.fitEstimateColorButton->setVisible( visible );
 	ui.fitLabel->setVisible( visible );
 	ui.estimateLabel->setVisible( visible );
 }
+
+void ColorPreferences::setMultipleHistogramColorsVisible( bool visible ){
+	QLayout* colorLayout = layout();
+	if ( !visible ){
+		colorLayout->removeWidget( ui.multipleHistogramsColorHolder );
+		ui.multipleHistogramsColorHolder->setParent( NULL );
+	}
+
+}
+
+void ColorPreferences::addColorToList( QColor color ){
+	QListWidgetItem* listItem = new QListWidgetItem( ui.multipleHistogramColorList );
+	listItem->setBackground( color );
+	ui.multipleHistogramColorList->addItem( listItem );
+}
+
+void ColorPreferences::addHistogramColor(){
+	QColor selectedColor = QColorDialog::getColor( Qt::white, this );
+	if ( selectedColor.isValid() ){
+		addColorToList( selectedColor );
+	}
+}
+
+void ColorPreferences::deleteHistogramColor(){
+	int row = ui.multipleHistogramColorList->currentRow();
+	if ( row >= 0 ){
+		QListWidgetItem* listItem = ui.multipleHistogramColorList->takeItem( row );
+		if ( listItem != NULL ){
+			delete listItem;
+		}
+		//registerColorChange();
+	}
+	else {
+		QString msg( "Please select a color in the list to delete.");
+		QMessageBox::warning( this, "Color Not Selected", msg );
+	}
+}
+
+
+
 ColorPreferences::~ColorPreferences(){
 
 }

@@ -1008,7 +1008,7 @@ Bool BJonesPoly::maskedChannel (const Int& chan, const Int& nChan)
 
 //----------------------------------------------------------------------------
     
-void BJonesPoly::loadMemCalTable (String applyTable,String field)
+void BJonesPoly::loadMemCalTable (String applyTable,String /*field*/)
 {
 // Load and cache the polynomial bandpass corrections
 // Input:

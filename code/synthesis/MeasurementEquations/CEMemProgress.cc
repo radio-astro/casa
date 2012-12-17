@@ -67,13 +67,13 @@ CEMemProgress::~CEMemProgress()
 // normGrad and entropy are not displayed, but their vectors and scales
 // are fully processed in case we want to diplay them in the future.
 //
-void CEMemProgress::info(const Bool lastcall,
+  void CEMemProgress::info(const Bool /*lastcall*/,
 			 const Int iteration,
 			 const Int numberIterations,
-			 const Lattice<Float>& model,
-			 const Lattice<Float>& resid,
+                           const Lattice<Float>& /*model*/,
+                           const Lattice<Float>& /*resid*/,
 			 const Float& maxResid,
-			 const IPosition& posMaxResid,
+                           const IPosition& /*posMaxResid*/,
 			 const Float& totalFlux,
 			 const Float& sigma,
 			 const Float& normGrad,

@@ -226,7 +226,7 @@ namespace casa{
   //
   //---------------------------------------------------------------------------------------
   //
-  void MultiThreadedVisibilityResampler::allocateBuffers(Bool newDataBuffers)
+  void MultiThreadedVisibilityResampler::allocateBuffers(Bool /*newDataBuffers*/)
   {
     LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler","allocateBuffers"));
     Double totalMem=0;
@@ -449,11 +449,11 @@ namespace casa{
   //
   // Make the following four methods via templated implementation.
   template <class T>
-  void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<T>& griddedData,  
+  void MultiThreadedVisibilityResampler::DataToGridImpl_p(Array<T>& /*griddedData*/,  
 							  VBStore& vbs, 
-							  Matrix<Double>& sumwt,
+							  Matrix<Double>& /*sumwt*/,
 							  const Bool& dopsf,
-							  Bool useConjFreqCF)
+							  Bool /*useConjFreqCF*/)
   {
     //    LogIO log_p(LogOrigin("MultiThreadedVisibilityResampler", "DataToGridImpl_p"));
     if (whoLoadedVB_p == MThWorkID::DATATOGRID)  {/*scatter(vbsVec_p,vbs); */whoLoadedVB_p = MThWorkID::DATATOGRID;}

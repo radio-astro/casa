@@ -39,10 +39,10 @@ using namespace casa::async;
 namespace casa {
 
 ThreadCoordinatorBase::ThreadCoordinatorBase (Int nThreads, bool logStates)
-  : barrier_p (new boost::barrier(nThreads)),
+  : nThreads_p (nThreads),
+    barrier_p (new boost::barrier(nThreads)),
     logStates_p (logStates),
     mutex_p (new async::Mutex()),
-    nThreads_p (nThreads),
     nThreadsAtBarrier_p (0),
     nThreadsDispatched_p (0),
     readyForWork_p (False),

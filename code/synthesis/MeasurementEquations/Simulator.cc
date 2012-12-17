@@ -101,8 +101,7 @@
 Simulator::Simulator(): 
   msname_p(String("")), ms_p(0), mssel_p(0), vs_p(0), 
   seed_p(11111),
-  ac_p(0), distance_p(0), ve_p(), vc_p(),vp_p(0), gvp_p(0), 
-  nSpw(0),
+  ac_p(0), distance_p(0), ve_p(), vc_p(), nSpw(0), vp_p(0), gvp_p(0), 
   sim_p(0),
   // epJ_p(0),
   epJTableName_p(),
@@ -113,8 +112,7 @@ Simulator::Simulator():
 
 Simulator::Simulator(String& msname) 
   : msname_p(msname), ms_p(0), mssel_p(0), vs_p(0), seed_p(11111), 
-    ac_p(0), distance_p(0),ve_p(), vc_p(), vp_p(0), gvp_p(0), 
-    nSpw(0),
+    ac_p(0), distance_p(0),ve_p(), vc_p(), nSpw(0), vp_p(0), gvp_p(0), 
     sim_p(0),
     // epJ_p(0),
     epJTableName_p(),
@@ -168,7 +166,7 @@ Simulator::Simulator(MeasurementSet &theMs)
   if (!sim_p->getSpWindows(nSpw,spWindowName_p,nChan_p,startFreq_p,freqInc_p,stokesString_p))
     os << "Can't find spectral window information for loaded MS" << LogIO::WARN;
   freqRes_p.resize(nSpw);
-  for (uInt i=0;i<nSpw;++i)
+  for (Int i=0;i<nSpw;++i)
     freqRes_p[i]=freqInc_p[i];
   if (!sim_p->getFields(nField,sourceName_p,sourceDirection_p,calCode_p))
     os << "Can't find Field/Source information for loaded MS" << LogIO::WARN;
@@ -586,7 +584,7 @@ Bool Simulator::predictSummary(LogIO& os)
 }
 
 
-Bool Simulator::vpSummary(LogIO& os)
+Bool Simulator::vpSummary(LogIO& /*os*/)
 {
   if (vp_p) {
     vp_p->summary();
@@ -597,7 +595,7 @@ Bool Simulator::vpSummary(LogIO& os)
 }
 
 
-Bool Simulator::optionsSummary(LogIO& os)
+Bool Simulator::optionsSummary(LogIO& /*os*/)
 {
   return True;
 }
@@ -1449,7 +1447,7 @@ Bool Simulator::settrop(const String& mode,
 
 
 
-Bool Simulator::setleakage(const String& mode, const String& table,
+Bool Simulator::setleakage(const String& /*mode*/, const String& table,
 			   //const Quantity& interval, 
 			   const Vector<Double>& amplitude,
 			   const Vector<Double>& offset)
@@ -1540,7 +1538,7 @@ Bool Simulator::setleakage(const String& mode, const String& table,
 // OLD NOISE WITH ACoh
 
 Bool Simulator::oldsetnoise(const String& mode, 
-			    const String& table,
+			    const String& /*table*/,
 			    const Quantity& simplenoise,
 			    const Float antefficiency=0.80,
 			    const Float correfficiency=0.85,
@@ -1590,8 +1588,8 @@ Bool Simulator::oldsetnoise(const String& mode,
 
 
 
-Bool Simulator::setpa(const String& mode, const String& table,
-		      const Quantity& interval) {
+Bool Simulator::setpa(const String& /*mode*/, const String& /*table*/,
+		      const Quantity& /*interval*/) {
   
   LogIO os(LogOrigin("Simulator", "setpa()", WHERE));
   
@@ -1621,9 +1619,9 @@ Bool Simulator::setpa(const String& mode, const String& table,
 
 
 
-Bool Simulator::setbandpass(const String& mode, const String& table,
-			    const Quantity& interval,
-			    const Vector<Double>& amplitude) {
+Bool Simulator::setbandpass(const String& /*mode*/, const String& /*table*/,
+			    const Quantity& /*interval*/,
+			    const Vector<Double>& /*amplitude*/) {
   
   LogIO os(LogOrigin("Simulator", "setbandpass()", WHERE));
   
@@ -1749,8 +1747,8 @@ Bool Simulator::create_corrupt(Record& simpar)
 Bool Simulator::setapply(const String& type,
 			 const Double& t,
 			 const String& table,
-			 const String& spw,
-			 const String& field,
+			 const String& /*spw*/,
+			 const String& /*field*/,
 			 const String& interp,
 			 const Bool& calwt,
 			 const Vector<Int>& spwmap,
@@ -1908,7 +1906,7 @@ Bool Simulator::corrupt() {
     if (vc_p.nelements()>0) {
       os << LogIO::NORMAL << "Doing visibility corruption." 
 	 << LogIO::POST;
-      for (Int i=0;i<vc_p.nelements();i++) {
+      for (uInt i=0;i<vc_p.nelements();i++) {
 	//	os << vc_p[i]->longTypeName() << endl << vc_p[i]->siminfo() << endl <<
 	//	  "spwok = " << vc_p[i]->spwOK() << LogIO::POST;
 	os << vc_p[i]->siminfo() << "spwok = " << vc_p[i]->spwOK();
@@ -2251,7 +2249,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    AlwaysAssert(images_p[model], AipsError);
 	    // RI TODO is this a logic problem with more than one source??
 	    // Add distance
-	    if((distance_p.nelements() > 0 && distance_p.nelements() <= nField) && abs(distance_p[nField-1].get().getValue())>0.0) {
+	    if((distance_p.nelements() > 0 && distance_p.nelements() <= static_cast<uInt>(nField)) && abs(distance_p[nField-1].get().getValue())>0.0) {
 	      os << "  Refocusing to distance " << distance_p[nField-1].get("km").getValue()
 		 << " km" << LogIO::POST;
 	      Record info(images_p[model]->miscInfo());

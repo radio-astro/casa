@@ -156,7 +156,8 @@ namespace casa{
 		PagedImage<Complex> thisCF(Dir+'/'+fileNames[i]);
 		TableRecord miscinfo = thisCF.miscInfo();
 		//	    miscinfo.print(cerr);
-		Double  paVal, wVal; Int mVal;
+		Double  paVal;
+                //UNUSED: Double  wVal; Int mVal;
 		miscinfo.get("ParallacticAngle",paVal);
 		paList_p.push_back(paVal);
 	      }
@@ -180,11 +181,11 @@ namespace casa{
 		Int index= thisCF.coordinates().findCoordinate(Coordinate::SPECTRAL);
 		CoordinateSystem coordSys = thisCF.coordinates();
 		SpectralCoordinate spCS = coordSys.spectralCoordinate(index);
-		fVal=spCS.referenceValue()(0);
+		fVal=static_cast<casa::Int>(spCS.referenceValue()(0));
 		// Find the position of the given paVal in the
 		// paList_p.  That index will also be where the F,W,M
 		// values need to be instered in the cfCacheTable.
-		Int paPos = std::find(paList_p.begin(), paList_p.end(), paVal) - paList_p.begin() - 1;
+		uInt paPos = std::find(paList_p.begin(), paList_p.end(), paVal) - paList_p.begin() - 1;
 		if (paPos < paList_p.size())
 		  {
 		    cfCacheTable_p[paPos].freqList.push_back(fVal);
@@ -587,7 +588,7 @@ namespace casa{
   //
   // Return TRUE if loaded from disk and FLASE if found in the mem. cache.
   //
-  Int CFCache::loadFromDisk(Int where, Float pa, Float dPA,
+  Int CFCache::loadFromDisk(Int where, Float /*pa*/, Float /*dPA*/,
 			    Int Nw, CFStoreCacheType &convFuncCache,
 			    CFStore& cfs, String nameQualifier)
   {
@@ -720,7 +721,7 @@ namespace casa{
   Int CFCache::locateConvFunction(CFStore& cfs, 
 				  const Int Nw, const Float pa, const Float dPA,
 				  const String& nameQualifier,
-				  const Int mosXPos, const Int mosYPos)
+				  const Int /*mosXPos*/, const Int /*mosYPos*/)
   {
     LogIO log_l(LogOrigin("CFCache", "locatedConvFunction"));
 

@@ -24,7 +24,6 @@
 //#
 #include "SaveHistogramWidget.qo.h"
 #include <QFileSystemModel>
-
 #include <QMessageBox>
 #include <QDebug>
 

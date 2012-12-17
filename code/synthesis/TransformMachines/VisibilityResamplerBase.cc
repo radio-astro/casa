@@ -108,15 +108,15 @@ namespace casa{
 					       ConvolutionFunction& cf,
 					       const VisBuffer& vbs, 
 					       const Quantity& dPA,
-					       const Vector<Int>& dataChan2ImChanMap,
-					       const Vector<Int>& dataPol2ImPolMap,
+					       const Vector<Int>& /*dataChan2ImChanMap*/,
+					       const Vector<Int>& /*dataPol2ImPolMap*/,
 					       const Vector<Double>& pointingOffset)
   {
     LogIO log_l(LogOrigin("VisibilityResamplerBase", "makeVBRow2CFMap"));
     //    VBRow2CFMapType& vbRow2CFMap_p,
-    const Int nRow=vbs.nRow(), 
-      nChan=dataChan2ImChanMap.nelements(), 
-      nPol=dataPol2ImPolMap.nelements();
+    const Int nRow=vbs.nRow(); 
+    //UNUSED: nChan=dataChan2ImChanMap.nelements(), 
+    //UNUSED: nPol=dataPol2ImPolMap.nelements();
     //    vbRow2CFMap_p.resize(nPol, nChan, nRow);
     vbRow2CFBMap_p.resize(nRow);
     Quantity pa(getPA(vbs),"rad");

@@ -24,6 +24,7 @@
 //#
 #include "HistogramMarkerPoisson.h"
 #include <QPaintEvent>
+#include <QPainter>
 #include <QDebug>
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>

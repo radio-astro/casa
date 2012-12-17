@@ -23,13 +23,13 @@
 
     for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
       {
-	iLoc[1]    = (scaledSampling[1]*iy+offset[1]);
+	iLoc[1]    = static_cast<int>(scaledSampling[1]*iy+offset[1]);
 	iCFPos[1]  = iLoc[1] + convOrigin[1];
 	iGrdPos[1] = loc[1]+iy;
 
 	for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
 	  {
-	    iLoc[0]    = (scaledSampling[0]*ix+offset[0]);
+	    iLoc[0]    = static_cast<int>(scaledSampling[0]*ix+offset[0]);
 	    iCFPos[0]  = iLoc[0] + convOrigin[0];
 	    iGrdPos[0] = loc[0]+ix;
 

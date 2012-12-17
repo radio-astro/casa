@@ -27,9 +27,6 @@
 #define FITTERPOISSON_H_
 
 #include <guitools/Histogram/Fitter.h>
-#include <assert.h>
-#include <QtCore/qmath.h>
-#include <QMessageBox>
 
 namespace casa {
 /**

@@ -40,9 +40,7 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTPatchedInterp.h>
-#include <synthesis/CalTables/CalSet.h>
 #include <synthesis/CalTables/CalSetMetaInfo.h>
-#include <synthesis/CalTables/CalInterp.h>
 #include <synthesis/CalTables/VisCalEnum.h>
 #include <synthesis/MSVis/VisSet.h>
 #include <synthesis/MSVis/CalVisBuffer.h>
@@ -113,12 +111,6 @@ public:
 
   // Report if calibration available for specified spw
   //  (if no CalInterp available, assume True)
-  virtual Vector<Bool> spwOK() { 
-    return cint_ ? ci().spwOK() : Vector<Bool>(nSpw(),True); };
-
-  void setSpwOK() {
-    if (cs_) cs().setSpwOK();
-    if (cint_) ci().setSpwOK(); }
 
   // Use generic data gathering mechanism for solve
   virtual Bool useGenericGatherForSolve() { return True; };
@@ -193,16 +185,15 @@ public:
   // Size up the solving arrays, etc.  (supports combine)
   virtual Int sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol);
 
-  // Initialize internal shapes for solving
-  void initSolve(VisSet& vs);
 
+  // These inflate methods soon to deprecate (gmoellen, 20121212)
   // Inflate the pristine CalSet (from VisSet info)
   void inflate(VisSet& vs, const Bool& fillMeta=False);
-
   // Inflate the pristine CalSet (generically)
-  void inflate(const Vector<Int>& nChanDat,
-	       const Vector<Int>& startChanDat,
-	       const Vector<Int>& nSlot);
+  virtual void inflate(const Vector<Int>& nChanDat,
+		       const Vector<Int>& startChanDat,
+		       const Vector<Int>& nSlot);
+
 
   // Hazard a guess at the parameters (solveCPar) given the data
   virtual void guessPar(VisBuffer& vb)=0;
@@ -306,9 +297,6 @@ public:
   // New spwOK
   virtual Bool spwOK(Int ispw);
 
-  // File the current solved solution into a slot in the CalSet
-  virtual void keep(const Int& slot);
-
   // Post solve tinkering (generic version)
   virtual void globalPostSolveTinker();
 
@@ -325,23 +313,12 @@ public:
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
 			 fluxScaleStruct& oFluxScaleStruct,
-	//		 const String& oListFile)=0;
 			 const String& oListFile,
                          const Bool& incremental)=0;
 
-  // Tell the CalSet to write a CalTable
-  virtual void store();
-  void store(const String& tableName,const Bool& append);
-
   // Report state:
   inline virtual void state() { stateSVC(True); };
-  inline virtual Int nSlots(Int spw)
-  {
-    Int nslots=0;
-    if (parType() == VisCalEnum::COMPLEX) nslots=cs().nTime(spw);
-    else if (parType() == VisCalEnum::REAL) nslots=rcs().nTime(spw);
-    return nslots;
-  };
+
   virtual VisCalEnum::VCParType setParType(VisCalEnum::VCParType type) 
   {parType_ = type;return (VisCalEnum::VCParType)parType_;};
   virtual void currMetaNote();
@@ -388,11 +365,6 @@ protected:
   // Set to-be-solved-for flag
   inline void setSolved(const Bool& flag) {solved_=flag;};
 
-  // Access to CalSet/CalInterp
-  inline virtual CalSet<Complex>& cs() { return *cs_; };
-  inline virtual CalSet<Float>& rcs() { return *rcs_; };
-  inline virtual CalInterp& ci() { return *cint_; };
-
   // Initialize solve parameters (shape)
   virtual void initSolvePar()=0;
 
@@ -401,16 +373,12 @@ protected:
 
   // Explicitly synchronize pars with a CalSet slot
   using VisCal::syncPar;
-  void syncPar(const Int& spw, const Int& slot);
 
   // Set matrix channelization according to a VisSet
   virtual void setSolveChannelization(VisSet& vs);
 
   // Calculate chan averaging bounds
   virtual void setFracChanAve();
-
-  // Fill CalSet meta-data according to a VisSet
-  void fillMetaData(VisSet& vs);
 
   // Inflate an NCT w/ meta-data according to a VisSet 
   //   (for accum)
@@ -439,9 +407,6 @@ protected:
   // Logger
   LogIO& logSink() { return logsink_p; };
 
-  void makeCalSet();
-  void makeCalSet(Bool newtable);
-
   // Check if a cal table is appropriate
   void verifyCalTable(const String& caltablename);
 
@@ -454,10 +419,6 @@ protected:
   CTPatchedInterp *ci_;
   Vector<Bool> spwOK_;
 
-  // Solution/Interpolation 
-  CalSet<Complex> *cs_;
-  CalSet<Float> *rcs_;
-  CalInterp *cint_;
   CalSetMetaInfo csmi;
 
   Double maxTimePerSolution_p, minTimePerSolution_p, avgTimePerSolution_p;

@@ -1093,7 +1093,7 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, Bool dopsf,
 }
 
 
-void CubeSkyEquation::oldInitializePutSlice(const VisBuffer& vb, Bool dopsf, 
+void CubeSkyEquation::oldInitializePutSlice(const VisBuffer& vb, Bool /*dopsf*/, 
 					 Int cubeSlice, Int nCubeSlice) {
   AlwaysAssert(ok(),AipsError);
   Bool dirDep= (ej_ != NULL);
@@ -1337,7 +1337,7 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
     }
 }
 
-void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
+void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool /*dopsf*/,
 					  Int cubeSlice, Int nCubeSlice) 
 {
   //  cerr << "### Using old code: " << ftm_p[model]->name() << endl;
@@ -1415,7 +1415,7 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 }
 
 void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb, 
-					    Int row, 
+					    Int /*row*/, 
 					    Bool incremental, Int cubeSlice, 
 					    Int nCubeSlice)
 {
@@ -1529,7 +1529,7 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
-    Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
+    //UNUSED: Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
     /*slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
       IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), 0);
     */

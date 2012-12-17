@@ -39,7 +39,7 @@
 #include <casa/Utilities/Assert.h>
 
 #include <images/Images/PagedImage.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/RegionManager.h>
@@ -185,6 +185,12 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	}
 
         /* Check if each field is solveable (not sure what this means) */
+	/* Note to Urvashi: it means that the user has decided a given model for  
+	   a given field  is perfect [for e.g a well known source model] and is not
+	   to be messed with anymore while others can be messed with...thus returning is 
+	   wrong but should bypass looking for new components for the given field 
+	   that is fixed
+	*/
 	for(Int field=0;field<nfields_p;field++)
 	  if( !isSolveable(getModelIndex(field,0)) ) 
 	  {
@@ -350,7 +356,7 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    os << "**** Major Cycle " << numbermajorcycles_p << LogIO::POST;
 	    thiscycleniter=0;
 	    /* Compute stopping threshold for this major cycle */
-	    stopflag = computeFluxLimit(fractionOfPsf);
+	    stopflag = static_cast<casa::Int>(computeFluxLimit(fractionOfPsf));
 	    /* If the peak residual is already less than the user-threshold, stop */
 	    if(stopflag==1) break;
 	    /* If we detect divergence across major cycles, stop */
@@ -495,7 +501,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
   Vector<Float> fmaxres(nfields_p); fmaxres=0.0;
   
   /* Measure the peak residual across all fields */
-  for(uInt field=0;field<nfields_p;field++)
+  for(Int field=0;field<nfields_p;field++)
     {
       Int index = getModelIndex(field,0);
       Array<Float> tempArr;
@@ -530,7 +536,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
   
   /* Find PSF sidelobe level */
   Float maxpsfside=0.0;
-  for(uInt field=0;field<nfields_p;field++)
+  for(uInt field=0;static_cast<Int>(field)<nfields_p;field++)
     {
       Int index = getModelIndex(field,0);
       /* abs(min of the PSF) will be treated as the max sidelobe level */
@@ -559,7 +565,7 @@ Bool WBCleanImageSkyModel::calculateAlphaBeta(const Vector<String> &restoredName
                                                                            const Vector<String> &residualNames)
 {
   LogIO os(LogOrigin("WBCleanImageSkyModel", "calculateAlphaBeta", WHERE));
-  Int index=0;
+  //UNUSED: Int index=0;
   Bool writeerror=True;
   
 
@@ -1137,7 +1143,7 @@ Bool WBCleanImageSkyModel::checkParameters()
 {
   /* Check ntaylor_p, nrefFrequency_p with min and max freq from the image-coords */
   
-  for(Int i=0; i<image(0).coordinates().nCoordinates(); i++)
+  for(uInt i=0; i<image(0).coordinates().nCoordinates(); i++)
     {
       if( image(0).coordinates().type(i) == Coordinate::SPECTRAL )
 	{

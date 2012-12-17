@@ -47,7 +47,7 @@
 #include <lattices/Lattices/SubLattice.h>
 #include <images/Images/ImageInterface.h>
 #include <display/Utilities/ImageProperties.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCLELMask.h>

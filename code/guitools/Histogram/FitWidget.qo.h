@@ -49,12 +49,13 @@ public:
     void setCenterPeak( double center, double peak );
     void setFWHM( double fwhm );
     void setLambda( double lambda );
-    void setValues( Vector<Float> xValues, Vector<Float> yValues );
+    void setValues( int id, Vector<Float> xValues, Vector<Float> yValues );
     double getCenter() const;
     double getPeak() const;
     double getFWHM() const;
     double getLambda() const;
-    Vector<Float> getFitValues();
+    Vector<Float> getFitValues() const;
+    Vector<Float> getFitValuesX() const;
     bool isGaussian() const;
     void toAscii( QTextStream& out) const;
     ~FitWidget();
@@ -66,6 +67,9 @@ signals:
 	void poissonFitChanged();
 	void fitCleared();
 
+public slots:
+	void clearFit();
+
 private slots:
 	void centerEdited( const QString& centerText );
 	void peakEdited( const QString& peakText );
@@ -73,7 +77,6 @@ private slots:
 	void lambdaEdited( const QString& lambdaText );
 	void fitSelected( int index );
 	void doFit();
-	void clearFit();
 
 private:
 	FitWidget( const FitWidget& );
@@ -84,6 +87,7 @@ private:
 	FitterGaussian* fitterGaussian;
 	FitterPoisson* fitterPoisson;
     Ui::FitWidgetClass ui;
+    int fitId;
 };
 }
 #endif // FITWIDGET_QO_H

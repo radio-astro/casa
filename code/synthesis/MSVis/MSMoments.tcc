@@ -295,7 +295,7 @@ Bool MSMoments<T>::setSmoothMethod(const Vector<Int> &smoothAxesU,
 
 template<class T>
 Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
-                                 Bool doTemp, 
+                                 Bool /*doTemp*/, 
                                  const String& outName )
 {
   // Resize the vector of pointers for output data
@@ -368,7 +368,7 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
   Bool windowMethod = False ;
   Bool fitMethod = False ;
   Bool clipMethod = False ;
-  Bool doPlot = plotter_p.isAttached() ;
+  //UNUSED: Bool doPlot = plotter_p.isAttached() ;
 
   if ( doSmooth_p && !doWindow_p ) {
     smoothClipMethod = True ;

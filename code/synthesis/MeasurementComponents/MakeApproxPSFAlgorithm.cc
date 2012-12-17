@@ -131,7 +131,7 @@ void MakeApproxPSFAlgorithm::task(){
     SubLattice<Float>  psf_sl (*psf_p, psfbox, True);
     Array<Float> tempbeamArray;
     //Bool rStat = ((Lattice<Float> &)psf_sl).get(tempbeamArray);
-    Bool rStat = psf_sl.get(tempbeamArray);
+    //UNUSED: Bool rStat = psf_sl.get(tempbeamArray);
 
     if (beamArray_p) delete beamArray_p;
     beamArray_p= new Array<Float>(tempbeamArray);

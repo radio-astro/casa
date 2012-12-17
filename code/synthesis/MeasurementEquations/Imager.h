@@ -821,6 +821,12 @@ protected:
   Bool sjy_regridCubeChans(TempImage<Float>* tmodimage,
                            PagedImage<Float>& modimage, Int freqAxis);
 
+  // set a radius limit if the model image is one of the known source
+  // otherwise simply copy modimage to tmodimage
+  Bool sjy_setRadiusLimit(TempImage<Float>* tmodimage,
+                          PagedImage<Float>& modimage, const String& model,
+                          DirectionCoordinate& dircsys);
+
   String imageName();
 
   Bool pbguts(ImageInterface<Float>& in,  

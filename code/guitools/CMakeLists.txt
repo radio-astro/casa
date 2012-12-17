@@ -100,6 +100,8 @@ casa_add_library( guitools
   Histogram/RangePicker.cc
   Histogram/SaveHistogramWidget.cc
   Histogram/ToolTipPicker.cc
+  Histogram/ColorDelegate.cc
+  Histogram/Histogram.cc
   )
 	
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )

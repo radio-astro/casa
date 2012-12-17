@@ -72,7 +72,7 @@ namespace casa{
 
   CoordinateSystem ALMACalcIlluminationConvFunc::makeUVCoords(CoordinateSystem& imageCoordSys,
 							     IPosition& shape,
-							     Double refFreq)
+                                                              Double /*refFreq*/)
   {
     CoordinateSystem FTCoords = imageCoordSys;
 
@@ -133,7 +133,7 @@ namespace casa{
 
   void ALMACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
 					     const String& telescope, const MEpoch& obsTime, 
-					     const String& antType0, const String& antType1,
+					     const String& antType0, const String& /*antType1*/,
 					     const MVFrequency& freqQ, Double pa,
 					     Bool doSquint)
   {
@@ -151,7 +151,7 @@ namespace casa{
 
   void ALMACalcIlluminationConvFunc::applyPB(ImageInterface<Complex>& pbImage, 
 					     const String& telescope, const MEpoch& obsTime, 
-					     const String& antType0, const String& antType1,
+					     const String& antType0, const String& /*antType1*/,
 					     const MVFrequency& freqQ, Double pa,
 					     Bool doSquint)
   {
@@ -170,7 +170,7 @@ namespace casa{
 
   void ALMACalcIlluminationConvFunc::applyVP(ImageInterface<Complex>& pbImage, 
 					     const String& telescope, const MEpoch& obsTime, 
-					     const String& antType0, const String& antType1,
+					     const String& antType0, const String& /*antType1*/,
 					     const MVFrequency& freqQ, Double pa,
 					     Bool doSquint)
   {
@@ -199,7 +199,7 @@ namespace casa{
     LogIO logIO(LogOrigin("ALMACalcIlluminationConvFunc","regrid"));
     CoordinateSystem skyCoords(skyCS);
 
-    Int index;
+    //UNUSED: Int index;
     Float pa;
 
     pa = getPA(vb);
@@ -347,7 +347,7 @@ namespace casa{
 
   void ALMACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
 						    IPosition& skyShape,
-						    TempImage<Complex>& uvGrid,
+						    TempImage<Complex>& /*uvGrid*/,
 						    const String& telescope,
 						    const MVFrequency& freqQ,
 						    Float pa,
@@ -612,7 +612,7 @@ namespace casa{
     skyMuller(uvgrid);
   }
   
-  void ALMACalcIlluminationConvFunc::loadFromImage(String& fileName)
+  void ALMACalcIlluminationConvFunc::loadFromImage(String& /*fileName*/)
   {
     throw(AipsError("ALMACalcIlluminationConvFunc::loadFromImage() not yet supported."));
   };

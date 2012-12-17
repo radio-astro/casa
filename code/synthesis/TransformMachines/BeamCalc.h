@@ -309,7 +309,7 @@ namespace casa
     String obsName_p;
     String antType_p;
     MEpoch obsTime_p;
-    Int BeamCalc_NumBandCodes_p;
+    uInt BeamCalc_NumBandCodes_p;
     Vector<BeamCalcGeometry> BeamCalcGeometries_p;
     Vector<Double> bandMinFreq_p; // in Hz
     Vector<Double> bandMaxFreq_p; // in Hz

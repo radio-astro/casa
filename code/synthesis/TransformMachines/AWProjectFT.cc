@@ -117,9 +117,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       epJ_p(),
       doPBCorrection(True), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
-      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
+      Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), paNdxProcessed_p(), runTime(0.0)
+      rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), runTime(0.0)
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -1196,7 +1196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::initializeToVis(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
 				    PtrBlock<SubImage<Float> *> & modelImageVec, 
 				    PtrBlock<SubImage<Float> *>& weightImageVec, 
-				    PtrBlock<SubImage<Float> *>& fluxScaleVec, 
+				    PtrBlock<SubImage<Float> *>& /*fluxScaleVec*/, 
 				    Block<Matrix<Float> >& weightsVec,
 				    const VisBuffer& vb)
   {
@@ -1874,6 +1874,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LatticeIterator<Float> liy(*avgPB_p,lsx);
     for(lix.reset();!lix.atEnd();lix++) 
       {
+#warning pol and chan need to be investigated
 	Int pol=lix.position()(2);
 	Int chan=lix.position()(3);
 	//lix.rwCursor()=weights(pol,chan);

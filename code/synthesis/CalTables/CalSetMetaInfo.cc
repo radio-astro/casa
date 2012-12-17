@@ -200,8 +200,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Vector<Double> thisSpwRefFreq=getSpwRefFreqs(),
 	otherSpwRefFreq(otherCSMI.getSpwRefFreqs());
 
-      uInt n=thisSpwNames.nelements(),i;
+      uInt n=thisSpwNames.nelements();
       spwVerified = (n <= otherSpwNames.nelements());
+      uInt i=0;
       if (spwVerified)
 	for(i=0;i<n;i++)
 	  {
@@ -218,8 +219,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       Vector<String> thisAntNames=getAntNames(),
 	otherAntNames=otherCSMI.getAntNames();
-      uInt n=thisAntNames.nelements(),i;
+      uInt n=thisAntNames.nelements();
       antennaVerified = (n <= otherAntNames.nelements());
+      uInt i=0;
       if (antennaVerified)
 	for(i=0;i<n;i++)
 	  {
@@ -234,8 +236,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       Vector<String> thisFieldNames=getFieldNames(),
 	otherFieldNames=otherCSMI.getFieldNames();
-      uInt n=thisFieldNames.nelements(),i;
+      uInt n=thisFieldNames.nelements();
       fieldVerified = (n <= otherFieldNames.nelements());
+      uInt i = 0;
       if (fieldVerified)
 	for(i=0;i<n;i++)
 	  {

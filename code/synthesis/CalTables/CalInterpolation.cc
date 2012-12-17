@@ -56,7 +56,7 @@ CalInterpolation::~CalInterpolation()
 
 //----------------------------------------------------------------------------
 
-CalInterpolation::CalInterpolation (const CalInterpolation& other)
+  CalInterpolation::CalInterpolation (const CalInterpolation& /*other*/)
 {
 // Copy constructor
 // Input:

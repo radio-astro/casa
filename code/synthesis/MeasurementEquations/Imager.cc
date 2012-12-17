@@ -66,7 +66,7 @@
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
@@ -199,8 +199,8 @@ Imager::Imager()
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
-     mssFreqSel_p()
+     mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), 
+      prev_image_id_p(0), prev_mask_id_p(0)
 {
   ms_p=0;
   mssel_p=0;
@@ -317,8 +317,8 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-    viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
-    mssFreqSel_p()
+    mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+
 {
 
   mssel_p=0;
@@ -339,8 +339,8 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 Imager::Imager(MeasurementSet& theMS, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-     viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0),
-     mssFreqSel_p()
+     mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0),
+     prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
   ms_p=0;
@@ -3916,70 +3916,7 @@ Record Imager::clean(const String& algorithm,
     redoSkyModel_p=False;
     writeFluxScales(fluxscale_p);
     // restoreImages(image); // Moved to iClean so that it happens only once.
-    this->writeHistory(os);
-    try{
-     // write data processing history into image logtable
-      LoggerHolder imagelog (False);
-      LogSink& sink = imagelog.sink();
-      LogOrigin lor( String("imager"), String("clean()") );
-      LogMessage msg(lor);
-      sink.postLocally(msg);
-      
-      ROMSHistoryColumns msHis(ms_p->history());
-      const ROScalarColumn<Double> &time_col = msHis.time();
-      const ROScalarColumn<String> &origin_col = msHis.origin();
-      const ROArrayColumn<String> &cli_col = msHis.cliCommand();
-      const ROScalarColumn<String> &message_col = msHis.message();
-      if (msHis.nrow()>0) {
-	ostringstream oos;
-	uInt nmessages = time_col.nrow();
-	for (uInt i=0; i < nmessages; i++) {
-	  try{
-	  String tmp=frmtTime(time_col(i));
-	  oos << tmp
-	      << "  HISTORY " << origin_col(i);
-	  oos << " " << cli_col(i) << " ";
-	  oos << message_col(i)
-	      << endl;
-	  }
-	  catch(exception& y){
-	    os << LogIO::DEBUG2 << "Skipping history-table row " << i << " while filling output image-header " << LogIO::POST;
-	  }
-
-	}
-	// String historyline(oos);
-	sink.postLocally(msg.message(oos.str()));
-      }
-      for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-	if(Table::isWritable(image(thismodel))){
-	  PagedImage<Float> restoredImage(image(thismodel),
-					  TableLock(TableLock::AutoNoReadLocking));
-	  LoggerHolder& log = restoredImage.logger();
-	  log.append(imagelog);
-	  log.flush();
-	  restoredImage.table().relinquishAutoLocks(True);
-	}
-      }
-    }
-    catch(exception& x){
-      
-      this->unlock();
-      destroySkyEquation();
-      os << LogIO::WARN << "Caught exception: " << x.what()
-	 << LogIO::POST;
-      os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
-	 <<LogIO::POST; 
-      //continue and wrap up this function
-      
-    }
-    catch(...){
-      this->unlock();
-      destroySkyEquation();
-      os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
-      os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
-	 <<LogIO::POST;
-
-    }
+    
     
     this->unlock();
 
@@ -5300,14 +5237,26 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   dircsys.toWorld(mvd,dircsys.referencePixel());
   Double sep = fieldDir.getValue().separation(mvd,"\"").getValue();
 	  
+  //Apply radius limit for 3C286,3C48,3C147 and 3C138
+  sjy_setRadiusLimit(tmodimage, modimage, model, dircsys);
+
+  // for debugging
+  //PagedImage<Float> checkIm(TiledShape(modimage.shape(),
+  //                                        modimage.niceCursorShape()),
+  //                                  modimage.coordinates(),
+  //                                  "checkImage");
+  //checkIm.copyData((LatticeExpr<Float>)(*tmodimage));
+
   if(fluxdens[0] != 0.0){
     Float sumI = 1.0;
 
     // ?: can't handle the different return types.
     if(whichPols.nelements() > 1)
-      sumI = sum(ImagePolarimetry(modimage).stokesI()).getFloat();
+      //sumI = sum(ImagePolarimetry(modimage).stokesI()).getFloat();
+      sumI = sum(ImagePolarimetry(*tmodimage).stokesI()).getFloat();
     else
-      sumI = sum(modimage).getFloat();
+      //sumI = sum(modimage).getFloat();
+      sumI = sum(*tmodimage).getFloat();
 
     if(selspw == 0)
       os << LogIO::NORMAL
@@ -5338,7 +5287,9 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     else{
       // Scale factor
       Float scale = fluxUsed[0] / sumI;
-      tmodimage->copyData( (LatticeExpr<Float>)(modimage * scale) );	
+      //for addition of sjy_setRadiusLimit
+      //tmodimage->copyData( (LatticeExpr<Float>)(modimage * scale) );	
+      tmodimage->copyData( (LatticeExpr<Float>)(*tmodimage * scale) );	
       os << LogIO::NORMAL
          << "Scaling spw " << selspw << "'s model image to I = "
          << fluxUsed[0] // Loglevel INFO
@@ -5352,7 +5303,8 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
  << "Using the model image's original unscaled flux density for visibility prediction."
        << LogIO::POST;
     writeHistory(os);
-    tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
+    // included in sjy_setRadiusLimit
+    //tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
   }
             
   if(selspw == 0){
@@ -5374,6 +5326,57 @@ Bool Imager::sjy_regridCubeChans(TempImage<Float>* tmodimage,
   ImageRegrid<Float> ir;
   IPosition axes(1, freqAxis);   // regrid the spectral only
   ir.regrid(*tmodimage, Interpolate2D::LINEAR, axes, modimage);
+  return True;
+}
+
+Bool Imager::sjy_setRadiusLimit(TempImage<Float>* tmodimage,
+                                PagedImage<Float>& modimage, const String& model, DirectionCoordinate& dircsys)
+{
+  Path path(model);
+  String basename=path.baseName();
+  Float arad;
+  // radius limit in arcsec from AIPS
+  if (basename.find("3C286")==0) {
+      arad=3.0;
+  }
+  else if (basename.find("3C48")==0) {
+      arad=0.95;
+  }
+  else if (basename.find("3C147")==0) {
+      arad=0.85;
+  }
+  else if (basename.find("3C138")==0) {
+      arad=0.75;
+  }
+  else {
+      arad=0;
+      tmodimage->copyData(modimage);
+      return True;
+  }
+  try {
+    Quantity qrad(arad,"arcsec");
+    Float prad=Float(qrad.get(Unit("rad")).getValue()/abs(dircsys.increment()(0)));
+    Float radius = (prad >0.5 ? prad: 0.5);
+    String tempmaskname="__tmp_mask_setjy_radiuslimit";
+    PagedImage<Float> maskImage(TiledShape(modimage.shape(),
+                                           modimage.niceCursorShape()),
+                                modimage.coordinates(), tempmaskname);
+
+    maskImage.table().markForDelete();
+    Matrix<Float> circ(1,3);
+    Record *imrec=0;
+    Matrix<Quantity> blctrcs;
+    circ(0,0)=radius;
+    circ(0,1)=dircsys.referencePixel()(0);
+    circ(0,2)=dircsys.referencePixel()(1);
+    Imager::regionToImageMask(tempmaskname,imrec,blctrcs,circ,1.0);
+    PagedImage<Float> tmpmask(tempmaskname);
+    tmpmask.table().markForDelete();
+    tmodimage->copyData( (LatticeExpr<Float>)(tmpmask*modimage));
+  }
+  catch (...) {
+    return False;
+  }
   return True;
 }
 
@@ -6767,6 +6770,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	Vector<String> apsf(psfnames);
 	
 	if(String(algorithm) != "msmfs") ntaylor_p=1; /* masks increment by ntaylor_p only for msmfs */
+	uInt nmods = aresidual.nelements()/ntaylor_p;
 
 	if( (apsf.nelements()==1) && apsf[0]==String(""))
 	  apsf.resize();
@@ -6783,16 +6787,15 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      amask[k]=amodel[k]+String(".mask");
 	    }
 	  }
-	  Vector<Bool> nointerac(amodel.nelements());
+	  Vector<Bool> nointerac(nmods);
 	  nointerac.set(False);
-	  if(fixed.nelements() != amodel.nelements()){
-	    fixed.resize(amodel.nelements());
+	  if(fixed.nelements() != nmods){
+	    fixed.resize(nmods);
 	    fixed.set(False);
 	  }
 	  Bool forceReload=True;
 	  Int nloop=0;
 	  if(npercycle != 0)
-
 	    nloop=niter/npercycle;
 	  Int continter=0;
 	  Int elniter=npercycle;
@@ -6809,7 +6812,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
-	    uInt nmods = aresidual.nelements()/ntaylor_p;
+	    
 	    for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
 		PagedImage<Float> rest(aimage[nIm]);
@@ -6860,7 +6863,6 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      }
 	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
 		Int remainloop=nloop-k-1;
-		uInt nmods = aresidual.nelements()/ntaylor_p;
 		for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 		  if(!nointerac(nIm)){
 		    continter=interactivemask(aresidual[nIm], amask[nIm],
@@ -6908,6 +6910,71 @@ Int Imager::interactivemask(const String& image, const String& mask,
 
 	os << "Restoring Image(s) with the clean-beam" << LogIO::POST;
 	restoreImages(aimage);
+	this->writeHistory(os);
+	try{
+	  // write data processing history into image logtable
+	  LoggerHolder imagelog (False);
+	  LogSink& sink = imagelog.sink();
+	  LogOrigin lor( String("imager"), String("clean()") );
+	  LogMessage msg(lor);
+	  sink.postLocally(msg);
+      
+	  ROMSHistoryColumns msHis(ms_p->history());
+	  const ROScalarColumn<Double> &time_col = msHis.time();
+	  const ROScalarColumn<String> &origin_col = msHis.origin();
+	  const ROArrayColumn<String> &cli_col = msHis.cliCommand();
+	  const ROScalarColumn<String> &message_col = msHis.message();
+	  if (msHis.nrow()>0) {
+	    ostringstream oos;
+	    uInt nmessages = time_col.nrow();
+	    for (uInt i=0; i < nmessages; i++) {
+	      try{
+		String tmp=frmtTime(time_col(i));
+		oos << tmp
+		    << "  HISTORY " << origin_col(i);
+		oos << " " << cli_col(i) << " ";
+		oos << message_col(i)
+		    << endl;
+	      }
+	      catch(exception& y){
+		os << LogIO::DEBUG2 << "Skipping history-table row " << i << " while filling output image-header " << LogIO::POST;
+	      }
+	      
+	    }
+	    // String historyline(oos);
+	    sink.postLocally(msg.message(oos.str()));
+	  }
+	  for (Int thismodel=0;thismodel<Int(aimage.nelements());++thismodel) {
+	    if(Table::isWritable(aimage(thismodel))){
+	      PagedImage<Float> restoredImage(aimage(thismodel),
+					      TableLock(TableLock::AutoNoReadLocking));
+	      LoggerHolder& log = restoredImage.logger();
+	      log.append(imagelog);
+	      log.flush();
+	      restoredImage.table().relinquishAutoLocks(True);
+	    }
+	  }
+	}
+	catch(exception& x){
+      
+	  this->unlock();
+	  destroySkyEquation();
+	  os << LogIO::WARN << "Caught exception: " << x.what()
+	     << LogIO::POST;
+	  os << LogIO::SEVERE << "This means your MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
+	     <<LogIO::POST; 
+	  //continue and wrap up this function
+	  
+	}
+	catch(...){
+	  this->unlock();
+	  destroySkyEquation();
+	  os << LogIO::WARN << "Caught unknown exception" <<  LogIO::POST;
+	  os << LogIO::SEVERE << "The MS/HISTORY table may be corrupted;  you may consider deleting all the rows from this table"
+	     <<LogIO::POST;
+	  
+	}
+
 
        } //catch  (AipsError x) {
        //os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

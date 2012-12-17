@@ -94,14 +94,14 @@ namespace casa{
 		  const VisBuffer& vb, 
 		  const Bool doSquint=True,
 		  const Int& cfKey=0,
-		  const Double freqVal=-1) 
+		  const Double /*freqVal*/ =-1) 
     {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;}
 
     void applySky(ImageInterface<Complex>& outputImages,
 		  const VisBuffer& vb, 
 		  const Bool doSquint=True,
 		  const Int& cfKey=0,
-		  const Double freqVal=-1) 
+		  const Double /*freqVal*/ = -1) 
     {(void)outputImages;(void)vb;(void)doSquint;(void)cfKey;};
 
     Vector<Int> vbRow2CFKeyMap(const VisBuffer& vb, Int& nUnique) 

@@ -27,6 +27,7 @@
 
 #include <QtGui/QMainWindow>
 #include <images/Images/PagedImage.h>
+#include <casa/aipstype.h>
 #include <guitools/Histogram/HistogramMain.ui.h>
 #include <guitools/Histogram/ImageLoader.qo.h>
 #include <guitools/Histogram/SaveHistogramWidget.qo.h>
@@ -35,6 +36,8 @@ namespace casa {
 
 class BinPlotWidget;
 class ColorPreferences;
+template <class T> class ImageInterface;
+class ImageRegion;
 
 /**
  * Used when the histogram needs to come up as a main window.
@@ -57,7 +60,7 @@ public:
     		bool plotModeControls, QWidget *parent = 0);
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( const ImageRegion* imageRegion, int id );
-    pair<double,double> getRange() const;
+    std::pair<double,double> getRange() const;
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
     void setDisplayPlotTitle( bool display );
@@ -77,6 +80,8 @@ private slots:
 	void postStatusMessage( const QString& statusMsg );
 
 private:
+	HistogramMain( const HistogramMain& histMain );
+	HistogramMain& operator=( const HistogramMain& histMain );
 	bool generateImage( const QString& imagePath, ImageInterface<Float>*& image );
 
     ImageLoader fileLoader;

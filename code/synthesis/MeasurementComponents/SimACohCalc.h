@@ -98,7 +98,7 @@ public:
   virtual VisBuffer& applyInv(VisBuffer& vb);
   // </group>
 private:
-  Bool solve(VisEquation& ve) {return True;}
+  Bool solve(VisEquation& /*ve*/) {return True;}
   SimACohCalc();
 
   MLCG rndGen_p;

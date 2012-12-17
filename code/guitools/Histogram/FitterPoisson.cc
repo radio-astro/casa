@@ -25,6 +25,8 @@
 
 #include "FitterPoisson.h"
 #include <QDebug>
+#include <assert.h>
+#include <QtCore/qmath.h>
 
 namespace casa {
 
@@ -33,6 +35,7 @@ FitterPoisson::FitterPoisson() {
 }
 
 void FitterPoisson::clearFit(){
+	dataFitted = false;
 	lambdaSpecified = false;
 	errorMsg = "";
 	statusMsg = "";
@@ -79,6 +82,7 @@ bool FitterPoisson::doFit(){
 				positiveValues = false;
 			}
 			fitValues[i] = qPow( lambda, xVal ) * qExp(-1 * lambda ) / factorial( xVal );
+			dataFitted = true;
 		}
 		if ( !positiveValues ){
 			statusMsg = "Negative domain values were replaced with 0.";
@@ -100,7 +104,10 @@ double FitterPoisson::getLambda() const {
 }
 
 void FitterPoisson::toAscii( QTextStream& stream ) const {
-	stream << "Lambda: "<<lambda<<"\n";
+	const QString END_LINE( "\n");
+	stream << "Poisson Fit" << END_LINE;
+	stream << "Lambda: "<<lambda<< END_LINE << END_LINE;
+	Fitter::toAscii(stream);
 }
 
 FitterPoisson::~FitterPoisson() {

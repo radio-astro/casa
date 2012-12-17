@@ -545,7 +545,7 @@ void BJonesPolyMBuf::invalidate()
 
 //----------------------------------------------------------------------------
 
-void BJonesPolyMBuf::fillAttributes (const Vector<Int>& calIndices)
+  void BJonesPolyMBuf::fillAttributes (const Vector<Int>& /*calIndices*/)
 {
 // Resize all BJonesPoly attribute columns and set to their default values
 // Input:

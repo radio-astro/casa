@@ -25,7 +25,8 @@
 #include "HistogramMain.qo.h"
 #include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <guitools/Histogram/ColorPreferences.qo.h>
-
+#include <images/Images/ImageInterface.h>
+#include <images/Regions/ImageRegion.h>
 #include <QMessageBox>
 
 namespace casa {
@@ -68,10 +69,14 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 	connect( plotWidget, SIGNAL(postStatusMessage(const QString&)), this, SLOT(postStatusMessage(const QString&)));
 	connect( plotWidget, SIGNAL(rangeChanged()), this, SIGNAL(rangeChanged()));
 
+
 	plotWidget->addZoomActions( ui.menuZoom );
 	plotWidget->addDisplayActions( ui.menuDisplay );
 	if ( plotModeControls ){
 		plotWidget->addPlotModeActions( ui.menuDisplay );
+	}
+	else {
+		preferencesColor->setMultipleHistogramColorsVisible( false );
 	}
 	plotWidget->setDisplayPlotTitle( true );
 	plotWidget->setDisplayAxisTitles( true );
@@ -94,6 +99,8 @@ void HistogramMain::deleteImageRegion( int id ){
 void HistogramMain::imageRegionSelected( int id ){
 	plotWidget->imageRegionSelected( id );
 }
+
+
 
 pair<double,double> HistogramMain::getRange() const {
 	return plotWidget->getMinMaxValues();
@@ -132,9 +139,11 @@ void HistogramMain::colorsChanged(){
 	QColor histogramColor = preferencesColor->getHistogramColor();
 	QColor fitCurveColor = preferencesColor->getFitCurveColor();
 	QColor fitEstimateColor = preferencesColor->getFitEstimateColor();
+	QList<QColor> multipleHistogramColors = preferencesColor->getMultipleHistogramColors();
 	plotWidget->setHistogramColor( histogramColor );
 	plotWidget->setFitCurveColor( fitCurveColor );
 	plotWidget->setFitEstimateColor( fitEstimateColor );
+	plotWidget->setMultipleHistogramColors( multipleHistogramColors );
 }
 
 void HistogramMain::imageFileChanged(){

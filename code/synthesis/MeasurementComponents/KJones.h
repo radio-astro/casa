@@ -97,9 +97,6 @@ public:
   virtual Bool useGenericGatherForSolve() { return True; };
   virtual Bool useGenericSolveOne() { return False; }
 
-  // This is the old self-directed gather/solve
-  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
-
   // Override G here; nothing to do for K, for now
   virtual void globalPostSolveTinker() {};
 

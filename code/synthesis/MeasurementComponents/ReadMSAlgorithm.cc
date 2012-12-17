@@ -83,7 +83,7 @@ VisBuffer vb(vi);
 
 vi.origin(); 
 
-Int nchunk=0; 
+//UNUSED: Int nchunk=0; 
 
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin();vi.more();vi++) {
@@ -92,11 +92,11 @@ Int nchunk=0;
 	for (Int row=0; row<nRow; row++) {
 	  for (Int chn=0; chn<nChan; chn++) {
 	    if(!vb.flag()(chn,row)) {
-	      Float f=vb.frequency()(chn)/C::c;
-	      Float u=vb.uvw()(row)(0)*f;
-	      Float v=vb.uvw()(row)(1)*f;
-	      Float w=vb.uvw()(row)(2)*f;
-              Double wt=vb.imagingWeight()(chn,row);
+	      //UNUSED: Float f=vb.frequency()(chn)/C::c;
+              //UNUSED: Float u=vb.uvw()(row)(0)*f;
+	      //UNUSED: Float v=vb.uvw()(row)(1)*f;
+              //UNUSED: Float w=vb.uvw()(row)(2)*f;
+              //UNUSED: Double wt=vb.imagingWeight()(chn,row);
 	    }
 	  } 
 	}

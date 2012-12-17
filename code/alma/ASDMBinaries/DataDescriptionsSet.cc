@@ -25,7 +25,7 @@ namespace sdmbin {
      * Do v_switchCycleId and v_dataDescriptionIdArray have the same size ?
      */
     if ( v_switchCycleId.size() != v_dataDescriptionIdArray.size() )
-      Error(FATAL, "It seems that the arrays 'switchCycleId' and 'dataDescriptionId' do not have the same size in one row of the ConfigDescription table !");
+      Error(FATAL, (char *) "It seems that the arrays 'switchCycleId' and 'dataDescriptionId' do not have the same size in one row of the ConfigDescription table !");
 
     bool coutest=false;
 
@@ -193,9 +193,9 @@ namespace sdmbin {
 	    if(v_spwr[n]->isImageSpectralWindowIdExists())
 	      s_imspwId.insert(v_spwr[n]->getSpectralWindowId());
 	    else{
-	      Error(WARNING,"90deg. phase switching requires to declare the image\n %s",
+	      Error(WARNING,(char *) "90deg. phase switching requires to declare the image\n %s",
 		    "sideband in the definition of the SpectralWindow");
-	      Error(SERIOUS,"The definition of the image sideband is missing");
+	      Error(SERIOUS,(char *)"The definition of the image sideband is missing");
 	    }
 	  }
 	  
@@ -246,7 +246,7 @@ namespace sdmbin {
 	  if (coutest) cout << "autoPolarizationId=" << autoPolarizationId.toString() << endl;
 	  if (coutest) cout << "spectralWindowId=" << rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId().toString() << endl;
 	  if (autoPolarizationId.toString()=="null_0")
-	    Error(FATAL,"Missing row in the Polarization table for autocorrelation data.");
+	    Error(FATAL,(char *)"Missing row in the Polarization table for autocorrelation data.");
 	  if (coutest) cout << "Looking for a DataDescription row with polarizationId == "
 			    << autoPolarizationId.toString()
 			    << " and spectralWindowId = "
@@ -285,7 +285,7 @@ namespace sdmbin {
 
   }
 
-  DataDescriptionsSet::DataDescriptionsSet(const DataDescriptionsSet & a){
+  DataDescriptionsSet::DataDescriptionsSet(const DataDescriptionsSet & a) : SwitchCyclesList(a){
     //cout << "copy constructor DataDescriptionsSet" << endl;
 
     // attribute in the 'abstract' class SwitchCyclesList
@@ -343,11 +343,11 @@ namespace sdmbin {
     itbnddpe = m_bn_v_ddp_.end();
     if(vv_numBin_.size()){
       if(vv_numBin_.size()!=m_bn_v_ddp_.size())
-	Error(SERIOUS,"The input dataDescription and switchCycle identifiers are not defined with the same nb of basebands");
+	Error(SERIOUS,(char *)"The input dataDescription and switchCycle identifiers are not defined with the same nb of basebands");
       int nbb=0;
       for(itbnddp=itbnddpb; itbnddp!=itbnddpe; ++itbnddp){
 	if(itbnddp->second.size()!=vv_numBin_[nbb].size())
-	  Error(SERIOUS,"Nb of dataDescriptionId for baseband %d not equal to nb (%d) of switchCycleId for that baseband",
+	  Error(SERIOUS,(char *) "Nb of dataDescriptionId for baseband %d not equal to nb (%d) of switchCycleId for that baseband",
 		itbnddp->second.size(),vv_numBin_[nbb].size());
 	m_bn_v_numBin_.insert( make_pair(itbnddp->first,vv_numBin_[nbb]) );
 	m_bn_v_scId_.insert( make_pair(itbnddp->first,vv_switchCycleId_[nbb]) );
@@ -461,7 +461,7 @@ namespace sdmbin {
 
   unsigned int DataDescriptionsSet::metaDataIndex( unsigned int ndd) { // throw(Error){
     if((unsigned int)ndd>=v_metaDataIndex_.size())
-      Error(FATAL,"The dataDescription index index must be smaller than %d",
+      Error(FATAL,(char *) "The dataDescription index index must be smaller than %d",
 	    v_metaDataIndex_.size());
     return v_metaDataIndex_[ndd];
   }
@@ -478,7 +478,7 @@ namespace sdmbin {
       if(autoDataDescriptionId==v_autoDataDescriptionId_[n])m=n;
     }
     if(m<0){
-      Error(SERIOUS, "requested autoDataDescriptionId %s not present for the spectro-polarization setup", 
+      Error(SERIOUS, (char *)"requested autoDataDescriptionId %s not present for the spectro-polarization setup", 
 	    autoDataDescriptionId.getTag().c_str());
       return 0;
     }
@@ -497,7 +497,7 @@ namespace sdmbin {
     for(unsigned int n=0; n<v_crossDataDescriptionId_.size(); n++)
       if(crossDataDescriptionId==v_crossDataDescriptionId_[n])m=n;
     if(m<0){
-      Error(SERIOUS,"requested crossDataDescriptionId %s not present in the spectro-polarization setup", 
+      Error(SERIOUS,(char *) "requested crossDataDescriptionId %s not present in the spectro-polarization setup", 
 	    crossDataDescriptionId.getTag().c_str()); 
       return 0;
     }
@@ -519,7 +519,7 @@ namespace sdmbin {
 	return v_autoDataDescriptionId_[ndd];
     }
     Error(SERIOUS,
-	  "The data description identifier %s does not exist in the spectro-polarization setup",
+	  (char *) "The data description identifier %s does not exist in the spectro-polarization setup",
 	  crossDataDescriptionId.toString().c_str()); 
     return Tag((unsigned int)32767);
   }
@@ -541,13 +541,13 @@ namespace sdmbin {
 
   unsigned int DataDescriptionsSet::getNumChan(unsigned int ndd) { // throw(Error){
     if((unsigned int)ndd>=v_numChan_.size())
-      Error(SERIOUS,"The dataDescription number exceeds %d",
+      Error(SERIOUS,(char *) "The dataDescription number exceeds %d",
 	    v_numChan_.size());
     return v_numChan_[ndd];
   }
 
   unsigned int DataDescriptionsSet::getNumPol(unsigned int basebandIndex) { // throw(Error){
-    if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
+    if(basebandIndex>=v_basebandSet_.size())Error(FATAL,(char *) "No baseband with this index");
 
     return getNumPol(v_basebandSet_[basebandIndex]);
   }
@@ -568,13 +568,13 @@ namespace sdmbin {
     Enum<BasebandName> e_bn=itbbnddpf->first;
     for(unsigned int n=1; n<itbbnddpf->second.size(); n++)
       if(itbbnddpf->second[n].numCorr!=numpp)
-	Error(FATAL,"The dataDescriptions in %s do not have a common nb of pol. cross product",
+	Error(FATAL,(char *) "The dataDescriptions in %s do not have a common nb of pol. cross product",
 	      e_bn.str().c_str());
     return numpp;
   }
 
   unsigned int DataDescriptionsSet::getNumSdPol(unsigned int basebandIndex) { // throw(Error){
-    if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
+    if(basebandIndex>=v_basebandSet_.size())Error(FATAL, (char *) "No baseband with this index");
 
     return getNumSdPol(v_basebandSet_[basebandIndex]);
   }
@@ -598,14 +598,14 @@ namespace sdmbin {
     for(unsigned int n=1; n<itbbnddpf->second.size(); n++){
       numCorr = rpolSet.getRowByKey(itbbnddpf->second[n].polId)->getNumCorr();
       if(numCorr!=numpp)
-	Error(FATAL,"The dataDescriptions in %s do not have a common nb of sd pol. cross product",
+	Error(FATAL,(char *) "The dataDescriptions in %s do not have a common nb of sd pol. cross product",
 	      e_bn.str().c_str());
     }
     return numpp;
   }
 
   unsigned int DataDescriptionsSet::getNumSpw(unsigned int basebandIndex) { // throw(Error){
-    if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
+    if(basebandIndex>=v_basebandSet_.size())Error(FATAL,(char *) "No baseband with this index");
     return v_basebandSet_.size() ;
   }
 
@@ -618,7 +618,7 @@ namespace sdmbin {
   }
 
   unsigned int DataDescriptionsSet::getNdd(unsigned int basebandIndex, unsigned int i) { // throw(Error){
-    if(basebandIndex>=v_basebandSet_.size())Error(FATAL,"No baseband with this index");
+    if(basebandIndex>=v_basebandSet_.size())Error(FATAL,(char *) "No baseband with this index");
 
     return getNdd(v_basebandSet_[basebandIndex],i);
   }
@@ -629,14 +629,14 @@ namespace sdmbin {
       itbbnddpf=m_bn_v_ddp_.find(basebandName),
       itbbnddpe=m_bn_v_ddp_.end();
     Enum<BasebandName> e_bn; e_bn=basebandName;
-    if(itbbnddpf==itbbnddpe)Error(FATAL,"No baseband with the name %s for this configuration",
+    if(itbbnddpf==itbbnddpe)Error(FATAL,(char *) "No baseband with the name %s for this configuration",
 				  e_bn.str().c_str() );
 
     if(i>=itbbnddpf->second.size())
-      Error(FATAL,"Index %d too large; it cannot exceed %d",i,itbbnddpf->second.size());
+      Error(FATAL,(char *) "Index %d too large; it cannot exceed %d",i,itbbnddpf->second.size());
     Tag spwId = itbbnddpf->second[i].spwId;
     for(unsigned int ndd=0; ndd<v_spwId_.size(); ndd++)if(v_spwId_[ndd]==spwId)return ndd;
-    Error(FATAL,"error in the algorithm");
+    Error(FATAL,(char *)"error in the algorithm");
     return 0;
   }
 
@@ -650,18 +650,18 @@ namespace sdmbin {
 
   BasebandName      DataDescriptionsSet::getBasebandName(unsigned int ndd) { // throw (Error){
     if(ndd>v_basebandName_.size()-1)
-      Error(SERIOUS,"The dataDescription index index must be smaller than %d",
+      Error(SERIOUS,(char *) "The dataDescription index index must be smaller than %d",
 	    v_basebandName_.size());
     return v_basebandName_[ndd];
   }
 
   unsigned int      DataDescriptionsSet::getBasebandIndex(unsigned int ndd) { // throw(Error){
     if(ndd>v_basebandName_.size()-1)
-      Error(SERIOUS,"The dataDescription index index must be smaller than %d",
+      Error(SERIOUS,(char *) "The dataDescription index index must be smaller than %d",
 	    v_basebandName_.size());
     for(unsigned int nbb=0; nbb<v_basebandSet_.size(); nbb++)
       if(v_basebandName_[ndd]==v_basebandSet_[nbb])return nbb;
-    Error(FATAL,"Problem in the algorithm");
+    Error(FATAL,(char *) "Problem in the algorithm");
     return 0; // should never happen
   }
 
@@ -678,7 +678,7 @@ namespace sdmbin {
     for(unsigned int n=0; n<numDataDescription_; n++)
       if(dataDescriptionId==v_dataDescriptionIdArray_[n])ndd=n; // numbers are 1 based
     if(ndd==-1)Error(FATAL,
-		     "The data description identifier %s is not in the spectro-polarization setup",
+		     (char *) "The data description identifier %s is not in the spectro-polarization setup",
 		     dataDescriptionId.toString().c_str());
     return ndd;
   }
@@ -709,13 +709,13 @@ namespace sdmbin {
     for(unsigned int n=0; n<v_atmPhaseCorrection_.size(); n++)
       if(v_atmPhaseCorrection_[n]==apc)return n;
     Enum<AtmPhaseCorrection> e_apc=apc;
-    Error(FATAL,"No %s along the APC axis",e_apc.str().c_str());
+    Error(FATAL, (char *) "No %s along the APC axis",e_apc.str().c_str());
     return 0;
   }
 
   unsigned int    DataDescriptionsSet::numPol(unsigned int ndd) { // throw(Error){
     if((unsigned int)ndd>=v_numPol_.size())
-      Error(SERIOUS,"The dataDescription index index must be smaller than %d",
+      Error(SERIOUS,(char *) "The dataDescription index index must be smaller than %d",
 	    v_numPol_.size());
     return v_numPol_[ndd];
   }
@@ -723,7 +723,7 @@ namespace sdmbin {
   unsigned int    DataDescriptionsSet::numSdPol(unsigned int ndd) { // throw(Error){
     if(e_cm_[CROSS_ONLY])return 0;
     if(ndd>=v_numPol_.size())
-      Error(SERIOUS,"The dataDescription index index must be smaller than %d",
+      Error(SERIOUS,(char *) "The dataDescription index index must be smaller than %d",
 	    v_numPol_.size());
     if(e_cm_[AUTO_ONLY])return v_numPol_[ndd];	
     if(v_numPol_[ndd]<=2)return v_numPol_[ndd];
@@ -731,19 +731,19 @@ namespace sdmbin {
   }
 
   unsigned int  DataDescriptionsSet::numChan(unsigned int ndd) { // throw(Error){
-    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    //if(ndd<0)Error(FATAL,(char *) "DataDescription index must be 0 based");
     return v_numChan_[ndd];
   }
 
   Tag DataDescriptionsSet::getSpwId(unsigned int ndd) { // throw (Error){
-    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    //if(ndd<0)Error(FATAL,(char *) "DataDescription index must be 0 based");
     return v_spwId_[ndd];
   }
 
   Frequency DataDescriptionsSet::totBandwidth(unsigned int ndd) { // throw(Error){
-    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    //if(ndd<0)Error(FATAL,(char *) "DataDescription index must be 0 based");
     if(ndd>=numDataDescription_){
-      Error(SERIOUS,"The index for a DataDescriptions cannot exceed %d",
+      Error(SERIOUS,(char *) "The index for a DataDescriptions cannot exceed %d",
 	    numDataDescription_);
       return 0;
     }
@@ -753,12 +753,12 @@ namespace sdmbin {
 
 
   int               DataDescriptionsSet::numAutoData(unsigned int ndd) { // throw(Error){
-    if(ndd<0)Error(FATAL,"DataDescription index must be 0 based");
+    //if( ndd <= 0)Error(FATAL, (char *) "DataDescription index must be 0 based");
     if(v_numAutoData_.size()==0){
-      Error(WARNING, "no auto data expected");
+      Error(WARNING, (char *) "no auto data expected");
       return 0;
     }else if((unsigned int)ndd>=v_numAutoData_.size()){
-      Error(SERIOUS, "The index for a DataDescriptions cannot exceed %d",
+      Error(SERIOUS, (char *) "The index for a DataDescriptions cannot exceed %d",
 	    v_numAutoData_.size());
     }
     return v_numAutoData_[ndd];
@@ -766,10 +766,10 @@ namespace sdmbin {
 
   unsigned int      DataDescriptionsSet::numCrossData(unsigned int ndd) { // throw(Error){
     if(!v_numCrossData_.size()){
-      Error(WARNING, "no cross data expected");
+      Error(WARNING, (char *) "no cross data expected");
       return 0;
     }else if((unsigned int)ndd>=v_numCrossData_.size()){
-      Error(SERIOUS, "The index for a DataDescriptions cannot exceed %d",
+      Error(SERIOUS, (char *) "The index for a DataDescriptions cannot exceed %d",
 	    v_numCrossData_.size());
     }
     return v_numCrossData_[ndd];

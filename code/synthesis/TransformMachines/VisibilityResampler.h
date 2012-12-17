@@ -105,12 +105,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, 
 			    Matrix<Double>& sumwt, const Bool& dopsf,
-			    Bool useConjFreqCF=False)
+			    Bool /*useConjFreqCF*/=False)
     {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
     virtual void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, 
     			    Matrix<Double>& sumwt, const Bool& dopsf,
-			    Bool useConjFreqCF=False)
+			    Bool /*useConjFreqCF*/=False)
     {DataToGridImpl_p(griddedData, vbs, dopsf, sumwt);}
 
     //

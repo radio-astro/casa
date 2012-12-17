@@ -105,7 +105,8 @@ namespace casa{
     return *this;
   }
 
-  Int ALMAAperture::getVisParams(const VisBuffer& vb, const CoordinateSystem& skyCoord)
+  Int ALMAAperture::getVisParams(const VisBuffer& vb, 
+                                 const CoordinateSystem& /*skyCoord*/)
   {
     Vector<String> telescopeNames=vb.msColumns().observation().telescopeName().getColumn();
     for(uInt nt=0;nt<telescopeNames.nelements();nt++){
@@ -345,7 +346,7 @@ namespace casa{
 	Double dAngleRad = getPA(vb);
 	cout << "PA = " << dAngleRad << " rad" << endl;
 
-	Int fact1Index, fact2Index;
+	Int fact1Index=-1, fact2Index=-1;
 	Double pA1, pA2;
 
 	// apply the rotation offset from the response table
@@ -551,7 +552,7 @@ namespace casa{
 				     const Int& convSize,
 				     const Int& convSampling,
 				     const CoordinateSystem& skyCoord,
-				     const Int& skyNx, const Int& skyNy,
+				     const Int& skyNx, const Int& /*skyNy*/,
 				     CoordinateSystem& feedCoord)
   {
     feedCoord = skyCoord;

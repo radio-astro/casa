@@ -49,7 +49,7 @@ namespace asdmbinaries {
   }
 
   bool SDMDataObjectReader::initClass() {
-    char* binAttachNamesC[] = {"actualDurations", "actualTimes", "autoData", "flags", "crossData", "zeroLags", 0};
+    char* binAttachNamesC[] = {(char *) "actualDurations", (char *) "actualTimes", (char *) "autoData", (char *) "flags", (char *) "crossData", (char *) "zeroLags", 0};
     for (int i = 0; binAttachNamesC[i]; i++) {
       BINATTACHNAMES.insert(string(binAttachNamesC[i]));
     }
@@ -79,7 +79,7 @@ namespace asdmbinaries {
   string::size_type SDMDataObjectReader::find(const string& s) {
 
     while (true) {
-      while ((position_ < endPosition_) && (data_[position_++] != s.at(0)));
+      while ((position_ < endPosition_) && (data_[position_++] != s.at(0))) {;}
       
       if (position_ == endPosition_) return string::npos;
 
@@ -871,8 +871,8 @@ namespace asdmbinaries {
 
   const SDMDataObject & SDMDataObjectReader::read(string filename) {
 
-    char errmsg[512];
-    struct stat64 fattr;
+    
+    struct stat fattr; // stat64 fattr;
 
     unsigned long int filesize;
     char* data = 0;
@@ -891,7 +891,7 @@ namespace asdmbinaries {
     
     // Get its size.
     errno = 0;
-    int status = fstat64(filedes_,&fattr);
+    int status = fstat(filedes_,&fattr); // fstat64(filedes_,&fattr);
     if (status == -1) {
       //string message(strerror_r(errno, errmsg, 512));
       string message(strerror(errno));

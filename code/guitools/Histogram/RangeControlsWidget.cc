@@ -71,17 +71,8 @@ pair<double,double> RangeControlsWidget::getMinMaxValues() const {
 	return maxMinValues;
 }
 
-void RangeControlsWidget::setDataLimits( std::vector<float> values ){
-	double min = numeric_limits<float>::max();
-	double max = numeric_limits<float>::min();
-	for ( int i = 0; i < static_cast<int>(values.size()); i++ ){
-		if ( min > values[i] ){
-			min = values[i];
-		}
-		if ( max > values[i] ){
-			max = values[i];
-		}
-	}
+void RangeControlsWidget::setDataLimits( double min, double max ){
+
 	ui.dataMinLineEdit->setText( QString::number( min ) );
 	ui.dataMaxLineEdit->setText( QString::number( max ) );
 
@@ -96,7 +87,14 @@ void RangeControlsWidget::setDataLimits( std::vector<float> values ){
 	if ( rangeLimitMax < min || rangeLimitMax > max ){
 		rangeLimitMax = max;
 	}
-	this->setRange( rangeLimitMin, rangeLimitMax );
+	//If we have a range, we should reset it.
+	pair<double,double> oldRange = getMinMaxValues();
+	if ( oldRange.first != 0 && oldRange.second != 0  ){
+		double newLow = qMax( oldRange.first, rangeLimitMin );
+		double newHigh = qMin( oldRange.second, rangeLimitMax );
+		this->setRange( newLow, newHigh );
+	}
+
 }
 
 RangeControlsWidget::~RangeControlsWidget(){

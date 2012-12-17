@@ -29,7 +29,7 @@
 #include <images/Images/ImageOpener.h>
 
 #include <images/Images/PagedImage.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSQualityImage.h>
 #include <images/Images/FITSImgParser.h>

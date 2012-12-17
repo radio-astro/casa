@@ -32,7 +32,7 @@
 #include <casa/OS/SymLink.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/ExtendImage.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>

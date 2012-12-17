@@ -720,25 +720,25 @@ namespace sdmbin{
   }
 
 
-  DataDump::DataDump( vector<vector<uint32_t> >       vv_numCrossPolProduct,// /bb/spw
-		      vector<vector<uint32_t> >       vv_numAutoPolProduct, // /bb/spw
-		      vector<vector<uint32_t> >       vv_numSpectralPoint,  // /bb/spw
-		      vector<vector<uint32_t> >       vv_numBin,            // /bb/spw
-		      vector<vector<Enum<NetSideband> > > vv_e_sideband,        // /bb/spw
-		      uint32_t                        numApc,
-		      vector<uint32_t>                v_numSpectralWindow,  // /bb
-		      uint32_t                        numBaseband,
-		      uint32_t                        numAnt,
-		      CorrelationMode                     correlationMode,
-		      uint64_t                           time,
-		      uint64_t                           timeCentroid,  
-		      uint64_t                           interval,
-		      uint64_t                           exposure,
-		      uint32_t                        numVal,
-		      const int*                          crossData,
-		      uint32_t                        numAutoData,
-		      const float*                        autoData,
-		      uint32_t                        numFlags,
+  DataDump::DataDump( vector<vector<uint32_t> >       vv_numCrossPolProduct,	// /bb/spw
+		      vector<vector<uint32_t> >       vv_numAutoPolProduct,	// /bb/spw
+		      vector<vector<uint32_t> >       vv_numSpectralPoint,	// /bb/spw
+		      vector<vector<uint32_t> >       vv_numBin,	// /bb/spw
+		      vector<vector<Enum<NetSideband> > > vv_e_sideband,	// /bb/spw
+		      uint32_t          numApc,
+		      vector<uint32_t>  v_numSpectralWindow,	// /bb
+		      uint32_t          numBaseband,
+		      uint32_t          numAnt,
+		      CorrelationMode   correlationMode,
+		      uint64_t          time,
+		      uint64_t          timeCentroid,  
+		      uint64_t          interval,
+		      uint64_t          exposure,
+		      uint32_t          /*numVal*/, // comment to avoid the unused parameter warning
+ 		      const int*        /*crossData*/, // comment to avoid the unused parameter warning
+		      uint32_t          numAutoData,
+		      const float*      autoData,
+		      uint32_t          numFlags,
 		      const uint32_t*                 flags):
     DataStructure( vv_numCrossPolProduct,
 		   vv_numAutoPolProduct,
@@ -808,7 +808,7 @@ namespace sdmbin{
     if(floatCrossDataPtr_        ) delete floatCrossDataPtr_;
   }
 
-  DataDump::DataDump(const DataDump& a)
+  DataDump::DataDump(const DataDump& a) : DataStructure(a)
   {
     cout<<"Copy constructor DataDump (deep copy)"<<endl;
     cout<<"ici a.uintFlagsPtr_="<<a.uintFlagsPtr_<<endl;
@@ -957,7 +957,7 @@ namespace sdmbin{
     uint64_t st2 = (rhs.time()-rhs.interval())/(uint64_t)2;
     uint64_t et2 = (rhs.time()+rhs.interval())/(uint64_t)2; 
     if( st1>et2 || et1<st2)
-      Error( WARNING, "data difference of dumps overlaping in time");
+      Error( WARNING, (char *) "data difference of dumps overlaping in time");
     uint64_t st,et;
     if(st1<st2)
       st = st1;
@@ -1058,7 +1058,7 @@ namespace sdmbin{
     uint64_t st2 = (rhs.time()-rhs.interval())/(uint64_t)2;
     uint64_t et2 = (rhs.time()+rhs.interval())/(uint64_t)2; 
     if( st1>et2 || et1<st2)
-      Error( WARNING, "sum of data dumps which overlap in time");
+      Error( WARNING, (char *) "sum of data dumps which overlap in time");
     uint64_t st,et;
     if(st1<st2)
       st = st1;
@@ -1152,13 +1152,13 @@ namespace sdmbin{
 
   // Attachers and importers
 
-  void DataDump::attachFlags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachFlags( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning 
 			      uint32_t numData, const uint32_t* flagsPtr){
     cuintFlagsPtr_ = flagsPtr; 
     es_flagsAxes_  = es_an; 
     numFlags_      = numData; 
   }
-  void DataDump::importFlags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importFlags( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning 
 			      uint32_t numData, const uint32_t* flagsPtr){
     cuintFlagsPtr_ = NULL;
     if(uintFlagsPtr_){
@@ -1174,13 +1174,13 @@ namespace sdmbin{
     numFlags_     = numData; 
   }
 
-  void DataDump::attachActualTimes( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachActualTimes( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning 
 				    uint32_t numData, const int64_t * actualTimesPtr){
     clonlonActualTimesPtr_ = actualTimesPtr; 
     es_actualTimesAxes_    = es_an;
     numActualTimes_        = numData;
   }
-  void DataDump::importActualTimes( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importActualTimes( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning 
 				    uint32_t numData, const int64_t * actualTimesPtr){
     clonlonActualTimesPtr_ = NULL;
     if(lonlonActualTimesPtr_){
@@ -1197,13 +1197,13 @@ namespace sdmbin{
   }
 
 
-  void DataDump::attachActualDurations( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachActualDurations( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning 
 					uint32_t numData, const int64_t * actualDurationsPtr){
     clonlonActualDurationsPtr_ = actualDurationsPtr; 
     es_actualDurationsAxes_     = es_an;
     numActualDurations_         = numData;
   }
-  void DataDump::importActualDurations( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importActualDurations( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning 
 					uint32_t numData, const int64_t * actualDurationsPtr){
     clonlonActualDurationsPtr_ = NULL;
     if(lonlonActualDurationsPtr_){
@@ -1219,13 +1219,13 @@ namespace sdmbin{
     numActualDurations_     = numData; 
   }
 
-  void DataDump::attachZeroLags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachZeroLags( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning 
 				 uint32_t numData, const float* zeroLagsPtr){
     cfloatZeroLagsPtr_ = zeroLagsPtr; 
     es_zeroLagsAxes_   = es_an;
     numZeroLags_       = numData;
   }
-  void DataDump::importZeroLags( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importZeroLags( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, // comment to avoid the unused parameter warning
 				 uint32_t numData, const float* zeroLagsPtr){
     cfloatZeroLagsPtr_ = NULL;
     if(floatZeroLagsPtr_){
@@ -1241,7 +1241,7 @@ namespace sdmbin{
     numZeroLags_     = numData;
   }
 
-  void DataDump::attachAutoData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachAutoData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				 uint32_t numData, const float* autoDataPtr){
     cfloatAutoDataPtr_ = autoDataPtr; 
     es_autoDataAxes_   = es_an;
@@ -1251,7 +1251,7 @@ namespace sdmbin{
     //cout<<"uintFlagsPtr_="<<    uintFlagsPtr_<<endl;
 
   }
-  void DataDump::importAutoData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importAutoData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				 uint32_t numData, const float* autoDataPtr){
     cfloatAutoDataPtr_ = NULL;
     if(floatAutoDataPtr_){
@@ -1267,7 +1267,7 @@ namespace sdmbin{
     numAutoData_     = numData;
   }
 
-  void DataDump::attachCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachCrossData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				  uint32_t numData, const short int* crossDataPtr){
     cintCrossDataPtr_   = NULL; 
     cfloatCrossDataPtr_ = NULL;
@@ -1275,7 +1275,7 @@ namespace sdmbin{
     es_crossDataAxes_   = es_an;
     numCrossData_       = numData;
   }
-  void DataDump::importCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importCrossData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				  uint32_t numData, const short int* crossDataPtr){
     cintCrossDataPtr_   = NULL; 
     cfloatCrossDataPtr_ = NULL;
@@ -1293,7 +1293,7 @@ namespace sdmbin{
     numCrossData_     = numData;
   }
 
-  void DataDump::attachCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachCrossData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				  uint32_t numData, const  int* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = crossDataPtr; 
@@ -1301,7 +1301,7 @@ namespace sdmbin{
     es_crossDataAxes_   = es_an;
     numCrossData_       = numData;
   }
-  void DataDump::importCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importCrossData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				  uint32_t numData, const int* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = NULL;
@@ -1320,7 +1320,7 @@ namespace sdmbin{
   }
 
 
-  void DataDump::attachCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::attachCrossData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				  uint32_t numData, const float* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = NULL;
@@ -1328,7 +1328,7 @@ namespace sdmbin{
     es_crossDataAxes_   = es_an;
     numCrossData_       = numData;
   }
-  void DataDump::importCrossData( uint32_t declaredSize, EnumSet<AxisName> es_an, 
+  void DataDump::importCrossData( uint32_t /*declaredSize*/, EnumSet<AxisName> es_an, 
 				  uint32_t numData, const float* crossDataPtr){
     cshortCrossDataPtr_ = NULL; 
     cintCrossDataPtr_   = NULL;
@@ -1349,12 +1349,12 @@ namespace sdmbin{
   void DataDump::setScaleFactor(vector<vector<float> > vv_scaleFactor){
     if(vv_scaleFactor.size()!=vv_numCrossPolProduct_.size())
       Error(FATAL,
-	    "vv_scaleFactor, of size %d, does not have  a size equal to %d (i.e. numBaseband)",
+	    (char *) "vv_scaleFactor, of size %d, does not have  a size equal to %d (i.e. numBaseband)",
 	    vv_numCrossPolProduct_.size(),numBaseband_);
     for(uint32_t nbb=0; nbb<vv_numCrossPolProduct_.size(); nbb++)
       if(vv_scaleFactor[nbb].size()!=vv_numCrossPolProduct_[nbb].size())
 	Error(FATAL,
-	    "vv_scaleFactor[%d], of size %d, does not have  a size equal to the nb on spw for that baseband",
+	      (char *) "vv_scaleFactor[%d], of size %d, does not have  a size equal to the nb on spw for that baseband",
 	    nbb,vv_numCrossPolProduct_[nbb].size());
     vv_scaleFactor_ = vv_scaleFactor;
     // linearization for fast access:
@@ -1371,7 +1371,7 @@ namespace sdmbin{
     if(integrationNum_){
       if(integNum==integrationNum_)return integrationNum_;
       Error(WARNING,
-	    "This dump has already been identified with the integration number %d;\n it is not allowed to tag it again",
+	    (char *) "This dump has already been identified with the integration number %d;\n it is not allowed to tag it again",
 	    integrationNum_);
       return 0;
     }
@@ -1384,7 +1384,7 @@ namespace sdmbin{
       if(subintegNum==subintegrationNum_)return integrationNum_;
       if(subintegrationNum_)
 	Error(WARNING,
-	      "This dump has already been identified with the subintegration number %d;\n it is not allowed to tag it again",
+	      (char *) "This dump has already been identified with the subintegration number %d;\n it is not allowed to tag it again",
 	      subintegrationNum_);
       subintegrationNum_=subintegNum;
       return subintegNum;
@@ -1452,11 +1452,11 @@ namespace sdmbin{
       if(nspw<vv_scaleFactor_[nbb].size()){
 	return vv_scaleFactor_[nbb][nspw];
       }else{
-	Error(FATAL,"spectral window index %d too large for %d spectral windows for baseband index %d",
+	Error(FATAL,(char *) "spectral window index %d too large for %d spectral windows for baseband index %d",
 	      nspw,vv_scaleFactor_[nbb].size(),nbb);
       }
     }else{
-      Error(FATAL,"baseband index %d too large for %d basebands",
+      Error(FATAL,(char *) "baseband index %d too large for %d basebands",
 	    nbb,vv_scaleFactor_.size());
     }
     return 0;
@@ -1565,20 +1565,20 @@ namespace sdmbin{
     uint32_t dim=0;
     return dim;
   }
-  uint32_t DataDump::floatData(vector<vector<vector<float*> > >& vvv)
+  uint32_t DataDump::floatData(vector<vector<vector<float*> > >& /*vvv*/) // comment to avoid the unused parameter warning
   {
     uint32_t dim=0;
     return dim;
   }
 
-  uint32_t DataDump::floatData(vector<vector<vector<vector<float> > > >& vvvv)
+  uint32_t DataDump::floatData(vector<vector<vector<vector<float> > > >& /*vvvv*/) // comment to avoid the unused parameter warning
   {
     uint32_t dim=0;
     return dim;
   }
 
 
-  uint32_t DataDump::floatData(vector<vector<vector<vector<vector<float> > > > >& vvvvv)
+  uint32_t DataDump::floatData(vector<vector<vector<vector<vector<float> > > > >& /*vvvvv*/)
   {
 //     uint32_t nd;
 //     vvvvvvv.resize(numAnt_);
@@ -1699,7 +1699,7 @@ namespace sdmbin{
   {
   }
 
-  Integration::Integration( const Integration & a)
+  Integration::Integration( const Integration & a) : DataDump(a)
   {
     cout<<"Copy constructor Integration"<<endl;
     vv_numCrossPolProduct_= a.vv_numCrossPolProduct_;

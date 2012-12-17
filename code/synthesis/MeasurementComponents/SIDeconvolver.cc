@@ -66,7 +66,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
  }
 
-  Bool SIDeconvolver::deconvolve( SIIterBot &loopcontrols, Float &residual, Float &psf, Float &model, CountedPtr<SIMaskHandler> maskhandler, Int mapperid )
+  Bool SIDeconvolver::deconvolve( SIIterBot &loopcontrols, Float &residual, 
+                                  Float &/*psf*/, Float &model, 
+                                  CountedPtr<SIMaskHandler> /*maskhandler*/, 
+                                  Int mapperid )
   {
 
     LogIO os( LogOrigin("SIDeconvolver","deconvolve",WHERE) );
@@ -100,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  void SIDeconvolver::restore( Float image, Float beam, Float model, Float residual, Float weight )
+  void SIDeconvolver::restore( Float /*image*/, Float /*beam*/, Float /*model*/, Float /*residual*/, Float /*weight*/ )
   {
 
     LogIO os( LogOrigin("SIDeconvolver","restore",WHERE) );

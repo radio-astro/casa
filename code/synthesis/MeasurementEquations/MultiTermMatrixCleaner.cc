@@ -73,8 +73,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   MultiTermMatrixCleaner::MultiTermMatrixCleaner():
     MatrixCleaner(),
     ntaylor_p(0),psfntaylor_p(0),nscales_p(0),nx_p(0),ny_p(0),totalIters_p(0),
-    globalmaxpos_p(IPosition(0)),maxscaleindex_p(0),
-    memoryMB_p(0),donePSF_p(False),donePSP_p(False),doneCONV_p(False),
+    maxscaleindex_p(0), globalmaxpos_p(IPosition(0)),
+    donePSF_p(False),donePSP_p(False),doneCONV_p(False),memoryMB_p(0),
     adbg(False)
   { }
 
@@ -138,7 +138,7 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   /* Verify nscales_p and ntaylor_p */
   AlwaysAssert(nscales_p>0, AipsError);
   AlwaysAssert(ntaylor_p>0, AipsError);
-  AlwaysAssert(scaleSizes_p.nelements()==nscales_p, AipsError);
+  AlwaysAssert(scaleSizes_p.nelements()==static_cast<uInt>(nscales_p), AipsError);
 
   if(adbg) os << "Verify Scale sizes" << LogIO::POST;
   verifyScaleSizes();
@@ -154,7 +154,7 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   Int psupport = (Int) ( sqrt( psfbeam*psfbeam + maxscalesize*maxscalesize ) * nbeams  );
 
   // At least this big...
-  if(psupport < psfbeam*nbeams ) psupport = psfbeam*nbeams;
+  if(psupport < psfbeam*nbeams ) psupport = static_cast<Int>(psfbeam*nbeams);
 
   // Not too big...
   if(psupport > nx_p || psupport > ny_p)   psupport = MIN(nx_p,ny_p);
@@ -505,7 +505,7 @@ Int MultiTermMatrixCleaner::verifyScaleSizes()
   if(sum(scaleflags)>0) // prune the scalevector and change nscales_p
     {
       Vector<Float> newscalesizes(nscales_p - sum(scaleflags));
-      Int i=0;
+      uInt i=0;
       for(Int scale=0;scale<nscales_p;scale++)
 	{
 	  if(!scaleflags[scale])
@@ -547,7 +547,7 @@ Int MultiTermMatrixCleaner::allocateMemory()
 	                        + nscales_p  // vecSCalesFT
                                 + psfntaylor_p; // vecPsfFT
 
-	Int numMB = ( nx_p*ny_p*4*(ntempfull + ntemphalf/2.0)  + psfsupport_p[0]*psfsupport_p[1]*nHess  )/(1024*1024);
+	Int numMB = static_cast<Int>(( nx_p*ny_p*4*(ntempfull + ntemphalf/2.0)  + psfsupport_p[0]*psfsupport_p[1]*nHess  )/(1024*1024));
         memoryMB_p = Double(HostInfo::memoryTotal()/1024);
 
         if(adbg) os << "This algorithm needs to allocate " << numMB << " MBytes." << LogIO::POST;
@@ -1052,7 +1052,7 @@ Int MultiTermMatrixCleaner::solveMatrixEqn(Int ntaylor, Int scale, IPosition blc
 Note : This function is called within the 'scale' omp/pragma loop. Needs to be thread-safe
  ****************************************/
 
-Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int criterion, IPosition blc, IPosition trc)
+  Int MultiTermMatrixCleaner::chooseComponent(Int ntaylor, Int scale, Int /*criterion*/, IPosition blc, IPosition trc)
 {
 
 
@@ -1303,7 +1303,7 @@ Int MultiTermMatrixCleaner::updateModelAndRHS(Float loopgain)
 }/* end of updateModelAndRHS() */
 
 /* ................ */
-Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Float &loopgain)
+Int MultiTermMatrixCleaner::checkConvergence(Int /*criterion*/, Float &fluxlimit, Float &loopgain)
 {
     Float rmaxval=0.0;
     

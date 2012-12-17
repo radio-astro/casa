@@ -25,10 +25,10 @@
 #ifndef HISTOGRAM_MARKER_GAUSSIAN_H_
 #define HISTOGRAM_MARKER_GAUSSIAN_H_
 
-#include <QPainter>
-
 #include <qwt_plot_marker.h>
 #include <qwt_scale_map.h>
+
+class QPainter;
 
 namespace casa {
 

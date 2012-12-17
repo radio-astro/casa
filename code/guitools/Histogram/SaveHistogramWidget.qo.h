@@ -50,6 +50,8 @@ private slots:
 	void saveCanceled();
 
 private:
+	SaveHistogramWidget( const SaveHistogramWidget& widget );
+	SaveHistogramWidget& operator=(const SaveHistogramWidget& widget );
 	static const QString SAVE_ASCII;
 	static const QString SAVE_PNG;
     QFileSystemModel* fileModel;
