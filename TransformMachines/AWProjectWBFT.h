@@ -129,14 +129,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Method used to convert the pixel value of the PB image, passed
     // as pbPixValue, to a value used for PB-normalization.
     // Typically, this will depend on the units of the "PB image"
-    // constured by the makeSensitivtyImage() methods. pbLimit is the
-    // fractional pb-gain below which imaging is not required (this
-    // value is typically the user-defined parameter in the private
-    // member variable pbLimit_p).
+    // constructed by the makeSensitivtyImage() methods. pbLimit is
+    // the fractional pb-gain below which imaging is not required
+    // (this value is typically the user-defined parameter in the
+    // private member variable pbLimit_p).
     //
     inline virtual Float pbFunc(const Float& pbPixValue, const Float& pbLimit) 
-    //    {Float tt=(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
-    {Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
+    {return  1.0;};
+    //   {Float tt=(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
+ 
+
+   //    {Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
 
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
