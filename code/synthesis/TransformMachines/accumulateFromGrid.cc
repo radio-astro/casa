@@ -10,6 +10,7 @@
      Vector<Int>& loc, Complex& phasor, Double& sinDPA, Double& cosDPA,
      Bool& finitePointingOffset, Matrix<Complex>& cached_phaseGrad_p)
   {
+    (void)sinDPA; (void)cosDPA; (void)cfShape; // Keep the compiler warnings off for now
     Complex wt, norm=0.0;
     Vector<Int> iCFPos(4,0),iLoc(4,0);
 
