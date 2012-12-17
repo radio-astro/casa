@@ -68,6 +68,7 @@ makemask.xml
 mosaic.xml
 msview.xml
 msmoments.xml 
+mstransform.xml
 peel.xml
 plotants.xml
 plotcal.xml

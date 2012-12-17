@@ -86,6 +86,8 @@ __taskinit_setlogfile(casalog)
 casalog.setglobal(True)
 at = casac.atmosphere()
 ca = casac.calanalysis()
+mttool = casac.mstransformer
+mt = mttool()
 
 def gentools(tools=None):
 	"""

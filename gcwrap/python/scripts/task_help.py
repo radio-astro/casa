@@ -46,9 +46,10 @@ def toolhelp():
     print ' ia : Image analysis utilities'
     print ' im : Imaging utilities'
     print ' me : Measures utilities'
-    print ' ms : MeasurementSet (MS) utilties'
+    print ' ms : MeasurementSet (MS) utilities'
     print ' msmd : MS metadata accessors'
     print ' mp : MS plotting (data (amp/phase) versus other quantities)'
+    print ' mt : MS transformer utilities'
     print ' qa : Quanta utilities'
     print ' pm : PlotMS utilities'
     print ' po : Imagepol utilities'
@@ -57,15 +58,15 @@ def toolhelp():
     print ' sm : Simulation utilities'
     print ' tb : Table utilities (selection, extraction, etc)'
     print ' tp : Table plotting utilities'
-    print ' vp : Voltage pattern/primary beam utilties'
+    print ' vp : Voltage pattern/primary beam utilities'
     print ' ---'
     print ' pl : pylab functions (e.g., pl.title, etc)'
     print ' sd : Single dish utilities'
     print ' ---'
 
 def tasklist():
-    """ List tasks, organized by catagory """
-    print 'Available tasks, organized by category (experimental tasks in parens ()'
+    """ List tasks, organized by category """
+    print 'Available tasks, organized by category (experimental tasks in parenthesis ()'
     print '  deprecated tasks in curly brackets {}).'
     print ''
     for i in range(0,3):

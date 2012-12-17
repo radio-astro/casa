@@ -146,6 +146,8 @@ vpmanager = casac.vpmanager()
 vlafillertask = casac.vlafillertask()
 atmosphere = casac.atmosphere()
 cu = casac.utils()
+mstransformer = casac.mstransformer()
+
 #plotms = __plotmshome__.create( )
 
 
@@ -220,6 +222,7 @@ from visstat_pg import visstat_pg as visstat
 from calstat_pg import calstat_pg as calstat
 from msmoments_pg import msmoments_pg as msmoments
 from partition_pg import partition_pg as partition
+from mstransform_pg import mstransform_pg as mstransform
 
 ##
 ## asap may not be available with every casa installation

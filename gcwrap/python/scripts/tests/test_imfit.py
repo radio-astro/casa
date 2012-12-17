@@ -250,7 +250,7 @@ class imfit_test(unittest.TestCase):
                 region = ""
             elif (i == 1):
                 box = "130,89,170,129"
-                region = rg.box([0,0,0,0],[2,2,0,0])
+                #region = rg.box([0,0,0,0],[2,2,0,0])
             elif (i == 2):
                 box = ''
                 region = rg.box([130,89,0,0],[170,129,0,0])

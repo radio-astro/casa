@@ -47,7 +47,7 @@
 #include <images/Images/SepImageConvolver.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCLELMask.h>
 #include <lattices/LatticeMath/Fit2D.h>
