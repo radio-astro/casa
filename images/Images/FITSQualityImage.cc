@@ -29,7 +29,7 @@
 
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSErrorImage.h>
-#include <lattices/Lattices/FITSQualityMask.h>
+#include <images/Images/FITSQualityMask.h>
 
 #include <images/Images/FITSImgParser.h>
 #include <fits/FITS/hdu.h>

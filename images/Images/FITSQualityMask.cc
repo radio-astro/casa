@@ -26,7 +26,7 @@
 //# $Id: FITSMask.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 
-#include <lattices/Lattices/FITSQualityMask.h>
+#include <images/Images/FITSQualityMask.h>
 
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSErrorImage.h>
