@@ -311,6 +311,12 @@ public:
 	// Methods for efficient synchronization with CTIter
 	void invalidate() {ctCache_p->invalidate();}
 
+        Vector<bool>& flagRowRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<bool>& flagCubeRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<complex<float> >& visCubeRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<complex<float> >& visCubeCorrectedRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<complex<float> >& visCubeModelRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+
 private:
 
     CTIter *calIter_p;

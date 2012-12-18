@@ -1757,6 +1757,12 @@ VisBufferImpl2::flagCube () const
     return cache_p->flagCube_p.get ();
 }
 
+Cube<Bool> &
+VisBufferImpl2::flagCubeRef ()
+{
+    return cache_p->flagCube_p.getRef ();
+}
+
 void
 VisBufferImpl2::setFlagCube (const Cube<Bool>& value)
 {
@@ -1767,6 +1773,12 @@ const Vector<Bool> &
 VisBufferImpl2::flagRow () const
 {
     return cache_p->flagRow_p.get ();
+}
+
+Vector<Bool> &
+VisBufferImpl2::flagRowRef ()
+{
+    return cache_p->flagRow_p.getRef ();
 }
 
 void
@@ -1967,6 +1979,12 @@ VisBufferImpl2::visCubeCorrected () const
     return cache_p->correctedVisCube_p.get ();
 }
 
+Cube<Complex> &
+VisBufferImpl2::visCubeCorrectedRef ()
+{
+    return cache_p->correctedVisCube_p.getRef ();
+}
+
 void
 VisBufferImpl2::setVisCubeCorrected (const Cube<Complex> & value)
 {
@@ -2001,6 +2019,12 @@ const Cube<Complex> &
 VisBufferImpl2::visCubeModel () const
 {
     return cache_p->modelVisCube_p.get ();
+}
+
+Cube<Complex> &
+VisBufferImpl2::visCubeModelRef ()
+{
+    return cache_p->modelVisCube_p.getRef ();
 }
 
 void
@@ -2089,6 +2113,12 @@ const Cube<Complex> &
 VisBufferImpl2::visCube () const
 {
     return cache_p->visCube_p.get ();
+}
+
+Cube<Complex> &
+VisBufferImpl2::visCubeRef ()
+{
+    return cache_p->visCube_p.getRef ();
 }
 
 void

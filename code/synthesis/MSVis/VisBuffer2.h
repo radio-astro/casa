@@ -508,6 +508,12 @@ protected:
     virtual void setFillable (Bool isFillable) = 0;
     virtual void setRekeyable (Bool isRekeable) = 0;
 
+    virtual Vector<Bool> & flagRowRef () = 0;  // [nR]
+    virtual Cube<Bool> & flagCubeRef () = 0;  // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeRef () = 0; // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
+
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 
 private:
