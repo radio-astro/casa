@@ -325,6 +325,9 @@ class CustomToolbarCommon:
         reset = False
         doheader = (isinstance(header['textobj'],list) and \
                     len(header['textobj']) > 0)
+        if doheader:
+            top = self.plotter._plotter.figure.subplotpars.top
+            fontsize = header['textobj'][0].get_fontproperties().get_size()
         if self.plotter._startrow <= 0:
             msg = "The page counter is reset due to chages of plot settings. "
             msg += "Plotting from the first page."
@@ -339,18 +342,17 @@ class CustomToolbarCommon:
                 if header.has_key('selstr'):
                     selstr = header['selstr']
             self.plotter._reset_header()
-        if doheader:
-            top = self.plotter._plotter.figure.subplotpars.top
-            fontsize = header['textobj'][0].get_fontproperties().get_size()
 
         self.plotter._plotter.hold()
         if goback:
             self._set_prevpage_counter()
         #self.plotter._plotter.clear()
         self.plotter._plot(self.plotter._data)
-        self.set_pagecounter(self._get_pagenum())
+        pagenum = self._get_pagenum()
+        self.set_pagecounter(pagenum)
         # Plot header information
-        if header['textobj']:
+        #if header['textobj']:
+        if doheader and pagenum == 1:
             if top and top != self.plotter._margins[3]:
                 # work around for sdplot in CASA. complete checking in future?
                 self.plotter._plotter.figure.subplots_adjust(top=top)
@@ -402,13 +404,10 @@ class CustomToolbarCommon:
         pass        
 
     def _get_pagenum(self):
-        maxpanel = 16
         # get the ID of last panel in the current page
         idlastpanel = self.plotter._ipanel
-        if self.plotter._rows and self.plotter._cols:
-            ppp = self.plotter._rows*self.plotter._cols
-        else:
-            ppp = maxpanel
+        # max panels in a page
+        ppp = self.plotter._plotter.rows*self.plotter._plotter.cols
         return int(idlastpanel/ppp)+1
 
     # pause buttons for slow operations. implemented at a backend dependent class
@@ -1238,13 +1237,10 @@ class CustomFlagToolbarCommon:
         pass
 
     def _get_pagenum(self):
-        maxpanel = 25
         # get the ID of last panel in the current page
         idlastpanel = self.plotter._ipanel
-        if self.plotter._rows and self.plotter._cols:
-            ppp = self.plotter._rows*self.plotter._cols
-        else:
-            ppp = maxpanel
+        # max panels in a page
+        ppp = self.plotter._plotter.rows*self.plotter._plotter.cols
         return int(idlastpanel/ppp)+1
 
     # pause buttons for slow operations. implemented at a backend dependent class

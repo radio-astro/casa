@@ -69,6 +69,9 @@ set( ASAP_SRCS
      ${SRCDIR}/RasterEdgeDetector.cpp
      ${SRCDIR}/GenericEdgeDetector.cpp
      ${SRCDIR}/PlotHelper.cpp
+     ${SRCDIR}/STApplyTable.cpp
+     ${SRCDIR}/STCalTsys.cpp
+     ${SRCDIR}/STCalSky.cpp
      ${SRCDIR}/Templates.cpp )
 
 set( ASAP_PYSRCS

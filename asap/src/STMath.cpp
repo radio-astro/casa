@@ -1342,6 +1342,9 @@ if ( ! ref->conformant(*sig) ) {
     ++sit;
     ++s2it;
   }
+  
+  out->setFluxUnit("K");
+
   return out;
 }
 
@@ -1514,6 +1517,9 @@ CountedPtr< Scantable > STMath::donod(const casa::CountedPtr<Scantable>& s,
     ++sit;
     ++s2it;
   }
+
+  calb1->setFluxUnit("K");
+  
   return calb1;
 }
 
@@ -1608,7 +1614,9 @@ CountedPtr< Scantable > STMath::dofs( const CountedPtr< Scantable >& s,
     Double choffset = ( rv1 - rv2 ) / inc2 ;
     out = dofold( out1, out2, choffset ) ;
   }
-    
+   
+  out->setFluxUnit("K");
+
   return out;
 }
 

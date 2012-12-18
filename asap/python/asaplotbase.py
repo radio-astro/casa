@@ -55,7 +55,7 @@ class asaplotbase:
         c = asaprcParams['plotter.colours']
         if isinstance(c,str) and len(c) > 0:
             self.colormap = c.split()
-
+        # line styles need to be set as a list of numbers to use set_dashes
         self.lsalias = {"line":  [1,0],
                         "dashdot": [4,2,1,2],
                         "dashed" : [4,2,4,2],
@@ -87,16 +87,60 @@ class asaplotbase:
                        'button_release':None,
                        'motion_notify':None}
 
+    def _alive(self):
+        # Return True if the GUI alives.
+        if (not self.is_dead) and \
+               self.figmgr and hasattr(self.figmgr, "num"):
+            figid = self.figmgr.num
+            # Make sure figid=0 is what asapplotter expects.
+            # It might be already destroied/overridden by matplotlib
+            # commands or other methods using asaplot.
+            return _pylab_helpers.Gcf.has_fignum(figid) and \
+                   (self.figmgr == _pylab_helpers.Gcf.get_fig_manager(figid))
+        return False
+
+
+    ### Delete artists ###
     def clear(self):
         """
-        Delete all lines from the plot.  Line numbering will restart from 0.
+        Delete all lines from the current subplot.
+        Line numbering will restart from 0.
         """
 
-        for i in range(len(self.lines)):
-           self.delete(i)
+        #for i in range(len(self.lines)):
+        #   self.delete(i)
         self.axes.clear()
         self.color = 0
+        self.linestyle = 0
         self.lines = []
+        self.subplots[self.i]['lines'] = self.lines
+
+    def delete(self, numbers=None):
+        """
+        Delete the 0-relative line number, default is to delete the last.
+        The remaining lines are NOT renumbered.
+        """
+
+        if numbers is None: numbers = [len(self.lines)-1]
+
+        if not hasattr(numbers, '__iter__'):
+            numbers = [numbers]
+
+        for number in numbers:
+            if 0 <= number < len(self.lines):
+                if self.lines[number] is not None:
+                    for line in self.lines[number]:
+                        line.set_linestyle('None')
+                        self.lines[number] = None
+        self.show()
+
+
+    ### Set plot parameters ###
+    def hold(self, hold=True):
+        """
+        Buffer graphics until subsequently released.
+        """
+        self.buffering = hold
 
     def palette(self, color, colormap=None, linestyle=0, linestyles=None):
         if colormap:
@@ -120,24 +164,266 @@ class asaplotbase:
         if 0 <= linestyle < len(self.linestyles):
             self.linestyle = linestyle
 
-    def delete(self, numbers=None):
+    def legend(self, loc=None):
         """
-        Delete the 0-relative line number, default is to delete the last.
-        The remaining lines are NOT renumbered.
+        Add a legend to the plot.
+
+        Any other value for loc else disables the legend:
+             1: upper right
+             2: upper left
+             3: lower left
+             4: lower right
+             5: right
+             6: center left
+             7: center right
+             8: lower center
+             9: upper center
+            10: center
+
+        """
+        if isinstance(loc, int):
+            self.loc = None
+            if 0 <= loc <= 10: self.loc = loc
+        else:
+            self.loc = None
+        #self.show()
+
+    #def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, ganged=True):
+    def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, margin=None,ganged=True):
+        """
+        Set the panel layout.
+
+        rows and cols, if cols != 0, specify the number of rows and columns in
+        a regular layout.   (Indexing of these panels in matplotlib is row-
+        major, i.e. column varies fastest.)
+
+        cols == 0 is interpreted as a retangular layout that accomodates
+        'rows' panels, e.g. rows == 6, cols == 0 is equivalent to
+        rows == 2, cols == 3.
+
+        0 <= n < rows*cols is interpreted as the 0-relative panel number in
+        the configuration specified by rows and cols to be added to the
+        current figure as its next 0-relative panel number (i).  This allows
+        non-regular panel layouts to be constructed via multiple calls.  Any
+        other value of n clears the plot and produces a rectangular array of
+        empty panels.  The number of these may be limited by nplots.
+        """
+        if n < 0 and len(self.subplots):
+            self.figure.clear()
+            self.set_title()
+
+        if margin:
+            lef, bot, rig, top, wsp, hsp = margin
+            self.figure.subplots_adjust(
+                left=lef,bottom=bot,right=rig,top=top,wspace=wsp,hspace=hsp)
+            del lef,bot,rig,top,wsp,hsp
+
+        if rows < 1: rows = 1
+
+        if cols <= 0:
+            i = int(sqrt(rows))
+            if i*i < rows: i += 1
+            cols = i
+
+            if i*(i-1) >= rows: i -= 1
+            rows = i
+
+        if 0 <= n < rows*cols:
+            i = len(self.subplots)
+
+            self.subplots.append({})
+
+            self.subplots[i]['axes']  = self.figure.add_subplot(rows,
+                                            cols, n+1)
+            self.subplots[i]['lines'] = []
+
+            if i == 0: self.subplot(0)
+
+            self.rows = 0
+            self.cols = 0
+
+        else:
+            self.subplots = []
+
+            if nplots < 1 or rows*cols < nplots:
+                nplots = rows*cols
+            if ganged:
+                hsp,wsp = None,None
+                if rows > 1: hsp = 0.0001
+                if cols > 1: wsp = 0.0001
+                self.figure.subplots_adjust(wspace=wsp,hspace=hsp)
+            for i in range(nplots):
+                self.subplots.append({})
+                self.subplots[i]['lines'] = []
+                if not ganged:
+                    self.subplots[i]['axes'] = self.figure.add_subplot(rows,
+                                                cols, i+1)
+                    if asaprcParams['plotter.axesformatting'] != 'mpl':
+                        self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
+                else:
+                    if i == 0:
+                        self.subplots[i]['axes'] = self.figure.add_subplot(rows,
+                                                cols, i+1)
+                        if asaprcParams['plotter.axesformatting'] != 'mpl':
+
+                            self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
+                    else:
+                        self.subplots[i]['axes'] = self.figure.add_subplot(rows,
+                                                cols, i+1,
+                                                sharex=self.subplots[0]['axes'],
+                                                sharey=self.subplots[0]['axes'])
+
+                    # Suppress tick labelling for interior subplots.
+                    if i <= (rows-1)*cols - 1:
+                        if i+cols < nplots:
+                            # Suppress x-labels for frames width
+                            # adjacent frames
+                            for tick in self.subplots[i]['axes'].xaxis.majorTicks:
+                                tick.label1On = False
+                            #self.subplots[i]['axes'].xaxis.label.set_visible(False)
+                    if i%cols:
+                        # Suppress y-labels for frames not in the left column.
+                        for tick in self.subplots[i]['axes'].yaxis.majorTicks:
+                            tick.label1On = False
+                        #self.subplots[i]['axes'].yaxis.label.set_visible(False)
+                    # disable the first tick of [1:ncol-1] of the last row
+                    #if i+1 < nplots:
+                    #    self.subplots[i]['axes'].xaxis.majorTicks[0].label1On = False
+                # set axes label state for interior subplots.
+                if i%cols:
+                    self.subplots[i]['axes'].yaxis.label.set_visible(False)
+                if (i <= (rows-1)*cols - 1) and (i+cols < nplots):
+                    self.subplots[i]['axes'].xaxis.label.set_visible(False)
+            self.rows = rows
+            self.cols = cols
+            self.subplot(0)
+        del rows,cols,n,nplots,margin,ganged,i
+
+    def subplot(self, i=None, inc=None):
+        """
+        Set the subplot to the 0-relative panel number as defined by one or
+        more invokations of set_panels().
+        """
+        l = len(self.subplots)
+        if l:
+            if i is not None:
+                self.i = i
+
+            if inc is not None:
+                self.i += inc
+
+            self.i %= l
+            self.axes  = self.subplots[self.i]['axes']
+            self.lines = self.subplots[self.i]['lines']
+
+    def set_axes(self, what=None, *args, **kwargs):
+        """
+        Set attributes for the axes by calling the relevant Axes.set_*()
+        method.  Colour translation is done as described in the doctext
+        for palette().
         """
 
-        if numbers is None: numbers = [len(self.lines)-1]
+        if what is None: return
+        if what[-6:] == 'colour': what = what[:-6] + 'color'
 
-        if not hasattr(numbers, '__iter__'):
-            numbers = [numbers]
+        key = "colour"
+        if kwargs.has_key(key):
+            val = kwargs.pop(key)
+            kwargs["color"] = val
 
-        for number in numbers:
+        getattr(self.axes, "set_%s"%what)(*args, **kwargs)
+
+        self.show(hardrefresh=False)
+
+
+    def set_figure(self, what=None, *args, **kwargs):
+        """
+        Set attributes for the figure by calling the relevant Figure.set_*()
+        method.  Colour translation is done as described in the doctext
+        for palette().
+        """
+
+        if what is None: return
+        if what[-6:] == 'colour': what = what[:-6] + 'color'
+        #if what[-5:] == 'color' and len(args):
+        #    args = (get_colour(args[0]),)
+
+        newargs = {}
+        for k, v in kwargs.iteritems():
+            k = k.lower()
+            if k == 'colour': k = 'color'
+            newargs[k] = v
+
+        getattr(self.figure, "set_%s"%what)(*args, **newargs)
+        self.show(hardrefresh=False)
+
+
+    def set_limits(self, xlim=None, ylim=None):
+        """
+        Set x-, and y-limits for each subplot.
+
+        xlim = [xmin, xmax] as in axes.set_xlim().
+        ylim = [ymin, ymax] as in axes.set_ylim().
+        """
+        for s in self.subplots:
+            self.axes  = s['axes']
+            self.lines = s['lines']
+            oldxlim =  list(self.axes.get_xlim())
+            oldylim =  list(self.axes.get_ylim())
+            if xlim is not None:
+                for i in range(len(xlim)):
+                    if xlim[i] is not None:
+                        oldxlim[i] = xlim[i]
+            if ylim is not None:
+                for i in range(len(ylim)):
+                    if ylim[i] is not None:
+                        oldylim[i] = ylim[i]
+            self.axes.set_xlim(oldxlim)
+            self.axes.set_ylim(oldylim)
+        return
+
+
+    def set_line(self, number=None, **kwargs):
+        """
+        Set attributes for the specified line, or else the next line(s)
+        to be plotted.
+
+        number is the 0-relative number of a line that has already been
+        plotted.  If no such line exists, attributes are recorded and used
+        for the next line(s) to be plotted.
+
+        Keyword arguments specify Line2D attributes, e.g. color='r'.  Do
+
+            import matplotlib
+            help(matplotlib.lines)
+
+        The set_* methods of class Line2D define the attribute names and
+        values.  For non-US usage, 'colour' is recognized as synonymous with
+        'color'.
+
+        Set the value to None to delete an attribute.
+
+        Colour translation is done as described in the doctext for palette().
+        """
+
+        redraw = False
+        for k, v in kwargs.iteritems():
+            k = k.lower()
+            if k == 'colour': k = 'color'
+
             if 0 <= number < len(self.lines):
                 if self.lines[number] is not None:
                     for line in self.lines[number]:
-                        line.set_linestyle('None')
-                        self.lines[number] = None
-        self.show()
+                        getattr(line, "set_%s"%k)(v)
+                    redraw = True
+            else:
+                if v is None:
+                    del self.attributes[k]
+                else:
+                    self.attributes[k] = v
+
+        if redraw: self.show(hardrefresh=False)
+
 
     def get_line(self):
         """
@@ -146,6 +432,7 @@ class asaplotbase:
         return self.attributes
 
 
+    ### Actual plot methods ###
     def hist(self, x=None, y=None, fmt=None, add=None):
         """
         Plot a histogram.  N.B. the x values refer to the start of the
@@ -184,38 +471,6 @@ class asaplotbase:
             y2[i] = ydat[(i-1)/2]
 
         self.plot(x2, MaskedArray(y2,mask=m2,copy=0), fmt, add)
-
-
-    def hold(self, hold=True):
-        """
-        Buffer graphics until subsequently released.
-        """
-        self.buffering = hold
-
-
-    def legend(self, loc=None):
-        """
-        Add a legend to the plot.
-
-        Any other value for loc else disables the legend:
-             1: upper right
-             2: upper left
-             3: lower left
-             4: lower right
-             5: right
-             6: center left
-             7: center right
-             8: lower center
-             9: upper center
-            10: center
-
-        """
-        if isinstance(loc, int):
-            self.loc = None
-            if 0 <= loc <= 10: self.loc = loc
-        else:
-            self.loc = None
-        #self.show()
 
 
     def plot(self, x=None, y=None, fmt=None, add=None):
@@ -276,6 +531,220 @@ class asaplotbase:
         self.show()
 
 
+    def tidy(self):
+        # this needs to be exceuted after the first "refresh"
+        nplots = len(self.subplots)
+        if nplots == 1: return
+        for i in xrange(nplots):
+            ax = self.subplots[i]['axes']
+            if i%self.cols:
+                ax.xaxis.majorTicks[0].label1On = False
+            else:
+                if i != 0:
+                    ax.yaxis.majorTicks[-1].label1On = False
+            ## set axes label state for interior subplots.
+            #innerax=False
+            #if i%self.cols:
+            #    ax.yaxis.label.set_visible(innerax)
+            #if (i <= (self.rows-1)*self.cols - 1) and (i+self.cols < nplots):
+            #    ax.xaxis.label.set_visible(innerax)
+            
+
+    def set_title(self, title=None):
+        """
+        Set the title of the plot window.  Use the previous title if title is
+        omitted.
+        """
+        if title is not None:
+            self.title = title
+
+        self.figure.text(0.5, 0.95, self.title, horizontalalignment='center')
+
+
+    def text(self, *args, **kwargs):
+        """
+        Add text to the figure.
+        """
+        self.figure.text(*args, **kwargs)
+        self.show()
+
+    def vline_with_label(self, x, y, label,
+                         location='bottom', rotate=0.0, **kwargs):
+        """
+        Plot a vertical line with label.
+        It takes 'world' values fo x and y.
+        """
+        ax = self.axes
+        # need this to suppress autoscaling during this function
+        self.axes.set_autoscale_on(False)
+        ymin = 0.0
+        ymax = 1.0
+        valign = 'center'
+        if location.lower() == 'top':
+            y = max(0.0, y)
+        elif location.lower() == 'bottom':
+            y = min(0.0, y)
+        lbloffset = 0.06
+        # a rough estimate for the bb of the text
+        if rotate > 0.0: lbloffset = 0.03*len(label)
+        peakoffset = 0.01
+        xy = None
+        xy0 = None
+        # matplotlib api change 0.98 is using transform now
+        if hasattr(ax.transData, "inverse_xy_tup"):
+            # get relative coords
+            xy0 = ax.transData.xy_tup((x,y))
+            xy = ax.transAxes.inverse_xy_tup(xy0)
+        else:
+            xy0 = ax.transData.transform((x,y))
+            # get relative coords
+            xy = ax.transAxes.inverted().transform(xy0)
+        if location.lower() == 'top':
+            ymax = 1.0-lbloffset
+            ymin = xy[1]+peakoffset
+            valign = 'bottom'
+            ylbl = ymax+0.01
+        elif location.lower() == 'bottom':
+            ymin = lbloffset
+            ymax = xy[1]-peakoffset
+            valign = 'top'
+            ylbl = ymin-0.01
+        trans = blended_transform_factory(ax.transData, ax.transAxes)
+        l = ax.axvline(x, ymin, ymax, color='black', **kwargs)
+        t = ax.text(x, ylbl ,label, verticalalignment=valign,
+                                    horizontalalignment='center',
+                    rotation=rotate,transform = trans)
+        self.axes.set_autoscale_on(True)
+
+    def release(self):
+        """
+        Release buffered graphics.
+        """
+        self.buffering = False
+        self.show()
+
+
+    def show(self, hardrefresh=True):
+        """
+        Show graphics dependent on the current buffering state.
+        """
+        if not hardrefresh: return
+        if not self.buffering:
+            if self.loc is not None:
+                for sp in self.subplots:
+                    lines  = []
+                    labels = []
+                    i = 0
+                    for line in sp['lines']:
+                        i += 1
+                        if line is not None:
+                            lines.append(line[0])
+                            lbl = line[0].get_label()
+                            if lbl == '':
+                                lbl = str(i)
+                            labels.append(lbl)
+
+                    if len(lines):
+                        fp = FP(size=rcParams['legend.fontsize'])
+                        #fsz = fp.get_size_in_points() - len(lines)
+                        fsz = fp.get_size_in_points() - max(len(lines),self.cols)
+                        #fp.set_size(max(fsz,6))
+                        fp.set_size(max(fsz,8))
+                        sp['axes'].legend(tuple(lines), tuple(labels),
+                                          self.loc, prop=fp)
+                    #else:
+                    #    sp['axes'].legend((' '))
+
+            from matplotlib.artist import setp
+            fpx = FP(size=rcParams['xtick.labelsize'])
+            xts = fpx.get_size_in_points()- (self.cols)/2
+            fpy = FP(size=rcParams['ytick.labelsize'])
+            yts = fpy.get_size_in_points() - (self.rows)/2
+            fpa = FP(size=rcParams['axes.labelsize'])
+            fpat = FP(size=rcParams['axes.titlesize'])
+            axsize =  fpa.get_size_in_points()
+            tsize =  fpat.get_size_in_points()-(self.cols)/2
+            for sp in self.subplots:
+                ax = sp['axes']
+                ax.title.set_size(tsize)
+                setp(ax.get_xticklabels(), fontsize=xts)
+                setp(ax.get_yticklabels(), fontsize=yts)
+                off = 0
+                if self.cols > 1: off = self.cols
+                ax.xaxis.label.set_size(axsize-off)
+                off = 0
+                if self.rows > 1: off = self.rows
+                ax.yaxis.label.set_size(axsize-off)
+
+    def save(self, fname=None, orientation=None, dpi=None, papertype=None):
+        """
+        Save the plot to a file.
+
+        fname is the name of the output file.  The image format is determined
+        from the file suffix; 'png', 'ps', and 'eps' are recognized.  If no
+        file name is specified 'yyyymmdd_hhmmss.png' is created in the current
+        directory.
+        """
+        from asap import rcParams
+        if papertype is None:
+            papertype = rcParams['plotter.papertype']
+        if fname is None:
+            from datetime import datetime
+            dstr = datetime.now().strftime('%Y%m%d_%H%M%S')
+            fname = 'asap'+dstr+'.png'
+
+        d = ['png','.ps','eps', 'svg']
+
+        from os.path import expandvars
+        fname = expandvars(fname)
+
+        if fname[-3:].lower() in d:
+            try:
+                if fname[-3:].lower() == ".ps":
+                    from matplotlib import __version__ as mv
+                    w = self.figure.get_figwidth()
+                    h = self.figure.get_figheight()
+
+                    if orientation is None:
+                        # oriented
+                        if w > h:
+                            orientation = 'landscape'
+                        else:
+                            orientation = 'portrait'
+                    from matplotlib.backends.backend_ps import papersize
+                    pw,ph = papersize[papertype.lower()]
+                    ds = None
+                    if orientation == 'landscape':
+                        ds = min(ph/w, pw/h)
+                    else:
+                        ds = min(pw/w, ph/h)
+                    ow = ds * w
+                    oh = ds * h
+                    self.figure.set_size_inches((ow, oh))
+                    self.figure.savefig(fname, orientation=orientation,
+                                        papertype=papertype.lower())
+                    self.figure.set_size_inches((w, h))
+                    print 'Written file %s' % (fname)
+                else:
+                    if dpi is None:
+                        dpi =150
+                    self.figure.savefig(fname,dpi=dpi)
+                    print 'Written file %s' % (fname)
+            except IOError, msg:
+                #print 'Failed to save %s: Error msg was\n\n%s' % (fname, err)
+                asaplog.post()
+                asaplog.push('Failed to save %s: Error msg was\n\n%s' % (fname, str(msg)))
+                asaplog.post( 'ERROR' )
+                return
+        else:
+            #print "Invalid image type. Valid types are:"
+            #print "'ps', 'eps', 'png'"
+            asaplog.push( "Invalid image type. Valid types are:" )
+            asaplog.push( "'ps', 'eps', 'png', 'svg'" )
+            asaplog.post('WARN')
+
+
+    ### GUI event methods ###
     def position(self):
         """
         Use the mouse to get a position from a graph.
@@ -399,466 +868,3 @@ class asaplotbase:
         else:
             self.events[type] = self.canvas.mpl_connect(type + '_event', func)
 
-
-    def release(self):
-        """
-        Release buffered graphics.
-        """
-        self.buffering = False
-        self.show()
-
-
-    def save(self, fname=None, orientation=None, dpi=None, papertype=None):
-        """
-        Save the plot to a file.
-
-        fname is the name of the output file.  The image format is determined
-        from the file suffix; 'png', 'ps', and 'eps' are recognized.  If no
-        file name is specified 'yyyymmdd_hhmmss.png' is created in the current
-        directory.
-        """
-        from asap import rcParams
-        if papertype is None:
-            papertype = rcParams['plotter.papertype']
-        if fname is None:
-            from datetime import datetime
-            dstr = datetime.now().strftime('%Y%m%d_%H%M%S')
-            fname = 'asap'+dstr+'.png'
-
-        d = ['png','.ps','eps', 'svg']
-
-        from os.path import expandvars
-        fname = expandvars(fname)
-
-        if fname[-3:].lower() in d:
-            try:
-                if fname[-3:].lower() == ".ps":
-                    from matplotlib import __version__ as mv
-                    w = self.figure.get_figwidth()
-                    h = self.figure.get_figheight()
-
-                    if orientation is None:
-                        # oriented
-                        if w > h:
-                            orientation = 'landscape'
-                        else:
-                            orientation = 'portrait'
-                    from matplotlib.backends.backend_ps import papersize
-                    pw,ph = papersize[papertype.lower()]
-                    ds = None
-                    if orientation == 'landscape':
-                        ds = min(ph/w, pw/h)
-                    else:
-                        ds = min(pw/w, ph/h)
-                    ow = ds * w
-                    oh = ds * h
-                    self.figure.set_size_inches((ow, oh))
-                    self.figure.savefig(fname, orientation=orientation,
-                                        papertype=papertype.lower())
-                    self.figure.set_size_inches((w, h))
-                    print 'Written file %s' % (fname)
-                else:
-                    if dpi is None:
-                        dpi =150
-                    self.figure.savefig(fname,dpi=dpi)
-                    print 'Written file %s' % (fname)
-            except IOError, msg:
-                #print 'Failed to save %s: Error msg was\n\n%s' % (fname, err)
-                asaplog.post()
-                asaplog.push('Failed to save %s: Error msg was\n\n%s' % (fname, str(msg)))
-                asaplog.post( 'ERROR' )
-                return
-        else:
-            #print "Invalid image type. Valid types are:"
-            #print "'ps', 'eps', 'png'"
-            asaplog.push( "Invalid image type. Valid types are:" )
-            asaplog.push( "'ps', 'eps', 'png', 'svg'" )
-            asaplog.post('WARN')
-
-
-    def set_axes(self, what=None, *args, **kwargs):
-        """
-        Set attributes for the axes by calling the relevant Axes.set_*()
-        method.  Colour translation is done as described in the doctext
-        for palette().
-        """
-
-        if what is None: return
-        if what[-6:] == 'colour': what = what[:-6] + 'color'
-
-        key = "colour"
-        if kwargs.has_key(key):
-            val = kwargs.pop(key)
-            kwargs["color"] = val
-
-        getattr(self.axes, "set_%s"%what)(*args, **kwargs)
-
-        self.show(hardrefresh=False)
-
-
-    def set_figure(self, what=None, *args, **kwargs):
-        """
-        Set attributes for the figure by calling the relevant Figure.set_*()
-        method.  Colour translation is done as described in the doctext
-        for palette().
-        """
-
-        if what is None: return
-        if what[-6:] == 'colour': what = what[:-6] + 'color'
-        #if what[-5:] == 'color' and len(args):
-        #    args = (get_colour(args[0]),)
-
-        newargs = {}
-        for k, v in kwargs.iteritems():
-            k = k.lower()
-            if k == 'colour': k = 'color'
-            newargs[k] = v
-
-        getattr(self.figure, "set_%s"%what)(*args, **newargs)
-        self.show(hardrefresh=False)
-
-
-    def set_limits(self, xlim=None, ylim=None):
-        """
-        Set x-, and y-limits for each subplot.
-
-        xlim = [xmin, xmax] as in axes.set_xlim().
-        ylim = [ymin, ymax] as in axes.set_ylim().
-        """
-        for s in self.subplots:
-            self.axes  = s['axes']
-            self.lines = s['lines']
-            oldxlim =  list(self.axes.get_xlim())
-            oldylim =  list(self.axes.get_ylim())
-            if xlim is not None:
-                for i in range(len(xlim)):
-                    if xlim[i] is not None:
-                        oldxlim[i] = xlim[i]
-            if ylim is not None:
-                for i in range(len(ylim)):
-                    if ylim[i] is not None:
-                        oldylim[i] = ylim[i]
-            self.axes.set_xlim(oldxlim)
-            self.axes.set_ylim(oldylim)
-        return
-
-
-    def set_line(self, number=None, **kwargs):
-        """
-        Set attributes for the specified line, or else the next line(s)
-        to be plotted.
-
-        number is the 0-relative number of a line that has already been
-        plotted.  If no such line exists, attributes are recorded and used
-        for the next line(s) to be plotted.
-
-        Keyword arguments specify Line2D attributes, e.g. color='r'.  Do
-
-            import matplotlib
-            help(matplotlib.lines)
-
-        The set_* methods of class Line2D define the attribute names and
-        values.  For non-US usage, 'colour' is recognized as synonymous with
-        'color'.
-
-        Set the value to None to delete an attribute.
-
-        Colour translation is done as described in the doctext for palette().
-        """
-
-        redraw = False
-        for k, v in kwargs.iteritems():
-            k = k.lower()
-            if k == 'colour': k = 'color'
-
-            if 0 <= number < len(self.lines):
-                if self.lines[number] is not None:
-                    for line in self.lines[number]:
-                        getattr(line, "set_%s"%k)(v)
-                    redraw = True
-            else:
-                if v is None:
-                    del self.attributes[k]
-                else:
-                    self.attributes[k] = v
-
-        if redraw: self.show(hardrefresh=False)
-
-
-    #def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, ganged=True):
-    def set_panels(self, rows=1, cols=0, n=-1, nplots=-1, margin=None,ganged=True):
-        """
-        Set the panel layout.
-
-        rows and cols, if cols != 0, specify the number of rows and columns in
-        a regular layout.   (Indexing of these panels in matplotlib is row-
-        major, i.e. column varies fastest.)
-
-        cols == 0 is interpreted as a retangular layout that accomodates
-        'rows' panels, e.g. rows == 6, cols == 0 is equivalent to
-        rows == 2, cols == 3.
-
-        0 <= n < rows*cols is interpreted as the 0-relative panel number in
-        the configuration specified by rows and cols to be added to the
-        current figure as its next 0-relative panel number (i).  This allows
-        non-regular panel layouts to be constructed via multiple calls.  Any
-        other value of n clears the plot and produces a rectangular array of
-        empty panels.  The number of these may be limited by nplots.
-        """
-        if n < 0 and len(self.subplots):
-            self.figure.clear()
-            self.set_title()
-
-        if margin:
-            lef, bot, rig, top, wsp, hsp = margin
-            self.figure.subplots_adjust(
-                left=lef,bottom=bot,right=rig,top=top,wspace=wsp,hspace=hsp)
-            del lef,bot,rig,top,wsp,hsp
-
-        if rows < 1: rows = 1
-
-        if cols <= 0:
-            i = int(sqrt(rows))
-            if i*i < rows: i += 1
-            cols = i
-
-            if i*(i-1) >= rows: i -= 1
-            rows = i
-
-        if 0 <= n < rows*cols:
-            i = len(self.subplots)
-
-            self.subplots.append({})
-
-            self.subplots[i]['axes']  = self.figure.add_subplot(rows,
-                                            cols, n+1)
-            self.subplots[i]['lines'] = []
-
-            if i == 0: self.subplot(0)
-
-            self.rows = 0
-            self.cols = 0
-
-        else:
-            self.subplots = []
-
-            if nplots < 1 or rows*cols < nplots:
-                nplots = rows*cols
-            if ganged:
-                hsp,wsp = None,None
-                if rows > 1: hsp = 0.0001
-                if cols > 1: wsp = 0.0001
-                self.figure.subplots_adjust(wspace=wsp,hspace=hsp)
-            for i in range(nplots):
-                self.subplots.append({})
-                self.subplots[i]['lines'] = []
-                if not ganged:
-                    self.subplots[i]['axes'] = self.figure.add_subplot(rows,
-                                                cols, i+1)
-                    if asaprcParams['plotter.axesformatting'] != 'mpl':
-                        self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
-                else:
-                    if i == 0:
-                        self.subplots[i]['axes'] = self.figure.add_subplot(rows,
-                                                cols, i+1)
-                        if asaprcParams['plotter.axesformatting'] != 'mpl':
-
-                            self.subplots[i]['axes'].xaxis.set_major_formatter(OldScalarFormatter())
-                    else:
-                        self.subplots[i]['axes'] = self.figure.add_subplot(rows,
-                                                cols, i+1,
-                                                sharex=self.subplots[0]['axes'],
-                                                sharey=self.subplots[0]['axes'])
-
-                    # Suppress tick labelling for interior subplots.
-                    if i <= (rows-1)*cols - 1:
-                        if i+cols < nplots:
-                            # Suppress x-labels for frames width
-                            # adjacent frames
-                            for tick in self.subplots[i]['axes'].xaxis.majorTicks:
-                                tick.label1On = False
-                            #self.subplots[i]['axes'].xaxis.label.set_visible(False)
-                    if i%cols:
-                        # Suppress y-labels for frames not in the left column.
-                        for tick in self.subplots[i]['axes'].yaxis.majorTicks:
-                            tick.label1On = False
-                        #self.subplots[i]['axes'].yaxis.label.set_visible(False)
-                    # disable the first tick of [1:ncol-1] of the last row
-                    #if i+1 < nplots:
-                    #    self.subplots[i]['axes'].xaxis.majorTicks[0].label1On = False
-                # set axes label state for interior subplots.
-                if i%cols:
-                    self.subplots[i]['axes'].yaxis.label.set_visible(False)
-                if (i <= (rows-1)*cols - 1) and (i+cols < nplots):
-                    self.subplots[i]['axes'].xaxis.label.set_visible(False)
-            self.rows = rows
-            self.cols = cols
-            self.subplot(0)
-        del rows,cols,n,nplots,margin,ganged,i
-
-
-    def tidy(self):
-        # this needs to be exceuted after the first "refresh"
-        nplots = len(self.subplots)
-        if nplots == 1: return
-        for i in xrange(nplots):
-            ax = self.subplots[i]['axes']
-            if i%self.cols:
-                ax.xaxis.majorTicks[0].label1On = False
-            else:
-                if i != 0:
-                    ax.yaxis.majorTicks[-1].label1On = False
-            ## set axes label state for interior subplots.
-            #innerax=False
-            #if i%self.cols:
-            #    ax.yaxis.label.set_visible(innerax)
-            #if (i <= (self.rows-1)*self.cols - 1) and (i+self.cols < nplots):
-            #    ax.xaxis.label.set_visible(innerax)
-            
-
-    def set_title(self, title=None):
-        """
-        Set the title of the plot window.  Use the previous title if title is
-        omitted.
-        """
-        if title is not None:
-            self.title = title
-
-        self.figure.text(0.5, 0.95, self.title, horizontalalignment='center')
-
-
-    def show(self, hardrefresh=True):
-        """
-        Show graphics dependent on the current buffering state.
-        """
-        if not hardrefresh: return
-        if not self.buffering:
-            if self.loc is not None:
-                for sp in self.subplots:
-                    lines  = []
-                    labels = []
-                    i = 0
-                    for line in sp['lines']:
-                        i += 1
-                        if line is not None:
-                            lines.append(line[0])
-                            lbl = line[0].get_label()
-                            if lbl == '':
-                                lbl = str(i)
-                            labels.append(lbl)
-
-                    if len(lines):
-                        fp = FP(size=rcParams['legend.fontsize'])
-                        #fsz = fp.get_size_in_points() - len(lines)
-                        fsz = fp.get_size_in_points() - max(len(lines),self.cols)
-                        #fp.set_size(max(fsz,6))
-                        fp.set_size(max(fsz,8))
-                        sp['axes'].legend(tuple(lines), tuple(labels),
-                                          self.loc, prop=fp)
-                    #else:
-                    #    sp['axes'].legend((' '))
-
-            from matplotlib.artist import setp
-            fpx = FP(size=rcParams['xtick.labelsize'])
-            xts = fpx.get_size_in_points()- (self.cols)/2
-            fpy = FP(size=rcParams['ytick.labelsize'])
-            yts = fpy.get_size_in_points() - (self.rows)/2
-            fpa = FP(size=rcParams['axes.labelsize'])
-            fpat = FP(size=rcParams['axes.titlesize'])
-            axsize =  fpa.get_size_in_points()
-            tsize =  fpat.get_size_in_points()-(self.cols)/2
-            for sp in self.subplots:
-                ax = sp['axes']
-                ax.title.set_size(tsize)
-                setp(ax.get_xticklabels(), fontsize=xts)
-                setp(ax.get_yticklabels(), fontsize=yts)
-                off = 0
-                if self.cols > 1: off = self.cols
-                ax.xaxis.label.set_size(axsize-off)
-                off = 0
-                if self.rows > 1: off = self.rows
-                ax.yaxis.label.set_size(axsize-off)
-
-    def subplot(self, i=None, inc=None):
-        """
-        Set the subplot to the 0-relative panel number as defined by one or
-        more invokations of set_panels().
-        """
-        l = len(self.subplots)
-        if l:
-            if i is not None:
-                self.i = i
-
-            if inc is not None:
-                self.i += inc
-
-            self.i %= l
-            self.axes  = self.subplots[self.i]['axes']
-            self.lines = self.subplots[self.i]['lines']
-
-    def text(self, *args, **kwargs):
-        """
-        Add text to the figure.
-        """
-        self.figure.text(*args, **kwargs)
-        self.show()
-
-    def vline_with_label(self, x, y, label,
-                         location='bottom', rotate=0.0, **kwargs):
-        """
-        Plot a vertical line with label.
-        It takes "world" values fo x and y.
-        """
-        ax = self.axes
-        # need this to suppress autoscaling during this function
-        self.axes.set_autoscale_on(False)
-        ymin = 0.0
-        ymax = 1.0
-        valign = 'center'
-        if location.lower() == 'top':
-            y = max(0.0, y)
-        elif location.lower() == 'bottom':
-            y = min(0.0, y)
-        lbloffset = 0.06
-        # a rough estimate for the bb of the text
-        if rotate > 0.0: lbloffset = 0.03*len(label)
-        peakoffset = 0.01
-        xy = None
-        xy0 = None
-        # matplotlib api change 0.98 is using transform now
-        if hasattr(ax.transData, "inverse_xy_tup"):
-            # get relative coords
-            xy0 = ax.transData.xy_tup((x,y))
-            xy = ax.transAxes.inverse_xy_tup(xy0)
-        else:
-            xy0 = ax.transData.transform((x,y))
-            # get relative coords
-            xy = ax.transAxes.inverted().transform(xy0)
-        if location.lower() == 'top':
-            ymax = 1.0-lbloffset
-            ymin = xy[1]+peakoffset
-            valign = 'bottom'
-            ylbl = ymax+0.01
-        elif location.lower() == 'bottom':
-            ymin = lbloffset
-            ymax = xy[1]-peakoffset
-            valign = 'top'
-            ylbl = ymin-0.01
-        trans = blended_transform_factory(ax.transData, ax.transAxes)
-        l = ax.axvline(x, ymin, ymax, color='black', **kwargs)
-        t = ax.text(x, ylbl ,label, verticalalignment=valign,
-                                    horizontalalignment='center',
-                    rotation=rotate,transform = trans)
-        self.axes.set_autoscale_on(True)
-
-    def _alive(self):
-        # Return True if the GUI alives.
-        if (not self.is_dead) and \
-               self.figmgr and hasattr(self.figmgr, "num"):
-            figid = self.figmgr.num
-            # Make sure figid=0 is what asapplotter expects.
-            # It might be already destroied/overridden by matplotlib
-            # commands or other methods using asaplot.
-            return _pylab_helpers.Gcf.has_fignum(figid) and \
-                   (self.figmgr == _pylab_helpers.Gcf.get_fig_manager(figid))
-        return False
