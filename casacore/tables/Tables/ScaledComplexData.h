@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaledComplexData.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaledComplexData.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef TABLES_SCALEDCOMPLEXDATA_H
 #define TABLES_SCALEDCOMPLEXDATA_H
@@ -35,7 +35,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-template<class T> class ROScalarColumn;
+template<class T> class ScalarColumn;
 
 
 // <summary>
@@ -382,8 +382,8 @@ private:
     VirtualType    offset_p;             //# offset value
     Bool           fixedScale_p;         //# scale is a fixed column
     Bool           fixedOffset_p;        //# offset is a fixed column
-    ROScalarColumn<VirtualType>* scaleColumn_p;  //# column with scale value
-    ROScalarColumn<VirtualType>* offsetColumn_p; //# column with offset value
+    ScalarColumn<VirtualType>* scaleColumn_p;  //# column with scale value
+    ScalarColumn<VirtualType>* offsetColumn_p; //# column with offset value
 
     // Get the scale value for this row.
     VirtualType getScale (uInt rownr);

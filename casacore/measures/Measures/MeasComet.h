@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasComet.h 21074 2011-05-06 14:08:29Z gervandiepen $
+//# $Id: MeasComet.h 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #ifndef MEASURES_MEASCOMET_H
 #define MEASURES_MEASCOMET_H

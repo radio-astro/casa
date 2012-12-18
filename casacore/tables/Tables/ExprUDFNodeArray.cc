@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprUDFNodeArray.cc 21109 2011-07-18 10:28:54Z gervandiepen $
+//# $Id: ExprUDFNodeArray.cc 21146 2011-11-30 14:43:25Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/ExprUDFNodeArray.h>
@@ -38,8 +38,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Set the table. This is needed for ExprNode::checkReplaceTable to work.
     table_p = tab;
     // The source may be empty which causes the expression type
-    // to be made constant. Force it to be variable.
-    exprtype_p = Variable; 
+    // to be made constant. Force it to be variable if needed.
+    if (udf->isConstant()) {
+      exprtype_p = Constant;
+    } else {
+      exprtype_p = Variable;
+    }
     // Set the unit (is also fine if undefined).
     setUnit (Unit(udf->getUnit()));
   }
@@ -47,11 +51,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   TableExprUDFNodeArray::~TableExprUDFNodeArray()
   {
     delete itsUDF;
-  }
-
-  void TableExprUDFNodeArray::replaceTablePtr (const Table& table)
-  {
-    itsUDF->replaceTable (table);
   }
 
   Array<Bool>     TableExprUDFNodeArray::getArrayBool    (const TableExprId& id)

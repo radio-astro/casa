@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: TableGram.ll 20997 2010-11-17 07:05:29Z gervandiepen $
+    $Id: TableGram.ll 21198 2012-03-20 09:53:51Z gervandiepen $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -43,6 +43,7 @@
 %s EXPRstate
 %s GIVINGstate
 %s FROMstate
+%s CRETABstate
 
 /* The order in the following list is important, since, for example,
    the word "giving" must be recognized as GIVING and not as NAME.
@@ -73,7 +74,7 @@ DATE      {DATEH}|{DATES}
 DTIMEHM   {INT}[hH]({INT}?([mM]({FLINT})?)?)?
 DTIMEC    {INT}":"({INT}?(":"({FLINT})?)?)?
 DTIME     {DTIMEHM}|{DTIMEC}
-DATETIME  {DATE}([-/]{DTIME})?
+DATETIME  {DATE}([-/ ]{DTIME})?
 
 POSDM     {INT}[dD]{INT}[mM]{FLINT}?
 POSD      {INT}"."{INT}?"."{FLINT}?
@@ -142,7 +143,7 @@ ALLFUNC   {ALL}{WHITE}"("
 NAME      \\?[A-Za-z_]([A-Za-z_0-9]|(\\.))*
 NAMEFLD   {NAME}?"."?{NAME}?("::")?{NAME}("."{NAME})*
 TEMPTAB   [$]{INT}
-NAMETAB   ([A-Za-z0-9_./+\-~$@]|(\\.))+
+NAMETAB   ([A-Za-z0-9_./+\-~$@:]|(\\.))+
 REGEX1    m"/"[^/]+"/"
 REGEX2    m%[^%]+%
 REGEX3    m#[^#]+#
@@ -174,7 +175,7 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
     followed by whitespace and an alphanumeric name. That 2nd name
     serves as a shorthand for possible later use in the field name.
     A table name can be given in the FROM part and in the giving PART.
-    These are indicated by the FROM/GIVINGstate, because a table name
+    These are indicated by the FROM/GIVING/CRETABstate, because a table name
     can contain special characters like -. In the FROMstate a table name
     can also be $nnn indicating a temporary table.
     In a subquery care must be taken that the state is switched back to
@@ -241,10 +242,12 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 	  }
 {CREATETAB} {
             tableGramPosition() += yyleng;
+	    BEGIN(CRETABstate);
 	    return CREATETAB;
 	  }
 {DMINFO}  {
             tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
 	    return DMINFO;
 	  }
 {FROM}    {
@@ -373,6 +376,8 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 ">"       { tableGramPosition() += yyleng; return GT; }
 "<="      { tableGramPosition() += yyleng; return LE; }
 "<"       { tableGramPosition() += yyleng; return LT; }
+"~="      { tableGramPosition() += yyleng; return EQNEAR; }
+"!~="     { tableGramPosition() += yyleng; return NENEAR; }
 {BETWEEN} { tableGramPosition() += yyleng; return BETWEEN; }
 {EXISTS}  { tableGramPosition() += yyleng; return EXISTS; }
 {LIKE}    { tableGramPosition() += yyleng; return LIKE; }
@@ -552,8 +557,8 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 	    return TABNAME;
 	  }
 
- /* A table file name can be given in the UPDATE, FROM or GIVING clause */
-<FROMstate,GIVINGstate>{NAMETAB} {
+ /* A table file name can be given in the UPDATE, FROM, GIVING, CRETAB clause */
+<FROMstate,CRETABstate,GIVINGstate>{NAMETAB} {
             tableGramPosition() += yyleng;
             lvalp->val = new TaQLConstNode(
                 new TaQLConstNodeRep (tableGramRemoveEscapes (TableGramtext)));

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.cc 21019 2011-02-10 11:14:30Z gervandiepen $
+//# $Id: TableCopy.cc 21285 2012-11-14 15:36:59Z gervandiepen $
 
 
 //# Includes
@@ -38,6 +38,7 @@
 #include <tables/Tables/DataManInfo.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/SimOrdMap.h>
+#include <casa/Utilities/LinearSearch.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/OS/Path.h>
 #include <casa/BasicSL/String.h>
@@ -131,10 +132,10 @@ void TableCopy::copyInfo (Table& out, const Table& in)
 }
 
 void TableCopy::copySubTables (Table& out, const Table& in, Bool noRows,
-			       const Block<String> omit)
+                               const Block<String>& omit)
 {
   copySubTables (out.rwKeywordSet(), in.keywordSet(), out.tableName(),
-		 out.tableType(), in, noRows, omit);
+		 out.tableType(), in, noRows);
   const TableDesc& outDesc = out.tableDesc();
   const TableDesc& inDesc = in.tableDesc();
   for (uInt i=0; i<outDesc.ncolumn(); i++) {
@@ -158,21 +159,14 @@ void TableCopy::copySubTables (TableRecord& outKeys,
 			       Table::TableType outType,
 			       const Table& in,
 			       Bool noRows,
-			       const Block<String> omit)
+                               const Block<String>& omit)
 {
   for (uInt i=0; i<inKeys.nfields(); i++) {
     if (inKeys.type(i) == TpTable) {
       Table inTab = inKeys.asTable(i);
-      String bName = Path(inTab.tableName()).baseName();
-      Bool doOmit = False;
-      for(uInt j=0; j<omit.size(); j++){
-	if(bName==omit[j]){
-	  doOmit=True; 
-	  break;
-	}
-      }
-      if(doOmit){
-	continue; // do not copy this subtable if it is in the omit vector
+      // Skip a subtable that has to be omitted.
+      if (linearSearchBrackets1 (omit, inKeys.name(i)) >= 0) {
+        continue;
       }
       // Lock the subtable in case not locked yet.
       // Note it will keep the lock if already locked.
@@ -186,7 +180,7 @@ void TableCopy::copySubTables (TableRecord& outKeys,
 	  outKeys.removeField (keyName);
 	}
       } else {
-	String newName = outName + '/' + bName;
+	String newName = outName + '/' + Path(inTab.tableName()).baseName();
 	Table outTab;
 	if (outType == Table::Memory) {
 	  outTab = inTab.copyToMemoryTable (newName, noRows);
@@ -197,7 +191,7 @@ void TableCopy::copySubTables (TableRecord& outKeys,
 	}
 	outKeys.defineTable (inKeys.name(i), outTab);
       }
-    } // end if is table
+    }
   }
 }
 

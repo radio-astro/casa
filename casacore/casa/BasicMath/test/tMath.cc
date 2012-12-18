@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMath.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tMath.cc 21022 2011-03-01 10:07:47Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
@@ -81,94 +81,20 @@ int main() {
       AlwaysAssert(!isFinite(x), AipsError);
     }
     {
-        Double epsilon = 1e-13;
-    	Double x = 321.444;
-        AlwaysAssert(roundDouble(x, 3, 1) == 300, AipsError);
-        AlwaysAssert(roundDouble(x, 3, 2) == 320, AipsError);
-        AlwaysAssert(roundDouble(x, 3, 3) == 321, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 3, 4) - 321.4) < epsilon, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 3, 5) - 321.44) < epsilon, AipsError);
-
-        AlwaysAssert(roundDouble(x, 1, 1, 3.4) == 300, AipsError);
-        AlwaysAssert(roundDouble(x, 2, 1, 3.4) == 320, AipsError);
-        AlwaysAssert(roundDouble(x, 3, 1, 3.4) == 321, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 4, 1, 3.4) - 321.4) < epsilon, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 5, 1, 3.4) - 321.44) < epsilon, AipsError);
-
-        x = 21.45554;
-        AlwaysAssert(roundDouble(x, 1, 2) == 20, AipsError);
-        AlwaysAssert(roundDouble(x, 2, 2) == 21, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 3, 2) - 21.5) < epsilon, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 4, 2) - 21.46) < epsilon, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 5, 2) - 21.456) < epsilon, AipsError);
-
-        AlwaysAssert(roundDouble(x, 1, 1, 2.1) == 20, AipsError);
-        AlwaysAssert(roundDouble(x, 1, 2, 2.1) == 21, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 1, 3, 2.1) - 21.5) < epsilon, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 1, 4, 2.1) - 21.46) < epsilon, AipsError);
-        AlwaysAssert(fabs(roundDouble(x, 1, 5, 2.1) - 21.456) < epsilon, AipsError);
-
-    	x = -11.324;
-
-    	AlwaysAssert(roundDouble(x, 1, 2) == -10, AipsError);
-    	AlwaysAssert(roundDouble(x, 2, 2) == -11, AipsError);
-    	AlwaysAssert(fabs(roundDouble(x, 3, 2) - -11.3) < epsilon, AipsError);
-    	AlwaysAssert(fabs(roundDouble(x, 4, 2) - -11.32) < epsilon, AipsError);
-    	AlwaysAssert(fabs(roundDouble(x, 5, 2) - -11.324) < epsilon, AipsError);
-     	AlwaysAssert(roundDouble(x, 1, 1, 1.1) == -10, AipsError);
-    	AlwaysAssert(roundDouble(x, 1, 2, 1.1) == -11, AipsError);
-    	AlwaysAssert(fabs(roundDouble(x, 1, 3, 1.1) - -11.3) < epsilon, AipsError);
-    	AlwaysAssert(fabs(roundDouble(x, 1, 4, 1.1) - -11.32) < epsilon, AipsError);
-    	AlwaysAssert(fabs(roundDouble(x, 1, 5, 1.1) - -11.324) < epsilon, AipsError);
-    	x = -4502034;
-
-        AlwaysAssert(roundDouble(x, 3, 1) == -5000000, AipsError);
-     	AlwaysAssert(roundDouble(x, 3, 2) == -4500000, AipsError);
-     	AlwaysAssert(roundDouble(x, 3, 3) == -4500000, AipsError);
-     	AlwaysAssert(roundDouble(x, 3, 4) == -4502000, AipsError);
-     	AlwaysAssert(roundDouble(x, 3, 5) == -4502000, AipsError);
-     	AlwaysAssert(roundDouble(x, 1, 2, 5) == -5000000, AipsError);
-     	AlwaysAssert(roundDouble(x, 2, 2, 5) == -4500000, AipsError);
-     	AlwaysAssert(roundDouble(x, 3, 2, 5) == -4500000, AipsError);
-     	AlwaysAssert(roundDouble(x, 4, 2, 5) == -4502000, AipsError);
-     	AlwaysAssert(roundDouble(x, 5, 2, 5) == -4502000, AipsError);
-    	x = -0.0123456;
-    	AlwaysAssert(fabs(roundDouble(x, 1, 2) - -0.01) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 2, 2) - -0.012) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 3, 2) - -0.0123) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 2) - -0.01235) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 5, 2) - -0.012346) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 1, 1.2) - -0.01) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 2, 1.2) - -0.012) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 3, 1.2) - -0.0123) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 4, 1.2) - -0.01235) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 5, 1.2) - -0.012346) < epsilon, AipsError);
-     	x = 0.0123456;
-    	AlwaysAssert(fabs(roundDouble(x, 1, 2) - 0.01) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 2, 2) - 0.012) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 3, 2) - 0.0123) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 2) - 0.01235) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 5, 2) - 0.012346) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 1, 1.2) - 0.01) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 2, 1.2) - 0.012) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 3, 1.2) - 0.0123) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 4, 1.2) - 0.01235) < epsilon, AipsError);
-     	AlwaysAssert(fabs(roundDouble(x, 4, 5, 1.2) - 0.012346) < epsilon, AipsError);
-    	x = 0;
-    	AlwaysAssert(roundDouble(x, 3, 2) == 0, AipsError);
-
-	AlwaysAssert(nearAbs(3.,3.,0.), AipsError);
-	AlwaysAssert(nearAbs(3.,3.,1.), AipsError);
-	AlwaysAssert(nearAbs(3,3,0.), AipsError);
-	AlwaysAssert(nearAbs(3,3,1.), AipsError);
-	AlwaysAssert(nearAbs(3.,3.5,1.), AipsError);
-	AlwaysAssert(nearAbs(3,4,1.), AipsError);
-	AlwaysAssert(!nearAbs(3.,3.5,0.), AipsError);
-	AlwaysAssert(!nearAbs(3.,3.1,0.), AipsError);
-	AlwaysAssert(!nearAbs(3,4,0.5), AipsError);
-	AlwaysAssert(!nearAbs(3.5,3.,0.49), AipsError);
-	AlwaysAssert(!nearAbs(4,3,0.99), AipsError);
-
+      Double x = 321.544;
+      AlwaysAssert(roundDouble(x) == 320, AipsError);
+      AlwaysAssert(roundDouble(x,3) == 322, AipsError);
+      x = 21.45554;
+      AlwaysAssert(roundDouble(x,2) == 21, AipsError);
+      AlwaysAssert(roundDouble(x) == 21.5, AipsError);
+      x = -11.324;
+      AlwaysAssert(roundDouble(x,2) == -11, AipsError);
+      x = -4502034;
+      AlwaysAssert(roundDouble(x) == -4500000, AipsError);
+      x = -0.012345;
+      AlwaysAssert(nearAbs(roundDouble(x,4), -0.01235, 1e-8), AipsError);
+      x = 0;
+      AlwaysAssert(roundDouble(x) == 0, AipsError);
     }
   }
   catch (AipsError x) {

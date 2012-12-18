@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPosIter.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayPosIter.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef CASA_ARRAYPOSITER_H
 #define CASA_ARRAYPOSITER_H
@@ -113,10 +113,9 @@ public:
     // iteration step returns a cursor (containing the data of axis 1).
     // During the iteration axis 2 will vary most rapidly (as it was
     // given first).
-    // Iterate over the given axes in the given order.
-    // The cursor axes are the remaining axes.
-    // E.g. for a shape of [3,4,5,6] and iterAxes [3,1], the cursor size
-    // is [3,5] (axes 0 and 2), while the iteration is fastest for axis 3.
+    // <br>E.g. for a shape of [3,4,5,6] and cursor axes [2,0], the cursor size
+    // is [3,5] (axes 0 and 2), while the iteration is done over axes 1 and 3
+    // (1 the fastest varying one).
     ArrayPositionIterator(const IPosition &shape,
 			  const IPosition &axes,
 			  Bool axesAreCursor=True);

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TabularSpectrum.cc 21081 2011-05-09 11:36:20Z gervandiepen $
+//# $Id: TabularSpectrum.cc 21292 2012-11-28 14:58:19Z gervandiepen $
 
 #include <components/ComponentModels/TabularSpectrum.h>
 #include <casa/Arrays/Vector.h>
@@ -107,7 +107,7 @@ ComponentType::SpectralShape TabularSpectrum::type() const {
   return ComponentType::TABULAR_SPECTRUM;
 }
 
-const void TabularSpectrum::values(Vector<MFrequency::MVType>& freq, Vector<Flux<Double> >& flux) const {
+void TabularSpectrum::values(Vector<MFrequency::MVType>& freq, Vector<Flux<Double> >& flux) const {
    freq.resize(tabFreqVal_p.nelements());
    flux.resize(flux_p.nelements());
    flux=flux_p;

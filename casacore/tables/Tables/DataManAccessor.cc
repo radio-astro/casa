@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManAccessor.cc 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: DataManAccessor.cc 21295 2012-11-30 16:00:01Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/DataManAccessor.h>
@@ -43,6 +43,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     itsDataManager = table.findDataManager (name, byColumn);
   }
+
+  RODataManAccessor::~RODataManAccessor()
+  {}
 
   void RODataManAccessor::setProperties (const Record& prop) const
   {

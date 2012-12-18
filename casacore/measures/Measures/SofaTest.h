@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SofaTest.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SofaTest.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef MEASURES_SOFATEST_H
 #define MEASURES_SOFATEST_H

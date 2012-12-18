@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRecordRep.cc 20969 2010-09-27 12:45:04Z gervandiepen $
+//# $Id: TableRecordRep.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #include <tables/Tables/TableRecordRep.h>
 #include <tables/Tables/TableRecord.h>
@@ -390,7 +390,8 @@ void TableRecordRep::print (std::ostream& os, Int maxNrValues,
 	    os << indent << '}' << endl;
 	} else if (desc_p.type(i) == TpTable) {
 	    os << "Table "
-	       << static_cast<const TableKeyword*>(data_p[i])->tableName();
+	       << static_cast<const TableKeyword*>(data_p[i])->tableName()
+               << endl;
         } else {
 	    printDataField (os, desc_p.type(i),
 			    indent, maxNrValues, data_p[i]);

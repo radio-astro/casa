@@ -1,4 +1,5 @@
-//# Copyright (C) 1995,1996,1999-2001
+//# StdLogical.h: Logical Operations on STL-style containers
+//# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -21,27 +22,44 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id: StdLogical.h 21288 2012-11-16 15:29:12Z gervandiepen $
 
 
-#ifndef STDLOGICAL_H_
-#define STDLOGICAL_H_
+#ifndef CASA_STDLOGICAL_H
+#define CASA_STDLOGICAL_H
 
 #include <casa/aips.h>
+#include <casa/BasicMath/Functors.h>
 
 namespace casa {
 
-// define logical operations on STL containers
+  // Arbitrary compare operation on two STL-style containers.
+  // It returns True if containers have equal size and
+  // all elements compare True.
+  template<typename C1, typename C2, typename CompareOperator>
+  bool compareAll (const C1& l, const C2& r, CompareOperator op)
+  {
+    if (l.size() != r.size()) return false;
+    return compareAll (l.begin(), l.end(), r.begin(), op);
+  }
 
-template<class T, class U> Bool allNearAbs (const T &l, const T &r, const U tolerance);
+  // Test if all elements of the containers are relatively near each other.
+  template<typename C1, typename C2, typename U>
+  bool allNear (const C1& l, const C2& r, U tolerance)
+    { return compareAll (l, r, Near<U>(tolerance)); }
+
+  // Test if all elements of the containers are absolutely near each other.
+  template<typename C1, typename C2, typename U>
+  bool allNearAbs (const C1& l, const C2& r, U tolerance)
+    { return compareAll (l, r, NearAbs<U>(tolerance)); }
 
 
-
-} // end namespace casa
-
-#ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/BasicMath/StdLogical.tcc>
-#endif //# CASACORE_NO_AUTO_TEMPLATES
+} //# end namespace casa
 
 
+//# #ifndef CASACORE_NO_AUTO_TEMPLATES
+//# #include <casa/BasicMath/StdLogical.tcc>
+//# #endif //# CASACORE_NO_AUTO_TEMPLATES
 
-#endif /* STDLOGICAL_H_ */
+#endif

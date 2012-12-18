@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTiledFileAccess.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tTiledFileAccess.cc 21249 2012-05-18 01:38:49Z Malte.Marquarding $
 
 
 #include <tables/Tables/TiledFileAccess.h>
@@ -181,6 +181,40 @@ int main()
 				 tfal.getDComplex (Slicer(st,leng))));
       }
       cout << end << endl;
+    } catch (AipsError x) {
+      cout << "Exception: " << x.getMesg() << endl;
+      return 1;
+    }
+  }
+
+  // Test for a uChar array written in canonical format.
+  // Read it also back as Float with a scale and offset.
+  {
+    IPosition shape(2,10,10);
+    Array<uChar> arrs(shape);
+    Array<Float> arrf(shape);
+    Float scale = 2;
+    Float offset = 2;
+    indgen(arrs);
+    indgen(arrf, float(2), float(2));
+    {
+      Bool deleteIt;
+      const uChar* dataPtr = arrs.getStorage (deleteIt);
+      RegularFileIO fios(RegularFile("tTiledFileAccess_tmp.dat"), ByteIO::New);
+      CanonicalIO ios (&fios);
+      ios.write (shape.product(), dataPtr);
+      arrs.freeStorage (dataPtr, deleteIt);
+    }
+    try {
+      Slicer slicer (IPosition(2,0,0), shape);
+      TiledFileAccess tfac ("tTiledFileAccess_tmp.dat", 0, shape,
+			    IPosition(2,10,5), TpUChar,
+                            TSMOption::Cache, True, True);
+      AlwaysAssertExit (allEQ (arrs, tfac.getUChar (slicer)));
+      AlwaysAssertExit (allEQ (arrf, tfac.getFloat (slicer, scale, offset,
+						    uChar(255))));
+      AlwaysAssertExit (tfac.shape() == shape);
+      AlwaysAssertExit (tfac.tileShape() == IPosition(2,10,5));
     } catch (AipsError x) {
       cout << "Exception: " << x.getMesg() << endl;
       return 1;

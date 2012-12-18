@@ -195,7 +195,7 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
     //2012.09.13 values
     //fill_coeffs(RVF4(1.2553, -0.4689, -0.1597, 0.0286), RVF4(0.0006, 0.0006, 0.0002, 0.0003));
     //3C286 revised values as of Oct 1, 2012.
-    fill_coeffs(RVF4(1.2515, -0.4605, -0.1715, 0.0336), RVF4(0.0048, 0.0163, 0.0208, 0.0082));
+    fill_coeffs(RVF4(1.2515, -0.4605, -0.1715, 0.0336), RVF4(0.0006, 0.0006, 0.0002, 0.0003));
   else if(srcEnum == FCQS::THREEC123) {
     
     /*** 2012.09.13 values
@@ -213,13 +213,13 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
     ***/
     //3C123 revised values as of Oct 1, 2012 
     // now only given to 2nd order
-    fill_coeffs(RVF3(1.8077, -0.8018, -0.1157),RVF3(0.0036, 0.0081, 0.0047));
+    fill_coeffs(RVF3(1.8077, -0.8018, -0.1157),RVF3(0.0007, 0.0014, 0.0039));
   }
   else if(srcEnum == FCQS::THREEC295)
     // 2012.09.13 values  
     //fill_coeffs(RVF4(1.4832, -0.7749, -0.3529, 0.0767),RVF4(0.0007, 0.0006, 0.0003, 0.0003)); 
     // 3C295 Oct 1, 2012 
-    fill_coeffs(RVF4(1.4866, -0.7871, -0.3440, 0.0749),RVF4(0.0036, 0.0110, 0.0160, 0.0070)); 
+    fill_coeffs(RVF4(1.4866, -0.7871, -0.3440, 0.0749),RVF4(0.0007, 0.0006, 0.0003, 0.0003)); 
   else if(srcEnum == FCQS::THREEC196) {
     /*** 2012.09.13 values
     coeffs(0)=1.2892;
@@ -235,7 +235,7 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
     fill_coeffs(RVF5(coeffs),RVF5(coefferrs));
     ***/
     // 3C196 Oct 1 2012 values has less terms
-    fill_coeffs(RVF4(1.2969, -0.8690, -0.1788, 0.0305), RVF4(0.0040, 0.0114, 0.0150, 0.0063));
+    fill_coeffs(RVF4(1.2969, -0.8690, -0.1788, 0.0305), RVF4(0.0007, 0.0017, 0.0036, 0.0028));
   } 
   else
     found = false;

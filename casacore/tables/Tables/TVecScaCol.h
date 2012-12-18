@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecScaCol.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TVecScaCol.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef TABLES_TVECSCACOL_H
 #define TABLES_TVECSCACOL_H
@@ -35,9 +35,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-class ROTableColumn;
 class TableColumn;
-template<class T> class ROScalarColumn;
 template<class T> class ScalarColumn;
 class String;
 
@@ -94,11 +92,6 @@ protected:
 
 public:
     // Create a table vector from the given table column.
-    // This constructor is for ROTableVector and does not allow
-    // elements to be changed.
-    TabVecScaCol (const ROTableColumn& column);
-
-    // Create a table vector from the given table column.
     // This constructor is for TableVector and allows elements to be changed.
     TabVecScaCol (const TableColumn& column);
 
@@ -121,8 +114,7 @@ public:
     void set (const T&);
 
 protected:
-    ROScalarColumn<T>*  colPtr_p;
-    ScalarColumn<T>*    colPtrPut_p;
+    ScalarColumn<T>*  colPtr_p;
 };
 
 

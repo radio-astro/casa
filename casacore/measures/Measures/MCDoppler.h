@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MCDoppler.h 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: MCDoppler.h 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #ifndef MEASURES_MCDOPPLER_H
 #define MEASURES_MCDOPPLER_H

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasIERS.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: MeasIERS.cc 21272 2012-10-26 05:22:39Z Malte.Marquarding@gmail.com $
 
 //# Includes
 #include <measures/Measures/MeasIERS.h>
@@ -162,7 +162,7 @@ Bool MeasIERS::initMeas(MeasIERS::Files which) {
            << "Cannot read IERS (Earth axis data) table " << tp[which]
            << "\nCalculations will proceed with lower precision"
            << LogIO::POST;
-        ok = False;
+        return False;
       }
       if (ok) {
         MeasIERS::openNote(&MeasIERS::closeMeas);
@@ -404,11 +404,13 @@ Bool MeasIERS::findTab(Table& tab, const Table *tabin, const String &rc,
 	    Bool found = False;
 	    String mdir;
 	    if (Aipsrc::find(mdir, "measures.directory")) {
-	      mdir += "/";
-	      ldir = mdir + udir;
+	      mdir.trim();
+	      Path mpath = Path(mdir);
+	      mpath.append(udir);
+	      ldir = mpath.absoluteName()+"/";
 	      searched.resize(searched.nelements()+1, True);
 	      searched[searched.nelements()-1] = ldir;                        
-	      if  (Table::isReadable(ldir + name)) {
+	      if  (Table::isReadable(ldir+name)) {
 		found = True;
 	      }
 	    }

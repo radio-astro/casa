@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRecordGramTable.cc 21086 2011-05-13 08:31:02Z gervandiepen $
+//# $Id: tRecordGramTable.cc 21146 2011-11-30 14:43:25Z gervandiepen $
 
 #include <tables/Tables/RecordGram.h>
 #include <tables/Tables/ExprNode.h>
@@ -50,39 +50,41 @@ void doIt (const String& str)
   TableExprNode expr = RecordGram::parse (tab, str);
   cout << str << ": ";
   if (expr.isScalar()) {
+    Vector<uInt> rownrs(expr.nrow());
+    indgen (rownrs);
     switch (expr.getColumnDataType()) {
     case TpBool:
-      cout << expr.getColumnBool();
+      cout << expr.getColumnBool (rownrs);
       break;
     case TpUChar:
-      cout << expr.getColumnuChar();
+      cout << expr.getColumnuChar (rownrs);
       break;
     case TpShort:
-      cout << expr.getColumnShort();
+      cout << expr.getColumnShort (rownrs);
       break;
     case TpUShort:
-      cout << expr.getColumnuShort();
+      cout << expr.getColumnuShort (rownrs);
       break;
     case TpInt:
-      cout << expr.getColumnInt();
+      cout << expr.getColumnInt (rownrs);
       break;
     case TpUInt:
-      cout << expr.getColumnuInt();
+      cout << expr.getColumnuInt (rownrs);
       break;
     case TpFloat:
-      cout << expr.getColumnFloat();
+      cout << expr.getColumnFloat (rownrs);
       break;
     case TpDouble:
-      cout << expr.getColumnDouble();
+      cout << expr.getColumnDouble (rownrs);
       break;
     case TpComplex:
-      cout << expr.getColumnComplex();
+      cout << expr.getColumnComplex (rownrs);
       break;
     case TpDComplex:
-      cout << expr.getColumnDComplex();
+      cout << expr.getColumnDComplex (rownrs);
       break;
     case TpString:
-      cout << expr.getColumnString();
+      cout << expr.getColumnString (rownrs);
       break;
     default:
       cout << "Unknown expression scalar type " << expr.getColumnDataType();

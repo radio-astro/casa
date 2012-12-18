@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: String.cc 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 
 #include <casa/BasicSL/RegexBase.h>
 #include <algorithm>
-#include <stdarg.h>
 #include <casa/string.h>
 #include <casa/sstream.h>
-#include <stdio.h>		/**for vsnprintf( ) **/
+#include <stdio.h>		// for vsnprintf( )
+#include <stdarg.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -77,138 +77,94 @@ Int String::freq(const Char *s) const {
 
 Double String::toDouble(const String& string) {
     istringstream instr(string);
-    Double var(0.0);
+    Double var;
     instr >> var;
-    
-    if(instr.fail())         // making sure things get reset
-	                     // cause sometimes they don't
-	    var = 0.0;
+    if (instr.fail()) {
+      var = 0.0;
+    }
     return var;
 }
 
 Float String::toFloat(const String& string) {
     istringstream instr(string);
-    Float var(0.0);
+    Float var;
     // Initialize in case the string is empty or non-numeric.
     instr >> var;
-    if(instr.fail())         // making sure things get reset
-	    var = 0.0;
+    if (instr.fail()) {
+      var = 0.0;
+    }
     return var;
 }
 
 Int String::toInt(const String& string) {
     istringstream instr(string);
+    Int var;
     // Initialize in case the string is empty or non-numeric.
-
-    Int var(0);
     instr >> var;
-    if(instr.fail()) {
-    	// making sure things get reset
-	    var = 0;
+    if (instr.fail()) {
+      var = 0.0;
     }
     return var;
 }
 
-String
-String::format (char * picture, ...)
+String String::format (const char* picture, ...)
 {
-    const int BufferSize = 16000;
+    const int BufferSize = 16384;
     char buffer [BufferSize];
-
     va_list vaList;
     va_start (vaList, picture);
-
     int nUsed = vsnprintf (buffer, BufferSize, picture, vaList);
-
     va_end (vaList);
-
     String result = buffer;
-
     if (nUsed >= BufferSize){
         result += "*TRUNCATED*";
     }
-
     return result;
 }
 
-
-void String::trim() {
-	Char ws[4];
-	ws[0] = ' ';
-	ws[1] = '\t';
-	ws[2] = '\n';
-	ws[3] = '\r';
-	trim(ws, 4);
+void String::trim()
+{
+    char ws[4];
+    ws[0] = ' ';
+    ws[1] = '\t';
+    ws[2] = '\n';
+    ws[3] = '\r';
+    trim(ws, 4);
 }
 
-void String::trim(Char c[], uInt n) {
+void String::trim(char c[], uInt n) {
     iterator iter = begin();
-    Bool found = True;
-    while (
-        iter != end() && found
-    ) {
-    	found = False;
-    	for (uInt i=0; i<n; i++) {
-    		if (*iter == c[i]) {
-    			erase(iter);
-    			found = True;
-    			break;
-    		}
-    	}
+    while (iter != end()  &&  std::find(c, c+n, *iter) != c+n) {
+        ++iter;
     }
-
-
-    if (length() > 0) {
-    	found = True;
-    	iter = end() - 1;
-    	while (
-    		iter != begin() && found
-    	) {
-    		found = False;
-    	   	for (uInt i=0; i<n; i++) {
-    	   		if (*iter == c[i]) {
-    	    		erase(iter);
-    	    		found = True;
-    	    		iter--;
-    	    		break;
-    	    	}
-    	    }
-    	}
+    erase (begin(), iter);
+    if (! empty()) {
+        iter = end() - 1;
+        while (iter != begin()  &&  std::find(c, c+n, *iter) != c+n) {
+            --iter;
+        }
+        ++iter;
+        erase (iter, end());
     }
 }
 
 void String::ltrim(char c) {
     iterator iter = begin();
-    while (iter != end()) {
-    	if (*iter == c) {
-    		erase(iter);
-    		// no need to increment iter
-    		// since what was the second character
-    		// is now the first after the erase()
-    	}
-    	else {
-    		break;
-    	}
+    while (iter != end()  &&  *iter ==c) {
+         ++iter;
     }
+    erase (begin(), iter);
 }
 
 void String::rtrim(char c) {
-
-	if (length() > 0) {
-	    iterator iter = begin();
-		iter = end() - 1;
-		while (
-			iter != begin()
-		) {
-			if (*iter == c) {
-				erase(iter);
-				iter--;
-			}
-			else {
-				break;
-			}
-		}
-	}
+    if (! empty()) {
+      iterator iter = end() - 1;
+        while (iter != begin()  &&  *iter == c) {
+            --iter;
+        }
+        ++iter;
+        erase (iter, end());
+    }
 }
 
 // Obtain a (separate) 'sub'-string
@@ -398,11 +354,6 @@ void String::capitalize() {
   }
 }
 
-Bool String::startsWith(const String& beginString) const {
-	return find(beginString) == 0;
-}
-
-
 // RegexBase related functions
 String::size_type String::find(const RegexBase &r, size_type pos) const {
   Int unused;
@@ -416,17 +367,19 @@ String::size_type String::rfind(const RegexBase &r, size_type pos) const {
 
 Bool String::matches(const string &str, Int pos) const {
   Bool rstat(False);
-  if(pos < 0){
-	  if(this->index(str,pos) == 0)
-		  rstat = True;
-	  else
-		  cerr << "No Match " << this->index(str, pos) << endl;
+  if (pos < 0) {
+    if (this->index(str,pos) == 0) {
+      rstat = True;
+      ///    } else {
+      ///      cerr << "No Match " << this->index(str, pos) << endl;
+    }
   } else {
-	  if (length() != 0 && str.length() != 0 &&
-	  length() == pos+str.length() &&
-	  static_cast<size_type>(pos) < length() &&
-	  index(str, pos) == static_cast<size_type>(pos))
-		  rstat = True;
+    if (length() != 0 && str.length() != 0 &&
+        length() == pos+str.length() &&
+        static_cast<size_type>(pos) < length() &&
+        index(str, pos) == static_cast<size_type>(pos)) {
+      rstat = True;
+    }
   }
   return rstat;
 }

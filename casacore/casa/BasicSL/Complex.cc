@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Complex.cc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 
 //# Includes
@@ -132,6 +132,18 @@ void setInf(DComplex &val)
   Double x; setInf(x);
   Double y; setInf(y);
   val = DComplex(x, y);
+}
+
+
+// Finite functions
+
+Bool isFinite(const Complex &val)
+{
+  return isFinite(val.real()) || isFinite(val.imag());
+}
+Bool isFinite(const DComplex &val)
+{
+  return isFinite(val.real()) || isFinite(val.imag());
 }
 
 // fmod functions

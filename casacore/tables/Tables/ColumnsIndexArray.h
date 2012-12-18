@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnsIndexArray.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColumnsIndexArray.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef TABLES_COLUMNSINDEXARRAY_H
 #define TABLES_COLUMNSINDEXARRAY_H
@@ -39,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 class String;
-class ROTableColumn;
+class TableColumn;
 
 
 // <summary>
@@ -253,7 +253,7 @@ protected:
   // If the switch <src>arrayPossible</src> is True, the column can
   // be an array. Otherwise it has to be a scalar.
   void addColumnToDesc (RecordDesc& description,
-			const ROTableColumn& column);
+			const TableColumn& column);
 
   // Make the various internal <src>RecordFieldPtr</src> objects.
   void makeObjects (const RecordDesc& description);

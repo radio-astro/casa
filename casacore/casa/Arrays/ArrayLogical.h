@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayLogical.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ArrayLogical.h 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #ifndef CASA_ARRAYLOGICAL_H
 #define CASA_ARRAYLOGICAL_H
@@ -264,10 +264,11 @@ template<class T> Bool allSame (const Array<T> &a)
   { return a.size() <= 1  ||  allEQ(*a.data(), a); }
 
 
-// Element by element test for NaN or Infinity.
+// Element by element test for NaN or (In)finity.
 // <group>
-template<class T> LogicalArray isNaN (const Array<T> &array);
-template<class T> LogicalArray isInf (const Array<T> &array);
+template<class T> LogicalArray isNaN    (const Array<T> &array);
+template<class T> LogicalArray isInf    (const Array<T> &array);
+template<class T> LogicalArray isFinite (const Array<T> &array);
 // </group>
 
 // 

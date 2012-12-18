@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StandardStManAccessor.cc 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: StandardStManAccessor.cc 21295 2012-11-30 16:00:01Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/StandardStManAccessor.h>
@@ -81,11 +81,6 @@ uInt ROStandardStManAccessor::getCacheSize() const
 void ROStandardStManAccessor::clearCache()
 {
     itsSSMPtr->clearCache();
-}
-
-void ROStandardStManAccessor::showCacheStatistics (ostream& anOs) const
-{
-    itsSSMPtr->showCacheStatistics (anOs);
 }
 
 void ROStandardStManAccessor::showBaseStatistics (ostream& anOs) const

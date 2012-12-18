@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DerivedColumn.cc 20941 2010-08-25 18:35:26Z gervandiepen $
+//# $Id: DerivedColumn.cc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 //# Includes
 #include <derivedmscal/DerivedMC/DerivedColumn.h>
@@ -49,6 +49,17 @@ namespace casa {
   void LASTColumn::get (uInt rowNr, Double& data)
   {
     data = itsEngine->getLAST (itsAntNr, rowNr);
+  }
+
+  HaDecColumn::~HaDecColumn()
+  {}
+  IPosition HaDecColumn::shape (uInt)
+  {
+    return IPosition(1,2);
+  }
+  void HaDecColumn::getArray (uInt rowNr, Array<Double>& data)
+  {
+    itsEngine->getHaDec (itsAntNr, rowNr, data);
   }
 
   AzElColumn::~AzElColumn()

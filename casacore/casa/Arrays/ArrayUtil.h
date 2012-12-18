@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayUtil.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayUtil.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef CASA_ARRAYUTIL_H
 #define CASA_ARRAYUTIL_H
@@ -190,6 +190,45 @@ uInt partialFuncHelper (Int& nelemCont,
 // </group>
 
 
+// <summary>
+// Reverse the order of one or more axes of an array.
+// </summary>
+
+// <use visibility=export>
+
+// <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="tArrayUtil2.cc">
+
+// <synopsis>
+// This function makes it possible to reverse one or more axes of an array by
+// swapping around the elements of each axis.
+// The resulting array is a copy of the input array with its data
+// moved around according to the new order.
+// If the order does not change, a copy is returned if the
+// <src>alwaysCopy</src> is true. Otherwise a reference of the
+// input array is returned.
+// <p>
+// Reversing axis 0 means that its elements are reversed.
+// Reversing axis 1 means that the 
+// </synopsis>
+
+// <example>
+// Reversing axis 0 of a Vector means that the Vector is reversed.
+// Reversing axis 1 of a Matrix means that its rows are reversed.
+// Reversing axis 0 of an N-dim array means that the elements of each Vector
+// in that array are reversed.
+// Reversing axis 1 of a Matrix means that its columns are reversed.
+// </example>
+
+// <group name=reverseArray>
+template<class T>
+Array<T> reverseArray (const Array<T>& array,
+                       const IPosition& reversedAxes,
+                       Bool alwaysCopy = True);
+template<class T>
+Array<T> reverseArray (const Array<T>& array, uInt axis,
+                       Bool alwaysCopy = True);
+// </group>
+
 
 // <summary>
 // Reorder the axes of an array.
@@ -238,23 +277,6 @@ Array<T> reorderArray (const Array<T>& array,
 		       Bool alwaysCopy = True);
 // </group>
 
-
-// reverse specified axes in an array. <src>reverseAxes</src>
-// contains the list of axes to reverse.
-template<class T>
-Array<T> reverseArray (
-	const Array<T>& array,
-	const IPosition& reversedAxes,
-	Bool alwaysCopy = True
-);
-
-
-// reverse an array along a specified axis.
-template<class T>
-Array<T> reverseArray (
-	const Array<T>& array, const uInt axis,
-	Bool alwaysCopy = True
-);
 
 // <summary>
 // Helper function for function reorderArray.

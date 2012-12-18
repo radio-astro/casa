@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TwoSidedShape.cc 21071 2011-05-06 14:02:15Z gervandiepen $
+//# $Id: TwoSidedShape.cc 21292 2012-11-28 14:58:19Z gervandiepen $
 
 #include <components/ComponentModels/TwoSidedShape.h>
 #include <casa/iomanip.h>

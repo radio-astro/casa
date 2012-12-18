@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MPosition.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MPosition.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_MPOSITION_H
 #define MEASURES_MPOSITION_H
@@ -42,9 +42,7 @@ class MPosition;
 class MCPosition;
 template <class M> class MeasConvert;
 template <class M> class ArrayMeasColumn;
-template <class M> class ROArrayMeasColumn;
 template <class M> class ScalarMeasColumn;
-template <class M> class ROScalarMeasColumn;
 
 //# Typedefs
 
@@ -108,10 +106,8 @@ class MPosition : public MeasBase<MVPosition, MeasRef<MPosition> > {
   typedef MeasRef<MPosition> Ref;
   // Measure Convert (i.e. MPosition::Convert)
   typedef MeasConvert<MPosition> Convert;
-  // Measure table Columns (e.g., MPosition::ROScalarColumn)
-  typedef ROScalarMeasColumn<MPosition> ROScalarColumn;
+  // Measure table Columns (e.g., MPosition::ScalarColumn)
   typedef ScalarMeasColumn<MPosition> ScalarColumn;
-  typedef ROArrayMeasColumn<MPosition> ROArrayColumn;
   typedef ArrayMeasColumn<MPosition> ArrayColumn;
   // Reference enum Types (included originally for gcc 2.95)  
   typedef WHATEVER_SUN_TYPEDEF(MPosition) Types Types;

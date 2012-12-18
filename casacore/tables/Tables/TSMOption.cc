@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMOption.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: TSMOption.cc 21154 2011-12-02 07:19:09Z gervandiepen $
 
 #include <tables/Tables/TSMOption.h>
 #include <casa/System/AipsrcValue.h>
@@ -42,14 +42,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Get variables from aipsrc if needed.
     if (itsOption == TSMOption::Aipsrc) {
       String opt;
-      AipsrcValue<String>::find (opt, "table.tsm.option", "default");
+      AipsrcValue<String>::find (opt, "table.tsm.option", "cache");
       opt.downcase();
       if (opt == "map"  ||  opt == "mmap") {
         itsOption = TSMOption::MMap;
       } else if (opt == "cache") {
         itsOption = TSMOption::Cache;
-      } else if (opt == "buffer") {
-        itsOption = TSMOption::Buffer;
+        ///      } else if (opt == "buffer") {
+        ///        itsOption = TSMOption::Buffer;
       } else if (opt == "default32") {
         itsOption = (newTable ? TSMOption::Cache : TSMOption::MMap);
       } else {

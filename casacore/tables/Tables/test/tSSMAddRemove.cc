@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: tSSMAddRemove.cc 21258 2012-08-31 09:29:10Z gervandiepen $
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>

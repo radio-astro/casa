@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeDer.cc 21103 2011-07-08 07:27:17Z gervandiepen $
+//# $Id: TaQLNodeDer.cc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/TaQLNodeDer.h>

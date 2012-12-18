@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Matrix.tcc 21098 2011-06-24 07:42:37Z gervandiepen $
+//# $Id: Matrix.tcc 21179 2012-03-07 10:28:37Z gervandiepen $
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
@@ -310,7 +310,7 @@ template<class T> Vector<T> Matrix<T>::diagonal(Int n)
     tmp.originalLength_p.resize (1);
     tmp.nels_p = tmp.length_p(0);
     if (tmp.nels_p > 1) {
-        tmp.inc_p(0) = this->steps_p(0)+this->steps_p(1);
+        tmp.inc_p(0) = this->steps_p(0) + this->steps_p(1);
 	tmp.contiguous_p = False;
     }
     tmp.makeSteps();

@@ -1,4 +1,5 @@
-//# Copyright (C) 1993,1994,1995,1996,1999,2001
+//# tStdLogical.cc: Test program for functions in StdLogical.h
+//# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -31,30 +32,34 @@
 
 using namespace casa;
 
-int main() {
-	try {
-		std::set<Float> a;
-		std::set<Float> b;
+int main()
+{
+  try {
+    std::set<Float> a;
+    std::set<Float> b;
 
-		Float a1[] = {0.1, 5.2, 6.3};
-		Float b1[] = {0.5};
+    Float a1[] = {0.1, 5.2, 6.3};
+    Float b1[] = {0.5};
 
-		a.insert(a1, a1+3);
-		b.insert(b1, b1+1);
-		AlwaysAssert(! allNearAbs(a, b, 0.1), AipsError);
+    a.insert(a1, a1+3);
+    b.insert(b1, b1+1);
+    AlwaysAssert(! allNearAbs(a, b, 0.1), AipsError);
 
-		b.clear();
-		Float b2[] = {0.2, 5.1, 6.4};
-		b.insert(b2, b2+3);
-		AlwaysAssert(! allNearAbs(a, b, 0.05), AipsError);
-		AlwaysAssert(allNearAbs(a, b, 0.11), AipsError);
+    b.clear();
+    Float b2[] = {0.2, 5.1, 6.4};
+    b.insert(b2, b2+3);
+    AlwaysAssert(! allNearAbs(a, b, 0.05), AipsError);
+    AlwaysAssert(allNearAbs(a, b, 0.11), AipsError);
 
-		cout << "OK" << endl;
-		return 0;
-	}
-	catch (const AipsError& exc) {
-		cout << "FAIL" << endl;
-		return 1;
-	}
+    AlwaysAssert(compareAll(a.begin(), a.end(), a1, NearAbs<Float>(0.1)),
+                 AipsError);
+
+    cout << "OK" << endl;
+    return 0;
+  }
+  catch (const AipsError& exc) {
+    cout << "FAIL" << endl;
+    return 1;
+  }
 
 }

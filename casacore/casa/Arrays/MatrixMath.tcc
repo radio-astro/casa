@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixMath.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MatrixMath.tcc 21159 2011-12-13 02:59:29Z ben.h@bigpond.net.au $
 
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/Vector.h>
@@ -100,7 +100,7 @@ Vector<T> product (const Matrix<T> &A, const Vector<T> &x) {
 template <class T> 
 Vector<T> directProduct(const Vector<T>& x, const Vector<T>& y) 
 {
-  Int nx=x.nelements(), ny=y.nelements();
+  uInt nx=x.nelements(), ny=y.nelements();
   Vector<T> res(nx*ny);
   for (uInt i=0; i<nx*ny; i++) {
       res(i) = x(i/ny) * y(i%ny);

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StandardStManAccessor.h 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: StandardStManAccessor.h 21295 2012-11-30 16:00:01Z gervandiepen $
 
 #ifndef TABLES_STANDARDSTMANACCESSOR_H
 #define TABLES_STANDARDSTMANACCESSOR_H
@@ -111,7 +111,7 @@ public:
     ROStandardStManAccessor (const Table& table, const String& name,
                              Bool byColumn=False);
 
-    ~ROStandardStManAccessor();
+    virtual ~ROStandardStManAccessor();
 
     // Copy constructor (reference semantics).
     ROStandardStManAccessor (const ROStandardStManAccessor& that);
@@ -139,9 +139,6 @@ public:
     // It will flush the cache as needed and remove all buckets from it
     // resulting in a drop in memory used.
     void clearCache();
-
-    // Show the statistics for the cache used by this storage manager.
-    void showCacheStatistics (ostream& anOs) const;
 
     // Show the statistics for the base class.
     void showBaseStatistics (ostream& anOs) const;
