@@ -219,7 +219,41 @@ Define the image coordinate systems, image shapes and the number of images (mult
 </method>
 
 <!-- ===================================== -->
+   <method type="function" name="getmajorcyclecontrols">
+   <shortdescription>Get parameters controlling major cycle</shortdescription>
 
+<description>
+</description>
+<input/>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="executemajorcycle">
+   <shortdescription>Run a major cycle</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="controls">
+     <description>All parameters that control major cycle</description>
+     <value type="record"></value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+<!-- ===================================== -->
+   <method type="function" name="endmajorcycle">
+   <shortdescription>Record the end of a major cycle</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
 
    <method type="function" name="runminorcycle">
    <shortdescription>Run a minor cycle</shortdescription>
@@ -229,6 +263,51 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <input/>
 <returns type="bool"/>
 </method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="getsubiterbot">
+   <shortdescription>Get the controller for a minor cycle</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="executeminorcycle">
+   <shortdescription>Run a minor cycle</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="iterbotrecord">
+     <description>All parameters that control major cycle</description>
+     <value type="record"></value>
+     </param>
+</input>
+
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="endminorcycle">
+   <shortdescription>End of minor cycle</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="iterbotrecord">
+     <description>All parameters that control major cycle</description>
+     <value type="record"></value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
 
 <!-- ===================================== -->
 

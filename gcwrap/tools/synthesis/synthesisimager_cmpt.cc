@@ -241,6 +241,48 @@ bool synthesisimager::runmajorcycle()
   return rstat;
 }
 
+casac::record* synthesisimager::getmajorcyclecontrols()
+{
+  casac::record* rstat(0);
+  try {
+    rstat=fromRecord(itsImager->getMajorCycleControls());
+  } catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}  
+
+bool synthesisimager::executemajorcycle(const casac::record& controls)
+{
+  Bool rstat(False);
+  try {
+    casa::Record recpars = *toRecord( controls );
+    itsImager->executeMajorCycle( recpars );
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool synthesisimager::endmajorcycle()
+{
+  Bool rstat(False);
+  
+  try 
+    {
+      itsImager->endMajorCycle();
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+
+
 bool synthesisimager::runminorcycle()
 {
   Bool rstat(False);
@@ -256,6 +298,49 @@ bool synthesisimager::runminorcycle()
 
   return rstat;
 }
+
+casac::record* synthesisimager::getsubiterbot()
+{
+  casac::record* rstat(0);
+  try {
+    rstat=fromRecord(itsImager->getSubIterBot());
+  } catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}  
+
+casac::record* synthesisimager::executeminorcycle(const casac::record& iterbot)
+{
+  casac::record* rstat(False);
+  try {
+    casa::Record recpars = *toRecord( iterbot );
+    rstat = fromRecord(itsImager->executeMinorCycle( recpars ));
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool synthesisimager::endminorcycle(const casac::record& iterbot)
+{
+  Bool rstat(False);
+  
+  try 
+    {
+      casa::Record recpars = *toRecord( iterbot );
+      itsImager->endMinorCycle(recpars);
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+
 
 bool
 synthesisimager::done()

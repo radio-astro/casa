@@ -84,7 +84,7 @@ class PySynthesisImager:
             return False
         return True
 
-    def initialize(self, toolsi=None):
+    def initialize(self, toolsi=None, initializeIteration = True):
         self.casalog.origin('tclean.initialize')
         if toolsi==None:
             print "Creating tool"
@@ -105,7 +105,8 @@ class PySynthesisImager:
             toolsi.initmapper()
         ## End loop on 'multi-fields' here....
 
-        toolsi.setupiteration(iterpars=self.params['iteration'])
+        if initializeIteration:
+            toolsi.setupiteration(iterpars=self.params['iteration'])
         # From ParClean loopcontrols gets overwritten, but it is always with the same thing. Try to clean this up. 
 
 
@@ -218,18 +219,31 @@ class ParallelPySynthesisImager(PySynthesisImager):
             for dat in range(0,len( selpars['spw'] )):
                 self.params['dataselection']['spw'][dat] =  selpars['spw'][dat] + ':'+str(ch)
 
-            PySynthesisImager.initialize(self, self.toollist[ch] )
+            PySynthesisImager.initialize(self, self.toollist[ch], ch == 0 )
         self.params['dataselection'] = copy.deepcopy(selpars)
 
     def runMajorCycle(self):
-        for ch in range(0,self.nchunks):
-            # Send in updated model as startmodel..
-            PySynthesisImager.runMajorCycle(self, self.toollist[ch])
+        # Get the controls from the first
+        controlRecord = self.toollist[0].getmajorcyclecontrols()
+        
+        for tool in self.toollist:
+            tool.executemajorcycle(controlRecord);
+
+        self.toollist[0].endMajorCycle()
+            
+        # Send in updated model as startmodel..
+        #PySynthesisImager.runMajorCycle(self, self.toollist[ch])
         self.gatherImages()
 
     def runMinorCycle(self):
         casalog.origin('parallel.tclean.runMinorCycle')
         casalog.post('Set combined images for the minor cycle')
+        # subIterBot = self.toollist[0].getsubiterbot();
+        
+        #         for tool in self.toollist:
+        #             returnBot = tool.executeminorcycle(subIterBot);
+        #             tool.endminorcycle(returnBot);
+
         PySynthesisImager.runMinorCycle(self, self.toollist[0] )  # Use the full list for spectral-cube deconv.
         casalog.origin('parallel.tclean.runMinorCycle')
         casalog.post('Mark updated model as input to all major cycles') 
