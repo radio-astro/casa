@@ -39,10 +39,12 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/System/PGPlotter.h>
 
-#include<synthesis/MeasurementEquations/SIIterBot.h>
 #include<synthesis/MeasurementEquations/SIMaskHandler.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+  /* Forware Declaration */
+  class SISubIterBot;
 
 
 class SIDeconvolver {
@@ -52,12 +54,12 @@ public:
   SIDeconvolver();
   ~SIDeconvolver();
 
-  Bool deconvolve( SIIterBot& loopcontrols,  Float &image, Float &psf, Float &model, CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
+  Bool deconvolve( SISubIterBot& loopcontrols,  Float &image, Float &psf, Float &model, CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
 
   // eventually, send in images by reference.
   void restore( Float image, Float beam, Float model, Float residual, Float weight );
 
-  Bool checkStop( SIIterBot &loopcontrols, Int currentiteration, Float currentresidual );
+  Bool checkStop( SISubIterBot &loopcontrols, Int currentiteration, Float currentresidual );
 
 protected:
 

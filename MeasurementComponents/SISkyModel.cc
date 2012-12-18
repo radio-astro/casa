@@ -52,6 +52,8 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
+#include <synthesis/MeasurementEquations/SIIterBot.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -74,29 +76,25 @@ SISkyModel::~SISkyModel()
 
 
   void SISkyModel::runMinorCycle( SIMapperCollection &mappers, 
-				  SIIterBot &loopcontrols )
+				  SISubIterBot &loopcontrols )
   {
     LogIO os( LogOrigin("SISkyModel","runMinorCycle",WHERE) );
-   
-    Float peakResidual = mappers.findPeakResidual();
 
-    loopcontrols.setMaxPsfSidelobe( mappers.findMaxPsfSidelobe() );
-    loopcontrols.updateCycleThreshold(peakResidual);
+    // Now done in Synthesis Imager
+    // Float peakResidual = mappers.findPeakResidual();
 
-
-    os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
-    os << " and model flux = " << mappers.addIntegratedFlux() << LogIO::POST;
-
-    os << " [ cyclethreshold = " << loopcontrols.getCycleThreshold() ;
-    os << " max iter per field/chan/pol = " << loopcontrols.getCycleNiter() ;
-    os << " loopgain = " << loopcontrols.getLoopGain() ;
-    os << " ]" << LogIO::POST;
+//     loopcontrols.setMaxPsfSidelobe( mappers.findMaxPsfSidelobe() );
+//     loopcontrols.updateCycleThreshold(peakResidual);
 
 
+//     os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
+//     os << " and model flux = " << mappers.addIntegratedFlux() << LogIO::POST;
 
-    if (loopcontrols.interactiveInputRequired(peakResidual)) {
-      pauseForUserInteraction( mappers, loopcontrols );
-    }
+//     os << " [ cyclethreshold = " << loopcontrols.getCycleThreshold() ;
+//     os << " max iter per field/chan/pol = " << loopcontrols.getCycleNiter() ;
+//     os << " loopgain = " << loopcontrols.getLoopGain() ;
+//     os << " ]" << LogIO::POST;
+
 
     Int startiter=0,stopiter=0;
 
@@ -145,33 +143,7 @@ SISkyModel::~SISkyModel()
 
   }// end of restore
 
-  void SISkyModel::pauseForUserInteraction( SIMapperCollection &mappers, 
-                                            SIIterBot &loopcontrols )
-  {
-    LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
-
-    os << "Waiting for interactive clean feedback" << LogIO::POST;
-
-    /* This call will make sure that the current values of loop control are
-       available in the GUI and will not return until the user hits the
-       button */
-    loopcontrols.waitForInteractiveInput();
-    
-    Int nmappers = mappers.nMappers();
-    for(Int mp=0;mp<nmappers;mp++)
-      {
-	TempImage<Float> dispresidual, dispmask;
-	// Memory for these image copies are allocated inside the SIMapper
-	mappers.getMapper(mp)->getCopyOfResidualAndMask( dispresidual, dispmask );
-
-	///// Send dispresidual and dispmask to the GUI.
-	///// Receive dispmask back from the GUI ( on click-to-set-mask for this field )
-
-	mappers.getMapper(mp)->setMask( dispmask );
-      }
-
-    
-  }// end of pauseForUserInteraction
+  
 
 
 } //# NAMESPACE CASA - END

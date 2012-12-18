@@ -138,7 +138,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Use the image name to create a unique service name */
     try {
       std::string imagename = impars.asString( RecordFieldId("imagename"));
-      itsLoopController.reset( new SIIterBot("SynthesisImage_" + imagename));
       // Read and interpret input parameters.
     } catch(AipsError &x)
       {
@@ -283,9 +282,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","updateIterationDetails",WHERE) );
     try
       {
-        if (itsLoopController.get() == NULL) 
-          throw( AipsError("Iteration Control un-initialized"));
-                 
+        itsLoopController.reset( new SIIterBot("SynthesisImage_"));
         itsLoopController->setControlsFromRecord(iterpars);
       }
     catch(AipsError &x)
@@ -414,9 +411,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }// end of endLoops
   
-  void SynthesisImager::runMajorCycle()
+  Record SynthesisImager::getMajorCycleControls()
   {
-    LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+    /* This method makes all decisions about how the major cycle should 
+       execute.  The output of this is passed to the runMajorCycle method
+    */
+    LogIO os( LogOrigin("SynthesisImager","getMajorCycleControls",WHERE) );
+    Record returnRecord;
+
     try
       {
         if (itsLoopController.get() == NULL) 
@@ -437,7 +439,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    if(! itsLoopController->getUpdatedModelFlag())
 	      {
 		os << "No new model. No need to update residuals in a major cycle." << LogIO::POST;
-		return;
+		return returnRecord;//With appropriate flag
 	      }
 	    os << "Update residual image in major cycle " << 
               String::toString(itsLoopController->getMajorCycleCount()) << ". ";
@@ -465,14 +467,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError("Error in setting up Major Cycle : "+x.getMesg()) );
       }
-    
+    return returnRecord;
+  }
+
+  void SynthesisImager::endMajorCycle()
+  {
+    LogIO os( LogOrigin("SynthesisImager","endMajorCycle",WHERE) );
+
+    try{
+      if (itsLoopController.get() == NULL) 
+        throw( AipsError("Iteration Control un-initialized"));
+
+      itsLoopController->incrementMajorCycleCount();
+      itsLoopController->addSummaryMajor();
+    } catch(AipsError &x) {
+      throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
+    }    
+  }
+
+  void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/)
+  {
+    LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
     
     try
       {    
 	// se.runMajorCycle(xxxxx . modeltoms = usescratch)
 	itsSkyEquation.runMajorCycle( itsMappers );
-	itsLoopController->incrementMajorCycleCount();
-	itsLoopController->addSummaryMajor();
 
 	/* The first time, when PSFs are made, all mappers need to compute 
            PSF parameters ( peak sidelobe level, etc ) 0 and store it inside 
@@ -485,22 +505,121 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }    
   }// end of runMajorCycle
   
-  void  SynthesisImager::runMinorCycle() //SIIterBot& loopcontrols)
+  void SynthesisImager::runMajorCycle() 
   {
-    LogIO os( LogOrigin("SynthesisImager","runMinorCycle",WHERE) );
+    /* Convience methed for the non parallel case */
+    try {
+      Record controls = getMajorCycleControls();
+      executeMajorCycle(controls);
+      endMajorCycle();
+    } catch(AipsError &x) {
+      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
+    }
+  }
 
+  
+  Record SynthesisImager::getSubIterBot()
+  {
+    Record returnRecord;
+
+    LogIO os( LogOrigin("SynthesisImager","getSubIterBot",WHERE) );
     try
       {
         if (itsLoopController.get() == NULL) 
           throw( AipsError("Iteration Control un-initialized"));
 
-        itsSkyModel.runMinorCycle( itsMappers , *itsLoopController );
+        Float peakResidual = itsMappers.findPeakResidual();
+
+        itsLoopController->setMaxPsfSidelobe( itsMappers.findMaxPsfSidelobe());
+        itsLoopController->updateCycleThreshold(peakResidual);
+
+        os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
+        os << " and model flux = " << itsMappers.addIntegratedFlux() << LogIO::POST;
+        
+        os << " [ cyclethreshold = " << itsLoopController->getCycleThreshold() ;
+        os << " max iter per field/chan/pol = " << itsLoopController->getCycleNiter() ;
+        os << " loopgain = " << itsLoopController->getLoopGain() ;
+        os << " ]" << LogIO::POST;
+
+        if (itsLoopController->interactiveInputRequired(peakResidual)) {
+          pauseForUserInteraction();
+        }
+
+        returnRecord = itsLoopController->getSubIterBotRecord();
       }
     catch(AipsError &x)
       {
 	throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
       }
+    return returnRecord;
+  }
+
+  Record SynthesisImager::executeMinorCycle(Record& subIterBotRecord) {
+    LogIO os( LogOrigin("SynthesisImager","executeMinorCycle",WHERE) );
+    Record returnRecord;
+    
+    try {
+      SISubIterBot loopController(subIterBotRecord);
+      itsSkyModel.runMinorCycle( itsMappers , loopController );
+      returnRecord = loopController.serialize();
+    } catch(AipsError &x) {
+      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
+    }
+    return returnRecord;
+  }
+
+  void SynthesisImager::endMinorCycle(Record& subIterBotRecord) {
+    try {
+      if (itsLoopController.get() == NULL) 
+        throw( AipsError("Iteration Control un-initialized"));
+
+      SISubIterBot loopController(subIterBotRecord);
+      LogIO os( LogOrigin("SynthesisImager",__FUNCTION__,WHERE) );
+      itsLoopController->mergeSubIterBot(loopController);
+    } catch(AipsError &x) {
+      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
+    }
+  }
+
+  void  SynthesisImager::runMinorCycle() //SIIterBot& loopcontrols)
+  {
+    LogIO os( LogOrigin("SynthesisImager","runMinorCycle",WHERE) );
+
+    try {
+      Record iterBotRecord = getSubIterBot();
+      iterBotRecord = executeMinorCycle(iterBotRecord);
+      endMinorCycle(iterBotRecord);
+    } catch(AipsError &x) {
+      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
+    }
   }// end of runMinorCycle
   
+
+  void SynthesisImager::pauseForUserInteraction()
+  {
+    LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
+
+    os << "Waiting for interactive clean feedback" << LogIO::POST;
+
+    /* This call will make sure that the current values of loop control are
+       available in the GUI and will not return until the user hits the
+       button */
+    itsLoopController->waitForInteractiveInput();
+    
+    Int nmappers = itsMappers.nMappers();
+    for(Int mp=0;mp<nmappers;mp++)
+      {
+	TempImage<Float> dispresidual, dispmask;
+	// Memory for these image copies are allocated inside the SIMapper
+	itsMappers.getMapper(mp)->getCopyOfResidualAndMask( dispresidual, dispmask );
+
+	///// Send dispresidual and dispmask to the GUI.
+	///// Receive dispmask back from the GUI ( on click-to-set-mask for this field )
+
+	itsMappers.getMapper(mp)->setMask( dispmask );
+      }
+    
+  }// end of pauseForUserInteraction
+
 } //# NAMESPACE CASA - END
 
