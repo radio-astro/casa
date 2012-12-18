@@ -115,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pointingToImage(0), usezero_p(False),
       // convFunc_p(), convWeights_p(),
       epJ_p(),
-      doPBCorrection(True), /*cfCache_p(cfcache),*/ paChangeDetector(),
+      doPBCorrection(True), conjBeams_p(True),/*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
@@ -160,7 +160,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Bool doPBCorr,
 			   Int itilesize, 
 			   Float pbLimit,
-			   Bool usezero)
+			   Bool usezero,
+			   Bool conjBeams)
     : FTMachine(cfcache,cf), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
@@ -168,7 +169,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pointingToImage(0), usezero_p(usezero),
       // convFunc_p(), convWeights_p(),
       epJ_p(),
-      doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
+      doPBCorrection(doPBCorr), conjBeams_p(conjBeams),/*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
@@ -2184,7 +2185,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // directly to bool cubes.
     //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
     vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
-
+    vbs.conjBeams_p=conjBeams_p;
 
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
     visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
