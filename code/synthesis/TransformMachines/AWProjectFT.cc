@@ -334,6 +334,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	paNdxProcessed_p = other.paNdxProcessed_p;
 	runTime= other.runTime;
 	imRefFreq_p = other.imRefFreq_p;
+	conjBeams_p = other.conjBeams_p;
       };
     return *this;
   };
