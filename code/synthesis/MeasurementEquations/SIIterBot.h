@@ -45,14 +45,14 @@ class casa::Record;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  class SIIterBot : public edu::nrao::casa::SynthImager_adaptor,
-                    public DBusService,
-                    boost::noncopyable 
-  {
+  class SISubIterBot : boost::noncopyable 
+ {
   public:
-    SIIterBot(const std::string &serviceName);
-    ~SIIterBot();
-    
+    SISubIterBot();
+    SISubIterBot(Record& recordIn);
+
+    virtual ~SISubIterBot();
+
     /* Method to call to determine if we should wait for interactive
        updates from the user true if:
          - exceeded number of interactiveNiter 
@@ -60,32 +60,165 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          - pause has been pressed
     */
     bool interactiveInputRequired(Float currentPeakResidual);
-    //void interactiveComplete();
-
-    /* Wait for an Interactive Clean Cycle */
-    void waitForInteractiveInput(); 
-
 
     /* Method to call to determine if a major cycle is required, true if
          - We are done (see below)
          - exceeded number maxcycleniter
          - exceeded cycle threshold
     */
-    bool majorCycleRequired(Float currentPeakResidual);
+    virtual bool majorCycleRequired(Float currentPeakResidual);
 
     /* Method to call to determine if we should stop the clean process 
        true if
-         - stop flag has been set
-         - exceeded Niter
-         - exceeded threshold
+       - stop flag has been set
+       - exceeded Niter
+       - exceeded threshold
     */
     bool cleanComplete(Float currentPeakResidual);
 
+    /* Getter Methods for the control variables */
+    Int getNiter();
+    Int getCycleNiter();
+    Int getInteractiveNiter();
 
+    Int getMaxCycleIterDone();
+    Int getIterDone();
 
+    Float getThreshold();
+    Float getCycleThreshold();
+    Float getInteractiveThreshold();
+   
+    Float getLoopGain();
+    Float getCycleFactor();
+
+    Bool getInteractiveMode();
+    Bool getPauseFlag();
+    Bool getStopFlag();
+
+    void incrementMinorCycleCount();
+
+    /* This method resets the iteration counter for the cycle */
+    void resetCycleIter();
+
+    /* This returns the following fields:
+       * Controls
+       - niter
+       - cycleniter
+       - interactiveniter
+       - threshold
+       - cyclethreshold
+       - interactivethreshold
+       - loopgain
+       - cyclefactor
+       
+       * Status 
+       - iterdone
+       - cycleiterdone;
+       - interactiveiterdone;
+       - nmajordone;
+    */
+    Record getDetailsRecord(); 
+    Record serialize();
+
+    Int getRemainingNiter();
+    Int getCompletedNiter();
+
+    /* Flag to note that the model has been updated */
+    Bool getUpdatedModelFlag();
+    void setUpdatedModelFlag(Bool updatedmodel);
+
+    void addSummaryMinor(Int mapperid, Float model, Float peakresidual);
+
+    Array<Double> getSummaryMinor();
     
+  protected:
+    /* As a convience the controls can also be updated from a Record.  
+       The following fields are supported:
+       - niter
+       - cycleniter
+       - interactiveniter
+       - threshold
+       - cyclethreshold
+       - interactivethreshold
+       - loopgain
+       - cyclefactor
+    */
+    void setControlsFromRecord(Record &recordIn);
 
 
+
+    /* These are protected in this scope, but public in the Iterbot */
+    void changeNiter( Int niter );
+    void changeCycleNiter( Int cycleniter );
+    void changeInteractiveNiter(Int interactiveniter );
+
+    void changeThreshold( Float threshold );
+    void changeCycleThreshold( Float cyclethreshold );
+    void changeInteractiveThreshold( Float cyclethreshold );
+
+    void changeLoopGain(  Float loopgain );
+    void changeCycleFactor( Float cyclefactor);
+
+    void changeInteractiveMode(const bool& interactiveEnabled);
+    void changePauseFlag(const bool& pauseEnabled);
+    void changeStopFlag(const bool& stopEnabled);
+    
+    /* A recursive mutex which provides access control to the
+       underlying state variables
+    */
+    boost::recursive_mutex recordMutex;
+
+    /* These are the internal variables that we need for the control 
+       note: ALL access to these should be through getter/setter mechanism
+       so they can be protected by the mutex 
+    */
+    
+    /* Control Variables */
+    Int    itsNiter;
+    Int    itsCycleNiter;
+    Int    itsInteractiveNiter;
+
+    Float itsThreshold;
+    Float itsCycleThreshold;
+    Float itsInteractiveThreshold;
+
+    Float itsCycleFactor;
+    Float itsLoopGain;
+    
+    Bool  itsStopFlag;
+    Bool  itsPauseFlag;
+    Bool  itsInteractiveMode;
+    Bool  itsUpdatedModelFlag;
+
+    /* Status Reporting Variables */
+    Int   itsIterDone;
+    Int   itsCycleIterDone;
+    Int   itsInteractiveIterDone;
+
+    /* This variable keeps track of the maximum number of iterations done
+       during a major cycle */
+    Int   itsMaxCycleIterDone;
+
+    /* Summary Variable */
+    Array<Double> itsSummaryMinor;
+
+  };
+
+
+  class SIIterBot : public SISubIterBot,
+                    public edu::nrao::casa::SynthImager_adaptor,
+                    public DBusService
+  {
+  public:
+    SIIterBot(const std::string &serviceName);
+    ~SIIterBot();
+    
+    /* Wait for an Interactive Clean Cycle */
+    void waitForInteractiveInput(); 
+
+    virtual bool majorCycleRequired(Float currentPeakResidual);
+
+    void mergeSubIterBot(SISubIterBot& subIterBot);
 
     /* ------ Begin functions for runtime parameter modification ------ */
     /* These are the control variables.  We can set them either through these
@@ -118,22 +251,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
     void setControlsFromRecord(Record &recordIn);
 
-    /* Getter Methods for the control variables */
-    Int getNiter();
-    Int getCycleNiter();
-    int getInteractiveNiter();
-
-    Float getThreshold();
-    Float getCycleThreshold();
-    Float getInteractiveThreshold();
-   
-    Float getLoopGain();
-    Float getCycleFactor();
-
-    Bool getInteractiveMode();
-    Bool getPauseFlag();
-    Bool getStopFlag();
-
+    Record getDetailsRecord(); 
+    Record getSubIterBotRecord();
 
     /* ------ END Functions for runtime parameter modification -------*/
 
@@ -142,19 +261,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Note:  Incrementing the Major cycle will reset the cycleIterDone */
     void incrementMajorCycleCount();
 
-    void incrementMinorCycleCount();
-
     Int getMajorCycleCount();
-
-    Int getRemainingNiter();
-    Int getCompletedNiter();
 
     /* This will calculate and set a new cycle threshold based
        on the Peak Residual and the current values of the PSF values.*/
     void updateCycleThreshold(Float PeakResidual);
-
-    /* This method resets the iteration counter for the cycle */
-    void resetCycleIter();
     
     /* Values for the control of the cycle threshold */
     void setMaxPsfSidelobe( Float maxpsfsidelobe );
@@ -166,11 +277,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void setMinPsfFraction(Float minpsffraction );
     Float getMinPsfFraction();
 
-    /* Flag to note that the model has been updated */
-    Bool getUpdatedModelFlag();
-    void setUpdatedModelFlag(Bool updatedmodel);
-
-    void addSummaryMinor(Int mapperid, Float model, Float peakresidual);
     void addSummaryMajor();
 
     /* Publish the current details from the Iterbot to all clients */
@@ -193,27 +299,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //// START /// Functions for runtime parameter modification
 
     /* Methods to get the state of the iterbot as a Record*/
-    /* This returns the following fields:
-       * Controls
-       - niter
-       - cycleniter
-       - interactiveniter
-       - threshold
-       - cyclethreshold
-       - interactivethreshold
-       - loopgain
-       - cyclefactor
-       - maxpsfsidelobe
-       - maxpsffraction
-       - minpsffraction
-       
-       * Status 
-       - iterdone
-       - cycleiterdone;
-       - interactiveiterdone;
-       - nmajordone;
-    */
-    Record getDetailsRecord(); 
 
     /* This record has all of the fields associated with the detail record 
        but adds
@@ -224,50 +309,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   protected:
 
-  private:
-
-    /* A recursive mutex which provides access control to the
-       underlying state variables
-    */
-    boost::recursive_mutex recordMutex;
-
-    /* These are the internal variables that we need for the control 
-       note: ALL access to these should be through getter/setter mechanism
-       so they can be protected by the mutex 
-    */
-    
-    /* Control Variables */
-    Int    itsNiter;
-    Int    itsCycleNiter;
-    Int    itsInteractiveNiter;
-
-    Float itsThreshold;
-    Float itsCycleThreshold;
-    Float itsInteractiveThreshold;
-
-    Float itsCycleFactor;
-    Float itsLoopGain;
-
     Float itsMinPsfFraction;
     Float itsMaxPsfFraction;
     Float itsMaxPsfSidelobe;
-
     
-    Bool  itsStopFlag;
-    Bool  itsPauseFlag;
-    Bool  itsInteractiveMode;
-
-    /* Status Reporting Variables */
-    Int   itsIterDone;
-    Int   itsCycleIterDone;
-    Int   itsInteractiveIterDone;
-    Int   itsMajorDone;
-
-    /* This variable keeps track of the maximum number of iterations done
-       during a major cycle */
-    Int   itsMaxCycleIterDone;
-    
-    Bool   itsUpdatedModelFlag;
 
     /* The number of Controllers Currently Connected */
     int    itsControllerCount;
@@ -281,9 +326,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      boost::condition_variable interactionCond; 
      boost::mutex              interactionMutex; 
 
+    Int   itsMajorDone;
 
     /* Summary variables */
-    Array<Double> itsSummaryMinor;
     Array<Int>    itsSummaryMajor;
   };
     

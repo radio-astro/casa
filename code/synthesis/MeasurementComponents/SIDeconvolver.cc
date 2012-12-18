@@ -40,6 +40,7 @@
 #include <lattices/Lattices/LatticeIterator.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include<synthesis/MeasurementEquations/SIIterBot.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
@@ -66,7 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
  }
 
-  Bool SIDeconvolver::deconvolve( SIIterBot &loopcontrols, Float &residual, 
+  Bool SIDeconvolver::deconvolve( SISubIterBot &loopcontrols, Float &residual, 
                                   Float &/*psf*/, Float &model, 
                                   CountedPtr<SIMaskHandler> /*maskhandler*/, 
                                   Int mapperid )
@@ -96,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return updatedmodel;
 }
 
-  Bool SIDeconvolver::checkStop( SIIterBot &loopcontrols, Int /*currentiteration*/, Float currentresidual )
+  Bool SIDeconvolver::checkStop( SISubIterBot &loopcontrols, Int /*currentiteration*/, Float currentresidual )
   {
     return loopcontrols.majorCycleRequired(currentresidual);
   }

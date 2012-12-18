@@ -49,6 +49,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <synthesis/MeasurementEquations/SIMapper.h>
+#include <synthesis/MeasurementEquations/SIIterBot.h>
 
 
 #include <sys/types.h>
@@ -111,7 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // Run the deconvolver
-  void SIMapper::deconvolve( SIIterBot &loopcontrols  )
+  void SIMapper::deconvolve( SISubIterBot &loopcontrols  )
   {
     LogIO os( LogOrigin("SIMapper","deconvolve",WHERE) );
 

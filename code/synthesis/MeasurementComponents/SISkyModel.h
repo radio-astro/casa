@@ -40,13 +40,15 @@
 #include <casa/System/PGPlotter.h>
 
 #include <synthesis/MeasurementEquations/SIMapperCollection.h>
-#include <synthesis/MeasurementEquations/SIIterBot.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward Declarations
   class ViewerProxy;
   template<class T> class ImageInterface;
+  class SISubIterBot;
+
 
 class SISkyModel 
 {
@@ -63,13 +65,13 @@ public:
 
   void init( ); // Send in iteration-control,etc params here...
 
-  void runMinorCycle( SIMapperCollection &mappers , SIIterBot &loopcontrols );
+  void runMinorCycle( SIMapperCollection &mappers, SISubIterBot &loopcontrols);
 
   void restore( SIMapperCollection &mappers );
 
 protected:
 
-  void pauseForUserInteraction( SIMapperCollection &mappers, SIIterBot &loopcontrols );
+  //void pauseForUserInteraction( SIMapperCollection &mappers, SIIterBot &loopcontrols );
 
 
 };

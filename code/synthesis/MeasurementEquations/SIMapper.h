@@ -37,13 +37,13 @@
 
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/MeasurementComponents/SIDeconvolver.h>
-#include <synthesis/MeasurementEquations/SIIterBot.h>
 #include <synthesis/MeasurementEquations/SIMaskHandler.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 template<class T> class ImageInterface;
+ class SISubIterBot;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -64,7 +64,7 @@ class SIMapper
   void getCopyOfResidualAndMask( TempImage<Float> &residual, TempImage<Float> &mask );
   void setMask( TempImage<Float> &mask );
 
-  void deconvolve( SIIterBot &loopcontrols );
+  void deconvolve( SISubIterBot &loopcontrols );
 
   Float getPeakResidual();
   Float getPSFSidelobeLevel();

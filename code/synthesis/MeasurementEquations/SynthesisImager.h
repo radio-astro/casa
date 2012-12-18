@@ -86,7 +86,16 @@ class SynthesisImager
   void endLoops();//SIIterBot& loopcontrols);
   //  void runMajorCycle(){SIIterBot rec; runMajorCycle(rec);}
   void runMajorCycle();//SIIterBot& loopcontrols);
+
+  Record getMajorCycleControls();
+  void   executeMajorCycle(Record& controls);
+  void   endMajorCycle();
+
+
   void runMinorCycle();//SIIterBot& loopcontrols);
+  Record getSubIterBot();
+  Record executeMinorCycle(Record& subIterBot);
+  void endMinorCycle(Record& subIterBot);
 
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
@@ -98,6 +107,8 @@ protected:
   SIMapperCollection itsMappers;
 
   //  CountedPtr<VisSet> itsVisSet;
+
+  void pauseForUserInteraction();
 
   CountedPtr<FTMachine> itsCurrentFTMachine;
   CountedPtr<SIDeconvolver> itsCurrentDeconvolver;
