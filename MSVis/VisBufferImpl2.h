@@ -382,6 +382,11 @@ protected:
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem);
 
+    virtual Vector<Bool> & flagRowRef ();  // [nR]
+    virtual Cube<Bool> & flagCubeRef ();  // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeRef (); // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
 
 private:
 
