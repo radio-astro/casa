@@ -468,7 +468,8 @@ namespace casa{
 					  // Vector<Float> sampling;
 					  // Vector<Int> support;
 					  if ( //(!dopsf) && 
-					      (CONJBEAMS==True)) // UUU : With conjugate beams...
+					      //					      (CONJBEAMS==True)) // UUU : With conjugate beams...
+					      vbs.conjBeams_p)
 					    {
 					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
 								      wndx, mNdx, conjMNdx, ipol,  mRow);

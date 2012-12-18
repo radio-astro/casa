@@ -65,8 +65,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Int itilesize, 
 			       Float paSteps,
 			       Float pbLimit,
-			       Bool usezero)
-    : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr,itilesize,pbLimit,usezero),
+			       Bool usezero,
+			       Bool conjBeams)
+    : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr, itilesize,pbLimit,usezero,conjBeams),
       avgPBReady_p(False),resetPBs_p(True),wtImageFTDone_p(False),fieldIds_p(0),rotatedCFWts_p(),visResamplerWt_p()
   {
     (void)paSteps;

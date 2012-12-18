@@ -2874,7 +2874,7 @@ Bool Imager::createFTMachine()
 			     //			     mthVisResampler,
 			     visResampler,
 			     /*True */doPointing, doPBCorr, 
-			     tile_p, paStep_p, pbLimit_p, True);
+			     tile_p, paStep_p, pbLimit_p, True,conjBeams_p);
       
     ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
     //
