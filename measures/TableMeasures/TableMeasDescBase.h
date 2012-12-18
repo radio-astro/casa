@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableMeasDescBase.h 20019 2007-03-13 21:40:09Z gervandiepen $
+//# $Id: TableMeasDescBase.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_TABLEMEASDESCBASE_H
 #define MEASURES_TABLEMEASDESCBASE_H
@@ -42,7 +42,7 @@ class String;
 class Table;
 class TableDesc;
 class TableRecord;
-class ROTableColumn;
+class TableColumn;
 class Measure;
 template<class T> class Quantum;
 
@@ -196,7 +196,7 @@ public:
 					 const String& columnName);
 
   // Does this column contain table measures?
-  static Bool hasMeasures (const ROTableColumn& column);
+  static Bool hasMeasures (const TableColumn& column);
 
 protected:
   // Set the initial reference codes and types in the table.

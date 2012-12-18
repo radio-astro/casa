@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.h 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: String.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef CASA_STRING_H
 #define CASA_STRING_H
@@ -473,10 +473,6 @@ class String : public string {
   // </group>
   // </group>
 
-
-  // Does the string start with the specified string?
-  Bool startsWith(const String& beginString) const;
-
   // Compare. Returns 0 if strings equal and of equal size; else positive if
   // str larger or longer; else negative.
   // <note role=warning> The gcc compiler does not have the proper standard
@@ -584,30 +580,31 @@ class String : public string {
   static Float toFloat(const String& string);
 
   // Convert a string to an Int. If the specified string does not represent
-  // an Int or Double or Float, 0 is returned. If a string representing a float or double is passed in,
-  // the integer portion will be returned. eg
-  // Int x = String::toInt("4.9"); // x = 4
-  // Int y = String::toInt("-7.6"); // y = -7
-
+  // an Int, 0 is returned.
   static Int toInt(const String& string);
 
-  static String format (char * picture, ...);
+  // Create a formatted string using the given printf format string.
+  static String format (const char* picture, ...);
 
   // Remove beginning and ending whitespace.
   void trim();
 
-  // remove specified chars (independent of order) from beginning and end of string if it exists there.
-  void trim(Char c[], uInt n);
+  // Remove specified chars from beginning and end of string.
+  void trim(char c[], uInt n);
 
-  // remove specified character from left of string if it exists.
+  // Remove specified character from beginning of string.
   // If the character is repeated more than once on the left, all instances
-  // will be removed eg ltrim(',') results in ",,xy" becoming "xy".
+  // will be removed; e.g. ltrim(',') results in ",,xy" becoming "xy".
   void ltrim(char c);
 
-  // remove specified character from right of string if it exists.
+  // Remove specified character from end of string.
   // If the character is repeated more than once on the right, all instances
-  // will be removed eg rtrim(',') results in "xy,," becoming "xy".
+  // will be removed; e.g. rtrim(',') results in "xy,," becoming "xy".
   void rtrim(char c);
+
+  // Does the string start with the specified string?
+  Bool startsWith(const string& beginString) const
+    { return find(beginString) == 0; }
 
   // Search functions. Returns either npos (if not found); else position.
   // <note role=warning> The RegexBase ones are ** aips++ additions</note>

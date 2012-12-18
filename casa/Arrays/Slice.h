@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slice.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Slice.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef CASA_SLICE_H
 #define CASA_SLICE_H
@@ -117,9 +117,9 @@ public:
 
     // Check a vector of slices.
     // If a vector of an axis is empty or missing, it is replaced by a Slice
-    // representing th entire axis.
+    // representing the entire axis.
     // It checks if the Slices do not exceed the array shape.
-    // It returns the shape of the combined slices and fills th Slicer
+    // It returns the shape of the combined slices and fills the Slicer
     // for the first array part defined by the slices.
     static IPosition checkSlices (Vector<Vector<Slice> >& slices, Slicer& first,
                                   const IPosition& shape);

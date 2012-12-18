@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprUDFNode.h 21101 2011-07-06 07:57:05Z gervandiepen $
+//# $Id: ExprUDFNode.h 21146 2011-11-30 14:43:25Z gervandiepen $
 
 #ifndef TABLES_EXPRUDFNODE_H
 #define TABLES_EXPRUDFNODE_H
@@ -92,9 +92,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual TaqlRegex getRegex    (const TableExprId& id);
     virtual MVTime    getDate     (const TableExprId& id);
     // </group>
-
-    // Replace the Table pointer in this node.
-    virtual void replaceTablePtr (const Table&);
 
   private:
     UDFBase* itsUDF;

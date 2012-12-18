@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableVector.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tTableVector.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/TableDesc.h>
@@ -147,7 +147,7 @@ void dovec (Int nr) {
 
     Table tab ("tTableVector_tmp.data",Table::Update);
     TableVector<Int> tvec4(tab,"col1");
-    ROTableVector<float> tvecFloat(tab,"col3");
+    TableVector<float> tvecFloat(tab,"col3");
 //#    tvecFloat = 3;                            // Should fail when compiling
     cout << "got tvec4" << endl;
     cout << tvec4(1) << " (must be 99999)" << endl;

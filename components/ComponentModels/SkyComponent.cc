@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SkyComponent.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: SkyComponent.cc 21292 2012-11-28 14:58:19Z gervandiepen $
 
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -266,8 +266,8 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 	if ( delta != 0 ) {
 		dra.convert("s");
 		ddec.convert("arcsec");
-		Double drasec  = roundDouble(dra.getValue(), 3, 2);
-		Double ddecarcsec = roundDouble(ddec.getValue(), 3, 2);
+		Double drasec  = roundDouble(dra.getValue());
+		Double ddecarcsec = roundDouble(ddec.getValue());
 		Vector<Double> dravec(2), ddecvec(2);
 		dravec.set(drasec);
 		ddecvec.set(ddecarcsec);
@@ -306,8 +306,8 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 			Double decPixErr = ddec.getValue() == 0
 				? 0 :abs(ddec.getValue("rad")/increment[1]);
 			Vector<Double> raPix(2), decPix(2);
-			raPix.set(roundDouble(raPixErr, 3, 2));
-			decPix.set(roundDouble(decPixErr, 3, 2));
+			raPix.set(roundDouble(raPixErr));
+			decPix.set(roundDouble(decPixErr));
 			precision = precisionForValueErrorPairs(raPix, decPix);
 			position << setprecision(precision);
 			position << "       --- ra:   " << pixel[0];

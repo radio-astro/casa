@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: taql.cc 21110 2011-07-18 11:16:15Z gervandiepen $
+//# $Id: taql.cc 21168 2012-01-04 08:11:03Z gervandiepen $
 
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/Table.h>
@@ -142,6 +142,7 @@ void showTime (const Array<double>& times, const String& unit)
        iter != endIter; ++iter) {
     if (!firstTime) {
       cout << ", ";
+    } else {
       firstTime = False;
     }
     q.setValue (*iter);
@@ -165,6 +166,7 @@ void showPos (const Array<double>& pos, const Vector<String>& units)
   for (Array<double>::const_iterator iter= pos.begin(); iter != endIter;) {
     if (!firstTime) {
       cout << ", ";
+    } else {
       firstTime = False;
     }
     for (uInt i=0; i<units.size(); ++i) {
@@ -194,6 +196,7 @@ void showDir (const Array<double>& dir, const Vector<String>& units)
   for (Array<double>::const_iterator iter= dir.begin(); iter != endIter;) {
     if (!firstTime) {
       cout << ", ";
+    } else {
       firstTime = False;
     }
     cout << '[';
@@ -238,6 +241,7 @@ template<> void showArray (const Array<MVTime>& arr)
          iter != endIter; ++iter) {
       if (!firstTime) {
         cout << ", ";
+      } else {
         firstTime = False;
       }
       showTime (*iter);
@@ -350,40 +354,42 @@ void showExpr(const TableExprNode& expr)
   if (! unit.empty()) {
     cout << "Unit: " << unit.getName() << endl;
   }
+  Vector<uInt> rownrs (expr.nrow());
+  indgen (rownrs);
   if (expr.isScalar()) {
     switch (expr.getColumnDataType()) {
     case TpBool:
-      showArray (expr.getColumnBool());
+      showArray (expr.getColumnBool (rownrs));
       break;
     case TpUChar:
-      showArray (expr.getColumnuChar());
+      showArray (expr.getColumnuChar (rownrs));
       break;
     case TpShort:
-      showArray (expr.getColumnShort());
+      showArray (expr.getColumnShort (rownrs));
       break;
     case TpUShort:
-      showArray (expr.getColumnuShort());
+      showArray (expr.getColumnuShort (rownrs));
       break;
     case TpInt:
-      showArray (expr.getColumnInt());
+      showArray (expr.getColumnInt (rownrs));
       break;
     case TpUInt:
-      showArray (expr.getColumnuInt());
+      showArray (expr.getColumnuInt (rownrs));
       break;
     case TpFloat:
-      showArray (expr.getColumnFloat());
+      showArray (expr.getColumnFloat (rownrs));
       break;
     case TpDouble:
-      showArray (expr.getColumnDouble());
+      showArray (expr.getColumnDouble (rownrs));
       break;
     case TpComplex:
-      showArray (expr.getColumnComplex());
+      showArray (expr.getColumnComplex (rownrs));
       break;
     case TpDComplex:
-      showArray (expr.getColumnDComplex());
+      showArray (expr.getColumnDComplex (rownrs));
       break;
     case TpString:
-      showArray (expr.getColumnString());
+      showArray (expr.getColumnString (rownrs));
       break;
     default:
       if (expr.getNodeRep()->dataType() == TableExprNodeRep::NTDate) {

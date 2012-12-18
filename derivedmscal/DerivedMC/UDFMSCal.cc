@@ -23,18 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFMSCal.cc 21113 2011-07-21 07:57:27Z gervandiepen $
+//# $Id: UDFMSCal.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #include <derivedmscal/DerivedMC/UDFMSCal.h>
+#include <ms/MeasurementSets/MSAntennaGram.h>
+#include <ms/MeasurementSets/MSTimeGram.h>
+#include <ms/MeasurementSets/MSUvDistGram.h>
+#include <ms/MeasurementSets/MSSpwGram.h>
+#include <ms/MeasurementSets/MSFieldGram.h>
+#include <ms/MeasurementSets/MSArrayGram.h>
+#include <ms/MeasurementSets/MSStateGram.h>
+#include <ms/MeasurementSets/MSScanGram.h>
+#include <ms/MeasurementSets/MSObservationGram.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ExprUnitNode.h>
 #include <casa/Arrays/ArrayIO.h>
 
 namespace casa {
 
-  UDFMSCal::UDFMSCal (ColType type, Int antnr)
-    : itsType  (type),
-      itsAntNr (antnr)
+  UDFMSCal::UDFMSCal (ColType type, Int arg)
+    : itsType (type),
+      itsArg  (arg)
   {}
 
   UDFBase* UDFMSCal::makeHA (const String&)
@@ -43,6 +52,12 @@ namespace casa {
     { return new UDFMSCal (HA, 0); }
   UDFBase* UDFMSCal::makeHA2 (const String&)
     { return new UDFMSCal (HA, 1); }
+  UDFBase* UDFMSCal::makeHADEC (const String&)
+    { return new UDFMSCal (HADEC, -1); }
+  UDFBase* UDFMSCal::makeHADEC1 (const String&)
+    { return new UDFMSCal (HADEC, 0); }
+  UDFBase* UDFMSCal::makeHADEC2 (const String&)
+    { return new UDFMSCal (HADEC, 1); }
   UDFBase* UDFMSCal::makePA1 (const String&)
     { return new UDFMSCal (PA, 0); }
   UDFBase* UDFMSCal::makePA2 (const String&)
@@ -61,6 +76,24 @@ namespace casa {
     { return new UDFMSCal (UVW, -1); }
   UDFBase* UDFMSCal::makeStokes (const String&)
     { return new UDFMSCal (STOKES, -1); }
+  UDFBase* UDFMSCal::makeBaseline (const String&)
+  { return new UDFMSCal (SELECTION, BASELINE); }
+  UDFBase* UDFMSCal::makeTime (const String&)
+    { return new UDFMSCal (SELECTION, TIME); }
+  UDFBase* UDFMSCal::makeUVDist (const String&)
+    { return new UDFMSCal (SELECTION, UVDIST); }
+  UDFBase* UDFMSCal::makeSpw (const String&)
+    { return new UDFMSCal (SELECTION, SPW); }
+  UDFBase* UDFMSCal::makeField (const String&)
+    { return new UDFMSCal (SELECTION, FIELD); }
+  UDFBase* UDFMSCal::makeArray (const String&)
+    { return new UDFMSCal (SELECTION, ARRAY); }
+  UDFBase* UDFMSCal::makeScan (const String&)
+    { return new UDFMSCal (SELECTION, SCAN); }
+  UDFBase* UDFMSCal::makeState (const String&)
+    { return new UDFMSCal (SELECTION, STATE); }
+  UDFBase* UDFMSCal::makeObs (const String&)
+    { return new UDFMSCal (SELECTION, OBS); }
 
   void UDFMSCal::setup (const Table& table, const TaQLStyle&)
   {
@@ -68,7 +101,7 @@ namespace casa {
       throw AipsError ("UDFMSCal can only be used on a table");
     }
     // Function Stokes is handled by this class, all others by the engine.
-    if (itsType != STOKES) {
+    if (itsType != STOKES  &&  itsType != SELECTION) {
       itsEngine.setTable (table);
       if (operands().size() > 1) {
         throw AipsError("More than 1 argument given to DERIVEDMSCAL function");
@@ -86,18 +119,25 @@ namespace casa {
       setNDim (0);
       setUnit ("rad");
       break;
+    case HADEC:
     case AZEL:
       setShape (IPosition(1,2));
+      itsTmpVector.resize (2);
       setUnit ("rad");
       break;
     case UVW:
       setShape (IPosition(1,3));
+      itsTmpVector.resize (3);
       setUnit ("m");
       break;
     case STOKES:
       setupStokes (table, operands());
       setDataType (operands()[0]->dataType());
       break;
+    case SELECTION:
+      setupSelection (table, operands());
+      setNDim (0);
+      setDataType (TableExprNodeRep::NTBool);
     }
   }
 
@@ -133,12 +173,13 @@ namespace casa {
       // First try the string as a planetary object.
       // In the future comets can be supported like COMET:cometname.
       String str = operand->getString(0);
-      MDirection::Types refType;
-      Bool fnd = MDirection::getType (refType, str);
-      if (fnd && refType>MDirection::N_Types && refType<=MDirection::N_Planets
-          && refType!=MDirection::COMET) {
-        itsEngine.setDirection (MDirection(refType));
-      } else {
+      Bool fnd = True;
+      try {
+        itsEngine.setDirection (MDirection::makeMDirection(str));
+      } catch (std::exception&) {
+        fnd = False;
+      }
+      if (!fnd) {
         // Now do it as a FIELD column name.
         // Skip possible leading backslash (escape char).
         if (str.size() > 0  &&  str[0] == '\\') {
@@ -232,12 +273,132 @@ namespace casa {
     }
   }
 
-  void UDFMSCal::replaceTable (const Table& table)
+  void UDFMSCal::setupSelection (const Table& table,
+                                 PtrBlock<TableExprNodeRep*>& operands)
   {
-    if (itsType == STOKES) {
-      itsDataNode.checkReplaceTable (table);
-    } else {
-      itsEngine.setTable (table);
+    // There must be 1 argument (scalar string).
+    if (operands.size() != 1) {
+      throw AipsError ("1 argument must be given to DERIVEDMSCAL selections");
+    }
+    if (operands[0]->valueType() != TableExprNodeRep::VTScalar  ||
+        operands[0]->dataType()  != TableExprNodeRep::NTString  ||
+        !operands[0]->isConstant()) {
+      throw AipsError ("Argument of DERIVEDMSCAL selection must be a "
+                       "constant string scalar");
+    }
+    // Get and process the selection string.
+    String selStr(operands[0]->getString(0));
+    switch (itsArg) {
+    case BASELINE:
+      {
+        Table anttab(table.keywordSet().asTable("ANTENNA"));
+        TableExprNode a1 (table.col("ANTENNA1"));
+        TableExprNode a2 (a1);
+        if (table.tableDesc().isColumn("ANTENNA2")) {
+          a2 = TableExprNode (table.col("ANTENNA2"));
+        }
+        Vector<Int> selectedAnts1;
+        Vector<Int> selectedAnts2;
+        Matrix<Int> selectedBaselines;
+        itsDataNode = msAntennaGramParseCommand (anttab, a1, a2, selStr, 
+                                                 selectedAnts1, selectedAnts2,
+                                                 selectedBaselines);
+      }
+      break;
+    case TIME:
+      {
+        TableExprNode node (table.col("TIME"));
+        Matrix<Double> times;
+        if (msTimeGramParseCommand (selStr, TableExprNode(),
+                                    node, times) == 0) {
+          itsDataNode = *(msTimeGramParseNode());
+        }
+        msTimeGramParseDeleteNode();
+      }
+      break;
+    case UVDIST:
+      {
+        MeasurementSet ms(table);
+        if (msUvDistGramParseCommand(&ms, selStr) == 0) {
+          itsDataNode = *(msUvDistGramParseNode());
+        }
+        msUvDistGramParseDeleteNode();
+      }
+      break;
+    case SPW:
+      {
+        Table ddtab (table.keywordSet().asTable("DATA_DESCRIPTION"));
+        Table spwtab(table.keywordSet().asTable("SPECTRAL_WINDOW"));
+        TableExprNode colAsTEN = table.col("DATA_DESC_ID");
+        Vector<Int> spwid;
+        Matrix<Int> chanid;
+        if (msSpwGramParseCommand(MSSpectralWindow(spwtab),
+                                  MSDataDescription(ddtab),
+                                  colAsTEN, selStr, spwid, chanid) == 0) {
+          itsDataNode = *(msSpwGramParseNode());
+        }
+        msSpwGramParseDeleteNode();
+      }
+      break;
+    case FIELD:
+      {
+        Table fieldtab(table.keywordSet().asTable("FIELD"));
+        TableExprNode colAsTEN = table.col("FIELD_ID");
+        Vector<Int> fldid;
+        itsDataNode = msFieldGramParseCommand (fieldtab, colAsTEN, selStr,
+                                               fldid);
+        msFieldGramParseDeleteNode();
+      }
+      break;
+    case ARRAY:
+      {
+        MeasurementSet ms(table);
+        Vector<Int> arrid;
+        Int maxArr=1000;
+        itsDataNode = msArrayGramParseCommand(&ms, selStr, arrid, maxArr);
+      }
+      break;
+    case SCAN:
+      {
+        MeasurementSet ms(table);
+        Vector<Int> scanid;
+        Int maxScan=1000;
+        itsDataNode = msScanGramParseCommand(&ms, selStr, scanid, maxScan);
+      }
+      break;
+    case STATE:
+      {
+        MeasurementSet ms(table);
+        Vector<Int> stateid;
+        if (msStateGramParseCommand(&ms, selStr, stateid) == 0) {
+          itsDataNode = *(msStateGramParseNode());
+        }
+        msStateGramParseDeleteNode();
+      }
+      break;
+    case OBS:
+      {
+        MeasurementSet ms(table);
+        Vector<Int> obsid;
+        Int maxObs=1000;
+        itsDataNode = msObservationGramParseCommand(&ms, ms.observation(),
+                                                    selStr, obsid, maxObs);
+      }
+      break;
+    default:
+      throw AipsError ("UDFMScal::setupSelection: unknown type " +
+                       String::toString(itsArg));
+    }
+  }
+
+  Bool UDFMSCal::getBool (const TableExprId& id)
+  {
+    DebugAssert (id.byRow(), AipsError);
+    switch (itsType) {
+    case SELECTION:
+      return itsDataNode.getBool (id);
+    default:
+      throw AipsError ("UDFMSCal: unexpected getBool function");
     }
   }
 
@@ -246,11 +407,11 @@ namespace casa {
     DebugAssert (id.byRow(), AipsError);
     switch (itsType) {
     case HA:
-      return itsEngine.getHA (itsAntNr, id.rownr());
+      return itsEngine.getHA (itsArg, id.rownr());
     case PA:
-      return itsEngine.getPA (itsAntNr, id.rownr());
+      return itsEngine.getPA (itsArg, id.rownr());
     case LAST:
-      return itsEngine.getLAST (itsAntNr, id.rownr());
+      return itsEngine.getLAST (itsArg, id.rownr());
     default:
       throw AipsError ("UDFMSCal: unexpected getDouble function");
     }
@@ -271,12 +432,15 @@ namespace casa {
   {
     DebugAssert (id.byRow(), AipsError);
     switch (itsType) {
+    case HADEC:
+      itsEngine.getHaDec (itsArg, id.rownr(), itsTmpVector);
+      return itsTmpVector;
     case AZEL:
-      itsEngine.getAzEl (itsAntNr, id.rownr(), itsTmpAzEl);
-      return itsTmpAzEl;
+      itsEngine.getAzEl (itsArg, id.rownr(), itsTmpVector);
+      return itsTmpVector;
     case UVW:
-      itsEngine.getUVWJ2000 (id.rownr(), itsTmpUVW);
-      return itsTmpUVW;
+      itsEngine.getUVWJ2000 (id.rownr(), itsTmpVector);
+      return itsTmpVector;
     case STOKES:
       {
         // Unfortunately stokes weight conversion is only defined for Float,

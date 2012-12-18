@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableKeywords.cc 20668 2009-07-10 01:14:57Z Malte.Marquarding $
+//# $Id: tTableKeywords.cc 21168 2012-01-04 08:11:03Z gervandiepen $
 
 //# Includes
 #include <casa/aips.h>
@@ -125,6 +125,7 @@ void copyTables (const String& newName, const String& oldName)
 
 void readFromOtherDir()
 {
+  {
     // Reconstruct the main table.
     // Get the sub table from the keyword .
     Table tab("main3data");
@@ -138,6 +139,12 @@ void readFromOtherDir()
     AlwaysAssertExit (subtab2.nrow() == 2);
     Table subtab4 = subtab3.keywordSet().asTable ("SubTab4");
     AlwaysAssertExit (subtab4.nrow() == 4);
+  }
+  {
+    // Open the table using the :: syntax.
+    Table subtab3 (Table::openTable("main3data::SubTab2"));
+    AlwaysAssertExit (subtab3.nrow() == 3);
+  }
 }    
 
 

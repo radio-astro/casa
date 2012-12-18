@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.cc 21101 2011-07-06 07:57:05Z gervandiepen $
+//# $Id: ExprNode.cc 21168 2012-01-04 08:11:03Z gervandiepen $
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
@@ -271,32 +271,17 @@ DataType TableExprNode::getColumnDataType() const
     return dataType();
 }
 
-
-Bool TableExprNode::checkTable (const Table& table) const
+Bool TableExprNode::checkTableSize (const Table& table, Bool canBeConst) const
 {
-    return  (table.baseTablePtr() == node_p->table().baseTablePtr());
-}
-
-Bool TableExprNode::checkReplaceTable (const Table& table,
-				       Bool canBeConst) const
-{
-    if (table.baseTablePtr() == node_p->table().baseTablePtr()) {
-	return True;
+    // Always correct if no original table.
+    if (table.isNull()) {
+        return True;
     }
     if (node_p->table().isNull()) {
 	return canBeConst;
     }
-    Bool equalDataTypes;
-    if (! table.tableDesc().columnDescSet().isEqual
-	                 (node_p->table().tableDesc().columnDescSet(),
-			  equalDataTypes)
-    ||  !equalDataTypes) {
-	return False;
-    }
-    node_p->replaceTablePtr (table);
-    return True;
+    return (table.nrow() == node_p->nrow());
 }
-
 
 void TableExprNode::throwInvDT (const String& message)
     { throw (TableInvExpr ("invalid operand data type; " + message)); }
@@ -341,6 +326,9 @@ TableExprNodeRep* TableExprNode::newPlus (TableExprNodeRep* right) const
 	case TableExprNodeRep::NTString:
 	    tsnptr = new TableExprNodeArrayPlusString (node);
 	    break;
+	case TableExprNodeRep::NTDate:
+	    tsnptr = new TableExprNodeArrayPlusDate (node);
+	    break;
 	default:
 	    throwInvDT("in array operator+");
 	}
@@ -380,6 +368,9 @@ TableExprNodeRep* TableExprNode::newMinus (TableExprNodeRep* right) const
 	    break;
 	case TableExprNodeRep::NTComplex:
 	    tsnptr = new TableExprNodeArrayMinusDComplex (node);
+	    break;
+	case TableExprNodeRep::NTDate:
+	    tsnptr = new TableExprNodeArrayMinusDate (node);
 	    break;
 	default:
 	    throwInvDT("in array operator-");
@@ -1213,7 +1204,7 @@ TableExprNode TableExprNode::newFunctionNode
     // need their own objects and the table.
     if (ftype == TableExprFuncNode::rownrFUNC) {
 	TableExprNodeMulti::checkNumOfArg (0, 0, par);
-	return table.nodeRownr (style.origin());     // first rownr is 0 or 1
+	return newRownrNode (table, style.origin());  // first rownr is 0 or 1
     }
     if (ftype == TableExprFuncNode::rowidFUNC) {
 	TableExprNodeMulti::checkNumOfArg (0, 0, par);
@@ -1221,7 +1212,7 @@ TableExprNode TableExprNode::newFunctionNode
     }
     if (ftype == TableExprFuncNode::randFUNC) {
 	TableExprNodeMulti::checkNumOfArg (0, 0, par);
-	return table.nodeRandom();
+	return newRandomNode (table);
     }
     // Check all the operands and get the resulting data type and value type
     // of the function.

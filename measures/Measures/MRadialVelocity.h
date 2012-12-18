@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MRadialVelocity.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MRadialVelocity.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_MRADIALVELOCITY_H
 #define MEASURES_MRADIALVELOCITY_H
@@ -42,9 +42,7 @@ class MRadialVelocity;
 class MCRadialVelocity;
 template <class M> class MeasConvert;
 template <class M> class ArrayMeasColumn;
-template <class M> class ROArrayMeasColumn;
 template <class M> class ScalarMeasColumn;
-template <class M> class ROScalarMeasColumn;
 class MDoppler;
 class MVDoppler;
 
@@ -175,10 +173,8 @@ class MRadialVelocity : public MeasBase<MVRadialVelocity, MeasRef<MRadialVelocit
   typedef MeasRef<MRadialVelocity> Ref;
   // Measure conversion use (i.e. MRadialVelocity::Convert)
   typedef MeasConvert<MRadialVelocity> Convert;
-  // Measure table Columns (e.g., MRadialVelocity::ROScalarColumn)
-  typedef ROScalarMeasColumn<MRadialVelocity> ROScalarColumn;
+  // Measure table Columns (e.g., MRadialVelocity::ScalarColumn)
   typedef ScalarMeasColumn<MRadialVelocity> ScalarColumn;
-  typedef ROArrayMeasColumn<MRadialVelocity> ROArrayColumn;
   typedef ArrayMeasColumn<MRadialVelocity> ArrayColumn;
   // Reference enum Types (included originally for gcc 2.95)  
   typedef WHATEVER_SUN_TYPEDEF(MRadialVelocity) Types Types;

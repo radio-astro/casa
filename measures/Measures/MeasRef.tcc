@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasRef.tcc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MeasRef.tcc 21285 2012-11-14 15:36:59Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -38,45 +38,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class Ms>
 MeasRef<Ms>::MeasRef()
-: empty_p (True), rep_p ()
 {}
 
 template<class Ms>
 MeasRef<Ms>::MeasRef(const MeasRef<Ms> &other)
-: MRBase(other)
-{
-  empty_p = other.empty_p;
-
-  if (! other.empty_p){
-    rep_p = other.rep_p;
-  }
-  else{
-    rep_p = CountedPtr<RefRep> ();
-  }
-}
+  : MRBase(other),
+    rep_p (other.rep_p)
+{}
 
 template<class Ms>
 MeasRef<Ms> &
 MeasRef<Ms>::operator=(const MeasRef<Ms> &other) {
-
   if (this != &other) {
-
-    empty_p = other.empty_p;
-
-    if (! other.empty_p){
-      rep_p = other.rep_p;
-    }
-    else{
-      rep_p = CountedPtr<RefRep> ();
-    }
+    rep_p = other.rep_p;
   }
-
   return *this;
 }
 
 template<class Ms>
 MeasRef<Ms>::MeasRef(const uInt tp)
-: empty_p (True), rep_p ()
 {
   create();
   rep_p->type = Ms::castType(tp);
@@ -84,7 +64,6 @@ MeasRef<Ms>::MeasRef(const uInt tp)
 
 template<class Ms>
 MeasRef<Ms>::MeasRef(const uInt tp, const Ms &ep)
-: empty_p (True), rep_p ()
 {
   create();
   rep_p->type = Ms::castType(tp);
@@ -93,7 +72,6 @@ MeasRef<Ms>::MeasRef(const uInt tp, const Ms &ep)
 
 template<class Ms>
 MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf)
-: empty_p (True), rep_p ()
 {
   create();
   rep_p->type = Ms::castType(tp);
@@ -102,7 +80,6 @@ MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf)
 
 template<class Ms>
 MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf, const Ms &ep)
-: empty_p (True), rep_p ()
 {
   create();
   rep_p->type = Ms::castType(tp);
@@ -112,9 +89,8 @@ MeasRef<Ms>::MeasRef(const uInt tp, const MeasFrame &mf, const Ms &ep)
 
 template<class Ms>
 void MeasRef<Ms>::create() {
-  if (empty_p){
+  if (empty()) {
     rep_p = new RefRep();
-    empty_p = False;
   }
 }
 
@@ -137,7 +113,7 @@ Bool MeasRef<Ms>::operator!=(const MeasRef<Ms> &other) const {
 //# Member functions
 template<class Ms>
 Bool MeasRef<Ms>::empty() const {
-  return (empty_p);
+  return rep_p.null();
 }
 
 template<class Ms>
@@ -147,7 +123,7 @@ const String &MeasRef<Ms>::showMe() {
 
 template<class Ms>
 uInt MeasRef<Ms>::getType() const{
-  return (! empty_p ? rep_p->type : 0);
+  return (! empty() ? rep_p->type : 0);
 }
 
 template<class Ms>
@@ -223,7 +199,7 @@ const MeasFrame &MeasRef<Ms>::frameComet(MRBase &ref1,
 
 template<class Ms>
 const Measure* MeasRef<Ms>::offset() const {
-  return ( ! empty_p ? rep_p->offmp : 0);
+  return ( ! empty() ? rep_p->offmp : 0);
 }
 
 template<class Ms>

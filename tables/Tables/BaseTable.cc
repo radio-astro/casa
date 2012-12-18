@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.cc 21110 2011-07-18 11:16:15Z gervandiepen $
+//# $Id: BaseTable.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/BaseTable.h>
@@ -1079,7 +1079,10 @@ void BaseTable::showStructure (ostream& os, Bool showDataMans, Bool showColumns,
         // Do not show if the subtable has the same root as this table.
         // This is needed to avoid endless recursion in case of SORTED_TABLE
         // in a MeasurementSet.
-        if (! tab.isSameRoot (Table(this, False))) {
+        if (tab.isSameRoot (Table(this, False))) {
+          os << endl << "Subtable " << keywords.name(i)
+             << " references the parent table!!" << endl;
+        } else {
           tab.showStructure (os, showDataMans, showColumns,
                              showSubTables, sortColumns);
         }

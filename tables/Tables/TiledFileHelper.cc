@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledFileHelper.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledFileHelper.cc 21249 2012-05-18 01:38:49Z Malte.Marquarding $
 
 
 #include <tables/Tables/TiledFileHelper.h>
@@ -54,6 +54,10 @@ TiledFileHelper::TiledFileHelper (const String& fileName,
   switch (dtype) {
   case TpBool:
     itsDesc.addColumn (ArrayColumnDesc<Bool> ("DATA", shape,
+					      ColumnDesc::FixedShape));
+    break;
+  case TpUChar:
+    itsDesc.addColumn (ArrayColumnDesc<uChar> ("DATA", shape,
 					      ColumnDesc::FixedShape));
     break;
   case TpShort:

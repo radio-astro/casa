@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableCopy.h 20889 2010-05-17 06:53:39Z gervandiepen $
+//# $Id: TableCopy.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef TABLES_TABLECOPY_H
 #define TABLES_TABLECOPY_H
@@ -125,20 +125,22 @@ public:
 
   // Copy all subtables (in table and column keywords) from input to
   // output table.
+  // Subtables of which the keyword name matches an omit value are skipped.
   // Optionally the row contents are not copied.
-  // Optionally, certain subtables are not copied
-  static void copySubTables (Table& out, const Table& in, Bool noRows=False, 
-			     const Block<String> omit=Block<String>());
+  static void copySubTables (Table& out, const Table& in, Bool noRows=False,
+			     const Block<String>& omit=Block<String>());
 
   // Copy the subtables in the given keywordset to the output keywordset
   // in the table with the given name.
+  // Subtables of which the keyword name matches an omit value are skipped.
+  // Optionally the row contents are not copied.
   static void copySubTables (TableRecord& outKeys,
 			     const TableRecord& inKeys,
 			     const String& outName,
 			     Table::TableType outType,
 			     const Table& in,
 			     Bool noRows=False,
-			     const Block<String> omit=Block<String>());
+			     const Block<String>& omit=Block<String>());
 
   // Replace TiledDataStMan by TiledShapeStMan in the DataManagerInfo record.
   // Since TiledShapeStMan does not support ID columns, they are

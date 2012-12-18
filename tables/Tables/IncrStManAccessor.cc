@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IncrStManAccessor.cc 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: IncrStManAccessor.cc 21295 2012-11-30 16:00:01Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/IncrStManAccessor.h>
@@ -80,11 +80,6 @@ uInt ROIncrementalStManAccessor::cacheSize() const
 void ROIncrementalStManAccessor::clearCache()
 {
     dataManPtr_p->clearCache();
-}
-
-void ROIncrementalStManAccessor::showCacheStatistics (ostream& os) const
-{
-    dataManPtr_p->showCacheStatistics (os);
 }
 
 } //# NAMESPACE CASA - END

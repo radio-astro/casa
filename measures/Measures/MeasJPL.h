@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasJPL.h 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: MeasJPL.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_MEASJPL_H
 #define MEASURES_MEASJPL_H
@@ -241,7 +241,7 @@ private:
   // Index in record
   static Int idx[N_Files][3][13];
   // Data column descriptor
-  static ROArrayColumn<Double> acc[N_Files];
+  static ArrayColumn<Double> acc[N_Files];
   // Data in current row
   static Vector<Double> dval[N_Files];
   // Current row

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Functors.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: Functors.h 21195 2012-03-14 08:10:42Z gervandiepen $
 
 #ifndef CASA_FUNCTORS_H
 #define CASA_FUNCTORS_H
@@ -100,13 +100,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     return true;
   }
-  // For use with a constant value (through bind1st or bind2nd).
-  template<typename InputIterator1, typename CompareOperator>
-  inline bool compareAll (InputIterator1 first1, InputIterator1 last1,
-                          CompareOperator op)
+  // For use with a constant left value.
+  // This avoids use of bind1st or bind2nd which can fail for gcc-4.3.
+  // (see ArrayMath.h).
+  template<typename InputIterator1, typename T, typename CompareOperator>
+  inline bool compareAllLeft (InputIterator1 first1, InputIterator1 last1,
+                              T left, CompareOperator op)
   {
     for (; first1!=last1; ++first1) {
-      if (!op(*first1)) return false;
+      if (!op(left, *first1)) return false;
+    }
+    return true;
+  }
+  // For use with a constant right value.
+  // This avoids use of bind1st or bind2nd which can fail for gcc-4.3.
+  // (see ArrayMath.h).
+  template<typename InputIterator1, typename T, typename CompareOperator>
+  inline bool compareAllRight (InputIterator1 first1, InputIterator1 last1,
+                               T right, CompareOperator op)
+  {
+    for (; first1!=last1; ++first1) {
+      if (!op(*first1, right)) return false;
     }
     return true;
   }
@@ -125,13 +139,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     return false;
   }
-  // For use with a constant value (through bind1st or bind2nd).
-  template<typename InputIterator1, typename CompareOperator>
-  inline bool compareAny (InputIterator1 first1, InputIterator1 last1,
-                          CompareOperator op)
+  // For use with a constant left value.
+  // This avoids use of bind1st or bind2nd which can fail for gcc-4.3.
+  // (see ArrayMath.h).
+  template<typename InputIterator1, typename T, typename CompareOperator>
+  inline bool compareAnyLeft (InputIterator1 first1, InputIterator1 last1,
+                              T left, CompareOperator op)
   {
     for (; first1!=last1; ++first1) {
-      if (op(*first1)) return true;
+      if (op(left, *first1)) return true;
+    }
+    return false;
+  }
+  // For use with a constant right value.
+  // This avoids use of bind1st or bind2nd which can fail for gcc-4.3.
+  // (see ArrayMath.h).
+  template<typename InputIterator1, typename T, typename CompareOperator>
+  inline bool compareAnyRight (InputIterator1 first1, InputIterator1 last1,
+                               T right, CompareOperator op)
+  {
+    for (; first1!=last1; ++first1) {
+      if (op(*first1, right)) return true;
     }
     return false;
   }
@@ -235,6 +263,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     bool operator() (T value) const
       { return isInf (value); }
+  };
+
+  // Functor to test for finiteness.
+  template<typename T>
+  struct IsFinite : public std::unary_function<T,bool>
+  {
+    bool operator() (T value) const
+      { return isFinite (value); }
   };
 
   // Functor to test if two values are relatively near each other.

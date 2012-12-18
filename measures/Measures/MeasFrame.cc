@@ -39,76 +39,7 @@
 #include <measures/Measures/MeasComet.h>
 #include <casa/iostream.h>
 
-////#undef CASA_THREAD_NEUTRAL // Normally defined in the build system
-////#warning "Undefined CASA_THREAD_NEUTRAL"
-
-#if defined (CASA_THREAD_NEUTRAL)
-
-#warning "--> CASA_THREAD_NEUTRAL defined. ****"
-
-#include <boost/thread/recursive_mutex.hpp>
-
-#endif // defined (CASA_THREAD_NEUTRAL)
-
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-class RecursiveMutex;
-RecursiveMutex * createRecursiveMutexBoost ();
-
-class RecursiveMutex {
-
-public:
-
-    virtual ~RecursiveMutex () {}
-
-    virtual void lock () {}
-    virtual void unlock () {}
-
-    static RecursiveMutex * create ()
-    {
-#if defined (CASA_THREAD_NEUTRAL)
-        return createRecursiveMutexBoost ();
-#else
-        return new RecursiveMutex ();
-#endif // defined (CASA_THREAD_NEUTRAL)
-    }
-
-protected:
-
-    RecursiveMutex () {};
-};
-
-
-#if defined (CASA_THREAD_NEUTRAL)
-
-#warning "--> CASA_THREAD_NEUTRAL defined. ****"
-
-#include <boost/thread/recursive_mutex.hpp>
-
-class RecursiveMutexBoost : public RecursiveMutex {
-
-    friend RecursiveMutex * createRecursiveMutexBoost ();
-
-public:
-
-
-    void lock () { recursiveMutex_p.lock (); }
-    void unlock () { recursiveMutex_p.unlock (); }
-
-private:
-
-    RecursiveMutexBoost () {}
-
-    boost::recursive_mutex recursiveMutex_p;
-};
-
-RecursiveMutex *
-createRecursiveMutexBoost ()
-{
-    return new RecursiveMutexBoost ();
-}
-
-#endif // defined (CASA_THREAD_NEUTRAL)
 
 // Representation class
 class FrameRep {
@@ -172,93 +103,23 @@ MeasFrame::MeasFrame(const Measure &meas1, const Measure &meas2,
 }
 
 MeasFrame::MeasFrame(const MeasFrame &other) {
-
-    // Get a reference to the other frame's mutex, if
-    // it exists.
-
-    repMutex_p = other.repMutex_p;
-
-    if (! repMutex_p.null()){
-
-        // The other frame had a mutex, so lock it.
-
-        repMutex_p->lock ();    // lock the mutex
-
-        rep = other.rep;       // copy the representation
-
-        if (rep) rep->cnt++;   // update use count, if rep is not null
-
-        repMutex_p->unlock();   // unlock mutex
-    }
-    else{
-        rep = 0;               // set rep to null
-    }
+  rep = other.rep;
+  if (rep) rep->cnt++;
 }
 
 // Destructor
-
 MeasFrame::~MeasFrame() {
-
-  if (! repMutex_p.null()){
-
-      repMutex_p->lock ();
-
-      bool destroyThings = rep && rep->cnt && --rep->cnt == 0;
-
-      if (destroyThings){
-
-          delete rep;
-          rep = 0;
-      }
-
-      repMutex_p->unlock();
-  }
+  if (rep && rep->cnt && --rep->cnt == 0) delete rep;
 }
 
 // Operators
 MeasFrame &MeasFrame::operator=(const MeasFrame &other) {
-
-    if (this != &other) {
-
-        // Safely release the current representation,
-        // deleting it if this is the last use.
-
-        if (! repMutex_p.null()){
-
-            repMutex_p->lock ();
-
-            if (rep && rep->cnt && --rep->cnt == 0) delete rep;
-
-            repMutex_p->unlock ();
-
-        }
-
-        // Copy in the new values
-
-        repMutex_p = other.repMutex_p;  // get the other's mutex
-
-        if (! repMutex_p.null ()){
-
-            // The other MF has values, so first, get the lock.
-
-            repMutex_p->lock ();
-
-            // Copy the other's rep and increase the use count.
-
-            rep = other.rep;
-
-            if (other.rep) other.rep->cnt++;
-
-            // Release the lock.
-
-            repMutex_p->unlock ();
-        }
-        else{
-            rep = 0; // no mutex, so no rep
-        }
-    }
-
-    return *this;
+  if (this != &other) {
+    if (other.rep) other.rep->cnt++;
+    if (rep && rep->cnt && --rep->cnt == 0) delete rep;
+    rep = other.rep;
+  }
+  return *this;
 }
 
 Bool MeasFrame::operator==(const MeasFrame &other) const {
@@ -600,7 +461,6 @@ Bool MeasFrame::getComet(MVPosition &tdb) const {
 void MeasFrame::create() {
   if (!rep) {
     rep = new FrameRep();
-    repMutex_p = RecursiveMutex::create ();
     uInt locker = 0;
     lock(locker);
     rep->mymcf = new MCFrame(*this);

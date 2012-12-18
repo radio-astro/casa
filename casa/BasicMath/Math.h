@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Math.h 20744 2009-09-30 00:59:00Z Malte.Marquarding $
+//# $Id: Math.h 21022 2011-03-01 10:07:47Z gervandiepen $
 
 #ifndef CASA_MATH_H
 #define CASA_MATH_H
@@ -301,15 +301,15 @@ inline Bool isNaN(Double val)
 }
 // </group>
 
-// Round the value to x significant digits if the significand of the value is
-// less than/equal to  sigBreak value or to y digits if not. Usually used for formatting
-// for printing. If y < 0, the number is rounded to the same number of x digits
-// independent of its significand.
-// sigBreak must be in the range of 1 to 10.
-Double roundDouble(
-	const Double value, const uInt  x, const Int y=-1,
-	const Double sigBreak=sqrt(10.0)
-);
+// Round a number to <src>ndigit</src> significant digits, usually used
+// for formatting for printing.
+// <br>A non-integer <src>ndigit=N+F<src>, with integer N and fraction F,
+// is interpreted as follows. 
+// For <src>x = A*10^B</src>, where B is an integer, A is rounded to N digits
+// if <src>A > 10^F</src>, otherwise N+1 digits.
+// <br>For the default 2.5, a value of 32157 is rounded to 32000,
+// while 22157 is rounded to 22200.
+Double roundDouble(Double val, Double ndigit=2.5);
 
 // Functions that return IEEE NaN's. The specific NaN returned has all bits
 // set. This is 'quiet' NaN, and because the sign bit is set it may be

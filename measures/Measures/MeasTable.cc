@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasTable.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: MeasTable.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MeasTable.h>
@@ -4182,7 +4182,9 @@ Bool MeasTable::AntennaResponsesPath(String &antRespPath, const String &nam) {
       {
 	String mdir;
 	Aipsrc::find(mdir, "measures.directory");
-	Path lPath(mdir + "/" + antRespPath);
+	mdir.trim();
+	Path lPath(mdir);
+	lPath.append(antRespPath);
 	absPathName = lPath.absoluteName();
 	isValid = Table::isReadable(absPathName);
       }
@@ -4370,7 +4372,7 @@ const Vector<Double> &MeasTable::IGRF(Double tm) {
     lastIGRF = *(rfp[0]);
     row.get(indx);
     time0IGRF = *(rfp[0]);
-    ROArrayColumn<Double> acc, accd;
+    ArrayColumn<Double> acc, accd;
     acc.attach(t, "COEF");
     accd.attach(t, "dCOEF");
     coefIGRF = acc(indx);
@@ -4935,11 +4937,149 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
   static Double checkT = -1e30;
   static Vector<Double> argArray[132];
   static Double factor = 0;
-  // From V.S. Gubanov, Astron. Zh. 49, p1112, 1972
+
+  // Wim Brouw's old table
+  static const Short MABER[130][6] = {
+    // Order: sin(x), cos(x), sin(y), cos(y), sin(z), cos(z)
+    {	1,	0,	0,	-157,	0,	358},
+    {	715,	0,	0,	-656,	0,	-285},
+    {	543,	0,	0,	-498,	0,	-216},
+    {	-72,	0,	0,	63,	0,	35},
+    {	-60,	0,	0,	55,	0,	24},
+    {	38,	0,	0,	-35,	0,	-15},
+    {	0,	-31,	28,	0,	12,	0},
+    {	0,	0,	0,	26,	0,	-59},
+    {	-26,	0,	0,	-24,	0,	-10},
+    {	-22,	0,	0,	-20,	0,	-9},
+    {	22,	0,	0,	-20,	0,	-9},	// 10
+    {	-22,	0,	0,	20,	0,	9},
+    {	0,	-18,	17,	0,	7,	0},
+    {	16,	0,	0,	15,	0,	6},
+    {	0,	16,	14,	0,	6,	0},
+    {	0,	16,	14,	0,	6,	0},
+    {	0,	12,	-1,	0,	-5,	0},
+    {	-12,	0,	0,	11,	0,	5},
+    {	11,	0,	0,	10,	0,	4},
+    {	11,	0,	0,	-10,	0,	-4},
+    {	-11,	0,	0,	-10,	0,	-4},	// 20
+    {	-10,	0,	0,	-9,	0,	-4},
+    {	-10,	0,	0,	9,	0,	4},
+    {	0,	0,	8,	-8,	0,	-3},
+    {	0,	0,	8,	-8,	0,	-3},
+    {	-8,	0,	0,	7,	0,	3},
+    {	-8,	0,	0,	-7,	0,	-3},
+    {	0,	8,	7,	0,	3,	0},
+    {	0,	-7,	-6,	0,	-3,	0},
+    {	0,	-7,	-6,	0,	-3,	0},
+    {	0,	7,	6,	0,	3,	0},	// 30
+    {	7,	0,	0,	6,	0,	3},
+    {	0,	6,	-6,	0,	-3,	0},
+    {	-6,	0,	6,	0,	3,	0},
+    {	6,	0,	0,	-5,	0,	-2},
+    {	-6,	0,	0,	5,	0,	2},
+    {	0,	5,	5,	0,	2,	0},
+    {	0,	5,	5,	0,	2,	0},
+    {	-5,	0,	0,	-5,	0,	-2},
+    {	-5,	0,	0,	4,	0,	2},
+    {	0,	5,	4,	0,	2,	0},	// 40
+    {	0,	0,	0,	0,	0,	-2},
+    {	0,	4,	4,	0,	2,	0},
+    {	0,	-4,	-3,	0,	-1,	0},
+    {	0,	-4,	-3,	0,	-1,	0},
+    {	0,	3,	3,	0,	1,	0},
+    {	0,	3,	-3,	0,	-1,	0},
+    {	0,	3,	3,	0,	1,	0},
+    {	0,	3,	3,	0,	1,	0},
+    {	0,	0,	0,	0,	-1,	0},
+    {	-3,	0,	0,	3,	0,	1},	// 50
+    {	3,	0,	0,	-3,	0,	-1},
+    {	0,	-3,	-3,	0,	-1,	0},
+    {	-3,	0,	0,	3,	0,	1},
+    {	-3,	0,	0,	2,	0,	1},
+    {	0,	-3,	2,	0,	1,	0},
+    {	-3,	0,	0,	2,	0,	1},
+    {	3,	0,	0,	-2,	0,	-1},
+    {	-3,	0,	0,	2,	0,	1},
+    {	-2,	0,	0,	-2,	0,	0},
+    {	0,	0,	0,	1,	0,	-3},	// 60
+    {	0,	0,	0,	0,	0,	1},
+    {	0,	2,	-2,	0,	0,	0},
+    {	0,	2,	2,	0,	0,	0},
+    {	0,	2,	2,	0,	0,	0},
+    {	-2,	0,	0,	2,	0,	0},
+    {	2,	0,	0,	2,	0,	0},
+    {	0,	-2,	2,	0,	0,	0},
+    {	0,	2,	2,	0,	0,	0},
+    {	2,	0,	0,	-2,	0,	0},
+    {	0,	-2,	-2,	0,	0,	0},	// 70
+    {	0,	-2,	-2,	0,	0,	0},
+    {	0,	-2,	2,	0,	0,	0},
+    {	2,	0,	0,	-2,	0,	0},
+    {	2,	0,	0,	-2,	0,	0},
+    {	-2,	0,	0,	-2,	0,	0},
+    {	2,	0,	0,	1,	0,	0},
+    {	0,	1,	1,	0,	0,	0},
+    {	1,	0,	0,	-1,	0,	0},
+    {	-1,	0,	0,	1,	0,	0},
+    {	1,	0,	0,	-1,	0,	0},	// 80
+    {	0,	1,	1,	0,	0,	0},
+    {	1,	0,	0,	-1,	0,	0},
+    {	-1,	0,	0,	1,	0,	0},
+    {	0,	-1,	-1,	0,	0,	0},
+    {	0,	-1,	-1,	0,	0,	0},
+    {	-1,	0,	0,	0,	0,	0},
+    {	1,	0,	0,	0,	0,	0},
+    {	0,	1,	0,	0,	0,	0},
+    {	0,	1,	0,	0,	0,	0},
+    {	0,	1,	0,	0,	0,	0},	// 90
+    {	0,	-1,	0,	0,	0,	0},
+    {	-1,	0,	0,	0,	0,	0},
+    {	-1,	0,	0,	0,	0,	0},
+    {	-1,	0,	0,	0,	0,	0},
+    {	1,	0,	0,	0,	0,	0},
+    {	0,	1,	0,	0,	0,	0},
+    {	1,	0,	0,	0,	0,	0},
+    {	-1,	0,	0,	0,	0,	0},
+    {	-1,	0,	0,	0,	0,	0},
+    {	1,	0,	0,	0,	0,	0},	// 100
+    {	-1,	0,	0,	0,	0,	0},
+    {	1,	0,	0,	0,	0,	0},
+    {	0,	1,	0,	0,	0,	0},
+    {	0,	-1,	0,	0,	0,	0},
+    {	-1,	0,	0,	0,	0,	0},
+    {	1,	0,	0,	0,	0,	0},
+    {	0,	-1,	0,	0,	0,	0},
+    {	0,	1,	0,	0,	0,	0},
+    //
+    {	701,	0,	0,	-642,	0,	-280},
+    {	0,	158,	152,	0,	48,	0},	// 110
+    {	0,	159,	147,	0,	61,	0},
+    {	34,	0,	0,	-31,	0,	-14},
+    {	0,	20,	18,	0,	8,	0},
+    {	-17,	0,	0,	16,	0,	7},
+    {	0,	12,	11,	0,	4,	0},
+    {	11,	0,	0,	-10,	0,	-4},
+    {	0,	9,	8,	0,	3,	0},
+    {	0,	8,	7,	2,	0,	0},
+    {	-5,	0,	0,	5,	0,	2},
+    {	-5,	0,	0,	4,	0,	2},	// 120
+    {	0,	4,	3,	2,	0,	0},
+    {	-3,	0,	0,	3,	0,	1},
+    {	0,	3,	2,	0,	1,	0},
+    {	-3,	0,	0,	5,	0,	-5},
+    {	2,	0,	0,	-2,	0,	-1},
+    {	-1,	0,	0,	0,	0,	1},
+    {	0,	1,	1,	0,	0,	0},
+    {	0,	1,	1,	0,	0,	0},
+    {	0,	-1,	0,	0,	0,	0},
+  };
+  /*
+  // new Rob Reid's table (some slight differences)
   static const Short MABER[130][6] = {
     // Order:
     //  Delta xdot       Delta ydot     Delta zdot
     // sin,    cos,    sin,     cos,   sin,     cos
+
     {	1,	0,	0,	-157,	0,	358},   // T
     {	715,	0,	0,	-656,	0,	-285},
     {	543,	0,	0,	-498,	0,	-216},
@@ -5072,6 +5212,8 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
     {	0,	1,	1,	0,	0,	0},     // T
     {	0,	-1,	0,	0,	0,	0},     // T
   };
+  */
+
   static const Short ABERT1T[10] = { // Includes ABERT2T and ABERT3T,
     0,3,44,54,55,113,119,120,128,129 // which will end up as T**2 and
   };                                 // T**3 respectively.
@@ -6492,39 +6634,39 @@ Double MeasTable::dUTC(Double utc) {
       Double dt;
       String vs;
       if (!MeasIERS::getTable(t, kws, row, rfp, vs, dt, 4, rfn, "TAI_UTC",
-                             "measures.tai_utc.directory",
-                             "geodetic")) {
-        LogIO os(LogOrigin("MeasTable",
-                           String("dUTC(Double)"),
-                           WHERE));
-        os << "Cannot read leap second table TAI_UTC" << LogIO::EXCEPTION;
+			      "measures.tai_utc.directory",
+			      "geodetic")) {
+	LogIO os(LogOrigin("MeasTable",
+			   String("dUTC(Double)"),
+			   WHERE));
+	os << "Cannot read leap second table TAI_UTC" << LogIO::EXCEPTION;
       }
       N = t.nrow();
       if (N < 35) {
-        LogIO os(LogOrigin("MeasTable",
-                           String("dUTC(Double)"),
-                           WHERE));
-        os << "Leap second table TAI_UTC corrupted" << LogIO::EXCEPTION;
+	LogIO os(LogOrigin("MeasTable",
+			   String("dUTC(Double)"),
+			   WHERE));
+	os << "Leap second table TAI_UTC corrupted" << LogIO::EXCEPTION;
       }
       if (Time().modifiedJulianDay() - dt > 180) {
-        LogIO os(LogOrigin("MeasTable",
-                           String("dUTC(Double)"),
-                           WHERE));
-        os << LogIO::SEVERE <<
-          String("Leap second table TAI_UTC seems out-of-date. \n") +
-          "Until table is updated (see aips++ manager) times and coordinates\n" +
-          "derived from UTC could be wrong by 1s or more." << LogIO::POST;
+	LogIO os(LogOrigin("MeasTable",
+			   String("dUTC(Double)"),
+			   WHERE));
+	os << LogIO::SEVERE <<
+	  String("Leap second table TAI_UTC seems out-of-date. \n") +
+	  "Until table is updated (see aips++ manager) times and coordinates\n" +
+	  "derived from UTC could be wrong by 1s or more." << LogIO::POST;
       }
       LEAP = (Double (*)[4])(new Double[4*N]);
       for (Int i=0; i < N; i++) {
-        row.get(i);
-        for (Int j=0; j < 4; j++) {
-          LEAP[i][j] = *(rfp[j]);
-        }
+	row.get(i);
+	for (Int j=0; j < 4; j++) {
+	  LEAP[i][j] = *(rfp[j]);
+	}
       }
       needInit = False;
     }
-  } 
+  }
   Double val(0);
   if (utc < LEAP[0][0]) {
     val = LEAP[0][1] + (utc - LEAP[0][2])*LEAP[0][3];

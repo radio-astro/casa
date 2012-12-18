@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TabularSpectrum.h 21071 2011-05-06 14:02:15Z gervandiepen $
+//# $Id: TabularSpectrum.h 21282 2012-11-05 11:04:19Z gervandiepen $
 
 #ifndef COMPONENTS_TABULARSPECTRUM_H
 #define COMPONENTS_TABULARSPECTRUM_H
@@ -171,7 +171,7 @@ public:
 
   // set/get the Tabular values
   // <group>
-  const void values(Vector<MFrequency::MVType>& freq, Vector<Flux<Double> >& flux) const;
+  void values(Vector<MFrequency::MVType>& freq, Vector<Flux<Double> >& flux) const;
   void setValues(const Vector<MFrequency::MVType>& frequencies, const Vector<Flux<Double> >& flux, const MFrequency::Ref& refFrame);
   // </group>
 

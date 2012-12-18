@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Cube.tcc 21098 2011-06-24 07:42:37Z gervandiepen $
+//# $Id: Cube.tcc 21159 2011-12-13 02:59:29Z ben.h@bigpond.net.au $
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>

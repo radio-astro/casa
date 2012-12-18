@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnsIndex.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColumnsIndex.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef TABLES_COLUMNSINDEX_H
 #define TABLES_COLUMNSINDEX_H
@@ -39,7 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 class String;
-class ROTableColumn;
+class TableColumn;
 template<typename T> class RecordFieldPtr;
 
 // <summary>
@@ -347,7 +347,7 @@ protected:
 
     // Add a column to the record description for the keys.
     void addColumnToDesc (RecordDesc& description,
-			  const ROTableColumn& column);
+			  const TableColumn& column);
 
     // Create the various members in the object.
     void create (const Table& table, const Vector<String>& columnNames,

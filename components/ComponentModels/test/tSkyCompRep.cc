@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSkyCompRep.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tSkyCompRep.cc 21292 2012-11-28 14:58:19Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>

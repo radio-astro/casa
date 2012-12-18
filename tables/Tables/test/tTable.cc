@@ -255,10 +255,7 @@ void b (Bool doExcp)
 	try {
 	    tab.addColumn (ScalarColumnDesc<Int>("ab"));
 	} catch (AipsError x) {
-	    cout << "--> As expected, table is not writable" << endl;
-	    cout << ">>>" << endl; // Ignore text of error message
 	    cout << x.getMesg() << endl;             // table not writable
-	    cout << "<<<" << endl;
 	} 
     }
     ROScalarColumn<Int> ab2(tab,"ab");

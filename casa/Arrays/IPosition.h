@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.h 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: IPosition.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef CASA_IPOSITION_H
 #define CASA_IPOSITION_H
@@ -33,7 +33,8 @@
 #include <casa/iosfwd.h>
 #include <casa/BasicSL/String.h>
 #include <vector>
-#include <stddef.h>
+#include <cstddef>                  // for ptrdiff_t
+#include <sys/types.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -227,10 +228,10 @@ public:
     ssize_t operator()  (uInt index) const;
     // </group>
 
-    // make an IPosition by using only the specified elements of the current
-    // IPosition.  all values of <src>axes</src> must be less than
+    // Make an IPosition by using only the specified elements of the current
+    // IPosition. All values of <src>axes</src> must be less than
     // the number of elements of the current object.
-    // Examples:
+    // <example>
     // IPosition ipos(4, 11, 12, 13, 14);
     // // ex1 is IPosition(3, 11, 12, 13);
     // IPosition ex1 = ipos(IPosition(3,0,1,2);
@@ -238,8 +239,17 @@ public:
     // IPosition ex2 = ipos(IPosition(2,2,1);
     // // ex3 is IPosition(4,14,14,14,14)
     // IPosition ex3 = ipos(IPosition(4,3,3,3,3);
-
+    // </example>
     IPosition operator() (const IPosition& axes) const;
+
+    // Index into the IPosition from the end.
+    // By default the last value is returned.
+    // If the preprocessor symbol AIPS_ARRAY_INDEX_CHECK is defined, it will
+    // check if the index is not out of bounds.
+    // <group>
+    ssize_t& last (uInt index=0);
+    ssize_t last (uInt index=0) const;
+    // </group>
 
     // Get the storage.
     const ssize_t *storage() const;
@@ -270,6 +280,12 @@ public:
     // IPosition.
     // An exception is thrown if <src>n</src> is too high.
     IPosition getLast (uInt n) const;
+
+    // Return an IPosition where the given axes are reoved.
+    IPosition removeAxes (const IPosition& axes) const;
+
+    // Return an IPosition containing the given axes only.
+    IPosition keepAxes (const IPosition& axes) const;
 
     // The number of elements in this IPosition. Since IPosition
     // objects use zero-based indexing, the maximum available index is
@@ -381,6 +397,7 @@ public:
       { return data_p + size_p; }
     const_iterator end() const
       { return data_p + size_p; }
+    // </group>
     // </group>
 
 private:
@@ -553,6 +570,26 @@ inline ssize_t IPosition::operator()(uInt index) const
     }
 #endif
     return data_p[index];
+}
+
+inline ssize_t& IPosition::last (uInt index)
+{
+#if defined(AIPS_ARRAY_INDEX_CHECK)
+    if (size_p - index <= 0) {
+	throwIndexError();
+    }
+#endif
+    return data_p[size_p-index-1];
+}
+
+inline ssize_t IPosition::last (uInt index) const
+{
+#if defined(AIPS_ARRAY_INDEX_CHECK)
+    if (size_p - index <= 0) {
+	throwIndexError();
+    }
+#endif
+    return data_p[size_p-index-1];
 }
 
 inline const ssize_t *IPosition::storage() const

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableParse.h 21103 2011-07-08 07:27:17Z gervandiepen $
+//# $Id: TableParse.h 21168 2012-01-04 08:11:03Z gervandiepen $
 
 #ifndef TABLES_TABLEPARSE_H
 #define TABLES_TABLEPARSE_H
@@ -485,13 +485,16 @@ private:
 				    const Vector<Int>& ignoreFuncs);
 
   // Do the update step.
-  void doUpdate (Bool showTimings, Table& updTable, const Table& inTable);
+  // Rows 0,1,2,.. in UpdTable are updated from the expression result
+  // for the rows in the given rownrs vector.
+  void doUpdate (Bool showTimings, const Table& origTable,
+                 Table& updTable, const Vector<uInt>& rownrs);
 
   // Do the insert step and return a selection containing the new rows.
   Table doInsert (Bool showTimings, Table& table);
 
   // Do the delete step.
-  void doDelete (Bool showTimings, Table& table, const Table& sel);
+  void doDelete (Bool showTimings, Table& table);
 
   // Do the count step returning a memory table containing the unique
   // column values and the counts of the column values.
@@ -501,12 +504,14 @@ private:
   Table doProject (Bool showTimings, const Table&);
 
   // Do the projection containing column expressions.
-  Table doProjectExpr (const Table&);
+  // Projection is done for the selected rownrs.
+  Table doProjectExpr();
 
   // Do the sort step.
-  Table doSort (Bool showTimings, const Table& table);
+  void doSort (Bool showTimings, const Table& origTable);
 
   // Do the limit/offset step.
+  void  doLimOff (Bool showTimings);
   Table doLimOff (Bool showTimings, const Table& table);
 
   // Do the 'select distinct' step.
@@ -518,12 +523,12 @@ private:
   // Update the values in the columns (helpers of doUpdate).
   // <group>
   template<typename TCOL, typename TNODE>
-  void updateValue2 (const TableExprId& rowid, Bool isScalarCol,
+  void updateValue2 (uInt row, const TableExprId& rowid, Bool isScalarCol,
                      const TableExprNode& node, TableColumn& col,
                      const Slicer* slicerPtr,
                      IPosition& blc, IPosition& trc, IPosition& inc);
   template<typename T>
-  void updateValue1 (const TableExprId& rowid, Bool isScalarCol,
+  void updateValue1 (uInt row, const TableExprId& rowid, Bool isScalarCol,
                      const TableExprNode& node, TableColumn& col,
                      const Slicer* slicerPtr,
                      IPosition& blc, IPosition& trc, IPosition& inc);
@@ -542,7 +547,7 @@ private:
   TableExprNode getColSet();
 
   // Make a set from the results of the subquery.
-  TableExprNode makeSubSet() const;
+  TableExprNode makeSubSet (const Table& origTable) const;
 
   // Evaluate an int scalar expression.
   Int64 evalIntScaExpr (const TableExprNode& expr) const;
@@ -583,7 +588,8 @@ private:
   // Try to find the keyword representing a table in one of the tables
   // in any select block (from inner to outer).
   // If not found, an exception is thrown.
-  static Table tableKey (const String& shorthand, const String& columnName,
+  static Table tableKey (const String& fullName,
+                         const String& shorthand, const String& columnName,
 			 const Vector<String>& fieldNames,
 			 const vector<TableParseSelect*>& stack);
 
@@ -622,9 +628,9 @@ private:
   //# The WHERE expression tree.
   TableExprNode node_p;
   //# The possible limit (= max nr of selected rows) (0 means no limit).
-  uInt limit_p;
+  Int64 limit_p;
   //# The possible offset (= nr of selected rows to skip).
-  uInt offset_p;
+  Int64 offset_p;
   //# The update or insert expression list.
   std::vector<TableParseUpdate*> update_p;
   //# The table selection to be inserted.
@@ -637,6 +643,8 @@ private:
   Sort::Order order_p;
   //# The resulting table.
   Table table_p;
+  //# The resulting row numbers.
+  Vector<uInt> rownrs_p;
 };
 
 

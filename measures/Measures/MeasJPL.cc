@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasJPL.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: MeasJPL.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 //# Includes
 #include <casa/BasicMath/Math.h>
@@ -320,7 +320,7 @@ const String MeasJPL::tp[MeasJPL::N_Files] = {"DE200", "DE405"};
 Int MeasJPL::idx[MeasJPL::N_Files][3][13];
 Int MeasJPL::ldat[MeasJPL::N_Files] = {0, 0};
 Vector<Double> MeasJPL::dval[MeasJPL::N_Files];
-ROArrayColumn<Double> MeasJPL::acc[MeasJPL::N_Files];
+ArrayColumn<Double> MeasJPL::acc[MeasJPL::N_Files];
 Double MeasJPL::chc[18];
 Double MeasJPL::chcv[18];
 Double MeasJPL::aufac[MeasJPL::N_Files];

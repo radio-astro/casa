@@ -3,8 +3,8 @@ tFunctors
 tMath
 tMathNaN
 tPrimes
-tStdLogical
 tRNG
+tStdLogical
 )
 
 foreach (test ${tests})

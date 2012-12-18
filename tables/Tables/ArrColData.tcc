@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrColData.tcc 21091 2011-06-01 12:08:15Z gervandiepen $
+//# $Id: ArrColData.tcc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #include <tables/Tables/ArrColData.h>
 #include <tables/Tables/ArrColDesc.h>
@@ -101,7 +101,7 @@ void ArrayColumnData<T>::initialize (uInt, uInt)
 template<class T>
 uInt ArrayColumnData<T>::ndimColumn() const
 {
-    uInt ndim = columnDesc().ndim();
+    Int ndim = columnDesc().ndim();
     return (ndim > 0  ?  ndim : shapeCol_p.nelements());
 }
 template<class T>

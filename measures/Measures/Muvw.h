@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Muvw.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: Muvw.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_MUVW_H
 #define MEASURES_MUVW_H
@@ -44,9 +44,7 @@ class MCuvw;
 class MDirection;
 template <class M> class MeasConvert;
 template <class M> class ArrayMeasColumn;
-template <class M> class ROArrayMeasColumn;
 template <class M> class ScalarMeasColumn;
-template <class M> class ROScalarMeasColumn;
 
 //# Typedefs
 
@@ -168,10 +166,8 @@ public:
   typedef MeasRef<Muvw> Ref;
   // MeasConvert use (i.e. Muvw::Convert)
   typedef MeasConvert<Muvw> Convert;
-  // Measure table Columns (e.g., Muvw::ROScalarColumn)
-  typedef ROScalarMeasColumn<Muvw> ROScalarColumn;
+  // Measure table Columns (e.g., Muvw::ScalarColumn)
   typedef ScalarMeasColumn<Muvw> ScalarColumn;
-  typedef ROArrayMeasColumn<Muvw> ROArrayColumn;
   typedef ArrayMeasColumn<Muvw> ArrayColumn;
   // Reference enum Types (included originally for gcc 2.95)  
   typedef WHATEVER_SUN_TYPEDEF(Muvw) Types Types;

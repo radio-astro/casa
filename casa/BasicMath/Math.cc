@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Math.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Math.cc 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
@@ -116,9 +116,9 @@ Bool nearAbs(uInt val1, uInt val2, Double tol) {
   if (val1 == val2) {
     return True;
   } else if (val1 > val2) {
-    return (tol > Double(val1 - val2));
+    return (tol >= Double(val1 - val2));
   } else {
-    return (tol > Double(val2 - val1));
+    return (tol >= Double(val2 - val1));
   }
 }
 
@@ -292,40 +292,20 @@ void setInf(Double& val) {
   val = doubleInf();
 }
 
-Double roundDouble(
-	const Double value, const uInt x, const Int y,
-	const Double sigBreak
-) {
-	if (value == 0) {
-		return 0;
-	}
-	if (sigBreak < 1 || sigBreak >= 10) {
-		ostringstream os;
-		os << __FUNCTION__  << ": sigBreak is " << sigBreak << " but must be in the range of 1 to 10";
-		throw AipsError(os.str());
-	}
-	Int z = y;
-	if (y<0) {
-		z = x;
-	}
-	Double val = value;
-	Bool isNegative = val < 0;
-	Double sign = isNegative ? -1 : 1;
-	val *= sign;
-    Double lgr = log10(val);
-    Double lgrSig = log10(sigBreak);
-    Int i = (lgr >= 0) ? int(lgr + 1) : int(lgr);
-    Int nDigits = (
-    		(lgr >= 0 && (fabs(lgr - int(lgr)))<=lgrSig)
-			|| (lgr < 0 && (fabs(lgr - int(lgr)))>(1 - lgrSig))
-        ) ? int(x) : z;
-    Double temp = val * pow(10.0, (nDigits-i));
-    return sign*round(temp)*pow(10.0, (i-nDigits));
+Double roundDouble(Double val, Double ndigit) {
+  Double sign = 1;
+  if (val == 0) {
+    return 0;
+  } else if (val < 0) {
+    sign = -1;
+  }
+  val *= sign;
+  Double lgr = log10(val) - ndigit;
+  // E.g. log10(0.1) gives -0.9999999, so add little number when truncating.
+  Int i = Int(lgr >= 0  ?  lgr + 1.000001 : lgr - 0.000001);
+  Double temp = val * pow(10.0, -i);
+  return sign*round(temp)*pow(10.0, i);
 }
-
-// Local Variables: 
-// compile-command: "gmake Math"
-// End: 
 
 } //# NAMESPACE CASA - END
 
