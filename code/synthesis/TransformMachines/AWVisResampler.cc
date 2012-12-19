@@ -377,6 +377,7 @@ namespace casa{
 
    //   Double conjRefFreq = mean(vbs.freq_p);
    Double conjRefFreq = vbs.imRefFreq();
+
     for(Int irow=rbeg; irow< rend; irow++){   
       //      if ((vbs.uvw_p.nelements() == 0)) 
       if (accumCFs) if (allTrue(allPolNChanDone_l)) break;
@@ -412,15 +413,6 @@ namespace casa{
 		      //
 		      // Using the int-index version for Freq, W and Muellerelements
 		      //	      cfb.getParams(cfRefFreq, s, support(0), support(1),0,wndx,0);
-		      cfb.getParams(cfRefFreq, s, support(0), support(1),fndx,wndx,0);
-		      sampling(0) = sampling(1) = s;
-		      
-		      cfScale = cfRefFreq/freq[ichan];
-		      cfScale = 1.0;
-		      scaledSampling[0] = (sampling[0]*cfScale);
-		      scaledSampling[1] = (sampling[1]*cfScale);
-		      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
-		      scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
 		      //
 		      //------------------------------------------------------------------------------
 		      //
@@ -433,6 +425,18 @@ namespace casa{
 		      conjScaledSampling[1] = (sampling[1]*cfScale);
 		      conjScaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
 		      conjScaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
+		      //
+		      //------------------------------------------------------------------------------
+		      //
+		      cfb.getParams(cfRefFreq, s, support(0), support(1),fndx,wndx,0);
+		      sampling(0) = sampling(1) = s;
+		      
+		      cfScale = cfRefFreq/freq[ichan];
+		      cfScale = 1.0;
+		      scaledSampling[0] = (sampling[0]*cfScale);
+		      scaledSampling[1] = (sampling[1]*cfScale);
+		      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
+		      scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
 		      
 		      sgrid(pos,loc,off, phasor, irow, vbs.uvw_p, dphase_p[irow], freq[ichan], 
 			    uvwScale_p, offset_p, scaledSampling);
@@ -473,15 +477,15 @@ namespace casa{
 					    {
 					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
 								      wndx, mNdx, conjMNdx, ipol,  mRow);
-					      support.reference(conjScaledSupport);
-					      sampling.reference(conjScaledSampling);
+					      support.assign(conjScaledSupport);
+					      sampling.assign(conjScaledSampling);
 					    }
 					  else// UUU : Without conjugate beams...
 					    {
 					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
 								      wndx, mNdx, conjMNdx, ipol,  mRow);
-					      support.reference(scaledSupport);
-					      sampling.reference(scaledSampling);
+					      support.assign(scaledSupport);
+					      sampling.assign(scaledSampling);
 					    }
 					  
 					  convOrigin=cfShape/2;
