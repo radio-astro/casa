@@ -439,6 +439,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Array for non-tiled gridding
     Array<Complex> griddedData;
+    Array<DComplex> griddedData2;
     
     //    DirectionCoordinate directionCoord;
     MDirection::Convert* pointingToImage;
@@ -494,6 +495,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void normalizeAvgPB(ImageInterface<Complex>& inImage,
 				ImageInterface<Float>& outImage);
     virtual void resampleDataToGrid(Array<Complex>& griddedData, VBStore& vbs, 
+				    const VisBuffer& vb, Bool& dopsf);
+    virtual void resampleDataToGrid(Array<DComplex>& griddedData, VBStore& vbs, 
 				    const VisBuffer& vb, Bool& dopsf);
     virtual void resampleGridToData(VBStore& vbs, Array<Complex>& griddedData,
 				    const VisBuffer& vb);

@@ -55,7 +55,6 @@
 #include <casa/OS/Timer.h>
 
 #define CONVSIZE (1024*2)
-#define CONVWTSIZEFACTOR 1.0
 #define OVERSAMPLING 2
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
@@ -1478,10 +1477,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	arrayLattice = new ArrayLattice<Complex>(griddedData);
 	lattice=arrayLattice;
 	// if(useDoubleGrid_p) 
-	//   visResampler_p->initializeToSky(griddedData2, sumWeight);
-	// else
+	//   {
+	//     griddedData.resize();
+	//     griddedData2.resize(gridShape);
+	//     griddedData2=DComplex(0.0);
+	//   }
       }
-    visResampler_p->initializeToSky(griddedData, sumWeight);
+    // if(useDoubleGrid_p) 
+    //   visResampler_p->initializeToSky(griddedData2, sumWeight);
+    // else
+      visResampler_p->initializeToSky(griddedData, sumWeight);
   }
   //
   //---------------------------------------------------------------
@@ -1507,10 +1512,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     paChangeDetector.reset();
     cfCache_p->flush();
-  // if(useDoubleGrid_p) 
-  //   visResampler_p->finalizeToSky(griddedData2, sumWeight);
-  // else
-    visResampler_p->finalizeToSky(griddedData, sumWeight);
+    // if(useDoubleGrid_p) 
+    //   visResampler_p->finalizeToSky(griddedData2, sumWeight);
+    // else
+      visResampler_p->finalizeToSky(griddedData, sumWeight);
   }
   //
   //---------------------------------------------------------------
@@ -1630,6 +1635,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       const VisBuffer& /*vb*/, Bool& dopsf)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
+    visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
+  }
+  //
+  //-------------------------------------------------------------------------
+  // Gridding
+  void AWProjectFT::resampleDataToGrid(Array<DComplex>& griddedData_l, VBStore& vbs, 
+				       const VisBuffer& /*vb*/, Bool& dopsf)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGridD[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
   }
   //
@@ -1779,7 +1793,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// x and y transforms (lattice has the gridded vis.  Make the
 	// dirty images)
 	//
-	LatticeFFT::cfft2d(*lattice,False);
+	// if (useDoubleGrid_p)
+	//   {
+	//     ArrayLattice<DComplex> darrayLattice(griddedData2);
+	//     LatticeFFT::cfft2d(darrayLattice,False);
+	//     griddedData.resize(griddedData2.shape());
+	//     convertArray(griddedData, griddedData2);
+	
+	//     //Don't need the double-prec grid anymore...
+	//     griddedData2.resize();
+	//     arrayLattice = new ArrayLattice<Complex>(griddedData);
+	//     lattice=arrayLattice;
+	//   }
+	// else
+	  {
+	    arrayLattice = new ArrayLattice<Complex>(griddedData);
+	    lattice=arrayLattice;
+	    LatticeFFT::cfft2d(*lattice,False);
+	  }
 	//
 	// Now normalize the dirty image.
 	//
