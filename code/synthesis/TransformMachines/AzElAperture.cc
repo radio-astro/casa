@@ -52,7 +52,7 @@ namespace casa{
 	  
 	  SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
 					     *cfc.getStorage(),
-					     dPA);
+					     dPA);//,"LINEAR");
 					     // currentCFPA-actualPA);//,"LINEAR");
 	  // Update the PA value in the CF-Cache
 	  cfc.pa_p=Quantity(actualPA, "rad");

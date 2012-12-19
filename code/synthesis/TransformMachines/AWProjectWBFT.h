@@ -135,7 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // (this value is typically the user-defined parameter in the
     // private member variable pbLimit_p).
     //
-    inline virtual Float pbFunc(const Float& pbPixValue, const Float& pbLimit) 
+    inline virtual Float pbFunc(const Float& /*pbPixValue*/, const Float& /*pbLimit*/) 
     {return  1.0;};
     //   {Float tt=(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
  
@@ -170,7 +170,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void resampleDataToGrid(Array<Complex>& griddedData,VBStore& vbs, 
 				    const VisBuffer& vb, Bool& dopsf);
+    virtual void resampleDataToGrid(Array<DComplex>& griddedData,VBStore& vbs, 
+				    const VisBuffer& vb, Bool& dopsf)
+    {
+      throw(AipsError("not yet ready!"));
+    };
     //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
+    void resampleCFToGrid(Array<Complex>& wtsGrid, 
+			  VBStore& vbs, const VisBuffer& vb);
 
     Bool avgPBReady_p,resetPBs_p, wtImageFTDone_p;
 
