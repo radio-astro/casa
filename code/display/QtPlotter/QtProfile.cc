@@ -588,8 +588,10 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	}
 
 	CoordinateSystem cSys = image->coordinates();
-	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-	Converter::setSpectralCoordinate( spectralCoordinate );
+	if ( cSys.hasSpectralAxis() ){
+		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+		Converter::setSpectralCoordinate( spectralCoordinate );
+	}
 	initializeSolidAngle();
 
 	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
