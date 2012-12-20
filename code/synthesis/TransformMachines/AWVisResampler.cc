@@ -51,10 +51,10 @@ namespace casa{
   // or single precision grid.
   //
   //***TEMP REMOVAL OF DComplex gridder*****
-  // template
-  // void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
-  // 					Matrix<Double>& sumwt,const Bool& dopsf,
-  // 					Bool useConjFreqCF); // __restrict__;
+  template
+  void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
+  					Matrix<Double>& sumwt,const Bool& dopsf,
+  					Bool useConjFreqCF); // __restrict__;
   template
   void AWVisResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
 					Matrix<Double>& sumwt,const Bool& dopsf,
@@ -349,6 +349,7 @@ namespace casa{
 
    //   Double conjRefFreq = mean(vbs.freq_p);
    Double conjRefFreq = vbs.imRefFreq();
+   Bool isGridSinglePrecision=(typeid(gridStore[0]) == typeid(wt));
 
     for(Int irow=rbeg; irow< rend; irow++){   
       //      if ((vbs.uvw_p.nelements() == 0)) 

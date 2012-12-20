@@ -160,7 +160,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Int itilesize, 
 			   Float pbLimit,
 			   Bool usezero,
-			   Bool conjBeams)
+			   Bool conjBeams,
+			   Bool doublePrecGrid)
     : FTMachine(cfcache,cf), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
@@ -168,7 +169,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pointingToImage(0), usezero_p(usezero),
       // convFunc_p(), convWeights_p(),
       epJ_p(),
-      doPBCorrection(doPBCorr), conjBeams_p(conjBeams),/*cfCache_p(cfcache),*/ paChangeDetector(),
+      doPBCorrection(doPBCorr), conjBeams_p(conjBeams), 
+      /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
@@ -200,6 +202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfs2_p = new CFStore2;
     cfwts2_p = new CFStore2;
     pop_p->init();
+    useDoubleGrid_p=doublePrecGrid;
     //    rotatedConvFunc_p.data=new Array<Complex>();
   }
   //
@@ -1483,6 +1486,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    griddedData2=DComplex(0.0);
 	  }
       }
+
     if(useDoubleGrid_p) 
       visResampler_p->initializeToSky(griddedData2, sumWeight);
     else
@@ -1618,7 +1622,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     VBStore vbs;
     setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase);
 
-    resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+    if (useDoubleGrid_p)
+      resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+    else
+      resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
     
   //Double or single precision gridding.
   // if(useDoubleGrid_p) 
@@ -1785,7 +1792,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    << LogIO::POST;
     // UUU else
       {
-	const IPosition latticeShape = lattice->shape();
 	log_l << LogIO::DEBUGGING
 		<< "Starting FFT and scaling of image" << LogIO::POST;
 	//    
@@ -1810,6 +1816,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    lattice=arrayLattice;
 	    LatticeFFT::cfft2d(*lattice,False);
 	  }
+	const IPosition latticeShape = lattice->shape();
 	//
 	// Now normalize the dirty image.
 	//

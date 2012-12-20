@@ -29,7 +29,7 @@
 
 {
   //  T *gridPtr;
-  Complex *cfPtr, *phaseGradPtr;
+  Complex *cfPtr, *phaseGradPtr,typeComplex;
   Int *supportPtr, *cfShapePtr,
     *locPtr, *igrdposPtr, *ilocPtr, *tilocPtr,
     *convOriginPtr;
@@ -58,19 +58,44 @@
   //
   // Call the FORTRAN function with the gridding inner-loops (in synthesis/fortran/faccumulateToGrid.f)
   //
-  faccumulatetogrid_(gridStore, 
-		     convFuncV, 
-		     &nvalue, 
-		     &wVal,
-		     supportPtr,samplingPtr,offPtr, convOriginPtr,
-		     cfShapePtr,locPtr,igrdposPtr, 
-		     &sinDPA, &cosDPA,
-		     &finitePointingOffsets_int, 
-		     &psfOnly_int,
-		     &norm, phaseGradPtr,
-		     &gnx, &gny, &gnp, &gnc,
-		     &cf0, &cf1, &cf2, &cf3,
-		     &phx, &phy);
+  if (isGridSinglePrecision)
+    {
+      // Following type cast is so that when this code compiles when
+      // embedded in (via #include) in the templated method
+      // AWVisResampler::DataToGridImpl_p().  Without this type cast,
+      // a compile-time error occurs.
+      Complex *Complex_gridStore=(Complex *)gridStore;
+      faccumulatetogrid_(Complex_gridStore, 
+			 convFuncV, 
+			 &nvalue, 
+			 &wVal,
+			 supportPtr,samplingPtr,offPtr, convOriginPtr,
+			 cfShapePtr,locPtr,igrdposPtr, 
+			 &sinDPA, &cosDPA,
+			 &finitePointingOffsets_int, 
+			 &psfOnly_int,
+			 &norm, phaseGradPtr,
+			 &gnx, &gny, &gnp, &gnc,
+			 &cf0, &cf1, &cf2, &cf3,
+			 &phx, &phy);
+    }
+  else
+    {
+      DComplex *DComplex_gridStore=(DComplex *)gridStore;
+      dfaccumulatetogrid_(DComplex_gridStore, 
+			  convFuncV, 
+			  &nvalue, 
+			  &wVal,
+			  supportPtr,samplingPtr,offPtr, convOriginPtr,
+			  cfShapePtr,locPtr,igrdposPtr, 
+			  &sinDPA, &cosDPA,
+			  &finitePointingOffsets_int, 
+			  &psfOnly_int,
+			  &norm, phaseGradPtr,
+			  &gnx, &gny, &gnp, &gnc,
+			  &cf0, &cf1, &cf2, &cf3,
+			  &phx, &phy);
+    }
 		     
 		     // &nx,&ny,&nGridPol, &nGridChan,
 		     // &unity, &unity, &unity, &unity,

@@ -58,7 +58,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Float paSteps=5.0, 
 		  Float pbLimit=5e-4,
 		  Bool usezero=False,
-		  Bool conjBeams_p=True);
+		  Bool conjBeams_p=True,
+		  Bool doublePrecGrid=False);
     // </group>
     
     // Construct from a Record containing the AWProjectWBFT state
