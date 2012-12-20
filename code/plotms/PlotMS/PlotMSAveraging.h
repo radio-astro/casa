@@ -39,7 +39,7 @@ namespace casa {
 class PlotMSAveraging {
 public:
     // Static //
-    
+
     // Enum and methods to define the different fields for an MS averaging.
     // All fields have a bool flag for on/off, and some of them also have a
     // double value (see fieldHasValue()).  Fields are off by default, with a
@@ -50,39 +50,37 @@ public:
     // xmlcasa/scripts/task_plotms.py.**
     // <group>
     PMS_ENUM1(Field, fields, fieldStrings, field,
-              CHANNEL, TIME, SCAN, FIELD, BASELINE, ANTENNA, SPW, 
+              CHANNEL, TIME, SCAN, FIELD, BASELINE, ANTENNA, SPW,
 	      SCALARAVE)
     PMS_ENUM2(Field, fields, fieldStrings, field,
-              "channel", "time", "scan", "field", "baseline", 
-	      "antenna", "spw",
-	      "scalar")
+              "channel", "time", "scan", "field", "baseline",
+              "antenna", "spw",
+              "scalar")
     // </group>
-              
+
     // Returns whether the given field has a double value associated with it or
     // not.
     static bool fieldHasValue(Field f);
-    
+
     // Returns the list of fields, NOT including the given, with which the
     // given field is mutually exclusive.  In a mutually exclusive group, only
     // one field can be turned on at a given time (although they can all be
     // off at the same time).
     static const vector<Field>& fieldMutuallyExclusiveGroup(Field f);
-    
+
     // Returns true if the given field is in a mutually exclusive group, false
     // otherwise.  See fieldMutuallyExclusiveGroup().
     static bool fieldIsInMutuallyExclusiveGroup(Field f) {
         return fieldMutuallyExclusiveGroup(f).size() > 0; }
-    
-    
+
     // Non-Static //
-    
+
     // Constructor, which uses default values.
     PlotMSAveraging();
-    
+
     // Destructor.
     ~PlotMSAveraging();
-    
-    
+
     // Converts this object to/from a record.  Each field will have a key that
     // is its enum name, with a bool value for its flag value.  Fields that
     // also have double values will have an additional key that is its enum
@@ -91,21 +89,21 @@ public:
     void fromRecord(const RecordInterface& record);
     Record toRecord(bool useStrings = false) const;
     // </group>
-    
+
     // Gets/Sets the on/off flag for the given field.
     // <group>
     bool getFlag(Field f) const;
     void getFlag(Field f, bool& flag) const { flag = getFlag(f); }
     void setFlag(Field f, bool on);
     // </group>
-    
+
     // Gets/Sets the double value for the given field, if applicable.
     // <group>
     double getValue(Field f) const;
     void getValue(Field f, double& value) const { value = getValue(f); }
     void setValue(Field f, double value);
     // </group>
-    
+
     // Gets/Sets the value for the given field as a String.  Blank means a
     // false value (or a field that does not have a double value); otherwise
     // the double value in String form is used.
@@ -115,11 +113,10 @@ public:
     void setValue(Field f, const String& value);
     // </group>
 
-
     // If any explicit averaging is turned ON, return True
-    bool anyAveraging() const { return (channel() || time() || 
-				  baseline() || antenna() ||spw()); }
-    
+    bool anyAveraging() const {
+        return channel() || time() || baseline() || antenna() || spw(); }
+
     // Convenience methods for returning the standard field values.
     // <group>
     bool channel() const { return getFlag(CHANNEL); }
@@ -135,7 +132,7 @@ public:
     bool spw() const { return getFlag(SPW); }
     bool scalarAve() const { return getFlag(SCALARAVE); }
     // </group>
-    
+
     // Convenience methods for setting the standard field values.
     // <group>
     void setChannel(const String& value) { setValue(CHANNEL, value); }
@@ -149,32 +146,29 @@ public:
     void setBaseline(bool flag) { setFlag(BASELINE, flag); }
     void setAntenna(bool flag) { setFlag(ANTENNA, flag); }
     void setSpw(bool flag) { setFlag(SPW, flag); }
-    void setScalarAve(bool flag) { setFlag(SCALARAVE,flag); }
+    void setScalarAve(bool flag) { setFlag(SCALARAVE, flag); }
     // </group>
-    
-    
+
     // Equality operators.
     // <group>
     bool operator==(const PlotMSAveraging& other) const;
     bool operator!=(const PlotMSAveraging& other) const {
         return !(operator==(other)); }
     // </group>
-    
+
     // Print out a summary of the averaging state:
     String summary() const;
 
 private:
     // Averaging field flags.
     map<Field, bool> itsFlags_;
-    
+
     // Averaging field double values.
     map<Field, double> itsValues_;
 
-    
     // Sets the default values.
     void setDefaults();
-    
-    
+
     // String constant for what to append to the enum name in the record to
     // get the key for the double value.
     static const String RKEY_VALUE;

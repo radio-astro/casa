@@ -72,118 +72,119 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class PlotMSVBAverager
 {
 public:
-  // Construct from the number of antennas, the averaging interval and
-  // the pre-normalization flag
-  PlotMSVBAverager(Int nAnt,Bool chanDepWt);
+    // Construct from the number of antennas, the averaging interval and
+    // the pre-normalization flag
+    PlotMSVBAverager(Int nAnt,Bool chanDepWt);
 
-  // Null destructor
-  ~PlotMSVBAverager();
+    // Null destructor
+    ~PlotMSVBAverager();
 
-  // Set up baseline averaging
-  inline void setBlnAveraging(Bool doBln) { 
-    blnAve_p=doBln; if (doBln) setAntAveraging(False); };
-  // Set up baseline averaging
-  inline void setAntAveraging(Bool doAnt) { 
-    antAve_p=doAnt; if (doAnt) setBlnAveraging(False); };
+    // Set up baseline averaging
+    inline void setBlnAveraging(Bool doBln) {
+        blnAve_p=doBln; if(doBln) setAntAveraging(False); };
+    // Set up baseline averaging
+    inline void setAntAveraging(Bool doAnt) {
+        antAve_p=doAnt; if(doAnt) setBlnAveraging(False); };
 
-  // Set scalar averaging flag 
-  inline void setScalarAve(Bool doScalar) { 
-    //    cout << "Using " << (doScalar ? "SCALAR" : "VECTOR") << " averaging." << endl;
-    inCoh_p = doScalar; };
-  
-  // Control which data column to average
-  inline void setNoData() {doVC_p=doMVC_p=doCVC_p=doWC_p=doUVW_p=False;};
-  inline void setDoVC()  {doVC_p= doWC_p=True;};
-  inline void setDoMVC() {doMVC_p=doWC_p=True;};
-  inline void setDoCVC() {doCVC_p=doWC_p=True;};
-  inline void setDoUVW() {doUVW_p=True;};
+    // Set scalar averaging flag
+    inline void setScalarAve(Bool doScalar) {
+        //  cout << "Using " << (doScalar ? "SCALAR" : "VECTOR")
+        //       << " averaging." << endl;
+        inCoh_p = doScalar;
+    };
 
-  // Accumulate a VisBuffer
-  inline void accumulate (VisBuffer& vb) { antAve_p ? antAccumulate(vb) : simpAccumulate(vb); };
+    // Control which data column to average
+    inline void setNoData() {
+        doVC_p = doMVC_p = doCVC_p = doWC_p = doUVW_p = False; }
+    inline void setDoVC()  { doVC_p = doWC_p = True; }
+    inline void setDoMVC() { doMVC_p = doWC_p = True; }
+    inline void setDoCVC() { doCVC_p = doWC_p = True; }
+    inline void setDoUVW() { doUVW_p = True; }
 
-  // Finalize averaging, and return the result
-  void finalizeAverage();
+    // Accumulate a VisBuffer
+    inline void accumulate(VisBuffer& vb) {
+        antAve_p ? antAccumulate(vb) : simpAccumulate(vb); }
 
-  // Return a reference to the result
-  // TBD: is it ok to return a CVB as a VB reference?  (do I need an
-  //      explicit cast here?
-  VisBuffer& aveVisBuff() { return avBuf_p; }
-  CalVisBuffer& aveCalVisBuff() { return avBuf_p; }
+    // Finalize averaging, and return the result
+    void finalizeAverage();
+
+    // Return a reference to the result
+    // TBD: is it ok to return a CVB as a VB reference?  (do I need an
+    //      explicit cast here?
+    VisBuffer& aveVisBuff() { return avBuf_p; }
+    CalVisBuffer& aveCalVisBuff() { return avBuf_p; }
 
 private:
-  // Prohibit null constructor, copy constructor and assignment for now
-  PlotMSVBAverager();
-  PlotMSVBAverager& operator= (const PlotMSVBAverager&);
-  PlotMSVBAverager (const PlotMSVBAverager&);
+    // Prohibit null constructor, copy constructor and assignment for now
+    PlotMSVBAverager();
+    PlotMSVBAverager& operator=(const PlotMSVBAverager&);
+    PlotMSVBAverager(const PlotMSVBAverager&);
 
-  // Diagnostic printing level
-  Int& prtlev() { return prtlev_; };
+    // Diagnostic printing level
+    Int& prtlev() { return prtlev_; };
 
-  // Initialize the next accumulation interval
-  //  (should this be public?)
-  void initialize(VisBuffer& vb);
+    // Initialize the next accumulation interval
+    //  (should this be public?)
+    void initialize(VisBuffer& vb);
 
-  // Different accumulate versions
-  void simpAccumulate (VisBuffer& vb);  // ordinary
-  void antAccumulate (VisBuffer& vb);   // antenna-based averaging version
+    // Different accumulate versions
+    void simpAccumulate(VisBuffer& vb);  // ordinary
+    void antAccumulate(VisBuffer& vb);   // antenna-based averaging version
 
-  // Verify zero or two crosshands present (if antAve_p)
-  void verifyCrosshands(VisBuffer& vb);
+    // Verify zero or two crosshands present (if antAve_p)
+    void verifyCrosshands(VisBuffer& vb);
 
-  // Hash function to return the row offset for an interferometer (ant1, ant2)
-  Int baseline(const Int& ant1, const Int& ant2);
+    // Hash function to return the row offset for an interferometer (ant1, ant2)
+    Int baseline(const Int& ant1, const Int& ant2);
 
-  // Convert r/i to a/p
-  void convertToAP(Cube<Complex>& d);
+    // Convert r/i to a/p
+    void convertToAP(Cube<Complex>& d);
 
-  // Number of antennas, correlations, and channels
-  Int nAnt_p, nCorr_p, nChan_p, nBlnMax_p;
+    // Number of antennas, correlations, and channels
+    Int nAnt_p, nCorr_p, nChan_p, nBlnMax_p;
 
-  // Weights in input VBs are chan-independent
-  Bool chanIndepWt_p;
+    // Weights in input VBs are chan-independent
+    Bool chanIndepWt_p;
 
-  // Validation by baseline (if False, no attempt to accumulate this baseline)
-  Vector<Bool> blnOK_p;
+    // Validation by baseline
+    // (if False, no attempt to accumulate this baseline)
+    Vector<Bool> blnOK_p;
 
-  // Are we averaging baselines together?
-  Bool blnAve_p;
+    // Are we averaging baselines together?
+    Bool blnAve_p;
 
-  // Are we averaging antennas together?
-  Bool antAve_p;
+    // Are we averaging antennas together?
+    Bool antAve_p;
 
-  // Are we incoherently (scalar) averaging?
-  Bool inCoh_p;
+    // Are we incoherently (scalar) averaging?
+    Bool inCoh_p;
 
-  // Accumulation helpers...
-  Double timeRef_p;
-  Double minTime_p;
-  Double maxTime_p;
-  Double aveTime_p;
-  Double aveInterval_p;
-  Vector<Double> blnWtSum_p;
-  Double vbWtSum_p;
-  Int aveScan_p;
+    // Accumulation helpers...
+    Double timeRef_p;
+    Double minTime_p;
+    Double maxTime_p;
+    Double aveTime_p;
+    Double aveInterval_p;
+    Vector<Double> blnWtSum_p;
+    Double vbWtSum_p;
+    Int aveScan_p;
 
-  // Optional averaging triggers
-  Bool doVC_p,doMVC_p,doCVC_p,doUVW_p,doWC_p;
+    // Optional averaging triggers
+    Bool doVC_p, doMVC_p, doCVC_p, doUVW_p, doWC_p;
 
-  // Accumulation buffer
-  CalVisBuffer avBuf_p;
+    // Accumulation buffer
+    CalVisBuffer avBuf_p;
 
-  // Keep track of initialization state
-  Bool initialized_p;
+    // Keep track of initialization state
+    Bool initialized_p;
 
-  // Correlation list for cross-hand swapping
-  Vector<Int> jcor_p;
-  
-  // Diagnostic print level
-  Int prtlev_;
+    // Correlation list for cross-hand swapping
+    Vector<Int> jcor_p;
 
+    // Diagnostic print level
+    Int prtlev_;
 };
-
 
 } //# NAMESPACE CASA - END
 
-#endif
-
-
+#endif//PLOTMSVBAVERAGER_H

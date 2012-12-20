@@ -47,99 +47,91 @@ class PlotMSApp;
 class PlotMSIndexer;
 
 class CalCache : public PlotMSCacheBase {
-    
-  // Friend class declarations.
-  friend class PlotMSIndexer;
+    // Friend class declarations.
+    friend class PlotMSIndexer;
 
-public:    
-  
-  // Constructor which takes parent PlotMS.
-  CalCache(PlotMSApp* parent);
-  
-  // Destructor
-  virtual ~CalCache();
+public:
+    // Constructor which takes parent PlotMS.
+    CalCache(PlotMSApp* parent);
 
-  // Identify myself
-  PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::CAL; };
+    // Destructor
+    virtual ~CalCache();
 
-  // Is the underlying table complex?
-  inline Bool parsAreComplex() { return parsAreComplex_; };
+    // Identify myself
+    PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::CAL; };
 
-  // Access to channel averaging bounds
-  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
-  
-  // ...not yet CAL-specific... (or ever?)
-  // Set up indexing for the plot
-  //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
-  //		    Bool globalXRange=False, Bool globalYRange=False);
+    // Is the underlying table complex?
+    inline Bool parsAreComplex() { return parsAreComplex_; };
 
-  virtual String polname(Int ipol);
+    // Access to channel averaging bounds
+    Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
 
+    // ...not yet CAL-specific... (or ever?)
+    // Set up indexing for the plot
+    //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
+    //		    Bool globalXRange=False, Bool globalYRange=False);
+
+    virtual String polname(Int ipol);
 
 protected:
-
-  // CAL-specific loadIt method
-  virtual void loadIt(vector<PMS::Axis>& loadAxes,
-		      vector<PMS::DataColumn>& loadData,
-		      PlotMSCacheThread* thread = NULL);
+    // CAL-specific loadIt method
+    virtual void loadIt(vector<PMS::Axis>& loadAxes,
+                        vector<PMS::DataColumn>& loadData,
+                        PlotMSCacheThread* thread = NULL);
 
 private:
-    
-  // Forbid copy for now
-  CalCache(const CalCache&);
+    // Forbid copy for now
+    CalCache(const CalCache&);
 
-  // Setup the CalIter
-  void setUpCalIter(const String& calname,
-		    const PlotMSSelection& selection,
-		    Bool readonly=True,
-		    Bool chanselect=True,
-		    Bool corrselect=True);
+    // Setup the CalIter
+    void setUpCalIter(const String& calname,
+                      const PlotMSSelection& selection,
+                      Bool readonly = True,
+                      Bool chanselect = True,
+                      Bool corrselect = True);
 
-  // Count the chunks required in the cache
-  void countChunks(ROCTIter& ci,PlotMSCacheThread* thread);  // old
+    // Count the chunks required in the cache
+    void countChunks(ROCTIter& ci,PlotMSCacheThread* thread);  // old
 
-  // Trap attempt to use to much memory (too many points)
-  //  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
+    // Trap attempt to use to much memory (too many points)
+    //  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
 
-  // Loop over VisIter, filling the cache
-  void loadCalChunks(ROCTIter& ci,
-		  const vector<PMS::Axis> loadAxes,
-		  PlotMSCacheThread* thread);
+    // Loop over VisIter, filling the cache
+    void loadCalChunks(ROCTIter& ci,
+                       const vector<PMS::Axis> loadAxes,
+                       PlotMSCacheThread* thread);
 
-  // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis);
+    // Loads the specific axis/metadata into the cache using
+    //  the given VisBuffer.
+    void loadCalAxis(ROCTIter& cti, Int chunk, PMS::Axis axis);
 
-  // Set flags in the CalTable
-  virtual void flagToDisk(const PlotMSFlagging& flagging,
-			  Vector<Int>& chunks, 
-			  Vector<Int>& relids,
-			  Bool flag,
-			  PlotMSIndexer* indexer);
-  
+    // Set flags in the CalTable
+    virtual void flagToDisk(const PlotMSFlagging& flagging,
+                            Vector<Int>& chunks,
+                            Vector<Int>& relids,
+                            Bool flag,
+                            PlotMSIndexer* indexer);
 
-  // A container for channel averaging bounds
-  Vector<Matrix<Int> > chanAveBounds_p;
+    // A container for channel averaging bounds
+    Vector<Matrix<Int> > chanAveBounds_p;
 
-  // Provisional flagging helpers
-  Vector<Int> nVBPerAve_;
-  
-  // The polarization basis
-  String basis_;
+    // Provisional flagging helpers
+    Vector<Int> nVBPerAve_;
 
-  // VisIterator pointer
-  ROCTIter* ci_p;
-  CTIter* wci_p;
+    // The polarization basis
+    String basis_;
 
-  // Is parameter column complex?
-  Bool parsAreComplex_;
+    // VisIterator pointer
+    ROCTIter* ci_p;
+    CTIter* wci_p;
 
-  // Volume meter for volume calculation
-  //  PMSCacheVolMeter vm_;
+    // Is parameter column complex?
+    Bool parsAreComplex_;
 
-    
+    // Volume meter for volume calculation
+    //  PMSCacheVolMeter vm_;
 };
 typedef CountedPtr<CalCache> CalCachePtr;
-
 
 }
 

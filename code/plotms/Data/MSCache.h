@@ -45,119 +45,115 @@
 
 namespace casa {
 
-//# Forward declarations.
+// Forward declarations.
 class PlotMSApp;
 class PlotMSIndexer;
 
 class MSCache : public PlotMSCacheBase {
-    
-  // Friend class declarations.
-  friend class PlotMSIndexer;
+    // Friend class declarations.
+    friend class PlotMSIndexer;
 
-public:    
-  
-  // Constructor which takes parent PlotMS.
-  MSCache(PlotMSApp* parent);
-  
-  // Destructor
-  virtual ~MSCache();
+public:
+    // Constructor which takes parent PlotMS.
+    MSCache(PlotMSApp* parent);
 
-  // Identify myself
-  PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::MS; };
+    // Destructor
+    virtual ~MSCache();
 
-  // Access to channel averaging bounds
-  Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
-  
-  // ...not yet MS-specific... (or ever?)
-  // Set up indexing for the plot
-  //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
-  //		    Bool globalXRange=False, Bool globalYRange=False);
+    // Identify myself
+    PlotMSCacheBase::Type cacheType() { return PlotMSCacheBase::MS; };
 
-  virtual String polname(Int ipol);
+    // Access to channel averaging bounds
+    Matrix<Int>& chanAveBounds(Int spw) { return chanAveBounds_p(spw); };
+
+    // ...not yet MS-specific... (or ever?)
+    // Set up indexing for the plot
+    //  void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
+    //		    Bool globalXRange=False, Bool globalYRange=False);
+
+    virtual String polname(Int ipol);
 
 protected:
-
-  // MS-specific loadIt method
-  virtual void loadIt(vector<PMS::Axis>& loadAxes,
-		      vector<PMS::DataColumn>& loadData,
-		      PlotMSCacheThread* thread = NULL);
+    // MS-specific loadIt method
+    virtual void loadIt(vector<PMS::Axis>& loadAxes,
+                        vector<PMS::DataColumn>& loadData,
+                        PlotMSCacheThread* thread = NULL);
 
 private:
-    
-  // Forbid copy for now
-  MSCache(const MSCache&);
+    // Forbid copy for now
+    MSCache(const MSCache&);
 
-  // Setup the VisIter
-  void setUpVisIter(const String& msname,
-		    const PlotMSSelection& selection,
-		    Bool readonly=True,
-		    Bool chanselect=True,
-		    Bool corrselect=True);
+    // Setup the VisIter
+    void setUpVisIter(const String& msname,
+                      const PlotMSSelection& selection,
+                      Bool readonly = True,
+                      Bool chanselect = True,
+                      Bool corrselect = True);
 
-  // Count the chunks required in the cache
-  void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);  // old
-  void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,  // supports time-averaging 
-		   const PlotMSAveraging& averaging,PlotMSCacheThread* thread);
+    // Count the chunks required in the cache
+    // old
+    void countChunks(ROVisibilityIterator& vi,PlotMSCacheThread* thread);
+    // supports time-averaging
+    void countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
+                     const PlotMSAveraging& averaging,
+                     PlotMSCacheThread* thread);
 
-  // Trap attempt to use to much memory (too many points)
-  void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
+    // Trap attempt to use to much memory (too many points)
+    void trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes);
 
-  // Loop over VisIter, filling the cache
-  void loadChunks(ROVisibilityIterator& vi,
-		  const vector<PMS::Axis> loadAxes,
-		  const vector<PMS::DataColumn> loadData,
-		  const PlotMSAveraging& averaging,
-		  PlotMSCacheThread* thread);
-  void loadChunks(ROVisibilityIterator& vi,
-		  const PlotMSAveraging& averaging,
-		  const Vector<Int>& nIterPerAve,
-		  const vector<PMS::Axis> loadAxes,
-		  const vector<PMS::DataColumn> loadData,
-		  PlotMSCacheThread* thread);
+    // Loop over VisIter, filling the cache
+    void loadChunks(ROVisibilityIterator& vi,
+                    const vector<PMS::Axis> loadAxes,
+                    const vector<PMS::DataColumn> loadData,
+                    const PlotMSAveraging& averaging,
+                    PlotMSCacheThread* thread);
+    void loadChunks(ROVisibilityIterator& vi,
+                    const PlotMSAveraging& averaging,
+                    const Vector<Int>& nIterPerAve,
+                    const vector<PMS::Axis> loadAxes,
+                    const vector<PMS::DataColumn> loadData,
+                    PlotMSCacheThread* thread);
 
-  // Force read on vb for requested axes 
-  //   (so pre-cache averaging treats all data it should)
-  void forceVBread(VisBuffer& vb,
-		   vector<PMS::Axis> loadAxes,
-		   vector<PMS::DataColumn> loadData);
+    // Force read on vb for requested axes
+    //  (so pre-cache averaging treats all data it should)
+    void forceVBread(VisBuffer& vb,
+                     vector<PMS::Axis> loadAxes,
+                     vector<PMS::DataColumn> loadData);
 
-  // Tell time averager which data column to read
-  void discernData(vector<PMS::Axis> loadAxes,
-		   vector<PMS::DataColumn> loadData,
-		   PlotMSVBAverager& vba);
+    // Tell time averager which data column to read
+    void discernData(vector<PMS::Axis> loadAxes,
+                     vector<PMS::DataColumn> loadData,
+                     PlotMSVBAverager& vba);
 
-  // Loads the specific axis/metadata into the cache using the given VisBuffer.
-  void loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
-		PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
+    // Loads the specific axis/metadata into the cache using
+    //  the given VisBuffer.
+    void loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
+                  PMS::DataColumn data = PMS::DEFAULT_DATACOLUMN);
 
-  // Set flags in the MS
-  virtual void flagToDisk(const PlotMSFlagging& flagging,
-			  Vector<Int>& chunks, 
-			  Vector<Int>& relids,
-			  Bool flag,
-			  PlotMSIndexer* indexer);
-  
+    // Set flags in the MS
+    virtual void flagToDisk(const PlotMSFlagging& flagging,
+                            Vector<Int>& chunks,
+                            Vector<Int>& relids,
+                            Bool flag,
+                            PlotMSIndexer* indexer);
 
-  // A container for channel averaging bounds
-  Vector<Matrix<Int> > chanAveBounds_p;
+    // A container for channel averaging bounds
+    Vector<Matrix<Int> > chanAveBounds_p;
 
-  // Provisional flagging helpers
-  Vector<Int> nVBPerAve_;
+    // Provisional flagging helpers
+    Vector<Int> nVBPerAve_;
 
-  // VisIterator pointer
-  ROVisIterator* rvi_p;
-  VisIterator* wvi_p;
+    // VisIterator pointer
+    ROVisIterator* rvi_p;
+    VisIterator* wvi_p;
 
-  // VisBufferUtil for freq/vel calculations
-  VisBufferUtil vbu_;
+    // VisBufferUtil for freq/vel calculations
+    VisBufferUtil vbu_;
 
-  // Volume meter for volume calculation
-  MSCacheVolMeter vm_;
-
-    
+    // Volume meter for volume calculation
+    MSCacheVolMeter vm_;
 };
 typedef CountedPtr<MSCache> MSCachePtr;
-
 
 }
 

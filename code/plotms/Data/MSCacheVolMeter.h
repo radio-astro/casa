@@ -41,37 +41,34 @@ namespace casa {
 class MSCacheVolMeter {
 
 public:
+    // Constructor/Destructor
+    MSCacheVolMeter();
+    MSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave,
+                    const Vector<Vector<Slice> >& chansel,
+                    const Vector<Vector<Slice> >& corrsel);
+    ~MSCacheVolMeter();
 
-  // Constructor/Destructor
-  MSCacheVolMeter();
-  MSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave,
-		   const Vector<Vector<Slice> >& chansel,
-		   const Vector<Vector<Slice> >& corrsel);
-  ~MSCacheVolMeter();
+    // reset (as if default ctor was run)
+    void reset();
 
-  // reset (as if default ctor was run)
-  void reset();
+    // add in via a VisBuffer
+    void add(const VisBuffer& vb);
 
-  // add in via a VisBuffer
-  void add(const VisBuffer& vb);
+    // add in via counts
+    void add(Int DDID, Int nRows);
 
-  // add in via counts
-  void add(Int DDID,Int nRows);
-
-  // evaluate the volume for specified axes, and complain if 
-  String evalVolume(map<PMS::Axis,Bool> axes,Vector<Bool> axesmask);
+    // evaluate the volume for specified axes, and complain if
+    String evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesmask);
 
 private:
+    // The number of DATA_DESCRIPTIONs
+    Int nDDID_;
 
-  // The number of DATA_DESCRIPTIONs
-  Int nDDID_;
+    // Counters
+    Vector<uInt64> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
 
-  // Counters
-  Vector<uInt64> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
-
-  // The number of antennas (max)
-  Int nAnt_;
-
+    // The number of antennas (max)
+    Int nAnt_;
 };
 
 }
