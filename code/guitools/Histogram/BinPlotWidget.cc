@@ -71,6 +71,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 	setAxisLabelFont( 8);
 
 	ui.plotHolder->setLayout( layout );
+	//setFocusPolicy( Qt::StrongFocus );
 
 	initializePlotControls();
 	initializeFitWidget( fitControls );
@@ -1063,6 +1064,10 @@ void BinPlotWidget::clearCurves(){
 //-----------------------------------------------------------------------
 //                   Rectangle Range Specification
 //-----------------------------------------------------------------------
+
+void BinPlotWidget::enterEvent( QEvent* /*event*/ ){
+	this->setFocus(Qt::OtherFocusReason );
+}
 
 void BinPlotWidget::resizeEvent( QResizeEvent* event ){
 	QWidget::resizeEvent( event );

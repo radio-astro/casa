@@ -103,7 +103,7 @@ void Histogram::defineStepHorizontal( int index, QVector<double>& xVals,
 	yVals[1] = yVals[0];
 }
 
-double Histogram::computeYValue( double value, bool useLog ) const {
+double Histogram::computeYValue( double value, bool useLog ){
 	double resultValue = value;
 	if ( useLog ){
 		if ( value != 0 ){

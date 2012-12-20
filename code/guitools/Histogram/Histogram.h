@@ -53,9 +53,8 @@ public:
 	vector<float> getYValues() const;
 	void toAscii( QTextStream& out ) const;
 	virtual ~Histogram();
-
+	static double computeYValue( double value, bool useLog );
 private:
-	double computeYValue( double value, bool useLog ) const;
 	int getPeakIndex() const;
 	float getTotalCount() const;
 
