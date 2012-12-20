@@ -1425,46 +1425,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWProjectFT::resampleDataToGrid(griddedData,vbs,vb,dopsf);
     if (!avgPBReady_p)
       {
+	//
+	// Get a reference to the pixels of griddedWeights (a
+	// TempImage!)
+	//
 	Array<Complex> gwts; Bool removeDegenerateAxis=False;
 	griddedWeights.get(gwts, removeDegenerateAxis);
 	resampleCFToGrid(gwts, vbs, vb);
-	// //
-	// // Grid the weighted convolution function as well
-	// //
-	// LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
-	// //
-	// // Now rotate and put the rotated convolution weight function
-	// // in rotatedCFWts_l object.
-	// //
-
-	// //	makeWBCFWt(*cfwts2_p, imRefFreq_p);
-
-	// visResamplerWt_p->copy(*visResampler_p);
-	
-	// Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
-	// visResamplerWt_p->makeVBRow2CFMap(*cfwts2_p,*convFuncCtor_p, vb,
-	// 				  paChangeDetector.getParAngleTolerance(),
-	// 				  chanMap,polMap,pointingOffset);
-	// VBRow2CFBMapType& theMap=visResamplerWt_p->getVBRow2CFBMap();
-	// convFuncCtor_p->prepareConvFunction(vb,theMap);
-	// //
-	// // Set the uvw array to zero-sized array and dopsf=True.
-	// // uvw.nelements()==0 is a hint to the re-sampler to put the
-	// // gridded weights at the origin of the uv-grid. dopsf=True so
-	// // that CF*Wts are accumulated (as against CF*Wts*Vis).
-	// //
-	// // Receive the sum-of-weights in a dummy array.
-	// Matrix<Double> uvwOrigin;
-	// vbs.uvw_p.reference(uvwOrigin); 
-	// Bool dopsf_l=True;
-	
-	// Array<Complex> gwts; Bool removeDegenerateAxis=False;
-	// griddedWeights.get(gwts, removeDegenerateAxis);
-	// Int nDataChan = vbs.flagCube_p.shape()[1];
-	
-	
-	// vbs.startChan_p = 0; vbs.endChan_p = nDataChan;
-	// visResamplerWt_p->DataToGrid(gwts, vbs, sumCFWeight, dopsf_l); 
+      }
+  };
+  //
+  //---------------------------------------------------------------
+  //
+  void AWProjectWBFT::resampleDataToGrid(Array<DComplex>& griddedData,
+					 VBStore& vbs, const VisBuffer& vb, 
+					 Bool& dopsf) 
+  {
+    AWProjectFT::resampleDataToGrid(griddedData,vbs,vb,dopsf);
+    if (!avgPBReady_p)
+      {
+	//
+	// Get a reference to the pixels of griddedWeights (a
+	// TempImage!)
+	//
+	Array<Complex> gwts; Bool removeDegenerateAxis=False;
+	griddedWeights.get(gwts, removeDegenerateAxis);
+	resampleCFToGrid(gwts, vbs, vb);
       }
   };
   //  void AWProjectWBFT::resampleGridToData(VBStore& vbs, const VisBuffer& vb) {};

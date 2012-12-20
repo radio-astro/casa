@@ -1476,16 +1476,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	griddedData=Complex(0.0);
 	arrayLattice = new ArrayLattice<Complex>(griddedData);
 	lattice=arrayLattice;
-	// if(useDoubleGrid_p) 
-	//   {
-	//     griddedData.resize();
-	//     griddedData2.resize(gridShape);
-	//     griddedData2=DComplex(0.0);
-	//   }
+	if(useDoubleGrid_p) 
+	  {
+	    griddedData.resize();
+	    griddedData2.resize(gridShape);
+	    griddedData2=DComplex(0.0);
+	  }
       }
-    // if(useDoubleGrid_p) 
-    //   visResampler_p->initializeToSky(griddedData2, sumWeight);
-    // else
+    if(useDoubleGrid_p) 
+      visResampler_p->initializeToSky(griddedData2, sumWeight);
+    else
       visResampler_p->initializeToSky(griddedData, sumWeight);
   }
   //
@@ -1512,9 +1512,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     paChangeDetector.reset();
     cfCache_p->flush();
-    // if(useDoubleGrid_p) 
-    //   visResampler_p->finalizeToSky(griddedData2, sumWeight);
-    // else
+    if(useDoubleGrid_p) 
+      visResampler_p->finalizeToSky(griddedData2, sumWeight);
+    else
       visResampler_p->finalizeToSky(griddedData, sumWeight);
   }
   //
@@ -1625,7 +1625,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //   visResampler_p->DataToGrid(griddedData2, vbs, sumWeight, dopsf);
   // else
   //    visResampler_p->DataToGrid(griddedData, vbs, sumWeight, dopsf); 
-
 
   }
   //
@@ -1793,19 +1792,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// x and y transforms (lattice has the gridded vis.  Make the
 	// dirty images)
 	//
-	// if (useDoubleGrid_p)
-	//   {
-	//     ArrayLattice<DComplex> darrayLattice(griddedData2);
-	//     LatticeFFT::cfft2d(darrayLattice,False);
-	//     griddedData.resize(griddedData2.shape());
-	//     convertArray(griddedData, griddedData2);
+	if (useDoubleGrid_p)
+	  {
+	    ArrayLattice<DComplex> darrayLattice(griddedData2);
+	    LatticeFFT::cfft2d(darrayLattice,False);
+	    griddedData.resize(griddedData2.shape());
+	    convertArray(griddedData, griddedData2);
 	
-	//     //Don't need the double-prec grid anymore...
-	//     griddedData2.resize();
-	//     arrayLattice = new ArrayLattice<Complex>(griddedData);
-	//     lattice=arrayLattice;
-	//   }
-	// else
+	    //Don't need the double-prec grid anymore...
+	    griddedData2.resize();
+	    arrayLattice = new ArrayLattice<Complex>(griddedData);
+	    lattice=arrayLattice;
+	  }
+	else
 	  {
 	    arrayLattice = new ArrayLattice<Complex>(griddedData);
 	    lattice=arrayLattice;

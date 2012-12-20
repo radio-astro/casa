@@ -190,18 +190,17 @@ namespace casa{
 		//tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
 
 		
-		doSquint=True;
 		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,conjFreq);
 
 		//tt=max(ftATermSq_l.get()); ftATermSq_l.put(abs(ftATermSq_l.get()/tt));
 
-		// {
-		//   ostringstream name;
-		//   name << "ftTerm" << "_" << muellerElements(imx)(imy) <<".im";
-		//   storeImg(name,ftATerm_l);
-		//   name << "ftTermSq" << "_" << muellerElements(imx)(imy) <<".im";
-		//   storeImg(name,ftATermSq_l);
-		// }
+		{
+		  // ostringstream name;
+		  // name << "ftTerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
+		  // storeImg(name,ftATerm_l);
+		  // name << "ftTermSq" << "_" << muellerElements(imx)(imy) <<".im";
+		  // storeImg(name,ftATermSq_l);
+		}
 
 		// TempImage<Complex> ftATermSq_l(pbshp,cs_l);
 		// ftATermSq_l.set(Complex(1.0,0.0));
@@ -248,8 +247,8 @@ namespace casa{
 		    //		    Int inner = cfBufMat.shape()(0)/aTerm.getOversampling();
 		    //		    Float inner = 2.0*aTerm.getOversampling()/cfBufMat.shape()(0);
 
-		    // Timer tim;
-		    // tim.mark();
+		    //Timer tim;
+		    //tim.mark();
 		    if (psTerm.isNoOp())
 		      cfBufMat = cfWtBufMat = 1.0;
 		    else
@@ -257,7 +256,7 @@ namespace casa{
 			psTerm.applySky(cfBufMat, False);   // Assign (psScale set in psTerm.init()
 			psTerm.applySky(cfWtBufMat, False); // Assign
 		      }
-		    // tim.show("PSTerm*2: ");
+		    //tim.show("PSTerm*2: ");
 
 		    // WBAWP CODE BEGIN  -- make PS*PS for Weights
 		    // psTerm.applySky(cfWtBufMat, True);  // Multiply
@@ -270,10 +269,9 @@ namespace casa{
 		    // doimain.  No need to apply it to the
 		    // wt-functions.
 
-		    // Timer tim;
-		    // tim.mark();
+		    //tim.mark();
 		    wTerm.applySky(cfBufMat, iw, cellSize, wScale, cfBuf.shape()(0));///4);
-		    // tim.show("WTerm: ");
+		    //tim.show("WTerm: ");
 		    // wTerm.applySky(cfWtBufMat, iw, cellSize, wScale, cfWtBuf.shape()(0)/4);
 
     		    IPosition PolnPlane(4,0,0,0,0),
@@ -289,10 +287,10 @@ namespace casa{
 		    //-------------------------------------------------------------		    
 		    // WBAWP CODE BEGIN -- ftATermSq_l has conj. PolCS
 		    //cfWtBuf *= ftATerm_l.get()*conj(ftATermSq_l.get());
-		    // tim.mark();
+		    //tim.mark();
 		    cfWtBuf *= ftATerm_l.get();
 		    cfBuf *= ftATerm_l.get();
-		    // tim.show("W*A*2: ");
+		    //tim.show("W*A*2: ");
 		    // WBAWP CODE END
 
 		    
@@ -300,8 +298,10 @@ namespace casa{
 		    // cfWtBuf = sqrt(cfWtBuf);
 		    // psTerm.applySky(cfWtBufMat,True);
 
+		    //tim.mark();
 		    twoDPB_l.putSlice(cfBuf, PolnPlane);
 		    twoDPBSq_l.putSlice(cfWtBuf, PolnPlane);
+		    //tim.show("putSlice:");
 		    // WBAWP CODE BEGIN
 		    //		    twoDPB_l *= ftATerm_l;
 		    // WBAWP CODE END
@@ -317,7 +317,7 @@ namespace casa{
 		    // Set the ref. freq. of the co-ordinate system to
 		    // that set by ATerm::applySky().
 		    //
-		    // tim.mark();
+		    //tim.mark();
     		    CoordinateSystem cs=twoDPB_l.coordinates();
     		    Int index= twoDPB_l.coordinates().findCoordinate(Coordinate::SPECTRAL);
     		    SpectralCoordinate SpCS = twoDPB_l.coordinates().spectralCoordinate(index);
@@ -326,7 +326,7 @@ namespace casa{
     		    Vector<Double> refValue; refValue.resize(1); refValue(0)=cfRefFreq;
     		    SpCS.setReferenceValue(refValue);
     		    cs.replaceCoordinate(SpCS,index);
-		    // tim.show("CSStuff:");
+		    //tim.show("CSStuff:");
     		    // {
 		    //   ostringstream name;
 		    //   name << "twoDPB.before" << iw << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
@@ -338,15 +338,16 @@ namespace casa{
 		    // Now FT the function and copy the data from
 		    // TempImages back to the CFBuffer buffers
 		    //
-		    // tim.mark();
+		    //tim.mark();
     		    LatticeFFT::cfft2d(twoDPB_l);
     		    LatticeFFT::cfft2d(twoDPBSq_l);
-		    // tim.show("FFT*2:");
+		    //tim.show("FFT*2:");
 		    // Array<Complex> t0;
 		    // twoDPBSq_l.get(t0); t0 = abs(t0);
 		    // twoDPBSq_l.put(t0);
 
 
+		    //tim.mark();
 		    IPosition shp(twoDPB_l.shape());
 		    IPosition start(4, 0, 0, 0, 0), pbSlice(4, shp[0]-1, shp[1]-1,1/*polInUse*/, 1),
 		      sliceLength(4,cfBuf.shape()[0]-1,cfBuf.shape()[1]-1,1,1);
@@ -360,6 +361,7 @@ namespace casa{
 		    
 		    cfWtBuf(Slicer(start,sqSliceLength)).nonDegenerate()
 		      =(twoDPBSq_l.getSlice(start, pbSqSlice, True));
+		    //tim.show("Slicer*2:");
 		    //
 		    // Finally, resize the buffers, limited to the
 		    // support size determined by the threshold
@@ -368,12 +370,16 @@ namespace casa{
 		    // the FT domain set the co-ord. sys. and modified
 		    // support sizes.
 		    //
+		    //tim.mark();
 		    if (iw==0) wtcpeak = max(cfWtBuf);
 		    cfWtBuf /= wtcpeak;
+		    //tim.show("Norm");
 
-
+		    //tim.mark();
 		    resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
+		    //tim.show("Resize:");
 
+		    //tim.mark();
 		    Vector<Double> ftRef(2);
 		    // ftRef(0)=cfWtBuf.shape()(0)/2-1;
 		    // ftRef(1)=cfWtBuf.shape()(1)/2-1;
@@ -388,11 +394,13 @@ namespace casa{
 		    cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
 				       muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
 
-		    
+		    //tim.show("CSStuff:");
 		    // setUpCFSupport(cfBuf, xSupport, ySupport, sampling);
 		    //		    if (iw==0) 
+		    //tim.mark();
 		      cpeak = max(cfBuf);
 		    cfBuf /= cpeak;
+		    //tim.show("Peaknorm:");
     		    // {
     		    //   ostringstream name;
     		    //   name << "twoDPB.after" << iw << "_" << inu << "_" << muellerElements(imx)(imy) << ".im";
@@ -411,16 +419,21 @@ namespace casa{
 		    ftRef(0)=cfBuf.shape()(0)/2.0;
 		    ftRef(1)=cfBuf.shape()(1)/2.0;
 
+		    //tim.mark();
 		    if (iw == 0)
 		      {
 			cfNorm=0; cfWtNorm=0;
 			cfNorm = cfArea(cfBufMat, xSupport, ySupport, sampling);
 			cfWtNorm = cfArea(cfWtBufMat, xSupportWt, ySupportWt, sampling);
 		      }
+		    //tim.show("Area*2:");
 
+		    //tim.mark();
 		    cfBuf /= cfNorm;
 		    cfWtBuf /= cfWtNorm;
+		    //tim.show("cfNorm*2:");
 
+		    //tim.mark();
 		    ftCoords=cs_l;
 		    SynthesisUtils::makeFTCoordSys(cs_l, cfBuf.shape()(0), ftRef, ftCoords);
 
@@ -429,7 +442,7 @@ namespace casa{
 				  freqValues(inu), wValues(iw), muellerElements(imx)(imy));
 		    cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
 				     muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
-
+		    //tim.show("End*2:");
     		  }
 	      }
 	  }
@@ -898,9 +911,10 @@ namespace casa{
       threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
     //    threshold *= aTerm_p->getSupportThreshold()*0.1;
-    if (aTerm_p->isNoOp()) 
-      threshold *= 1e-3; // This is the threshold used in "standard" FTMchines
-    else
+    // if (aTerm_p->isNoOp()) 
+    //   threshold *= 1e-3; // This is the threshold used in "standard" FTMchines
+    // else
+
       threshold *= aTerm_p->getSupportThreshold();
     //
     // Find the support size of the conv. function in pixels
@@ -1265,29 +1279,41 @@ namespace casa{
   void AWConvFunc::prepareConvFunction(const VisBuffer& vb, VBRow2CFBMapType& theMap)
   {
     Int nRow=theMap.nelements();
-    CountedPtr<CFBuffer> cfb, cbPtr;
-    CountedPtr<CFCell>  cfc;
+    // CountedPtr<CFBuffer> cfb, cbPtr;
+    // CountedPtr<CFCell>  cfc;
+    // CountedPtr<ATerm> aTerm_l=aTerm_p;
+    CFBuffer *cfb, *cbPtr;
+    ATerm *aTerm_l=&*aTerm_p;
+    Int Nth=1;
+// #ifdef HAS_OMP
+//     Nth=max(omp_get_max_threads()-2,1);
+// #endif
 
     for (Int irow=0;irow<nRow;irow++)
       {
-	cfb=theMap(irow);
-	if ((!cfb.null()) && (cfb != cbPtr))
+	cfb=&*(theMap(irow));
+	//	if ((!cfb.null()) && (cfb != cbPtr))
+	if ((cfb!=NULL) && (cfb != cbPtr))
 	  {
 	    IPosition shp(cfb->shape());
 	    cbPtr = cfb;
-	    for (Int i=0;i<shp(0);i++)      // Chan-loop
+	    for(Int k=0;k<shp(2);k++)   // Mueller-loop
 	      for(Int j=0;j<shp(1);j++)     // W-loop
-		for(Int k=0;k<shp(2);k++)   // Mueller-loop
+// #pragma omp parallel default(none) firstprivate(j,k) shared(shp,cfb,aTerm_l) num_threads(Nth)
+     {
+// #pragma omp for
+		for (Int i=0;i<shp(0);i++)      // Chan-loop
 		  {
-		    cfc = cfb->getCFCellPtr(i,j,k);
+		    CFCell  *cfc;
+		    cfc = &*(cfb->getCFCellPtr(i,j,k));
 		    
 		    // Call this for every VB.  Any optimization
 		    // (e.g. rotating at some increment only) is
 		    // implemented in the ATerm::rotate().
 
-		    aTerm_p->rotate(vb,*cfc);
-
+		    aTerm_l->rotate(vb,*cfc);
 		  }
+    }
 	  }
       }
   };
