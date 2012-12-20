@@ -146,5 +146,6 @@ def predictcomp(objname=None, standard=None, epoch=None,
                          'SEVERE')
 
     except Exception, instance:
-        casalog.post(instance, 'SEVERE')
+        casalog.post(str(instance), 'SEVERE')
+        raise Exception, instance
     return retval
