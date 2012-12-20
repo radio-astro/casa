@@ -155,7 +155,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int tilesize=16, 
 		Float pbLimit=5e-4,
 		Bool usezero=False,
-		Bool conjBeams_p=True);
+		Bool conjBeams_p=True,
+		Bool doublePrecGrid=False);
     // </group>
     
     // Construct from a Record containing the AWProjectFT state

@@ -41,6 +41,18 @@ namespace casa{
 			    Int *imNX, Int *imNY, Int *imNP, Int *imNC,
 			    Int *cfNX, Int *cfNY, Int *cfNP, Int *cfNC,
 			    Int *phNX, Int *phNY);
+    void dfaccumulatetogrid_(DComplex *grid, Complex *CF, 
+			    Complex *nvalue, Double *wVal, 
+			    Int *scaledSupport, Float *scaledSampling,
+			    Double *off, Int *convOrigin, Int *cfShape, Int *loc,
+			    Int *igrdpos, Double *sinDPA, Double *cosDPA,
+			    Int *finitePointingOffset,
+			    Int *doPSFOnly,
+			    Double *norm,
+			    Complex *phaseGrad,
+			    Int *imNX, Int *imNY, Int *imNP, Int *imNC,
+			    Int *cfNX, Int *cfNY, Int *cfNP, Int *cfNC,
+			    Int *phNX, Int *phNY);
     void faccumulatefromgrid_(Complex *nvalue, const Complex *grid, Complex *CF, 
 			      Double *wVal, 
 			      Int *scaledSupport, Float *scaledSampling,

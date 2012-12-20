@@ -105,9 +105,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //***TEMP REMOVAL OF DComplex gridder*****
 
-    // virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
-    // 			    const Bool& dopsf,Bool useConjFreqCF=False)
-    // {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,useConjFreqCF);}
+    virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+    			    const Bool& dopsf,Bool useConjFreqCF=False)
+    {DataToGridImpl_p(griddedData, vbs, sumwt,dopsf,useConjFreqCF);}
 
     virtual void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
 			    const Bool& dopsf,Bool useConjFreqCF=False)

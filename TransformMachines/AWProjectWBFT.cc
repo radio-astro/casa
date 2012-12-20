@@ -66,8 +66,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Float paSteps,
 			       Float pbLimit,
 			       Bool usezero,
-			       Bool conjBeams)
-    : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr, itilesize,pbLimit,usezero,conjBeams),
+			       Bool conjBeams,
+			       Bool doublePrecGrid)
+    : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr, itilesize,pbLimit,usezero,conjBeams,doublePrecGrid),
       avgPBReady_p(False),resetPBs_p(True),wtImageFTDone_p(False),fieldIds_p(0),rotatedCFWts_p(),visResamplerWt_p()
   {
     (void)paSteps;
@@ -1274,18 +1275,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     npol  = image->shape()(2);
     nchan = image->shape()(3);
 
-    //    if(image->shape().product()>cachesize) isTiled=True;
-    //  else                                   isTiled=False;
-
     isTiled = False;
 
-    // cout << "AWPWB::initToSky : nx : " 
-    // 	 << nx << " ny : " << ny << " npol  " << npol 
-    // 	 << " nchan : " << nchan << " istiled : " 
-    // 	 << isTiled << " cachesize : " << cachesize 
-    // 	 << endl;
-    
-    
     sumWeight=0.0;
     weight.resize(sumWeight.shape());
     weight=0.0;
@@ -1316,14 +1307,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	griddedWeights.set(0.0);
 	pbPeaks.resize(griddedWeights.shape()(2));
 	pbPeaks.set(0.0);
-
-	// // REMOVE THIS CODE
-	// {
-	//   griddedConjWeights.resize(iimage.shape()); 
-	//   griddedConjWeights.setCoordinateInfo(iimage.coordinates());
-	//   griddedConjWeights.set(0.0);
-	// }
-	// // REMOVE THIS CODE
 
 	resetPBs_p=False;
       }
@@ -1418,11 +1401,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void AWProjectWBFT::resampleDataToGrid(Array<Complex>& griddedData,
+  void AWProjectWBFT::resampleDataToGrid(Array<Complex>& griddedData_l,
 					 VBStore& vbs, const VisBuffer& vb, 
 					 Bool& dopsf) 
   {
-    AWProjectFT::resampleDataToGrid(griddedData,vbs,vb,dopsf);
+    AWProjectFT::resampleDataToGrid(griddedData_l,vbs,vb,dopsf);
     if (!avgPBReady_p)
       {
 	//
@@ -1437,11 +1420,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  void AWProjectWBFT::resampleDataToGrid(Array<DComplex>& griddedData,
+  void AWProjectWBFT::resampleDataToGrid(Array<DComplex>& griddedData_l,
 					 VBStore& vbs, const VisBuffer& vb, 
 					 Bool& dopsf) 
   {
-    AWProjectFT::resampleDataToGrid(griddedData,vbs,vb,dopsf);
+    AWProjectFT::resampleDataToGrid(griddedData_l,vbs,vb,dopsf);
     if (!avgPBReady_p)
       {
 	//
