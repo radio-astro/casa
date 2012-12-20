@@ -171,10 +171,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void resampleDataToGrid(Array<Complex>& griddedData,VBStore& vbs, 
 				    const VisBuffer& vb, Bool& dopsf);
     virtual void resampleDataToGrid(Array<DComplex>& griddedData,VBStore& vbs, 
-				    const VisBuffer& vb, Bool& dopsf)
-    {
-      throw(AipsError("not yet ready!"));
-    };
+				    const VisBuffer& vb, Bool& dopsf);
     //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
     void resampleCFToGrid(Array<Complex>& wtsGrid, 
 			  VBStore& vbs, const VisBuffer& vb);

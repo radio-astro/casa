@@ -36,40 +36,12 @@
 #include <iostream>
 #include <typeinfo>
 #include <iomanip>
+#include <synthesis/TransformMachines/FortranizedLoops.h>
 #ifdef HAS_OMP
 #include <omp.h>
 #endif
 //#include <casa/BasicMath/Functors.h>
 namespace casa{
-
-#define CONJBEAMS (True)
-  extern "C" 
-  {
-    void faccumulatetogrid_(Complex *grid, Complex *CF, 
-			    Complex *nvalue, Double *wVal, 
-			    Int *scaledSupport, Float *scaledSampling,
-			    Double *off, Int *convOrigin, Int *cfShape, Int *loc,
-			    Int *igrdpos, Double *sinDPA, Double *cosDPA,
-			    Int *finitePointingOffset,
-			    Int *doPSFOnly,
-			    Double *norm,
-			    Complex *phaseGrad,
-			    Int *imNX, Int *imNY, Int *imNP, Int *imNC,
-			    Int *cfNX, Int *cfNY, Int *cfNP, Int *cfNC,
-			    Int *phNX, Int *phNY);
-    void faccumulatefromgrid_(Complex *nvalue, const Complex *grid, Complex *CF, 
-			      Double *wVal, 
-			      Int *scaledSupport, Float *scaledSampling,
-			      Double *off, Int *convOrigin, Int *cfShape, Int *loc,
-			      Int *igrdpos, Double *sinDPA, Double *cosDPA,
-			      Int *finitePointingOffset,
-			      Complex *phaseGrad,
-			      Complex *phasor,
-			      Int *imNX, Int *imNY, Int *imNP, Int *imNC,
-			      Int *cfNX, Int *cfNY, Int *cfNP, Int *cfNC,
-			      Int *phNX, Int *phNY);
-  };
-
 
   //
   //-----------------------------------------------------------------------------------
@@ -503,7 +475,7 @@ namespace casa{
 					  // 			   support,sampling,
 					  // 			   off, convOrigin, cfShape, loc, igrdpos,
 					  // 			   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
-					  #include "FortranizedLoopsToGrid.cc"
+#include <synthesis/TransformMachines/FortranizedLoopsToGrid.cc>
 					}
 				      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
 				      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
@@ -683,8 +655,7 @@ namespace casa{
 			// 		   scaledSupport, scaledSampling, off, convOrigin, 
 			// 		   cfShape, loc, phasor, sinDPA, cosDPA, 
 			// 		   finitePointingOffset, cached_phaseGrad_p);
-			#include "FortranizedLoopsFromGrid.cc"
-
+#include <synthesis/TransformMachines/FortranizedLoopsFromGrid.cc>
 
 
 			/*
