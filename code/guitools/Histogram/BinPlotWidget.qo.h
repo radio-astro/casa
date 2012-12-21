@@ -86,7 +86,8 @@ public:
     bool setImageRegion( const ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
-    void postStatus( const QString& msg );
+    virtual void postMessage( const QString& msg );
+
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
 

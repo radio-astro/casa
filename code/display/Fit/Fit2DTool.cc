@@ -40,6 +40,7 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 	setImageFunctionalityEnabled( false );
 	connect( &findSourcesDialog, SIGNAL(showOverlay(String, String, String)),
 		this, SIGNAL(showOverlay(String,String,String)));
+	connect( &findSourcesDialog, SIGNAL(removeOverlay(String)), this, SIGNAL(removeOverlay(String)));
 	connect( &findSourcesDialog, SIGNAL(estimateFileSpecified(const QString&)), this, SLOT(estimateFileChanged( const QString&)));
 
 	ui.channelLineEdit->setText( QString::number(0));
@@ -249,6 +250,9 @@ String Fit2DTool::populatePixelBox() const {
 
 void Fit2DTool::setImageFunctionalityEnabled( bool enable ){
 	ui.fitButton->setEnabled( enable );
+	ui.estimateGroupBox->setEnabled( enable );
+	ui.pixelRangeGroupBox->setEnabled( enable );
+	ui.channelLineEdit->setEnabled( enable );
 }
 
 void Fit2DTool::setImage( ImageInterface<Float>* image ){

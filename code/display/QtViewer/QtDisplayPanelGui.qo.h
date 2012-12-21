@@ -553,6 +553,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void showFitInteractive();
   void refreshFit();
   void addSkyComponentOverlay(String path, String dataType, String displayType );
+  void removeSkyComponentOverlay( String path );
 
  public:
  

@@ -58,7 +58,7 @@ bool Histogram::reset(const ImageInterface<Float>* image, const ImageRegion* reg
 				if ( heightSource != NULL ){
 					QString msg( "Could not make a histogram of the region: ");
 					msg.append( error.getMesg().c_str() );
-					heightSource->postStatus( msg );
+					heightSource->postMessage( msg );
 				}
 			}
 		}

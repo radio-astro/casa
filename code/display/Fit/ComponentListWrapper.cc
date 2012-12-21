@@ -39,6 +39,13 @@ ComponentListWrapper::ComponentListWrapper(){
 
 }
 
+void ComponentListWrapper::clear(){
+	int componentCount = getSize();
+	for ( int i = componentCount-1; i>= 0; i-- ){
+		skyList.remove(i);
+	}
+}
+
 int ComponentListWrapper::getSize() const {
 	return skyList.nelements();
 }

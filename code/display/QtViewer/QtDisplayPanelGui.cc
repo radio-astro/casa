@@ -662,6 +662,12 @@ void QtDisplayPanelGui::initAnimationHolder(){
 }
 
 void QtDisplayPanelGui::initHistogramHolder(){
+//Note: We need a better set of signals for the histogram tool.
+//Listening to the region dock is probably not a good idea.
+//In addition, region size updates are not currently being
+//passed to the histogrammer.  This is particularly bad in the
+//case of ellipses, when the initial size is 0 so ellipses are
+//not getting histogrammed at all.
 #ifdef SHOW_EXAMPLE_HISTOGRAM
 	histogramDockWidget_ = new QDockWidget();
 	histogramDockWidget_ ->setObjectName( "Histogram");
@@ -738,6 +744,7 @@ void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, std::string
 void QtDisplayPanelGui::refreshFit(){
 	if ( fitTool != NULL ){
 		List<QtDisplayData*> rdds = qdp_->registeredDDs();
+		bool foundImage = false;
 		if ( rdds.len() > 0 ){
 			for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 				QtDisplayData* pdd = qdds.getRight();
@@ -747,11 +754,16 @@ void QtDisplayPanelGui::refreshFit(){
 					if (ppd != 0 && img != 0) {
 						if (ppd->isCSmaster(pdd->dd())) {
 							fitTool->setImage( img );
+							foundImage = true;
 							break;
 						}
 					}
 				}
 			}
+		}
+		if ( !foundImage ){
+			fitTool->setImage( NULL );
+
 		}
 	}
 }
@@ -762,7 +774,9 @@ void QtDisplayPanelGui::showFitInteractive(){
 
 		connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshFit()));
 		connect( fitTool, SIGNAL(showOverlay(String, String, String)),
-					this, SLOT(addSkyComponentOverlay(String, String, String)));
+				this, SLOT(addSkyComponentOverlay(String, String, String)));
+		connect( fitTool, SIGNAL(removeOverlay(String)),
+				this, SLOT(removeSkyComponentOverlay(String)));
 		connect( this, SIGNAL(frameChanged(int)), fitTool, SLOT(frameChanged(int)));
 		refreshFit();
 		QtRectTool *rect = dynamic_cast<QtRectTool*>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
@@ -795,6 +809,21 @@ void QtDisplayPanelGui::addSkyComponentOverlay(String path, String dataType, Str
 	QtDisplayData* dd = createDD( path, dataType, displayType );
 	if ( dd == NULL ){
 		qDebug() << "Could not overlay sky catalog";
+	}
+}
+
+void QtDisplayPanelGui::removeSkyComponentOverlay( String path ){
+	QtDisplayData* displayDataToRemove = NULL;
+	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+		QtDisplayData* displayData = qdds.getRight();
+		String ddPath = displayData->name();
+		if ( ddPath == path ){
+			displayDataToRemove = displayData;
+			break;
+		}
+	}
+	if ( displayDataToRemove != NULL ){
+		removeDD( displayDataToRemove );
 	}
 }
 

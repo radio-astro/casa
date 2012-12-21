@@ -46,6 +46,7 @@ public:
 	string getType( int i ) const;
 	Vector<double> getLatLong( int i ) const;
 	Quantity getFlux( int i ) const;
+	void clear();
 	void remove( const QVector<int>& indices );
 	bool fromRecord( String& errorMsg, Record& record );
 	bool toEstimateFile( QTextStream& stream,

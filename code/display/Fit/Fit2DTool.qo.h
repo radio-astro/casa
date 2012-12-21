@@ -49,6 +49,7 @@ public:
 
 signals:
 	void showOverlay(String, String, String);
+	void removeOverlay(String);
 
 public slots:
 	void frameChanged( int frame );
@@ -91,6 +92,7 @@ private:
     FindSourcesDialog findSourcesDialog;
     PixelRangeDialog pixelRangeDialog;
     Fit2DLogDialog logDialog;
+
     Ui::Fit2DToolClass ui;
 };
 }

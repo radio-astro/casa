@@ -899,7 +899,7 @@ void BinPlotWidget::deleteImageRegion( int id ){
 	}
 }
 
-void BinPlotWidget::postStatus( const QString& msg ){
+void BinPlotWidget::postMessage( const QString& msg ){
 	emit postStatusMessage( msg );
 }
 
@@ -923,6 +923,7 @@ bool BinPlotWidget::setImageRegion( const ImageRegion* region, int id ){
 		if ( plotMode != IMAGE_MODE && success ){
 			resetRegion();
 		}
+
 	}
 	else {
 		qWarning() << "Please specify an image before specifying an image region";

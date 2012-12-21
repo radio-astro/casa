@@ -27,6 +27,7 @@
 #include "FindSourcesDialog.qo.h"
 #include <QDir>
 #include <QDebug>
+#include <QTime>
 #include <QMessageBox>
 #include <QFileSystemModel>
 #include <imageanalysis/Regions/CasacRegionManager.h>
@@ -38,8 +39,12 @@
 namespace casa {
 
 FindSourcesDialog::FindSourcesDialog(QWidget *parent)
-    : QDialog(parent){
+    : QDialog(parent), SKY_CATALOG("skycatalog"){
+
 	ui.setupUi(this);
+
+	QTime time = QTime::currentTime();
+	qsrand((uInt)time.msec());
 
 	QDoubleValidator* validator = new QDoubleValidator( 0, std::numeric_limits<double>::max(), 7, this );
 	ui.cutoffLineEdit->setValidator( validator );
@@ -50,6 +55,7 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent)
 	ui.sourceTable->setHorizontalHeaderLabels( tableHeaders );
 	ui.sourceTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui.sourceTable->setSelectionMode( QAbstractItemView::SingleSelection );
+	ui.sourceTable->setSortingEnabled( true );
 	setSourceResultsVisible( false );
 
 	initializeFileManagement();
@@ -75,6 +81,7 @@ void FindSourcesDialog::deleteSelectedSource(){
 		QMessageBox::warning( this, "No Source", "Please select a source to delete.");
 	}
 	else {
+		clearSkyOverlay();
 		int removeCount = selectedItems.size();
 		QVector<int> removeIndices;
 		for ( int i = 0; i < removeCount; i++ ){
@@ -85,7 +92,7 @@ void FindSourcesDialog::deleteSelectedSource(){
 			}
 		}
 		skyList.remove( removeIndices );
-		resetSourceView();
+		resetSkyOverlay();
 	}
 }
 
@@ -124,32 +131,86 @@ void FindSourcesDialog::resetSourceView() {
 
 void FindSourcesDialog::setTableValue(int row, int col, const String& val ){
 	QTableWidgetItem* tableItem = new QTableWidgetItem();
+	tableItem->setFlags( tableItem->flags() ^ Qt::ItemIsEditable );
 	QString valueStr( val.c_str() );
-	tableItem -> setText( valueStr );
+	bool validNum;
+	float numVal = valueStr.toFloat(&validNum);
+	if ( !validNum ){
+		tableItem -> setText( valueStr );
+	}
+	else {
+		tableItem ->setData(Qt::DisplayRole, numVal );
+	}
 	ui.sourceTable->setItem( row, col, tableItem );
 }
 
 void FindSourcesDialog::setSourceResultsVisible( bool visible ){
-	ui.sourceTable->setVisible( visible );
-	ui.line->setVisible( visible );
-	ui.deleteSourceButton->setVisible( visible );
-	ui.sourceEstimatesLabel->setVisible( visible );
-	ui.fileLabel->setVisible( visible );
-	ui.directoryLabel->setVisible( visible );
-	ui.fileLineEdit->setVisible( visible );
-	ui.directoryLineEdit->setVisible( visible );
-	ui.treeWidget->setVisible( visible );
+	QLayout* dLayout = layout();
+	QVBoxLayout* dialogLayout = dynamic_cast<QVBoxLayout*> (dLayout);
+	int holderIndex = dialogLayout->indexOf( ui.sourceResultHolder );
+	if ( !visible ){
+		if ( holderIndex >= 0 ){
+			resultIndex = holderIndex;
+			dialogLayout->removeWidget( ui.sourceResultHolder );
+			ui.sourceResultHolder->setParent( NULL );
+			setMinimumSize(300,150);
+			setMaximumSize(400,200);
+		}
+	}
+	else {
+		if ( holderIndex < 0 ){
+			dialogLayout->insertWidget( resultIndex, ui.sourceResultHolder );
+			setMinimumSize( 700, 400 );
+			setMaximumSize( 1200, 600);
+		}
+	}
 	ui.saveButton->setVisible( visible );
 }
+
 
 //----------------------------------------------------------------
 //                    Finding Sources
 //----------------------------------------------------------------
+
+void FindSourcesDialog::clearSkyOverlay(){
+	//Clean up if we have old results lying around.
+	if ( skyPath.length() > 0 ){
+		//Just get the file name
+		int dirIndex = skyPath.lastIndexOf( QDir::separator() );
+		QString fileName = skyPath;
+		if ( dirIndex >= 0 ){
+			fileName = skyPath.right( skyPath.length() - dirIndex - 1 );
+		}
+		//Add in the -skycatalog suffix
+		fileName = fileName +"-"+ SKY_CATALOG;
+		String removePath( fileName.toStdString() );
+		//Tell the viewer to remove the previous overlay
+		emit removeOverlay( removePath );
+		skyPath.clear();
+	}
+}
+
+void FindSourcesDialog::resetSkyOverlay(){
+	createTable( );
+	resetSourceView();
+	//Now tell the viewer to display this sky catalog
+	String skyPathStr( skyPath.toStdString());
+	String skyStr( SKY_CATALOG.toStdString());
+	emit showOverlay( skyPathStr, "sky cat", skyStr );
+
+}
+
+
 void FindSourcesDialog::findSources(){
 	if ( image == NULL ){
 		QMessageBox::warning( this, "No Image", "Please load an image to fit.");
 		return;
 	}
+
+	skyList.clear();
+	ui.sourceTable->setRowCount( 0 );
+	clearSkyOverlay();
+
 	ImageAnalysis* analysis = new ImageAnalysis( image );
 	Record region = makeRegion();
 	QString cutoffStr = ui.cutoffLineEdit->text();
@@ -164,29 +225,8 @@ void FindSourcesDialog::findSources(){
 			qDebug() << "Got error from making sky list from record: "<<errorMsg.c_str();
 			return;
 		}
-		int count = skyList.getSize();
-		ui.sourceTable->setRowCount( count );
-		String imagePath = image->name();
-		QString imagePathStr( imagePath.c_str());
-		String skyPathStr;
-		int lastSeparator = imagePathStr.lastIndexOf( QDir::separator());
-		if ( lastSeparator > 0 ){
-			QString fileName = imagePathStr.right( imagePathStr.length() - lastSeparator - 1 );
 
-			QString directory = imagePathStr.left( lastSeparator + 1);
-			int dotIndex = fileName.lastIndexOf( ".");
-			if ( dotIndex > 0 ){
-				fileName = fileName.left( dotIndex );
-			}
-			fileName = fileName + ".skycat";
-			QString skyPath = directory + fileName;
-			skyPathStr = skyPath.toStdString();
-		}
-		createTable( skyPathStr );
-		resetSourceView();
-
-		//Now tell the viewer to display this sky catalog
-		emit showOverlay( skyPathStr, "sky cat", "skycatalog" );
+		resetSkyOverlay();
 	}
 	catch( AipsError& error ){
 		qDebug()<< "Could not find sources: "<<error.getMesg().c_str();
@@ -211,7 +251,7 @@ Record FindSourcesDialog::makeRegion() const {
 	return region;
 }
 
-void FindSourcesDialog::createTable( const String& path ){
+void FindSourcesDialog::createTable( ){
 	TableDesc::
 	TableDesc td("tTableDesc", "1", TableDesc::New);
 	td.addColumn( ScalarColumnDesc<String>("Type") );
@@ -223,8 +263,10 @@ void FindSourcesDialog::createTable( const String& path ){
 	td.addColumn( ScalarColumnDesc<double>("FluxValue") );
 
 	//Setup a new table from the description.
-	SetupNewTable newtab( path, td, Table::New);
+	SetupNewTable newtab( /*path*/"", td, Table::New);
 	Table sourceTable(newtab);
+	String tableName = sourceTable.tableName();
+	skyPath = QString( tableName.c_str());
 
 	//Construct the various column objects.
 	ScalarColumn<String> typeCol(sourceTable, "Type");

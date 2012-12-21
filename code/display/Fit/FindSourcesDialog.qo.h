@@ -57,6 +57,7 @@ public:
 
 signals:
 	void showOverlay(String, String, String);
+	void removeOverlay(String path );
 	void estimateFileSpecified( const QString& fullPath );
 
 private slots:
@@ -73,19 +74,22 @@ private:
 	bool writeEstimateFile( QString& filePath );
 	void resetSourceView();
 	void setSourceResultsVisible( bool visible );
-	void createTable( const String& path );
+	void createTable();
 	void initializeFileManagement();
-
 	void setTableValue(int row, int col, const String& val );
-
 	Record makeRegion() const;
+	void resetSkyOverlay();
+	void clearSkyOverlay();
 
 	ComponentListWrapper skyList;
 	enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL };
 	ImageInterface<Float>* image;
 	String pixelBox;
+	QString skyPath;
 	int channel;
+	int resultIndex;
 	QFileSystemModel* fileModel;
+	const QString SKY_CATALOG;
     Ui::FindSourcesDialogClass ui;
 };
 }

@@ -29,7 +29,7 @@ namespace casa {
 class HeightSource {
 public:
 	virtual int getCanvasHeight() = 0;
-	virtual void postStatus( const QString& /*msg*/ ){}
+	virtual void postMessage( const QString& msg ) = 0;
 	virtual ~HeightSource(){}
 };
 
