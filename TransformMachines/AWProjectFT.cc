@@ -1090,7 +1090,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convFuncCtor_p->setSpwSelection(spwChanSelFlag_p);
 	convFuncCtor_p->setSpwFreqSelection(spwFreqSel_p);
 
-	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
+	// USEFUL DEBUG MESSAGE
+	//	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
 					 pop_p, pa, uvScale, uvOffset,
