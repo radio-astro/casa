@@ -1265,39 +1265,40 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const VisBuffer& vb)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT","initializeToSky[R&D]"));
-
-    image=&iimage;
+    AWProjectFT::initializeToSky(iimage,weight,vb);
+    // The following code is same as that in the parent class call above. 
+//     image=&iimage;
     
-    init();
-    initMaps(vb);
-    nx    = image->shape()(0);
-    ny    = image->shape()(1);
-    npol  = image->shape()(2);
-    nchan = image->shape()(3);
+//     init();
+//     initMaps(vb);
+//     nx    = image->shape()(0);
+//     ny    = image->shape()(1);
+//     npol  = image->shape()(2);
+//     nchan = image->shape()(3);
 
-    isTiled = False;
+//     isTiled = False;
 
-    sumWeight=0.0;
-    weight.resize(sumWeight.shape());
-    weight=0.0;
+//     sumWeight=0.0;
+//     weight.resize(sumWeight.shape());
+//     weight=0.0;
 
-    if(isTiled) 
-      {
-	imageCache->flush();
-	image->set(Complex(0.0));
-	//lattice=image;
-	lattice=CountedPtr<Lattice<Complex> > (image, False);
-      }
-    else 
-      {
-	IPosition gridShape(4, nx, ny, npol, nchan);
-	griddedData.resize(gridShape);
-	griddedData=Complex(0.0);
-//	if(arrayLattice) delete arrayLattice; arrayLattice=0;
-	arrayLattice = new ArrayLattice<Complex>(griddedData);
-	lattice=arrayLattice;
-	visResampler_p->initializeToSky(griddedData, sumWeight);
-      }
+//     if(isTiled) 
+//       {
+// 	imageCache->flush();
+// 	image->set(Complex(0.0));
+// 	//lattice=image;
+// 	lattice=CountedPtr<Lattice<Complex> > (image, False);
+//       }
+//     else 
+//       {
+// 	IPosition gridShape(4, nx, ny, npol, nchan);
+// 	griddedData.resize(gridShape);
+// 	griddedData=Complex(0.0);
+// //	if(arrayLattice) delete arrayLattice; arrayLattice=0;
+// 	arrayLattice = new ArrayLattice<Complex>(griddedData);
+// 	lattice=arrayLattice;
+// 	visResampler_p->initializeToSky(griddedData, sumWeight);
+//       }
 
     //AlwaysAssert(lattice, AipsError);
     if (resetPBs_p)
@@ -1330,22 +1331,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectWBFT::finalizeToSky()
   {
     LogIO log_l(LogOrigin("AWProjectWBFT", "finalizeToSky[R&D]"));
+    AWProjectFT::finalizeToSky();
+    // The following commented code is the same as in the parent class
+    // call above.
+
+    // if(isTiled) 
+    //   {
+    // 	AlwaysAssert(image, AipsError);
+    // 	AlwaysAssert(imageCache, AipsError);
+    // 	imageCache->flush();
+    // 	ostringstream o;
+    // 	imageCache->showCacheStatistics(o);
+    // 	log_l << o.str() << LogIO::POST;
+    //   }
     
-    if(isTiled) 
-      {
-	AlwaysAssert(image, AipsError);
-	AlwaysAssert(imageCache, AipsError);
-	imageCache->flush();
-	ostringstream o;
-	imageCache->showCacheStatistics(o);
-	log_l << o.str() << LogIO::POST;
-      }
+    // if(pointingToImage) delete pointingToImage; pointingToImage=0;
     
-    if(pointingToImage) delete pointingToImage; pointingToImage=0;
-    
-    paChangeDetector.reset();
-    cfCache_p->flush();
-    visResampler_p->finalizeToSky(griddedData, sumWeight);
+    // paChangeDetector.reset();
+    // cfCache_p->flush();
+    // visResampler_p->finalizeToSky(griddedData, sumWeight);
+
     if (!avgPBReady_p) 
       {
 	Array<Complex> gwts; Bool removeDegenerateAxis=False;
