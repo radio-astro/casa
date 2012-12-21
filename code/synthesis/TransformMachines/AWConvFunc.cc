@@ -174,11 +174,13 @@ namespace casa{
 		Double conjFreq=SynthesisUtils::conjFreq(freqValues(inu),imRefFreq_p);
 		Int conjFreqIndex;
 		conjFreq=SynthesisUtils::nearestValue(freqValues, conjFreq, conjFreqIndex);
-		cerr << "Freq. values: " 
-		     << freqValues(inu) << " " 
-		     << imRefFreq_p << " " 
-		     << conjFreq << " " 
-		     << endl;
+
+		// USEFUL DEBUG MESSAGE
+		// cerr << "Freq. values: " 
+		//      << freqValues(inu) << " " 
+		//      << imRefFreq_p << " " 
+		//      << conjFreq << " " 
+		//      << endl;
 
 		CoordinateSystem conjPolCS_l=cs_l;  makeConjPolAxis(conjPolCS_l);
 		TempImage<Complex> ftATerm_l(pbshp, cs_l), ftATermSq_l(pbshp,conjPolCS_l);
@@ -561,7 +563,10 @@ namespace casa{
     else
       {
 	Int nSpw;
-	cerr << "##### Min. Max. Freq. per Spw: " << spwFreqSelection_p << " " << spwFreqSelection_p.shape() <<endl;
+
+	// USEFUL DEBUG MESSAGE
+	//cerr << "##### Min. Max. Freq. per Spw: " << spwFreqSelection_p << " " << spwFreqSelection_p.shape() <<endl;
+
 	nSpw = spwFreqSelection_p.shape()(0);
 	fValues.resize(nSpw);
 	dNU = (spwFreqSelection_p(0,1) - spwFreqSelection_p(0,2));

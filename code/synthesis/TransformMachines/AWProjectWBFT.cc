@@ -356,7 +356,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // the data-sum-of-weights.
     //
 
-        cerr << "SumCFWt: " << getSumOfCFWeights() << " " << max(wtBuf) << " " << sensitivityPatternQualifier_p << endl;
+    // USEFUL DEBUG MESSAGE
+    //cerr << "SumCFWt: " << getSumOfCFWeights() << " " << max(wtBuf) << " " << sensitivityPatternQualifier_p << endl;
     for(wtImIter.reset(); !wtImIter.atEnd(); wtImIter++)
       {
 	Int pol_l=wtImIter.position()(2), chan_l=wtImIter.position()(3);
