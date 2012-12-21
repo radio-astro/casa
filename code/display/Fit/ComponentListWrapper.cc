@@ -161,45 +161,49 @@ bool ComponentListWrapper::toEstimateFile( QTextStream& stream,
 				minorAxis = QString::number(minorAxisValue) + ARC_SEC;
 				double posValue = shapeParams(2)*180.0/C::pi;
 				posAngle = QString::number(posValue) + DEG_STR;
-			}
 
-			//Pixel centers
-			int worldAxisCount = coordSystem.nWorldAxes();
-			if ( worldAxisCount >= 2 ){
-				Vector<double> worldCoordinates( worldAxisCount );
-				worldCoordinates[0] = getRAValue( index );
-				worldCoordinates[1] = getDECValue( index );
-				Vector<double> pixelCoordinates( worldAxisCount );
-				coordSystem.toPixel( pixelCoordinates, worldCoordinates );
-				QString xCenter = QString::number(static_cast<int>(pixelCoordinates[0]));
-				QString yCenter = QString::number(static_cast<int>(pixelCoordinates[1]));
 
-				// get the integrated flux value
-				Quantity integratedFlux = getFlux( index);
-				Unit imUnit=image->units();
-				ImageInfo imageInformation = image->imageInfo();
+				//Pixel centers
+				int worldAxisCount = coordSystem.nWorldAxes();
+				if ( worldAxisCount >= 2 ){
+					Vector<double> worldCoordinates( worldAxisCount );
+					worldCoordinates[0] = getRAValue( index );
+					worldCoordinates[1] = getDECValue( index );
+					Vector<double> pixelCoordinates( worldAxisCount );
+					coordSystem.toPixel( pixelCoordinates, worldCoordinates );
+					QString xCenter = QString::number(static_cast<int>(pixelCoordinates[0]));
+					QString yCenter = QString::number(static_cast<int>(pixelCoordinates[1]));
 
-				// get the peak flux from the integrated flux
-				Quantity peakFluxQuantity=SkyCompRep::integralToPeakFlux(directionCoordinate,
+					// get the integrated flux value
+					Quantity integratedFlux = getFlux( index);
+					Unit imUnit=image->units();
+					ImageInfo imageInformation = image->imageInfo();
+
+					// get the peak flux from the integrated flux
+					Quantity peakFluxQuantity=SkyCompRep::integralToPeakFlux(directionCoordinate,
 								ComponentType::GAUSSIAN, integratedFlux,
-								imUnit, Quantity(worldCoordinates[0],"rad"), Quantity(worldCoordinates[1],"rad"),
+								imUnit, Quantity(shapeParams(0),"rad"), Quantity(shapeParams(1),"rad"),
 								imageInformation.restoringBeam());
-				double peakFluxValue = peakFluxQuantity.getValue();
-				QString peakFlux = QString::number( peakFluxValue, 'f', 6 );
+					double peakFluxValue = peakFluxQuantity.getValue();
+					QString peakFlux = QString::number( peakFluxValue );
 
-				//Write a line
-				const QString COMMA_STR( ", ");
-				stream << peakFlux << COMMA_STR;
-				stream << xCenter << COMMA_STR;
-				stream << yCenter << COMMA_STR;
-				stream << majorAxis << COMMA_STR;
-				stream << minorAxis << COMMA_STR;
-				stream << posAngle;
-				stream << "\n";
-				writeCount++;
+					//Write a line
+					const QString COMMA_STR( ", ");
+					stream << peakFlux << COMMA_STR;
+					stream << xCenter << COMMA_STR;
+					stream << yCenter << COMMA_STR;
+					stream << majorAxis << COMMA_STR;
+					stream << minorAxis << COMMA_STR;
+					stream << posAngle;
+					stream << "\n";
+					writeCount++;
+				}
+				else {
+					errorMsg = errorMsg + "\n Error finding center for source "+QString::number((index+1));
+				}
 			}
 			else {
-				errorMsg = errorMsg + "\n Error finding center for source "+QString::number((index+1));
+				errorMsg = errorMsg + "\n Error finding major/minor axis source "+QString::number((index+1));
 			}
 		}
 		if ( writeCount < lineCount ){
