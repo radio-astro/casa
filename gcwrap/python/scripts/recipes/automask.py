@@ -4,8 +4,17 @@ import numpy as np
 iaim=casac.image()
 iamask=casac.image()
 qa=casac.quanta()
+rg=casac.regionmanager()
 
-def automask(image='', maskimage=''):
+def automask(image='', maskimage='', twopass=True):
+"""
+image : dirty image or residual to mask
+maskimage: name of mask to create. If already existant has to be same shape and coordsys as image
+twopass: set to True if faint fluffy stuff is wanted else false if a less agressive masking 
+              is needed especially a multi pass masking after some cleaning
+
+"""
+#    print '2pass ', twopass
     iaim.open(image)
     stat=iaim.statistics()
     csys=iaim.coordsys()
@@ -22,26 +31,53 @@ def automask(image='', maskimage=''):
             numpix=6
     #print 'NUMPIX', numpix
     ib=iaim.rebin('__rebin.image', [numpix, numpix, 1, 1], overwrite=True)
-    thresh=5.0*stat['rms'][0]/np.sqrt(float(numpix))
+    if(twopass):
+        thresh=5.0*stat['rms'][0]/np.sqrt(float(numpix))
+    else:
+        thresh=3.0*stat['rms'][0]/np.sqrt(float(numpix))
     ic=ib.imagecalc(outfile='__thresh.image', pixels='iif(abs(__rebin.image)> '+str(thresh)+',1.0,0.0)', overwrite=True)
     ib.remove(done=True, verbose=False)
     ie=ic.regrid(outfile='__threshreg.image', shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
     ic.remove(done=True, verbose=False)
-    ig=ie.convolve2d(outfile='__newmask.image', major='10pix', minor='10pix', overwrite=True)
+    convpix='10pix' if(twopass) else '10pix'
+    ig=ie.convolve2d(outfile='__newmask2.image', major=convpix, minor=convpix, overwrite=True)
     ie.remove(done=True, verbose=False)
-    ig.calc(pixels='iif(__newmask.image > '+str(stat['rms'][0])+'/3.0, 1.0, 0.0)')
+    ratiostr='3.0' if(twopass) else '3.0' 
+#    print 'pixels=', 'iif(__newmask.image > '+str(stat['rms'][0])+'/'+ratiostr+', 1.0, 0.0)'
+    ig.done()
+    ih=iamask.imagecalc(outfile='__newmask.image', pixels='iif(__newmask2.image > '+str(stat['rms'][0])+'/'+ratiostr+', 1.0, 0.0)')
+#    print ih.statistics()
+    ih.done()
+    iamask.removefile('__newmask2.image')
+    
     if(not os.path.exists(maskimage)):
         iamask.fromimage(outfile=maskimage, infile=image)
         iamask.open(maskimage)
         iamask.set(0.0)
         iamask.done()
-    ig.done()
+    else:
+        ih=iamask.imagecalc(outfile='__newmask2.image', pixels='"'+maskimage+'"'+'+ __newmask.image')
+        ih.done()
+        iamask.removefile('__newmask.image')
+        os.rename('__newmask2.image', '__newmask.image')
+   
     iamask.open(maskimage)
-    iamask.calc(pixels='iif("'+maskimage+'" >= __newmask.image,"'+maskimage+'", __newmask.image)')
+#    print iamask.statistics()
+    iamask.calc(pixels='iif(__newmask.image > 0.0, 1.0 ,0)')
+#    print 'post adding', iamask.statistics()
     iamask.done()
     iaim.done()
     iamask.removefile('__newmask.image')
-    
+    if(twopass):
+        iaim.open(image)
+        iaim.calcmask(mask='"'+maskimage+'"'+' < 0.9', name='mulligatawni')
+        iaim.done()
+        automask(image=image, maskimage=maskimage, twopass=False)
+        iaim.open(image)
+        iaim.maskhandler('set', '')
+        iaim.done()
+        rg.deletefromtable(image, 'mulligatawni') 
+   
 
 def automask2(image='', maskimage=''):
     iaim.open(image)
