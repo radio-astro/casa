@@ -193,7 +193,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QPushButton" name="openEstimatesButton">
+           <widget class="QPushButton" name="browseButton">
             <property name="toolTip">
              <string>Use a file browser to specify the file containing initial estimates for the fit.</string>
             </property>

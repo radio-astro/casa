@@ -26,6 +26,8 @@
 #include <display/Fit/Gaussian2DFitter.h>
 #include <QMessageBox>
 #include <QDebug>
+#include <QDir>
+#include <QFileDialog>
 
 namespace casa {
 
@@ -59,6 +61,7 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 	connect( ui.findEstimatesButton, SIGNAL(clicked()), this, SLOT(showFindSourcesDialog()));
 	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(finishedWork()));
 	connect( ui.graphicalPixelRangeButton, SIGNAL(clicked()), this, SLOT(showPixelRangeDialog()));
+	connect( ui.browseButton, SIGNAL(clicked()), this, SLOT(showFileDialog()));
 
 	progressBar.setWindowTitle( "2D Fit Tool");
 	progressBar.setLabelText( "Fitting source(s)...");
@@ -66,6 +69,20 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 	progressBar.setMinimum( 0 );
 	progressBar.setMaximum( 0 );
 	progressBar.setCancelButton( 0 );
+}
+
+void Fit2DTool::showFileDialog(){
+	QFileDialog dialog( this );
+	QDir homeDir = QDir::home();
+	QString homePath = homeDir.absolutePath();
+	dialog.setFileMode(QFileDialog::ExistingFile);
+	dialog.setWindowTitle("Select Fit2D Estimate File" );
+	dialog.setDirectory( homePath );
+	if ( dialog.exec() ){
+		QStringList fileNames = dialog.selectedFiles();
+		QString fileName = fileNames[0];
+		ui.estimateFileLineEdit->setText( fileName );
+	}
 }
 
 void Fit2DTool::pixelRangeEnabledChanged( bool enabled ){
@@ -231,7 +248,6 @@ String Fit2DTool::populatePixelBox() const {
 }
 
 void Fit2DTool::setImageFunctionalityEnabled( bool enable ){
-	ui.findEstimatesButton->setEnabled( enable );
 	ui.fitButton->setEnabled( enable );
 }
 

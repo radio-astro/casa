@@ -34,6 +34,7 @@ namespace casa {
 
 template <class T> class ImageInterface;
 class ImageRegion;
+class HeightSource;
 
 /**
  * Generates and Manages the data corresponding to a histogram.
@@ -41,7 +42,7 @@ class ImageRegion;
 
 class Histogram {
 public:
-	Histogram();
+	Histogram( HeightSource* source );
 	int getDataCount() const;
 	std::pair<float,float> getDataRange() const;
 	bool reset(const ImageInterface<Float>* image, const ImageRegion* region);
@@ -54,10 +55,12 @@ public:
 	void toAscii( QTextStream& out ) const;
 	virtual ~Histogram();
 	static double computeYValue( double value, bool useLog );
+signals:
+	void postStatus( const QString& msg );
 private:
 	int getPeakIndex() const;
 	float getTotalCount() const;
-
+	HeightSource* heightSource;
 	vector<Float> xValues;
 	vector<Float> yValues;
 };

@@ -62,6 +62,7 @@ public slots:
 		const QList<int> &pixel_x, const QList<int> &pixel_y );
 
 private slots:
+	void showFileDialog();
 	void showFindSourcesDialog();
 	void showPixelRangeDialog();
 	void estimateFileChanged( const QString& fullPath );

@@ -899,13 +899,17 @@ void BinPlotWidget::deleteImageRegion( int id ){
 	}
 }
 
+void BinPlotWidget::postStatus( const QString& msg ){
+	emit postStatusMessage( msg );
+}
+
 Histogram* BinPlotWidget::findHistogramFor( int id ){
 	Histogram* histogram = NULL;
 	if ( histogramMap.contains(id) ){
 		histogram = histogramMap[id];
 	}
 	else {
-		histogram = new Histogram();
+		histogram = new Histogram( this );
 		histogramMap.insert(id, histogram );
 	}
 	return histogram;
