@@ -2831,7 +2831,6 @@ Bool Imager::createFTMachine()
 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
 
-    useDoublePrecGrid=False;
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p, aTermOn_p);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
@@ -2869,12 +2868,14 @@ Bool Imager::createFTMachine()
     // Finally construct the FTMachine with the CFCache, ConvFunc and
     // Re-sampler objects.  
     //
+    useDoublePrecGrid=(!singlePrec_p);
     ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
 			     cfcache, awConvFunc, 
 			     //			     mthVisResampler,
 			     visResampler,
 			     /*True */doPointing, doPBCorr, 
-			     tile_p, paStep_p, pbLimit_p, True,conjBeams_p);
+			     tile_p, paStep_p, pbLimit_p, True,conjBeams_p,
+			     useDoublePrecGrid);
       
     ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
     //
