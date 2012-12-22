@@ -7,13 +7,14 @@ qa=casac.quanta()
 rg=casac.regionmanager()
 
 def automask(image='', maskimage='', twopass=True):
-"""
-image : dirty image or residual to mask
-maskimage: name of mask to create. If already existant has to be same shape and coordsys as image
-twopass: set to True if faint fluffy stuff is wanted else false if a less agressive masking 
-              is needed especially a multi pass masking after some cleaning
+    """
+    image : dirty image or residual to mask
+    maskimage: name of mask to create. If already existant has to be same shape 
+    and coordsys as image
+    twopass: set to True if faint fluffy stuff is wanted else false if a less agressive masking 
+    is needed especially a multi pass masking after some cleaning
 
-"""
+    """
 #    print '2pass ', twopass
     iaim.open(image)
     stat=iaim.statistics()
