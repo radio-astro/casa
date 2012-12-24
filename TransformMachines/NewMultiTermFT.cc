@@ -54,14 +54,14 @@
 #include <synthesis/TransformMachines/Utils.h>
 
 // This is the list of FTMachine types supported by NewMultiTermFT
-#include <synthesis/TransformMachines/GridFT.h>
+//#include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/AWProjectWBFT.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 #define PSOURCE False
-#define psource (IPosition(4,128,128,0,0))
+#define psource (IPosition(4,256,256,0,0))
   
   //---------------------------------------------------------------------- 
   //-------------------- constructors and descructors ---------------------- 
@@ -70,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     :FTMachine(), nterms_p(nterms), donePSF_p(False),doingPSF_p(False),
      reffreq_p(reffreq), imweights_p(Matrix<Float>(0,0)), machineName_p("NewMultiTermFT"),
      pblimit_p((Float)1e-04), doWideBandPBCorrection_p(False), cacheDir_p("."), 
-     donePBTaylor_p(False)
+     donePBTaylor_p(False), useConjBeams_p(True)
   {
     dbg_p=False;
     
@@ -101,7 +101,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(subftm->name()=="AWProjectWBFT") 
       {
 	doWideBandPBCorrection_p = ((AWProjectWBFT*)subftm)->getDOPBCorrection();
+	useConjBeams_p = ((AWProjectWBFT*)subftm)->getConjBeams();
 	pblimit_p = ((AWProjectWBFT*)subftm)->getPBLimit();
+	cout << "dowideband : " << doWideBandPBCorrection_p << " conjbeams : " << useConjBeams_p << endl;
       }
     
     if(dbg_p) cout << "Running MTFT with doWideBandPBCorrection : " << doWideBandPBCorrection_p 
@@ -155,6 +157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	pblimit_p = other.pblimit_p;
 	cacheDir_p = other.cacheDir_p;
 	donePBTaylor_p = other.donePBTaylor_p;
+	useConjBeams_p = other.useConjBeams_p;
 	
 	// Make the list of subftms
 	subftms_p.resize(other.subftms_p.nelements());
@@ -186,11 +189,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   FTMachine* NewMultiTermFT::getNewFTM(const FTMachine *ftm)
   {
     //    if(dbg_p) cout << "MTFT::getNewFTM " << endl;
+    /*
     if(ftm->name()=="GridFT")
       {
        	return new GridFT(static_cast<const GridFT&>(*ftm)); 
       }
-    else  if(ftm->name()=="AWProjectWBFT") 
+      else */ if(ftm->name()=="AWProjectWBFT") 
       { return new AWProjectWBFT(static_cast<const AWProjectWBFT&>(*ftm)); }
     else
       {throw(AipsError("FTMachine "+ftm->name()+" is not supported with MS-MFS")); }
@@ -307,12 +311,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     /////////////////////////////   
     normAvgPBs(weightImageVec);
-    
-    // Normalize the model image by the sensitivity image only (from Taylor0)
-    if(PSOURCE) cout << "Divide the models by the weightimage before prediction" << endl;
-    for(uInt taylor=0;taylor<nterms_p;taylor++)
+
+    // Pre-prediction correction of the model, to rid it of the Primary Beam.
+    if(PSOURCE) cout << "Divide the models by the PB before prediction" << endl;
+    if( useConjBeams_p == True )
       {
-	normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);
+	// Model contains only avgPB scaling, but no PB frequency dependence
+	// Divide all terms of the model image by the sensitivity image only (from Taylor0)
+	for(uInt taylor=0;taylor<nterms_p;taylor++)
+	  {
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);
+	  }
+      }
+    else 
+      {
+	// The model contains avgPB scaling and twice the frequency-dependence of the PB in it. 
+	// Multiply all terms of the model by pbcoeffs_0. Divide TWICE by the wideband PB.
+	for(uInt taylor=0;taylor<nterms_p;taylor++)
+	  {
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+	  }
+	// Connect pbcoeffs_p to fluxScaleVec. This is where PB Taylor coefficients were put in by the 'iftm'.
+	if(pbcoeffs_p.nelements() != nterms_p) pbcoeffs_p.resize(nterms_p);
+	for(uInt taylor=0;taylor<nterms_p;taylor++)
+	  { 
+	    pbcoeffs_p[taylor] = &(*(fluxScaleVec[taylor])); 
+	  }
+	
+	applyWideBandPB( String("divide") , modelImageVec );
+	applyWideBandPB( String("divide") , modelImageVec );
       }
     
     //	for(uInt taylor=0;taylor<nterms_p;taylor++)
@@ -337,11 +364,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     /// Multiply the model with the avgPB again, so that it's ready for the minor cycle incremental accumulation
     if(PSOURCE) cout << "Multiplying the models by the weightimage to reset it to flat-noise for the minor cycle" << endl;
-    for(uInt taylor=0;taylor<nterms_p;taylor++)
+
+    if( useConjBeams_p == True )
       {
-	normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
 	
+	for(uInt taylor=0;taylor<nterms_p;taylor++)
+	  {
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+	    
+	  }
       }
+    else
+      {
+
+	applyWideBandPB( String("multiply") , modelImageVec );
+	applyWideBandPB( String("multiply") , modelImageVec );
+
+	// Divide by the avg PB 0
+	for(uInt taylor=0;taylor<nterms_p;taylor++)
+	  {
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);
+	  }
+
+
+      }
+    
+    if(PSOURCE) cout << "------ model, gone back : " << modelImageVec[0]->getAt(psource) << "," << modelImageVec[1]->getAt(psource) << endl;
     
     
   }// end of initializeToVis
@@ -594,7 +642,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Normalize weightImageVecs in-place
     for(uInt taylor=0;taylor<weightImageVec.nelements();taylor++)
       {
-	cout << "MTFT :: Normalizing wtimg : " << taylor << " by peak of zeroth : " << maxval << endl;
+	//cout << "MTFT :: Normalizing wtimg : " << taylor << " by peak of zeroth : " << maxval << endl;
 	weightImageVec[taylor]->copyData( (LatticeExpr<Float>) ( (*(weightImageVec[taylor]))/maxval ) );
       }
     
@@ -660,14 +708,123 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   
   //---------------------------------------------------------------------------------------------------
-  // Make pixel-by-pixel matrices from pbcoeffs, invert, apply to residuals
-  void NewMultiTermFT::normalizeWideBandPB2(PtrBlock<SubImage<Float> *> &resImageVec)
+  // Make pixel-by-pixel matrices from pbcoeffs, (invert), and multiply with the given vector (in place)
+  void NewMultiTermFT::applyWideBandPB(String action, PtrBlock<SubImage<Float> *> &imageVec)
+  {
+    //readAvgPBs(); // Should read only once.
+    AlwaysAssert( pbcoeffs_p.nelements()==nterms_p , AipsError );
+    AlwaysAssert( imageVec.nelements()==nterms_p , AipsError );
+    
+    Int nX=imageVec[0]->shape()(0);
+    Int nY=imageVec[0]->shape()(1);
+    Int npol=imageVec[0]->shape()(2);
+    Int nchan=imageVec[0]->shape()(3);
+    
+    AlwaysAssert(nchan==1,AipsError);
+    AlwaysAssert(npol==1,AipsError);
+    
+    Double deter=0.0;
+    Matrix<Double> mat( IPosition(2,nterms_p,nterms_p) );
+    Matrix<Double> invmat( IPosition(2,nterms_p,nterms_p) );
+
+    mat.set(0.0);
+    invmat.set(0.0);
+
+    // Go over all pixels for which coeffPB_0 is above pblimit_p
+    Vector<Float> pbvec(nterms_p), invec(nterms_p), outvec(nterms_p);
+    IPosition tip(4,0,0,0,0);
+    for(tip[0]=0;tip[0]<nX;tip[0]++)
+      {
+	for(tip[1]=0;tip[1]<nY;tip[1]++)
+	  {
+	    // Normalize only if pb > limit
+	    if(fabs(pbcoeffs_p[0]->getAt(tip)) > pblimit_p )
+	      {
+		// Fill in the single-pixel Hessian, and RHS and LHS vectors
+		for(uInt taylor1=0;taylor1<nterms_p;taylor1++)
+		  {
+		    for(uInt taylor2=0;taylor2<=taylor1;taylor2++)
+		      {
+			mat(taylor1,taylor2) = (pbcoeffs_p[ taylor1 - taylor2 ])->getAt(tip);
+		      }
+		    invec[taylor1] = imageVec[taylor1]->getAt(tip);
+		    outvec[taylor1]=0.0;
+		  }
+		
+		// Invert hess_p into invhess_p;
+		try
+		  {
+		    //invertSymPosDef((invmat),deter,(mat));
+		    invert((invmat),deter,(mat));
+		  }
+		catch(AipsError &x)
+		  {
+		    cout << "The non-invertible Matrix is : " << (mat) << endl;
+		    throw( AipsError("Cannot Invert matrix for PB application: " + x.getMesg() ) );
+		  }
+
+		if(PSOURCE)
+		  {
+		    if( tip[0] == psource[0] && tip[1] == psource[1] )
+		      {
+			cout << "PB mat : " << mat << endl;
+			cout << "InvPB mat : " << invmat << endl;
+		      }
+		  }
+	
+		// Multiply invhess_p by RHS and fill in LHS vector
+		for(uInt taylor1=0;taylor1<nterms_p;taylor1++)
+		  {
+		    outvec[taylor1]=0.0;
+		    for(uInt taylor2=0;taylor2<nterms_p;taylor2++)
+		      {
+			if( action == String("divide") )
+			  {
+			    outvec[taylor1] += invmat(taylor1,taylor2) * (invec[taylor2]) ;
+			  }
+			else
+			  {
+			    outvec[taylor1] += mat(taylor1,taylor2) * (invec[taylor2]) ;
+			  }
+		      } // for taylor2
+		  }// for taylor1
+		
+		/*
+		  if(tip==psource)
+		  {
+		  cout << "------ normalizeWideBandPB2 : before : " << imageVec[0]->getAt(tip) << "," << imageVec[1]->getAt(tip) << " after : " << outvec[0] << "," << outvec[1] << "  hess : " << hess_p << endl;
+		  }
+		*/
+		
+		// Put the solution into the residual images.
+		for(uInt taylor=0;taylor<nterms_p;taylor++)
+		  imageVec[taylor]->putAt(outvec[taylor], tip);
+		
+	      }// if larger than pblimit
+	    else // if smaller than pblimit
+	      {
+		// Put 0.0 into the residual images for un-normalizable parts
+		for(uInt taylor=0;taylor<nterms_p;taylor++)
+		  imageVec[taylor]->putAt((Float)0.0, tip);
+	      }
+	    
+	  }//end of for y
+      }// end of for x
+    
+  }// end of applyWideBandPB
+
+
+  /*
+  
+  //---------------------------------------------------------------------------------------------------
+  // Make pixel-by-pixel matrices from pbcoeffs, (invert), and multiply with the given vector (in place)
+  void NewMultiTermFT::applyWideBandPB(String action, PtrBlock<SubImage<Float> *> &imageVec)
   {
     //readAvgPBs(); // Should read only once.
     AlwaysAssert( sensitivitymaps_p.nelements()==2*nterms_p-1 , AipsError );
-    AlwaysAssert( resImageVec.nelements()==nterms_p , AipsError );
+    AlwaysAssert( imageVec.nelements()==nterms_p , AipsError );
     
-    Int nX=sensitivitymaps_p[0]->shape()(0);
+    Int nX=imageVec[0]->shape()(0);
     Int nY=sensitivitymaps_p[0]->shape()(1);
     Int npol=sensitivitymaps_p[0]->shape()(2);
     Int nchan=sensitivitymaps_p[0]->shape()(3);
@@ -701,7 +858,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      {
 			hess_p(taylor1,taylor2) = (sensitivitymaps_p[taylor1+taylor2])->getAt(tip);
 		      }
-		    resvec[taylor1] = resImageVec[taylor1]->getAt(tip);
+		    resvec[taylor1] = imageVec[taylor1]->getAt(tip);
 		    normedvec[taylor1]=0.0;
 		  }
 		
@@ -726,23 +883,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      } // for taylor2
 		  }// for taylor1
 		
-		/*
-		  if(tip==psource)
-		  {
-		  cout << "------ normalizeWideBandPB2 : before : " << resImageVec[0]->getAt(tip) << "," << resImageVec[1]->getAt(tip) << " after : " << normedvec[0] << "," << normedvec[1] << "  hess : " << hess_p << endl;
-		  }
-		*/
-		
 		// Put the solution into the residual images.
 		for(uInt taylor=0;taylor<nterms_p;taylor++)
-		  resImageVec[taylor]->putAt(normedvec[taylor], tip);
+		  imageVec[taylor]->putAt(normedvec[taylor], tip);
 		
 	      }// if larger than pblimit
 	    else // if smaller than pblimit
 	      {
 		// Put 0.0 into the residual images for un-normalizable parts
 		for(uInt taylor=0;taylor<nterms_p;taylor++)
-		  resImageVec[taylor]->putAt((Float)0.0, tip);
+		  imageVec[taylor]->putAt((Float)0.0, tip);
 	      }
 	    
 	  }//end of for y
@@ -750,7 +900,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }// end of normalizeWideBandPB2
   
-  
+ */
+ 
   //---------------------------------------------------------------------------------------------------
   // Use sumwts to make a Hessian, invert it, apply to weight images, fill in pbcoeffs_p
   // This should get called only once, while making PSFs, when there are 2n-1 terms.
@@ -800,7 +951,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    throw( AipsError("Cannot Invert matrix : " + x.getMesg() ) );
 	  }
 	cout << "Inverse Hessian : " << invhess_p << endl;
-	
+
+	multiplyHMatrix( invhess_p, weightImageVec, pbcoeffs_p, String("/coeffPB_") );
+
+/*	
 	// Multiply invhess_p by sumweights_p and fill in pbcoeffs_p (Fig 7.3)
 	for(uInt taylor1=0;taylor1<nterms_p;taylor1++)
 	  {
@@ -814,10 +968,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    ///pbcoeffs_p[taylor1]->copyData(LatticeExpr<Float> (len) );
 	    storeImg(cacheDir_p+"/coeffPB_"+String::toString(taylor1) , *(pbcoeffs_p[taylor1]) );
 	  }// for taylor1
+*/
 	
     return;
   }
+
+  void NewMultiTermFT::multiplyHMatrix( Matrix<Double> &hmat, 
+					PtrBlock<SubImage<Float>* > &invec, 
+					PtrBlock<SubImage<Float>* > &outvec,
+					String saveImagePrefix )
+  {
+    AlwaysAssert( hmat.shape().nelements()==2 && 
+		  hmat.shape()[0] == nterms_p && 
+		  hmat.shape()[1] == nterms_p , AipsError );
+    AlwaysAssert( invec.nelements() >= nterms_p , AipsError );
+    AlwaysAssert( outvec.nelements() >= nterms_p, AipsError );
+
+    for(uInt taylor1=0;taylor1<nterms_p;taylor1++)
+      {
+	LatticeExprNode len(0.0);
+	for(uInt taylor2=0;taylor2<nterms_p;taylor2++)
+	  {
+	    len = len + LatticeExprNode(hmat(taylor1,taylor2) * (*(invec[taylor2])) );
+	  } // for taylor2
+	
+	outvec[taylor1]->copyData(LatticeExpr<Float> (iif( abs(len)<pblimit_p*pblimit_p , 0.0 , len   )) );
+
+	if( saveImagePrefix.length() > 0 )
+	  {
+	    storeImg(cacheDir_p+saveImagePrefix+String::toString(taylor1) , *(outvec[taylor1]) );
+	  }
+      }// for taylor1
+    
+  }// end of multiplyHMatrix
   
+
+  /*
+
   //---------------------------------------------------------------------------------------------------
   // Apply inverse of single Hessian to residuals
   void NewMultiTermFT::normalizeWideBandPB(PtrBlock<SubImage<Float> *> &resImageVec, PtrBlock<SubImage<Float> *>& scratchImageVec)
@@ -895,15 +1082,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return;
   }
-  
+
+  */
+
+  /*  
   // invert, apply to residuals
   void NewMultiTermFT::applyWideBandPB(PtrBlock<SubImage<Float> *> &modelImageVec)
   {
     AlwaysAssert( pbcoeffs_p.nelements()==nterms_p , AipsError );
     AlwaysAssert( modelImageVec.nelements()>=nterms_p , AipsError );
     
+    multiplyHMatrix( hess_p, modelImageVec, pbcoeffs_p, String("/coeffPB_") );
   }
-  
+  */
   
   
   //---------------------------------------------------------------------------------------------------

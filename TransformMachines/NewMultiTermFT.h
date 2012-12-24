@@ -182,9 +182,12 @@ protected:
   void normAvgPBs(PtrBlock<SubImage<Float> *> & weightImageVec);
   void calculateTaylorPBs(PtrBlock<SubImage<Float> *> & weightImageVec);
   // Make pixel-by-pixel matrices from pbcoeffs, invert, apply to residuals
-  void normalizeWideBandPB2(PtrBlock<SubImage<Float> *> & resImageVec);
-  void normalizeWideBandPB(PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& scratchImageVec);
-  void applyWideBandPB(PtrBlock<SubImage<Float> *> & modelImageVec);
+  //  void normalizeWideBandPB2(PtrBlock<SubImage<Float> *> & resImageVec);
+  //  void normalizeWideBandPB(PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& scratchImageVec);
+  void applyWideBandPB(String action, PtrBlock<SubImage<Float> *> & imageVec);
+
+  void multiplyHMatrix( Matrix<Double> &hmat, PtrBlock<SubImage<Float>* > &invec,
+			PtrBlock<SubImage<Float>* > &outvec, String saveImagePrefix );
 
   // Helper function to write ImageInterfaces to disk
   Bool storeAsImg(String fileName, ImageInterface<Float> & theImg);
@@ -202,6 +205,7 @@ protected:
   Bool doWideBandPBCorrection_p;
   String cacheDir_p;
   Bool donePBTaylor_p;
+  Bool useConjBeams_p;
 
   Block< CountedPtr<FTMachine> > subftms_p;
   Block<Matrix<Float> > sumweights_p;
