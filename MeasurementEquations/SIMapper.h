@@ -94,9 +94,13 @@ protected:
   CountedPtr<CoordinateSystem> itsCoordSys;
   CountedPtr<SIMaskHandler> itsMaskHandler;
 
+  // These are images
   Float itsImage, itsPsf, itsModel;
   Float itsResidual, itsOriginalResidual;
   Float itsWeight, itsBeam;
+
+  // These are supporting params
+  IPosition itsImShape;
 
   Bool updatedmodel_p;
   Int mapperid_p;
@@ -105,6 +109,10 @@ protected:
   
   void allocateImageMemory();
 
+  Int getNx();
+  Int getNy();
+  Int getNChan();
+  Int getNPol();
 
   /////////////////// All input parameters
 

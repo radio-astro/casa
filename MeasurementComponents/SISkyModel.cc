@@ -80,22 +80,14 @@ SISkyModel::~SISkyModel()
   {
     LogIO os( LogOrigin("SISkyModel","runMinorCycle",WHERE) );
 
-    // Now done in Synthesis Imager
-    // Float peakResidual = mappers.findPeakResidual();
-
-//     loopcontrols.setMaxPsfSidelobe( mappers.findMaxPsfSidelobe() );
-//     loopcontrols.updateCycleThreshold(peakResidual);
-
-
-//     os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
-//     os << " and model flux = " << mappers.addIntegratedFlux() << LogIO::POST;
-
-//     os << " [ cyclethreshold = " << loopcontrols.getCycleThreshold() ;
-//     os << " max iter per field/chan/pol = " << loopcontrols.getCycleNiter() ;
-//     os << " loopgain = " << loopcontrols.getLoopGain() ;
-//     os << " ]" << LogIO::POST;
-
-
+    os << "Start Minor-Cycle iterations with peak residual = " << mappers.findPeakResidual();
+    os << " and model flux = " << mappers.addIntegratedFlux() << LogIO::POST;
+    
+    os << " [ cyclethreshold = " << loopcontrols.getCycleThreshold() ;
+    os << " max iter per field/chan/pol = " << loopcontrols.getCycleNiter() ;
+    os << " loopgain = " << loopcontrols.getLoopGain() ;
+    os << " ]" << LogIO::POST;
+    
     Int startiter=0,stopiter=0;
 
     for(Int mp=0;mp<mappers.nMappers();mp++)
@@ -117,7 +109,6 @@ SISkyModel::~SISkyModel()
 	  }
 
       }    
-
 
     // Get/sync peak residual and sum of flux over all fields.
     loopcontrols.setUpdatedModelFlag( mappers.anyUpdatedModel() );

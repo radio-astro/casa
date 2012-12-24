@@ -85,11 +85,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
     
-    Vector<String> mslist,fieldlist,spwlist;
-    
+    Vector<String> mslist(0),fieldlist(0),spwlist(0);
+   
     try
       {
-	
+	// TODO : If critical params are unspecified, throw exceptions.
 	if( selpars.isDefined("vis") ) { selpars.get( RecordFieldId("vis") , mslist ); }
 	if( selpars.isDefined("field") ) { selpars.get( RecordFieldId("field") , fieldlist ); }
 	if( selpars.isDefined("spw") ) { selpars.get( RecordFieldId("spw") , spwlist ); }
@@ -136,30 +136,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Define/construct Image Coordinates" << LogIO::POST;
 
     /* Use the image name to create a unique service name */
+    Int nchan=1; //,npol=1,imx=1,imy=1;
+    std::string imagename;
     try {
-      std::string imagename = impars.asString( RecordFieldId("imagename"));
+
+      // TODO : If critical params are unspecified, throw exceptions.
+      if( impars.isDefined("imagename") ) 
+	{ imagename = impars.asString( RecordFieldId("imagename")); }
+      else
+	{throw( AipsError("imagename not specified")); }
+
+      if( impars.isDefined("nchan") ) 
+	{ impars.get( RecordFieldId("nchan") , nchan ); }
+      else
+	{throw( AipsError("nchan not specified")); }
+
       // Read and interpret input parameters.
     } catch(AipsError &x)
       {
 	throw( AipsError("Error in reading input image-parameters: "+x.getMesg()) );
       }
 
-      
-
-
-    Int nchan=1;
-
-    try
-      {
-	if( impars.isDefined("nchan") ) { impars.get( RecordFieldId("nchan") , nchan ); }
-
-	// Read and interpret input parameters.
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in reading input image-parameters: "+x.getMesg()) );
-      }
-    
     try
       {
 	
@@ -167,6 +164,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	itsCurrentCoordSys = new CoordinateSystem();
 	SpectralCoordinate* mySpectral=0;
+	//StokesCoordinate* myStokes=0;
 	
 	MFrequency::Types imfreqref=MFrequency::REST;
 	Vector<Double> chanFreq( nchan );
@@ -177,6 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Double restFreq = 1.0e+09;
 	mySpectral = new SpectralCoordinate(imfreqref, chanFreq, restFreq);
 
+	//xitsCurrentCoordSys->addCoordinate(*myStokes);
 	itsCurrentCoordSys->addCoordinate(*mySpectral);
 	if(mySpectral) delete mySpectral;
 
@@ -196,9 +195,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     try
       {
-	
+      // TODO : If critical params are unspecified, throw exceptions.
 	if( gridpars.isDefined("startmodel") ) { gridpars.get( RecordFieldId("startmodel"), startmodel_p ); }
-	
       }
     catch(AipsError &x)
       {
@@ -505,18 +503,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }    
   }// end of runMajorCycle
   
-  void SynthesisImager::runMajorCycle() 
-  {
-    /* Convience methed for the non parallel case */
-    try {
-      Record controls = getMajorCycleControls();
-      executeMajorCycle(controls);
-      endMajorCycle();
-    } catch(AipsError &x) {
-      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
-    }
-  }
-
   
   Record SynthesisImager::getSubIterBot()
   {
@@ -581,20 +567,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
-  void  SynthesisImager::runMinorCycle() //SIIterBot& loopcontrols)
-  {
-    LogIO os( LogOrigin("SynthesisImager","runMinorCycle",WHERE) );
-
-    try {
-      Record iterBotRecord = getSubIterBot();
-      iterBotRecord = executeMinorCycle(iterBotRecord);
-      endMinorCycle(iterBotRecord);
-    } catch(AipsError &x) {
-      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
-    }
-  }// end of runMinorCycle
-  
-
   void SynthesisImager::pauseForUserInteraction()
   {
     LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
@@ -605,6 +577,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        available in the GUI and will not return until the user hits the
        button */
     itsLoopController->waitForInteractiveInput();
+    // UUU comment out the above line to test if plumbing around interaction is OK.
     
     Int nmappers = itsMappers.nMappers();
     for(Int mp=0;mp<nmappers;mp++)

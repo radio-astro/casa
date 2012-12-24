@@ -93,7 +93,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsMappers[mapindex];
   }
 
-  /////////// Functions relevant to the minor cycle
+  /**************************************************************************/
+  /* Below here are all the functions that loop over Mappers to gather info. */
+  /**************************************************************************/
+
   Float SIMapperCollection::findPeakResidual()
   {
     Float peakresidual=0.0, maxpeakresidual=0.0;
@@ -150,6 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return updatedmodel;
   }
 
+  /**************************************************************************/
 
    
 } //# NAMESPACE CASA - END
