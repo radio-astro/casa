@@ -231,7 +231,11 @@ bool synthesisimager::runmajorcycle()
 
   try 
     {
-      itsImager->runMajorCycle();
+      // This is a convenience function for tool-level usage, for the non-parallel case.
+      // Duplicates the code from getmajorcyclecontrols(), executemajorcycle(), endmajorcycle().
+      casa::Record recpars = itsImager->getMajorCycleControls();
+      itsImager->executeMajorCycle( recpars );
+      itsImager->endMajorCycle();
     } 
   catch  (AipsError x) 
     {
@@ -289,7 +293,11 @@ bool synthesisimager::runminorcycle()
   
   try 
     {
-      itsImager->runMinorCycle();
+      // This is a convenience function for tool-level usage, for the non-parallel case.
+      // Duplicates the code from getsubiterbot(), executeminorcycle(), endminorcycle().
+      casa::Record iterbotrec = itsImager->getSubIterBot();
+      iterbotrec = itsImager->executeMinorCycle(iterbotrec);
+      itsImager->endMinorCycle(iterbotrec);
      } 
   catch  (AipsError x) 
     {

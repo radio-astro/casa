@@ -67,6 +67,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCoordSys = imcoordsys;
     itsMaskHandler = maskhandler;
 
+    itsImShape = IPosition();
+
     updatedmodel_p = False;
     mapperid_p = mapperid;
 
@@ -95,7 +97,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Read nchan from itsCoordSys --- and allocate 'images' of that shape/size.
     SpectralCoordinate scoord = itsCoordSys->spectralCoordinate();
-    cout << "NChans : " << (scoord.worldValues()).nelements() << endl;
+
+    //itsImShape = IPosition(4,imx,imy,npol, (scoord.worldValues()).nelements()  );
+    itsImShape = IPosition(4,1,1,1, (scoord.worldValues()).nelements()  );
 
     // Initial Peak Residuals - for single-pixel-image testing.
     itsOriginalResidual = 1.0;
@@ -106,6 +110,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /// If there is a starting model, set updatedmodel_p = True !!
 
+  }
+
+  // TODO : Check which axes is which, and pick the appropriate shape.
+  //             Use an imageAxesMap to go from imx,imy,npol,nchan to itsImShape
+  Int SIMapper::getNx()
+  {
+    return (itsImShape.nelements()==4)? itsImShape[0] : 0 ;
+  }
+  Int SIMapper::getNy()
+  {
+    return (itsImShape.nelements()==4)? itsImShape[1] : 0 ;
+  }
+  Int SIMapper::getNChan()
+  {
+    return (itsImShape.nelements()==4)? itsImShape[3] : 0 ;
+  }
+  Int SIMapper::getNPol()
+  {
+    return (itsImShape.nelements()==4)? itsImShape[2] : 0 ;
   }
 
 

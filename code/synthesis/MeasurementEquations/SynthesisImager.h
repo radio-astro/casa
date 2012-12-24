@@ -79,20 +79,14 @@ class SynthesisImager
 
   void initMapper();
   void initCycles();
-  // Record initLoops();
-  // void endLoops(Record& loopcontrols){SIIterBot lc(loopcontrols); endLoops(lc); }
   bool cleanComplete();
 
-  void endLoops();//SIIterBot& loopcontrols);
-  //  void runMajorCycle(){SIIterBot rec; runMajorCycle(rec);}
-  void runMajorCycle();//SIIterBot& loopcontrols);
+  void endLoops();
 
   Record getMajorCycleControls();
   void   executeMajorCycle(Record& controls);
   void   endMajorCycle();
 
-
-  void runMinorCycle();//SIIterBot& loopcontrols);
   Record getSubIterBot();
   Record executeMinorCycle(Record& subIterBot);
   void endMinorCycle(Record& subIterBot);

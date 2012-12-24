@@ -226,6 +226,8 @@ class ParallelPySynthesisImager(PySynthesisImager):
         # Get the controls from the first
         controlRecord = self.toollist[0].getmajorcyclecontrols()
         
+        
+        # To Parallelize: move this across all engines
         for tool in self.toollist:
             tool.executemajorcycle(controlRecord);
 
@@ -242,7 +244,7 @@ class ParallelPySynthesisImager(PySynthesisImager):
         
         #         for tool in self.toollist:
         #             returnBot = tool.executeminorcycle(subIterBot);
-        #             tool.endminorcycle(returnBot);
+        #             self.toollist[0].endminorcycle(returnBot);
 
         PySynthesisImager.runMinorCycle(self, self.toollist[0] )  # Use the full list for spectral-cube deconv.
         casalog.origin('parallel.tclean.runMinorCycle')

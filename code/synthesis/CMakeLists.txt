@@ -325,6 +325,7 @@ casa_add_library( synthesis
  MeasurementEquations/SIMapper.cc
  MeasurementEquations/SIMapperCollection.cc
  MeasurementEquations/SIMaskHandler.cc
+ MeasurementEquations/SISubIterBot.cc
  MeasurementEquations/SIIterBot.cc
  MeasurementComponents/SISkyModel.cc
  MeasurementComponents/SIDeconvolver.cc
@@ -610,6 +611,7 @@ install (FILES
         MeasurementEquations/SISkyEquation.h
 	MeasurementEquations/SIMapper.h
 	MeasurementEquations/SIMapperCollection.h
+	MeasurementEquations/SISubIterBot.h
 	MeasurementEquations/SIIterBot.h
 	MeasurementEquations/SIMaskHandler.h
 	DESTINATION include/casacode/synthesis/MeasurementEquations
