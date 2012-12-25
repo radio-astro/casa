@@ -54,9 +54,20 @@ public:
   SIDeconvolver();
   ~SIDeconvolver();
 
-  Bool deconvolve( SISubIterBot& loopcontrols,  Float &image, Float &psf, Float &model, CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
+
+  // Decide how to iterate through the image axes.
+  // The Mapper will call 'deconvolve' for 
+  ///uInt makeSubImageList();
+
+  // 
+  Bool deconvolve( SISubIterBot& loopcontrols,  
+		   Float &residual, Float &psf, Float &model, 
+		   CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
 
   // eventually, send in images by reference.
+  void findNextComponent( Float residual, Float psf, Float loopgain, Float &comp );
+  void updateModel( Float &model, Float comp );
+  void updateResidual( Float &residual, Float comp );
   void restore( Float image, Float beam, Float model, Float residual, Float weight );
 
   Bool checkStop( SISubIterBot &loopcontrols, Int currentiteration, Float currentresidual );

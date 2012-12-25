@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   SIDeconvolver::SIDeconvolver()
  {
-   
+
  }
 
   SIDeconvolver::~SIDeconvolver()
@@ -67,8 +67,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
  }
 
+  // TODO :  Overloadable function to be called from the Mapper. 
+  // Use this to tell the Mapper how to partition
+  // the image for separate calls to 'deconvolve'.
+  // Give codes to signal one or more of the following.
+    ///    - channel planes separate
+    ///    - stokes planes separate
+    ///    - partitioned-image clean (facets ?)
+
+  // Later, can add more complex partitioning schemes.... 
+  // but there will be one place to do it, per deconvolver.
+
+  /*
+    uInt SIDeconvolver::makeSubImageList()
+    {  
+    }
+  */
+
   Bool SIDeconvolver::deconvolve( SISubIterBot &loopcontrols, Float &residual, 
-                                  Float &/*psf*/, Float &model, 
+                                  Float &psf, Float &model, 
                                   CountedPtr<SIMaskHandler> /*maskhandler*/, 
                                   Int mapperid )
   {
@@ -77,16 +94,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Int iters=0;
     
-    //    while ( ! loopcontrols.checkMinorStop( iters++ , residual ) )
     while ( ! checkStop( loopcontrols,  iters++, residual ) )
       {
-	Float comp = loopcontrols.getLoopGain() * residual;
+	Float comp=0.0;
 
 	// Optionally, fiddle with maskhandler for autoboxing.... 
 	// mask = maskhandler->makeAutoBox();
 
-	residual = residual - comp;
-	model = model + comp;
+	findNextComponent( residual, psf, loopcontrols.getLoopGain(), comp );
+	  
+	updateResidual( residual, comp );
+	updateModel ( model, comp );
 
 	loopcontrols.incrementMinorCycleCount( );
 	loopcontrols.addSummaryMinor( mapperid, model, residual );
@@ -102,6 +120,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return loopcontrols.majorCycleRequired(currentresidual);
   }
   
+
+  void SIDeconvolver::findNextComponent( Float residual, Float /*psf*/, Float loopgain, Float &comp )
+  {
+    comp = loopgain * residual;
+  }
+
+  void SIDeconvolver::updateModel( Float &model, Float comp )
+  {
+    model = model + comp;
+  }
+
+  void SIDeconvolver::updateResidual( Float &residual, Float comp )
+  {
+    residual = residual - comp;
+  }
 
   void SIDeconvolver::restore( Float /*image*/, Float /*beam*/, Float /*model*/, Float /*residual*/, Float /*weight*/ )
   {
