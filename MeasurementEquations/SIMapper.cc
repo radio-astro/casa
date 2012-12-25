@@ -74,6 +74,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     allocateImageMemory();
 
+    partitionImages();
+
   }
   
   SIMapper::~SIMapper() 
@@ -112,6 +114,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  // TODO For the current deconvolver, decide how many sliced deconvolution calls to make.
+  void SIMapper::partitionImages()
+  {
+    /// Call it separately per channel or stokes
+    //itsDeconvolver->makeSubImageList();
+
+    /// Make a list of reference SubImages here, with the correct shapes.
+    /// Loop over this list of reference subimages in the 'deconvolve' call.
+    /// This will support...
+    ///    - channel cube clean
+    ///    - stokes cube clean
+    ///    - partitioned-image clean (facets ?)
+    ///    - 3D deconvolver
+
+  }
+
+
   // TODO : Check which axes is which, and pick the appropriate shape.
   //             Use an imageAxesMap to go from imx,imy,npol,nchan to itsImShape
   Int SIMapper::getNx()
@@ -135,6 +154,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // Run the deconvolver
+  // TODO : Loop over the list of reference SubImages here.
+  //  This means, for iteration control, each SubImage is treated the same as a separate Mapper.
   void SIMapper::deconvolve( SISubIterBot &loopcontrols  )
   {
     LogIO os( LogOrigin("SIMapper","deconvolve",WHERE) );

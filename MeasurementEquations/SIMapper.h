@@ -109,6 +109,9 @@ protected:
   
   void allocateImageMemory();
 
+  // For the current deconvolver, decide how many sliced deconvolution calls to make
+  void partitionImages();
+
   Int getNx();
   Int getNy();
   Int getNChan();
