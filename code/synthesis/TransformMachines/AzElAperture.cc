@@ -41,7 +41,6 @@ namespace casa{
       Double dPA = currentCFPA-actualPA;
       //      cerr << actualPA << " " << currentCFPA << endl;
       if (fabs(dPA) > 0.1)
-
 	//      if (fabs(actualPA-currentCFPA) > 0.0)
 	{
 	  Array<TT> inData;
