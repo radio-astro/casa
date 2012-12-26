@@ -45,7 +45,6 @@ namespace casa{
 	{
 	  Array<TT> inData;
 	  inData.assign(*cfc.getStorage());
-
 	  // cerr << "dPA = " << actualPA << " " << currentCFPA << " " 
 	  //      << actualPA - currentCFPA << " " << &(*cfc.getStorage()) << endl;
 	  
