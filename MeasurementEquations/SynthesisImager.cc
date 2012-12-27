@@ -66,6 +66,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsCurrentFTMachine(NULL), 
 				       itsCurrentDeconvolver(NULL), 
 				       itsCurrentCoordSys(NULL),
+                                       itsCurrentImageShape(IPosition()),
+                                       itsCurrentImageName(""),
 				       itsCurrentMaskHandler(NULL),
 				       itsSkyModel(SISkyModel()),
 				       itsSkyEquation(SISkyEquation()),
@@ -136,7 +138,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Define/construct Image Coordinates" << LogIO::POST;
 
     /* Use the image name to create a unique service name */
-    Int nchan=1; //,npol=1,imx=1,imy=1;
+    Int nchan=1,npol=2,imx=1,imy=1;
+    String phasecenter =  "19:59:28.500 +40.44.01.50";
+    Double cellx=10.0,celly=10.0;
+
     std::string imagename;
     try {
 
@@ -160,24 +165,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 	
-	//itsCurrentCoordSys = XXXX
+	itsCurrentCoordSys = buildImageCoordinateSystem(imagename, phasecenter, 
+                                                        cellx, celly, imx, imy, npol, nchan );
+        itsCurrentImageShape = IPosition(4,imx,imy,npol,nchan);
 
-	itsCurrentCoordSys = new CoordinateSystem();
-	SpectralCoordinate* mySpectral=0;
-	//StokesCoordinate* myStokes=0;
-	
-	MFrequency::Types imfreqref=MFrequency::REST;
-	Vector<Double> chanFreq( nchan );
-	for(Int ch=0;ch<nchan;ch++)
-	  {
-	    chanFreq[ch] = 1.0e+09 + (Double)ch * 1.0e+06;
-	  }
-	Double restFreq = 1.0e+09;
-	mySpectral = new SpectralCoordinate(imfreqref, chanFreq, restFreq);
-
-	//xitsCurrentCoordSys->addCoordinate(*myStokes);
-	itsCurrentCoordSys->addCoordinate(*mySpectral);
-	if(mySpectral) delete mySpectral;
+        itsCurrentImageName = imagename;
 
       }
     catch(AipsError &x)
@@ -232,7 +224,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     try
       {
-	/// itsCurrentDeconvolver = XXX
+	itsCurrentDeconvolver = new SIDeconvolver();
       }
     catch(AipsError &x)
       {
@@ -264,7 +256,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsMappers[nMappers] = new SIMapper( itsCurrentFTMachine, itsCurrentDeconvolver, itsCurrentCoordSys , nMappers );
 	*/
 
-	itsMappers.addMapper( itsCurrentFTMachine, itsCurrentDeconvolver, itsCurrentCoordSys, itsCurrentMaskHandler );
+	itsMappers.addMapper( itsCurrentImageName,  itsCurrentFTMachine, itsCurrentDeconvolver, itsCurrentCoordSys, itsCurrentImageShape, itsCurrentMaskHandler );
 
       }
     catch(AipsError &x)
@@ -593,6 +585,106 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
   }// end of pauseForUserInteraction
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////    Internal Functions start here.  These are not visible to the tool layer.
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  
+  // Build the Image coordinate system.  TODO : Replace with Imager2::imagecoordinates2()
+  CountedPtr<CoordinateSystem> SynthesisImager::buildImageCoordinateSystem(String imagename, 
+                                                                           String phasecenter, 
+                                                                           Double cellx, Double celly, 
+                                                                           uInt imx, uInt imy,
+                                                                           uInt npol, uInt nchan)
+  {
+    
+    // Set up Direction Coordinate
+
+    // Cell Size
+    Vector<Double> deltas(2);
+    deltas(0) = -1* cellx / 3600.0 * 3.14158 / 180.0; // 10 arcsec in radians
+    deltas(1) = celly / 3600.0 * 3.14158 / 180.0; // 10 arcsec in radians
+
+    // Direction of Image Center
+    MDirection mDir;
+    String tmpA,tmpB,tmpC;
+    std::istringstream iss(phasecenter);
+    iss >> tmpA >> tmpB >> tmpC;
+    casa::Quantity tmpQA, tmpQB;
+    casa::Quantity::read(tmpQA, tmpA);
+    casa::Quantity::read(tmpQB, tmpB);
+    if(tmpC.length() > 0){
+      casa::MDirection::Types theRF;
+      casa::MDirection::getType(theRF, tmpC);
+      mDir = casa::MDirection (tmpQA, tmpQB, theRF);
+    } else {
+      mDir = casa::MDirection (tmpQA, tmpQB);
+    }
+    //    MVDirection mvPhaseCenter( mDir.getAngle() );
+    // MVAngle ra = mvPhaseCenter.get()(0);
+    //  //ra(0.0);
+      // MVAngle dec = mvPhaseCenter.get()(1);
+    //    MVAngle ra(mDir.getAngle().getValue()(0));
+    // MVAngle dec(mDir.getAngle().getValue()(1));
+
+    Vector<Double> refCoord(2);
+    //    refCoord(0) = ra.get().getValue();
+    //  refCoord(1) = dec;
+    refCoord(0) = mDir.getAngle().getValue()(0);
+    refCoord(1) = mDir.getAngle().getValue()(1);
+
+    // Reference pixel
+    Vector<Double> refPixel(2); 
+    refPixel(0) = Double(imx / 2);
+    refPixel(1) = Double(imy / 2);
+
+    // Projection
+    Projection projection(Projection::SIN);
+
+    // Not sure....
+    Matrix<Double> xform(2,2);
+    xform=0.0;
+    xform.diagonal()=1.0;
+
+    DirectionCoordinate myRaDec(MDirection::Types(mDir.getRefPtr()->getType()),
+                                projection,
+                                refCoord(0), refCoord(1),
+                                deltas(0), deltas(1),
+                                xform,
+                                refPixel(0), refPixel(1));
+
+
+    // Set up Stokes Coordinate
+    Vector<Int> whichStokes(npol);
+    whichStokes[0] = Stokes::I;
+    if(npol>1) whichStokes[1] = Stokes::V;
+    StokesCoordinate myStokes(whichStokes);
+    
+    // Set up Spectral Coordinate
+    //SpectralCoordinate* mySpectral=0;
+    MFrequency::Types imfreqref=MFrequency::REST;
+    Vector<Double> chanFreq( nchan );
+    for(Int ch=0;ch<nchan;ch++)
+      {
+        chanFreq[ch] = 1.0e+09 + (Double)ch * 1.0e+06;
+      }
+    Double restFreq = 1.0e+09;
+    //mySpectral = new SpectralCoordinate(imfreqref, chanFreq, restFreq);
+    SpectralCoordinate mySpectral(imfreqref, chanFreq, restFreq);
+    
+
+    CountedPtr<CoordinateSystem> coordSys;
+    coordSys = new CoordinateSystem();
+    coordSys->addCoordinate(myRaDec);
+    coordSys->addCoordinate(myStokes);
+    coordSys->addCoordinate(mySpectral);
+    //if(mySpectral) delete mySpectral;
+
+    return coordSys;
+  }// end of buildImageCoordinateSystem
+
 
 } //# NAMESPACE CASA - END
 

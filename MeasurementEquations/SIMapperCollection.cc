@@ -70,14 +70,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   // Allocate Memory and open images.
-  void SIMapperCollection::addMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler )
+  void SIMapperCollection::addMapper( String imagename,  CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, IPosition imshape, CountedPtr<SIMaskHandler> maskhandler )
   {
 
     LogIO os( LogOrigin("SIMapperCollection","addMapper",WHERE) );
 
     Int nMappers = itsMappers.nelements();
     itsMappers.resize(nMappers+1, True);
-    itsMappers[nMappers] = new SIMapper( ftmachine, deconvolver, imcoordsys , maskhandler, nMappers );
+    itsMappers[nMappers] = new SIMapper( imagename, ftmachine, deconvolver, imcoordsys , imshape, maskhandler, nMappers );
 
   }
 
@@ -95,6 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /**************************************************************************/
   /* Below here are all the functions that loop over Mappers to gather info. */
+  // TODO : They should not be necessary. The IterBot should pick up this info as it goes along.
   /**************************************************************************/
 
   Float SIMapperCollection::findPeakResidual()

@@ -58,19 +58,29 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SIMapper::SIMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler, Int mapperid) 
+  SIMapper::SIMapper( String imagename, CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, IPosition imshape, CountedPtr<SIMaskHandler> maskhandler, Int mapperid) 
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
+
+    itsImageName = imagename;
 
     itsFTMachine = ftmachine;
     itsDeconvolver = deconvolver;
     itsCoordSys = imcoordsys;
+    itsImageShape = imshape;
     itsMaskHandler = maskhandler;
 
-    itsImShape = IPosition();
+    itsImage=NULL;
+    itsPsf=NULL;
+    itsModel=NULL;
+    itsResidual=NULL;
+    itsWeight=NULL;
 
     updatedmodel_p = False;
     mapperid_p = mapperid;
+
+    // Temp
+    tmpPos_p = IPosition(4,0,0,0,0);
 
     allocateImageMemory();
 
@@ -83,6 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   // Allocate Memory and open images.
+  //// TODO : If only the major cycle is called (niter=0), don't allocate Image, Psf, Weight...
   void SIMapper::allocateImageMemory()
   {
 
@@ -90,25 +101,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     os << "Mapper " << mapperid_p << " : Calculate required memory, and allocate" << LogIO::POST;
 
-    //// TODO : If only the major cycle is called (niter=0), don't allocate Image, Psf, Weight...
+    // Make the Images.
+    itsResidual = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".residual"));
+    itsPsf = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".psf"));
+    itsModel = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".model"));
+    itsWeight = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".weight"));
 
-    itsImage=0.0;
-    itsPsf=0.2;
-    itsModel=0.0;
-    itsWeight=1.0;
-
-    // Read nchan from itsCoordSys --- and allocate 'images' of that shape/size.
-    SpectralCoordinate scoord = itsCoordSys->spectralCoordinate();
-
-    //itsImShape = IPosition(4,imx,imy,npol, (scoord.worldValues()).nelements()  );
-    itsImShape = IPosition(4,1,1,1, (scoord.worldValues()).nelements()  );
+    Array<Float> pixels( itsImageShape );
+    pixels = 0.0;
+    itsResidual->put(pixels); 
+    itsPsf->put(pixels);
+    itsPsf->putAt(0.2, tmpPos_p);
+    itsModel->put(pixels);
+    pixels = 1.0;
+    itsWeight->put(pixels);
 
     // Initial Peak Residuals - for single-pixel-image testing.
     itsOriginalResidual = 1.0;
     if ( mapperid_p == 0 )  itsOriginalResidual=1.0;
     if ( mapperid_p == 1 )  itsOriginalResidual=0.5;
 
-    itsResidual=itsOriginalResidual;
+    itsResidual->putAt(itsOriginalResidual, tmpPos_p);
+
+    cout << "Starting residual : " << endl;
+    cout << itsResidual->getAt(tmpPos_p) << endl;
 
     /// If there is a starting model, set updatedmodel_p = True !!
 
@@ -131,28 +147,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  // TODO : Check which axes is which, and pick the appropriate shape.
-  //             Use an imageAxesMap to go from imx,imy,npol,nchan to itsImShape
-  Int SIMapper::getNx()
-  {
-    return (itsImShape.nelements()==4)? itsImShape[0] : 0 ;
-  }
-  Int SIMapper::getNy()
-  {
-    return (itsImShape.nelements()==4)? itsImShape[1] : 0 ;
-  }
-  Int SIMapper::getNChan()
-  {
-    return (itsImShape.nelements()==4)? itsImShape[3] : 0 ;
-  }
-  Int SIMapper::getNPol()
-  {
-    return (itsImShape.nelements()==4)? itsImShape[2] : 0 ;
-  }
-
-
-
-
   // Run the deconvolver
   // TODO : Loop over the list of reference SubImages here.
   //  This means, for iteration control, each SubImage is treated the same as a separate Mapper.
@@ -160,7 +154,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","deconvolve",WHERE) );
 
-    updatedmodel_p = itsDeconvolver->deconvolve( loopcontrols, itsResidual, itsPsf, itsModel, itsMaskHandler,  mapperid_p );
+    updatedmodel_p = itsDeconvolver->deconvolve( loopcontrols, *itsResidual, *itsPsf, *itsModel, itsMaskHandler,  mapperid_p );
 
   }
 
@@ -169,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","getPeakResidual",WHERE) );
 
-    Float maxresidual = itsResidual;
+    Float maxresidual = itsResidual->getAt(tmpPos_p);
 
     return maxresidual;
   }
@@ -179,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","getModelFlux",WHERE) );
 
-    Float modelflux = itsModel;
+    Float modelflux = itsModel->getAt(tmpPos_p);
 
     return modelflux;
   }
@@ -191,7 +185,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /// Calculate only once, store and return for all subsequent calls.
 
-    Float psfsidelobe = itsPsf;
+    Float psfsidelobe = itsPsf->getAt( tmpPos_p );
 
     return psfsidelobe;
   }
@@ -210,7 +204,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","restoreImage",WHERE) );
     
-    itsDeconvolver->restore( itsImage, itsBeam, itsModel, itsResidual, itsWeight );
+    itsImage = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".image"));
+    itsDeconvolver->restore( *itsImage, itsBeam, *itsModel, *itsResidual, *itsWeight );
 
   }
 
@@ -254,8 +249,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapper::finalizeGrid()
   {
 
-    itsResidual = itsOriginalResidual - itsModel;
-    
+    //itsResidual = itsOriginalResidual - itsModel;
+
+    itsResidual->putAt( itsOriginalResidual - itsModel->getAt(tmpPos_p)  , tmpPos_p );
+
   }
 
   void SIMapper::initializeDegrid()
