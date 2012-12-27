@@ -60,6 +60,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIDeconvolver::SIDeconvolver()
  {
 
+   tmpPos_p = IPosition(4,0,0,0,0);
+
  }
 
   SIDeconvolver::~SIDeconvolver()
@@ -84,8 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   */
 
-  Bool SIDeconvolver::deconvolve( SISubIterBot &loopcontrols, Float &residual, 
-                                  Float &psf, Float &model, 
+  Bool SIDeconvolver::deconvolve( SISubIterBot &loopcontrols, 
+				  ImageInterface<Float>  &residual, 
+                                  ImageInterface<Float>  &psf, 
+				  ImageInterface<Float>  &model, 
                                   CountedPtr<SIMaskHandler> /*maskhandler*/, 
                                   Int mapperid )
   {
@@ -93,8 +97,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIDeconvolver","deconvolve",WHERE) );
 
     Int iters=0;
-    
-    while ( ! checkStop( loopcontrols,  iters++, residual ) )
+    //cout << "Image shape : " << residual.shape() << endl;
+    Float peakresidual=residual.getAt(tmpPos_p);
+
+    while ( ! checkStop( loopcontrols,  iters++, peakresidual ) )
       {
 	Float comp=0.0;
 
@@ -106,8 +112,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	updateResidual( residual, comp );
 	updateModel ( model, comp );
 
+	peakresidual = residual.getAt(tmpPos_p);
+
 	loopcontrols.incrementMinorCycleCount( );
-	loopcontrols.addSummaryMinor( mapperid, model, residual );
+	loopcontrols.addSummaryMinor( mapperid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
+	//cout << mapperid << " model : " <<  model.getAt(tmpPos_p) << " res : " << residual.getAt(tmpPos_p) << endl;
       }
 
     Bool updatedmodel = iters>0; // This info is recorded per model/mapper
@@ -115,33 +124,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return updatedmodel;
 }
 
-  Bool SIDeconvolver::checkStop( SISubIterBot &loopcontrols, Int /*currentiteration*/, Float currentresidual )
+  Bool SIDeconvolver::checkStop( SISubIterBot &loopcontrols, 
+				 Int /*currentiteration*/, 
+				 Float currentresidual )
   {
     return loopcontrols.majorCycleRequired(currentresidual);
   }
   
 
-  void SIDeconvolver::findNextComponent( Float residual, Float /*psf*/, Float loopgain, Float &comp )
+  void SIDeconvolver::findNextComponent( ImageInterface<Float>  &residual, 
+					 ImageInterface<Float>  &/*psf*/, Float loopgain, 
+					 Float  &comp )
   {
-    comp = loopgain * residual;
+    //    comp = loopgain * residual;
+
+    comp =  loopgain * residual.getAt(tmpPos_p);
+
   }
 
-  void SIDeconvolver::updateModel( Float &model, Float comp )
+  void SIDeconvolver::updateModel( ImageInterface<Float>  &model, Float  &comp )
   {
-    model = model + comp;
+    //    model = model + comp;
+
+    model.putAt( model.getAt(tmpPos_p) + comp  , tmpPos_p );
+
   }
 
-  void SIDeconvolver::updateResidual( Float &residual, Float comp )
+  void SIDeconvolver::updateResidual( ImageInterface<Float>  &residual, Float  &comp )
   {
-    residual = residual - comp;
+    //    residual = residual - comp;
+    residual.putAt( residual.getAt(tmpPos_p) - comp  , tmpPos_p );
   }
 
-  void SIDeconvolver::restore( Float /*image*/, Float /*beam*/, Float /*model*/, Float /*residual*/, Float /*weight*/ )
+  void SIDeconvolver::restore( ImageInterface<Float>  &image, Float /*beam*/, ImageInterface<Float>  &/*model*/, ImageInterface<Float>  &/*residual*/, ImageInterface<Float>  &/*weight*/ )
   {
 
     LogIO os( LogOrigin("SIDeconvolver","restore",WHERE) );
     
-    os << "Smooth model and add residuals. Optionally, PB-correct too." << LogIO::POST;
+    os << "Smooth model and add residuals for " << image.name() << ". Optionally, PB-correct too." << LogIO::POST;
 
   }
 

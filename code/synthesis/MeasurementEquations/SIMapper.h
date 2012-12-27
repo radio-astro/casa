@@ -52,7 +52,7 @@ class SIMapper
  public:
   // Default constructor
 
-  SIMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
+  SIMapper( String imagename, CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, IPosition imshape, CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
   ~SIMapper();
 
   // Copy constructor and assignment operator
@@ -92,16 +92,18 @@ protected:
   CountedPtr<SIDeconvolver> itsDeconvolver;
   CountedPtr<FTMachine> itsFTMachine; 
   CountedPtr<CoordinateSystem> itsCoordSys;
+  IPosition itsImageShape;
   CountedPtr<SIMaskHandler> itsMaskHandler;
 
   // These are images
-  Float itsImage, itsPsf, itsModel;
-  Float itsResidual, itsOriginalResidual;
-  Float itsWeight, itsBeam;
+  String itsImageName;
+
+  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsModel, itsResidual, itsWeight;
+  
+  Float itsBeam;
+  Float itsOriginalResidual;
 
   // These are supporting params
-  IPosition itsImShape;
-
   Bool updatedmodel_p;
   Int mapperid_p;
 
@@ -112,12 +114,10 @@ protected:
   // For the current deconvolver, decide how many sliced deconvolution calls to make
   void partitionImages();
 
-  Int getNx();
-  Int getNy();
-  Int getNChan();
-  Int getNPol();
-
   /////////////////// All input parameters
+
+  IPosition tmpPos_p;
+
 
 };
 

@@ -51,7 +51,7 @@ class SIMapperCollection
   //Imager(const Imager&);
   //Imager& operator=(const Imager&);
 
-  void addMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler );
+  void addMapper( String imagename, CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, IPosition imshape, CountedPtr<SIMaskHandler> maskhandler );
 
   // TODO : If individual mapper accesses are not needed in SISkyEquation, pull those loops in here and get rid of the getMapper access function.
   Int nMappers();

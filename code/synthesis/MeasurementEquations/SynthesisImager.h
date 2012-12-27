@@ -96,6 +96,13 @@ class SynthesisImager
 
 protected:
 
+  /////////////// Internal Functions
+  CountedPtr<CoordinateSystem> buildImageCoordinateSystem(String imagename, 
+							  String phasecenter, 
+							  Double cellx, Double celly, 
+							  uInt imx, uInt imy,
+							  uInt npol, uInt nchan);
+
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
@@ -107,6 +114,8 @@ protected:
   CountedPtr<FTMachine> itsCurrentFTMachine;
   CountedPtr<SIDeconvolver> itsCurrentDeconvolver;
   CountedPtr<CoordinateSystem> itsCurrentCoordSys;
+  IPosition itsCurrentImageShape;
+  String itsCurrentImageName;
   CountedPtr<SIMaskHandler> itsCurrentMaskHandler;
 
   SISkyModel itsSkyModel;

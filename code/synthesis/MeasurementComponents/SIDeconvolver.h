@@ -61,18 +61,34 @@ public:
 
   // 
   Bool deconvolve( SISubIterBot& loopcontrols,  
-		   Float &residual, Float &psf, Float &model, 
-		   CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
+		   ImageInterface<Float> &residual, 
+		   ImageInterface<Float> &psf, 
+		   ImageInterface<Float> &model, 
+		   CountedPtr<SIMaskHandler> maskhandler, 
+		   Int mapperid);
 
   // eventually, send in images by reference.
-  void findNextComponent( Float residual, Float psf, Float loopgain, Float &comp );
-  void updateModel( Float &model, Float comp );
-  void updateResidual( Float &residual, Float comp );
-  void restore( Float image, Float beam, Float model, Float residual, Float weight );
+  void findNextComponent( ImageInterface<Float>  &residual, 
+			  ImageInterface<Float>  &psf, 
+			  Float loopgain, 
+			  Float &comp );
+  void updateModel( ImageInterface<Float> &model, 
+		    Float  &comp );
+  void updateResidual( ImageInterface<Float> &residual, 
+		       Float  &comp );
+
+  void restore( ImageInterface<Float>  &image, 
+		Float beam, 
+		ImageInterface<Float>  &model, 
+		ImageInterface<Float>  &residual, 
+		ImageInterface<Float>  &weight );
 
   Bool checkStop( SISubIterBot &loopcontrols, Int currentiteration, Float currentresidual );
 
 protected:
+
+  // For debugging.
+  IPosition tmpPos_p;
 
 };
 
