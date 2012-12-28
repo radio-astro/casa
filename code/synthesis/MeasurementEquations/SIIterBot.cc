@@ -102,25 +102,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /* Need to merge in the minor cycle summary */
     IPosition shp = itsSummaryMinor.shape();
-    if( shp.nelements() != 2 && shp[0] != 5 ) 
-      throw(AipsError("Internal error in shape of minor-cycle summary record"));
+    if( shp.nelements() != 2 && shp[0] != itsNSummaryFields ) 
+      throw(AipsError("Internal error in shape of global minor-cycle summary record"));
+
     Array<Double> subSummary = subIterBot.getSummaryMinor();
     IPosition subIterShp = subSummary.shape();
+    if( subIterShp.nelements() != 2 && subIterShp[0] != itsNSummaryFields ) 
+      throw(AipsError("Internal error in shape of minor-cycle summary record"));
 
+    itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, shp[1]+subIterShp[1] ) ,True );
 
-    itsSummaryMinor.resize( IPosition( 2, 5, shp[1]+subIterShp[1] ) ,True );
-
+    // Note : itsNSummaryFields is hard-coded to 6 in the SISubIterBot constructors.
     for (unsigned int row = 0; row < subIterShp[1]; row++) {
-      itsSummaryMinor( IPosition(2, 0, shp[1]+row ) ) = 
-        itsIterDone + subSummary(IPosition(2, 0,row))  ;
-      itsSummaryMinor( IPosition(2, 1, shp[1]+row ) ) = 
-        subSummary(IPosition(2, 1, row ));
-      itsSummaryMinor( IPosition(2, 2, shp[1]+row ) ) = 
-        subSummary(IPosition(2, 2, row ));
-      itsSummaryMinor( IPosition(2, 3, shp[1]+row ) ) = 
-        subSummary(IPosition(2, 3, row ));
-      itsSummaryMinor( IPosition(2, 4, shp[1]+row ) ) = 
-        subSummary(IPosition(2, 4, row ));
+      // iterations done
+      itsSummaryMinor( IPosition(2, 0, shp[1]+row ) ) = itsIterDone + subSummary(IPosition(2, 0,row));  
+      // peak residual
+      itsSummaryMinor( IPosition(2, 1, shp[1]+row ) ) = subSummary(IPosition(2, 1, row )); 
+      // model flux
+      itsSummaryMinor( IPosition(2, 2, shp[1]+row ) ) = subSummary(IPosition(2, 2, row )); 
+      // cycle threshold
+      itsSummaryMinor( IPosition(2, 3, shp[1]+row ) ) = subSummary(IPosition(2, 3, row )); 
+      // mapper id
+      itsSummaryMinor( IPosition(2, 4, shp[1]+row ) ) = subSummary(IPosition(2, 4, row )); 
+      // chunk id (channel/stokes)
+      itsSummaryMinor( IPosition(2, 5, shp[1]+row ) ) = subSummary(IPosition(2, 5, row )); 
     }
 
     /* Now do the rest of the values */
@@ -229,7 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* This returns a record suitable for initializing a subIterBot. 
        In particular it has no iterations or summary */
     Record returnRecord = serialize();
-    Array<Double> tmpSummary(IPosition(2,5,0));
+    Array<Double> tmpSummary(IPosition(2,itsNSummaryFields,0));
 
     returnRecord.define( RecordFieldId("iterdone"),  0);
     returnRecord.define( RecordFieldId("summaryminor"), tmpSummary);

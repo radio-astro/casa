@@ -60,6 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIDeconvolver::SIDeconvolver()
  {
 
+   // TESTING place-holder for the position of the clean component.
    tmpPos_p = IPosition(4,0,0,0,0);
 
  }
@@ -80,24 +81,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Later, can add more complex partitioning schemes.... 
   // but there will be one place to do it, per deconvolver.
 
-  /*
-    uInt SIDeconvolver::makeSubImageList()
-    {  
-    }
-  */
+  void SIDeconvolver::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
+  {  
+    onechan = True;
+    onepol = True;
+  }
 
   Bool SIDeconvolver::deconvolve( SISubIterBot &loopcontrols, 
 				  ImageInterface<Float>  &residual, 
                                   ImageInterface<Float>  &psf, 
 				  ImageInterface<Float>  &model, 
                                   CountedPtr<SIMaskHandler> /*maskhandler*/, 
-                                  Int mapperid )
+                                  Int mapperid,
+				  uInt decid)
   {
 
     LogIO os( LogOrigin("SIDeconvolver","deconvolve",WHERE) );
 
     Int iters=0;
-    //cout << "Image shape : " << residual.shape() << endl;
+
     Float peakresidual=residual.getAt(tmpPos_p);
 
     while ( ! checkStop( loopcontrols,  iters++, peakresidual ) )
@@ -115,8 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	peakresidual = residual.getAt(tmpPos_p);
 
 	loopcontrols.incrementMinorCycleCount( );
-	loopcontrols.addSummaryMinor( mapperid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
-	//cout << mapperid << " model : " <<  model.getAt(tmpPos_p) << " res : " << residual.getAt(tmpPos_p) << endl;
+	loopcontrols.addSummaryMinor( mapperid, decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
       }
 
     Bool updatedmodel = iters>0; // This info is recorded per model/mapper

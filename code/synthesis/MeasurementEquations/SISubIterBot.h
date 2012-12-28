@@ -127,7 +127,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool getUpdatedModelFlag();
     void setUpdatedModelFlag(Bool updatedmodel);
 
-    void addSummaryMinor(Int mapperid, Float model, Float peakresidual);
+   void addSummaryMinor(Int mapperid, uInt decid, Float model, Float peakresidual);
 
     Array<Double> getSummaryMinor();
     
@@ -201,6 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /* Summary Variable */
     Array<Double> itsSummaryMinor;
+    Int itsNSummaryFields;
 
   };
 

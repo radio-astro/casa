@@ -212,15 +212,23 @@ class ParallelPySynthesisImager(PySynthesisImager):
 
     def initialize(self):
         selpars = copy.deepcopy( self.params['dataselection'] )
+        imdefs = copy.deepcopy( self.listofimagedefinitions )
         for ch in range(0,self.nchunks):
             casalog.origin('parallel.tclean.runMinorCycle')
             casalog.post('Initialize for chunk '+str(ch))
 
+            # Set up the chunks to parallelize on
             for dat in range(0,len( selpars['spw'] )):
                 self.params['dataselection']['spw'][dat] =  selpars['spw'][dat] + ':'+str(ch)
 
+            # Change the image name for each chunk
+            for im in range(0, len(self.listofimagedefinitions)):
+                self.listofimagedefinitions[im]['imagename'] = imdefs[im]['imagename'] + '_' + str(ch)
+
             PySynthesisImager.initialize(self, self.toollist[ch], ch == 0 )
+
         self.params['dataselection'] = copy.deepcopy(selpars)
+        self.listofimagedefinitions = copy.deepcopy(imdefs)
 
     def runMajorCycle(self):
         # Get the controls from the first

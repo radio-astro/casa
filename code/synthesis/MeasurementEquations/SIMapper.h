@@ -99,13 +99,15 @@ protected:
   String itsImageName;
 
   CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsModel, itsResidual, itsWeight;
-  
   Float itsBeam;
-  Float itsOriginalResidual;
+  Vector<Slicer> decSlices, ftmSlices; 
+  
+  // This is only for testing. In the real-world, this is the data....
+  Array<Float> itsOriginalResidual;
 
   // These are supporting params
-  Bool updatedmodel_p;
-  Int mapperid_p;
+  Bool itsIsModelUpdated;
+  Int itsMapperId;
 
   //////////////////// Member Functions
   
@@ -115,9 +117,6 @@ protected:
   void partitionImages();
 
   /////////////////// All input parameters
-
-  IPosition tmpPos_p;
-
 
 };
 
