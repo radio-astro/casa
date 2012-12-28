@@ -49,7 +49,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                 itsCycleIterDone(0),
                                 itsInteractiveIterDone(0),
                                 itsMaxCycleIterDone(0),
-                                itsSummaryMinor(IPosition(2,5,0))
+                                itsSummaryMinor(IPosition(2,6,0)),
+				itsNSummaryFields(6)
   {}
 
 
@@ -69,7 +70,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                                itsCycleIterDone(0),
                                                itsInteractiveIterDone(0),
                                                itsMaxCycleIterDone(0),
-                                               itsSummaryMinor(IPosition(2,5,0))
+                                               itsSummaryMinor(IPosition(2,6,0)),
+					       itsNSummaryFields(6)
   {
     LogIO os( LogOrigin("SISubIterBot",__FUNCTION__,WHERE) );
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
@@ -109,7 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   bool SISubIterBot::majorCycleRequired(Float currentPeakResidual){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
-    
+
     if (cleanComplete(currentPeakResidual))
       /* We are done cleaning, this should return true as well */
       return true;
@@ -397,25 +399,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCycleIterDone = 0;
   }
 
-  void SISubIterBot::addSummaryMinor(Int mapperid, Float model, Float peakresidual)
+  void SISubIterBot::addSummaryMinor(Int mapperid, uInt decid, Float model, Float peakresidual)
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     
     LogIO os( LogOrigin("SISubIterBot", __FUNCTION__ ,WHERE) );
 
-
     IPosition shp = itsSummaryMinor.shape();
-    if( shp.nelements() != 2 && shp[0] != 5 ) 
+    if( shp.nelements() != 2 && shp[0] != itsNSummaryFields ) 
       throw(AipsError("Internal error in shape of minor-cycle summary record"));
 
-     itsSummaryMinor.resize( IPosition( 2, 5, shp[1]+1 ) , True );
+     // Note : itsNSummaryFields is hard-coded to 6 in the SISubIterBot constructors.
+     itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, shp[1]+1 ) , True );
+     // iterations done
      itsSummaryMinor( IPosition(2, 0, shp[1] ) ) = itsIterDone;
+     // peak residual
      itsSummaryMinor( IPosition(2, 1, shp[1] ) ) = (Double) peakresidual;
+     // model flux
      itsSummaryMinor( IPosition(2, 2, shp[1] ) ) = (Double) model;
-     itsSummaryMinor( IPosition(2, 3, shp[1] ) ) = mapperid;
-     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = getCycleThreshold();
-
-     shp = itsSummaryMinor.shape();
+     // cycle threshold
+     itsSummaryMinor( IPosition(2, 3, shp[1] ) ) = getCycleThreshold();
+     // mapper id
+     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = mapperid;
+     // chunk id (channel/stokes)
+     itsSummaryMinor( IPosition(2, 5, shp[1] ) ) = decid;
 
   }// end of addSummaryMinor
 

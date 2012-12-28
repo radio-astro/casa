@@ -138,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Define/construct Image Coordinates" << LogIO::POST;
 
     /* Use the image name to create a unique service name */
-    Int nchan=1,npol=2,imx=1,imy=1;
+    Int nchan=1,npol=1,imx=1,imy=1;
     String phasecenter =  "19:59:28.500 +40.44.01.50";
     Double cellx=10.0,celly=10.0;
 
@@ -165,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 	
-	itsCurrentCoordSys = buildImageCoordinateSystem(imagename, phasecenter, 
+	itsCurrentCoordSys = buildImageCoordinateSystem(phasecenter, 
                                                         cellx, celly, imx, imy, npol, nchan );
         itsCurrentImageShape = IPosition(4,imx,imy,npol,nchan);
 
@@ -593,8 +593,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   
   // Build the Image coordinate system.  TODO : Replace with Imager2::imagecoordinates2()
-  CountedPtr<CoordinateSystem> SynthesisImager::buildImageCoordinateSystem(String imagename, 
-                                                                           String phasecenter, 
+  CountedPtr<CoordinateSystem> SynthesisImager::buildImageCoordinateSystem(String phasecenter, 
                                                                            Double cellx, Double celly, 
                                                                            uInt imx, uInt imy,
                                                                            uInt npol, uInt nchan)
@@ -666,7 +665,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //SpectralCoordinate* mySpectral=0;
     MFrequency::Types imfreqref=MFrequency::REST;
     Vector<Double> chanFreq( nchan );
-    for(Int ch=0;ch<nchan;ch++)
+    for(uInt ch=0;ch<nchan;ch++)
       {
         chanFreq[ch] = 1.0e+09 + (Double)ch * 1.0e+06;
       }

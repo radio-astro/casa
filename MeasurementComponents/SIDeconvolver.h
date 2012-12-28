@@ -56,8 +56,8 @@ public:
 
 
   // Decide how to iterate through the image axes.
-  // The Mapper will call 'deconvolve' for 
-  ///uInt makeSubImageList();
+  // The Mapper will call 'deconvolve' with pieces of only this shape.
+  void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
 
   // 
   Bool deconvolve( SISubIterBot& loopcontrols,  
@@ -65,7 +65,8 @@ public:
 		   ImageInterface<Float> &psf, 
 		   ImageInterface<Float> &model, 
 		   CountedPtr<SIMaskHandler> maskhandler, 
-		   Int mapperid);
+		   Int mapperid,
+		   uInt decid);
 
   // eventually, send in images by reference.
   void findNextComponent( ImageInterface<Float>  &residual, 

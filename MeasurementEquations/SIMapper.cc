@@ -76,11 +76,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResidual=NULL;
     itsWeight=NULL;
 
-    updatedmodel_p = False;
-    mapperid_p = mapperid;
+    decSlices.resize();
+    ftmSlices.resize();
 
-    // Temp
-    tmpPos_p = IPosition(4,0,0,0,0);
+    itsIsModelUpdated = False;
+    itsMapperId = mapperid;
 
     allocateImageMemory();
 
@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SIMapper","allocateImageMemory",WHERE) );
 
-    os << "Mapper " << mapperid_p << " : Calculate required memory, and allocate" << LogIO::POST;
+    os << "Mapper " << itsMapperId << " : Calculate required memory, and allocate" << LogIO::POST;
 
     // Make the Images.
     itsResidual = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".residual"));
@@ -107,55 +107,100 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsModel = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".model"));
     itsWeight = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".weight"));
 
+    // Initialize all these images.
     Array<Float> pixels( itsImageShape );
     pixels = 0.0;
-    itsResidual->put(pixels); 
-    itsPsf->put(pixels);
-    itsPsf->putAt(0.2, tmpPos_p);
-    itsModel->put(pixels);
-    pixels = 1.0;
-    itsWeight->put(pixels);
+    itsResidual->set(0.0); 
+    itsPsf->set(0.0);
+    itsPsf->set(0.2);
+    itsModel->set(0.0);
+    itsWeight->set(1.0);
 
+    //////////////////////////////////// ONLY FOR TESTING //////////////////////////////////
     // Initial Peak Residuals - for single-pixel-image testing.
-    itsOriginalResidual = 1.0;
-    if ( mapperid_p == 0 )  itsOriginalResidual=1.0;
-    if ( mapperid_p == 1 )  itsOriginalResidual=0.5;
+    // In the real world, this is the gridded/imaged data.
+    itsOriginalResidual.resize( itsImageShape );
 
-    itsResidual->putAt(itsOriginalResidual, tmpPos_p);
+    // Different values for different mappers
+    if ( itsMapperId == 0 )  itsOriginalResidual=1.0;
+    if ( itsMapperId == 1 )  itsOriginalResidual=0.5;
 
-    cout << "Starting residual : " << endl;
-    cout << itsResidual->getAt(tmpPos_p) << endl;
+    // Give the first mapper a spectral line, if nchan>2
+    if ( itsMapperId == 0 && itsImageShape[3] > 2 ) itsOriginalResidual( IPosition(4,0,0,0,1) ) = 2.0;
 
-    /// If there is a starting model, set updatedmodel_p = True !!
+    //////////////////////////////////// ONLY FOR TESTING /////////////////////////////////
+
+    /// If there is a starting model, set itsIsModelUpdated = True !!
 
   }
 
-  // TODO For the current deconvolver, decide how many sliced deconvolution calls to make.
+  /// Make a list of Slices, to send sequentially to the deconvolver.
+  /// Loop over this list of reference subimages in the 'deconvolve' call.
+  /// This will support...
+  ///    - channel cube clean
+  ///    - stokes cube clean
+  ///    - partitioned-image clean (facets ?)
+  ///    - 3D deconvolver
   void SIMapper::partitionImages()
   {
-    /// Call it separately per channel or stokes
-    //itsDeconvolver->makeSubImageList();
+    LogIO os( LogOrigin("SIMapper","partitionImages",WHERE) );
 
-    /// Make a list of reference SubImages here, with the correct shapes.
-    /// Loop over this list of reference subimages in the 'deconvolve' call.
-    /// This will support...
-    ///    - channel cube clean
-    ///    - stokes cube clean
-    ///    - partitioned-image clean (facets ?)
-    ///    - 3D deconvolver
+    uInt nx = itsImageShape[0];
+    uInt ny = itsImageShape[1];
+    uInt npol = itsImageShape[2];
+    uInt nchan = itsImageShape[3];
 
-  }
+    /// (1) /// Set up the Deconvolver Slicers.
+
+    // Ask the deconvolver what shape it wants.
+    Bool onechan=False, onepol=False;
+    itsDeconvolver->queryDesiredShape(onechan, onepol);
+
+    uInt nSubImages = ( (onechan)?itsImageShape[3]:1 ) * ( (onepol)?itsImageShape[2]:1 ) ;
+    uInt polstep = (onepol)?1:npol;
+    uInt chanstep = (onechan)?1:nchan;
+
+    os << "Number of sub-deconvolvers : " << nSubImages << LogIO::POST;
+    decSlices.resize(nSubImages);
+
+    uInt subindex=0;
+    for(uInt pol=0; pol<npol; pol+=polstep)
+      {
+	for(uInt chan=0; chan<nchan; chan+=chanstep)
+	  {
+	    AlwaysAssert( subindex < nSubImages , AipsError );
+	    IPosition substart(4,0,0,pol,chan);
+	    IPosition substop(4,nx-1,ny-1, pol+polstep-1, chan+chanstep-1);
+	    decSlices[subindex] = Slicer(substart, substop, Slicer::endIsLast);
+	    subindex++;
+	  }
+      }
+
+    /// (2) /// Set up the FTM Slicers
+
+    //Ask the FTMs what chunk sizes they want, and make a similar list of Slices.
+    // ftmSlices.resize(nftmchunks);
+
+  }// end of partitionImages
 
 
-  // Run the deconvolver
-  // TODO : Loop over the list of reference SubImages here.
-  //  This means, for iteration control, each SubImage is treated the same as a separate Mapper.
+  // Run the deconvolver for each Slice.
+  // This means, for iteration control, each SubImage is treated the same as a separate Mapper.
   void SIMapper::deconvolve( SISubIterBot &loopcontrols  )
   {
     LogIO os( LogOrigin("SIMapper","deconvolve",WHERE) );
 
-    updatedmodel_p = itsDeconvolver->deconvolve( loopcontrols, *itsResidual, *itsPsf, *itsModel, itsMaskHandler,  mapperid_p );
+    for( uInt subim=0; subim<decSlices.nelements(); subim++)
+      {
 
+	//cout << "Mapper : " << itsMapperId << "  Deconvolving : " << decSlices[subim] << endl;
+	SubImage<Float> subResidual( *itsResidual, decSlices[subim], True );
+	SubImage<Float> subPsf( *itsPsf, decSlices[subim], True );
+	SubImage<Float> subModel( *itsModel, decSlices[subim], True );
+	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
+
+	itsIsModelUpdated |= itsDeconvolver->deconvolve( loopcontrols, subResidual, subPsf, subModel, itsMaskHandler,  itsMapperId , subim );
+      }
   }
 
   // Calculate the peak residual for this mapper
@@ -163,7 +208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","getPeakResidual",WHERE) );
 
-    Float maxresidual = itsResidual->getAt(tmpPos_p);
+    Float maxresidual = max( itsResidual->get() );
 
     return maxresidual;
   }
@@ -173,7 +218,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","getModelFlux",WHERE) );
 
-    Float modelflux = itsModel->getAt(tmpPos_p);
+    Float modelflux = sum( itsModel->get() );
 
     return modelflux;
   }
@@ -185,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /// Calculate only once, store and return for all subsequent calls.
 
-    Float psfsidelobe = itsPsf->getAt( tmpPos_p );
+    Float psfsidelobe = max( itsPsf->get() );
 
     return psfsidelobe;
   }
@@ -195,7 +240,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","isModelUpdated",WHERE) );
 
-    return updatedmodel_p;
+    return itsIsModelUpdated;
   }
 
 
@@ -249,9 +294,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapper::finalizeGrid()
   {
 
-    //itsResidual = itsOriginalResidual - itsModel;
-
-    itsResidual->putAt( itsOriginalResidual - itsModel->getAt(tmpPos_p)  , tmpPos_p );
+    itsResidual->put( itsOriginalResidual - itsModel->get() );
 
   }
 
@@ -259,13 +302,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper", "initializeDegrid",WHERE) );
 
-    if ( updatedmodel_p == False ) 
+    if ( itsIsModelUpdated == False ) 
       {
-        os << "Mapper " << mapperid_p << " : No new model to predict visibilities from" << LogIO::POST;
+        os << "Mapper " << itsMapperId << " : No new model to predict visibilities from" << LogIO::POST;
       }
     else
       {
-        os << "Mapper " << mapperid_p << " : Degridding current model" << LogIO::POST;
+        os << "Mapper " << itsMapperId << " : Degridding current model" << LogIO::POST;
       }
   }
 

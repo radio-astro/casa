@@ -80,6 +80,7 @@ SISkyModel::~SISkyModel()
   {
     LogIO os( LogOrigin("SISkyModel","runMinorCycle",WHERE) );
 
+    /*
     os << "Start Minor-Cycle iterations with peak residual = " << mappers.findPeakResidual();
     os << " and model flux = " << mappers.addIntegratedFlux() << LogIO::POST;
     
@@ -87,7 +88,8 @@ SISkyModel::~SISkyModel()
     os << " max iter per field/chan/pol = " << loopcontrols.getCycleNiter() ;
     os << " loopgain = " << loopcontrols.getLoopGain() ;
     os << " ]" << LogIO::POST;
-    
+    */
+
     Int startiter=0,stopiter=0;
 
     for(Int mp=0;mp<mappers.nMappers();mp++)
