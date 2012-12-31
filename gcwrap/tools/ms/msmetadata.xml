@@ -80,46 +80,138 @@ windows in the dataset and close the tool.
             </example>
         </description>
 
-        <method type="function" name="antennaid">
+        <method type="function" name="antennaids">
             <shortdescription>Get the zero-based antenna ID for the specfied antenna name.</shortdescription>
              <input>
-                <param type="string" direction="in" name="name">
-                    <description>Zero-based antenna ID for which to get the antenna name.</description>
+                <param type="any" direction="in" name="name">
+                    <description>Antenna names (string or string array) for which to get the corresponding IDs.</description>
+                    <value type="string"/>
+                    <any type="variant" limittypes="string stringArray"/>
                     <value/>
                 </param>
             </input>
-            <returns type="int"/>
+            <returns type="intArray"/>
             <description>
-                Get the zero-based antenna ID for the specfied antenna name.
+                Get the zero-based antenna IDs for the specfied antenna names.
             </description>
             <example>
     msmd.open("my.ms")
     # get the zero-based antennaID for the antenna named "VB2"
-    antenna_id = msmd.antennaid("VB2")
+    antenna_id = msmd.antennaids("VB2")[0]
     msmd.done()
             </example>
         </method>
 
-        <method type="function" name="antennaname">
-            <shortdescription>Get the name of the antenna for the specfied zero-based antenna ID.</shortdescription>
+        <method type="function" name="antennanames">
+            <shortdescription>Get the names of the antennas for the specfied zero-based antenna IDs.</shortdescription>
              <input>
-                <param type="int" direction="in" name="antennaid">
-                    <description>Zero-based antenna ID for which to get the antenna name.</description>
+                <param type="any" direction="in" name="antennaids">
+                    <description>Zero-based antenna IDs (int or int array) for which to get the antenna names.</description>
+                    <value type="int">-1</value>
+                    <any type="variant" limittypes="int intArray"/>
                     <value>-1</value>
                 </param>
             </input>
-            <returns type="string"/>
+            <returns type="stringArray"/>
             <description>
                 Get the name of the antenna for the specfied zero-based antenna ID.
             </description>
             <example>
     msmd.open("my.ms")
     # get the name associated with antenna ID 31
-    antenna_name = msmd.antennaname(31)
+    antenna_name = msmd.antennanames(31)[0]
     msmd.done()
             </example>
         </method>
         
+        <method type="function" name="antennaoffset">
+            <shortdescription>Get the offset position of the specified antenna relative to the array reference position.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="which">
+                    <description>Zero-based antenna in the ANTENNA table.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the offset position of the specified antenna relative to the array reference position. The returned
+                record contains the longitude, latitude, and elevation offsets as quantity records. The reported longitude and
+                latitude offsets are measured along the surface of a sphere whose center is coincident with the center of
+                the earth and whose surface contains the observatory reference position.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the offset of the (zero-based) 3rd antenna in the ANTENNA table
+    antennna_offset = msmd.antennaoffset(3)[0]
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="antennaoffset">
+            <shortdescription>Get the offset position of the specified antenna relative to the array reference position.</shortdescription>
+            <input>
+                <param type="string" direction="in" name="name">
+                    <description>Antenna name.</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the offset position of the specified antenna relative to the array reference position. The returned
+                record contains the longitude, latitude, and elevation offsets as quantity records. The reported longitude and
+                latitude offsets are measured along the surface of a sphere whose center is coincident with the center of
+                the earth and whose surface contains the observatory reference position.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the offset of antenna DV02
+    antennna_offset = msmd.antennaoffset('DV02')
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="antennaposition">
+            <shortdescription>Get the position of the specified antenna.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="which">
+                    <description>Zero-based antenna position in the ANTENNA table.</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the position of the specified antenna. The returned record represents a position measure,
+                and can be used as such by the measures (me) tool.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the position of the (zero-based) 3rd antenna in the ANTENNA table
+    antennna_position = msmd.antennaposition(3)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="antennaposition">
+            <shortdescription>Get the position of the specified antenna.</shortdescription>
+            <input>
+                <param type="string" direction="in" name="name">
+                    <description>Name of the antenna.</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the position of the specified antenna. The returned record represents a position measure,
+                and can be used as such by the measures (me) tool.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the position of the antenna named DV07
+    antennna_position = msmd.antennaposition("DV07")
+    msmd.done()
+            </example>
+        </method>
+
         <method type="function" name="chanavgspws">
             <shortdescription>Get an array of spectral window IDs used for channel averages. These are windows that do have 1 channel.</shortdescription>
             <returns type="intArray"/>
@@ -465,6 +557,40 @@ windows in the dataset and close the tool.
             </example>
         </method>
 
+        <method type="function" name="observatorynames">
+            <shortdescription>Get an array of MS telescope (observatory) names as they are listed in the OBSERVATIONS table.</shortdescription>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of MS telescope (observatory) names as they are listed in the OBSERVATIONS table.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the telescope names
+    telescope_names = msmd.telescopenames()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="observatoryposition">
+            <shortdescription>Get the position of the specified telescope.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="which">
+                    <description>Zero-based telescope position in the OBSERVATIONS table (see msmd.telescopenames()).</description>
+                    <value>0</value>
+                </param>
+            </input>
+            <returns type="record"/>
+            <description>
+                Get the position of the specified telescope.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the position of the 0th telescope
+    telescope_position = msmd.telescopeposition(0)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="open">
             <shortdescription>Attach the MS metadata tool to the specified MS</shortdescription>
             <input>
@@ -698,7 +824,7 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
-        
+
         <method type="function" name="timesforfield">
             <shortdescription>Get an array of the unique times for the specified field.</shortdescription>
              <input>

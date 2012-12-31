@@ -32,9 +32,13 @@
 
 #include <tools/ms/msmetadata_forward.h>
 
+#include <casa/Containers/Record.h>
 #include <casa/Logging/LogIO.h>
-#include <casacore/casa/OS/PrecTimer.h>
-#include <ms/MeasurementSets/MSMetaData.h>
+//#include <casacore/casa/OS/PrecTimer.h>
+#include <measures/Measures/MeasureHolder.h>
+#include <casa/Quanta/QuantumHolder.h>
+
+#include <ms/MeasurementSets/MSMetaDataPreload.h>
 
 #include <casa/namespace.h>
 
@@ -65,18 +69,123 @@ msmetadata::msmetadata() : _log(new LogIO()) {}
 
 msmetadata::~msmetadata() {}
 
-int msmetadata::antennaid(const string& name) {
+vector<int> msmetadata::antennaids(const variant& names) {
 	_FUNC(
-		return _msmd->getAntennaID(name);
+		vector<String> myNames;
+		variant::TYPE type = names.type();
+		if (type == variant::STRING) {
+			myNames.push_back(names.toString());
+		}
+		else if (type == variant::STRINGVEC) {
+			vector<string> tmp = names.toStringVec();
+			vector<string>::const_iterator end = tmp.end();
+			for (
+				vector<string>::const_iterator iter=tmp.begin();
+				iter!=end; iter++
+			) {
+				myNames.push_back(*iter);
+			}
+		}
+		else {
+			*_log << "Unsupported type for parameter names. Must be either a string or string array"
+				<< LogIO::EXCEPTION;
+		}
+		return _vectorUIntToVectorInt(_msmd->getAntennaIDs(myNames));
 	)
 }
 
-string msmetadata::antennaname(int antennaid) {
+vector<string> msmetadata::antennanames(const variant& antennaids) {
 	_FUNC(
-		if (antennaid < 0) {
-			throw AipsError("Antenna ID must be nonnegative.");
+		vector<uInt> myIDs;
+		variant::TYPE type = antennaids.type();
+		if (type == variant::INT) {
+			Int id = antennaids.toInt();
+			if (id < 0) {
+				*_log << "Antenna ID must be nonnegative."
+					<< LogIO::EXCEPTION;
+			}
+			myIDs.push_back(id);
 		}
-		return _msmd->getAntennaName(antennaid);
+		else if (type == variant::INTVEC) {
+			vector<Int> tmp = antennaids.toIntVec();
+			vector<Int>::const_iterator end = tmp.end();
+			for (
+				vector<Int>::const_iterator iter=tmp.begin();
+				iter!=tmp.end(); iter++
+			) {
+				if (*iter < 0) {
+					*_log << "Antenna ID must be nonnegative."
+						<< LogIO::EXCEPTION;
+				}
+				myIDs.push_back(*iter);
+			}
+		}
+		else {
+			*_log << "Unsupported type for parameter antennaids. "
+				<< "Must be either an integer or integer array."
+				<< LogIO::EXCEPTION;
+		}
+		return _vectorStringToStdVectorString(_msmd->getAntennaNames(myIDs));
+	)
+}
+
+record* msmetadata::antennaoffset(const int which) {
+	_FUNC(
+		Quantum<Vector<Double> > out = _msmd->getAntennaOffset(which);
+		Vector<Double> v = out.getValue();
+		String u = out.getUnit();
+		QuantumHolder longitude(casa::Quantity(v[0], u));
+		QuantumHolder latitude(casa::Quantity(v[1], u));
+		QuantumHolder elevation(casa::Quantity(v[2], u));
+		Record x;
+		Record outRec;
+		longitude.toRecord(x);
+		outRec.defineRecord("longitude offset", x);
+		latitude.toRecord(x);
+		outRec.defineRecord("latitude offset", x);
+		elevation.toRecord(x);
+		outRec.defineRecord("elevation offset", x);
+		return fromRecord(outRec);
+	)
+}
+
+
+record* msmetadata::antennaoffset(const string& name) {
+	_FUNC(
+		Quantum<Vector<Double> > out = _msmd->getAntennaOffset(name);
+		Vector<Double> v = out.getValue();
+		String u = out.getUnit();
+		QuantumHolder longitude(casa::Quantity(v[0], u));
+		QuantumHolder latitude(casa::Quantity(v[1], u));
+		QuantumHolder elevation(casa::Quantity(v[2], u));
+		Record x;
+		Record outRec;
+		longitude.toRecord(x);
+		outRec.defineRecord("longitude offset", x);
+		latitude.toRecord(x);
+		outRec.defineRecord("latitude offset", x);
+		elevation.toRecord(x);
+		outRec.defineRecord("elevation offset", x);
+		return fromRecord(outRec);
+	)
+}
+
+
+record* msmetadata::antennaposition(const int which) {
+	_FUNC(
+		MeasureHolder out(_msmd->getAntennaPosition(which));
+		Record outRec;
+		out.toRecord(outRec);
+		return fromRecord(outRec);
+	)
+}
+
+record* msmetadata::antennaposition(const string& name) {
+	_FUNC(
+		MeasureHolder out(_msmd->getAntennaPosition(name));
+		Record outRec;
+		out.toRecord(outRec);
+		return fromRecord(outRec);
 	)
 }
 
@@ -251,9 +360,29 @@ int msmetadata::nvis() {
 	)
 }
 
+vector<string> msmetadata::observatorynames() {
+	_FUNC(
+		return _vectorStringToStdVectorString(_msmd->getObservatoryNames());
+	)
+}
+
+record* msmetadata::observatoryposition(const int which) {
+	_FUNC(
+		MeasureHolder out(_msmd->getObservatoryPosition(which));
+		Record outRec;
+		String error;
+		if (!out.toRecord(error, outRec)) {
+			error += "Failed to generate position.\n";
+			*_log << LogIO::SEVERE << error << LogIO::POST;
+			return 0;
+		}
+		return fromRecord(outRec);
+	)
+}
+
 bool msmetadata::open(const string& msname) {
 	_FUNC2(
-		_msmd.reset(new MSMetaData(MeasurementSet(msname)));
+		_msmd.reset(new MSMetaDataPreload(MeasurementSet(msname)));
 		*_log << LogIO::NORMAL << "Read metadata from "
 			<< _msmd->nVisibilities() << " visibilities." << LogIO::POST;
 		return true;
@@ -395,7 +524,7 @@ vector<int> msmetadata::wvrspws() {
 	)
 }
 
-msmetadata::msmetadata(const MeasurementSet& ms) : _msmd(new MSMetaData(ms)), _log(new LogIO()) {
+msmetadata::msmetadata(const MeasurementSet& ms) : _msmd(new MSMetaDataPreload(ms)), _log(new LogIO()) {
 	*_log << LogIO::NORMAL << "Read metadata from "
 		<< _msmd->nVisibilities() << " visibilities." << LogIO::POST;
 }
@@ -428,7 +557,7 @@ void msmetadata::_handleException(const AipsError& x) const {
 
 std::vector<double> msmetadata::_setDoubleToVectorDouble(
 	const std::set<casa::Double>& inset
-) const {
+) {
 	vector<double> output;
 	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
 	return output;
@@ -436,21 +565,37 @@ std::vector<double> msmetadata::_setDoubleToVectorDouble(
 
 std::vector<std::string> msmetadata::_setStringToVectorString(
 	const std::set<casa::String>& inset
-) const {
+) {
 	vector<string> output;
 	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
 	return output;
 }
 
-std::vector<int> msmetadata::_setUIntToVectorInt(const std::set<casa::uInt>& inset) const {
-	vector<int> x;
+std::vector<int> msmetadata::_setUIntToVectorInt(const std::set<casa::uInt>& inset) {
+	vector<int> output;
+	/*
 	for (
 		std::set<uInt>::const_iterator iter=inset.begin();
 		iter!=inset.end();iter++
 	) {
 		x.push_back(*iter);
 	}
-	return x;
+	*/
+	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
+
+	return output;
+}
+
+std::vector<std::string> msmetadata::_vectorStringToStdVectorString(const std::vector<casa::String>& inset) {
+	vector<string> output;
+	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
+	return output;
+}
+
+std::vector<int> msmetadata::_vectorUIntToVectorInt(const std::vector<uInt>& inset) {
+	vector<int> output;
+	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
+	return output;
 }
 
 } // casac namespace
