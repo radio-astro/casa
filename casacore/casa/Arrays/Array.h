@@ -320,6 +320,8 @@ public:
     template <class U>
     void tovector(vector<T, U> &out) const;
 
+    vector<T> tovector() const;
+
     // It is occasionally useful to have an array which access the same
     // storage appear to have a different shape. For example,
     // turning an N-dimensional array into a Vector.
