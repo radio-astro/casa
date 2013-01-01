@@ -53,6 +53,7 @@ String LatticePADisplayData<Float>::showValue(const Vector<Double>& world) {
 	// (kludge: showValue() and showPosition() should also have
 	// wch passed in, and call conformsTo(wch) instead...).
   Vector<Double> fullWorld, fullPixel;
+
   String retval;
   if (!getFullCoord(fullWorld, fullPixel, world)) {
     retval = "invalid";
@@ -88,7 +89,7 @@ String LatticePADisplayData<Float>::showValue(const Vector<Double>& world) {
 }
 template <> 
 String LatticePADisplayData<Complex>::showValue(const Vector<Double>& world) {
-  if(!conformed()) return "";
+  //if(!conformed()) return "";
 	// (kludge: showValue() and showPosition() should also have
 	// wch passed in, and call conformsTo(wch) instead...).
   Vector<Double> fullWorld, fullPixel;
@@ -97,6 +98,7 @@ String LatticePADisplayData<Complex>::showValue(const Vector<Double>& world) {
     retval = "invalid";
     return retval;
   }
+
   Int length = fullPixel.shape()(0);
   IPosition ipos(length);
   for (Int i = 0; i < length; i++) {
@@ -106,10 +108,12 @@ String LatticePADisplayData<Complex>::showValue(const Vector<Double>& world) {
       return retval;
     }
   }
+
   if (!maskValue(ipos)) {
     retval = "masked";
     return retval;
   }
+
   ostringstream oss;
   if(itsNotation == Coordinate::SCIENTIFIC) {
       oss.setf(ios::scientific, ios::floatfield);

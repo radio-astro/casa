@@ -254,13 +254,20 @@ Record FindSourcesDialog::makeRegion() const {
 void FindSourcesDialog::createTable( ){
 	TableDesc::
 	TableDesc td("tTableDesc", "1", TableDesc::New);
-	td.addColumn( ScalarColumnDesc<String>("Type") );
-	td.addColumn( ScalarColumnDesc<double>("Long") );
-	td.addColumn( ScalarColumnDesc<double>("Lat") );
-	td.addColumn( ScalarColumnDesc<String>("COMP_ID") );
-	td.addColumn( ScalarColumnDesc<String>("RA") );
-	td.addColumn( ScalarColumnDesc<String>("DEC") );
-	td.addColumn( ScalarColumnDesc<double>("FluxValue") );
+	const String TYPE_COL("Type");
+	const String LONG_COL("Long");
+	const String LAT_COL("Lat");
+	const String COMP_COL("COMP_ID");
+	const String RA_COL("RA");
+	const String DEC_COL("DEC");
+	const String FLUX_COL("FluxValue");
+	td.addColumn( ScalarColumnDesc<String>( TYPE_COL ) );
+	td.addColumn( ScalarColumnDesc<double>( LONG_COL ) );
+	td.addColumn( ScalarColumnDesc<double>( LAT_COL ) );
+	td.addColumn( ScalarColumnDesc<String>( COMP_COL ) );
+	td.addColumn( ScalarColumnDesc<String>( RA_COL ) );
+	td.addColumn( ScalarColumnDesc<String>( DEC_COL ) );
+	td.addColumn( ScalarColumnDesc<double>( FLUX_COL ) );
 
 	//Setup a new table from the description.
 	SetupNewTable newtab( /*path*/"", td, Table::New);
@@ -269,13 +276,13 @@ void FindSourcesDialog::createTable( ){
 	skyPath = QString( tableName.c_str());
 
 	//Construct the various column objects.
-	ScalarColumn<String> typeCol(sourceTable, "Type");
-	ScalarColumn<double> longCol(sourceTable, "Long");
-	ScalarColumn<double> latCol( sourceTable, "Lat");
-	ScalarColumn<String> idCol( sourceTable, "COMP_ID");
-	ScalarColumn<String> raCol( sourceTable, "RA");
-	ScalarColumn<String> decCol( sourceTable, "DEC");
-	ScalarColumn<double> fluxCol( sourceTable, "FluxValue");
+	ScalarColumn<String> typeCol(sourceTable, TYPE_COL );
+	ScalarColumn<double> longCol(sourceTable, LONG_COL );
+	ScalarColumn<double> latCol( sourceTable, LAT_COL );
+	ScalarColumn<String> idCol( sourceTable, COMP_COL );
+	ScalarColumn<String> raCol( sourceTable, RA_COL );
+	ScalarColumn<String> decCol( sourceTable, DEC_COL );
+	ScalarColumn<double> fluxCol( sourceTable, FLUX_COL );
 
 	//Write the data into the columns.
 	int rowCount = skyList.getSize();

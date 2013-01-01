@@ -36,6 +36,8 @@ Fit2DTool::Fit2DTool(QWidget *parent)
       findSourcesDialog( this ), pixelRangeDialog( this ),
       logDialog( this ){
 	ui.setupUi(this);
+	const QString WINDOW_TITLE( "2D Fit Tool");
+	this->setWindowTitle( WINDOW_TITLE );
 
 	setImageFunctionalityEnabled( false );
 	connect( &findSourcesDialog, SIGNAL(showOverlay(String, String, String)),
@@ -64,7 +66,7 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 	connect( ui.graphicalPixelRangeButton, SIGNAL(clicked()), this, SLOT(showPixelRangeDialog()));
 	connect( ui.browseButton, SIGNAL(clicked()), this, SLOT(showFileDialog()));
 
-	progressBar.setWindowTitle( "2D Fit Tool");
+	progressBar.setWindowTitle( WINDOW_TITLE );
 	progressBar.setLabelText( "Fitting source(s)...");
 	progressBar.setWindowModality( Qt::WindowModal );
 	progressBar.setMinimum( 0 );

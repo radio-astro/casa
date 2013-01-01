@@ -223,6 +223,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	mainToolBar_->addAction(profileAct_);
 	mainToolBar_->addAction(momentsCollapseAct_);
 	mainToolBar_->addAction(histogramAct_);
+	mainToolBar_->addAction(fitAct_);
 	//		    mainToolBar_->addAction(rgnMgrAct_);
 	mainToolBar_->addSeparator();
 	mainToolBar_->addAction(printAct_);
@@ -436,6 +437,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	profileAct_->setIcon(QIcon(":/icons/Spec_Prof.png"));
 	momentsCollapseAct_->setIcon(QIcon(":/icons/profileMomentCollapse.png"));
 	histogramAct_->setIcon( QIcon(":/icons/hist.png"));
+	fitAct_->setIcon( QIcon(":/icons/gaussian.png"));
 	// rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
 	printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
 	unzoomAct_ ->setIcon(QIcon(":/icons/Zoom0_OutExt.png"));

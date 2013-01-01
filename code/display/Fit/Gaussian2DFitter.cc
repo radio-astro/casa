@@ -64,6 +64,8 @@ void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const Str
 	}
 }
 
+
+
 void Gaussian2DFitter::run(){
 	successfulFit = true;
 	String channelStr = String::toString(channelNumber);
@@ -72,26 +74,11 @@ void Gaussian2DFitter::run(){
 	ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
 			excludePixs, "", "", estimateFile);
 	fitter.setLogfile( logPath );
-	//Include a zero level estimate??????
-	/*Array<Float> medVals;
-
-	// add a sky component to the fit
-	if (skyComponent()){
-		// get a sky estimate via the median
-		SubImage<Float> subImg(*image, imgReg);
-		ImageStatistics<Float> stats(subImg, False);
-		if (!stats.getConvertedStatistic(medVals, LatticeStatsBase::MEDIAN,True)){
-			//cout << "no idea" << endl;
-			return 0;
-		}
-		if (medVals.size()>0)
-			fitter.setZeroLevelEstimate(Double(medVals(IPosition(1,0))), False);
-	}*/
 
 	// do the fit
 	fitResultList = fitter.fit();
 
-	// fit that did not converge go back immediately
+	//If the fit did not converge record an error.
 	if (!fitter.converged(0)){
 		successfulFit = false;
 		errorMsg = "Fit did not converge.";
