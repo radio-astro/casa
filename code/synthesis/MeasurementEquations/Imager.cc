@@ -6911,7 +6911,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	}
 
 	os << "Restoring Image(s) with the clean-beam" << LogIO::POST;
-	restoreImages(aimage);
+	restoreImages(aimage, (niter>=0) );
 	this->writeHistory(os);
 	try{
 	  // write data processing history into image logtable
