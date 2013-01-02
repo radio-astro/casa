@@ -476,13 +476,23 @@ std::set<uInt> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) cons
 	return std::set<uInt>(fields.begin(), fields.end());
 }
 
-String MSMetaDataOnDemand::getFieldNameForFieldID(const uInt fieldID) const {
-	if (fieldID >= _ms.field().nrow()) {
-		throw AipsError(
-			_ORIGIN + "No such field ID " + String::toString(fieldID)
-		);
+vector<String> MSMetaDataOnDemand::getFieldNamesForFieldIDs(
+	const vector<uInt>& fieldIDs
+) const {
+	_checkFieldIDs(fieldIDs);
+	if (fieldIDs.size() == 0) {
+		return _getFieldNames(_ms);
 	}
-	return _getFieldNames(_ms)[fieldID];
+	vector<String> allNames = _getFieldNames(_ms);
+	vector<String> names;
+	vector<uInt>::const_iterator end = fieldIDs.end();
+	for (
+		vector<uInt>::const_iterator iter=fieldIDs.begin();
+		iter!=end; iter++
+	) {
+		names.push_back(allNames[*iter]);
+	}
+	return names;
 }
 
 std::set<uInt> MSMetaDataOnDemand::getFieldsForTimes(
@@ -744,6 +754,18 @@ void MSMetaDataOnDemand::_checkFieldID(const uInt fieldID) const {
 		);
 	}
 }
+
+void MSMetaDataOnDemand::_checkFieldIDs(const vector<uInt>& fieldIDs) const {
+	if (fieldIDs.size() > 0) {
+		if (uInt myMax = max(Vector<uInt>(fieldIDs)) >= _ms.field().nrow()) {
+			throw AipsError(
+				_ORIGIN + "At least one field ID (" + String::toString(myMax)
+					+ ") is out of range"
+			);
+		}
+	}
+}
+
 
 std::set<uInt> MSMetaDataOnDemand::_getUnique(const vector<uInt>& v) {
 	std::set<uInt> ret;

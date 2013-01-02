@@ -171,8 +171,9 @@ public:
 	// get the field IDs associated with the specified intent.
 	virtual std::set<uInt> getFieldsForIntent(const String& intent) const = 0;
 
-	// get the field name associated with the specified field ID
-	virtual String getFieldNameForFieldID(uInt fieldID) const = 0;
+	// get the field names associated with the specified field IDs. If <src>fieldIDs</src>
+	// is empty, a list of all field names will be returned.
+	virtual vector<String> getFieldNamesForFieldIDs(const vector<uInt>& fieldIDs) const = 0;
 
 	// Get the fields which fail into the specified time range (center-tol to center+tol)
 	virtual std::set<uInt> getFieldsForTimes(Double center, Double tol) const = 0;

@@ -154,8 +154,9 @@ public:
 	// get the field IDs associated with the specified intent.
 	std::set<uInt> getFieldsForIntent(const String& intent) const;
 
-	// get the field name associated with the specified field ID
-	String getFieldNameForFieldID(uInt fieldID) const;
+	// get the field names associated with the specified field IDs. If <src>fieldIDs</src>
+	// is empty, a vector of all the field names is returned.
+	vector<String> getFieldNamesForFieldIDs(const vector<uInt>& fieldIDs) const;
 
 	// Get the fields which fail into the specified time range (center-tol to center+tol)
 	std::set<uInt> getFieldsForTimes(Double center, Double tol) const;
@@ -219,6 +220,8 @@ private:
 	static void _checkScan(const uInt scan, const std::set<uInt> allScans);
 
 	void _checkFieldID(const uInt fieldID) const;
+
+	void _checkFieldIDs(const vector<uInt>& fieldIDs) const;
 
 	vector<std::set<String> > _getSpwToIntentsMap() const;
 
