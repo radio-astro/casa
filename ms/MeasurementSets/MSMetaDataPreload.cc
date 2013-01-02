@@ -493,6 +493,10 @@ Quantum<Vector<Double> > MSMetaDataPreload::getAntennaOffset(uInt which) const {
 	return _antennaOffsets[which];
 }
 
+vector<Quantum<Vector<Double> > > MSMetaDataPreload::getAntennaOffsets() const {
+	return _antennaOffsets;
+}
+
 Quantum<Vector<Double> > MSMetaDataPreload::getAntennaOffset(const String& name) const {
 	vector<String> names(1);
 	names[0] = name;

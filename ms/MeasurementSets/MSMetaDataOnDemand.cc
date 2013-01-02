@@ -554,6 +554,15 @@ Quantum<Vector<Double> > MSMetaDataOnDemand::getAntennaOffset(uInt which) const 
 	)[which];
 }
 
+vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getAntennaOffsets() const {
+	vector<String> names;
+	vector<String> obsNames;
+	return _getAntennaOffsets(
+		_getAntennaPositions(names, _ms),
+		_getObservatoryPositions(obsNames, _ms)[0]
+	);
+}
+
 Quantum<Vector<Double> > MSMetaDataOnDemand::getAntennaOffset(
 	const String& name
 ) const {

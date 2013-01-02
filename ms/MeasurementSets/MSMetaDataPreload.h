@@ -180,6 +180,8 @@ public:
 
 	Quantum<Vector<Double> > getAntennaOffset(const String& name) const;
 
+	vector<Quantum<Vector<Double> > > getAntennaOffsets() const;
+
 private:
 	vector<uInt> _scans, _antenna1,	_antenna2, _states,
 		_dataDescIDs, _dataDescToSpwMap, _fieldIds;
