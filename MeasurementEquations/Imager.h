@@ -775,7 +775,7 @@ protected:
   // if user specified or try to get the info from the SOURCE table 
   Bool getRestFreq(Vector<Double>& restFreq, const Int& spw);
 
-  Bool restoreImages(const Vector<String>& restored);
+  Bool restoreImages(const Vector<String>& restored, Bool modresiduals=True);
 
   // names of flux scale images
   Bool writeFluxScales(const Vector<String>& fluxScaleNames);

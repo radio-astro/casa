@@ -2068,7 +2068,7 @@ void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
        << beam_p(IPosition(2,0,0)).getPA(Unit("deg")) << " (deg) " << LogIO::POST;
 }
 
-Bool Imager::restoreImages(const Vector<String>& restoredNames)
+Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresiduals)
 {
 
   LogIO os(LogOrigin("imager", "restoreImages()", WHERE));
@@ -2110,12 +2110,14 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
       // If msmfs, calculate Coeff Residuals
       if(doWideBand_p && ntaylor_p>1)
 	{
-	  sm_p->calculateCoeffResiduals(); 
-	  // Re-fill them into the output residual images.
-	  for (uInt k=0 ; k < residuals_p.nelements(); ++k){
-	    (residuals_p[k])->copyData(sm_p->getResidual(k));
-	   }
-
+	  if( modresiduals ) // When called from pclean, this is set to False, via the iClean call to restoreImages.
+	    {
+	      sm_p->calculateCoeffResiduals(); 
+	      // Re-fill them into the output residual images.
+	      for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+		(residuals_p[k])->copyData(sm_p->getResidual(k));
+	      }
+	    }
 	}
 
  
