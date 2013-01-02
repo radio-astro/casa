@@ -920,7 +920,7 @@ void testIt(MSMetaData& md) {
 			}
 		}
 		{
-			cout << "*** test getFieldNameForFieldID()" << endl;
+			cout << "*** test getFieldNamesForFieldIDs()" << endl;
 			for (uInt i=0; i<md.nFields(); i++) {
 				String name;
 				switch(i) {
@@ -945,7 +945,12 @@ void testIt(MSMetaData& md) {
 				default:
 					throw AipsError("Unknown field ID");
 				}
-				AlwaysAssert(md.getFieldNameForFieldID(i) == name, AipsError);
+				String got = md.getFieldNamesForFieldIDs(vector<uInt>(1, i))[0];
+				cout << "*** expec " << name << " got " << got << endl;
+				AlwaysAssert(
+					got == name,
+					AipsError
+				);
 			}
 		}
 		{

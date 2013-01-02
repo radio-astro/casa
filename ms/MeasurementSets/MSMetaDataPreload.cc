@@ -433,9 +433,22 @@ std::set<uInt> MSMetaDataPreload::getFieldsForIntent(const String& intent) const
 	return getFieldsForScans(scans);
 }
 
-String MSMetaDataPreload::getFieldNameForFieldID(const uInt fieldID) const {
-	_checkFieldID(fieldID);
-	return this->_fieldNames[fieldID];
+vector<String> MSMetaDataPreload::getFieldNamesForFieldIDs(
+	const vector<uInt>& fieldIDs
+) const {
+	_checkFieldIDs(fieldIDs);
+	if (fieldIDs.size() == 0) {
+		return _fieldNames;
+	}
+	vector<String> names;
+	vector<uInt>::const_iterator end = fieldIDs.end();
+	for (
+		vector<uInt>::const_iterator iter=fieldIDs.begin();
+		iter!=end; iter++
+	) {
+		names.push_back(_fieldNames[*iter]);
+	}
+	return names;
 }
 
 std::set<uInt> MSMetaDataPreload::getFieldsForTimes(
@@ -459,7 +472,7 @@ std::set<uInt> MSMetaDataPreload::getFieldsForTimes(
 
 std::set<Double> MSMetaDataPreload::getTimesForField(const uInt fieldID) const {
 	_checkFieldID(fieldID);
-	return _fieldNameToTimesMap.find(getFieldNameForFieldID(fieldID))->second;
+	return _fieldNameToTimesMap.find(getFieldNamesForFieldIDs(vector<uInt>(1, fieldID))[0])->second;
 }
 
 vector<String> MSMetaDataPreload::getObservatoryNames() const {
@@ -803,6 +816,17 @@ void MSMetaDataPreload::_checkFieldID(const uInt fieldID) const {
 			_ORIGIN + "field ID ("
 			+ String::toString(fieldID) + ") out of range"
 		);
+	}
+}
+
+void MSMetaDataPreload::_checkFieldIDs(const vector<uInt>& fieldIDs) const {
+	if (fieldIDs.size() > 0) {
+		if (uInt myMax = max(Vector<uInt>(fieldIDs)) >= _nFields) {
+			throw AipsError(
+				_ORIGIN + "At least one fieldID (" + String::toString(myMax)
+					+ ") is out of range"
+			);
+		}
 	}
 }
 
