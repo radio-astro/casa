@@ -315,12 +315,32 @@ vector<string> msmetadata::intentsforspw(int spw) {
 	)
 }
 
-string msmetadata::nameforfield(const int fieldid) {
+vector<string> msmetadata::namesforfields(const variant& fieldids) {
 	_FUNC(
-		if (fieldid < 0) {
-			throw AipsError("Field ID must be nonnegative.");
+		variant::TYPE myType = fieldids.type();
+		vector<uInt> fieldIDs;
+		if (myType == variant::INT) {
+			Int id = fieldids.toInt();
+			if (id < 0) {
+				throw AipsError("Field ID must be nonnegative.");
+			}
+			fieldIDs.push_back(id);
 		}
-		return _msmd->getFieldNameForFieldID(fieldid);
+		else if (myType == variant::INTVEC) {
+			if (min(Vector<Int>(fieldids.toIntVec())) < 0 ) {
+				throw AipsError("All field IDs must be nonnegative.");
+			}
+
+			fieldIDs = _vectorIntToVectorUInt(fieldids.toIntVec());
+		}
+		else if (fieldids.size() != 0) {
+			throw AipsError(
+				"Unsupported type for fieldids. It must be a nonnegative integer or integer array"
+			);
+		}
+		return _vectorStringToStdVectorString(
+			_msmd->getFieldNamesForFieldIDs(fieldIDs)
+		);
 	)
 }
 
@@ -530,14 +550,9 @@ msmetadata::msmetadata(const MeasurementSet& ms) : _msmd(new MSMetaDataPreload(m
 }
 
 vector<string> msmetadata::_fieldNames(const set<uint>& ids) {
-	vector<string> names;
-	for (
-		std::set<uInt>::const_iterator iter=ids.begin();
-		iter!=ids.end(); iter++
-	) {
-		names.push_back(_msmd->getFieldNameForFieldID(*iter));
-	}
-	return names;
+	return _vectorStringToStdVectorString(
+		_msmd->getFieldNamesForFieldIDs(vector<uInt>(ids.begin(), ids.end()))
+	);
 }
 
 bool msmetadata::_isAttached(const bool throwExceptionIfNotAttached) const {
@@ -594,6 +609,12 @@ std::vector<std::string> msmetadata::_vectorStringToStdVectorString(const std::v
 
 std::vector<int> msmetadata::_vectorUIntToVectorInt(const std::vector<uInt>& inset) {
 	vector<int> output;
+	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
+	return output;
+}
+
+std::vector<uint> msmetadata::_vectorIntToVectorUInt(const std::vector<Int>& inset) {
+	vector<uint> output;
 	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
 	return output;
 }

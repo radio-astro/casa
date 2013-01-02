@@ -471,22 +471,25 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
-        <method type="function" name="nameforfield">
+        <method type="function" name="namesforfields" direction="in">
             <shortdescription>Get the name of the specified field.</shortdescription>
              <input>
-                <param type="int" direction="in" name="field">
-                    <description>Zero-based field ID for which to get the name.</description>
-                    <value>-1</value>
+                <param type="any" direction="in" name="fieldids">
+                    <description>Zero-based field IDs for which to get the names (integer or interger array). Unspecified will return all field names.</description>
+                     <value type="string"/>
+                    <any type="variant" limittypes="string int intArray"/>
                 </param>
             </input>
-            <returns type="string"/>
+            <returns type="stringArray"/>
             <description>
                 Get the name of the specified field.
             </description>
             <example>
     msmd.open("my.ms")
-    # get the name for field 8.
-    field_names = msmd.fieldsforname(8)
+    # get the name for field 8 and 2.
+    field_names = msmd.namesforfields([8, 2])
+    # get all field names
+    all_field_nams = namesforfields()
     msmd.done()
             </example>
         </method>

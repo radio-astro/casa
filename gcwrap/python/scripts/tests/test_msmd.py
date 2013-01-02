@@ -354,15 +354,21 @@ class msmd_test(unittest.TestCase):
                 expec = numpy.array([])
             self.assertTrue((got == expec).all())
 
-    def test_nameforfield(self):
-        """Test nameforfield()"""
+    def test_namesforfields(self):
+        """Test namesforfields()"""
         names = [
             "3C279", "J1337-129", "Titan",
             "J1625-254", "V866 Sco", "RNO 90"
         ]
         for i in range(self.md.nfields()):
-            got = self.md.nameforfield(i)
-            self.assertTrue(got == names[i])
+            got = self.md.namesforfields(i)
+            self.assertTrue(got == [names[i]])
+        self.assertTrue(self.md.namesforfields() == names)
+        self.assertTrue(
+            self.md.namesforfields([4, 0, 2])
+            == ["V866 Sco", "3C279", "Titan"]
+        )
+
 
     def test_nantennas(self):
         """ Test nantennas()"""

@@ -19,6 +19,7 @@ static std::vector<std::string> _vectorStringToStdVectorString(const std::vector
 
 static std::vector<int> _vectorUIntToVectorInt(const std::vector<casa::uInt>& inset);
 
+static std::vector<uint> _vectorIntToVectorUInt(const std::vector<casa::Int>& inset);
 
 friend msmetadata* ms::metadata();
 
