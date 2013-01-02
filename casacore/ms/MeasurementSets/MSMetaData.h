@@ -201,6 +201,8 @@ public:
 
 	virtual Quantum<Vector<Double> > getAntennaOffset(const String& name) const = 0;
 
+	virtual vector<Quantum<Vector<Double> > > getAntennaOffsets() const = 0;
+
 protected:
 
 	struct SpwProperties {
@@ -258,8 +260,13 @@ protected:
 		std::map<String, uInt>& namesToIDs, const MeasurementSet ms
 	);
 
+	// get all antenna positions. A vector of antenna names is also returned.
 	static vector<MPosition> _getAntennaPositions(
 		vector<String>& antennaNames, const MeasurementSet& ms
+	);
+
+	static vector<MPosition> _getAntennaPositions(
+		const MeasurementSet& ms
 	);
 
 	static vector<Quantum<Vector<Double> > > _getAntennaOffsets(

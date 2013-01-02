@@ -49,6 +49,7 @@
 #include <ms/MeasurementSets.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSMetaDataOnDemand.h>
 #include <ms/MeasurementSets/MSSummary.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSSelector.h>
@@ -1010,6 +1011,7 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 		Int diamprec=1;
 		uInt latwidth=13;
 		uInt longwidth=14;
+		uInt offsetwidth = 14;
 
 		os.output().setf(ios::fixed, ios::floatfield);
 		os.output().setf(ios::left, ios::adjustfield);
@@ -1024,10 +1026,31 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 		os.output().width(diamwidth+4); os << "Diam.";
 		os.output().width(longwidth);   os << "Long.";
 		os.output().width(latwidth);    os << "Lat.";
+		os.output().width(3*offsetwidth);
+		os << "       Offset from array center (m)";
 		os << endl;
+		os << indent;
+		os.output().width(
+			indwidth + namewidth + statwidth + diamwidth + 4
+			+ longwidth + latwidth
+		);
+		os << " ";
+		os.output().setf(ios::right, ios::adjustfield);
+		os.output().width(offsetwidth);
+		os << "East";
+		os.output().width(offsetwidth);
+		os << "North";
+		os.output().width(offsetwidth);
+		os << "Elevation";
+		os << endl;
+
+
+		MSMetaDataOnDemand msmd(*pMS);
+		vector<Quantum<Vector<Double> > > offsets = msmd.getAntennaOffsets();
 
 		// For each ant
 		for (Int i=0; i<nAnt; i++) {
+			os.output().setf(ios::left, ios::adjustfield);
 
 			Int ant=antIds(i);
 			// Get diameter
@@ -1038,6 +1061,7 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 			MPosition mLongLat=antCol.positionMeas()(ant);
 			MVAngle mvLong= mLongLat.getAngle().getValue()(0);
 			MVAngle mvLat= mLongLat.getAngle().getValue()(1);
+			Vector<Double> antOff = offsets[i].getValue("m");
 
 			// write the row
 			os << indent;
@@ -1048,6 +1072,14 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 			os.output().width(diamwidth); os << diam.getValue(diamUnit)<<"m   ";
 			os.output().width(longwidth); os << mvLong.string(MVAngle::ANGLE,7);
 			os.output().width(latwidth);  os << mvLat.string(MVAngle::DIG2,7);
+			os.output().setf(ios::right, ios::adjustfield);
+			os.output().precision(4);
+			os.output().width(offsetwidth);
+			os << antOff[0];
+			os.output().width(offsetwidth);
+			os << antOff[1];
+			os.output().width(offsetwidth);
+			os << antOff[2];
 			os << endl;
 		}
 

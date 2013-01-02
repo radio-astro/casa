@@ -184,6 +184,8 @@ public:
 
 	Quantum<Vector<Double> > getAntennaOffset(const String& name) const;
 
+	vector<Quantum<Vector<Double> > > getAntennaOffsets() const;
+
 private:
 	const MeasurementSet _ms;
 
