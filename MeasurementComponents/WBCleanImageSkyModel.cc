@@ -139,6 +139,15 @@ WBCleanImageSkyModel::~WBCleanImageSkyModel()
 {
   lc_p.resize(0);
   //cout << "WBCleanImageSkyModel destructor " << endl;
+
+  /*
+  if(nmodels_p > numberOfModels())
+    {
+      resizeWorkArrays(numberOfModels());
+      nmodels_p = numberOfModels();
+    }
+  */
+
 };
 
 /*************************************
@@ -184,22 +193,6 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	  AlwaysAssert((npol==1), AipsError);  
 	}
 
-        /* Check if each field is solveable (not sure what this means) */
-	/* Note to Urvashi: it means that the user has decided a given model for  
-	   a given field  is perfect [for e.g a well known source model] and is not
-	   to be messed with anymore while others can be messed with...thus returning is 
-	   wrong but should bypass looking for new components for the given field 
-	   that is fixed
-	*/
-	for(Int field=0;field<nfields_p;field++)
-	  if( !isSolveable(getModelIndex(field,0)) ) 
-	  {
-		  os << "No more processing on this field" << LogIO::POST;
-		  return False;
-	  }
-
-	///cout << "Using New FTMs ? : " << se.isNewFTM() << endl;
-	
 	//------------------------------- For 'active'  ---------------------------------------------------------------///
 	/* Calculate the initial residual image for all models. */
 	if( se.isNewFTM() == False )
@@ -364,6 +357,13 @@ Bool WBCleanImageSkyModel::solve(SkyEquation& se)
 	    
 	    for(Int thismodel=0;thismodel<nfields_p;thismodel++) // For now, nfields_p=1 always.
 	      {
+
+		if( !isSolveable(getModelIndex(thismodel,0)) )
+		  {
+		    // This field is not to be cleaned in this set of minor-cycle iterations
+		    continue;
+		  }
+
 		/* Number of iterations left to do */ 
 		moreiterations[thismodel] = numberIterations() - iterationcount[thismodel];
 		
