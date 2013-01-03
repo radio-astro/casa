@@ -146,6 +146,9 @@
                wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
      $              iloc(2) + l_phaseGradOriginY)
             endif
+c$$$            if ((nvalue .eq. 0.0) .or.(wt .eq. 0.0)) then
+c$$$               write(*,*) "D: ", nvalue,wt,norm
+c$$$            endif
 
             grid(l_igrdpos(1), l_igrdpos(2), l_igrdpos(3), l_igrdpos(4)) 
      $           =grid(l_igrdpos(1), l_igrdpos(2), 

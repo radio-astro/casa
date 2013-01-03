@@ -272,7 +272,7 @@ namespace casa{
     cfShape=vbRow2CFBMap_p(0)->getStorage()(0,0,0)->getStorage()->shape().asVector();
     Vector<Int> convOrigin = (cfShape)/2;
     Double sinDPA=0.0, cosDPA=1.0;
-    Double cfScale, cfRefFreq;
+    Double cfScale=1.0, cfRefFreq;
 
     // Timer timer;
     // timer.mark();
@@ -346,11 +346,11 @@ namespace casa{
 			      (fabs(pointingOffset(0))>0) ||  
 			      (fabs(pointingOffset(1))>0)
 			      );
+   Bool isGridSinglePrecision=(typeid(gridStore[0]) == typeid(wt));
 
    //   Double conjRefFreq = mean(vbs.freq_p);
    Double conjRefFreq = vbs.imRefFreq();
-   Bool isGridSinglePrecision=(typeid(gridStore[0]) == typeid(wt));
-
+   
     for(Int irow=rbeg; irow< rend; irow++){   
       //      if ((vbs.uvw_p.nelements() == 0)) 
       if (accumCFs) if (allTrue(allPolNChanDone_l)) break;
@@ -391,8 +391,7 @@ namespace casa{
 		      //
 		      cfb.getParams(cfRefFreq, s, support(0), support(1),conjFNdx,wndx,0);
 		      sampling(0) = sampling(1) = s;
-		      cfScale = cfRefFreq/conjRefFreq;
-		      cfScale = 1.0;
+		      //cfScale = cfRefFreq/conjRefFreq;
 		      
 		      conjScaledSampling[0] = (sampling[0]*cfScale);
 		      conjScaledSampling[1] = (sampling[1]*cfScale);
@@ -404,8 +403,8 @@ namespace casa{
 		      cfb.getParams(cfRefFreq, s, support(0), support(1),fndx,wndx,0);
 		      sampling(0) = sampling(1) = s;
 		      
-		      cfScale = cfRefFreq/freq[ichan];
-		      cfScale = 1.0;
+		      //cfScale = cfRefFreq/freq[ichan];
+
 		      scaledSampling[0] = (sampling[0]*cfScale);
 		      scaledSampling[1] = (sampling[1]*cfScale);
 		      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
@@ -518,7 +517,7 @@ namespace casa{
     
     //    Vector<Int> convOrigin = (cfShape-1)/2;
     Vector<Int> convOrigin = (cfShape)/2;
-    Double sinDPA=0.0, cosDPA=1.0, cfScale, cfRefFreq;
+    Double sinDPA=0.0, cosDPA=1.0, cfScale=1.0, cfRefFreq;
     //    Int wndx = 0, fndx=0;
     
     rbeg=0;
@@ -588,12 +587,10 @@ namespace casa{
 	    Float s;
 	    // CoordinateSystem cs; 
 	    // cfb.getParams(cs,s,support(0),support(1),0,wndx,0);
-	    cfb.getParams(cfRefFreq,s,support(0),support(1),0,wndx,0);
+	    cfb.getParams(cfRefFreq,s,support(0),support(1),fndx,wndx,0);
 	    sampling(0) = sampling(1) = s;
 	    
 	    //cfScale = cfRefFreq/freq[ichan];
-	    cfScale = 1; 
-	    cfScale=1.0;
 	    
 	    scaledSampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
 	    scaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
@@ -628,7 +625,7 @@ namespace casa{
 			// indexed by the Freq, W-term and Mueller
 			// Element.
 			//
-			Complex* __restrict__ convFuncV;
+			Complex*  convFuncV;
 			convFuncV = getConvFunc_p(cfShape, cfb, wVal, fndx, wndx, mNdx,
 						  conjMNdx, ipol, mRow);
 			//
@@ -657,196 +654,203 @@ namespace casa{
 			// 		   cfShape, loc, phasor, sinDPA, cosDPA, 
 			// 		   finitePointingOffset, cached_phaseGrad_p);
 #include <synthesis/TransformMachines/FortranizedLoopsFromGrid.cc>
-
-
-			/*
-			  for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
-			  {
-			  //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
-			  iloc(1)=(scaledSampling[1]*iy+off[1]);//+convOrigin[1];
-			  igrdpos[1]=loc[1]+iy;
-			  for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
-			  {
-			  //				iloc(0)=(Int)(scaledSampling[0]*ix+off[0]-1);//+convOrigin[0];
-			  iloc(0)=(scaledSampling[0]*ix+off[0]);//+convOrigin[0];
-			  igrdpos[0]=loc[0]+ix;
-			  tiloc=iloc;
-			  if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
-			  {
-			  wt=getFrom4DArray((const Complex * __restrict__ &)convFuncV,
-			  tiloc,cfInc_p);
-			  if (wVal > 0.0) wt = conj(wt);
-			  norm(apol)+=(wt);
-			  if (finitePointingOffset) wt *= cached_phaseGrad_p(tiloc[0], tiloc[1]);
-			  // nvalue+=wt*grid(grdpos);
-			  // The following uses raw index on the 4D grid
-			  // nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
-			  nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
-			  }
-			  }
-			  }
-			  }
-			*/
-			//		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
+/*			
+			 IPosition phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
+			 for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+			   {
+			     //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
+			     iloc(1)=(scaledSampling[1]*iy+off[1]);//+convOrigin[1];
+			     igrdpos[1]=loc[1]+iy;
+			     for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+			       {
+				 //				iloc(0)=(Int)(scaledSampling[0]*ix+off[0]-1);//+convOrigin[0];
+				 iloc(0)=(scaledSampling[0]*ix+off[0]);//+convOrigin[0];
+				 igrdpos[0]=loc[0]+ix;
+				 tiloc=iloc;
+				 if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
+				   {
+				     wt=getFrom4DArray((const Complex * __restrict__ &)convFuncV,
+						       tiloc,cfInc_p);
+				     if (wVal > 0.0) wt = conj(wt);
+				     norm(apol)+=(wt);
+				     if (finitePointingOffset) 
+				       {
+					 wt *= (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0),  iloc[1]+phaseGradOrigin_l(1)));
+					 // ttt += (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0), iloc[1]+phaseGradOrigin_l(1)));
+					 // cerr << "## " << (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0), iloc[1]+phaseGradOrigin_l(1))) << " "
+					 //      << iloc << " " << phaseGradOrigin_l << endl;
+				       }
+				     // nvalue+=wt*grid(grdpos);
+				     // The following uses raw index on the 4D grid
+				     // nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
+				     nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
+				   }
+			       }
+			   }
+*/
+			 //		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
 		      }
-		    visCube(ipol,ichan,irow)=nvalue;
-		  }
+		    visCube(ipol,ichan,irow)=nvalue; // Goes with FortranizedLoopsFromGrid.cc
+		    //		    visCube(ipol,ichan,irow)=nvalue*conj(phasor)/norm(apol); // Goes with C++ loops
+		    // cerr << ipol << " " << ichan << " " << irow << " " << nvalue << " " << norm(apol) << " " << pointingOffset 
+		    // 	 << " " << qualifier_p << " " << ttt << " " << scaledSupport << endl;
 		}
 	      }
 	    }
 	  }
 	}
-	//	junk++;
       }
-    } // End row-loop
+      //	junk++;
+    }
+  } // End row-loop
     // cerr << endl;
     // if (junk==20) exit(0);
-  }
-  //
-  //-----------------------------------------------------------------------------------
-  //
-  void AWVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc, 
-			     Vector<Double>& off, Complex& phasor, 
-			     const Int& irow, const Matrix<Double>& uvw, 
-			     const Double& dphase, const Double& freq, 
-			     const Vector<Double>& scale, 
-			     const Vector<Double>& offset,
-			     const Vector<Float>& sampling)
-  {
-    Double phase;
-    Vector<Double> uvw_l(3,0); // This allows gridding of weights
-			       // centered on the uv-origin
-    if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
-    
-    pos(2)=sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
-    loc(2)=SynthesisUtils::nint(pos[2]);
-    off(2)=0;
-    
-    for(Int idim=0;idim<2;idim++)
-      {
-	pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+(offset[idim]);
-	loc[idim]=SynthesisUtils::nint(pos[idim]);
-	//	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
-	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
-      }
-    
-    if (dphase != 0.0)
-      {
-	phase=-2.0*C::pi*dphase*freq/C::c;
-	phasor=Complex(cos(phase), sin(phase));
-      }
-    else
-      phasor=Complex(1.0);
-    // cerr << "### " << pos[0] << " " << offset[0] << " " << loc[0] << " " << off[0] << " " << uvw_l(0) << endl;
-    // exit(0);
-  }
-  //
-  //-----------------------------------------------------------------------------------
-  //
-  Bool AWVisResampler::reindex(const Vector<Int>& in, Vector<Int>& out,
-			       const Double& sinDPA, const Double& cosDPA,
-			       const Vector<Int>& Origin, const Vector<Int>& size)
-  {
-    
-    Bool onGrid=False;
-    Int ix=in[0], iy=in[1];
-    if (sinDPA != 0.0)
-      {
-	ix = SynthesisUtils::nint(cosDPA*in[0] + sinDPA*in[1]);
-	iy = SynthesisUtils::nint(-sinDPA*in[0] + cosDPA*in[1]);
-      }
-    out[0]=ix+Origin[0];
-    out[1]=iy+Origin[1];
-    
-    onGrid = ((out[0] >= 0) && (out[0] < size[0]) &&
-	      (out[1] >= 0) && (out[1] < size[1]));
-    return onGrid;
-  }
+}
+//
+//-----------------------------------------------------------------------------------
+//
+void AWVisResampler::sgrid(Vector<Double>& pos, Vector<Int>& loc, 
+			   Vector<Double>& off, Complex& phasor, 
+			   const Int& irow, const Matrix<Double>& uvw, 
+			   const Double& dphase, const Double& freq, 
+			   const Vector<Double>& scale, 
+			   const Vector<Double>& offset,
+			   const Vector<Float>& sampling)
+{
+  Double phase;
+  Vector<Double> uvw_l(3,0); // This allows gridding of weights
+  // centered on the uv-origin
+  if (uvw.nelements() > 0) for(Int i=0;i<3;i++) uvw_l[i]=uvw(i,irow);
   
-  template 
-  void AWVisResampler::addTo4DArray(DComplex* __restrict__ & store,
-				    const Int* __restrict__ & iPos, 
-				    const Vector<Int>& inc, 
-  				    Complex& nvalue, Complex& wt) __restrict__ ;
-  template 
-  void AWVisResampler::addTo4DArray(Complex* __restrict__ & store,
-				    const Int* __restrict__ & iPos, 
-				    const Vector<Int>& inc, 
-  				    Complex& nvalue, Complex& wt) __restrict__;
+  pos(2)=sqrt(abs(scale[2]*uvw_l(2)*freq/C::c))+offset[2];
+  loc(2)=SynthesisUtils::nint(pos[2]);
+  off(2)=0;
   
-  // void lineCFArea(const Int& th,
-  // 		  const Double& sinDPA,
-  // 		  const Double& cosDPA,
-  // 		  const Complex*__restrict__& convFuncV,
-  // 		  const Vector<Int>& cfShape,
-  // 		  const Vector<Int>& convOrigin,
-  // 		  const Int& cfInc,
-  // 		  Vector<Int>& iloc,
-  // 		  Vector<Int>& tiloc,
-  // 		  const Int* supportPtr,
-  // 		  const Float* samplingPtr,
-  // 		  const Double* offPtr,
-  // 		  Complex *cfAreaArrPtr)
-  // {
-  //   cfAreaArrPtr[th]=0.0;
-  //   for(Int ix=-supportPtr[0]; ix <= supportPtr[0]; ix++) 
-  //     {
-  // 	iloc[0]=(Int)((samplingPtr[0]*ix+offPtr[0])-1);//+convOrigin[0];
-  // 	tiloc=iloc;
-  // 	if (reindex(iloc,tiloc,sinDPA, cosDPA, 
-  // 		    convOrigin, cfShape))
-  // 	  {
-  // 	    wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
-  // 				tiloc,cfInc);
-  // 	    if (wVal > 0.0) wt = conj(wt);
-  // 	    cfAreaArrPtr[th] += wt;
-  // 	  }
-  //     }
-  // }
+  for(Int idim=0;idim<2;idim++)
+    {
+      pos[idim]=scale[idim]*uvw_l(idim)*freq/C::c+(offset[idim]);
+      loc[idim]=SynthesisUtils::nint(pos[idim]);
+      //	off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]+1);
+      off[idim]=SynthesisUtils::nint((loc[idim]-pos[idim])*sampling[idim]);
+    }
   
-  Complex AWVisResampler::getCFArea(Complex* __restrict__& convFuncV, 
-				    Double& wVal, 
-				    Vector<Int>& scaledSupport, 
-				    Vector<Float>& scaledSampling,
-				    Vector<Double>& off,
-				    Vector<Int>& convOrigin, 
-				    Vector<Int>& cfShape,
-				    Double& sinDPA, 
-				    Double& cosDPA)
-  {
-    Vector<Int> iloc(4,0),tiloc(4);
-    Complex cfArea=0, wt;
-    Bool dummy;
-    Int *supportPtr=scaledSupport.getStorage(dummy);
-    Double *offPtr=off.getStorage(dummy);
-    Float *samplingPtr=scaledSampling.getStorage(dummy);
-    Int Nth=1;
-    Vector<Complex> cfAreaArr(Nth);
-    Complex *cfAreaArrPtr=cfAreaArr.getStorage(dummy);
-    
-    for(Int iy=-supportPtr[1]; iy <= supportPtr[1]; iy++) 
-      {
-	iloc(1)=(Int)((samplingPtr[1]*iy+offPtr[1])-1);//+convOrigin[1];
-	for (Int th=0;th<Nth;th++)
-	  {
-	    cfAreaArr[th]=0.0;
-	    for(Int ix=-supportPtr[0]; ix <= supportPtr[0]; ix++) 
-	      {
-		iloc[0]=(Int)((samplingPtr[0]*ix+offPtr[0])-1);//+convOrigin[0];
-		tiloc=iloc;
-		if (reindex(iloc,tiloc,sinDPA, cosDPA, 
-			    convOrigin, cfShape))
-		  {
-		    wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
-					tiloc,cfInc_p);
-		    if (wVal > 0.0) wt = conj(wt);
-		    cfAreaArrPtr[th] += wt;
-		  }
-	      }
-	  }
-	cfArea += sum(cfAreaArr);
-      }
-    //    cerr << "cfArea: " << scaledSupport << " " << scaledSampling << " " << cfShape << " " << convOrigin << " " << cfArea << endl;
-    return cfArea;
-  }
+  if (dphase != 0.0)
+    {
+      phase=-2.0*C::pi*dphase*freq/C::c;
+      phasor=Complex(cos(phase), sin(phase));
+    }
+  else
+    phasor=Complex(1.0);
+  // cerr << "### " << pos[0] << " " << offset[0] << " " << loc[0] << " " << off[0] << " " << uvw_l(0) << endl;
+  // exit(0);
+}
+//
+//-----------------------------------------------------------------------------------
+//
+Bool AWVisResampler::reindex(const Vector<Int>& in, Vector<Int>& out,
+			     const Double& sinDPA, const Double& cosDPA,
+			     const Vector<Int>& Origin, const Vector<Int>& size)
+{
+  
+  Bool onGrid=False;
+  Int ix=in[0], iy=in[1];
+  if (sinDPA != 0.0)
+    {
+      ix = SynthesisUtils::nint(cosDPA*in[0] + sinDPA*in[1]);
+      iy = SynthesisUtils::nint(-sinDPA*in[0] + cosDPA*in[1]);
+    }
+  out[0]=ix+Origin[0];
+  out[1]=iy+Origin[1];
+  
+  onGrid = ((out[0] >= 0) && (out[0] < size[0]) &&
+	    (out[1] >= 0) && (out[1] < size[1]));
+  return onGrid;
+}
+
+template 
+void AWVisResampler::addTo4DArray(DComplex* __restrict__ & store,
+				  const Int* __restrict__ & iPos, 
+				  const Vector<Int>& inc, 
+				  Complex& nvalue, Complex& wt) __restrict__ ;
+template 
+void AWVisResampler::addTo4DArray(Complex* __restrict__ & store,
+				  const Int* __restrict__ & iPos, 
+				  const Vector<Int>& inc, 
+				  Complex& nvalue, Complex& wt) __restrict__;
+
+// void lineCFArea(const Int& th,
+// 		  const Double& sinDPA,
+// 		  const Double& cosDPA,
+// 		  const Complex*__restrict__& convFuncV,
+// 		  const Vector<Int>& cfShape,
+// 		  const Vector<Int>& convOrigin,
+// 		  const Int& cfInc,
+// 		  Vector<Int>& iloc,
+// 		  Vector<Int>& tiloc,
+// 		  const Int* supportPtr,
+// 		  const Float* samplingPtr,
+// 		  const Double* offPtr,
+// 		  Complex *cfAreaArrPtr)
+// {
+//   cfAreaArrPtr[th]=0.0;
+//   for(Int ix=-supportPtr[0]; ix <= supportPtr[0]; ix++) 
+//     {
+// 	iloc[0]=(Int)((samplingPtr[0]*ix+offPtr[0])-1);//+convOrigin[0];
+// 	tiloc=iloc;
+// 	if (reindex(iloc,tiloc,sinDPA, cosDPA, 
+// 		    convOrigin, cfShape))
+// 	  {
+// 	    wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
+// 				tiloc,cfInc);
+// 	    if (wVal > 0.0) wt = conj(wt);
+// 	    cfAreaArrPtr[th] += wt;
+// 	  }
+//     }
+// }
+
+Complex AWVisResampler::getCFArea(Complex* __restrict__& convFuncV, 
+				  Double& wVal, 
+				  Vector<Int>& scaledSupport, 
+				  Vector<Float>& scaledSampling,
+				  Vector<Double>& off,
+				  Vector<Int>& convOrigin, 
+				  Vector<Int>& cfShape,
+				  Double& sinDPA, 
+				  Double& cosDPA)
+{
+  Vector<Int> iloc(4,0),tiloc(4);
+  Complex cfArea=0, wt;
+  Bool dummy;
+  Int *supportPtr=scaledSupport.getStorage(dummy);
+  Double *offPtr=off.getStorage(dummy);
+  Float *samplingPtr=scaledSampling.getStorage(dummy);
+  Int Nth=1;
+  Vector<Complex> cfAreaArr(Nth);
+  Complex *cfAreaArrPtr=cfAreaArr.getStorage(dummy);
+  
+  for(Int iy=-supportPtr[1]; iy <= supportPtr[1]; iy++) 
+    {
+      iloc(1)=(Int)((samplingPtr[1]*iy+offPtr[1])-1);//+convOrigin[1];
+      for (Int th=0;th<Nth;th++)
+	{
+	  cfAreaArr[th]=0.0;
+	  for(Int ix=-supportPtr[0]; ix <= supportPtr[0]; ix++) 
+	    {
+	      iloc[0]=(Int)((samplingPtr[0]*ix+offPtr[0])-1);//+convOrigin[0];
+	      tiloc=iloc;
+	      if (reindex(iloc,tiloc,sinDPA, cosDPA, 
+			  convOrigin, cfShape))
+		{
+		  wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
+				      tiloc,cfInc_p);
+		  if (wVal > 0.0) wt = conj(wt);
+		  cfAreaArrPtr[th] += wt;
+		}
+	    }
+	}
+      cfArea += sum(cfAreaArr);
+    }
+  //    cerr << "cfArea: " << scaledSupport << " " << scaledSampling << " " << cfShape << " " << convOrigin << " " << cfArea << endl;
+  return cfArea;
+}
 };// end namespace casa

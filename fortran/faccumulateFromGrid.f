@@ -25,7 +25,7 @@
       integer convOrigin(4), cfShape(4), loc(4), igrdpos(4)
       double precision sinDPA, cosDPA
       integer finitePointingOffset
-      double precision norm
+      complex norm
       complex phaseGrad(phNX, phNY),phasor
 
       integer l_phaseGradOriginX, l_phaseGradOriginY
@@ -41,7 +41,6 @@
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
 
-
       do iy=-scaledSupport(2),scaledSupport(2) 
          iloc(2)=nint(scaledSampling(2)*iy+off(2))
          iCFPos(2)=iloc(2)+convOrigin(2)+1
@@ -55,14 +54,20 @@
      $           iCFPos(3), iCFPos(4))
             if (wVal > 0.0)  wt = conjg(wt)
 
-            norm = norm + real(wt)
+            norm = norm + (wt)
 
             if (finitePointingOffset .eq. 1) then
                wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX, 
      $              iloc(2) + l_phaseGradOriginY)
             endif
-
-            nvalue = nvalue + wt *grid(l_igrdpos(1), l_igrdpos(2), 
+c$$$            tt = phaseGrad(iloc(1) + l_phaseGradOriginX, 
+c$$$     $              iloc(2) + l_phaseGradOriginY)
+c$$$            if (scaledSupport(1) .eq. 5) then
+c$$$               write(*,*) "DG: ",tt,
+c$$$     $           iloc(1), iloc(2),l_phaseGradOriginX,l_phaseGradOriginY,
+c$$$     $           scaledSupport(1), scaledSampling(1)
+c$$$            endif
+            nvalue = nvalue + wt * grid(l_igrdpos(1), l_igrdpos(2), 
      $           l_igrdpos(3), l_igrdpos(4))
          enddo
       enddo
