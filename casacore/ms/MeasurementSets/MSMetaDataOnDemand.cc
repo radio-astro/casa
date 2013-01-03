@@ -539,18 +539,35 @@ MPosition MSMetaDataOnDemand::getObservatoryPosition(uInt which) const {
 	return _getObservatoryPositions(names, _ms)[which];
 }
 
-MPosition MSMetaDataOnDemand::getAntennaPosition(uInt which) const {
-	if (which >= _ms.antenna().nrow()) {
-		throw AipsError("MSMetaData::getAntennaPosition out of range exception.");
-	}
+vector<MPosition> MSMetaDataOnDemand::getAntennaPositions(
+	const vector<uInt>& which
+) const {
 	vector<String> antNames;
-	return _getAntennaPositions(antNames, _ms)[which];
+	if (which.size() == 0) {
+		return _getAntennaPositions(antNames, _ms);
+	}
+	if (max(Vector<uInt>(which)) >= _ms.antenna().nrow()) {
+		throw AipsError(_ORIGIN + "out of range exception.");
+	}
+	vector<MPosition> output;
+	vector<uInt>::const_iterator end = which.end();
+	vector<MPosition> pos = _getAntennaPositions(antNames, _ms);
+	for (
+		vector<uInt>::const_iterator iter=which.begin();
+		iter!=end; iter++
+	) {
+		output.push_back(pos[*iter]);
+	}
+	return output;
 }
 
-MPosition MSMetaDataOnDemand::getAntennaPosition(const String& name) const {
-	vector<String> names(1);
-	names[0] = name;
-	return getAntennaPosition(getAntennaIDs(names)[0]);
+vector<MPosition> MSMetaDataOnDemand::getAntennaPositions(
+	const vector<String>& names
+) const {
+	if (names.size() == 0) {
+		throw AipsError(_ORIGIN + "names cannot be empty");
+	}
+	return getAntennaPositions(getAntennaIDs(names));
 }
 
 Quantum<Vector<Double> > MSMetaDataOnDemand::getAntennaOffset(uInt which) const {
@@ -564,9 +581,21 @@ Quantum<Vector<Double> > MSMetaDataOnDemand::getAntennaOffset(uInt which) const 
 	)[which];
 }
 
-vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getAntennaOffsets() const {
+vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getAntennaOffsets(
+	const vector<MPosition>& positions
+) const {
+	uInt nPos = positions.size();
 	vector<String> names;
 	vector<String> obsNames;
+	if (nPos > 0) {
+		if (nPos != nAntennas()) {
+			throw AipsError(_ORIGIN + "Incorrect number of positions provided.");
+		}
+		return _getAntennaOffsets(
+			positions,
+			_getObservatoryPositions(obsNames, _ms)[0]
+		);
+	}
 	return _getAntennaOffsets(
 		_getAntennaPositions(names, _ms),
 		_getObservatoryPositions(obsNames, _ms)[0]

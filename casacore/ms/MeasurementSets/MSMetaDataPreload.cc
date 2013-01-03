@@ -486,17 +486,33 @@ MPosition MSMetaDataPreload::getObservatoryPosition(uInt which) const {
 	return _observatoryPositions[which];
 }
 
-MPosition MSMetaDataPreload::getAntennaPosition(uInt which) const {
-	if (which >= _antennaNames.size()) {
+vector<MPosition> MSMetaDataPreload::getAntennaPositions(
+	const vector<uInt>& which
+) const {
+	if (which.size() == 0) {
+		return _antennaPositions;
+	}
+	if (max(Vector<uInt>(which)) >= _antennaNames.size()) {
 		throw AipsError(_ORIGIN + "Out of range exception.");
 	}
-	return _antennaPositions[which];
+	vector<MPosition> output;
+	vector<uInt>::const_iterator end = which.end();
+	for (
+		vector<uInt>::const_iterator iter=which.begin();
+		iter!=end; iter++
+	) {
+		output.push_back(_antennaPositions[*iter]);
+	}
+	return output;
 }
 
-MPosition MSMetaDataPreload::getAntennaPosition(const String& name) const {
-	vector<String> names(1);
-	names[0] = name;
-	return _antennaPositions[getAntennaIDs(names)[0]];
+vector<MPosition> MSMetaDataPreload::getAntennaPositions(
+	const vector<String>& names
+) const {
+	if (names.size() == 0) {
+		throw AipsError(_ORIGIN + "names cannot be empty");
+	}
+	return getAntennaPositions(getAntennaIDs(names));
 }
 
 Quantum<Vector<Double> > MSMetaDataPreload::getAntennaOffset(uInt which) const {
@@ -506,7 +522,9 @@ Quantum<Vector<Double> > MSMetaDataPreload::getAntennaOffset(uInt which) const {
 	return _antennaOffsets[which];
 }
 
-vector<Quantum<Vector<Double> > > MSMetaDataPreload::getAntennaOffsets() const {
+vector<Quantum<Vector<Double> > > MSMetaDataPreload::getAntennaOffsets(
+	const vector<MPosition>& positions
+) const {
 	return _antennaOffsets;
 }
 
