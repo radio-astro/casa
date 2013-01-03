@@ -120,10 +120,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Initial Peak Residuals - for single-pixel-image testing.
     // In the real world, this is the gridded/imaged data.
     itsOriginalResidual.resize( itsImageShape );
+    itsOriginalResidual = 0.0;
 
     // Different values for different mappers
-    if ( itsMapperId == 0 )  itsOriginalResidual=1.0;
-    if ( itsMapperId == 1 )  itsOriginalResidual=0.5;
+    for (uInt ch=0; ch < itsImageShape[3]; ch++)
+      {
+	if ( itsMapperId == 0 )  itsOriginalResidual( IPosition(4,0,0,0,ch) ) = 1.0;
+	if ( itsMapperId == 1 )  itsOriginalResidual( IPosition(4,0,0,0,ch) ) = 0.5;
+	if ( itsMapperId == 2 )  itsOriginalResidual( IPosition(4,0,0,0,ch) ) = 0.7;
+      }
 
     // Give the first mapper a spectral line, if nchan>2
     if ( itsMapperId == 0 && itsImageShape[3] > 2 ) itsOriginalResidual( IPosition(4,0,0,0,1) ) = 2.0;

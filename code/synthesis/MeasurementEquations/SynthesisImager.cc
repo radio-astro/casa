@@ -138,23 +138,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Define/construct Image Coordinates" << LogIO::POST;
 
     /* Use the image name to create a unique service name */
-    Int nchan=1,npol=1,imx=1,imy=1;
+    uInt nchan=1,npol=1; 
+    //imx=1,imy=1;
+    Vector<Int> imsize(2);
     String phasecenter =  "19:59:28.500 +40.44.01.50";
     Double cellx=10.0,celly=10.0;
 
     std::string imagename;
     try {
-
       // TODO : If critical params are unspecified, throw exceptions.
-      if( impars.isDefined("imagename") ) 
+      // TODO : If they're the wrong data type, throw exceptions.
+
+      if( impars.isDefined("imagename") )  // A single string
 	{ imagename = impars.asString( RecordFieldId("imagename")); }
       else
 	{throw( AipsError("imagename not specified")); }
 
-      if( impars.isDefined("nchan") ) 
+      if( impars.isDefined("nchan") ) // A single integer
 	{ impars.get( RecordFieldId("nchan") , nchan ); }
       else
 	{throw( AipsError("nchan not specified")); }
+
+      if( impars.isDefined("imsize") ) // An array with 2 integers
+	{ 
+          impars.get( RecordFieldId("imsize") , imsize ); 
+        }
+      else
+	{throw( AipsError("imsize not specified")); }
 
       // Read and interpret input parameters.
     } catch(AipsError &x)
@@ -166,8 +176,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	
 	itsCurrentCoordSys = buildImageCoordinateSystem(phasecenter, 
-                                                        cellx, celly, imx, imy, npol, nchan );
-        itsCurrentImageShape = IPosition(4,imx,imy,npol,nchan);
+                                                        cellx, celly, (uInt)imsize[0], (uInt)imsize[1], npol, nchan );
+        itsCurrentImageShape = IPosition(4,(uInt)imsize[0],(uInt)imsize[1],npol,nchan);
 
         itsCurrentImageName = imagename;
 

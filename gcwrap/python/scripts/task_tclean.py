@@ -14,7 +14,8 @@ from taskinit import *
 import copy
 
 def tclean(vis='', field='', spw='',
-           imagename='',nchan=1,
+           imagename='',nchan=1,imsize=[1,1],
+           outlierfile='',
            startmodel='',
            niter=0, threshold=0.0, loopgain=0.1,
            maxcycleniter=-1, cyclefactor=1,
@@ -26,7 +27,7 @@ def tclean(vis='', field='', spw='',
     # Put all parameters into dictionaries
     params={}
     params['dataselection']={'vis':vis, 'field':field, 'spw':spw, 'usescratch':usescratch}
-    params['imagedefinition']={'imagename':imagename, 'nchan':nchan}
+    params['imagedefinition']={'imagename':imagename, 'nchan':nchan,'imsize':imsize, 'outlierfile':outlierfile}
     params['imaging']={'startmodel':startmodel}
     params['deconvolution']={}
     params['iteration']={'niter':niter, 'threshold':threshold, 'loopgain':loopgain, 'cycleniter':maxcycleniter, 'cyclefactor':cyclefactor , 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction, 'interactive':interact}
@@ -80,7 +81,7 @@ class PySynthesisImager:
 
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
-            casalog.post('Parameter Errors : \n' + errs)
+            casalog.post('Parameter Errors : \n' + errs,'WARN')
             return False
         return True
 
@@ -92,14 +93,11 @@ class PySynthesisImager:
             print "Back from Creating tool"
             toolsi = self.toolsi
         toolsi.selectdata(selpars=self.params['dataselection'])
-        impars = copy.deepcopy( self.params['imagedefinition'] )
 
         ## Start a loop on 'multi-fields' here....
         for eachimdef in self.listofimagedefinitions:
-            # Fill in the individual parameters
-            impars['imagename'] = eachimdef[ 'imagename' ]
             # Init a mapper for each individual field
-            toolsi.defineimage(impars=impars)
+            toolsi.defineimage(impars=eachimdef)
             toolsi.setupimaging(gridpars=self.params['imaging'])
             toolsi.setupdeconvolution(decpars=self.params['deconvolution'])
             toolsi.initmapper()
@@ -174,21 +172,86 @@ class PySynthesisImager:
         ### Get a list of image-coord pars from the multifield outlier file + main field...
         ### Go through this list, and do setup. :  Fill in self.listofimagedefinitions with dicts of params
 
-        ## FOR NOW... this list is just a list of image names....
+        ## Convert lists per parameters, into a list of parameter-sets.
+        
+        ## Main field is always in 'impars'.
+        self.listofimagedefinitions.append( {'imagename':impars['imagename'], 'nchan':impars['nchan'], 'imsize':impars['imsize'] } )
+        
+        ## Multiple images have been specified. 
+        ## (1) Parse the outlier file and fill a list of imagedefinitions
+        ## OR (2) Parse lists per input parameter into a list of parameter-sets (imagedefinitions)
+        ### The code below implements (1)
+        if len(impars['outlierfile'])>0:
+            self.listofimagedefinitions = self.listofimagedefinitions +( self.parseOutlierFile(impars['outlierfile']) )
 
-        ## One image only
-        if type( impars['imagename'] ) == str:
-            self.listofimagedefinitions.append( {'imagename':impars['imagename']} )
+        #print 'BEFORE : ', self.listofimagedefinitions
 
-        ## If multiple images are specified....... 
-        if type( impars['imagename'] ) == list:
-            for imname in impars['imagename']:
-                self.listofimagedefinitions.append( {'imagename':imname} )
+        ## Synchronize parameter types here. 
+        for eachimdef in self.listofimagedefinitions:
+
+            ## Check/fix nchan : Must be a single integer.
+            if eachimdef.has_key('nchan'):
+                if type( eachimdef['nchan'] ) != int:
+                    try:
+                        eachimdef['nchan'] = eval( eachimdef['nchan'] )
+                    except:
+                        errs = errs + 'nchan must be an integer for field ' + eachimdef['imagename'] + '\n'
+            else:
+                errs = errs + 'nchan is not specified for field ' + eachimdef['imagename'] + '\n'
+
+            ## Check/fix imsize : Must be an array with 2 integers
+            if eachimdef.has_key('imsize'):
+                tmpimsize = eachimdef['imsize']
+                if type(tmpimsize) == str:
+                    try:
+                        tmpimsize = eval( eachimdef['imsize'] )
+                    except:
+                        errs = errs + 'imsize must be a single integer, or a list of 2 integers'
+
+                if type(tmpimsize) == list:
+                    if len(tmpimsize) == 2:
+                        eachimdef['imsize'] = tmpimsize;  # not checking that elements are ints...
+                    else:
+                        errs = errs + 'imsize must be a single integer, or a list of 2 integers'
+                elif type(tmpimsize) == int:
+                    eachimdef['imsize'] = [tmpimsize, tmpimsize] 
+                else:
+                    errs = errs + 'imsize must be a single integer, or a list of 2 integers'
+            else:
+                errs = errs + 'imsize is not specified for field ' + eachimdef['imagename'] + '\n'
+            
+        #print 'AFTER : ', self.listofimagedefinitions
 
         return errs
 
     ###### End : Parameter-checking functions ##################
 
+    ## Parse outlier file and construct a list of imagedefinitions (dictionaries).
+    def parseOutlierFile(self, outlierfilename="" ):
+        if not os.path.exists( outlierfilename ):
+             print 'Cannot find outlier file : ', outlierfilename
+             return {}
+
+        returnlist = []
+
+        fp = open( outlierfilename, 'r' )
+        thelines = fp.readlines()
+        tempd = {}
+        for oneline in thelines:
+            parpair = oneline.replace(' ','').replace('\n','').split("=")  
+            #print parpair
+            if len(parpair) != 2:
+                print 'Error in line containing : ', oneline
+                print returnlist
+                return returnlist
+            if parpair[0] == 'imagename' and tempd != {}:
+                returnlist.append(tempd)
+                tempd={}
+            tempd [ parpair[0] ] = parpair[1] 
+
+        returnlist.append(tempd)
+        #print returnlist
+        return returnlist
 
 
 ###################################################

@@ -52,6 +52,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="int">1</value>
     </param>
 
+    <param type="any" name="imsize">
+      <description>Number of pixels</description>
+      <any type="variant" limittypes="int intArray"/>
+      <value type="intArray">1,1</value>
+    </param>
+
+    <param type="string" name="outlierfile">
+      <description>Name of outlier-field image definitions</description>
+      <value type="string"></value>
+    </param>
+
 
 <!--============================================== -->
 <!--                            Imaging/Gridding Parameters                                                      -->
