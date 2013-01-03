@@ -68,6 +68,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // setCFMaps(cfmap,conjcfmap);
     }
 
+    virtual void copy(const AWVisResampler& other) 
+    {
+      VisibilityResampler::copy(other);
+      SynthesisUtils::SETVEC(cached_phaseGrad_p, other.cached_phaseGrad_p);
+      SynthesisUtils::SETVEC(cached_PointingOffset_p, other.cached_PointingOffset_p);
+    }
+
     AWVisResampler& operator=(const AWVisResampler& other) 
     {
       copy(other);      

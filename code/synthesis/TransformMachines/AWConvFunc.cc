@@ -557,8 +557,15 @@ namespace casa{
     Vector<Double> fValues;
     if (wbAWP_p==False)
       {
+	// Return the sky-image ref. freq.
 	fValues.resize(1);
 	fValues[0]=imRefFreq_p;
+
+	// // Return the max. freq. from the list of selected SPWs
+	// Double maxFreq=0.0;
+	// for (Int i=0;i<spwFreqSelection_p.shape()(0);i++)
+	//   if (spwFreqSelection_p(i,2) > maxFreq) maxFreq=spwFreqSelection_p(i,2);
+	// fValues[0]=maxFreq;
       }
     else
       {
@@ -1287,9 +1294,10 @@ namespace casa{
     // CountedPtr<CFBuffer> cfb, cbPtr;
     // CountedPtr<CFCell>  cfc;
     // CountedPtr<ATerm> aTerm_l=aTerm_p;
-    CFBuffer *cfb, *cbPtr;
+    CFBuffer *cfb, *cbPtr=0;
     ATerm *aTerm_l=&*aTerm_p;
-    Int Nth=1;
+
+    // Int Nth=1;
 // #ifdef HAS_OMP
 //     Nth=max(omp_get_max_threads()-2,1);
 // #endif

@@ -28,7 +28,7 @@
 //# $Id$
 {
   const Complex *gridPtr;
-  Complex *cfPtr, *phaseGradPtr;
+  Complex  *phaseGradPtr;
   Int *supportPtr, *cfShapePtr,
     *locPtr, *igrdposPtr, *ilocPtr, *tilocPtr,
     *convOriginPtr;
@@ -37,10 +37,9 @@
   Bool dummy;
 
   gridPtr       = grid.getStorage(dummy);
-  cfPtr         = convFuncV;
   phaseGradPtr  = cached_phaseGrad_p.getStorage(dummy);
-  supportPtr    = support.getStorage(dummy);
-  samplingPtr   = sampling.getStorage(dummy);
+  supportPtr    = scaledSupport.getStorage(dummy);
+  samplingPtr   = scaledSampling.getStorage(dummy);
   cfShapePtr    = cfShape.getStorage(dummy);
   locPtr        = loc.getStorage(dummy);
   igrdposPtr    = igrdpos.getStorage(dummy);
@@ -54,7 +53,7 @@
   Int phx=cached_phaseGrad_p.shape()[0], phy=cached_phaseGrad_p.shape()[1];
 
   //
-  // Call the FORTRAN function with the gridding inner-loops (in synthesis/fortran/faccumulateToGrid.f)
+  // Call the FORTRAN function with the gridding inner-loops (in synthesis/fortran/faccumulateFromGrid.f)
   //
   faccumulatefromgrid_(&nvalue, 
 		       gridPtr, 

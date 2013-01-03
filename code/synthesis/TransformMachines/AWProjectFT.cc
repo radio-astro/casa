@@ -877,7 +877,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT", "makeCFPolMap[R&D]"));
     Vector<Int> msStokes = vb.corrType();
     Int nPol = msStokes.nelements();
     polM.resize(polMap.shape());
@@ -1205,7 +1205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    Block<Matrix<Float> >& weightsVec,
 				    const VisBuffer& vb)
   {
-    LogIO log_p(LogOrigin("AWProjectFT","initToVis"));
+    LogIO log_p(LogOrigin("AWProjectFT","initToVis[V][R&D]"));
     //
     // Setting the image below is crucial since init() and
     // initMaps(vb) below expect this to be set.
@@ -1213,7 +1213,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     image=&(*compImageVec[0]);
 
     log_p << "Total flux in model image (before avgPB normalization): " 
-	  << sum((*(modelImageVec[0])).get()) << LogIO::POST;
+	  << sum((*(modelImageVec[0])).get()) 
+	  << " predicing SPW = " <<vb.spectralWindow() 
+	  << " Pointing Offset = " << convFuncCtor_p->findPointingOffset(*(compImageVec[0]), vb)
+	  << " Qualifier String = " << sensitivityPatternQualifier_p 
+	  << LogIO::POST;
     if(doPBCorrection) 
       {
 	// Make the sensitivity Image if applicable
@@ -1390,7 +1394,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Now do the FFT2D in place
     //
 
+    //    storeImg(String("img.before.mod"), *image);
     LatticeFFT::cfft2d(*lattice);
+    //    storeImg(String("img.after.mod"), *image);
 
     log_l << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
   }
@@ -1502,7 +1508,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Now we flush the cache and report statistics For memory based,
     // we don't write anything out yet.
     //
-    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT", "finalizeToSky[R&D]"));
 
     if(isTiled) 
       {
