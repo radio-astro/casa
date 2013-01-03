@@ -171,10 +171,12 @@ public:
 	// get the position of the specified telescope (observatory).
 	MPosition getObservatoryPosition(uInt which) const;
 
-	// get the position of the specified antenna
-	MPosition getAntennaPosition(uInt which) const;
+	// get the positions of the specified antennas. If <src>which</src> is empty, return
+	// all antenna positions.
+	vector<MPosition> getAntennaPositions(const vector<uInt>& which=std::vector<uInt>(0)) const;
 
-	MPosition getAntennaPosition(const String& name) const;
+	// <src>names</src> cannot be empty.
+	vector<MPosition> getAntennaPositions(const vector<String>& names) const;
 
 	// get the position of the specified antenna relative to the observatory position.
 	// the three vector returned represents the longitudinal, latitudinal, and elevation
@@ -185,7 +187,12 @@ public:
 
 	Quantum<Vector<Double> > getAntennaOffset(const String& name) const;
 
-	vector<Quantum<Vector<Double> > > getAntennaOffsets() const;
+	// if not empty, <src>positions</src> must contain the same number of elements as the
+	// number of antennas in the MS. These will be used instead of also retrieving the antenna
+	// positions from the MS.
+	vector<Quantum<Vector<Double> > > getAntennaOffsets(
+		const vector<MPosition>& positions=vector<MPosition>(0)
+	) const;
 
 private:
 	const MeasurementSet _ms;

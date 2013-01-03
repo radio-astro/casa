@@ -995,7 +995,11 @@ void testIt(MSMetaData& md) {
 		}
 		{
 			cout << "*** getAntennaPosition()" << endl;
-			cout << md.getAntennaPosition(2).getAngle("deg") << endl;
+			cout
+				<< Vector<MPosition>(
+					md.getAntennaPositions(vector<uInt>(1, 2))
+				)
+				<< endl;
 		}
 		{
 			cout << "*** getAntennaOffset()" << endl;
