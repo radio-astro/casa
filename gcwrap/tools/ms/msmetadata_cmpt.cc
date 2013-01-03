@@ -170,10 +170,9 @@ record* msmetadata::antennaoffset(const string& name) {
 	)
 }
 
-
 record* msmetadata::antennaposition(const int which) {
 	_FUNC(
-		MeasureHolder out(_msmd->getAntennaPosition(which));
+		MeasureHolder out(_msmd->getAntennaPositions(vector<uInt>(1, which))[0]);
 		Record outRec;
 		out.toRecord(outRec);
 		return fromRecord(outRec);
@@ -182,7 +181,7 @@ record* msmetadata::antennaposition(const int which) {
 
 record* msmetadata::antennaposition(const string& name) {
 	_FUNC(
-		MeasureHolder out(_msmd->getAntennaPosition(name));
+		MeasureHolder out(_msmd->getAntennaPositions(vector<String>(1, String(name)))[0]);
 		Record outRec;
 		out.toRecord(outRec);
 		return fromRecord(outRec);
