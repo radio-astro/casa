@@ -205,6 +205,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
 
 	itsIsModelUpdated |= itsDeconvolver->deconvolve( loopcontrols, subResidual, subPsf, subModel, itsMaskHandler,  itsMapperId , subim );
+        loopcontrols.resetCycleIter();
+
       }
   }
 
