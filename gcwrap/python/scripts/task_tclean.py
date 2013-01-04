@@ -64,7 +64,9 @@ class PySynthesisImager:
     """ Class to do imaging and deconvolution """
 
     def __init__(self,casalog,params):
-        self.toolsi=None #gentools(['si'])[0]
+        # SI Tool is a list, for the serial case of length 1
+        self.siTools = []
+        self.nchunks = 1
         self.casalog = casalog
         self.params = params
         self.listofimagedefinitions = []
@@ -85,59 +87,109 @@ class PySynthesisImager:
             return False
         return True
 
-    def initialize(self, toolsi=None, initializeIteration = True):
+    def initialize(self):
         self.casalog.origin('tclean.initialize')
-        if toolsi==None:
-            print "Creating tool"
-            self.toolsi = casac.synthesisimager()
-            print "Back from Creating tool"
-            toolsi = self.toolsi
-        toolsi.selectdata(selpars=self.params['dataselection'])
 
-        ## Start a loop on 'multi-fields' here....
-        for eachimdef in self.listofimagedefinitions:
+        # Create the tool we are going to use (only one in this case)
+        for (selection, images) in self.calculateChunks():
+            print selection
+            print images
+            self.initializeTool(selection, images)
+
+        # Setup the tool to have the iteration control
+        self.siTools[0].setupiteration(iterpars=self.params['iteration'])
+
+    def initializeTool(self, selectionParameters, imageParameters):
+        # This method adds an additional tool to the list of tools
+        self.casalog.origin('tclean.initializeTool')
+        siTool = casac.synthesisimager()
+        siTool.selectdata(selpars = selectionParameters)
+        
+        ## Loop over each image for multi-field like cases
+        for eachimdef in imageParameters:
             # Init a mapper for each individual field
-            toolsi.defineimage(impars=eachimdef)
-            toolsi.setupimaging(gridpars=self.params['imaging'])
-            toolsi.setupdeconvolution(decpars=self.params['deconvolution'])
-            toolsi.initmapper()
+            siTool.defineimage(impars=eachimdef)
+            siTool.setupimaging(gridpars=self.params['imaging'])
+            siTool.setupdeconvolution(decpars=self.params['deconvolution'])
+            siTool.initmapper()
         ## End loop on 'multi-fields' here....
 
-        if initializeIteration:
-            toolsi.setupiteration(iterpars=self.params['iteration'])
-        # From ParClean loopcontrols gets overwritten, but it is always with the same thing. Try to clean this up. 
+        self.siTools.append(siTool)
 
+    def calculateChunks(self):
+        # This probably will move to c++ at some point but for now:
+        # Return tuples of dataselection / imagedefinition pairs one for
+        # each tool
+        chunkList = []
 
-    def runMajorCycle(self,toolsi=None):
+        if self.nchunks == 1:
+            # Nothing to do, single chunk
+            return [(self.params['dataselection'],
+                     self.listofimagedefinitions)]
+            
+        for ch in range(0,self.nchunks):
+            casalog.origin('parallel.tclean.runMinorCycle')
+            casalog.post('Initialize for chunk '+str(ch))
+
+            selpars = copy.deepcopy( self.params['dataselection'] )
+            imdefs = copy.deepcopy( self.listofimagedefinitions )
+
+            # Set up the chunks to parallelize on
+            for dat in range(0,len(self.params['dataselection']['spw'] )):
+                selpars['spw'][dat] = \
+                   self.params['dataselection']['spw'][dat] + ':'+str(ch)
+
+            # Change the image name for each chunk
+            for im in range(0, len(self.listofimagedefinitions)):
+                imdefs[im]['imagename'] = \
+                  self.listofimagedefinitions[im]['imagename'] + '_' + str(ch)
+
+            chunkList.append((selpars, imdefs))
+        return chunkList
+
+    def runMajorCycle(self):
         self.casalog.origin('tclean.runMajorCycle')
-        if toolsi==None:
-            toolsi = self.toolsi
-        toolsi.runmajorcycle()
 
-    def runMinorCycle(self, toolsi=None):
+        # Get the controls from the first
+        controlRecord = self.siTools[0].getmajorcyclecontrols()
+                
+        # To Parallelize: move this across all engines
+        for siTool in self.siTools:
+            siTool.executemajorcycle(controlRecord);
+
+        self.siTools[0].endmajorcycle()
+            
+    def runMinorCycle(self):
         self.casalog.origin('tclean.runMinorCycle')
-        if toolsi==None:
-            toolsi = self.toolsi
-        toolsi.runminorcycle()
 
-    def runLoops(self, toolsi=None):
+        returnBotList = []
+        # Get the conrols from the first
+        subIterBot = self.siTools[0].getsubiterbot();
+
+        # JSK ToDo: we need to run on all tools once we have selective
+        # execution of the deconvolver
+        
+        # for siTool in self.siTools:
+        for siTool in self.siTools[:1]:
+            returnBotList.append(siTool.executeminorcycle(subIterBot))
+
+        # Report the results to the first controller
+        for returnBot in returnBotList:
+            self.siTools[0].endminorcycle(returnBot);
+            
+
+    def runLoops(self):
         self.casalog.origin('tclean.runLoops')
-        if toolsi==None:
-            toolsi = self.toolsi
         self.runMajorCycle()
-        while not toolsi.cleanComplete():
+        while not self.siTools[0].cleanComplete():
             self.runMinorCycle()
             self.runMajorCycle()
 
-    def finalize(self, toolsi=None):
-        if toolsi==None:
-            toolsi = self.toolsi
-        toolsi.endloops()
+    def finalize(self):
+        self.siTools[0].endloops()
 
-    def returninfo(self, toolsi=None):
-        if toolsi==None:
-            toolsi = self.toolsi
-        return toolsi.getiterationsummary()
+    def returninfo(self):
+        return self.siTools[0].getiterationsummary()
 
 
     ###### Start : Parameter-checking functions ##################
@@ -266,64 +318,27 @@ class ParallelPySynthesisImager(PySynthesisImager):
 
     def __init__(self,casalog,params):
         PySynthesisImager.__init__(self,casalog,params)
-        # Read params['other']['clusterdef'] to decide chunking.
         self.nchunks = len(params['other']['clusterdef'])
-        # Initialize a list of synthesisimager tools
-        self.toollist = []
-        for ch in range(0,self.nchunks):
-            self.toollist.append( casac.synthesisimager() ) 
-
-    def initialize(self):
-        selpars = copy.deepcopy( self.params['dataselection'] )
-        imdefs = copy.deepcopy( self.listofimagedefinitions )
-        for ch in range(0,self.nchunks):
-            casalog.origin('parallel.tclean.runMinorCycle')
-            casalog.post('Initialize for chunk '+str(ch))
-
-            # Set up the chunks to parallelize on
-            for dat in range(0,len( selpars['spw'] )):
-                self.params['dataselection']['spw'][dat] =  selpars['spw'][dat] + ':'+str(ch)
-
-            # Change the image name for each chunk
-            for im in range(0, len(self.listofimagedefinitions)):
-                self.listofimagedefinitions[im]['imagename'] = imdefs[im]['imagename'] + '_' + str(ch)
-
-            PySynthesisImager.initialize(self, self.toollist[ch], ch == 0 )
-
-        self.params['dataselection'] = copy.deepcopy(selpars)
-        self.listofimagedefinitions = copy.deepcopy(imdefs)
 
     def runMajorCycle(self):
-        # Get the controls from the first
-        controlRecord = self.toollist[0].getmajorcyclecontrols()
+        # For now just call the serial case, but in the future this
+        # would span it out across the engines
+        PySynthesisImager.runMajorCycle(self)
         
-        
-        # To Parallelize: move this across all engines
-        for tool in self.toollist:
-            tool.executemajorcycle(controlRecord);
-
-        self.toollist[0].endMajorCycle()
-            
-        # Send in updated model as startmodel..
-        #PySynthesisImager.runMajorCycle(self, self.toollist[ch])
+        # We may want to do this in all cases
         self.gatherImages()
 
     def runMinorCycle(self):
-        casalog.origin('parallel.tclean.runMinorCycle')
-        casalog.post('Set combined images for the minor cycle')
-        # subIterBot = self.toollist[0].getsubiterbot();
+        # For now just call the serial case, but in the future this
+        # would span it out across the engines
+        PySynthesisImager.runMinorCycle(self)
+
+    def initializeTool(self, selectionParameters, imageParameters):
+        # For now this just runs the serial case, but should be starting
+        # each tool on a different engine
+        PySynthesisImager.initializeTool(self, selectionParameters, \
+                                         imageParameters)
         
-        #         for tool in self.toollist:
-        #             returnBot = tool.executeminorcycle(subIterBot);
-        #             self.toollist[0].endminorcycle(returnBot);
-
-        PySynthesisImager.runMinorCycle(self, self.toollist[0] )  # Use the full list for spectral-cube deconv.
-        casalog.origin('parallel.tclean.runMinorCycle')
-        casalog.post('Mark updated model as input to all major cycles') 
-
-    def finalize(self):
-        self.toollist[0].endloops()
-
     def gatherImages(self):
         casalog.origin('parallel.tclean.gatherimages')
         casalog.post('Gather images from all chunks')

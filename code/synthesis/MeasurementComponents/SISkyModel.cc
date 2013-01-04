@@ -97,7 +97,6 @@ SISkyModel::~SISkyModel()
 
 	startiter = loopcontrols.getCompletedNiter();
 	mappers.getMapper(mp)->deconvolve( loopcontrols );
-        loopcontrols.resetCycleIter();
 	stopiter = loopcontrols.getCompletedNiter();
 
 	if( startiter != stopiter)
