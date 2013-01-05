@@ -989,6 +989,15 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
+# FindSubversion.cmake is part of the standard distro
+include(FindSubversion)
+# extract working copy information into MY_XXX variables
+Subversion_WC_INFO(${CMAKE_SOURCE_DIR} CasaCode)
+file( WRITE ${CMAKE_INSTALL_PREFIX}/../share/version.txt
+  "# casa version file created from casa code cmake\n"
+  "${CASA_API_VERSION} ${CasaCode_WC_LAST_CHANGED_REV}\n"
+)
+
 add_subdirectory( doc/userman )
 
 # All documentation
