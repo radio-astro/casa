@@ -22,42 +22,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#include "Fit2DLogDialog.qo.h"
-#include <QFile>
-#include <QTextStream>
-#include <QStringBuilder>
+
+#include "ColorComboDelegate.h"
+
+#include <QPainter>
+#include <QDebug>
 
 namespace casa {
 
-Fit2DLogDialog::Fit2DLogDialog(QWidget *parent)
-    : QDialog(parent){
-	ui.setupUi(this);
-	this->setWindowTitle( "Fit 2D Results");
-	connect(ui.closeButton, SIGNAL(clicked()), this, SLOT(logViewFinished()));
+ColorComboDelegate::ColorComboDelegate(QObject* parent):
+		QItemDelegate(parent) {
 }
 
-bool Fit2DLogDialog::setLog( const QString& fullPath ){
-	QFile logFile( fullPath);
-	bool successfulRead = true;
-	if ( logFile.open(QIODevice::ReadOnly) ){
-	   QTextStream in( &logFile );
-	   while ( !in.atEnd() ){
-	          QString line = in.readLine();
-	          ui.logTextEdit->append( line );
-	   }
-	   logFile.close();
-	}
-	else {
-		successfulRead = false;
-	}
-	return successfulRead;
+void ColorComboDelegate::setSupportedColors( QStringList colorNameList ){
+	colorNames = colorNameList;
 }
 
-void Fit2DLogDialog::logViewFinished(){
-	close();
+QString ColorComboDelegate::getNamedColor( int index ) const {
+	return colorNames[index];
 }
 
-Fit2DLogDialog::~Fit2DLogDialog(){
+void ColorComboDelegate::paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const{
+	int colorIndex = index.row();
+	QColor itemColor( colorNames[colorIndex]);
+	painter->fillRect(option.rect, itemColor );
+}
 
+ColorComboDelegate::~ColorComboDelegate() {
 }
-}
+
+} /* namespace casa */

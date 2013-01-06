@@ -50,7 +50,7 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent)
 	ui.cutoffLineEdit->setValidator( validator );
 	ui.cutoffLineEdit->setText( QString::number(0.01f));
 
-	QStringList tableHeaders =(QStringList()<< "ID" << "RA" << "DEC" << "Flux");
+	QStringList tableHeaders =(QStringList()<< "RA" << "DEC" << "Flux" << "Major Axis"<<"Minor Axis"<<"Angle");
 	ui.sourceTable->setColumnCount( tableHeaders.size());
 	ui.sourceTable->setHorizontalHeaderLabels( tableHeaders );
 	ui.sourceTable->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -114,7 +114,9 @@ void FindSourcesDialog::resetSourceView() {
 	for ( int i=0; i<rowCount; i++ ){
 
 		//Type
-		setTableValue( i, ID_COL, String::toString(i));
+		QTableWidgetItem* item = new QTableWidgetItem( QString::number(i) );
+		ui.sourceTable->setVerticalHeaderItem(i, item );
+		//setTableValue( i, ID_COL, String::toString(i));
 
 		//RA and DEC
 		String raStr = skyList.getRA( i );
@@ -126,7 +128,19 @@ void FindSourcesDialog::resetSourceView() {
 		double fluxVal = skyList.getFlux( i ).getValue();
 		String fluxStr = String::toString( fluxVal );
 		setTableValue( i, FLUX_COL, fluxStr );
+
+		//Major & minor axis and position angle
+		Quantity majorAxisQuantity = skyList.getMajorAxis( i );
+		String majorAxisStr = String::toString(majorAxisQuantity.getValue());
+		setTableValue( i, MAJOR_AXIS_COL, majorAxisStr );
+		Quantity minorAxisQuantity = skyList.getMinorAxis( i );
+		String minorAxisStr = String::toString( minorAxisQuantity.getValue());
+		setTableValue( i, MINOR_AXIS_COL, minorAxisStr );
+		Quantity angleQuantity = skyList.getAngle( i );
+		String angleStr = String::toString( angleQuantity.getValue());
+		setTableValue( i, ANGLE_COL, angleStr );
 	}
+	ui.sourceTable->resizeColumnsToContents();
 }
 
 void FindSourcesDialog::setTableValue(int row, int col, const String& val ){
@@ -160,7 +174,7 @@ void FindSourcesDialog::setSourceResultsVisible( bool visible ){
 	else {
 		if ( holderIndex < 0 ){
 			dialogLayout->insertWidget( resultIndex, ui.sourceResultHolder );
-			setMinimumSize( 700, 400 );
+			setMinimumSize( 950, 400 );
 			setMaximumSize( 1200, 600);
 		}
 	}
@@ -195,9 +209,7 @@ void FindSourcesDialog::resetSkyOverlay(){
 	resetSourceView();
 	//Now tell the viewer to display this sky catalog
 	String skyPathStr( skyPath.toStdString());
-	String skyStr( SKY_CATALOG.toStdString());
-	emit showOverlay( skyPathStr, "sky cat", skyStr );
-
+	emit showOverlay( skyPathStr );
 }
 
 
@@ -218,14 +230,12 @@ void FindSourcesDialog::findSources(){
 	int maxEstimates = ui.sourceEstimateCountSpinBox->value();
 	try {
 		Record sources = analysis->findsources(maxEstimates,cutoff,region,"",False );
-
 		String errorMsg;
 		bool ok = skyList.fromRecord(errorMsg, sources);
 		if ( !ok ){
 			qDebug() << "Got error from making sky list from record: "<<errorMsg.c_str();
 			return;
 		}
-
 		resetSkyOverlay();
 	}
 	catch( AipsError& error ){
@@ -254,20 +264,20 @@ Record FindSourcesDialog::makeRegion() const {
 void FindSourcesDialog::createTable( ){
 	TableDesc::
 	TableDesc td("tTableDesc", "1", TableDesc::New);
-	const String TYPE_COL("Type");
-	const String LONG_COL("Long");
-	const String LAT_COL("Lat");
-	const String COMP_COL("COMP_ID");
-	const String RA_COL("RA");
-	const String DEC_COL("DEC");
-	const String FLUX_COL("FluxValue");
-	td.addColumn( ScalarColumnDesc<String>( TYPE_COL ) );
-	td.addColumn( ScalarColumnDesc<double>( LONG_COL ) );
-	td.addColumn( ScalarColumnDesc<double>( LAT_COL ) );
-	td.addColumn( ScalarColumnDesc<String>( COMP_COL ) );
-	td.addColumn( ScalarColumnDesc<String>( RA_COL ) );
-	td.addColumn( ScalarColumnDesc<String>( DEC_COL ) );
-	td.addColumn( ScalarColumnDesc<double>( FLUX_COL ) );
+	const String TYPE_COLUMN("Type");
+	const String LONG_COLUMN("Long");
+	const String LAT_COLUMN("Lat");
+	const String COMP_COLUMN("COMP_ID");
+	const String RA_COLUMN("RA");
+	const String DEC_COLUMN("DEC");
+	const String FLUX_COLUMN("FluxValue");
+	td.addColumn( ScalarColumnDesc<String>( TYPE_COLUMN ) );
+	td.addColumn( ScalarColumnDesc<double>( LONG_COLUMN ) );
+	td.addColumn( ScalarColumnDesc<double>( LAT_COLUMN ) );
+	td.addColumn( ScalarColumnDesc<String>( COMP_COLUMN ) );
+	td.addColumn( ScalarColumnDesc<String>( RA_COLUMN ) );
+	td.addColumn( ScalarColumnDesc<String>( DEC_COLUMN ) );
+	td.addColumn( ScalarColumnDesc<double>( FLUX_COLUMN ) );
 
 	//Setup a new table from the description.
 	SetupNewTable newtab( /*path*/"", td, Table::New);
@@ -276,13 +286,13 @@ void FindSourcesDialog::createTable( ){
 	skyPath = QString( tableName.c_str());
 
 	//Construct the various column objects.
-	ScalarColumn<String> typeCol(sourceTable, TYPE_COL );
-	ScalarColumn<double> longCol(sourceTable, LONG_COL );
-	ScalarColumn<double> latCol( sourceTable, LAT_COL );
-	ScalarColumn<String> idCol( sourceTable, COMP_COL );
-	ScalarColumn<String> raCol( sourceTable, RA_COL );
-	ScalarColumn<String> decCol( sourceTable, DEC_COL );
-	ScalarColumn<double> fluxCol( sourceTable, FLUX_COL );
+	ScalarColumn<String> typeCol(sourceTable, TYPE_COLUMN );
+	ScalarColumn<double> longCol(sourceTable, LONG_COLUMN );
+	ScalarColumn<double> latCol( sourceTable, LAT_COLUMN );
+	ScalarColumn<String> idCol( sourceTable, COMP_COLUMN );
+	ScalarColumn<String> raCol( sourceTable, RA_COLUMN );
+	ScalarColumn<String> decCol( sourceTable, DEC_COLUMN );
+	ScalarColumn<double> fluxCol( sourceTable, FLUX_COLUMN );
 
 	//Write the data into the columns.
 	int rowCount = skyList.getSize();
@@ -290,13 +300,14 @@ void FindSourcesDialog::createTable( ){
 		sourceTable.addRow();
 
 		//Latitude and longitude
-		Vector<Double> angleVector = skyList.getLatLong( i );
+		Quantum< Vector<double> > latLongQuantum = skyList.getLatLong( i );
+		Vector<double> angleVector = latLongQuantum.getValue();
 		longCol.put(i, angleVector[0]);
 		latCol.put( i, angleVector[1]);
 		const String UNIT_STR( "unit");
-		const String DEGREE_STR( "deg");
-		longCol.rwKeywordSet().define ( UNIT_STR, DEGREE_STR );
-		latCol.rwKeywordSet().define( UNIT_STR, DEGREE_STR );
+		String unitStr = latLongQuantum.getUnit();
+		longCol.rwKeywordSet().define ( UNIT_STR, unitStr );
+		latCol.rwKeywordSet().define( UNIT_STR, unitStr );
 
 		//Type
 		String refString = skyList.getType( i );

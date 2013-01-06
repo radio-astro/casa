@@ -46,13 +46,22 @@ QString Gaussian2DFitter::getLogFilePath() const {
 	return logPath.c_str();
 }
 
+QString Gaussian2DFitter::getResidualImagePath() const {
+	return residualImageFile.c_str();
+}
+
+void Gaussian2DFitter::setLogFilePath( String path ){
+	logPath = path;
+}
+
 void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const String& box,
-		int channelNum, const String& estimatesFileName,
+		int channelNum, const String& estimatesFileName, const String& residualImage,
 		const Vector<Float>& include, const Vector<Float>& exclude ){
 	this->image = image;
 	pixelBox = box;
 	channelNumber = channelNum;
 	estimateFile = estimatesFileName;
+	residualImageFile = residualImage;
 	int includeCount = include.size();
 	includePixs.resize( includeCount );
 	for ( int i = 0; i < includeCount; i++ ){
@@ -64,19 +73,24 @@ void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const Str
 	}
 }
 
-
+QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
+	return fitResultList.toDrawingDisplay( image, colorName );
+}
 
 void Gaussian2DFitter::run(){
 	successfulFit = true;
 	String channelStr = String::toString(channelNumber);
-	String fileName( "Fit2DLogFile");
-	logPath = viewer::options.temporaryPath( fileName );
+	if ( logPath.length() == 0 ){
+		String fileName( "Fit2DLogFile");
+		logPath = viewer::options.temporaryPath( fileName );
+	}
 	ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
-			excludePixs, "", "", estimateFile);
+			excludePixs, residualImageFile, "", estimateFile);
 	fitter.setLogfile( logPath );
 
 	// do the fit
-	fitResultList = fitter.fit();
+	ComponentList componentList = fitter.fit();
+	fitResultList.fromComponentList( componentList );
 
 	//If the fit did not converge record an error.
 	if (!fitter.converged(0)){

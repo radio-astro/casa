@@ -100,6 +100,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/QtViewer.qo.h
   QtViewer/Preferences.qo.h
   Fit/FindSourcesDialog.qo.h
+  Fit/ResidualHistogramDialog.qo.h
   Fit/Fit2DTool.qo.h
   Fit/PixelRangeDialog.qo.h
   Fit/Fit2DLogDialog.qo.h
@@ -167,6 +168,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Fit/Fit2DTool.ui
   Fit/Fit2DLogDialog.ui
   Fit/PixelRangeDialog.ui
+  Fit/ResidualHistogramDialog.ui
   RegionShapes/QtDS9WriteOptions.ui
   RegionShapes/QtEditRegionShape.ui
   RegionShapes/QtNewRegionShape.ui
@@ -383,7 +385,9 @@ casa_add_library( display
   Fit/Fit2DLogDialog.cc
   Fit/Gaussian2DFitter.cc
   Fit/ComponentListWrapper.cc
+  Fit/ColorComboDelegate.cc
   Fit/PixelRangeDialog.cc
+  Fit/ResidualHistogramDialog.cc
   QtAutoGui/QtAutoGui.cc
   QtAutoGui/QtGuiEntry.cc
   QtAutoGui/QtLayout.cc

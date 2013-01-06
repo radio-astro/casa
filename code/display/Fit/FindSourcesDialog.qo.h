@@ -56,7 +56,7 @@ public:
     void setPixelBox( const String& box );
 
 signals:
-	void showOverlay(String, String, String);
+	void showOverlay(String);
 	void removeOverlay(String path );
 	void estimateFileSpecified( const QString& fullPath );
 
@@ -82,7 +82,8 @@ private:
 	void clearSkyOverlay();
 
 	ComponentListWrapper skyList;
-	enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL };
+	enum SourceColumns { RA_COL, DEC_COL, FLUX_COL,
+			MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL };
 	ImageInterface<Float>* image;
 	String pixelBox;
 	QString skyPath;

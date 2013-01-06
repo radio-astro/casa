@@ -32,6 +32,7 @@
 namespace casa {
 
 template <class T> class ImageInterface;
+class RegionShape;
 
 /**
  * Provides convenient accessors and functionality for a ComponentList.
@@ -44,18 +45,32 @@ public:
 	string getRA( int i ) const;
 	string getDEC( int i ) const;
 	string getType( int i ) const;
-	Vector<double> getLatLong( int i ) const;
+	Quantity getMajorAxis( int i ) const;
+	Quantity getMinorAxis( int i ) const;
+	Quantity getAngle( int i ) const;
+	Quantum< Vector<double> > getLatLong( int i ) const;
 	Quantity getFlux( int i ) const;
 	void clear();
 	void remove( const QVector<int>& indices );
+	void fromComponentList( ComponentList list );
 	bool fromRecord( String& errorMsg, Record& record );
 	bool toEstimateFile( QTextStream& stream,
 			ImageInterface<Float>* image, QString& errorMsg ) const;
+	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName ) const;
 	virtual ~ComponentListWrapper();
+
 private:
-	double getRAValue( int i ) const;
-	double getDECValue( int i ) const;
+	void toRecord( Record& record, const Quantity& quantity ) const;
+	double getRAValue( int i, const String& unit ) const;
+	double getDECValue( int i, const String& unit ) const;
+	double radiansToDegrees( double value ) const;
+	double degreesToArcSecs( double Value ) const;
+	Quantity getAxis( int listIndex, int shapeIndex, bool toArcSecs ) const;
+
 	ComponentList skyList;
+	const String RAD;
+	const String DEG;
+	const String ARC_SEC;
 };
 
 } /* namespace casa */

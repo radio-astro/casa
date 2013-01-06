@@ -22,42 +22,48 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#include "Fit2DLogDialog.qo.h"
-#include <QFile>
-#include <QTextStream>
-#include <QStringBuilder>
+#include "ResidualHistogramDialog.qo.h"
+#include <guitools/Histogram/BinPlotWidget.qo.h>
+#include <images/Images/ImageInterface.h>
+#include <images/Images/PagedImage.h>
 
 namespace casa {
 
-Fit2DLogDialog::Fit2DLogDialog(QWidget *parent)
-    : QDialog(parent){
+ResidualHistogramDialog::ResidualHistogramDialog(QWidget *parent)
+    : QDialog(parent), residualImage( NULL ){
 	ui.setupUi(this);
-	this->setWindowTitle( "Fit 2D Results");
-	connect(ui.closeButton, SIGNAL(clicked()), this, SLOT(logViewFinished()));
-}
+	setWindowTitle( "Fit 2D Residual Image Histogram");
 
-bool Fit2DLogDialog::setLog( const QString& fullPath ){
-	QFile logFile( fullPath);
-	bool successfulRead = true;
-	if ( logFile.open(QIODevice::ReadOnly) ){
-	   QTextStream in( &logFile );
-	   while ( !in.atEnd() ){
-	          QString line = in.readLine();
-	          ui.logTextEdit->append( line );
-	   }
-	   logFile.close();
+	//Add the plot widget to the dialog
+	QHBoxLayout* layout = new QHBoxLayout(ui.histogramHolder);
+	plotWidget = new BinPlotWidget( false, false, false, this );
+	plotWidget->setPlotMode( 1 );
+	layout->addWidget( plotWidget );
+	ui.histogramHolder->setLayout( layout );
+
+	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(close()));
+
+}
+bool ResidualHistogramDialog::setImage( const String& imagePath ){
+	bool success = true;
+	if ( residualImage != NULL ){
+		delete residualImage;
+		residualImage = NULL;
 	}
-	else {
-		successfulRead = false;
+
+	try {
+		residualImage = new PagedImage<Float> (imagePath);
+		plotWidget->setImage( residualImage );
 	}
-	return successfulRead;
+	catch( AipsError& error ){
+		success = false;
+
+	}
+	return success;
 }
 
-void Fit2DLogDialog::logViewFinished(){
-	close();
-}
-
-Fit2DLogDialog::~Fit2DLogDialog(){
-
+ResidualHistogramDialog::~ResidualHistogramDialog()
+{
+	delete residualImage;
 }
 }

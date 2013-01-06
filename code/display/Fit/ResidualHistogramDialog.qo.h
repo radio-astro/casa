@@ -1,3 +1,6 @@
+#ifndef RESIDUALHISTOGRAMDIALOG_QO_H
+#define RESIDUALHISTOGRAMDIALOG_QO_H
+
 //# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -22,54 +25,31 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-
-#ifndef GAUSSIAN2DFITTER_H_
-#define GAUSSIAN2DFITTER_H_
-
-#include <casa/aipstype.h>
+#include <QtGui/QDialog>
+#include <display/Fit/ResidualHistogramDialog.ui.h>
+#include <casa/aips.h>
 #include <casa/BasicSL/String.h>
-#include <display/Fit/ComponentListWrapper.h>
-#include <QString>
-#include <QThread>
 
 namespace casa {
 
 template <class T> class ImageInterface;
+class BinPlotWidget;
 
-/**
- * Performs a 2DGaussian fit of an image in a background thread.
- */
+class ResidualHistogramDialog : public QDialog {
+    Q_OBJECT
 
-class Gaussian2DFitter : public QThread {
 public:
-	Gaussian2DFitter();
-	void run();
-	bool isFitSuccessful() const;
-	void setFitParameters( ImageInterface<Float>* image, const String& box,
-			int channelNum, const String& estimatesFileName, const String& residualImageFile,
-			const Vector<Float>& includeVector, const Vector<Float>& excludeVector);
-	QString getErrorMessage() const;
-	QString getLogFilePath() const;
-	QString getResidualImagePath() const;
-	void setLogFilePath( String path );
-	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName) const;
-	virtual ~Gaussian2DFitter();
+    ResidualHistogramDialog(QWidget *parent = 0);
+    bool setImage( const String& path );
+    ~ResidualHistogramDialog();
 
 private:
-	Gaussian2DFitter( const Gaussian2DFitter& other );
-	Gaussian2DFitter operator=( const Gaussian2DFitter& other );
-	QString errorMsg;
-	bool successfulFit;
-	ComponentListWrapper fitResultList;
-	ImageInterface<Float>* image;
-	Vector<Float> includePixs;
-	Vector<Float> excludePixs;
-	String pixelBox;
-	String logPath;
-	int channelNumber;
-	String estimateFile;
-	String residualImageFile;
+    ResidualHistogramDialog( const ResidualHistogramDialog& other );
+    ResidualHistogramDialog operator=( const ResidualHistogramDialog& other );
+    BinPlotWidget* plotWidget;
+    ImageInterface<Float>* residualImage;
+    Ui::ResidualHistogramDialogClass ui;
 };
+}
 
-} /* namespace casa */
-#endif /* GAUSSIAN2DFITTER_H_ */
+#endif // RESIDUALHISTOGRAMDIALOG_QO_H

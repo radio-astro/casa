@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>710</width>
+    <width>948</width>
     <height>444</height>
    </rect>
   </property>
@@ -91,7 +91,7 @@
           <number>1</number>
          </property>
          <property name="maximum">
-          <number>10</number>
+          <number>25</number>
          </property>
         </widget>
        </item>
@@ -240,6 +240,18 @@
           </item>
           <item>
            <widget class="QTableWidget" name="sourceTable">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>600</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="toolTip">
              <string>List of possible source estimates.</string>
             </property>
@@ -321,6 +333,12 @@
                <layout class="QHBoxLayout" name="horizontalLayout_8">
                 <item>
                  <widget class="QLineEdit" name="fileLineEdit">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>200</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="toolTip">
                    <string>Name of file where source estimates should be written.</string>
                   </property>
@@ -344,6 +362,18 @@
           </item>
           <item>
            <widget class="QTreeView" name="treeWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>300</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="toolTip">
              <string>Select a directory where the source estimates should be stored.</string>
             </property>

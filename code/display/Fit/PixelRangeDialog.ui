@@ -42,7 +42,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Bin Plot</string>
+        <string>Pixel Range</string>
        </property>
       </widget>
      </item>
