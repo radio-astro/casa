@@ -71,12 +71,7 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 
 <description>
 </description>
-<input>
-     <param type="record" name="iterbotrecord">
-     <description>All parameters that control major cycle</description>
-     <value type="record"></value>
-     </param>
-</input>
+<input/>
 
 <returns type="record"/>
 </method>

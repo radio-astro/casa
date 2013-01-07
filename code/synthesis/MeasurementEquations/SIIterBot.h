@@ -39,14 +39,15 @@
 #include <casadbus/interfaces/SynthImager.adaptor.h>
 #include <casadbus/utilities/DBusBase.h>
 
-#include<synthesis/MeasurementEquations/SISubIterBot.h>
+//#include<synthesis/MeasurementEquations/SISubIterBot.h>
 
 /* Future Decl */
 class casa::Record;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  class SIIterBot : public SISubIterBot,
+  class SIIterBot : boost::noncopyable,
+                    //public SISubIterBot,
                     public edu::nrao::casa::SynthImager_adaptor,
                     public DBusService
   {
@@ -55,11 +56,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ~SIIterBot();
     
     /* Wait for an Interactive Clean Cycle */
+    bool interactiveInputRequired();
     void waitForInteractiveInput(); 
 
-    virtual bool majorCycleRequired(Float currentPeakResidual);
+    // virtual bool majorCycleRequired(Float currentPeakResidual);
 
-    void mergeSubIterBot(SISubIterBot& subIterBot);
+    bool cleanComplete();
+    
+    /* --- Functions for interacting with Minor Cycle Control --- */
+    Record getMinorCycleControls();
+    void   mergeCycleInitializationRecord(Record&);
+    void   mergeCycleExecutionRecord(Record&);
+    
+
+    //void mergeSubIterBot(SISubIterBot& subIterBot);
 
     /* ------ Begin functions for runtime parameter modification ------ */
     /* These are the control variables.  We can set them either through these
@@ -72,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void changeCycleThreshold( Float cyclethreshold );
     void changeInteractiveThreshold( Float cyclethreshold );
 
-    void changeLoopGain(  Float loopgain );
+    void changeLoopGain(Float loopgain );
     void changeCycleFactor( Float cyclefactor);
 
     void changeInteractiveMode(const bool& interactiveEnabled);
@@ -93,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void setControlsFromRecord(Record &recordIn);
 
     Record getDetailsRecord(); 
-    Record getSubIterBotRecord();
+    //Record getSubIterBotRecord();
 
     /* ------ END Functions for runtime parameter modification -------*/
 
@@ -104,21 +114,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Int getMajorCycleCount();
 
+
+
     /* This will calculate and set a new cycle threshold based
        on the Peak Residual and the current values of the PSF values.*/
-    void updateCycleThreshold(Float PeakResidual);
+    void updateCycleThreshold();
     
     /* Values for the control of the cycle threshold */
-    void setMaxPsfSidelobe( Float maxpsfsidelobe );
-    Float getMaxPsfSidelobe();
+/*     void setMaxPsfSidelobe( Float maxpsfsidelobe ); */
+/*     Float getMaxPsfSidelobe(); */
 
-    void setMaxPsfFraction(Float maxpsffraction );
-    Float getMaxPsfFraction();
+/*     void setMaxPsfFraction(Float maxpsffraction ); */
+/*     Float getMaxPsfFraction(); */
 
-    void setMinPsfFraction(Float minpsffraction );
-    Float getMinPsfFraction();
+/*     void setMinPsfFraction(Float minpsffraction ); */
+/*     Float getMinPsfFraction(); */
+    //Int getRemainingNiter();
+    //Int getCompletedNiter();
 
     void addSummaryMajor();
+
+    /* -------- DBus Interface ------------- */
 
     /* Publish the current details from the Iterbot to all clients */
     void pushDetails();
@@ -130,7 +146,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     bool incrementController();
     bool decrementController();
     int  getNumberOfControllers();
-
 
     std::map<std::string,DBus::Variant> getDetails();
     DBus::Variant getSummary();
@@ -150,13 +165,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   protected:
 
+    void mergeMinorCycleSummary(const Array<Double>& summary);
+
     Float itsMinPsfFraction;
     Float itsMaxPsfFraction;
     Float itsMaxPsfSidelobe;
+    Float itsPeakResidual;
 
     /* The number of Controllers Currently Connected */
     int    itsControllerCount;
+
+
+    /* A recursive mutex which provides access control to the
+       underlying state variables
+    */
+    boost::recursive_mutex recordMutex;
+
+    /* Control Variables */
+    Int    itsNiter;
+    Int    itsCycleNiter;
+    Int    itsInteractiveNiter;
+
+    Float itsThreshold;
+    Float itsCycleThreshold;
+    Float itsInteractiveThreshold;
+
+    Float itsCycleFactor;
+    Float itsLoopGain;
     
+    Bool  itsStopFlag;
+    Bool  itsPauseFlag;
+    Bool  itsInteractiveMode;
+    Bool  itsUpdatedModelFlag;
+
+    Int   itsIterDone;
+    Int   itsInteractiveIterDone;
+    Int   itsMaxCycleIterDone;
+    Int   itsMajorDone;
+
     /*
       A condition variable used when we're waiting for interaction to 
       complete
@@ -166,9 +212,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      boost::condition_variable interactionCond; 
      boost::mutex              interactionMutex; 
 
-    Int   itsMajorDone;
 
     /* Summary variables */
+    Int itsNSummaryFields;
+    Array<Double> itsSummaryMinor;
     Array<Int>    itsSummaryMajor;
   };
     

@@ -28,15 +28,20 @@ namespace casa {
   }
 
   void DBusThreadedBase::stopService() {
+    std::cout << "Leaving dispatcher loop: " << time(0) << std::endl;
     casa::DBusSession::instance().dispatcher( ).leave( );
-    if (!itsThread->timed_join(boost::posix_time::time_duration(0,0,10,0))) {
+    std::cout << "Waiting for timed join: " << time(0) <<std::endl;
+    if (!itsThread->timed_join(boost::posix_time::time_duration(0,0,30,0))) {
       std::cout << "Error Closing service thread" << std::endl;
     }
+    std::cout << "Timed Join Passed: " << time(0) <<std::endl;
     itsThread = NULL;
   }
 
   void DBusThreadedBase::serviceLoop() {
     casa::DBusSession::instance().dispatcher( ).enter( );
+    std::cout << "Service Loop Exited: " << time(0) << std::endl;
+    itsThread->detach();
   }
 
   std::map<std::string,DBus::Variant> 

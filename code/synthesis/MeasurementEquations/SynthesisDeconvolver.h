@@ -37,6 +37,7 @@
 
 #include<synthesis/MeasurementEquations/SDAlgorithmBase.h>
 #include<synthesis/MeasurementEquations/SDMaskHandler.h>
+#include <synthesis/MeasurementEquations/SIMinorCycleController.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -60,7 +61,7 @@ class SynthesisDeconvolver
   void setupDeconvolution(Record recpars);
   void setupIteration(Record iterpars);
 
-  Record initMinorCycle(Record& subIterBot);
+  Record initMinorCycle();
   Record executeMinorCycle(Record& subIterBot);
 
   // Helpers
@@ -88,7 +89,7 @@ protected:
   Vector<Slicer> partitionImages();
 
   // Call the deconvolver here, for each slice.
-  void deconvolve( SISubIterBot &loopcontrols );
+  void deconvolve();
 
   // Check if images exist on disk and are all the same shape
   Bool checkImagesOnDisk();
@@ -110,6 +111,8 @@ protected:
   Vector<CountedPtr<PagedImage<Float> > > itsPartImages, itsPartPsfs, itsPartResiduals, itsPartWeights;
 
   Float itsBeam;
+
+  SIMinorCycleController loopController;
 
   /////////////// All input parameters
 

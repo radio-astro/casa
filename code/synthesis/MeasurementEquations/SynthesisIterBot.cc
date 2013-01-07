@@ -56,7 +56,8 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SynthesisIterBot::SynthesisIterBot() : itsLoopController()
+  SynthesisIterBot::SynthesisIterBot() : 
+    itsLoopController("SynthesisImager")
   {
   }
   
@@ -70,8 +71,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
     try
       {
-        itsLoopController.reset( new SIIterBot("SynthesisImage_"));
-        itsLoopController->setControlsFromRecord(iterpars);
+        //itsLoopController.reset( new SIIterBot("SynthesisImage_"));
+        itsLoopController.setControlsFromRecord(iterpars);
       }
     catch(AipsError &x)
       {
@@ -85,10 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisIterBot","getIterationDetails",WHERE) );
     Record returnRecord;
     try {
-        if (itsLoopController.get() == NULL) 
-          throw( AipsError("Iteration Control un-initialized"));
-
-      returnRecord = itsLoopController->getDetailsRecord();
+      returnRecord = itsLoopController.getDetailsRecord();
     } catch(AipsError &x) {
       throw( AipsError("Error in retrieving iteration parameters : " +
                        x.getMesg()) );
@@ -101,10 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisIterBot","getIterationSummary",WHERE) );
     Record returnRecord;
     try {
-        if (itsLoopController.get() == NULL) 
-          throw( AipsError("Iteration Control un-initialized"));
-
-      returnRecord = itsLoopController->getSummaryRecord();
+      returnRecord = itsLoopController.getSummaryRecord();
     } catch(AipsError &x) {
       throw( AipsError("Error in retrieving iteration parameters : " +
                        x.getMesg()) );
@@ -133,9 +128,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Setting intractive mode to " 
        << ((interactiveMode) ? "Active" : "Inactive") << LogIO::POST;
     try {
-      if (itsLoopController.get() == NULL) 
-        throw( AipsError("Iteration Control un-initialized"));
-      itsLoopController->changeInteractiveMode(interactiveMode);
+      itsLoopController.changeInteractiveMode(interactiveMode);
     } catch(AipsError &x) {
       throw( AipsError("Error Setting Interactive Mode : "+x.getMesg()) );
     }
@@ -145,10 +138,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   bool SynthesisIterBot::cleanComplete() {
     bool returnValue;
     try {
-      if (itsLoopController.get() == NULL) 
-        throw( AipsError("Iteration Control un-initialized"));
-      Float peakResidual = itsLoopController->getPeakResidual(); // This should go..
-      returnValue=itsLoopController->cleanComplete(peakResidual);
+      //Float peakResidual = itsLoopController.getPeakResidual(); // This should go..
+      returnValue=itsLoopController.cleanComplete();
     } catch (AipsError &x) {
       throw( AipsError("Error checking clean complete state : "+x.getMesg()) );
     }
@@ -247,11 +238,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisIterBot","endMajorCycle",WHERE) );
 
     try{
-      if (itsLoopController.get() == NULL) 
-        throw( AipsError("Iteration Control un-initialized"));
-
-      itsLoopController->incrementMajorCycleCount();
-      itsLoopController->addSummaryMajor();
+      itsLoopController.incrementMajorCycleCount();
+      itsLoopController.addSummaryMajor();
     } catch(AipsError &x) {
       throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
     }    
@@ -265,11 +253,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisIterBot","getSubIterBot",WHERE) );
     try
       {
-        if (itsLoopController.get() == NULL) 
-          throw( AipsError("Iteration Control un-initialized"));
-
-	Float peakResidual = itsLoopController->getPeakResidual(); /// This can go
-	Float integratedFlux = itsLoopController->getIntegratedFlux(); // This can go too.
+	//Float peakResidual = itsLoopController.getPeakResidual(); /// This can go
+	//Float integratedFlux = itsLoopController.getIntegratedFlux(); // This can go too.
 	
 	//// Commented out... this info should already be there, after the previous 'mergeSubIterBot' calls.
         //itsLoopController->setMaxPsfSidelobe(maxPsfSidelobe);
@@ -277,19 +262,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	/// Commented out temporarily. 
 
-        os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
-        os << " and model flux = " << integratedFlux << LogIO::POST;
+//         os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
+//         os << " and model flux = " << integratedFlux << LogIO::POST;
         
-        os << " [ cyclethreshold = " << itsLoopController->getCycleThreshold() ;
-        os << " max iter per field/chan/pol = " << itsLoopController->getCycleNiter() ;
-        os << " loopgain = " << itsLoopController->getLoopGain() ;
-        os << " ]" << LogIO::POST;
+//         os << " [ cyclethreshold = " << itsLoopController.getCycleThreshold() ;
+//         os << " max iter per field/chan/pol = " << itsLoopController.getCycleNiter() ;
+//         os << " loopgain = " << itsLoopController.getLoopGain() ;
+//         os << " ]" << LogIO::POST;
 
-        if (itsLoopController->interactiveInputRequired(peakResidual)) {
+        if (itsLoopController.interactiveInputRequired()) {
           pauseForUserInteraction();
         }
 
-        returnRecord = itsLoopController->getSubIterBotRecord();
+        returnRecord = itsLoopController.getMinorCycleControls();
       }
     catch(AipsError &x)
       {
@@ -298,14 +283,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return returnRecord;
   }
 
-  void SynthesisIterBot::endMinorCycle(Record& subIterBotRecord) {
+  void SynthesisIterBot::endMinorCycle(Record& executionRecord) {
     try {
-      if (itsLoopController.get() == NULL) 
-        throw( AipsError("Iteration Control un-initialized"));
-
-      SISubIterBot loopController(subIterBotRecord);
+      //SISubIterBot loopController(subIterBotRecord);
       LogIO os( LogOrigin("SynthesisIterBot",__FUNCTION__,WHERE) );
-      itsLoopController->mergeSubIterBot(loopController);
+      itsLoopController.mergeCycleExecutionRecord(executionRecord);
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
     }
@@ -320,7 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* This call will make sure that the current values of loop control are
        available in the GUI and will not return until the user hits the
        button */
-    itsLoopController->waitForInteractiveInput();
+    itsLoopController.waitForInteractiveInput();
     // UUU comment out the above line to test if plumbing around interaction is OK.
 
     /*    
