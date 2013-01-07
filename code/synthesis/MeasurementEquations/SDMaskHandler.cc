@@ -1,4 +1,4 @@
-//# SIMaskHandler.cc: Implementation of SIMaskHandler classes
+//# SDMaskHandler.cc: Implementation of SDMaskHandler classes
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -52,33 +52,33 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
-#include <synthesis/MeasurementEquations/SIMaskHandler.h>
+#include <synthesis/MeasurementEquations/SDMaskHandler.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-  SIMaskHandler::SIMaskHandler()
+  SDMaskHandler::SDMaskHandler()
   {
     
   }
   
-  SIMaskHandler::~SIMaskHandler()
+  SDMaskHandler::~SDMaskHandler()
   {
     
   }
   
-  void SIMaskHandler::makeMask()
+  void SDMaskHandler::makeMask()
   {
-    LogIO os( LogOrigin("SIMaskHandler","makeMask",WHERE) );
+    LogIO os( LogOrigin("SDMaskHandler","makeMask",WHERE) );
     os << "Make mask" << LogIO::POST;
   }
 
 
   // Return a reference to the ImageInterface tied to the mask image in the mapper.
-  void SIMaskHandler::makeAutoMask()
+  void SDMaskHandler::makeAutoMask()
   {
-    LogIO os( LogOrigin("SIMaskHandler","makeAutoMask",WHERE) );
+    LogIO os( LogOrigin("SDMaskHandler","makeAutoMask",WHERE) );
     os << "Make autobox mask" << LogIO::POST;
   }
 

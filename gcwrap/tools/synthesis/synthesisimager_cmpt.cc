@@ -5,8 +5,6 @@
  * 
  * // TODO: WRITE YOUR DESCRIPTION HERE! 
  
- * @author Wes Young
- * @version 
  ***/
 
 #include <iostream>
@@ -30,7 +28,7 @@ namespace casac {
 
 synthesisimager::synthesisimager()
 {
-  itsImager = new SynthesisImager() ;
+  itsImager = new SynthesisImager();
 }
 
 synthesisimager::~synthesisimager()
@@ -96,71 +94,6 @@ synthesisimager::defineimage(const casac::record& impars)
   return rstat;
 }
 
-  bool synthesisimager::setupdeconvolution(const casac::record& decpars)
-{
-  Bool rstat(False);
-
-  try 
-    {
-      casa::Record rec = *toRecord( decpars );
-      itsImager->setupDeconvolution( rec );
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-casac::record* synthesisimager::getiterationdetails()
-{
-  casac::record* rstat(0);
-
-  try 
-    {
-      rstat=fromRecord(itsImager->getIterationDetails());
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-casac::record* synthesisimager::getiterationsummary()
-{
-  casac::record* rstat(0);
-
-  try 
-    {
-      rstat=fromRecord(itsImager->getIterationSummary());
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-
-casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
-{
-
-  try 
-    {
-      casa::Record recpars = *toRecord( iterpars );
-      itsImager->setupIteration( recpars );
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return getiterationdetails();
-}
 
 bool synthesisimager::initmapper()
 {
@@ -178,86 +111,6 @@ bool synthesisimager::initmapper()
   return rstat;
 }
 
-bool synthesisimager::initcycles()
-{
-  Bool rstat(False);
-
-  try 
-    {
-      itsImager->initCycles( );
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-bool synthesisimager::cleanComplete()
-{
-  Bool rstat(False);
-
-  try 
-    {
-      rstat = itsImager->cleanComplete( );
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-
-   casac::record* synthesisimager::endloops()
-  {
-  try 
-    {
-      itsImager->endLoops();
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return getiterationdetails();
-  }
-
-bool synthesisimager::runmajorcycle()
-{
-  Bool rstat(False);
-
-  try 
-    {
-      // This is a convenience function for tool-level usage, for the non-parallel case.
-      // Duplicates the code from getmajorcyclecontrols(), executemajorcycle(), endmajorcycle().
-      casa::Record recpars = itsImager->getMajorCycleControls();
-      itsImager->executeMajorCycle( recpars );
-      itsImager->endMajorCycle();
-    } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-  
-  return rstat;
-}
-
-casac::record* synthesisimager::getmajorcyclecontrols()
-{
-  casac::record* rstat(0);
-  try {
-    rstat=fromRecord(itsImager->getMajorCycleControls());
-  } catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-
-  return rstat;
-}  
-
 bool synthesisimager::executemajorcycle(const casac::record& controls)
 {
   Bool rstat(False);
@@ -267,85 +120,6 @@ bool synthesisimager::executemajorcycle(const casac::record& controls)
   } catch  (AipsError x) {
     RETHROW(x);
   }
-  return rstat;
-}
-
-bool synthesisimager::endmajorcycle()
-{
-  Bool rstat(False);
-  
-  try 
-    {
-      itsImager->endMajorCycle();
-     } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-
-  return rstat;
-}
-
-
-bool synthesisimager::runminorcycle()
-{
-  Bool rstat(False);
-  
-  try 
-    {
-      // This is a convenience function for tool-level usage, for the non-parallel case.
-      // Duplicates the code from getsubiterbot(), executeminorcycle(), endminorcycle().
-      casa::Record iterbotrec = itsImager->getSubIterBot();
-      iterbotrec = itsImager->executeMinorCycle(iterbotrec);
-      itsImager->endMinorCycle(iterbotrec);
-     } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-
-  return rstat;
-}
-
-casac::record* synthesisimager::getsubiterbot()
-{
-  casac::record* rstat(0);
-  try {
-    rstat=fromRecord(itsImager->getSubIterBot());
-  } catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-
-  return rstat;
-}  
-
-casac::record* synthesisimager::executeminorcycle(const casac::record& iterbot)
-{
-  casac::record* rstat(False);
-  try {
-    casa::Record recpars = *toRecord( iterbot );
-    rstat = fromRecord(itsImager->executeMinorCycle( recpars ));
-  } catch  (AipsError x) {
-    RETHROW(x);
-  }
-  return rstat;
-}
-
-bool synthesisimager::endminorcycle(const casac::record& iterbot)
-{
-  Bool rstat(False);
-  
-  try 
-    {
-      casa::Record recpars = *toRecord( iterbot );
-      itsImager->endMinorCycle(recpars);
-     } 
-  catch  (AipsError x) 
-    {
-      RETHROW(x);
-    }
-
   return rstat;
 }
 
@@ -370,6 +144,236 @@ synthesisimager::done()
   return rstat;
 }
 
+
+
+/*
+  bool synthesisimager::setupdeconvolution(const casac::record& decpars)
+{
+  Bool rstat(False);
+
+  try 
+    {
+      casa::Record rec = *toRecord( decpars );
+      itsDeconvolver->setupDeconvolution( rec );
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+*/
+ /*
+casac::record* synthesisimager::getiterationdetails()
+{
+  casac::record* rstat(0);
+
+  try 
+    {
+      rstat=fromRecord(itsIterBot->getIterationDetails());
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+ */
+
+  /*
+casac::record* synthesisimager::getiterationsummary()
+{
+  casac::record* rstat(0);
+
+  try 
+    {
+      rstat=fromRecord(itsIterBot->getIterationSummary());
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+  */
+
+   /*
+casac::record* synthesisimager::setupiteration(const casac::record& iterpars)
+{
+
+  try 
+    {
+      casa::Record recpars = *toRecord( iterpars );
+      itsIterBot->setupIteration( recpars );
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return getiterationdetails();
+}
+   */
+
+/*
+bool synthesisimager::cleanComplete()
+{
+  Bool rstat(False);
+
+  try 
+    {
+      rstat = itsIterBot->cleanComplete( );
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+*/
+
+  /*
+   casac::record* synthesisimager::endloops()
+  {
+  try 
+    {
+      itsImager->endLoops();
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return getiterationdetails();
+  }
+  */
+
+ /*
+bool synthesisimager::runmajorcycle()
+{
+  Bool rstat(False);
+
+  try 
+    {
+      // This is a convenience function for tool-level usage, for the non-parallel case.
+      // Duplicates the code from getmajorcyclecontrols(), executemajorcycle(), endmajorcycle().
+      casa::Record recpars; // = itsImager->getMajorCycleControls();
+      itsImager->executeMajorCycle( recpars );
+      itsIterBot->endMajorCycle();
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+ */
+  /*
+casac::record* synthesisimager::getmajorcyclecontrols()
+{
+  casac::record* rstat(0);
+  try {
+    rstat=fromRecord(itsImager->getMajorCycleControls());
+  } catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}  
+  */
+
+/*
+bool synthesisimager::endmajorcycle()
+{
+  Bool rstat(False);
+  
+  try 
+    {
+      itsIterBot->endMajorCycle();
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+*/
+
+ /*
+bool synthesisimager::runminorcycle()
+{
+  Bool rstat(False);
+  
+  try 
+    {
+      // This is a convenience function for tool-level usage, for the non-parallel case.
+      // Duplicates the code from getsubiterbot(), executeminorcycle(), endminorcycle().
+      casa::Record iterbotrec = itsIterBot->getSubIterBot();
+      iterbotrec = itsDeconvolver->executeMinorCycle(iterbotrec);
+      itsImager->endMinorCycle(iterbotrec);
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+ */
+
+  /*
+casac::record* synthesisimager::getsubiterbot()
+{
+  casac::record* rstat(0);
+  try {
+    rstat=fromRecord(itsImager->getSubIterBot());
+  } catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}  
+  */
+
+   /*
+casac::record* synthesisimager::executeminorcycle(const casac::record& iterbot)
+{
+  casac::record* rstat(False);
+  try {
+    casa::Record recpars = *toRecord( iterbot );
+    rstat = fromRecord(itsImager->executeMinorCycle( recpars ));
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+   */
+    /*
+bool synthesisimager::endminorcycle(const casac::record& iterbot)
+{
+  Bool rstat(False);
+  
+  try 
+    {
+      casa::Record recpars = *toRecord( iterbot );
+      itsImager->endMinorCycle(recpars);
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+    */
 
 
 } // casac namespace

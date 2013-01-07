@@ -1,4 +1,4 @@
-//# SIMapper.h: Imager functionality sits here; 
+//# SynthesisDeconvolver.h: Imager functionality sits here; 
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SIMAPPER_H
-#define SYNTHESIS_SIMAPPER_H
+#ifndef SYNTHESIS_SYNTHESISITERBOT_H
+#define SYNTHESIS_SYNTHESISITERBOT_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
@@ -35,68 +35,53 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
-#include <synthesis/TransformMachines/FTMachine.h>
+#include <boost/scoped_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
+class MeasurementSet;
+class ViewerProxy;
 template<class T> class ImageInterface;
+ class SIIterBot;
 
 // <summary> Class that contains functions needed for imager </summary>
 
-class SIMapper 
+class SynthesisIterBot
 {
  public:
   // Default constructor
 
-  SIMapper( String imagename, 
-            CountedPtr<FTMachine> ftmachine, 
-            CountedPtr<CoordinateSystem> imcoordsys, 
-            IPosition imshape, 
-            Int mapperid);
-  ~SIMapper();
+  SynthesisIterBot();
+  ~SynthesisIterBot();
 
-  ///// Major Cycle Functions
+  // Copy constructor and assignment operator
 
-  void initializeGrid();
-  void grid();
-  void finalizeGrid();
+  // make all pure-inputs const
+  void setupIteration(Record iterpars);
 
-  void initializeDegrid();
-  void degrid();
-  void finalizeDegrid();
+  void setInteractiveMode(Bool interactiveMode);
+  void   setIterationDetails(Record iterpars);
+  Record getIterationDetails();
+  Record getIterationSummary();
 
-  Record getFTMRecord();
+  bool cleanComplete();
+
+  Record getSubIterBot();
+  void endMinorCycle(Record& subIterBot);
+
+  void endMajorCycle();
 
 protected:
 
-  ///////////////////// Member Objects
+  void pauseForUserInteraction();
 
-  CountedPtr<FTMachine> itsFTMachine; 
-  CountedPtr<CoordinateSystem> itsCoordSys;
-  IPosition itsImageShape;
+  /////////////// Member Objects
 
-  // These are images
-  String itsImageName;
+  boost::scoped_ptr<SIIterBot> itsLoopController;
 
-  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsModel, itsResidual, itsWeight;
-  
-  // This is only for testing. In the real-world, this is the data....
-  Array<Float> itsOriginalResidual;
-
-  // These are supporting params
-  Bool itsIsModelUpdated;
-  Int itsMapperId;
-
-  //////////////////// Member Functions
-  
-  void allocateImageMemory();
-
-  Bool doImagesExist();
-  Bool doesModelImageExist();
-
-  /////////////////// All input parameters
-
+  /////////////// All input parameters
+ 
 };
 
 

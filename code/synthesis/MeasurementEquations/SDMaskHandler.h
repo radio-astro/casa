@@ -1,4 +1,4 @@
-//# SISkyModel.h: Definition for SISkyModel.cc
+//# SDMaskHandler.h: Definition for SDMaskHandler
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,53 +26,38 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SISKYMODEL_H
-#define SYNTHESIS_SISKYMODEL_H
+#ifndef SYNTHESIS_SDMASKHANDLER_H
+#define SYNTHESIS_SDMASKHANDLER_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <synthesis/MeasurementComponents/SkyModel.h>
 #include <casa/Arrays/Matrix.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
-#include <casa/System/PGPlotter.h>
-
-#include <synthesis/MeasurementEquations/SIMapperCollection.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// Forward Declarations
-  class ViewerProxy;
-  template<class T> class ImageInterface;
-  class SISubIterBot;
-
-
-class SISkyModel 
+class SDMaskHandler 
 {
 public:
 
   // Empty constructor
-  SISkyModel();
-  ~SISkyModel();
+  SDMaskHandler();
+  ~SDMaskHandler();
 
 
   // Copy constructor and assignment operator
   //Imager(const Imager&);
   //Imager& operator=(const Imager&);
 
-  void init( ); // Send in iteration-control,etc params here...
+  void makeMask();
 
-  void runMinorCycle( SIMapperCollection &mappers, SISubIterBot &loopcontrols);
-
-  void restore( SIMapperCollection &mappers );
+  // Return a reference to an imageinterface for the mask.
+  void makeAutoMask();
 
 protected:
-
-  //void pauseForUserInteraction( SIMapperCollection &mappers, SIIterBot &loopcontrols );
-
 
 };
 

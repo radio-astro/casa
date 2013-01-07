@@ -1,4 +1,4 @@
-//# SIDeconvolver.cc: Implementation of SIDeconvolver classes
+//# SDAlgorithmBase.cc: Implementation of SDAlgorithmBase classes
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -27,7 +27,7 @@
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/OS/HostInfo.h>
-#include <synthesis/MeasurementComponents/SIDeconvolver.h>
+#include <synthesis/MeasurementEquations/SDAlgorithmBase.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <images/Images/TempImage.h>
@@ -38,15 +38,15 @@
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include<synthesis/MeasurementEquations/SIIterBot.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/Directory.h>
 #include <tables/Tables/TableLock.h>
+
+#include<synthesis/MeasurementEquations/SIIterBot.h>
 
 #include <casa/sstream.h>
 
@@ -57,7 +57,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-  SIDeconvolver::SIDeconvolver()
+  SDAlgorithmBase::SDAlgorithmBase()
  {
 
    // TESTING place-holder for the position of the clean component.
@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
  }
 
-  SIDeconvolver::~SIDeconvolver()
+  SDAlgorithmBase::~SDAlgorithmBase()
  {
    
  }
@@ -81,22 +81,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Later, can add more complex partitioning schemes.... 
   // but there will be one place to do it, per deconvolver.
 
-  void SIDeconvolver::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
+  void SDAlgorithmBase::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
   {  
     onechan = True;
     onepol = True;
   }
 
-  Bool SIDeconvolver::deconvolve( SISubIterBot &loopcontrols, 
+  Bool SDAlgorithmBase::deconvolve( SISubIterBot &loopcontrols, 
 				  ImageInterface<Float>  &residual, 
                                   ImageInterface<Float>  &psf, 
 				  ImageInterface<Float>  &model, 
-                                  CountedPtr<SIMaskHandler> /*maskhandler*/, 
-                                  Int mapperid,
+                                  CountedPtr<SDMaskHandler> /*maskhandler*/, 
 				  uInt decid)
   {
 
-    LogIO os( LogOrigin("SIDeconvolver","deconvolve",WHERE) );
+    LogIO os( LogOrigin("SDAlgorithmBase","deconvolve",WHERE) );
 
     Int iters=0;
 
@@ -117,7 +116,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	peakresidual = residual.getAt(tmpPos_p);
 
 	loopcontrols.incrementMinorCycleCount( );
-	loopcontrols.addSummaryMinor( mapperid, decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
+	loopcontrols.setPeakResidual( residual.getAt(tmpPos_p) );
+	loopcontrols.setIntegratedFlux( model.getAt(tmpPos_p) );
+	loopcontrols.addSummaryMinor( decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
       }
 
     Bool updatedmodel = iters>0; // This info is recorded per model/mapper
@@ -125,7 +126,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return updatedmodel;
 }
 
-  Bool SIDeconvolver::checkStop( SISubIterBot &loopcontrols, 
+  Bool SDAlgorithmBase::checkStop( SISubIterBot &loopcontrols, 
 				 Int /*currentiteration*/, 
 				 Float currentresidual )
   {
@@ -133,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  void SIDeconvolver::findNextComponent( ImageInterface<Float>  &residual, 
+  void SDAlgorithmBase::findNextComponent( ImageInterface<Float>  &residual, 
 					 ImageInterface<Float>  &/*psf*/, Float loopgain, 
 					 Float  &comp )
   {
@@ -143,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SIDeconvolver::updateModel( ImageInterface<Float>  &model, Float  &comp )
+  void SDAlgorithmBase::updateModel( ImageInterface<Float>  &model, Float  &comp )
   {
     //    model = model + comp;
 
@@ -151,16 +152,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SIDeconvolver::updateResidual( ImageInterface<Float>  &residual, Float  &comp )
+  void SDAlgorithmBase::updateResidual( ImageInterface<Float>  &residual, Float  &comp )
   {
     //    residual = residual - comp;
     residual.putAt( residual.getAt(tmpPos_p) - comp  , tmpPos_p );
   }
 
-  void SIDeconvolver::restore( ImageInterface<Float>  &image, Float /*beam*/, ImageInterface<Float>  &/*model*/, ImageInterface<Float>  &/*residual*/, ImageInterface<Float>  &/*weight*/ )
+  void SDAlgorithmBase::restore( ImageInterface<Float>  &image, Float /*beam*/, ImageInterface<Float>  &/*model*/, ImageInterface<Float>  &/*residual*/, ImageInterface<Float>  &/*weight*/ )
   {
 
-    LogIO os( LogOrigin("SIDeconvolver","restore",WHERE) );
+    LogIO os( LogOrigin("SDAlgorithmBase","restore",WHERE) );
     
     os << "Smooth model and add residuals for " << image.name() << ". Optionally, PB-correct too." << LogIO::POST;
 

@@ -58,17 +58,19 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SIMapper::SIMapper( String imagename, CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, IPosition imshape, CountedPtr<SIMaskHandler> maskhandler, Int mapperid) 
+  SIMapper::SIMapper( String imagename, 
+		      CountedPtr<FTMachine> ftmachine, 
+		      CountedPtr<CoordinateSystem> imcoordsys, 
+		      IPosition imshape, 
+		      Int mapperid) 
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
 
     itsImageName = imagename;
 
     itsFTMachine = ftmachine;
-    itsDeconvolver = deconvolver;
     itsCoordSys = imcoordsys;
     itsImageShape = imshape;
-    itsMaskHandler = maskhandler;
 
     itsImage=NULL;
     itsPsf=NULL;
@@ -76,15 +78,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResidual=NULL;
     itsWeight=NULL;
 
-    decSlices.resize();
-    ftmSlices.resize();
-
     itsIsModelUpdated = False;
     itsMapperId = mapperid;
 
     allocateImageMemory();
-
-    partitionImages();
 
   }
   
@@ -102,10 +99,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Mapper " << itsMapperId << " : Calculate required memory, and allocate" << LogIO::POST;
 
     // Make the Images.
-    itsResidual = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".residual"));
-    itsPsf = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".psf"));
-    itsModel = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".model"));
-    itsWeight = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".weight"));
+    // itsImageName is the 'full' image. 
+    //     -- Check, and create a new image only if it does not already exist on disk.
+    //     -- If it exists on disk, check that it's shape and coordinates 
+
+    if( doImagesExist( ) )
+      {
+	itsResidual = new PagedImage<Float> (itsImageName+String(".residual"));
+	itsPsf = new PagedImage<Float> (itsImageName+String(".psf"));
+	itsWeight = new PagedImage<Float> (itsImageName+String(".weight"));
+      }
+    else
+      {
+	itsResidual = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".residual"));
+	itsPsf = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".psf"));
+	itsWeight = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".weight"));
+      }
+
+    if( doesModelImageExist() )
+      {
+	itsModel = new PagedImage<Float> (itsImageName+String(".model"));
+      }
+    else
+      {
+	itsModel = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".model"));
+      }
+
 
     // Initialize all these images.
     Array<Float> pixels( itsImageShape );
@@ -139,143 +158,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  /// Make a list of Slices, to send sequentially to the deconvolver.
-  /// Loop over this list of reference subimages in the 'deconvolve' call.
-  /// This will support...
-  ///    - channel cube clean
-  ///    - stokes cube clean
-  ///    - partitioned-image clean (facets ?)
-  ///    - 3D deconvolver
-  void SIMapper::partitionImages()
+  // TODO : Move to an image-wrapper class ? Same function exists in SynthesisDeconvolver.
+  Bool SIMapper::doImagesExist()
   {
-    LogIO os( LogOrigin("SIMapper","partitionImages",WHERE) );
-
-    uInt nx = itsImageShape[0];
-    uInt ny = itsImageShape[1];
-    uInt npol = itsImageShape[2];
-    uInt nchan = itsImageShape[3];
-
-    /// (1) /// Set up the Deconvolver Slicers.
-
-    // Ask the deconvolver what shape it wants.
-    Bool onechan=False, onepol=False;
-    itsDeconvolver->queryDesiredShape(onechan, onepol);
-
-    uInt nSubImages = ( (onechan)?itsImageShape[3]:1 ) * ( (onepol)?itsImageShape[2]:1 ) ;
-    uInt polstep = (onepol)?1:npol;
-    uInt chanstep = (onechan)?1:nchan;
-
-    os << "Number of sub-deconvolvers : " << nSubImages << LogIO::POST;
-    decSlices.resize(nSubImages);
-
-    uInt subindex=0;
-    for(uInt pol=0; pol<npol; pol+=polstep)
-      {
-	for(uInt chan=0; chan<nchan; chan+=chanstep)
-	  {
-	    AlwaysAssert( subindex < nSubImages , AipsError );
-	    IPosition substart(4,0,0,pol,chan);
-	    IPosition substop(4,nx-1,ny-1, pol+polstep-1, chan+chanstep-1);
-	    decSlices[subindex] = Slicer(substart, substop, Slicer::endIsLast);
-	    subindex++;
-	  }
-      }
-
-    /// (2) /// Set up the FTM Slicers
-
-    //Ask the FTMs what chunk sizes they want, and make a similar list of Slices.
-    // ftmSlices.resize(nftmchunks);
-
-  }// end of partitionImages
-
-
-  // Run the deconvolver for each Slice.
-  // This means, for iteration control, each SubImage is treated the same as a separate Mapper.
-  void SIMapper::deconvolve( SISubIterBot &loopcontrols  )
-  {
-    LogIO os( LogOrigin("SIMapper","deconvolve",WHERE) );
-
-    for( uInt subim=0; subim<decSlices.nelements(); subim++)
-      {
-
-	//cout << "Mapper : " << itsMapperId << "  Deconvolving : " << decSlices[subim] << endl;
-	SubImage<Float> subResidual( *itsResidual, decSlices[subim], True );
-	SubImage<Float> subPsf( *itsPsf, decSlices[subim], True );
-	SubImage<Float> subModel( *itsModel, decSlices[subim], True );
-	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
-
-	itsIsModelUpdated |= itsDeconvolver->deconvolve( loopcontrols, subResidual, subPsf, subModel, itsMaskHandler,  itsMapperId , subim );
-        loopcontrols.resetCycleIter();
-
-      }
+    // Check if imagename.residual, imagename.psf. imagename.weight
+    // exist on disk and if they're the right shape.
+    // If the shape is not right, complain here and throw an exception (or just say it will get overwritten)
+    return False;
   }
 
-  // Calculate the peak residual for this mapper
-  Float SIMapper::getPeakResidual()
+  Bool SIMapper::doesModelImageExist()
   {
-    LogIO os( LogOrigin("SIMapper","getPeakResidual",WHERE) );
+    // Check if the model image exists.
+    // If it exists, then...
+    //   If the shape is not right, attempt a re-grid onto itsImageShape here.
+    //   If it's a component list, but the FTM needs an image, evaluate the model image here.
+    //   If none of the above here, then complain.
 
-    Float maxresidual = max( itsResidual->get() );
+    itsIsModelUpdated = False;
 
-    return maxresidual;
+    return False;
   }
-
-  // Calculate the total model flux
-  Float SIMapper::getModelFlux()
-  {
-    LogIO os( LogOrigin("SIMapper","getModelFlux",WHERE) );
-
-    Float modelflux = sum( itsModel->get() );
-
-    return modelflux;
-  }
-
-  // Calculate the PSF sidelobe level...
-  Float SIMapper::getPSFSidelobeLevel()
-  {
-    LogIO os( LogOrigin("SIMapper","getPSFSidelobeLevel",WHERE) );
-
-    /// Calculate only once, store and return for all subsequent calls.
-
-    Float psfsidelobe = max( itsPsf->get() );
-
-    return psfsidelobe;
-  }
-
-  // Check if the model has been updated or not
-  Bool SIMapper::isModelUpdated()
-  {
-    LogIO os( LogOrigin("SIMapper","isModelUpdated",WHERE) );
-
-    return itsIsModelUpdated;
-  }
-
-
-  // Restore Image.
-  void SIMapper::restore()
-  {
-    LogIO os( LogOrigin("SIMapper","restoreImage",WHERE) );
-    
-    itsImage = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".image"));
-    itsDeconvolver->restore( *itsImage, itsBeam, *itsModel, *itsResidual, *itsWeight );
-
-  }
-
-
-  // This is for interactive-clean.
-  void SIMapper::getCopyOfResidualAndMask( TempImage<Float> &/*residual*/,
-                                           TempImage<Float> &/*mask*/ )
-  {
-    // Actually all I think we need here are filenames JSK 12/12/12
-    // resize/shape and copy the residual image and mask image to these in/out variables.
-    // Allocate Memory here.
-  }
-  void SIMapper::setMask( TempImage<Float> &/*mask*/ )
-  {
-    // Here we will just pass in the new names
-    // Copy the input mask to the local main image mask
-  }
-
 
 
   // #############################################
@@ -300,6 +203,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //// The function that makes the PSF should check its validity, and fit the beam,
   void SIMapper::finalizeGrid()
   {
+
+    // TODO : Fill in itsResidual, itsPsf, itsWeight.
+    // Do not normalize the residual by the weight. 
+    //   -- Normalization happens later, via 'divideResidualImageByWeight' called from SI.divideImageByWeight()
+    //   -- This will ensure that normalizations are identical for the single-node and parallel major cycles. 
 
     itsResidual->put( itsOriginalResidual - itsModel->get() );
 

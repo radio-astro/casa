@@ -105,42 +105,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 
 <!-- ===================================== -->
 
-   <method type="function" name="setupdeconvolution">
-   <shortdescription>Set parameters to control minor cycle algorithms</shortdescription>
-
-<description>
-</description>
-<input>
-
-     <param type="record" name="decpars">
-     <description>All parameters for deconvolution (minor cycle)</description>
-     <value type="record"></value>
-     </param>
-
-</input>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-
-   <method type="function" name="setupiteration">
-   <shortdescription>Set parameters to control iteration mechanisms</shortdescription>
-
-<description>
-</description>
-<input>
-
-     <param type="record" name="iterpars">
-     <description>All parameters that control iterations</description>
-     <value type="record"></value>
-     </param>
-
-</input>
-<returns type="record"/>
-</method>
-
-<!-- ===================================== -->
-
 
    <method type="function" name="initmapper">
    <shortdescription>Construct ftmachine, deconvolver, and allocate image-memory</shortdescription>
@@ -151,81 +115,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 
 </input>
 <returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-
-   <method type="function" name="initcycles">
-   <shortdescription>Construct SkyModel and SkyEquation</shortdescription>
-
-<description>
-</description>
-<input>
-
-</input>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-
-   <method type="function" name="cleanComplete">
-   <shortdescription>Return true when we have completed this clean</shortdescription>
-
-<description>
-</description>
-<input>
-
-</input>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-
-<!-- 
-
-   <method type="function" name="initloops">
-   <shortdescription>Initializing loops</shortdescription>
-
-<description>
-</description>
-<input>
-
-</input>
-<returns type="record"/>
-</method>
-
--->
-
-<!-- ===================================== -->
-
-   <method type="function" name="endloops">
-   <shortdescription>End loops and restore images</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="record"/>
-</method>
-
-<!-- ===================================== -->
-
-   <method type="function" name="runmajorcycle">
-   <shortdescription>Run a major cycle</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-   <method type="function" name="getmajorcyclecontrols">
-   <shortdescription>Get parameters controlling major cycle</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="record"/>
 </method>
 
 <!-- ===================================== -->
@@ -244,6 +133,108 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <returns type="bool"/>
 </method>
 <!-- ===================================== -->
+
+   <method type="function" name="done">
+   <shortdescription>Close the tool</shortdescription>
+
+<description>
+</description>
+<input>
+
+</input>
+<returns type="bool"/>
+</method>
+
+
+<!-- ====================================
+
+   <method type="function" name="setupdeconvolution">
+   <shortdescription>Set parameters to control minor cycle algorithms</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="decpars">
+     <description>All parameters for deconvolution (minor cycle)</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+
+   <method type="function" name="setupiteration">
+   <shortdescription>Set parameters to control iteration mechanisms</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="record" name="iterpars">
+     <description>All parameters that control iterations</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="record"/>
+</method>
+
+
+   <method type="function" name="cleanComplete">
+   <shortdescription>Return true when we have completed this clean</shortdescription>
+
+<description>
+</description>
+<input>
+
+</input>
+<returns type="bool"/>
+</method>
+
+
+   <method type="function" name="initloops">
+   <shortdescription>Initializing loops</shortdescription>
+
+<description>
+</description>
+<input>
+
+</input>
+<returns type="record"/>
+</method>
+
+
+   <method type="function" name="endloops">
+   <shortdescription>End loops and restore images</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="record"/>
+</method>
+
+
+   <method type="function" name="runmajorcycle">
+   <shortdescription>Run a major cycle</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="bool"/>
+</method>
+
+
+   <method type="function" name="getmajorcyclecontrols">
+   <shortdescription>Get parameters controlling major cycle</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="record"/>
+</method>
+
    <method type="function" name="endmajorcycle">
    <shortdescription>Record the end of a major cycle</shortdescription>
 
@@ -253,7 +244,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <returns type="bool"/>
 </method>
 
-<!-- ===================================== -->
 
    <method type="function" name="runminorcycle">
    <shortdescription>Run a minor cycle</shortdescription>
@@ -264,7 +254,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <returns type="bool"/>
 </method>
 
-<!-- ===================================== -->
 
    <method type="function" name="getsubiterbot">
    <shortdescription>Get the controller for a minor cycle</shortdescription>
@@ -275,7 +264,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <returns type="record"/>
 </method>
 
-<!-- ===================================== -->
 
    <method type="function" name="executeminorcycle">
    <shortdescription>Run a minor cycle</shortdescription>
@@ -292,7 +280,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <returns type="record"/>
 </method>
 
-<!-- ===================================== -->
 
    <method type="function" name="endminorcycle">
    <shortdescription>End of minor cycle</shortdescription>
@@ -309,7 +296,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 </method>
 
 
-<!-- ===================================== -->
 
 
    <method type="function" name="getiterationdetails">
@@ -321,7 +307,6 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <returns type="record"/>
 </method>
 
-<!-- ===================================== -->
 
 
    <method type="function" name="getiterationsummary">
@@ -333,18 +318,8 @@ Define the image coordinate systems, image shapes and the number of images (mult
 <returns type="record"/>
 </method>
 
-<!-- ===================================== -->
+- ===================================== -->
 
-   <method type="function" name="done">
-   <shortdescription>Close the tool</shortdescription>
-
-<description>
-</description>
-<input>
-
-</input>
-<returns type="bool"/>
-</method>
 
 </tool>
 

@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        - exceeded Niter
        - exceeded threshold
     */
-    bool cleanComplete(Float currentPeakResidual);
+    bool cleanComplete(Float peakResidual);
 
     /* Getter Methods for the control variables */
     Int getNiter();
@@ -127,10 +127,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool getUpdatedModelFlag();
     void setUpdatedModelFlag(Bool updatedmodel);
 
-   void addSummaryMinor(Int mapperid, uInt decid, Float model, Float peakresidual);
+   void addSummaryMinor(uInt decid, Float model, Float peakresidual);
 
     Array<Double> getSummaryMinor();
     
+   /* Variables to track status inside each Deconvolver */
+   Float getPeakResidual();
+   Float getIntegratedFlux();
+   Float getMaxPsfSidelobe();
+   void setPeakResidual(Float peakResidual);
+   void setIntegratedFlux(Float integratedFlux);
+   void setMaxPsfSidelobe(Float maxPsfSidelobe);
+
   protected:
     /* As a convience the controls can also be updated from a Record.  
        The following fields are supported:
@@ -199,9 +207,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        during a major cycle */
     Int   itsMaxCycleIterDone;
 
+   /* JK : TODO : These variables track the status inside each Deconvolver.
+       The mergeIterBot function should reconcile these across Deconvolvers.
+       Need to add get/set methods for them, and read these vars in getSubIterBot, and cleanComplete */
+   Float itsPeakResidual;
+   Float itsIntegratedFlux;
+   Float itsMaxPsfSidelobe;
+   
+
     /* Summary Variable */
     Array<Double> itsSummaryMinor;
     Int itsNSummaryFields;
+    Int itsDeconvolverID;    /* An ID per Deconvolver. Used only for the summary */
+
 
   };
 

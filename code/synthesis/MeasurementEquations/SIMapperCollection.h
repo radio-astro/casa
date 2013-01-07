@@ -47,30 +47,27 @@ class SIMapperCollection
   SIMapperCollection();
   ~SIMapperCollection();
 
-  // Copy constructor and assignment operator
-  //Imager(const Imager&);
-  //Imager& operator=(const Imager&);
+  void addMapper( String imagename, 
+		  CountedPtr<FTMachine> ftmachine, 
+		  CountedPtr<CoordinateSystem> imcoordsys, 
+		  IPosition imshape);
 
-  void addMapper( String imagename, CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, IPosition imshape, CountedPtr<SIMaskHandler> maskhandler );
-
-  // TODO : If individual mapper accesses are not needed in SISkyEquation, pull those loops in here and get rid of the getMapper access function.
   Int nMappers();
   CountedPtr<SIMapper>& getMapper( Int mapindex );
 
-  // Functions relevant to the minor cycle
+  /*
 
   Float findPeakResidual();
   Float addIntegratedFlux();
   Float findMaxPsfSidelobe();
   Bool anyUpdatedModel();
   
-
+  */
 protected:
 
   ///////////////////// Member Objects
 
   Block<CountedPtr<SIMapper> >  itsMappers;
-
 
 };
 
