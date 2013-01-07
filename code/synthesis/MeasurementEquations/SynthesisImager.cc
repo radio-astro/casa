@@ -61,21 +61,31 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
-				       //				       itsVisSet(NULL),
+				       itsVisSet(NULL),
 				       itsCurrentFTMachine(NULL), 
 				       itsCurrentCoordSys(NULL),
                                        itsCurrentImageShape(IPosition()),
                                        itsCurrentImageName(""),
-				       itsSkyEquation(SISkyEquation()),
 				       itsUseScratch(True)
   {
     
   }
   
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   SynthesisImager::~SynthesisImager() 
   {
+    LogIO os( LogOrigin("SynthesisImager","destructor",WHERE) );
+    os << "SynthesisImager destroyed" << LogIO::POST;
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Make this read in a list of MS's and selection pars....
   void  SynthesisImager::selectData(Record selpars)
@@ -110,13 +120,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError("Error in reading selection parameter record : "+x.getMesg()) );
       }
-    
+
+    // Set up Visibility Iterator here.
     try
       {
-	
-	os << "Setup vi/vb and construct SkyEquation" << LogIO::POST;
-	//VisSet vset;
-	itsSkyEquation.init(); // vset );
+	os << "Do MS-Selection and Setup vi/vb" << LogIO::POST;
+	//itsVisSet = createVisSet(/* parameters */);
       }
     catch(AipsError &x)
       {
@@ -124,6 +133,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
   }// end of selectData()
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Construct Image Coordinates
   void  SynthesisImager::defineImage(Record impars)
@@ -156,7 +169,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       if( impars.isDefined("imsize") ) // An array with 2 integers
 	{ 
-          impars.get( RecordFieldId("imsize") , imsize ); 
+          impars.get( RecordFieldId("imsize") , imsize );
+	  if(imsize.nelements() != 2) 
+	    {
+	      throw( AipsError("imsize must be an array of two integers") );
+	    }
         }
       else
 	{throw( AipsError("imsize not specified")); }
@@ -184,15 +201,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     
   }// end of defineImage
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void  SynthesisImager::setupImaging(Record gridpars)
+  void  SynthesisImager::setupImaging(Record /*gridpars*/)
   {
     LogIO os( LogOrigin("SynthesisImager","setupImaging",WHERE) );
     os << "Set Imaging Options - Construct FTMachine" << LogIO::POST;
     
     try
       {
-      // TODO : If critical params are unspecified, throw exceptions.
+	// TODO : Parse FT-machine-related parameters.
+
       }
     catch(AipsError &x)
       {
@@ -201,8 +222,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     try
       {
-	
-	/// itsCurrentFTMachine = XXX
+
+	// TODO : Set up the FT-Machine. Send in parameters here...
+	itsCurrentFTMachine = createFTMachine(/* parameters */);
 	
       }
     catch(AipsError &x)
@@ -212,6 +234,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }// end of setupImaging
   
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   void SynthesisImager::initMapper()
   {
     LogIO os( LogOrigin("SynthesisImager","initMapper", WHERE) );
@@ -219,7 +245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 
-	itsMappers.addMapper( itsCurrentImageName, itsCurrentFTMachine, itsCurrentCoordSys, itsCurrentImageShape);
+	itsMappers.addMapper( String("basetype"), itsCurrentImageName, itsCurrentFTMachine, itsCurrentCoordSys, itsCurrentImageShape);
 
       }
     catch(AipsError &x)
@@ -230,85 +256,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }//end of initMapper
   
-   /* This method makes all decisions about how the major cycle should 
-       execute.  The output of this is passed to the runMajorCycle method
-    */
-  // This needs to be re-implemented somewhere else.
-  /*
-  Record SynthesisImager::getMajorCycleControls()
-  {
-     LogIO os( LogOrigin("SynthesisImager","getMajorCycleControls",WHERE) );
-    Record returnRecord;
 
-    try
-      {
-        if (itsLoopController.get() == NULL) 
-          throw( AipsError("Iteration Control un-initialized"));
-
-        // TODO : Check if input model images exist, and setUpdatedModelFlag.
-        //             This may be unnecessary now, but check.
-        Bool startmodel = False;
-
- 	if(itsLoopController->getCompletedNiter()==0 &&
-           startmodel )
- 	  {
-            itsLoopController->setUpdatedModelFlag(true);
- 	  }
-	
-	if(itsLoopController->getMajorCycleCount() ==0)
-	  {
-	    os << "Make PSFs, weights and initial dirty/residual images. " ;
-	  }
-	else
-	  {
-	    if(! itsLoopController->getUpdatedModelFlag())
-	      {
-		os << "No new model. No need to update residuals in a major cycle." << LogIO::POST;
-		return returnRecord;//With appropriate flag
-	      }
-	    os << "Update residual image in major cycle " << 
-              String::toString(itsLoopController->getMajorCycleCount()) << ". ";
-	  }
-	
-	if(itsLoopController->cleanComplete(itsMappers.findPeakResidual()) &&
-           itsLoopController->getUpdatedModelFlag())
-	  {
-	    if(itsUseScratch==True)
-	      {
-		os << "Save image model to MS in MODEL_DATA column on disk" 
-                   << LogIO::POST;
-	      }
-	    else
-	      {
-		os << "Save image model to MS as a Record for on-the-fly prediction" << LogIO::POST;
-	      }
-	  }
-	else
-	  {
-	    os << LogIO::POST;
-	  }
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in setting up Major Cycle : "+x.getMesg()) );
-      }
-    return returnRecord;
-  }
-  */
-
-    void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/)
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
     
     try
       {    
-	// se.runMajorCycle(xxxxx . modeltoms = usescratch)
-	itsSkyEquation.runMajorCycle( itsMappers );
-
-	/* The first time, when PSFs are made, all mappers need to compute 
-           PSF parameters ( peak sidelobe level, etc ) 0 and store it inside 
-           the mappers. */
-
+	runMajorCycle();
       }
     catch(AipsError &x)
       {
@@ -320,7 +278,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////    Internal Functions start here.  These are not visible to the tool layer.
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   
   // Build the Image coordinate system.  TODO : Replace with Imager2::imagecoordinates2()
   CountedPtr<CoordinateSystem> SynthesisImager::buildImageCoordinateSystem(String phasecenter, 
@@ -401,6 +358,91 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return coordSys;
   }// end of buildImageCoordinateSystem
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  // Make the FT-Machine and related objects (cfcache, etc.)
+  CountedPtr<FTMachine> SynthesisImager::createFTMachine()
+  {
+    LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE) );
+    CountedPtr<FTMachine> localFTM = NULL;
+
+    return localFTM;
+  }// end of createFTMachine
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  // Do MS-Selection and set up vi/vb. 
+  // Only this functions needs to know anything about the MS 
+  CountedPtr<VisSet> SynthesisImager::createVisSet()
+  {
+    LogIO os( LogOrigin("SynthesisImager","createVisSet",WHERE) );
+    CountedPtr<VisSet> localVS = NULL;
+
+    return localVS;
+  }// end of createVisSet
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  void SynthesisImager::runMajorCycle()
+  {
+    LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+
+    Int nmappers = itsMappers.nMappers();
+    
+    os << "Run major cycle over all " << nmappers << " mappers" << LogIO::POST;
+
+    ///////// (1) Initialize all the FTMs.
+    for(Int mp=0;mp<nmappers;mp++)
+      {
+	// vb.selectChannel(....)
+	itsMappers.initializeDegrid(mp);
+	itsMappers.initializeGrid(mp);
+      }
+
+    ////////// (2) Iterate through visbuffers, degrid, subtract, grid
+
+    //for ( vi.originChunks(); vi.moreChunks(); vi.nextChunk() )
+      {
+	//for( vi.origin(); vi.more(); vi++ )
+	  {
+	    for(Int mp=0;mp<nmappers;mp++)
+	      {
+		itsMappers.degrid(mp /* ,vb */);
+		// resultvb.modelVisCube += vb.modelVisCube()
+	      }
+	    
+	    // resultvb.visCube -= resultvb.modelvisCube()
+	    
+	    // save model either in the column, or in the record. 
+	    // Access the FTM record as    rec=mappers[mp]->getFTMRecord();
+	    
+	    for(Int mp=0;mp<nmappers;mp++)
+	      {
+		itsMappers.grid(mp /* ,vb */);
+	      }
+	  }// end of for vb.
+      }// end of vi.chunk iterations
+      
+
+      /////////// (3) Finalize Mappers.
+      for(Int mp=0;mp<nmappers;mp++)
+	{
+	  itsMappers.finalizeDegrid(mp);
+	  itsMappers.finalizeGrid(mp);
+	}
+      
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } //# NAMESPACE CASA - END

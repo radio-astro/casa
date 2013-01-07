@@ -36,7 +36,6 @@
 #include <measures/Measures/MDirection.h>
 
 #include<synthesis/MeasurementEquations/SIMapperCollection.h>
-#include<synthesis/MeasurementEquations/SISkyEquation.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -82,29 +81,31 @@ protected:
 							  uInt imx, uInt imy,
 							  uInt npol, uInt nchan);
 
+  CountedPtr<FTMachine> createFTMachine();
+  CountedPtr<VisSet> createVisSet();
+
+  void runMajorCycle();
+
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
-  //  CountedPtr<VisSet> itsVisSet;
+  CountedPtr<VisSet> itsVisSet;
+
   CountedPtr<FTMachine> itsCurrentFTMachine;
   CountedPtr<CoordinateSystem> itsCurrentCoordSys;
   IPosition itsCurrentImageShape;
   String itsCurrentImageName;
 
-  SISkyEquation itsSkyEquation;
 
   /////////////// All input parameters
 
   // Data Selection
   // Image Definition
-  // Iteration Control
   // Imaging/Gridding
-  // Deconvolution
 
   // Other Options
   Bool itsUseScratch;
 
-  //////////////// Internal functions
  
 };
 

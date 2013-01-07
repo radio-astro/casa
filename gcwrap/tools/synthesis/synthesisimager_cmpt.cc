@@ -26,7 +26,7 @@ using namespace casa;
      
 namespace casac {
 
-synthesisimager::synthesisimager()
+synthesisimager::synthesisimager() 
 {
   itsImager = new SynthesisImager();
 }
@@ -48,6 +48,9 @@ synthesisimager::selectdata(const casac::record& selpars)
 
   try 
     {
+
+      if( ! itsImager ) itsImager = new SynthesisImager();
+
       casa::Record rec = *toRecord( selpars );
       itsImager->selectData( rec );
     } 
@@ -66,6 +69,9 @@ synthesisimager::defineimage(const casac::record& impars)
 
   try 
     {
+
+      if( ! itsImager ) itsImager = new SynthesisImager();
+
       casa::Record rec = *toRecord( impars );
       itsImager->defineImage( rec );
     } 
@@ -83,6 +89,9 @@ synthesisimager::defineimage(const casac::record& impars)
 
   try 
     {
+
+      if( ! itsImager ) itsImager = new SynthesisImager();
+
       casa::Record rec = *toRecord( gridpars );
       itsImager->setupImaging( rec );
     } 
@@ -101,6 +110,9 @@ bool synthesisimager::initmapper()
 
   try 
     {
+
+      if( ! itsImager ) itsImager = new SynthesisImager();
+
       itsImager->initMapper( );
     } 
   catch  (AipsError x) 
@@ -115,6 +127,9 @@ bool synthesisimager::executemajorcycle(const casac::record& controls)
 {
   Bool rstat(False);
   try {
+
+      if( ! itsImager ) itsImager = new SynthesisImager();
+
     casa::Record recpars = *toRecord( controls );
     itsImager->executeMajorCycle( recpars );
   } catch  (AipsError x) {

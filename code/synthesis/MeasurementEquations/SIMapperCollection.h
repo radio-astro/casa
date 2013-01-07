@@ -35,6 +35,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
+#include <synthesis/MeasurementEquations/SIMapperBase.h>
 #include <synthesis/MeasurementEquations/SIMapper.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -47,27 +48,30 @@ class SIMapperCollection
   SIMapperCollection();
   ~SIMapperCollection();
 
-  void addMapper( String imagename, 
+  void addMapper( String mappertype, 
+		  String imagename, 
 		  CountedPtr<FTMachine> ftmachine, 
 		  CountedPtr<CoordinateSystem> imcoordsys, 
 		  IPosition imshape);
 
   Int nMappers();
-  CountedPtr<SIMapper>& getMapper( Int mapindex );
 
-  /*
+  //// For KG : Need to add the interface for 'vb' flowing through here....
+  void initializeGrid(Int mapperid);
+  void grid(Int mapperid);
+  void finalizeGrid(Int mapperid);
 
-  Float findPeakResidual();
-  Float addIntegratedFlux();
-  Float findMaxPsfSidelobe();
-  Bool anyUpdatedModel();
-  
-  */
+  void initializeDegrid(Int mapperid);
+  void degrid(Int mapperid);
+  void finalizeDegrid(Int mapperid);
+
+  Record getFTMRecord(Int mapperid);
+
 protected:
 
   ///////////////////// Member Objects
 
-  Block<CountedPtr<SIMapper> >  itsMappers;
+  Block<CountedPtr<SIMapperBase> >  itsMappers;
 
 };
 
