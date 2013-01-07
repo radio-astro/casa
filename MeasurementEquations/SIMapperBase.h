@@ -24,8 +24,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SIMAPPER_H
-#define SYNTHESIS_SIMAPPER_H
+#ifndef SYNTHESIS_SIMAPPERBASE_H
+#define SYNTHESIS_SIMAPPERBASE_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
@@ -36,7 +36,6 @@
 #include <measures/Measures/MDirection.h>
 
 #include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/MeasurementEquations/SIMapperBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -45,34 +44,58 @@ template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
-  class SIMapper : public SIMapperBase
+class SIMapperBase 
 {
  public:
   // Default constructor
 
-  SIMapper( String imagename, 
+  SIMapperBase( String imagename, 
             CountedPtr<FTMachine> ftmachine, 
             CountedPtr<CoordinateSystem> imcoordsys, 
             IPosition imshape, 
             Int mapperid);
-  ~SIMapper();
+  virtual ~SIMapperBase();
 
   ///// Major Cycle Functions
 
   // For KG : Need to add 'vb' coming into these functions.
-  void initializeGrid();
-  void grid();
-  void finalizeGrid();
+  // Would be good to make these pure virtual, but need to keep base-class implementation for initial testing.
+  virtual void initializeGrid();
+  virtual void grid();
+  virtual void finalizeGrid();
 
-  void initializeDegrid();
-  void degrid();
-  void finalizeDegrid();
+  virtual void initializeDegrid();
+  virtual void degrid();
+  virtual void finalizeDegrid();
 
-  Record getFTMRecord();
+  virtual Record getFTMRecord();
 
 protected:
+  //////////////////// Member Functions
+  
+  void allocateImageMemory();
+  Bool doImagesExist();
+  Bool doesModelImageExist();
 
+  ///////////////////// Member Objects
 
+  CountedPtr<FTMachine> itsFTMachine, itsInverseFTMachine; 
+  CountedPtr<CoordinateSystem> itsCoordSys;
+  IPosition itsImageShape;
+
+  // These are images
+  String itsImageName;
+
+  CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight;
+  
+  // This is only for testing. In the real-world, this is the data....
+  Array<Float> itsOriginalResidual;
+
+  // These are supporting params
+  Bool itsIsModelUpdated;
+  Int itsMapperId;
+
+  /////////////////// All input parameters
 
 };
 

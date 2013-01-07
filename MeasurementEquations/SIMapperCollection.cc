@@ -56,6 +56,9 @@
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
   
   SIMapperCollection::SIMapperCollection() 
   {
@@ -65,12 +68,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
   
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
   SIMapperCollection::~SIMapperCollection() 
   {
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Allocate Memory and open images.
-  void SIMapperCollection::addMapper( String imagename, 
+  void SIMapperCollection::addMapper( String mappertype,  
+				      String imagename, 
 				      CountedPtr<FTMachine> ftmachine, 
 				      CountedPtr<CoordinateSystem> imcoordsys, 
 				      IPosition imshape)
@@ -78,89 +88,110 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SIMapperCollection","addMapper",WHERE) );
 
+    CountedPtr<SIMapperBase> localMapper=NULL;
     Int nMappers = itsMappers.nelements();
 
+    // Check 'mappertype' for valid types....
+    if( mappertype == "basetype" )
+      {
+	localMapper = new SIMapperBase( imagename, ftmachine, imcoordsys , imshape, nMappers );
+      }
+    else if( mappertype == "default" )
+      {
+	localMapper = new SIMapper( imagename, ftmachine, imcoordsys , imshape, nMappers );
+      }
+    /*
+    else if( mappertype == "multiterm" )
+      {
+	localMapper = new SIMapperMultiTerm( imagename, ftmachine, imcoordsys , imshape, nMappers );
+      }
+    */
+    else
+      {
+	throw ( AipsError("Internal Error : Unrecognized Mapper Type in MapperCollection.addMapper") );
+      }
+
+    // If all is well, add to the list.
     itsMappers.resize(nMappers+1, True);
-    itsMappers[nMappers] = new SIMapper( imagename, ftmachine, imcoordsys , imshape, nMappers );
+    itsMappers[nMappers] = localMapper;
 
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
   Int SIMapperCollection::nMappers()
   {
     return itsMappers.nelements();
   }
 
-  CountedPtr<SIMapper> & SIMapperCollection::getMapper( Int mapindex )
-  {
-    if(static_cast<uInt>(mapindex)>=itsMappers.nelements()) throw(AipsError("Internal Error : Map Index larger than nmappers"));
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    return itsMappers[mapindex];
+  void SIMapperCollection::initializeGrid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->initializeGrid();
   }
 
-  /**************************************************************************/
-  /* Below here are all the functions that loop over Mappers to gather info. */
-  // TODO : They should not be necessary. The IterBot should pick up this info as it goes along.
-  /**************************************************************************/
-  /*
-  Float SIMapperCollection::findPeakResidual()
-  {
-    Float peakresidual=0.0, maxpeakresidual=0.0;
-    for(uInt mp=0;mp<itsMappers.nelements();mp++)
-      {
-	peakresidual = itsMappers[mp]->getPeakResidual();
-	if( peakresidual > maxpeakresidual )
-	  {
-	    maxpeakresidual = peakresidual;
-	  }
-      }
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    return maxpeakresidual;
+  void SIMapperCollection::grid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->grid();
   }
 
-  Float SIMapperCollection::addIntegratedFlux()
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  void SIMapperCollection::finalizeGrid(Int mapperid)
   {
-
-    Float modelflux=0.0;
-    for(uInt mp=0;mp<itsMappers.nelements();mp++)
-      {
-	modelflux += itsMappers[mp]->getModelFlux();
-      }
-
-    return modelflux;
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->finalizeGrid();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  Float SIMapperCollection::findMaxPsfSidelobe()
+
+  void SIMapperCollection::initializeDegrid(Int mapperid)
   {
-    // Calculate a PSF fraction from the PSFs across all mappers.
-    Float psfsidelobe=0.0, maxpsfsidelobe=0.0;
-    for(uInt mp=0;mp<itsMappers.nelements();mp++)
-      {
-	psfsidelobe = itsMappers[mp]->getPSFSidelobeLevel();
-	if( psfsidelobe > maxpsfsidelobe )
-	  {
-	    maxpsfsidelobe = psfsidelobe;
-	  }
-      }
-
-    return maxpsfsidelobe;
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->initializeDegrid();
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  Bool SIMapperCollection::anyUpdatedModel()
+  void SIMapperCollection::degrid(Int mapperid)
   {
-    Bool updatedmodel = False;
-    for(uInt mp=0;mp<itsMappers.nelements();mp++)
-      {
-	updatedmodel |= itsMappers[mp]->isModelUpdated();
-      }
-
-    return updatedmodel;
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->degrid();
   }
-  */
 
-  /**************************************************************************/
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   
+  void SIMapperCollection::finalizeDegrid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->finalizeDegrid();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  Record SIMapperCollection::getFTMRecord(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    return itsMappers[mapperid]->getFTMRecord();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
 } //# NAMESPACE CASA - END
 
