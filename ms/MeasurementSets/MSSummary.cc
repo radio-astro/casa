@@ -1211,8 +1211,8 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		Int widthField =  5;
 		Int widthCode  =  5;
 		Int widthName  = 20;
-		Int widthRA    = 15;
-		Int widthDec   = 15;
+		Int widthRA    = 16;
+		Int widthDec   = 16;
 		Int widthType  =  8;
 		Int widthSrc   =  6;
 		Int widthnVis  =  7;
@@ -1248,8 +1248,8 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 				os.output().width(widthField);	os << (fld);
 				os.output().width(widthCode);   os << msFC.code()(fld);
 				os.output().width(widthName);	os << name.at(0,20);
-				os.output().width(widthRA);	os << mvRa(0.0).string(MVAngle::TIME,11);
-				os.output().width(widthDec);	os << mvDec.string(MVAngle::DIG2,10);
+				os.output().width(widthRA);	os << mvRa(0.0).string(MVAngle::TIME,12);
+				os.output().width(widthDec);	os << mvDec.string(MVAngle::DIG2,11);
 				os.output().width(widthType);
 				os << MDirection::showType(mRaDec.getRefPtr()->getType());
 				if (srcok) {os.output().width(widthSrc);	os << msFC.sourceId()(fld);}
