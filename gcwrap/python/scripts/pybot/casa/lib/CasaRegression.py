@@ -445,3 +445,31 @@ class CasaRegression:
 
         maildb.close( )
         s.quit( )
+
+        if count <= 0:
+            ###
+            ### generate tarball distros upon successful builds...
+            ###
+            version_file = self._path['casa'] + "/build/share/version.txt"
+            major = ''
+            minor = ''
+            bug = ''
+            svn = ''
+            if os.path.isfile(version_file):
+                version_re = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)\s+([0-9]+).*?")
+                for line in open(version_file,'r'):
+                    if line.startswith('#'):
+                        continue			# comment
+                    else:
+                        m = re.match(version_re,line);
+                        if m is not None:
+                            major = m.group(1)
+                            minor = m.group(2)
+                            bug = m.group(3)
+                            svn = m.group(4)
+
+            if major and minor and bug and svn:
+                p = subprocess.Popen( [ self._path['bin'] + "/cbtdistro", '--version', major + "." + minor + "." + bug + "." + svn ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+                for line in p.stdout:
+                    print "cbt> " + line.rstrip( )
+                p.wait( )
