@@ -44,7 +44,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   /* Forware Declaration */
-  class SISubIterBot;
+  class SIMinorCycleController;
 
 
 class SDAlgorithmBase {
@@ -60,7 +60,7 @@ public:
   void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
 
   // 
-  Bool deconvolve( SISubIterBot& loopcontrols,  
+  Bool deconvolve( SIMinorCycleController& loopController,  
 		   ImageInterface<Float> &residual, 
 		   ImageInterface<Float> &psf, 
 		   ImageInterface<Float> &model, 
@@ -83,7 +83,7 @@ public:
 		ImageInterface<Float>  &residual, 
 		ImageInterface<Float>  &weight );
 
-  Bool checkStop( SISubIterBot &loopcontrols, Int currentiteration, Float currentresidual );
+  Bool checkStop( SIMinorCycleController &loopcontrols, Int currentiteration, Float currentresidual );
 
 protected:
 

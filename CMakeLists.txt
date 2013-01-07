@@ -325,7 +325,7 @@ casa_add_library( synthesis
  MeasurementEquations/SIMapperBase.cc
  MeasurementEquations/SIMapper.cc
  MeasurementEquations/SynthesisIterBot.cc
- MeasurementEquations/SISubIterBot.cc
+ MeasurementEquations/SIMinorCycleController.cc
  MeasurementEquations/SIIterBot.cc
  MeasurementEquations/SynthesisDeconvolver.cc
  MeasurementEquations/SDAlgorithmBase.cc
@@ -611,7 +611,7 @@ install (FILES
 	MeasurementEquations/SIMapperBase.h
 	MeasurementEquations/SIMapper.h
 	MeasurementEquations/SynthesisIterBot.h
-	MeasurementEquations/SISubIterBot.h
+	MeasurementEquations/SIMinorCycleController.h
 	MeasurementEquations/SIIterBot.h
 	MeasurementEquations/SynthesisDeconvolver.h
 	MeasurementEquations/SDMaskHandler.h

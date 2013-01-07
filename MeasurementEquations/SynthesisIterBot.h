@@ -34,6 +34,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
+#include <synthesis/MeasurementEquations/SIIterBot.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -43,7 +44,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class MeasurementSet;
 class ViewerProxy;
 template<class T> class ImageInterface;
- class SIIterBot;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -78,7 +78,7 @@ protected:
 
   /////////////// Member Objects
 
-  boost::scoped_ptr<SIIterBot> itsLoopController;
+  SIIterBot itsLoopController;
 
   /////////////// All input parameters
  

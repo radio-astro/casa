@@ -46,7 +46,7 @@
 #include <casa/OS/Directory.h>
 #include <tables/Tables/TableLock.h>
 
-#include<synthesis/MeasurementEquations/SIIterBot.h>
+#include<synthesis/MeasurementEquations/SIMinorCycleController.h>
 
 #include <casa/sstream.h>
 
@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     onepol = True;
   }
 
-  Bool SDAlgorithmBase::deconvolve( SISubIterBot &loopcontrols, 
+  Bool SDAlgorithmBase::deconvolve( SIMinorCycleController &loopcontrols, 
 				  ImageInterface<Float>  &residual, 
                                   ImageInterface<Float>  &psf, 
 				  ImageInterface<Float>  &model, 
@@ -121,12 +121,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	loopcontrols.addSummaryMinor( decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
       }
 
+
+    /// UUUU: Don't need to return this: just set it in the loopcontroller 
     Bool updatedmodel = iters>0; // This info is recorded per model/mapper
 
     return updatedmodel;
 }
 
-  Bool SDAlgorithmBase::checkStop( SISubIterBot &loopcontrols, 
+  Bool SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
 				 Int /*currentiteration*/, 
 				 Float currentresidual )
   {

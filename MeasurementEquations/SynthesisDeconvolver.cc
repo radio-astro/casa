@@ -49,7 +49,6 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 
-#include<synthesis/MeasurementEquations/SIIterBot.h>
 #include <synthesis/MeasurementEquations/SynthesisDeconvolver.h>
 
 #include <sys/types.h>
@@ -65,8 +64,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsCoordSys(NULL),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
-				       itsModel(NULL),
 				       itsImage(NULL),itsPsf(NULL),itsResidual(NULL),itsWeight(NULL),
+				       itsModel(NULL),
 				       itsPartImages(),itsPartPsfs(),itsPartResiduals(),itsPartWeights(),
 				       itsBeam(0.0)
   {
@@ -125,7 +124,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }//end of setupDeconvolution
   
 
-  Record SynthesisDeconvolver::initMinorCycle( Record& subIterBotRecord  )
+  Record SynthesisDeconvolver::initMinorCycle( )
   { 
     LogIO os( LogOrigin("SynthesisDeconvolver","initMinorCycle",WHERE) );
     Record returnRecord;
@@ -141,10 +140,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       divideResidualImageByWeight();
       
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
-      SISubIterBot loopController(subIterBotRecord);
+      //SISubIterBot loopController(subIterBotRecord);
       loopController.setPeakResidual( getPeakResidual() );
       loopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
-      returnRecord = loopController.serialize();
+      returnRecord = loopController.getCycleInitializationRecord();
     } catch(AipsError &x) {
       throw( AipsError("Error initializing the Minor Cycle : "+x.getMesg()) );
     }
@@ -153,17 +152,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   
-  Record SynthesisDeconvolver::executeMinorCycle(Record& subIterBotRecord)
+  Record SynthesisDeconvolver::executeMinorCycle(Record& minorCycleControlRec)
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","executeMinorCycle",WHERE) );
     Record returnRecord;
 
     try {
-
-      SISubIterBot loopController(subIterBotRecord);
-      deconvolve( loopController );
-      returnRecord = loopController.serialize();
-
+      loopController.setCycleControls(minorCycleControlRec);
+      deconvolve();
+      returnRecord = loopController.getCycleExecutionRecord();
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
     }
@@ -317,7 +314,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // Run the deconvolver for each Slice.
   // This means, for iteration control, each SubImage is treated the same as a separate Mapper.
-  void SynthesisDeconvolver::deconvolve( SISubIterBot &loopcontrols  )
+  void SynthesisDeconvolver::deconvolve()
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","deconvolve",WHERE) );
 
@@ -335,11 +332,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	SubImage<Float> subModel( *itsModel, decSlices[subim], True );
 	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
 
-	isModelUpdated |= itsDeconvolver->deconvolve( loopcontrols, subResidual, subPsf, subModel, itsMaskHandler, subim );
-        loopcontrols.resetCycleIter();
-
+	isModelUpdated |= itsDeconvolver->deconvolve( loopController, subResidual, subPsf, subModel, itsMaskHandler, subim );
+        loopController.resetCycleIter();
+        
       }
-    loopcontrols.setUpdatedModelFlag( isModelUpdated );
+    loopController.setUpdatedModelFlag( isModelUpdated );
   }
 
   // Calculate the peak residual for this mapper
