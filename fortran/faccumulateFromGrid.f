@@ -63,10 +63,18 @@
 c$$$            tt = phaseGrad(iloc(1) + l_phaseGradOriginX, 
 c$$$     $              iloc(2) + l_phaseGradOriginY)
 c$$$            if (scaledSupport(1) .eq. 5) then
-c$$$               write(*,*) "DG: ",tt,
-c$$$     $           iloc(1), iloc(2),l_phaseGradOriginX,l_phaseGradOriginY,
-c$$$     $           scaledSupport(1), scaledSampling(1)
+
+c$$$            if ((iCFPos(1) .gt. cfNX) .or. (iCFPos(2) .gt. cfNY) .or.
+c$$$     $           (l_igrdpos(1) .gt. imNX) .or. (l_igrdpos(2) .gt. imNY)
+c$$$     $           .or. (l_igrdpos(3) .gt. imNP) 
+c$$$     $           .or. (l_igrdpos(4) .gt. imNC)) then
+c$$$               write(*,*) "DG: ",
+c$$$c     $           tt,
+c$$$     $              iCFPos(1), iCFPos(2), l_igrdpos(1), l_igrdpos(2),
+c$$$     $              l_igrdpos(3),l_igrdpos(4), scaledSampling(1),
+c$$$     $              scaledSupport(1)
 c$$$            endif
+
             nvalue = nvalue + wt * grid(l_igrdpos(1), l_igrdpos(2), 
      $           l_igrdpos(3), l_igrdpos(4))
          enddo

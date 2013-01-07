@@ -119,23 +119,28 @@ namespace casa{
     // if (wndx != 1)
     //    cerr << "F, W, M: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << wVal << endl;
     if (wVal > 0.0) 
-      convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
+      {
+	convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
+	//	cerr << "Indexes+: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << ipol << " " << mRow << " " << convFuncV->shape().asVector() << endl;
+      }
     else
-      convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,conjMNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
-
+      {
+	convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,conjMNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
+	//	cerr << "Indexes-: " << fndx << " " << wndx << " " << conjMNdx[ipol][mRow] << " " << ipol << " " << mRow << " " << convFuncV->shape().asVector() << endl;
+      }
     cfShape = convFuncV->shape().asVector();
     return convFuncV->getStorage(Dummy);
   };
 
   template <class T>
   Double AWVisResampler::accumulateOnGrid(Array<T>& grid,Complex* __restrict__& convFuncV, 
-					Complex& nvalue,Double& wVal, 
-					Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
-					Vector<Double>& off, Vector<Int>& convOrigin, 
-					Vector<Int>& cfShape, Vector<Int>& loc, Vector<Int>& igrdpos,
+					  Complex& nvalue,Double& wVal, 
+					  Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
+					  Vector<Double>& off, Vector<Int>& convOrigin, 
+					  Vector<Int>& cfShape, Vector<Int>& loc, Vector<Int>& igrdpos,
                                           Double& sinDPA, Double& cosDPA,
-					Bool& finitePointingOffset,
-					Bool doPSFOnly)
+					  Bool& finitePointingOffset,
+					  Bool doPSFOnly)
   {
     Vector<Int> iloc(4,0), tiloc(4);
     Bool Dummy;
@@ -353,16 +358,8 @@ namespace casa{
    
     for(Int irow=rbeg; irow< rend; irow++){   
       //      if ((vbs.uvw_p.nelements() == 0)) 
-      if (accumCFs) if (allTrue(allPolNChanDone_l)) break;
-      // if (accumCFs) 
-      // 	{
-      // 	  Bool allPolsDone=True, allChansDone=True;
-      // 	  for (Int k=0;k<nGridPol;k++) allPolsDone = (allPolsDone && polsDone_l[k]);
-      // 	  for (Int k=0;k<nGridChan;k++) allChansDone = (allChansDone && chansDone_l[k]);
 
-      // 	  if (allPolsDone && allChansDone) break;
-      // 	}
-      
+      //if (accumCFs) if (allTrue(allPolNChanDone_l)) break;
       
       if(!(*(rowFlag_ptr+irow)))
 	{   
@@ -375,8 +372,8 @@ namespace casa{
 		  if((targetIMChan>=0) && (targetIMChan<nGridChan)) 
 		    {
 		      Double conjFreq=sqrt(2*conjRefFreq*conjRefFreq - freq[ichan]*freq[ichan]);
-		      Double wVal = vbs.vb_p->uvw()(irow)(2);
-		      Int wndx = cfb.nearestWNdx(abs(wVal)*freq[ichan]/C::c);
+		      Double dataWVal = vbs.vb_p->uvw()(irow)(2);
+		      Int wndx = cfb.nearestWNdx(abs(dataWVal)*freq[ichan]/C::c);
 		      Int fndx = cfb.nearestFreqNdx(freq[ichan]),
 			conjFNdx =cfb.nearestFreqNdx(conjFreq);
 		      
@@ -391,10 +388,11 @@ namespace casa{
 		      //
 		      cfb.getParams(cfRefFreq, s, support(0), support(1),conjFNdx,wndx,0);
 		      sampling(0) = sampling(1) = s;
+
 		      //cfScale = cfRefFreq/conjRefFreq;
 		      
-		      conjScaledSampling[0] = (sampling[0]*cfScale);
-		      conjScaledSampling[1] = (sampling[1]*cfScale);
+		      conjScaledSampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
+		      conjScaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
 		      conjScaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
 		      conjScaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
 		      //
@@ -405,8 +403,8 @@ namespace casa{
 		      
 		      //cfScale = cfRefFreq/freq[ichan];
 
-		      scaledSampling[0] = (sampling[0]*cfScale);
-		      scaledSampling[1] = (sampling[1]*cfScale);
+		      scaledSampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
+		      scaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
 		      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
 		      scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
 		      
@@ -447,14 +445,14 @@ namespace casa{
 					      //					      (CONJBEAMS==True)) // UUU : With conjugate beams...
 					      vbs.conjBeams_p)
 					    {
-					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, conjFNdx, 
+					      convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, conjFNdx, 
 								      wndx, mNdx, conjMNdx, ipol,  mRow);
 					      support.assign(conjScaledSupport);
 					      sampling.assign(conjScaledSampling);
 					    }
 					  else// UUU : Without conjugate beams...
 					    {
-					      convFuncV=getConvFunc_p(cfShape, cfb, wVal, fndx, 
+					      convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, fndx, 
 								      wndx, mNdx, conjMNdx, ipol,  mRow);
 					      support.assign(scaledSupport);
 					      sampling.assign(scaledSampling);
@@ -471,7 +469,7 @@ namespace casa{
 					  // file (FortanizedLoopsToGrid.cc) has the interface code to call the inner 
 					  // loops re-written in FORTRAN (in synthesis/fortran/faccumulateOnGrid.f)
 
-					  // norm += accumulateOnGrid(grid,convFuncV,nvalue,wVal,
+					  // norm += accumulateOnGrid(grid,convFuncV,nvalue,dataWVal,
 					  // 			   support,sampling,
 					  // 			   off, convOrigin, cfShape, loc, igrdpos,
 					  // 			   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
@@ -499,9 +497,6 @@ namespace casa{
   //
   void AWVisResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
   {
-    
-    //    static int junk=0;
-    
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw, nCFFreq;
     Int achan, apol, rbeg, rend, PolnPlane, ConjPlane;
     Vector<Float> sampling(2),scaledSampling(2);
@@ -576,13 +571,13 @@ namespace casa{
 	  
 	  if((achan>=0) && (achan<nGridChan)) {
 	    //	    lambda = C::c/freq[ichan];
-	    Double wVal = abs(vbs.vb_p->uvw()(irow)(2));
-	    Int wndx = cfb.nearestWNdx(wVal*freq[ichan]/C::c);
+	    Double dataWVal = (vbs.vb_p->uvw()(irow)(2));
+	    Int wndx = cfb.nearestWNdx(abs(dataWVal)*freq[ichan]/C::c);
 	    Int fndx = cfb.nearestFreqNdx(freq[ichan]);
 	    
 	    //	    cerr << "Grid: " << ichan << " " << freq[ichan] << " " << fndx << endl;
 	    
-	    // if (nw > 1) wndx=SynthesisUtils::nint((wVal*freq[ichan]/C::c)/wIncr-1);
+	    // if (nw > 1) wndx=SynthesisUtils::nint((dataWVal*freq[ichan]/C::c)/wIncr-1);
 	    // if (nCFFreq > 0) fndx = SynthesisUtils::nint((freq[ichan])/fIncr-1);
 	    Float s;
 	    // CoordinateSystem cs; 
@@ -621,12 +616,12 @@ namespace casa{
 		    for (uInt mRow=0; mRow<conjMNdx[ipol].nelements(); mRow++)
 		      {
 			//
-			// Get the point to the storage for the CF
+			// Get the pointer to the storage for the CF
 			// indexed by the Freq, W-term and Mueller
 			// Element.
 			//
 			Complex*  convFuncV;
-			convFuncV = getConvFunc_p(cfShape, cfb, wVal, fndx, wndx, mNdx,
+			convFuncV = getConvFunc_p(cfShape, cfb, dataWVal, fndx, wndx, mNdx,
 						  conjMNdx, ipol, mRow);
 			//
 			// Compute the incrmenets and center pixel for the current CF
@@ -649,49 +644,51 @@ namespace casa{
 			// file (FortanizedLoopsFromGrid.cc) has the interface code to call the inner 
 			// loops re-written in FORTRAN (in synthesis/fortran/faccumulateOnGrid.f)
 
-			// accumulateFromGrid(nvalue, gridStore, igrdpos, convFuncV, wVal,
+			// accumulateFromGrid(nvalue, gridStore, igrdpos, convFuncV, dataWVal,
 			// 		   scaledSupport, scaledSampling, off, convOrigin, 
 			// 		   cfShape, loc, phasor, sinDPA, cosDPA, 
 			// 		   finitePointingOffset, cached_phaseGrad_p);
 #include <synthesis/TransformMachines/FortranizedLoopsFromGrid.cc>
-/*			
-			 IPosition phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
-			 for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
-			   {
-			     //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
-			     iloc(1)=(scaledSampling[1]*iy+off[1]);//+convOrigin[1];
-			     igrdpos[1]=loc[1]+iy;
-			     for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
-			       {
-				 //				iloc(0)=(Int)(scaledSampling[0]*ix+off[0]-1);//+convOrigin[0];
-				 iloc(0)=(scaledSampling[0]*ix+off[0]);//+convOrigin[0];
-				 igrdpos[0]=loc[0]+ix;
-				 tiloc=iloc;
-				 if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
-				   {
-				     wt=getFrom4DArray((const Complex * __restrict__ &)convFuncV,
-						       tiloc,cfInc_p);
-				     if (wVal > 0.0) wt = conj(wt);
-				     norm(apol)+=(wt);
-				     if (finitePointingOffset) 
-				       {
-					 wt *= (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0),  iloc[1]+phaseGradOrigin_l(1)));
-					 // ttt += (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0), iloc[1]+phaseGradOrigin_l(1)));
-					 // cerr << "## " << (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0), iloc[1]+phaseGradOrigin_l(1))) << " "
-					 //      << iloc << " " << phaseGradOrigin_l << endl;
-				       }
-				     // nvalue+=wt*grid(grdpos);
-				     // The following uses raw index on the 4D grid
-				     // nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
-				     nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
-				   }
-			       }
-			   }
-*/
+
+			 // //--------------------------------------------------------------------------------
+			 // IPosition phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
+			 // for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+			 //   {
+			 //     //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
+			 //     iloc(1)=(scaledSampling[1]*iy+off[1]);//+convOrigin[1];
+			 //     igrdpos[1]=loc[1]+iy;
+			 //     for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+			 //       {
+			 // 	 //				iloc(0)=(Int)(scaledSampling[0]*ix+off[0]-1);//+convOrigin[0];
+			 // 	 iloc(0)=(scaledSampling[0]*ix+off[0]);//+convOrigin[0];
+			 // 	 igrdpos[0]=loc[0]+ix;
+			 // 	 tiloc=iloc;
+			 // 	 if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
+			 // 	   {
+			 // 	     wt=getFrom4DArray((const Complex * __restrict__ &)convFuncV,
+			 // 			       tiloc,cfInc_p);
+			 // 	     if (dataWVal > 0.0) wt = conj(wt);
+			 // 	     norm(apol)+=(wt);
+			 // 	     if (finitePointingOffset) 
+			 // 	       {
+			 // 		 wt *= (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0),  iloc[1]+phaseGradOrigin_l(1)));
+			 // 		 // ttt += (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0), iloc[1]+phaseGradOrigin_l(1)));
+			 // 		 // cerr << "## " << (cached_phaseGrad_p(iloc[0]+phaseGradOrigin_l(0), iloc[1]+phaseGradOrigin_l(1))) << " "
+			 // 		 //      << iloc << " " << phaseGradOrigin_l << endl;
+			 // 	       }
+			 // 	     // nvalue+=wt*grid(grdpos);
+			 // 	     // The following uses raw index on the 4D grid
+			 // 	     // nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
+			 // 	     nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
+			 // 	   }
+			 //       }
+			 //   }
+			 // //--------------------------------------------------------------------------------
+
 			 //		    visCube(ipol,ichan,irow)=(nvalue*conj(phasor))/norm(apol);
 		      }
 		    visCube(ipol,ichan,irow)=nvalue; // Goes with FortranizedLoopsFromGrid.cc
-		    //		    visCube(ipol,ichan,irow)=nvalue*conj(phasor)/norm(apol); // Goes with C++ loops
+		    //visCube(ipol,ichan,irow)=nvalue*conj(phasor)/norm(apol); // Goes with C++ loops
 		    // cerr << ipol << " " << ichan << " " << irow << " " << nvalue << " " << norm(apol) << " " << pointingOffset 
 		    // 	 << " " << qualifier_p << " " << ttt << " " << scaledSupport << endl;
 		}
@@ -764,6 +761,8 @@ Bool AWVisResampler::reindex(const Vector<Int>& in, Vector<Int>& out,
   
   onGrid = ((out[0] >= 0) && (out[0] < size[0]) &&
 	    (out[1] >= 0) && (out[1] < size[1]));
+  if (!onGrid)
+    cerr << "CF index out of range: " << out << " " << size << endl;
   return onGrid;
 }
 
@@ -802,7 +801,7 @@ void AWVisResampler::addTo4DArray(Complex* __restrict__ & store,
 // 	  {
 // 	    wt = getFrom4DArray((const Complex * __restrict__ &)convFuncV, 
 // 				tiloc,cfInc);
-// 	    if (wVal > 0.0) wt = conj(wt);
+// 	    if (dataWVal > 0.0) wt = conj(wt);
 // 	    cfAreaArrPtr[th] += wt;
 // 	  }
 //     }
