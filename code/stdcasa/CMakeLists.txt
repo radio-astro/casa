@@ -56,10 +56,11 @@ add_custom_command( OUTPUT version.cc
 	COMMAND cat tmp3.txt tmp4.txt > version_tmp.cc
 	|| ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different version_tmp.cc version.cc
+	COMMAND echo '\# casa version file created from casa code cmake' > ${CMAKE_INSTALL_PREFIX}/../share/version.txt
+	COMMAND echo '${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION} ${SVNREVISION}' >> ${CMAKE_INSTALL_PREFIX}/../share/version.txt
 	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.template
 	DEPENDS definitions
 )
-
 
 casa_add_library( stdcasa
 	StdCasa/CasacSupport.cc
