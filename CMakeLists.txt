@@ -293,7 +293,6 @@ casa_add_library( synthesis
  MeasurementEquations/Imager.cc
  MeasurementEquations/Imager2.cc
  MeasurementEquations/ImagerMultiMS.cc
- MeasurementEquations/SynthesisImager.cc
  MeasurementEquations/ImageMSCleaner.cc
  MeasurementEquations/IncCEMemModel.cc
  MeasurementEquations/IncEntropy.cc
@@ -321,14 +320,16 @@ casa_add_library( synthesis
  fortran/fpbmos.f	
  fortran/fpbwproj.f	
  fortran/leakantso.f
+ MeasurementEquations/SynthesisImager.cc
  MeasurementEquations/SISkyEquation.cc
- MeasurementEquations/SIMapper.cc
  MeasurementEquations/SIMapperCollection.cc
- MeasurementEquations/SIMaskHandler.cc
+ MeasurementEquations/SIMapper.cc
+ MeasurementEquations/SynthesisIterBot.cc
  MeasurementEquations/SISubIterBot.cc
  MeasurementEquations/SIIterBot.cc
- MeasurementComponents/SISkyModel.cc
- MeasurementComponents/SIDeconvolver.cc
+ MeasurementEquations/SynthesisDeconvolver.cc
+ MeasurementEquations/SDAlgorithmBase.cc
+ MeasurementEquations/SDMaskHandler.cc
   )
 
 install (FILES
@@ -561,8 +562,6 @@ install (FILES
 	MeasurementComponents/nPBWProjectFT.h
 	MeasurementComponents/rGridFT.h
 	MeasurementComponents/ImageSkyModel.tcc
- 	MeasurementComponents/SISkyModel.h
-	MeasurementComponents/SIDeconvolver.h
 	DESTINATION include/casacode/synthesis/MeasurementComponents
 	)
 install (FILES
@@ -582,7 +581,6 @@ install (FILES
 	MeasurementEquations/ImageMSCleaner.h
 	MeasurementEquations/Imager.h
 	MeasurementEquations/ImagerMultiMS.h
-	MeasurementEquations/SynthesisImager.h
 	MeasurementEquations/IncCEMemModel.h
 	MeasurementEquations/IncEntropy.h
 	MeasurementEquations/Iterate.h
@@ -608,12 +606,16 @@ install (FILES
 	MeasurementEquations/MaskedHogbomCleanModel.tcc
 	MeasurementEquations/ResidualEquation.tcc
 	MeasurementEquations/StokesUtil.tcc
+	MeasurementEquations/SynthesisImager.h
         MeasurementEquations/SISkyEquation.h
-	MeasurementEquations/SIMapper.h
 	MeasurementEquations/SIMapperCollection.h
+	MeasurementEquations/SIMapper.h
+	MeasurementEquations/SynthesisIterBot.h
 	MeasurementEquations/SISubIterBot.h
 	MeasurementEquations/SIIterBot.h
-	MeasurementEquations/SIMaskHandler.h
+	MeasurementEquations/SynthesisDeconvolver.h
+	MeasurementEquations/SDMaskHandler.h
+	MeasurementEquations/SDAlgorithmBase.h
 	DESTINATION include/casacode/synthesis/MeasurementEquations
 	)
 install (FILES

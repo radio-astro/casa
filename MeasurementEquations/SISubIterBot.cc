@@ -50,7 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                 itsInteractiveIterDone(0),
                                 itsMaxCycleIterDone(0),
                                 itsSummaryMinor(IPosition(2,6,0)),
-				itsNSummaryFields(6)
+				itsNSummaryFields(6),
+				itsDeconvolverID(0) // Needs to be filled in.
   {}
 
 
@@ -71,7 +72,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                                itsInteractiveIterDone(0),
                                                itsMaxCycleIterDone(0),
                                                itsSummaryMinor(IPosition(2,6,0)),
-					       itsNSummaryFields(6)
+					       itsNSummaryFields(6),
+					       itsDeconvolverID(0) // Needs to be filled in.
   {
     LogIO os( LogOrigin("SISubIterBot",__FUNCTION__,WHERE) );
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
@@ -315,6 +317,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCycleIterDone++;
   }
 
+  Float SISubIterBot::getPeakResidual()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsPeakResidual;
+  }
+
+  void SISubIterBot::setPeakResidual(Float peakResidual)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsPeakResidual = peakResidual;
+  }
+
+  Float SISubIterBot::getIntegratedFlux()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsIntegratedFlux;
+  }
+
+  void SISubIterBot::setIntegratedFlux(Float integratedFlux)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsIntegratedFlux = integratedFlux;
+  }
+
+  Float SISubIterBot::getMaxPsfSidelobe()
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    return itsMaxPsfSidelobe;
+  }
+
+  void SISubIterBot::setMaxPsfSidelobe(Float maxPsfSidelobe)
+  {
+    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+    itsMaxPsfSidelobe = maxPsfSidelobe;
+  }
+
+
+
   Record SISubIterBot::getDetailsRecord() {
     LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
@@ -399,7 +439,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCycleIterDone = 0;
   }
 
-  void SISubIterBot::addSummaryMinor(Int mapperid, uInt decid, Float model, Float peakresidual)
+  void SISubIterBot::addSummaryMinor(uInt decid, Float model, Float peakresidual)
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     
@@ -420,7 +460,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      // cycle threshold
      itsSummaryMinor( IPosition(2, 3, shp[1] ) ) = getCycleThreshold();
      // mapper id
-     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = mapperid;
+     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = itsDeconvolverID; // TODO : Get current deconvolver tool ID.
      // chunk id (channel/stokes)
      itsSummaryMinor( IPosition(2, 5, shp[1] ) ) = decid;
 

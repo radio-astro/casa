@@ -136,8 +136,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (subIterBot.getUpdatedModelFlag()) {
       setUpdatedModelFlag(true);
     }
+
+    /* JK : TODO : Add code to merge peakResidual, integratedFlux, maxPsfSideLobe from the list of subiterbots */
+
+    itsPeakResidual = max( itsPeakResidual, subIterBot.getPeakResidual() );
+    itsIntegratedFlux += subIterBot.getIntegratedFlux(); // This needs to be zeroed somewhere first.
+    itsMaxPsfSidelobe = max( itsMaxPsfSidelobe, subIterBot.getMaxPsfSidelobe() );
+
   }
 
+  
   void SIIterBot::controlUpdate(const std::map<std::string,
                                 DBus::Variant>& updatedParams) {
     Record controlRecord=toRecord(updatedParams);

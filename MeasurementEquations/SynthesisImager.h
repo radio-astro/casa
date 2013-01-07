@@ -36,9 +36,7 @@
 #include <measures/Measures/MDirection.h>
 
 #include<synthesis/MeasurementEquations/SIMapperCollection.h>
-#include<synthesis/MeasurementComponents/SISkyModel.h>
 #include<synthesis/MeasurementEquations/SISkyEquation.h>
-#include<synthesis/MeasurementEquations/SIMaskHandler.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -46,7 +44,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 class MeasurementSet;
-class ViewerProxy;
 template<class T> class ImageInterface;
  class SIIterBot;
 
@@ -68,28 +65,11 @@ class SynthesisImager
   void selectData(Record selpars);
   void defineImage(Record impars);
   void setupImaging(Record gridpars);
-  void setupDeconvolution(Record recpars);
-  void setupIteration(Record iterpars);
-
-  void setInteractiveMode(Bool interactiveMode);
-
-  void   setIterationDetails(Record iterpars);
-  Record getIterationDetails();
-  Record getIterationSummary();
 
   void initMapper();
-  void initCycles();
-  bool cleanComplete();
 
-  void endLoops();
-
-  Record getMajorCycleControls();
+  //Record getMajorCycleControls();
   void   executeMajorCycle(Record& controls);
-  void   endMajorCycle();
-
-  Record getSubIterBot();
-  Record executeMinorCycle(Record& subIterBot);
-  void endMinorCycle(Record& subIterBot);
 
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
@@ -105,35 +85,24 @@ protected:
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
-
   //  CountedPtr<VisSet> itsVisSet;
-
-  void pauseForUserInteraction();
-
   CountedPtr<FTMachine> itsCurrentFTMachine;
-  CountedPtr<SIDeconvolver> itsCurrentDeconvolver;
   CountedPtr<CoordinateSystem> itsCurrentCoordSys;
   IPosition itsCurrentImageShape;
   String itsCurrentImageName;
-  CountedPtr<SIMaskHandler> itsCurrentMaskHandler;
 
-  SISkyModel itsSkyModel;
   SISkyEquation itsSkyEquation;
-
-  boost::scoped_ptr<SIIterBot> itsLoopController;
 
   /////////////// All input parameters
 
   // Data Selection
   // Image Definition
-  String startmodel_p;
-
   // Iteration Control
   // Imaging/Gridding
   // Deconvolution
 
   // Other Options
-  Bool usescratch_p;
+  Bool itsUseScratch;
 
   //////////////// Internal functions
  

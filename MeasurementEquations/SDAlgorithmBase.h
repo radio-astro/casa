@@ -1,4 +1,4 @@
-//# SIMaskHandler.h: Definition for SIMaskHandler
+//# SDAlgorithmBase.h: Definition for SDAlgorithmBase
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SIMASKHANDLER_H
-#define SYNTHESIS_SIMASKHANDLER_H
+#ifndef SYNTHESIS_SDALGORITHMBASE_H
+#define SYNTHESIS_SDALGORITHMBASE_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <synthesis/MeasurementComponents/SkyModel.h>
@@ -39,34 +39,59 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/System/PGPlotter.h>
 
+#include<synthesis/MeasurementEquations/SDMaskHandler.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class SIMaskHandler 
-{
+  /* Forware Declaration */
+  class SISubIterBot;
+
+
+class SDAlgorithmBase {
 public:
 
   // Empty constructor
-  SIMaskHandler();
-  ~SIMaskHandler();
+  SDAlgorithmBase();
+  ~SDAlgorithmBase();
 
 
-  // Copy constructor and assignment operator
-  //Imager(const Imager&);
-  //Imager& operator=(const Imager&);
+  // Decide how to iterate through the image axes.
+  // The Mapper will call 'deconvolve' with pieces of only this shape.
+  void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
 
-  void makeMask();
+  // 
+  Bool deconvolve( SISubIterBot& loopcontrols,  
+		   ImageInterface<Float> &residual, 
+		   ImageInterface<Float> &psf, 
+		   ImageInterface<Float> &model, 
+		   CountedPtr<SDMaskHandler> maskhandler, 
+		   uInt decid);
 
-  // Return a reference to an imageinterface for the mask.
-  void makeAutoMask();
+  // eventually, send in images by reference.
+  void findNextComponent( ImageInterface<Float>  &residual, 
+			  ImageInterface<Float>  &psf, 
+			  Float loopgain, 
+			  Float &comp );
+  void updateModel( ImageInterface<Float> &model, 
+		    Float  &comp );
+  void updateResidual( ImageInterface<Float> &residual, 
+		       Float  &comp );
+
+  void restore( ImageInterface<Float>  &image, 
+		Float beam, 
+		ImageInterface<Float>  &model, 
+		ImageInterface<Float>  &residual, 
+		ImageInterface<Float>  &weight );
+
+  Bool checkStop( SISubIterBot &loopcontrols, Int currentiteration, Float currentresidual );
 
 protected:
+
+  // For debugging.
+  IPosition tmpPos_p;
 
 };
 
 } //# NAMESPACE CASA - END
 
-
 #endif
-
-
