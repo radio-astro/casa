@@ -58,7 +58,7 @@
   faccumulatefromgrid_(&nvalue, 
 		       gridPtr, 
 		       convFuncV, 
-		       &wVal,
+		       &dataWVal,
 		       supportPtr,samplingPtr,offPtr, convOriginPtr,
 		       cfShapePtr,locPtr,igrdposPtr, 
 		       &sinDPA, &cosDPA,
