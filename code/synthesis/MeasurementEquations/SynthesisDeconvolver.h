@@ -60,6 +60,7 @@ class SynthesisDeconvolver
   void setupDeconvolution(Record recpars);
   void setupIteration(Record iterpars);
 
+  Record initMinorCycle(Record& subIterBot);
   Record executeMinorCycle(Record& subIterBot);
 
   // Helpers

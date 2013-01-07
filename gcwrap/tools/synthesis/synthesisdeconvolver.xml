@@ -66,6 +66,23 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="initminorcycle">
+   <shortdescription>Initialize the minor cycle (gather, norm, findpeakres)</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="iterbotrecord">
+     <description>All parameters that control major cycle</description>
+     <value type="record"></value>
+     </param>
+</input>
+
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
    <method type="function" name="executeminorcycle">
    <shortdescription>Run a minor cycle</shortdescription>
 
@@ -80,6 +97,7 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 
 <returns type="record"/>
 </method>
+
 
 <!-- ===================================== -->
 

@@ -117,7 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	loopcontrols.incrementMinorCycleCount( );
 	loopcontrols.setPeakResidual( residual.getAt(tmpPos_p) );
-	loopcontrols.setIntegratedFlux( model.getAt(tmpPos_p) );
+	//	loopcontrols.setIntegratedFlux( model.getAt(tmpPos_p) );
 	loopcontrols.addSummaryMinor( decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
       }
 
