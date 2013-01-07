@@ -124,6 +124,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }//end of setupDeconvolution
   
+
+  Record SynthesisDeconvolver::initMinorCycle( Record& subIterBotRecord  )
+  { 
+    LogIO os( LogOrigin("SynthesisDeconvolver","initMinorCycle",WHERE) );
+    Record returnRecord;
+
+    try {
+      // Do the Gather if/when needed and check that images exist on disk.
+      if( !checkImagesOnDisk() ) 
+	{
+	  throw( AipsError("Cannot validate images on disk, before starting") );
+	}
+      
+      // Normalize the residual image. i.e. Calculate the principal solution  
+      divideResidualImageByWeight();
+      
+      // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
+      SISubIterBot loopController(subIterBotRecord);
+      loopController.setPeakResidual( getPeakResidual() );
+      loopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
+      returnRecord = loopController.serialize();
+    } catch(AipsError &x) {
+      throw( AipsError("Error initializing the Minor Cycle : "+x.getMesg()) );
+    }
+    
+    return returnRecord;
+  }
+  
   
   Record SynthesisDeconvolver::executeMinorCycle(Record& subIterBotRecord)
   {
@@ -131,12 +159,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record returnRecord;
 
     try {
-
-      // Do the Gather if/when needed and check that images exist on disk.
-      if( !checkImagesOnDisk() ) 
-	{
-	  throw( AipsError("Cannot validate images on disk, before starting") );
-	}
 
       SISubIterBot loopController(subIterBotRecord);
       deconvolve( loopController );
@@ -301,9 +323,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool isModelUpdated=False;
 
-    divideResidualImageByWeight();
-
-    // Make a list of Slicers
+    // Make a list of Slicers.
     Vector<Slicer> decSlices = partitionImages();
 
     for( uInt subim=0; subim<decSlices.nelements(); subim++)
