@@ -70,7 +70,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   SIIterBot::~SIIterBot()
   {
+#ifdef INTERACTIVE_ITERATION
     disconnect();
+#endif
   }
 
 
@@ -93,7 +95,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(!interactionPending) {
       interactionPending = true;
       pushDetails();
+#ifdef INTERACTIVE_ITERATION
       interactionRequired(interactionPending);
+#endif
     }
 
     /* Wait on Condition variable */
@@ -103,7 +107,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (updateNeeded) {
       updateNeeded = false;
+#ifdef INTERACTIVE_ITERATION
       interactionRequired(false);
+#endif
       pushDetails();
     }
   }
@@ -246,7 +252,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void SIIterBot::pushDetails() {
+    #ifdef INTERACTIVE_ITERATION
     detailUpdate(fromRecord(getDetailsRecord()));
+    #endif
   }
 
   void SIIterBot::pushSummary(){
