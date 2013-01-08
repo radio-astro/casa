@@ -64,28 +64,9 @@ public:
 	static const Int CURRENT_VERSION;
 	static const Regex MAGIC;
 
-	// differentiating between the filename and simple text constructors
-	RegionTextParser(
-		const String& filename, const CoordinateSystem& csys,
-		const IPosition& imShape,
-		const Int requireAtLeastThisVersion
-	);
-
-	RegionTextParser(
-		const CoordinateSystem& csys, const IPosition& imShape, const String& text
-	);
-
-	~RegionTextParser();
-
-	Int getFileVersion() const;
-
-	Vector<AsciiAnnotationFileLine> getLines() const;
-
-private:
-	// because of nonstandard access patterns, ParamValue and ParamSet
-	// should be kept private and only used by this class. If it becomes
-	// necessary or desirable to use them in multiple classes, they should
-	// be converted to classes to allow generic access.
+	// because of nonstandard access patterns, be careful when using ParamValue and ParamSet
+	// outside this class. These should probably be made into full fledged classes at some
+	// point.
 	struct ParamValue {
 		Double doubleVal;
 		Int intVal;
@@ -100,6 +81,34 @@ private:
 	};
 
 	typedef std::map<AnnotationBase::Keyword, ParamValue> ParamSet;
+
+	// <group>
+	// differentiating between the filename and simple text constructors
+	RegionTextParser(
+		const String& filename, const CoordinateSystem& csys,
+		const IPosition& imShape,
+		const Int requireAtLeastThisVersion
+	);
+
+	RegionTextParser(
+		const CoordinateSystem& csys, const IPosition& imShape, const String& text
+	);
+	//</group>
+
+	~RegionTextParser();
+
+	Int getFileVersion() const;
+
+	Vector<AsciiAnnotationFileLine> getLines() const;
+
+	// get the parameter set from a line of <src>text</src>. <src>preamble</src> is prepended to exception messages.
+	static ParamSet getParamSet(
+		Bool& spectralParmsUpdated,
+		LogIO& log, const String& text, const String& preamble,
+		const CoordinateSystem& csys
+	);
+
+private:
 
 	const static String sOnePair;
 	const static String bTwoPair;
@@ -116,12 +125,16 @@ private:
 	IPosition _imShape;
 	uInt _regions;
 
+	RegionTextParser() {}
+
+	RegionTextParser& operator=(const RegionTextParser&);
+
 	void _parse(const String& contents, const String& fileDesc);
 
 	Array<String> _extractTwoPairs(uInt& end, const String& string) const;
 
 	// extract s1 and s2 from a string of the form "[s1, s2]"
-	Vector<String> _extractSinglePair(const String& string) const;
+	static Vector<String> _extractSinglePair(const String& string);
 
 	void _addLine(const AsciiAnnotationFileLine& line);
 
@@ -154,9 +167,9 @@ private:
 		const String& preamble
 	) const;
 
-	String _doLabel(String& consumeMe, const String& logPreamble) const;
+	static String _doLabel(String& consumeMe, const String& logPreamble);
 
-	String _getKeyValue(String& consumeMe, const String& preamble) const;
+	static String _getKeyValue(String& consumeMe, const String& preamble);
 
 	Vector<Quantity> _extractQuantityPairAndSingleQuantity(
 		String& consumeMe, const String& preamble
@@ -176,9 +189,9 @@ private:
 
 	void _setInitialGlobals();
 
-	Vector<Stokes::StokesTypes> _stokesFromString(
+	static Vector<Stokes::StokesTypes> _stokesFromString(
 		const String& stokes, const String& preamble
-	) const;
+	);
 
 	Vector<Quantity> _extractTwoQuantityPairsAndSingleQuantity(
 		String& consumeMe, const String& preamble

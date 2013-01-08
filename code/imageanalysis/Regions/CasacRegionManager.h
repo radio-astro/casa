@@ -84,7 +84,6 @@ public:
 		const String& box, const IPosition& imShape, const String& imageName=""
 	);
 
-
 	static vector<uInt> consolidateAndOrderRanges(
 		const vector<uInt>& ranges
 	);
@@ -96,7 +95,8 @@ public:
 
 	// <src>nChannels</src> is the total number of spectral channels in the image
 	vector<uInt> setSpectralRanges(
-		String specification, uInt& nSelectedChannels, const uInt nChannels
+		String specification, uInt& nSelectedChannels, const uInt nChannels,
+		const IPosition& imShape=IPosition(0)
 	) const;
 
 private:
@@ -123,19 +123,28 @@ private:
 	) const;
 
 	static void _setRegion(
-			Record& regionRecord, String& diagnostics,
-			const Record* regionPtr
+		Record& regionRecord, String& diagnostics,
+		const Record* regionPtr
 	);
 
 	String _stokesFromRecord(
-			const Record& region, const StokesControl stokesControl, const IPosition& shape
+		const Record& region, const StokesControl stokesControl, const IPosition& shape
 	) const;
 
 	void _setRegion(
-			Record& regionRecord, String& diagnostics,
-			const String& regionName, const IPosition& imShape,
-			const String& imageName
+		Record& regionRecord, String& diagnostics,
+		const String& regionName, const IPosition& imShape,
+		const String& imageName
 	);
+
+	vector<uInt> _spectralRangesFromTraditionalFormat(
+		uInt& nSelectedChannels, const String& specification, const uInt nChannels
+	) const;
+
+	vector<uInt> _spectralRangeFromRangeFormat(
+		uInt& nSelectedChannels, const String& specification,
+		const IPosition& imShape
+	) const;
 };
 
 } // casa namespace
