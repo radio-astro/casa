@@ -256,7 +256,6 @@ namespace casa {
 
     protected:
       inline LogIO* _getLog() const { return itsLog; }
-      inline CoordinateSystem* _getCsys() const { return itsCSys; }
 
     private:
       LogIO *itsLog;
