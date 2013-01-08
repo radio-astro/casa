@@ -36,10 +36,9 @@
 #include <boost/utility.hpp>
 
 // Include files for the DBus Service
-#include <casadbus/interfaces/SynthImager.adaptor.h>
+//#include <casadbus/interfaces/SynthImager.adaptor.h>
 #include <casadbus/utilities/DBusBase.h>
 
-//#include<synthesis/MeasurementEquations/SISubIterBot.h>
 
 /* Future Decl */
 class casa::Record;
@@ -47,9 +46,10 @@ class casa::Record;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   class SIIterBot : boost::noncopyable,
-                    //public SISubIterBot,
-                    public edu::nrao::casa::SynthImager_adaptor,
-                    public DBusService
+#ifdef INTERACTIVE_ITERATION
+    public edu::nrao::casa::SynthImager_adaptor,
+#endif
+    public DBusService
   {
   public:
     SIIterBot(const std::string &serviceName);
