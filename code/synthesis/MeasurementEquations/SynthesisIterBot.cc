@@ -28,6 +28,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
+#include <iomanip>
+
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -57,10 +59,11 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisIterBot::SynthesisIterBot() : 
-    itsLoopController("SynthesisImager")
+    itsLoopController(SynthesisIterBot::generateServiceName())  
   {
-  }
+      }
   
+
   SynthesisIterBot::~SynthesisIterBot() 
   {
   }
@@ -321,6 +324,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
 
   }// end of pauseForUserInteraction
+
+
+  string SynthesisIterBot::generateServiceName() {
+    ostringstream name;
+     timeval tp;
+     gettimeofday(&tp, NULL);
+     name << "SynthesisImager" <<tp.tv_sec << "_" << std::setw(6) 
+          << std::setfill('0') << tp.tv_usec;
+     return name.str();
+   }
 
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
