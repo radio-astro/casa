@@ -68,6 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsVisSet(NULL),
 				       itsCurrentFTMachine(NULL), 
 				       itsCurrentCoordSys(NULL),
+				       itsCurrentImages(NULL),
                                        itsCurrentImageShape(IPosition()),
                                        itsCurrentImageName(""),
 				       itsUseScratch(True)
@@ -193,6 +194,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
         itsCurrentImageName = imagename;
 
+	itsCurrentImages = new SIImageStore(itsCurrentImageName, itsCurrentCoordSys, itsCurrentImageShape);
+
       }
     catch(AipsError &x)
       {
@@ -245,7 +248,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 
-	itsMappers.addMapper( String("basetype"), itsCurrentImageName, itsCurrentFTMachine, itsCurrentCoordSys, itsCurrentImageShape);
+	itsMappers.addMapper( String("basetype"), itsCurrentImages, itsCurrentFTMachine);
 
       }
     catch(AipsError &x)

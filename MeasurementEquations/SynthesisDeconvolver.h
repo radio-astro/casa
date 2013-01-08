@@ -35,6 +35,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
+#include<synthesis/MeasurementEquations/SIImageStore.h>
 #include<synthesis/MeasurementEquations/SDAlgorithmBase.h>
 #include<synthesis/MeasurementEquations/SDMaskHandler.h>
 #include <synthesis/MeasurementEquations/SIMinorCycleController.h>
@@ -59,7 +60,6 @@ class SynthesisDeconvolver
 
   // make all pure-inputs const
   void setupDeconvolution(Record recpars);
-  void setupIteration(Record iterpars);
 
   Record initMinorCycle();
   Record executeMinorCycle(Record& subIterBot);
@@ -99,6 +99,9 @@ protected:
 
   CountedPtr<SDAlgorithmBase> itsDeconvolver;
   CountedPtr<SDMaskHandler> itsMaskHandler;
+  CountedPtr<SIImageStore> itsImages;
+
+  Vector<CountedPtr<SIImageStore> > itsPartImages;
 
   IPosition itsImageShape;
   CountedPtr<CoordinateSystem> itsCoordSys;
@@ -106,9 +109,9 @@ protected:
   String itsImageName;
   Vector<String> itsPartImageNames;
 
-  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsResidual, itsWeight;
-  CountedPtr<PagedImage<Float> > itsModel;
-  Vector<CountedPtr<PagedImage<Float> > > itsPartImages, itsPartPsfs, itsPartResiduals, itsPartWeights;
+  //  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsResidual, itsWeight;
+  //CountedPtr<PagedImage<Float> > itsModel;
+  //Vector<CountedPtr<PagedImage<Float> > > itsPartImages, itsPartPsfs, itsPartResiduals, itsPartWeights;
 
   Float itsBeam;
 

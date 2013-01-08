@@ -121,11 +121,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	loopcontrols.addSummaryMinor( decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
       }
 
+    loopcontrols.setUpdatedModelFlag( iters>0 );
 
-    /// UUUU: Don't need to return this: just set it in the loopcontroller 
-    Bool updatedmodel = iters>0; // This info is recorded per model/mapper
-
-    return updatedmodel;
 }
 
   Bool SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 

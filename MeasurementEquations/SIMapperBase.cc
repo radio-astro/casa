@@ -58,31 +58,22 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SIMapperBase::SIMapperBase( String imagename, 
+  SIMapperBase::SIMapperBase( CountedPtr<SIImageStore> imagestore,
 		      CountedPtr<FTMachine> ftmachine, 
-		      CountedPtr<CoordinateSystem> imcoordsys, 
-		      IPosition imshape, 
 		      Int mapperid)
   {
     LogIO os( LogOrigin("SIMapperBase","Construct a mapper",WHERE) );
 
-    itsImageName = imagename;
-
     itsFTMachine = ftmachine;
     itsInverseFTMachine = ftmachine; // This should be a clone.
 
-    itsCoordSys = imcoordsys;
-    itsImageShape = imshape;
-
-    itsPsf=NULL;
-    itsModel=NULL;
-    itsResidual=NULL;
-    itsWeight=NULL;
+    itsImages = imagestore;
+    itsImageShape = itsImages->getShape();
 
     itsIsModelUpdated = False;
     itsMapperId = mapperid;
 
-    allocateImageMemory();
+    initImages();
 
   }
   
@@ -93,48 +84,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   // Allocate Memory and open images.
   //// TODO : If only the major cycle is called (niter=0), don't allocate Image, Psf, Weight...
-  void SIMapperBase::allocateImageMemory()
+  void SIMapperBase::initImages()
   {
     LogIO os( LogOrigin("SIMapperBase","allocateImageMemory",WHERE) );
 
     os << "Mapper " << itsMapperId << " : Calculate required memory, and allocate" << LogIO::POST;
 
-    // Make the Images.
-    // itsImageName is the 'full' image. 
-    //     -- Check, and create a new image only if it does not already exist on disk.
-    //     -- If it exists on disk, check that it's shape and coordinates 
-
-    if( doImagesExist( ) )
-      {
-	itsResidual = new PagedImage<Float> (itsImageName+String(".residual"));
-	itsPsf = new PagedImage<Float> (itsImageName+String(".psf"));
-	itsWeight = new PagedImage<Float> (itsImageName+String(".weight"));
-      }
-    else
-      {
-	itsResidual = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".residual"));
-	itsPsf = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".psf"));
-	itsWeight = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".weight"));
-      }
-
-    if( doesModelImageExist() )
-      {
-	itsModel = new PagedImage<Float> (itsImageName+String(".model"));
-      }
-    else
-      {
-	itsModel = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".model"));
-      }
-
 
     // Initialize all these images.
     Array<Float> pixels( itsImageShape );
     pixels = 0.0;
-    itsResidual->set(0.0); 
-    itsPsf->set(0.0);
-    itsPsf->set(0.2);
-    itsModel->set(0.0);
-    itsWeight->set(1.0);
+    itsImages->residual()->set(0.0); 
+    itsImages->psf()->set(0.0);
+    itsImages->psf()->set(0.2);
+    itsImages->model()->set(0.0);
+    itsImages->weight()->set(1.0);
 
     //////////////////////////////////// ONLY FOR TESTING //////////////////////////////////
     // Initial Peak Residuals - for single-pixel-image testing.
@@ -156,30 +120,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  // TODO : Move to an image-wrapper class ? Same function exists in SynthesisDeconvolver.
-  Bool SIMapperBase::doImagesExist()
-  {
-    LogIO os( LogOrigin("SIMapperBase","doImagesExist",WHERE) );
-    // Check if imagename.residual, imagename.psf. imagename.weight
-    // exist on disk and if they're the right shape.
-    // If the shape is not right, complain here and throw an exception (or just say it will get overwritten)
-    return False;
-  }
-
-  Bool SIMapperBase::doesModelImageExist()
-  {
-    LogIO os( LogOrigin("SIMapperBase","doesModelImageExist",WHERE) );
-    // Check if the model image exists.
-    // If it exists, then...
-    //   If the shape is not right, attempt a re-grid onto itsImageShape here.
-    //   If it's a component list, but the FTM needs an image, evaluate the model image here.
-    //   If none of the above here, then complain.
-
-    itsIsModelUpdated = False;
-
-    return False;
-  }
-
 
   // #############################################
   // #############################################
@@ -192,7 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperBase::initializeGrid(/* vb */)
   {
     LogIO os( LogOrigin("SIMapperBase","initializeGrid",WHERE) );
-    // itsFTM->initializeToSky( itsResidual, vb )
+    // itsFTM->initializeToSky( itsImages->residual(), vb )
   }
 
   void SIMapperBase::grid(/* vb */)
@@ -205,13 +145,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapperBase","finalizeGrid",WHERE) );
 
-    // TODO : Fill in itsResidual, itsPsf, itsWeight.
+    // TODO : Fill in itsImages->residual(), itsImages->psf(), itsImages->weight().
     // Do not normalize the residual by the weight. 
     //   -- Normalization happens later, via 'divideResidualImageByWeight' called from SI.divideImageByWeight()
     //   -- This will ensure that normalizations are identical for the single-node and parallel major cycles. 
 
     // For TESTING
-    itsResidual->put( itsOriginalResidual - itsModel->get() );
+    itsImages->residual()->put( itsOriginalResidual - itsImages->model()->get() );
 
   }
 

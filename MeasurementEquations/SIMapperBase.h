@@ -36,6 +36,7 @@
 #include <measures/Measures/MDirection.h>
 
 #include <synthesis/TransformMachines/FTMachine.h>
+#include <synthesis/MeasurementEquations/SIImageStore.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -49,10 +50,8 @@ class SIMapperBase
  public:
   // Default constructor
 
-  SIMapperBase( String imagename, 
+  SIMapperBase( CountedPtr<SIImageStore> imagestore, 
             CountedPtr<FTMachine> ftmachine, 
-            CountedPtr<CoordinateSystem> imcoordsys, 
-            IPosition imshape, 
             Int mapperid);
   virtual ~SIMapperBase();
 
@@ -72,22 +71,23 @@ class SIMapperBase
 
 protected:
   //////////////////// Member Functions
-  
-  void allocateImageMemory();
-  Bool doImagesExist();
-  Bool doesModelImageExist();
 
+  void initImages();
+  
   ///////////////////// Member Objects
 
   CountedPtr<FTMachine> itsFTMachine, itsInverseFTMachine; 
+
   CountedPtr<CoordinateSystem> itsCoordSys;
   IPosition itsImageShape;
 
-  // These are images
-  String itsImageName;
+  CountedPtr<SIImageStore> itsImages;
 
+  /*
+  String itsImageName;
   CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight;
-  
+  */  
+
   // This is only for testing. In the real-world, this is the data....
   Array<Float> itsOriginalResidual;
 

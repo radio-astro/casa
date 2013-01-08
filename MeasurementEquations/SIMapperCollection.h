@@ -49,10 +49,8 @@ class SIMapperCollection
   ~SIMapperCollection();
 
   void addMapper( String mappertype, 
-		  String imagename, 
-		  CountedPtr<FTMachine> ftmachine, 
-		  CountedPtr<CoordinateSystem> imcoordsys, 
-		  IPosition imshape);
+		  CountedPtr<SIImageStore> imagestore,
+		  CountedPtr<FTMachine> ftmachine);
 
   Int nMappers();
 
