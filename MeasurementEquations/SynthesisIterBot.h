@@ -81,7 +81,9 @@ protected:
   SIIterBot itsLoopController;
 
   /////////////// All input parameters
- 
+
+ private:
+  static string generateServiceName();
 };
 
 
