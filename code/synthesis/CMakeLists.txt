@@ -321,6 +321,7 @@ casa_add_library( synthesis
  fortran/fpbwproj.f	
  fortran/leakantso.f
  MeasurementEquations/SynthesisImager.cc
+ MeasurementEquations/SIImageStore.cc
  MeasurementEquations/SIMapperCollection.cc
  MeasurementEquations/SIMapperBase.cc
  MeasurementEquations/SIMapper.cc
@@ -607,6 +608,7 @@ install (FILES
 	MeasurementEquations/ResidualEquation.tcc
 	MeasurementEquations/StokesUtil.tcc
 	MeasurementEquations/SynthesisImager.h
+	MeasurementEquations/SIImageStore.h
 	MeasurementEquations/SIMapperCollection.h
 	MeasurementEquations/SIMapperBase.h
 	MeasurementEquations/SIMapper.h

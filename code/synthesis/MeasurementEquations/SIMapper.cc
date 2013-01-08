@@ -57,11 +57,9 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SIMapper::SIMapper( String imagename, 
+  SIMapper::SIMapper( CountedPtr<SIImageStore> imagestore, 
 		      CountedPtr<FTMachine> ftmachine, 
-		      CountedPtr<CoordinateSystem> imcoordsys, 
-		      IPosition imshape, 
-		      Int mapperid) : SIMapperBase( imagename, ftmachine, imcoordsys, imshape, mapperid )
+		      Int mapperid) : SIMapperBase( imagestore, ftmachine, mapperid )
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
   }

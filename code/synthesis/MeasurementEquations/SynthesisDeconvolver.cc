@@ -60,13 +60,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisDeconvolver::SynthesisDeconvolver() : 
 				       itsDeconvolver(NULL), 
 				       itsMaskHandler(NULL),
+				       itsImages(CountedPtr<SIImageStore>()),
+				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageShape(IPosition()),
 				       itsCoordSys(NULL),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
-				       itsImage(NULL),itsPsf(NULL),itsResidual(NULL),itsWeight(NULL),
-				       itsModel(NULL),
-				       itsPartImages(),itsPartPsfs(),itsPartResiduals(),itsPartWeights(),
 				       itsBeam(0.0)
   {
     
@@ -177,33 +176,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","checkImagesOnDisk",WHERE) );
 
-    // Check if full images exist
-    Bool foundFullImage = doImagesExist( itsImageName );
+    // Check if full images exist, and open them if possible.
+    Bool foundFullImage=False;
+    try
+      {
+	itsImages = new SIImageStore( itsImageName );
+	foundFullImage = True;
+      }
+    catch(AipsError &x)
+      {
+	//throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
+	foundFullImage = False;
+      }
+
 
     // Check if part images exist
     Bool foundPartImages = itsPartImageNames.nelements()>0 ? True : False ;
+    itsPartImages.resize( itsPartImageNames.nelements() );
+
     for ( uInt part=0; part < itsPartImageNames.nelements() ; part++ )
       {
-	foundPartImages &= doImagesExist( itsPartImageNames[part] );
+	try
+	  {
+	    itsPartImages = new SIImageStore( itsPartImageNames[part] );
+	    foundPartImages |= True;
+	  }
+	catch(AipsError &x)
+	  {
+	    //throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
+	    foundFullImage = False;
+	  }
       }
+
 
     if( foundPartImages == True ) // Partial Images exist. Check that 'full' exists, and do the gather. 
       {
 	if ( foundFullImage == True ) // Full image exists. Just check that shapes match with parts.
 	  {
-	    //// itsImageShape = xxx
-	    //// itsCoordSys = new .... xxx
+	    os << "Need to check if part images have the same shape as the full image" << LogIO::POST;
 	  }
 	else // Full image does not exist. Need to make it, using the shape and coords of part[0]
 	  {
-
-	    /*
-	    itsResidual = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".residual"));
-	    itsPsf = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".psf"));
-	    itsWeight = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".weight"));
-	    */
+	    os << "Part images exist. Need to make full image" << LogIO::POST;
+	    ///itsImages = new SIImageStore( itsImageName, *coordsys, itsImageShape);
 	    foundFullImage = True;
 	  }
+
+	itsImageShape = itsImages->residual()->shape();
 
 	// By now, all partial images and the full images exist on disk, and have the same shape.
 	gatherImages();
@@ -213,12 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if ( foundFullImage == True ) // Just open them and check that shapes match each other.
 	  {
-	    itsResidual = new PagedImage<Float> ( itsImageName+String(".residual") );
-	    itsPsf = new PagedImage<Float> ( itsImageName+String(".psf") );
-	    itsWeight = new PagedImage<Float> ( itsImageName+String(".weight") );
-	    /// If weight image is not given, do not make a PagedImage. Leave it 'null'.
-	    
-	    itsImageShape = itsResidual->shape(); // Check with shapes of psf and weight.
+	    itsImageShape = itsImages->residual()->shape(); // Check with shapes of psf and weight.
 	  }
 	else // No full image on disk either. Error.
 	  {
@@ -228,14 +242,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return foundFullImage;
 
-  }
-
-  // TODO : Move to an image-wrapper class ? Same function exists in SIMapper
-  Bool SynthesisDeconvolver::doImagesExist( String /*imageName*/ )
-  {
-    // Check if imagename.residual, imagename.psf. imagename.weight
-    // exist on disk and if they're the right shape.
-    return False;
   }
 
 
@@ -327,14 +333,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 
 	//cout << "Mapper : " << itsMapperId << "  Deconvolving : " << decSlices[subim] << endl;
-	SubImage<Float> subResidual( *itsResidual, decSlices[subim], True );
-	SubImage<Float> subPsf( *itsPsf, decSlices[subim], True );
-	SubImage<Float> subModel( *itsModel, decSlices[subim], True );
+	SubImage<Float> subResidual( *(itsImages->residual()), decSlices[subim], True );
+	SubImage<Float> subPsf( *(itsImages->psf()), decSlices[subim], True );
+	SubImage<Float> subModel( *(itsImages->model()), decSlices[subim], True );
 	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
 
-	isModelUpdated |= itsDeconvolver->deconvolve( loopController, subResidual, subPsf, subModel, itsMaskHandler, subim );
+	itsDeconvolver->deconvolve( loopController, subResidual, subPsf, subModel, itsMaskHandler, subim );
         loopController.resetCycleIter();
-        
+
       }
     loopController.setUpdatedModelFlag( isModelUpdated );
   }
@@ -344,7 +350,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","getPeakResidual",WHERE) );
 
-    Float maxresidual = max( itsResidual->get() );
+    Float maxresidual = max( itsImages->residual()->get() );
 
     return maxresidual;
   }
@@ -354,7 +360,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","getModelFlux",WHERE) );
 
-    Float modelflux = sum( itsModel->get() );
+    Float modelflux = sum( itsImages->model()->get() );
 
     return modelflux;
   }
@@ -366,7 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /// Calculate only once, store and return for all subsequent calls.
 
-    Float psfsidelobe = max( itsPsf->get() );
+    Float psfsidelobe = max( itsImages->psf()->get() );
 
     return psfsidelobe;
   }
@@ -376,8 +382,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","restoreImage",WHERE) );
     
-    itsImage = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".image"));
-    itsDeconvolver->restore( *itsImage, itsBeam, *itsModel, *itsResidual, *itsWeight );
+    //itsImage = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".image"));
+    //itsDeconvolver->restore( *itsImage, itsBeam, *itsModel, *itsResidual, *itsWeight );
 
   }
 

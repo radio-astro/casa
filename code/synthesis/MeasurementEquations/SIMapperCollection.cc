@@ -80,10 +80,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   // Allocate Memory and open images.
   void SIMapperCollection::addMapper( String mappertype,  
-				      String imagename, 
-				      CountedPtr<FTMachine> ftmachine, 
-				      CountedPtr<CoordinateSystem> imcoordsys, 
-				      IPosition imshape)
+				      CountedPtr<SIImageStore> imagestore,
+				      CountedPtr<FTMachine> ftmachine)
   {
 
     LogIO os( LogOrigin("SIMapperCollection","addMapper",WHERE) );
@@ -94,16 +92,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Check 'mappertype' for valid types....
     if( mappertype == "basetype" )
       {
-	localMapper = new SIMapperBase( imagename, ftmachine, imcoordsys , imshape, nMappers );
+	localMapper = new SIMapperBase( imagestore, ftmachine, nMappers );
       }
     else if( mappertype == "default" )
       {
-	localMapper = new SIMapper( imagename, ftmachine, imcoordsys , imshape, nMappers );
+	localMapper = new SIMapper( imagestore, ftmachine, nMappers );
       }
     /*
     else if( mappertype == "multiterm" )
       {
-	localMapper = new SIMapperMultiTerm( imagename, ftmachine, imcoordsys , imshape, nMappers );
+	localMapper = new SIMapperMultiTerm( imagestore, ftmachine, nMappers );
       }
     */
     else

@@ -1,4 +1,4 @@
-//# SIMapper.h: Imager functionality sits here; 
+//# SIImageStore.h: Imager functionality sits here; 
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SIMAPPER_H
-#define SYNTHESIS_SIMAPPER_H
+#ifndef SYNTHESIS_SIIMAGESTORE_H
+#define SYNTHESIS_SIMAGESTORE_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
@@ -34,43 +34,42 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-
-#include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/MeasurementEquations/SIMapperBase.h>
+#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <images/Images/PagedImage.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// Forward declarations
-template<class T> class ImageInterface;
-
-// <summary> Class that contains functions needed for imager </summary>
-
-  class SIMapper : public SIMapperBase
+class SIImageStore 
 {
  public:
   // Default constructor
 
-  SIMapper( CountedPtr<SIImageStore> imagestore,
-            CountedPtr<FTMachine> ftmachine, 
-            Int mapperid);
-  ~SIMapper();
+  SIImageStore();
+  SIImageStore(String imagename);
+  SIImageStore(String imagename, 
+	       CountedPtr<CoordinateSystem> imcoordsys, 
+	       IPosition imshape);
 
-  ///// Major Cycle Functions
+  ~SIImageStore();
 
-  // For KG : Need to add 'vb' coming into these functions.
-  void initializeGrid();
-  void grid();
-  void finalizeGrid();
 
-  void initializeDegrid();
-  void degrid();
-  void finalizeDegrid();
+  IPosition getShape();
+  CountedPtr<PagedImage<Float> > psf();
+  CountedPtr<PagedImage<Float> > residual();
+  CountedPtr<PagedImage<Float> > weight();
+  CountedPtr<PagedImage<Float> > model();
 
-  Record getFTMRecord();
+  Bool doImagesExist();
+  Bool doesModelImageExist();
 
 protected:
 
+  ///////////////////// Member Objects
 
+  IPosition itsImageShape;
+  String itsImageName;
+  CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight;
+  
 
 };
 
