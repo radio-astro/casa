@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.tcc 21095 2011-06-09 09:11:36Z gervandiepen $
+//# $Id: ArrayMath.tcc 21195 2012-03-14 08:10:42Z gervandiepen $
 
 #include <casa/iostream.h>
 
@@ -66,11 +66,9 @@ void arrayTransform (const Array<L>& left, R right,
     arrayContTransform (left, right, result, op);
   } else {
     if (left.contiguousStorage()) {
-      std::transform (left.cbegin(), left.cend(),
-                      result.begin(), bind2nd(op, right));
+      myrtransform (left.cbegin(), left.cend(), result.begin(), right, op);
     } else {
-      std::transform (left.begin(), left.end(),
-                      result.begin(), bind2nd(op, right));
+      myrtransform (left.begin(), left.end(), result.begin(), right, op);
     }
   }
 }
@@ -83,11 +81,9 @@ void arrayTransform (L left, const Array<R>& right,
     arrayContTransform (left, right, result, op);
   } else {
     if (right.contiguousStorage()) {
-      std::transform (right.cbegin(), right.cend(),
-                      result.begin(), bind1st(op, left));
+      myltransform (right.cbegin(), right.cend(), result.begin(), left, op);
     } else {
-      std::transform (right.begin(), right.end(),
-                      result.begin(), bind1st(op, left));
+      myltransform (right.begin(), right.end(), result.begin(), left, op);
     }
   }
 }
@@ -1196,14 +1192,13 @@ template<class T> T median(const Array<T> &a, Block<T> &tmp, Bool sorted,
     const T* storage = a.data();
     if (!(a.contiguousStorage() && inPlace)) {
       tmp.resize (a.size(), False, False);
+      storage = tmp.storage();
       if (a.contiguousStorage()) {
 	objcopy (tmp.storage(), a.data(), a.size());
-        storage = tmp.storage();
       } else {
-      // A non-contiguous array, so do the assignment through an array.
+        // A non-contiguous array, so do the assignment through an array.
 	Array<T> tmpa(a.shape(), tmp.storage(), SHARE);
 	tmpa = a;
-	storage = tmp.storage();
       }
     }
     T* data = const_cast<T*>(storage);

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.h 21022 2011-03-01 10:07:47Z gervandiepen $
+//# $Id: Complex.h 21130 2011-10-18 07:39:05Z gervandiepen $
 
 
 #ifndef CASA_COMPLEX_H
@@ -164,6 +164,7 @@ Bool isNaN (const Complex& val);
 void setNaN(Complex& val);
 Bool isInf (const Complex& val);
 void setInf(Complex& val);
+Bool isFinite(const Complex& val);
 // </group>
 
 // <summary>Complex comparisons </summary>
@@ -191,6 +192,7 @@ Bool isNaN (const DComplex& val);
 void setNaN(DComplex& val);
 Bool isInf (const DComplex& val);
 void setInf(DComplex& val);
+Bool isFinite(const DComplex& val);
 // </group>
 
 // <summary> DComplex comparisons </summary>

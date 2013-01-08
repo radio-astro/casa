@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DerivedMSCal.cc 20941 2010-08-25 18:35:26Z gervandiepen $
+//# $Id: DerivedMSCal.cc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #include <derivedmscal/DerivedMC/DerivedMSCal.h>
 #include <derivedmscal/DerivedMC/DerivedColumn.h>
@@ -113,7 +113,13 @@ DataManagerColumn* DerivedMSCal::makeIndArrColumn (const String& name,
                                                    const String&)
 {
   DataManagerColumn* col;
-  if (name == "AZEL1") {
+  if (name == "HADEC") {
+    col = new HaDecColumn(&itsEngine, -1);
+  } else if (name == "HADEC1") {
+    col = new HaDecColumn(&itsEngine, 0);
+  } else if (name == "HADEC2") {
+    col = new HaDecColumn(&itsEngine, 1);
+  } else if (name == "AZEL1") {
     col = new AzElColumn(&itsEngine, 0);
   } else if (name == "AZEL2") {
     col = new AzElColumn(&itsEngine, 1);

@@ -7,7 +7,7 @@
 # The script supplies the names of all test tables found in the system.
 # It is meant to be run from assay, but can also be used standalone.
 #
-# $Id: tTable_2.run 21091 2011-06-01 12:08:15Z gervandiepen $
+# $Id: tTable_2.run 21130 2011-10-18 07:39:05Z gervandiepen $
 #-----------------------------------------------------------------------------
 
 # Fundamentals.

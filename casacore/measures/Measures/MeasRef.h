@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasRef.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MeasRef.h 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #ifndef MEASURES_MEASREF_H
 #define MEASURES_MEASREF_H
@@ -195,7 +195,6 @@ private:
   };
   
   //# Data
-  Bool empty_p;
   CountedPtr<RefRep> rep_p;
   
   //# Member functions

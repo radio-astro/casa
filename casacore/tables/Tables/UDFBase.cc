@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFBase.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: UDFBase.cc 21146 2011-11-30 14:43:25Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/UDFBase.h>
@@ -40,8 +40,9 @@ namespace casa {
 
 
   UDFBase::UDFBase()
-    : itsDataType  (TableExprNodeRep::NTAny),
-      itsNDim      (-2)
+    : itsDataType   (TableExprNodeRep::NTAny),
+      itsNDim       (-2),
+      itsIsConstant (False)
   {}
 
   UDFBase::~UDFBase()
@@ -94,6 +95,11 @@ namespace casa {
   void UDFBase::setUnit (const String& unit)
   {
     itsUnit = unit;
+  }
+
+  void UDFBase::setConstant (Bool isConstant)
+  {
+    itsIsConstant = isConstant;
   }
 
   Bool      UDFBase::getBool     (const TableExprId&)
@@ -154,6 +160,10 @@ namespace casa {
     Int j = fname.index('.');
     if (j > 0  &&  j < Int(fname.size())-1) {
       String libname(fname.substr(0,j));
+      // derivedmscal UDFs are used often, so allow alias mscal.
+      if (libname == "mscal") {
+        libname = "derivedmscal";
+      }
       // Try to load the dynamic library and see if registered now.
       DynLib dl(libname, string("libcasa_"), "register_"+libname, False);
       if (dl.getHandle()) {

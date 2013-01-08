@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayError.h 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: ArrayError.h 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #ifndef CASA_ARRAYERROR_H
 #define CASA_ARRAYERROR_H

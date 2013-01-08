@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableMeasDescBase.cc 20019 2007-03-13 21:40:09Z gervandiepen $
+//# $Id: TableMeasDescBase.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/TableMeasDescBase.h>
@@ -214,7 +214,7 @@ void TableMeasDescBase::resetUnits (const Vector<Unit>& units)
   }
 }
 
-Bool TableMeasDescBase::hasMeasures (const ROTableColumn& column)
+Bool TableMeasDescBase::hasMeasures (const TableColumn& column)
 {
   return column.keywordSet().isDefined ("MEASINFO");
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableQuantumDesc.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: TableQuantumDesc.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_TABLEQUANTUMDESC_H
 #define MEASURES_TABLEQUANTUMDESC_H
@@ -38,7 +38,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class TableDesc;
 class Table;
 class TableRecord;
-class ROTableColumn;
+class TableColumn;
 class Unit;
 
 
@@ -334,7 +334,7 @@ public:
   // </group>
 
   // Does this column contain table quanta?
-  static Bool hasQuanta (const ROTableColumn& column);
+  static Bool hasQuanta (const TableColumn& column);
 
 private:
   // Name of column which stores the Quantum's values.

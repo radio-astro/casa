@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeSet.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ExprNodeSet.h 21168 2012-01-04 08:11:03Z gervandiepen $
 
 #ifndef TABLES_EXPRNODESET_H
 #define TABLES_EXPRNODESET_H
@@ -192,9 +192,6 @@ public:
     // Get the table of a node and check if the children use the same table.
     void checkTable();
 
-    // Replace the BaseTable pointer in this node and all its children.
-    virtual void replaceTablePtr (const Table&);
-
     // Let a set node convert itself to the given unit.
     virtual void adaptSetUnits (const Unit&);
 
@@ -216,7 +213,7 @@ private:
     TableExprNodeRep* itsStart;
     TableExprNodeRep* itsEnd;
     TableExprNodeRep* itsIncr;
-    Int  itsMinusEnd;
+    Bool itsEndExcl;
     Bool itsLeftClosed;
     Bool itsRightClosed;
     Bool itsDiscrete;
@@ -316,10 +313,11 @@ public:
     // (i.e. Slicer::MimicSource used) in the <src>Slicer</src> object.
     TableExprNodeSet (const Slicer&);
 
-    // Construct a set with n*set.nelements() elements.
+    // Construct a set with n*set.nelements() elements where n is the number
+    // of rows.
     // Element i is constructed by evaluating the input element
-    // for row i.
-    TableExprNodeSet (uInt n, const TableExprNodeSet&);
+    // for row rownr[i].
+    TableExprNodeSet (const Vector<uInt>& rownrs, const TableExprNodeSet&);
 
     TableExprNodeSet(const TableExprNodeSet&);
 
@@ -396,9 +394,6 @@ public:
     virtual Array<Bool> hasArrayDate     (const TableExprId& id,
 					  const Array<MVTime>& value);
     // </group>
-
-    // Replace the BaseTable pointer in this node and all its children.
-    virtual void replaceTablePtr (const Table&);
 
     // Let a set node convert itself to the given unit.
     virtual void adaptSetUnits (const Unit&);

@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: TableGram.yy 21103 2011-07-08 07:27:17Z gervandiepen $
+    $Id: TableGram.yy 21168 2012-01-04 08:11:03Z gervandiepen $
 */
 
 /*
@@ -165,7 +165,7 @@ using namespace casa;
 /* This defines the precedence order of the operators (low to high) */
 %left OR
 %left AND
-%nonassoc EQ EQASS GT GE LT LE NE
+%nonassoc EQ EQASS GT GE LT LE NE EQNEAR NENEAR
 %left BITOR
 %left BITXOR
 %left BITAND
@@ -838,6 +838,24 @@ relexpr:   arithexpr {
          | arithexpr NE arithexpr {
 	       $$ = new TaQLNode(
 	            new TaQLBinaryNodeRep (TaQLBinaryNodeRep::B_NE, *$1, *$3));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | arithexpr EQNEAR arithexpr {
+   	       TaQLMultiNode set(False);
+               set.add (*$1);
+               set.add (*$3);
+               set.add (TaQLConstNode(new TaQLConstNodeRep(1e-5)));
+               $$ = new TaQLNode (new TaQLFuncNodeRep("NEAR", set));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | arithexpr NENEAR arithexpr {
+   	       TaQLMultiNode set(False);
+               set.add (*$1);
+               set.add (*$3);
+               set.add (TaQLConstNode(new TaQLConstNodeRep(1e-5)));
+               TaQLNode ref (new TaQLFuncNodeRep("NEAR", set));
+	       $$ = new TaQLNode(
+                    new TaQLUnaryNodeRep (TaQLUnaryNodeRep::U_NOT, ref));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
          | arithexpr REGEX {

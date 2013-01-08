@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableQuantumDesc.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TableQuantumDesc.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/TableQuantumDesc.h>
@@ -174,7 +174,7 @@ void TableQuantumDesc::checkUnitsColumn (const TableDesc& td) const
   }
 }
 
-Bool TableQuantumDesc::hasQuanta (const ROTableColumn& column)
+Bool TableQuantumDesc::hasQuanta (const TableColumn& column)
 {
   return ( column.keywordSet().isDefined ("QuantumUnits")  ||
 	   column.keywordSet().isDefined ("VariableUnits"));

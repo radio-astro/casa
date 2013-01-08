@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMeasComet.cc 21074 2011-05-06 14:08:29Z gervandiepen $
+//# $Id: tMeasComet.cc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 //# Includes
 #include <casa/aips.h>
@@ -201,6 +201,7 @@ int main()
     cout << x.getMesg() << endl;
   }
 
+  /*
   try {
     cout << "-----------------------------------------" << endl;
     cout << "Read a table without DiskLong or DiskLat." << endl;
@@ -242,6 +243,7 @@ int main()
   catch (AipsError x) {
     cout << x.getMesg() << endl;
   }
+  */
   
   return 0;
 }

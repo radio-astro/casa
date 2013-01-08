@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: IPosition.cc 21285 2012-11-14 15:36:59Z gervandiepen $
 
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/ArrayError.h>
@@ -230,21 +230,19 @@ IPosition& IPosition::operator= (ssize_t value)
     return *this;
 }
 
-IPosition IPosition::operator() (const IPosition& axes) const {
-	IPosition ipos(axes.nelements());
-	uInt i = 0;
-	for (
-		IPosition::const_iterator iter=axes.begin();
-		iter!=axes.end(); iter++, i++
-	) {
-		if (*iter >= size_p) {
-			throw AipsError(
-				"IPosition::operator()(): Axis number must be less than the number of elements in the current object"
-			);
-		}
-		ipos[i] = data_p[*iter];
-	}
-	return ipos;
+IPosition IPosition::operator() (const IPosition& axes) const
+{
+  IPosition ipos(axes.nelements());
+  uInt i = 0;
+  for (IPosition::const_iterator iter=axes.begin();
+       iter!=axes.end(); ++iter, ++i) {
+    if (*iter >= Int(size_p)) {
+      throw AipsError("IPosition::operator()(const IPosition&): "
+                      "Axis number must be less than size of current object");
+    }
+    ipos[i] = data_p[*iter];
+  }
+  return ipos;
 }
 
 void IPosition::append (const IPosition& other)
@@ -322,6 +320,29 @@ IPosition IPosition::getLast (uInt n) const
     return tmp;
 }
 
+IPosition IPosition::removeAxes (const IPosition& axes) const
+{
+  // Get the axes to keep.
+  // It also checks if axes are specified correctly.
+  IPosition resAxes = IPosition::otherAxes (size_p, axes);
+  uInt ndimRes = resAxes.nelements();
+  // Create the result shape.
+  IPosition resShape(ndimRes);
+  if (ndimRes == 0) {
+    resShape.resize(1);
+    resShape[0] = 1;
+  } else {
+    for (uInt i=0; i<ndimRes; ++i) {
+      resShape[i] = data_p[resAxes[i]];
+    }
+  }
+  return resShape;
+}
+
+IPosition IPosition::keepAxes (const IPosition& axes) const
+{
+  return removeAxes (otherAxes(size_p, axes));
+}
 
 // <thrown>
 //    <item> ArrayConformanceError
@@ -1128,9 +1149,8 @@ IPosition IPosition::makeAxisPath (uInt nrdim, const IPosition& partialPath)
     return path;
 }
 
-IPosition IPosition::otherAxes (
-	uInt nrdim, const IPosition& axes
-) {
+IPosition IPosition::otherAxes (uInt nrdim, const IPosition& axes)
+{
    AlwaysAssert (nrdim>=axes.nelements(),AipsError);
    return makeAxisPath(nrdim, axes).getLast(nrdim-axes.nelements());
 }

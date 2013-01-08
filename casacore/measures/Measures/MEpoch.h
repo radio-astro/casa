@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MEpoch.h 21074 2011-05-06 14:08:29Z gervandiepen $
+//# $Id: MEpoch.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_MEPOCH_H
 #define MEASURES_MEPOCH_H
@@ -42,9 +42,7 @@ class MEpoch;
 class MCEpoch;
 template <class M> class MeasConvert;
 template <class M> class ArrayMeasColumn;
-template <class M> class ROArrayMeasColumn;
 template <class M> class ScalarMeasColumn;
-template <class M> class ROScalarMeasColumn;
 
 //# Typedefs
 
@@ -158,10 +156,8 @@ public:
   typedef MeasRef<MEpoch> Ref;
   // Measure Convert (i.e. MEpoch::Convert)
   typedef MeasConvert<MEpoch> Convert;
-  // Measure table Columns (e.g., MEpoch::ROScalarColumn)
-  typedef ROScalarMeasColumn<MEpoch> ROScalarColumn;
+  // Measure table Columns (e.g., MEpoch::ScalarColumn)
   typedef ScalarMeasColumn<MEpoch> ScalarColumn;
-  typedef ROArrayMeasColumn<MEpoch> ROArrayColumn;
   typedef ArrayMeasColumn<MEpoch> ArrayColumn;
   // Reference enum Types (included originally for gcc 2.95)  
   typedef WHATEVER_SUN_TYPEDEF(MEpoch) Types Types;

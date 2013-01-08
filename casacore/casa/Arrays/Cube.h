@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Cube.h 21121 2011-09-01 14:05:32Z gervandiepen $
+//# $Id: Cube.h 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #ifndef CASA_CUBE_H
 #define CASA_CUBE_H

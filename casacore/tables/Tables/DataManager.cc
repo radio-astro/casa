@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManager.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: DataManager.cc 21295 2012-11-30 16:00:01Z gervandiepen $
 
 
 //# Includes
@@ -107,6 +107,9 @@ void DataManager::reopenRW()
 {}
 
 void DataManager::setMaximumCacheSize (uInt)
+{}
+
+void DataManager::showCacheStatistics (ostream&) const
 {}
 
 //# Create a column object for a scalar.

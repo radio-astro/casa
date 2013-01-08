@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarQuantColumn.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ScalarQuantColumn.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef MEASURES_SCALARQUANTCOLUMN_H
 #define MEASURES_SCALARQUANTCOLUMN_H
@@ -35,7 +35,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 class Table;
-template <class T> class ROScalarColumn;
 template <class T> class ScalarColumn;
 class String;
 class Unit;
@@ -54,7 +53,7 @@ class Unit;
 //# Classes you should understand before using this one.
 //   <li> <linkto class=TableQuantumDesc>TableQuantumDesc</linkto>
 //   <li> <linkto class=Table>Table</linkto>
-//   <li> <linkto class=ROScalarColumn>ROScalarColumn</linkto>
+//   <li> <linkto class=ScalarColumn>ScalarColumn</linkto>
 //   <li> <linkto class=Quantum>Quantum</linkto>
 // </prerequisite>
 
@@ -70,7 +69,7 @@ class Unit;
 // object.<br>
 //
 // A ROScalarQuantColumn object is used much in the same way as a
-// <linkto class=ROScalarColumn>ROScalarColumn</linkto> object.
+// <linkto class=ScalarColumn>ScalarColumn</linkto> object.
 //
 // <h3>Quantum Units</h3></A>
 // Quanta retrieved from the column will normally have the Unit that was
@@ -195,14 +194,14 @@ protected:
   Unit itsUnit;
 
   // Get access to itsUnitsCol.
-  const ROScalarColumn<String>* unitsCol() const
+  const ScalarColumn<String>* unitsCol() const
     { return itsUnitsCol; }
 
 private:
   //# The underlying data column stores the quantum column's data.
-  ROScalarColumn<T>* itsDataCol;
+  ScalarColumn<T>* itsDataCol;
   //# Variable units column if applicable.
-  ROScalarColumn<String>* itsUnitsCol;
+  ScalarColumn<String>* itsUnitsCol;
   //# Unit to retrieve the data in.
   Unit itsUnitOut;
   //# Convert unit when getting data?

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRep.cc 21110 2011-07-18 11:16:15Z gervandiepen $
+//# $Id: ExprNodeRep.cc 21168 2012-01-04 08:11:03Z gervandiepen $
 
 #include <tables/Tables/ExprNodeRep.h>
 #include <tables/Tables/ExprNode.h>
@@ -130,11 +130,6 @@ Double TableExprNodeRep::getUnitFactor() const
 Bool TableExprNodeRep::isSingleValue() const
 {
   return isConstant();
-}
-
-void TableExprNodeRep::replaceTablePtr (const Table& table)
-{
-    table_p = table;
 }
 
 void TableExprNodeRep::adaptSetUnits (const Unit&)
@@ -293,6 +288,60 @@ Array<MVTime> TableExprNodeRep::getArrayDate (const TableExprId&)
     return Array<MVTime>();
 }
 
+Array<Bool> TableExprNodeRep::getBoolAS (const TableExprId& id)
+{
+  if (valueType() == VTArray) {
+    return getArrayBool(id);
+  }
+  Vector<Bool> res(1);
+  res[0] = getBool(id);
+  return res;
+}
+Array<Int64> TableExprNodeRep::getIntAS (const TableExprId& id)
+{
+  if (valueType() == VTArray) {
+    return getArrayInt(id);
+  }
+  Vector<Int64> res(1);
+  res[0] = getInt(id);
+  return res;
+}
+Array<Double> TableExprNodeRep::getDoubleAS (const TableExprId& id)
+{
+  if (valueType() == VTArray) {
+    return getArrayDouble(id);
+  }
+  Vector<Double> res(1);
+  res[0] = getDouble(id);
+  return res;
+}
+Array<DComplex> TableExprNodeRep::getDComplexAS (const TableExprId& id)
+{
+  if (valueType() == VTArray) {
+    return getArrayDComplex(id);
+  }
+  Vector<DComplex> res(1);
+  res[0] = getDComplex(id);
+  return res;
+}
+Array<String> TableExprNodeRep::getStringAS (const TableExprId& id)
+{
+  if (valueType() == VTArray) {
+    return getArrayString(id);
+  }
+  Vector<String> res(1);
+  res[0] = getString(id);
+  return res;
+}
+Array<MVTime> TableExprNodeRep::getDateAS (const TableExprId& id)
+{
+  if (valueType() == VTArray) {
+    return getArrayDate(id);
+  }
+  Vector<MVTime> res(1);
+  res[0] = getDate(id);
+  return res;
+}
 
 Bool TableExprNodeRep::hasBool     (const TableExprId& id, Bool value)
 {
@@ -353,87 +402,87 @@ Array<Bool> TableExprNodeRep::hasArrayDate (const TableExprId& id,
 }
 
 
-Array<Bool>     TableExprNodeRep::getColumnBool()
+Array<Bool>     TableExprNodeRep::getColumnBool (const Vector<uInt>& rownrs)
 {
-    uInt nrrow = nrow();
+    uInt nrrow = rownrs.size();
     Vector<Bool> vec (nrrow);
     for (uInt i=0; i<nrrow; i++) {
-	vec(i) = getBool (i);
+	vec[i] = getBool (rownrs[i]);
     }
     return vec;
 }
-Array<uChar>    TableExprNodeRep::getColumnuChar()
+Array<uChar>    TableExprNodeRep::getColumnuChar (const Vector<uInt>&)
 {
     TableExprNode::throwInvDT ("(getColumnuChar not implemented)");
     return Array<uChar>();
 }
-Array<Short>    TableExprNodeRep::getColumnShort()
+Array<Short>    TableExprNodeRep::getColumnShort (const Vector<uInt>&)
 {
     TableExprNode::throwInvDT ("(getColumnShort not implemented)");
     return Array<Short>();
 }
-Array<uShort>   TableExprNodeRep::getColumnuShort()
+Array<uShort>   TableExprNodeRep::getColumnuShort (const Vector<uInt>&)
 {
     TableExprNode::throwInvDT ("(getColumnuShort not implemented)");
     return Array<uShort>();
 }
-Array<Int>      TableExprNodeRep::getColumnInt()
+Array<Int>      TableExprNodeRep::getColumnInt (const Vector<uInt>& rownrs)
 {
-    uInt nrrow = nrow();
+    uInt nrrow = rownrs.size();
     Vector<Int> vec (nrrow);
     for (uInt i=0; i<nrrow; i++) {
-	vec(i) = getInt (i);
+      vec[i] = getInt (rownrs[i]);
     }
     return vec;
 }
-Array<uInt>     TableExprNodeRep::getColumnuInt()
+Array<uInt>     TableExprNodeRep::getColumnuInt (const Vector<uInt>&)
 {
     TableExprNode::throwInvDT ("(getColumnuInt not implemented)");
     return Array<uInt>();
 }
-// Array<Int64>    TableExprNodeRep::getColumnInt64()
+// Array<Int64>    TableExprNodeRep::getColumnInt64 (const Vector<uInt>& rownrs)
 // {
-//     uInt nrrow = nrow();
+//     uInt nrrow = rownrs.size();
 //     Vector<Int64> vec (nrrow);
 //     for (uInt i=0; i<nrrow; i++) {
-// 	vec(i) = getInt (i);
+// 	vec[i] = getInt (rownrs[i]);
 //     }
 //     return vec;
 // }
-Array<Float>    TableExprNodeRep::getColumnFloat()
+Array<Float>    TableExprNodeRep::getColumnFloat (const Vector<uInt>&)
 {
     TableExprNode::throwInvDT ("(getColumnFloat not implemented)");
     return Array<Float>();
 }
-Array<Double>   TableExprNodeRep::getColumnDouble()
+Array<Double>   TableExprNodeRep::getColumnDouble (const Vector<uInt>& rownrs)
 {
-    uInt nrrow = nrow();
+    uInt nrrow = rownrs.size();
     Vector<Double> vec (nrrow);
     for (uInt i=0; i<nrrow; i++) {
-	vec(i) = getDouble (i);
+	vec[i] = getDouble (rownrs[i]);
     }
     return vec;
 }
-Array<Complex>  TableExprNodeRep::getColumnComplex()
+Array<Complex>  TableExprNodeRep::getColumnComplex (const Vector<uInt>&)
 {
     TableExprNode::throwInvDT ("(getColumnComplex not implemented)");
     return Array<Complex>();
 }
-Array<DComplex> TableExprNodeRep::getColumnDComplex()
+Array<DComplex> TableExprNodeRep::getColumnDComplex (const Vector<uInt>& rownrs)
 {
-    uInt nrrow = nrow();
+    uInt nrrow = rownrs.size();
     Vector<DComplex> vec (nrrow);
     for (uInt i=0; i<nrrow; i++) {
-	vec(i) = getDComplex (i);
+	vec[i] = getDComplex (rownrs[i]);
     }
     return vec;
 }
-Array<String>   TableExprNodeRep::getColumnString()
+Array<String>   TableExprNodeRep::getColumnString (const Vector<uInt>& rownrs)
 {
-    uInt nrrow = nrow();
+    uInt nrrow = rownrs.size();
     Vector<String> vec (nrrow);
     for (uInt i=0; i<nrrow; i++) {
-	vec(i) = getString (i);
+	vec[i] = getString (rownrs[i]);
     }
     return vec;
 }
@@ -489,9 +538,6 @@ TableExprNodeRep* TableExprNodeBinary::shortcutOrAnd ()
 	    return *otherNode;
 	}
     }
-    // Put a BaseTable in the node, so the expression analyzer
-    // knows the constant comes from a Table.
-    (**constNode).replaceTablePtr (Table(), thisNode->baseTablePtr());
     return *constNode;
 
     // In the calling routine something like the following has to be done.
@@ -573,9 +619,6 @@ TableExprNodeRep* TableExprNodeRep::convertNode (TableExprNodeRep* thisNode,
 	    TableExprNode::throwInvDT ("in convertNode"); // should never occur
 	}
     }
-    // Put a BaseTable in it, so the expression analyzer knows the constant
-    // comes from a Table.
-    newNode->replaceTablePtr (thisNode->table());
     newNode->setUnit (thisNode->unit());
     delete thisNode;
     return newNode;
@@ -644,17 +687,6 @@ Bool TableExprNodeBinary::isSingleValue() const
   return rnode_p->isSingleValue() && rnode_p->isSingleValue();
 }
 
-void TableExprNodeBinary::replaceTablePtr (const Table& table)
-{
-    table_p = table;
-    if (lnode_p != 0) {
-	lnode_p->replaceTablePtr (table);
-    }
-    if (rnode_p != 0) {
-	rnode_p->replaceTablePtr (table);
-    }
-}
-
 // Check the datatypes and get the common one.
 // For use with operands.
 TableExprNodeRep::NodeDataType TableExprNodeBinary::getDT
@@ -694,7 +726,7 @@ TableExprNodeRep::NodeDataType TableExprNodeBinary::getDT
     if (leftDtype == NTString  &&  rightDtype == NTDate) {
 	leftDtype = NTDate;
     }
-    // A double will be promoted to Date when using with a Date in a comparison.
+    // A double will be promoted to Date when used with a Date in a comparison.
     if (opt >= OtEQ  &&  opt <= OtIN) {
         if (leftDtype == NTDate  &&  rightDtype == NTDouble) {
             rightDtype = NTDate;
@@ -708,6 +740,7 @@ TableExprNodeRep::NodeDataType TableExprNodeBinary::getDT
 	return NTDouble;
     }
     // Date matches Date; Date+Date is not allowed
+    // Note that date/date or date*date has been catched earlier.
     if (leftDtype == NTDate  &&  rightDtype == NTDate  &&  opt != OtPlus) {
 	return NTDate;
     }
@@ -816,12 +849,11 @@ TableExprNodeRep* TableExprNodeBinary::fillNode (TableExprNodeBinary* thisNode,
 						 Bool convertConstType)
 {
     // Fill the children and link to them.
+    // If needed, change the children to get matching data types.
     thisNode->lnode_p = left->link();
     if (right != 0) {
 	thisNode->rnode_p = right->link();
-    }
-    // Change the children when needed.
-    if (right != 0) {
+
 	// NTRegex will always be placed in the right node 
 	if (left->dataType() == NTRegex) {
 	    thisNode->lnode_p = right;
@@ -834,7 +866,8 @@ TableExprNodeRep* TableExprNodeBinary::fillNode (TableExprNodeBinary* thisNode,
                 TableExprNode dNode = datetime (right);
 	        unlink (right);
 	        thisNode->rnode_p = getRep(dNode)->link();
-            } else if (right->dataType() == NTDouble) {
+            } else if (right->dataType() == NTDouble  ||
+                       right->dataType() == NTInt) {
                 TableExprNode dNode = mjdtodate (right);
 	        unlink (right);
 	        thisNode->rnode_p = getRep(dNode)->link();
@@ -845,7 +878,8 @@ TableExprNodeRep* TableExprNodeBinary::fillNode (TableExprNodeBinary* thisNode,
                 TableExprNode dNode = datetime (left);
                 unlink (left);
                 thisNode->lnode_p = getRep(dNode)->link();
-            } else if (left->dataType() == NTDouble) {
+            } else if (left->dataType() == NTDouble  ||
+                       left->dataType() == NTInt) {
                 TableExprNode dNode = mjdtodate (left);
                 unlink (left);
                 thisNode->lnode_p = getRep(dNode)->link();
@@ -954,9 +988,6 @@ void TableExprNodeBinary::convertConstChild()
 	                                    ((**constNode).getArrayDouble(0));
       }
     }
-    // Put a BaseTable in it, so the expression analyzer knows the constant
-    // comes from a Table.
-    newNode->replaceTablePtr ((**constNode).table());
     newNode->setUnit ((**constNode).unit());
     unlink (*constNode);
     *constNode = newNode->link();
@@ -992,16 +1023,6 @@ void TableExprNodeMulti::show (ostream& os, uInt indent) const
     for (uInt j=0; j<operands_p.nelements(); j++) {
 	if (operands_p[j] != 0) {
 	    operands_p[j]->show (os, indent+2);
-	}
-    }
-}
-
-void TableExprNodeMulti::replaceTablePtr (const Table& table)
-{
-    table_p = table;
-    for (uInt i=0; i<operands_p.nelements(); i++) {
-	if (operands_p[i] != 0) {
-	    operands_p[i]->replaceTablePtr (table);
 	}
     }
 }

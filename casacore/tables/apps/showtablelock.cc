@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: showtablelock.cc 20794 2009-11-05 03:47:24Z Malte.Marquarding $
+//# $Id: showtablelock.cc 21145 2011-11-29 13:30:41Z gervandiepen $
 
 #include <tables/Tables/Table.h>
 #include <casa/IO/LockFile.h>
@@ -66,7 +66,7 @@ int main (int argc, char* argv[])
            << " is " << perm << "write-locked in process " << pid << endl;
     } else {
       cout << "Table " <<  tablename
-           << " is not used in another process" << endl;
+           << " is neither opened nor locked in another process" << endl;
     }
   } catch (std::exception& x) {
     cerr << x.what() << endl;

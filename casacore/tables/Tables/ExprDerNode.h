@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprDerNode.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ExprDerNode.h 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #ifndef TABLES_EXPRDERNODE_H
 #define TABLES_EXPRDERNODE_H
@@ -37,7 +37,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-class ROTableColumn;
+class TableColumn;
 class Table;
 
 //# This file defines classes derived from TableExprNode representing
@@ -301,36 +301,33 @@ public:
     TableExprNodeColumn (const Table&, const String& columnName);
     ~TableExprNodeColumn();
 
-    // Replace the Table pointer in this node.
-    virtual void replaceTablePtr (const Table&);
-
     Bool     getBool     (const TableExprId& id);
     Int64    getInt      (const TableExprId& id);
     Double   getDouble   (const TableExprId& id);
     DComplex getDComplex (const TableExprId& id);
     String   getString   (const TableExprId& id);
-    const ROTableColumn& getColumn() const;
+    const TableColumn& getColumn() const;
 
     // Get the data type of this scalar column.
     Bool getColumnDataType (DataType&) const;
 
-    Array<Bool>     getColumnBool();
-    Array<uChar>    getColumnuChar();
-    Array<Short>    getColumnShort();
-    Array<uShort>   getColumnuShort();
-    Array<Int>      getColumnInt();
-    Array<uInt>     getColumnuInt();
-    Array<Float>    getColumnFloat();
-    Array<Double>   getColumnDouble();
-    Array<Complex>  getColumnComplex();
-    Array<DComplex> getColumnDComplex();
-    Array<String>   getColumnString();
+    Array<Bool>     getColumnBool (const Vector<uInt>& rownrs);
+    Array<uChar>    getColumnuChar (const Vector<uInt>& rownrs);
+    Array<Short>    getColumnShort (const Vector<uInt>& rownrs);
+    Array<uShort>   getColumnuShort (const Vector<uInt>& rownrs);
+    Array<Int>      getColumnInt (const Vector<uInt>& rownrs);
+    Array<uInt>     getColumnuInt (const Vector<uInt>& rownrs);
+    Array<Float>    getColumnFloat (const Vector<uInt>& rownrs);
+    Array<Double>   getColumnDouble (const Vector<uInt>& rownrs);
+    Array<Complex>  getColumnComplex (const Vector<uInt>& rownrs);
+    Array<DComplex> getColumnDComplex (const Vector<uInt>& rownrs);
+    Array<String>   getColumnString (const Vector<uInt>& rownrs);
 
     // Get the column unit (can be empty).
-    static Unit getColumnUnit (const ROTableColumn&);
+    static Unit getColumnUnit (const TableColumn&);
 
 protected:
-    ROTableColumn* tabColPtr_p;                //# pointer to table column
+    TableColumn* tabColPtr_p;                //# pointer to table column
 };
 
 

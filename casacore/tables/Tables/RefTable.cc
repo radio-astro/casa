@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 21025 2011-03-03 15:09:00Z gervandiepen $
+//# $Id: RefTable.cc 21224 2012-03-28 11:53:10Z gervandiepen $
 
 #include <tables/Tables/RefTable.h>
 #include <tables/Tables/RefColumn.h>

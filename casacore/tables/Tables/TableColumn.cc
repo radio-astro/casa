@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableColumn.cc 21027 2011-03-16 09:12:25Z gervandiepen $
+//# $Id: TableColumn.cc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #include <tables/Tables/TableColumn.h>
 #include <tables/Tables/Table.h>
@@ -33,12 +33,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-ROTableColumn::ROTableColumn ()
-: baseTabPtr_p(0),
-  baseColPtr_p(0)
+TableColumn::TableColumn ()
+: baseTabPtr_p     (0),
+  baseColPtr_p     (0),
+  colCachePtr_p    (0),
+  canChangeShape_p (False),
+  isColWritable_p  (False)
 {}
 
-ROTableColumn::ROTableColumn (const Table& tab, const String& columnName)
+TableColumn::TableColumn (const Table& tab, const String& columnName)
 : baseColPtr_p(0)
 {
     //# Get base table and base column.
@@ -49,9 +52,10 @@ ROTableColumn::ROTableColumn (const Table& tab, const String& columnName)
     baseColPtr_p  = baseTabPtr_p->getColumn (columnName);
     colCachePtr_p = &(baseColPtr_p->columnCache());
     canChangeShape_p = baseColPtr_p->canChangeShape();
+    isColWritable_p  = baseColPtr_p->isWritable();
 }
 
-ROTableColumn::ROTableColumn (const Table& tab, uInt columnIndex)
+TableColumn::TableColumn (const Table& tab, uInt columnIndex)
 : baseColPtr_p(0)
 {
     //# Get base table and base column.
@@ -62,156 +66,137 @@ ROTableColumn::ROTableColumn (const Table& tab, uInt columnIndex)
     baseColPtr_p  = baseTabPtr_p->getColumn (columnIndex);
     colCachePtr_p = &(baseColPtr_p->columnCache());
     canChangeShape_p = baseColPtr_p->canChangeShape();
+    isColWritable_p  = baseColPtr_p->isWritable();
 }
 
-ROTableColumn::ROTableColumn (const ROTableColumn& that)
+TableColumn::TableColumn (const TableColumn& that)
 : baseTabPtr_p     (that.baseTabPtr_p),
   baseColPtr_p     (that.baseColPtr_p),
   colCachePtr_p    (that.colCachePtr_p),
-  canChangeShape_p (that.canChangeShape_p)
+  canChangeShape_p (that.canChangeShape_p),
+  isColWritable_p  (that.isColWritable_p)
 {}
 
-ROTableColumn* ROTableColumn::clone() const
+TableColumn* TableColumn::clone() const
 {
-    return new ROTableColumn (*this);
+    return new TableColumn (*this);
 }
 
-void ROTableColumn::reference (const ROTableColumn& that)
+TableColumn& TableColumn::operator= (const TableColumn& that)
+{
+    reference (that);
+    return *this;
+}
+
+void TableColumn::reference (const TableColumn& that)
 {
     baseTabPtr_p     = that.baseTabPtr_p;
     baseColPtr_p     = that.baseColPtr_p;
     colCachePtr_p    = that.colCachePtr_p;
     canChangeShape_p = that.canChangeShape_p;
+    isColWritable_p  = that.isColWritable_p;
 }
 
-ROTableColumn::~ROTableColumn()
+TableColumn::~TableColumn()
 {}
 
 
-void ROTableColumn::throwIfNull() const
+void TableColumn::throwIfNull() const
 {
     if (isNull()) {
 	throw (TableInvOper ("TableColumn is null"));
     }
 }
 
-Bool ROTableColumn::hasContent() const
-{
-  Bool retval = !isNull() && isDefined(0);
-  if(retval){
-	// The first cell seems to have something, but check for
-	// degenerate Arrays.
-      try{
-         uInt nDim = ndim(0);
 
-         if(nDim > 0){
-            IPosition shp(shape(0));
-
-            for(uInt i = 0; i < nDim; ++i){
-               if(shp[i] == 0){
-                  retval = False;
-                  break;
-               }
-            }
-         }
-      }
-      catch(AipsError x) {
-         // ndim(0) will throw an exception if the column is scalar.
-         // This seems like a kludgy way of distinguishing between the 2.
-         retval = True;
-      }
-  }
-  return retval;
-}
-
-TableRecord& ROTableColumn::rwKeywordSet()
+TableRecord& TableColumn::rwKeywordSet()
 {
     if (! baseTabPtr_p->isWritable()) {
-	throw (TableError ("ROTableColumn::rwKeywordSet cannot be used: table "
+	throw (TableError ("TableColumn::rwKeywordSet cannot be used: table "
 			   + baseTabPtr_p->tableName() + " is not writable"));
     }
     return baseColPtr_p->rwKeywordSet();
 }
 
 
-const ColumnDesc& ROTableColumn::columnDesc() const
+const ColumnDesc& TableColumn::columnDesc() const
     { return baseColPtr_p->columnDesc(); }
 
-Table ROTableColumn::table() const
+Table TableColumn::table() const
     { return Table (baseTabPtr_p, False); }
 
 
-Bool ROTableColumn::asBool (uInt rownr) const
+Bool TableColumn::asBool (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     Bool value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-uChar ROTableColumn::asuChar (uInt rownr) const
+uChar TableColumn::asuChar (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     uChar value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-Short ROTableColumn::asShort (uInt rownr) const
+Short TableColumn::asShort (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     Short value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-uShort ROTableColumn::asuShort (uInt rownr) const
+uShort TableColumn::asuShort (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     uShort value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-Int ROTableColumn::asInt (uInt rownr) const
+Int TableColumn::asInt (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     Int value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-uInt ROTableColumn::asuInt (uInt rownr) const
+uInt TableColumn::asuInt (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     uInt value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-float ROTableColumn::asfloat (uInt rownr) const
+float TableColumn::asfloat (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     float value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-double ROTableColumn::asdouble (uInt rownr) const
+double TableColumn::asdouble (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     double value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-Complex ROTableColumn::asComplex (uInt rownr) const
+Complex TableColumn::asComplex (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     Complex value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-DComplex ROTableColumn::asDComplex (uInt rownr) const
+DComplex TableColumn::asDComplex (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     DComplex value;
     baseColPtr_p->getScalar (rownr, value);
     return value;
 }
-String ROTableColumn::asString (uInt rownr) const
+String TableColumn::asString (uInt rownr) const
 {
     TABLECOLUMNCHECKROW(rownr); 
     String value;
@@ -219,55 +204,12 @@ String ROTableColumn::asString (uInt rownr) const
     return value;
 }
 
-TableColumn::TableColumn()
-: ROTableColumn(),
-  isWritable_p (True)
-{}
 
-TableColumn::TableColumn (const Table& tab, const String& columnName, Bool isWritable)
-: ROTableColumn(tab, columnName),
-  isWritable_p (isWritable)
-{
-    if (! tab.isColumnWritable (columnName) && isWritable_p) {
-	throw (TableInvOper
-	       (columnName + " is readonly (use the ROxxxColumn class)"));
-    }
-}
-
-TableColumn::TableColumn (const Table& tab, uInt columnIndex, Bool isWritable)
-: ROTableColumn(tab, columnIndex),
-  isWritable_p (isWritable)
-{
-    if (! tab.isColumnWritable (columnIndex) && isWritable_p) {
-	throw (TableInvOper
-	       ("column is readonly (use the ROxxxColumn class)"));
-    }
-}
-
-TableColumn::TableColumn (const TableColumn& that)
-: ROTableColumn (that),
-  isWritable_p (that.isWritable_p)
-{}
-
-ROTableColumn* TableColumn::clone() const
-{
-    return new TableColumn (*this);
-}
-
-void TableColumn::reference (const TableColumn& that)
-    { ROTableColumn::reference (that); }
-
-TableColumn::~TableColumn()
-{}
-
-
-
-void TableColumn::put (uInt thisRownr, const ROTableColumn& that,
+void TableColumn::put (uInt thisRownr, const TableColumn& that,
 		       uInt thatRownr)
 {
-    ThrowIfTableColumnNotWritable ();
-
-    TABLECOLUMNCHECKROW(thisRownr); 
+    TABLECOLUMNCHECKROW(thisRownr);
+    checkWritable();
     if (columnDesc().isScalar()) {
 	switch (columnDesc().dataType()) {
 	case TpBool:
@@ -400,10 +342,9 @@ void TableColumn::put (uInt thisRownr, const ROTableColumn& that,
 
 //#// Currently this is a very dumb implementation.
 //# It should check if types are equal and take advantage of that.
-void TableColumn::putColumn (const ROTableColumn& that)
+void TableColumn::putColumn (const TableColumn& that)
 {
-    ThrowIfTableColumnNotWritable ();
-
+    checkWritable();
     uInt nrrow = nrow();
     if (nrrow != that.nrow()) {
 	throw (TableConformanceError ("TableColumn::putColumn"));
@@ -411,6 +352,41 @@ void TableColumn::putColumn (const ROTableColumn& that)
     for (uInt i=0; i<nrrow; i++) {
 	put (i, that, i);
     }
+}
+
+void TableColumn::throwNotWritable() const
+{
+  throw TableError ("Column " + columnDesc().name() + " in table " +
+                    baseTabPtr_p->tableName() + " is not writable");
+}
+
+Bool TableColumn::hasContent() const
+{
+  Bool retval = !isNull() && isDefined(0);
+  if(retval){
+	// The first cell seems to have something, but check for
+	// degenerate Arrays.
+      try{
+         uInt nDim = ndim(0);
+
+         if(nDim > 0){
+            IPosition shp(shape(0));
+
+            for(uInt i = 0; i < nDim; ++i){
+               if(shp[i] == 0){
+                  retval = False;
+                  break;
+               }
+            }
+         }
+      }
+      catch(AipsError x) {
+         // ndim(0) will throw an exception if the column is scalar.
+         // This seems like a kludgy way of distinguishing between the 2.
+         retval = True;
+      }
+  }
+  return retval;
 }
 
 } //# NAMESPACE CASA - END

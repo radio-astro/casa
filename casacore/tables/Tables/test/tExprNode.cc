@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tExprNode.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tExprNode.cc 21156 2011-12-12 07:57:36Z gervandiepen $
 
 #include <casa/Containers/Record.h>
 #include <tables/Tables/ExprNode.h>
@@ -1026,6 +1026,18 @@ void doIt()
   checkScaString ("trim(ss)", exprid, trim(TableExprNode("a b")), "a b");
   checkScaString ("ltrim(ss)", exprid, rtrim(TableExprNode("  a b  ")), "  a b");
   checkScaString ("rtrim(ss)", exprid, ltrim(TableExprNode("  a b  ")), "a b  ");
+  checkScaString ("substr(ss,2)", exprid, substr(TableExprNode("abcdef"),2), "cdef");
+  checkScaString ("substr(ss,2,10)", exprid, substr(TableExprNode("abcdef"),2,10), "cdef");
+  checkScaString ("substr(ss,3,2)", exprid, substr(TableExprNode("abcdef"),3,2), "de");
+  checkArrString ("substr(trim(as),-1,2)", exprid, substr(trim(earrs1),-1,2), Vector<String>(arrs1.size(), "a1"));
+  checkArrString ("substr(as,-1,-1)", exprid, substr(earrs1,-1,-1), Vector<String>(arrs1.size(), ""));
+  checkScaString ("replace(ss,ss1)", exprid, replace(TableExprNode("abcdef"),"ab"), "cdef");
+  checkScaString ("replace(ss,ss2)", exprid, replace(TableExprNode("abcdefab"),"ab"), "cdef");
+  checkScaString ("replace(ss,ss2,ss)", exprid, replace(TableExprNode("abcdefab"),"ab", "xyz"), "xyzcdefxyz");
+  checkScaString ("replace(ss,rg2)", exprid, replace(TableExprNode("abcdefab"),Regex("a.")), "cdef");
+  checkScaString ("replace(ss,rg2,ss)", exprid, replace(TableExprNode("abcdefab"),Regex("a."), "xaz"), "xazcdefxaz");
+  checkScaString ("replace(ss,rg1,ss)", exprid, replace(TableExprNode("abcdefab"),Regex("a.$"), "xaz"), "abcdefxaz");
+  checkArrString ("replace(as,Regex(.*)", exprid, replace(earrs1,Regex(".*")), Vector<String>(arrs1.size(), ""));
   checkScaBool ("ss==regex", exprid, ess1==regex(TableExprNode("s.*")), True);
   checkScaBool ("ss==regex", exprid, ess1==regex(TableExprNode("as.*")), False);
   checkScaBool ("ss==patt", exprid, ess1==pattern(TableExprNode("s*")), True);

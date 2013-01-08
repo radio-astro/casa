@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.h 21095 2011-06-09 09:11:36Z gervandiepen $
+//# $Id: ArrayMath.h 21293 2012-11-30 15:58:59Z gervandiepen $
 
 #ifndef CASA_ARRAYMATH_H
 #define CASA_ARRAYMATH_H
@@ -652,6 +652,8 @@ template<class T> T rms(const Array<T> &a);
 // sorted. By default a copy will be made, but if "inPlace" is in effect,
 // the data themselves will be sorted. That should only be used if the
 // data are used not thereafter.
+// <note>The function kthLargest in class GenSortIndirect can be used to
+// obtain the index of the median in an array. </note>
 // <group>
 template<class T> inline T median(const Array<T> &a)
     { return median (a, False, (a.nelements() <= 100), False); }
@@ -672,6 +674,8 @@ template<class T> T median(const Array<T> &a, Block<T> &tmp, Bool sorted,
 // A fraction of 0.5 is the same as the median, be it that no mean of
 // the two middle elements is taken if the array has an even nr of elements.
 // It uses kthLargest if the array is not sorted yet.
+// <note>The function kthLargest in class GenSortIndirect can be used to
+// obtain the index of the fractile in an array. </note>
 template<class T> T fractile(const Array<T> &a, Float fraction,
 			     Bool sorted = False, Bool inPlace = False)
   { Block<T> tmp; return fractile (a, tmp, fraction, sorted, inPlace); }

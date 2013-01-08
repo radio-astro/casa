@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTabularSpectrum.cc 21071 2011-05-06 14:02:15Z gervandiepen $
+//# $Id: tTabularSpectrum.cc 21130 2011-10-18 07:39:05Z gervandiepen $
 
 #include <casa/aips.h>
 #include <components/ComponentModels/ComponentType.h>

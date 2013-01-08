@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledStManAccessor.h 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: TiledStManAccessor.h 21295 2012-11-30 16:00:01Z gervandiepen $
 
 #ifndef TABLES_TILEDSTMANACCESSOR_H
 #define TABLES_TILEDSTMANACCESSOR_H
@@ -168,7 +168,7 @@ public:
     ROTiledStManAccessor (const Table& table, const String& name,
                           Bool byColumn=False);
 
-    ~ROTiledStManAccessor();
+    virtual ~ROTiledStManAccessor();
 
     // Copy constructor (reference semantics).
     ROTiledStManAccessor (const ROTiledStManAccessor& that);
@@ -276,9 +276,6 @@ public:
     // It will flush the caches as needed and remove all buckets from them
     // resulting in a possibly large drop in memory used.
     void clearCaches();
-
-    // Show the statistics for each cache used by this storage manager.
-    void showCacheStatistics (ostream& os) const;
 
 
 protected:

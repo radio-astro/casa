@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecScaCol.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: TVecScaCol.tcc 21298 2012-12-07 14:53:03Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/TVecScaCol.h>
@@ -35,24 +35,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Construct a table column vector.
 template<class T>
-TabVecScaCol<T>::TabVecScaCol (const ROTableColumn& column)
-: colPtrPut_p (0)
-{
-    //# Construct a scalar column.
-    //# This will check the type, etc. and link to the BaseTable object.
-    colPtr_p = new ROScalarColumn<T> (column);
-    tag_p  = TagScaCol;
-    nrel_p = -1;                                 // #rows is #nelements
-}
-
-//# Construct a table column vector.
-template<class T>
 TabVecScaCol<T>::TabVecScaCol (const TableColumn& column)
 {
     //# Construct a scalar column.
     //# This will check the type, etc. and link to the BaseTable object.
-    colPtrPut_p = new ScalarColumn<T> (column);
-    colPtr_p    = colPtrPut_p;
+    colPtr_p = new ScalarColumn<T> (column);
     tag_p  = TagScaCol;
     nrel_p = -1;                                 // #rows is #nelements
 }
@@ -76,18 +63,16 @@ template<class T>
 void TabVecScaCol<T>::getVal (uInt i, T& val) const
     { colPtr_p->get (i, val); }
 
-//# colPtrPut_p is zero for a table vector constructed from a ROTable.
-//# However, a put is impossible for these, thus all is fine.
 template<class T>
 void TabVecScaCol<T>::putVal (uInt i, const T& val)
-    { colPtrPut_p->put (i, val); }
+    { colPtr_p->put (i, val); }
 
 template<class T>
 void TabVecScaCol<T>::set (const T& val)
 {
-    uInt nrrow = colPtrPut_p->nrow();
+    uInt nrrow = colPtr_p->nrow();
     for (uInt i=0; i<nrrow; i++) {
-	colPtrPut_p->put (i, val);
+	colPtr_p->put (i, val);
     }
 }
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayLogical.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ArrayLogical.tcc 21195 2012-03-14 08:10:42Z gervandiepen $
 
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayUtil.h>
@@ -50,9 +50,9 @@ bool arrayCompareAll (const Array<T>& left, T right,
                       CompareOperator op)
 {
   if (left.contiguousStorage()) {
-    return compareAll (left.cbegin(), left.cend(), bind2nd(op, right));
+    return compareAllRight (left.cbegin(), left.cend(), right, op);
   } else {
-    return compareAll (left.begin(),  left. end(), bind2nd(op, right));
+    return compareAllRight (left.begin(), left.end(), right, op);
   }
 }
 
@@ -61,9 +61,9 @@ bool arrayCompareAll (T left, const Array<T>& right,
                       CompareOperator op)
 {
   if (right.contiguousStorage()) {
-    return compareAll (right.cbegin(), right.cend(), bind1st(op, left));
+    return compareAllLeft (right.cbegin(), right.cend(), left, op);
   } else {
-    return compareAll (right.begin(),  right.end(),  bind1st(op, left));
+    return compareAllLeft (right.begin(), right.end(), left, op);
   }
 }
 
@@ -84,9 +84,9 @@ bool arrayCompareAny (const Array<T>& left, T right,
                       CompareOperator op)
 {
   if (left.contiguousStorage()) {
-    return compareAny (left.cbegin(), left.cend(), bind2nd(op, right));
+    return compareAnyRight (left.cbegin(), left.cend(), right, op);
   } else {
-    return compareAny (left.begin(),  left. end(), bind2nd(op, right));
+    return compareAnyRight (left.begin(), left.end(), right, op);
   }
 }
 
@@ -95,9 +95,9 @@ bool arrayCompareAny (T left, const Array<T>& right,
                       CompareOperator op)
 {
   if (right.contiguousStorage()) {
-    return compareAny (right.cbegin(), right.cend(), bind1st(op, left));
+    return compareAnyLeft (right.cbegin(), right.cend(), left, op);
   } else {
-    return compareAny (right.begin(),  right.end(),  bind1st(op, left));
+    return compareAnyLeft (right.begin(), right.end(), left, op);
   }
 }
 
@@ -575,6 +575,14 @@ LogicalArray isInf (const Array<T> &array)
 {
   LogicalArray result(array.shape());
   arrayContTransform (array, result, casa::IsInf<T>());
+  return result;
+}
+
+template<class T>
+LogicalArray isFinite (const Array<T> &array)
+{
+  LogicalArray result(array.shape());
+  arrayContTransform (array, result, casa::IsFinite<T>());
   return result;
 }
 

@@ -240,10 +240,10 @@ namespace casa {
       //save region into a table (image, blank table or any other such)
       String imageRegionToTable(const String& tabName, 
 				const ImageRegion& imreg,
-				const String& regName); 
+				const String& regName, Bool asmask=False); 
 
       String recordToTable(const String& tabName, const RecordInterface& rec, 
-			 const String& regName="");
+			   const String& regName="", Bool asmask=False);
       //recover region from table
       Record* tableToRecord(const String& tabName,   const String& regname);
 

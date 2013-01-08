@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Flux.tcc 21071 2011-05-06 14:02:15Z gervandiepen $
+//# $Id: Flux.tcc 21292 2012-11-28 14:58:19Z gervandiepen $
 
 #include <components/ComponentModels/Flux.h>
 #include <casa/Arrays/Array.h>
