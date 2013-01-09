@@ -33,6 +33,7 @@ namespace casa {
 
 template <class T> class ImageInterface;
 class RegionShape;
+class RegionBox;
 
 /**
  * Provides convenient accessors and functionality for a ComponentList.
@@ -50,13 +51,16 @@ public:
 	Quantity getAngle( int i ) const;
 	Quantum< Vector<double> > getLatLong( int i ) const;
 	Quantity getFlux( int i ) const;
+	//QString getEstimateFixed( int index ) const;
 	void clear();
-	void remove( const QVector<int>& indices );
+	void remove( QVector<int> indices );
 	void fromComponentList( ComponentList list );
 	bool fromRecord( String& errorMsg, Record& record );
 	bool toEstimateFile( QTextStream& stream,
-			ImageInterface<Float>* image, QString& errorMsg ) const;
+			ImageInterface<Float>* image, QString& errorMsg,
+			bool screenEstimates = false, RegionBox* screenBox = NULL) const;
 	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName ) const;
+	//void setFixedEstimates( const QList<QString>& fixedList );
 	virtual ~ComponentListWrapper();
 
 private:
@@ -66,8 +70,10 @@ private:
 	double radiansToDegrees( double value ) const;
 	double degreesToArcSecs( double Value ) const;
 	Quantity getAxis( int listIndex, int shapeIndex, bool toArcSecs ) const;
+	double rotateAngle( double value ) const;
 
 	ComponentList skyList;
+	//QList<QString> fixedEstimates;
 	const String RAD;
 	const String DEG;
 	const String ARC_SEC;

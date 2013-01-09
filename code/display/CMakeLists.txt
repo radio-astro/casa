@@ -388,6 +388,7 @@ casa_add_library( display
   Fit/ColorComboDelegate.cc
   Fit/PixelRangeDialog.cc
   Fit/ResidualHistogramDialog.cc
+  Fit/RegionBox.cc
   QtAutoGui/QtAutoGui.cc
   QtAutoGui/QtGuiEntry.cc
   QtAutoGui/QtLayout.cc

@@ -283,6 +283,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	string animloc = addAnimationDockWidget();
 
 	initHistogramHolder();
+	initFit2DTool();
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 	std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
@@ -764,29 +765,69 @@ void QtDisplayPanelGui::refreshFit(){
 				}
 			}
 		}
+		else {
+			fitTool->hide();
+		}
 		if ( !foundImage ){
 			fitTool->setImage( NULL );
+		}
+	}
+}
+
+
+
+void QtDisplayPanelGui::initFit2DTool(){
+	PanelDisplay* panelDisplay = qdp_->panelDisplay();
+	fitTool = new Fit2DTool( this );
+
+	connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshFit()));
+	connect( fitTool, SIGNAL(showOverlay(String)),this, SLOT(addSkyComponentOverlay(String)));
+	connect( fitTool, SIGNAL(addResidualFitImage(String)), this, SLOT(addResidualFitImage(String)));
+	connect( fitTool, SIGNAL(removeOverlay(String)),this, SLOT(removeSkyComponentOverlay(String)));
+	connect( fitTool, SIGNAL(remove2DFitOverlay( QList<RegionShape*>)),this, SLOT( remove2DFitOverlay(QList<RegionShape*>)));
+	connect( fitTool, SIGNAL(add2DFitOverlay( QList<RegionShape*> )),this, SLOT( add2DFitOverlay(QList<RegionShape*>)));
+
+	//Update the channel for the fit.
+	connect( this, SIGNAL(frameChanged(int)), fitTool, SLOT(frameChanged(int)));
+	refreshFit();
+
+	//Connect drawing tools so that regions are updated for the fit.
+	QtRectTool *rect = dynamic_cast<QtRectTool*>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
+	// one region source is shared among all of the tools...
+	// so there is no need to connect these signals for all of the tools...
+	if ( rect != NULL ){
+		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+		if ( qrs ) {
+			connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
+				const QList<double> &, const QList<int> &, const QList<int> &,
+				const QString &, const QString &, const QString &, int, int ) ),
+				fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+				const QList<double> &, const QList<int> &, const QList<int> &,
+				const QString &, const QString &, const QString &, int, int ) ) );
+			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
+				const QList<int> &, const QList<int> & ) ),
+				fitTool, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
+				const QList<int> &, const QList<int> & ) ) );
+			connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
+				const QList<double> &, const QList<int> &, const QList<int> &,
+				const QString &, const QString &, const QString &, int, int ) ),
+				fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+				const QList<double> &, const QList<int> &, const QList<int> &,
+				const QString &, const QString &, const QString &, int, int ) ) );
 
 		}
 	}
 }
-void QtDisplayPanelGui::showFitInteractive(){
-	if ( fitTool == NULL ){
-		PanelDisplay* panelDisplay = qdp_->panelDisplay();
-		fitTool = new Fit2DTool( this );
 
-		connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshFit()));
-		connect( fitTool, SIGNAL(showOverlay(String)),this, SLOT(addSkyComponentOverlay(String)));
-		connect( fitTool, SIGNAL(addResidualFitImage(String)), this, SLOT(addResidualFitImage(String)));
-		connect( fitTool, SIGNAL(removeOverlay(String)),this, SLOT(removeSkyComponentOverlay(String)));
-		connect( fitTool, SIGNAL(remove2DFitOverlay( QList<RegionShape*>)),this, SLOT( remove2DFitOverlay(QList<RegionShape*>)));
-		connect( fitTool, SIGNAL(add2DFitOverlay( QList<RegionShape*> )),this, SLOT( add2DFitOverlay(QList<RegionShape*>)));
-		connect( this, SIGNAL(frameChanged(int)), fitTool, SLOT(frameChanged(int)));
-		refreshFit();
-		connectRegionSignals( panelDisplay, fitTool, true );
-	}
+
+void QtDisplayPanelGui::showFitInteractive(){
 	fitTool->show();
 }
+
+void QtDisplayPanelGui::hideFit2DTool(){
+	fitTool->hide();
+}
+
 
 void QtDisplayPanelGui::addResidualFitImage( String path ){
 	QtDisplayData* dd = createDD( path, "image", "raster" );
@@ -1248,6 +1289,8 @@ void QtDisplayPanelGui::hideImageMenus() {
 					hideFileBoxPanel();
 					hideMakeRegionPanel();
 					hideImageProfile();
+					hideFit2DTool();
+					hideHistogram();
 					hideShapeManager();
 					hideStats();
 
@@ -1276,6 +1319,8 @@ void QtDisplayPanelGui::hideAllSubwindows() {
 	hideFileBoxPanel();
 	hideMakeRegionPanel();
 	hideImageProfile();
+	hideFit2DTool();
+	hideHistogram();
 	hideDataManager();
 	hideExportManager();
 	hideDataOptionsPanel();
@@ -1658,7 +1703,7 @@ void QtDisplayPanelGui::showImageProfile() {
 						connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 						connect( this, SIGNAL(frameChanged(int)), profile_, SLOT(frameChanged(int)));
 						connect( profile_, SIGNAL(movieChannel(int,int)), this, SLOT(movieChannels(int, int)));
-						connectRegionSignals(ppd, profile_);
+						connectRegionSignals(ppd);
 					}
 					else {
 						if (profileDD_ != pdd) {
@@ -1719,130 +1764,114 @@ void QtDisplayPanelGui::showImageProfile() {
 	}
 }
 
-void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd, QWidget* slotImplementer, bool slotsOnly){
+void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ){
 	QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
 	if (pos) {
-		if ( !slotsOnly ){
-			connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+		connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType)),
-				slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 						const Vector<Double>, const Vector<Double>, const ProfileType)));
-			connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
 				pos, SLOT(setCoordType(const String&)));
-		}
+
 		// one region source is shared among all of the tools...
 		// so there is no need to connect these signals for all of the tools...
 		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 
 		if ( qrs ) {
-			if ( !slotsOnly ){
-				connect( slotImplementer, SIGNAL(adjustPosition(double,double,double,double)),
+			connect( profile_, SIGNAL(adjustPosition(double,double,double,double)),
 					qrs.get(), SLOT(adjustPosition(double,double,double,double)));
-			}
 			connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
 					const QList<double> &, const QList<int> &, const QList<int> &,
 					const QString &, const QString &, const QString &, int, int ) ),
-					slotImplementer, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+					profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 							const QList<double> &, const QList<int> &, const QList<int> &,
 							const QString &, const QString &, const QString &, int, int ) ) );
 			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 					const QList<int> &, const QList<int> & ) ),
-					slotImplementer, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
+					profile_, SLOT( updateRegion( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
 							const QList<int> &, const QList<int> & ) ) );
 			connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
 					const QList<double> &, const QList<int> &, const QList<int> &,
 					const QString &, const QString &, const QString &, int, int ) ),
-					slotImplementer, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+					profile_, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 							const QList<double> &, const QList<int> &, const QList<int> &,
 							const QString &, const QString &, const QString &, int, int ) ) );
+
 		}
 	}
 	else {
 		QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POINT));
 		if (pos) {
-			if ( !slotsOnly ){
-				connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+			connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType)),
-					slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 							const Vector<Double>, const Vector<Double>, const ProfileType)));
-				connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
 					pos, SLOT(setCoordType(const String&)));
-			}
 		}
 	}
 
 	QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 	if (rect) {
-		if ( !slotsOnly ){
-			connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+		connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType)),
-				slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 						const Vector<Double>, const Vector<Double>, const ProfileType )));
-			connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
 				rect, SLOT(setCoordType(const String&)));
-		}
 	}
 	else {
 		QtOldRectTool *rect = dynamic_cast<QtOldRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 		if (rect) {
-			if ( !slotsOnly ){
-				connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+			connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType)),
-					slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 							const Vector<Double>, const Vector<Double>, const ProfileType )));
-				connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
 					rect, SLOT(setCoordType(const String&)));
-			}
 		}
 	}
 
 	QtEllipseTool *ellipse = dynamic_cast<QtEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 	if (ellipse) {
-		if ( !slotsOnly ){
-			connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+		connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType )),
-				slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 						const Vector<Double>, const Vector<Double>, const ProfileType )));
-			connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
 				ellipse, SLOT(setCoordType(const String&)));
-		}
 	}
 	else {
 		QtOldEllipseTool *ellipse = dynamic_cast<QtOldEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 		if (ellipse) {
-			if ( !slotsOnly ){
-				connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+			connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType )),
-					slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 							const Vector<Double>, const Vector<Double>, const ProfileType )));
-				connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
 					ellipse, SLOT(setCoordType(const String&)));
-			}
 		}
 	}
 
 	QtPolyTool *poly = dynamic_cast<QtPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
 	if (poly) {
-		if ( !slotsOnly ){
-			connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+		connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType )),
-				slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 						const Vector<Double>, const Vector<Double>, const ProfileType )));
-			connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+		connect( profile_, SIGNAL(coordinateChange(const String&)),
 				poly, SLOT(setCoordType(const String&)));
-		}
 	}
 	else {
 		QtOldPolyTool *poly = dynamic_cast<QtOldPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
 		if (poly) {
-			if ( !slotsOnly ){
-				connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+			connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType )),
-					slotImplementer, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 							const Vector<Double>, const Vector<Double>, const ProfileType )));
-				connect( slotImplementer, SIGNAL(coordinateChange(const String&)),
+			connect( profile_, SIGNAL(coordinateChange(const String&)),
 					poly, SLOT(setCoordType(const String&)));
-			}
 		}
 	}
 }
@@ -2617,23 +2646,38 @@ void QtDisplayPanelGui::showHistogram(){
 	histogrammer->show();
 }
 
+void QtDisplayPanelGui::hideHistogram(){
+	histogrammer->hide();
+}
+
 void QtDisplayPanelGui::refreshHistogrammer(){
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
-	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-		QtDisplayData* pdd = qdds.getRight();
-		if(pdd != 0 && pdd->dataType() == "image") {
-			ImageInterface<float>* img = pdd->imageInterface();
-			PanelDisplay* ppd = qdp_->panelDisplay();
-			if (ppd != 0 && img != 0) {
-				if (ppd->isCSmaster(pdd->dd())) {
-					histogrammer->setImage( img );
-					if ( binPlotWidget != NULL ){
-						binPlotWidget->setImage( img );
+	bool imageFound = false;
+	int registeredCount = rdds.len();
+	if ( registeredCount > 0 ){
+		for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+			QtDisplayData* pdd = qdds.getRight();
+			if(pdd != 0 && pdd->dataType() == "image") {
+				ImageInterface<float>* img = pdd->imageInterface();
+				PanelDisplay* ppd = qdp_->panelDisplay();
+				if (ppd != 0 && img != 0) {
+					if (ppd->isCSmaster(pdd->dd())) {
+						histogrammer->setImage( img );
+						imageFound = true;
+						if ( binPlotWidget != NULL ){
+							binPlotWidget->setImage( img );
+						}
+						break;
 					}
-					break;
 				}
 			}
 		}
+	}
+	else {
+		histogrammer->hide();
+	}
+	if ( !imageFound ){
+		histogrammer->setImage( NULL );
 	}
 }
 

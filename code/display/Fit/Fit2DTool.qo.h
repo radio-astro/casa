@@ -34,6 +34,7 @@
 #include <display/Fit/PixelRangeDialog.qo.h>
 #include <display/Fit/ResidualHistogramDialog.qo.h>
 #include <display/Fit/Fit2DLogDialog.qo.h>
+//#include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
 namespace casa {
@@ -42,6 +43,7 @@ template <class T> class ImageInterface;
 class Gaussian2DFitter;
 class ColorComboDelegate;
 class RegionShape;
+class RegionBox;
 class Fit2DTool : public QDialog {
     Q_OBJECT
 
@@ -102,9 +104,13 @@ private:
 			String& saveFile, const QString& purpose );
 	void addViewerFitMarkers();
 	void removeViewerFitMarkers();
+	void clearRegions();
+	String getScreenedEstimatesFile( const String& estimatesFileName, bool* error );
 
-	QList<int> regionBoxBLC;
-	QList<int> regionBoxTRC;
+	QMap< int, RegionBox*> regions;
+	int currentRegionId;
+	const int DEFAULT_KEY;
+	const QString REGION_LABEL;
 	ImageInterface<Float>* image;
 	QList<RegionShape*> fitMarkers;
 	Gaussian2DFitter* fitter;

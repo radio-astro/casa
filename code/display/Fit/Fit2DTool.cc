@@ -24,8 +24,10 @@
 //#
 #include "Fit2DTool.qo.h"
 #include <display/Fit/Gaussian2DFitter.h>
+#include <display/Fit/RegionBox.h>
 #include <display/Fit/ColorComboDelegate.h>
 #include <display/RegionShapes/RegionShape.h>
+#include <display/Display/Options.h>
 #include <QMessageBox>
 #include <QDebug>
 #include <QDir>
@@ -33,10 +35,12 @@
 namespace casa {
 
 Fit2DTool::Fit2DTool(QWidget *parent)
-    : QDialog(parent), image( NULL), fitter(NULL), progressBar( this ),
+    : QDialog(parent), DEFAULT_KEY(-1), REGION_LABEL("Region:  "),
+      image( NULL), fitter(NULL), progressBar( this ),
       findSourcesDialog( this ), pixelRangeDialog( this ),
       logDialog( this ){
 	ui.setupUi(this);
+	currentRegionId = DEFAULT_KEY;
 	const QString WINDOW_TITLE( "2D Fit Tool");
 	this->setWindowTitle( WINDOW_TITLE );
 
@@ -53,8 +57,8 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 	ui.viewButton->setEnabled( false );
 	fitColorDelegate = new ColorComboDelegate( this );
 	ui.fitColorCombo->setItemDelegate(  fitColorDelegate );
-	const QStringList colorNames = QStringList()<<"black"<<"white"<<"red"<<
-			"green"<<"blue"<<"cyan"<<"magenta"<<"yellow";
+	const QStringList colorNames = QStringList()<<"yellow"<<"white"<<"red"<<
+			"green"<<"blue"<<"cyan"<<"magenta"<<"black";
 	fitColorDelegate->setSupportedColors( colorNames );
 	for ( int i = 0; i < colorNames.size(); i++ ){
 		ui.fitColorCombo->addItem(colorNames[i]);
@@ -267,6 +271,32 @@ bool Fit2DTool::validateFile( QLineEdit* directoryLineEdit, QLineEdit* fileLineE
 	return fileOk;
 }
 
+String Fit2DTool::getScreenedEstimatesFile( const String& estimatesFileName, bool* errorWritingFile ){
+	QString screenedEstimatesFileName(estimatesFileName.c_str());
+	if ( screenedEstimatesFileName.length() > 0 ){
+		if ( !regions.isEmpty() ){
+			RegionBox* screenBox = regions[currentRegionId ];
+			if ( screenBox != NULL ){
+				int separatorIndex = screenedEstimatesFileName.lastIndexOf( QDir::separator());
+				if ( separatorIndex > 0 ){
+					screenedEstimatesFileName = screenedEstimatesFileName.right(screenedEstimatesFileName.length() - separatorIndex-1);
+				}
+				String outName= viewer::options.temporaryPath( screenedEstimatesFileName.toStdString() );
+				QString outNameStr( outName.c_str() );
+				bool success = findSourcesDialog.writeEstimateFile( outNameStr, true, screenBox );
+				if ( success ){
+					screenedEstimatesFileName = outNameStr;
+				}
+				else {
+					*errorWritingFile = true;
+					qDebug() << "Could not write estimates to temp file: "<<outNameStr;
+				}
+			}
+		}
+	}
+	return screenedEstimatesFileName.toStdString();
+}
+
 
 void Fit2DTool::doFit(){
 
@@ -280,6 +310,11 @@ void Fit2DTool::doFit(){
 		else {
 			estimatesFileName = fileName.toStdString();
 		}
+	}
+	bool errorWritingFile = false;
+	estimatesFileName = getScreenedEstimatesFile( estimatesFileName, &errorWritingFile );
+	if ( errorWritingFile ){
+		return;
 	}
 
 	String pixelBox = populatePixelBox();
@@ -315,6 +350,7 @@ void Fit2DTool::doFit(){
 
 void Fit2DTool::frameChanged( int frame ){
 	ui.channelLineEdit->setText( QString::number( frame ));
+	findSourcesDialog.setChannel( frame );
 }
 
 void Fit2DTool::clearFitMarkers(){
@@ -383,11 +419,8 @@ void Fit2DTool::estimateFileChanged( const QString& fullPath ){
 
 void Fit2DTool::showFindSourcesDialog(){
 	if ( image != NULL ){
-		String pixelBox = populatePixelBox();
-		findSourcesDialog.setPixelBox( pixelBox );
 		QString channelStr = ui.channelLineEdit->text();
 		findSourcesDialog.setChannel(channelStr.toInt());
-		findSourcesDialog.setImage( image );
 		findSourcesDialog.show();
 	}
 	else {
@@ -395,26 +428,12 @@ void Fit2DTool::showFindSourcesDialog(){
 	}
 }
 
-void Fit2DTool::resetRegion( const QList<int>& pixelX, const QList<int>& pixelY ){
-	if ( pixelX.size() == 2 && pixelY.size() == 2 ){
-		regionBoxBLC.clear();
-		regionBoxTRC.clear();
-		regionBoxBLC.append(pixelX[0]);
-		regionBoxBLC.append(pixelY[0]);
-		regionBoxTRC.append(pixelX[1]);
-		regionBoxTRC.append(pixelY[1]);
-	}
-}
 
 String Fit2DTool::populatePixelBox() const {
 	QString pixelStr( "");
 	const QString COMMA_STR( ",");
-	if ( regionBoxBLC.size() == 2 && regionBoxTRC.size() == 2 ){
-		pixelStr.append( QString::number(regionBoxBLC[0]) + COMMA_STR );
-		pixelStr.append( QString::number(regionBoxBLC[1]) + COMMA_STR );
-
-		pixelStr.append( QString::number(regionBoxTRC[0]) + COMMA_STR );
-		pixelStr.append( QString::number(regionBoxTRC[1]));
+	if ( currentRegionId != DEFAULT_KEY ){
+		pixelStr = regions[currentRegionId]->toString();
 	}
 	else {
 		//No regions so just use the image as bounds.
@@ -434,6 +453,10 @@ void Fit2DTool::setImageFunctionalityEnabled( bool enable ){
 	ui.estimateGroupBox->setEnabled( enable );
 	ui.pixelRangeGroupBox->setEnabled( enable );
 	ui.channelLineEdit->setEnabled( enable );
+	ui.fitImageLabel->setVisible( enable );
+	if ( !enable ){
+		ui.fitRegionLabel->setVisible( enable );
+	}
 }
 
 void Fit2DTool::setImage( ImageInterface<Float>* image ){
@@ -442,25 +465,83 @@ void Fit2DTool::setImage( ImageInterface<Float>* image ){
 	if ( image == NULL ){
 		enableFunctionality = false;
 	}
+	else {
+		String imageName = image->name(false);
+		QString imageNameStr( imageName.c_str());
+		ui.fitImageLabel->setText( "Image:" + imageNameStr );
+		findSourcesDialog.setImage( image );
+
+	}
 	setImageFunctionalityEnabled( enableFunctionality );
 }
 
-void Fit2DTool::newRegion( int /*id*/, const QString &/*shape*/, const QString &/*name*/,
+void Fit2DTool::newRegion( int id, const QString &/*shape*/, const QString &/*name*/,
 		const QList<double> &/*world_x*/, const QList<double> &/*world_y*/,
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
 		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/,
 		int /*fontsize*/, int /*fontstyle*/ ) {
-	resetRegion( pixel_x, pixel_y );
+	RegionBox* regionBox = regions[id];
+	if ( regionBox == NULL ){
+		regionBox = new RegionBox( pixel_x, pixel_y );
+		regions[id] = regionBox;
+	}
+	else {
+		regionBox->update( pixel_x, pixel_y );
+	}
+	ui.fitRegionLabel->setVisible( true );
+	QString boxSpec( regionBox->toStringLabelled());
+	ui.fitRegionLabel->setText( REGION_LABEL+boxSpec);
+	currentRegionId = id;
+
+	String pixelBox = populatePixelBox();
+	findSourcesDialog.setPixelBox( pixelBox );
 }
 
-void Fit2DTool::updateRegion( int /*id*/, viewer::Region::RegionChanges /*changes*/,
+void Fit2DTool::clearRegions(){
+	QList<int> keys = regions.keys();
+	for ( int i = 0; i < keys.size(); i++ ){
+		RegionBox* box = regions.take( keys[i] );
+		delete box;
+	}
+}
+
+void Fit2DTool::updateRegion( int id, viewer::Region::RegionChanges changes,
 		const QList<double> &/*world_x*/, const QList<double> &/*world_y*/,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ){
-	resetRegion( pixel_x, pixel_y );
+	if ( changes != viewer::Region::RegionChangeDelete ){
+		RegionBox* box = regions[id];
+		if ( box != NULL ){
+			box->update( pixel_x, pixel_y );
+			currentRegionId = id;
+			ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
+			String pixelBox = populatePixelBox();
+			findSourcesDialog.setPixelBox( pixelBox );
+		}
+		else {
+			qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
+		}
+	}
+	else {
+		RegionBox* regionToRemove = regions.take(id);
+		delete regionToRemove;
+		if ( regions.isEmpty() ){
+			currentRegionId = DEFAULT_KEY;
+			ui.fitRegionLabel->setVisible( false );
+		}
+		else {
+			QList<int> keys = regions.keys();
+			currentRegionId = keys[0];
+			ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
+		}
+		String pixelBox = populatePixelBox();
+		findSourcesDialog.setPixelBox( pixelBox );
+	}
 }
+
 
 Fit2DTool::~Fit2DTool(){
 	delete fitter;
 	clearFitMarkers();
+	clearRegions();
 }
 }

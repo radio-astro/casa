@@ -514,12 +514,15 @@ class QtDisplayPanelGui : public QtPanelBase {
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
-  void connectRegionSignals(PanelDisplay* ppd, QWidget* destination, bool slotsOnly = false);
+  void connectRegionSignals(PanelDisplay* ppd);
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
   void updateFrameInformation();
   void initAnimationHolder();
   void initHistogramHolder();
+  void hideHistogram();
+  void initFit2DTool();
+  void hideFit2DTool();
 
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
@@ -554,8 +557,6 @@ class QtDisplayPanelGui : public QtPanelBase {
   void refreshFit();
   void addSkyComponentOverlay(String path);
   void removeSkyComponentOverlay( String path );
-  //void remove2DFitOverlay( DrawingDisplayData& drawingData );
-  //void add2DFitOverlay( DrawingDisplayData& drawingData );
   void add2DFitOverlay( QList<RegionShape*> fitMarkers );
   void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
   void addResidualFitImage( String path );

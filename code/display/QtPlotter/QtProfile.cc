@@ -1174,8 +1174,10 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 	if (!isVisible()) return;
 	if (!analysis) return;
 
-
-	if ( type == viewer::Region::RegionChangeFocus )
+	if ( type == viewer::Region::RegionChangeDelete ){
+		return;
+	}
+	else if ( type == viewer::Region::RegionChangeFocus )
 		current_region_id = id_;			// viewer region focus has changed
 	else if ( type == viewer::Region::RegionChangeNewChannel )
 		return;						// viewer moving to new channel

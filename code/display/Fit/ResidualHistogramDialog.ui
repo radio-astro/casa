@@ -85,6 +85,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="closeButton">
+       <property name="toolTip">
+        <string>Close this dialog</string>
+       </property>
        <property name="text">
         <string>Close</string>
        </property>

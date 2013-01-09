@@ -89,13 +89,20 @@ void Gaussian2DFitter::run(){
 	fitter.setLogfile( logPath );
 
 	// do the fit
-	ComponentList componentList = fitter.fit();
-	fitResultList.fromComponentList( componentList );
+	try {
+		ComponentList componentList = fitter.fit();
+		fitResultList.fromComponentList( componentList );
 
-	//If the fit did not converge record an error.
-	if (!fitter.converged(0)){
+		//If the fit did not converge record an error.
+		if (!fitter.converged(0)){
+			successfulFit = false;
+			errorMsg = "Fit did not converge.";
+		}
+	}
+	catch( AipsError& error ){
 		successfulFit = false;
-		errorMsg = "Fit did not converge.";
+		QString specificProblem( error.what() );
+		errorMsg = "Fit did not converge: "+ specificProblem;
 	}
 }
 

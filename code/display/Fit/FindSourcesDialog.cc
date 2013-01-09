@@ -35,6 +35,8 @@
 #include <tables/Tables.h>
 #include <casa/Quanta/MVAngle.h>
 #include <display/Display/Options.h>
+#include <display/Fit/RegionBox.h>
+//#include <display/Fit/FixedEstimateWidget.qo.h>
 
 namespace casa {
 
@@ -50,12 +52,14 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent)
 	ui.cutoffLineEdit->setValidator( validator );
 	ui.cutoffLineEdit->setText( QString::number(0.01f));
 
-	QStringList tableHeaders =(QStringList()<< "RA" << "DEC" << "Flux" << "Major Axis"<<"Minor Axis"<<"Angle");
+	QStringList tableHeaders =(QStringList()<< "ID"<<"RA" << "DEC" << "Flux" <<
+			"Major Axis"<<"Minor Axis"<<"Angle"/*<<"Fixed"*/);
 	ui.sourceTable->setColumnCount( tableHeaders.size());
 	ui.sourceTable->setHorizontalHeaderLabels( tableHeaders );
 	ui.sourceTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui.sourceTable->setSelectionMode( QAbstractItemView::SingleSelection );
 	ui.sourceTable->setSortingEnabled( true );
+	ui.sourceTable->verticalHeader()->hide();
 	setSourceResultsVisible( false );
 
 	initializeFileManagement();
@@ -76,19 +80,31 @@ void FindSourcesDialog::canceledFindSources(){
 //------------------------------------------------------------------
 
 void FindSourcesDialog::deleteSelectedSource(){
-	QList<QTableWidgetSelectionRange> selectedItems = ui.sourceTable->selectedRanges();
+	QList<QTableWidgetItem*> selectedItems = ui.sourceTable->selectedItems();
 	if ( selectedItems.isEmpty()){
 		QMessageBox::warning( this, "No Source", "Please select a source to delete.");
 	}
 	else {
 		clearSkyOverlay();
+
+		//Store any fixed estimates that the user may have indicated
+		//so that we can later restore them.
+		/*QList<QString> estimateList = populateFixedEstimates();
+		skyList.setFixedEstimates( estimateList );*/
+
+		//Decide which ones we are going to remove
 		int removeCount = selectedItems.size();
 		QVector<int> removeIndices;
-		for ( int i = 0; i < removeCount; i++ ){
-			int startRow = selectedItems[i].topRow();
-			int endRow = selectedItems[i].bottomRow();
-			for ( int j = startRow; j <= endRow; j++ ){
-				removeIndices.append( j );
+		int colCount = ui.sourceTable->columnCount();
+		for ( int i = ID_COL; i < removeCount; i=i+colCount ){
+			QString idText = selectedItems[i]->text();
+			bool validInt;
+			int itemId = idText.toInt(&validInt);
+			if ( validInt ){
+				removeIndices.append( itemId );
+			}
+			else {
+				qDebug() << "FindSourcesDialog -Selected item: "<<idText<<" was not a valid ID";
 			}
 		}
 		skyList.remove( removeIndices );
@@ -103,6 +119,7 @@ void FindSourcesDialog::deleteSelectedSource(){
 void FindSourcesDialog::resetSourceView() {
 	//Write the data into the columns.
 	int rowCount = skyList.getSize();
+	//ui.sourceTable->clearContents();
 	ui.sourceTable->setRowCount( rowCount );
 
 	bool sourceResultsVisible = false;
@@ -110,13 +127,11 @@ void FindSourcesDialog::resetSourceView() {
 		sourceResultsVisible = true;
 	}
 	setSourceResultsVisible( sourceResultsVisible );
-
+	ui.sourceTable->setSortingEnabled( false );
 	for ( int i=0; i<rowCount; i++ ){
 
 		//Type
-		QTableWidgetItem* item = new QTableWidgetItem( QString::number(i) );
-		ui.sourceTable->setVerticalHeaderItem(i, item );
-		//setTableValue( i, ID_COL, String::toString(i));
+		setTableValue( i, ID_COL, String::toString(i));
 
 		//RA and DEC
 		String raStr = skyList.getRA( i );
@@ -139,7 +154,14 @@ void FindSourcesDialog::resetSourceView() {
 		Quantity angleQuantity = skyList.getAngle( i );
 		String angleStr = String::toString( angleQuantity.getValue());
 		setTableValue( i, ANGLE_COL, angleStr );
+
+		/*FixedEstimateWidget* cellWidget = new FixedEstimateWidget(ui.sourceTable);
+		QString estimateInfo = skyList.getEstimateFixed( i );
+		cellWidget->fromString( estimateInfo );
+		ui.sourceTable->setCellWidget( i, FIXED_COL, cellWidget );
+		ui.sourceTable->setRowHeight( i, 40 );*/
 	}
+	ui.sourceTable->setSortingEnabled( true );
 	ui.sourceTable->resizeColumnsToContents();
 }
 
@@ -280,7 +302,9 @@ void FindSourcesDialog::createTable( ){
 	td.addColumn( ScalarColumnDesc<double>( FLUX_COLUMN ) );
 
 	//Setup a new table from the description.
-	SetupNewTable newtab( /*path*/"", td, Table::New);
+	String fileName( "Fit2DTable");
+	String filePath = viewer::options.temporaryPath( fileName );
+	SetupNewTable newtab( filePath, td, Table::New);
 	Table sourceTable(newtab);
 	String tableName = sourceTable.tableName();
 	skyPath = QString( tableName.c_str());
@@ -333,13 +357,28 @@ void FindSourcesDialog::createTable( ){
 //                Estimate File
 //---------------------------------------------------------------
 
-bool FindSourcesDialog::writeEstimateFile( QString& filePath ){
+/*QList<QString> FindSourcesDialog::populateFixedEstimates() const {
+	QList<QString> fixedList;
+	int rowCount = ui.sourceTable->rowCount();
+	for ( int i = 0; i < rowCount; i++ ){
+		QWidget* cellWidget = ui.sourceTable->cellWidget( i, FIXED_COL );
+		FixedEstimateWidget* fixedCellWidget = dynamic_cast<FixedEstimateWidget*>(cellWidget);
+		QString fixedStr = fixedCellWidget->toString();
+		fixedList.append( fixedStr );
+	}
+	return fixedList;
+}*/
+
+bool FindSourcesDialog::writeEstimateFile( QString& filePath,
+		bool screenEstimates, RegionBox* screeningBox ){
 	QFile file( filePath );
 	bool success = file.open( QIODevice::WriteOnly | QIODevice::Text );
 	if ( success ){
+		/*QList<QString> fixedStrs = populateFixedEstimates();
+		skyList.setFixedEstimates( fixedStrs );*/
 		QTextStream out( &file );
 		QString errorMsg;
-		success = skyList.toEstimateFile( out, image, errorMsg );
+		success = skyList.toEstimateFile( out, image, errorMsg, screenEstimates, screeningBox );
 		if ( !success ){
 			QMessageBox::warning( this, "Problem Writing Estimates", errorMsg );
 		}
