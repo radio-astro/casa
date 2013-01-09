@@ -138,20 +138,7 @@ class sdplot_worker(sdutil.sdtask_template):
         # Need to specify center and spacing in the epoch and
         # unit of DIRECTION column (currently assuming J2000 and rad)
         # TODO: need checking epoch and unit of DIRECTION in scantable
-        crad = None
         spacing = []
-        ##if self.center != '':
-        #    #epoch, ra, dec = self.center.split(' ')
-        #if mapcenter != '':
-        #    epoch, ra, dec = mapcenter.split(' ')
-        #    cme = me.direction(epoch, ra, dec)
-        #    crad = [qa.convert(cme['m0'],'rad')['value'], \
-        #            qa.convert(cme['m1'],'rad')['value']]
-        #    #print "Plot center (%frad, %frad)" % (crad[0], crad[1])
-        #if cellx != '' and celly != '':
-        #    spacing = [qa.convert(cellx, 'rad')['value'], \
-        #               qa.convert(celly, 'rad')['value']]
-        #    #print "Plot cell (%frad, %frad)" % (spacing[0], spacing[1])
         if cellx != '': spacing.append(cellx)
         if celly != '': spacing.append(celly)
         #sd.plotter.plotgrid(center=crad,spacing=spacing,rows=ny,cols=nx)
@@ -341,8 +328,9 @@ class sdplot_worker(sdutil.sdtask_template):
         mapcenter = sdutil.get_map_center(self.center)
         (cellx,celly) = sdutil.get_cellx_celly(self.cell)
         if calc and \
-               ((mapcenter.split() != 3) or not qa.qa.compare(cellx, "rad")):
-            (mapcenter,cellx,celly) = self.__calc_center_and_cell(mapcenter, cellx, celly)
+               ((mapcenter.split() != 3) or not qa.compare(cellx, "rad")):
+            #(mapcenter,cellx,celly) = self.__calc_center_and_cell(mapcenter, cellx, celly)
+            (mapcenter,cellx,celly) = self.__get_center_and_cell(nx, ny, mapcenter, cellx, celly)
         return (nx,ny,cellx,celly,mapcenter)
         
     def __get_mapsize(self):
@@ -352,6 +340,15 @@ class sdplot_worker(sdutil.sdtask_template):
         nx = (self.subplot % 10)
         ny = int(self.subplot/10)
         return (nx,ny)
+
+    def __get_center_and_cell(self, nx, ny, center, cellx, celly):
+        from asap._asap import plothelper
+        ph = ph = plothelper(self.scan)
+        ph.set_grid(nx, ny, cellx=cellx, celly=celly, center=center,
+                    projname="SIN")
+        gcenter = ph.get_gref()
+        gcell = ph.get_gcellval()
+        return gcenter, ("%erad" % gcell[0]), ("%erad" % gcell[1])
 
     def __calc_center_and_cell(self, center, cellx, celly):
         from numpy import array
