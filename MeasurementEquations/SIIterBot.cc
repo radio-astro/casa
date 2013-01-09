@@ -38,7 +38,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   // All SIIterBots must have 'type' and 'name' defined.
   SIIterBot::SIIterBot(const std::string &serviceName):
+#ifdef INTERACTIVE_ITERATION
                        DBusService(serviceName),
+#endif
                        itsMinPsfFraction(0.05),
                        itsMaxPsfFraction(0.8),
                        itsMaxPsfSidelobe(0.0),
@@ -226,6 +228,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
   
+    #ifdef INTERACTIVE_ITERATION
   void SIIterBot::controlUpdate(const std::map<std::string,
                                 DBus::Variant>& updatedParams) {
     Record controlRecord=toRecord(updatedParams);
@@ -235,6 +238,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       updateNeeded=true;
     }
   }
+    #endif
 
   void SIIterBot::interactionComplete() {
     changePauseFlag(false);
@@ -247,9 +251,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     interactionCond.notify_all();
   }
 
+#ifdef INTERACTIVE_ITERATION
   std::map<std::string,DBus::Variant> SIIterBot::getDetails(){
     return fromRecord(getDetailsRecord());
   }
+#endif
 
   void SIIterBot::pushDetails() {
     #ifdef INTERACTIVE_ITERATION
