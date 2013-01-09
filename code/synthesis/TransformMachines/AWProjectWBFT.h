@@ -57,7 +57,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Int tilesize=16, 
 		  Float paSteps=5.0, 
 		  Float pbLimit=5e-4,
-		  Bool usezero=False);
+		  Bool usezero=False,
+		  Bool conjBeams_p=True,
+		  Bool doublePrecGrid=False);
     // </group>
     
     // Construct from a Record containing the AWProjectWBFT state
@@ -129,14 +131,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Method used to convert the pixel value of the PB image, passed
     // as pbPixValue, to a value used for PB-normalization.
     // Typically, this will depend on the units of the "PB image"
-    // constured by the makeSensitivtyImage() methods. pbLimit is the
-    // fractional pb-gain below which imaging is not required (this
-    // value is typically the user-defined parameter in the private
-    // member variable pbLimit_p).
+    // constructed by the makeSensitivtyImage() methods. pbLimit is
+    // the fractional pb-gain below which imaging is not required
+    // (this value is typically the user-defined parameter in the
+    // private member variable pbLimit_p).
     //
-    inline virtual Float pbFunc(const Float& pbPixValue, const Float& pbLimit) 
-    //    {Float tt=(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
-    {Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
+    inline virtual Float pbFunc(const Float& /*pbPixValue*/, const Float& /*pbLimit*/) 
+    {return  1.0;};
+    //   {Float tt=(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
+ 
+
+   //    {Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
 
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
@@ -166,7 +171,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void resampleDataToGrid(Array<Complex>& griddedData,VBStore& vbs, 
 				    const VisBuffer& vb, Bool& dopsf);
+    virtual void resampleDataToGrid(Array<DComplex>& griddedData,VBStore& vbs, 
+				    const VisBuffer& vb, Bool& dopsf);
     //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
+    void resampleCFToGrid(Array<Complex>& wtsGrid, 
+			  VBStore& vbs, const VisBuffer& vb);
 
     Bool avgPBReady_p,resetPBs_p, wtImageFTDone_p;
 

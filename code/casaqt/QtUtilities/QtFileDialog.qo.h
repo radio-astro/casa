@@ -93,10 +93,10 @@ public:
     // Returns a new filename using the given optional parent, caption,
     // starting directory, and filter parameters.  See QFileDialog.
     // <group>
-    static QString qgetAnyFile(QWidget* parent = NULL,
-            const QString& caption = QString(),
-            const QString& directory = lastDirectory(),
-            const QString& filter = QString(), int histLimit = historyLimit()){
+    static QString qgetAnyFile(
+        QWidget* parent = NULL, const QString& caption = QString(),
+        const QString& directory = lastDirectory(),
+        const QString& /*filter*/ = QString(), int histLimit = historyLimit()){
         return qgetHelper(AcceptSave, AnyFile, parent, caption, directory,
                           QString(), histLimit); }
     static String getAnyFile(QWidget* parent = NULL,

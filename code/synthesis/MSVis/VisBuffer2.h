@@ -491,6 +491,8 @@ public:
 
     virtual Int spectralWindow () const = 0;
 
+    virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
+
     static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
 
 protected:
@@ -505,6 +507,12 @@ protected:
     virtual Bool isRekeyable () const = 0;
     virtual void setFillable (Bool isFillable) = 0;
     virtual void setRekeyable (Bool isRekeable) = 0;
+
+    virtual Vector<Bool> & flagRowRef () = 0;  // [nR]
+    virtual Cube<Bool> & flagCubeRef () = 0;  // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeRef () = 0; // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 

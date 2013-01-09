@@ -1,21 +1,31 @@
-//All helper functions of imager moved here for readability #
-//Imager.cc: Implementation of Imager.h # Copyright (C) 1997-2008 #
-//Associated Universities, Inc. Washington DC, USA.  # # This program
-//is free software; you can redistribute it and/or modify it # under
-//the terms of the GNU General Public License as published by the Free
-//# Software Foundation; either version 2 of the License, or (at your
-//option) # any later version.  # # This program is distributed in the
-//hope that it will be useful, but WITHOUT # ANY WARRANTY; without
-//even the implied warranty of MERCHANTABILITY or # FITNESS FOR A
-//PARTICULAR PURPOSE.  See the GNU General Public License for # more
-//details.  # # You should have received a copy of the GNU General
-//Public License along # with this program; if not, write to the Free
-//Software Foundation, Inc., # 675 Massachusetts Ave, Cambridge, MA
-//02139, USA.  # # Correspondence concerning AIPS++ should be
-//addressed as follows: # Internet email: aips2-request@nrao.edu.  #
-//Postal address: AIPS++ Project Office # National Radio Astronomy
-//Observatory # 520 Edgemont Road # Charlottesville, VA 22903-2475 USA
-//# # $Id$
+// -*- C++ -*-
+//# Imager.cc: Implementation of Imager.h 
+//# All helper functions of imager moved here for readability 
+//# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id$
 
 
 #include <casa/Exceptions/Error.h>
@@ -2068,7 +2078,7 @@ void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
        << beam_p(IPosition(2,0,0)).getPA(Unit("deg")) << " (deg) " << LogIO::POST;
 }
 
-Bool Imager::restoreImages(const Vector<String>& restoredNames)
+Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresiduals)
 {
 
   LogIO os(LogOrigin("imager", "restoreImages()", WHERE));
@@ -2110,12 +2120,14 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames)
       // If msmfs, calculate Coeff Residuals
       if(doWideBand_p && ntaylor_p>1)
 	{
-	  sm_p->calculateCoeffResiduals(); 
-	  // Re-fill them into the output residual images.
-	  for (uInt k=0 ; k < residuals_p.nelements(); ++k){
-	    (residuals_p[k])->copyData(sm_p->getResidual(k));
-	   }
-
+	  if( modresiduals ) // When called from pclean, this is set to False, via the iClean call to restoreImages.
+	    {
+	      sm_p->calculateCoeffResiduals(); 
+	      // Re-fill them into the output residual images.
+	      for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+		(residuals_p[k])->copyData(sm_p->getResidual(k));
+	      }
+	    }
 	}
 
  
@@ -2831,7 +2843,6 @@ Bool Imager::createFTMachine()
 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
 
-    useDoublePrecGrid=False;
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p, aTermOn_p);
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
@@ -2869,12 +2880,14 @@ Bool Imager::createFTMachine()
     // Finally construct the FTMachine with the CFCache, ConvFunc and
     // Re-sampler objects.  
     //
+    useDoublePrecGrid=(!singlePrec_p);
     ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
 			     cfcache, awConvFunc, 
 			     //			     mthVisResampler,
 			     visResampler,
 			     /*True */doPointing, doPBCorr, 
-			     tile_p, paStep_p, pbLimit_p, True);
+			     tile_p, paStep_p, pbLimit_p, True,conjBeams_p,
+			     useDoublePrecGrid);
       
     ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
     //

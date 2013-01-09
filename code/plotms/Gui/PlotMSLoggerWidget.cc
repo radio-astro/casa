@@ -38,7 +38,7 @@ namespace casa {
 ////////////////////////////////////
 
 PlotMSLoggerWidget::PlotMSLoggerWidget(const String& filename, int events,
-        LogMessage::Priority priority, int maxWidth, bool editFilename,
+        LogMessage::Priority priority, int /*maxWidth*/, bool editFilename,
         bool editPriority, QWidget* parent): QtEditingWidget(parent),
         itsFilename_(filename), itsFilenameWidget_(NULL), itsEvents_(events),
         itsEventsBox_(new QtComboCheckBox()), itsPriority_(priority),

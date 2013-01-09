@@ -128,26 +128,6 @@ public:
     virtual void origin ();
     virtual void advance ();
 
-//    virtual Bool isWritable () const;
-//
-//    // Return the time interval (in seconds) used for iteration.
-//    // This is not the same as the INTERVAL column.  Setting the
-//    // the interval requires calling origin chunks before performing
-//    // further iterator.
-//
-//    virtual Double getInterval() const;
-//    //virtual void setInterval (Double timeInterval);
-//
-//    virtual Bool existsColumn (VisBufferComponent2 id) const;
-//
-//    virtual const Block<Int>& getSortColumns() const;
-//
-//    // Return the row ids as from the original root table. This is useful
-//    // to find correspondance between a given row in this iteration to the
-//    // original ms row
-//
-//    virtual void getRowIds (Vector<uInt> & rowids) const;
-
     //   +=========================+
     //   |                         |
     //   | Subchunk Data Accessors |
@@ -161,67 +141,6 @@ public:
     //   |                        |
     //   +------------------------+
 
-#warning "For the moment accept the inherited wrapper methods"
-
-
-//    // True if all elements of the cube returned by getBeamOffsets are zero
-//
-//    virtual Bool allBeamOffsetsZero () const;
-//
-//    // Return the antenna AZ/EL Vector (nant)
-//
-//    virtual MDirection azel0 (Double time) const;
-//    static void azel0Calculate (Double time, MSDerivedValues & msd,
-//                                MDirection & azel0, const MEpoch & mEpoch0);
-//
-//    virtual const Vector<MDirection> & azel (Double time) const;
-//    static void azelCalculate (Double time, MSDerivedValues & msd, Vector<MDirection> & azel,
-//                               Int nAnt, const MEpoch & mEpoch0);
-//
-//    // Return feed parallactic angles Vector (nant) (1 feed/ant)
-//
-//    virtual const Vector<Float> & feed_pa (Double time) const;
-//    static Vector<Float> feed_paCalculate (Double time, MSDerivedValues & msd,
-//                                           Int nAntennas, const MEpoch & mEpoch0,
-//                                           const Vector<Float> & receptor0Angle);
-//
-//    // Return a cube containing pairs of coordinate offsets for each
-//    // receptor of each feed (values are in radians, coordinate system is fixed
-//    // with antenna and is the same one as used to define the BEAM_OFFSET
-//    // parameter in the feed table). The cube axes are receptor, antenna, feed.
-//
-//    virtual const Cube<RigidVector<Double, 2> > & getBeamOffsets () const;
-//
-//    // Return the hour angle for the specified time
-//
-//    virtual Double hourang (Double time) const;
-//    static Double hourangCalculate (Double time, MSDerivedValues & msd, const MEpoch & mEpoch0);
-//
-//    // Return nominal parallactic angle at specified time
-//    // (does not include feed position angle offset--see feed_pa)
-//    // A global value for all antennas (e.g., small array)
-//
-//    virtual const Float & parang0 (Double time) const;
-//    static Float parang0Calculate (Double time, MSDerivedValues & msd, const MEpoch & epoch0);
-//
-//    // Per antenna:
-//
-//    virtual const Vector<Float> & parang (Double time) const;
-//    static Vector<Float> parangCalculate (Double time, MSDerivedValues & msd,
-//                                          int nAntennas, const MEpoch mEpoch0);
-//
-//    // Return the current phase center as an MDirection
-//
-//    virtual const MDirection & phaseCenter () const;
-//
-//    // Return receptor angles for all antennae and feeds
-//    // First axis of the cube is a receptor number,
-//    // 2nd is antennaId, 3rd is feedId
-//    // Note: the method is intended to provide an access to MSIter::receptorAngles
-//    // for VisBuffer in the multi-feed case. It may be worth to change the
-//    // interface of feed_pa to return the information for all feeds.
-//
-//    virtual const Cube<Double> & receptorAngles () const;
 
     //   +=========================+
     //   |                         |
@@ -229,67 +148,7 @@ public:
     //   |                         |
     //   +=========================+
 
-#warning "For the moment accept the inherited wrapper methods"
 
-//    // return a string mount identifier for each antenna
-//
-//    virtual const Vector<String> & antennaMounts () const;
-//
-//    virtual MEpoch getEpoch () const;
-//
-//    // Return imaging weight (a weight for each channel)
-//    // virtual Matrix<Float> & imagingWeight (Matrix<Float> & wt) const;
-//
-//    virtual const VisImagingWeight & getImagingWeightGenerator () const;
-//
-//    virtual MFrequency::Types getObservatoryFrequencyType () const; //???
-//    virtual MPosition getObservatoryPosition () const;
-//    virtual Vector<Float> getReceptor0Angle ();
-//
-//    virtual Int getReportingFrameOfReference () const;
-//    virtual void setReportingFrameOfReference (Int frame);
-//
-//    virtual Vector<Int> getChannels (Double time, Int frameOfReference) const;
-//    virtual Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
-//
-//    //reference to actual ms in interator
-//
-//    virtual Int msId () const; // zero-based index of current MS in set of MSs
-//    virtual const MeasurementSet & ms () const;
-//
-//    // Call to use the slurp i/o method for all scalar columns. This
-//    // will set the BucketCache cache size to the full column length
-//    // and cause the full column to be cached in memory, if
-//    // any value of the column is used. In case of out-of-memory,
-//    // it will automatically fall-back on the smaller cache size.
-//    // Slurping the column is to be considered as a work-around for the
-//    // Table i/o code, which uses BucketCache and performs extremely bad
-//    // for random access. Slurping is useful when iterating non-sequentially
-//    // an MS or parts of an MS, it is not tested with multiple MSs.
-//
-//    virtual void slurp () const;
-//
-//    // Access the current ROMSColumns object in MSIter
-//
-//    virtual const vi::SubtableColumns & subtableColumns () const;
-//
-//    // get back the selected spectral windows and spectral channels for
-//    // current ms
-//
-//    virtual const SpectralWindowChannels & getSpectralWindowChannels (Int msId, Int spectralWindowId) const;
-//
-//    //assign a VisImagingWeight object to this iterator
-//
-//    virtual void useImagingWeight (const VisImagingWeight & imWgt);
-//
-//    // Return number of antennasm spws, polids, ddids
-//
-//    virtual Int nAntennas () const;
-//    virtual Int nDataDescriptionIds () const;
-//    virtual Int nPolarizations () const;
-//    virtual Int nRowsInChunk () const; // number rows in current chunk
-//    virtual Int nRowsViWillSweep () const; // number of rows in all selected ms's
-//    virtual Int nSpectralWindows () const;
 
     //   +-------------------+
     //   |                   |

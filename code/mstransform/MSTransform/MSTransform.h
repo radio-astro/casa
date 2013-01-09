@@ -144,6 +144,9 @@ public:
 	// reset everything
 	void done();
 
+	// set the defaults of the parameters
+//	Record & defaultOptions();
+
 
 	// configure the tool and parse the parameters
 	bool configure(Record config);

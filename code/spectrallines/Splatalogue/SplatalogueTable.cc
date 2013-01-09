@@ -138,18 +138,59 @@ String SplatalogueTable::list() const {
 	return os.str();
 }
 
+namespace {
+template <typename T>
+class Kluge {
+
+// The latest casacore mode changed the signature to the TableExprNode::getColumnTYPE
+// methods.  Since SplatalogueTable::toRecord is the only code that is using them,
+// I've installed a very limited kluge to fix this issue.  FYI: The casacore mod changed
+// the casacore mode now requires an array of row numbers rather than defaulting to all
+// rows(?).  jjacobs 12/17/12
+
+
+public:
+
+typedef Array<T> (TableExprNode::* Extractor) (const Vector<uInt>& rownrs) const;
+
+static Array<T>
+extract (const TableExprNode & col, Extractor extractor)
+{
+  Vector<uInt> rownrs (col.nrow());
+  indgen (rownrs);
+
+  return ((& col) ->* extractor) (rownrs);
+
+}
+
+};
+}
+
 Record SplatalogueTable::toRecord() const {
-	Array<String> species = col(SPECIES).getColumnString();
-	Array<Bool> recommended = col(RECOMMENDED).getColumnBool();
-	Array<String> chemName = col(CHEMICAL_NAME).getColumnString();
-	Array<Double> freq = col(FREQUENCY).getColumnDouble();
-	Array<String> qns = col(QUANTUM_NUMBERS).getColumnString();
-	Array<Float> intensity = col(INTENSITY).getColumnFloat();
-	Array<Float> smu2 = col(SMU2).getColumnFloat();
-	Array<Float> loga = col(LOGA).getColumnFloat();
-	Array<Float> el = col(EL).getColumnFloat();
-	Array<Float> eu = col(EU).getColumnFloat();
-	Array<String> linelist = col(LINELIST).getColumnString();
+
+	Array<String> species = Kluge<String>::extract (col(SPECIES), & TableExprNode::getColumnString);
+	Array<Bool> recommended = Kluge<Bool>::extract (col(RECOMMENDED), & TableExprNode::getColumnBool);
+	Array<String> chemName = Kluge<String>::extract (col(CHEMICAL_NAME), & TableExprNode::getColumnString);
+	Array<Double> freq = Kluge<Double>::extract (col(FREQUENCY), & TableExprNode::getColumnDouble);
+	Array<String> qns = Kluge<String>::extract (col(QUANTUM_NUMBERS), & TableExprNode::getColumnString);
+	Array<Float> intensity = Kluge<Float>::extract (col(INTENSITY), & TableExprNode::getColumnFloat);
+	Array<Float> smu2 = Kluge<Float>::extract (col(SMU2), & TableExprNode::getColumnFloat);
+	Array<Float> loga = Kluge<Float>::extract (col(LOGA), & TableExprNode::getColumnFloat);
+	Array<Float> el = Kluge<Float>::extract (col(EL), & TableExprNode::getColumnFloat);
+	Array<Float> eu = Kluge<Float>::extract (col(EU), & TableExprNode::getColumnFloat);
+	Array<String> linelist = Kluge<String>::extract (col(LINELIST), & TableExprNode::getColumnString);
+
+//	Array<String> species = col(SPECIES).getColumnString();
+//	Array<Bool> recommended = col(RECOMMENDED).getColumnBool();
+//	Array<String> chemName = col(CHEMICAL_NAME).getColumnString();
+//	Array<Double> freq = col(FREQUENCY).getColumnDouble();
+//	Array<String> qns = col(QUANTUM_NUMBERS).getColumnString();
+//	Array<Float> intensity = col(INTENSITY).getColumnFloat();
+//	Array<Float> smu2 = col(SMU2).getColumnFloat();
+//	Array<Float> loga = col(LOGA).getColumnFloat();
+//	Array<Float> el = col(EL).getColumnFloat();
+//	Array<Float> eu = col(EU).getColumnFloat();
+//	Array<String> linelist = col(LINELIST).getColumnString();
 
 	IPosition idx = IPosition(1, 0);
 	Record rec;

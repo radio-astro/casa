@@ -36,9 +36,6 @@
 #include <measures/Measures/MDirection.h>
 
 #include<synthesis/MeasurementEquations/SIMapperCollection.h>
-#include<synthesis/MeasurementComponents/SISkyModel.h>
-#include<synthesis/MeasurementEquations/SISkyEquation.h>
-#include<synthesis/MeasurementEquations/SIMaskHandler.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -46,7 +43,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
 class MeasurementSet;
-class ViewerProxy;
 template<class T> class ImageInterface;
  class SIIterBot;
 
@@ -68,61 +64,48 @@ class SynthesisImager
   void selectData(Record selpars);
   void defineImage(Record impars);
   void setupImaging(Record gridpars);
-  void setupDeconvolution(Record recpars);
-  void setupIteration(Record iterpars);
-
-  void setInteractiveMode(Bool interactiveMode);
-
-  void   setIterationDetails(Record iterpars);
-  Record getIterationDetails();
-  Record getIterationSummary();
 
   void initMapper();
-  void initCycles();
-  // Record initLoops();
-  // void endLoops(Record& loopcontrols){SIIterBot lc(loopcontrols); endLoops(lc); }
-  bool cleanComplete();
 
-  void endLoops();//SIIterBot& loopcontrols);
-  //  void runMajorCycle(){SIIterBot rec; runMajorCycle(rec);}
-  void runMajorCycle();//SIIterBot& loopcontrols);
-  void runMinorCycle();//SIIterBot& loopcontrols);
+  //Record getMajorCycleControls();
+  void   executeMajorCycle(Record& controls);
 
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
 protected:
 
+  /////////////// Internal Functions
+  CountedPtr<CoordinateSystem> buildImageCoordinateSystem(String phasecenter, 
+							  Double cellx, Double celly, 
+							  uInt imx, uInt imy,
+							  uInt npol, uInt nchan);
+
+  CountedPtr<FTMachine> createFTMachine();
+  CountedPtr<VisSet> createVisSet();
+
+  void runMajorCycle();
+
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
-
-  //  CountedPtr<VisSet> itsVisSet;
+  CountedPtr<VisSet> itsVisSet;
 
   CountedPtr<FTMachine> itsCurrentFTMachine;
-  CountedPtr<SIDeconvolver> itsCurrentDeconvolver;
   CountedPtr<CoordinateSystem> itsCurrentCoordSys;
-  CountedPtr<SIMaskHandler> itsCurrentMaskHandler;
+  IPosition itsCurrentImageShape;
+  String itsCurrentImageName;
 
-  SISkyModel itsSkyModel;
-  SISkyEquation itsSkyEquation;
-
-  boost::scoped_ptr<SIIterBot> itsLoopController;
 
   /////////////// All input parameters
 
   // Data Selection
   // Image Definition
-  String startmodel_p;
-
-  // Iteration Control
   // Imaging/Gridding
-  // Deconvolution
 
   // Other Options
-  Bool usescratch_p;
+  Bool itsUseScratch;
 
-  //////////////// Internal functions
  
 };
 

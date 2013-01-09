@@ -314,7 +314,6 @@ Bool ImageSkyModel::makeNewtonRaphsonStep(SkyEquation& se, Bool incremental, Boo
       }
     }
   }
-
   modified_p=False;
   return True;
 }

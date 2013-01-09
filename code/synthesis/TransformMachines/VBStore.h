@@ -93,7 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Float> imagingWeight_p;
     Cube<Complex> visCube_p, modelCube_p, correctedCube_p;
     Vector<Double> freq_p;
-    Bool dopsf_p,useCorrected_p;
+    Bool dopsf_p,useCorrected_p, conjBeams_p;
     Vector<Int> corrType_p;
     Quantity paQuant_p;
     Vector<Int> antenna1_p, antenna2_p;

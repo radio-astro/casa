@@ -55,7 +55,6 @@
 #include <casa/OS/Timer.h>
 
 #define CONVSIZE (1024*2)
-#define CONVWTSIZEFACTOR 1.0
 #define OVERSAMPLING 2
 #define USETABLES 0           // If equal to 1, use tabulated exp() and
 			      // complex exp() functions.
@@ -115,7 +114,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pointingToImage(0), usezero_p(False),
       // convFunc_p(), convWeights_p(),
       epJ_p(),
-      doPBCorrection(True), /*cfCache_p(cfcache),*/ paChangeDetector(),
+      doPBCorrection(True), conjBeams_p(True),/*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
@@ -160,7 +159,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   Bool doPBCorr,
 			   Int itilesize, 
 			   Float pbLimit,
-			   Bool usezero)
+			   Bool usezero,
+			   Bool conjBeams,
+			   Bool doublePrecGrid)
     : FTMachine(cfcache,cf), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
@@ -168,7 +169,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pointingToImage(0), usezero_p(usezero),
       // convFunc_p(), convWeights_p(),
       epJ_p(),
-      doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
+      doPBCorrection(doPBCorr), conjBeams_p(conjBeams), 
+      /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
@@ -200,6 +202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cfs2_p = new CFStore2;
     cfwts2_p = new CFStore2;
     pop_p->init();
+    useDoubleGrid_p=doublePrecGrid;
     //    rotatedConvFunc_p.data=new Array<Complex>();
   }
   //
@@ -333,6 +336,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	paNdxProcessed_p = other.paNdxProcessed_p;
 	runTime= other.runTime;
 	imRefFreq_p = other.imRefFreq_p;
+	conjBeams_p = other.conjBeams_p;
       };
     return *this;
   };
@@ -873,7 +877,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::makeCFPolMap(const VisBuffer& vb, const Vector<Int>& locCfStokes,
 				 Vector<Int>& polM)
   {
-    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT", "makeCFPolMap[R&D]"));
     Vector<Int> msStokes = vb.corrType();
     Int nPol = msStokes.nelements();
     polM.resize(polMap.shape());
@@ -1086,7 +1090,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convFuncCtor_p->setSpwSelection(spwChanSelFlag_p);
 	convFuncCtor_p->setSpwFreqSelection(spwFreqSel_p);
 
-	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
+	// USEFUL DEBUG MESSAGE
+	//	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
 					 pop_p, pa, uvScale, uvOffset,
@@ -1200,7 +1205,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    Block<Matrix<Float> >& weightsVec,
 				    const VisBuffer& vb)
   {
-    LogIO log_p(LogOrigin("AWProjectFT","initToVis"));
+    LogIO log_p(LogOrigin("AWProjectFT","initToVis[V][R&D]"));
     //
     // Setting the image below is crucial since init() and
     // initMaps(vb) below expect this to be set.
@@ -1208,7 +1213,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     image=&(*compImageVec[0]);
 
     log_p << "Total flux in model image (before avgPB normalization): " 
-	  << sum((*(modelImageVec[0])).get()) << LogIO::POST;
+	  << sum((*(modelImageVec[0])).get()) 
+	  << " predicing SPW = " <<vb.spectralWindow() 
+	  << " Pointing Offset = " << convFuncCtor_p->findPointingOffset(*(compImageVec[0]), vb)
+	  << " Qualifier String = " << sensitivityPatternQualifier_p 
+	  << LogIO::POST;
     if(doPBCorrection) 
       {
 	// Make the sensitivity Image if applicable
@@ -1385,7 +1394,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Now do the FFT2D in place
     //
 
+    //    storeImg(String("img.before.mod"), *image);
     LatticeFFT::cfft2d(*lattice);
+    //    storeImg(String("img.after.mod"), *image);
 
     log_l << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
   }
@@ -1475,11 +1486,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	griddedData=Complex(0.0);
 	arrayLattice = new ArrayLattice<Complex>(griddedData);
 	lattice=arrayLattice;
-	// if(useDoubleGrid_p) 
-	//   visResampler_p->initializeToSky(griddedData2, sumWeight);
-	// else
+	if(useDoubleGrid_p) 
+	  {
+	    griddedData.resize();
+	    griddedData2.resize(gridShape);
+	    griddedData2=DComplex(0.0);
+	  }
       }
-    visResampler_p->initializeToSky(griddedData, sumWeight);
+
+    if(useDoubleGrid_p) 
+      visResampler_p->initializeToSky(griddedData2, sumWeight);
+    else
+      visResampler_p->initializeToSky(griddedData, sumWeight);
   }
   //
   //---------------------------------------------------------------
@@ -1490,7 +1508,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Now we flush the cache and report statistics For memory based,
     // we don't write anything out yet.
     //
-    LogIO log_l(LogOrigin("AWProjectFT", "findPointingOffsets[R&D]"));
+    LogIO log_l(LogOrigin("AWProjectFT", "finalizeToSky[R&D]"));
 
     if(isTiled) 
       {
@@ -1505,10 +1523,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     paChangeDetector.reset();
     cfCache_p->flush();
-  // if(useDoubleGrid_p) 
-  //   visResampler_p->finalizeToSky(griddedData2, sumWeight);
-  // else
-    visResampler_p->finalizeToSky(griddedData, sumWeight);
+    if(useDoubleGrid_p) 
+      visResampler_p->finalizeToSky(griddedData2, sumWeight);
+    else
+      visResampler_p->finalizeToSky(griddedData, sumWeight);
   }
   //
   //---------------------------------------------------------------
@@ -1611,14 +1629,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     VBStore vbs;
     setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase);
 
-    resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+    if (useDoubleGrid_p)
+      resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+    else
+      resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
     
   //Double or single precision gridding.
   // if(useDoubleGrid_p) 
   //   visResampler_p->DataToGrid(griddedData2, vbs, sumWeight, dopsf);
   // else
   //    visResampler_p->DataToGrid(griddedData, vbs, sumWeight, dopsf); 
-
 
   }
   //
@@ -1628,6 +1648,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       const VisBuffer& /*vb*/, Bool& dopsf)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
+    visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
+  }
+  //
+  //-------------------------------------------------------------------------
+  // Gridding
+  void AWProjectFT::resampleDataToGrid(Array<DComplex>& griddedData_l, VBStore& vbs, 
+				       const VisBuffer& /*vb*/, Bool& dopsf)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGridD[R&D]"));
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
   }
   //
@@ -1770,14 +1799,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    << LogIO::POST;
     // UUU else
       {
-	const IPosition latticeShape = lattice->shape();
 	log_l << LogIO::DEBUGGING
 		<< "Starting FFT and scaling of image" << LogIO::POST;
 	//    
 	// x and y transforms (lattice has the gridded vis.  Make the
 	// dirty images)
 	//
-	LatticeFFT::cfft2d(*lattice,False);
+	if (useDoubleGrid_p)
+	  {
+	    ArrayLattice<DComplex> darrayLattice(griddedData2);
+	    LatticeFFT::cfft2d(darrayLattice,False);
+	    griddedData.resize(griddedData2.shape());
+	    convertArray(griddedData, griddedData2);
+	
+	    //Don't need the double-prec grid anymore...
+	    griddedData2.resize();
+	    arrayLattice = new ArrayLattice<Complex>(griddedData);
+	    lattice=arrayLattice;
+	  }
+	else
+	  {
+	    arrayLattice = new ArrayLattice<Complex>(griddedData);
+	    lattice=arrayLattice;
+	    LatticeFFT::cfft2d(*lattice,False);
+	  }
+	const IPosition latticeShape = lattice->shape();
 	//
 	// Now normalize the dirty image.
 	//
@@ -1874,9 +1920,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LatticeIterator<Float> liy(*avgPB_p,lsx);
     for(lix.reset();!lix.atEnd();lix++) 
       {
-#warning pol and chan need to be investigated
-	Int pol=lix.position()(2);
-	Int chan=lix.position()(3);
+	//Int pol=lix.position()(2);
+	//Int chan=lix.position()(3);
 	//lix.rwCursor()=weights(pol,chan);
 	lix.rwCursor()=liy.rwCursor();
       }
@@ -2185,7 +2230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // directly to bool cubes.
     //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
     vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
-
+    vbs.conjBeams_p=conjBeams_p;
 
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
     visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,

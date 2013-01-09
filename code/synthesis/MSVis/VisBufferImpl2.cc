@@ -492,6 +492,7 @@ public:
     VbCacheItemArray <Vector<Float> > sigma_p;
     VbCacheItemArray <Matrix<Float> > sigmaMat_p;
     VbCacheItem <Int> spectralWindow_p;
+    VbCacheItem <Vector<Int> > spectralWindows_p;
     VbCacheItemArray <Vector<Int> > stateId_p;
     VbCacheItemArray <Vector<Double> > time_p;
     VbCacheItemArray <Vector<Double> > timeCentroid_p;
@@ -677,6 +678,7 @@ VisBufferCache::VisBufferCache (VisBufferImpl2 * vb)
     sigma_p.initialize (vb, &VisBufferImpl2::fillSigma, Sigma, Nr, False);
     sigmaMat_p.initialize (vb, &VisBufferImpl2::fillSigmaMat, SigmaMat);
     spectralWindow_p.initialize (vb, &VisBufferImpl2::fillSpectralWindow, SpectralWindow);
+    spectralWindows_p.initialize (vb, &VisBufferImpl2::fillSpectralWindows, SpectralWindows);
     stateId_p.initialize (vb, &VisBufferImpl2::fillStateId, StateId, Nr);
     time_p.initialize (vb, &VisBufferImpl2::fillTime, casa::vi::Time, Nr);
     timeCentroid_p.initialize (vb, &VisBufferImpl2::fillTimeCentroid, TimeCentroid, Nr);
@@ -1755,6 +1757,12 @@ VisBufferImpl2::flagCube () const
     return cache_p->flagCube_p.get ();
 }
 
+Cube<Bool> &
+VisBufferImpl2::flagCubeRef ()
+{
+    return cache_p->flagCube_p.getRef ();
+}
+
 void
 VisBufferImpl2::setFlagCube (const Cube<Bool>& value)
 {
@@ -1765,6 +1773,12 @@ const Vector<Bool> &
 VisBufferImpl2::flagRow () const
 {
     return cache_p->flagRow_p.get ();
+}
+
+Vector<Bool> &
+VisBufferImpl2::flagRowRef ()
+{
+    return cache_p->flagRow_p.getRef ();
 }
 
 void
@@ -1894,6 +1908,12 @@ VisBufferImpl2::spectralWindow () const
 }
 
 const Vector<Int> &
+VisBufferImpl2::spectralWindows () const
+{
+	return cache_p->spectralWindows_p.get ();
+}
+
+const Vector<Int> &
 VisBufferImpl2::stateId () const
 {
     return cache_p->stateId_p.get ();
@@ -1959,6 +1979,12 @@ VisBufferImpl2::visCubeCorrected () const
     return cache_p->correctedVisCube_p.get ();
 }
 
+Cube<Complex> &
+VisBufferImpl2::visCubeCorrectedRef ()
+{
+    return cache_p->correctedVisCube_p.getRef ();
+}
+
 void
 VisBufferImpl2::setVisCubeCorrected (const Cube<Complex> & value)
 {
@@ -1993,6 +2019,12 @@ const Cube<Complex> &
 VisBufferImpl2::visCubeModel () const
 {
     return cache_p->modelVisCube_p.get ();
+}
+
+Cube<Complex> &
+VisBufferImpl2::visCubeModelRef ()
+{
+    return cache_p->modelVisCube_p.getRef ();
 }
 
 void
@@ -2081,6 +2113,12 @@ const Cube<Complex> &
 VisBufferImpl2::visCube () const
 {
     return cache_p->visCube_p.get ();
+}
+
+Cube<Complex> &
+VisBufferImpl2::visCubeRef ()
+{
+    return cache_p->visCube_p.getRef ();
 }
 
 void
@@ -2637,6 +2675,14 @@ VisBufferImpl2::fillSpectralWindow (Int& value) const
   CheckVisIter ();
 
   value = getViP()->spectralWindow ();
+}
+
+void
+VisBufferImpl2::fillSpectralWindows (Vector<Int>& value) const
+{
+  CheckVisIter ();
+
+  getViP()->spectralWindows (value);
 }
 
 void

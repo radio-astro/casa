@@ -74,10 +74,12 @@ PlotMSParameters::PlotMSParameters(const String& logFilename, int logEvents,
         itsClearSelectionsOnAxesChange_(clearSelections),
         itsCachedImageWidth_(cachedImageWidth),
         itsCachedImageHeight_(cachedImageHeight) {
-       	}
+}
 
-PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy) {
-    operator=(copy); }
+PlotMSParameters::PlotMSParameters(const PlotMSParameters& copy)
+    : PlotMSWatchedParameters(copy) {
+    operator=(copy);
+}
 
 PlotMSParameters::~PlotMSParameters() { }
 

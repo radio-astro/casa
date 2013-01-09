@@ -45,7 +45,7 @@
 #include <casa/OS/File.h>
 #include <fstream>
 #include <casa/sstream.h>
-
+#include <casa/OS/Timer.h>
 namespace casa{
 
   //
@@ -516,6 +516,9 @@ namespace casa{
     IPosition inShape(inImg.shape()),inNdx;
     Vector<Int> inStokes,outStokes;
     Int index,s,index1;
+
+    // Timer tim;
+    // tim.mark();
     index = inImg.coordinates().findCoordinate(Coordinate::STOKES);
     inStokes = inImg.coordinates().stokesCoordinate(index).stokes();
     index = outImg.coordinates().findCoordinate(Coordinate::STOKES);
@@ -526,13 +529,20 @@ namespace casa{
     CoordinateSystem outCS = outImg.coordinates();
     outCS.replaceCoordinate(inSpectralCoords,index);
     outImg.setCoordinateInfo(outCS);
-
+    //tim.show("fillPB::CSStuff:");
     ndx(3)=0;
+// #ifdef HAS_OMP
+//     Int Nth=max(omp_get_max_threads()-2,1);
+// #endif
+    //tim.mark();
     for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++) // The poln axes
       {
 	for(s=0;s<inShape(2);s++) if (inStokes(s) == outStokes(ndx(2))) break;
 	
 	for(ndx(0)=0;ndx(0)<imsize(0);ndx(0)++)
+	  //#pragma omp parallel default(none) firstprivate(s,iy) shared(twoPiW,convSize) num_threads(Nth)
+    {
+      //#pragma omp for
 	  for(ndx(1)=0;ndx(1)<imsize(1);ndx(1)++)
 	    {
 	      Complex cval;
@@ -541,7 +551,9 @@ namespace casa{
 	      if (Square) cval = cval*conj(cval);
 	      outImg.putAt(cval*outImg.getAt(ndx),ndx);
 	    }
+    }
       }
+    //tim.show("fillPB: ");
   }
   
   void VLACalcIlluminationConvFunc::fillPB(ImageInterface<Complex>& inImg,
@@ -554,12 +566,17 @@ namespace casa{
     
     Vector<Int> inStokes,outStokes;
     Int index,s;
+
+    // Timer tim;
+    // tim.mark();
     index = inImg.coordinates().findCoordinate(Coordinate::STOKES);
     inStokes = inImg.coordinates().stokesCoordinate(index).stokes();
     index = outImg.coordinates().findCoordinate(Coordinate::STOKES);
     outStokes = outImg.coordinates().stokesCoordinate(index).stokes();
     ndx(3)=0;
+    //tim.show("fillPB::CSStuff2:");
 
+    //tim.mark();
     for(ndx(2)=0;ndx(2)<imsize(2);ndx(2)++) // The poln axes
       {
 	if (outStokes(ndx(2)) == Stokes::I)
@@ -600,6 +617,7 @@ namespace casa{
 	  }
 	else throw(AipsError("Unsupported Stokes found in VLACalcIlluminationConvFunc::fillPB."));
       }
+    //tim.show("fillPB2:");
   }
   
   /*

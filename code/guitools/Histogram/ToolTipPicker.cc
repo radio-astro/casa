@@ -24,7 +24,7 @@
 //#
 
 #include "ToolTipPicker.h"
-
+#include <guitools/Histogram/Histogram.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
 #include <qwt_plot.h>
@@ -53,9 +53,24 @@ void ToolTipPicker::setData( const std::vector<float>& xVal, const std::vector<f
 	}
 }
 
-QwtText ToolTipPicker::trackerText( const QwtDoublePoint & pos ) const {
-	float xValue = pos.x();
-	//float yValue = pos.y();
+std::pair<float,float> ToolTipPicker::getRangeY() const {
+	float min = std::numeric_limits<float>::max();
+	float max = std::numeric_limits<float>::min();
+	int rangeCount = yVector.size();
+	for ( int i = 0; i < rangeCount; i++ ){
+		float adjustedY = Histogram::computeYValue( yVector[i], logScale );
+		if ( adjustedY < min ){
+			min = adjustedY;
+		}
+		if ( adjustedY > max ){
+			max = adjustedY;
+		}
+	}
+	std::pair<float,float> range( min, max );
+	return range;
+}
+
+int ToolTipPicker::findClosestPoint( float xValue, float yValue ) const {
 	int pointIndex = -1;
 	double distance = std::numeric_limits<float>::max();
 	for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
@@ -71,14 +86,32 @@ QwtText ToolTipPicker::trackerText( const QwtDoublePoint & pos ) const {
 		pointIndex = -1;
 	}
 
+	if ( pointIndex >= 0 ){
+		std::pair<float,float> rangeY = getRangeY();
+		float spanY = rangeY.second - rangeY.first;
+		const float ERROR_MARGIN_Y = spanY / 10;
+		float adjustedY = Histogram::computeYValue( yVector[pointIndex], logScale );
+		double yDistance = qAbs( adjustedY - yValue );
+		if ( yDistance > ERROR_MARGIN_Y ){
+			pointIndex = -1;
+		}
+	}
+	return pointIndex;
+}
+
+
+QwtText ToolTipPicker::trackerText( const QwtDoublePoint & pos ) const {
+	float xValue = pos.x();
+	float yValue = pos.y();
+	int pointIndex = findClosestPoint( xValue, yValue );
 	QString toolTipText;
 	if ( pointIndex != -1 ){
+		float adjustedY = Histogram::computeYValue( yVector[pointIndex], logScale );
 		if ( !logScale ){
-			toolTipText.sprintf("( %.5f, %.0f)", xVector[pointIndex], yVector[pointIndex]);
+			toolTipText.sprintf("( %.5f, %.0f)", xVector[pointIndex], adjustedY );
 		}
 		else {
-			float logValue = qLn( yVector[pointIndex] ) / qLn( 10 );
-			toolTipText.sprintf("( %.5f, %.5f)", xVector[pointIndex], logValue );
+			toolTipText.sprintf("( %.5f, %.5f)", xVector[pointIndex], adjustedY );
 		}
 	}
 	return QwtText( toolTipText );

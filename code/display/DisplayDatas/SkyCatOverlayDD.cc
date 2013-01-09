@@ -43,411 +43,411 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SkyCatOverlayDD::SkyCatOverlayDD(Table *table) :
-  PassiveTableDD(table),
-  itsParamNameColumn(0),
-  itsParamLineWidth(0),
-  itsParamMarkerType(0),
-  itsParamMarkerSize(0),
-  itsParamMarkerColor(0),
-  itsParamMapColumn(0),
-  itsParamCharacterFont(0),
-  itsParamCharacterSize(0),
-  itsParamCharacterColor(0),
-  itsParamCharacterAngle(0),
-  itsParamLabelXOffset(0),
-  itsParamLabelYOffset(0) {
-  if (!determineDirectionColumnMapping()) {
-    throw(AipsError("Invalid sky catalogue table; cannot determine coordinate "
-		    "column mapping"));
-  }
-  constructParameters();
+		  PassiveTableDD(table),
+		  itsParamNameColumn(0),
+		  itsParamLineWidth(0),
+		  itsParamMarkerType(0),
+		  itsParamMarkerSize(0),
+		  itsParamMarkerColor(0),
+		  itsParamMapColumn(0),
+		  itsParamCharacterFont(0),
+		  itsParamCharacterSize(0),
+		  itsParamCharacterColor(0),
+		  itsParamCharacterAngle(0),
+		  itsParamLabelXOffset(0),
+		  itsParamLabelYOffset(0) {
+	if (!determineDirectionColumnMapping()) {
+		throw(AipsError("Invalid sky catalogue table; cannot determine coordinate "
+				"column mapping"));
+	}
+	constructParameters();
 }
 
 SkyCatOverlayDD::SkyCatOverlayDD(const String tablename) :
-  PassiveTableDD(tablename),
-  itsParamNameColumn(0),
-  itsParamLineWidth(0),
-  itsParamMarkerType(0),
-  itsParamMarkerSize(0),
-  itsParamMarkerColor(0),
-  itsParamMapColumn(0),
-  itsParamCharacterFont(0),
-  itsParamCharacterSize(0),
-  itsParamCharacterColor(0),
-  itsParamCharacterAngle(0),
-  itsParamLabelXOffset(0),
-  itsParamLabelYOffset(0) {
-  if (!determineDirectionColumnMapping()) {
-    throw(AipsError("Invalid sky catalogue table; cannot determine coordinate "
-		    "column mapping"));
-  }
-  constructParameters();
+		  PassiveTableDD(tablename),
+		  itsParamNameColumn(0),
+		  itsParamLineWidth(0),
+		  itsParamMarkerType(0),
+		  itsParamMarkerSize(0),
+		  itsParamMarkerColor(0),
+		  itsParamMapColumn(0),
+		  itsParamCharacterFont(0),
+		  itsParamCharacterSize(0),
+		  itsParamCharacterColor(0),
+		  itsParamCharacterAngle(0),
+		  itsParamLabelXOffset(0),
+		  itsParamLabelYOffset(0) {
+	if (!determineDirectionColumnMapping()) {
+		throw(AipsError("Invalid sky catalogue table; cannot determine coordinate "
+				"column mapping"));
+	}
+	constructParameters();
 }
 
 SkyCatOverlayDD::~SkyCatOverlayDD() {
-  destructParameters();
+	destructParameters();
 }
 
 void SkyCatOverlayDD::setDefaultOptions() {
-  PassiveTableDD::setDefaultOptions();
+	PassiveTableDD::setDefaultOptions();
 }
 
 Bool SkyCatOverlayDD::setOptions(Record &rec, Record &recOut) {
-  Bool ret = PassiveTableDD::setOptions(rec, recOut);
-  Bool localchange = False;
-  localchange = (itsParamNameColumn->fromRecord(rec) || localchange);
-  localchange = (itsParamLineWidth->fromRecord(rec) || localchange);
-		
-  localchange = (itsParamMarkerType->fromRecord(rec) || localchange);
-  localchange = (itsParamMarkerSize->fromRecord(rec) || localchange);
-  localchange = (itsParamMarkerColor->fromRecord(rec) || localchange);
-  localchange = (itsParamMapColumn->fromRecord(rec) || localchange);
-		
-  localchange = (itsParamCharacterFont->fromRecord(rec) || localchange);
-  localchange = (itsParamCharacterSize->fromRecord(rec) || localchange);
-  localchange = (itsParamCharacterColor->fromRecord(rec) || localchange);
-  localchange = (itsParamCharacterAngle->fromRecord(rec) || localchange);
-  localchange = (itsParamLabelXOffset->fromRecord(rec) || localchange);
-  localchange = (itsParamLabelYOffset->fromRecord(rec) || localchange);
-  
-  ret = ret || localchange;
-  return ret;
+	Bool ret = PassiveTableDD::setOptions(rec, recOut);
+	Bool localchange = False;
+	localchange = (itsParamNameColumn->fromRecord(rec) || localchange);
+	localchange = (itsParamLineWidth->fromRecord(rec) || localchange);
+
+	localchange = (itsParamMarkerType->fromRecord(rec) || localchange);
+	localchange = (itsParamMarkerSize->fromRecord(rec) || localchange);
+	localchange = (itsParamMarkerColor->fromRecord(rec) || localchange);
+	localchange = (itsParamMapColumn->fromRecord(rec) || localchange);
+
+	localchange = (itsParamCharacterFont->fromRecord(rec) || localchange);
+	localchange = (itsParamCharacterSize->fromRecord(rec) || localchange);
+	localchange = (itsParamCharacterColor->fromRecord(rec) || localchange);
+	localchange = (itsParamCharacterAngle->fromRecord(rec) || localchange);
+	localchange = (itsParamLabelXOffset->fromRecord(rec) || localchange);
+	localchange = (itsParamLabelYOffset->fromRecord(rec) || localchange);
+
+	ret = ret || localchange;
+	return ret;
 }
 
 Record SkyCatOverlayDD::getOptions() {
-  Record rec = PassiveTableDD::getOptions();
+	Record rec = PassiveTableDD::getOptions();
 
-  itsParamNameColumn->toRecord(rec);
-  
-  itsParamLineWidth->toRecord(rec);
+	itsParamNameColumn->toRecord(rec);
 
-  itsParamMarkerType->toRecord(rec);
-  itsParamMarkerSize->toRecord(rec);
-  itsParamMarkerColor->toRecord(rec);
-  itsParamMapColumn->toRecord(rec);
+	itsParamLineWidth->toRecord(rec);
 
-  itsParamCharacterFont->toRecord(rec);
-  itsParamCharacterSize->toRecord(rec);
-  itsParamCharacterColor->toRecord(rec);
-  itsParamCharacterAngle->toRecord(rec);
-  itsParamLabelXOffset->toRecord(rec);
-  itsParamLabelYOffset->toRecord(rec);
+	itsParamMarkerType->toRecord(rec);
+	itsParamMarkerSize->toRecord(rec);
+	itsParamMarkerColor->toRecord(rec);
+	itsParamMapColumn->toRecord(rec);
 
-  return rec;
+	itsParamCharacterFont->toRecord(rec);
+	itsParamCharacterSize->toRecord(rec);
+	itsParamCharacterColor->toRecord(rec);
+	itsParamCharacterAngle->toRecord(rec);
+	itsParamLabelXOffset->toRecord(rec);
+	itsParamLabelYOffset->toRecord(rec);
+
+	return rec;
 }
 
 CachingDisplayMethod *SkyCatOverlayDD::newDisplayMethod(
-    WorldCanvas *worldCanvas,
-    AttributeBuffer *wchAttributes,
-    AttributeBuffer *ddAttributes,
-    CachingDisplayData *dd) {
-  return new SkyCatOverlayDM(worldCanvas, wchAttributes, ddAttributes, dd);
+		WorldCanvas *worldCanvas,
+		AttributeBuffer *wchAttributes,
+		AttributeBuffer *ddAttributes,
+		CachingDisplayData *dd) {
+	return new SkyCatOverlayDM(worldCanvas, wchAttributes, ddAttributes, dd);
 }
 
 AttributeBuffer SkyCatOverlayDD::optionsAsAttributes() {
-  AttributeBuffer buffer = PassiveTableDD::optionsAsAttributes();
+	AttributeBuffer buffer = PassiveTableDD::optionsAsAttributes();
 
-  buffer.set(itsParamNameColumn->name(), itsParamNameColumn->value());
-  //new
-  buffer.set("coordinatetype", itsDirectionTypeColumn);
-  //new
+	buffer.set(itsParamNameColumn->name(), itsParamNameColumn->value());
+	//new
+	buffer.set("coordinatetype", itsDirectionTypeColumn);
+	//new
 
-  buffer.set("longitudecolumn", itsLongitudeColumn);
-  buffer.set("latitudecolumn", itsLatitudeColumn);
+	buffer.set("longitudecolumn", itsLongitudeColumn);
+	buffer.set("latitudecolumn", itsLatitudeColumn);
 
-  buffer.set(itsParamLineWidth->name(), itsParamLineWidth->value());
+	buffer.set(itsParamLineWidth->name(), itsParamLineWidth->value());
 
-  buffer.set(itsParamMarkerType->name(), itsParamMarkerType->value());
-  buffer.set(itsParamMarkerSize->name(), itsParamMarkerSize->value());
-  buffer.set(itsParamMarkerColor->name(), itsParamMarkerColor->value());
-  buffer.set(itsParamMapColumn->name(), itsParamMapColumn->value());
+	buffer.set(itsParamMarkerType->name(), itsParamMarkerType->value());
+	buffer.set(itsParamMarkerSize->name(), itsParamMarkerSize->value());
+	buffer.set(itsParamMarkerColor->name(), itsParamMarkerColor->value());
+	buffer.set(itsParamMapColumn->name(), itsParamMapColumn->value());
 
-  buffer.set(itsParamCharacterFont->name(), itsParamCharacterFont->value());
-  buffer.set(itsParamCharacterSize->name(), itsParamCharacterSize->value());
-  buffer.set(itsParamCharacterColor->name(), itsParamCharacterColor->value());
-  buffer.set(itsParamCharacterAngle->name(), itsParamCharacterAngle->value());
-  buffer.set(itsParamLabelXOffset->name(), itsParamLabelXOffset->value());
-  buffer.set(itsParamLabelYOffset->name(), itsParamLabelYOffset->value());
+	buffer.set(itsParamCharacterFont->name(), itsParamCharacterFont->value());
+	buffer.set(itsParamCharacterSize->name(), itsParamCharacterSize->value());
+	buffer.set(itsParamCharacterColor->name(), itsParamCharacterColor->value());
+	buffer.set(itsParamCharacterAngle->name(), itsParamCharacterAngle->value());
+	buffer.set(itsParamLabelXOffset->name(), itsParamLabelXOffset->value());
+	buffer.set(itsParamLabelYOffset->name(), itsParamLabelYOffset->value());
 
-  return buffer;
+	return buffer;
 }
 
 SkyCatOverlayDD::SkyCatOverlayDD() :
-  PassiveTableDD() {
+		  PassiveTableDD() {
 }
 
 SkyCatOverlayDD::SkyCatOverlayDD(const SkyCatOverlayDD &other) :
-  PassiveTableDD(other) {
+		  PassiveTableDD(other) {
 }
 
 void SkyCatOverlayDD::operator=(const SkyCatOverlayDD &) {
 }
 
 Bool SkyCatOverlayDD::conformsToCS(const WorldCanvas& wc) {
-  // Determine whether DD can draw on the current coordinate system of the
-  // given WC[H].  This DD requires two sky coordinates; it tests that
-  // direction coordinates are encoded into both axis codes.
-  //
-  // (12/04: The whole DD till needs work to function correctly in some
-  // cases, such as transposed RA and Dec...).
-  
-  String xAxis = "xaxiscode (required match)",
-         yAxis = "yaxiscode (required match)";
-  String xcode, ycode;
-  
-  return csConformed_  =
-	  wc.getAttributeValue(xAxis, xcode) && xcode.contains("Direction")
-       && wc.getAttributeValue(yAxis, ycode) && ycode.contains("Direction");
+	// Determine whether DD can draw on the current coordinate system of the
+	// given WC[H].  This DD requires two sky coordinates; it tests that
+	// direction coordinates are encoded into both axis codes.
+	//
+	// (12/04: The whole DD till needs work to function correctly in some
+	// cases, such as transposed RA and Dec...).
+
+	String xAxis = "xaxiscode (required match)",
+			yAxis = "yaxiscode (required match)";
+	String xcode, ycode;
+
+	return csConformed_  =
+			wc.getAttributeValue(xAxis, xcode) && xcode.contains("Direction")
+			&& wc.getAttributeValue(yAxis, ycode) && ycode.contains("Direction");
 }
 
- 
+
 Bool SkyCatOverlayDD::determineDirectionColumnMapping() {
-  if (!table()) {
-    return False;
-  }
+	if (!table()) {
+		return False;
+	}
 
-  itsColumnNames = table()->tableDesc().columnNames();
-  if (itsColumnNames.nelements() < 3) {
-    return False;
-  }
+	itsColumnNames = table()->tableDesc().columnNames();
+	if (itsColumnNames.nelements() < 3) {
+		return False;
+	}
 
-  // logic is case insensitive, and is as follows:
-  // - first column called 'long*', or if not present, first column having
-  //   units which map to degrees or hours is longitude column
-  // - first column called 'lat*', or if not present, first column *beyond
-  //   latitude column* having units which map to degrees is latitude column.
+	// logic is case insensitive, and is as follows:
+	// - first column called 'long*', or if not present, first column having
+	//   units which map to degrees or hours is longitude column
+	// - first column called 'lat*', or if not present, first column *beyond
+	//   latitude column* having units which map to degrees is latitude column.
 
-  itsLongitudeColumn = "";
-  itsLatitudeColumn = "";
-  itsDirectionTypeColumn ="";
+	itsLongitudeColumn = "";
+	itsLatitudeColumn = "";
+	itsDirectionTypeColumn ="";
 
-  Regex rxLong("^[lL][oO][nN][gG].*");
-  Regex rxLat("^[lL][aA][tT].*");
-  Regex rxDir("^[tT][yY][pP][eE].*");
+	Regex rxLong("^[lL][oO][nN][gG].*");
+	Regex rxLat("^[lL][aA][tT].*");
+	Regex rxDir("^[tT][yY][pP][eE].*");
 
-  // first attempt basic column name pattern matching
-  uInt ncols = itsColumnNames.nelements();
-  uInt i;
-  for (i = 0; (i < ncols) && (itsLongitudeColumn == ""); i++) {
-    if (itsColumnNames(i).matches(rxLong)) {
-      itsLongitudeColumn = itsColumnNames(i);
-    }
-  }
-  for (i = 0; (i < ncols) && (itsLatitudeColumn == ""); i++) {
-    if (itsColumnNames(i).matches(rxLat)) {
-      itsLatitudeColumn = itsColumnNames(i);
-    }
-  }
-  for (i = 0; (i < ncols) && (itsDirectionTypeColumn == ""); i++) {
-    if (itsColumnNames(i).matches(rxDir)) {
-       itsDirectionTypeColumn = itsColumnNames(i);
-    }
-  }
+	// first attempt basic column name pattern matching
+	uInt ncols = itsColumnNames.nelements();
+	uInt i;
+	for (i = 0; (i < ncols) && (itsLongitudeColumn == ""); i++) {
+		if (itsColumnNames(i).matches(rxLong)) {
+			itsLongitudeColumn = itsColumnNames(i);
+		}
+	}
+	for (i = 0; (i < ncols) && (itsLatitudeColumn == ""); i++) {
+		if (itsColumnNames(i).matches(rxLat)) {
+			itsLatitudeColumn = itsColumnNames(i);
+		}
+	}
+	for (i = 0; (i < ncols) && (itsDirectionTypeColumn == ""); i++) {
+		if (itsColumnNames(i).matches(rxDir)) {
+			itsDirectionTypeColumn = itsColumnNames(i);
+		}
+	}
 
 
-  // and return if we at least determined long,lat and type columns
-  if ((itsLongitudeColumn != "") && (itsLatitudeColumn != "") &&
-      (itsDirectionTypeColumn !="")) {
-    return True;
-  }
+	// and return if we at least determined long,lat and type columns
+	if ((itsLongitudeColumn != "") && (itsLatitudeColumn != "") &&
+			(itsDirectionTypeColumn !="")) {
+		return True;
+	}
 
-  // ok, we have more work to do.
-  Unit degUnit("deg");
-  Unit hUnit("h");
-  Int storeIndex = -1;
+	// ok, we have more work to do.
+	Unit degUnit("deg");
+	Unit hUnit("h");
+	Int storeIndex = -1;
 
-  if (itsLongitudeColumn == "") {
-    // need to find first column with UNIT keyword dimensionally
-    // equivalent to degrees or hours
-    for (i = 0; (i < ncols) && (itsLongitudeColumn == ""); i++) {
-      Unit tunit = columnUnit(itsColumnNames(i));
-      if ((tunit == degUnit) || (tunit == hUnit)) {
-	itsLongitudeColumn = itsColumnNames(i);
-	storeIndex = Int(i);
-      }
-    }
-  }
-  if (itsLongitudeColumn == "") {
-    // haven't found anything suitable for longitude, so cannot go further.
-    return False;
-  }
+	if (itsLongitudeColumn == "") {
+		// need to find first column with UNIT keyword dimensionally
+		// equivalent to degrees or hours
+		for (i = 0; (i < ncols) && (itsLongitudeColumn == ""); i++) {
+			Unit tunit = columnUnit(itsColumnNames(i));
+			if ((tunit == degUnit) || (tunit == hUnit)) {
+				itsLongitudeColumn = itsColumnNames(i);
+				storeIndex = Int(i);
+			}
+		}
+	}
+	if (itsLongitudeColumn == "") {
+		// haven't found anything suitable for longitude, so cannot go further.
+		return False;
+	}
 
-  if (itsLatitudeColumn == "") {
-    // need to find first column *beyond long column* with UNIT keyword
-    // dimensionally equivalent to degrees
-    for (i = storeIndex; (i < ncols) && (itsLatitudeColumn == ""); i++) {
-      Unit tunit = columnUnit(itsColumnNames(i));
-      if (tunit == degUnit) {
-	itsLatitudeColumn = itsColumnNames(i);
-      }
+	if (itsLatitudeColumn == "") {
+		// need to find first column *beyond long column* with UNIT keyword
+		// dimensionally equivalent to degrees
+		for (i = storeIndex; (i < ncols) && (itsLatitudeColumn == ""); i++) {
+			Unit tunit = columnUnit(itsColumnNames(i));
+			if (tunit == degUnit) {
+				itsLatitudeColumn = itsColumnNames(i);
+			}
 
-    }
-  }
-  if (itsLatitudeColumn == "") {
-    // haven't found anything suitable for latitude, so cannot go further.
-    return False;
-  }
+		}
+	}
+	if (itsLatitudeColumn == "") {
+		// haven't found anything suitable for latitude, so cannot go further.
+		return False;
+	}
 
-  // we made it, so return True!
-  return True;
+	// we made it, so return True!
+	return True;
 }
 
 Unit SkyCatOverlayDD::columnUnit(const String columnName) const {
-  static Regex rxUnit("^[uU][nN][iI][tT]$");
-  String value;
-  if (getColumnKeyword(value, columnName, rxUnit)) {
-    return Unit(value);
-  } else {
-    return Unit("_");
-  }
+	static Regex rxUnit("^[uU][nN][iI][tT]$");
+	String value;
+	if (getColumnKeyword(value, columnName, rxUnit)) {
+		return Unit(value);
+	} else {
+		return Unit("_");
+	}
 }
 
 void SkyCatOverlayDD::constructParameters() {
-  Vector<String> vstring;
-  Vector<String> vstring2;
-  vstring2 = getColumnNamesOfType(TpString);
-  uInt k=0;
-  for (uInt i=0; i< vstring2.nelements(); i++) {
-    // exclude direction type column since it is not useful
-    if (vstring2(i) != itsDirectionTypeColumn) {
-      vstring.resize(k+1,True);
-      vstring(k) = vstring2(i);
-      k++;
-    }
-  }
-  vstring.resize(vstring.nelements() + 1, True);
-  vstring(vstring.nelements() - 1) = "<none>";
-  itsParamNameColumn
-    = new DParameterChoice("namecolumn", "Column listing names", 
-			   "", vstring, vstring(vstring.nelements() - 1),
-			   vstring(vstring.nelements() - 1),
-			   "Label_properties");
-  vstring.resize();
-  itsParamLineWidth
-    = new DParameterRange<Int>("labellinewidth", "Line width",
-			       "", 1, 5, 1, 1, 1,
-			       "Label_properties");
-  
-  Vector<String> markerNames(Display::nMarkers);
-  Vector<Int> markerValues(Display::nMarkers);
-  for (Int i=0; i<Display::nMarkers;i++) {
-    ostringstream os;
-    markerValues(i) = i;
-    Display::Marker m = static_cast<Display::Marker>(i);
-    os << m;    
-    markerNames(i) = String(os);
-  }
-  itsParamMarkerType 
-    = new DParameterMapKeyChoice("markertype", "Marker type",
-				"Select the symbol", markerNames, 
-				markerValues, markerNames(0), markerNames(0),
-				"Marker_properties");
-  itsParamMarkerSize
-    = new DParameterRange<Int>("markersize", "Marker size",
-			       "Marker size in screen pixel", 0, 20, 1, 5, 5,
-			       "Marker_properties");
+	Vector<String> vstring;
+	Vector<String> vstring2;
+	vstring2 = getColumnNamesOfType(TpString);
+	uInt k=0;
+	for (uInt i=0; i< vstring2.nelements(); i++) {
+		// exclude direction type column since it is not useful
+		if (vstring2(i) != itsDirectionTypeColumn) {
+			vstring.resize(k+1,True);
+			vstring(k) = vstring2(i);
+			k++;
+		}
+	}
+	vstring.resize(vstring.nelements() + 1, True);
+	vstring(vstring.nelements() - 1) = "<none>";
+	itsParamNameColumn
+	= new DParameterChoice("namecolumn", "Column listing names",
+			"", vstring, vstring(/*vstring.nelements() - 1*/0),
+			vstring(/*vstring.nelements() - 1*/0),
+			"Label_properties");
+	vstring.resize();
+	itsParamLineWidth
+	= new DParameterRange<Int>("labellinewidth", "Line width",
+			"", 1, 5, 1, 1, 1,
+			"Label_properties");
 
-  itsParamMarkerColor
-    = new DParameterColorChoice("markercolor", "Marker color",
-			   "", "Marker_properties");
+	Vector<String> markerNames(Display::nMarkers);
+	Vector<Int> markerValues(Display::nMarkers);
+	for (Int i=0; i<Display::nMarkers;i++) {
+		ostringstream os;
+		markerValues(i) = i;
+		Display::Marker m = static_cast<Display::Marker>(i);
+		os << m;
+		markerNames(i) = String(os);
+	}
+	itsParamMarkerType
+	= new DParameterMapKeyChoice("markertype", "Marker type",
+			"Select the symbol", markerNames,
+			markerValues, markerNames(0), markerNames(0),
+			"Marker_properties");
+	itsParamMarkerSize
+	= new DParameterRange<Int>("markersize", "Marker size",
+			"Marker size in screen pixel", 0, 20, 1, 5, 5,
+			"Marker_properties");
 
-  // gather columns of type Int, Float and Double for mapped markers
-  Vector<String> vflt= getColumnNamesOfType(TpFloat);;
-  Vector<String> vstring4;
-  if ( vflt.nelements() > 0 ) {
-    k=0;
-    for (uInt i=0; i< vflt.nelements(); i++) {
-      // exclude direction type column since it is not useful
-      if (vflt(i) != itsLongitudeColumn && 
-	  vflt(i) != itsLatitudeColumn) {
-	vstring4.resize(k+1,True);
-	vstring4(k) = vflt(i);
-	k++;
-      }
-    }
-  }
-  Vector<String> vdbl(getColumnNamesOfType(TpDouble));
-  if (vdbl.nelements()  > 0) { 
-    for (uInt i=0; i< vdbl.nelements(); i++) {
-      // exclude direction type column since it is not useful
-      if (vdbl(i) != itsLongitudeColumn && 
-	  vdbl(i) != itsLatitudeColumn) {
-	vstring4.resize(k+1,True);
-	vstring4(k) = vdbl(i);
-	k++;
-      }
-    }
+	itsParamMarkerColor
+	= new DParameterColorChoice("markercolor", "Marker color",
+			"", "Marker_properties");
 
-  }
+	// gather columns of type Int, Float and Double for mapped markers
+	Vector<String> vflt= getColumnNamesOfType(TpFloat);;
+	Vector<String> vstring4;
+	if ( vflt.nelements() > 0 ) {
+		k=0;
+		for (uInt i=0; i< vflt.nelements(); i++) {
+			// exclude direction type column since it is not useful
+			if (vflt(i) != itsLongitudeColumn &&
+					vflt(i) != itsLatitudeColumn) {
+				vstring4.resize(k+1,True);
+				vstring4(k) = vflt(i);
+				k++;
+			}
+		}
+	}
+	Vector<String> vdbl(getColumnNamesOfType(TpDouble));
+	if (vdbl.nelements()  > 0) {
+		for (uInt i=0; i< vdbl.nelements(); i++) {
+			// exclude direction type column since it is not useful
+			if (vdbl(i) != itsLongitudeColumn &&
+					vdbl(i) != itsLatitudeColumn) {
+				vstring4.resize(k+1,True);
+				vstring4(k) = vdbl(i);
+				k++;
+			}
+		}
 
-  Vector<String> vint = getColumnNamesOfType(TpInt);
-  if (vint.nelements()  > 0) { 
-    for (uInt i=0; i< vint.nelements(); i++) {
-      vstring4.resize(k+1,True);
-      vstring4(k) = vdbl(i);
-      k++;
-    }
-  }
-  vstring4.resize(vstring4.nelements() + 1, True);
-  vstring4(vstring4.nelements() - 1) = "<none>";
+	}
 
-  itsParamMapColumn
-    = new DParameterChoice("mapcolumn", "Marker value column", 
-			   "Select a column if you want to map the"
-			   " marker size to its's values", 
-			   vstring4, vstring4(vstring4.nelements() - 1),
-			   vstring4(vstring4.nelements() - 1),
-			   "Marker_properties");
+	Vector<String> vint = getColumnNamesOfType(TpInt);
+	if (vint.nelements()  > 0) {
+		for (uInt i=0; i< vint.nelements(); i++) {
+			vstring4.resize(k+1,True);
+			vstring4(k) = vdbl(i);
+			k++;
+		}
+	}
+	vstring4.resize(vstring4.nelements() + 1, True);
+	vstring4(vstring4.nelements() - 1) = "<none>";
 
-  vstring.resize(4);
-  vstring(0) = "normal";
-  vstring(1) = "roman";
-  vstring(2) = "italic";
-  vstring(3) = "script";
+	itsParamMapColumn
+	= new DParameterChoice("mapcolumn", "Marker value column",
+			"Select a column if you want to map the"
+			" marker size to its's values",
+			vstring4, vstring4(vstring4.nelements() - 1),
+			vstring4( vstring4.nelements() - 1),
+			"Marker_properties");
 
-  itsParamCharacterFont 
-    = new DParameterChoice("labelcharfont", "Character font",
-                          "", vstring, vstring(0), vstring(0), 
-                          "Label_properties");
+	vstring.resize(4);
+	vstring(0) = "normal";
+	vstring(1) = "roman";
+	vstring(2) = "italic";
+	vstring(3) = "script";
+
+	itsParamCharacterFont
+	= new DParameterChoice("labelcharfont", "Character font",
+			"", vstring, vstring(0), vstring(0),
+			"Label_properties");
 
 
-  vstring.resize();
-  itsParamCharacterSize 
-    = new DParameterRange<Float>(WCAxisLabeller::LABEL_CHAR_SIZE, "Character size",
-			       "Select the font size for text",
-			       0.0, 4.0, 0.05, 0.8, 0.8,
-			       "Label_properties");
-  itsParamCharacterColor
-    = new DParameterColorChoice("labelcharcolor", "Character color",
-				"", "Label_properties");
-  itsParamCharacterAngle
-    = new DParameterRange<Int>("labelcharangle", "Label angle",
-			       "", 0, 359, 1, 0, 0, 
-			       "Label_properties");
-  itsParamLabelXOffset
-    = new DParameterRange<Float>("labelxoffset", "Label X offset (char units)",
-				 "", -2.0, 2.0, 0.05, 0.0, 0.0,
-				 "Label_properties");
-  itsParamLabelYOffset
-    = new DParameterRange<Float>("labelyoffset", "Label Y offset (char units)",
-				 "", -2.0, 2.0, 0.05, 0.0, 0.0,
-				 "Label_properties");
+	vstring.resize();
+	itsParamCharacterSize
+	= new DParameterRange<Float>(WCAxisLabeller::LABEL_CHAR_SIZE, "Character size",
+			"Select the font size for text",
+			0.0, 4.0, 0.05, 0.8, 0.8,
+			"Label_properties");
+	itsParamCharacterColor
+	= new DParameterColorChoice("labelcharcolor", "Character color",
+			"", "Label_properties");
+	itsParamCharacterAngle
+	= new DParameterRange<Int>("labelcharangle", "Label angle",
+			"", 0, 359, 1, 0, 0,
+			"Label_properties");
+	itsParamLabelXOffset
+	= new DParameterRange<Float>("labelxoffset", "Label X offset (char units)",
+			"", -2.0, 2.0, 0.05, 0.0, 0.0,
+			"Label_properties");
+	itsParamLabelYOffset
+	= new DParameterRange<Float>("labelyoffset", "Label Y offset (char units)",
+			"", -2.0, 2.0, 0.05, 0.0, 0.0,
+			"Label_properties");
 
 }
 
 void SkyCatOverlayDD::destructParameters() {
-  delete itsParamNameColumn;
-  delete itsParamLineWidth;
-  delete itsParamMarkerType;
-  delete itsParamMarkerSize;
-  delete itsParamMarkerColor;
-  delete itsParamMapColumn;  
-  delete itsParamCharacterFont;
-  delete itsParamCharacterSize;
-  delete itsParamCharacterColor;
-  delete itsParamCharacterAngle;
-  delete itsParamLabelXOffset;
-  delete itsParamLabelYOffset;
+	delete itsParamNameColumn;
+	delete itsParamLineWidth;
+	delete itsParamMarkerType;
+	delete itsParamMarkerSize;
+	delete itsParamMarkerColor;
+	delete itsParamMapColumn;
+	delete itsParamCharacterFont;
+	delete itsParamCharacterSize;
+	delete itsParamCharacterColor;
+	delete itsParamCharacterAngle;
+	delete itsParamLabelXOffset;
+	delete itsParamLabelYOffset;
 }
 
 } //# NAMESPACE CASA - END

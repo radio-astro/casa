@@ -51,6 +51,7 @@ typedef enum {
     Sigma,
     SigmaMat,
     SpectralWindow,
+    SpectralWindows,
     StateId,
     Time,
     TimeCentroid,

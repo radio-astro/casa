@@ -638,7 +638,7 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                          << " None None None None None None None "
                          << "MJD(seconds) GHz None None None None None"
                          << endl;
-                for(int _field = 0; _field < r.nfields(); ++_field) {
+                for(uInt _field = 0; _field < r.nfields(); ++_field) {
                     ostringstream fs;
                     fs << _field;
                     String field_str = fs.str();

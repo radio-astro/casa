@@ -929,6 +929,7 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
     case PMS::HA0:           return ha0_.size();
     case PMS::PA0:           return pa0_.size();
 
+    case PMS::TSYS:
     case PMS::NONE: return 0;
     }
     return 0;

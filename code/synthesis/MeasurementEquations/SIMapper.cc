@@ -1,4 +1,4 @@
-//# SIMapper.cc: Implementation of Imager.h
+//# SIMapper.cc: Implementation of SIMapper.h
 //# Copyright (C) 1997-2008
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -57,190 +57,77 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SIMapper::SIMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler, Int mapperid) 
+  SIMapper::SIMapper( String imagename, 
+		      CountedPtr<FTMachine> ftmachine, 
+		      CountedPtr<CoordinateSystem> imcoordsys, 
+		      IPosition imshape, 
+		      Int mapperid) : SIMapperBase( imagename, ftmachine, imcoordsys, imshape, mapperid )
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
-
-    itsFTMachine = ftmachine;
-    itsDeconvolver = deconvolver;
-    itsCoordSys = imcoordsys;
-    itsMaskHandler = maskhandler;
-
-    updatedmodel_p = False;
-    mapperid_p = mapperid;
-
-    allocateImageMemory();
-
   }
   
   SIMapper::~SIMapper() 
   {
   }
   
-  // Allocate Memory and open images.
-  void SIMapper::allocateImageMemory()
-  {
-
-    LogIO os( LogOrigin("SIMapper","allocateImageMemory",WHERE) );
-
-    os << "Mapper " << mapperid_p << " : Calculate required memory, and allocate" << LogIO::POST;
-
-    //// TODO : If only the major cycle is called (niter=0), don't allocate Image, Psf, Weight...
-
-    itsImage=0.0;
-    itsPsf=0.2;
-    itsModel=0.0;
-    itsWeight=1.0;
-
-    // Read nchan from itsCoordSys --- and allocate 'images' of that shape/size.
-    SpectralCoordinate scoord = itsCoordSys->spectralCoordinate();
-    cout << "NChans : " << (scoord.worldValues()).nelements() << endl;
-
-    // Initial Peak Residuals - for single-pixel-image testing.
-    itsOriginalResidual = 1.0;
-    if ( mapperid_p == 0 )  itsOriginalResidual=1.0;
-    if ( mapperid_p == 1 )  itsOriginalResidual=0.5;
-
-    itsResidual=itsOriginalResidual;
-
-    /// If there is a starting model, set updatedmodel_p = True !!
-
-  }
-
-
-
-
-  // Run the deconvolver
-  void SIMapper::deconvolve( SIIterBot &loopcontrols  )
-  {
-    LogIO os( LogOrigin("SIMapper","deconvolve",WHERE) );
-
-    updatedmodel_p = itsDeconvolver->deconvolve( loopcontrols, itsResidual, itsPsf, itsModel, itsMaskHandler,  mapperid_p );
-
-  }
-
-  // Calculate the peak residual for this mapper
-  Float SIMapper::getPeakResidual()
-  {
-    LogIO os( LogOrigin("SIMapper","getPeakResidual",WHERE) );
-
-    Float maxresidual = itsResidual;
-
-    return maxresidual;
-  }
-
-  // Calculate the total model flux
-  Float SIMapper::getModelFlux()
-  {
-    LogIO os( LogOrigin("SIMapper","getModelFlux",WHERE) );
-
-    Float modelflux = itsModel;
-
-    return modelflux;
-  }
-
-  // Calculate the PSF sidelobe level...
-  Float SIMapper::getPSFSidelobeLevel()
-  {
-    LogIO os( LogOrigin("SIMapper","getPSFSidelobeLevel",WHERE) );
-
-    /// Calculate only once, store and return for all subsequent calls.
-
-    Float psfsidelobe = itsPsf;
-
-    return psfsidelobe;
-  }
-
-  // Check if the model has been updated or not
-  Bool SIMapper::isModelUpdated()
-  {
-    LogIO os( LogOrigin("SIMapper","isModelUpdated",WHERE) );
-
-    return updatedmodel_p;
-  }
-
-
-  // Restore Image.
-  void SIMapper::restore()
-  {
-    LogIO os( LogOrigin("SIMapper","restoreImage",WHERE) );
-    
-    itsDeconvolver->restore( itsImage, itsBeam, itsModel, itsResidual, itsWeight );
-
-  }
-
-
-  // This is for interactive-clean.
-  void SIMapper::getCopyOfResidualAndMask( TempImage<Float> &/*residual*/,
-                                           TempImage<Float> &/*mask*/ )
-  {
-    // Actually all I think we need here are filenames JSK 12/12/12
-    // resize/shape and copy the residual image and mask image to these in/out variables.
-    // Allocate Memory here.
-  }
-  void SIMapper::setMask( TempImage<Float> &/*mask*/ )
-  {
-    // Here we will just pass in the new names
-    // Copy the input mask to the local main image mask
-  }
-
-
-
   // #############################################
   // #############################################
-  // #######  Functions to be called from SISkyEquation ###########
+  // #######  Gridding / De-gridding functions ###########
   // #############################################
-  // #  Inside the Mapper, the 'vb' is not to be used. It's only to pass to FTM.
-  // #  All vi,vb operations should stay in SISkyEquation
   // #############################################
+
 
   /// All these take in vb's, and just pass them on.
 
-  void SIMapper::initializeGrid()
+  void SIMapper::initializeGrid(/* vb */)
   {
+    LogIO os( LogOrigin("SIMapper","initializeGrid",WHERE) );
     // itsFTM->initializeToSky( itsResidual, vb )
   }
 
-  void SIMapper::grid()
+  void SIMapper::grid(/* vb */)
   {
+    LogIO os( LogOrigin("SIMapper","grid",WHERE) );
   }
 
   //// The function that makes the PSF should check its validity, and fit the beam,
   void SIMapper::finalizeGrid()
   {
+    LogIO os( LogOrigin("SIMapper","finalizeGrid",WHERE) );
 
-    itsResidual = itsOriginalResidual - itsModel;
-    
+    // TODO : Fill in itsResidual, itsPsf, itsWeight.
+    // Do not normalize the residual by the weight. 
+    //   -- Normalization happens later, via 'divideResidualImageByWeight' called from SI.divideImageByWeight()
+    //   -- This will ensure that normalizations are identical for the single-node and parallel major cycles. 
+
   }
 
   void SIMapper::initializeDegrid()
   {
     LogIO os( LogOrigin("SIMapper", "initializeDegrid",WHERE) );
 
-    if ( updatedmodel_p == False ) 
-      {
-        os << "Mapper " << mapperid_p << " : No new model to predict visibilities from" << LogIO::POST;
-      }
-    else
-      {
-        os << "Mapper " << mapperid_p << " : Degridding current model" << LogIO::POST;
-      }
+    ////  only if model exists...
+    
   }
 
   void SIMapper::degrid()
   {
+    LogIO os( LogOrigin("SIMapper","degrid",WHERE) );
   }
 
   void SIMapper::finalizeDegrid()
   {
+    LogIO os( LogOrigin("SIMapper","finalizeDegrid",WHERE) );
   }
 
   Record SIMapper::getFTMRecord()
   {
+    LogIO os( LogOrigin("SIMapper","getFTMRecord",WHERE) );
     Record rec;
     // rec = itsFTM->toRecord();
     return rec;
   }
+
    
 } //# NAMESPACE CASA - END
 

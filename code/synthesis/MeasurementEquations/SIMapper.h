@@ -36,9 +36,7 @@
 #include <measures/Measures/MDirection.h>
 
 #include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/MeasurementComponents/SIDeconvolver.h>
-#include <synthesis/MeasurementEquations/SIIterBot.h>
-#include <synthesis/MeasurementEquations/SIMaskHandler.h>
+#include <synthesis/MeasurementEquations/SIMapperBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -47,34 +45,21 @@ template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
 
-class SIMapper 
+  class SIMapper : public SIMapperBase
 {
  public:
   // Default constructor
 
-  SIMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler, Int mapperid);
+  SIMapper( String imagename, 
+            CountedPtr<FTMachine> ftmachine, 
+            CountedPtr<CoordinateSystem> imcoordsys, 
+            IPosition imshape, 
+            Int mapperid);
   ~SIMapper();
-
-  // Copy constructor and assignment operator
-  //Imager(const Imager&);
-  //Imager& operator=(const Imager&);
-
-  ///// Minor Cycle Functions
-
-  void getCopyOfResidualAndMask( TempImage<Float> &residual, TempImage<Float> &mask );
-  void setMask( TempImage<Float> &mask );
-
-  void deconvolve( SIIterBot &loopcontrols );
-
-  Float getPeakResidual();
-  Float getPSFSidelobeLevel();
-  Float getModelFlux();
-  Bool isModelUpdated();
-
-  void restore();
 
   ///// Major Cycle Functions
 
+  // For KG : Need to add 'vb' coming into these functions.
   void initializeGrid();
   void grid();
   void finalizeGrid();
@@ -87,26 +72,7 @@ class SIMapper
 
 protected:
 
-  ///////////////////// Member Objects
 
-  CountedPtr<SIDeconvolver> itsDeconvolver;
-  CountedPtr<FTMachine> itsFTMachine; 
-  CountedPtr<CoordinateSystem> itsCoordSys;
-  CountedPtr<SIMaskHandler> itsMaskHandler;
-
-  Float itsImage, itsPsf, itsModel;
-  Float itsResidual, itsOriginalResidual;
-  Float itsWeight, itsBeam;
-
-  Bool updatedmodel_p;
-  Int mapperid_p;
-
-  //////////////////// Member Functions
-  
-  void allocateImageMemory();
-
-
-  /////////////////// All input parameters
 
 };
 
