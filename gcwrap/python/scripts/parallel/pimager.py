@@ -513,7 +513,9 @@ class pimager():
                           imsize=[512, 512], pixsize=['1arcsec', '1arcsec'], weight='natural',
                           robust=0.0, npixels=0, gain=0.1,  uvtaper=False, outertaper=[], 
                           timerange='', uvrange='', baselines='', scan='', observation='', 
-                          visinmem=False, pbcorr=False, minpb=0.2, numthreads=1, cyclefactor=1.5):
+                          visinmem=False, pbcorr=False, minpb=0.2, numthreads=1, cyclefactor=1.5,
+                          painc=360.0, pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+                          epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True):
         self.spw=spw
         self.field=field
         self.phasecenter=phasecenter
@@ -539,23 +541,40 @@ class pimager():
         self.minpb=minpb
         self.numthreads=numthreads
         self.cyclefactor=cyclefactor
+        self.painc=painc;
+        self.pblimit=pblimit;
+        self.dopbcorr=dopbcorr;
+        self.applyoffsets=applyoffsets;
+        self.cfcache=cfcache;
+        self.epjtablename=epjtablename;
+        self.mterm=mterm;
+        self.aterm=aterm;
+        self.psterm=psterm;
+        self.wbawp=wbawp;
+        self.conjbeams=conjbeams;
     
     def pcontmt(self, msname=None, imagename=None, imsize=[1000, 1000], 
-              pixsize=['1arcsec', '1arcsec'], phasecenter='', 
-              field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
-              majorcycles=-1, cyclefactor=1.5, niter=1000, npercycle=100, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
-              contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
-              numthreads=1, savemodel=False, nterms=2):
+                pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+                field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
+                majorcycles=-1, cyclefactor=1.5, niter=1000, npercycle=100, gain=0.1, threshold='0.0mJy', 
+                alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], 
+                timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
+                contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
+                numthreads=1, savemodel=False, nterms=2,
+                painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+                epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True):
         if(nterms==1):
             self.pcont(msname=msname, imagename=imagename, imsize=imsize, 
-              pixsize=pixsize, phasecenter=phasecenter, field=field, spw=spw, stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets,  
-              majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, npercycle=npercycle, gain=gain, 
-              threshold=threshold, alg=alg, scales=scales, weight=weight, robust=robust, 
-              npixels=npixels,  uvtaper=uvtaper, outertaper=outertaper, 
-              timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
-              observation=observation, pbcorr=pbcorr, minpb=minpb, contclean=contclean, 
-              visinmem=visinmem, interactive=interactive, maskimage=maskimage,
-              numthreads=numthreads, savemodel=savemodel)
+                       pixsize=pixsize, phasecenter=phasecenter, field=field, spw=spw, stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets,  
+                       majorcycles=majorcycles, cyclefactor=cyclefactor, niter=niter, npercycle=npercycle, gain=gain, 
+                       threshold=threshold, alg=alg, scales=scales, weight=weight, robust=robust, 
+                       npixels=npixels,  uvtaper=uvtaper, outertaper=outertaper, 
+                       timerange=timerange, uvrange=uvrange, baselines=baselines, scan=scan, 
+                       observation=observation, pbcorr=pbcorr, minpb=minpb, contclean=contclean, 
+                       visinmem=visinmem, interactive=interactive, maskimage=maskimage,
+                       numthreads=numthreads, savemodel=savemodel,
+                       painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
+                       mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
         else:
             self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
                                    stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
@@ -564,7 +583,9 @@ class pimager():
                                    outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
                                    baselines=baselines, scan=scan, observation=observation, 
                                    visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
-                                   cyclefactor=cyclefactor)
+                                   cyclefactor=cyclefactor,
+                                   painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
+                                   mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
             dc=casac.deconvolver()
             ia=casac.image()
             niterpercycle=niter/majorcycles if(majorcycles >0) else niter
@@ -649,6 +670,7 @@ class pimager():
                     substr=self.workingdirs[k]+'/Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
                    ###############
                 imlist.append(substr)
+                cfcachelist.append(substr);
         ##continue clean or not
             if(contclean and os.path.exists(models[0])):
                 for k in range(numcpu):
@@ -669,7 +691,21 @@ class pimager():
                 casalog.post('Starting Gridding for major cycle '+str(maj)) 
                 for k in range(numcpu):
                     imnam='"%s"'%(imlist[k])
-                    runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+', scales='+str(scales)+')'
+                    c.odo('a.cfcache='+'"'+str(cfcache+"_"+cfcachelist[k])+'"',k);
+                    c.odo('a.painc='+str(painc),k);
+                    c.odo('a.pblimit='+str(pblimit),k);
+                    c.odo('a.dopbcorr='+str(dopbcorr),k);
+                    c.odo('a.applyoffsets='+str(applyoffsets),k);
+                    c.odo('a.epjtablename='+'"'+str(epjtablename)+'"',k);
+                    c.odo('a.mterm='+str(mterm),k);
+                    c.odo('a.aterm='+str(aterm),k);
+                    c.odo('a.psterm='+str(psterm),k);
+                    c.odo('a.wbawp='+str(wbawp),k);
+                    c.odo('a.conjbeams='+str(conjbeams),k);
+                    
+                    runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+')';
+
+
                     print 'command is ', runcomm
                     out[k]=c.odo(runcomm,k)
                 over=False
@@ -833,11 +869,13 @@ class pimager():
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
               hostnames='',  
-              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, npercycle=100, gain=0.1, threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
+              numcpuperhost=1, majorcycles=-1, cyclefactor=1.5, niter=1000, npercycle=100, gain=0.1, 
+              threshold='0.0mJy', alg='clark', scales=[0], weight='natural', robust=0.0, npixels=0,  
+              uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
               contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
               numthreads=1, savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
-              epjtablename=''):
+              epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True):
 
         """
         msname= measurementset
@@ -894,7 +932,9 @@ class pimager():
                                outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
                                baselines=baselines, scan=scan, observation=observation, 
                                visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
-                               cyclefactor=cyclefactor)
+                               cyclefactor=cyclefactor,
+                               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
+                               mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
         
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
       
@@ -988,6 +1028,11 @@ class pimager():
                 c.odo('a.dopbcorr='+str(dopbcorr),k);
                 c.odo('a.applyoffsets='+str(applyoffsets),k);
                 c.odo('a.epjtablename='+'"'+str(epjtablename)+'"',k);
+                c.odo('a.mterm='+str(mterm),k);
+                c.odo('a.aterm='+str(aterm),k);
+                c.odo('a.psterm='+str(psterm),k);
+                c.odo('a.wbawp='+str(wbawp),k);
+                c.odo('a.conjbeams='+str(conjbeams),k);
                 runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+')'
                 print 'command is ', runcomm
                 out[k]=c.odo(runcomm,k)
@@ -1236,7 +1281,8 @@ class pimager():
                                stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
                                facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
                                robust=robust, npixels=npixels, gain=gain,   
-                               visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads)
+                               visinmem=visinmem, pbcorr=pbcorr, numthreads=numthreads,
+                               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename)
         self.setupcluster(hostnames,numcpuperhost, 3)
         numcpu=self.numcpu
         ##Start an slave for my async use for cleaning up etc here
@@ -1605,7 +1651,8 @@ class pimager():
                                baselines=baselines, scan=scan, observation=observation, 
                                visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, 
                                numthreads=numthreads, 
-                               cyclefactor=cyclefactor)
+                               cyclefactor=cyclefactor,
+                               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename)
              
         self.setupcluster(hostnames,numcpuperhost, 0)
         numcpu=self.numcpu
@@ -2633,7 +2680,25 @@ class pimager():
         spwlaunch='"'+self.spw+'"' if (type(self.spw)==str) else str(self.spw)
         fieldlaunch='"'+self.field+'"' if (type(self.field) == str) else str(self.field)
         pslaunch='"'+self.phasecenter+'"' if (type(self.phasecenter) == str) else str(self.phasecenter)
-        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets)+',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes+'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='+str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'+', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+', minpb='+str(self.minpb)+', cyclefactor='+str(self.cyclefactor)+')'
+        launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets) \
+            +',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch \
+            +',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes \
+            +'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper="'+str(self.uvtaper)+'", outertaper="'\
+            +str(self.outertaper)+'", timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'\
+            +', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+', minpb='+str(self.minpb)+', cyclefactor='+str(self.cyclefactor)\
+            +', painc='+ str(self.painc)  \
+            +', pblimit='+ str(self.pblimit) \
+            +', dopbcorr='+str(self.dopbcorr) \
+            +', applyoffsets='+str(self.applyoffsets) \
+            +', cfcache='+'"'+str(self.cfcache)+'"' \
+            +', epjtablename='+'"'+str(self.epjtablename)+'"'\
+            +', mterm='+str(self.mterm) \
+            +', aterm='+str(self.aterm) \
+            +', psterm='+str(self.psterm) \
+            +', wbawp='+str(self.wbawp) \
+            +', conjbeams='+str(self.conjbeams) \
+            +')'
+
         print 'launch command', launchcomm
         self.c.pgc(launchcomm);
         self.c.pgc('a.visInMem='+str(self.visinmem));
