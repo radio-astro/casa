@@ -33,10 +33,7 @@ synthesisimager::synthesisimager()
 
 synthesisimager::~synthesisimager()
 {
-  if(itsImager)
-    {
-      delete itsImager;
-    }
+  done();
 }
 
 
@@ -149,6 +146,7 @@ synthesisimager::done()
       if (itsImager)
 	{
 	  delete itsImager;
+	  itsImager=NULL;
 	}
     } 
   catch  (AipsError x) 

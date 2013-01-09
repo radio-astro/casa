@@ -35,10 +35,7 @@ synthesisdeconvolver::synthesisdeconvolver()
 
 synthesisdeconvolver::~synthesisdeconvolver()
 {
-  if(itsDeconvolver)
-    {
-      delete itsDeconvolver;
-    }
+  done();
 }
 
   bool synthesisdeconvolver::setupdeconvolution(const casac::record& decpars)
@@ -92,6 +89,7 @@ synthesisdeconvolver::done()
       if (itsDeconvolver)
 	{
 	  delete itsDeconvolver;
+	  itsDeconvolver=NULL;
 	}
     } 
   catch  (AipsError x) 

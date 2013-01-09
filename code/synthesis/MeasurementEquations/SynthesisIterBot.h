@@ -36,6 +36,8 @@
 #include <measures/Measures/MDirection.h>
 #include <synthesis/MeasurementEquations/SIIterBot.h>
 
+//#include<casa/random.h>
+
 #include <boost/scoped_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -68,7 +70,9 @@ class SynthesisIterBot
   bool cleanComplete();
 
   Record getSubIterBot();
-  void endMinorCycle(Record& subIterBot);
+
+  void startMinorCycle(Record& initializationRecord);
+  void endMinorCycle(Record& executionRecord);
 
   void endMajorCycle();
 
@@ -80,7 +84,7 @@ protected:
 
   SIIterBot itsLoopController;
 
-  /////////////// All input parameters
+    /////////////// All input parameters
 
  private:
   static string generateServiceName();

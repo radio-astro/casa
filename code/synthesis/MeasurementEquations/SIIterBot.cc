@@ -30,6 +30,8 @@
 
 #include <math.h> // For FLT_MAX
 
+#
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   ////////////////////////////////////
@@ -425,7 +427,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIIterBot::changeCycleNiter( Int cycleniter )
   {
      boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
-     if (cycleniter < 0)
+     if (cycleniter <= 0)  
        itsCycleNiter = itsNiter;
      else
        itsCycleNiter = cycleniter;

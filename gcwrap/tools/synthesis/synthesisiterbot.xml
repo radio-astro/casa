@@ -102,15 +102,30 @@ This is used to construct {\tt synthesisiterbot} tool.
 
 <!-- ===================================== -->
 
-
    <method type="function" name="endminorcycle">
-   <shortdescription>End of minor cycle</shortdescription>
+   <shortdescription>Update the iterbot with iteration stats from the deconvolver</shortdescription>
 
 <description>
 </description>
 <input>
-     <param type="record" name="iterbotrecord">
-     <description>All parameters that control major cycle</description>
+     <param type="record" name="execrecord">
+     <description>Pass in the output of synthesisdeconvolver.executeminorcycle()</description>
+     <value type="record"></value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="initminorcycle">
+   <shortdescription>Initialize the iterbot with starting peak residuals</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="record" name="initrecord">
+     <description>Pass in the output of synthesisdeconvolver.initminorcycle()</description>
      <value type="record"></value>
      </param>
 </input>

@@ -28,7 +28,8 @@ using namespace casa;
      
 namespace casac {
 
-synthesisiterbot::synthesisiterbot()
+  synthesisiterbot::synthesisiterbot():
+    itsIterBot(NULL)
 {
   itsIterBot = new SynthesisIterBot() ;
 }
@@ -142,13 +143,30 @@ bool synthesisiterbot::endmajorcycle()
   return rstat;
 }  
 
-bool synthesisiterbot::endminorcycle(const casac::record& iterbot)
+bool synthesisiterbot::initminorcycle(const casac::record& initrecord)
 {
   Bool rstat(False);
   
   try 
     {
-      casa::Record recpars = *toRecord( iterbot );
+      casa::Record recpars = *toRecord( initrecord );
+      itsIterBot->startMinorCycle( recpars );
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+
+bool synthesisiterbot::endminorcycle(const casac::record& execrecord)
+{
+  Bool rstat(False);
+  
+  try 
+    {
+      casa::Record recpars = *toRecord( execrecord );
       itsIterBot->endMinorCycle(recpars);
      } 
   catch  (AipsError x) 
@@ -170,6 +188,7 @@ synthesisiterbot::done()
       if (itsIterBot)
 	{
 	  delete itsIterBot;
+	  itsIterBot=NULL;
 	}
     } 
   catch  (AipsError x) 
