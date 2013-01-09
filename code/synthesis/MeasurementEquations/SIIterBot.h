@@ -45,11 +45,11 @@ class casa::Record;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  class SIIterBot : boost::noncopyable,
+  class SIIterBot : boost::noncopyable
 #ifdef INTERACTIVE_ITERATION
-    public edu::nrao::casa::SynthImager_adaptor,
-#endif
+    ,public edu::nrao::casa::SynthImager_adaptor,
     public DBusService
+#endif
   {
   public:
     SIIterBot(const std::string &serviceName);
@@ -147,11 +147,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     bool decrementController();
     int  getNumberOfControllers();
 
+    #ifdef INTERACTIVE_ITERATION
     std::map<std::string,DBus::Variant> getDetails();
+    #endif
     DBus::Variant getSummary();
     
     void interactionComplete();
+
+    #ifdef INTERACTIVE_ITERATION
     void controlUpdate(const std::map<std::string, DBus::Variant>& parameters);
+    #endif
     //// START /// Functions for runtime parameter modification
 
     /* Methods to get the state of the iterbot as a Record*/
