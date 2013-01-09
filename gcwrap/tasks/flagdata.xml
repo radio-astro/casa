@@ -799,7 +799,7 @@ The task will flag a subset of data based on the following modes of operation:
                     
                datacolumn -- Column to use for clipping.
                     default: 'DATA'
-                    options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL, 'RESIDUAL_DATA',
+                    options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
                              'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
@@ -907,7 +907,7 @@ The task will flag a subset of data based on the following modes of operation:
 
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
-                    options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL, 'RESIDUAL_DATA',
+                    options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
                              'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
@@ -1019,7 +1019,7 @@ The task will flag a subset of data based on the following modes of operation:
  
                   (2) Supply noise-estimates to be used with default scale-factors. 
   
-                      flagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, action='calculate)
+                      flagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, action='calculate')
 
                   (3) Two-passes. This replicates the usage pattern in AIPS.
 
@@ -1064,7 +1064,7 @@ The task will flag a subset of data based on the following modes of operation:
 
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
-                    options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL, 'RESIDUAL_DATA',
+                    options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
                              'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
