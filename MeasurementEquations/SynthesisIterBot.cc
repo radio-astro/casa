@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisIterBot::SynthesisIterBot() : 
     itsLoopController(SynthesisIterBot::generateServiceName())  
   {
-      }
+  }
   
 
   SynthesisIterBot::~SynthesisIterBot() 
@@ -284,6 +284,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in constructing SubIterBot : "+x.getMesg()) );
       }
     return returnRecord;
+  }
+
+  void SynthesisIterBot::startMinorCycle(Record& initializationRecord) {
+    try {
+      LogIO os( LogOrigin("SynthesisIterBot",__FUNCTION__,WHERE) );
+      itsLoopController.mergeCycleInitializationRecord(initializationRecord);
+    } catch(AipsError &x) {
+      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
+    }
   }
 
   void SynthesisIterBot::endMinorCycle(Record& executionRecord) {
