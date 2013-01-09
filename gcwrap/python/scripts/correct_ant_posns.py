@@ -115,14 +115,18 @@ def correct_ant_posns (vis_name, print_offsets=False):
         response.close()
         html_lines = html.split('\n')
         for correction_line in html_lines:
-            for month in MONTHS:
-                if (correction_line.find(month) >= 0):
-                    correction_lines.append(str(year)+' '+correction_line)
-                    break
+            # skip the comment (lines begin with ';') lines
+            if correction_line.strip().find(';')!=0:
+                for month in MONTHS:
+                    if (correction_line.find(month) >= 0):
+                        correction_lines.append(str(year)+' '+correction_line)
+                        break
 
     corrections_list = []
+    #print "correction_lines=",correction_lines
     for correction_line in correction_lines:
         correction_line_fields = correction_line.split()
+        #print "correction_line_fields=",correction_line_fields
         if (len(correction_line_fields) > 9):
             [c_year, moved_date, obs_date, put_date, put_time_str, ant, pad, Bx, By, Bz] = correction_line_fields
             s_moved = moved_date[:3]

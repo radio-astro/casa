@@ -395,7 +395,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     outputvis -- Name of output visibility file
         default: ''; example: outputvis='ngc5921.mms'
 
-    createmms -- Create a multi-MS as the output.
+    createmms -- Create a multi-MS as the output. (TBI)
         default: True
 
         If False, it will work like the split task and create a

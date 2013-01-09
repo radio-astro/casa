@@ -3687,6 +3687,10 @@ however not used yet.</description>
        <description>Trigger the WB A-Projection algorithm?</description>
        <value>false</value>
      </param>
+     <param type="bool" name="conjbeams">
+       <description>Use frequency conjugate beams in WB A-Projection algorithm?</description>
+       <value>true</value>
+     </param>
      
 </input>
 <returns type="bool"/>

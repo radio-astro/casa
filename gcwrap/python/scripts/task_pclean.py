@@ -197,12 +197,13 @@ def pclean(vis=None,
     else:
         ##need to calculate chanchunk
         memperproc=totmem/float(numprocperhost)/2.0
-        estmem=18.0*float(imsize[0]*imsize[1])*4
+        estmem=36.0*float(imsize[0]*imsize[1])*4
         chanchunk=int(memperproc/estmem)
         while((chanchunk*numproc) > nchan):
             chanchunk=chanchunk-1
         if(chanchunk <1):
             chanchunk=1
+
         if(interactive and (mask=='')):
             mask=imagename+'.mask'
         pim.pcube_driver(msname=vis, imagename=imagename, 

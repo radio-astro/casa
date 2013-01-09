@@ -1749,6 +1749,12 @@ of strings (else \glish\ will take the empty string as a region).
      <choice>Record of region tool(s)</choice>
      </param>
 
+     <param type="bool" direction="in" name="asmask">
+       <description>save region as a mask rather than region</description>
+       <value>false</value>
+       <choice>false</choice>
+     </param>
+
      <param type="bool" direction="in" name="verbose">
      <description>Report successful saves</description>
      <value>true</value>
@@ -1764,7 +1770,11 @@ of strings (else \glish\ will take the empty string as a region).
 
 This function saves regions into an casa Table
 For the {\stfaf tablename} argument the user should be the name of an existing
-\aipspp\ Table on disk (any kind of table)
+\aipspp\ Table on disk (any kind of table).
+
+If the parameter {\tt asmask} is {\tt True} then the table has to be an image table.
+A mask makes sense with an image only.  
+
 <!--
 For the {\stfaf tablename} argument, you can specify an
 <link anchor="images:image">image</link> \tool, a <link anchor="table:table">table</link> \tool,
@@ -1802,7 +1812,7 @@ x x0
 
 <example>
 
-2 \aipspp\ image files on disk 'hcn1' 'hcn2'
+2 CASA image files on disk 'hcn1' 'hcn2'
 
 - names = rg.namesintable('hcn1')
 - r = rg.fromtabletorecord('hcn1', names[0])
@@ -1814,6 +1824,26 @@ In this example, we recover a region into a record
 from one image, and then copy them to another.
 
 </example>
+
+<example>
+
+####In this example a region is saved as a mask 
+ia.open('myfancy.image')
+csys=ia.coordsys()
+ia.done()
+##Lets make a world-box  region 
+wbox=rg.wbox(['10pix', '10pix', '0pix', '0pix'], ['20pix', '20pix', '0pix', '0pix'], csys=csys.torecord())
+###save that into the image as a mask rather than just a region and assign it the name
+###mask1
+rg.fromrecordtotable('myfancy.image', 'mask1', wbox, asmask=True)
+###now let us set that as default mask
+ia.open('myfancy.restored')
+ia.maskhandler('set', 'mask1')
+ia.done()
+###and now let us view that image
+viewer('try01.0.restored')
+</example>
+
 </method>
  
    <method type="function" name="fromtabletorecord">

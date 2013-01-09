@@ -642,7 +642,7 @@ regionmanager::fromglobaltotable(const std::string& tablename, const bool confir
 std::string
 regionmanager::fromrecordtotable(const std::string& tablename, 
 				 const ::casac::variant& regionname, 
-				 const ::casac::record& regionrec, 
+				 const ::casac::record& regionrec, const bool asmask, 
 				 const bool)
 {
     if ( !itsIsSetup )
@@ -656,7 +656,7 @@ regionmanager::fromrecordtotable(const std::string& tablename,
     
 	String elname=toCasaString(regionname);
 	retval=
-	    (itsRegMan->recordToTable(String(tablename), *leRec, elname)).c_str();
+	  (itsRegMan->recordToTable(String(tablename), *leRec, elname, asmask)).c_str();
 	if(leRec)
 	    delete leRec;
 

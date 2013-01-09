@@ -68,6 +68,7 @@ casa_add_python( tools tools_regressions_python python/${PYTHONV}/regressions
   vla_uvfits_line_sf.py
   wf_regression.py
   wideband_regression.py
+  widebandmosaic_regression.py
   wproj3ddat_regression.py
   run_orionmos4sim.py
   m51_3sim_regression.py

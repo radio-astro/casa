@@ -3,7 +3,7 @@
 #include <stdcasa/StdCasa/CasacSupport.h>
 namespace casa
 {
-  class SynthesisImager;
-  class LogIO;
+class SynthesisIterBot;
+class LogIO;
 };
 

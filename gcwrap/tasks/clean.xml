@@ -149,6 +149,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Trigger the wide-band A-Projection algorithm?</description>
       <value>False</value>
     </param>
+    <param type="bool" name="conjbeams" subparam="true">
+      <description>Use frequency conjugate beams in WB A-Projection algorithm?</description>
+      <value>True</value>
+    </param>
     <param type="string" name="epjtable" subparam="true">
       <description>Table of EP-Jones parameters</description>
       <value type="string"></value>
@@ -507,6 +511,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="cfcache"><value type="string">cfcache.dir</value></default>
 		<default param="painc"><value>360.0</value></default>
 		<default param="wbawp"><value>False</value></default>
+		<default param="conjbeams"><value>True</value></default>
 		<default param="aterm"><value>True</value></default>
 		<default param="psterm"><value>True</value></default>
 		<default param="mterm"><value>False</value></default>

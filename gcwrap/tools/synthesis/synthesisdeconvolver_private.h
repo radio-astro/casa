@@ -1,0 +1,2 @@
+
+casa::SynthesisDeconvolver *itsDeconvolver;

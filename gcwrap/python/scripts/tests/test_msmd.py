@@ -85,18 +85,24 @@ class msmd_test(unittest.TestCase):
     def tearDown(self):
         self.md.done()
         
-    def test_antennaname_and_antennaid(self):
-        """Test antennaname() and antennaid"""
+    def test_antennanames_and_antennaids(self):
+        """Test antennanames() and antennaids()"""
         names = [
             "DA43", "DA44", "DV02", "DV03", "DV05",
             "DV07", "DV08", "DV10", "DV12", "DV13",
             "DV14", "DV15", "DV16", "DV17", "DV18"
         ]
         for i in range(self.md.nantennas()):
-            got = self.md.antennaname(i)
-            self.assertTrue(got == names[i])
-            got = self.md.antennaid(names[i])
-            self.assertTrue(got == i)
+            got = self.md.antennanames(i)
+            self.assertTrue(got == [names[i]])
+            got = self.md.antennaids(names[i])
+            self.assertTrue(got == [i])
+        expec = ["DV07", "DV02"]
+        got = self.md.antennanames([5, 2])
+        self.assertTrue(got == expec)
+        expec = [4, 0, 7]
+        got = self.md.antennaids([names[4], names[0], names[7]])
+        self.assertTrue((got == expec).all())
         
     def test_chanavgspws(self):
         """Test chanavgspws()"""
@@ -348,15 +354,21 @@ class msmd_test(unittest.TestCase):
                 expec = numpy.array([])
             self.assertTrue((got == expec).all())
 
-    def test_nameforfield(self):
-        """Test nameforfield()"""
+    def test_namesforfields(self):
+        """Test namesforfields()"""
         names = [
             "3C279", "J1337-129", "Titan",
             "J1625-254", "V866 Sco", "RNO 90"
         ]
         for i in range(self.md.nfields()):
-            got = self.md.nameforfield(i)
-            self.assertTrue(got == names[i])
+            got = self.md.namesforfields(i)
+            self.assertTrue(got == [names[i]])
+        self.assertTrue(self.md.namesforfields() == names)
+        self.assertTrue(
+            self.md.namesforfields([4, 0, 2])
+            == ["V866 Sco", "3C279", "Titan"]
+        )
+
 
     def test_nantennas(self):
         """ Test nantennas()"""
@@ -604,6 +616,11 @@ class msmd_test(unittest.TestCase):
             got = self.md.statesforscan(i)
             self.assertTrue((got == expec).all())
 
+    def test_telescopenames(self):
+        """ Test observatorynames()"""
+        got = self.md.observatorynames()
+        expec = numpy.array(["ALMA"])
+        self.assertTrue((got == expec).all())
         
     def test_tdmspws(self):
         """Test tdmspws()"""
