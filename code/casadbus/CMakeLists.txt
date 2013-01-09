@@ -23,8 +23,19 @@ casa_add_dbus_proxy( session/DBusSession.proxy.h xml/DBusSession.interface.xml )
 casa_add_dbus_proxy( viewer/ViewerProxy.proxy.h xml/ViewerProxy.interface.xml )
 #casa_add_dbus_adaptor( viewer/ViewerAdaptor.adaptor.h xml/ViewerProxy.interface.xml )
 
-casa_add_dbus_proxy( interfaces/SynthImager.proxy.h xml/SynthImager.interface.xml )
-casa_add_dbus_adaptor( interfaces/SynthImager.adaptor.h xml/SynthImager.interface.xml )
+if (INTERACTIVE_ITERATION)
+   casa_add_dbus_proxy( interfaces/SynthImager.proxy.h xml/SynthImager.interface.xml )
+   casa_add_dbus_adaptor( interfaces/SynthImager.adaptor.h xml/SynthImager.interface.xml )
+    install( FILES 
+             ${CMAKE_CURRENT_BINARY_DIR}/interfaces/SynthImager.proxy.h
+	${CMAKE_CURRENT_BINARY_DIR}/interfaces/SynthImager.adaptor.h
+	DESTINATION include/casacode/casadbus/interfaces
+	)
+
+
+else()
+   message( WARNING "Not Building Support for Interactive control of imaging")
+endif()
 
 install( FILES 
 	${CMAKE_CURRENT_BINARY_DIR}/plotserver/PlotServerProxy.proxy.h
@@ -38,13 +49,8 @@ install( FILES
 	${CMAKE_CURRENT_BINARY_DIR}/session/DBusSession.proxy.h
 	DESTINATION include/casacode/casadbus/session
 	)
-install( FILES 
-	${CMAKE_CURRENT_BINARY_DIR}/interfaces/SynthImager.proxy.h
-	${CMAKE_CURRENT_BINARY_DIR}/interfaces/SynthImager.adaptor.h
-	DESTINATION include/casacode/casadbus/interfaces
-	)
 
-
+if (INTERACTIVE_ITERATION)
 casa_add_library( casadbus
   plotserver/PlotServerProxy.cc
   session/DBusSession.cc
@@ -57,14 +63,32 @@ casa_add_library( casadbus
   utilities/Diagnostic.cc
   utilities/DBusBase.cc
   viewer/ViewerProxy.cc
- 
   interfaces/SynthImager.proxy.h
   interfaces/SynthImager.adaptor.h
   plotserver/PlotServerProxy.proxy.h
   session/DBusSession.proxy.h
   viewer/ViewerProxy.proxy.h  
 )
-
+else()
+casa_add_library( casadbus
+  plotserver/PlotServerProxy.cc
+  session/DBusSession.cc
+  session/Dispatcher.cc
+  types/record.cc
+  types/variant.cc
+  types/nullptr.cc
+  utilities/BusAccess.cc
+  utilities/Conversion.cc
+  utilities/Diagnostic.cc
+  utilities/DBusBase.cc
+  viewer/ViewerProxy.cc
+  interfaces/SynthImager.proxy.h
+  interfaces/SynthImager.adaptor.h
+  plotserver/PlotServerProxy.proxy.h
+  session/DBusSession.proxy.h
+  viewer/ViewerProxy.proxy.h  
+)
+endif()
 install (FILES
 	plotserver/PlotServerProxy.h
 	DESTINATION include/casacode/casadbus/plotserver
