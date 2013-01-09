@@ -691,7 +691,7 @@ class pimager():
                 casalog.post('Starting Gridding for major cycle '+str(maj)) 
                 for k in range(numcpu):
                     imnam='"%s"'%(imlist[k])
-                    c.odo('a.cfcache='+'"'+str(cfcache+"_"+cfcachelist[k])+'"',k);
+                    c.odo('a.cfcache='+'"'+str(cfcachelist[k]+"_"+cfcache)+'"',k);
                     c.odo('a.painc='+str(painc),k);
                     c.odo('a.pblimit='+str(pblimit),k);
                     c.odo('a.dopbcorr='+str(dopbcorr),k);
@@ -702,7 +702,7 @@ class pimager():
                     c.odo('a.psterm='+str(psterm),k);
                     c.odo('a.wbawp='+str(wbawp),k);
                     c.odo('a.conjbeams='+str(conjbeams),k);
-                    
+
                     runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+')';
 
 
@@ -1022,7 +1022,7 @@ class pimager():
             casalog.post('Starting Gridding for major cycle '+str(maj)) 
             for k in range(numcpu):
                 imnam='"%s"'%(imlist[k])
-                c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
+                c.odo('a.cfcache='+'"'+str(cfcachelist[k]+"_"+cfcache)+'"',k);
                 c.odo('a.painc='+str(painc),k);
                 c.odo('a.pblimit='+str(pblimit),k);
                 c.odo('a.dopbcorr='+str(dopbcorr),k);
