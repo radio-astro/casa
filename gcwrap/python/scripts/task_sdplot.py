@@ -139,20 +139,23 @@ class sdplot_worker(sdutil.sdtask_template):
         # unit of DIRECTION column (currently assuming J2000 and rad)
         # TODO: need checking epoch and unit of DIRECTION in scantable
         crad = None
-        spacing = None
-        #if self.center != '':
-            #epoch, ra, dec = self.center.split(' ')
-        if mapcenter != '':
-            epoch, ra, dec = mapcenter.split(' ')
-            cme = me.direction(epoch, ra, dec)
-            crad = [qa.convert(cme['m0'],'rad')['value'], \
-                    qa.convert(cme['m1'],'rad')['value']]
-            #print "Plot center (%frad, %frad)" % (crad[0], crad[1])
-        if cellx != '' and celly != '':
-            spacing = [qa.convert(cellx, 'rad')['value'], \
-                       qa.convert(celly, 'rad')['value']]
-            #print "Plot cell (%frad, %frad)" % (spacing[0], spacing[1])
-        sd.plotter.plotgrid(center=crad,spacing=spacing,rows=ny,cols=nx)
+        spacing = []
+        ##if self.center != '':
+        #    #epoch, ra, dec = self.center.split(' ')
+        #if mapcenter != '':
+        #    epoch, ra, dec = mapcenter.split(' ')
+        #    cme = me.direction(epoch, ra, dec)
+        #    crad = [qa.convert(cme['m0'],'rad')['value'], \
+        #            qa.convert(cme['m1'],'rad')['value']]
+        #    #print "Plot center (%frad, %frad)" % (crad[0], crad[1])
+        #if cellx != '' and celly != '':
+        #    spacing = [qa.convert(cellx, 'rad')['value'], \
+        #               qa.convert(celly, 'rad')['value']]
+        #    #print "Plot cell (%frad, %frad)" % (spacing[0], spacing[1])
+        if cellx != '': spacing.append(cellx)
+        if celly != '': spacing.append(celly)
+        #sd.plotter.plotgrid(center=crad,spacing=spacing,rows=ny,cols=nx)
+        sd.plotter.plotgrid(center=mapcenter,spacing=spacing,rows=ny,cols=nx)
 
         self.__print_header(asaplot=True)
 
@@ -187,42 +190,52 @@ class sdplot_worker(sdutil.sdtask_template):
         refresh = False
         sd.plotter.set_mode(stacking=self.stack,panelling=self.panel,refresh=refresh)
         ncolor = 0
-        if self.colormap != 'none': 
+        cm_default = "green red black cyan magenta orange blue purple yellow pink"
+        ls_default = "line"
+        if len(self.colormap) < 1: self.colormap = 'none'
+        if len(self.linestyles) < 1: self.linestyles = 'none'
+        if self.colormap != 'none':
+            # user defined colormap
             colmap = self.colormap
-            ncolor=len(colmap.split())
-        elif self.linestyles == 'none': 
-            colmap = "green red black cyan magenta orange blue purple yellow pink"
+            ncolor = len(colmap.split())
+        elif self.linestyles == 'none':
+            # no colormap and linestyle. using default colormap
+            colmap = cm_default
             ucm = sd.rcParams['plotter.colours']
             if isinstance(ucm,str) and len(ucm) > 0: colmap = ucm
-            ncolor=len(colmap.split())
+            ncolor = len(colmap.split())
             del ucm
-        else: colmap=None
+        else:
+            # user defined linestyle
+            colmap = "black"
+            casalog.post("plot colour is set to '%s'" % colmap)
 
-        if self.linestyles != 'none': lines=self.linestyles
-        elif ncolor <= 1: 
+        if self.linestyles != 'none':
+            # user defined linestyle
+            lines = self.linestyles
+        elif ncolor <= 1:
+            # single color plot. generate variation in linestyle
             lines = "line dashed dotted dashdot"
             uls = sd.rcParams['plotter.linestyles']
             if isinstance(uls,str) and len(uls) > 0: lines = uls
             del uls
-        else: lines=None
+        else:
+            # multi color plot. 
+            lines = None
 
         if isinstance(self.linewidth,int) or isinstance (self.linewidth,float):
             lwidth = self.linewidth
         else:
-            casalog.post( "Invalid linewidth. linewidth is ignored and set to 1.", priority = 'WARN' )
+            casalog.post("Invalid linewidth. linewidth is ignored and set to 1.", priority='WARN')
             lwidth = 1
 
         # set plot colors
-        if colmap is not None:
-            if ncolor > 1 and lines is not None:
-                casalog.post( "'linestyles' is valid only for single colour plot.\n...Ignoring 'linestyles'.", priority = 'WARN' )
-            sd.plotter.set_colors(colmap,refresh=refresh)
-        else:
-            if lines is not None:
-                tmpcol="black"
-                #print "INFO: plot colour is set to '",tmpcol,"'"
-                casalog.post( "plot colour is set to '"+tmpcol+"'" )
-                sd.plotter.set_colors(tmpcol,refresh=refresh)
+        if ncolor > 1 and lines is not None:
+            casalog.post("'linestyles' is valid only for single colour plot.\n...Ignoring 'linestyles'.", priority='WARN')
+        if not lines: lines = ls_default
+
+        sd.plotter.set_colors(colmap,refresh=refresh)
+
         # set linestyles and/or linewidth
         # so far, linestyles can be specified only if a color is assigned
         #if lines is not None or linewidth is not None:
