@@ -40,10 +40,10 @@
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 //
-#define CONVSIZE (1024*2)
-#define CONVWTSIZEFACTOR sqrt(2.0)
-#define OVERSAMPLING 10
-#define THRESHOLD 1E-3
+// #define CONVSIZE (1024*2)
+// #define CONVWTSIZEFACTOR sqrt(2.0)
+// #define OVERSAMPLING 10
+// #define THRESHOLD 1E-3
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

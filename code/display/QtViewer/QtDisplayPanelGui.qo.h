@@ -74,6 +74,7 @@ class QtDataOptionsPanel;
 class AnimatorHolder;
 class BinPlotWidget;
 class HistogramMain;
+class Fit2DTool;
 
 template <class T> class ImageInterface;
 
@@ -484,7 +485,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_,
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
       *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
@@ -519,11 +520,15 @@ class QtDisplayPanelGui : public QtPanelBase {
   void updateFrameInformation();
   void initAnimationHolder();
   void initHistogramHolder();
+  void hideHistogram();
+  void initFit2DTool();
+  void hideFit2DTool();
 
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   BinPlotWidget* binPlotWidget;
   HistogramMain* histogrammer;
+  Fit2DTool* fitTool;
 
   //Docking/Dock Widgets
   string addAnimationDockWidget();
@@ -548,6 +553,13 @@ class QtDisplayPanelGui : public QtPanelBase {
   void updateHistogramSelection( int id );
   void showHistogram();
   void refreshHistogrammer();
+  void showFitInteractive();
+  void refreshFit();
+  void addSkyComponentOverlay(String path);
+  void removeSkyComponentOverlay( String path );
+  void add2DFitOverlay( QList<RegionShape*> fitMarkers );
+  void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
+  void addResidualFitImage( String path );
 
  public:
  

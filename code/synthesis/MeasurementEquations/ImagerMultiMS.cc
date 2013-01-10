@@ -322,6 +322,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //dataspectralwindowids_p.resize();
       //dataspectralwindowids_p=thisSelection.getSpwList();
       Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
+      mssFreqSel_p.resize();
+      mssFreqSel_p=thisSelection.getChanFreqList(NULL, True);
      
       uInt nms = numMS_p;
       uInt nrow = chansels.nrow(); 

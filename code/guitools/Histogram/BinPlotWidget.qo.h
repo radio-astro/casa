@@ -86,6 +86,8 @@ public:
     bool setImageRegion( const ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
+    virtual void postMessage( const QString& msg );
+
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
 
@@ -122,6 +124,12 @@ public slots:
 protected:
     virtual void resizeEvent( QResizeEvent* event );
     virtual void keyPressEvent( QKeyEvent* event );
+    /*Overriden because we weren't getting the first "Shift" to bring
+     * up the context menu when the mouse first entered the histogram.
+     * We set the focus on this widget when the mouse enters so it will
+     * get that first "Shift" without having to do a click first.
+     */
+    virtual void enterEvent( QEvent* event );
 
 private slots:
 	void lineMoved( const QPoint& pt );

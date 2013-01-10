@@ -14,10 +14,10 @@ class ViColumns2 {
 
 public:
 
-    ViColumns2 (Bool writable);
+    ViColumns2 ();
     ViColumns2 & operator= (const ViColumns2 & other);
 
-    void attachColumns (const Table & t, bool attachSpecialColumns = False);
+    void attachColumns (const Table & t, bool attachSpecialColumns = True);
 
 
     ScalarColumn<Int>    antenna1_p;

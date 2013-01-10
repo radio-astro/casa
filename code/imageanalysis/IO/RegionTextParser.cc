@@ -35,6 +35,8 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/VelocityMachine.h>
 
+#define _ORIGIN "RegionTextParser::" + String(__FUNCTION__) + ": "
+
 namespace casa {
 
 const Int RegionTextParser::CURRENT_VERSION = 0;
@@ -59,23 +61,22 @@ RegionTextParser::RegionTextParser(
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
 	_fileVersion(-1), _imShape(imShape), _regions(0) {
-	String preamble = String(__FUNCTION__) + ": ";
 	RegularFile file(filename);
 	if (! file.exists()) {
 		throw AipsError(
-			preamble + "File "
+			_ORIGIN + "File "
 			+ filename + " does not exist."
 		);
 	}
 	if (! file.isReadable()) {
 		throw AipsError(
-			preamble + "File "
+			_ORIGIN + "File "
 			+ filename + " is not readable."
 		);
 	}
 	if (! _csys.hasDirectionCoordinate()) {
 		throw AipsError(
-			preamble
+			_ORIGIN
 			+ "Coordinate system does not have a direction coordintate"
 		);
 	}
@@ -111,11 +112,9 @@ RegionTextParser::RegionTextParser(
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
 	_fileVersion(-1), _imShape(imShape), _regions(0) {
-	String preamble = String(__FUNCTION__) + ": ";
-
 	if (! _csys.hasDirectionCoordinate()) {
 		throw AipsError(
-			preamble
+			_ORIGIN
 			+ "Coordinate system has no direction coordintate"
 		);
 	}
@@ -127,7 +126,7 @@ RegionTextParser::~RegionTextParser() {}
 
 Int RegionTextParser::getFileVersion() const {
 	if (_fileVersion < 0) {
-		*_log << "File version not associated with simple text strings"
+		*_log << _ORIGIN << "File version not associated with simple text strings"
 			<< LogIO::EXCEPTION;
 	}
 	return _fileVersion;
@@ -147,7 +146,7 @@ void RegionTextParser::_determineVersion(
 		return;
 	}
 	if (! chunk.contains(MAGIC)) {
-		*_log << "File " << filename
+		*_log << _ORIGIN << "File " << filename
 			<< " does not contain CASA region text file magic value"
 			<< LogIO::EXCEPTION;
 	}
@@ -173,23 +172,23 @@ void RegionTextParser::_determineVersion(
 			}
 		}
 		if (_fileVersion < requireAtLeastThisVersion) {
-			*_log << "File version " << _fileVersion
+			*_log << _ORIGIN << "File version " << _fileVersion
 				<< " is less than required version "
 				<< requireAtLeastThisVersion << LogIO::EXCEPTION;
 		}
 		if (_fileVersion > CURRENT_VERSION) {
-			*_log << "File version " << _fileVersion
+			*_log << _ORIGIN << "File version " << _fileVersion
 				<< " is greater than the most recent version of the spec ("
 				<< CURRENT_VERSION
 				<< "). Did you bring this file with you when you traveled "
 				<< "here from the future perhaps? Unfortunately we don't "
 				<< "support such possibilities yet." << LogIO::EXCEPTION;
 		}
-		*_log << LogIO::NORMAL << "Found spec version "
+		*_log << LogIO::NORMAL << _ORIGIN << "Found spec version "
 			<< _fileVersion << LogIO::POST;
 	}
 	else {
-		*_log << LogIO::WARN << "File " << filename
+		*_log << LogIO::WARN << _ORIGIN << "File " << filename
 			<< " does not contain a CASA Region Text File spec version. "
 			<< "The current spec version, " << CURRENT_VERSION << " will be assumed. "
 			<< "WE STRONGLY SUGGEST YOU INCLUDE THE SPEC VERSION IN THIS FILE TO AVOID "
@@ -544,13 +543,14 @@ AnnotationBase::Type RegionTextParser::_getAnnotationType(
 	return annotationType;
 }
 
-RegionTextParser::ParamSet
-RegionTextParser::_getCurrentParamSet(
-	Bool& spectralParmsUpdated, ParamSet& newParams,
-	String& consumeMe, const String& preamble
-) const {
-	ParamSet currentParams = _currentGlobals;
+RegionTextParser::ParamSet RegionTextParser::getParamSet(
+	Bool& spectralParmsUpdated, LogIO& log,
+	const String& text, const String& preamble,
+	const CoordinateSystem& csys
+) {
+	ParamSet parms;
 	spectralParmsUpdated = False;
+	String consumeMe = text;
 	// get key-value pairs on the line
 	while (consumeMe.size() > 0) {
 		ParamValue paramValue;
@@ -559,7 +559,7 @@ RegionTextParser::_getCurrentParamSet(
 		consumeMe.ltrim(',');
 		consumeMe.trim();
 		if (! consumeMe.contains('=')) {
-			*_log << preamble << "Illegal extra characters on line ("
+			log << preamble << "Illegal extra characters on line ("
 				<< consumeMe << "). Did you forget a '='?"
 				<< LogIO::EXCEPTION;
 		}
@@ -579,14 +579,14 @@ RegionTextParser::_getCurrentParamSet(
 				key = AnnotationBase::COORD;
 			}
 			else if (keyword == "corr") {
-				if (_csys.hasPolarizationCoordinate()) {
+				if (csys.hasPolarizationCoordinate()) {
 					key = AnnotationBase::CORR;
 					paramValue.stokes = _stokesFromString(
-							paramValue.stringVal, preamble
+						paramValue.stringVal, preamble
 					);
 				}
 				else {
-					*_log << LogIO::WARN << preamble
+					log << LogIO::WARN << preamble
 						<< "Keyword " << keyword << " specified but will be ignored "
 						<< "because the coordinate system has no polarization axis."
 						<< LogIO::POST;
@@ -597,9 +597,9 @@ RegionTextParser::_getCurrentParamSet(
 				|| keyword == "veltype" || keyword == "restfreq"
 			) {
 				spectralParmsUpdated = True;
-				if (! _csys.hasSpectralAxis()) {
+				if (! csys.hasSpectralAxis()) {
 					spectralParmsUpdated = False;
-					*_log << LogIO::WARN << preamble
+					log << LogIO::WARN << preamble
 						<< "Keyword " << keyword << " specified but will be ignored "
 						<< "because the coordinate system has no spectral axis."
 						<< LogIO::POST;
@@ -617,7 +617,7 @@ RegionTextParser::_getCurrentParamSet(
 					key = AnnotationBase::RESTFREQ;
 					Quantity qRestfreq;
 					if (! readQuantity(qRestfreq, paramValue.stringVal)) {
-						*_log << preamble << "Could not convert rest frequency "
+						log << preamble << "Could not convert rest frequency "
 							<< paramValue.stringVal << " to quantity"
 							<< LogIO::EXCEPTION;
 					}
@@ -626,7 +626,7 @@ RegionTextParser::_getCurrentParamSet(
 			else if (keyword == "linewidth") {
 				key = AnnotationBase::LINEWIDTH;
 				if (! paramValue.stringVal.matches(Regex("^[1-9]+$"))) {
-					*_log << preamble << "linewidth (" << paramValue.stringVal
+					log << preamble << "linewidth (" << paramValue.stringVal
 						<< ") must be a positive integer but is not." << LogIO::EXCEPTION;
 				}
 				paramValue.intVal = String::toInt(paramValue.stringVal);
@@ -640,7 +640,7 @@ RegionTextParser::_getCurrentParamSet(
 			else if (keyword == "symsize") {
 				key = AnnotationBase::SYMSIZE;
 				if (! paramValue.stringVal.matches(Regex("^[1-9]+$"))) {
-					*_log << preamble << "symsize (" << paramValue.stringVal
+					log << preamble << "symsize (" << paramValue.stringVal
 						<< ") must be a positive integer but is not." << LogIO::EXCEPTION;
 				}
 				paramValue.intVal = String::toInt(paramValue.stringVal);
@@ -648,7 +648,7 @@ RegionTextParser::_getCurrentParamSet(
 			else if (keyword == "symthick") {
 				key = AnnotationBase::SYMTHICK;
 				if (! paramValue.stringVal.matches(Regex("^[1-9]+$"))) {
-					*_log << preamble << "symthick (" << paramValue.stringVal
+					log << preamble << "symthick (" << paramValue.stringVal
 						<< ") must be a positive integer but is not." << LogIO::EXCEPTION;
 				}
 				paramValue.intVal = String::toInt(paramValue.stringVal);
@@ -677,7 +677,7 @@ RegionTextParser::_getCurrentParamSet(
 					v != "true"  && v != "t"
 					&& v != "false" && v != "f"
 				) {
-					*_log << preamble << "Cannot determine boolean value of usetex"
+					log << preamble << "Cannot determine boolean value of usetex"
 						<< paramValue.stringVal << LogIO::EXCEPTION;
 				}
 				paramValue.boolVal = (v == "true" || v == "t");
@@ -699,7 +699,7 @@ RegionTextParser::_getCurrentParamSet(
 						)
 					)
 				) {
-					*_log << preamble << "Illegal label offset specification \""
+					log << preamble << "Illegal label offset specification \""
 						<< v << "\"" << LogIO::EXCEPTION;
 				}
 				// the brackets have been stripped, add them back to make it easier
@@ -712,7 +712,7 @@ RegionTextParser::_getCurrentParamSet(
 					iter != pair.end(); iter++
 				) {
 					if (! iter->matches(rInt)) {
-						*_log << preamble << "Illegal label offset specification, "
+						log << preamble << "Illegal label offset specification, "
 							<< *iter << " is not an integer" << LogIO::EXCEPTION;
 					}
 					paramValue.intVec.push_back(String::toInt(*iter));
@@ -720,15 +720,34 @@ RegionTextParser::_getCurrentParamSet(
 				key = AnnotationBase::LABELOFF;
 			}
 			else {
-				*_log << preamble << "Unrecognized key " << keyword
+				log << preamble << "Unrecognized key " << keyword
 					<< LogIO::EXCEPTION;
 			}
 		}
 		consumeMe.trim();
 		if (key != AnnotationBase::UNKNOWN_KEYWORD) {
-			currentParams[key] = paramValue;
-			newParams[key] = paramValue;
+			parms[key] = paramValue;
 		}
+	}
+	return parms;
+}
+
+RegionTextParser::ParamSet
+RegionTextParser::_getCurrentParamSet(
+	Bool& spectralParmsUpdated, ParamSet& newParams,
+	String& consumeMe, const String& preamble
+) const {
+	ParamSet currentParams = _currentGlobals;
+	newParams = getParamSet(
+		spectralParmsUpdated,
+		*_log, consumeMe, preamble, _csys
+	);
+	ParamSet::const_iterator end = newParams.end();
+	for (
+		ParamSet::const_iterator iter=newParams.begin();
+		iter!=end; iter++
+	) {
+		currentParams[iter->first] = iter->second;
 	}
 	if (
 		currentParams.find(AnnotationBase::RANGE) == currentParams.end()
@@ -964,7 +983,7 @@ Array<String> RegionTextParser::_extractTwoPairs(uInt& end, const String& string
 	return ret;
 }
 
-Vector<String> RegionTextParser::_extractSinglePair(const String& string) const {
+Vector<String> RegionTextParser::_extractSinglePair(const String& string) {
 	Char quotes[2];
 	quotes[0] = '\'';
 	quotes[1] = '"';
@@ -986,17 +1005,20 @@ Vector<String> RegionTextParser::_extractSinglePair(const String& string) const 
 
 String RegionTextParser::_doLabel(
 	String& consumeMe, const String& preamble
-) const {
+) {
 	Char firstChar = consumeMe.firstchar();
 	if (firstChar != '\'' && firstChar != '"') {
-		*_log << preamble
-			<< "keyword 'label' found but first non-whitespace character after the '=' is not a quote. It must be."
-			<< LogIO::EXCEPTION;
+		ostringstream oss;
+		oss << preamble << "keyword 'label' found but first non-whitespace "
+			<< "character after the '=' is not a quote. It must be.";
+		throw AipsError(oss.str());
 	}
 	String::size_type posCloseQuote = consumeMe.find(firstChar, 1);
 	if (posCloseQuote == String::npos) {
-		*_log << preamble << "Could not find closing quote ("
-			<< String(firstChar) << ") for label" << LogIO::EXCEPTION;
+		ostringstream err;
+		err << preamble << "Could not find closing quote ("
+			<< String(firstChar) << ") for label";
+		throw AipsError(err.str());
 	}
 	String label = consumeMe.substr(1, posCloseQuote - 1);
 	consumeMe.del(0, (Int)posCloseQuote + 1);
@@ -1005,12 +1027,14 @@ String RegionTextParser::_doLabel(
 
 String RegionTextParser::_getKeyValue(
 	String& consumeMe, const String& preamble
-) const {
+) {
 	String value;
 	if (consumeMe.startsWith("[")) {
 		if (! consumeMe.contains("]")) {
-			*_log << preamble << "Unmatched open bracket: "
-				<< consumeMe << LogIO::EXCEPTION;
+			ostringstream err;
+			err << preamble << "Unmatched open bracket: "
+				<< consumeMe;
+			throw AipsError(err.str());
 		}
 		Int closeBracketPos = consumeMe.find("]");
 		// don't save the open and close brackets
@@ -1185,7 +1209,7 @@ Vector<Quantity> RegionTextParser::_extractSingleQuantityPair(
 Vector<Stokes::StokesTypes>
 RegionTextParser::_stokesFromString(
 	const String& stokes, const String& preamble
-) const {
+) {
 	Int maxn = Stokes::NumberOfTypes;
 	string *res = new string[maxn];
 	Int nStokes = split(stokes, res, maxn, ",");

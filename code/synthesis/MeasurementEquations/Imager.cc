@@ -1829,7 +1829,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const Bool psTermOn,
 			const Bool aTermOn,
 			const Bool mTermOn,
-			const Bool wbawp)
+			const Bool wbawp,
+			const Bool conjBeams)
 {
 
 #ifdef PABLO_IO
@@ -1880,6 +1881,7 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   aTermOn_p=aTermOn;
   mTermOn_p=mTermOn;
   wbAWP_p=wbawp;
+  conjBeams_p=conjBeams;
   freqInterpMethod_p=interpMeth;
   imageTileVol_p=imageTileVol;
   singlePrec_p=singprec;
@@ -6909,7 +6911,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	}
 
 	os << "Restoring Image(s) with the clean-beam" << LogIO::POST;
-	restoreImages(aimage);
+	restoreImages(aimage, (niter>=0) );
 	this->writeHistory(os);
 	try{
 	  // write data processing history into image logtable

@@ -245,6 +245,14 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
       case PMS::ROW:
 	axisVol=sizeof(uInt)*sum(nRowsPerDDID_);
 	break;
+      case PMS::GAMP:
+      case PMS::GPHASE:
+      case PMS::GREAL:
+      case PMS::GIMAG:
+      case PMS::DELAY:
+      case PMS::SWP:
+      case PMS::TSYS:
+      case PMS::OPAC:
       case PMS::NONE:
 	break;
       } // switch

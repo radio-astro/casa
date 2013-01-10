@@ -176,42 +176,45 @@ protected:
   // Multiply model visibilities by Taylor-function weights - during "get"
   Bool modifyModelVis(VisBuffer &vb, uInt thisterm);
   // Restore vb.imagingweights to the original
-  Bool restoreImagingWeights(VisBuffer &vb);
+  void restoreImagingWeights(VisBuffer &vb);
 
   // Use sumwts to make a Hessian, invert it, apply to weight images, fill in pbcoeffs_p
-  void calculateTaylorPBs();
+  void normAvgPBs(PtrBlock<SubImage<Float> *> & weightImageVec);
+  void calculateTaylorPBs(PtrBlock<SubImage<Float> *> & weightImageVec);
   // Make pixel-by-pixel matrices from pbcoeffs, invert, apply to residuals
-  void normalizeWideBandPB2(PtrBlock<SubImage<Float> *> & resImageVec);
-  void normalizeWideBandPB(PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& scratchImageVec);
-  void applyWideBandPB(PtrBlock<SubImage<Float> *> & modelImageVec);
+  //  void normalizeWideBandPB2(PtrBlock<SubImage<Float> *> & resImageVec);
+  //  void normalizeWideBandPB(PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& scratchImageVec);
+  void applyWideBandPB(String action, PtrBlock<SubImage<Float> *> & imageVec);
+
+  void multiplyHMatrix( Matrix<Double> &hmat, PtrBlock<SubImage<Float>* > &invec,
+			PtrBlock<SubImage<Float>* > &outvec, String saveImagePrefix );
 
   // Helper function to write ImageInterfaces to disk
   Bool storeAsImg(String fileName, ImageInterface<Float> & theImg);
 
-  void readAvgPBs();
-  void normAvgPBs(PtrBlock<SubImage<Float> *> & weightImageVec);
 
-
-  Matrix<Float> imweights_p;
   Cube<Complex> modviscube_p;
 
-  String machineName_p;
-
   //// New MTFT specific internal parameters and functions
-  Int nterms_p;
+  uInt nterms_p;
+  Bool donePSF_p, doingPSF_p;
   Double reffreq_p;
+  Matrix<Float> imweights_p;
+  String machineName_p;
+  Float pblimit_p;
+  Bool doWideBandPBCorrection_p;
+  String cacheDir_p;
+  Bool donePBTaylor_p;
+  Bool useConjBeams_p;
+
   Block< CountedPtr<FTMachine> > subftms_p;
   Block<Matrix<Float> > sumweights_p;
-  Bool donePSF_p, doingPSF_p;
 
   Double sumwt_p;
   Matrix<Double> hess_p, invhess_p; // Block is for the pol axis
 
-  Bool doWideBandPBCorrection_p;
-  Float pblimit_p;
   Block<CountedPtr<ImageInterface<Float> > > sensitivitymaps_p;
   PtrBlock<SubImage<Float>* > pbcoeffs_p;
-  String cacheDir_p;
 
   Bool dbg_p,dotime_p;
   Timer tmr_p;

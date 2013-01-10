@@ -33,21 +33,25 @@ namespace casa{
   void AzElAperture::rotate(const VisBuffer& vb, CFCell& cfc) 
     {
       LogIO log_l(LogOrigin("AzElAperture", "rotate"));
-      
+      // If the A-Term is a No-Op, the resulting CF is rotationally
+      // symmetric.
+      if (isNoOp()) return;
+
       Double actualPA = getPA(vb), currentCFPA = cfc.pa_p.getValue("rad");
+      Double dPA = currentCFPA-actualPA;
       //      cerr << actualPA << " " << currentCFPA << endl;
-      if (fabs(actualPA-currentCFPA) > 0.1)
+      if (fabs(dPA) > 0.1)
 	//      if (fabs(actualPA-currentCFPA) > 0.0)
 	{
 	  Array<TT> inData;
 	  inData.assign(*cfc.getStorage());
-
 	  // cerr << "dPA = " << actualPA << " " << currentCFPA << " " 
 	  //      << actualPA - currentCFPA << " " << &(*cfc.getStorage()) << endl;
 	  
 	  SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
 					     *cfc.getStorage(),
-					     currentCFPA-actualPA);//,"LINEAR");
+					     dPA);//,"LINEAR");
+					     // currentCFPA-actualPA);//,"LINEAR");
 	  // Update the PA value in the CF-Cache
 	  cfc.pa_p=Quantity(actualPA, "rad");
 

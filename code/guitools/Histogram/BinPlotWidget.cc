@@ -71,6 +71,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 	setAxisLabelFont( 8);
 
 	ui.plotHolder->setLayout( layout );
+	//setFocusPolicy( Qt::StrongFocus );
 
 	initializePlotControls();
 	initializeFitWidget( fitControls );
@@ -898,13 +899,17 @@ void BinPlotWidget::deleteImageRegion( int id ){
 	}
 }
 
+void BinPlotWidget::postMessage( const QString& msg ){
+	emit postStatusMessage( msg );
+}
+
 Histogram* BinPlotWidget::findHistogramFor( int id ){
 	Histogram* histogram = NULL;
 	if ( histogramMap.contains(id) ){
 		histogram = histogramMap[id];
 	}
 	else {
-		histogram = new Histogram();
+		histogram = new Histogram( this );
 		histogramMap.insert(id, histogram );
 	}
 	return histogram;
@@ -918,6 +923,7 @@ bool BinPlotWidget::setImageRegion( const ImageRegion* region, int id ){
 		if ( plotMode != IMAGE_MODE && success ){
 			resetRegion();
 		}
+
 	}
 	else {
 		qWarning() << "Please specify an image before specifying an image region";
@@ -1063,6 +1069,10 @@ void BinPlotWidget::clearCurves(){
 //-----------------------------------------------------------------------
 //                   Rectangle Range Specification
 //-----------------------------------------------------------------------
+
+void BinPlotWidget::enterEvent( QEvent* /*event*/ ){
+	this->setFocus(Qt::OtherFocusReason );
+}
 
 void BinPlotWidget::resizeEvent( QResizeEvent* event ){
 	QWidget::resizeEvent( event );

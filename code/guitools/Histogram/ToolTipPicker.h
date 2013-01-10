@@ -30,6 +30,7 @@
 namespace casa {
 
 class ToolTipPicker :QwtPlotPicker {
+
 public:
 	ToolTipPicker( int xAxis, int yAxis, int selectionFlags, RubberBand rubberBand,
 			DisplayMode trackorMode, QwtPlotCanvas* canvas );
@@ -37,7 +38,10 @@ public:
 	void setLogScale( bool logScale );
 	virtual QwtText trackerText( const QwtDoublePoint & pos ) const;
 	virtual ~ToolTipPicker();
+
 private:
+	int findClosestPoint( float xValue, float yValue ) const;
+	std::pair<float,float> getRangeY() const;
 	std::vector<float> xVector;
 	std::vector<float> yVector;
 	bool logScale;

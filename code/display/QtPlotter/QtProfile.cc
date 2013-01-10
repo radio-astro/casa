@@ -493,7 +493,6 @@ void QtProfile::changeCoordinate(const QString &text) {
 
 
 void QtProfile::changeFrame(const QString &text) {
-	//qDebug() << "In change frame with input: " << text <<" coordinateType: " << coordinateType.c_str();
 	spcRefFrame=String(text.toStdString());
 	changeCoordinateType(QString(ctypeUnit.c_str()));
 }
@@ -536,7 +535,6 @@ void QtProfile::changeCoordinateType(const QString &text ) {
 }
 
 void QtProfile::closeEvent (QCloseEvent *) {
-	//qDebug() << "closeEvent";
 	lastPX.resize(0);
 	lastPY.resize(0);
 	lastWX.resize(0);
@@ -588,8 +586,10 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	}
 
 	CoordinateSystem cSys = image->coordinates();
-	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-	Converter::setSpectralCoordinate( spectralCoordinate );
+	if ( cSys.hasSpectralAxis() ){
+		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+		Converter::setSpectralCoordinate( spectralCoordinate );
+	}
 	initializeSolidAngle();
 
 	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
@@ -611,6 +611,7 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	//YUnits
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
+	adjustPlotUnits();
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
 	setDisplayYUnits( yAxisCombo->currentText());
 
@@ -637,8 +638,8 @@ void QtProfile::adjustPlotUnits(){
 		Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
 		if(pos>-1){
 			yUnit.remove(pos,5);
-			yUnitsList[0] = yUnit;
 		}
+		yUnitsList[0] = "Jy";
 	}
 	//Add *pixels in case of sum
 	else if ( itsPlotType==QtProfile::PSUM ){
@@ -927,7 +928,7 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 		updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
 
 	}
-	//qDebug() << "spcRval="<<spcRval.c_str()<<" cSysRval="<<cSysRval.c_str();
+
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
 		cSysRval = spcRval;
@@ -1173,8 +1174,10 @@ void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const
 	if (!isVisible()) return;
 	if (!analysis) return;
 
-
-	if ( type == viewer::Region::RegionChangeFocus )
+	if ( type == viewer::Region::RegionChangeDelete ){
+		return;
+	}
+	else if ( type == viewer::Region::RegionChangeFocus )
 		current_region_id = id_;			// viewer region focus has changed
 	else if ( type == viewer::Region::RegionChangeNewChannel )
 		return;						// viewer moving to new channel
@@ -2096,6 +2099,22 @@ Int QtProfile::scaleAxis(){
 	return ordersOfM;
 }
 
+void QtProfile::setDisplayYUnits( const QString& unitStr ){
+	//Called with the left axis combo box changes its units.
+	QString displayUnit = unitStr;
+	//Right now optical units are not being supported as far as changing
+	//them on the y-axis.
+	bool convertableUnits = ConverterIntensity::isSupportedUnits( yUnit );
+	if ( !convertableUnits ){
+		displayUnit = "";
+	}
+	else {
+		postConversionWarning( displayUnit );
+	}
+	pixelCanvas->setDisplayYUnits( yUnitPrefix + displayUnit );
+	this->specFitSettingsWidget->setDisplayYUnits( yUnitPrefix + displayUnit );
+}
+
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
 	bool unitsAcceptable = ConverterIntensity::isSupportedUnits( yUnit );
 	setYUnitConversionVisibility( unitsAcceptable );
@@ -2249,7 +2268,6 @@ void QtProfile::adjustTopAxisSettings(){
 void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
 		const QString& label ){
 	specFitSettingsWidget->addCurveName( label );
-	//qDebug() << "Adding polyline label="<<label;
 	pixelCanvas->addPolyLine(xVals, yVals, label );
 	adjustTopAxisSettings();
 }
@@ -2412,21 +2430,6 @@ void QtProfile::initializeSolidAngle() const {
 			yAxisCombo->removeItem( yAxisUnitCount - 1 );
 		}
 	}
-}
-
-void QtProfile::setDisplayYUnits( const QString& unitStr ){
-	QString displayUnit = unitStr;
-	//Right now optical units are not being supported as far as changing
-	//them on the y-axis.
-	bool convertableUnits = ConverterIntensity::isSupportedUnits( yUnit );
-	if ( !convertableUnits ){
-		displayUnit = "";
-	}
-	else {
-		postConversionWarning( displayUnit );
-	}
-	pixelCanvas->setDisplayYUnits( displayUnit );
-	this->specFitSettingsWidget->setDisplayYUnits( displayUnit );
 }
 
 void QtProfile::postConversionWarning( QString unitStr ){

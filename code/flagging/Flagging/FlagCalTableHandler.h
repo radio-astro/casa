@@ -170,6 +170,7 @@ public:
 	virtual Int polarizationId () const {Int dummy; return dummy;}
 	virtual const Vector<uInt> & rowIds () const {Vector<uInt> dummy; return dummy;}
 	virtual Int spectralWindow () const {Int dummy; return dummy;}
+	virtual const Vector<Int> & spectralWindows () const {Vector<Int> dummy; return dummy;}
 
     virtual void setFillable (Bool isFillable) {}
     virtual const Vector<Int> & dataDescriptionIds () const {Vector<Int> dummy; return dummy;}
@@ -309,6 +310,12 @@ public:
 
 	// Methods for efficient synchronization with CTIter
 	void invalidate() {ctCache_p->invalidate();}
+
+        Vector<bool>& flagRowRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<bool>& flagCubeRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<complex<float> >& visCubeRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<complex<float> >& visCubeCorrectedRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<complex<float> >& visCubeModelRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
 
 private:
 

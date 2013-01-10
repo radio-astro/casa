@@ -179,6 +179,13 @@ VisBufferComponents2::name (Int id)
     names [Weight] = "Weight";
     names [WeightMat] = "WeightMat";
     names [WeightSpectrum] = "WeightSpectrum";
+    names [Uvw] = "UVW";
+    names [VisibilityCorrected] = "VisibilityCorrected";
+    names [VisibilityModel] = "VisibilityModel";
+    names [VisibilityObserved] = "VisibilityObserved";
+    names [VisibilityCubeCorrected] = "VisibilityCubeCorrected";
+    names [VisibilityCubeModel] = "VisibilityCubeModel";
+    names [VisibilityCubeObserved] = "VisibilityCubeObserved";
 
     assert (names.size() == N_VisBufferComponents2);
 

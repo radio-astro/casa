@@ -87,9 +87,9 @@ PlotMSFlaggingWidget::PlotMSFlaggingWidget(QWidget* parent) :
 PlotMSFlaggingWidget::~PlotMSFlaggingWidget() { }
 
 
-PlotMSFlagging PlotMSFlaggingWidget::getValue(PlotMSPlot* plot) const {
+PlotMSFlagging PlotMSFlaggingWidget::getValue(PlotMSPlot* /*plot*/) const {
     PlotMSFlagging val;
-    
+
     const vector<PlotMSFlagging::Field>& f = PlotMSFlagging::fields();
     double d;
     PlotMSSelection s;

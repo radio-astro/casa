@@ -224,10 +224,8 @@ void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
 // Protected Methods //
 
 void PlotMSDBusApp::dbusRunXmlMethod(
-	const String& methodName, const Record& parameters, Record& retValue,
-	const String& callerName, bool isAsync
-) 
-{
+    const String& methodName, const Record& parameters, Record& retValue,
+    const String& /*callerName*/, bool isAsync) {
 
   //  cout << "PlotMSDBusApp::dbusRunXmlMethod: " << methodName << " by " << callerName << boolalpha << " " << isAsync << endl;
 

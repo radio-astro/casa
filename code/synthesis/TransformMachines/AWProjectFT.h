@@ -154,7 +154,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool doPBCorr=True,
 		Int tilesize=16, 
 		Float pbLimit=5e-4,
-		Bool usezero=False);
+		Bool usezero=False,
+		Bool conjBeams_p=True,
+		Bool doublePrecGrid=False);
     // </group>
     
     // Construct from a Record containing the AWProjectFT state
@@ -173,6 +175,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     void setDOPBCorrection(Bool doit=True) {doPBCorrection=doit;};
     Bool getDOPBCorrection() {return doPBCorrection;};
+    void setConjBeams(Bool useit=True) {conjBeams_p=useit;};
+    Bool getConjBeams() {return conjBeams_p;};
+
     virtual Float getPBLimit() {return pbLimit_p;};
     // Initialize transform to Visibility plane using the image
     // as a template. The image is loaded and Fourier transformed.
@@ -435,6 +440,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Array for non-tiled gridding
     Array<Complex> griddedData;
+    Array<DComplex> griddedData2;
     
     //    DirectionCoordinate directionCoord;
     MDirection::Convert* pointingToImage;
@@ -469,7 +475,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<SolvableVisJones> epJ_p;
     Double sigma;
     Int Nant_p, doPointing;
-    Bool doPBCorrection, makingPSF;
+    Bool doPBCorrection, makingPSF, conjBeams_p;
     
     //    CountedPtr<CFCache> cfCache_p;
     ParAngleChangeDetector paChangeDetector;
@@ -490,6 +496,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void normalizeAvgPB(ImageInterface<Complex>& inImage,
 				ImageInterface<Float>& outImage);
     virtual void resampleDataToGrid(Array<Complex>& griddedData, VBStore& vbs, 
+				    const VisBuffer& vb, Bool& dopsf);
+    virtual void resampleDataToGrid(Array<DComplex>& griddedData, VBStore& vbs, 
 				    const VisBuffer& vb, Bool& dopsf);
     virtual void resampleGridToData(VBStore& vbs, Array<Complex>& griddedData,
 				    const VisBuffer& vb);

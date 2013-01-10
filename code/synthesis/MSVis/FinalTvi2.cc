@@ -16,7 +16,7 @@ namespace vi {
 FinalTvi2::FinalTvi2 (ViImplementation2 * inputVi, VisibilityIterator2 * vi,
                       MeasurementSet & finalMs, Bool isWritable)
 : TransformingVi2 (inputVi),
-  columns_p (True),
+  columns_p (),
   columnsAttached_p (False),
   ms_p (finalMs)
 {
@@ -99,7 +99,7 @@ FinalTvi2::writeBackChanges (VisBuffer2 * vb)
 }
 
 void
-FinalTvi2::writeDataValues (MeasurementSet & ms, const RefRows & rows)
+FinalTvi2::writeDataValues (MeasurementSet & /*ms*/, const RefRows & rows)
 {
     // Write out the visibility data either complex or float
 
@@ -132,7 +132,7 @@ FinalTvi2::writeDataValues (MeasurementSet & ms, const RefRows & rows)
 }
 
 void
-FinalTvi2::writeKeyValues (MeasurementSet & ms, const RefRows & rows)
+FinalTvi2::writeKeyValues (MeasurementSet & /*ms*/, const RefRows & rows)
 {
     columns_p.antenna1_p.putColumnCells (rows, getVisBuffer()->antenna1());
 
@@ -153,7 +153,7 @@ FinalTvi2::writeKeyValues (MeasurementSet & ms, const RefRows & rows)
 }
 
 void
-FinalTvi2::writeMiscellaneousValues (MeasurementSet & ms, const RefRows & rows)
+FinalTvi2::writeMiscellaneousValues (MeasurementSet & /*ms*/, const RefRows & rows)
 {
     columns_p.timeInterval_p.putColumnCells (rows, getVisBuffer()->timeInterval());
 
@@ -174,94 +174,94 @@ FinalTvi2::writeMiscellaneousValues (MeasurementSet & ms, const RefRows & rows)
 }
 
 void
-FinalTvi2::writeFlag (const Matrix<Bool> & flag)
+FinalTvi2::writeFlag (const Matrix<Bool> & /*flag*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeFlag (const Cube<Bool> & flag)
+FinalTvi2::writeFlag (const Cube<Bool> & /*flag*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeFlagRow (const Vector<Bool> & rowflags)
+FinalTvi2::writeFlagRow (const Vector<Bool> & /*rowflags*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeFlagCategory(const Array<Bool>& fc)
+FinalTvi2::writeFlagCategory(const Array<Bool>& /*fc*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes)
+FinalTvi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
 {
     Throw ("Not Implemented");
 }
 void
-FinalTvi2::writeVisModel (const Matrix<CStokesVector> & visibilityStokes)
+FinalTvi2::writeVisModel (const Matrix<CStokesVector> & /*visibilityStokes*/)
 {
     Throw ("Not Implemented");
 }
 void
-FinalTvi2::writeVisObserved (const Matrix<CStokesVector> & visibilityStokes)
-{
-    Throw ("Not Implemented");
-}
-
-void
-FinalTvi2::writeVisCorrected (const Cube<Complex> & vis)
-{
-    Throw ("Not Implemented");
-}
-void
-FinalTvi2::writeVisModel (const Cube<Complex> & vis)
-{
-    Throw ("Not Implemented");
-}
-void
-FinalTvi2::writeVisObserved (const Cube<Complex> & vis)
+FinalTvi2::writeVisObserved (const Matrix<CStokesVector> & /*visibilityStokes*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeWeight (const Vector<Float> & wt)
+FinalTvi2::writeVisCorrected (const Cube<Complex> & /*vis*/)
+{
+    Throw ("Not Implemented");
+}
+void
+FinalTvi2::writeVisModel (const Cube<Complex> & /*vis*/)
+{
+    Throw ("Not Implemented");
+}
+void
+FinalTvi2::writeVisObserved (const Cube<Complex> & /*vis*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeWeightMat (const Matrix<Float> & wtmat)
+FinalTvi2::writeWeight (const Vector<Float> & /*wt*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeWeightSpectrum (const Cube<Float> & wtsp)
+FinalTvi2::writeWeightMat (const Matrix<Float> & /*wtmat*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeSigma (const Vector<Float> & sig)
+FinalTvi2::writeWeightSpectrum (const Cube<Float> & /*wtsp*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeSigmaMat (const Matrix<Float> & sigmat)
+FinalTvi2::writeSigma (const Vector<Float> & /*sig*/)
 {
     Throw ("Not Implemented");
 }
 
 void
-FinalTvi2::writeModel(const RecordInterface& rec, Bool iscomponentlist,
-                      Bool incremental)
+FinalTvi2::writeSigmaMat (const Matrix<Float> & /*sigmat*/)
+{
+    Throw ("Not Implemented");
+}
+
+void
+FinalTvi2::writeModel(const RecordInterface& /*rec*/, Bool /*iscomponentlist*/,
+                      Bool /*incremental*/)
 {
     Throw ("Not Implemented");
 }

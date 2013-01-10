@@ -63,6 +63,8 @@ public:
 	// is this region an annotation only? ie just for graphical rendering?
 	Bool isAnnotationOnly() const;
 
+	// get the frequency limits converted to the spectral frame of the coordinate
+	// system of this object.
 	Vector<MFrequency> getFrequencyLimits() const;
 
 	Vector<Stokes::StokesTypes> getStokes() const;
@@ -79,6 +81,12 @@ public:
 	void setDifference(const Bool difference);
 
 	Bool isDifference() const;
+
+	// get the pixel range included in the spectral selection.
+	// If there is no spectral axis, a zero length vector is returned. Otherwise,
+	// a vector of two values is returned. The zeroth value will always be less
+	// than or equal to the first.
+	vector<Double> getSpectralPixelRange() const;
 
 protected:
 
@@ -159,6 +167,7 @@ private:
 	Bool _isDifference, _constructing;
 	IPosition _imShape;
 	static const String _class;
+	vector<Double> _spectralPixelRange;
 
 	// if freqRefFrame=="" -> use the reference frame of the coordinate system
 	// if dopplerString=="" -> use the doppler system associated with the coordinate system

@@ -417,6 +417,7 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 	case PMS::OPAC: 
 	case PMS::SWP: PMSC_DELETE(par_) break;
 
+        case PMS::TSYS:
 	case PMS::NONE: break;
         }        
 
@@ -769,6 +770,7 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
   case PMS::EL0:
   case PMS::HA0:
   case PMS::PA0:
+  case PMS::TSYS:
   case PMS::NONE:
     break;
   }
@@ -937,6 +939,7 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
     case PMS::HA0:           return ha0_.size();
     case PMS::PA0:           return pa0_.size();
 
+    case PMS::TSYS:
     case PMS::NONE: return 0;
 
     }

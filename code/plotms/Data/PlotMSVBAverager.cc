@@ -34,8 +34,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
-  
-PlotMSVBAverager::PlotMSVBAverager(Int nAnt,Bool chanDepWt) 
+
+PlotMSVBAverager::PlotMSVBAverager(Int nAnt, Bool /*chanDepWt*/)
   : nAnt_p(nAnt),
     nCorr_p(0),
     nChan_p(0),

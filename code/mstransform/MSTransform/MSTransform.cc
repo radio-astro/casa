@@ -81,7 +81,7 @@ MSTransform::done()
 	observation_p = "";
 
 	config_p = Record();
-	datacolumn_p = "";
+	datacolumn_p = "CORRECTED";
 	isconfigured_p = false;
 
 /*
@@ -93,6 +93,63 @@ MSTransform::done()
 
 	return;
 }
+
+/*
+// ---------------------------------------------------------------------
+// MSTransform::defaultOptions
+// Set the defaults for all the parameters
+// Returns a Record with the default of each parameter
+// ---------------------------------------------------------------------
+Record &
+MSTransform::defaultOptions()
+{
+	Record defaults;
+
+	defaults.define("inputms", "");
+	defaults.define("outputms", "");
+	defaults.define("createmms", true);
+	defaults.define("separationaxis", "both");
+	defaults.define("numsubms", "");
+	defaults.define("tileshape", "");
+	defaults.define("spw", "");
+	defaults.define("scan", "");
+	defaults.define("antenna", "");
+	defaults.define("array", "");
+	defaults.define("correlation", "");
+	defaults.define("field", "");
+	defaults.define("timerange", "");
+	defaults.define("uvrange", "");
+	defaults.define("state", "");
+	defaults.define("observation", "");
+	defaults.define("datacolumn", "CORRECTED");
+	defaults.define("realmodelcol", false);
+	defaults.define("combinespws", false);
+	defaults.define("freqaverage", false);
+	defaults.define("freqbin", "");
+	defaults.define("useweights", "");
+	defaults.define("hanning", false);
+	defaults.define("regridms", false);
+	defaults.define("mode", "");
+	defaults.define("nchan", "");
+	defaults.define("start", "");
+	defaults.define("width", "");
+	defaults.define("interpolation", "");
+	defaults.define("phasecenter", "");
+	defaults.define("restfreq", "");
+	defaults.define("outframe", "");
+	defaults.define("veltype", "");
+	defaults.define("separatespws", false);
+	defaults.define("nspws", "");
+	defaults.define("timeaverage", false);
+	defaults.define("timebing", "");
+	defaults.define("timespan", "");
+	defaults.define("quantize_c", "");
+	defaults.define("minbaselines", "");
+
+	return defauts;
+}
+*/
+
 
 // ---------------------------------------------------------------------
 // MSTransform::configure
@@ -149,7 +206,6 @@ MSTransform::configure(Record config)
 	}
 	else {
 		// Add the default column to the Record
-		datacolumn_p = "CORRECTED";
 		config_p.define("datacolumn", datacolumn_p);
 	}
 
@@ -253,6 +309,7 @@ MSTransform::run()
 
 	mdh_p->close();
 	delete mdh_p;
+	mdh_p = NULL;
 
 	return Record();
 }

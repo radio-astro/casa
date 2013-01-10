@@ -30,14 +30,16 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Regions/ImageRegion.h>
+#include <guitools/Histogram/HeightSource.h>
 
 namespace casa {
 
-Histogram::Histogram() {
+Histogram::Histogram( HeightSource* heightSource ) {
+	this->heightSource = heightSource;
 }
 
 bool Histogram::reset(const ImageInterface<Float>* image, const ImageRegion* region){
-	bool success = false;
+	bool success = true;
 	if ( image != NULL ){
 		ImageHistograms<Float>* histogramMaker = NULL;
 		SubImage<Float>* subImage = NULL;
@@ -47,23 +49,36 @@ bool Histogram::reset(const ImageInterface<Float>* image, const ImageRegion* reg
 		}
 		else {
 			//Make the histogram based on the region
-			subImage = new SubImage<Float>( *image, *region );
-			histogramMaker = new ImageHistograms<Float>(*subImage);
+			try {
+				subImage = new SubImage<Float>( *image, *region );
+				histogramMaker = new ImageHistograms<Float>(*subImage);
+			}
+			catch( AipsError& error ){
+				success = false;
+				if ( heightSource != NULL ){
+					QString msg( "Could not make a histogram of the region: ");
+					msg.append( error.getMesg().c_str() );
+					heightSource->postMessage( msg );
+				}
+			}
 		}
 		Array<Float> values;
 		Array<Float> counts;
-		success = histogramMaker->getHistograms( values, counts );
 		if ( success ){
-			//Store the data
-			xValues.resize( values.size());
-			yValues.resize( counts.size());
-			values.tovector( xValues );
-			counts.tovector( yValues );
+			success = histogramMaker->getHistograms( values, counts );
+			if ( success ){
+				//Store the data
+				xValues.resize( values.size());
+				yValues.resize( counts.size());
+				values.tovector( xValues );
+				counts.tovector( yValues );
+			}
 		}
 		delete histogramMaker;
 		delete subImage;
 	}
 	else {
+		success = false;
 		qDebug() << "Cant reset histogram with a null image.";
 	}
 	return success;
@@ -103,7 +118,7 @@ void Histogram::defineStepHorizontal( int index, QVector<double>& xVals,
 	yVals[1] = yVals[0];
 }
 
-double Histogram::computeYValue( double value, bool useLog ) const {
+double Histogram::computeYValue( double value, bool useLog ){
 	double resultValue = value;
 	if ( useLog ){
 		if ( value != 0 ){

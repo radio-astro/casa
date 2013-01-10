@@ -45,14 +45,15 @@
 
 #include <casa/OS/HostInfo.h>
 
+#include<synthesis/MeasurementEquations/SIIterBot.h>
 #include <synthesis/MeasurementEquations/SynthesisImager.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
-#include <casadbus/utilities/BusAccess.h>
-#include <casadbus/session/DBusSession.h>
+//#include <casadbus/utilities/BusAccess.h>
+//#include <casadbus/session/DBusSession.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -60,35 +61,43 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
-				       //				       itsVisSet(NULL),
+				       itsVisSet(NULL),
 				       itsCurrentFTMachine(NULL), 
-				       itsCurrentDeconvolver(NULL), 
 				       itsCurrentCoordSys(NULL),
-				       itsCurrentMaskHandler(NULL),
-				       itsSkyModel(SISkyModel()),
-				       itsSkyEquation(SISkyEquation()),
-				       //				       itsLoopController(SIIterBot()),
-				       startmodel_p(String("")), 
-				       usescratch_p(True)
+				       itsCurrentImages(NULL),
+                                       itsCurrentImageShape(IPosition()),
+                                       itsCurrentImageName(""),
+				       itsUseScratch(True)
   {
     
   }
   
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   SynthesisImager::~SynthesisImager() 
   {
+    LogIO os( LogOrigin("SynthesisImager","destructor",WHERE) );
+    os << "SynthesisImager destroyed" << LogIO::POST;
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Make this read in a list of MS's and selection pars....
   void  SynthesisImager::selectData(Record selpars)
   {
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
     
-    Vector<String> mslist,fieldlist,spwlist;
-    
+    Vector<String> mslist(0),fieldlist(0),spwlist(0);
+   
     try
       {
-	
+	// TODO : If critical params are unspecified, throw exceptions.
 	if( selpars.isDefined("vis") ) { selpars.get( RecordFieldId("vis") , mslist ); }
 	if( selpars.isDefined("field") ) { selpars.get( RecordFieldId("field") , fieldlist ); }
 	if( selpars.isDefined("spw") ) { selpars.get( RecordFieldId("spw") , spwlist ); }
@@ -105,20 +114,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << " field='" << fieldlist[sel] << "'" << LogIO::POST;
 	  }
 	
-	if( selpars.isDefined("usescratch") ) { selpars.get( RecordFieldId("usescratch"), usescratch_p ); }
+	if( selpars.isDefined("usescratch") ) { selpars.get( RecordFieldId("usescratch"), itsUseScratch ); }
 	
       }
     catch(AipsError &x)
       {
 	throw( AipsError("Error in reading selection parameter record : "+x.getMesg()) );
       }
-    
+
+    // Set up Visibility Iterator here.
     try
       {
-	
-	os << "Setup vi/vb and construct SkyEquation" << LogIO::POST;
-	//VisSet vset;
-	itsSkyEquation.init(); // vset );
+	os << "Do MS-Selection and Setup vi/vb" << LogIO::POST;
+	//itsVisSet = createVisSet(/* parameters */);
       }
     catch(AipsError &x)
       {
@@ -126,6 +134,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
   }// end of selectData()
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Construct Image Coordinates
   void  SynthesisImager::defineImage(Record impars)
@@ -134,38 +146,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     os << "Define/construct Image Coordinates" << LogIO::POST;
 
-    Int nchan=1;
+    /* Use the image name to create a unique service name */
+    uInt nchan=1,npol=1; 
+    //imx=1,imy=1;
+    Vector<Int> imsize(2);
+    String phasecenter =  "19:59:28.500 +40.44.01.50";
+    Double cellx=10.0,celly=10.0;
 
-    try
-      {
-	if( impars.isDefined("nchan") ) { impars.get( RecordFieldId("nchan") , nchan ); }
+    std::string imagename, partimagename;
+    try {
+      // TODO : If critical params are unspecified, throw exceptions.
+      // TODO : If they're the wrong data type, throw exceptions.
 
-	// Read and interpret input parameters.
-      }
-    catch(AipsError &x)
+      if( impars.isDefined("imagename") )  // A single string
+	{ imagename = impars.asString( RecordFieldId("imagename")); }
+      else
+	{throw( AipsError("imagename not specified")); }
+
+      if( impars.isDefined("nchan") ) // A single integer
+	{ impars.get( RecordFieldId("nchan") , nchan ); }
+      else
+	{throw( AipsError("nchan not specified")); }
+
+      if( impars.isDefined("imsize") ) // An array with 2 integers
+	{ 
+          impars.get( RecordFieldId("imsize") , imsize );
+	  if(imsize.nelements() != 2) 
+	    {
+	      throw( AipsError("imsize must be an array of two integers") );
+	    }
+        }
+      else
+	{throw( AipsError("imsize not specified")); }
+
+      // Read and interpret input parameters.
+    } catch(AipsError &x)
       {
 	throw( AipsError("Error in reading input image-parameters: "+x.getMesg()) );
       }
-    
+
     try
       {
 	
-	//itsCurrentCoordSys = XXXX
+	itsCurrentCoordSys = buildImageCoordinateSystem(phasecenter, 
+                                                        cellx, celly, (uInt)imsize[0], (uInt)imsize[1], npol, nchan );
+        itsCurrentImageShape = IPosition(4,(uInt)imsize[0],(uInt)imsize[1],npol,nchan);
 
-	itsCurrentCoordSys = new CoordinateSystem();
-	SpectralCoordinate* mySpectral=0;
-	
-	MFrequency::Types imfreqref=MFrequency::REST;
-	Vector<Double> chanFreq( nchan );
-	for(Int ch=0;ch<nchan;ch++)
-	  {
-	    chanFreq[ch] = 1.0e+09 + (Double)ch * 1.0e+06;
-	  }
-	Double restFreq = 1.0e+09;
-	mySpectral = new SpectralCoordinate(imfreqref, chanFreq, restFreq);
+        itsCurrentImageName = imagename;
 
-	itsCurrentCoordSys->addCoordinate(*mySpectral);
-	if(mySpectral) delete mySpectral;
+	itsCurrentImages = new SIImageStore(itsCurrentImageName, itsCurrentCoordSys, itsCurrentImageShape);
 
       }
     catch(AipsError &x)
@@ -175,17 +204,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     
   }// end of defineImage
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void  SynthesisImager::setupImaging(Record gridpars)
+  void  SynthesisImager::setupImaging(Record /*gridpars*/)
   {
     LogIO os( LogOrigin("SynthesisImager","setupImaging",WHERE) );
     os << "Set Imaging Options - Construct FTMachine" << LogIO::POST;
     
     try
       {
-	
-	if( gridpars.isDefined("startmodel") ) { gridpars.get( RecordFieldId("startmodel"), startmodel_p ); }
-	
+	// TODO : Parse FT-machine-related parameters.
+
       }
     catch(AipsError &x)
       {
@@ -194,8 +225,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     try
       {
-	
-	/// itsCurrentFTMachine = XXX
+
+	// TODO : Set up the FT-Machine. Send in parameters here...
+	itsCurrentFTMachine = createFTMachine(/* parameters */);
 	
       }
     catch(AipsError &x)
@@ -205,41 +237,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }// end of setupImaging
   
-  void SynthesisImager::setupDeconvolution(Record /*decpars*/)
-  {
-    LogIO os( LogOrigin("SynthesisImager","setupDeconvolution",WHERE) );
-    os << "Set Deconvolution Options - Construct Deconvolver" << LogIO::POST;
-    
-    try
-      {
-	
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in reading deconvolution parameters: "+x.getMesg()) );
-      }
-    
-    try
-      {
-	/// itsCurrentDeconvolver = XXX
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
-      }
-    
-    try
-      {
-	/// itsCurrentMaskHandler = XXX ( check the mask input for accepted formats )
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing a MaskHandler : "+x.getMesg()) );
-      }
-    
-    
-  }//end of setupDeconvolution
-  
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   void SynthesisImager::initMapper()
   {
     LogIO os( LogOrigin("SynthesisImager","initMapper", WHERE) );
@@ -247,13 +248,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 
-	/*	
-	Int nMappers = itsMappers.nelements();
-	itsMappers.resize(nMappers+1, True);
-	itsMappers[nMappers] = new SIMapper( itsCurrentFTMachine, itsCurrentDeconvolver, itsCurrentCoordSys , nMappers );
-	*/
-
-	itsMappers.addMapper( itsCurrentFTMachine, itsCurrentDeconvolver, itsCurrentCoordSys, itsCurrentMaskHandler );
+	itsMappers.addMapper( String("basetype"), itsCurrentImages, itsCurrentFTMachine);
 
       }
     catch(AipsError &x)
@@ -264,223 +259,194 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }//end of initMapper
   
-  SIIterBot  SynthesisImager::setupIteration(Record iterpars)
-  {
-    LogIO os( LogOrigin("SynthesisImager","setupIteration",WHERE) );
-    os << "Set Iteration Control Options : Construct SISkyModel" << LogIO::POST;
 
-    SIIterBot loopcontrols;
-    
-    try
-     {
-	if( iterpars.isDefined("niter") ) 
-	  {
-	    loopcontrols.define( RecordFieldId("niter") , iterpars.asInt( RecordFieldId("niter") ) );
-	  }
-	
-	if( iterpars.isDefined("threshold") ) 
-	  {
-	    loopcontrols.define( RecordFieldId("threshold") , iterpars.asDouble( RecordFieldId("threshold") ) );
-
-	    // Initialize the cyclethreshold also to the same value. 
-	    // This will get overridden by internal calculations, or by a runtime user-change.
-	    loopcontrols.define( RecordFieldId("cyclethreshold") , iterpars.asDouble( RecordFieldId("threshold") ) );
-	  }
-	
-	if( iterpars.isDefined("loopgain") ) 
-	  {
-	    loopcontrols.define( RecordFieldId("loopgain") , iterpars.asDouble( RecordFieldId("loopgain") ) );
-	  }
-
-	if( iterpars.isDefined("maxcycleniter") ) 
-	  {
-	    // Only if it is set to a valid number, accept it. 
-	    if ( iterpars.asInt( RecordFieldId("maxcycleniter") ) > 0 )
-	      {
-		loopcontrols.define( RecordFieldId("maxcycleniter") , iterpars.asInt( RecordFieldId("maxcycleniter") ) );
-	      }
-	    else// If left unset, set to niter.
-	      {
-		loopcontrols.define( RecordFieldId("maxcycleniter") , iterpars.asInt( RecordFieldId("niter") ) );
-	      }
-	  }
-
-	if( iterpars.isDefined("cyclefactor") ) 
-	  {
-	    loopcontrols.define( RecordFieldId("cyclefactor") , iterpars.asDouble( RecordFieldId("cyclefactor") ) );
-	  }
-
-	if( iterpars.isDefined("minpsffraction") ) 
-	  {
-	    loopcontrols.define( RecordFieldId("minpsffraction") , iterpars.asDouble( RecordFieldId("minpsffraction") ) );
-	  }
-
-	if( iterpars.isDefined("maxpsffraction") ) 
-	  {
-	    loopcontrols.define( RecordFieldId("maxpsffraction") , iterpars.asDouble( RecordFieldId("maxpsffraction") ) );
-	  }
-
-	
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in reading iteration parameters : "+x.getMesg()) );
-      }
-    
-
-    try
-      {
-	
-	itsSkyModel.init(); // Send in iteration-control parameters here.// Or... do nothing.
-	
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing SkyModel : "+x.getMesg()) );
-      }
-    
-
-    return loopcontrols;
-  }//end of setupIteration
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void SynthesisImager::initCycles()
-  {
-    LogIO os( LogOrigin("SynthesisImager","initCycles", WHERE) );
-    os << "Do nothing. (Construct SkyModel and SkyEquation)" << LogIO::POST;
-    try
-      {
-	
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing image coordinate system : "+x.getMesg()) );
-      }
-  }
-  
-  /*
-    Record  SynthesisImager::initLoops()
-    {
-    LogIO os( LogOrigin("SynthesisImager","initLoops",WHERE) );
-    os << "Initialize Cleaning" << LogIO::POST;
-    
-    }
-  */
-  
-  void  SynthesisImager::endLoops(SIIterBot& loopcontrols)
-  {
-    LogIO os( LogOrigin("SynthesisImager","endLoops",WHERE) );
-    
-    try
-      {
-	
-	Bool updatedmodel = loopcontrols.asBool( RecordFieldId("updatedmodel") );
-	
-	if(updatedmodel==True)
-	  {
-	    os << "Restore Image (and normalize to Flat Sky) " << LogIO::POST;
-	    itsSkyModel.restore( itsMappers );
-	  }
-	
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing image coordinate system : "+x.getMesg()) );
-      }
-    
-    
-  }// end of endLoops
-  
-  void SynthesisImager::runMajorCycle(SIIterBot& loopcontrols)   // Or nothing...
+  void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
-    try
-      {
-
-	loopcontrols.checkStop();
-
-	Bool updatedmodel = loopcontrols.asBool( RecordFieldId("updatedmodel") );
-	Int nmajordone = loopcontrols.asInt( RecordFieldId("nmajordone") );
-	Int niterdone = loopcontrols.asInt( RecordFieldId("niterdone") );
-	Bool stop = loopcontrols.asBool( RecordFieldId("stop") );
-
-	if( niterdone==0 && startmodel_p.length()>1 )
-	  {
-	    updatedmodel=True;
-	    loopcontrols.define( RecordFieldId("updatedmodel") , True );
-	  }
-	
-	if(nmajordone==0)
-	  {
-	    os << "Make PSFs, weights and initial dirty/residual images. " ;
-	  }
-	else
-	  {
-	    if(updatedmodel==False)
-	      {
-		os << "No new model. No need to update residuals in a major cycle." << LogIO::POST;
-		return; // loopcontrols;
-	      }
-	    os << "Update residual image in major cycle "<< String::toString(nmajordone) << ". ";
-	  }
-	
-	if(stop==True && updatedmodel==True)
-	  {
-	    if(usescratch_p==True)
-	      {
-		os << "Save image model to MS in MODEL_DATA column on disk" << LogIO::POST;
-	      }
-	    else
-	      {
-		os << "Save image model to MS as a Record for on-the-fly prediction" << LogIO::POST;
-	      }
-	  }
-	else
-	  {
-	    os << LogIO::POST;
-	  }
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in setting up Major Cycle : "+x.getMesg()) );
-      }
-    
     
     try
       {    
-	// se.runMajorCycle(xxxxx . modeltoms = usescratch)
-	itsSkyEquation.runMajorCycle( itsMappers );
-
-	loopcontrols.incrementMajorCycleCount();
-
-	loopcontrols.addSummaryMajor();
-
-	//The first time, when PSFs are made, all mappers need to compute PSF parameters ( peak sidelobe level, etc ) 0 and store it inside the mappers.
-
+	runMajorCycle();
       }
     catch(AipsError &x)
       {
 	throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
-      }
-    
+      }    
   }// end of runMajorCycle
   
-  void  SynthesisImager::runMinorCycle(SIIterBot& loopcontrols)
-  {
-    LogIO os( LogOrigin("SynthesisImager","runMinorCycle",WHERE) );
-    
-    try
-      {
-	loopcontrols.verifyFields();
-	
-	itsSkyModel.runMinorCycle( itsMappers , loopcontrols );
-
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
-      }
-    
-  }// end of runMinorCycle
   
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////    Internal Functions start here.  These are not visible to the tool layer.
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  // Build the Image coordinate system.  TODO : Replace with Imager2::imagecoordinates2()
+  CountedPtr<CoordinateSystem> SynthesisImager::buildImageCoordinateSystem(String phasecenter, 
+                                                                           Double cellx, Double celly, 
+                                                                           uInt imx, uInt imy,
+                                                                           uInt npol, uInt nchan)
+  {
+    
+    // Cell Size
+    Vector<Double> deltas(2);
+    deltas(0) = -1* cellx / 3600.0 * 3.14158 / 180.0; // 10 arcsec in radians
+    deltas(1) = celly / 3600.0 * 3.14158 / 180.0; // 10 arcsec in radians
+
+    // Direction of Image Center
+    MDirection mDir;
+    String tmpA,tmpB,tmpC;
+    std::istringstream iss(phasecenter);
+    iss >> tmpA >> tmpB >> tmpC;
+    casa::Quantity tmpQA, tmpQB;
+    casa::Quantity::read(tmpQA, tmpA);
+    casa::Quantity::read(tmpQB, tmpB);
+    if(tmpC.length() > 0){
+      casa::MDirection::Types theRF;
+      casa::MDirection::getType(theRF, tmpC);
+      mDir = casa::MDirection (tmpQA, tmpQB, theRF);
+    } else {
+      mDir = casa::MDirection (tmpQA, tmpQB);
+    }
+
+    Vector<Double> refCoord(2);
+    refCoord(0) = mDir.getAngle().getValue()(0);
+    refCoord(1) = mDir.getAngle().getValue()(1);
+
+    // Reference pixel
+    Vector<Double> refPixel(2); 
+    refPixel(0) = Double(imx / 2);
+    refPixel(1) = Double(imy / 2);
+
+    // Projection
+    Projection projection(Projection::SIN);
+
+    // Not sure....
+    Matrix<Double> xform(2,2);
+    xform=0.0;
+    xform.diagonal()=1.0;
+
+    // Set up direction coordinate
+    DirectionCoordinate myRaDec(MDirection::Types(mDir.getRefPtr()->getType()),
+                                projection,
+                                refCoord(0), refCoord(1),
+                                deltas(0), deltas(1),
+                                xform,
+                                refPixel(0), refPixel(1));
+
+
+    // Set up Stokes Coordinate
+    Vector<Int> whichStokes(npol);
+    whichStokes[0] = Stokes::I;
+    if(npol>1) whichStokes[1] = Stokes::V;
+    StokesCoordinate myStokes(whichStokes);
+    
+    // Set up Spectral Coordinate
+    MFrequency::Types imfreqref=MFrequency::REST;
+    Vector<Double> chanFreq( nchan );
+    for(uInt ch=0;ch<nchan;ch++)
+      {
+        chanFreq[ch] = 1.0e+09 + (Double)ch * 1.0e+06;
+      }
+    Double restFreq = 1.0e+09;
+    SpectralCoordinate mySpectral(imfreqref, chanFreq, restFreq);
+    
+
+    CountedPtr<CoordinateSystem> coordSys;
+    coordSys = new CoordinateSystem();
+    coordSys->addCoordinate(myRaDec);
+    coordSys->addCoordinate(myStokes);
+    coordSys->addCoordinate(mySpectral);
+
+    return coordSys;
+  }// end of buildImageCoordinateSystem
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  // Make the FT-Machine and related objects (cfcache, etc.)
+  CountedPtr<FTMachine> SynthesisImager::createFTMachine()
+  {
+    LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE) );
+    CountedPtr<FTMachine> localFTM = NULL;
+
+    return localFTM;
+  }// end of createFTMachine
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  // Do MS-Selection and set up vi/vb. 
+  // Only this functions needs to know anything about the MS 
+  CountedPtr<VisSet> SynthesisImager::createVisSet()
+  {
+    LogIO os( LogOrigin("SynthesisImager","createVisSet",WHERE) );
+    CountedPtr<VisSet> localVS = NULL;
+
+    return localVS;
+  }// end of createVisSet
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  void SynthesisImager::runMajorCycle()
+  {
+    LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+
+    Int nmappers = itsMappers.nMappers();
+    
+    os << "Run major cycle over all " << nmappers << " mappers" << LogIO::POST;
+
+    ///////// (1) Initialize all the FTMs.
+    for(Int mp=0;mp<nmappers;mp++)
+      {
+	// vb.selectChannel(....)
+	itsMappers.initializeDegrid(mp);
+	itsMappers.initializeGrid(mp);
+      }
+
+    ////////// (2) Iterate through visbuffers, degrid, subtract, grid
+
+    //for ( vi.originChunks(); vi.moreChunks(); vi.nextChunk() )
+      {
+	//for( vi.origin(); vi.more(); vi++ )
+	  {
+	    for(Int mp=0;mp<nmappers;mp++)
+	      {
+		itsMappers.degrid(mp /* ,vb */);
+		// resultvb.modelVisCube += vb.modelVisCube()
+	      }
+	    
+	    // resultvb.visCube -= resultvb.modelvisCube()
+	    
+	    // save model either in the column, or in the record. 
+	    // Access the FTM record as    rec=mappers[mp]->getFTMRecord();
+	    
+	    for(Int mp=0;mp<nmappers;mp++)
+	      {
+		itsMappers.grid(mp /* ,vb */);
+	      }
+	  }// end of for vb.
+      }// end of vi.chunk iterations
+      
+
+      /////////// (3) Finalize Mappers.
+      for(Int mp=0;mp<nmappers;mp++)
+	{
+	  itsMappers.finalizeDegrid(mp);
+	  itsMappers.finalizeGrid(mp);
+	}
+      
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 } //# NAMESPACE CASA - END
 

@@ -571,7 +571,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
 : ViImplementation2 (),
   channelSelector_p (0),
   channelSelectorCache_p (new ChannelSelectorCache ()),
-  columns_p (isWritable),
+  columns_p (),
   floatDataFound_p (False),
   frequencySelections_p (0),
   more_p (False),
@@ -982,6 +982,21 @@ Int
 VisibilityIteratorImpl2::spectralWindow () const
 {
     return msIter_p.spectralWindowId ();
+}
+
+void
+VisibilityIteratorImpl2::spectralWindows (Vector<Int> & spws) const
+{
+	Vector<Int> ddis;
+	dataDescriptionIds(ddis);
+	spws.resize(ddis.size());
+
+	for (uInt idx=0;idx<ddis.size();idx++)
+	{
+		spws(idx) = subtableColumns_p->dataDescription().spectralWindowId()(ddis(idx));
+	}
+
+	return;
 }
 
 // Return current Polarization Id

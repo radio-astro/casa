@@ -860,6 +860,13 @@ VisibilityIterator2::spectralWindow () const
 }
 
 void
+VisibilityIterator2::spectralWindows (Vector<Int>& spws) const
+{
+    CheckImplementationPointerR ();
+    impl_p->spectralWindows (spws);
+}
+
+void
 VisibilityIterator2::stateId (Vector<Int>& stateids) const
 {
     CheckImplementationPointerR ();

@@ -87,10 +87,8 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
 }
 
 void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
-  		            Vector<Vector<Slice> >& chansel,
-  		            Vector<Vector<Slice> >& corrsel) const {    
-
-
+  		            Vector<Vector<Slice> >& /*chansel*/,
+  		            Vector<Vector<Slice> >& /*corrsel*/) const {
   // Trap unsupported selections
 
   if (uvrange().length()>0)

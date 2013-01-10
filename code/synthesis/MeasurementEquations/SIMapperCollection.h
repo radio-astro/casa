@@ -35,6 +35,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
+#include <synthesis/MeasurementEquations/SIMapperBase.h>
 #include <synthesis/MeasurementEquations/SIMapper.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -47,30 +48,28 @@ class SIMapperCollection
   SIMapperCollection();
   ~SIMapperCollection();
 
-  // Copy constructor and assignment operator
-  //Imager(const Imager&);
-  //Imager& operator=(const Imager&);
+  void addMapper( String mappertype, 
+		  CountedPtr<SIImageStore> imagestore,
+		  CountedPtr<FTMachine> ftmachine);
 
-  void addMapper( CountedPtr<FTMachine> ftmachine, CountedPtr<SIDeconvolver> deconvolver, CountedPtr<CoordinateSystem> imcoordsys, CountedPtr<SIMaskHandler> maskhandler );
-
-  // TODO : If individual mapper accesses are not needed in SISkyEquation, pull those loops in here and get rid of the getMapper access function.
   Int nMappers();
-  CountedPtr<SIMapper>& getMapper( Int mapindex );
 
-  // Functions relevant to the minor cycle
+  //// For KG : Need to add the interface for 'vb' flowing through here....
+  void initializeGrid(Int mapperid);
+  void grid(Int mapperid);
+  void finalizeGrid(Int mapperid);
 
-  Float findPeakResidual();
-  Float addIntegratedFlux();
-  Float findMaxPsfSidelobe();
-  Bool anyUpdatedModel();
-  
+  void initializeDegrid(Int mapperid);
+  void degrid(Int mapperid);
+  void finalizeDegrid(Int mapperid);
+
+  Record getFTMRecord(Int mapperid);
 
 protected:
 
   ///////////////////// Member Objects
 
-  Block<CountedPtr<SIMapper> >  itsMappers;
-
+  Block<CountedPtr<SIMapperBase> >  itsMappers;
 
 };
 

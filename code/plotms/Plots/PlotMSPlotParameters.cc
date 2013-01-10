@@ -56,7 +56,7 @@ void PlotMSPlotParameters::Group::updated(bool requiresRedraw) {
     if(itsParent_ != NULL) itsParent_->groupUpdated(this, requiresRedraw); }
 
 
-void PlotMSPlotParameters::Group::notifyWatchers_(bool wasCanceled) {
+void PlotMSPlotParameters::Group::notifyWatchers_(bool /*wasCanceled*/) {
     if(itsParent_ != NULL) itsParent_->notifyWatchers(name()); }
 
 
@@ -69,9 +69,10 @@ void PlotMSPlotParameters::Group::notifyWatchers_(bool wasCanceled) {
 PlotMSPlotParameters::PlotMSPlotParameters(PlotFactoryPtr factory) :
         itsFactory_(factory) { }
 
-PlotMSPlotParameters::PlotMSPlotParameters(const PlotMSPlotParameters& copy) :
-        itsFactory_(copy.itsFactory_) {
-    operator=(copy); }
+PlotMSPlotParameters::PlotMSPlotParameters(const PlotMSPlotParameters& copy)
+    : PlotMSWatchedParameters(copy), itsFactory_(copy.itsFactory_) {
+    operator=(copy);
+}
 
 PlotMSPlotParameters::~PlotMSPlotParameters() {
     for(unsigned int i = 0; i < itsGroups_.size(); i++)

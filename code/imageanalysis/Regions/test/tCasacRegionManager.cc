@@ -253,61 +253,76 @@ int main() {
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
-			  chans = "5";
 			  stokesControl = CasacRegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting a single channel");
-			  regRec = rm.fromBCS(
-					  diagnostics, nSelectedChannels, stokes,
-					  0, "", chans, stokesControl, box,
-					  imShape
-			  );
-			  AlwaysAssert(nSelectedChannels == 1, AipsError);
-			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
-			  Vector<Double> expblc(4);
-			  expblc[0] = 1.24795230;
-			  expblc[1] = 0.782549990;
-			  expblc[2] = 6.73510000e+09;
-			  expblc[3] = 1.0;
-			  compVecs(gotblc, expblc);
-			  Vector<Double> gottrc = recToVec(regRec.asRecord("trc"));
-			  Vector<Double> exptrc(4);
+			  for (uInt i=0; i<3; i++) {
+				  chans = i == 0
+					  ? "5"
+					  : i == 1
+					      ? "range=[5pix, 5pix]"
+					      : "range=[6.73510000e+09Hz, 6.7351 GHz]";
+				  regRec = rm.fromBCS(
+				      diagnostics, nSelectedChannels, stokes,
+					      0, "", chans, stokesControl, box,
+					      imShape
+				  );
+				  cout << "*** nsel " << nSelectedChannels << endl;
+				  AlwaysAssert(nSelectedChannels == 1, AipsError);
+				  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
+				  Vector<Double> expblc(4);
+				  expblc[0] = 1.24795230;
+				  expblc[1] = 0.782549990;
+				  expblc[2] = 6.73510000e+09;
+				  expblc[3] = 1.0;
+				  compVecs(gotblc, expblc);
+				  Vector<Double> gottrc = recToVec(regRec.asRecord("trc"));
+				  Vector<Double> exptrc(4);
 
-			  exptrc[0] = 1.24791339;
-			  exptrc[1] = 0.782577665;
-			  exptrc[2] = 6.73510000e+09;
-			  exptrc[3] = 4.0;
-			  compVecs(gottrc, exptrc);
+				  exptrc[0] = 1.24791339;
+				  exptrc[1] = 0.782577665;
+				  exptrc[2] = 6.73510000e+09;
+				  exptrc[3] = 4.0;
+				  compVecs(gottrc, exptrc);
+			  }
 		  }
 		  {
 			  diagnostics = "";
 			  nSelectedChannels = 0;
 			  stokes = "";
-			  chans = "5~10";
 			  stokesControl = CasacRegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting multiple continuous channels");
-			  regRec = rm.fromBCS(
+			  for (uInt i=0; i<4; i++) {
+				  chans = i == 0
+				      ? "5~10"
+				      : i == 1
+				        ? "5, 6, 7, 8, 9,10"
+				        : i == 2
+				          ? "range=[5pix, 10pix]"
+				          : "range=[6.73510000e+09Hz, 8.73510GHz]";
+				  regRec = rm.fromBCS(
 					  diagnostics, nSelectedChannels, stokes,
 					  0, "", chans, stokesControl, box,
 					  imShape
-			  );
-			  AlwaysAssert(nSelectedChannels == 6, AipsError);
-			  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
-			  Vector<Double> expblc(4);
-			  expblc[0] = 1.24795230;
-			  expblc[1] = 0.782549990;
-			  expblc[2] = 6.73510000e+09;
-			  expblc[3] = 1.0;
-			  compVecs(gotblc, expblc);
-			  Vector<Double> gottrc = recToVec(regRec.asRecord("trc"));
-			  Vector<Double> exptrc(4);
+				  );
+				  AlwaysAssert(nSelectedChannels == 6, AipsError);
+				  Vector<Double> gotblc = recToVec(regRec.asRecord("blc"));
+				  Vector<Double> expblc(4);
+				  expblc[0] = 1.24795230;
+				  expblc[1] = 0.782549990;
+				  expblc[2] = 6.73510000e+09;
+				  expblc[3] = 1.0;
+				  compVecs(gotblc, expblc);
+				  Vector<Double> gottrc = recToVec(regRec.asRecord("trc"));
+				  Vector<Double> exptrc(4);
 
-			  exptrc[0] = 1.24791339;
-			  exptrc[1] = 0.782577665;
-			  exptrc[2] = 8.73510000e+09;
-			  exptrc[3] = 4.0;
-			  compVecs(gottrc, exptrc);
+				  exptrc[0] = 1.24791339;
+				  exptrc[1] = 0.782577665;
+				  exptrc[2] = 8.73510000e+09;
+				  exptrc[3] = 4.0;
+				  compVecs(gottrc, exptrc);
+			  }
 		  }
 		  {
 			  diagnostics = "";

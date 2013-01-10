@@ -1316,10 +1316,10 @@ void MMueller::newselfSolve(VisSet& vs, VisEquation& ve) {
       }
 
       nGood++;
-    }
 
-    keepNCT();
-    
+      // record in in-memory caltable
+      keepNCT();
+    }
   }
   
   logSink() << "  Found good "

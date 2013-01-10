@@ -29,7 +29,8 @@ AnnRegion::AnnRegion(
 	const Bool annotationOnly
 ) : AnnotationBase(shape, dirRefFrameString, csys), _isAnnotationOnly(annotationOnly),
 	_convertedFreqLimits(Vector<MFrequency>(0)), _stokes(stokes),
-	_isDifference(False), _constructing(True), _imShape(imShape) {
+	_isDifference(False), _constructing(True), _imShape(imShape),
+	 _spectralPixelRange(vector<Double>(0)) {
 	_init();
 	_setFrequencyLimits(
 		beginFreq, endFreq, freqRefFrameString,
@@ -48,7 +49,8 @@ AnnRegion::AnnRegion(
 	_convertedFreqLimits(Vector<MFrequency>(0)),
 	_beginFreq(Quantity(0, "Hz")), _endFreq(Quantity(0, "Hz")),
 	_restFreq(Quantity(0, "Hz")), _stokes(stokes),
-	_isDifference(False), _constructing(True), _imShape(imShape) {
+	_isDifference(False), _constructing(True), _imShape(imShape),
+	 _spectralPixelRange(vector<Double>(0)) {
 	_init();
 	// right before returning
 	_constructing = False;
@@ -76,6 +78,7 @@ AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
     _directionRegion = other._directionRegion;
     _constructing = other._constructing;
     _imShape = other._imShape;
+    _spectralPixelRange = other._spectralPixelRange;
     return *this;
 }
 
@@ -242,26 +245,27 @@ void AnnRegion::_setDirectionRegion(const ImageRegion& region) {
 	_directionRegion = region;
 }
 
+vector<Double> AnnRegion::getSpectralPixelRange() const {
+	return _spectralPixelRange;
+}
+
 void AnnRegion::_extend() {
 	Int stokesAxis = -1;
 	Int spectralAxis = -1;
 	Vector<Quantity> freqRange;
 	uInt nBoxes = 0;
-    cout << "converted freq limits " << _convertedFreqLimits << endl;
     if (getCsys().hasSpectralAxis() && _convertedFreqLimits.size() == 2) {
 		SpectralCoordinate spcoord = getCsys().spectralCoordinate();
 		String unit = spcoord.worldAxisUnits()[0];
-		Vector<Double> pixrange(2);
-		spcoord.toPixel(pixrange(0), _convertedFreqLimits[0]);
-		spcoord.toPixel(pixrange(1), _convertedFreqLimits[1]);
+		_spectralPixelRange.resize(2);
+		spcoord.toPixel(_spectralPixelRange[0], _convertedFreqLimits[0]);
+		spcoord.toPixel(_spectralPixelRange[1], _convertedFreqLimits[1]);
         freqRange.resize(2);
-		if (pixrange[1] > pixrange[0]) {
-			freqRange[0] = _convertedFreqLimits[0].get(unit);
-			freqRange[1] = _convertedFreqLimits[1].get(unit);
-		}
-		else {
-			freqRange[0] = _convertedFreqLimits[1].get(unit);
-			freqRange[1] = _convertedFreqLimits[0].get(unit);
+        freqRange[0] = _convertedFreqLimits[0].get(unit);
+        freqRange[1] = _convertedFreqLimits[1].get(unit);
+		if (_spectralPixelRange[1] <= _spectralPixelRange[0]) {
+			std::swap(_spectralPixelRange[0], _spectralPixelRange[1]);
+			std::swap(freqRange[0], freqRange[1]);
 		}
 		spectralAxis = getCsys().spectralAxisNumber();
 		nBoxes = 1;

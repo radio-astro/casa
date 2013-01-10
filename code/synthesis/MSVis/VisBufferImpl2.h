@@ -288,6 +288,7 @@ public:
     virtual void setSigma (const Vector<Float> &);
     virtual const Matrix<Float> & sigmaMat () const;
     virtual Int spectralWindow () const;
+    virtual const Vector<Int> & spectralWindows () const;
     virtual const Vector<Int> & stateId () const;
     virtual void setStateId (const Vector<Int> & value);
     virtual const Vector<Double> & time () const;
@@ -381,6 +382,11 @@ protected:
     template <typename Coord>
     void updateCoord (Coord & item, const Coord & otherItem);
 
+    virtual Vector<Bool> & flagRowRef ();  // [nR]
+    virtual Cube<Bool> & flagCubeRef ();  // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeRef (); // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
+    virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
 
 private:
 
@@ -451,6 +457,7 @@ private:
     virtual void fillSigma (Vector<Float>& value) const;
     virtual void fillSigmaMat (Matrix<Float>& value) const;
     virtual void fillSpectralWindow (Int& value) const;
+    virtual void fillSpectralWindows  (Vector<Int>& value) const;
     virtual void fillStateId (Vector<Int>& value) const;
     virtual void fillTime (Vector<Double>& value) const;
     virtual void fillTimeCentroid (Vector<Double>& value) const;

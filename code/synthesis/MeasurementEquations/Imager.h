@@ -254,7 +254,8 @@ class Imager
 		  const Bool psTermOn=True,
 		  const Bool aTermOn=True,
 		  const Bool mTermOn=False,
-		  const Bool wbAWP=False);
+		  const Bool wbAWP=False,
+		  const Bool conjBeams=True);
 
   // Set the single dish processing options
   Bool setsdoptions(const Float scale, const Float weight, 
@@ -774,7 +775,7 @@ protected:
   // if user specified or try to get the info from the SOURCE table 
   Bool getRestFreq(Vector<Double>& restFreq, const Int& spw);
 
-  Bool restoreImages(const Vector<String>& restored);
+  Bool restoreImages(const Vector<String>& restored, Bool modresiduals=True);
 
   // names of flux scale images
   Bool writeFluxScales(const Vector<String>& fluxScaleNames);
@@ -912,7 +913,7 @@ protected:
   //
   EPJones *epJ;
   String epJTableName_p, cfCacheDirName_p;
-  Bool doPointing, doPBCorr, psTermOn_p, aTermOn_p, mTermOn_p, wbAWP_p;
+  Bool doPointing, doPBCorr, psTermOn_p, aTermOn_p, mTermOn_p, wbAWP_p, conjBeams_p;
   //SimplePlotterPtr plotter_p;
   Record interactiveState_p;
 
