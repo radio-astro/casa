@@ -144,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     
-    os << "Define/construct Image Coordinates" << LogIO::POST;
+    os << "Define/construct Image Coordinates. Allocate Memory" << LogIO::POST;
 
     /* Use the image name to create a unique service name */
     uInt nchan=1,npol=1; 
@@ -244,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::initMapper()
   {
     LogIO os( LogOrigin("SynthesisImager","initMapper", WHERE) );
-    os << "Construct a Mapper from the current FTMachine and Deconvolver, and allocate Image Memory" << LogIO::POST;
+    os << "Construct mapper " << itsMappers.nMappers() << LogIO::POST;
     try
       {
 
@@ -266,6 +266,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+
+    os << "Execute Major Cycle" << LogIO::POST;
     
     try
       {    

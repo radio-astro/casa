@@ -54,6 +54,8 @@ class SIImageStore
 
 
   IPosition getShape();
+  String getName();
+
   CountedPtr<PagedImage<Float> > psf();
   CountedPtr<PagedImage<Float> > residual();
   CountedPtr<PagedImage<Float> > weight();

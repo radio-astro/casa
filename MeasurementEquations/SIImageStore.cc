@@ -148,6 +148,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsImageShape;
   }
 
+  String SIImageStore::getName()
+  {
+    return itsImageName;
+  }
+
   CountedPtr<PagedImage<Float> > SIImageStore::psf()
   {
     return itsPsf;

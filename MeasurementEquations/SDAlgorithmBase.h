@@ -83,7 +83,7 @@ public:
 		ImageInterface<Float>  &residual, 
 		ImageInterface<Float>  &weight );
 
-  Bool checkStop( SIMinorCycleController &loopcontrols, Int currentiteration, Float currentresidual );
+  Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
 
 protected:
 

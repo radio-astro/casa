@@ -157,10 +157,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cycleThreshold = max(cycleThreshold, itsInteractiveThreshold);
     }
 
-    returnRecord.define( RecordFieldId("cycleiter"),  maxCycleIterations);
+    returnRecord.define( RecordFieldId("cycleniter"),  maxCycleIterations);
     returnRecord.define( RecordFieldId("cyclethreshold"), cycleThreshold);
     returnRecord.define( RecordFieldId("loopgain"), itsLoopGain);
-    returnRecord.define( RecordFieldId("cyclefactor"), itsCycleFactor);
 
     return returnRecord;
   }

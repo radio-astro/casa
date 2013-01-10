@@ -36,7 +36,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIMinorCycleController::SIMinorCycleController(): 
                                 itsCycleNiter(0),
                                 itsCycleThreshold(0.0),
-                                itsCycleFactor(1.0),
                                 itsLoopGain(0.1),
                                 itsUpdatedModelFlag(false),
                                 itsIterDone(0),
@@ -71,11 +70,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsLoopGain;
   }
   
-  Float SIMinorCycleController::getCycleFactor()
-  {
-    return itsCycleFactor;
-  }
-
   
   void SIMinorCycleController::setUpdatedModelFlag(Bool updatedmodel)
   {
@@ -93,9 +87,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsPeakResidual;
   }
 
+  // This is the max residual across all channels/stokes (subimages).
+  // This is returned in the end-minor-cycle record.
   void SIMinorCycleController::setPeakResidual(Float peakResidual)
   {
-    itsPeakResidual = peakResidual;
+    itsPeakResidual = max( itsPeakResidual, peakResidual );
   }
 
   Float SIMinorCycleController::getIntegratedFlux()
@@ -116,6 +112,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMinorCycleController::setMaxPsfSidelobe(Float maxPsfSidelobe)
   {
     itsMaxPsfSidelobe = maxPsfSidelobe;
+  }
+
+  Int SIMinorCycleController::getIterDone()
+  {
+    return itsIterDone;
+  }
+
+  Int SIMinorCycleController::getCycleNiter()
+  {
+    return itsCycleNiter;
+  }
+
+  Float SIMinorCycleController::getCycleThreshold()
+  {
+    return itsCycleThreshold;
   }
 
   Record SIMinorCycleController::getCycleExecutionRecord() {
@@ -151,16 +162,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
 
     if (recordIn.isDefined("cycleniter"))
-      recordIn.get(RecordFieldId("cycleniter"), itsCycleNiter);
+      {recordIn.get(RecordFieldId("cycleniter"), itsCycleNiter);}
+    else
+      {throw(AipsError("cycleniter not defined in input minor-cycle controller") );}
 
     if (recordIn.isDefined("cyclethreshold")) 
-      recordIn.get(RecordFieldId("cyclethreshold"),itsCycleThreshold);
+      {recordIn.get(RecordFieldId("cyclethreshold"),itsCycleThreshold);}
+    else
+      {throw(AipsError("cyclethreshold not defined in input minor-cycle controller") );}
 
     if (recordIn.isDefined("loopgain")) 
-      recordIn.get(RecordFieldId("loopgain"), itsLoopGain);
-
-    if (recordIn.isDefined("cyclefactor"))
-      recordIn.get(RecordFieldId("cyclefactor"), itsCycleFactor);
+      {recordIn.get(RecordFieldId("loopgain"), itsLoopGain);}
+    else
+      {throw(AipsError("loopgain not defined in input minor-cycle controller") );}
 
     /* Reset the counters for the new cycle */
     itsMaxCycleIterDone = 0;

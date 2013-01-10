@@ -128,6 +128,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisDeconvolver","initMinorCycle",WHERE) );
     Record returnRecord;
 
+    os << "Initialize the Minor Cycle" << LogIO::POST;
+
     try {
       // Do the Gather if/when needed and check that images exist on disk.
       if( !checkImagesOnDisk() ) 
@@ -271,7 +273,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uInt polstep = (onepol)?1:npol;
     uInt chanstep = (onechan)?1:nchan;
 
-    os << "Number of sub-deconvolvers : " << nSubImages << LogIO::POST;
     Vector<Slicer> decSlices( nSubImages );
 
     uInt subindex=0;
@@ -328,6 +329,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Make a list of Slicers.
     Vector<Slicer> decSlices = partitionImages();
+    os << "Starting iterations on " << decSlices.nelements() << " slices for image : " << itsImageName
+       << " [ CycleThreshold=" << loopController.getCycleThreshold()
+       << ", CycleNiter=" << loopController.getCycleNiter() << " ]" << LogIO::POST;
 
     for( uInt subim=0; subim<decSlices.nelements(); subim++)
       {
