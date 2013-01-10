@@ -618,6 +618,15 @@ public:
 					    bool csvformat=false) const;
   std::vector<uint> getMoleculeIdColumnData() const;
   void setMoleculeIdColumnData(const std::vector<uint>& molids);
+  double calculateModelSelectionCriteria(const std::string& valname,
+					 const std::string& blfunc,
+					 int order,
+					 const std::vector<bool>& inMask,
+					 int whichrow,
+					 bool useLineFinder,
+					 const std::vector<int>& edge,
+					 float threshold,
+					 int chanAvgLimit);
 
 
 private:
@@ -802,6 +811,12 @@ private:
   void showProgressOnTerminal(const int nProcessed, const int nTotal, const bool showProgress=true, const int nTotalThreshold=1000);
 
   void applyChanFlag( casa::uInt whichrow, const std::vector<bool>& msk, casa::uChar flagval);
+
+  double doCalculateModelSelectionCriteria(const std::string& valname, 
+					   const std::vector<float>& spec, 
+					   const std::vector<bool>& mask, 
+					   const std::string& blfunc, 
+					   int order);
 
 };
 

@@ -2655,6 +2655,118 @@ void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, floa
   }
 }
 
+double Scantable::calculateModelSelectionCriteria(const std::string& valname, const std::string& blfunc, int order, const std::vector<bool>& inMask, int whichrow, bool useLineFinder, const std::vector<int>& edge, float threshold, int chanAvgLimit)
+{
+  if (useLineFinder) {
+    int minEdgeSize = getIFNos().size()*2;
+
+
+    int edgeSize = edge.size();
+    std::vector<int> currentEdge;
+    if (edgeSize >= 2) {
+      int idx = 0;
+      if (edgeSize > 2) {
+        if (edgeSize < minEdgeSize) {
+          throw(AipsError("Length of edge element info is less than that of IFs"));
+        }
+        idx = 2 * getIF(whichrow);
+      }
+      currentEdge.push_back(edge[idx]);
+      currentEdge.push_back(edge[idx+1]);
+    } else {
+      throw(AipsError("Wrong length of edge element"));
+    }
+
+    STLineFinder lineFinder = STLineFinder();
+    std::vector<float> sp = getSpectrum(whichrow);
+    lineFinder.setData(sp);
+    lineFinder.setOptions(threshold, 3, chanAvgLimit);
+    lineFinder.findLines(getCompositeChanMask(whichrow, inMask), currentEdge, whichrow);
+    std::vector<bool> chanMask = lineFinder.getMask();
+    
+    return doCalculateModelSelectionCriteria(valname, sp, chanMask, blfunc, order);
+
+  } else {
+    return doCalculateModelSelectionCriteria(valname, getSpectrum(whichrow), getCompositeChanMask(whichrow, inMask), blfunc, order);
+  }
+
+}
+
+double Scantable::doCalculateModelSelectionCriteria(const std::string& valname, const std::vector<float>& spec, const std::vector<bool>& mask, const std::string& blfunc, int order)
+{
+  int nparam;
+  std::vector<float> params;
+  int nClipped = 0;
+  float thresClip = 0.0;
+  int nIterClip = 0;
+  std::vector<float> res;
+  if (blfunc == "chebyshev") {
+    nparam = order + 1;
+    res = doChebyshevFitting(spec, mask, order, params, nClipped, thresClip, nIterClip, true);
+  } else if (blfunc == "sinusoid") {
+    std::vector<int> nWaves;
+    nWaves.clear();
+    for (int i = 0; i <= order; ++i) {
+      nWaves.push_back(i);
+    }
+    nparam = 2*order + 1;  // order = nwave
+    res = doSinusoidFitting(spec, mask, nWaves, params, nClipped, thresClip, nIterClip, true);
+  } else if (blfunc == "cspline") {
+    std::vector<int> pieceEdges(order+1);  //order = npiece
+    nparam = order + 3;
+    params.resize(4*order);
+    res = doCubicSplineFitting(spec, mask, order, pieceEdges, params, nClipped, thresClip, nIterClip, true);
+  } else {
+    throw(AipsError("blfunc must be chebyshev, cspline or sinusoid."));
+  }
+
+  double msq = 0.0;
+  int nusedchan = 0;
+  int nChan = res.size();
+  for (int i = 0; i < nChan; ++i) {
+    if (mask[i]) {
+      msq += (double)res[i]*(double)res[i];
+      nusedchan++;
+    }
+  }
+  if (nusedchan == 0) {
+    throw(AipsError("all channels masked."));
+  }
+  msq /= (double)nusedchan;
+
+  nparam++;  //add 1 for sigma of Gaussian distribution
+  const double PI = 6.0 * asin(0.5); // PI (= 3.141592653...)
+
+  if (valname.find("aic") == 0) {
+    // Original Akaike Information Criterion (AIC)
+    double aic = nusedchan * (log(2.0 * PI * msq) + 1.0) + 2.0 * nparam;
+
+    // Corrected AIC by Sugiura(1978)
+    if (valname == "aicc") {
+      if (nusedchan - nparam - 1 <= 0) {
+	throw(AipsError("channel size is too small to calculate AICc."));
+      }
+      aic += 2.0*nparam*(nparam + 1)/(double)(nusedchan - nparam - 1);
+    }
+
+    return aic;
+
+  } else if (valname == "bic") {
+    // Bayesian Information Criterion (BIC)
+    double bic = nusedchan * log(msq) + nparam * log((double)nusedchan);
+    return bic;
+
+  } else if (valname == "gcv") {
+    // Generalised Cross Validation
+    double x = 1.0 - (double)nparam / (double)nusedchan;
+    double gcv = msq / (x * x);
+    return gcv;
+
+  } else {
+    throw(AipsError("valname must be aic, aicc, bic or gcv."));
+  }
+}
+
 void Scantable::autoChebyshevBaseline(const std::vector<bool>& mask, int order, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
 {
   try {
@@ -2750,6 +2862,23 @@ double Scantable::getChebyshevPolynomial(int n, double x) {
 double Scantable::getChebyshevPolynomial(int n, double x) {
   if ((x < -1.0)||(x > 1.0)) {
     throw(AipsError("out of definition range (-1 <= x <= 1)."));
+  } else if (x == 1.0) {
+    return 1.0;
+  } else if (x == 0.0) {
+    double res;
+    if (n%2 == 0) {
+      if (n%4 == 0) {
+	res = 1.0;
+      } else {
+	res = -1.0;
+      }
+    } else {
+      res = 0.0;
+    }
+    return res;
+  } else if (x == -1.0) {
+    double res = (n%2 == 0 ? 1.0 : -1.0);
+    return res;
   } else if (n < 0) {
     throw(AipsError("the order must be zero or positive."));
   } else if (n == 0) {
@@ -2765,7 +2894,7 @@ double Scantable::getChebyshevPolynomial(int n, double x) {
 	  c *= (double)(n-2*m+i)/(double)i;
 	}
       }
-      res += (m%2 == 0 ? 1.0 : -1.0)*(double)n/(double)(n-m)*pow(2.0*x, (double)(n-2*m-1))/2.0*c;
+      res += (m%2 == 0 ? 1.0 : -1.0)*(double)n/(double)(n-m)*pow(2.0*x, (double)(n-2*m))/2.0*c;
     }
     return res;
   }

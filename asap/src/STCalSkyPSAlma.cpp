@@ -1,5 +1,5 @@
 //
-// C++ Implementation: STCalTsys
+// C++ Implementation: STCalSkyPSAlma
 //
 // Description:
 //
@@ -12,30 +12,28 @@
 
 #include <vector>
 #include "STSelector.h"
-#include "STCalTsys.h"
+#include "STCalSkyPSAlma.h"
 #include "RowAccumulator.h"
 #include "STIdxIter.h"
 #include "STDefs.h"
 #include <atnf/PKSIO/SrcType.h>
 
-#include <casa/Arrays/ArrayMath.h>
-
 using namespace std;
 using namespace casa;
 
 namespace asap {
-  STCalTsys::STCalTsys(CountedPtr<Scantable> &s, vector<int> &iflist)
-    : STCalibration(s),
-      iflist_(iflist)
+STCalSkyPSAlma::STCalSkyPSAlma(CountedPtr<Scantable> &s)
+  : STCalibration(s)
 {
-  applytable_ = new STCalTsysTable(*s);
+  applytable_ = new STCalSkyTable(*s, "PSALMA");
 }
 
-void STCalTsys::calibrate()
+void STCalSkyPSAlma::calibrate()
 {
+  vector<int> types(1,SrcType::PSOFF);
   STSelector selOrg = scantable_->getSelection();
   STSelector sel;
-  sel.setIFs(iflist_);
+  sel.setTypes(types);
   scantable_->setSelection(sel);
   
   fillCalTable();
@@ -43,7 +41,7 @@ void STCalTsys::calibrate()
   scantable_->setSelection(selOrg);
 }
 
-void STCalTsys::fillCalTable()
+void STCalSkyPSAlma::fillCalTable()
 {
   RowAccumulator acc(W_TINT);
   
@@ -62,7 +60,7 @@ void STCalTsys::fillCalTable()
   Vector<Float> elevation = ecol->getColumn();
   delete ecol;
 
-  ROArrayColumn<Float> specCol(scantable_->table(), "TSYS");
+  ROArrayColumn<Float> specCol(scantable_->table(), "SPECTRA");
   ROArrayColumn<uChar> flagCol(scantable_->table(), "FLAGTRA");
   ROScalarColumn<uInt> freqidCol(scantable_->table(), "FREQ_ID");
 
@@ -112,7 +110,7 @@ void STCalTsys::fillCalTable()
 
       // check time gap
       double gap = 2.0 * timeSep[i] / (intervalSec[jrow] + intervalSec[irow]);
-      if ( gap > 5.0 ) {
+      if ( gap > 1.1 ) {
         if ( acc.state() ) {
           acc.replaceNaN() ;
 //           const Vector<Bool> &msk = acc.getMask();
@@ -124,7 +122,7 @@ void STCalTsys::fillCalTable()
 //           }
           timeCen /= (Double)count * 86400.0; // sec->day
           elCen /= (Float)count;
-          STCalTsysTable *p = dynamic_cast<STCalTsysTable *>(&(*applytable_));
+          STCalSkyTable *p = dynamic_cast<STCalSkyTable *>(&(*applytable_));
           p->appenddata(0, 0, current[2], current[0], current[1],
                         freqidCol(irow), timeCen, elCen, acc.getSpectrum());
         }

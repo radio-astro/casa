@@ -4,7 +4,7 @@
 // Description:
 //
 //
-// Author: Takeshi Nakazato
+// Author: Takeshi Nakazato <takeshi.nakazato@nao.ac.jp> (C) 2012
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -14,6 +14,8 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/TableRecord.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/ExprNode.h>
 #include <measures/TableMeasures/TableMeasDesc.h>
 #include <measures/TableMeasures/TableMeasRefDesc.h>
 #include <measures/TableMeasures/TableMeasValueDesc.h>
@@ -34,6 +36,7 @@ STApplyTable::STApplyTable( const Scantable& parent, const casa::String& name )
   td.addColumn(ScalarColumnDesc<uInt>("BEAMNO"));
   td.addColumn(ScalarColumnDesc<uInt>("IFNO"));
   td.addColumn(ScalarColumnDesc<uInt>("POLNO"));
+  td.addColumn(ScalarColumnDesc<uInt>("FREQ_ID"));
   td.addColumn(ScalarColumnDesc<Double>("TIME"));
   TableMeasRefDesc measRef(MEpoch::UTC); // UTC as default
   TableMeasValueDesc measVal(td, "TIME");
@@ -52,6 +55,13 @@ STApplyTable::STApplyTable( const Scantable& parent, const casa::String& name )
 
   table_.tableInfo().setType("ApplyTable");
 
+  originaltable_ = table_;
+}
+
+STApplyTable::STApplyTable(const String &name)
+{
+  table_ = Table(name, Table::Update);
+  attachBaseColumns();
   originaltable_ = table_;
 }
 
@@ -75,11 +85,14 @@ void STApplyTable::attachBaseColumns()
   polCol_.attach(table_, "POLNO");
   timeCol_.attach(table_, "TIME");
   timeMeasCol_.attach(table_, "TIME");
+  freqidCol_.attach(table_, "FREQ_ID");
 }
 
-void STApplyTable::setSelection(STSelector &sel)
+void STApplyTable::setSelection(STSelector &sel, bool sortByTime)
 {
   table_ = sel.apply(originaltable_);
+  if (sortByTime)
+    table_.sort("TIME", Sort::Descending);
   attach();
   sel_ = sel;
 }
@@ -93,7 +106,7 @@ void STApplyTable::unsetSelection()
 
 void STApplyTable::setbasedata(uInt irow, uInt scanno, uInt cycleno,
                                uInt beamno, uInt ifno, uInt polno, 
-                               Double time)
+                               uInt freqid, Double time)
 {
   scanCol_.put(irow, scanno);
   cycleCol_.put(irow, cycleno);
@@ -101,6 +114,63 @@ void STApplyTable::setbasedata(uInt irow, uInt scanno, uInt cycleno,
   ifCol_.put(irow, ifno);
   polCol_.put(irow, polno);
   timeCol_.put(irow, time);
+  freqidCol_.put(irow, freqid);
 }
 
+void STApplyTable::save(const String &name)
+{
+  table_.deepCopy(name, Table::New);
+}
+
+String STApplyTable::caltype()
+{
+  if (table_.keywordSet().isDefined("ApplyType")) {
+    return table_.keywordSet().asString("ApplyType");
+  }
+  else 
+    return "NONE";
+}
+
+STCalEnum::CalType  STApplyTable::getCalType(const String &name)
+{
+  Table t(name, Table::Old);
+  return stringToType(t.keywordSet().asString("ApplyType"));
+}
+
+STCalEnum::CalType STApplyTable::getCalType(CountedPtr<STApplyTable> tab)
+{
+  return stringToType(tab->caltype());
+}
+
+STCalEnum::CalType STApplyTable::getCalType(STApplyTable *tab)
+{
+  return stringToType(tab->caltype());
+}
+
+STCalEnum::CalType STApplyTable::stringToType(const String &caltype)
+{
+  if (caltype == "CALSKY_PSALMA")
+    return STCalEnum::CalPSAlma;
+  else if (caltype == "CALTSYS")
+    return STCalEnum::CalTsys;
+  else
+    return STCalEnum::NoType;
+}
+
+Block<Double> STApplyTable::getFrequenciesRow(uInt id)
+{
+  const TableRecord &rec = table_.keywordSet();
+  rec.print(os_.output());
+  os_ << LogIO::POST;
+  Table ftab = rec.asTable("FREQUENCIES");
+  Table t = ftab(ftab.col("ID") == id);
+  ROTableColumn col(t, "REFPIX");
+  Block<Double> r(3);
+  r[0] = col.asdouble(0);
+  col.attach(t, "REFVAL");
+  r[1] = col.asdouble(0);
+  col.attach(t, "INCREMENT");
+  r[2] = col.asdouble(0);
+  return r;
+}
 }

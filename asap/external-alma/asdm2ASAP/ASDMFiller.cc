@@ -64,6 +64,7 @@ void ASDMFiller::fill()
 
   // header
   fillHeader() ;
+  const STHeader hdr = table_->getHeader();
 
   // set Frame for FREQUENCIES table
   string sFreqFrame = reader_->getFrame() ;
@@ -255,7 +256,7 @@ void ASDMFiller::fill()
             reader_->getFrequency( refpix, refval, incr, freqref ) ;
             refval = (double)toLSRK( casa::Double(refval), 
                                      String(freqref),
-                                     mjd,
+                                     hdr.utc,
                                      antpos,
                                      //direction,
                                      srcDir,

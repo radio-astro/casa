@@ -320,7 +320,8 @@ public:
   { return table_->getMoleculeIdColumnData(); }
   void setMoleculeIdColumnData(const std::vector<uint>& molids)
   { table_->setMoleculeIdColumnData(molids); }
-
+  double calculateModelSelectionCriteria(const std::string& valname, const std::string& blfunc, int order, const std::vector<bool>& inMask, int whichrow, bool useLineFinder, const std::vector<int>& edge, float threshold, int chanAvgLimit)
+  { return table_->calculateModelSelectionCriteria(valname, blfunc, order, inMask, whichrow, useLineFinder, edge, threshold, chanAvgLimit); }
 
 private:
   casa::CountedPtr<Scantable> table_;

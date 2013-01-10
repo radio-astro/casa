@@ -37,8 +37,7 @@
 #include <scimath/Functionals/CompiledFunction.h>
 #include <scimath/Functionals/CompoundFunction.h>
 #include <scimath/Functionals/Gaussian1D.h>
-//#include <scimath/Functionals/Lorentzian1D.h>
-#include "Lorentzian1D.h"
+#include <scimath/Functionals/Lorentzian1D.h>
 #include <scimath/Functionals/Sinusoid1D.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/AutoDiff.h>

@@ -59,6 +59,7 @@ class asapplotter:
         self._margins = self.set_margin(refresh=False)
         self._legendloc = None
         ### scantable plot settings
+        self._plotmode = "spectra"
         self._panelling = None
         self._stacking = None
         self.set_panelling()
@@ -110,6 +111,8 @@ class asapplotter:
                               linestyle=0,linestyles=self._linestyles)
         self._plotter.legend(self._legendloc)
 
+    ### TODO: it's probably better to define following two methods in
+    ###       backend dependent class.
     def _new_custombar(self):
         backend=matplotlib.get_backend()
         if not self._visible:
@@ -128,6 +131,7 @@ class asapplotter:
         elif self._plotter.figmgr.casabar:
             return True
         return False
+    ### end of TODO
 
     def _assert_plotter(self,action="status",errmsg=None):
         """
@@ -274,7 +278,7 @@ class asapplotter:
         return []
 
 
-    ### Forwards to matplotlib axes ###
+    ### Forwards to methods in matplotlib axes ###
     def text(self, *args, **kwargs):
         self._assert_plotter(action="reload")
         if kwargs.has_key("interactive"):
@@ -413,8 +417,8 @@ class asapplotter:
             if (self._data is not None) and (scan != self._data):
                 del self._data
                 msg = "A new scantable is set to the plotter. "\
-                      "The masks and data selections are reset."
-                asaplog.push( msg )
+                      "The masks, data selections, and labels are reset."
+                asaplog.push(msg)
             self._data = scan
             # reset
             self._reset()
@@ -512,6 +516,8 @@ class asapplotter:
         """
         self._rows = rows
         self._cols = cols
+        # new layout is set. need to reset counters for multi page plotting
+        self._reset_counters()
         if refresh and self._data: self.plot(self._data)
         return
 
@@ -903,7 +909,7 @@ class asapplotter:
         if not self._data:
             msg = "Can only set mask after a first call to plot()"
             raise RuntimeError(msg)
-        if len(mask):
+        if (mask is not None) and len(mask):
             if isinstance(mask, list) or isinstance(mask, tuple):
                 self._usermask = array(mask)
             else:
@@ -924,11 +930,19 @@ class asapplotter:
 
     ### Reset methods ###
     def _reset(self):
-        self._usermask = []
-        self._usermaskspectra = None
-        self._offset = None
+        """Reset method called when new data is set"""
+        # reset selections and masks
         self.set_selection(None, False)
+        self.set_mask(None, None, False)
+        # reset offset
+        self._offset = None
+        # reset header
         self._reset_header()
+        # reset labels
+        self._lmap = None # related to stack
+        self.set_title(None, None, False)
+        self.set_ordinate(None, None, False)
+        self.set_abcissa(None, None, False)
 
     def _reset_header(self):
         self._headtext={'string': None, 'textobj': None}
@@ -936,8 +950,8 @@ class asapplotter:
     def _reset_counter(self):
         self._startrow = 0
         self._ipanel = -1
-        self._reset_header()
         self._panelrows = []
+        self._reset_header()
         if self.casabar_exists():
             self._plotter.figmgr.casabar.set_pagecounter(1)
 
@@ -960,6 +974,7 @@ class asapplotter:
             NO checking is done that the abcissas of the scantable
             are consistent e.g. all 'channel' or all 'velocity' etc.
         """
+        self._plotmode = "spectra"
         if not self._data and not scan:
             msg = "Input is not a scantable"
             raise TypeError(msg)
@@ -1028,8 +1043,10 @@ class asapplotter:
         ganged = rcParams['plotter.ganged']
         if self._panelling == 'i':
             ganged = False
-        if not firstpage:
-            # not the first page just clear the axis
+        if (not firstpage) and \
+               self._plotter._subplotsOk(self._rows, self._cols, n):
+            # Not the first page and subplot number is ok.
+            # Just clear the axis
             nx = self._plotter.cols
             ipaxx = n - nx - 1 #the max panel id to supress x-label
             for ip in xrange(len(self._plotter.subplots)):
@@ -1303,6 +1320,7 @@ class asapplotter:
         """
         plot azimuth and elevation versus time of a scantable
         """
+        self._plotmode = "azel"
         visible = rcParams['plotter.gui']
         from matplotlib import pylab as PL
         from matplotlib.dates import DateFormatter
@@ -1310,13 +1328,11 @@ class asapplotter:
         from matplotlib.dates import HourLocator, MinuteLocator,SecondLocator, DayLocator
         from matplotlib.ticker import MultipleLocator
         from numpy import array, pi
-        if PL.gcf() == self._plotter.figure:
+        if self._plotter and (PL.gcf() == self._plotter.figure):
             # the current figure is ASAP plotter. Use mpl plotter
             figids = PL.get_fignums()
-            if figids[-1] > 0:
-                PL.figure(figids[-1])
-            else:
-                PL.figure(1)
+            PL.figure(max(figids[-1],1))
+
         if not visible or not self._visible:
             PL.ioff()
             from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -1422,6 +1438,7 @@ class asapplotter:
             projection : projection type either
                          ''(no projection [deg])|'coord'(not implemented)
         """
+        self._plotmode = "pointing"
         from numpy import array, pi
         from asap import scantable
         # check for scantable
@@ -1543,13 +1560,11 @@ class asapplotter:
         visible = rcParams['plotter.gui']
         from matplotlib import pylab as PL
         from numpy import array, pi
-        if PL.gcf() == self._plotter.figure:
+        if self._plotter and (PL.gcf() == self._plotter.figure):
             # the current figure is ASAP plotter. Use mpl plotter
             figids = PL.get_fignums()
-            if figids[-1] > 0:
-                PL.figure(figids[-1])
-            else:
-                PL.figure(1)
+            PL.figure(max(figids[-1],1))
+
         if not visible or not self._visible:
             PL.ioff()
             from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -1587,6 +1602,7 @@ class asapplotter:
     # plotting in time is not yet implemented..
     @asaplog_post_dec
     def plottp(self, scan=None):
+        self._plotmode = "totalpower"
         from asap import scantable
         if not self._data and not scan:
             msg = "Input is not a scantable"
@@ -1750,18 +1766,19 @@ class asapplotter:
 
     # plot spectra by pointing
     @asaplog_post_dec
-    def plotgrid(self, scan=None,center=None,spacing=None,rows=None,cols=None):
+    def plotgrid(self, scan=None,center="",spacing=[],rows=None,cols=None):
         """
         Plot spectra based on direction.
         
         Parameters:
             scan:      a scantable to plot
-            center:    the grid center direction (a list) of plots in the
-                       unit of DIRECTION column.
+            center:    the grid center direction (a string)
                        (default) the center of map region
+                       (example) 'J2000 19h30m00s -25d00m00s'
             spacing:   a list of horizontal (R.A.) and vertical (Dec.)
-                       spacing in the unit of DIRECTION column.
+                       spacing.
                        (default) Calculated by the extent of map region and
+                       (example) ['1arcmin', '1arcmin']
                        the number of rows and cols to cover
             rows:      number of panels (grid points) in horizontal direction
             cols:      number of panels (grid points) in vertical direction
@@ -1774,6 +1791,7 @@ class asapplotter:
         Only the first spectrum is plotted in case there are multiple
         spectra which belong to a grid.
         """
+        self._plotmode = "grid"
         from asap import scantable
         from numpy import array, ma, cos
         if not self._data and not scan:
@@ -1784,100 +1802,13 @@ class asapplotter:
             del scan
 
         # Rows and cols
-        if rows:
-            self._rows = int(rows)
-        else:
-            msg = "Number of rows to plot are not specified. "
-            if self._rows:
-                msg += "Using previous value = %d" % (self._rows)
-                asaplog.push(msg)
-            else:
-                self._rows = 1
-                msg += "Setting rows = %d" % (self._rows)
-                asaplog.post()
-                asaplog.push(msg)
-                asaplog.post("WARN")
-        if cols:
-            self._cols = int(cols)
-        else:
-            msg = "Number of cols to plot are not specified. "
-            if self._cols:
-                msg += "Using previous value = %d" % (self._cols)
-                asaplog.push(msg)
-            else:
-                self._cols = 1
-                msg += "Setting cols = %d" % (self._cols)
-                asaplog.post()
-                asaplog.push(msg)
-                asaplog.post("WARN")
+        if (self._rows is None):
+            rows = max(1, rows)
+        if (self._cols is None):
+            cols = max(1, cols)
+        self.set_layout(rows,cols,False)
 
-        # Center and spacing
-        dirarr = array(self._data.get_directionval()).transpose()
-        print "Pointing range: (x, y) = (%f - %f, %f - %f)" %\
-              (dirarr[0].min(),dirarr[0].max(),dirarr[1].min(),dirarr[1].max())
-        dircent = [0.5*(dirarr[0].max() + dirarr[0].min()),
-                   0.5*(dirarr[1].max() + dirarr[1].min())]
-        del dirarr
-        if center is None:
-            #asaplog.post()
-            asaplog.push("Grid center is not specified. Automatically calculated from pointing center.")
-            #asaplog.post("WARN")
-            #center = [dirarr[0].mean(), dirarr[1].mean()]
-            center = dircent
-        elif (type(center) in (list, tuple)) and len(center) > 1:
-            from numpy import pi
-            # make sure center_x is in +-pi of pointing center
-            # (assumes dirs are in rad)
-            rotnum = round(abs(center[0] - dircent[0])/(2*pi))
-            if center[0] < dircent[0]: rotnum *= -1
-            cenx = center[0] - rotnum*2*pi
-            center = [cenx, center[1]]
-        else:
-            msg = "Direction of grid center should be a list of float (R.A., Dec.)"
-            raise ValueError, msg
-        asaplog.push("Grid center: (%f, %f) " % (center[0],center[1]))
-
-        if spacing is None:
-            #asaplog.post()
-            asaplog.push("Grid spacing not specified. Automatically calculated from map coverage")
-            #asaplog.post("WARN")
-            # automatically get spacing
-            dirarr = array(self._data.get_directionval()).transpose()
-            wx = 2. * max(abs(dirarr[0].max()-center[0]),
-                          abs(dirarr[0].min()-center[0]))
-            wy = 2. * max(abs(dirarr[1].max()-center[1]),
-                          abs(dirarr[1].min()-center[1]))
-            ## slightly expand area to plot the edges
-            #wx *= 1.1
-            #wy *= 1.1
-            xgrid = wx/max(self._cols-1.,1.)
-            #xgrid = wx/float(max(self._cols,1.))
-            xgrid *= cos(center[1])
-            ygrid = wy/max(self._rows-1.,1.)
-            #ygrid = wy/float(max(self._rows,1.))
-            # single pointing (identical R.A. and/or Dec. for all spectra.)
-            if xgrid == 0:
-                xgrid = 1.
-            if ygrid == 0:
-                ygrid = 1.
-            # spacing should be negative to transpose plot
-            spacing = [- xgrid, - ygrid]
-            del dirarr, xgrid, ygrid
-        #elif isinstance(spacing, str):
-        #    # spacing is a quantity
-        elif (type(spacing) in (list, tuple)) and len(spacing) > 1:
-            for i in xrange(2):
-                val = spacing[i]
-                if not isinstance(val, float):
-                    raise TypeError("spacing should be a list of float")
-                if val > 0.:
-                    spacing[i] = -val
-            spacing = spacing[0:2]
-        else:
-            msg = "Invalid spacing."
-            raise TypeError(msg)
-        asaplog.push("Spacing: (%f, %f) (projected)" % (spacing[0],spacing[1]))
-
+        # Select the first IF, POL, and BEAM for plotting
         ntotpl = self._rows * self._cols
         ifs = self._data.getifnos()
         if len(ifs) > 1:
@@ -1904,7 +1835,8 @@ class asapplotter:
             asaplog.post()
             asaplog.push(msg)
             asaplog.post("WARN")
-        
+
+        # Prepare plotter
         self._assert_plotter(action="reload")
         self._plotter.hold()
         self._reset_counter()
@@ -1920,8 +1852,18 @@ class asapplotter:
         # Plot helper
         from asap._asap import plothelper as plhelper
         ph = plhelper(self._data)
-        ph.set_gridval(self._cols, self._rows, spacing[0], spacing[1],
-                          center[0], center[1], epoch="J2000", projname="SIN")
+        #ph.set_gridval(self._cols, self._rows, spacing[0], spacing[1],
+        #                  center[0], center[1], epoch="J2000", projname="SIN")
+        if type(spacing) in (list, tuple, array):
+            if len(spacing) == 0:
+                spacing = ["", ""]
+            elif len(spacing) == 1:
+                spacing = [spacing[0], spacing[0]]
+        else:
+            spacing = [spacing, spacing]
+        ph.set_grid(self._cols, self._rows, spacing[0], spacing[1], \
+                    center, projname="SIN")
+
         # Actual plot
         npl = 0
         for irow in range(self._data.nrow()):

@@ -550,7 +550,10 @@ casa::Bool ASDMReader::setMainRow( casa::uInt configDescId, casa::uInt fieldId )
 
   Tag configDescTag( (unsigned int)configDescId, TagType::ConfigDescription ) ;
   Tag fieldTag( (unsigned int)fieldId, TagType::Field ) ;
-  mainRow_ = casa::Vector<MainRow *>( *(asdm_->getMain().getByContext( configDescTag, fieldTag ) ) ) ;
+  vector<MainRow *> *rows = asdm_->getMain().getByContext( configDescTag, fieldTag );
+  if (rows == 0)
+    return false;
+  mainRow_ = casa::Vector<MainRow *>( *rows ) ;
   
   return true ;
 }

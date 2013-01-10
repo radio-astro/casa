@@ -1,5 +1,5 @@
 //
-// C++ Interface: STCalTsys
+// C++ Interface: STCalSkyPSAlma
 //
 // Description:
 //
@@ -9,11 +9,10 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-#ifndef ASAP_CALTSYS_H
-#define ASAP_CALTSYS_H
+#ifndef ASAP_CALSKY_PS_ALMA_H
+#define ASAP_CALSKY_PS_ALMA_H
 
 #include <memory>
-#include <vector>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
@@ -27,7 +26,7 @@
 #include "STDefs.h"
 #include "STApplyTable.h"
 #include "STCalibration.h"
-#include "STCalTsysTable.h"
+#include "STCalSkyTable.h"
 
 
 namespace asap {
@@ -36,17 +35,15 @@ namespace asap {
  * Calibration operations on Scantable objects
  * @author TakeshiNakazato
  */
-class STCalTsys : public STCalibration {
+class STCalSkyPSAlma : public STCalibration {
 public:
-  STCalTsys(casa::CountedPtr<Scantable> &s, vector<int> &iflist);
+  STCalSkyPSAlma(casa::CountedPtr<Scantable> &s);
 
   virtual void calibrate();
 
-  ~STCalTsys() {;}
+  ~STCalSkyPSAlma() {;}
 private:
   void fillCalTable();
-
-  vector<int> iflist_;
 };
 
 }

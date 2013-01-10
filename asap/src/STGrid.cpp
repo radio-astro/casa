@@ -2151,6 +2151,7 @@ ScantableWrapper STGrid2::getResultAsScantable( int tp )
     tout = s->table().rwKeywordSet().asTable(subt[i]) ;
     tin = dataList_[0].getCP()->table().rwKeywordSet().asTable(subt[i]) ;
     TableCopy::copyRows( tout, tin ) ;
+    tout.rwKeywordSet() = tin.rwKeywordSet();
   }
   fillTable( s->table() ) ;
   return sw ;

@@ -2538,6 +2538,82 @@ class scantable(Scantable):
             msg = 'wrong value given for addwn/rejwn'
             raise RuntimeError(msg)
 
+    @asaplog_post_dec
+    def calc_aic(self, value=None, blfunc=None, order=None, mask=None,
+                 whichrow=None, uselinefinder=None, edge=None,
+                 threshold=None, chan_avg_limit=None):
+        """\
+        Calculates and returns model selection criteria for a specified
+        baseline model and a given spectrum data. 
+        Available values include Akaike Information Criterion (AIC), the
+        corrected Akaike Information Criterion (AICc) by Sugiura(1978),
+        Bayesian Information Criterion (BIC) and the Generalised Cross
+        Validation (GCV). 
+
+        Parameters:
+            value:         name of model selection criteria to calculate.
+                           available ones include 'aic', 'aicc', 'bic' and
+                           'gcv'. default is 'aicc'.
+            blfunc:        baseline function name. available ones include 
+                           'chebyshev', 'cspline' and 'sinusoid'.
+                           default is 'chebyshev'.
+            order:         parameter for basline function. actually stands for
+                           order of polynomial (order) for 'chebyshev',
+                           number of spline pieces (npiece) for 'cspline' and
+                           maximum wave number for 'sinusoid', respectively.
+                           default is 5 (which is also the default order value
+                           for [auto_]chebyshev_baseline()).
+            mask:          an optional mask. default is [].
+            whichrow:      row number. default is 0 (the first row)
+            uselinefinder: use sd.linefinder() to flag out line regions
+                           default is True.
+            edge:           an optional number of channel to drop at
+                            the edge of spectrum. If only one value is
+                            specified, the same number will be dropped
+                            from both sides of the spectrum. Default
+                            is to keep all channels. Nested tuples
+                            represent individual edge selection for
+                            different IFs (a number of spectral channels
+                            can be different)
+                            default is (0, 0).
+            threshold:      the threshold used by line finder. It is
+                            better to keep it large as only strong lines
+                            affect the baseline solution.
+                            default is 3.
+            chan_avg_limit: a maximum number of consequtive spectral
+                            channels to average during the search of
+                            weak and broad lines. The default is no
+                            averaging (and no search for weak lines).
+                            If such lines can affect the fitted baseline
+                            (e.g. a high order polynomial is fitted),
+                            increase this parameter (usually values up
+                            to 8 are reasonable). Most users of this
+                            method should find the default value sufficient.
+                            default is 1.
+
+        Example:
+            aic = scan.calc_aic(blfunc='chebyshev', order=5, whichrow=0)
+        """
+
+        try:
+            varlist = vars()
+
+            if value          is None: value          = 'aicc'
+            if blfunc         is None: blfunc         = 'chebyshev'
+            if order          is None: order          = 5
+            if mask           is None: mask           = []
+            if whichrow       is None: whichrow       = 0
+            if uselinefinder  is None: uselinefinder  = True
+            if edge           is None: edge           = (0, 0)
+            if threshold      is None: threshold      = 3
+            if chan_avg_limit is None: chan_avg_limit = 1
+
+            return self._calc_aic(value, blfunc, order, mask,
+                                  whichrow, uselinefinder, edge,
+                                  threshold, chan_avg_limit)
+            
+        except RuntimeError, e:
+            raise_fitting_failure_exception(e)
 
     @asaplog_post_dec
     def sinusoid_baseline(self, insitu=None, mask=None, applyfft=None, 

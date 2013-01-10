@@ -1,5 +1,5 @@
 //
-// C++ Interface: STCalTsys
+// C++ Interface: STCalibration
 //
 // Description:
 //
@@ -9,11 +9,10 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-#ifndef ASAP_CALTSYS_H
-#define ASAP_CALTSYS_H
+#ifndef ASAPSTCALIBRATION_H
+#define ASAPSTCALIBRATION_H
 
 #include <memory>
-#include <vector>
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
@@ -22,12 +21,9 @@
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
-#include "RowAccumulator.h"
 #include "Scantable.h"
 #include "STDefs.h"
 #include "STApplyTable.h"
-#include "STCalibration.h"
-#include "STCalTsysTable.h"
 
 
 namespace asap {
@@ -36,17 +32,18 @@ namespace asap {
  * Calibration operations on Scantable objects
  * @author TakeshiNakazato
  */
-class STCalTsys : public STCalibration {
+class STCalibration {
 public:
-  STCalTsys(casa::CountedPtr<Scantable> &s, vector<int> &iflist);
+  STCalibration(casa::CountedPtr<Scantable> &s);
 
-  virtual void calibrate();
+  virtual void calibrate() = 0;
 
-  ~STCalTsys() {;}
-private:
-  void fillCalTable();
+  virtual ~STCalibration() {;}
 
-  vector<int> iflist_;
+  void save(casa::String name) {applytable_->save(name);}
+protected:
+  casa::CountedPtr<Scantable> scantable_;
+  casa::CountedPtr<STApplyTable> applytable_; 
 };
 
 }

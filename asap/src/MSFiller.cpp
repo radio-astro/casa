@@ -360,7 +360,8 @@ public:
     if ( header.utc == 0.0 ) {
       Vector<MEpoch> amp ;
       getArrayMeas( "TIME_RANGE", (uInt)columnValue, obstab, amp ) ;
-      header.utc = amp[0].get( "d" ).getValue() ;
+      obsEpoch = amp[0];
+      header.utc = obsEpoch.get( "d" ).getValue() ;
     }
     if ( header.antennaname.empty() )
       getScalar( "TELESCOPE_NAME", (uInt)columnValue, obstab, header.antennaname ) ;
@@ -434,11 +435,12 @@ public:
     Bool iswvr = (Bool)(nchan == 4) ;
     map<Int,uInt>::iterator iter = ifmap.find( spwId ) ;
     if ( iter == ifmap.end() ) {
-      MEpoch me ;
-      getScalarMeas( "TIME", recordNo, table, me ) ;
-      spectralSetup( spwId, me, antpos, sourceDir, 
-                     freqId, nchan, 
-                     freqref, reffreq, bandwidth ) ;
+      //MEpoch me ;
+      //getScalarMeas( "TIME", recordNo, table, me ) ;
+      //spectralSetup( spwId, me, antpos, sourceDir, 
+      spectralSetup(spwId, obsEpoch, antpos, sourceDir, 
+                    freqId, nchan, 
+                    freqref, reffreq, bandwidth);
       ifmap.insert( pair<Int,uInt>(spwId,freqId) ) ;
     }
     else {
@@ -1264,6 +1266,7 @@ private:
   MDirection sourceDir;
   MPosition antpos;
   MEpoch currentTime;
+  MEpoch obsEpoch;
   MeasFrame mf;
   MDirection::Convert toj2000;
   MDirection::Convert toazel;

@@ -22,6 +22,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
 #include "ScantableWrapper.h"
+#include "Scantable.h"
 
 namespace asap {
 
@@ -36,7 +37,7 @@ public:
 
   virtual ~PlotHelper();
   /**
-   * Set scantable for automatic resolution of grid parameter
+   * Set scantable
    **/
   void setScantable( const ScantableWrapper &s ) ;
 
@@ -51,18 +52,40 @@ public:
   /**
    * Set grid parameters for plot panel (by quantity)
    **/
-/*   void setGridParam(const int nx, const int ny,  */
-/* 		    const string cellx="", const string celly="", */
-/* 		    string center="", const string projname="SIN") ; */
+  void setGridParam(const int nx, const int ny,
+		    const string cellx="", const string celly="",
+		    string center="", const string projname="SIN") ;
 
   /**
-   * Get Pixel position of a row
+   * Get Pixel position of a row in the scantable
    **/
   vector<double> getGridPixel(const int whichrow=0);
 
- private:
-  casa::DirectionCoordinate *dircoord_;
-  ScantableWrapper data_;
+  /**
+   * Get the reference direction of grid coordinate (grid center)
+   **/
+  string getGridRef();
+
+  /**
+   * Get the cell size (>0) of the grid coordinate (in radian)
+   **/
+  vector<double> getGridCellVal();
+
+
+private:
+  /** Generate temporal coordinate from the DIRECTION column of a scantable**/
+  casa::DirectionCoordinate getSTCoord(const int nx, const int ny,
+				       const casa::Projection::Type ptype);
+
+  /** Generation of direction coordinate **/
+  void setupCoord(const casa::MDirection::Types mdt,
+		  const casa::Projection::Type pjt,
+		  const casa::Double centx, const casa::Double centy,
+		  const casa::Double incx, const casa::Double incy,
+		  const casa::Double refx, const casa::Double refy);
+
+  casa::DirectionCoordinate *dircoord_p;
+  casa::CountedPtr<Scantable> data_p;
 
 };
 

@@ -8,7 +8,7 @@ import matplotlib
 
 from matplotlib.figure import Figure, Text
 from matplotlib.font_manager import FontProperties as FP
-from numpy import sqrt
+from numpy import sqrt, ceil
 from matplotlib import rc, rcParams
 from matplotlib.ticker import OldScalarFormatter
 from matplotlib import _pylab_helpers
@@ -99,6 +99,33 @@ class asaplotbase:
                    (self.figmgr == _pylab_helpers.Gcf.get_fig_manager(figid))
         return False
 
+    def _subplotsOk(self, rows, cols, npanel=0):
+        """
+        Check if the axes in subplots are actually the ones plotted on
+        the figure. Returns a bool.
+        This method is to detect manual layout changes using mpl methods.
+        """
+        # compare with user defined layout
+        if (rows is not None) and (rows != self.rows):
+            return False
+        if (cols is not None) and (cols != self.cols):
+            return False
+        # check number of subplots
+        figaxes = self.figure.get_axes()
+        np = self.rows*self.cols
+        if npanel > np:
+            return False
+        if len(figaxes) != np:
+            return False
+        if len(self.subplots) != len(figaxes):
+            return False
+        # compare axes instance in this class and on the plotter
+        ok = True
+        for ip in range(np):
+            if self.subplots[ip]['axes'] != figaxes[ip]:
+                ok = False
+                break
+        return ok
 
     ### Delete artists ###
     def clear(self):

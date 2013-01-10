@@ -1,17 +1,17 @@
 //
-// C++ Interface: STCalSky
+// C++ Interface: STCalSkyTable
 //
 // Description:
 //
 // ApplyTable for sky calibration.
 //
-// Author: Takeshi Nakazato 
+// Author: Takeshi Nakazato <takeshi.nakazato@nao.ac.jp> (C) 2012
 //
 // Copyright: See COPYING file that comes with this distribution
 //
 //
-#ifndef ASAPCALSKY_H
-#define ASAPCALSKY_H
+#ifndef ASAP_CALSKY_TABLE_H
+#define ASAP_CALSKY_TABLE_H
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
@@ -30,12 +30,13 @@ ApplyTable for sky calibration
 @date $Date:$
 @version $Revision:$
 */
-class STCalSky : public STApplyTable {
+class STCalSkyTable : public STApplyTable {
 public:
-  STCalSky() {;}
-  STCalSky(const Scantable& parent);
+  STCalSkyTable() {;}
+  STCalSkyTable(const Scantable& parent, const casa::String &caltype);
+  STCalSkyTable(const casa::String &name);
 
-  virtual ~STCalSky();
+  virtual ~STCalSkyTable();
 
   void setup();
   void attachOptionalColumns();
@@ -43,19 +44,22 @@ public:
   const casa::String& name() const {return name_;}
 
   void setdata(casa::uInt irow, casa::uInt scannos, casa::uInt cycleno, 
-               casa::uInt beamno, casa::uInt ifno, 
-               casa::uInt polno, casa::Double time, casa::Float elevation, 
+               casa::uInt beamno, casa::uInt ifno, casa::uInt polno, 
+               casa::uInt freqid, casa::Double time, casa::Float elevation, 
                casa::Vector<casa::Float> spectra);
   void appenddata(casa::uInt scanno, casa::uInt cycleno, casa::uInt beamno, 
-                  casa::uInt ifno, casa::uInt polno, 
+                  casa::uInt ifno, casa::uInt polno, casa::uInt freqid,  
                   casa::Double time, casa::Float elevation, 
                   casa::Vector<casa::Float> spectra);
   
   casa::Vector<casa::Float> getElevation() {return elCol_.getColumn();}
   casa::Matrix<casa::Float> getSpectra() {return spectraCol_.getColumn();}
+  casa::uInt nchan(casa::uInt ifno);
 
+  //casa::Vector<casa::Double> getBaseFrequency(casa::uInt whichrow);
 private:
-  static const casa::String name_ ;
+  static const casa::String name_;
+  const casa::String caltype_;
   casa::ArrayColumn<casa::Float> spectraCol_;
   casa::ScalarColumn<casa::Float> elCol_;
 };

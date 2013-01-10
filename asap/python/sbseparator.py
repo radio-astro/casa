@@ -8,7 +8,7 @@ from asap.parameters import rcParams
 from asap.logging import asaplog, asaplog_post_dec
 from asap.selector import selector
 from asap.asapgrid import asapgrid2
-#from asap._asap import sidebandsep
+from asap._asap import SBSeparator
 
 class sbseparator:
     """
@@ -48,6 +48,7 @@ class sbseparator:
         self.freqframe = ""
         self.solveother = False
         self.dirtol = [1.e-5, 1.e-5] # direction tolerance in rad (2 arcsec)
+        #self.lo1 = 0.
 
         self.tables = []
         self.nshift = -1
@@ -55,7 +56,7 @@ class sbseparator:
 
         self.set_data(infiles)
         
-        #self.separator = sidebandsep()
+        self._separator = SBSeparator()
 
     @asaplog_post_dec
     def set_data(self, infiles):
@@ -73,7 +74,7 @@ class sbseparator:
                     asaplog.post()
                     raise TypeError, "Input data is not a list of scantables."
 
-            #self.separator._setdata(infiles)
+            #self._separator._setdata(infiles)
             self._reset_data()
             self.intables = infiles
         else:
@@ -83,7 +84,7 @@ class sbseparator:
                     asaplog.post()
                     raise ValueError, "Could not find input file '%s'" % name
             
-            #self.separator._setdataname(infiles)
+            #self._separator._setdataname(infiles)
             self._reset_data()
             self.intables = infiles
 
@@ -165,22 +166,22 @@ class sbseparator:
         """
         Set shift mode and channel shift of image band.
 
-        mode       : shift mode ['DSB'|'SSB']
+        mode       : shift mode ['DSB'|'SSB'(='2SB')]
                      When mode='DSB', imageshift is assumed to be equal
                      to the shift of signal sideband but in opposite direction.
         imageshift : a list of number of channel shift in image band of
                      each scantable. valid only mode='SSB'
         """
-        if mode.upper().startswith("S"):
+        if mode.upper().startswith("D"):
+            # DSB mode
+            self.dsbmode = True
+            self.imageShift = []
+        else:
             if not imageshift:
                 raise ValueError, "Need to set shift value of image sideband"
             self.dsbmode = False
             self.imageShift = imageshift
             asaplog.push("Image sideband shift is set manually: %s" % str(self.imageShift))
-        else:
-            # DSB mode
-            self.dsbmode = True
-            self.imageShift = []
 
     @asaplog_post_dec
     def set_both(self, flag=False):
@@ -198,7 +199,7 @@ class sbseparator:
         """
         Set rejection limit of solution.
         """
-        #self.separator._setlimit(abs(threshold))
+        #self._separator._setlimit(abs(threshold))
         self.rejlimit = threshold
         asaplog.push("The threshold of rejection is set to %f" % self.rejlimit)
 
@@ -213,6 +214,34 @@ class sbseparator:
         if flag:
             asaplog.push("Expert mode: solution are obtained by subtraction of the other sideband.")
 
+    def set_lo1(self,lo1):
+        """
+        Set LO1 frequency to calculate frequency of image sideband.
+
+        lo1 : LO1 frequency in float
+        """
+        lo1val = -1.
+        if isinstance(lo1, dict) and lo1["unit"] == "Hz":
+            lo1val = lo1["value"]
+        else:
+            lo1val = float(lo1)
+        if lo1val <= 0.:
+            asaplog.push("Got negative LO1 frequency. It will be ignored.")
+            asaplog.post("WARN")
+        else:
+            self._separator.set_lo1(lo1val)
+
+
+    def set_lo1root(self, name):
+        """
+        Set MS name which stores LO1 frequency of signal side band.
+        It is used to calculate frequency of image sideband.
+
+        name : MS name which contains 'ASDM_SPECTRALWINDOW' and
+               'ASDM_RECEIVER' tables.
+        """
+        self._separator.set_lo1root(name)
+
 
     @asaplog_post_dec
     def separate(self, outname="", overwrite=False):
@@ -223,12 +252,16 @@ class sbseparator:
         overwrite : overwrite existing table
         """
         # List up valid scantables and IFNOs to convolve.
-        #self.separator._separate()
+        #self._separator._separate()
         self._setup_shift()
         #self._preprocess_tables()
 
+        ### TEMPORAL ###
+        self._separator._get_asistb_from_scantb(self.tables[0])
+        ################
+
         nshift = len(self.tables)
-        signaltab = self._grid_outtable(self.tables[0].copy())
+        signaltab = self._grid_outtable(self.tables[0])
         if self.getboth:
             imagetab = signaltab.copy()
 
@@ -248,10 +281,12 @@ class sbseparator:
                 continue
             signal = self._solve_signal(spec_array, tabidx)
             signaltab.set_spectrum(signal, irow)
+
+            # Solve image side side band
             if self.getboth:
                 image = self._solve_image(spec_array, tabidx)
                 imagetab.set_spectrum(image, irow)
-        
+
         # TODO: Need to remove rejrow form scantables here
         signaltab.flag_row(rejrow)
         if self.getboth:
@@ -266,13 +301,14 @@ class sbseparator:
             else:
                 shutil.rmtree(signalname)
         signaltab.save(signalname)
+
         if self.getboth:
             # Warnings
             asaplog.post()
             asaplog.push("Saving IMAGE sideband.")
-            asaplog.push("Note, frequency information of IMAGE sideband cannot be properly filled so far. (future development)")
-            asaplog.push("Storing frequency setting of SIGNAL sideband in FREQUENCIES table for now.")
-            asaplog.post("WARN")
+            #asaplog.push("Note, frequency information of IMAGE sideband cannot be properly filled so far. (future development)")
+            #asaplog.push("Storing frequency setting of SIGNAL sideband in FREQUENCIES table for now.")
+            #asaplog.post("WARN")
 
             imagename = outname + ".imageband"
             if os.path.exists(imagename):
@@ -280,6 +316,9 @@ class sbseparator:
                     raise Exception, "Output file '%s' exists." % imagename
                 else:
                     shutil.rmtree(imagename)
+            # Update frequency information
+            self._separator.set_imgtable(imagetab)
+            self._separator.solve_imgfreq()
             imagetab.save(imagename)
 
 
@@ -339,13 +378,14 @@ class sbseparator:
         # Generate gridded table for output (Just to get rows)
         gridder = asapgrid2(table)
         gridder.setIF(self.baseif)
-        
+
         cellx = str(self.dirtol[0])+"rad"
         celly = str(self.dirtol[1])+"rad"
         dirarr = numpy.array(table.get_directionval()).transpose()
         mapx = dirarr[0].max() - dirarr[0].min()
         mapy = dirarr[1].max() - dirarr[1].min()
-        nx = max(1, numpy.ceil(mapx/self.dirtol[0]))
+        centy = 0.5 * (dirarr[1].max() + dirarr[1].min())
+        nx = max(1, numpy.ceil(mapx*numpy.cos(centy)/self.dirtol[0]))
         ny = max(1, numpy.ceil(mapy/self.dirtol[0]))
 
         asaplog.push("Regrid output scantable with cell = [%s, %s]" % \
@@ -392,7 +432,7 @@ class sbseparator:
             else:
                 seltab = tab.copy()
                 seltab.set_selection(selector(rows=selrow))
-            
+
             if tab.nrow() > 1:
                 asaplog.push("table %d - More than a spectrum selected. averaging rows..." % (itab))
                 tab = seltab.average_time(scanav=False, weight="tintsys")
@@ -413,7 +453,7 @@ class sbseparator:
                 return False, tabidx
 
         return spec_array[0:nspec], tabidx
-            
+
 
     @asaplog_post_dec
     def _setup_shift(self):
@@ -451,7 +491,7 @@ class sbseparator:
             self.baseif = valid_ifs[0]
             asaplog.post()
             asaplog.push("IFNO is not selected. Using the first IF in the first scantable. Reference IFNO = %d" % (self.baseif))
-        
+
         if not (self.baseif in valid_ifs):
             asaplog.post()
             errmsg = "IF%d does not exist in the first scantable" %  \
@@ -459,7 +499,7 @@ class sbseparator:
             raise RuntimeError, errmsg
 
         asaplog.push("Start selecting tables and IFNOs to solve.")
-        asaplog.push("Cheching frequency of the reference IF")
+        asaplog.push("Checking frequency of the reference IF")
         unit_org = stab.get_unit()
         coord = stab._getcoordinfo()
         frame_org = coord[1]
@@ -472,16 +512,18 @@ class sbseparator:
         basech0 = spx[0]
         baseinc = spx[1]-spx[0]
         self.nchan = len(spx)
-        if isinstance(self.freqtol, float):
-            vftol = abs(baseinc * self.freqtol)
-            self.freqtol = dict(value=vftol, unit="Hz")
-        else:
+        # frequency tolerance
+        if isinstance(self.freqtol, dict) and self.freqtol['unit'] == "Hz":
             vftol = abs(self.freqtol['value'])
+        else:
+            vftol = abs(baseinc * float(self.freqtol))
+            self.freqtol = dict(value=vftol, unit="Hz")
+        # tolerance of frequency increment
         inctol = abs(baseinc/float(self.nchan))
         asaplog.push("Reference frequency setup (Table = 0, IFNO = %d):  nchan = %d, chan0 = %f Hz, incr = %f Hz" % (self.baseif, self.nchan, basech0, baseinc))
         asaplog.push("Allowed frequency tolerance = %f Hz ( %f channels)" % (vftol, vftol/baseinc))
         poltype0 = stab.poltype()
-        
+
         self.tables = []
         self.signalShift = []
         if self.dsbmode:
@@ -544,6 +586,7 @@ class sbseparator:
         if not self.dsbmode and len(self.imageShift) != len(self.signalShift):
             asaplog.post()
             errmsg = "User defined channel shift of image sideband has %d elements, while selected IFNOs are %d" % (len(self.imageShift), len(self.signalShift))
+            errmsg += "\nThe frequency tolerance (freqtol) you set may be too small."
             raise RuntimeError, errmsg
 
         self.signalShift = numpy.array(self.signalShift)
@@ -556,20 +599,31 @@ class sbseparator:
         ### Do time averaging for now.
         for itab in range(len(self.tables)):
             self.tables[itab] = self.tables[itab].average_time(scanav=False, weight="tintsys")
-        
+
+#     @asaplog_post_dec
+#     def _setup_image_freq(self, table):
+#         # User defined coordinate
+#         # Get from associated MS
+#         # Get from ASDM
+#         lo1 = -1.
+#         if self.lo1 > 0.:
+#             asaplog.push("Using user defined LO1 frequency %e16.12 [Hz]" % self.lo1)
+#             lo1 = self.lo1
+#         else:
+#             print "NOT IMPLEMENTED YET!!!"
 
 #     def save(self, outfile, outform="ASAP", overwrite=False):
 #         if not overwrite and os.path.exists(outfile):
 #             raise RuntimeError, "Output file '%s' already exists" % outfile
 # 
-#         #self.separator._save(outfile, outform)
+#         #self._separator._save(outfile, outform)
 
 #     def done(self):
 #         self.close()
 
 #     def close(self):
 #         pass
-#         #del self.separator
+#         #del self._separator
     
 
 
