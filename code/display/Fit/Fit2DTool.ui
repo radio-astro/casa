@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>730</width>
-    <height>399</height>
+    <height>482</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -413,6 +413,9 @@
      </property>
      <item>
       <widget class="QGroupBox" name="saveGroupBox">
+       <property name="toolTip">
+        <string>Save the results of the fit as a log file.</string>
+       </property>
        <property name="title">
         <string>Save Fit Output</string>
        </property>
@@ -448,7 +451,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="saveFileLineEdit"/>
+           <widget class="QLineEdit" name="saveFileLineEdit">
+            <property name="toolTip">
+             <string>Name of the file where the output log from the fit should be saved.</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -478,6 +485,9 @@
               <height>0</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Directory for saving the fit output log.</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -499,6 +509,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="saveBrowseButton">
+            <property name="toolTip">
+             <string>Select a directory for saving the fit output log file.</string>
+            </property>
             <property name="text">
              <string>Browse...</string>
             </property>
@@ -538,6 +551,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="displayFitCheckBox">
+            <property name="toolTip">
+             <string>Display one or more elliptical regions in the viewer representing the fit.</string>
+            </property>
             <property name="text">
              <string>Display on Viewer</string>
             </property>
@@ -571,7 +587,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="fitColorCombo"/>
+           <widget class="QComboBox" name="fitColorCombo">
+            <property name="toolTip">
+             <string>Select a color for displaying the fit in the viewer.</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -592,6 +612,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="viewButton">
+            <property name="toolTip">
+             <string>View the log of the fit results.</string>
+            </property>
             <property name="text">
              <string>Results...</string>
             </property>
@@ -617,6 +640,9 @@
      </item>
      <item>
       <widget class="QGroupBox" name="residualGroupBox">
+       <property name="toolTip">
+        <string>Generate a residual image and display it in the viewer.</string>
+       </property>
        <property name="title">
         <string>Residual Image</string>
        </property>
@@ -643,7 +669,11 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="residualFileLineEdit"/>
+           <widget class="QLineEdit" name="residualFileLineEdit">
+            <property name="toolTip">
+             <string>Name of the residual image file.</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -673,6 +703,9 @@
               <height>0</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Directory for saving the residual image.</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -694,6 +727,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="residualHistogramButton">
+            <property name="toolTip">
+             <string>Display a histogram of the pixel intensities in the residual image.</string>
+            </property>
             <property name="text">
              <string>Residual Histogram...</string>
             </property>
@@ -701,6 +737,9 @@
           </item>
           <item>
            <widget class="QPushButton" name="residualBrowseButton">
+            <property name="toolTip">
+             <string>Specify a directory where the residual image should be saved.</string>
+            </property>
             <property name="text">
              <string>Browse...</string>
             </property>
@@ -710,6 +749,80 @@
         </item>
        </layout>
       </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_22">
+     <item>
+      <spacer name="horizontalSpacer_23">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="fitImageLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_24">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_23">
+     <item>
+      <spacer name="horizontalSpacer_25">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="fitRegionLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_26">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

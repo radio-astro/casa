@@ -7,13 +7,16 @@
     <x>0</x>
     <y>0</y>
     <width>948</width>
-    <height>444</height>
+    <height>481</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Find Sources</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_6">
+  <layout class="QVBoxLayout" name="verticalLayout_7">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_5"/>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_11">
      <item>
@@ -202,7 +205,7 @@
    </item>
    <item>
     <widget class="QWidget" name="sourceResultHolder" native="true">
-     <layout class="QVBoxLayout" name="verticalLayout_5">
+     <layout class="QVBoxLayout" name="verticalLayout_6">
       <item>
        <widget class="Line" name="line">
         <property name="orientation">

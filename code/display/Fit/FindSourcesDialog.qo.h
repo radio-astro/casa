@@ -54,6 +54,8 @@ public:
     ~FindSourcesDialog();
     void setChannel( int channel );
     void setPixelBox( const String& box );
+    bool writeEstimateFile( QString& filePath,
+    		bool screenEstimates = false, RegionBox* screeningBox = NULL );
 
 signals:
 	void showOverlay(String);
@@ -71,7 +73,7 @@ private slots:
 private:
 	FindSourcesDialog( const FindSourcesDialog& other );
 	FindSourcesDialog& operator=( const FindSourcesDialog& other );
-	bool writeEstimateFile( QString& filePath );
+	//QList<QString> populateFixedEstimates() const;
 	void resetSourceView();
 	void setSourceResultsVisible( bool visible );
 	void createTable();
@@ -82,8 +84,8 @@ private:
 	void clearSkyOverlay();
 
 	ComponentListWrapper skyList;
-	enum SourceColumns { RA_COL, DEC_COL, FLUX_COL,
-			MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL };
+	enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
+			MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL/*, FIXED_COL*/ };
 	ImageInterface<Float>* image;
 	String pixelBox;
 	QString skyPath;
