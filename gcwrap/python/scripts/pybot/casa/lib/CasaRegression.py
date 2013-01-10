@@ -343,15 +343,6 @@ class CasaRegression:
         summary_email_recipients.append(self._state['master-email'])
         
         ###
-        ### do report post processing (to set the title)...
-        ###
-        print self._path['bin'] + "/postprocess-report " + "[DELAY:120]::" + report_path
-        p = subprocess.Popen( [ self._path['bin'] + "/postprocess-report", "[DELAY:120]::" + report_path ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
-        for line in p.stdout:
-            print "postprocess> " + line.rstrip( )
-        p.wait( )
-        
-        ###
         ### web-published reports should have the jenkins '/userContent/' in the path...
         ### otherwise, we'll assume it's a local file...
         ###
@@ -473,3 +464,17 @@ class CasaRegression:
                 for line in p.stdout:
                     print "cbt> " + line.rstrip( )
                 p.wait( )
+
+        ###
+        ### do report post processing (to set the title)...
+        ### report post processing was moved to the end when distro packaging was added
+        ### because the extra distro processing time pushes finalization of the pybot run
+        ### past the two minute delay... pybot finalization and exit is required prior to
+        ### processing the report because the html report is *only* generated after the
+        ### final pybot actions take places (since these may add to the log)...
+        ###
+        print self._path['bin'] + "/postprocess-report " + "[DELAY:120]::" + report_path
+        p = subprocess.Popen( [ self._path['bin'] + "/postprocess-report", "[DELAY:120]::" + report_path ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+        for line in p.stdout:
+            print "postprocess> " + line.rstrip( )
+        p.wait( )
