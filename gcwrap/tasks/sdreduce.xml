@@ -257,6 +257,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <allowed kind="enum">
                 <value>none</value>
 	        <value>poly</value>
+                <value>chebyshev</value>
 	        <value>cspline</value>
 	        <value>sinusoid</value>
 	    </allowed>
@@ -444,6 +445,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<equals value="poly">
 			<default param="order"><value>5</value></default>
 	        </equals>
+		<equals value="chebyshev">
+			<default param="order"><value>5</value></default>
+			<default param="clipthresh"><value>3.0</value></default>
+			<default param="clipniter"><value>0</value></default>
+	        </equals>
                 <equals value="cspline">
 			<default param="npiece"><value>2</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
@@ -453,7 +459,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="applyfft"><value>True</value></default>
 			<default param="fftmethod"><value type="string">fft</value></default>
 			<default param="fftthresh"><value type="double">3.0</value></default>
-			<default param="addwn"><value type="vector"><value></value></value></default>
+			<default param="addwn"><value type="vector"><value>0</value></value></default>
 			<default param="rejwn"><value type="vector"><value></value></value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>0</value></default>

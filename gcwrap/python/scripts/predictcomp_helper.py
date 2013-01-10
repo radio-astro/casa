@@ -33,9 +33,11 @@ def predictSolarObjectCompList(objname, epoch, freqs, prefix):
 
     # turn user input epoch to mjd
 
-    import solar_system_setjy as ss_setjy
+    #import solar_system_setjy as ss_setjy
+    import solar_system_setjy as SSSetjy
     #print "sending objname=",objname, " epochv=",epochv, " freqlist=",freqlist
     observatory='ALMA'
+    ss_setjy=SSSetjy.solar_system_setjy()
     (errcodes, fluxes, fluxerrs, sizes, dirs)=\
        ss_setjy.solar_system_fd(source_name=objname, MJDs=[epochv], frequencies=freqlist, observatory=observatory, casalog=casalog)
   

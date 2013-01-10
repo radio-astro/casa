@@ -115,10 +115,12 @@ def correct_ant_posns (vis_name, print_offsets=False):
         response.close()
         html_lines = html.split('\n')
         for correction_line in html_lines:
-            for month in MONTHS:
-                if (correction_line.find(month) >= 0):
-                    correction_lines.append(str(year)+' '+correction_line)
-                    break
+            # skip the comment (lines begin with ';') lines and HMTL tag
+            if len(correction_line) and correction_line.strip().find(';')!=0 and correction_line.strip().find('<'):
+                for month in MONTHS:
+                    if (correction_line.find(month) >= 0):
+                        correction_lines.append(str(year)+' '+correction_line)
+                        break
 
     corrections_list = []
     for correction_line in correction_lines:

@@ -177,8 +177,10 @@ class ss_setjy_helper:
 	# size: [majoraxis, minoraxis, pa]
 	# direction: direction for each time stamp
         # 
-	import solar_system_setjy as ss_setjy
+	#import solar_system_setjy as ss_setjy
+	import solar_system_setjy as SSsetjy 
 	retdict={}
+        ss_setjy=SSsetjy.solar_system_setjy()
 	#for src in srcnames:
 	for vfid in validfids:
           src=srcnames[vfid]

@@ -56,7 +56,6 @@ for root, dirs, files in os.walk(__casapath__):
 quanta = casac.quanta()
 measures = casac.measures()
 imager = casac.imager()
-synthesisimager = casac.synthesisimager()
 calibrater = casac.calibrater()
 ms = casac.ms()
 tableplot = casac.tableplot()

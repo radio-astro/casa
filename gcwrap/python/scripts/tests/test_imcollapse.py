@@ -474,25 +474,25 @@ class imcollapse_test(unittest.TestCase):
     def test_CAS3737(self):
         """ imcollapse: test tabular spectral axis has correct collapsed reference value """
         image = self.tabular_spectral_image
-        chans = "2445~2555"
-        mytool = run_collapse(
-            image, "mean", 2, "", "", "",
-            chans, "", "", False
-        )
-        expected = 98318505973583.641
-        got = mytool.toworld([0,0,0])["numeric"][2]
-        mytool.done()
-        frac = got/expected - 1
-        self.assertTrue(frac < 1e-6 and frac > -1e-6)
+        for chans in ["2445~2555", "range=[2445pix,2555pix]"]:
+            mytool = run_collapse(
+                image, "mean", 2, "", "", "",
+                chans, "", "", False
+            )
+            expected = 98318505973583.641
+            got = mytool.toworld([0,0,0])["numeric"][2]
+            mytool.done()
+            frac = got/expected - 1
+            self.assertTrue(frac < 1e-6 and frac > -1e-6)
         
-        mytool = run_imcollapse(
-            image, "mean", 2, "", "", "",
-            chans, "", "", False, True
-        )
-        got = mytool.toworld([0,0,0])["numeric"][2]
-        mytool.done()
-        frac = got/expected - 1
-        self.assertTrue(frac < 1e-6 and frac > -1e-6)
+            mytool = run_imcollapse(
+                image, "mean", 2, "", "", "",
+                chans, "", "", False, True
+            )
+            got = mytool.toworld([0,0,0])["numeric"][2]
+            mytool.done()
+            frac = got/expected - 1
+            self.assertTrue(frac < 1e-6 and frac > -1e-6)
         
     def test_beams(self):
         """test per plane beams"""

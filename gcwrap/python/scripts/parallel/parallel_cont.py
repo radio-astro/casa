@@ -6,7 +6,13 @@ import numpy as np
 from cleanhelper import *
 from casac import casac
 class imagecont():
-    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False, minpb=0.2, cyclefactor=1.5):
+    def __init__(self, ftmachine='ft', wprojplanes=10, facets=1, pixels=[3600, 3600], cell=['3arcsec', '3arcsec'], spw='', 
+                 field='', phasecenter='', weight='natural', robust=0.0, stokes='I', npixels=0, uvtaper=False, outertaper=[], 
+                 timerange='', uvrange='', baselines='', scan='', observation='', gain=0.1, numthreads=-1, pbcorr=False, 
+                 minpb=0.2, cyclefactor=1.5,
+                 painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+                 epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True):
+
         self.im=casac.imager()
         self.imperms={}
         self.dc=casac.deconvolver()
@@ -30,14 +36,8 @@ class imagecont():
         self.numthreads=numthreads
         self.imagetilevol=1000000
         self.visInMem=False
-        self.painc=360.0
-        self.pblimit=0.1
-        self.dopbcorr=False
         self.cyclefactor=cyclefactor
         self.novaliddata={}
-        self.applyoffsets=False
-        self.cfcache='cfcache.dir'
-        self.epjtablename=''
         self.gain=gain
         self.uvtaper=uvtaper
         self.outertaper=outertaper
@@ -48,6 +48,18 @@ class imagecont():
         self.observation=observation
         self.pbcorr=pbcorr
         self.minpb=minpb
+
+        self.painc=painc;
+        self.pblimit=pblimit;
+        self.dopbcorr=dopbcorr;
+        self.applyoffsets=applyoffsets;
+        self.cfcache=cfcache;
+        self.epjtablename=epjtablename;
+        self.mterm=mterm;
+        self.aterm=aterm;
+        self.psterm=psterm;
+        self.wbawp=wbawp;
+        self.conjbeams=conjbeams;
 
     def setextraoptions(self, im, cyclefactor=1.5, fluxscaleimage='', scaletype='SAULT'):
         im.setmfcontrol(scaletype=scaletype, fluxscale=[fluxscaleimage], 
@@ -60,15 +72,18 @@ class imagecont():
         im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], 
                        celly=self.cell[1], phasecenter=self.phCen, mode='frequency', 
                        nchan=1, start=freq, step=band, facets=self.facets, 
-                       stokes=self.stokes)
+                       stokes=self.stokes);
+
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, 
-                      pastep=self.painc, pblimit=self.pblimit, 
-                      cfcachedirname=self.cfcache, dopbgriddingcorrections=self.dopbcorr, 
-                      applypointingoffsets=self.applyoffsets, 
                       imagetilevol=self.imagetilevol,
-                       singleprecisiononly=singleprec, numthreads=self.numthreads)
+                      singleprecisiononly=singleprec, numthreads=self.numthreads,
+                      pastep=self.painc, pblimit=self.pblimit, dopbgriddingcorrections=self.dopbcorr, 
+                      applypointingoffsets=self.applyoffsets, cfcachedirname=self.cfcache,
+                      epjtablename=self.epjtablename,
+                      mterm=self.mterm, wbawp=self.wbawp, aterm=self.aterm, 
+                      psterm=self.psterm, conjbeams=self.conjbeams)
 
     def imagecontmultims(self, msnames=[''], start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         im=self.im
@@ -139,7 +154,9 @@ class imagecont():
         if(not self.imageparamset):
             self.origms=msname
             try:
-                im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem, time=self.timerange, uvrange=self.uvrange, baseline=self.baselines, scan=self.scan, observation=self.observation, writeaccess=False)
+                im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem, 
+                             time=self.timerange, uvrange=self.uvrange, baseline=self.baselines, scan=self.scan, 
+                             observation=self.observation, writeaccess=False)
                 if(self.uvtaper):
                     im.filter(type='gaussian', bmaj=self.outertaper[0],
                                bmin=self.outertaper[1], bpa=self.outertaper[2])
@@ -787,7 +804,12 @@ class imagecont():
         im.setscales(scalemethod='uservector',uservector=scales);
         im.settaylorterms(ntaylorterms=nterms,
                           reffreq=(qa.convert(qa.unit(reffreq),"Hz"))['value'])
-        im.setoptions(ftmachine=self.ft)
+        # im.setoptions(ftmachine=self.ft,pastep=self.painc,
+	# 	      cfcachedirname=self.cfcache,
+	# 	      applypointingoffsets= self.applyoffsets,
+	# 	      dopbgriddingcorrections=self.dopbcorr,
+	# 	      pblimit=self.pblimit,
+	#               wprojplanes=self.wprojplanes,aterm=self.aterm,psterm=self.psterm,wbawp=self.wbawp,conjbeams=self.conjbeams);
         im.clean(model=models,image=restoreds,psfimage=psfs[0:nterms], residual=residuals,  algorithm='msmfs',niter=-1)
         if( incremental == False ) :  # first major cycle
            im.getweightgrid(type='ftweight', wgtimages=sumwts)

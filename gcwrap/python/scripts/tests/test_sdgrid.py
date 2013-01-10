@@ -48,8 +48,6 @@ class sdgrid_unittest_base(object):
         resultpix = index
         msglt = 'There are nonzero pixels that should be zero'
         msggt = 'There are zero pixels that should be nonzero'
-        msglt = 'There are nonzero pixels that should be zero'
-        msggt = 'There are zero pixels that should be nonzero'
         self.assertEqual(len(refpix),len(resultpix),
                          msg=(msglt if len(refpix) < len(resultpix) else msggt))
         for i in xrange(len(refpix)):

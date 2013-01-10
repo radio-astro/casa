@@ -14,7 +14,8 @@ from taskinit import *
 import copy
 
 def tclean(vis='', field='', spw='',
-           imagename='',nchan=1,
+           imagename='',nchan=1,imsize=[1,1],
+           outlierfile='',
            startmodel='',
            niter=0, threshold=0.0, loopgain=0.1,
            maxcycleniter=-1, cyclefactor=1,
@@ -26,7 +27,7 @@ def tclean(vis='', field='', spw='',
     # Put all parameters into dictionaries
     params={}
     params['dataselection']={'vis':vis, 'field':field, 'spw':spw, 'usescratch':usescratch}
-    params['imagedefinition']={'imagename':imagename, 'nchan':nchan}
+    params['imagedefinition']={'imagename':imagename, 'nchan':nchan,'imsize':imsize, 'outlierfile':outlierfile}
     params['imaging']={'startmodel':startmodel}
     params['deconvolution']={}
     params['iteration']={'niter':niter, 'threshold':threshold, 'loopgain':loopgain, 'cycleniter':maxcycleniter, 'cyclefactor':cyclefactor , 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction, 'interactive':interact}
@@ -63,7 +64,9 @@ class PySynthesisImager:
     """ Class to do imaging and deconvolution """
 
     def __init__(self,casalog,params):
-        self.toolsi=None #gentools(['si'])[0]
+        # SI Tool is a list, for the serial case of length 1
+        self.siTools = []
+        self.nchunks = 1
         self.casalog = casalog
         self.params = params
         self.listofimagedefinitions = []
@@ -80,65 +83,113 @@ class PySynthesisImager:
 
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
-            casalog.post('Parameter Errors : \n' + errs)
+            casalog.post('Parameter Errors : \n' + errs,'WARN')
             return False
         return True
 
-    def initialize(self, toolsi=None):
+    def initialize(self):
         self.casalog.origin('tclean.initialize')
-        if toolsi==None:
-            print "Creating tool"
-            self.toolsi = casac.synthesisimager()
-            print "Back from Creating tool"
-            toolsi = self.toolsi
-        toolsi.selectdata(selpars=self.params['dataselection'])
-        impars = copy.deepcopy( self.params['imagedefinition'] )
 
-        ## Start a loop on 'multi-fields' here....
-        for eachimdef in self.listofimagedefinitions:
-            # Fill in the individual parameters
-            impars['imagename'] = eachimdef[ 'imagename' ]
+        # Create the tool we are going to use (only one in this case)
+        for (selection, images) in self.calculateChunks():
+            print selection
+            print images
+            self.initializeTool(selection, images)
+
+        # Setup the tool to have the iteration control
+        self.siTools[0].setupiteration(iterpars=self.params['iteration'])
+
+    def initializeTool(self, selectionParameters, imageParameters):
+        # This method adds an additional tool to the list of tools
+        self.casalog.origin('tclean.initializeTool')
+        siTool = casac.synthesisimager()
+        siTool.selectdata(selpars = selectionParameters)
+        
+        ## Loop over each image for multi-field like cases
+        for eachimdef in imageParameters:
             # Init a mapper for each individual field
-            toolsi.defineimage(impars=impars)
-            toolsi.setupimaging(gridpars=self.params['imaging'])
-            toolsi.setupdeconvolution(decpars=self.params['deconvolution'])
-            toolsi.initmapper()
+            siTool.defineimage(impars=eachimdef)
+            siTool.setupimaging(gridpars=self.params['imaging'])
+            siTool.setupdeconvolution(decpars=self.params['deconvolution'])
+            siTool.initmapper()
         ## End loop on 'multi-fields' here....
 
-        toolsi.setupiteration(iterpars=self.params['iteration'])
-        # From ParClean loopcontrols gets overwritten, but it is always with the same thing. Try to clean this up. 
+        self.siTools.append(siTool)
 
+    def calculateChunks(self):
+        # This probably will move to c++ at some point but for now:
+        # Return tuples of dataselection / imagedefinition pairs one for
+        # each tool
+        chunkList = []
 
-    def runMajorCycle(self,toolsi=None):
+        if self.nchunks == 1:
+            # Nothing to do, single chunk
+            return [(self.params['dataselection'],
+                     self.listofimagedefinitions)]
+            
+        for ch in range(0,self.nchunks):
+            casalog.origin('parallel.tclean.runMinorCycle')
+            casalog.post('Initialize for chunk '+str(ch))
+
+            selpars = copy.deepcopy( self.params['dataselection'] )
+            imdefs = copy.deepcopy( self.listofimagedefinitions )
+
+            # Set up the chunks to parallelize on
+            for dat in range(0,len(self.params['dataselection']['spw'] )):
+                selpars['spw'][dat] = \
+                   self.params['dataselection']['spw'][dat] + ':'+str(ch)
+
+            # Change the image name for each chunk
+            for im in range(0, len(self.listofimagedefinitions)):
+                imdefs[im]['imagename'] = \
+                  self.listofimagedefinitions[im]['imagename'] + '_' + str(ch)
+
+            chunkList.append((selpars, imdefs))
+        return chunkList
+
+    def runMajorCycle(self):
         self.casalog.origin('tclean.runMajorCycle')
-        if toolsi==None:
-            toolsi = self.toolsi
-        toolsi.runmajorcycle()
 
-    def runMinorCycle(self, toolsi=None):
+        # Get the controls from the first
+        controlRecord = self.siTools[0].getmajorcyclecontrols()
+                
+        # To Parallelize: move this across all engines
+        for siTool in self.siTools:
+            siTool.executemajorcycle(controlRecord);
+
+        self.siTools[0].endmajorcycle()
+            
+    def runMinorCycle(self):
         self.casalog.origin('tclean.runMinorCycle')
-        if toolsi==None:
-            toolsi = self.toolsi
-        toolsi.runminorcycle()
 
-    def runLoops(self, toolsi=None):
+        returnBotList = []
+        # Get the conrols from the first
+        subIterBot = self.siTools[0].getsubiterbot();
+
+        # JSK ToDo: we need to run on all tools once we have selective
+        # execution of the deconvolver
+        
+        # for siTool in self.siTools:
+        for siTool in self.siTools[:1]:
+            returnBotList.append(siTool.executeminorcycle(subIterBot))
+
+        # Report the results to the first controller
+        for returnBot in returnBotList:
+            self.siTools[0].endminorcycle(returnBot);
+            
+
+    def runLoops(self):
         self.casalog.origin('tclean.runLoops')
-        if toolsi==None:
-            toolsi = self.toolsi
         self.runMajorCycle()
-        while not toolsi.cleanComplete():
+        while not self.siTools[0].cleanComplete():
             self.runMinorCycle()
             self.runMajorCycle()
 
-    def finalize(self, toolsi=None):
-        if toolsi==None:
-            toolsi = self.toolsi
-        toolsi.endloops()
+    def finalize(self):
+        self.siTools[0].endloops()
 
-    def returninfo(self, toolsi=None):
-        if toolsi==None:
-            toolsi = self.toolsi
-        return toolsi.getiterationsummary()
+    def returninfo(self):
+        return self.siTools[0].getiterationsummary()
 
 
     ###### Start : Parameter-checking functions ##################
@@ -173,21 +224,86 @@ class PySynthesisImager:
         ### Get a list of image-coord pars from the multifield outlier file + main field...
         ### Go through this list, and do setup. :  Fill in self.listofimagedefinitions with dicts of params
 
-        ## FOR NOW... this list is just a list of image names....
+        ## Convert lists per parameters, into a list of parameter-sets.
+        
+        ## Main field is always in 'impars'.
+        self.listofimagedefinitions.append( {'imagename':impars['imagename'], 'nchan':impars['nchan'], 'imsize':impars['imsize'] } )
+        
+        ## Multiple images have been specified. 
+        ## (1) Parse the outlier file and fill a list of imagedefinitions
+        ## OR (2) Parse lists per input parameter into a list of parameter-sets (imagedefinitions)
+        ### The code below implements (1)
+        if len(impars['outlierfile'])>0:
+            self.listofimagedefinitions = self.listofimagedefinitions +( self.parseOutlierFile(impars['outlierfile']) )
 
-        ## One image only
-        if type( impars['imagename'] ) == str:
-            self.listofimagedefinitions.append( {'imagename':impars['imagename']} )
+        #print 'BEFORE : ', self.listofimagedefinitions
 
-        ## If multiple images are specified....... 
-        if type( impars['imagename'] ) == list:
-            for imname in impars['imagename']:
-                self.listofimagedefinitions.append( {'imagename':imname} )
+        ## Synchronize parameter types here. 
+        for eachimdef in self.listofimagedefinitions:
+
+            ## Check/fix nchan : Must be a single integer.
+            if eachimdef.has_key('nchan'):
+                if type( eachimdef['nchan'] ) != int:
+                    try:
+                        eachimdef['nchan'] = eval( eachimdef['nchan'] )
+                    except:
+                        errs = errs + 'nchan must be an integer for field ' + eachimdef['imagename'] + '\n'
+            else:
+                errs = errs + 'nchan is not specified for field ' + eachimdef['imagename'] + '\n'
+
+            ## Check/fix imsize : Must be an array with 2 integers
+            if eachimdef.has_key('imsize'):
+                tmpimsize = eachimdef['imsize']
+                if type(tmpimsize) == str:
+                    try:
+                        tmpimsize = eval( eachimdef['imsize'] )
+                    except:
+                        errs = errs + 'imsize must be a single integer, or a list of 2 integers'
+
+                if type(tmpimsize) == list:
+                    if len(tmpimsize) == 2:
+                        eachimdef['imsize'] = tmpimsize;  # not checking that elements are ints...
+                    else:
+                        errs = errs + 'imsize must be a single integer, or a list of 2 integers'
+                elif type(tmpimsize) == int:
+                    eachimdef['imsize'] = [tmpimsize, tmpimsize] 
+                else:
+                    errs = errs + 'imsize must be a single integer, or a list of 2 integers'
+            else:
+                errs = errs + 'imsize is not specified for field ' + eachimdef['imagename'] + '\n'
+            
+        #print 'AFTER : ', self.listofimagedefinitions
 
         return errs
 
     ###### End : Parameter-checking functions ##################
 
+    ## Parse outlier file and construct a list of imagedefinitions (dictionaries).
+    def parseOutlierFile(self, outlierfilename="" ):
+        if not os.path.exists( outlierfilename ):
+             print 'Cannot find outlier file : ', outlierfilename
+             return {}
+
+        returnlist = []
+
+        fp = open( outlierfilename, 'r' )
+        thelines = fp.readlines()
+        tempd = {}
+        for oneline in thelines:
+            parpair = oneline.replace(' ','').replace('\n','').split("=")  
+            #print parpair
+            if len(parpair) != 2:
+                print 'Error in line containing : ', oneline
+                print returnlist
+                return returnlist
+            if parpair[0] == 'imagename' and tempd != {}:
+                returnlist.append(tempd)
+                tempd={}
+            tempd [ parpair[0] ] = parpair[1] 
+
+        returnlist.append(tempd)
+        #print returnlist
+        return returnlist
 
 
 ###################################################
@@ -202,41 +318,27 @@ class ParallelPySynthesisImager(PySynthesisImager):
 
     def __init__(self,casalog,params):
         PySynthesisImager.__init__(self,casalog,params)
-        # Read params['other']['clusterdef'] to decide chunking.
         self.nchunks = len(params['other']['clusterdef'])
-        # Initialize a list of synthesisimager tools
-        self.toollist = []
-        for ch in range(0,self.nchunks):
-            self.toollist.append( casac.synthesisimager() ) 
-
-    def initialize(self):
-        selpars = copy.deepcopy( self.params['dataselection'] )
-        for ch in range(0,self.nchunks):
-            casalog.origin('parallel.tclean.runMinorCycle')
-            casalog.post('Initialize for chunk '+str(ch))
-
-            for dat in range(0,len( selpars['spw'] )):
-                self.params['dataselection']['spw'][dat] =  selpars['spw'][dat] + ':'+str(ch)
-
-            PySynthesisImager.initialize(self, self.toollist[ch] )
-        self.params['dataselection'] = copy.deepcopy(selpars)
 
     def runMajorCycle(self):
-        for ch in range(0,self.nchunks):
-            # Send in updated model as startmodel..
-            PySynthesisImager.runMajorCycle(self, self.toollist[ch])
+        # For now just call the serial case, but in the future this
+        # would span it out across the engines
+        PySynthesisImager.runMajorCycle(self)
+        
+        # We may want to do this in all cases
         self.gatherImages()
 
     def runMinorCycle(self):
-        casalog.origin('parallel.tclean.runMinorCycle')
-        casalog.post('Set combined images for the minor cycle')
-        PySynthesisImager.runMinorCycle(self, self.toollist[0] )  # Use the full list for spectral-cube deconv.
-        casalog.origin('parallel.tclean.runMinorCycle')
-        casalog.post('Mark updated model as input to all major cycles') 
+        # For now just call the serial case, but in the future this
+        # would span it out across the engines
+        PySynthesisImager.runMinorCycle(self)
 
-    def finalize(self):
-        self.toollist[0].endloops()
-
+    def initializeTool(self, selectionParameters, imageParameters):
+        # For now this just runs the serial case, but should be starting
+        # each tool on a different engine
+        PySynthesisImager.initializeTool(self, selectionParameters, \
+                                         imageParameters)
+        
     def gatherImages(self):
         casalog.origin('parallel.tclean.gatherimages')
         casalog.post('Gather images from all chunks')

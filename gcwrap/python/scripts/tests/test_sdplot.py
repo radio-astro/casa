@@ -1274,7 +1274,8 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, header=self.header,
                         outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.30.01.9"}
+                   #"J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)
@@ -1363,7 +1364,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
                         plottype=self.type, cell=cell,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
-                   'title0': "J2000 17:17:58.9 +59.29.20.0"}#'J2000 17:17:58.9 +59.30.02.0'}
+                   'title0': "J2000 17:17:58.9 +59.30.01.9"}#'J2000 17:17:58.9 +59.30.02.0'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
         # Tests
         self.assertEqual(result,None)

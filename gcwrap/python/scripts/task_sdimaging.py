@@ -21,8 +21,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __del__(self, base=sdutil.sdtask_template_imaging):
         super(sdimaging_worker,self).__del__()
 
-    def __register(self, key, attr=None):
-        self.imager_param.register(key,attr)
+    def __register(self, key, attr=None, arg_is_value=False):
+        self.imager_param.register(key,attr,arg_is_value)
 
     def parameter_check(self):
         # outfile check
@@ -155,13 +155,30 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                 
         # phasecenter
         # if empty, it should be determined here...
-
-        self.__register('phasecenter')
+        if len(self.phasecenter) == 0:
+            self.open_table(self.pointing_table)
+            dir = self.table.getcol('DIRECTION')
+            dirinfo = self.table.getcolkeywords('DIRECTION')
+            units = dirinfo['QuantumUnits'] if dirinfo.has_key('QuantumUnits') \
+                    else ['rad', 'rad']
+            mref = dirinfo['MEASINFO']['Ref'] if dirinfo.has_key('MEASINFO') \
+                   else 'J2000'
+            forms = ['dms','dms'] if mref.find('AZEL') != -1 else ['hms','dms']
+            qx = qa.quantity(numpy.median(dir[0,:,:]),units[0])
+            qy = qa.quantity(numpy.median(dir[1,:,:]),units[1])
+            self.close_table()
+            phasecenter = ' '.join([mref,
+                                    qa.formxxx(qx,forms[0]),
+                                    qa.formxxx(qy,forms[1])])
+            self.__register('phasecenter',phasecenter,arg_is_value=True)
+        else:
+            self.__register('phasecenter')
         self.__register('movingsource', 'ephemsrcname')
 
     def execute(self):
         # imaging
         casalog.post("Start imaging...", "INFO")
+        casalog.post("Using phasecenter \"%s\""%(self.imager_param['phasecenter']), "INFO")
         self.open_imager(self.infile)
         self.imager.selectvis(field=self.fieldid, spw=self.spwid, nchan=-1, start=0, step=1, baseline=self.antenna, scan=self.scanlist)
         #self.imager.selectvis(vis=infile, field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)

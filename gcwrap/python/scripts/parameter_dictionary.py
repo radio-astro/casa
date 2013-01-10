@@ -380,17 +380,17 @@ class par(str):
 		
 	@staticmethod
 	def chans():
-		""" Range of channels:
-		uvcontsub - It takes a simple list of channels or anything that will
-		produce such a list of integer channel values:
-		examples chans=[0,1,2,3,55,56,57,58,59,60,61]
-		        chans=range(0,4)+range(55,62)
+		""" 
+		String specifying frequency selection. Examples
+        chans="0,3,4,8"          # select channels 0, 3, 4, 8
+		chans="3~20;50,51"       # channels 3 to 20 and 50 and 51
+        chans="<10;>=55"        # channels 0 to 9 and 55 and greater (inclusively)
+        
+        Frequency selection using the ASCII region format is also supported. In this
+        case, at least the range parameter is required and optionally the restfreq,
+        veltype, and frame parameters may be provided.
 
-		immath, imstat, and imcontsub - It takes a string listing of channel
-		numbers, much like the spw paramter such as:
-		examples chans="0,3,4,8"
-		         chans="3~20;50,51"    #channels 3to20 and 50 and 51
-			 chans="<10;>=55"      #chanls 0to9 and 55 and greater (inclusively)
+        chans="range=[1110000m/s, 1130km/s], restfreq=1.42040575GHz"
 		
 		"""
 

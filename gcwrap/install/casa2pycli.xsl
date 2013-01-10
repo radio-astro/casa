@@ -70,6 +70,39 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>
         """</xsl:text>
 <xsl:apply-templates select="aps:shortdescription"></xsl:apply-templates>
+<xsl:apply-templates select="aps:description"/>
+<xsl:if test="aps:input">
+<xsl:text>
+	Arguments :
+</xsl:text>
+</xsl:if>
+<xsl:for-each select="aps:input">
+	<xsl:for-each select="aps:param">
+		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:description"/><xsl:text>
+</xsl:text>
+<xsl:text>		   Default Value: </xsl:text><xsl:value-of select="aps:value"/>
+<xsl:if test="aps:allowed">
+	<xsl:text>
+		   Allowed Values:</xsl:text>
+	<xsl:for-each select="aps:allowed/aps:value">
+	<xsl:text>
+				</xsl:text><xsl:value-of select="."/>
+	</xsl:for-each>
+</xsl:if>
+<xsl:text>
+
+</xsl:text>
+	</xsl:for-each>
+</xsl:for-each>
+<xsl:if test="aps:returns">
+	<xsl:for-each select="aps:returns">
+		<xsl:text>	Returns: </xsl:text><xsl:value-of select="@type"/><xsl:text>
+</xsl:text>
+</xsl:for-each>
+</xsl:if>
+<xsl:text>
+	Example :
+</xsl:text>
 <xsl:apply-templates select="aps:example"/>
 <xsl:text>
         """</xsl:text>
@@ -393,6 +426,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:template match="aps:input" mode="quotes"> <xsl:call-template name="doqargs"></xsl:call-template>
 </xsl:template>
 <xsl:template match="aps:shortdescription"><xsl:value-of select="."/></xsl:template>
+<xsl:template match="aps:description"><xsl:text>
+
+	Detailed Description: 
+</xsl:text><xsl:value-of select="."/></xsl:template>
 <xsl:template match="aps:example"><xsl:value-of select="replace(., '\\.*\{verbatim\}', '')" disable-output-escaping="yes"/></xsl:template>
 
 <xsl:template name="checkoutput">
