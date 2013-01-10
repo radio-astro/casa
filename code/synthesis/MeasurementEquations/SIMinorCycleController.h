@@ -90,9 +90,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /* Getter Methods for the control variables */
     Float getLoopGain(); 
-    Float getCycleFactor();
 
     void incrementMinorCycleCount();
+
+    Int getIterDone();
+    Int getCycleNiter();
+    Float getCycleThreshold();
 
     /* This method resets the iteration counter for the cycle */
     void resetCycleIter();
@@ -114,10 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  protected:
     /* Control Variables */
     Int    itsCycleNiter;
-    
     Float itsCycleThreshold;
-    
-    Float itsCycleFactor;
     Float itsLoopGain;
     
     Bool  itsUpdatedModelFlag;

@@ -97,11 +97,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SDAlgorithmBase","deconvolve",WHERE) );
 
-    Int iters=0;
-
+    Int startiteration = loopcontrols.getIterDone();
     Float peakresidual=residual.getAt(tmpPos_p);
+    Float modelflux=model.getAt(tmpPos_p);
 
-    while ( ! checkStop( loopcontrols,  iters++, peakresidual ) )
+    os << "Subimage " << decid << " -- Start : iter=" << startiteration 
+       << ", residual=" << peakresidual 
+       << ", model=" << modelflux;
+
+    while ( ! checkStop( loopcontrols,  peakresidual ) )
       {
 	Float comp=0.0;
 
@@ -114,20 +118,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	updateModel ( model, comp );
 
 	peakresidual = residual.getAt(tmpPos_p);
+	modelflux = model.getAt(tmpPos_p);
 
 	loopcontrols.incrementMinorCycleCount( );
-	loopcontrols.setPeakResidual( residual.getAt(tmpPos_p) );
-	//	loopcontrols.setIntegratedFlux( model.getAt(tmpPos_p) );
-	loopcontrols.addSummaryMinor( decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
+	loopcontrols.setPeakResidual( peakresidual );
+	loopcontrols.addSummaryMinor( decid, modelflux, peakresidual );
       }
 
-    loopcontrols.setUpdatedModelFlag( iters>0 );
+    // same as checking on itscycleniter.....
+    loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
+
+    os << " --> Stop : iter=" << loopcontrols.getIterDone()
+       << ", residual=" << peakresidual 
+       << ", model=" << modelflux 
+       << LogIO::POST;
 
 }
 
   Bool SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
-				 Int /*currentiteration*/, 
-				 Float currentresidual )
+				   Float currentresidual )
   {
     return loopcontrols.majorCycleRequired(currentresidual);
   }

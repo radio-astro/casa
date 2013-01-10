@@ -86,10 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //// TODO : If only the major cycle is called (niter=0), don't allocate Image, Psf, Weight...
   void SIMapperBase::initImages()
   {
-    LogIO os( LogOrigin("SIMapperBase","allocateImageMemory",WHERE) );
-
-    os << "Mapper " << itsMapperId << " : Calculate required memory, and allocate" << LogIO::POST;
-
+    LogIO os( LogOrigin("SIMapperBase","initImages",WHERE) );
 
     // Initialize all these images.
     Array<Float> pixels( itsImageShape );
