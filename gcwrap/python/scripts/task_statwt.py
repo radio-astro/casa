@@ -25,16 +25,27 @@ def statwt(vis, dorms, byantenna, sepacs, fitspw, fitcorr, combine,
         mytb.open(vis)
         colnames  = mytb.colnames()
         mytb.close()
+
+
         for datacol in ['CORRECTED_DATA', 'DATA', 'junk']:
             if datacol in colnames:
                 break
         if datacol == 'junk':
             raise ValueError(vis + " does not have a data column")        
 
-        if datacol != datacolumn: # no CORRECTED_DATA case (fall back to DATA)
+        if datacolumn == 'float_data':
+           raise ValueError("float_data is not yet supported") 
+
+        if datacolumn == 'corrected' and datacol == 'DATA': # no CORRECTED_DATA case (fall back to DATA)
            casalog.post("No %s column found, using %s column" % (datacolumn.upper()+'_DATA', datacol),'WARN')
            datacolumn = datacol
-
+        else:
+           if datacolumn=='corrected':
+               datacolumn_name=datacolumn.upper()+'_DATA'
+           else:
+               datacolumn_name=datacolumn.upper()
+           casalog.post("Using %s column to determine visibility scatter" % datacolumn_name)
+       
         if ':' in spw:
             casalog.post('The channel selection part of spw will be ignored.', 'WARN')
         
