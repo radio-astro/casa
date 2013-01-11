@@ -25,6 +25,7 @@ within the system. There are five broad packages:
 	\begin{itemize}
 	\item \ahlink{Images}{images} - create, manipulate and analyze images
 	\item \ahlink{Coordsys}{images:coordsys} - functionality for manipulating coordinate systems
+	\item \ahlink{Componentlist}{components:componentlist} - functionality for manipulating components 
 	\item \ahlink{MeasurementSet}{ms} - functionality for manipulating MeasurementSets (CASA data structures)
 	\item \ahlink{Measures}{measures} - functionality for handling quantities with a specified reference frame
 	\item \ahlink{Quanta}{quanta} - functionality for handling quantities (values with units)
