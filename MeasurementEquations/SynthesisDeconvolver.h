@@ -35,7 +35,6 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
-#include<synthesis/MeasurementEquations/SIImageStore.h>
 #include<synthesis/MeasurementEquations/SDAlgorithmBase.h>
 #include<synthesis/MeasurementEquations/SDMaskHandler.h>
 #include <synthesis/MeasurementEquations/SIMinorCycleController.h>
@@ -99,8 +98,8 @@ protected:
 
   CountedPtr<SDAlgorithmBase> itsDeconvolver;
   CountedPtr<SDMaskHandler> itsMaskHandler;
-  CountedPtr<SIImageStore> itsImages;
 
+  CountedPtr<SIImageStore> itsImages;
   Vector<CountedPtr<SIImageStore> > itsPartImages;
 
   IPosition itsImageShape;
@@ -108,6 +107,10 @@ protected:
   
   String itsImageName;
   Vector<String> itsPartImageNames;
+
+  uInt itsDeconvolverId;
+
+  Vector<Slicer> itsDecSlices;
 
   //  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsResidual, itsWeight;
   //CountedPtr<PagedImage<Float> > itsModel;

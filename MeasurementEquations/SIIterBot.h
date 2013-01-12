@@ -172,6 +172,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void mergeMinorCycleSummary(const Array<Double>& summary);
 
+    /* For testing/debugging. Print out the contents of the iterbot */
+    void printOut(String prefix, Bool verbose); 
+
     Float itsMinPsfFraction;
     Float itsMaxPsfFraction;
     Float itsMaxPsfSidelobe;

@@ -69,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                        itsSummaryMajor(IPosition(1,0))
 
   {
-    LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
+    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
   }
     
   SIIterBot::~SIIterBot()
@@ -120,6 +120,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   bool SIIterBot::cleanComplete(){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+
+    printOut("CleanComplete", False);
 
     if (itsIterDone >= itsNiter || 
         itsPeakResidual <= itsThreshold ||
@@ -172,11 +174,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMaxPsfSidelobe = 
       max(itsMaxPsfSidelobe,
           initRecord.asFloat(RecordFieldId("maxpsfsidelobe")));
+
+    //printOut("MergeInit", False);
+
   }
 
 
   void SIIterBot::mergeCycleExecutionRecord(Record& execRecord){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
+
+    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
 
     mergeMinorCycleSummary(execRecord.asArrayDouble
                            (RecordFieldId("summaryminor")));
@@ -191,6 +198,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           execRecord.asFloat(RecordFieldId("peakresidual")));
   
     itsUpdatedModelFlag |=execRecord.asBool(RecordFieldId("updatedmodelflag"));
+
+    os << "Completed " << itsIterDone << " iterations so far" << LogIO::POST;
 
   }
 
@@ -314,7 +323,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   Record SIIterBot::getSummaryRecord() {
-    LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
+    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     Record returnRecord = getDetailsRecord();
     returnRecord.define( RecordFieldId("summaryminor"), itsSummaryMinor);
@@ -518,6 +527,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (recordIn.isDefined("interactive"))
       changeInteractiveMode(recordIn.asBool(RecordFieldId("interactive")));
    }
+
+  /* Print out contents of the IterBot. For debugging. */
+  void SIIterBot::printOut(String prefix, Bool verbose)
+  {
+    if( verbose == True )
+      {
+	cout << prefix << " : " 
+	     << " ItsNiter=" << itsNiter
+	     << " itsCycleNiter=" << itsCycleNiter
+	     << " itsInteractiveNiter=" << itsInteractiveNiter
+	     << " itsThreshold=" << itsThreshold
+	     << " itsCycleThreshold=" << itsCycleThreshold
+	     << " itsInteractiveThreshold=" << itsInteractiveThreshold
+	     << " itsCycleFactor=" << itsCycleFactor
+	     << " itsLoopGain=" << itsLoopGain
+	     << " itsStopFlag=" << itsStopFlag
+	     << " itsPauseFlag=" << itsPauseFlag
+	     << " itsInteractiveMode=" << itsInteractiveMode
+	     << " itsUpdatedModelFlag=" << itsUpdatedModelFlag
+	     << " itsPeakResidual=" << itsPeakResidual
+	     << " itsMaxPsfSidelobe=" << itsMaxPsfSidelobe
+	     << " itsMinPsfFraction=" << itsMinPsfFraction
+	     << " itsMaxPsfFraction=" << itsMaxPsfFraction
+	     << " itsIterdone=" << itsIterDone
+	     << " itsInteractiveIterDone=" << itsInteractiveIterDone
+	     << " itsMaxCycleIterDone=" << itsMaxCycleIterDone
+	     << " itsMajorDone=" << itsMajorDone
+	     << endl;
+      }
+    else
+      {
+	cout << prefix << " : " 
+	     << " ItsNiter=" << itsNiter
+	     << "  itsCycleNiter=" << itsCycleNiter
+	     << " itsThreshold=" << itsThreshold
+	     << " itsCycleThreshold=" << itsCycleThreshold
+	     << " itsStopFlag=" << itsStopFlag
+	     << " itsPeakResidual=" << itsPeakResidual
+	     << " itsIterdone=" << itsIterDone
+	     << endl;
+      }
+
+
+  }
 
 } //# NAMESPACE CASA - END
 

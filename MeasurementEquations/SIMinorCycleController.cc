@@ -79,6 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMinorCycleController::incrementMinorCycleCount()
   {
     itsIterDone++;
+    itsTotalIterDone++;
     itsCycleIterDone++;
   }
 
@@ -89,9 +90,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // This is the max residual across all channels/stokes (subimages).
   // This is returned in the end-minor-cycle record.
+  /// TODO : Make arrays/lists for peakresidual per 'subimage'. Max over subims gets returned.
   void SIMinorCycleController::setPeakResidual(Float peakResidual)
   {
-    itsPeakResidual = max( itsPeakResidual, peakResidual );
+    itsPeakResidual = peakResidual;
   }
 
   Float SIMinorCycleController::getIntegratedFlux()
@@ -143,6 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         itsUpdatedModelFlag);
     returnRecord.define(RecordFieldId("maxcycleiterdone"),
                         itsMaxCycleIterDone);
+
     return returnRecord;
   }
 
@@ -154,6 +157,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Control Variables */
     returnRecord.define(RecordFieldId("peakresidual"), itsPeakResidual);
     returnRecord.define(RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
+
+    /* Reset Counters and summary for the current set of minorcycle iterations */
+    itsIterDone = 0;
+    itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, 0) , True );
 
     return returnRecord;
   }
@@ -187,7 +194,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCycleIterDone = 0;
   }
 
-  void SIMinorCycleController::addSummaryMinor(uInt decid, Float model, Float peakresidual)
+  void SIMinorCycleController::addSummaryMinor(uInt deconvolverid, uInt subimageid, Float model, Float peakresidual)
   {
     //boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     
@@ -208,9 +215,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      // cycle threshold
      itsSummaryMinor( IPosition(2, 3, shp[1] ) ) = itsCycleThreshold;
      // mapper id
-     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = itsDeconvolverID; // TODO : Get current deconvolver tool ID.
+     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = deconvolverid;
      // chunk id (channel/stokes)
-     itsSummaryMinor( IPosition(2, 5, shp[1] ) ) = decid;
+     itsSummaryMinor( IPosition(2, 5, shp[1] ) ) = subimageid;
 
   }// end of addSummaryMinor
  
