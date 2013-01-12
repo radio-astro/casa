@@ -67,10 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
 				       itsVisSet(NULL),
 				       itsCurrentFTMachine(NULL), 
-				       itsCurrentCoordSys(NULL),
 				       itsCurrentImages(NULL),
-                                       itsCurrentImageShape(IPosition()),
-                                       itsCurrentImageName(""),
 				       itsUseScratch(True)
   {
     
@@ -144,8 +141,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     
-    os << "Define/construct Image Coordinates. Allocate Memory" << LogIO::POST;
-
     /* Use the image name to create a unique service name */
     uInt nchan=1,npol=1; 
     //imx=1,imy=1;
@@ -185,21 +180,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in reading input image-parameters: "+x.getMesg()) );
       }
 
+    os << "Define Image Coordinates and allocate Memory for : " << imagename<< LogIO::POST;
+
     try
       {
 	
-	itsCurrentCoordSys = buildImageCoordinateSystem(phasecenter, 
-                                                        cellx, celly, (uInt)imsize[0], (uInt)imsize[1], npol, nchan );
-        itsCurrentImageShape = IPosition(4,(uInt)imsize[0],(uInt)imsize[1],npol,nchan);
-
-        itsCurrentImageName = imagename;
-
-	itsCurrentImages = new SIImageStore(itsCurrentImageName, itsCurrentCoordSys, itsCurrentImageShape);
+	CountedPtr<CoordinateSystem> coordsys = buildImageCoordinateSystem(phasecenter, 
+									   cellx, celly, (uInt)imsize[0], (uInt)imsize[1], npol, nchan );
+        IPosition imageshape(4,(uInt)imsize[0],(uInt)imsize[1],npol,nchan);
+	itsCurrentImages = new SIImageStore(imagename, coordsys, imageshape);
 
       }
     catch(AipsError &x)
       {
-	throw( AipsError("Error in constructing image coordinate system : "+x.getMesg()) );
+	throw( AipsError("Error in constructing image coordinate system and allocating memory : "+x.getMesg()) );
       }
     
     
@@ -211,7 +205,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void  SynthesisImager::setupImaging(Record /*gridpars*/)
   {
     LogIO os( LogOrigin("SynthesisImager","setupImaging",WHERE) );
-    os << "Set Imaging Options - Construct FTMachine" << LogIO::POST;
     
     try
       {
@@ -222,6 +215,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError("Error in reading Imaging Parameters : "+x.getMesg()) );
       }
+    
+    os << "Set Imaging Options. Construct FTMachine of type XXX" << LogIO::POST;
     
     try
       {
@@ -244,7 +239,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::initMapper()
   {
     LogIO os( LogOrigin("SynthesisImager","initMapper", WHERE) );
-    os << "Construct mapper " << itsMappers.nMappers() << LogIO::POST;
+    os << "Construct mapper " << itsMappers.nMappers() 
+       << " for image : " << itsCurrentImages->getName() << " and ftm : " << "FTMNAME"
+       << LogIO::POST;
     try
       {
 
@@ -267,8 +264,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
-    os << "Execute Major Cycle" << LogIO::POST;
-    
+    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+
     try
       {    
 	runMajorCycle();
@@ -402,7 +399,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Int nmappers = itsMappers.nMappers();
     
-    os << "Run major cycle over all " << nmappers << " mappers" << LogIO::POST;
+    os << "Run major cycle for " << nmappers << " images" << LogIO::POST;
 
     ///////// (1) Initialize all the FTMs.
     for(Int mp=0;mp<nmappers;mp++)

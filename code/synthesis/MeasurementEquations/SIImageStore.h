@@ -60,9 +60,12 @@ class SIImageStore
   CountedPtr<PagedImage<Float> > residual();
   CountedPtr<PagedImage<Float> > weight();
   CountedPtr<PagedImage<Float> > model();
+  CountedPtr<PagedImage<Float> > image();
 
   Bool doImagesExist();
   Bool doesModelImageExist();
+
+  void allocateRestoredImage();
 
 protected:
 
@@ -70,7 +73,7 @@ protected:
 
   IPosition itsImageShape;
   String itsImageName;
-  CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight;
+  CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
   
 
 };

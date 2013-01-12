@@ -40,6 +40,7 @@
 #include <casa/System/PGPlotter.h>
 
 #include<synthesis/MeasurementEquations/SDMaskHandler.h>
+#include<synthesis/MeasurementEquations/SIImageStore.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -65,7 +66,8 @@ public:
 		   ImageInterface<Float> &psf, 
 		   ImageInterface<Float> &model, 
 		   CountedPtr<SDMaskHandler> maskhandler, 
-		   uInt decid);
+		   uInt subimageid,
+		   Int deconvolverid);
 
   // eventually, send in images by reference.
   void findNextComponent( ImageInterface<Float>  &residual, 
@@ -77,11 +79,7 @@ public:
   void updateResidual( ImageInterface<Float> &residual, 
 		       Float  &comp );
 
-  void restore( ImageInterface<Float>  &image, 
-		Float beam, 
-		ImageInterface<Float>  &model, 
-		ImageInterface<Float>  &residual, 
-		ImageInterface<Float>  &weight );
+  void restore( CountedPtr<SIImageStore> imagestore );
 
   Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
 

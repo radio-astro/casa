@@ -66,6 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsCoordSys(NULL),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
+				       itsDeconvolverId(0),
 				       itsBeam(0.0)
   {
     
@@ -73,14 +74,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisDeconvolver::~SynthesisDeconvolver() 
   {
+    LogIO os( LogOrigin("SynthesisDeconvolver","descructor",WHERE) );
+    os << "SynthesisDeconvolver destroyed" << LogIO::POST;
   }
   
   
   void SynthesisDeconvolver::setupDeconvolution(Record decpars)
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupDeconvolution",WHERE) );
-    os << "Set Deconvolution Options - Construct Deconvolver" << LogIO::POST;
-    
     try
       {
 
@@ -94,6 +95,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{ itsPartImageNames.resize(0); }
 
+      if( decpars.isDefined("id") )
+	{ decpars.get( RecordFieldId("id") , itsDeconvolverId ); }
 
       }
     catch(AipsError &x)
@@ -101,6 +104,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in reading deconvolution parameters: "+x.getMesg()) );
       }
     
+    os << "Set Deconvolution Options for image [" << itsDeconvolverId << "] :" << itsImageName ;
+    if( itsPartImageNames.nelements()>0 ) os << " constructed from : " << itsPartImageNames;
+    os << LogIO::POST;
+
     try
       {
 	itsDeconvolver = new SDAlgorithmBase();
@@ -127,8 +134,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   { 
     LogIO os( LogOrigin("SynthesisDeconvolver","initMinorCycle",WHERE) );
     Record returnRecord;
-
-    os << "Initialize the Minor Cycle" << LogIO::POST;
 
     try {
       // Do the Gather if/when needed and check that images exist on disk.
@@ -242,6 +247,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
+    // Make a list of Slicers.
+    itsDecSlices = partitionImages();
+
     return foundFullImage;
 
   }
@@ -327,22 +335,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool isModelUpdated=False;
 
-    // Make a list of Slicers.
-    Vector<Slicer> decSlices = partitionImages();
-    os << "Starting iterations on " << decSlices.nelements() << " slices for image : " << itsImageName
+    os << "Run minor-cycle on " << itsDecSlices.nelements() 
+       << " slices of [" << itsDeconvolverId << "]:" << itsImageName
        << " [ CycleThreshold=" << loopController.getCycleThreshold()
-       << ", CycleNiter=" << loopController.getCycleNiter() << " ]" << LogIO::POST;
+       << ", CycleNiter=" << loopController.getCycleNiter() 
+       << ", Gain=" << loopController.getLoopGain()
+       << " ]" << LogIO::POST;
 
-    for( uInt subim=0; subim<decSlices.nelements(); subim++)
+    for( uInt subim=0; subim<itsDecSlices.nelements(); subim++)
       {
 
 	//cout << "Mapper : " << itsMapperId << "  Deconvolving : " << decSlices[subim] << endl;
-	SubImage<Float> subResidual( *(itsImages->residual()), decSlices[subim], True );
-	SubImage<Float> subPsf( *(itsImages->psf()), decSlices[subim], True );
-	SubImage<Float> subModel( *(itsImages->model()), decSlices[subim], True );
+	SubImage<Float> subResidual( *(itsImages->residual()), itsDecSlices[subim], True );
+	SubImage<Float> subPsf( *(itsImages->psf()), itsDecSlices[subim], True );
+	SubImage<Float> subModel( *(itsImages->model()), itsDecSlices[subim], True );
 	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
 
-	itsDeconvolver->deconvolve( loopController, subResidual, subPsf, subModel, itsMaskHandler, subim );
+	itsDeconvolver->deconvolve( loopController, subResidual, subPsf, subModel, itsMaskHandler, subim, itsDeconvolverId);
         loopController.resetCycleIter();
 
       }
@@ -385,9 +394,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisDeconvolver::restore()
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","restoreImage",WHERE) );
-    
-    //itsImage = new PagedImage<Float> (itsImageShape, *itsCoordSys, itsImageName+String(".image"));
-    //itsDeconvolver->restore( *itsImage, itsBeam, *itsModel, *itsResidual, *itsWeight );
+
+    itsDeconvolver->restore(itsImages);
 
   }
 

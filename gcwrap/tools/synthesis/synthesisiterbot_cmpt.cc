@@ -130,7 +130,7 @@ bool synthesisiterbot::endmajorcycle()
 
 
 
-  casac::record* synthesisiterbot::getsubiterbot()
+  casac::record* synthesisiterbot::getminorcyclecontrols()
 {
   casac::record* rstat(0);
   try {
@@ -143,7 +143,7 @@ bool synthesisiterbot::endmajorcycle()
   return rstat;
 }  
 
-bool synthesisiterbot::initminorcycle(const casac::record& initrecord)
+bool synthesisiterbot::mergeinitrecord(const casac::record& initrecord)
 {
   Bool rstat(False);
   
@@ -160,7 +160,7 @@ bool synthesisiterbot::initminorcycle(const casac::record& initrecord)
   return rstat;
 }
 
-bool synthesisiterbot::endminorcycle(const casac::record& execrecord)
+bool synthesisiterbot::mergeexecrecord(const casac::record& execrecord)
 {
   Bool rstat(False);
   
