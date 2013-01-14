@@ -1987,12 +1987,12 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
  * is filled and will be used by fillMain.
  */ 
 void fillMain(int		rowNum,
-	      MainRow*	r_p,
+	      MainRow*		r_p,
 	      SDMBinData&	sdmBinData,
-	      const VMSData* vmsData_p,
+	      const VMSData*	vmsData_p,
 	      UvwCoords&	uvwCoords,
 	      bool		complexData,
-	      bool           mute) {
+	      bool              mute) {
   
   if (debug) cout << "fillMain : entering" << endl;
 
@@ -2102,10 +2102,32 @@ void fillMain(int		rowNum,
 	}
       }
     }
-    // No we are in front of non radiometric data ? They must be labelled AP_CORRECTED
+    
     else {
-      for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {      
-	if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+      // we are in front of non radiometric data , supposedly AP_CORRECTED data.
+      for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size() ; iData++) {
+	if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
+	  /*
+	  ** do not forget to prepend the autodata copied from the uncorrected data, because the lower layers of the software do not put the (uncorrected) autodata in the
+	  ** corrected data.
+	  */
+	  correctedTime.push_back(vmsData_p->v_time.at(iData));
+	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	  correctedFilteredDD.push_back(filteredDD.at(iData));
+	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	  correctedUvw.push_back(vv_uvw.at(iData)(0));
+	  correctedUvw.push_back(vv_uvw.at(iData)(1));
+	  correctedUvw.push_back(vv_uvw.at(iData)(2));
+	  correctedData.push_back(uncorrectedData.at(iData));    // <-------- Here we re-use the autodata already present in the uncorrected data.
+	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));	    
+	}
+	else {
 	  correctedTime.push_back(vmsData_p->v_time.at(iData));
 	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
 	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
