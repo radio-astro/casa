@@ -83,6 +83,9 @@ protected:
   //  ( j = sqrt(p) )
   virtual Bool trivialJonesElem() { return False; };
 
+  // Specialized calcPar that does some sanity checking
+  virtual void calcPar();
+
   // Invert doInv for Tsys corrections
   virtual void syncJones(const Bool& doInv) { BJones::syncJones(!doInv); };
   

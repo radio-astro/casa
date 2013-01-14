@@ -252,11 +252,25 @@ void StandardTsys::specify(const Record&) {
 
 }
 
+// Specialized calcPar that does some sanity checking
+void StandardTsys::calcPar() {
 
+  // Call parent (this drives generalized interpolation)
+  SolvableVisCal::calcPar();
+
+  // Since some interpolation types may unwittingly yield
+  //  negative Tsys, we'll trap that here by flagging and zeroing them
+  Cube<Bool> mask(currRPar()<Float(0.0));
+  currParOK()(mask)=False;
+  currRPar()(mask)=0.0;  // avoids NaN generation in sqrt, even for flagged points
+}
+
+
+
+// Specialized Jones Matrix calculation
 void StandardTsys::calcAllJones() {
-
+  
   // Antenna-based factors are the sqrt(Tsys)
-  //  currJElem()=sqrt(currRPar());  NEWCALTABLE
   convertArray(currJElem(),sqrt(currRPar()));
   currJElemOK()=currParOK();
 
