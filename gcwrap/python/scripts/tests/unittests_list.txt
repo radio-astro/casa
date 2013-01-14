@@ -71,7 +71,7 @@ test_imstat                     dmehring@nrao.edu
 test_imtrans                    dmehring@nrao.edu
 test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
-test_listobs                    scastro@eso.org
+test_listobs                    dmehring@nrao.edu
 #test_listvis                    scastro@eso.org
 test_listpartition              scastro@eso.org
 test_makemask                   ttsutsum@nrao.edu
