@@ -994,6 +994,16 @@ void XJones::setSolve(const Record& solvepar) {
   if (preavg()<0.0)
     preavg()=300.0;
 
+  // Force refant to none (==-1), because it is meaningless to
+  //  apply a refant to an X solution
+  if (refant()>-1) {
+    logSink() << ".   (Ignoring specified refant for " 
+	      << typeName() << " solve.)"
+	      << LogIO::POST;
+    refantlist().resize(1);
+    refantlist()(0)=-1;
+  }
+
 }
 
 void XJones::newselfSolve(VisSet& vs, VisEquation& ve) {
