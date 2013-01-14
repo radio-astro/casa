@@ -70,10 +70,10 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 	connect( plotWidget, SIGNAL(rangeChanged()), this, SIGNAL(rangeChanged()));
 
 
-	plotWidget->addZoomActions( ui.menuZoom );
+	plotWidget->addZoomActions( rangeControls, ui.menuZoom );
 	plotWidget->addDisplayActions( ui.menuDisplay );
 	if ( plotModeControls ){
-		plotWidget->addPlotModeActions( ui.menuDisplay );
+		plotWidget->addPlotModeActions( ui.menuConfigure );
 	}
 	else {
 		preferencesColor->setMultipleHistogramColorsVisible( false );
@@ -87,7 +87,7 @@ bool HistogramMain::setImage( ImageInterface<Float>* img ){
 	return imageSet;
 }
 
-bool HistogramMain::setImageRegion( const ImageRegion* imageRegion, int id ){
+bool HistogramMain::setImageRegion( ImageRegion* imageRegion, int id ){
 	bool regionSet = plotWidget->setImageRegion( imageRegion, id );
 	return regionSet;
 }
@@ -116,6 +116,14 @@ void HistogramMain::setDisplayAxisTitles( bool display ){
 
 void HistogramMain::setPlotMode( int mode ){
 	plotWidget->setPlotMode( mode );
+}
+
+void HistogramMain::setChannelCount( int count ){
+	plotWidget->setChannelCount( count );
+}
+
+void HistogramMain::setChannelValue( int value ){
+	plotWidget->setChannelValue( value );
 }
 
 void HistogramMain::openFileLoader(){

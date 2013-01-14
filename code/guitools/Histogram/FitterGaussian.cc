@@ -24,8 +24,12 @@
 //#
 
 #include "FitterGaussian.h"
-#include <scimath/Functionals/Gaussian1D.h>
+//#include <scimath/Functionals/Gaussian1D.h>
+#include <scimath/Fitting/FitGaussian.h>
+#include <QDebug>
 
+#include <iostream>
+using namespace std;
 namespace casa {
 
 FitterGaussian::FitterGaussian() {
@@ -144,15 +148,77 @@ bool FitterGaussian::doFit(){
 				errorMsg = "The full width at half maximum value must be positive.";
 			}
 			else {
-				Gaussian1D<Float> gaussFit(peak, center, fwhm );
-				for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
-					fitValues[i] = gaussFit.eval(&xValues[i]);
+
+				FitGaussian<Float> fitgauss;
+				fitgauss.setDimensions(1);
+				fitgauss.setNumGaussians(1);
+
+				//Initialize the x-data values
+				Matrix<Float> components;
+				int xCount = xValues.size();
+				components.resize(xCount,1);
+				for ( int i = 0; i < xCount; i++ ){
+					components(i,0) = xValues[i];
 				}
-				dataFitted = true;
+
+				//Initialize the estimate
+				Matrix<Float> estimate;
+				estimate.resize(1, 3);
+				estimate(0,0) = peak;
+				estimate(0,1) = center;
+				estimate(0,2) = fwhm;
+				fitgauss.setFirstEstimate(estimate);
+
+				try {
+					Matrix<Float> solution = fitgauss.fit(components, yValues, rmsError );
+					solutionPeak = solution( 0, 0 );
+					solutionCenter = solution( 0, 1 );
+					solutionFWHM= solution( 0, 2 );
+					solutionChiSquared = fitgauss.chisquared();
+					solutionRMS = fitgauss.RMS();
+					solutionConverged = fitgauss.converged();
+					Gaussian1D<Float> gaussFit(solutionPeak, solutionCenter, solutionFWHM );
+					for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
+							fitValues[i] = gaussFit.eval(&xValues[i]);
+					}
+					dataFitted = true;
+				}
+				catch (AipsError& err) {
+				    qDebug() << "ERROR: " << err.what();
+				    fitSuccessful = false;
+				}
 			}
 		}
 	}
 	return fitSuccessful;
+}
+
+QString FitterGaussian::getSolutionStatistics() const {
+	QString stats;
+	if ( solutionConverged ){
+		stats.append( "Fit converged to a value.\n");
+	}
+	else {
+		stats.append( "Fit did not converge.\n Result generated the smallest RMS.\n");
+	}
+	int fieldWidth = -14;
+	QChar fillChar(' ');
+	QString centerStr("%0");
+	centerStr = centerStr.arg( "Center:", fieldWidth, fillChar);
+	stats.append( centerStr + QString::number(solutionCenter)+"\n");
+	QString peakStr("%0");
+	peakStr = peakStr.arg( "Peak:", fieldWidth, fillChar);
+	stats.append( peakStr + QString::number(solutionPeak)+"\n");
+	QString fwhmStr("%0");
+	fwhmStr = fwhmStr.arg( "FWHM:", fieldWidth, fillChar );
+	stats.append( fwhmStr + QString::number(solutionFWHM)+"\n");
+	QString chiSquaredStr("%0");
+	chiSquaredStr = chiSquaredStr.arg( "Chi-squared:", fieldWidth, fillChar);
+	stats.append( chiSquaredStr + QString::number(solutionChiSquared)+"\n");
+	QString rmsStr("%0");
+	rmsStr = rmsStr.arg( "RMS:", fieldWidth, fillChar );
+	stats.append( rmsStr + QString::number(solutionRMS));
+	return stats;
 }
 
 void FitterGaussian::clearFit(){

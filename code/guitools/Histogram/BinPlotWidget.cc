@@ -31,11 +31,16 @@
 #include <guitools/Histogram/RangeControlsWidget.qo.h>
 #include <guitools/Histogram/RangePicker.h>
 #include <guitools/Histogram/ToolTipPicker.h>
+#include <guitools/Histogram/BinCountWidget.qo.h>
+#include <guitools/Histogram/ChannelRangeWidget.qo.h>
+#include <guitools/Histogram/ZoomWidget.qo.h>
 
 #include <QDebug>
 #include <QMessageBox>
 #include <QFile>
 #include <QMouseEvent>
+#include <QWidgetAction>
+#include <QSpinBox>
 #include <QtCore/qmath.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
@@ -52,14 +57,20 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
     image( NULL ), binPlot( this ),
     NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), IMAGE_ID(-1), contextMenuZoom(this),
-    zoomRangeAction( "Zoom Range", this), zoom95Action( "Zoom 95% of Peak", this),
-    zoom98Action("Zoom 98% of Peak", this), zoom995Action ( "Zoom 99.5% of Peak", this),
-    zoom999Action( "Zoom 99.9% of Peak", this), zoomNeutralAction( "Zoom Neutral", this),
+    zoomActionContext(NULL), zoomWidgetContext( NULL ),
+    zoomActionMenu(NULL), zoomWidgetMenu( NULL ),
     lambdaAction("Lambda",this), centerPeakAction( "(Center,Peak)",this),
     fwhmAction( "Center +/- FWHM/2", this), contextMenu(this),
-    stepFunctionAction( "Histogram",this), logAction( "Log(Count)", this), clearAction( "Clear", this ),
-    regionModeAction( "Plot Selected Region", this), imageModeAction("Plot Image", this),
-    regionAllModeAction( "Plot All Regions", this ), contextMenuDisplay( this ){
+    stepFunctionNoneAction("Line",this), stepFunctionAction( "Histogram Outline",this), stepFunctionFilledAction( "Filled Histogram",this),
+    logAction( "Log(Count)", this), logActionX("Log(Intensity)",this), clearAction( "Clear", this ),
+    contextMenuDisplay( this ),
+    regionModeAction( "Selected Region", this), imageModeAction("Image", this),
+    regionAllModeAction( "All Regions", this ),
+    binCountActionContext(NULL), channelRangeActionContext(NULL),
+    binCountActionMenu(NULL), channelRangeActionMenu(NULL),
+    binCountWidgetContext(NULL), channelRangeWidgetContext(NULL),
+    binCountWidgetMenu(NULL), channelRangeWidgetMenu(NULL),
+    contextMenuConfigure( this ){
 
 	ui.setupUi(this);
 
@@ -71,11 +82,11 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 	setAxisLabelFont( 8);
 
 	ui.plotHolder->setLayout( layout );
-	//setFocusPolicy( Qt::StrongFocus );
 
-	initializePlotControls();
+	initializeDisplayActions();
 	initializeFitWidget( fitControls );
 	initializeRangeControls( rangeControls );
+	initializeZoomControls( rangeControls );
 	initializePlotModeControls( plotModeControls );
 
 	displayPlotTitle = false;
@@ -206,14 +217,20 @@ void BinPlotWidget::initializePlotModeControls( bool enable ){
 		plotControlsGroup->addAction( &regionModeAction );
 		plotControlsGroup->addAction( &imageModeAction );
 		plotControlsGroup->addAction( &regionAllModeAction );
+
 		regionModeAction.setCheckable( true );
 		imageModeAction.setCheckable( true );
 		regionAllModeAction.setCheckable( true );
 		regionModeAction.setChecked( true );
-		contextMenuDisplay.addSeparator();
-		contextMenuDisplay.addAction( &imageModeAction );
-		contextMenuDisplay.addAction( &regionModeAction );
-		contextMenuDisplay.addAction( &regionAllModeAction );
+		binCountWidgetContext = new BinCountWidget( &contextMenuConfigure );
+		binCountActionContext = new QWidgetAction( &contextMenuConfigure );
+		binCountActionContext->setDefaultWidget( binCountWidgetContext );
+		channelRangeWidgetContext = new ChannelRangeWidget( &contextMenuConfigure );
+		channelRangeActionContext = new QWidgetAction( &contextMenuConfigure );
+		channelRangeActionContext->setDefaultWidget( channelRangeWidgetContext );
+		addPlotModeActions( &contextMenuConfigure, binCountActionContext, channelRangeActionContext );
+		connect( channelRangeWidgetContext, SIGNAL(rangeChanged(int,int,bool,bool)), this, SLOT(channelRangeChanged(int,int,bool,bool)));
+		connect( binCountWidgetContext, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
 		connect( &imageModeAction, SIGNAL(triggered(bool)), this, SLOT(imageModeSelected(bool)));
 		connect( &regionModeAction, SIGNAL(triggered(bool)), this, SLOT(regionModeSelected(bool)));
 		connect( &regionAllModeAction, SIGNAL(triggered(bool)), this, SLOT(regionAllModeSelected(bool)));
@@ -257,7 +274,84 @@ void BinPlotWidget::regionAllModeSelected( bool enabled ){
 	}
 }
 
-void BinPlotWidget::addPlotModeActions( QMenu* menu ){
+void BinPlotWidget::channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic ){
+
+	//Coordinate the channel range from the two different menus
+	if ( channelRangeWidgetContext != NULL ){
+		channelRangeWidgetContext->setRange( minValue, maxValue );
+		channelRangeWidgetContext->setAutomatic( automatic );
+	}
+	if ( channelRangeWidgetMenu != NULL ){
+		channelRangeWidgetMenu->setRange( minValue, maxValue );
+		channelRangeWidgetMenu->setAutomatic( automatic );
+	}
+
+	if ( allChannels ){
+		Histogram::setChannelRangeDefault();
+	}
+	else {
+		Histogram::setChannelRange( minValue, maxValue );
+	}
+	int selectedId = getSelectedId();
+	if ( histogramMap.contains( selectedId )){
+		histogramMap[selectedId]->reset();
+		reset();
+	}
+}
+
+void BinPlotWidget::binCountChanged( int count ){
+	//Coordinate the bin counts from the two different menus.
+	if ( binCountWidgetContext != NULL ){
+		binCountWidgetContext->setBinCount( count );
+	}
+	if ( binCountWidgetMenu != NULL ){
+		binCountWidgetMenu->setBinCount( count );
+	}
+	Histogram::setBinCount( count );
+	int selectedId = getSelectedId();
+	if ( histogramMap.contains(selectedId)){
+		histogramMap[selectedId]->compute();
+		reset();
+	}
+}
+
+void BinPlotWidget::setChannelValue( int value ){
+	if ( channelRangeWidgetContext != NULL ){
+		channelRangeWidgetContext->setChannelValue( value );
+	}
+	if ( channelRangeWidgetMenu != NULL ){
+		channelRangeWidgetMenu->setChannelValue( value );
+	}
+}
+
+void BinPlotWidget::setChannelCount( int count ){
+	if ( channelRangeWidgetContext != NULL ){
+		channelRangeWidgetContext->setChannelCount( count );
+	}
+	if ( channelRangeWidgetMenu != NULL ){
+		channelRangeWidgetMenu->setChannelCount( count );
+	}
+}
+
+void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction, QWidgetAction* channelRangeAction ){
+
+	if ( binCountAction == NULL ){
+		binCountActionMenu = new QWidgetAction( menu );
+		binCountWidgetMenu = new BinCountWidget( menu );
+		binCountActionMenu->setDefaultWidget( binCountWidgetMenu );
+		connect( binCountWidgetMenu, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
+		binCountAction = binCountActionMenu;
+	}
+	if ( channelRangeAction == NULL ){
+		channelRangeActionMenu = new QWidgetAction( menu );
+		channelRangeWidgetMenu = new ChannelRangeWidget( menu );
+		connect( channelRangeWidgetMenu, SIGNAL(rangeChanged(int,int,bool,bool)), this, SLOT(channelRangeChanged(int,int,bool,bool)));
+		channelRangeActionMenu->setDefaultWidget( channelRangeWidgetMenu );
+		channelRangeAction = channelRangeActionMenu;
+	}
+	menu->addAction( binCountAction );
+	menu->addSeparator();
+	menu->addAction( channelRangeAction );
 	menu->addSeparator();
 	menu->addAction( &imageModeAction );
 	menu->addAction( &regionModeAction );
@@ -282,41 +376,64 @@ void BinPlotWidget::setPlotMode( int mode ){
 	}
 }
 
-void BinPlotWidget::initializePlotControls(){
-	displayStep = true;
+void BinPlotWidget::initializeDisplayActions(){
+
 	displayLog = false;
+	displayLogX = false;
 	logAction.setCheckable( true );
 	logAction.setChecked( displayLog );
+	logActionX.setCheckable( true );
+	logActionX.setChecked( displayLogX );
+
+	//displayStep = HISTOGRAM_FILLED;
 	stepFunctionAction.setCheckable( true );
-	stepFunctionAction.setChecked( displayStep );
-	contextMenuDisplay.addAction( &clearAction );
-	contextMenuDisplay.addAction( &logAction );
-	contextMenuDisplay.addAction( &stepFunctionAction );
+	stepFunctionAction.setChecked( true );
+	stepFunctionNoneAction.setCheckable( true );
+	stepFunctionNoneAction.setChecked( false );
+	stepFunctionFilledAction.setCheckable( true );
+	stepFunctionFilledAction.setChecked( false );
+	QActionGroup* histogramGroup = new QActionGroup( this );
+	histogramGroup->addAction( &stepFunctionNoneAction );
+	histogramGroup->addAction( &stepFunctionAction );
+	histogramGroup->addAction( &stepFunctionFilledAction );
+	addDisplayActions( &contextMenuDisplay );
 	connect( &clearAction, SIGNAL(triggered(bool)), this, SLOT(clearAll()));
 	connect( &logAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayLog(bool)));
 	connect( &stepFunctionAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayStep(bool)));
+	connect( &stepFunctionNoneAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayStep(bool)));
+	connect( &stepFunctionFilledAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayStep(bool)));
 	if ( toolTipPicker != NULL ){
 		setDisplayLog( displayLog );
 	}
 }
 
+
 void BinPlotWidget::addDisplayActions( QMenu* menu ){
 	menu->addAction( &clearAction );
+	menu->addSeparator();
 	menu->addAction( &logAction );
+	menu->addAction( &logActionX );
+	menu->addSeparator();
+	menu->addAction( &stepFunctionNoneAction );
 	menu->addAction( &stepFunctionAction );
+	menu->addAction( &stepFunctionFilledAction );
 }
 
-void BinPlotWidget::setDisplayStep( bool display ){
-	if ( displayStep != display ){
-		displayStep = display;
-		stepFunctionAction.setChecked( displayStep );
-		if ( plotMode == IMAGE_MODE ){
-			resetImage();
-		}
-		else {
-			resetRegion();
-		}
+void BinPlotWidget::reset(){
+	if ( plotMode == IMAGE_MODE ){
+		resetImage();
 	}
+	else {
+		resetRegion();
+	}
+}
+
+void BinPlotWidget::setDisplayStep( bool ){
+	//if ( displayStep != display ){
+		//displayStep = display;
+		//stepFunctionAction.setChecked( displayStep );
+		reset();
+	//}
 }
 
 void BinPlotWidget::setDisplayLog( bool display ){
@@ -377,34 +494,51 @@ void BinPlotWidget::initializeRangeControls( bool enable ){
 	toolTipPicker = new ToolTipPicker( QwtPlot::xBottom, QwtPlot::yLeft,
 			QwtPlotPicker::PointSelection, QwtPlotPicker::NoRubberBand,
 			QwtPlotPicker::AlwaysOn, binPlot.canvas());
+}
 
-	//Zooming
-	QActionGroup* zoomGroup = new QActionGroup( this );
-	zoomGroup->addAction( &zoomRangeAction );
-	zoomGroup->addAction( &zoom95Action );
-	zoomGroup->addAction( &zoom98Action );
-	zoomGroup->addAction( &zoom995Action );
-	zoomGroup->addAction( &zoom999Action );
-	zoomGroup->addAction( &zoomNeutralAction );
-	zoomRangeAction.setCheckable(true);
-	zoom95Action.setCheckable(true);
-	zoom98Action.setCheckable(true);
-	zoom995Action.setCheckable(true);
-	zoom999Action.setCheckable(true);
-	zoomNeutralAction.setCheckable(true);
-	zoomNeutralAction.setChecked( true );
-	connect( &zoomRangeAction, SIGNAL(triggered(bool)), this, SLOT(zoomRange(bool)));
-	connect( &zoom95Action, SIGNAL(triggered(bool)), this, SLOT(zoom95(bool)));
-	connect( &zoom98Action, SIGNAL(triggered(bool)), this, SLOT(zoom98(bool)));
-	connect( &zoom995Action, SIGNAL(triggered(bool)), this, SLOT(zoom995(bool)));
-	connect( &zoom999Action, SIGNAL(triggered(bool)), this, SLOT(zoom999(bool)));
-	connect( &zoomNeutralAction, SIGNAL(triggered(bool)), this, SLOT(zoomNeutral(bool)));
-	contextMenuZoom.addAction( &zoomRangeAction );
-	contextMenuZoom.addAction( &zoom95Action );
-	contextMenuZoom.addAction( &zoom98Action );
-	contextMenuZoom.addAction( &zoom995Action );
-	contextMenuZoom.addAction( &zoom999Action );
-	contextMenuZoom.addAction( &zoomNeutralAction );
+void BinPlotWidget::zoomContextFinished(){
+	contextMenuZoom.close();
+	if ( zoomWidgetMenu != NULL ){
+		zoomWidgetMenu->copyState( zoomWidgetContext );
+	}
+}
+
+void BinPlotWidget::zoomMenuFinished(){
+	if ( zoomWidgetContext != NULL ){
+		zoomWidgetContext->copyState( zoomWidgetMenu );
+	}
+}
+
+void BinPlotWidget::zoomPercentage( float minValue, float maxValue ){
+	if ( !isEmpty() ){
+		Histogram::setIntensityRange( minValue, maxValue );
+		int selectedId = getSelectedId();
+		if ( histogramMap.contains( selectedId )){
+			histogramMap[selectedId]->compute();
+			reset();
+		}
+	}
+	else {
+		QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
+	}
+}
+
+
+void BinPlotWidget::connectZoomActions( ZoomWidget* zoomWidget ){
+
+	connect( zoomWidget, SIGNAL(zoomRange(float,float)), this, SLOT(zoomPercentage(float,float)));
+	connect( zoomWidget, SIGNAL( zoomNeutral()), this, SLOT(zoomNeutral()));
+	connect( zoomWidget, SIGNAL( zoomGraphicalRange()), this, SLOT(zoomRange()));
+}
+
+void BinPlotWidget::initializeZoomControls( bool rangeControls ){
+
+	zoomWidgetContext = new ZoomWidget( rangeControls, &contextMenuZoom );
+	zoomActionContext = new QWidgetAction( &contextMenuZoom );
+	zoomActionContext->setDefaultWidget( zoomWidgetContext );
+	contextMenuZoom.addAction( zoomActionContext );
+	connectZoomActions( zoomWidgetContext );
+	connect( zoomWidgetContext, SIGNAL(finished()), this, SLOT(zoomContextFinished()));
 	contextMenuMode = ZOOM_CONTEXT;
 }
 
@@ -423,7 +557,7 @@ void BinPlotWidget::zoomRangeMarker( double startValue, double endValue ){
 	}
 }
 
-void BinPlotWidget::zoom( float percent ){
+int BinPlotWidget::getSelectedId() const {
 	int id = selectedId;
 	//There is not region selected, just grab the first one we
 	//can find.
@@ -433,110 +567,48 @@ void BinPlotWidget::zoom( float percent ){
 			id = keys[0];
 		}
 	}
-	if ( histogramMap.contains( id )){
-		pair<float,float> range = histogramMap[id]->getZoomRange( percent );
-		binPlot.setAxisScale( QwtPlot::xBottom, range.first, range.second);
-		zoomRangeMarker( range.first, range.second);
-		binPlot.replot();
-	}
+	return id;
 }
 
-void BinPlotWidget::zoomRange( bool rangeZoom ){
+void BinPlotWidget::zoomRange( ){
 	if ( !isEmpty() ){
-		if ( rangeZoom ){
-			int lowerBound = rectMarker->getLowerBound();
-			int upperBound = rectMarker ->getUpperBound();
-			if ( lowerBound < upperBound ){
-				//Change to world coordinates
-				double lowerBoundWorld = binPlot.invTransform( QwtPlot::xBottom, lowerBound );
-				double upperBoundWorld = binPlot.invTransform( QwtPlot::xBottom, upperBound );
-				binPlot.setAxisScale( QwtPlot::xBottom, lowerBoundWorld, upperBoundWorld );
-				zoomRangeMarker( lowerBoundWorld, upperBoundWorld );
-				binPlot.replot();
+		pair<double,double> bounds = this->getMinMaxValues();
+		if ( bounds.first < bounds.second ){
+			Histogram::setIntensityRange( bounds.first, bounds.second );
+			int id = getSelectedId();
+			if ( histogramMap.contains(id)){
+				histogramMap[id]->compute();
+				reset();
 			}
-			else {
-				QMessageBox::warning( this, "Range Not Specified", "Please specify a range by dragging the left mouse." );
-				zoomNeutralAction.setChecked( true );
-			}
+		}
+		else {
+			QMessageBox::warning( this, "Invalid Range","Please drag the left mouse button on the histogram to specify a graphical range.");
 		}
 	}
 	else {
-		if ( rangeZoom ){
-			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
-			zoomNeutralAction.setChecked( true );
+		QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
+	}
+}
+
+void BinPlotWidget::zoomNeutral(){
+	if ( !isEmpty() ){
+		Histogram::setIntensityRangeDefault();
+		int id = getSelectedId();
+		if ( histogramMap.contains( id )){
+			histogramMap[id]->compute();
+			reset();
 		}
 	}
 }
 
-void BinPlotWidget::zoomNeutral( bool neutralZoom ){
-	if ( neutralZoom ){
-		if ( !isEmpty() ){
-			binPlot.setAxisAutoScale( QwtPlot::xBottom );
-			//The rescale won't take affect until after we plot.
-			binPlot.replot();
-			QwtScaleDiv* scaleDivX = binPlot.axisScaleDiv( QwtPlot::xBottom );
-			QwtDoubleInterval interval = scaleDivX->interval();
-			zoomRangeMarker( interval.minValue(), interval.maxValue() );
-			//Now the range marker is correct, we have to replot.
-			binPlot.replot();
-		}
-	}
-}
 
-void BinPlotWidget::zoom95( bool zoomValues ){
-	if ( zoomValues ){
-		if ( !isEmpty() ){
-			zoom( 0.95f);
-		}
-		else {
-			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
-			zoomNeutralAction.setChecked( true );
-		}
-	}
-}
-
-void BinPlotWidget::zoom98( bool zoomValues ){
-	if ( zoomValues ){
-		if ( !isEmpty() ){
-			zoom( 0.98f );
-		}
-		else {
-			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
-			zoomNeutralAction.setChecked( true );
-		}
-	}
-}
-
-void BinPlotWidget::zoom995( bool zoomValues ){
-	if ( zoomValues ){
-		if ( !isEmpty() ){
-			zoom( 0.995f );
-		}
-		else {
-			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
-			zoomNeutralAction.setChecked( true );
-		}
-	}
-}
-
-void BinPlotWidget::zoom999( bool zoomValues ){
-	if ( zoomValues ){
-		if ( !isEmpty() ){
-			zoom( 0.999f );
-		}
-		else {
-			QMessageBox::warning( this, NO_DATA, NO_DATA_MESSAGE );
-			zoomNeutralAction.setChecked( true );
-		}
-	}
-}
-void BinPlotWidget::addZoomActions( QMenu* zoomMenu ){
-	zoomMenu->addAction( &zoomRangeAction );
-	zoomMenu->addAction( &zoom95Action );
-	zoomMenu->addAction( &zoom98Action );
-	zoomMenu->addAction( &zoom995Action );
-	zoomMenu->addAction( &zoom999Action );
-	zoomMenu->addAction( &zoomNeutralAction );
+void BinPlotWidget::addZoomActions( bool rangeControls, QMenu* zoomMenu ){
+	zoomWidgetMenu = new ZoomWidget( rangeControls, zoomMenu );
+	zoomActionMenu = new QWidgetAction( zoomMenu );
+	zoomActionMenu->setDefaultWidget( zoomWidgetMenu );
+	zoomMenu->addAction( zoomActionMenu );
+	connectZoomActions( zoomWidgetMenu );
+	connect( zoomWidgetMenu, SIGNAL(finished()), this, SLOT(zoomMenuFinished()));
 }
 
 void BinPlotWidget::setMinMaxValues( double minValue, double maxValue,
@@ -823,7 +895,15 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 	}
 	curve->setPen(curvePen);
 	curve->attach(&binPlot);
+
 	if ( histColor != fitCurveColor ){
+		if ( stepFunctionFilledAction.isChecked() ){
+			curve->setBaseline( 0 );
+			QBrush brush;
+			brush.setColor( histColor );
+			brush.setStyle( Qt::SolidPattern );
+			curve->setBrush( brush );
+		}
 		curves.append( curve );
 	}
 	return curve;
@@ -834,10 +914,10 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 void BinPlotWidget::defineCurveHistogram( int id, const QColor& histogramColor ){
 	if ( histogramMap.contains(id)){
 		int pointCount = histogramMap[id]->getDataCount();
+		QVector<double> xValues(2);
+		QVector<double> yValues(2);
 		for ( int i = 0; i < pointCount; i++ ){
 			//Draw vertical line
-			QVector<double> xValues(2);
-			QVector<double> yValues(2);
 			histogramMap[id]->defineStepVertical( i, xValues, yValues, displayLog );
 			addCurve( xValues, yValues, histogramColor );
 
@@ -845,6 +925,10 @@ void BinPlotWidget::defineCurveHistogram( int id, const QColor& histogramColor )
 			histogramMap[id]->defineStepHorizontal(i, xValues, yValues, displayLog);
 			addCurve( xValues, yValues, histogramColor );
 		}
+		//Add the last vertical line
+		xValues[0] = xValues[1];
+		yValues[0] = 0;
+		addCurve( xValues, yValues, histogramColor);
 	}
 }
 
@@ -865,7 +949,7 @@ void BinPlotWidget::defineCurve( int id, const QColor& curveColor, bool clearCur
 		clearCurves();
 	}
 
-	if ( displayStep ){
+	if ( stepFunctionAction.isChecked() || stepFunctionFilledAction.isChecked() ){
 		defineCurveHistogram( id, curveColor );
 	}
 	else {
@@ -915,12 +999,14 @@ Histogram* BinPlotWidget::findHistogramFor( int id ){
 	return histogram;
 }
 
-bool BinPlotWidget::setImageRegion( const ImageRegion* region, int id ){
+bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 	bool success = false;
 	if ( image != NULL && region != NULL ){
 		Histogram* histogram = findHistogramFor( id );
-		success = histogram->reset( image, region );
+		histogram->setRegion( region );
+		success = histogram->reset();
 		if ( plotMode != IMAGE_MODE && success ){
+			selectedId = id;
 			resetRegion();
 		}
 
@@ -935,11 +1021,18 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 	bool success = true;
 	if ( image != img && img != NULL ){
 		image = img;
-		Histogram* oldImageHistogram = histogramMap[IMAGE_ID];
-		histogramMap.remove(IMAGE_ID);
-		delete oldImageHistogram;
+		Histogram::setImage( image );
+		clearHistograms();
 		clearAll();
 		success = resetImage();
+		if ( success ){
+			if ( zoomWidgetContext != NULL ){
+				zoomWidgetContext->setImage( image );
+			}
+			if ( zoomWidgetMenu != NULL ){
+				zoomWidgetMenu->setImage( image );
+			}
+		}
 	}
 	else {
 		success = false;
@@ -950,20 +1043,8 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 void BinPlotWidget::resetRegion( ){
 	//Make the histogram(s)
 	if ( plotMode == REGION_MODE ){
-		if ( selectedId != IMAGE_ID ){
-			makeHistogram( selectedId, curveColor );
-		}
-		else {
-			//We arbitrarily choose one, if none are selected.
-			QList<int> keys = histogramMap.keys();
-			int keyCount = keys.size();
-			for ( int i = keyCount - 1; i >= 0; i--){
-				if ( keys[i] != IMAGE_ID ){
-					makeHistogram( keys[i], curveColor );
-					break;
-				}
-			}
-		}
+		int id = getSelectedId();
+		makeHistogram( id, curveColor );
 	}
 	else if ( plotMode == REGION_ALL_MODE ){
 		clearCurves();
@@ -990,7 +1071,7 @@ bool BinPlotWidget::resetImage(){
 	if ( image != NULL ){
 		if ( plotMode == IMAGE_MODE ){
 			Histogram* histogram = findHistogramFor( IMAGE_ID );
-			success = histogram->reset( image, NULL );
+			success = histogram->reset( );
 			if ( success ){
 				makeHistogram( IMAGE_ID, curveColor );
 
@@ -1043,7 +1124,6 @@ void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		}
 	}
 	update();
-
 }
 
 void BinPlotWidget::setValidatorLimits(){
@@ -1079,6 +1159,21 @@ void BinPlotWidget::resizeEvent( QResizeEvent* event ){
 	rectangleSizeChanged();
 	resetGaussianFitMarker();
 	resetPoissonFitMarker();
+}
+
+void BinPlotWidget::mousePressEvent( QMouseEvent* event ){
+	Qt::MouseButton mouseButton = event->button();
+	if ( mouseButton == Qt::LeftButton ){
+		if ( contextMenuMode == FIT_CONTEXT ){
+			QPoint relativePos = event->pos();
+			bool ptInPlot = isPlotContains( relativePos.x(), relativePos.y() );
+			if ( ptInPlot ){
+				QPoint globalPos = event->globalPos();
+				contextMenuConfigure.exec( globalPos );
+			}
+		}
+	}
+	QWidget::mousePressEvent( event );
 }
 
 void BinPlotWidget::keyPressEvent( QKeyEvent* event ){

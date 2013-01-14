@@ -34,8 +34,20 @@ void Fitter::setData( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
 	clearFit();
 	//fitValues.resize(0);
 	dataFitted = false;
-	xValues = dataValuesX;
-	yValues = dataValuesY;
+	int xValueSize = dataValuesX.size();
+	xValues.resize( xValueSize );
+	for ( int i = 0; i < xValueSize; i++ ){
+		xValues[i]= dataValuesX[i];
+	}
+	int yValueSize = dataValuesY.size();
+	yValues.resize( yValueSize );
+	for ( int i = 0; i < yValueSize; i++ ){
+		yValues[i] = dataValuesY[i];
+	}
+}
+
+void Fitter::setRMS( double value ){
+	rmsError = value;
 }
 
 bool Fitter::isFit() const {

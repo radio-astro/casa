@@ -41,7 +41,7 @@ using namespace std;
 
 class QwtPlotMarker;
 class QwtPlotCurve;
-
+class QWidgetAction;
 
 namespace casa {
 
@@ -54,7 +54,9 @@ class Histogram;
 class HistogramMarkerGaussian;
 class HistogramMarkerPoisson;
 class RangeControlsWidget;
-
+class BinCountWidget;
+class ChannelRangeWidget;
+class ZoomWidget;
 
 /**
  * Display a histogram of intensity vs count.  Functionality is pluggable
@@ -83,7 +85,7 @@ public:
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls, QWidget* parent = 0 );
     enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
     bool setImage( ImageInterface<Float>* img );
-    bool setImageRegion( const ImageRegion* imageRegion, int id );
+    bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
     virtual void postMessage( const QString& msg );
@@ -99,9 +101,12 @@ public:
     void setFitCurveColor( QColor color );
     void setMultipleHistogramColors( const QList<QColor>& colors );
     void setAxisLabelFont( int size );
-    void addZoomActions( QMenu* zoomMenu );
+    void setChannelCount( int count );
+    void setChannelValue( int value );
+    void addZoomActions( bool rangeControl, QMenu* zoomMenu );
     void addDisplayActions( QMenu* menu );
-    void addPlotModeActions( QMenu* menu );
+    void addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction=NULL,
+    		QWidgetAction* channelRangeAction = NULL );
     void setPlotMode( int mode );
     bool isEmpty() const;
     ~BinPlotWidget();
@@ -143,28 +148,36 @@ private slots:
 	void fwhmSpecified();
 	void fitDone( const QString& msg );
 	void clearAll();
+	void zoomContextFinished();
+	void zoomMenuFinished();
 	void resetGaussianFitMarker();
 	void resetPoissonFitMarker();
-	void zoom95( bool zoom );
-	void zoom98( bool zoom );
-	void zoom995( bool zoom );
-	void zoom999( bool zoom );
-	void zoomNeutral( bool zoom );
-	void zoomRange( bool rangeZoom );
 
+	void zoomNeutral();
+	//Zoom based on an intensity range specified by the user using the range controls widget
+	void zoomRange();
+	//Zoom based on an intensity range specified by the user using the zoom context menu.
+	void zoomPercentage( float minValue, float maxValue);
+	void binCountChanged( int count );
+	void channelRangeChanged( int minValue, int maxValue, bool allChannels, bool automatic );
 	void imageModeSelected( bool enabled );
 	void regionModeSelected( bool enabled );
 	void regionAllModeSelected( bool enabled );
+
+protected:
+	virtual void mousePressEvent( QMouseEvent* event );
 
 private:
 	BinPlotWidget( const BinPlotWidget& );
 	BinPlotWidget& operator=( const BinPlotWidget& );
 	void initializeFitWidget( bool fitControls );
-	void initializePlotControls();
+	void initializeDisplayActions();
+	void initializeZoomControls( bool rangeControls );
 	void initializePlotModeControls( bool enable );
 	void initializeGaussianFitMarker();
 	void initializePoissonFitMarker();
 	void initializeRangeControls( bool rangeControls);
+	void connectZoomActions( ZoomWidget* zoomWidget );
 	void clearGaussianFitMarker();
 	void clearPoissonFitMarker();
 	void clearHistograms();
@@ -173,6 +186,7 @@ private:
 	void rectangleSizeChanged();
 	void resetAxisTitles();
 	void resetPlotTitle();
+	void reset();
 	bool resetImage();
 	void resetRegion();
 	void resetRectangleMarker();
@@ -185,6 +199,7 @@ private:
 	bool isPlotContains( int x, int y );
 	virtual int getCanvasHeight();
 	Histogram* findHistogramFor( int id );
+	int getSelectedId() const;
 	void zoom( float percent );
 	void zoomRangeMarker( double startValue, double endValue );
     Ui::BinPlotWidgetClass ui;
@@ -217,12 +232,11 @@ private:
     ToolTipPicker* toolTipPicker;
     RangeControlsWidget* rangeControlWidget;
     QMenu contextMenuZoom;
-    QAction zoomRangeAction;
-    QAction zoom95Action;
-    QAction zoom98Action;
-    QAction zoom995Action;
-    QAction zoom999Action;
-    QAction zoomNeutralAction;
+
+    QWidgetAction* zoomActionContext;
+    ZoomWidget* zoomWidgetContext;
+    QWidgetAction* zoomActionMenu;
+    ZoomWidget* zoomWidgetMenu;
     double rectX;
     double rectWidth;
 
@@ -238,17 +252,35 @@ private:
     HistogramMarkerPoisson* fitEstimateMarkerPoisson;
 
     //Plot Display
+    QAction stepFunctionNoneAction;
     QAction stepFunctionAction;
+    QAction stepFunctionFilledAction;
     QAction logAction;
+    QAction logActionX;
     QAction clearAction;
+    enum HistogramOptions{HISTOGRAM_FILLED,HISTOGRAM_OUTLINE,HISTOGRAM_LINE};
+    bool displayLog;
+    bool displayLogX;
+    QMenu contextMenuDisplay;
+
+    //Plot Control
     QAction regionModeAction;
     QAction imageModeAction;
     QAction regionAllModeAction;
-    bool displayStep;
-    bool displayLog;
-
+    //We should be able to use just one binCountAction and binCountWidget
+    //However, to appear, the constructor has to take the appropriate
+    //menu as a parent.
+    QWidgetAction* binCountActionContext;
+    QWidgetAction* channelRangeActionContext;
+    QWidgetAction* binCountActionMenu;
+    QWidgetAction* channelRangeActionMenu;
+    BinCountWidget* binCountWidgetContext;
+    ChannelRangeWidget* channelRangeWidgetContext;
+    BinCountWidget* binCountWidgetMenu;
+    ChannelRangeWidget* channelRangeWidgetMenu;
+    QMenu contextMenuConfigure;
     PlotMode plotMode;
-    QMenu contextMenuDisplay;
+
 
 };
 

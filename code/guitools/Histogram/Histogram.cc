@@ -34,37 +34,65 @@
 
 namespace casa {
 
-Histogram::Histogram( HeightSource* heightSource ) {
+const int Histogram::ALL_CHANNELS = -1;
+const int Histogram::ALL_INTENSITIES = -1;
+ImageInterface<Float>* Histogram::image = NULL;
+int Histogram::channelMin = ALL_CHANNELS;
+int Histogram::channelMax = ALL_CHANNELS;
+float Histogram::intensityMin = ALL_INTENSITIES;
+float Histogram::intensityMax = ALL_INTENSITIES;
+int Histogram::binCount = 25;
+
+
+Histogram::Histogram( HeightSource* heightSource ):
+	histogramMaker(NULL), region(NULL){
 	this->heightSource = heightSource;
 }
 
-bool Histogram::reset(const ImageInterface<Float>* image, const ImageRegion* region){
+void Histogram::setChannelRangeDefault(){
+	channelMin = ALL_CHANNELS;
+	channelMax = ALL_CHANNELS;
+}
+
+void Histogram::setChannelRange( int minChannel, int maxChannel ){
+	channelMin = minChannel;
+	channelMax = maxChannel;
+}
+
+void Histogram::setBinCount( int count ){
+	binCount = count;
+}
+
+void Histogram::setIntensityRangeDefault(){
+	intensityMin = ALL_INTENSITIES;
+	intensityMax = ALL_INTENSITIES;
+}
+
+void Histogram::setIntensityRange( float minimumIntensity, float maximumIntensity ){
+	intensityMin = minimumIntensity;
+	intensityMax = maximumIntensity;
+}
+
+bool Histogram::compute( ){
 	bool success = true;
-	if ( image != NULL ){
-		ImageHistograms<Float>* histogramMaker = NULL;
-		SubImage<Float>* subImage = NULL;
-		if ( region == NULL ){
-			//Make the histogram based on the image
-			histogramMaker = new ImageHistograms<Float>(*image );
+	if ( histogramMaker != NULL ){
+
+		//Set the number of bins.
+		histogramMaker->setNBins( binCount );
+
+		//Set the intensity range.
+		Vector<Float> includeRange;
+		if ( intensityMin != ALL_INTENSITIES && intensityMax != ALL_INTENSITIES ){
+			includeRange.resize(2);
+			includeRange[0] = intensityMin;
+			includeRange[1] = intensityMax;
 		}
-		else {
-			//Make the histogram based on the region
-			try {
-				subImage = new SubImage<Float>( *image, *region );
-				histogramMaker = new ImageHistograms<Float>(*subImage);
-			}
-			catch( AipsError& error ){
-				success = false;
-				if ( heightSource != NULL ){
-					QString msg( "Could not make a histogram of the region: ");
-					msg.append( error.getMesg().c_str() );
-					heightSource->postMessage( msg );
-				}
-			}
-		}
-		Array<Float> values;
-		Array<Float> counts;
-		if ( success ){
+		histogramMaker->setIncludeRange( includeRange );
+		try {
+
+			//Calculate the histogram
+			Array<Float> values;
+			Array<Float> counts;
 			success = histogramMaker->getHistograms( values, counts );
 			if ( success ){
 				//Store the data
@@ -74,8 +102,84 @@ bool Histogram::reset(const ImageInterface<Float>* image, const ImageRegion* reg
 				counts.tovector( yValues );
 			}
 		}
-		delete histogramMaker;
-		delete subImage;
+		catch( AipsError& error ){
+			success = false;
+			qDebug() << "Could not get histogram for count="<<binCount;
+			qDebug() << "Exception: "<<error.what();
+		}
+	}
+	else {
+		success = false;
+		qDebug() << "We should already have set an image to compute a histogram";
+	}
+	return success;
+}
+
+ImageHistograms<Float>* Histogram::filterByChannels( const ImageInterface<Float>* image ){
+	ImageHistograms<Float>* imageHistogram = NULL;
+	if ( channelMin != ALL_CHANNELS && channelMax != ALL_CHANNELS ){
+		//Create a slicer from the image
+		CoordinateSystem cSys = image->coordinates();
+		if ( cSys.hasSpectralAxis() ){
+			int spectralIndex = cSys.spectralCoordinateNumber();
+			IPosition imShape = image->shape();
+			int shapeCount = imShape.nelements();
+			IPosition startPos( shapeCount, 0);
+			IPosition endPos(imShape - 1);
+			IPosition stride( shapeCount, 1);
+
+			startPos(spectralIndex) = channelMin;
+			endPos(spectralIndex) = channelMax;
+			Slicer channelSlicer( startPos, endPos, stride, Slicer::endIsLast );
+			SubImage<Float> subImage(*image, channelSlicer );
+			imageHistogram = new ImageHistograms<Float>( subImage );
+		}
+	}
+	else {
+		imageHistogram = new ImageHistograms<Float>(*image );
+	}
+	return imageHistogram;
+}
+
+void Histogram::setImage(ImageInterface<Float>* img ){
+	image = img;
+}
+
+void Histogram::setRegion( ImageRegion* region ){
+	this->region = region;
+}
+
+bool Histogram::reset(){
+	bool success = true;
+	if ( image != NULL ){
+		if ( histogramMaker != NULL ){
+			delete histogramMaker;
+			//delete subImage;
+			histogramMaker = NULL;
+			//subImage = NULL;
+		}
+		try {
+			if ( region == NULL ){
+				//Make the histogram based on the image
+				histogramMaker = filterByChannels( image );
+			}
+			else {
+				//Make the histogram based on the region
+
+				SubImage<Float>* subImage = new SubImage<Float>( *image, *region );
+				histogramMaker = filterByChannels( subImage );
+				delete subImage;
+			}
+			success = compute();
+		}
+		catch( AipsError& error ){
+			success = false;
+			if ( heightSource != NULL ){
+				QString msg( "Could not make a histogram of the region: ");
+				msg.append( error.getMesg().c_str() );
+				heightSource->postMessage( msg );
+			}
+		}
 	}
 	else {
 		success = false;
@@ -164,7 +268,7 @@ float Histogram::getTotalCount() const {
 	return count;
 }
 
-int Histogram::getPeakIndex() const {
+/*int Histogram::getPeakIndex() const {
 	int peakIndex = -1;
 	double maxCount = std::numeric_limits<double>::min();
 	for ( int i = 0; i < static_cast<int>(yValues.size()); i++ ){
@@ -174,9 +278,9 @@ int Histogram::getPeakIndex() const {
 		}
 	}
 	return peakIndex;
-}
+}*/
 
-pair<float,float> Histogram::getZoomRange( float peakPercent ) const {
+/*pair<float,float> Histogram::getZoomRange( float peakPercent ) const {
 	int peakIndex = getPeakIndex();
 	pair<float,float> zoomRange;
 	if ( peakIndex >= 0 ){
@@ -218,7 +322,8 @@ pair<float,float> Histogram::getZoomRange( float peakPercent ) const {
 		zoomRange.second = xValues[endIndex];
 	}
 	return zoomRange;
-}
+}*/
+
 vector<float> Histogram::getXValues() const {
 	return xValues;
 }
@@ -259,6 +364,8 @@ void Histogram::toAscii( QTextStream& out ) const {
 }
 
 Histogram::~Histogram() {
+	delete histogramMaker;
+	//delete subImage;
 }
 
 } /* namespace casa */

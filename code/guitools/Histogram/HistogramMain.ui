@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>757</width>
-    <height>544</height>
+    <height>615</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,8 +57,14 @@
      <string>Display(Shift+Click Right Mouse)</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuConfigure">
+    <property name="title">
+     <string>Configure(Ctrl+Click Left Mouse)</string>
+    </property>
+   </widget>
    <addaction name="menuZoom"/>
    <addaction name="menuDisplay"/>
+   <addaction name="menuConfigure"/>
   </widget>
   <action name="actionImageFile">
    <property name="icon">

@@ -480,21 +480,23 @@ void Fit2DTool::newRegion( int id, const QString &/*shape*/, const QString &/*na
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
 		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/,
 		int /*fontsize*/, int /*fontstyle*/ ) {
-	RegionBox* regionBox = regions[id];
-	if ( regionBox == NULL ){
-		regionBox = new RegionBox( pixel_x, pixel_y );
-		regions[id] = regionBox;
-	}
-	else {
-		regionBox->update( pixel_x, pixel_y );
-	}
-	ui.fitRegionLabel->setVisible( true );
-	QString boxSpec( regionBox->toStringLabelled());
-	ui.fitRegionLabel->setText( REGION_LABEL+boxSpec);
-	currentRegionId = id;
+	if ( pixel_x.size() == 2 && pixel_y.size() == 2 ){
+		RegionBox* regionBox = regions[id];
+		if ( regionBox == NULL ){
+			regionBox = new RegionBox( pixel_x, pixel_y );
+			regions[id] = regionBox;
+		}
+		else {
+			regionBox->update( pixel_x, pixel_y );
+		}
+		ui.fitRegionLabel->setVisible( true );
+		QString boxSpec( regionBox->toStringLabelled());
+		ui.fitRegionLabel->setText( REGION_LABEL+boxSpec);
+		currentRegionId = id;
 
-	String pixelBox = populatePixelBox();
-	findSourcesDialog.setPixelBox( pixelBox );
+		String pixelBox = populatePixelBox();
+		findSourcesDialog.setPixelBox( pixelBox );
+	}
 }
 
 void Fit2DTool::clearRegions(){
@@ -508,33 +510,35 @@ void Fit2DTool::clearRegions(){
 void Fit2DTool::updateRegion( int id, viewer::Region::RegionChanges changes,
 		const QList<double> &/*world_x*/, const QList<double> &/*world_y*/,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ){
-	if ( changes != viewer::Region::RegionChangeDelete ){
-		RegionBox* box = regions[id];
-		if ( box != NULL ){
-			box->update( pixel_x, pixel_y );
-			currentRegionId = id;
-			ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
+	if ( pixel_x.size() == 2 && pixel_y.size() == 2 ){
+		if ( changes != viewer::Region::RegionChangeDelete ){
+			RegionBox* box = regions[id];
+			if ( box != NULL ){
+				box->update( pixel_x, pixel_y );
+				currentRegionId = id;
+				ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
+				String pixelBox = populatePixelBox();
+				findSourcesDialog.setPixelBox( pixelBox );
+			}
+			else {
+				qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
+			}
+		}
+		else {
+			RegionBox* regionToRemove = regions.take(id);
+			delete regionToRemove;
+			if ( regions.isEmpty() ){
+				currentRegionId = DEFAULT_KEY;
+				ui.fitRegionLabel->setVisible( false );
+			}
+			else {
+				QList<int> keys = regions.keys();
+				currentRegionId = keys[0];
+				ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
+			}
 			String pixelBox = populatePixelBox();
 			findSourcesDialog.setPixelBox( pixelBox );
 		}
-		else {
-			qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
-		}
-	}
-	else {
-		RegionBox* regionToRemove = regions.take(id);
-		delete regionToRemove;
-		if ( regions.isEmpty() ){
-			currentRegionId = DEFAULT_KEY;
-			ui.fitRegionLabel->setVisible( false );
-		}
-		else {
-			QList<int> keys = regions.keys();
-			currentRegionId = keys[0];
-			ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
-		}
-		String pixelBox = populatePixelBox();
-		findSourcesDialog.setPixelBox( pixelBox );
 	}
 }
 

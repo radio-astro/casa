@@ -22,34 +22,49 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#ifndef ZOOMWIDGET_QO_H
+#define ZOOMWIDGET_QO_H
 
-#ifndef FITTERPOISSON_H_
-#define FITTERPOISSON_H_
+#include <QtGui/QWidget>
+#include <guitools/Histogram/ZoomWidget.ui.h>
 
-#include <guitools/Histogram/Fitter.h>
 
 namespace casa {
-/**
- * Fits Poisson curves to the histogram.
- */
 
-class FitterPoisson : public Fitter {
+template <class T> class ImageInterface;
+class ImageRegion;
+
+class ZoomWidget : public QWidget
+{
+    Q_OBJECT
+
 public:
-	FitterPoisson();
-	void setLambda( double value );
-	double getLambda() const;
-	virtual QString getSolutionStatistics() const;
-	virtual bool doFit();
-	virtual void clearFit();
-	virtual void toAscii( QTextStream& stream ) const;
-	virtual ~FitterPoisson();
-private:
-	int factorial( int n ) const;
-	bool isIntegerValue( float val ) const;
+    ZoomWidget(bool rangeControls, QWidget *parent = 0);
+    void setImage( ImageInterface<float>* image );
+    void setRegion( ImageRegion* region );
+    void copyState( ZoomWidget* other );
 
-	bool lambdaSpecified;
-	double lambda;
+    ~ZoomWidget();
+
+signals:
+	void zoomRange( float min, float max );
+	void zoomNeutral();
+	void zoomGraphicalRange();
+	void finished();
+
+
+private slots:
+	void percentageToggled( bool selected );
+	void zoom();
+
+private:
+	void calculateRange( );
+    Ui::ZoomWidgetClass ui;
+    QStringList zoomList;
+    ImageInterface<float>* image;
+    ImageRegion* region;
 };
 
-} /* namespace casa */
-#endif /* FITTERPOISSON_H_ */
+}
+
+#endif // ZOOMWIDGET_QO_H

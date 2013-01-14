@@ -22,34 +22,30 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-
-#ifndef FITTERPOISSON_H_
-#define FITTERPOISSON_H_
-
-#include <guitools/Histogram/Fitter.h>
+#include "BinCountWidget.qo.h"
 
 namespace casa {
-/**
- * Fits Poisson curves to the histogram.
- */
 
-class FitterPoisson : public Fitter {
-public:
-	FitterPoisson();
-	void setLambda( double value );
-	double getLambda() const;
-	virtual QString getSolutionStatistics() const;
-	virtual bool doFit();
-	virtual void clearFit();
-	virtual void toAscii( QTextStream& stream ) const;
-	virtual ~FitterPoisson();
-private:
-	int factorial( int n ) const;
-	bool isIntegerValue( float val ) const;
+int BinCountWidget::DEFAULT_COUNT = 25;
 
-	bool lambdaSpecified;
-	double lambda;
-};
+BinCountWidget::BinCountWidget(QWidget *parent)
+    : QWidget(parent){
+	ui.setupUi(this);
+	connect( ui.binCountSpinBox, SIGNAL(valueChanged(int)), this, SIGNAL(binCountChanged(int)));
+}
 
-} /* namespace casa */
-#endif /* FITTERPOISSON_H_ */
+int BinCountWidget::getBinCount() const {
+	return ui.binCountSpinBox->value();
+}
+
+void BinCountWidget::setBinCount( int binCount ){
+	int oldValue = ui.binCountSpinBox->value();
+	if ( oldValue != binCount ){
+		ui.binCountSpinBox->setValue( binCount );
+	}
+}
+
+BinCountWidget::~BinCountWidget(){
+
+}
+}

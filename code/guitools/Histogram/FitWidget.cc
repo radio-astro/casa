@@ -34,6 +34,7 @@ namespace casa {
 FitWidget::FitWidget(QWidget *parent)
     : QWidget(parent){
 	ui.setupUi(this);
+	setSolutionVisible( false );
 
 	QDoubleValidator* posValidator = new QDoubleValidator( 0, std::numeric_limits<double>::max(), 10, this);
 	QDoubleValidator* validator = new QDoubleValidator(std::numeric_limits<double>::min(),
@@ -42,6 +43,8 @@ FitWidget::FitWidget(QWidget *parent)
 	ui.gaussPeakLineEdit->setValidator( validator );
 	ui.gaussFWHMLineEdit->setValidator( validator );
 	ui.poissonLambdaLineEdit->setValidator( posValidator );
+	ui.rmsLineEdit->setValidator( posValidator );
+	ui.rmsLineEdit->setText( QString::number(1.2f));
 	connect( ui.gaussCenterLineEdit, SIGNAL(textEdited( const QString&)), this, SLOT( centerEdited( const QString& )));
 	connect( ui.gaussPeakLineEdit, SIGNAL(textEdited( const QString&)), this, SLOT( peakEdited( const QString& )));
 	connect( ui.gaussFWHMLineEdit, SIGNAL(textEdited(const QString&)), this, SLOT( fwhmEdited( const QString& )));
@@ -199,15 +202,30 @@ Vector<Float> FitWidget::getFitValuesX() const {
 	return fitValuesX;
 }
 
+void FitWidget::setSolutionVisible( bool visible ){
+	ui.fitResultsTextEdit->setVisible( visible );
+	ui.line->setVisible( visible );
+	ui.fitResultsLabel->setVisible( visible );
+}
+
 void FitWidget::doFit() {
+	QString rmsStr = ui.rmsLineEdit->text();
+	double rmsVal = rmsStr.toDouble();
+	if ( rmsVal <= 0 ){
+		QMessageBox::warning( this, "RMS Invalid", "Please specify a positive value for fit rms.");
+		return;
+	}
+	fitter->setRMS( rmsVal );
 	bool successfulFit = fitter->doFit();
+	setSolutionVisible( successfulFit );
 	if ( successfulFit ){
-		//Since the fitter may have estimate the parameters for the
-		//fit, we should update the estimate boxes with the parameters
-		//user.
+		//We keep the initial estimates as they are, but update
+		//the solution statistics.
 		if ( isGaussian() ){
-			setCenterPeak( fitterGaussian->getCenter(), fitterGaussian->getPeak() );
-			setFWHM( fitterGaussian->getFWHM() );
+			//setCenterPeak( fitterGaussian->getCenter(), fitterGaussian->getPeak() );
+			//setFWHM( fitterGaussian->getFWHM() );
+			QString solutionStats = fitterGaussian->getSolutionStatistics();
+			ui.fitResultsTextEdit->setText( solutionStats );
 		}
 		else {
 			setLambda( fitterPoisson->getLambda() );
@@ -233,6 +251,7 @@ void FitWidget::clearFit(){
 	ui.gaussPeakLineEdit->setText("");
 	ui.gaussFWHMLineEdit->setText("");
 	ui.poissonLambdaLineEdit->setText("");
+	setSolutionVisible( false );
 	emit fitCleared();
 }
 
