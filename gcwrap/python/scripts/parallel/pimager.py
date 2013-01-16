@@ -14,6 +14,7 @@ import shutil
 import pdb
 import copy
 import glob
+casalog =  casac.logsink()
 class pimager():
     def __init__(self, cluster=''):
         self.msinfo=odict()
@@ -54,6 +55,7 @@ class pimager():
         shutil.rmtree(os.environ['IPYTHONDIR'], True)
     @staticmethod
     def maxouterpsf(psfim='', image=''):
+        casalog.filter("ERROR")
         ia.open(psfim)
         stat=ia.statistics()
         csys=ia.coordsys()
@@ -80,9 +82,11 @@ class pimager():
         statout=ib.statistics(region=outerreg)
         ia.done()
         ib.done()
+        casalog.filter("INFO")
         return np.max(statout['max'], np.fabs(statout['min']))
     @staticmethod
     def averimages(outimage='outimage', inimages=[]):
+        casalog.filter("ERROR")
         if((type(inimages)==list) and (len (inimages)==0)):
             return False
         if(os.path.exists(outimage)):
@@ -98,9 +102,11 @@ class pimager():
             shutil.copytree(inimages, outimage)
         else:
             return False
+        casalog.filter("INFO")
         return True  
     @staticmethod
     def weightedaverimages(outimage='outimage', inimages=[], wgtimages=[]):
+        casalog.filter("ERROR")
         if((type(inimages)==list) and (len (inimages)==0)):
             return False
         if(len(wgtimages) != len (inimages)):
@@ -128,6 +134,7 @@ class pimager():
             shutil.copytree(inimages, outimage)
         else:
             return False
+        casalog.filter("INFO")
         return True
   
     @staticmethod
@@ -489,6 +496,7 @@ class pimager():
 
     @staticmethod
     def copyimage(inimage='', outimage='', init=False, initval=0.0):
+        casalog.filter("ERROR")
         ia.fromimage(outfile=outimage, infile=inimage, overwrite=True)
         ia.open(outimage)
         if(init):
@@ -500,14 +508,19 @@ class pimager():
             ####ib.done()
             ia.insert(inimage, locate=[0,0,0,0])
         ia.done()
+        casalog.filter("INFO")
     @staticmethod
-    def regridimage(outimage='', inimage='', templateimage=''):
-        ia.open(templateimage)
-        csys=ia.coordsys()
-        shp=ia.shape()
+    def regridimage(outimage='', inimage='', templateimage='', csys='', shp=[]):
+        casalog.filter("ERROR")
+        if((templateimage != '') and os.path.exists(templateimage)):
+            ia.open(templateimage)
+            csys=ia.coordsys()
+            shp=ia.shape()
+            
         ia.open(inimage)
         ia.regrid(outfile=outimage, shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
         ia.done()
+        casalog.filter("INFO")
     def setupcommonparams(self, spw='*', field='*', phasecenter='', 
                           stokes='I', ftmachine='ft', wprojplanes=64, facets=1, 
                           imsize=[512, 512], pixsize=['1arcsec', '1arcsec'], weight='natural',
@@ -767,9 +780,11 @@ class pimager():
                         c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
                 newthresh=threshold
                 if(majorcycles <= 1):
+                    casalog.filter("ERROR")
                     ia.open(residuals[0])
                     residstat=ia.statistics()
                     ia.done()
+                    casalog.filter("INFO")
                     maxresid=np.max([residstat['max'], np.fabs(residstat['min'])])
                     psfoutermax=self.maxouterpsf(psfim=psfs[0], image=restoreds[0])
                     newthresh=psfoutermax*cyclefactor*maxresid
@@ -792,14 +807,17 @@ class pimager():
                     if(majorcycles <=1):
                         niterpercycle=niterpercycle-retval['iterations']
                     maxresid=retval['maxresidual']
+                    casalog.filter("ERROR")
                     ia.open(models[0])
                     print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
                     ia.done()
+                    
                     for k in range(len(imlist)):
                         for tt in range(nterms):
                             ia.open(imlist[k]+'.model.tt'+str(tt))
                             ia.insert(infile=models[tt], locate=[0,0,0,0])
                             ia.done()
+                    casalog.filter("INFO")
                     maj +=1
             ia.open(imlist[numcpu-1]+'.image.tt0')
             beam=ia.restoringbeam()
@@ -817,6 +835,7 @@ class pimager():
 
 
     def combineimages(self, rootnames=[], nterms=2, outputrootname=''):
+        casalog.filter("ERROR")
         combmodels=[]
         combpsfs=[]
         combresiduals=[]
@@ -863,6 +882,7 @@ class pimager():
             ia.open( combpsfs[tt] )
             ia.calc('"'+ combpsfs[tt] + '"/"' + combwts[0] +'"')
             ia.done()
+        casalog.filter("INFO")
         #done
     
     def pcont(self, msname=None, imagename=None, imsize=[1000, 1000], 
@@ -1584,6 +1604,21 @@ class pimager():
             
                 
 ############################################
+    def available_proc(self, allproc=False):
+        over=False
+        numcpu=self.numcpu
+        cpurec={}
+        while(not over):
+            time.sleep(1)
+            a=self.c.queue_status()
+            cpids=range(numcpu)
+            cpids.reverse()
+            for k in cpids:
+                if(a[k][1]['pending']=='None') :
+                    cpurec[a[k][0]]=True
+            over = (len(cpurec) >0) if (not allproc) else (len(cpurec)==numcpu)
+        return cpurec.keys()
+
     def pcube(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
               field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
@@ -1661,6 +1696,8 @@ class pimager():
         owd=os.getcwd()
         self.c.pgc('import os')
         self.c.pgc('os.chdir("'+owd+'")')
+        self.c.pgc('from parallel.parallel_cont import imagecont')
+        self.c.pgc('from casac import casac')
         #####################
         model=imagename+'.model' 
         if(not contclean or (not os.path.exists(model))):
@@ -1671,7 +1708,7 @@ class pimager():
             shutil.rmtree(imagename+'.image', True)
             ##create the cube
             im.selectvis(vis=msname, spw=spw, field=field, writeaccess=False)
-            im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
+            im.defineimage(nx=10, ny=10, cellx=pixsize[0], celly=pixsize[1], 
                            phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start, restfreq=restfreq)
             im.setoptions(imagetilevol=imagetilevol) 
             #print 'making model image (', model, ') ...'
@@ -1682,7 +1719,10 @@ class pimager():
         
         ia.open(model)
         elshape=ia.shape()
+        elshape[0]=imsize[0]
+        elshape[1]=imsize[1]
         csys=ia.coordsys()
+        csys.setreferencepixel([imsize[0]/2.0, imsize[1]/2.0], 'direction')
         fstart=csys.toworld([0,0,0,0],'n')['numeric'][3]
         fstep=csys.toworld([0,0,0,1],'n')['numeric'][3]-fstart
         fend=fstep*(nchan-1)+fstart
@@ -1695,22 +1735,21 @@ class pimager():
                 ia.done()
                 if(np.any(maskshape != elshape)):
                     newmask=maskimage+'_regrid'
-                    self.regridimage(outimage=newmask, inimage=maskimage, templateimage=model);
+                    self.regridimage(outimage=newmask, inimage=maskimage, csys=csys, shp=elshape);
                     maskimage=newmask
             else:
-                shutil.copytree(model, maskimage)
-                ia.open(maskimage)
-                ia.set(0.0)
-                ia.done()
+                 im.selectvis(vis=msname, writeaccess=False)
+                 im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
+                           phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start, restfreq=restfreq)
+                 im.make(maskimage)
+                 im.done()
                 
         #print 'LOCKS2 ', tb.listlocks()
         imepoch=csys.epoch()
         imobservatory=csys.telescope()
         shutil.rmtree(imagename+'.image', True)
         shutil.rmtree(imagename+'.residual', True)
-        ## don't need to copy anymore with concat
-        #shutil.copytree(model, imagename+'.image')
-        #shutil.copytree(model, imagename+'.residual')
+        
 
         out=range(numcpu)  
         self.c.pgc('from  parallel.parallel_cont import *')
@@ -1730,6 +1769,12 @@ class pimager():
         #####
         if(contclean):
             imagecont.getallchanmodel(imagename , chanchunk)
+        #####
+        ######unnecessary
+        ## don't need to copy anymore with concat
+        #shutil.copytree(model, imagename+'.image')
+        #shutil.copytree(model, imagename+'.residual')
+        #shutil.copytree(model, imagename+'.psf')
         #####
         timemake=time.time()
         print 'time to get make cubes', timemake - time1 
@@ -1799,8 +1844,8 @@ class pimager():
                 time.sleep(1)
                 overone=True
                 for k in range(numcpu):
-                    overone=(overone and ((type(out[k])==int) or (self.c.check_job(out[k],False))))
-                    #print k,  'checjob' , ((type(out[k])==int) or (self.c.check_job(out[k],False))), 'chanind', chanind[k], 'chancounter', chancounter, 'readypu', readyputchan[chanind[k]]
+                    #print k,  'overone', overone, 'checjob' , (type(out[k])==int), (self.c.check_job(out[k],False)), 'chancounter', chancounter
+                    overone=(overone and ((type(out[k])==int) or (self.c.check_job(out[k], False))))
                     if((chanind[k] > -1) and (not readyputchan[chanind[k]]) and ((type(out[k])==int) or self.c.check_job(out[k],False)) ):
                         readyputchan[chanind[k]]=True 
                         if(type(out[k]) !=int):
@@ -1838,23 +1883,51 @@ class pimager():
 #        ia.open(imagename+'.image')
 #        ia.setrestoringbeam(beam=rb)
 #        ia.done()
+        #imagecont.putchanimage(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, False)
+        #imagecont.putchanimage(imagename+'.residual' , [imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], chans, False)
+        #imagecont.putchanimage(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, False)
+        #imagecont.putchanimage(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], chans, False)
         #imagecont.putchanimage2(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
         #imagecont.putchanimage2(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)] , chans, doneputchan.tolist(), True)
         
         #imagecont.putchanimage2(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
         #self.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys)
-        imagecont.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys)
+        ####  
+        ##imagecont.concatimages(model,  [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], csys, False)
+        ####
+        csysrec=csys.torecord()
+        avproc=self.available_proc()[0]
+        self.c.push(csysrec=csysrec, targets=avproc)
+        out[avproc]=self.c.odo('imagecont.concatimages("'+model+'",  '+str([imnams[k]+str(k)+'.model' for k in range(nchanchunk)])+', csysrec)',avproc)
         #self.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
-        imagecont.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys)
+        ##imagecont.concatimages(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)], csys, False)
+        avproc=self.available_proc()[0]
+        self.c.push(csysrec=csysrec, targets=avproc)
+        out[avproc]=self.c.odo('imagecont.concatimages("'+imagename+'.residual",  '+str([imnams[k]+str(k)+'.residual' for k in range(nchanchunk)])+', csysrec)',avproc)
         #self.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
-        imagecont.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys)
+        ##imagecont.concatimages(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], csys, False)
+        avproc=self.available_proc()[0]
+        self.c.push(csysrec=csysrec, targets=avproc)
+        out[avproc]=self.c.odo('imagecont.concatimages("'+imagename+'.image",  '+str([imnams[k]+str(k)+'.image' for k in range(nchanchunk)])+', csysrec)',avproc)
         #self.concatimages(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], csys)
-        imagecont.concatimages(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], csys)
+        ##imagecont.concatimages(imagename+'.psf' , [imnams[k]+str(k)+'.psf' for k in range(nchanchunk)], csys)
+        avproc=self.available_proc()[0]
+        self.c.push(csysrec=csysrec, targets=avproc)
+        ###print 'concat command ', 'imagecont.concatimages("'+imagename+'.psf",  '+str([imnams[k]+str(k)+'.psf' for k in range(nchanchunk)])+', csysrec)'
+        out[avproc]=self.c.odo('imagecont.concatimages("'+imagename+'.psf",  '+str([imnams[k]+str(k)+'.psf' for k in range(nchanchunk)])+', csysrec)',avproc)
         if(self.ftmachine=='mosaic'):
             #self.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
-            imagecont.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
-            #self.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
-            imagecont.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
+            ##imagecont.concatimages(imagename+'.flux' , [imnams[k]+str(k)+'.flux' for k in range(nchanchunk)], csys)
+            avproc=self.available_proc()[0]
+            self.c.push(csysrec=csysrec, targets=avproc)
+            out[avproc]=self.c.odo('imagecont.concatimages("'+imagename+'.flux",  '+str([imnams[k]+str(k)+'.flux' for k in range(nchanchunk)])+', csysrec)',avproc)
+            
+            ##self.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
+            #imagecont.concatimages(imagename+'.flux.pbcoverage' , [imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)], csys)
+            avproc=self.available_proc()[0]
+            self.c.push(csysrec=csysrec, targets=avproc)
+            out[avproc]=self.c.odo('imagecont.concatimages("'+imagename+'.flux.pbcoverage",  '+str([imnams[k]+str(k)+'.flux.pbcoverage' for k in range(nchanchunk)])+', csysrec)',avproc)
+        avproc=self.available_proc(True)
         time2=time.time()
         print 'Time to concat/cleanup', (time2- timebegrem)/60.0, 'mins'
         if(savemodel):
@@ -2683,8 +2756,8 @@ class pimager():
         launchcomm='a=imagecont(ftmachine='+'"'+self.ftmachine+'",'+'wprojplanes='+str(self.wprojplanes)+',facets='+str(self.facets) \
             +',pixels='+str(self.imsize)+',cell='+str(self.cell)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch \
             +',weight="'+self.weight+'", robust='+ str(self.robust)+', npixels='+str(self.npixels)+', stokes="'+self.stokes \
-            +'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper="'+str(self.uvtaper)+'", outertaper="'\
-            +str(self.outertaper)+'", timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'\
+            +'", numthreads='+str(self.numthreads)+', gain='+str(self.gain)+', uvtaper='+str(self.uvtaper)+', outertaper='\
+            +str(self.outertaper)+', timerange="'+str(self.timerange)+'"'+', uvrange="'+str(self.uvrange)+'"'+', baselines="'+str(self.baselines)+'"'\
             +', scan="'+str(self.scan)+'"'+', observation="'+str(self.observation)+'"'+', pbcorr='+str(self.pbcorr)+', minpb='+str(self.minpb)+', cyclefactor='+str(self.cyclefactor)\
             +', painc='+ str(self.painc)  \
             +', pblimit='+ str(self.pblimit) \
