@@ -117,7 +117,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
 		// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
 		regionDock_  = new viewer::QtRegionDock(this, qdp_);
-		connect( regionDock_, SIGNAL(regionChange(viewer::region*,std::string)), SIGNAL(regionChange(viewer::region*,std::string)));
+		connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));
 		connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
 		std::string shown = getrc("visible.regiondock");
 		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
@@ -664,7 +664,7 @@ void QtDisplayPanelGui::initHistogramHolder(){
 		//Image updates
 		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
 		if ( regionDock_ != NULL ){
-			connect( regionDock_, SIGNAL(regionChange(viewer::region*,std::string)), this, SLOT(updateHistogram(viewer::region*,std::string)));
+			connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), this, SLOT(updateHistogram(viewer::Region*,std::string)));
 		}
 		refreshHistogrammer();
 	}
