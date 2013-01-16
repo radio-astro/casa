@@ -35,11 +35,16 @@ ToolTipPicker::ToolTipPicker( int xAxis, int yAxis, int selectionFlags, RubberBa
 			DisplayMode trackorMode, QwtPlotCanvas* canvas ):
 				QwtPlotPicker( xAxis, yAxis, selectionFlags, rubberBand,
 						trackorMode, canvas ){
-	logScale = false;
+	logScaleY = false;
+	logScaleX = false;
 }
 
-void ToolTipPicker::setLogScale( bool logScale ){
-	this->logScale = logScale;
+void ToolTipPicker::setLogScaleY( bool logScale ){
+	logScaleY = logScale;
+}
+
+void ToolTipPicker::setLogScaleX( bool logScale ){
+	logScaleX = logScale;
 }
 
 void ToolTipPicker::setData( const std::vector<float>& xVal, const std::vector<float>& yVal ){
@@ -58,7 +63,7 @@ std::pair<float,float> ToolTipPicker::getRangeY() const {
 	float max = std::numeric_limits<float>::min();
 	int rangeCount = yVector.size();
 	for ( int i = 0; i < rangeCount; i++ ){
-		float adjustedY = Histogram::computeYValue( yVector[i], logScale );
+		float adjustedY = Histogram::computeYValue( yVector[i], logScaleY );
 		if ( adjustedY < min ){
 			min = adjustedY;
 		}
@@ -74,7 +79,8 @@ int ToolTipPicker::findClosestPoint( float xValue, float yValue ) const {
 	int pointIndex = -1;
 	double distance = std::numeric_limits<float>::max();
 	for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
-		double xDistance = qAbs( xVector[i] - xValue );
+		float adjustedX = Histogram::computeXValue( xVector[i], logScaleX );
+		double xDistance = qAbs( adjustedX - xValue );
 		if ( xDistance < distance ){
 			distance = xDistance;
 			pointIndex = i;
@@ -90,7 +96,7 @@ int ToolTipPicker::findClosestPoint( float xValue, float yValue ) const {
 		std::pair<float,float> rangeY = getRangeY();
 		float spanY = rangeY.second - rangeY.first;
 		const float ERROR_MARGIN_Y = spanY / 10;
-		float adjustedY = Histogram::computeYValue( yVector[pointIndex], logScale );
+		float adjustedY = Histogram::computeYValue( yVector[pointIndex], logScaleY );
 		double yDistance = qAbs( adjustedY - yValue );
 		if ( yDistance > ERROR_MARGIN_Y ){
 			pointIndex = -1;
@@ -106,12 +112,13 @@ QwtText ToolTipPicker::trackerText( const QwtDoublePoint & pos ) const {
 	int pointIndex = findClosestPoint( xValue, yValue );
 	QString toolTipText;
 	if ( pointIndex != -1 ){
-		float adjustedY = Histogram::computeYValue( yVector[pointIndex], logScale );
-		if ( !logScale ){
-			toolTipText.sprintf("( %.5f, %.0f)", xVector[pointIndex], adjustedY );
+		float adjustedY = Histogram::computeYValue( yVector[pointIndex], logScaleY );
+		float adjustedX = Histogram::computeXValue( xVector[pointIndex], logScaleX );
+		if ( !logScaleY ){
+			toolTipText.sprintf("( %.5f, %.0f)", adjustedX, adjustedY );
 		}
 		else {
-			toolTipText.sprintf("( %.5f, %.5f)", xVector[pointIndex], adjustedY );
+			toolTipText.sprintf("( %.5f, %.5f)", adjustedX, adjustedY );
 		}
 	}
 	return QwtText( toolTipText );

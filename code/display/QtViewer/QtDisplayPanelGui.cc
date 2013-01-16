@@ -77,7 +77,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   qsm_(0), qst_(0),
 								   profile_(0), savedTool_(QtMouseToolNames::NONE),
 								   profileDD_(0),
-								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
+								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0)/*, pvCutAct_(0)*/,
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
@@ -117,7 +117,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
 		// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
 		regionDock_  = new viewer::QtRegionDock(this, qdp_);
-		connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));
+		connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));	
 		connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
 		std::string shown = getrc("visible.regiondock");
 		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
@@ -378,6 +378,10 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		for(Int i=sep+1; i<nActions; i++) vwMenu_->addAction(vwActions[i]);
 		if (0<sep && sep<nActions-1)      vwMenu_->addSeparator();
 		for(Int i=0; i<sep; i++)          vwMenu_->addAction(vwActions[i]);
+		/*vwMenu_->addSeparator();
+		pvCutAct_  = new QAction ("PV Cut",this);
+		connect(pvCutAct_,    SIGNAL(triggered(bool)),  SLOT(showPVCut(bool)));
+		vwMenu_->addAction( pvCutAct_ );*/
 
 		delete rawVwMenu;
 	}
@@ -663,14 +667,26 @@ void QtDisplayPanelGui::initHistogramHolder(){
 
 		//Image updates
 		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
-		if ( regionDock_ != NULL ){
-			connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), this, SLOT(updateHistogram(viewer::Region*,std::string)));
+		//Region updates
+		PanelDisplay* panelDisplay = qdp_->panelDisplay();
+		std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
+		if (pos) {
+			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+			if ( qrs ) {
+				connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
+						const QList<double> &, const QList<int> &, const QList<int> &,
+						const QString &, const QString &, const QString &, int, int ) ),
+						this, SLOT( histogramRegionUpdate( int) ) );
+				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> & ) ),
+						this, SLOT( histogramRegionUpdate( int, viewer::region::RegionChanges) ));
+			}
 		}
 		refreshHistogrammer();
 	}
 }
 
-void QtDisplayPanelGui::histogramRegionUpdate( int id, viewer::region::RegionChanges change){ 
+void QtDisplayPanelGui::histogramRegionUpdate( int id, viewer::region::RegionChanges change){
 	std::list<viewer::Region*> regionList = regions();
 	std::list<viewer::Region*>::iterator regionIterator = regionList.begin();
 	while( regionIterator != regionList.end() ){
@@ -843,6 +859,10 @@ void QtDisplayPanelGui::remove2DFitOverlay( QList<RegionShape*> fitMarkers ){
 		qdp_->unregisterRegionShape( fitMarkers[i]);
 	}
 }
+
+/*void QtDisplayPanelGui::showPVCut( bool show ){
+	qDebug() << "Need code for showing a PVCut";
+}*/
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {
 

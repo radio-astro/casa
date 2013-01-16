@@ -45,6 +45,7 @@ public:
 signals:
 	void rangeChanged(int minRange, int maxRange, bool allChannels, bool automatic );
 
+
 private slots:
 	void valueChangedMin( int value );
 	void valueChangedMax( int value );
@@ -53,6 +54,7 @@ private slots:
 private:
 	bool isAllChannels() const;
 	bool isAutomatic() const;
+	int channel;
     Ui::ChannelRangeWidgetClass ui;
 };
 

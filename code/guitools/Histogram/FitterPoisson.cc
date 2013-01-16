@@ -32,14 +32,12 @@
 namespace casa {
 
 FitterPoisson::FitterPoisson() {
-	lambdaSpecified = false;
+	clearFit();
 }
 
 void FitterPoisson::clearFit(){
-	dataFitted = false;
+	Fitter::clearFit();
 	lambdaSpecified = false;
-	errorMsg = "";
-	statusMsg = "";
 }
 
 bool FitterPoisson::isIntegerValue( float val ) const {
@@ -59,9 +57,43 @@ int FitterPoisson::factorial( int n ) const {
 	return factValue;
 }
 
+float FitterPoisson::getRMSE() const {
+	float rmse = -1;
+	int dataCount = fitValues.size();
+	if ( dataCount > 0 ){
+		float sumOfSquares = 0;
+		for ( int i = 0; i < dataCount; i++ ){
+			float diff = fitValues[i] - yValues[i];
+			sumOfSquares = sumOfSquares + qPow( diff, 2 );
+		}
+		sumOfSquares = sumOfSquares / dataCount;
+		rmse = qPow( sumOfSquares, 0.5 );
+	}
+	return rmse;
+}
+
+int FitterPoisson::getFitCount() const {
+	int count = 0;
+	for ( int i = 0; i < static_cast<int>(yValues.size()); i++ ){
+		int binCount = static_cast<int>(yValues[i]);
+		count = count + binCount;
+	}
+	return count;
+}
+
 QString FitterPoisson::getSolutionStatistics() const {
-	QString result( "Lambda: ");
-	result.append( QString::number( lambda ));
+	float rmse = getRMSE();
+	QString result;
+	if ( rmse >= 0 ){
+		if ( rmse < rmsError ){
+			result.append( "Fit satisfying RMS criterion was found:\n\n");
+		}
+		else {
+			result.append( "Fit did not satisfy RMS criterion:\n");
+		}
+		result.append( formatResultLine( "Lambda:", lambda));
+		result.append( formatResultLine( "RMSE:", rmse));
+	}
 	return result;
 }
 
@@ -76,10 +108,10 @@ bool FitterPoisson::doFit(){
 		errorMsg = "Could not fit a Poisson distribution because the lambda value: "+lambdaStr+" was not positive.";
 	}
 	else {
-
 		fitValues.resize( xValues.size());
 		bool allInts = true;
 		bool positiveValues = true;
+		int fitCount = getFitCount();
 		for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
 			if ( !isIntegerValue( xValues[i])){
 				allInts = false;
@@ -89,7 +121,7 @@ bool FitterPoisson::doFit(){
 				xVal = 0;
 				positiveValues = false;
 			}
-			fitValues[i] = qPow( lambda, xVal ) * qExp(-1 * lambda ) / factorial( xVal );
+			fitValues[i] = fitCount * qPow( lambda, xVal ) * qExp(-1 * lambda ) / factorial( xVal );
 			dataFitted = true;
 		}
 		if ( !positiveValues ){

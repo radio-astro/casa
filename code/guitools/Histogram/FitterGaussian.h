@@ -41,11 +41,11 @@ public:
 	void setPeak( double peakValue );
 	void setCenter( double centerValue );
 	void setFWHM( double fwhmValue );
-
 	virtual bool doFit();
-	virtual void clearFit();
 	virtual void toAscii( QTextStream& stream ) const;
 	virtual ~FitterGaussian();
+	virtual void clearFit();
+
 private:
 	double getPeak() const;
 	double getCenter() const;

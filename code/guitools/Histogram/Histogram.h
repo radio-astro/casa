@@ -55,10 +55,12 @@ public:
 	bool reset();
 
 	void setRegion(ImageRegion* region);
-	void defineLine( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
-	void defineStepHorizontal( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
-	void defineStepVertical( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
-	//std::pair<float,float> getZoomRange( float peakPercent ) const;
+	void defineLine( int index, QVector<double>& xVals, QVector<double>& yVals,
+			bool useLogX, bool useLogY ) const;
+	void defineStepHorizontal( int index, QVector<double>& xVals, QVector<double>& yVals,
+			bool useLogX, bool useLogY ) const;
+	void defineStepVertical( int index, QVector<double>& xVals, QVector<double>& yVals,
+			bool useLogX, bool useLogY ) const;
 	vector<float> getXValues() const;
 	vector<float> getYValues() const;
 	std::pair<float,float> getDataRange() const;
@@ -69,10 +71,11 @@ public:
 	static void setBinCount( int count );
 	static void setChannelRangeDefault();
 	static void setIntensityRangeDefault();
-	static void setImage( ImageInterface<Float>* image );
 	static void setChannelRange( int minChannel, int maxChannel );
 	static void setIntensityRange( float minimumIntensity, float maximumIntensity );
+	static void setImage( ImageInterface<Float>* image );
 	static double computeYValue( double value, bool useLog );
+	static double computeXValue( double value, bool useLog );
 
 signals:
 	void postStatus( const QString& msg );
@@ -81,8 +84,6 @@ private:
 	Histogram( const Histogram& other );
 	Histogram operator=( const Histogram& other );
 	ImageHistograms<Float>* filterByChannels( const ImageInterface<Float>* image );
-	//int getPeakIndex() const;
-	float getTotalCount() const;
 	HeightSource* heightSource;
 	vector<Float> xValues;
 	vector<Float> yValues;

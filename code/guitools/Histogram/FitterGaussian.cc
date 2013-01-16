@@ -24,7 +24,6 @@
 //#
 
 #include "FitterGaussian.h"
-//#include <scimath/Functionals/Gaussian1D.h>
 #include <scimath/Fitting/FitGaussian.h>
 #include <QDebug>
 
@@ -33,9 +32,7 @@ using namespace std;
 namespace casa {
 
 FitterGaussian::FitterGaussian() {
-	peakSpecified = false;
-	centerSpecified = false;
-	fwhmSpecified = false;
+	clearFit();
 }
 
 void FitterGaussian::setPeak( double peakValue ){
@@ -196,37 +193,35 @@ bool FitterGaussian::doFit(){
 QString FitterGaussian::getSolutionStatistics() const {
 	QString stats;
 	if ( solutionConverged ){
-		stats.append( "Fit converged to a value.\n");
+		if ( solutionRMS < rmsError ){
+			stats.append( "Fit satisfying RMS criterion was found:\n\n");
+		}
+		else {
+			stats.append( "No fit satisfying RMS criterion was found.\nBest available fit:\n\n");
+		}
+		stats.append( formatResultLine( "Center:", solutionCenter));
+		stats.append( formatResultLine( "Peak:", solutionPeak));
+		stats.append( formatResultLine( "FWHM:", solutionFWHM));
+		stats.append( formatResultLine( "Chi-squared:", solutionChiSquared));
+		stats.append( formatResultLine( "RMS:", solutionRMS));
 	}
 	else {
-		stats.append( "Fit did not converge.\n Result generated the smallest RMS.\n");
+		stats.append( "Fit did not converge.\n");
 	}
-	int fieldWidth = -14;
-	QChar fillChar(' ');
-	QString centerStr("%0");
-	centerStr = centerStr.arg( "Center:", fieldWidth, fillChar);
-	stats.append( centerStr + QString::number(solutionCenter)+"\n");
-	QString peakStr("%0");
-	peakStr = peakStr.arg( "Peak:", fieldWidth, fillChar);
-	stats.append( peakStr + QString::number(solutionPeak)+"\n");
-	QString fwhmStr("%0");
-	fwhmStr = fwhmStr.arg( "FWHM:", fieldWidth, fillChar );
-	stats.append( fwhmStr + QString::number(solutionFWHM)+"\n");
-	QString chiSquaredStr("%0");
-	chiSquaredStr = chiSquaredStr.arg( "Chi-squared:", fieldWidth, fillChar);
-	stats.append( chiSquaredStr + QString::number(solutionChiSquared)+"\n");
-	QString rmsStr("%0");
-	rmsStr = rmsStr.arg( "RMS:", fieldWidth, fillChar );
-	stats.append( rmsStr + QString::number(solutionRMS));
 	return stats;
 }
 
 void FitterGaussian::clearFit(){
-	errorMsg="";
-	dataFitted = false;
+	Fitter::clearFit();
 	centerSpecified = false;
 	peakSpecified = false;
 	fwhmSpecified = false;
+	solutionPeak = -1;
+	solutionCenter = -1;
+	solutionFWHM = -1;
+	solutionChiSquared = -1;
+	solutionRMS = std::numeric_limits<float>::max();
+	solutionConverged = false;
 }
 
 void FitterGaussian::toAscii( QTextStream& stream ) const {

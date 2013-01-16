@@ -165,7 +165,6 @@ bool Histogram::reset(){
 			}
 			else {
 				//Make the histogram based on the region
-
 				SubImage<Float>* subImage = new SubImage<Float>( *image, *region );
 				histogramMaker = filterByChannels( subImage );
 				delete subImage;
@@ -189,19 +188,19 @@ bool Histogram::reset(){
 }
 
 void Histogram::defineLine( int index, QVector<double>& xVals,
-		QVector<double>& yVals, bool useLog ) const{
+		QVector<double>& yVals, bool useLogX, bool useLogY ) const{
 	assert( xVals.size() == 2 );
 	assert( yVals.size() == 2 );
 	int dataCount = xValues.size();
 	assert( index >= 0 && index < dataCount);
-	xVals[0] = xValues[index];
-	xVals[1] = xValues[index];
+	xVals[0] = computeXValue( xValues[index], useLogX);
+	xVals[1] = computeXValue( xValues[index], useLogX);
 	yVals[0] = 0;
-	yVals[1] = computeYValue( yValues[index], useLog );
+	yVals[1] = computeYValue( yValues[index], useLogY );
 }
 
 void Histogram::defineStepHorizontal( int index, QVector<double>& xVals,
-		QVector<double>& yVals, bool useLog ) const{
+		QVector<double>& yVals, bool useLogX, bool useLogY ) const{
 	assert( xVals.size() == 2 );
 	assert( yVals.size() == 2 );
 	int pointCount = xValues.size();
@@ -218,9 +217,36 @@ void Histogram::defineStepHorizontal( int index, QVector<double>& xVals,
 	else {
 		xVals[1] = xValues[index];
 	}
-	yVals[0] = computeYValue(yValues[index], useLog);
+	xVals[0] = computeXValue(xVals[0], useLogX );
+	xVals[1] = computeXValue(xVals[1], useLogX );
+	yVals[0] = computeYValue(yValues[index], useLogY);
 	yVals[1] = yVals[0];
 }
+
+void Histogram::defineStepVertical( int index, QVector<double>& xVals,
+		QVector<double>& yVals, bool useLogX, bool useLogY ) const {
+	assert( xVals.size() == 2 );
+	assert( yVals.size() == 2 );
+	int count = xValues.size();
+	assert( index >= 0 && index < count );
+	if ( index > 0 ){
+		xVals[0] = (xValues[index] + xValues[index-1])/2;
+	}
+	else {
+		xVals[0] = xValues[0];
+	}
+	xVals[0] = computeXValue( xVals[0], useLogX );
+	xVals[1] = xVals[0];
+
+	if ( index > 0 ){
+		yVals[0] = computeYValue(yValues[index-1], useLogY );
+	}
+	else {
+		yVals[0] = 0;
+	}
+	yVals[1] = computeYValue(yValues[index], useLogY );
+}
+
 
 double Histogram::computeYValue( double value, bool useLog ){
 	double resultValue = value;
@@ -232,104 +258,30 @@ double Histogram::computeYValue( double value, bool useLog ){
 	return resultValue;
 }
 
-void Histogram::defineStepVertical( int index, QVector<double>& xVals,
-		QVector<double>& yVals, bool useLog ) const {
-	assert( xVals.size() == 2 );
-	assert( yVals.size() == 2 );
-	int count = xValues.size();
-	assert( index >= 0 && index < count );
-	if ( index > 0 ){
-		xVals[0] = (xValues[index] + xValues[index-1])/2;
+double Histogram::computeXValue( double value, bool useLog ){
+	double resultValue = value;
+	if ( useLog ){
+		if ( value != 0 ){
+			resultValue = qLn( qAbs(value) ) / qLn( 10 );
+		}
 	}
-	else {
-		xVals[0] = xValues[0];
-	}
-	xVals[1] = xVals[0];
-
-	if ( index > 0 ){
-		yVals[0] = computeYValue(yValues[index-1], useLog );
-	}
-	else {
-		yVals[0] = 0;
-	}
-	yVals[1] = computeYValue(yValues[index], useLog );
+	return resultValue;
 }
+
+
 
 int Histogram::getDataCount() const {
 	return xValues.size();
 }
 
-
-float Histogram::getTotalCount() const {
-	float count = 0;
-	for ( int i = 0; i < static_cast<int>(yValues.size()); i++ ){
-		count = count + yValues[i];
-	}
-	return count;
-}
-
-/*int Histogram::getPeakIndex() const {
-	int peakIndex = -1;
-	double maxCount = std::numeric_limits<double>::min();
-	for ( int i = 0; i < static_cast<int>(yValues.size()); i++ ){
-		if ( yValues[i] > maxCount ){
-			maxCount = yValues[i];
-			peakIndex = i;
-		}
-	}
-	return peakIndex;
-}*/
-
-/*pair<float,float> Histogram::getZoomRange( float peakPercent ) const {
-	int peakIndex = getPeakIndex();
-	pair<float,float> zoomRange;
-	if ( peakIndex >= 0 ){
-		float totalCount = getTotalCount();
-		float targetCount = totalCount * peakPercent;
-		int startIndex = peakIndex;
-		int endIndex = peakIndex;
-		float runningCount = yValues[peakIndex];
-		int valueCount = yValues.size();
-		//Keep going until we have reached our target or we have no more values to add in.
-		while( runningCount < targetCount && (startIndex>=0 || endIndex<valueCount) ){
-			startIndex = startIndex - 1;
-			if ( startIndex > 0 ){
-				runningCount = runningCount + yValues[startIndex];
-				if ( runningCount >= targetCount ){
-					break;
-				}
-			}
-
-			endIndex = endIndex + 1;
-			if ( endIndex < valueCount ){
-				runningCount = runningCount + yValues[endIndex];
-			}
-
-		}
-		startIndex = qMax( 0, startIndex );
-		endIndex = qMin( valueCount - 1, endIndex );
-		if ( startIndex == endIndex ){
-			if ( startIndex > 0 ){
-				startIndex--;
-			}
-			else {
-				if ( endIndex < valueCount - 1){
-					endIndex++;
-				}
-			}
-		}
-		zoomRange.first = xValues[startIndex];
-		zoomRange.second = xValues[endIndex];
-	}
-	return zoomRange;
-}*/
-
 vector<float> Histogram::getXValues() const {
 	return xValues;
 }
+
 vector<float> Histogram::getYValues() const {
 	return yValues;
 }
+
 pair<float,float> Histogram::getDataRange() const {
 	int count = xValues.size();
 	pair<float,float> range;

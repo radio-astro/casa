@@ -23,6 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "ChannelRangeWidget.qo.h"
+#include <QDebug>
 
 namespace casa {
 
@@ -42,15 +43,34 @@ ChannelRangeWidget::ChannelRangeWidget(QWidget *parent)
 void ChannelRangeWidget::automaticChannelsChanged( bool enabled ){
 	ui.minSpinBox->setEnabled( !enabled );
 	ui.maxSpinBox->setEnabled( !enabled );
+	bool allChannels = isAllChannels();
+	if ( enabled ){
+		QString channelStr = ui.channelLineEdit->text();
+		int channelIndex = channelStr.toInt();
+		emit rangeChanged(channelIndex, channelIndex, allChannels, enabled );
+	}
+	else {
+		emit rangeChanged(ui.minSpinBox->value(), ui.maxSpinBox->value(), allChannels, enabled );
+	}
+
 }
 
 bool ChannelRangeWidget::isAllChannels() const {
-	int minValue = ui.minSpinBox->value();
-	int maxValue = ui.maxSpinBox->value();
 	bool allChannels = false;
-	if ( minValue == ui.minSpinBox->minimum()){
-		if ( maxValue == ui.maxSpinBox->maximum()){
+	if ( ui.automaticChannelCheckBox->isChecked()){
+		//Only all channels if there is only 1 total.
+		if ( ui.maxSpinBox->maximum() == 1 ){
 			allChannels = true;
+		}
+	}
+	else {
+		//All channels if the spin boxes are at their limits.
+		int minValue = ui.minSpinBox->value();
+		int maxValue = ui.maxSpinBox->value();
+		if ( minValue == ui.minSpinBox->minimum()){
+			if ( maxValue == ui.maxSpinBox->maximum()){
+				allChannels = true;
+			}
 		}
 	}
 	return allChannels;
@@ -74,21 +94,25 @@ void ChannelRangeWidget::valueChangedMax( int value ){
 }
 
 void ChannelRangeWidget::setAutomatic( bool autoChannels ){
+	blockSignals( true );
 	ui.automaticChannelCheckBox->setChecked( autoChannels );
+	blockSignals( false );
 }
 
 void ChannelRangeWidget::setRange( int minRange, int maxRange ){
-	int minValue = ui.minSpinBox->value();
-	if ( minValue != minRange ){
-		blockSignals( true );
-		ui.minSpinBox->setValue( minRange );
-		blockSignals( false );
-	}
-	int maxValue = ui.maxSpinBox->value();
-	if ( maxValue != maxRange ){
-		blockSignals( true );
-		ui.maxSpinBox->setValue( maxRange );
-		blockSignals( false );
+	if (!ui.automaticChannelCheckBox->isChecked()){
+		int minValue = ui.minSpinBox->value();
+		if ( minValue != minRange ){
+			blockSignals( true );
+			ui.minSpinBox->setValue( minRange );
+			blockSignals( false );
+		}
+		int maxValue = ui.maxSpinBox->value();
+		if ( maxValue != maxRange ){
+			blockSignals( true );
+			ui.maxSpinBox->setValue( maxRange );
+			blockSignals( false );
+		}
 	}
 }
 
@@ -99,11 +123,8 @@ void ChannelRangeWidget::setChannelCount( int count ){
 }
 
 void ChannelRangeWidget::setChannelValue( int value ){
+	ui.channelLineEdit->setText( QString::number( value ));
 	if ( ui.automaticChannelCheckBox->isChecked()){
-		blockSignals( true );
-		ui.minSpinBox->setValue( value );
-		ui.maxSpinBox->setValue( value );
-		blockSignals( false );
 		emit rangeChanged( value, value, false, true );
 	}
 }

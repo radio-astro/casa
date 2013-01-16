@@ -487,7 +487,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
       *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
-      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_/*, *pvCutAct_*/;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -524,9 +524,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   void hideHistogram();
   void initFit2DTool();
   void hideFit2DTool();
-
-  void histogramRegionUpdate( int id, viewer::region::RegionChanges change=viewer::region::RegionChangeCreate);
   void updateHistogram( viewer::Region* qtRegion, viewer::region::RegionChanges change );
+
+
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   HistogramMain* histogrammer;
@@ -552,6 +552,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_update(QtDisplayData*);
   void showHistogram();
   void refreshHistogrammer();
+  void histogramRegionUpdate( int, viewer::region::RegionChanges change = viewer::region::RegionChangeCreate );
   void showFitInteractive();
   void refreshFit();
   void addSkyComponentOverlay(String path);
@@ -559,6 +560,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void add2DFitOverlay( QList<RegionShape*> fitMarkers );
   void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
   void addResidualFitImage( String path );
+  //void showPVCut(bool show);
 
 
  public:

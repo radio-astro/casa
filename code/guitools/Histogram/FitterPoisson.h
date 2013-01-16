@@ -40,11 +40,14 @@ public:
 	double getLambda() const;
 	virtual QString getSolutionStatistics() const;
 	virtual bool doFit();
-	virtual void clearFit();
 	virtual void toAscii( QTextStream& stream ) const;
 	virtual ~FitterPoisson();
+	virtual void clearFit();
+
 private:
 	int factorial( int n ) const;
+	int getFitCount() const;
+	float getRMSE() const;
 	bool isIntegerValue( float val ) const;
 
 	bool lambdaSpecified;
