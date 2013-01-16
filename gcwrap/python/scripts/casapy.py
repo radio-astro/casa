@@ -590,8 +590,40 @@ def readboxfile(boxfile):
     print 'union is: ',union
     return union
 
-def inp(taskname=None):
+
+def inp(taskname=None, page=False):
+    """
+    Function to browse input parameters of a given task
+    taskname: name of task of interest
+    page: use paging if True, useful if list of parameters is longer than terminal height
+    """
     try:
+        ####paging contributed by user Ramiro Hernandez
+        if(page):
+            #########################
+            class TemporaryRedirect(object):
+                def __init__(self, stdout=None, stderr=None):
+                    self._stdout = stdout or sys.stdout
+                    self._stderr = stderr or sys.stderr
+                def __enter__(self):
+                    self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+                    self.old_stdout.flush(); self.old_stderr.flush()
+                    sys.stdout, sys.stderr = self._stdout, self._stderr
+                def __exit__(self, exc_type, exc_value, traceback):
+                    self._stdout.flush(); self._stderr.flush()
+                    sys.stdout = self.old_stdout
+                    sys.stderr = self.old_stderr
+            #######################end class
+            tempfile="__temp_input.casa"
+            temporal = open(tempfile, 'w')    
+
+            with TemporaryRedirect(stdout=temporal):
+                inp(taskname, False)
+            temporal.close()
+            os.system('more '+tempfile)
+            os.system('rm '+tempfile)
+            return
+        ####
         myf=sys._getframe(len(inspect.stack())-1).f_globals
         if((taskname==None) and (not myf.has_key('taskname'))):
             print 'No task name defined for inputs display'
