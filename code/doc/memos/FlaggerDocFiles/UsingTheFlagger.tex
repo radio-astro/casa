@@ -969,31 +969,33 @@ CASA <12>: summary
 \subsection{Obtaining summaries per reason}
 \begin{verbatim}
 
-########################################
+#########################################################################
 #
-#   Function to count statistics as a function of 'reason'.
+#   Function to count statistics as a function of 'reason'
+#   
+#   Flag Zeros, and run TFCrop, gathering incremental summary statistics.
 #
-######################################
+#########################################################################
 def task_reason_stats(msname='',field='',spw='',writeflags=True):
 
-    # Run the task with rflag
+    # Open the MS and select data
     tf.open(msname=msname,ntime=100.0);
-    tf.selectdata(field=field, spw=spw); # loose union...
+    tf.selectdata(field=field, spw=spw);
 
-    # Unflag
+    # Unflag (This is only for a demo)
     ag0 = {'apply':True, 'sequential':True, 'mode':'unflag'}
     tf.parseagentparameters(ag0);
 
-    # Flag Zeros
+    # (1) Flag Zeros
     ag1 = {'apply':True,'sequential':True,'mode':'clip', 'clipzeros':True}
     tf.parseagentparameters(ag1);
-    # Summary
+    # (2) Summary
     ag2 = {'apply':True,'sequential':True,'mode':'summary','name':'Zeros'}
     tf.parseagentparameters(ag2);
-    # TFCrop
+    # (3) TFCrop
     ag3 = {'apply':True,'sequential':True,'mode':'tfcrop'}
     tf.parseagentparameters(ag3);
-    # Summary
+    # (4) Summary
     ag4 = {'apply':True,'sequential':True,'mode':'summary', 'name':'TFCrop'}
     tf.parseagentparameters(ag4);
 
