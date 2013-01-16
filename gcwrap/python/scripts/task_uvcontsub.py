@@ -100,7 +100,9 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         if not os.path.isdir(vis):
             raise Exception, 'Visibility data set not found - please verify the name'
 
-        
+        #
+        #locfitspw=__exclude_channels(vis,field,fitspw)
+        #print "locfitspw=",locfitspw
         mytb.open(vis + '/SPECTRAL_WINDOW')
         allspw = '0~' + str(mytb.nrows() - 1)
         mytb.close()
@@ -255,3 +257,101 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         casalog.post('Error in uvcontsub: ' + str(instance), 'SEVERE')
         mycb.close()                        # Harmless if cb is closed.
         raise Exception
+
+
+def _exclude_channels(vis,field,infitspw):
+    """
+    private function for select channels outside given by infitspw
+    returns: list containing new channel ranges
+    """
+    mytb.open(vis+'/SPECTRAL_WINDOW')
+    nspw=mytb.nrows()
+    mytb.close()
+   
+    fullspwids=str(range(nspw)).strip('[,]')
+    tql={'field':field,'spw':fullspwids}
+    myms.open(vis)
+    myms.msselect(tql,True)
+    allsels=myms.msselectedindices()
+    myms.reset()  
+    # input fitspw selection
+    tql['spw']=infitspw
+    myms.msselect(tql,True)
+    usersels=myms.msselectedindices()['channel']
+    myms.close()
+    # sort the arrays so that chan ranges are
+    # in order
+    usersels.sort(axis=0)
+    spwsels=''
+    spwid=-1
+    prevspwid=None
+    newchanlist=[]
+    nsels=len(usersels)
+    print "Usersels=",usersels
+    for isel in range(nsels):
+        print "isel=",isel
+        prevspwid = spwid
+        spwid=usersels[isel][0] 
+        lochan=usersels[isel][1]
+        hichan=usersels[isel][2]
+        stp=usersels[isel][3]
+        maxchanid=allsels['channel'][spwid][2]
+        # find left and right side ranges of the selected range
+        if spwid != prevspwid:
+            # first line in the selected spw
+            print "first round"
+            if lochan > 0:
+                outloL=0
+                outhiL=lochan-1
+                outloR= (0 if hichan+1>=maxchanid else hichan+1)
+                if outloR:
+                    if isel<nsels-1 and usersels[isel+1][0]==spwid:
+                        outhiR=usersels[isel+1][1]-1
+                    else:
+                        outhiR=maxchanid
+                else:
+                    outhiR=0 # higher end of the user selected range reaches maxchanid
+                             # so no right hand side range
+                print "outloL,outhiL,outloR,outhiR==", outloL,outhiL,outloR,outhiR
+            else:
+                # no left hand side range
+                outloL=0
+                outhiL=0
+                outloR=hichan+1
+                if isel<nsels-1 and usersels[isel+1][0]==spwid:
+                    outhiR=usersels[isel+1][1]-1
+                else:
+                    outhiR=maxchanid
+        else:
+            #expect the left side range is already taken care of
+            outloL=0
+            outhiL=0
+            outloR=hichan+1
+            if outloR>=maxchanid:
+                #No more boundaries to consider
+                outloR=0
+                outhiR=0
+            else:
+                if isel<nsels-1 and usersels[isel+1][0]==spwid:
+                    outhiR=min(usersels[isel+1][1]-1,maxchanid)
+                else:
+                    outhiR=maxchanid
+                if outloR > outhiR:
+                    outloR = 0
+                    outhiR = 0
+
+    #
+        if (not(outloL == 0 and outhiL == 0)) and outloL <= outhiL:
+            newchanlist.append([spwid,outloL,outhiL,stp])
+        if (not(outloR == 0 and outhiR == 0)) and outloR <= outhiR:
+            newchanlist.append([spwid,outloR,outhiR,stp])
+    print "newchanlist=",newchanlist
+    #return newchanlist
+    # create spw selection string from newchanlist
+    spwstr=''
+    for irange in range(len(newchanlist)):
+        chanrange=newchanlist[irange]
+        spwstr+=str(chanrange[0])+':'+str(chanrange[1])+'~'+str(chanrange[2])         
+        if irange != len(newchanlist)-1:
+            spwstr+=','
+    return spwstr 
