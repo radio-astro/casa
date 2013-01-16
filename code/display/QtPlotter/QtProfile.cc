@@ -75,12 +75,6 @@
 
 namespace casa { 
 
-const QString QtProfile::PLOT_TYPE_FLUX = "Flux Density";
-const QString QtProfile::PLOT_TYPE_MEAN = "Mean";
-const QString QtProfile::PLOT_TYPE_MEDIAN = "Median";
-const QString QtProfile::PLOT_TYPE_SUM = "Sum";
-
-
 QtProfile::~QtProfile()
 {
 
@@ -108,10 +102,6 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 
 	setBackgroundRole(QPalette::Dark);
 
-	plotMode->addItem( PLOT_TYPE_MEAN );
-	plotMode->addItem( PLOT_TYPE_MEDIAN );
-	plotMode->addItem( PLOT_TYPE_SUM );
-	plotMode->addItem( PLOT_TYPE_FLUX );
 	fillPlotTypes(img);
 	connect(plotMode, SIGNAL(currentIndexChanged(const QString &)),
 			this, SLOT(changePlotType(const QString &)));
@@ -493,6 +483,7 @@ void QtProfile::changeCoordinate(const QString &text) {
 
 
 void QtProfile::changeFrame(const QString &text) {
+	//qDebug() << "In change frame with input: " << text <<" coordinateType: " << coordinateType.c_str();
 	spcRefFrame=String(text.toStdString());
 	changeCoordinateType(QString(ctypeUnit.c_str()));
 }
@@ -535,6 +526,7 @@ void QtProfile::changeCoordinateType(const QString &text ) {
 }
 
 void QtProfile::closeEvent (QCloseEvent *) {
+	//qDebug() << "closeEvent";
 	lastPX.resize(0);
 	lastPY.resize(0);
 	lastWX.resize(0);
@@ -586,10 +578,8 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	}
 
 	CoordinateSystem cSys = image->coordinates();
-	if ( cSys.hasSpectralAxis() ){
-		SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
-		Converter::setSpectralCoordinate( spectralCoordinate );
-	}
+	SpectralCoordinate spectralCoordinate = cSys.spectralCoordinate();
+	Converter::setSpectralCoordinate( spectralCoordinate );
 	initializeSolidAngle();
 
 	ctypeUnit = String(bottomAxisCType->currentText().toStdString());
@@ -611,7 +601,6 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	//YUnits
 	yUnit = QString(img->units().getName().chars());
 	yUnitPrefix = "";
-	adjustPlotUnits();
 	setPixelCanvasYUnits( yUnitPrefix, yUnit );
 	setDisplayYUnits( yAxisCombo->currentText());
 
@@ -638,8 +627,8 @@ void QtProfile::adjustPlotUnits(){
 		Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
 		if(pos>-1){
 			yUnit.remove(pos,5);
+			yUnitsList[0] = yUnit;
 		}
-		yUnitsList[0] = "Jy";
 	}
 	//Add *pixels in case of sum
 	else if ( itsPlotType==QtProfile::PSUM ){
@@ -727,13 +716,18 @@ void QtProfile::wcChanged( const String c,
 
 	setPositionStatus( pxv,pyv,wxv,wyv );
 
+
 	//Get Profile Flux density v/s coordinateType
 	bool ok = assignFrequencyProfile( wxv,wyv, coordinateType,xaxisUnit,z_xval,z_yval );
+	if ( !ok ){
+		return;
+	}
 
 	ok = setErrorPlotting( wxv, wyv );
 	if ( !ok ){
 		return;
 	}
+
 	// scale for better display
 	Int ordersOfM = scaleAxis();
 
@@ -928,7 +922,7 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 		updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
 
 	}
-
+	//qDebug() << "spcRval="<<spcRval.c_str()<<" cSysRval="<<cSysRval.c_str();
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
 		cSysRval = spcRval;
@@ -1168,18 +1162,18 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 }
 
 
-void QtProfile::updateRegion( int id_, viewer::Region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
+void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ) {
 
 	if (!isVisible()) return;
 	if (!analysis) return;
 
-	if ( type == viewer::Region::RegionChangeDelete ){
+	if ( type == viewer::region::RegionChangeDelete ){
 		return;
 	}
-	else if ( type == viewer::Region::RegionChangeFocus )
+	else if ( type == viewer::region::RegionChangeFocus )
 		current_region_id = id_;			// viewer region focus has changed
-	else if ( type == viewer::Region::RegionChangeNewChannel )
+	else if ( type == viewer::region::RegionChangeNewChannel )
 		return;						// viewer moving to new channel
 	else if ( id_ != current_region_id )
 		return;						// some other region
@@ -1540,11 +1534,11 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 
 	if (plotMode->count() <1 ){
 		// fill the plot types
-		plotMode->addItem( PLOT_TYPE_MEAN );
-		plotMode->addItem( PLOT_TYPE_MEDIAN );
-		plotMode->addItem( PLOT_TYPE_SUM );
+		plotMode->addItem("mean");
+		plotMode->addItem("median");
+		plotMode->addItem("sum");
 		if (allowFlux)
-			plotMode->addItem( PLOT_TYPE_FLUX );
+			plotMode->addItem("flux");
 
 		// read the preferred plot mode from casarc
 		QString pref_plotMode = read(".plot.type");
@@ -1561,12 +1555,12 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 	else{
 		// add/remove "flux" if necessary
 		if (allowFlux){
-			if (plotMode->findText( PLOT_TYPE_FLUX )<0)
-				plotMode->addItem( PLOT_TYPE_FLUX );
+			if (plotMode->findText("flux")<0)
+				plotMode->addItem("flux");
 		}
 		else{
-			if (plotMode->findText( PLOT_TYPE_FLUX ) > -1)
-				plotMode->removeItem(plotMode->findText( PLOT_TYPE_FLUX ));
+			if (plotMode->findText("flux") > -1)
+				plotMode->removeItem(plotMode->findText("flux"));
 		}
 	}
 
@@ -1627,13 +1621,13 @@ void QtProfile::fillPlotTypes(const ImageInterface<Float>* img){
 void QtProfile::stringToPlotType(const QString &text, QtProfile::PlotType &pType){
 	*itsLog << LogOrigin("QtProfile", "stringToPlotType");
 
-	if (!text.compare(QString( PLOT_TYPE_MEAN )))
+	if (!text.compare(QString("mean")))
 		pType = QtProfile::PMEAN;
-	else if (!text.compare(QString( PLOT_TYPE_MEDIAN )))
+	else if (!text.compare(QString("median")))
 		pType = QtProfile::PMEDIAN;
-	else if (!text.compare(QString( PLOT_TYPE_SUM )))
+	else if (!text.compare(QString("sum")))
 		pType = QtProfile::PSUM;
-	else if (!text.compare(QString( PLOT_TYPE_FLUX )))
+	else if (!text.compare(QString("flux")))
 		pType = QtProfile::PFLUX;
 	//else if (!text.compare(QString("rmse")))
 	//	pType = QtProfile::PVRMSE;
@@ -1847,48 +1841,6 @@ void QtProfile::setPositionStatus(const Vector<double> &pxv, const Vector<double
 	profileStatus->showMessage(position);
 }
 
-bool QtProfile::getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
-		Vector<Float> &z_xval, Vector<Float> &z_yval,
-		const String& xytype, const String& specaxis,
-		const Int& whichStokes, const Int& whichTabular,
-		const Int& whichLinear, const String& xunits,
-		const String& specFrame, const Int &combineType,
-		const Int& whichQuality, const String& restValue ){
-	bool ok = false;
-	try {
-		ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-						xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
-						combineType, whichQuality, restValue);
-	}
-	catch( AipsError& error ){
-		//Currently the flux profile throws an exception for images
-		//with channel-dependent beams.
-		ok = false;
-		if ( itsPlotType == QtProfile::PFLUX ){
-		//We will try again, this time using the restoring beam from the
-		//central channel.
-			int channelCount = z_xval.size();
-			int centralChannel = channelCount / 2;
-			try {
-				ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-										xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
-										combineType, whichQuality, restValue, centralChannel);
-				if ( ok ){
-					//Post a warning that flux was calculated using a central channel
-					//and the resulting calculation was only an approximation.
-					String warningMsg( "Calculation was performed using a central channel.\n  The result should be considered an approximation.");
-					postStatus( warningMsg );
-				}
-			}
-			catch( AipsError& error ){
-				//qDebug() << "Could not calculate flux using a central channel";
-			}
-		}
-	}
-	return ok;
-}
-
-
 bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
 		const String& coordinateType, const String& xaxisUnit,
 		Vector<Float> &z_xval, Vector<Float> &z_yval){
@@ -1907,10 +1859,10 @@ bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<
 	case QtProfile::PSUM:
 		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-				(Int)QtProfile::SUM, 0, cSysRval );
+				(Int)QtProfile::SUM, 0, cSysRval);
 		break;
 	case QtProfile::PFLUX:
-		ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_yval,
+		ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 				WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 				(Int)QtProfile::FLUX, 0, cSysRval);
 		break;
@@ -1991,7 +1943,7 @@ bool QtProfile::setErrorPlotting( const Vector<double> &wxv, const Vector<double
 						(Int)QtProfile::SQRTSUM, 1, cSysRval);
 				break;
 			case QtProfile::PFLUX:
-				ok=getFrequencyProfileWrapper( wxv, wyv, z_xval, z_eval,
+				ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
 						(Int)QtProfile::EFLUX, 1, cSysRval);
 				break;
@@ -2099,22 +2051,6 @@ Int QtProfile::scaleAxis(){
 	return ordersOfM;
 }
 
-void QtProfile::setDisplayYUnits( const QString& unitStr ){
-	//Called with the left axis combo box changes its units.
-	QString displayUnit = unitStr;
-	//Right now optical units are not being supported as far as changing
-	//them on the y-axis.
-	bool convertableUnits = ConverterIntensity::isSupportedUnits( yUnit );
-	if ( !convertableUnits ){
-		displayUnit = "";
-	}
-	else {
-		postConversionWarning( displayUnit );
-	}
-	pixelCanvas->setDisplayYUnits( yUnitPrefix + displayUnit );
-	this->specFitSettingsWidget->setDisplayYUnits( yUnitPrefix + displayUnit );
-}
-
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){
 	bool unitsAcceptable = ConverterIntensity::isSupportedUnits( yUnit );
 	setYUnitConversionVisibility( unitsAcceptable );
@@ -2164,9 +2100,9 @@ void QtProfile::addImageAnalysisGraph( const Vector<double> &wxv, const Vector<d
 						(Int)QtProfile::PSUM, 0);
 				break;
 			case QtProfile::PFLUX:
-				ok=getFrequencyProfileWrapper( wxv, wyv, xval, yval,
+				ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 						WORLD_COORDINATES, coordinateType, 0, 0, 0, xaxisUnit, spcRefFrame,
-						(Int)QtProfile::PFLUX, 0, "");
+						(Int)QtProfile::PFLUX, 0);
 				break;
 				//case QtProfile::PVRMSE:
 				//	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
@@ -2268,6 +2204,7 @@ void QtProfile::adjustTopAxisSettings(){
 void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
 		const QString& label ){
 	specFitSettingsWidget->addCurveName( label );
+	//qDebug() << "Adding polyline label="<<label;
 	pixelCanvas->addPolyLine(xVals, yVals, label );
 	adjustTopAxisSettings();
 }
@@ -2430,6 +2367,21 @@ void QtProfile::initializeSolidAngle() const {
 			yAxisCombo->removeItem( yAxisUnitCount - 1 );
 		}
 	}
+}
+
+void QtProfile::setDisplayYUnits( const QString& unitStr ){
+	QString displayUnit = unitStr;
+	//Right now optical units are not being supported as far as changing
+	//them on the y-axis.
+	bool convertableUnits = ConverterIntensity::isSupportedUnits( yUnit );
+	if ( !convertableUnits ){
+		displayUnit = "";
+	}
+	else {
+		postConversionWarning( displayUnit );
+	}
+	pixelCanvas->setDisplayYUnits( displayUnit );
+	this->specFitSettingsWidget->setDisplayYUnits( displayUnit );
 }
 
 void QtProfile::postConversionWarning( QString unitStr ){

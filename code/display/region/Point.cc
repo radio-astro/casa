@@ -92,12 +92,12 @@ namespace casa {
 	    return symbol;
 	}
 
-	void Point::fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+	void Point::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 					  std::vector<std::pair<double,double> > &world_pts ) const {
 
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-	    type = PointRegion;
+	    type = region::PointRegion;
 
 	    double wblc_x, wblc_y;
 	    try { linear_to_world( wc_, blc_x, blc_y, wblc_x, wblc_y ); } catch(...) { return; }
@@ -135,7 +135,8 @@ namespace casa {
 	    pc->drawPolyline(xv,yv);
 	}
 
-	void Point::drawRegion( bool selected ) {
+	void Point::drawRegion( bool /*selected*/ ) {
+
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    PixelCanvas *pc = wc_->pixelCanvas();
@@ -191,19 +192,21 @@ namespace casa {
 		    pc->drawFilledRectangle( x-1-inc, y-1-inc, x+1+inc, y+1+inc );
 	    }
 
-	    if ( selected ) {
-		// draw outline rectangle for resizing the point...
-		pushDrawingEnv(DotLine,1);
-		// While a circle would be a better choice, drawing a dotted circle
-		// leaves terrible gaps in the circumference...  currently... <drs>
-		// pc->drawEllipse(x, y, radius, radius, 0.0, True, 1.0, 1.0);
-		pc->drawRectangle( x-radius, y-radius, x+radius, y+radius );
-		if ( weaklySelected( ) ) {
-		    // Switching to a circle seemed good, but the rendering of a circle
-		    // with a dotted line is atrocious...
-		    pc->drawRectangle( x-radius+4, y-radius+4, x+radius-4, y+radius-4 );
-		}
-		popDrawingEnv( );
+		if ( memory::nullptr.check( creating_region ) ) {
+			pushDrawingEnv(region::DotLine,1);
+			if ( weaklySelected( ) || marked( ) ) {
+				// Switching to a circle seemed good, but the rendering of a circle
+				// with a dotted line is atrocious...
+				pc->drawRectangle( x-radius, y-radius, x+radius, y+radius );
+				if ( marked( ) ) {
+					// draw outline rectangle for resizing the point...
+					// While a circle would be a better choice, drawing a dotted circle
+					// leaves terrible gaps in the circumference...  currently... <drs>
+					// pc->drawEllipse(x, y, radius, radius, 0.0, True, 1.0, 1.0);
+					pc->drawRectangle( x-radius+4, y-radius+4, x+radius-4, y+radius-4 );
+				}
+			}
+			popDrawingEnv( );
 	    }
 
 	}
@@ -226,45 +229,52 @@ namespace casa {
 	}
 
 	// returns point state (Region::PointLocation)
-	Region::PointInfo Point::checkPoint( double xd, double yd ) const {
+	region::PointInfo Point::checkPoint( double xd, double yd ) const {
 	    unsigned int result = 0;
 	    int x, y, ptx, pty;
-	    try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return Region::PointInfo(0,0,PointOutside); }
+
+	    try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return region::PointInfo(0,0,region::PointOutside); }
 
 	    if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius )
-		result |= PointInside;
+			result |= region::PointInside;
 
-	    return PointInfo(xd,yd,result == 0 ? (unsigned int) PointOutside : result);
+	    return region::PointInfo(xd,yd,result == 0 ? (unsigned int) region::PointOutside : result);
 	}
 
         // returns mouse state (Region::MouseState)
 	unsigned int Point::mouseMovement( double xd, double yd, bool other_selected ) {
-	    unsigned int result = 0;
+		unsigned int result = 0;
 
-	    if ( visible_ == false ) return result;
+		if ( visible_ == false ) return result;
 
-	    int x, y, ptx, pty;
-	    try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return 0; }
+		int x, y, ptx, pty;
+		try { linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty ); } catch(...) { return 0; }
 
-	    if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius ) {
-		result |= MouseSelected;
-		result |= MouseRefresh;
-		selected_ = true;
-		draw( other_selected );
-		if ( other_selected == false ) {
-		    // mark flag as this is the region (how to mix in other shapes)
-		    // of interest for statistics updates...
-		    selectedInCanvas( );
+		if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius ) {
+			weaklySelect( mouse_in_region == false );
+			mouse_in_region = true;
+			result |= region::MouseSelected;
+			result |= region::MouseRefresh;
+			selected_ = true;
+			draw( other_selected );
+			if ( other_selected == false ) {
+				// mark flag as this is the region (how to mix in other shapes)
+				// of interest for statistics updates...
+				selectedInCanvas( );
+			}
+		} else if ( selected_ == true ) {
+			weaklyUnselect( );
+			mouse_in_region = false;
+			if ( selected_ == true ) {
+				selected_ = false;
+				draw( other_selected );
+				result |= region::MouseRefresh;
+			}
 		}
-	    } else if ( selected_ == true ) {
-		selected_ = false;
-		draw( other_selected );
-		result |= MouseRefresh;
-	    }
-	    return result;
+		return result;
 	}
 
-	std::list<RegionInfo> * Point::generate_dds_centers(bool /* skycomp */){
+	std::list<RegionInfo> * Point::generate_dds_centers( ){
 		// In principle there is no need to implement this,
 		// it would go to Rectangle::generate_dds_centers() otherwise
 		// and really try to fit a Gaussian to a point, certainly

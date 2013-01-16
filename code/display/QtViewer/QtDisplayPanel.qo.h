@@ -62,12 +62,16 @@ class PCITFiddler;
 class MWCPannerTool;
 class MWCPolylineTool;
 class MWCRulerlineTool;
+class MWCPositionVelocityTool;
 //class MWCPTRegion;
 class DParameterChoice;
 class RegionShape;
 class QtRegionShapeManager;
 
-namespace viewer { class RegionToolManager; }
+namespace viewer {
+	class RegionToolManager;
+	class Region;
+}
 
 class QtDisplayPanel : public QWidget,
                        public WCMotionEH,  public PCPositionEH {
@@ -343,9 +347,10 @@ public:
   panel_state getPanelState( ) const;
   void setPanelState( const panel_state & );
 
-  // load casa (or DS9?) region files...
+  // *new* Region code  --  load casa (or DS9?) region files...
   void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
-
+  // *new* Region code  --  revoke region from region source...
+  void revokeRegion( viewer::Region *r );
 
 
  public slots:
@@ -753,6 +758,7 @@ public:
   MWCPolylineTool* polyline_;
 
   MWCRulerlineTool* rulerline_;
+  MWCPositionVelocityTool *pvtool_;
 
   PCITFiddler* snsFidd_;
   PCITFiddler* bncFidd_;

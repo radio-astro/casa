@@ -912,7 +912,7 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 
 
 void BinPlotWidget::defineCurveHistogram( int id, const QColor& histogramColor ){
-	if ( histogramMap.contains(id)){
+	if ( histogramMap.contains(id) && histogramMap[id] ){
 		int pointCount = histogramMap[id]->getDataCount();
 		QVector<double> xValues(2);
 		QVector<double> yValues(2);
@@ -1108,7 +1108,7 @@ bool BinPlotWidget::isPrincipalHistogram( int id ) const {
 void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		bool clearCurves ){
 	defineCurve( id, curveColor, clearCurves );
-	if ( isPrincipalHistogram( id )){
+	if ( isPrincipalHistogram( id ) && histogramMap[id] ){
 		setValidatorLimits();
 		vector<float> xVector = histogramMap[id]->getXValues();
 		vector<float> yVector = histogramMap[id]->getYValues();

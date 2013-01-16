@@ -37,12 +37,25 @@
 #include <imageanalysis/Annotations/AnnPolygon.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/DisplayErrors.h>
+#include <display/QtViewer/QtDisplayData.qo.h>
+#include <display/ds9/ds9writer.h>
 
 namespace casa {
     namespace viewer {
 
-	Polygon::Polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts) :
-	  Region( wc ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+	Polygon::Polygon( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts) :
+		Region( "polygon", wc, d ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+		_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
+	    for ( size_t i=0; i < pts.size(); ++i ) {
+		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
+		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
+	    }
+	    closeFigure(false);
+	}
+
+	// carry over from QtRegion... hopefully, removed soon...
+	Polygon::Polygon( QtRegionSourceKernel *rs, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals ) :
+		Region( "polygon", wc, rs->dock( ), hold_signals ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 	  _drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
 	    for ( size_t i=0; i < pts.size(); ++i ) {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
@@ -52,17 +65,18 @@ namespace casa {
 	}
 
 	void Polygon::closeFigure( bool signal_complete ) {
-	    complete = true;
-	    unsigned int size = _ref_points_.size( );
-	    if ( size > 1 && _ref_points_[size-1].first == _ref_points_[size-2].first &&
-		 _ref_points_[size-1].second == _ref_points_[size-2].second ) {
-		_ref_points_.pop_back( );
-		_drawing_points_.pop_back( );
-	    }
-	    update_reference_bounds_rectangle( );
-	    update_drawing_bounds_rectangle( );
-	    if ( signal_complete )
-		polygonComplete( );  // pure-virtual when called from Polygon ctor
+		complete = true;
+		unsigned int size = _ref_points_.size( );
+		if ( size > 1 && _ref_points_[size-1].first == _ref_points_[size-2].first &&
+			 _ref_points_[size-1].second == _ref_points_[size-2].second ) {
+			_ref_points_.pop_back( );
+			_drawing_points_.pop_back( );
+		}
+		update_reference_bounds_rectangle( );
+		update_drawing_bounds_rectangle( );
+		if ( signal_complete ) {
+			try { polygonComplete( ); } catch (...) { /*fprintf( stderr, "******\tregion selection errors - %s, %d \t******\n", __FILE__, __LINE__ );*/ }
+		}
 	}
 
 	void Polygon::addVertex( double x, double y, bool rewrite_last_point ) {
@@ -76,6 +90,12 @@ namespace casa {
 		_drawing_points_[_drawing_points_.size( ) - 1] = pt(x,y);
 	    }
 	    update_drawing_bounds_rectangle( );
+	}
+
+	void Polygon::polygonComplete( ) {
+	    // for polygons signals remain blocked until polygon is complete...
+	    releaseSignals( );
+		updateStateInfo( true, region::RegionChangeModified );
 	}
 
 	void Polygon::move( double dx, double dy ) {
@@ -104,7 +124,7 @@ namespace casa {
 		    _drawing_trc_y_ = _drawing_points_[i].second;
 	    }
 
-	    updateStateInfo( true, RegionChangeModified );
+	    updateStateInfo( true, region::RegionChangeModified );
 	    setDrawCenter(false);
 	    invalidateCenterInfo();
 	}
@@ -123,20 +143,20 @@ namespace casa {
 	}
 
 	// returns point state (Region::PointLocation)
-	Region::PointInfo Polygon::checkPoint( double x, double y )  const {
+	region::PointInfo Polygon::checkPoint( double x, double y )  const {
 
 	    if ( complete == false )
-		return PointInfo( x, y, PointOutside );
+			return region::PointInfo( x, y, region::PointOutside );
 
 	    unsigned int result = 0;
 	    double blc_x, blc_y, trc_x, trc_y;
 	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 	    if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y )
-		result |= PointInside;
+			result |= region::PointInside;
 	    unsigned int handle = check_handle( x, y );
 	    if ( handle )
-		result |= PointHandle;
-	    return PointInfo( x, y, result == 0 ? (unsigned int) PointOutside : result, handle );
+			result |= region::PointHandle;
+	    return region::PointInfo( x, y, result == 0 ? (unsigned int) region::PointOutside : result, handle );
 	}
 
 	// returns mouse movement state
@@ -148,10 +168,10 @@ namespace casa {
 		double blc_x, blc_y, trc_x, trc_y;
 		boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 		if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y || within_vertex_handle( x, y ) ) {
-			if ( mouse_in_region == false ) weaklySelect( );
+			weaklySelect( mouse_in_region == false );
 			mouse_in_region = true;
-			result |= MouseSelected;
-			result |= MouseRefresh;
+			result |= region::MouseSelected;
+			result |= region::MouseRefresh;
 			selected_ = true;
 			draw( other_selected );		// this draw may not be necessary (?)...
 			if ( other_selected == false ) {
@@ -160,11 +180,13 @@ namespace casa {
 				selectedInCanvas( );
 			}
 		} else if ( selected_ == true ) {
-			if ( mouse_in_region == true ) weaklyUnselect( );
-			mouse_in_region = false;
-			selected_ = false;
-			draw( other_selected );		// this draw may not be necessary (?)...
-			result |= MouseRefresh;
+				weaklyUnselect( );
+				mouse_in_region = false;
+				if ( selected_ == true ) {
+					selected_ = false;
+					draw( other_selected );
+					result |= region::MouseRefresh;
+				}
 		}
 		return result;
 	}
@@ -175,6 +197,13 @@ namespace casa {
 	    return x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y;
 	}
 
+
+	void Polygon::output( ds9writer &out ) const {
+		if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+		std::string path = QtDisplayData::path(wc_->csMaster());
+		out.setCsysSource(path.c_str( ));
+		out.polygon(wc_,drawing_points( ));
+	}
 
 	unsigned int Polygon::check_handle( double x, double y ) const {
 	    double blc_x, blc_y, trc_x, trc_y;
@@ -267,7 +296,7 @@ namespace casa {
 	    _drawing_trc_y_ = trc_y;
 
 	    update_drawing_state( );
-	    updateStateInfo( true, RegionChangeModified ); 
+	    updateStateInfo( true, region::RegionChangeModified ); 
 	}
 
 	int Polygon::moveHandle( int handle, double x, double y ) {
@@ -279,7 +308,7 @@ namespace casa {
 	    else
 		return 0;
 
-	    updateStateInfo( true, RegionChangeModified ); 
+	    updateStateInfo( true, region::RegionChangeModified ); 
 	    setDrawCenter(false);
 	    invalidateCenterInfo();
 	    return handle;
@@ -350,6 +379,7 @@ namespace casa {
 	    // recalculate drawing vertices based upon updated reference vertices...
 	    update_drawing_state( );
 	    update_drawing_bounds_rectangle( );
+		refresh_state_gui( ); /***updateStatistics***/
 
 	    return handle;
 	}
@@ -483,6 +513,7 @@ namespace casa {
 	    _drawing_trc_y_ = trc_y;
 
 	    update_drawing_state( );
+		refresh_state_gui( ); /***updateStatistics***/
 
 	    return new_handle;
 	}
@@ -531,7 +562,7 @@ namespace casa {
 		}
 		if ( complete ) pc->drawLine( x1, y1, first_x, first_y );
 
-		if ( selected ) {
+		if ( selected && memory::nullptr.check( creating_region ) ) {
 
 			// get bounding rectangle...
 			double blc_x, blc_y, trc_x, trc_y;
@@ -555,7 +586,7 @@ namespace casa {
 			handle_delta_y = ydy - blc_y;
 
 			// draw outline rectangle for resizing whole polygon...
-			pushDrawingEnv(DotLine);
+			pushDrawingEnv(region::DotLine);
 			pc->drawRectangle( x1, y1, x2, y2 );
 			popDrawingEnv( );
 
@@ -571,7 +602,7 @@ namespace casa {
 
 			if (s) {
 				// draw handles of outline rectangle for resizing whole polygon...
-				pushDrawingEnv( Region::SolidLine);
+				pushDrawingEnv( region::SolidLine);
 				if ( weaklySelected( ) ) {
 					if ( marked_region_count( ) > 0 && mouse_in_region ) {
 						pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
@@ -584,6 +615,19 @@ namespace casa {
 						pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
 						pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
 					}
+
+					for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
+						int h_blc_x, h_blc_y, h_trc_x, h_trc_y;
+						try { linear_to_screen( wc_, _drawing_points_[i].first - handle_delta_x / 2.0, 
+												_drawing_points_[i].second - handle_delta_y / 2.0,
+												_drawing_points_[i].first + handle_delta_x / 2.0, 
+												_drawing_points_[i].second + handle_delta_y / 2.0,
+												h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+						} catch(...) { return; }
+
+						pc->drawFilledRectangle( h_blc_x, h_blc_y, h_trc_x, h_trc_y );
+					}
+
 				} else if ( marked( ) ) {
 					pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
 					pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
@@ -658,12 +702,12 @@ namespace casa {
 	    trcy = _drawing_trc_y_;
 	}
 
-	void Polygon::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+	void Polygon::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 					    std::vector<std::pair<double,double> > &world_pts ) const {
 
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-	    type = PolyRegion;
+	    type = region::PolyRegion;
 
 	    pixel_pts.resize(_drawing_points_.size( ));
 	    world_pts.resize(_drawing_points_.size( ));

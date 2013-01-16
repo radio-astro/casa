@@ -85,7 +85,7 @@ void MultiRectTool::disable() {
 
 	double linx1, liny1;
 	try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
-
+#if INCLUDE_OLD_CODE
 	// traverse in reverse order because the last region created is "on top"...
 	// check for click within a handle...
 	for ( rectanglelist::reverse_iterator iter = rectangles.rbegin(); iter != rectangles.rend(); ++iter ) {
@@ -106,7 +106,7 @@ void MultiRectTool::disable() {
 	moving_linx_ = linx1;
 	moving_liny_ = liny1;
 	if ( moving_regions.size( ) > 0 ) return;
-
+#endif
 	// start new rectangle
 	start_new_rectangle( wc, x, y );		// enter resizing state
 	refresh( );
@@ -114,7 +114,7 @@ void MultiRectTool::disable() {
 	return;
     }
 
-    void MultiRectTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type &selected_regions ) {
+    void MultiRectTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type &selected_regions ) {
 
 	if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
 
@@ -136,17 +136,23 @@ void MultiRectTool::disable() {
 	    // return;
 	}
 
-	int size = selected_regions.size( );
-	for ( rectanglelist::reverse_iterator iter = rectangles.rbegin(); iter != rectangles.rend(); ++iter ) {
-	    unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
-	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
-	    region_selected = region_selected | viewer::Region::regionSelected(result);
+	std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
+	if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
+		int size = selected_regions.size( );
+		rectanglelist processing = rectangles;
+		for ( rectanglelist::reverse_iterator iter = processing.rbegin(); iter != processing.rend(); ++iter ) {
+			unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
+			refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
+			region_selected = region_selected | viewer::Region::regionSelected(result);
+		}
+
+		if ( refresh_needed ) {
+			refresh( );
+		}
 	}
 
-	if ( refresh_needed ) {
-	    refresh( );
-	}
-
+#if USE_TRANSLATE_MOVING_REGIONS_INSTEAD
+	// there seems to be skew between this code and RegionToolManager::translate_moving_regions
 	if ( moving_regions.size( ) > 0 ) {
 	    // resize the rectangle
 	    double linx1, liny1;
@@ -159,6 +165,7 @@ void MultiRectTool::disable() {
 	    moving_linx_ = linx1;
 	    moving_liny_ = liny1;
 	}
+#endif
 
 	update_stats( ev );
 	//  commented out: Fri Aug  5 14:09:07 EDT 2011
@@ -173,124 +180,103 @@ void MultiRectTool::disable() {
 
     void MultiRectTool::keyReleased(const WCPositionEvent &ev) {
 
-	// avoid degenerate rectangles...
-	if ( memory::nullptr.check(creating_region) == false ) {
-	    if ( creating_region->degenerate( ) ) {
-		viewer::Region *nix = creating_region.get( );
-		rfactory->revokeRegion(nix);
-		if ( creating_region == resizing_region ) {
-		    resizing_region = memory::nullptr;
-		    resizing_region_handle = 0;
+		// avoid degenerate rectangles...
+		if ( memory::nullptr.check(creating_region) == false ) {
+			viewer::Region::creatingRegionEnd( );
+			if ( creating_region->degenerate( ) ) {
+				viewer::Region *nix = creating_region.get( );
+				rfactory->revokeRegion(nix);
+				if ( creating_region == resizing_region ) {
+					resizing_region = memory::nullptr;
+					resizing_region_handle = 0;
+				}
+			}
+			creating_region = memory::nullptr;
 		}
-	    }
-	    creating_region = memory::nullptr;
-	}
 
-// 	Bool wasActive = itsActive;
-	itsActive = False;
-	if ( rectangles.size( ) == 0 ) {
-	    if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
-		Int x = ev.pixX();
-		Int y = ev.pixY();
-		// Another link to Honglin's spectral profile hooks... but what's it do (it emits "echoClicked(clickPoint)") ? Double click without a rectangle...
-		// #0  casa::QtRTRegion::doubleClicked (this=0x1080bf200, x=270, y=347) at /Users/drs/dev/viewer/code/display/implement/QtViewer/QtMouseTools.cc:150
-		// #1  0x0000000100244448 in casa::MultiRectTool::keyReleased (this=0x1080bf210, ev=@0x7fff5fbfde80) at /Users/drs/dev/viewer/code/display/implement/DisplayEvents/MultiRectTool.cc:210
-		// #2  0x0000000100228726 in casa::MultiWCTool::operator() (this=0x1080bf210, ev=@0x7fff5fbfde80) at /Users/drs/dev/viewer/code/display/implement/DisplayEvents/MultiWCTool.cc:169
-		// #3  0x0000000100309759 in casa::WorldCanvas::callPositionEventHandlers (this=0x107cbb220, ev=@0x7fff5fbfde80) at /Users/drs/dev/viewer/code/display/implement/Display/WorldCanvas.cc:208
-		// #4  0x00000001003174de in casa::WorldCanvas::operator() (this=0x107cbb220, pev=@0x7fff5fbfe3c0) at /Users/drs/dev/viewer/code/display/implement/Display/WorldCanvas.cc:357
-		//
-		// --- "echoClicked(Record)" winds its way through:
-		// -------------------------- ./QtViewer/FileBox.cc --------------------------
-		//   connect(qdp_, SIGNAL(activate(Record)),
-		//                 SLOT(activate(Record)) );
-		// void FileBox::activate(Record rcd) {
-		// -------------------------- ./QtViewer/MakeMask.cc --------------------------
-		//   connect(qdp_, SIGNAL(activate(Record)),
-		//                 SLOT(activate(Record)) );
-		// void MakeMask::activate(Record rcd) {
-		// -------------------------- ./QtViewer/MakeRegion.cc --------------------------
-		//   connect(qdp_, SIGNAL(activate(Record)),
-		//                 SLOT(activate(Record)) );
-		// void MakeRegion::activate(Record rcd) {
-		// -------------------------- ./QtViewer/QtRegionManager.cc --------------------------
-		//   connect(qdp_, SIGNAL(activate(Record)),
-		//                 SLOT(activate(Record)) );
-		// void QtRegionManager::activate(Record rec) {
-		// -----------------------------------------------------------------------------------
-		doubleClicked(x, y);
-	    } else return;
-	}
-
-	if ( ev.worldCanvas() != itsCurrentWC ) { reset(); return;  }	// shouldn't happen.
-
-	if ( memory::nullptr.check(resizing_region) == false ) {
-	    // resize finished
-	    resizing_region = memory::nullptr;
-	}
-
-	if ( moving_regions.size( ) > 0 ) {
-	    // moving finished
-	    moving_regions.clear( );
-	}
-
-	if ( ev.modifiers( ) & Display::KM_Double_Click ) {
-
-	    // double click--invoke callbacks
-	    itsEmitted = True;
-	    itsLastPressTime = its2ndLastPressTime = -1.0;
-
-	    Int x = ev.pixX(), y = ev.pixY();
-	    double linx1, liny1;
-	    try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
-
-	    rectanglelist selected_regions;
-	    for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
-		if ( (*iter)->clickWithin( linx1, liny1 ) )
-		    selected_regions.push_back(*iter);
-	    }
-
-	    if ( selected_regions.size( ) > 0 ) {
-		std::string errMsg_;
-		std::map<String,bool> processed;
-		DisplayData *dd = 0;
-		List<DisplayData*> *dds = pd_->displayDatas( );
-		for ( ListIter<DisplayData *> ddi(*dds); ! ddi.atEnd( ); ++ddi ) {
-		    dd = ddi.getRight( );
-		    MSAsRaster *msar = dynamic_cast<MSAsRaster*>(dd);
-		    if ( msar == 0 ) continue;
-		    for ( rectanglelist::iterator iter = selected_regions.begin(); iter != selected_regions.end(); ++iter ) {
-			(*iter)->flag( msar );
-		    }
+		// 	Bool wasActive = itsActive;
+		itsActive = False;
+		if ( rectangles.size( ) == 0 ) {
+			if (ev.timeOfEvent() - its2ndLastPressTime < doubleClickInterval()) {
+				Int x = ev.pixX();
+				Int y = ev.pixY();
+				// Another link to Honglin's spectral profile hooks... but what's it do (it emits "echoClicked(clickPoint)") ? Double click without a rectangle...
+				// #0  casa::QtRTRegion::doubleClicked (this=0x1080bf200, x=270, y=347) at /Users/drs/dev/viewer/code/display/implement/QtViewer/QtMouseTools.cc:150
+				// #1  0x0000000100244448 in casa::MultiRectTool::keyReleased (this=0x1080bf210, ev=@0x7fff5fbfde80) at /Users/drs/dev/viewer/code/display/implement/DisplayEvents/MultiRectTool.cc:210
+				// #2  0x0000000100228726 in casa::MultiWCTool::operator() (this=0x1080bf210, ev=@0x7fff5fbfde80) at /Users/drs/dev/viewer/code/display/implement/DisplayEvents/MultiWCTool.cc:169
+				// #3  0x0000000100309759 in casa::WorldCanvas::callPositionEventHandlers (this=0x107cbb220, ev=@0x7fff5fbfde80) at /Users/drs/dev/viewer/code/display/implement/Display/WorldCanvas.cc:208
+				// #4  0x00000001003174de in casa::WorldCanvas::operator() (this=0x107cbb220, pev=@0x7fff5fbfe3c0) at /Users/drs/dev/viewer/code/display/implement/Display/WorldCanvas.cc:357
+				//
+				// --- "echoClicked(Record)" winds its way through:
+				// -------------------------- ./QtViewer/FileBox.cc --------------------------
+				//   connect(qdp_, SIGNAL(activate(Record)),
+				//                 SLOT(activate(Record)) );
+				// void FileBox::activate(Record rcd) {
+				// -------------------------- ./QtViewer/MakeMask.cc --------------------------
+				//   connect(qdp_, SIGNAL(activate(Record)),
+				//                 SLOT(activate(Record)) );
+				// void MakeMask::activate(Record rcd) {
+				// -------------------------- ./QtViewer/MakeRegion.cc --------------------------
+				//   connect(qdp_, SIGNAL(activate(Record)),
+				//                 SLOT(activate(Record)) );
+				// void MakeRegion::activate(Record rcd) {
+				// -------------------------- ./QtViewer/QtRegionManager.cc --------------------------
+				//   connect(qdp_, SIGNAL(activate(Record)),
+				//                 SLOT(activate(Record)) );
+				// void QtRegionManager::activate(Record rec) {
+				// -----------------------------------------------------------------------------------
+				doubleClicked(x, y);
+			} else return;
 		}
-	    }
 
-	    refresh();	// current WC still valid, until new rect. started.
-			// In particular, still valid during callbacks below.
+		if ( ev.worldCanvas() != itsCurrentWC ) { reset(); return;  }	// shouldn't happen.
+
+		if ( memory::nullptr.check(resizing_region) == false ) {
+			// resize finished
+			resizing_region = memory::nullptr;
+		}
+
+		if ( moving_regions.size( ) > 0 ) {
+			// moving finished
+			moving_regions.clear( );
+		}
+
+		if ( ev.modifiers( ) & Display::KM_Double_Click ) {
+
+			// double click--invoke callbacks
+			itsEmitted = True;
+			itsLastPressTime = its2ndLastPressTime = -1.0;
+
+			Int x = ev.pixX(), y = ev.pixY();
+			double linx1, liny1;
+			try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
+
+			rectanglelist selected_regions;
+			for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
+				if ( (*iter)->clickWithin( linx1, liny1 ) )
+					selected_regions.push_back(*iter);
+			}
+
+			if ( selected_regions.size( ) > 0 ) {
+				std::string errMsg_;
+				std::map<String,bool> processed;
+				DisplayData *dd = 0;
+				List<DisplayData*> *dds = pd_->displayDatas( );
+				for ( ListIter<DisplayData *> ddi(*dds); ! ddi.atEnd( ); ++ddi ) {
+					dd = ddi.getRight( );
+					MSAsRaster *msar = dynamic_cast<MSAsRaster*>(dd);
+					if ( msar == 0 ) continue;
+					for ( rectanglelist::iterator iter = selected_regions.begin(); iter != selected_regions.end(); ++iter ) {
+						(*iter)->flag( msar );
+					}
+				}
+			}
+
+			refresh();	// current WC still valid, until new rect. started.
+						// In particular, still valid during callbacks below.
+		}
+
 	}
-
-#if DUMP_STATISTICS_TO_TERMINAL
-	Int x = ev.pixX(), y = ev.pixY();
-	double linx1, liny1;
-	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
-	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
-	    if ( (*iter)->clickWithin( linx1, liny1 ) )
-		(*iter)->
-	}
-
-    Int x1, y1, x2, y2;
-    get(x1,y1, x2,y2);
-    if (x >= min(x1, x2) && x <= max(x1, x2) &&
-	y >= min(y1, y2) && y <= max(y1, y2))
-	 doubleInside();
-    else doubleOutside();  }
-
-  else if(wasActive) {	// end of move or sizing of rectangle:
-    refresh();		// redraw with handles
-    rectangleReady();  }
-	// (this callback is unused on glish level (12/01))
-#endif
-
-}
 
 
 void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
@@ -374,7 +360,7 @@ void MultiRectTool::get(Int &x1, Int &y1) const {
   x1 = ifloor(pix(0)+.5); y1 = ifloor(pix(1)+.5);  }
 
 
-    void MultiRectTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type &selected_regions) {
+    void MultiRectTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type &selected_regions) {
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter )
 	    (*iter)->draw( selected_regions.size( ) > 0 );
     }
@@ -387,19 +373,20 @@ void MultiRectTool::reset(Bool skipRefresh) {
   itsLastPressTime = its2ndLastPressTime = -1.;
 }
 
-    void MultiRectTool::revokeRegion( viewer::Region *r ) {
-	viewer::Rectangle *rect = dynamic_cast<viewer::Rectangle*>(r);
-	if ( rect == 0 ) return;
+	void MultiRectTool::revokeRegion( viewer::Region *r ) {
+		viewer::Rectangle *rect = dynamic_cast<viewer::Rectangle*>(r);
+		if ( rect == 0 ) return;
 
-	// rectanglelist::iterator iter = find( rectangles.begin(), rectangles.end(), (viewer::Rectangle*) r );
-	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
-	    if ( (*iter).get( ) == rect ) {
-		rectangles.erase( iter );
-		refresh( );
-		break;
-	    }
+		// rectanglelist::iterator iter = find( rectangles.begin(), rectangles.end(), (viewer::Rectangle*) r );
+		for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
+			if ( (*iter).get( ) == rect ) {
+				rectangles.erase( iter );
+				refresh( );
+				break;
+			}
+		}
 	}
-    }
+
 
     /**********************************************************************************************************
     ***********************************************************************************************************
@@ -862,31 +849,36 @@ void MultiRectTool::reset(Bool skipRefresh) {
     }
 
     std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
-	return rfactory->rectangle( wc, x1, y1, x2, y2 );
+		////// this is the code we would like to use (removing the "region source"), but currently the profile tool
+		////// queues off of events from the region source...
+		// viewer::Rectangle *result = new viewer::Rectangle( wc, dock_, x1, y1, x2, y2, true );
+		// result->releaseSignals( );
+		// return std::tr1::shared_ptr<viewer::Rectangle>(result);
+		return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
     void MultiRectTool::checkPoint( WorldCanvas */*wc*/, State &state ) {
 	for ( rectanglelist::iterator iter = ((MultiRectTool*) this)->rectangles.begin(); iter != rectangles.end(); ++iter ) {
-	    viewer::Region::PointInfo point_state = (*iter)->checkPoint( state.x(), state.y() );
+	    viewer::region::PointInfo point_state = (*iter)->checkPoint( state.x(), state.y() );
 	    // should consider introducing a cptr_ref which somehow allows creating a
 	    // base class reference based on a counted pointer to a derived class...
 	    state.insert( this, &*(*iter), point_state );
 	}
     }
 
-    static std::set<viewer::Region::RegionTypes> multi_rect_tool_region_set;
-    const std::set<viewer::Region::RegionTypes> &MultiRectTool::regionsCreated( ) const {
+    static std::set<viewer::region::RegionTypes> multi_rect_tool_region_set;
+    const std::set<viewer::region::RegionTypes> &MultiRectTool::regionsCreated( ) const {
 	if ( multi_rect_tool_region_set.size( ) == 0 ) {
-	    multi_rect_tool_region_set.insert( viewer::Region::RectRegion );
+	    multi_rect_tool_region_set.insert( viewer::region::RectRegion );
 	}
 	return multi_rect_tool_region_set;
     }
 
-    bool MultiRectTool::create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas *wc,
+    bool MultiRectTool::create( viewer::region::RegionTypes /*region_type*/, WorldCanvas *wc,
 				const std::vector<std::pair<double,double> > &pts,
-				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
+				const std::string &label, viewer::region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width,
+				const std::string &line_color, viewer::region::LineStyle line_style, unsigned int line_width,
 				bool is_annotation, VOID *region_specific_state ) {
 
 	if ( pts.size( ) != 2 ) return false;
@@ -906,35 +898,36 @@ void MultiRectTool::reset(Bool skipRefresh) {
 
     void MultiRectTool::start_new_rectangle( WorldCanvas *wc, int x, int y ) {
 
-	// As originally requested by Kumar, any non-modified regions would be erased when a
-	// new one was started, but Juergen said that new regions should not automatically cause
-	// other regions to disappear... instead, there <ESC> should cause the selected regions
-	// to be be deleted...      <drs>
-	// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		// As originally requested by Kumar, any non-modified regions would be erased when a
+		// new one was started, but Juergen said that new regions should not automatically cause
+		// other regions to disappear... instead, there <ESC> should cause the selected regions
+		// to be be deleted...      <drs>
+		// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
         // for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
-	//     // the only change that will count as "modifying" is a non-zero length name
-	//     if ( (*iter)->modified( ) == false ) {
-	// 	rectangles.erase( iter );
-	// 	continue;
-	//     }
-	// }
+		//     // the only change that will count as "modifying" is a non-zero length name
+		//     if ( (*iter)->modified( ) == false ) {
+		// 	rectangles.erase( iter );
+		// 	continue;
+		//     }
+		// }
 
-	itsCurrentWC = wc;
+		itsCurrentWC = wc;
 
-	double linx, liny;
-	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
+		double linx, liny;
+		try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
 
-	creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, 0 );
-	rectangles.push_back( resizing_region );
+		creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, 0 );
+		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));
+		rectangles.push_back( resizing_region );
 
-	if ( type( ) != POINTTOOL )
-	    resizing_region_handle = 1;
-	else
-	    resizing_region = memory::nullptr;
+		if ( type( ) != POINTTOOL )
+			resizing_region_handle = 1;
+		else
+			resizing_region = memory::nullptr;
 
-	set(x,y, x,y);
-	moving_regions.clear( );		// ensure that moving state is clear...
-    }
+		set(x,y, x,y);
+		moving_regions.clear( );		// ensure that moving state is clear...
+	}
 
 
 } //# NAMESPACE CASA - END

@@ -61,7 +61,7 @@ class QtDisplayData;
 template <class T> class ImageInterface;
 
 namespace viewer {
-  class QtRegion;
+  class Region;
 }
 
 class QtDataManager : public QWidget, private Ui::QtDataManager {
@@ -118,7 +118,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
  
  protected slots:
   
-  void handle_region_update(viewer::QtRegion*,std::string);
+  void handle_region_update(viewer::Region*,std::string);
 
   void createButtonClicked();
   void clickItem(QTreeWidgetItem* item);
@@ -158,16 +158,16 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   void region_do_output( );
 
   void region_item_state_change(QTreeWidgetItem*,int);
-  void region_selection_change( viewer::QtRegion *rgn, bool selected );
+  void region_selection_change( viewer::Region *rgn, bool selected );
 
  private:
 
     typedef std::map<QString,QtDisplayData*> display_data_map_t;
     display_data_map_t display_datas;
     
-    typedef std::map<QTreeWidgetItem*,viewer::QtRegion*> treeitem_map_t;
+    typedef std::map<QTreeWidgetItem*,viewer::Region*> treeitem_map_t;
     treeitem_map_t treeitem_to_region;
-    typedef std::map<viewer::QtRegion*,QTreeWidgetItem*> region_map_t;
+    typedef std::map<viewer::Region*,QTreeWidgetItem*> region_map_t;
     region_map_t region_to_treeitem;
 
     struct validation_msg {

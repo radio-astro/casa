@@ -45,6 +45,7 @@ namespace QtMouseToolNames {
   const std::string POLYGON = "polygon";
   const std::string POLYLINE = "polyline";
   const std::string RULERLINE = "rulerline";
+  const std::string POSITIONVELOCITY = "pvtool";
   const std::string MULTICROSSHAIR = "multicrosshair";
   const std::string ANNOTATIONS = "annotations";
   const std::string NONE = "";
@@ -54,7 +55,7 @@ namespace QtMouseToolNames {
   
   const std::string tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,
 			   POINT, RECTANGLE, ELLIPSE,  POLYGON, POLYLINE,
-			   RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
+			   RULERLINE, /*POSITIONVELOCITY,*/ MULTICROSSHAIR, ANNOTATIONS, NONE };
 
   const std::string longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
@@ -64,7 +65,7 @@ namespace QtMouseToolNames {
     
   std::string iconnames[] = { "magnifyb", "handb", "arrowcrossb",
    "brightcontrastb", "symdotb", "rectregionb", "ellregionb", "polyregionb",
-   "polylineb", "rulerb",  "mpcrosshairb", "dontuseb",  "" };
+   "polylineb", "rulerb",  /*"pvtoolb",*/ "mpcrosshairb", "dontuseb",  "" };
     
   const std::string helptexts[] = {
     "Use the assigned mouse button to drag out a rectangle."

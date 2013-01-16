@@ -109,11 +109,7 @@ qt4_wrap_cpp( outfiles_qoh
   RegionShapes/QtRegionShapeManager.qo.h
   RegionShapes/QtSingleRegionShape.qo.h
   RegionShapes/RSUtils.qo.h
-  region/QtRegion.qo.h
-  region/QtRectangle.qo.h
-  region/QtPolygon.qo.h
-  region/QtEllipse.qo.h
-  region/QtPoint.qo.h
+  region/Region.qo.h
   region/QtRegionSource.qo.h
   region/QtRegionDock.qo.h
   region/QtRegionState.qo.h
@@ -282,6 +278,7 @@ casa_add_library( display
   DisplayEvents/MWCPannerTool.cc
   DisplayEvents/MWCPolylineTool.cc
   DisplayEvents/MWCRulerlineTool.cc
+  DisplayEvents/MWCPositionVelocityTool.cc
   DisplayEvents/MWCPolyTool.cc
   DisplayEvents/MWCPTRegion.cc
   DisplayEvents/MWCEllipseTool.cc
@@ -505,11 +502,6 @@ casa_add_library( display
   Utilities/Lowlevel.cc
   Utilities/dtor.cc
   Utilities/ImageProperties.cc
-  region/QtRegion.cc
-  region/QtRectangle.cc
-  region/QtPolygon.cc
-  region/QtEllipse.cc
-  region/QtPoint.cc
   region/RegionCreator.cc
   region/RegionSource.cc
   region/QtRegionSource.cc

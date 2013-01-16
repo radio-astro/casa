@@ -126,7 +126,7 @@ void MWCEllipseTool::keyPressed(const WCPositionEvent &ev) {
   return;
 }
 
-void MWCEllipseTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCEllipseTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   if (!itsActive) return;
   if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
 
@@ -228,7 +228,7 @@ void MWCEllipseTool::get(Int &x1, Int &y1) const {
   x1 = ifloor(pix(0)+.5); y1 = ifloor(pix(1)+.5);  }
 
 
-void MWCEllipseTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCEllipseTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
   if(!itsEllipseExists) return;
 
   setClipToWC();

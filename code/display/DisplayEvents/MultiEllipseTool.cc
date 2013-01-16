@@ -29,17 +29,17 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiEllipseTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
-	return rfactory->ellipse( wc, x1, y1, x2, y2 );
-    }
-
-    static std::set<viewer::Region::RegionTypes> multi_ellipse_tool_region_set;
-    const std::set<viewer::Region::RegionTypes> &MultiEllipseTool::regionsCreated( ) const {
-	if ( multi_ellipse_tool_region_set.size( ) == 0 ) {
-	    multi_ellipse_tool_region_set.insert( viewer::Region::EllipseRegion );
+	std::tr1::shared_ptr<viewer::Rectangle> MultiEllipseTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
+		return rfactory->ellipse( wc, x1, y1, x2, y2 );
 	}
-	return multi_ellipse_tool_region_set;
-    }
+
+	static std::set<viewer::region::RegionTypes> multi_ellipse_tool_region_set;
+	const std::set<viewer::region::RegionTypes> &MultiEllipseTool::regionsCreated( ) const {
+		if ( multi_ellipse_tool_region_set.size( ) == 0 ) {
+			multi_ellipse_tool_region_set.insert( viewer::region::EllipseRegion );
+		}
+		return multi_ellipse_tool_region_set;
+	}
 
 
 } //# NAMESPACE CASA - END

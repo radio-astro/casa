@@ -190,7 +190,7 @@ void WCPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
   }
 }
 
-void WCPolyTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void WCPolyTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   itsMoved = True;
   if (!itsActive) {
     return;

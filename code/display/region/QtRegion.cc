@@ -99,22 +99,7 @@ QtRegion::~QtRegion( ) {
 	signal_region_change( Region::RegionChangeDelete );
 	disconnect(mystate, 0, 0, 0);
 
-}
-
-void QtRegion::mark(bool set) {
-	if ( set != mystate->marked( ) ) {
-		mystate->mark(set);
-		emit selectionChanged(this,set);
-	}
-}
-
 void QtRegion::status( const std::string &msg, const std::string &type ) { dock_->status(msg,type); }
-
-bool QtRegion::mark_toggle( ) {
-	bool result = mystate->mark_toggle( );
-	emit selectionChanged(this,result);
-	return result;
-}
 
 void QtRegion::setLabel( const std::string &l ) {  mystate->setTextValue(l); }
 void QtRegion::setLabelPosition( Region::TextPosition pos ) { mystate->setTextPosition( pos ); }
@@ -199,27 +184,24 @@ void QtRegion::invalidateCenterInfo( ){
 	mystate->setCenterBackground(QString("#a9a9a9"));
 }
 
-bool QtRegion::weaklySelected( ) const {
-	return dock_->isWeaklySelectedRegion(this);
-}
-void QtRegion::weaklySelect( ) {
-	dock_->addWeaklySelectedRegion(this);
-	dock_->selectRegion(mystate);
-}
-void QtRegion::weaklyUnselect( ) {
-	dock_->removeWeaklySelectedRegion(this);
-	const Region::region_list_type &weak = dock_->weaklySelectedRegionSet( );
-	if ( weak.size( ) > 0 ) {
-		QtRegion *region = dynamic_cast<QtRegion*>(*weak.begin( ));
-		if ( region ) dock_->selectRegion(region->state( ));
-	} else {
-		const Region::region_list_type &marked = dock_->selectedRegionSet( );
-		if ( marked.size( ) > 0 ) {
-			QtRegion *region = dynamic_cast<QtRegion*>(*marked.begin( ));
+	bool QtRegion::weaklySelected( ) const {
+		return dock_->isWeaklySelectedRegion(this);
+	}
+	void QtRegion::weaklySelect( ) {
+		dock_->addWeaklySelectedRegion(this);
+		dock_->selectRegion(mystate);
+		dock_->selectedCountUpdateNeeded( );
+	}
+	void QtRegion::weaklyUnselect( ) {
+		dock_->removeWeaklySelectedRegion(this);
+		const Region::region_list_type &weak = dock_->weaklySelectedRegionSet( );
+		if ( weak.size( ) > 0 ) {
+			QtRegion *region = dynamic_cast<QtRegion*>(*weak.begin( ));
 			if ( region ) dock_->selectRegion(region->state( ));
 		} else {
 			updateStateInfo( false, Region::RegionChangeFocus );
 		}
+		dock_->selectedCountUpdateNeeded( );
 	}
 }
 
@@ -409,20 +391,6 @@ void QtRegion::fetch_details( Region::RegionTypes &type, QList<int> &pixelx, QLi
 		worldx.push_back(world_pts[i].first);
 		worldy.push_back(world_pts[i].second);
 	}
-
-}
-
-const std::list<Region*> &QtRegion::get_selected_regions( ) {
-	// std::list<QtRegion*> regions = dock_->regions( );
-	// for ( std::list<QtRegion*>::iterator it=regions.begin( ); it != regions.end( ); ++it ) {
-	// 	if ( (*it)->marked( ) ) {
-	// 		Region *r = dynamic_cast<Region*>(*it);
-	// 		if ( r ) result->push_back(r);
-	// 	}
-	// }
-	// return result;
-	return dock_->selectedRegions( );
-}
 
 size_t QtRegion::selected_region_count( ) { return dock_->selectedRegionCount( ); }
 size_t QtRegion::marked_region_count( ) { return dock_->markedRegionCount( ); }

@@ -131,14 +131,14 @@ class MWCCrosshairTool : public MultiWCTool, public DTVisible {
   virtual void keyPressed(const WCPositionEvent &/*ev*/);
   virtual void keyReleased(const WCPositionEvent &/*ev*/);
   virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
   // </group>
 
   // draw the crosshair on the object's currently active WC.
   // Only to be called by the base class refresh event handler.  Derived
   // objects should use refresh() if they need to redraw, but even that
   // is normally handled automatically.
-  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
   // Called when the crosshair position has been chosen.  Override to
   // handle the crosshair-position-ready 'event'.

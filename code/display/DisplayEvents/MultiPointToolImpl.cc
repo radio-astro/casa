@@ -40,7 +40,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MultiPointToolImpl::MultiPointToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiPointTool(rf, pd, keysym, True) {  }
+	MultiPointToolImpl::MultiPointToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) : MultiPointTool(rf, pd, keysym, True) {  }
 
 MultiPointToolImpl::~MultiPointToolImpl() {  }
 

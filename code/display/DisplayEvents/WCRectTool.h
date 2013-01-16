@@ -110,7 +110,7 @@ class WCRectTool : public WCTool, public DTVisible {
   virtual void keyPressed(const WCPositionEvent &ev);
   virtual void keyReleased(const WCPositionEvent &ev);
   virtual void otherKeyPressed(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/);
   virtual void refresh(const WCRefreshEvent &ev);
   // </group>
 

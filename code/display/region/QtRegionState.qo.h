@@ -30,7 +30,7 @@
 #define REGION_QTREGIONSTATE_H_
 
 #include <casa/BasicSL/String.h>
-#include <display/region/Region.h>
+#include <display/region/RegionEnums.h>
 #include <display/region/QtRegionState.ui.h>
 #include <display/region/QtRegionStats.qo.h>
 #include <display/Display/MouseToolState.h>
@@ -38,7 +38,7 @@
 namespace casa {
     namespace viewer {
 
-	class QtRegion;
+	class Region;
 
 	class QtRegionState : public QFrame, protected Ui::QtRegionState {
 		Q_OBJECT
@@ -47,14 +47,17 @@ namespace casa {
 			// which cannot happen until after the ctor of QtRegionState...
 			void init( );
 
-			QtRegionState( const QString &name, QtRegion *region,
+			QtRegionState( const QString &name, Region *region,
 						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
 						   QWidget *parent=0 );
 			~QtRegionState( );
 
-			QtRegion *region( ) { return region_; }
+			bool statisticsIsVisible( ) { return categories->tabText(categories->currentIndex( )) == "stats"; }
+
+			Region *region( ) { return region_; }
 
 			void updateCoord( );
+			void updateStatistics(  );
 			void updateStatistics( std::list<RegionInfo> *stats );
 			void reloadStatistics( );
 			void updateCenters( std::list<RegionInfo> *centers );
@@ -64,7 +67,7 @@ namespace casa {
 			std::string lineColor( ) const;
 			std::string centerColor( ) const;
 			int lineWidth( ) const { return line_width->value( ); }
-			Region::LineStyle lineStyle( ) const;
+			region::LineStyle lineStyle( ) const;
 
 			int markerScale( ) const { return marker_scale->value( ); }
 			void setMarkerScale( int v );
@@ -74,18 +77,18 @@ namespace casa {
 			int textFontSize( ) const { return font_size->value( ); }
 			int textFontStyle( ) const;
 			std::string textValue( ) const;
-			Region::TextPosition textPosition( ) const;
+			region::TextPosition textPosition( ) const;
 			void textPositionDelta( int &x, int &y ) const;
 
 			void setTextValue( const std::string &l );
-			void setTextPosition( Region::TextPosition );
+			void setTextPosition( region::TextPosition );
 			void setTextDelta( const std::vector<int> & );
 			void setTextFont( const std::string &f );
 			void setTextFontSize( int s );
 			void setTextFontStyle( int s );
 			void setTextColor( const std::string & );
 			void setLineColor( const std::string & );
-			void setLineStyle( Region::LineStyle );
+			void setLineStyle( region::LineStyle );
 			void setLineWidth( unsigned int );
 			void setAnnotation( bool );
 			void disableAnnotation( bool );
@@ -97,13 +100,13 @@ namespace casa {
 			bool isAnnotation( ) const;
 
 			// reset the widget to its original state...
-			void reset( const QString &name, QtRegion *r );
+			void reset( const QString &name, Region *r );
 
 			/* QString getRegionCategory( ) const { return categories->tabText(categories->currentIndex( )); } */
-			void justExposed( );
+			/* void justExposed( ); */
 
-			void getCoordinatesAndUnits( Region::Coord &c, Region::Units &xu, Region::Units &yu, std::string &bounding_units ) const;
-			void setCoordinatesAndUnits( Region::Coord c, Region::Units x_units, Region::Units y_units, const std::string &bounding_units );
+			void getCoordinatesAndUnits( region::Coord &c, region::Units &xu, region::Units &yu, std::string &bounding_units ) const;
+			void setCoordinatesAndUnits( region::Coord c, region::Units x_units, region::Units y_units, const std::string &bounding_units );
 			void updatePosition( const QString &x, const QString &y, const QString &angle,
 								 const QString &bounding_width, const QString &bounding_height );
 
@@ -126,8 +129,11 @@ namespace casa {
 
 			void emitRefresh( ) { emit refreshCanvas( ); }
 
+			// return the current information mode of the region state, e.g. position, statistics, etc.
+			std::string mode( ) const;
+
 		signals:
-			void regionChange( viewer::QtRegion *, std::string );
+			void regionChange( viewer::Region *, std::string );
 			void refreshCanvas( );
 			void statisticsVisible( bool );
 			void collectStatistics( );
@@ -188,7 +194,7 @@ namespace casa {
 			static freestat_list *freestats;
 			static freestat_list *freecenters;
 			QString last_line_color;
-			QtRegion *region_;
+			Region *region_;
 
 			std::string bounding_index_to_string( int index ) const;
 

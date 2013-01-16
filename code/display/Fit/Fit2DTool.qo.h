@@ -65,7 +65,7 @@ public slots:
 		const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
 		const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
-	void updateRegion( int, viewer::Region::RegionChanges,
+	void updateRegion( int, viewer::region::RegionChanges,
 		const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y );
 

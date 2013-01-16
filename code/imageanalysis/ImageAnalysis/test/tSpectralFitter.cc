@@ -27,7 +27,7 @@
 
 #include <imageanalysis/ImageAnalysis/SpectralFitter.h>
 
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSQualityImage.h>

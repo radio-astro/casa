@@ -1028,7 +1028,7 @@ const Unit Profile2dDD::dataUnit() {
   return Unit("");
 }
 
-String Profile2dDD::showValue(const Vector<Double> &world) {
+String Profile2dDD::showValue(const Vector<Double> &/*world*/) {
   return "";
 }
 

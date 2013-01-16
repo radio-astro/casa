@@ -29,7 +29,8 @@
 #ifndef REGION_POLYGON_H_
 #define REGION_POLYGON_H_
 
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
+#include <display/region/QtRegionSource.qo.h>
 #include <casa/BasicSL/String.h>
 #include <vector>
 
@@ -40,17 +41,27 @@ namespace casa {
 
     namespace viewer {
 
+	// carry over from QtRegion... hopefully, removed soon...
+	class QtRegionSourceKernel;
+
 	class Polygon : public Region {
 	    public:
 		typedef std::pair<double,double> pt;
 		typedef std::vector<pt> point_list;
 
-		Polygon( WorldCanvas *wc, double x1, double y1 ) : Region( wc ),
+		Polygon( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 ) : Region( "polygon", wc, d ),
 				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1)
 				{ _ref_points_.push_back(pt(x1,y1)); _drawing_points_.push_back(pt(x1,y1)); }
 
-		Polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
+		Polygon( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts );
+		// carry over from QtRegion... hopefully, removed soon...
+		Polygon( QtRegionSourceKernel *, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals=false );
+		Polygon( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals=false ) : Region( "polygon", wc, rs->dock( ), hold_signals ),
+				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1)
+				{ _ref_points_.push_back(pt(x1,y1)); _drawing_points_.push_back(pt(x1,y1)); }
+
 
 		~Polygon( ) { }
 
@@ -64,7 +75,7 @@ namespace casa {
 		bool valid_translation( double dx, double dy, double width_delta, double height_delta );
 
 		// returns point state (Region::PointLocation)
-		PointInfo checkPoint( double x, double y ) const;
+		region::PointInfo checkPoint( double x, double y ) const;
 
 		// returns mouse state (Region::MouseState)
 		unsigned int mouseMovement( double x, double y, bool other_selected );
@@ -73,7 +84,7 @@ namespace casa {
 		void pixelCenter( double &x, double &y ) const;
 
 		void closeFigure( bool signal_complete=true );
-		virtual void polygonComplete( ) DISPLAY_PURE_VIRTUAL(Polygon::polyognComplete,);
+		void polygonComplete( );
 
 		void addVertex( double x, double y, bool rewrite_last_point=false );
 
@@ -84,6 +95,11 @@ namespace casa {
 		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
 
 		int numVertices( ) const { return drawing_points( ).size( ); }
+
+		void output( ds9writer &out ) const;
+
+		// fetch region type...
+		region::RegionTypes type( ) const { return region::PolyRegion; }
 
 	    protected:
 		unsigned int check_handle( double x, double y ) const;
@@ -96,7 +112,7 @@ namespace casa {
 
 		void drawRegion( bool );
 
-		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+		virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;
 
 		const point_list &drawing_points( ) const { return _drawing_points_; }

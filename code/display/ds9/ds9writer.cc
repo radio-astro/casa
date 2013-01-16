@@ -27,7 +27,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
 #include <display/ds9/ds9writer.h>
 #include <display/DisplayErrors.h>
 #include <QFileInfo>

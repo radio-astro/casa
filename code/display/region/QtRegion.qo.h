@@ -80,7 +80,7 @@ namespace casa {
 		std::string lineColor( ) const { return mystate->lineColor( ); }
 		std::string centerColor( ) const { return mystate->centerColor( ); }
 		int lineWidth( ) const { return mystate->lineWidth( ); }
-		Region::LineStyle lineStyle( ) const { return mystate->lineStyle( ); }
+		region::LineStyle lineStyle( ) const { return mystate->lineStyle( ); }
 
 		int markerScale( ) const { return mystate->markerScale( ); }
 		void setMarkerScale( int v ) { mystate->setMarkerScale(v); }
@@ -90,29 +90,29 @@ namespace casa {
 		int textFontSize( ) const { return mystate->textFontSize( ); }
 		int textFontStyle( ) const { return mystate->textFontStyle( ); }
 		std::string textValue( ) const { return mystate->textValue( ); }
-		Region::TextPosition textPosition( ) const { return mystate->textPosition( ); }
+		region::TextPosition textPosition( ) const { return mystate->textPosition( ); }
 		void textPositionDelta( int &x, int &y ) const { return mystate->textPositionDelta( x, y ); }
 
 		// set attributes when loading a casa region text file...
 		virtual void setLabel( const std::string &l );
-		void setLabelPosition( Region::TextPosition );
+		void setLabelPosition( region::TextPosition );
 		void setLabelDelta( const std::vector<int> & );
 		virtual void setFont( const std::string &font="", int font_size=0, int font_style=0, const std::string &font_color="" );
-		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine, unsigned int line_width=1 );
+		virtual void setLine( const std::string &line_color="", region::LineStyle line_style=region::SolidLine, unsigned int line_width=1 );
 		virtual void setAnnotation(bool ann);
 
 		int numFrames( ) const;
 		void zRange( int &x, int &y ) const;
-		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(Region::zIndex,0);
-		virtual bool regionVisible( ) const DISPLAY_PURE_VIRTUAL(Region::regionVisible,true);
+		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(region::zIndex,0);
+		virtual bool regionVisible( ) const DISPLAY_PURE_VIRTUAL(region::regionVisible,true);
 
 		virtual void linearCenter( double &/*x*/, double &/*y*/ ) const = 0;
-		  // DISPLAY_PURE_VIRTUAL(Region::linearCenter,);
+		  // DISPLAY_PURE_VIRTUAL(region::linearCenter,);
 		virtual void pixelCenter( double &/*x*/, double &/*y*/ ) const = 0;
-		  // DISPLAY_PURE_VIRTUAL(Region::pixelCenter,);
+		  // DISPLAY_PURE_VIRTUAL(region::pixelCenter,);
 
-		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(Region::refresh,);
-		virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
+		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(region::refresh,);
+		virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(region::annotation,0);
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( );
@@ -121,18 +121,18 @@ namespace casa {
 		void weaklySelect( );
 		void weaklyUnselect( );
 		// indicates that region movement requires the update of state information...
-		void updateStateInfo( bool region_modified, Region::RegionChanges );
+		void updateStateInfo( bool region_modified, region::RegionChanges );
 		void clearStatistics( );
 		void statisticsUpdateNeeded( ) { statistics_update_needed = true; }
 
-		virtual void getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units,
-						     std::string &width_height_units ) const = 0; //DISPLAY_PURE_VIRTUAL(Region::getCoordinatesAndUnits,);
+		virtual void getCoordinatesAndUnits( region::Coord &c, region::Units &x_units, region::Units &y_units,
+						     std::string &width_height_units ) const = 0; //DISPLAY_PURE_VIRTUAL(region::getCoordinatesAndUnits,);
 		virtual void getPositionString( std::string &x, std::string &y, std::string &angle,
 						double &bounding_width, double &bounding_height,
-						Region::Coord coord = Region::DefaultCoord,
-						Region::Units x_units = Region::DefaultUnits,
-						Region::Units y_units = Region::DefaultUnits,
-						const std::string &bounding_units = "rad" ) const = 0; //DISPLAY_PURE_VIRTUAL(Region::getPositionString,);
+						region::Coord coord = region::DefaultCoord,
+						region::Units x_units = region::DefaultUnits,
+						region::Units y_units = region::DefaultUnits,
+						const std::string &bounding_units = "rad" ) const = 0; //DISPLAY_PURE_VIRTUAL(region::getPositionString,);
 
 		virtual bool translateX( const std::string &/*x*/, const std::string &/*x_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
 		virtual bool translateY( const std::string &/*y*/, const std::string &/*y_units*/, const std::string &/*coordsys*/ ) = 0; //DISPLAY_PURE_VIRTUAL(Region::movePosition,false);
@@ -190,7 +190,7 @@ namespace casa {
 				    const QList<double> &world_x, const QList<double> &world_y,
 				    const QList<int> &pixel_x, const QList<int> &pixel_y,
 				    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
-		void regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &world_x, const QList<double> &world_y,
+		void regionUpdate( int, viewer::region::RegionChanges, const QList<double> &world_x, const QList<double> &world_y,
 				   const QList<int> &pixel_x, const QList<int> &pixel_y );
 		// generated by emitUpdate( )...
 		void regionUpdateResponse( int, const QString &shape, const QString &name,
@@ -241,14 +241,14 @@ namespace casa {
 		/*                                    std::vector<std::pair<int,int> > &/\*pixel_pts*\/, */
 		/* 				   std::vector<std::pair<double,double> > &/\*world_pts*\/ ) const */
 		/* 				DISPLAY_PURE_VIRTUAL(QtRegion::fetch_region_details,); */
-		virtual void fetch_region_details( Region::RegionTypes &/*type*/,
+		virtual void fetch_region_details( region::RegionTypes &/*type*/,
 		                                   std::vector<std::pair<int,int> > &/*pixel_pts*/,
 						   std::vector<std::pair<double,double> > &/*world_pts*/ ) const { }
 
 		virtual std::list<RegionInfo> *generate_dds_centers( ) DISPLAY_PURE_VIRTUAL(QtRegion::generate_dds_centers, 0);
 
 
-		void signal_region_change( Region::RegionChanges change );
+		void signal_region_change( region::RegionChanges change );
 
 		bool statistics_visible;
 		bool statistics_update_needed;
@@ -262,8 +262,8 @@ namespace casa {
 		QString color_;
 
 	    private:
-		std::map<Region::RegionChanges,bool> held_signals;
-		void fetch_details( Region::RegionTypes &type, QList<int> &pixelx, QList<int> &pixely, QList<double> &worldx, QList<double> &worldy );
+		std::map<region::RegionChanges,bool> held_signals;
+		void fetch_details( region::RegionTypes &type, QList<int> &pixelx, QList<int> &pixely, QList<double> &worldx, QList<double> &worldy );
 		void clear_signal_cache( );
 		int hold_signals;
 		bool z_index_within_range;

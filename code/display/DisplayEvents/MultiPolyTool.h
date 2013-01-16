@@ -117,12 +117,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    void revokeRegion( viewer::Region * );
 
 	    // returns a set which indicates regions this creator creates...
-	    const std::set<viewer::Region::RegionTypes> &regionsCreated( ) const;
+	    const std::set<viewer::region::RegionTypes> &regionsCreated( ) const;
 
-	    bool create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
-			 const std::string &/*label*/, viewer::Region::TextPosition /*label_pos*/, const std::vector<int> &/*label_off*/,
+	    bool create( viewer::region::RegionTypes /*region_type*/, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
+			 const std::string &/*label*/, viewer::region::TextPosition /*label_pos*/, const std::vector<int> &/*label_off*/,
 			 const std::string &/*font*/, int /*font_size*/, int /*font_style*/, const std::string &/*font_color*/,
-			 const std::string &/*line_color*/, viewer::Region::LineStyle /*line_style*/, unsigned int /*line_width*/,
+			 const std::string &/*line_color*/, viewer::region::LineStyle /*line_style*/, unsigned int /*line_width*/,
 			 bool /*annotation*/, VOID */*region_specific_state*/ );
 
 	    RegionToolTypes type( ) const { return POLYTOOL; }
@@ -135,7 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // is received, the doubleInside/Outside routine is invoked.
 	    // <group>
 	    virtual void keyPressed(const WCPositionEvent &/*ev*/);
-	    virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+	    virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 	    virtual void keyReleased(const WCPositionEvent &/*ev*/);
 	    virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
 	    // </group>
@@ -144,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Only to be called by the base class refresh event handler.  Derived
 	    // objects should use refresh() if they need to redraw, but even that
 	    // is normally handled automatically by this class.
-	    virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+	    virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
 	    // Output callback functions--to be overridden in derived class as needed.
 	    // Called when there is a double click inside/outside the polygon
@@ -164,6 +164,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    virtual void get(Vector<Int> &x, Vector<Int> &y) const;
 	    virtual void get(Int &x, Int &y, const Int pt) const;
 	    // </group>
+
+		virtual bool checkType( viewer::region::RegionTypes t ) { return t == viewer::region::PolyRegion; }
 
 	private:
 	    typedef std::list<std::tr1::shared_ptr<viewer::Polygon> > polygonlist;

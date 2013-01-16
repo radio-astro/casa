@@ -154,7 +154,7 @@ void MWCPolyTool::keyPressed(const WCPositionEvent &ev) {
 }
 
 
-void MWCPolyTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCPolyTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   if(itsMode==Off || itsMode==Ready) return;
   if(ev.worldCanvas()!=itsCurrentWC) return;
   Int x = ev.pixX();
@@ -226,7 +226,7 @@ void MWCPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
 	      ev.key() == Display::K_Escape) reset();  }
 
 
-void MWCPolyTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) { 
+void MWCPolyTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) { 
   if (itsMode==Off) return;
 
   setClipToDrawArea();

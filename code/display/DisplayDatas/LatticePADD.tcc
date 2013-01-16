@@ -1217,7 +1217,7 @@ void LatticePADisplayData<T>::drawBeamEllipse_(WorldCanvas* wc) {
 
     if( beams_.size( ) == 0 || beamOnOff_->value()=="No" ) return;
 
-    vector<double> beam = beams_.size( ) > activeZIndex_ ? beams_[activeZIndex_] : beams_[0];
+    vector<double> beam = (Int) beams_.size( ) > activeZIndex_ ? beams_[activeZIndex_] : beams_[0];
     // The major and minor axes must both be positive
     if ( beam[0] <= 0.0 || beam[1] <= 0.0 ) return;
 

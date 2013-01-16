@@ -25,7 +25,7 @@
 //#
 //# $Id: $
 
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
 #include <images/Regions/WCUnion.h>
 #include <casa/Quanta/MVAngle.h>
 #include <display/Display/WorldCanvas.h>
@@ -35,6 +35,9 @@
 #include <measures/Measures/MCDirection.h>
 #include <casa/Quanta/MVTime.h>
 #include <display/DisplayErrors.h>
+
+#include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 
 #include <images/Images/ImageStatistics.h>
 #include <components/ComponentModels/ComponentList.h>
@@ -47,6 +50,9 @@
 #include <algorithm>
 #include <casa/BasicMath/Functors.h>
 #include <cstdlib>
+#include <QDir>
+
+#include <display/region/QtRegionDock.qo.h>
 
 #define SEXAGPREC 9
 
@@ -71,11 +77,56 @@ namespace casa {
 	    char *buf;
 	};
 
-	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true), complete(false), draw_center_(false){
+	static inline AnnotationBase::LineStyle viewer_to_annotation( region::LineStyle ls ) {
+	    return ls == region::SolidLine ? AnnotationBase::SOLID : ls == region::DotLine ? AnnotationBase::DOTTED : AnnotationBase::DASHED;
+	}
+
+	std::tr1::shared_ptr<Region> Region::creating_region;
+
+	Region::Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *d, bool hold_signals_,
+					QtMouseToolNames::PointRegionSymbols sym ) :  dock_(d),
+																  position_visible(true), /*** it is assumed that the initial ***
+																						   *** state for region dock is with  ***
+																						   *** position coordinates visible   ***/
+																  id_(QtId::get_id( )),
+																  hold_signals(hold_signals_ ? 1 : 0),
+																  wc_(wc), selected_(false), visible_(true),
+																  complete(false), z_index_within_range(true),
+																  draw_center_(false), name_(name) {
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
 	    //	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
 	    // }
+
+	    mystate = new QtRegionState( QString::fromStdString(name_), this, sym );
+
+	    connect( mystate, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)) );
+
+	    connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
+	    connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
+	    connect( mystate, SIGNAL(collectStatistics( )), SLOT(reload_statistics_event( )) );
+	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
+
+	    connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(translateY(const QString &, const QString &, const QString &)), SLOT(translate_y(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(resizeX(const QString &, const QString &, const QString &)), SLOT(resize_x(const QString&,const QString&, const QString &)) );
+	    connect( mystate, SIGNAL(resizeY(const QString &, const QString &, const QString &)), SLOT(resize_y(const QString&,const QString&, const QString &)) );
+
+	    connect (mystate->getFitButton(), SIGNAL(clicked()), this, SLOT(updateCenterInfo()));
+
+	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
+	    connect( dock_, SIGNAL(deleteRegion(QtRegionState*)), SLOT(revoke_region(QtRegionState*)) );
+	    connect( dock_, SIGNAL(deleteAllRegions( )), SLOT(revoke_region( )) );
+	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, RegionTextList &)), SLOT(output(std::list<QtRegionState*>, RegionTextList &)) );
+	    connect( dock_, SIGNAL(saveRegions(std::list<QtRegionState*>, ds9writer &)), SLOT(output(std::list<QtRegionState*>, ds9writer &)) );
+
+	    dock_->addRegion(this,mystate);
+	    signal_region_change( region::RegionChangeCreate );
+	}
+
+	Region::~Region( ){
+	    dock_->removeRegion(mystate);
+	    disconnect(mystate, 0, 0, 0);
 	}
 
 	bool Region::degenerate( ) const {
@@ -88,6 +139,15 @@ namespace casa {
 	    catch (...) { return true; }
 	    // non-degenerate if (un-zoomed) any pixel dimensions are less than zero...
 	    return (ptrcx - pblcx) < 1 && (ptrcy - pblcy) < 1;
+	}
+
+	int Region::numFrames( ) const {
+		return dock_->numFrames( );
+	}
+
+	void Region::zRange( int &min, int &max ) const {
+	    min = mystate->zMin( );
+	    max = mystate->zMax( );
 	}
 
 	int Region::zIndex( ) const { return wc_ == 0 ? last_z_index : wc_->zIndex( ); }
@@ -161,13 +221,13 @@ namespace casa {
 	    Display::LineStyle current_ls = pc->getLineStyle( );
 	    switch ( current_ls ) {
 		case Display::LSSolid:
-		    ls_stack.push_back(ls_ele(SolidLine,lineWidth()));
+		    ls_stack.push_back(ls_ele(region::SolidLine,lineWidth()));
 		    break;
 		case Display::LSDashed:
-		    ls_stack.push_back(ls_ele(DashLine,lineWidth()));
+		    ls_stack.push_back(ls_ele(region::DashLine,lineWidth()));
 		    break;
 		case Display::LSDoubleDashed:
-		    ls_stack.push_back(ls_ele(LSDoubleDashed,lineWidth()));
+		    ls_stack.push_back(ls_ele(region::LSDoubleDashed,lineWidth()));
 		    break;
 	    }
 
@@ -198,15 +258,15 @@ namespace casa {
 	    if ( qpc != 0 ) {
 		int text_mod = textFontStyle( );
 		qpc->setFont( textFont( ), textFontSize( ),
-			      text_mod & BoldText ? true : false,
-			      text_mod & ItalicText ? true : false );
+					  text_mod & region::BoldText ? true : false,
+					  text_mod & region::ItalicText ? true : false );
 	    }
 	}
 
 	void Region::resetTextEnv( ) {
 	}
 
-	void Region::pushDrawingEnv( LineStyle ls, int thickness ) {
+	void Region::pushDrawingEnv( region::LineStyle ls, int thickness ) {
 	    ls_stack.push_back(ls_ele(current_ls,lineWidth()));
 	    set_line_style(ls_ele(ls, thickness));
 	}
@@ -261,7 +321,7 @@ namespace casa {
 		}
 
 		if ( new_z_index != last_z_index ) {
-			updateStateInfo( true, RegionChangeNewChannel );
+			updateStateInfo( true, region::RegionChangeNewChannel );
 			invalidateCenterInfo( );
 		}
 		last_z_index = new_z_index;
@@ -275,6 +335,45 @@ namespace casa {
 		setTextEnv( );
 		drawText( );
 		resetTextEnv( );
+	}
+
+	void Region::invalidateCenterInfo( ){
+		// set the background to "darkgrey"
+		mystate->setCenterBackground(QString("#a9a9a9"));
+	}
+
+	bool Region::weaklySelected( ) const {
+		return dock_->isWeaklySelectedRegion(this);
+	}
+	void Region::weaklySelect( bool scroll_dock ) {
+		dock_->addWeaklySelectedRegion(this);
+		dock_->selectRegion(mystate, scroll_dock);
+		dock_->selectedCountUpdateNeeded( );
+	}
+
+	void Region::weaklyUnselectLimited( ) {
+		dock_->removeWeaklySelectedRegion(this);
+	}
+	void Region::weaklyUnselect( ) {
+		weaklyUnselectLimited( );
+		const region::region_list_type &weak = dock_->weaklySelectedRegionSet( );
+		if ( weak.size( ) > 0 ) {
+			Region *region = dynamic_cast<Region*>(*weak.begin( ));
+			if ( region ) dock_->selectRegion(region->state( ));
+		} else {
+			const region::region_list_type &marked = dock_->selectedRegionSet( );
+			if ( marked.size( ) > 0 ) {
+				Region *region = dynamic_cast<Region*>(*marked.begin( ));
+				if ( region ) dock_->selectRegion(region->state( ));
+			} else {
+				updateStateInfo( false, region::RegionChangeFocus );
+			}
+		}
+		dock_->selectedCountUpdateNeeded( );
+	}
+
+	void Region::selectedInCanvas( ) {
+		dock_->selectRegion(mystate);
 	}
 
 	void Region::drawText( ) {
@@ -291,7 +390,7 @@ namespace casa {
 	    textPositionDelta( dx, dy );
 
 	    int m_angle = 0;
-	    TextPosition tp = textPosition( );
+		region::TextPosition tp = textPosition( );
 	    std::string text = textValue( );
 	    int text_height = pc->textHeight(text);
 	    int text_width = pc->textWidth(text);
@@ -301,22 +400,22 @@ namespace casa {
 
 	    const int offset = 5;
 	    switch ( tp ) {
-		case TopText:
+		case region::TopText:
 		    alignment = Display::AlignBottomLeft;
 		    y = trc_y + offset;
 		    x = (int) (((double) (blc_x + trc_x - text_width) + 0.5) / 2.0);
 		    break;
-		case RightText:
+		case region::RightText:
 		    alignment = Display::AlignBottomLeft;
 		    x = trc_x + offset;
 		    y = (int) (((double) (blc_y + trc_y - text_height) + 0.5) / 2.0);
 		    break;
-		case BottomText:
+		case region::BottomText:
 		    alignment = Display::AlignTopLeft;
 		    y = blc_y - offset;
 		    x = (int) (((double) (blc_x + trc_x - text_width) + 0.5) / 2.0);
 		    break;
-		case LeftText:
+		case region::LeftText:
 		    alignment = Display::AlignBottomRight;
 		    x = blc_x - offset;
 		    y = (int) (((double) (blc_y + trc_y - text_height) + 0.5) / 2.0);
@@ -362,15 +461,261 @@ if (!markCenter()) return;
 		pc->setColor(lineColor());
 	}
 
+	void Region::mark(bool set) {
+	    if ( set != mystate->marked( ) ) {
+		mystate->mark(set);
+		emit selectionChanged(this,set);
+	    }
+	}
+
+	bool Region::mark_toggle( ) {
+	    bool result = mystate->mark_toggle( );
+	    emit selectionChanged(this,result);
+	    return result;
+	}
+
+	size_t Region::selected_region_count( ) { return dock_->selectedRegionCount( ); }
+	size_t Region::marked_region_count( ) { return dock_->markedRegionCount( ); }
+
+	void Region::status( const std::string &msg, const std::string &type ) { dock_->status(msg,type); }
+
+	void Region::emitUpdate( ) {
+		region::RegionTypes type;
+		QList<int> pixelx, pixely;
+		QList<double> worldx, worldy;
+
+		fetch_details( type, pixelx, pixely, worldx, worldy );
+
+		emit regionUpdateResponse( id_, QString( type == region::RectRegion ? "rectangle" : type == region::PointRegion ? "point" :
+												 type == region::EllipseRegion ? "ellipse" : type == region::PolyRegion ? "polygon" : "error"),
+								   QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )),
+								   QString::fromStdString(textValue( )), QString::fromStdString(textFont( )), textFontSize( ),
+								   textFontStyle( ) );
+	}
+
+		void Region::refresh_state_gui( ) {
+
+			std::string mode = mystate->mode( );
+			if ( mode == "position" ) {
+				region::Coord c;
+				region::Units xu,yu;
+				std::string whu;
+				std::string x, y, angle;
+				double width, height;
+				mystate->getCoordinatesAndUnits( c, xu, yu, whu );
+				getPositionString( x, y, angle, width, height, c, xu, yu, whu );
+
+				QString qwidth;
+				QString qheight;
+				if ( width < 0.001 && height < 0.001 ) {
+					qwidth = QString("%1").arg(width,0,'g',5);
+					qheight = QString("%1").arg(height,0,'g',5);
+				} else {
+					qwidth = QString("%1").arg(width);
+					qheight = QString("%1").arg(height);
+				}
+
+				mystate->updatePosition( QString::fromStdString(x),
+										 QString::fromStdString(y),
+										 QString::fromStdString(angle),
+										 qwidth, qheight );
+			} else if ( mode == "statistics" ) {
+				mystate->updateStatistics( );
+			}
+
+#if 0
+		// update statistics, when needed...
+		// if ( statistics_visible == false ) {
+		// 	if ( region_modified ) statistics_update_needed = true;
+		// } else if ( (statistics_update_needed || region_modified ) && regionVisible( ) ) {
+		// 	reload_statistics_event( );
+		// }
+
+		// update position, when needed...
+		if ( position_visible == false ) {
+			if ( region_modified ) position_update_needed = true;
+		} else if ( (position_update_needed || region_modified) && regionVisible( ) ) {
+		}
+#endif
+
+	}
+
+        // indicates that region movement requires that the statistcs be updated...
+	void Region::updateStateInfo( bool /*region_modified*/, region::RegionChanges change ) {
+
+		signal_region_change( change );
+		refresh_state_gui( );
+
+	}
+
+	void Region::adjustCorners( double /*blcx*/, double /*blcy*/, double /*trcx*/, double /*trcy*/ ) {
+		fprintf( stderr, "!!!!!!!!!!!!!!!!!!!!>>> 	void Region::adjustCorners( double blcx, double blcy, double trcx, double trcy )\n" );
+
+	}
+
+	void Region::clearStatistics( ) {
+		statistics_update_needed = true;
+		mystate->clearStatistics( );
+	}
+
+	int &Region::colorIndex( ) { return dock_->colorIndex( ); }
+	std::pair<int,int> &Region::tabState( ) { return dock_->tabState( ); }
+	std::map<std::string,int> &Region::coordState( ) { return dock_->coordState( ); }
+
+	void Region::selectedCountUpdateNeeded( ) { dock_->selectedCountUpdateNeeded( ); }
+
+	QString Region::getSaveDir( ) {
+	    if ( dock_->saveDir( ).isNull( ) ) {
+		if ( ! dock_->loadDir( ).isNull( ) )
+		    dock_->saveDir( ) = dock_->loadDir( );
+		else
+		    dock_->saveDir( ) = QDir::currentPath();
+	    }
+	    return dock_->saveDir( );
+	}
+	void Region::putSaveDir( QString dir ) {
+	    dock_->saveDir( ) = dir;
+	}
+	QString Region::getLoadDir( ) {
+	    if ( dock_->loadDir( ).isNull( ) ) {
+		if ( ! dock_->saveDir( ).isNull( ) )
+		    dock_->loadDir( ) = dock_->saveDir( );
+		else
+		    dock_->loadDir( ) = QDir::currentPath();
+	    }
+	    return dock_->loadDir( );
+	}
+	void Region::putLoadDir( QString dir ) {
+	    dock_->loadDir( ) = dir;
+	}
+
+	void Region::refresh_canvas_event( ) { refresh( ); }
+	void Region::refresh_statistics_event( bool visible ) {
+		statistics_visible = visible;
+		if ( hold_signals ) {
+			held_signals[region::RegionChangeStatsUpdate] = true;
+			return;
+		}
+		updateStateInfo( false, region::RegionChangeFocus );
+	}
+	void Region::refresh_position_event( bool visible ) {
+		position_visible = visible;
+		updateStateInfo( false, region::RegionChangeUpdate );
+	}
+
+	void Region::translate_x( const QString &x, const QString &x_units, const QString &coordsys ) {
+		if ( translateX( x.toStdString( ), x_units.toStdString( ), coordsys.toStdString( ) ) ) {
+			refresh( );
+		}
+	}
+	void Region::translate_y( const QString &y, const QString &y_units, const QString &coordsys ) {
+		if ( translateY( y.toStdString( ), y_units.toStdString( ), coordsys.toStdString( ) ) ) {
+			refresh( );
+		}
+	}
+	void Region::resize_x( const QString &x, const QString &x_units, const QString &coordsys ) {
+		resizeX( x.toStdString( ), x_units.toStdString( ), coordsys.toStdString( ) );
+	}
+	void Region::resize_y( const QString &y, const QString &y_units, const QString &coordsys ) {
+		resizeY( y.toStdString( ), y_units.toStdString( ), coordsys.toStdString( ) );
+	}
+	void Region::updateCenterInfo() {
+		std::list<RegionInfo> *rc = generate_dds_centers( );
+		mystate->updateCenters(rc);
+		// set the background to standard color which is some kind of grey
+		mystate->setCenterBackground(QString("#e8e8e8"));
+	}
+	void Region::refresh_zrange_event( int min, int max ) {
+		int index = zIndex( );
+		if ( z_index_within_range == true && (index < min || index > max) ) {
+			z_index_within_range = false;
+			refresh( );
+		} else if ( z_index_within_range == false && index >= min && index <= max ) {
+			z_index_within_range = true;
+			refresh( );
+		}
+	}
+
+	void Region::revoke_region( ) {
+	    dock_->revokeRegion(this);
+	}
+
+	void Region::revoke_region( QtRegionState *redacted_state ) {
+	    if ( redacted_state == mystate ) { revoke_region( ); }
+	}
+
+	void Region::reload_statistics_event( ) {
+		statistics_update_needed = false;
+		std::list<RegionInfo> *rl = generate_dds_statistics( );
+		// send statistics to region state object...
+		mystate->updateStatistics(rl);
+		delete rl;
+	}
+
+	void Region::output( std::list<QtRegionState*> ol, RegionTextList &regionlist ) {
+		std::list<QtRegionState*>::iterator iter = find( ol.begin(), ol.end( ), mystate );
+		if ( iter != ol.end( ) ) {
+
+			AnnotationBase *ann = annotation( );
+
+			if ( ann == 0 ) {
+				fprintf( stderr, "Failed to create region annotation...\n" );
+				return;
+			}
+
+			AnnRegion *reg = dynamic_cast<AnnRegion*>(ann);
+			if ( reg ) reg->setAnnotationOnly((*iter)->isAnnotation( ));
+
+			// int number_frames = (*iter)->numFrames( );
+			ann->setLabel( (*iter)->textValue( ) );
+
+			ann->setColor( (*iter)->lineColor( ) );
+			ann->setLineStyle( viewer_to_annotation((*iter)->lineStyle( )) );
+			ann->setLineWidth( (*iter)->lineWidth( ) );
+
+			ann->setFont( (*iter)->textFont( ) );
+			ann->setFontSize( (*iter)->textFontSize( ) );
+			int font_style = (*iter)->textFontStyle( );
+
+			switch ( textPosition( ) ) {
+				case region::BottomText: ann->setLabelPosition("bottom"); break;
+				case region::LeftText: ann->setLabelPosition("left"); break;
+				case region::RightText: ann->setLabelPosition("right"); break;
+				default: ann->setLabelPosition("top");
+			}
+			ann->setLabelColor(textColor( ));
+
+			vector<int> delta(2);
+			textPositionDelta( delta[0], delta[1] );
+			if ( delta[0] != 0 || delta[1] != 0 ) {
+				ann->setLabelOffset(delta);
+			}
+
+			ann->setFontStyle( font_style & region::ItalicText && font_style & region::BoldText ? AnnotationBase::ITALIC_BOLD :
+							   font_style & region::ItalicText ? AnnotationBase::ITALIC :
+							   font_style & region::BoldText ? AnnotationBase::BOLD : AnnotationBase::NORMAL );
+
+			regionlist.addLine(AsciiAnnotationFileLine(ann));
+	    }
+	}
+
+	void Region::output( std::list<QtRegionState*> ol, ds9writer &out ) {
+		std::list<QtRegionState*>::iterator iter = find( ol.begin(), ol.end( ), mystate );
+		if ( iter != ol.end( ) ) {
+			output(out);
+		}
+	}
+
+
 	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
 	    std::list<RegionInfo> *info = generate_dds_statistics( );
 	    for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
 		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
 		if (memory::nullptr.check(stats))
 		  continue;
-		fprintf( stdout, "(%s)%s\n", (*iter).label().c_str( ),
-			 (*iter).type( ) == RegionInfo::MsInfoType ? " ms" :
-			 (*iter).type( ) == RegionInfo::ImageInfoType ? " image" : "" );
+		// fprintf( stdout, "(%s)%s\n", (*iter).label().c_str( ),
+		// 	 (*iter).type( ) == RegionInfo::MsInfoType ? " ms" :
+		// 	 (*iter).type( ) == RegionInfo::ImageInfoType ? " image" : "" );
 		size_t width = 0;
 		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ++stats_iter ) {
 		    size_t w = (*stats_iter).first.size( );
@@ -413,15 +758,34 @@ if (!markCenter()) return;
 	}
 
 	// region units as string... note, for HMS, DMS radian conversion is first done...
-	static inline const char *as_string( Region::Units units ) {
-	    return units == Region::Degrees ? "deg" : "rad";
+	static inline const char *as_string( region::Units units ) {
+	    return units == region::Degrees ? "deg" : "rad";
 	}
 
-      void Region::getCoordinatesAndUnits( Region::Coord &c, Region::Units &x_units, Region::Units &y_units, std::string &width_height_units ) const {
+		void Region::setLabel( const std::string &l ) {  mystate->setTextValue(l); }
+		void Region::setLabelPosition( region::TextPosition pos ) { mystate->setTextPosition( pos ); }
+		void Region::setLabelDelta( const std::vector<int> &delta ) { mystate->setTextDelta( delta ); }
+
+		void Region::setFont( const std::string &font, int font_size, int font_style, const std::string &font_color ) {
+			if ( font != "" ) mystate->setTextFont(font);
+			if ( font_size >= 0 ) mystate->setTextFontSize(font_size);
+			mystate->setTextFontStyle( font_style );
+			if ( font_color != "" ) mystate->setTextColor( font_color );
+		}
+
+		void Region::setLine( const std::string &line_color, region::LineStyle line_style, unsigned int line_width ) {
+			if ( line_color != "" ) mystate->setLineColor( line_color );
+			mystate->setLineStyle( line_style );
+			mystate->setLineWidth( line_width );
+		}
+
+		void Region::setAnnotation(bool ann) { mystate->setAnnotation(ann); }
+
+      void Region::getCoordinatesAndUnits( region::Coord &c, region::Units &x_units, region::Units &y_units, std::string &width_height_units ) const {
 	    c = current_region_coordsys( );
 	    x_units = current_xunits( );
 	    y_units = current_yunits( );
-	    width_height_units = (x_units == Radians ? "rad" : "deg");
+	    width_height_units = (x_units == region::Radians ? "rad" : "deg");
 	}
 
 	static inline double wrap_angle( double before, double after ) {
@@ -433,20 +797,20 @@ if (!markCenter()) return;
 	    return after;
 	}
 
-	static inline Region::Coord casa_to_viewer( MDirection::Types type ) {
-	    return type == MDirection::J2000 ? Region::J2000 :
-		type == MDirection::B1950 ? Region::B1950 :
-		type == MDirection::GALACTIC ? Region::Galactic :
-		type == MDirection::SUPERGAL ? Region::SuperGalactic :
-		type == MDirection::ECLIPTIC ? Region::Ecliptic : Region::J2000;
+	static inline region::Coord casa_to_viewer( MDirection::Types type ) {
+	    return type == MDirection::J2000 ? region::J2000 :
+		type == MDirection::B1950 ? region::B1950 :
+		type == MDirection::GALACTIC ? region::Galactic :
+		type == MDirection::SUPERGAL ? region::SuperGalactic :
+		type == MDirection::ECLIPTIC ? region::Ecliptic : region::J2000;
 	}
 
-	static inline MDirection::Types viewer_to_casa( Region::Coord type ) {
-	    return type == Region::J2000 ?  MDirection::J2000 :
-		type == Region::B1950 ?	 MDirection::B1950 :
-		type == Region::Galactic ? MDirection::GALACTIC :
-		type == Region::SuperGalactic ? MDirection::SUPERGAL :
-		type == Region::Ecliptic ? MDirection::ECLIPTIC : MDirection::J2000;
+	static inline MDirection::Types viewer_to_casa( region::Coord type ) {
+	    return type == region::J2000 ?  MDirection::J2000 :
+		type == region::B1950 ?	 MDirection::B1950 :
+		type == region::Galactic ? MDirection::GALACTIC :
+		type == region::SuperGalactic ? MDirection::SUPERGAL :
+		type == region::Ecliptic ? MDirection::ECLIPTIC : MDirection::J2000;
 	}
 
 	static inline MDirection::Types string_to_casa_coordsys( const std::string &s ) {
@@ -462,11 +826,11 @@ if (!markCenter()) return;
 	}
 
 
-	// static inline void convert_units( Quantum<Vector<double> > &q, Region::Units new_units ) {
+	// static inline void convert_units( Quantum<Vector<double> > &q, region::Units new_units ) {
 	//     q.convert( as_string(new_units) );
 	// }
 
-	static inline void convert_units( double &x, const std::string &xunits, Region::Units new_x_units, double &y, const std::string &yunits, Region::Units new_y_units ) {
+	static inline void convert_units( double &x, const std::string &xunits, region::Units new_x_units, double &y, const std::string &yunits, region::Units new_y_units ) {
 	    Quantum<double> resultx(x, xunits.c_str( ));
 	    Quantum<double> resulty(y, yunits.c_str( ));
 	    x = resultx.getValue(as_string(new_x_units));
@@ -489,8 +853,8 @@ if (!markCenter()) return;
 
 
 	void Region::getPositionString( std::string &x, std::string &y, std::string &angle,
-					double &bounding_width, double &bounding_height, Region::Coord coord,
-					Region::Units new_x_units, Region::Units new_y_units, const std::string &bounding_units ) const {
+					double &bounding_width, double &bounding_height, region::Coord coord,
+					region::Units new_x_units, region::Units new_y_units, const std::string &bounding_units ) const {
 	    if ( wc_ == 0 ) {
 		x = y = angle = "internal error";
 		return;
@@ -501,9 +865,9 @@ if (!markCenter()) return;
 		return;
 	    }
 
-	    if ( coord == DefaultCoord ) coord = current_region_coordsys( );
-	    if ( new_x_units == DefaultUnits ) new_x_units = current_xunits( );
-	    if ( new_y_units == DefaultUnits ) new_y_units = current_xunits( );
+	    if ( coord == region::DefaultCoord ) coord = current_region_coordsys( );
+	    if ( new_x_units == region::DefaultUnits ) new_x_units = current_xunits( );
+	    if ( new_y_units == region::DefaultUnits ) new_y_units = current_xunits( );
 	    double blc_x, blc_y, trc_x, trc_y;
 	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
@@ -527,7 +891,7 @@ if (!markCenter()) return;
 		return;
 	    }
 
-	    Coord cvcs = casa_to_viewer(cccs);
+	    region::Coord cvcs = casa_to_viewer(cccs);
 	    double result_x, result_y;
 	    const Vector<String> &units = wc_->worldAxisUnits();
 
@@ -555,12 +919,12 @@ if (!markCenter()) return;
 
 	    const Vector<String> &axis_labels = wc_->worldAxisNames( );
 
-	    if ( new_x_units == Pixel ) {
+	    if ( new_x_units == region::Pixel ) {
 		double center_x, center_y;
 		try { linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y ); } catch(...) { return; }
 		x = as_string(center_x);
-	    } else if ( new_x_units == Sexagesimal ) {
-		if ( axis_labels(0) == "Declination" || (coord != Region::J2000 && coord != Region::B1950) ) {
+	    } else if ( new_x_units == region::Sexagesimal ) {
+		if ( axis_labels(0) == "Declination" || (coord != region::J2000 && coord != region::B1950) ) {
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // D.M.S
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -578,12 +942,12 @@ if (!markCenter()) return;
 		x = as_string(result_x);
 	    }
 
-	    if ( new_y_units == Pixel ) {
+	    if ( new_y_units == region::Pixel ) {
 		double center_x, center_y;
 		try { linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y ); } catch(...) { return; }
 		y = as_string(center_y);
-	    } else if ( new_y_units == Sexagesimal ) {
-		if ( axis_labels(1) == "Declination"  || (coord != Region::J2000 && coord != Region::B1950) ) {
+	    } else if ( new_y_units == region::Sexagesimal ) {
+		if ( axis_labels(1) == "Declination"  || (coord != region::J2000 && coord != region::B1950) ) {
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    // D.M.S
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -616,7 +980,7 @@ if (!markCenter()) return;
 
 	    double new_center_x, new_center_y;
 	    if ( x_units == "pixel" ) {
-			try { 
+			try {
 				pixel_to_linear( wc_, atof(x.c_str( )), 0, new_center_x, new_center_y );
 			} catch( const casa::AipsError &err) {
 				status( "coordinate conversion failed: " + err.getMesg( ), "error" );
@@ -639,7 +1003,7 @@ if (!markCenter()) return;
 		    xq = Quantity( atof(x.c_str( )), "rad" );
 		} else {
 			status( "unknown units: " + x_units, "error" );
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -653,7 +1017,7 @@ if (!markCenter()) return;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
 			status( "linear to world coordinate converison failed...", "error" );
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -677,7 +1041,7 @@ if (!markCenter()) return;
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
 			status( "world to linear coordinate converison failed...", "error" );
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 		new_center_x = linearv[0];
@@ -688,7 +1052,7 @@ if (!markCenter()) return;
 	    // trap attempts to move region out of visible area...
 		if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
 			status( "translation moves region outside of image...", "error" );
-			updateStateInfo( true, RegionChangeReset );	// error: reset
+			updateStateInfo( true, region::RegionChangeReset );	// error: reset
 			return false;
 		}
 
@@ -732,7 +1096,7 @@ if (!markCenter()) return;
 		} else if ( y_units == "radians" ) {
 		    yq = Quantity( atof(y.c_str( )), "rad" );
 		} else {
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -745,7 +1109,7 @@ if (!markCenter()) return;
 		linearv(1) = cur_center_y;
 		if ( ! wc_->linToWorld( worldv, linearv ) ) {
 			status( "linear to world coordinate converison failed...", "error" );
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -768,7 +1132,7 @@ if (!markCenter()) return;
 
 		if ( ! wc_->worldToLin( linearv, worldv ) ) {
 			status( "world to linear coordinate converison failed...", "error" );
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 		new_center_x = linearv[0];
@@ -778,7 +1142,7 @@ if (!markCenter()) return;
 	    // trap attempts to move region out of visible area...
 		if ( ! valid_translation( new_center_x - cur_center_x, new_center_y - cur_center_y, 0, 0 ) ) {
 			status( "translation moves region outside of image...", "error" );
-			updateStateInfo( true, RegionChangeReset );	// error: reset
+			updateStateInfo( true, region::RegionChangeReset );	// error: reset
 			return false;
 		}
 
@@ -819,7 +1183,7 @@ if (!markCenter()) return;
 		} else if ( x_units == degstr ) {
 		    new_distance = Quantity( atof(x.c_str( )), "deg" );
 		} else {
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -838,7 +1202,7 @@ if (!markCenter()) return;
 		cur_trc_linearv(1) = cur_blc_linearv(1);
 		if ( ! wc_->linToWorld( cur_blc_worldv, cur_blc_linearv ) ||
 		     ! wc_->linToWorld( cur_trc_worldv, cur_trc_linearv ) ) {
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -867,7 +1231,7 @@ if (!markCenter()) return;
 		    output_blc.shiftLongitude(shift);
 		    output_trc.shiftLongitude(-shift);
 		}
-		
+
 		Vector<Double> out_blc_worldv(2);
 		Vector<Double> out_blc_linearv(2);
 		Vector<Double> out_trc_worldv(2);
@@ -878,7 +1242,7 @@ if (!markCenter()) return;
 		out_trc_worldv(1) = output_trc.getAngle( ).getValue("rad")[1];
 		if ( ! wc_->worldToLin( out_blc_linearv, out_blc_worldv ) ||
 		     ! wc_->worldToLin( out_trc_linearv, out_trc_worldv ) ) {
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -920,7 +1284,7 @@ if (!markCenter()) return;
 		} else if ( y_units == degstr ) {
 		    new_distance = Quantity( atof(y.c_str( )), "deg" );
 		} else {
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -939,7 +1303,7 @@ if (!markCenter()) return;
 		cur_trc_linearv(1) = cur_trc_y;
 		if ( ! wc_->linToWorld( cur_blc_worldv, cur_blc_linearv ) ||
 		     ! wc_->linToWorld( cur_trc_worldv, cur_trc_linearv ) ) {
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -968,7 +1332,7 @@ if (!markCenter()) return;
 		    output_blc.shiftLatitude(shift);
 		    output_trc.shiftLatitude(-shift);
 		}
-		
+
 		Vector<Double> out_blc_worldv(2);
 		Vector<Double> out_blc_linearv(2);
 		Vector<Double> out_trc_worldv(2);
@@ -979,7 +1343,7 @@ if (!markCenter()) return;
 		out_trc_worldv(1) = output_trc.getAngle( ).getValue("rad")[1];
 		if ( ! wc_->worldToLin( out_blc_linearv, out_blc_worldv ) ||
 		     ! wc_->worldToLin( out_trc_linearv, out_trc_worldv ) ) {
-		    updateStateInfo( true, RegionChangeReset );	// error: reset
+		    updateStateInfo( true, region::RegionChangeReset );	// error: reset
 		    return false;
 		}
 
@@ -990,7 +1354,7 @@ if (!markCenter()) return;
 	    return true;
 	}
 
-	Region::Coord Region::current_region_coordsys( ) const {
+	region::Coord Region::current_region_coordsys( ) const {
 	    return casa_to_viewer(current_casa_coordsys( ));
 	}
 
@@ -1007,56 +1371,57 @@ if (!markCenter()) return;
 	    return cs.directionCoordinate(index).directionType(true);
 	}
 
-	Region::Units Region::current_xunits( ) const {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return Degrees;
+	region::Units Region::current_xunits( ) const {
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return region::Degrees;
 	    const Vector<String> &units = wc_->worldAxisUnits();
 	    if ( units(0) == "rad" )
-		return Radians;
+			return region::Radians;
 	    if ( units(0) == "deg" )
-		return Degrees;
-	    return Degrees;
+			return region::Degrees;
+		return region::Degrees;
 	}
 
-	Region::Units Region::current_yunits( ) const {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return Degrees;
+	region::Units Region::current_yunits( ) const {
+		if ( wc_ == 0 || wc_->csMaster() == 0 ) return region::Degrees;
 	    const Vector<String> &units = wc_->worldAxisUnits();
-	    if ( units(1) == "rad" )
-		return Radians;
-	    if ( units(1) == "deg" )
-		return Degrees;
-	    return Degrees;
+		if ( units(1) == "rad" )
+			return region::Radians;
+		if ( units(1) == "deg" )
+			return region::Degrees;
+	    return region::Degrees;
 	}
 
 
 	void Region::set_line_style( const ls_ele &val ) {
-	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+		if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
-	    if ( pc == 0 ) return;
-	    if ( val.second >= 0 ) pc->setLineWidth(val.second);
-	    switch ( val.first ) {
-		case DashLine:
-		    pc->setLineStyle( Display::LSDashed );
-		    current_ls = DashLine;
-		    break;
-		case DotLine:
-		    {	QtPixelCanvas* qpc = dynamic_cast<QtPixelCanvas*>(pc);
-			if(qpc != NULL) {
-			    qpc->setQtLineStyle(Qt::DotLine);
-			    current_ls = DotLine;
-			} else {
-			    pc->setLineStyle( Display::LSDashed );
-			    current_ls = DashLine;
-			}
-		    }
-		    break;
-		case LSDoubleDashed:
-		    pc->setLineStyle(Display::LSDoubleDashed );
-		    current_ls = DashLine;
-		    break;
-		default:
-		    pc->setLineStyle(Display::LSSolid);
-		    current_ls = SolidLine;
-		    break;
+		if ( pc == 0 ) return;
+		if ( val.second >= 0 ) pc->setLineWidth(val.second);
+		switch ( val.first ) {
+			case region::DashLine:
+				pc->setLineStyle( Display::LSDashed );
+				current_ls = region::DashLine;
+				break;
+			case region::DotLine:
+				{
+					QtPixelCanvas* qpc = dynamic_cast<QtPixelCanvas*>(pc);
+					if(qpc != NULL) {
+						qpc->setQtLineStyle(Qt::DotLine);
+						current_ls = region::DotLine;
+					} else {
+						pc->setLineStyle( Display::LSDashed );
+						current_ls = region::DashLine;
+					}
+				}
+				break;
+			case region::LSDoubleDashed:
+				pc->setLineStyle(Display::LSDoubleDashed );
+				current_ls = region::DashLine;
+				break;
+			default:
+				pc->setLineStyle(Display::LSSolid);
+				current_ls = region::SolidLine;
+				break;
 	    }
 	}
 
@@ -1264,7 +1629,7 @@ if (!markCenter()) return;
 
 	    linear_to_world( wc_, base, base, base+lx, base+ly, blcx, blcy, trcx, trcy );
 	    MDirection::Types cccs = get_coordinate_type( wc_->coordinateSystem( ) );
-//	    Region::Coord crcs = casa_to_viewer(cccs);
+//	    region::Coord crcs = casa_to_viewer(cccs);
 	    if ( coordsys == cccs && units == "rad" ) {
 		wx = fabs(trcx-blcx);
 		wy = fabs(trcy-blcy);
@@ -1857,8 +2222,21 @@ if (!markCenter()) return;
 		  return 0;
 	  }
 
+	const std::set<Region*> &Region::get_selected_regions( ) {
+		// std::list<Region*> regions = dock_->regions( );
+		// for ( std::list<Region*>::iterator it=regions.begin( ); it != regions.end( ); ++it ) {
+		// 	if ( (*it)->marked( ) ) {
+		// 		Region *r = dynamic_cast<Region*>(*it);
+		// 		if ( r ) result->push_back(r);
+		// 	}
+		// }
+		// return result;
+		return dock_->selectedRegionSet( );
+	}
+
 	ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
-		const std::list<Region*> &selected_regions = get_selected_regions( );
+		if ( dd == 0 ) return ImageRegion_state( );
+		const std::set<Region*> &selected_regions = get_selected_regions( );
 		ImageRegion *result = 0;
 		size_t count = 0;
 
@@ -1876,7 +2254,7 @@ if (!markCenter()) return;
 
 			// does the selected region list contain this region?
 			bool contains_this = false;
-			for ( std::list<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it ) {
+			for ( std::set<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it ) {
 				if ( *it == this ) {
 					contains_this = true;
 					break;
@@ -1887,8 +2265,8 @@ if (!markCenter()) return;
 			PtrBlock<const ImageRegion*> rgns(selected_regions.size( ) + (contains_this ? 0 : 1));
 			if ( contains_this == false )
 				rgns[count++] = get_image_region( dd );
-			
-			for ( std::list<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it )
+
+			for ( std::set<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it )
 				rgns[count++] = (*it)->get_image_region( dd );
 
 			try {
@@ -1914,7 +2292,7 @@ if (!markCenter()) return;
 		const std::list<DisplayData*> &dds = wc_->displaylist( );
 
 		ImageRegion_state imageregion_state = get_image_selected_region( wc_->csMaster( ) );
-		ImageRegion *imageregion = imageregion_state;
+		std::tr1::shared_ptr<ImageRegion> imageregion = imageregion_state;
 		char region_component_count[128];
 		sprintf( region_component_count, "%lu", imageregion_state.regionCount( ) );
 
@@ -1944,7 +2322,7 @@ if (!markCenter()) return;
 				if (repeat != processed.end()) continue;
 				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
 
-				if ( imageregion == 0 ) continue;
+				if ( imageregion.get( ) == NULL ) continue;
 				RegionInfo::stats_t *dd_stats = getLayerStats(padd,image,*imageregion);
 				if ( dd_stats ) {
 					dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
@@ -1959,7 +2337,6 @@ if (!markCenter()) return;
 			}
 	    }
 
-		delete imageregion;
 		return region_statistics;
 	}
 
@@ -2314,6 +2691,93 @@ if (!markCenter()) return;
 	    wy2 = newpts.getValue( )(1);
 
 	}
+
+		void Region::signal_region_change( region::RegionChanges change ) {
+
+			if ( hold_signals > 0 ) {
+				held_signals[change] = true;
+				return;
+			}
+
+			switch ( change ) {
+				case region::RegionChangeUpdate:
+				case region::RegionChangeCreate:
+				case region::RegionChangeReset:
+				case region::RegionChangeFocus:
+				case region::RegionChangeModified:
+				case region::RegionChangeNewChannel:
+					{
+						region::RegionTypes type;
+						QList<int> pixelx, pixely;
+						QList<double> worldx, worldy;
+
+						fetch_details( type, pixelx, pixely, worldx, worldy );
+
+						if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
+
+						if ( change == region::RegionChangeCreate ) {
+							dock_->emitCreate( this );
+							emit regionCreated( id_, QString( type == region::RectRegion ? "rectangle" : type == region::PointRegion ? "point" :
+															  type == region::EllipseRegion ? "ellipse" : type == region::PolyRegion ? "polygon" : "error"),
+												QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
+												QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
+						} else
+							emit regionUpdate( id_, change, worldx, worldy, pixelx, pixely );
+					}
+					break;
+
+				case region::RegionChangeDelete:
+				case region::RegionChangeStatsUpdate:
+				case region::RegionChangeLabel:
+					// fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",
+					// 	     id_, lineColor( ).c_str( ), textValue( ).c_str( ), textFont( ).c_str( ), textFontStyle( ), textFontSize( ) );
+					break;
+			}
+		}
+
+		void Region::fetch_details( region::RegionTypes &type, QList<int> &pixelx, QList<int> &pixely, QList<double> &worldx, QList<double> &worldy ) {
+
+			std::vector<std::pair<int,int> > pixel_pts;
+			std::vector<std::pair<double,double> > world_pts;
+
+			fetch_region_details(type, pixel_pts, world_pts);
+
+			for ( unsigned int i=0; i < pixel_pts.size(); ++i ) {
+				pixelx.push_back(pixel_pts[i].first);
+				pixely.push_back(pixel_pts[i].second);
+			}
+
+			for ( unsigned int i=0; i < world_pts.size(); ++i ) {
+				worldx.push_back(world_pts[i].first);
+				worldy.push_back(world_pts[i].second);
+			}
+
+		}
+
+		void Region::process_held_signals( ) {
+			if ( held_signals[region::RegionChangeCreate] ) {
+				signal_region_change(region::RegionChangeCreate);
+			} else {
+				if ( held_signals[region::RegionChangeUpdate] ) {
+					signal_region_change(region::RegionChangeUpdate);
+				}
+				if ( held_signals[region::RegionChangeLabel] ) {
+					signal_region_change(region::RegionChangeLabel);
+				}
+			}
+
+			if ( held_signals[region::RegionChangeStatsUpdate] )
+				updateStateInfo( false, region::RegionChangeCreate );
+
+			clear_signal_cache( );
+		}
+
+		void Region::clear_signal_cache( ) {
+			held_signals[region::RegionChangeCreate] = false;
+			held_signals[region::RegionChangeUpdate] = false;
+			held_signals[region::RegionChangeLabel] = false;
+		}
+
     }
 
 }

@@ -63,7 +63,7 @@
 static pid_t manager_root_pid = 0;
 static bool sigterm_received = false;
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
-			     char *&dbus_name, bool &inital_run, bool &server_startup,
+				 char *&dbus_name, bool &do_dbus, bool &inital_run, bool &server_startup,
 			     bool &without_gui, bool &persistent, bool &casapy_start,
 			     char *&logfile_path );
 static void start_manager_root( const char *origname, int numargs, char **args,
@@ -126,6 +126,7 @@ int main( int argc, const char *argv[] ) {
     bool persistent = false;
     bool casapy_start = false;
     char *dbus_name = 0;
+	bool with_dbus = false;
     char *logfile_path = 0;
     bool initial_run = false;
 
@@ -150,9 +151,9 @@ int main( int argc, const char *argv[] ) {
     //
 //     QCoreApplication::setAttribute(Qt::AA_MacDontSwapCtrlAndMeta);
 
-    preprocess_args( argc, argv, numargs, args, dbus_name, initial_run,
-		     server_startup, without_gui, persistent, casapy_start,
-		     logfile_path );
+    preprocess_args( argc, argv, numargs, args, dbus_name, with_dbus,
+					 initial_run, server_startup, without_gui, persistent,
+					 casapy_start, logfile_path );
 
     //
     // setup casa logging's global sink, if the user supplied a path...
@@ -217,7 +218,7 @@ int main( int argc, const char *argv[] ) {
 	for ( int arg_index=0; args[arg_index]; ++arg_index )
 	    stdargs.push_back(args[arg_index]);
 
-	QtViewer* v = new QtViewer( stdargs, server_startup, dbus_name );
+	QtViewer* v = new QtViewer( stdargs, server_startup || with_dbus, dbus_name );
 
 	if ( ! server_startup ) {
 
@@ -339,9 +340,9 @@ int main( int argc, const char *argv[] ) {
 // processes argv into args stripping out the the viewer setup flags... numargs has the number
 // of args, and the last arg (not included in numargs count) is null (for execvp)
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
-			     char *&dbus_name, bool &initial_run, bool &server_startup,
-			     bool &without_gui, bool &persistent, bool &casapy_start,
-			     char *&logfile_path ) {
+							 char *&dbus_name, bool &with_dbus, bool &initial_run,
+							 bool &server_startup, bool &without_gui, bool &persistent,
+							 bool &casapy_start, char *&logfile_path ) {
 
     without_gui = false;
     persistent = false;
@@ -386,6 +387,8 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	    persistent = true;
 	} else if ( ! strcmp(argv[x],"--casapy") ) {
 	    casapy_start = true;
+	} else if ( ! strcmp(argv[x],"--dbus") ) {
+		with_dbus = true;
 	}  else if ( ! strncmp(argv[x],"--rcdir",7) ) {
 	    if ( argv[x][7] == '=' ) {
 		viewer::setrcDir(&argv[x][8]);

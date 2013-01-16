@@ -156,7 +156,7 @@ void WCCrosshairTool::otherKeyPressed(const WCPositionEvent &ev) {
   }
 }
 
-void WCCrosshairTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void WCCrosshairTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   itsMoved = True;
   if (!itsActive) {
     return;

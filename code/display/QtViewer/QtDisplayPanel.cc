@@ -37,6 +37,7 @@
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/DisplayEvents/MWCPolylineTool.h>
 #include <display/DisplayEvents/MWCRulerlineTool.h>
+#include <display/DisplayEvents/MWCPositionVelocityTool.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/DisplayEvents/MWCPannerTool.h>
 #include <display/Display/AttributeBuffer.h>
@@ -57,6 +58,7 @@
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
 #include <display/ds9/ds9parser.h>
+#include <casadbus/types/nullptr.h>
 
 #include <QtCore/QPoint>
 #include <QtGui/QToolTip>
@@ -80,7 +82,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 						zoom_(0), panner_(0),
 						ocrosshair_(0), ortregion_(0), oelregion_(0), optregion_(0),
 						region_source_factory(0),
-						polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
+						polyline_(0), rulerline_(0), pvtool_(0), snsFidd_(0), bncFidd_(0),
 						mouseToolNames_(),
 						tracking_(True),
 						modeZ_(True),
@@ -212,7 +214,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 
 	using namespace QtMouseToolNames;	// (See QtMouseToolState.qo.h)
 
-	mouseToolNames_.resize(10);
+	mouseToolNames_.resize(11);
 	mouseToolNames_[0] = ZOOM;
 	mouseToolNames_[1] = PAN;
 	mouseToolNames_[2] = SHIFTSLOPE;
@@ -223,6 +225,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 	mouseToolNames_[7] = POLYGON;
 	mouseToolNames_[8] = POLYLINE;
 	mouseToolNames_[9] = RULERLINE;
+	mouseToolNames_[10] = POSITIONVELOCITY;
 	// The canonical text-names of the mouse tools on this panel.
 	// These happen to be in QtMouseToolNames::toolIndex order,
 	// but that is not a requirement.  This order is returned by
@@ -232,20 +235,18 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 
 	// Create the actual mouse tools.
 
-	zoom_      = new MWCRTZoomer;       pd_->addTool(ZOOM, zoom_);
-	panner_    = new MWCPannerTool;     pd_->addTool(PAN, panner_);
-	//crosshair_ = new MWCCrosshairTool;  pd_->addTool(POINT, crosshair_);
-	//ptregion_  = new MWCPTRegion;       pd_->addTool(POLYGON, ptregion_);
-	//rtregion_  = new QtRTRegion(pd_);   pd_->addTool(RECTANGLE, rtregion_);
+	zoom_      = new MWCRTZoomer;       pd_->addTool(ZOOM, std::tr1::shared_ptr<MultiWCTool>(zoom_));
+	panner_    = new MWCPannerTool;     pd_->addTool(PAN, std::tr1::shared_ptr<MultiWCTool>(panner_));
+
 	if ( new_region_tools ) {
 
-		toolmgr = new viewer::RegionToolManager( region_source_factory, pd_ );
+		toolmgr = new viewer::RegionToolManager( region_source_factory, panel_, pd_ );
 
 	} else {
-		ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POINT, ocrosshair_);
-		optregion_  = new QtOldPolyTool(pd_);	pd_->addTool(POLYGON, optregion_);
-		ortregion_  = new QtOldRectTool(pd_);	pd_->addTool(RECTANGLE, ortregion_);
-		oelregion_  = new QtOldEllipseTool(pd_);	pd_->addTool(ELLIPSE, oelregion_);
+		ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POINT, std::tr1::shared_ptr<MultiWCTool>(ocrosshair_));
+		optregion_  = new QtOldPolyTool(pd_);	pd_->addTool(POLYGON, std::tr1::shared_ptr<MultiWCTool>(optregion_));
+		ortregion_  = new QtOldRectTool(pd_);	pd_->addTool(RECTANGLE, std::tr1::shared_ptr<MultiWCTool>(ortregion_));
+		oelregion_  = new QtOldEllipseTool(pd_);	pd_->addTool(ELLIPSE, std::tr1::shared_ptr<MultiWCTool>(oelregion_));
 		connect( ortregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 				SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
 		connect( ortregion_, SIGNAL(echoClicked(Record)),
@@ -261,9 +262,12 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 	}
 
 
-	polyline_  = new MWCPolylineTool;   pd_->addTool(POLYLINE, polyline_);
+	polyline_  = new MWCPolylineTool;   pd_->addTool(POLYLINE, std::tr1::shared_ptr<MultiWCTool>(polyline_));
 
-	rulerline_  = new MWCRulerlineTool;   pd_->addTool(RULERLINE, rulerline_);
+	rulerline_  = new MWCRulerlineTool;   pd_->addTool(RULERLINE, std::tr1::shared_ptr<MultiWCTool>(rulerline_));
+
+	// pvtool_  = new MWCPositionVelocityTool;   pd_->addTool(POSITIONVELOCITY, std::tr1::shared_ptr<MultiWCTool>(pvtool_));
+
 
 	snsFidd_ = new PCITFiddler(pc_, PCITFiddler::StretchAndShift,
 			Display::K_None);
@@ -426,8 +430,10 @@ void QtDisplayPanel::resetSelectionTools() {
 
 void QtDisplayPanel::resetTool(String toolname) {
 	// (NB: no effect on PCTools (e.g. SHIFTSLOPE, BRIGHTCONTRAST).
-	MultiWCTool* tool = pd_->getTool(toolname);
-	if(tool!=0) tool->reset();  }
+	std::tr1::shared_ptr<MultiWCTool> tool = pd_->getTool(toolname);
+	if ( tool.get( ) == 0 ) return;
+	tool->reset();
+}
 
 
 void QtDisplayPanel::resetTools() {
@@ -1192,7 +1198,6 @@ void QtDisplayPanel::updateColorBarDDLists_() {
 
 	// Create new allColorBarDDs_ List (paring down from all registered DDs).
 	allColorBarDDs_ = registeredDDs();
-
 	for(ListIter<QtDisplayData*> acbdds(allColorBarDDs_); !acbdds.atEnd(); ) {
 		QtDisplayData* cbdd = acbdds.getRight();
 
@@ -1237,8 +1242,7 @@ void QtDisplayPanel::updateColorBarDDLists_() {
 			// 'True, False, False' == 'does DD conform to this sub-panel's
 			// blink restriction (if any)?'  (dd's Coordinate compatibility
 			// has already been tested farther above).
-			bool blinkRestrictionConforms=pd_->conforms(ccbdd->dd(), True, False, False, panel_i);
-			if( blinkRestrictionConforms ) {
+			if(pd_->conforms(ccbdd->dd(), True, False, False, panel_i)) {
 
 				// dd will display.  Move it off the candidate list, onto the
 				// end of the list of DDs whose colorbars should also display.
@@ -1319,6 +1323,7 @@ Float QtDisplayPanel::cbPanelSpace_(QtDisplayData* dd ) {
 	// Proportion of PC size (again, in the thickness direction)
 	// to use for margins.
 	Float cbmrg = (mrgna_ + marginb_(dd))*marginUnit_ / pcthsz_;
+
 	return  cbth + cbmrg;
 }
 
@@ -1445,9 +1450,7 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
 	for(allcbdds.toStart();  !allcbdds.atEnd();  allcbdds++, i++) {
 		Float cbpsz = cbPanelSpace_(allcbdds.getRight());
 		Int j=i;
-		for(; j>0 && cbpszs[j-1]<cbpsz ; j--){
-			cbpszs[j] = cbpszs[j-1];
-		}
+		for(; j>0 && cbpszs[j-1]<cbpsz ; j--) cbpszs[j] = cbpszs[j-1];
 		cbpszs[j] = cbpsz;
 	}
 
@@ -1632,14 +1635,20 @@ void QtDisplayPanel::arrangeColorBars_(Bool reorient, Bool resizing) {
 }
 
 void QtDisplayPanel::plotCountChangeAdjustment(){
-	//Fixes a bug where the color bar may not be displayed
-	//even if the user has tweaked the gui indicating they
-	//want it displayed.
-	for (ListIter<QtDisplayData*> qtDisplayDataIterator(qdds_); !qtDisplayDataIterator.atEnd(); qtDisplayDataIterator++) {
-		//Determine if we are supposed to be displaying a color bar
-		QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
-		Record record = qtDisplayData->getOptions();
-		try {
+	//Fixes a bug where if the number of plots displayed decreases,
+	//and the color bar is displayed, the color bar will not be drawn.
+	int newRowCount = pd_->getRowCount();
+	int newColumnCount = pd_->getColumnCount();
+	int oldCount = oldRowCount + oldColumnCount;
+	int newCount = newRowCount + newColumnCount;
+	oldRowCount = newRowCount;
+	oldColumnCount = newColumnCount;
+	//If the number number of plots decreases
+	if ( oldCount > newCount ){
+		for (ListIter<QtDisplayData*> qtDisplayDataIterator(qdds_); !qtDisplayDataIterator.atEnd(); qtDisplayDataIterator++) {
+			//Determine if we are supposed to be displaying a color bar
+			QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
+			Record record = qtDisplayData->getOptions();
 			String wedgeDisplayStr = record.subRecord(WedgeDD::WEDGE_PREFIX).asString("value");
 			if ( wedgeDisplayStr == QtDisplayData::WEDGE_YES ){
 				//We are supposed to be displaying a color bar, so make sure the
@@ -1647,9 +1656,6 @@ void QtDisplayPanel::plotCountChangeAdjustment(){
 				DisplayData* displayData = qtDisplayData->dd();
 				displayData->setDisplayState( DisplayData::DISPLAYED);
 			}
-		}
-		catch( AipsError& error ){
-			//qDebug() <<"Display data "<<qtDisplayData->name().c_str()<<" did not have a wedge";
 		}
 	}
 }
@@ -1943,11 +1949,11 @@ void QtDisplayPanel::setBlen_(Int len) {
 }
 
 void QtDisplayPanel::lowerBoundAnimatorImageChanged( int bound ){
-	assert ( bound <= bLen_ );
+	// assert ( bound <= bLen_ );
 	bStart_= max(0, bound);
 }
 void QtDisplayPanel::upperBoundAnimatorImageChanged(int bound ){
-	assert ( bound >= 0 );
+	// assert ( bound >= 0 );
 	bEnd_ = min( bLen_, bound+1);
 }
 void QtDisplayPanel::stepSizeAnimatorImageChanged(int step ){
@@ -2575,6 +2581,13 @@ void QtDisplayPanel::loadRegions( const std::string &path, const std::string &da
 		}
 	}
 
+}
+
+// revoke region from region source...
+void QtDisplayPanel::revokeRegion( viewer::Region *r ) {
+	std::tr1::shared_ptr<RegionTool> tool = toolmgr->tool(r->type( ));
+	if ( memory::nullptr.check(tool) == false )
+		tool->revokeRegion( r );
 }
 
 const QtDisplayPanel::panel_state::colormap_state *QtDisplayPanel::panel_state::colormap( const std::string &path ) const {

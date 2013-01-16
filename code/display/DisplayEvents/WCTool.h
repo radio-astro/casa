@@ -33,7 +33,7 @@
 #include <display/DisplayEvents/WCMotionEH.h>
 #include <display/DisplayEvents/WCRefreshEH.h>
 #include <display/DisplayEvents/DisplayTool.h>
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -174,7 +174,7 @@ class WCTool : public DisplayTool {
   virtual void keyReleased(const WCPositionEvent &/*ev*/);
   virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
   virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
   virtual void refresh(const WCRefreshEvent &/*ev*/);
   // </group>
 

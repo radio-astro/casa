@@ -30,7 +30,7 @@
 #include <display/QtViewer/QtDataManager.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
-#include <display/region/QtRegion.qo.h>
+#include <display/region/Region.qo.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableInfo.h>
 #include <images/Images/FITSImgParser.h>
@@ -448,12 +448,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    treeitem_to_region.insert(treeitem_map_t::value_type(item,*it));
 	    region_to_treeitem.insert(region_map_t::value_type(*it,item));
-	    // connect(*it,        SIGNAL(selectionChanged(viewer::QtRegion*,bool)),  this, SLOT(region_selection_change(viewer::QtRegion*,bool)));
+	    // connect(*it,        SIGNAL(selectionChanged(viewer::Region*,bool)),  this, SLOT(region_selection_change(viewer::Region*,bool)));
 	}
 	ts.dtree( )->resizeColumnToContents(0);
     }
 
-    void QtDataManager::region_selection_change( viewer::QtRegion *rgn, bool selected ) {
+    void QtDataManager::region_selection_change( viewer::Region *rgn, bool selected ) {
 	region_map_t::iterator it = region_to_treeitem.find(rgn);
 	if ( it != region_to_treeitem.end( ) ) {
 	    if ( selected )
@@ -573,7 +573,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	region_do_save->setEnabled(false);
     }
 
-    void QtDataManager::handle_region_update(viewer::QtRegion*,std::string) {
+    void QtDataManager::handle_region_update(viewer::Region*,std::string) {
 	for ( int i=0; i < tabs->count( ); ++i ) {
 	    if ( tabs->tabText(i) == "save region" ) {
 		update_region_list( tab_info[i] );
@@ -590,7 +590,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		lbl << "output file" << "type";
 		ts.tree( )->setColumnCount(2);
 		ts.tree( )->setHeaderLabels(lbl);
-		connect( panel_, SIGNAL(regionChange(viewer::QtRegion*,std::string )), SLOT(handle_region_update(viewer::QtRegion*,std::string)));
+		connect( panel_, SIGNAL(regionChange(viewer::Region*,std::string )), SLOT(handle_region_update(viewer::Region*,std::string)));
 	    }
 	    if ( ts.dtree( )->columnCount( ) == 1 ) {
 		QStringList lbl;

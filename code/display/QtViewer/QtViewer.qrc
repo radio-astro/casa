@@ -125,6 +125,10 @@
     <file>icons/rulerb1.png</file>
     <file>icons/rulerb2.png</file>
     <file>icons/rulerb3.png</file>
+    <file>icons/pvtoolb0.png</file>
+    <file>icons/pvtoolb1.png</file>
+    <file>icons/pvtoolb2.png</file>
+    <file>icons/pvtoolb3.png</file>
         <file>icons/arrow.png</file>
         <file>icons/arrowcross.png</file>
         <file>icons/brightcontrast.png</file>
@@ -154,7 +158,6 @@
         <file>icons/ff.png</file>
         <file>icons/hand.png</file>
         <file>icons/hist.png</file>
-        <file>icons/gaussian.png</file>
         <file>icons/hsplit.png</file>
         <file>icons/ibeam.png</file>
         <file>icons/idx.png</file>

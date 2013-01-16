@@ -49,7 +49,7 @@
 #include <display/DisplayDatas/CachingDisplayMethod.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
 #include <display/Display/Colormap.h>
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

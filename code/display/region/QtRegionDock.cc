@@ -32,17 +32,19 @@
 #include <algorithm>
 #include <display/region/QtRegionDock.qo.h>
 #include <display/region/QtRegionState.qo.h>
-#include <display/region/QtRegion.qo.h>
+#include <display/region/Region.qo.h>
 #include <display/ds9/ds9writer.h>
 #include <display/DisplayErrors.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 
 namespace casa {
     namespace viewer {
+
 	QtRegionDock::QtRegionDock( QtDisplayPanelGui *d, QWidget* parent ) :
 					QDockWidget(parent), Ui::QtRegionDock( ),
 					dpg(d), current_dd(0), current_tab_state(-1,-1),
-					current_color_index(6 /*** magenta ***/ ), dismissed(false) {
+					current_color_index(6 /*** magenta ***/ ), dismissed(false),
+					mouse_in_dock(false) {
 	    setupUi(this);
 
 	    // there are two standard Qt, dismiss icons...
@@ -63,7 +65,7 @@ namespace casa {
 	    connect( region_stack, SIGNAL(currentChanged(int)), SLOT(stack_changed(int)) );
 	    connect( region_stack, SIGNAL(widgetRemoved(int)), SLOT(stack_changed(int)) );
 
-	    connect( region_scroll, SIGNAL(sliderMoved(int)), SLOT(change_stack(int)) );
+	    connect( region_scroll, SIGNAL(valueChanged(int)), SLOT(change_stack(int)) );
 
 	    connect( dismiss_region, SIGNAL(clicked(bool)), SLOT(delete_current_region(bool)) );
 	    connect( reset_regions, SIGNAL(clicked(bool)), SLOT(delete_all_regions(bool)) );
@@ -71,16 +73,17 @@ namespace casa {
 	    connect( region_stack, SIGNAL(currentChanged(int)), SLOT(emit_region_stack_change(int)) );
 
 	}
-  
+
 	QtRegionDock::~QtRegionDock() {  }
 
 	// void QtRegionDock::showStats( const QString &stats ) { }
 
 	void QtRegionDock::enterEvent( QEvent* ) {
+		mouse_in_dock = true;
 		if ( region_stack->count( ) > 0 ) {
 			QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
 			if ( current_selection ) {
-				QtRegion *region = current_selection->region( );
+				Region *region = current_selection->region( );
 				if ( region ) {
 					clearWeaklySelectedRegionSet( );
 					addWeaklySelectedRegion(region);
@@ -89,31 +92,36 @@ namespace casa {
 				// moving out of one or more regions is lost. This ensures that at least when the
 				// cursor moves into the dock, all regions will be marked as clear of the mouse...
 				for ( region_list_t::iterator it = region_list.begin( ); it != region_list.end( ); ++it ) {
-					Region *r = dynamic_cast<Region*>(*it);
-					if ( r ) r->clearMouseInRegion( );
+					Region *region = dynamic_cast<Region*>(*it);
+					if ( region ) {
+						region->clearMouseInRegion( );
+						region->refresh( );
+					}
 				}
 			}
 	    }
 	}
 
 	void QtRegionDock::leaveEvent( QEvent* ) {
+		mouse_in_dock = false;
 		if ( region_stack->count( ) > 0 ) {
 			QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
 			if ( current_selection ) {
-				current_selection->emitRefresh( );
-				QtRegion *region = current_selection->region( );
+				// current_selection->emitRefresh( );
+				Region *region = current_selection->region( );
 				if ( region) {
 					clearWeaklySelectedRegionSet( );
+					region->refresh( );
 				}
 			}
 	    }
 	}
 
-	void QtRegionDock::emitCreate( QtRegion *r ) {
-	    emit regionChange( r, "created" );
+	void QtRegionDock::emitCreate( Region *r ) {
+	    try { emit regionChange( r, "created" ); } catch(...) { /*fprintf( stderr, "******\tregion selection errors - %s, %d \t******\n", __FILE__, __LINE__ );*/ }
 	}
 
-	void QtRegionDock::addRegion(QtRegion *r, QtRegionState *state, int index) {
+	void QtRegionDock::addRegion(Region *r, QtRegionState *state, int index) {
 
 	    // book keeping for DataManager region access...
 	    region_list.push_back(r);
@@ -128,7 +136,7 @@ namespace casa {
 
 	    // emit regionChange( r, "created" );
 
-	    connect( r, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SIGNAL(regionChange(viewer::QtRegion*,std::string)));
+	    connect( r, SIGNAL(regionChange(viewer::Region*,std::string)), this, SIGNAL(regionChange(viewer::Region*,std::string)));
 	    connect( state, SIGNAL(outputRegions(const QString &,const QString &,const QString&,const QString&)), SLOT(output_region_event(const QString &,const QString &,const QString&,const QString&)) );
 	    connect( state, SIGNAL(loadRegions(bool&,const QString &,const QString &)), SIGNAL(loadRegions(bool&,const QString &,const QString&)) );
 	    connect( this, SIGNAL(region_stack_change(QWidget*)), state, SLOT(stackChange(QWidget*)) );
@@ -145,7 +153,7 @@ namespace casa {
 
 	void QtRegionDock::removeRegion(QtRegionState *state) {
 
-	    QtRegion *gonner=0;
+	    Region *gonner=0;
 	    // clean up book keeping for DataManager region access...
 	    region_map_t::iterator map_it = region_map.find(state);
 	    if ( map_it != region_map.end( ) ) {
@@ -162,6 +170,12 @@ namespace casa {
 		disconnect( state, 0, this, 0 );
 	    }
 	    region_stack->removeWidget(state);
+
+		// At one point the equivalent revokeRegion(...), below, was performed
+		// at this point, but since the unification of GUI and non-GUI regions
+		// I don't think this is necessary. The regions can only be deleted via
+		// the region dock or the QtDisplayPanel.
+
 	    if ( gonner ) emit regionChange( gonner, "deleted" );
 	}
 
@@ -169,123 +183,125 @@ namespace casa {
 		dpg->status(msg,type);
 	}
 
-	void QtRegionDock::selectRegion(QtRegionState *state) {
-	    region_stack->setCurrentWidget(state);
+	void QtRegionDock::selectRegion(QtRegionState *state, bool scroll ) {
+		if ( scroll ) region_stack->setCurrentWidget(state);
 	    state->nowVisible( );
-	    if ( state != NULL ){
-	    	QtRegion* qtRegion = state->region();
-	    	if ( qtRegion != NULL ){
-	    		emit regionSelected( qtRegion->getId());
-	    	}
-	    }
+        if ( state != NULL ){
+			Region* region = state->region();
+			if ( region != NULL ){
+				try { emit regionSelected( region->getId()); } catch(...) { /*fprintf( stderr, "******\tregion selection errors - %s, %d \t******\n", __FILE__, __LINE__ );*/ }
+			}
+		}
 	}
 
 	void QtRegionDock::selectedCountUpdateNeeded( ) {
-		selected_region_list_.clear( );
-		selected_region_set_.clear( );
 		marked_region_set_.clear( );
+		region::region_list_type selected;
 		for ( region_list_t::iterator it = region_list.begin( ); it != region_list.end( ); ++it ) {
 			(*it)->statisticsUpdateNeeded( );
 			Region *r = dynamic_cast<Region*>(*it);
 			if ( r ) {
 				if (  r->marked( ) ) {
-					selected_region_list_.push_back(r);
-					selected_region_set_.insert(r);
-					marked_region_set_.insert(r);
-				} else if ( r->weaklySelected( ) ) {
-					selected_region_list_.push_back(r);
-					selected_region_set_.insert(r);
-				}
-			}
+					 selected.insert(r);
+					 marked_region_set_.insert(r);
+				 } else if ( r->weaklySelected( ) ) {
+					 selected.insert(r);
+				 }
+			 }
 		}
 
-	}
-
-	void QtRegionDock::clearWeaklySelectedRegionSet( ) {
-		weakly_selected_region_set_.clear( );
-		selectedCountUpdateNeeded( );
-	}
-	bool QtRegionDock::isWeaklySelectedRegion( const QtRegion *qtregion ) const {
-		const Region *region = dynamic_cast<const Region*>(qtregion);
-		return weakly_selected_region_set_.find((Region*)region) == weakly_selected_region_set_.end( ) ? false : true;
-	}
-	void QtRegionDock::addWeaklySelectedRegion( QtRegion *qtregion ) {
-		Region *region = dynamic_cast<Region*>(qtregion);
-		weakly_selected_region_set_.insert( region );
-		selectedCountUpdateNeeded( );
-	}
-	void QtRegionDock::removeWeaklySelectedRegion( QtRegion *qtregion ) {
-		Region *region = dynamic_cast<Region*>(qtregion);
-		weakly_selected_region_set_.erase(region);
-		selectedCountUpdateNeeded( );
-	}
-
-	void QtRegionDock::dismiss( ) {
-	    hide( );
-	    dismissed = true;
-	}
-
-	// zero length string indicates OK!
-	std::string QtRegionDock::outputRegions( std::list<viewer::QtRegionState*> regionstate_list, std::string file,
-						 std::string format, std::string ds9_csys ) {
-	    if ( regionstate_list.size( ) > 0 ) {
-		if ( format == "crtf" ) {
-		    AnnRegion::unitInit();
-		    RegionTextList annotation_list;
-		    try { emit saveRegions(regionstate_list,annotation_list); } catch (...) { return "encountered error"; }
-		    ofstream sink;
-		    sink.open(file.c_str( ));
-		    annotation_list.print(sink);
-		    sink.close( );
-		} else if ( format == "ds9" ) {
-		    ds9writer writer(file.c_str( ),ds9_csys.c_str( ));
-		    try { emit saveRegions(regionstate_list,writer); } catch (...) { return "encountered error"; }
-		} else {
-		    return "invalid format";
-		}
-		return "";
-	    } else {
-		return "no regions to write out";
-	    }
-	}
-
-	void QtRegionDock::change_stack( int index ) {
-		int size = region_stack->count( );
-		if ( index >= 0 && index <= size - 1 ) {
-			region_stack->setCurrentIndex( index );
+		if ( selected != selected_region_set_ ) {
+			selected_region_set_ = selected;
 			QtRegionState *current_state = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
-			if ( current_state ) {
-				QtRegion *region = current_state->region( );
-				if ( region ) {
-					clearWeaklySelectedRegionSet( );
-					addWeaklySelectedRegion(region);
-					current_state->emitRefresh( );
-					updateRegionStats( );
-				}
-			}
+			if ( current_state && current_state->statisticsIsVisible( ) )
+				update_region_statistics( );
 		}
-	}
 
-	void QtRegionDock::updateRegionState( QtDisplayData *dd ) {
-	    if ( dd == 0 && current_dd == 0 ) return;
-	    if ( current_dd != 0 && dd == 0 )
-		region_stack->hide( );
-	    else if ( current_dd == 0 && dd != 0 )
-		region_stack->show( );
+	 }
 
-	    for ( int i = 0; i < region_stack->count( ); ++i ) {
-		QWidget *widget = region_stack->widget( i );
-		QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
-		if ( state != 0 ) state->updateCoord( );
-	    }
+	 void QtRegionDock::clearWeaklySelectedRegionSet( ) {
+		 weakly_selected_region_set_.clear( );
+		 selectedCountUpdateNeeded( );
+	 }
+	 bool QtRegionDock::isWeaklySelectedRegion( const Region *region ) const {
+		 return weakly_selected_region_set_.find((Region*)region) == weakly_selected_region_set_.end( ) ? false : true;
+	 }
+	 void QtRegionDock::addWeaklySelectedRegion( Region *region ) {
+		 weakly_selected_region_set_.insert( region );
+		 // selectedCountUpdateNeeded( );
+	 }
+	 void QtRegionDock::removeWeaklySelectedRegion( Region *region ) {
+		 weakly_selected_region_set_.erase(region);
+		 // selectedCountUpdateNeeded( );
+	 }
 
-	    current_dd = dd;
-	}
+	 void QtRegionDock::dismiss( ) {
+		 hide( );
+		 dismissed = true;
+	 }
 
-	void QtRegionDock::updateRegionStats( ) {
-	    QWidget *widget = region_stack->currentWidget( );
-	    QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
-	    if ( state != 0 ) {
+	 // zero length string indicates OK!
+	 std::string QtRegionDock::outputRegions( std::list<viewer::QtRegionState*> regionstate_list, std::string file,
+						  std::string format, std::string ds9_csys ) {
+		 if ( regionstate_list.size( ) > 0 ) {
+		 if ( format == "crtf" ) {
+			 AnnRegion::unitInit();
+			 RegionTextList annotation_list;
+			 try { emit saveRegions(regionstate_list,annotation_list); } catch (...) { return "encountered error"; }
+			 ofstream sink;
+			 sink.open(file.c_str( ));
+			 annotation_list.print(sink);
+			 sink.close( );
+		 } else if ( format == "ds9" ) {
+			 ds9writer writer(file.c_str( ),ds9_csys.c_str( ));
+			 try { emit saveRegions(regionstate_list,writer); } catch (...) { return "encountered error"; }
+		 } else {
+			 return "invalid format";
+		 }
+		 return "";
+		 } else {
+		 return "no regions to write out";
+		 }
+	 }
+
+	 void QtRegionDock::change_stack( int index ) {
+		 if ( mouse_in_dock == false ) return;
+		 int size = region_stack->count( );
+		 if ( index >= 0 && index <= size - 1 ) {
+			 region_stack->setCurrentIndex( index );
+			 QtRegionState *current_state = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
+			 if ( current_state ) {
+				 Region *region = current_state->region( );
+				 if ( region ) {
+					 clearWeaklySelectedRegionSet( );
+					 addWeaklySelectedRegion(region);
+					 current_state->emitRefresh( );
+					 updateRegionStats( );
+				 }
+			 }
+		 }
+	 }
+
+	 void QtRegionDock::updateRegionState( QtDisplayData *dd ) {
+		 if ( dd == 0 && current_dd == 0 ) return;
+		 if ( current_dd != 0 && dd == 0 )
+		 region_stack->hide( );
+		 else if ( current_dd == 0 && dd != 0 )
+		 region_stack->show( );
+
+		 for ( int i = 0; i < region_stack->count( ); ++i ) {
+		 QWidget *widget = region_stack->widget( i );
+		 QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
+		 if ( state != 0 ) state->updateCoord( );
+		 }
+
+		 current_dd = dd;
+	 }
+
+	 void QtRegionDock::updateRegionStats( ) {
+		 QWidget *widget = region_stack->currentWidget( );
+		 QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
+		 if ( state != 0 ) {
 		state->reloadStatistics( );
 	    }
 	}
@@ -321,30 +337,34 @@ namespace casa {
 	    if ( current_index >= 0 )
 		region_scroll->setValue(current_index);
 
-	    QtRegionState *state = dynamic_cast<QtRegionState*>(current_widget);
-	    if ( state == 0 )
-		throw internal_error("region state corruption");
+	    // QtRegionState *state = dynamic_cast<QtRegionState*>(current_widget);
+	    // if ( state == 0 )
+		// throw internal_error("region state corruption");
 
-		state->justExposed( );
+		// state->justExposed( );
 
 #if 0
-	    if ( QtRegion::getWeakSelection( ) != 0 ) {
+	    if ( Region::getWeakSelection( ) != 0 ) {
 		// stack changes when new region is created... but we're only interested in
 		// changes which happen due to user scrolling (in which case, the mouse has
 		// entered the region dock and the weak selection has been set).
-		QtRegion::setWeakSelection(state);
+		Region::setWeakSelection(state);
 		state->emitRefresh( );
 	    }
 #endif
 	    last_index = index;
 	}
 
-	void QtRegionDock::deleteRegions( const Region::region_list_type &rl ) {
-		Region::region_list_type listx(rl);
-		for ( Region::region_list_type::iterator it = listx.begin( ); it != listx.end( ); ++it ) {
+	int QtRegionDock::numFrames( ) const {
+		return dpg->numFrames( );
+	}
+
+	void QtRegionDock::deleteRegions( const region::region_list_type &rl ) {
+		region::region_list_type listx(rl);
+		for ( region::region_list_type::iterator it = listx.begin( ); it != listx.end( ); ++it ) {
 			Region *rr = *it;
 			if ( rr == 0 ) continue;
-			QtRegion *qr = dynamic_cast<QtRegion*>(rr);
+			Region *qr = dynamic_cast<Region*>(rr);
 			if ( qr ) {
 				QtRegionState *state = qr->state( );
 				if ( state ) emit deleteRegion(state);
@@ -352,6 +372,10 @@ namespace casa {
 		}
 		weakly_selected_region_set_.clear( );
 		selectedCountUpdateNeeded( );
+	}
+
+	void QtRegionDock::revokeRegion( Region *r ) {
+		dpg->revokeRegion( r );
 	}
 
 	void QtRegionDock::delete_current_region(bool) {
@@ -427,5 +451,10 @@ namespace casa {
 	    QDockWidget::closeEvent(event);
 	    dpg->putrc( "visible.regiondock", "false" );
 	}
+
+	void QtRegionDock::update_region_statistics( ) {
+		QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
+		if ( current_selection ) current_selection->updateStatistics( );
     }
+	}
 }

@@ -50,9 +50,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    namespace viewer {
-	class Preferences;
-    }
+	namespace viewer { class Preferences; }
 
 class String;
 class QtViewer;
@@ -111,8 +109,11 @@ class QtDisplayPanelGui : public QtPanelBase {
   // access to graphics panel 'base'....
   QtDisplayPanel* displayPanel() { return qdp_;  }
 
-  typedef std::list<viewer::QtRegion*> region_list_t;
-  region_list_t regions( ) { return regionDock_ ? regionDock_->regions( ) : std::list<viewer::QtRegion*>( ); }
+  typedef std::list<viewer::Region*> region_list_t;
+  region_list_t regions( ) { return regionDock_ ? regionDock_->regions( ) : std::list<viewer::Region*>( ); }
+  // region coupling between QtRegionDock and QtRegionSource(s)...
+  void revokeRegion( viewer::Region *r ) { qdp_->revokeRegion(r); }
+
   
   // public toolbars, for inserting custom buttons.
   QToolBar* customToolBar;	//# limited room
@@ -289,7 +290,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 
  signals:
 
-    void regionChange( viewer::QtRegion *, std::string );
+    void regionChange( viewer::Region *, std::string );
 
     void axisToolUpdate( QtDisplayData *controlling_dd );
 
@@ -524,7 +525,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void initFit2DTool();
   void hideFit2DTool();
 
-  void updateHistogram( viewer::QtRegion* qtRegion, viewer::Region::RegionChanges change );
+  void histogramRegionUpdate( int id, viewer::region::RegionChanges change=viewer::region::RegionChangeCreate);
+  void updateHistogram( viewer::Region* qtRegion, viewer::region::RegionChanges change );
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   HistogramMain* histogrammer;
@@ -533,6 +535,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   //Docking/Dock Widgets
   string addAnimationDockWidget();
   QDockWidget*  animDockWidget_;
+  QDockWidget*  histogramDockWidget_;
   viewer::QtRegionDock  *regionDock_;
   QDockWidget*  trkgDockWidget_;
   QWidget*    trkgWidget_;
@@ -547,8 +550,6 @@ class QtDisplayPanelGui : public QtPanelBase {
   void reset_status_bar( );
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
-
-  void histogramRegionUpdate( int id, viewer::Region::RegionChanges change=viewer::Region::RegionChangeCreate);
   void showHistogram();
   void refreshHistogrammer();
   void showFitInteractive();
