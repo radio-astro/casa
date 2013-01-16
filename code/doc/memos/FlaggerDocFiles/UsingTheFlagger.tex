@@ -979,31 +979,31 @@ CASA <12>: summary
 def task_reason_stats(msname='',field='',spw='',writeflags=True):
 
     # Open the MS and select data
-    tf.open(msname=msname,ntime=100.0);
-    tf.selectdata(field=field, spw=spw);
+    af.open(msname=msname,ntime=100.0);
+    af.selectdata(field=field, spw=spw);
 
     # Unflag (This is only for a demo)
     ag0 = {'apply':True, 'sequential':True, 'mode':'unflag'}
-    tf.parseagentparameters(ag0);
+    af.parseagentparameters(ag0);
 
     # (1) Flag Zeros
     ag1 = {'apply':True,'sequential':True,'mode':'clip', 'clipzeros':True}
-    tf.parseagentparameters(ag1);
+    af.parseagentparameters(ag1);
     # (2) Summary
     ag2 = {'apply':True,'sequential':True,'mode':'summary','name':'Zeros'}
-    tf.parseagentparameters(ag2);
+    af.parseagentparameters(ag2);
     # (3) TFCrop
     ag3 = {'apply':True,'sequential':True,'mode':'tfcrop'}
-    tf.parseagentparameters(ag3);
+    af.parseagentparameters(ag3);
     # (4) Summary
     ag4 = {'apply':True,'sequential':True,'mode':'summary', 'name':'TFCrop'}
-    tf.parseagentparameters(ag4);
+    af.parseagentparameters(ag4);
 
 
     # Run all these agents, and get the combined-report.
-    tf.init();
-    summary_stats_list = tf.run(writeflags=writeflags);
-    tf.done();
+    af.init();
+    summary_stats_list = af.run(writeflags=writeflags);
+    af.done();
 
     # Parse the output summary lists and extract only 'type==summary'
     ## Iterate through the list in the correct order. Do not follow default 'dictionary-key' ordering.
