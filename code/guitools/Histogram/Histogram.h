@@ -33,6 +33,8 @@
 namespace casa {
 
 template <class T> class ImageInterface;
+template <class T> class ImageHistograms;
+template <class T> class SubImage;
 class ImageRegion;
 class HeightSource;
 
@@ -44,25 +46,57 @@ class Histogram {
 public:
 	Histogram( HeightSource* source );
 	int getDataCount() const;
-	std::pair<float,float> getDataRange() const;
-	bool reset(const ImageInterface<Float>* image, const ImageRegion* region);
+
+	//Just recompute the histogram if a parameter such as bin count
+	//or intensity changes.
+	bool compute();
+
+	//Completely reset the histogram if the image, region, or channels change
+	bool reset();
+
+	void setRegion(ImageRegion* region);
 	void defineLine( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
 	void defineStepHorizontal( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
 	void defineStepVertical( int index, QVector<double>& xVals, QVector<double>& yVals, bool useLog ) const;
-	std::pair<float,float> getZoomRange( float peakPercent ) const;
+	//std::pair<float,float> getZoomRange( float peakPercent ) const;
 	vector<float> getXValues() const;
 	vector<float> getYValues() const;
+	std::pair<float,float> getDataRange() const;
 	void toAscii( QTextStream& out ) const;
 	virtual ~Histogram();
+
+	//common to all histograms
+	static void setBinCount( int count );
+	static void setChannelRangeDefault();
+	static void setIntensityRangeDefault();
+	static void setImage( ImageInterface<Float>* image );
+	static void setChannelRange( int minChannel, int maxChannel );
+	static void setIntensityRange( float minimumIntensity, float maximumIntensity );
 	static double computeYValue( double value, bool useLog );
+
 signals:
 	void postStatus( const QString& msg );
+
 private:
-	int getPeakIndex() const;
+	Histogram( const Histogram& other );
+	Histogram operator=( const Histogram& other );
+	ImageHistograms<Float>* filterByChannels( const ImageInterface<Float>* image );
+	//int getPeakIndex() const;
 	float getTotalCount() const;
 	HeightSource* heightSource;
 	vector<Float> xValues;
 	vector<Float> yValues;
+	ImageHistograms<Float>* histogramMaker;
+	ImageRegion* region;
+
+	static ImageInterface<Float>* image;
+	static int channelMin;
+	static int channelMax;
+	static float intensityMin;
+	static float intensityMax;
+	static int binCount;
+	static const int ALL_CHANNELS;
+	static const int ALL_INTENSITIES;
 };
 
 } /* namespace casa */

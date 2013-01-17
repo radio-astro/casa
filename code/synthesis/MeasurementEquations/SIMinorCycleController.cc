@@ -36,7 +36,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIMinorCycleController::SIMinorCycleController(): 
                                 itsCycleNiter(0),
                                 itsCycleThreshold(0.0),
-                                itsCycleFactor(1.0),
                                 itsLoopGain(0.1),
                                 itsUpdatedModelFlag(false),
                                 itsIterDone(0),
@@ -71,11 +70,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsLoopGain;
   }
   
-  Float SIMinorCycleController::getCycleFactor()
-  {
-    return itsCycleFactor;
-  }
-
   
   void SIMinorCycleController::setUpdatedModelFlag(Bool updatedmodel)
   {
@@ -85,6 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMinorCycleController::incrementMinorCycleCount()
   {
     itsIterDone++;
+    itsTotalIterDone++;
     itsCycleIterDone++;
   }
 
@@ -93,6 +88,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsPeakResidual;
   }
 
+  // This is the max residual across all channels/stokes (subimages).
+  // This is returned in the end-minor-cycle record.
+  /// TODO : Make arrays/lists for peakresidual per 'subimage'. Max over subims gets returned.
   void SIMinorCycleController::setPeakResidual(Float peakResidual)
   {
     itsPeakResidual = peakResidual;
@@ -118,6 +116,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMaxPsfSidelobe = maxPsfSidelobe;
   }
 
+  Int SIMinorCycleController::getIterDone()
+  {
+    return itsIterDone;
+  }
+
+  Int SIMinorCycleController::getCycleNiter()
+  {
+    return itsCycleNiter;
+  }
+
+  Float SIMinorCycleController::getCycleThreshold()
+  {
+    return itsCycleThreshold;
+  }
+
   Record SIMinorCycleController::getCycleExecutionRecord() {
     LogIO os( LogOrigin("SISkyModel",__FUNCTION__,WHERE) );
     //boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
@@ -132,6 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                         itsUpdatedModelFlag);
     returnRecord.define(RecordFieldId("maxcycleiterdone"),
                         itsMaxCycleIterDone);
+
     return returnRecord;
   }
 
@@ -144,6 +158,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     returnRecord.define(RecordFieldId("peakresidual"), itsPeakResidual);
     returnRecord.define(RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
 
+    /* Reset Counters and summary for the current set of minorcycle iterations */
+    itsIterDone = 0;
+    itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, 0) , True );
+
     return returnRecord;
   }
 
@@ -151,16 +169,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
 
     if (recordIn.isDefined("cycleniter"))
-      recordIn.get(RecordFieldId("cycleniter"), itsCycleNiter);
+      {recordIn.get(RecordFieldId("cycleniter"), itsCycleNiter);}
+    else
+      {throw(AipsError("cycleniter not defined in input minor-cycle controller") );}
 
     if (recordIn.isDefined("cyclethreshold")) 
-      recordIn.get(RecordFieldId("cyclethreshold"),itsCycleThreshold);
+      {recordIn.get(RecordFieldId("cyclethreshold"),itsCycleThreshold);}
+    else
+      {throw(AipsError("cyclethreshold not defined in input minor-cycle controller") );}
 
     if (recordIn.isDefined("loopgain")) 
-      recordIn.get(RecordFieldId("loopgain"), itsLoopGain);
-
-    if (recordIn.isDefined("cyclefactor"))
-      recordIn.get(RecordFieldId("cyclefactor"), itsCycleFactor);
+      {recordIn.get(RecordFieldId("loopgain"), itsLoopGain);}
+    else
+      {throw(AipsError("loopgain not defined in input minor-cycle controller") );}
 
     /* Reset the counters for the new cycle */
     itsMaxCycleIterDone = 0;
@@ -173,7 +194,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsCycleIterDone = 0;
   }
 
-  void SIMinorCycleController::addSummaryMinor(uInt decid, Float model, Float peakresidual)
+  void SIMinorCycleController::addSummaryMinor(uInt deconvolverid, uInt subimageid, Float model, Float peakresidual)
   {
     //boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     
@@ -194,9 +215,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      // cycle threshold
      itsSummaryMinor( IPosition(2, 3, shp[1] ) ) = itsCycleThreshold;
      // mapper id
-     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = itsDeconvolverID; // TODO : Get current deconvolver tool ID.
+     itsSummaryMinor( IPosition(2, 4, shp[1] ) ) = deconvolverid;
      // chunk id (channel/stokes)
-     itsSummaryMinor( IPosition(2, 5, shp[1] ) ) = decid;
+     itsSummaryMinor( IPosition(2, 5, shp[1] ) ) = subimageid;
 
   }// end of addSummaryMinor
  

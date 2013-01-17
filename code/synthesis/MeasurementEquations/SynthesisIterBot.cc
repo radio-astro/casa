@@ -66,6 +66,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   SynthesisIterBot::~SynthesisIterBot() 
   {
+    LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
+    os << "SynthesisIterBot destroyed" << LogIO::POST;
   }
   
   
@@ -114,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisIterBot::setupIteration(Record iterpars)
   {
     LogIO os( LogOrigin("SynthesisIterBot","setupIteration",WHERE) );
-    os << "Set Iteration Control Options : Construct SISkyModel" << LogIO::POST;
+    os << "Set Iteration Control Options." << LogIO::POST;
      try
       {
         setIterationDetails(iterpars);

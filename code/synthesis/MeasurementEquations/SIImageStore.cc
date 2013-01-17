@@ -66,6 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsModel=NULL;
     itsResidual=NULL;
     itsWeight=NULL;
+    itsImage=NULL;
 
     itsImageName=String("");
     itsImageShape=IPosition();
@@ -117,7 +118,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if( doImagesExist( ) )
       {
-	os << "Images already exist. Overwriting them" << LogIO::POST;
+	os << "Images already exist. Overwriting them";
       }
 
     itsResidual = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".residual"));
@@ -126,10 +127,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     if( doesModelImageExist() )
       {
-	os << "Model Image already exists. Overwriting it" << LogIO::POST;
+	os << "Model Image already exists. Overwriting it";
       }
     itsModel = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".model"));
-    
+
+    os << LogIO::POST;
+
   }
 
   
@@ -148,6 +151,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsImageShape;
   }
 
+  String SIImageStore::getName()
+  {
+    return itsImageName;
+  }
+
   CountedPtr<PagedImage<Float> > SIImageStore::psf()
   {
     return itsPsf;
@@ -163,6 +171,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<PagedImage<Float> > SIImageStore::model()
   {
     return itsModel;
+  }
+  CountedPtr<PagedImage<Float> > SIImageStore::image()
+  {
+    return itsImage;
   }
 
   // TODO : Move to an image-wrapper class ? Same function exists in SynthesisDeconvolver.
@@ -193,6 +205,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return immodel.exists();
   }
 
+
+  void SIImageStore::allocateRestoredImage()
+  {
+
+    //    itsImage = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".residual"));
+  }
 
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -59,10 +59,12 @@ public:
     HistogramMain(bool showFileLoader, bool fitControls, bool rangeControls,
     		bool plotModeControls, QWidget *parent = 0);
     bool setImage( ImageInterface<Float>* img );
-    bool setImageRegion( const ImageRegion* imageRegion, int id );
+    bool setImageRegion( ImageRegion* imageRegion, int id );
     std::pair<double,double> getRange() const;
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
+    void setChannelCount( int count );
+    void setChannelValue( int value );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
     void setPlotMode( int mode );

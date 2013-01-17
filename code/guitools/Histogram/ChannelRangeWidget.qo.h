@@ -22,34 +22,40 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+#ifndef CHANNELRANGEWIDGET_QO_H
+#define CHANNELRANGEWIDGET_QO_H
 
-#ifndef FITTERPOISSON_H_
-#define FITTERPOISSON_H_
-
-#include <guitools/Histogram/Fitter.h>
+#include <QtGui/QWidget>
+#include <guitools/Histogram/ChannelRangeWidget.ui.h>
 
 namespace casa {
-/**
- * Fits Poisson curves to the histogram.
- */
 
-class FitterPoisson : public Fitter {
+class ChannelRangeWidget : public QWidget
+{
+    Q_OBJECT
+
 public:
-	FitterPoisson();
-	void setLambda( double value );
-	double getLambda() const;
-	virtual QString getSolutionStatistics() const;
-	virtual bool doFit();
-	virtual void clearFit();
-	virtual void toAscii( QTextStream& stream ) const;
-	virtual ~FitterPoisson();
-private:
-	int factorial( int n ) const;
-	bool isIntegerValue( float val ) const;
+    ChannelRangeWidget(QWidget *parent = 0);
+    void setAutomatic( bool autoChannels );
+    void setRange( int minRange, int maxRange );
+    void setChannelValue( int value );
+    void setChannelCount( int count );
+    ~ChannelRangeWidget();
 
-	bool lambdaSpecified;
-	double lambda;
+signals:
+	void rangeChanged(int minRange, int maxRange, bool allChannels, bool automatic );
+
+private slots:
+	void valueChangedMin( int value );
+	void valueChangedMax( int value );
+	void automaticChannelsChanged( bool enabled );
+
+private:
+	bool isAllChannels() const;
+	bool isAutomatic() const;
+    Ui::ChannelRangeWidgetClass ui;
 };
 
-} /* namespace casa */
-#endif /* FITTERPOISSON_H_ */
+}
+
+#endif // CHANNELRANGEWIDGET_QO_H

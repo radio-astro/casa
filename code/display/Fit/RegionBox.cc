@@ -30,14 +30,11 @@
 namespace casa {
 
 RegionBox::RegionBox(const QList<int> &pixel_x, const QList<int> &pixel_y) {
-	assert( pixel_x.size() == 2 );
-	assert( pixel_y.size() == 2 );
+
 	initBox( pixel_x, pixel_y );
 }
 
 void RegionBox::update( const QList<int> & pixelX, const QList<int> & pixelY ){
-	assert( pixelX.size() == 2);
-	assert( pixelY.size() == 2);
 	clear();
 	initBox( pixelX, pixelY );
 }

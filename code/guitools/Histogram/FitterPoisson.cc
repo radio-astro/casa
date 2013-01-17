@@ -24,6 +24,7 @@
 //#
 
 #include "FitterPoisson.h"
+#include <scimath/Fitting/NonLinearFitLM.h>
 #include <QDebug>
 #include <assert.h>
 #include <QtCore/qmath.h>
@@ -58,6 +59,12 @@ int FitterPoisson::factorial( int n ) const {
 	return factValue;
 }
 
+QString FitterPoisson::getSolutionStatistics() const {
+	QString result( "Lambda: ");
+	result.append( QString::number( lambda ));
+	return result;
+}
+
 bool FitterPoisson::doFit(){
 	if ( !lambdaSpecified ){
 		lambda = getMean();
@@ -69,6 +76,7 @@ bool FitterPoisson::doFit(){
 		errorMsg = "Could not fit a Poisson distribution because the lambda value: "+lambdaStr+" was not positive.";
 	}
 	else {
+
 		fitValues.resize( xValues.size());
 		bool allInts = true;
 		bool positiveValues = true;

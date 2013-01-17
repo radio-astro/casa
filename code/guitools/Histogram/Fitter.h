@@ -39,12 +39,14 @@ class Fitter {
 public:
 	Fitter();
 	void setData( Vector<Float> xValues, Vector<Float> yValues );
+	void setRMS( double value );
 	Vector<Float> getFitValues() const;
 	Vector<Float> getFitValuesX() const;
 	virtual bool doFit() = 0;
 	virtual void clearFit()=0;
 	virtual void toAscii( QTextStream& out ) const;
 	bool isFit() const;
+	virtual QString getSolutionStatistics() const = 0;
 	QString getErrorMessage() const;
 	QString getStatusMessage() const;
 	virtual ~Fitter();
@@ -56,6 +58,7 @@ protected:
 	QString errorMsg;
 	QString statusMsg;
 	bool dataFitted;
+	double rmsError;
 	float getMean() const;
 };
 

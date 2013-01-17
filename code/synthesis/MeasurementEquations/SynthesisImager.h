@@ -94,10 +94,6 @@ protected:
   CountedPtr<FTMachine> itsCurrentFTMachine;
   CountedPtr<CoordinateSystem> itsCurrentCoordSys;
   CountedPtr<SIImageStore> itsCurrentImages;
-  IPosition itsCurrentImageShape;
-  String itsCurrentImageName;
-  
-
 
   /////////////// All input parameters
 

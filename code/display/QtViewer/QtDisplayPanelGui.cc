@@ -53,8 +53,6 @@
 #include <display/Fit/Fit2DTool.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 #include <display/RegionShapes/RegionShapes.h>
-
-#include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -83,7 +81,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
-								   animationHolder( NULL ), binPlotWidget( NULL ), histogrammer( NULL ), fitTool( NULL ),
+								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ),
 								   regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
@@ -627,16 +625,7 @@ string QtDisplayPanelGui::addAnimationDockWidget(){
 	return animloc;
 }
 
-string QtDisplayPanelGui::addHistogramDockWidget(){
-	std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
-	std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
-	addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
-		animloc == "left" ? Qt::LeftDockWidgetArea :
-		animloc == "top" ? Qt::TopDockWidgetArea :
-		Qt::BottomDockWidgetArea, histogramDockWidget_, Qt::Vertical );
-	histogramDockWidget_->setWidget( binPlotWidget );
-	return animloc;
-}
+
 
 void QtDisplayPanelGui::initAnimationHolder(){
 	if ( animationHolder == NULL ){
@@ -666,55 +655,57 @@ void QtDisplayPanelGui::initAnimationHolder(){
 }
 
 void QtDisplayPanelGui::initHistogramHolder(){
-//Note: We need a better set of signals for the histogram tool.
-//Listening to the region dock is probably not a good idea.
-//In addition, region size updates are not currently being
-//passed to the histogrammer.  This is particularly bad in the
-//case of ellipses, when the initial size is 0 so ellipses are
-//not getting histogrammed at all.
-#ifdef SHOW_EXAMPLE_HISTOGRAM
-	histogramDockWidget_ = new QDockWidget();
-	histogramDockWidget_ ->setObjectName( "Histogram");
-	histogramDockWidget_->setWindowTitle( "Histogram");
-	if ( binPlotWidget == NULL ){
-		binPlotWidget = new BinPlotWidget( false, false, false, this );
-		binPlotWidget->setPlotMode( BinPlotWidget::REGION_MODE );
-		binPlotWidget->setMaximumSize( 400, 300 );
-		refreshHistogrammer();
-	}
-	addHistogramDockWidget();
-#endif
+
 	if ( histogrammer == NULL ){
-		bool displayPlotModes = true;
-		if ( regionDock_ == NULL ){
-			displayPlotModes = false;
-		}
-		histogrammer = new HistogramMain(false,true,displayPlotModes,this);
+		histogrammer = new HistogramMain(false,true,true,this);
 		histogrammer->setDisplayPlotTitle( true );
 		histogrammer->setDisplayAxisTitles( true );
+
+		//Image updates
 		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
-		if ( regionDock_ != NULL ){
-			connect( regionDock_, SIGNAL(regionChange(viewer::QtRegion*,std::string)), this, SLOT(updateHistogram(viewer::QtRegion*,std::string)));
-			connect( regionDock_, SIGNAL(regionSelected(int)), this, SLOT(updateHistogramSelection(int)));
+
+		//Region updates
+		PanelDisplay* panelDisplay = qdp_->panelDisplay();
+		QtCrossTool *pos = dynamic_cast<QtCrossTool*>(panelDisplay->getTool(QtMouseToolNames::POINT));
+		if (pos) {
+			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+
+			if ( qrs ) {
+
+				connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
+						const QList<double> &, const QList<int> &, const QList<int> &,
+						const QString &, const QString &, const QString &, int, int ) ),
+						this, SLOT( histogramRegionUpdate( int) ) );
+				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::Region::RegionChanges, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> & ) ),
+						this, SLOT( histogramRegionUpdate( int, viewer::Region::RegionChanges) ));
+			}
 		}
 		refreshHistogrammer();
 	}
 }
 
-void QtDisplayPanelGui::updateHistogramSelection( int id ){
-	if ( histogrammer != NULL ){
-		histogrammer->imageRegionSelected( id );
+void QtDisplayPanelGui::histogramRegionUpdate( int id, viewer::Region::RegionChanges change){
+	std::list<viewer::QtRegion*> regionList = regions();
+	std::list<viewer::QtRegion*>::iterator regionIterator = regionList.begin();
+	while( regionIterator != regionList.end() ){
+		viewer::QtRegion* region = (*regionIterator);
+		int regionId = region->getId();
+		if ( regionId == id ){
+			updateHistogram( region, change );
+			break;
+		}
+		regionIterator++;
 	}
-	if ( binPlotWidget != NULL ){
-		binPlotWidget->imageRegionSelected( id );
+	if ( regionIterator == regionList.end() ){
+		qDebug() << "histogramRegionUpdate: "<<"Could not find region with id="<<id;
 	}
 }
 
-
-void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, std::string str ){
+void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, viewer::Region::RegionChanges change ){
 	if ( qtRegion != NULL ){
 		int regionId = qtRegion->getId();
-		if ( str == "created" ){
+		if ( change != viewer::Region::RegionChangeDelete ){
 			List<QtDisplayData*> rdds = qdp_->registeredDDs();
 			for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 				QtDisplayData* pdd = qdds.getRight();
@@ -727,16 +718,13 @@ void QtDisplayPanelGui::updateHistogram( viewer::QtRegion* qtRegion, std::string
 							ImageRegion* imageRegion = qtRegion->getImageRegion(displayData);
 							if ( imageRegion != NULL ){
 								histogrammer->setImageRegion( imageRegion, regionId );
-								if ( binPlotWidget != NULL ){
-									binPlotWidget->setImageRegion( imageRegion, regionId );
-								}
 							}
 						}
 					}
 				}
 			}
 		}
-		else if ( str == "deleted" ){
+		else {
 			histogrammer->deleteImageRegion( regionId );
 		}
 	}
@@ -987,6 +975,7 @@ void QtDisplayPanelGui::updateFrameInformation(){
 	}
 	if ( maxChannels > 0 ){
 		animationHolder->setChannelModeEnabled( maxChannels );
+
 	}
 	animationHolder->setModeEnabled( uniqueImages.size() );
 	//qdp_->setBlen_(uniqueImages.size() );
@@ -1253,6 +1242,9 @@ void QtDisplayPanelGui::updateAnimUi_() {
 		animationHolder->setFrameInformation( modez, frm, len );
 		animationHolder->setRateInformation( modez, minr, maxr, rate );
 		animationHolder->setPlaying( modez, play );
+	}
+	if ( histogrammer != NULL ){
+		histogrammer->setChannelValue( frm );
 	}
 }
 // Public slots: may be safely operated programmatically (i.e.,
@@ -2663,10 +2655,17 @@ void QtDisplayPanelGui::refreshHistogrammer(){
 				if (ppd != 0 && img != 0) {
 					if (ppd->isCSmaster(pdd->dd())) {
 						histogrammer->setImage( img );
-						imageFound = true;
-						if ( binPlotWidget != NULL ){
-							binPlotWidget->setImage( img );
+						const viewer::ImageProperties & imgProperties = pdd->imageProperties( );
+						if ( imgProperties.hasSpectralAxis() ){
+							int spectralAxisNum = imgProperties.spectralAxisNumber();
+							const Vector<int> imgShape = imgProperties.shape();
+							int channelCount = imgShape[spectralAxisNum];
+							histogrammer->setChannelCount( channelCount );
 						}
+						else {
+							histogrammer->setChannelCount( 1 );
+						}
+						imageFound = true;
 						break;
 					}
 				}

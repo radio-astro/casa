@@ -88,20 +88,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   Bool SDAlgorithmBase::deconvolve( SIMinorCycleController &loopcontrols, 
-				  ImageInterface<Float>  &residual, 
-                                  ImageInterface<Float>  &psf, 
-				  ImageInterface<Float>  &model, 
-                                  CountedPtr<SDMaskHandler> /*maskhandler*/, 
-				  uInt decid)
+				    ImageInterface<Float>  &residual, 
+				    ImageInterface<Float>  &psf, 
+				    ImageInterface<Float>  &model, 
+				    CountedPtr<SDMaskHandler> /*maskhandler*/, 
+				    uInt subimageid,
+				    Int deconvolverid)
   {
 
     LogIO os( LogOrigin("SDAlgorithmBase","deconvolve",WHERE) );
 
-    Int iters=0;
-
+    Int startiteration = loopcontrols.getIterDone();
     Float peakresidual=residual.getAt(tmpPos_p);
+    Float modelflux=model.getAt(tmpPos_p);
 
-    while ( ! checkStop( loopcontrols,  iters++, peakresidual ) )
+    Float startpeakresidual = peakresidual;
+    Float startmodelflux = modelflux;
+
+    while ( ! checkStop( loopcontrols,  peakresidual ) )
       {
 	Float comp=0.0;
 
@@ -114,20 +118,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	updateModel ( model, comp );
 
 	peakresidual = residual.getAt(tmpPos_p);
+	modelflux = model.getAt(tmpPos_p);
 
 	loopcontrols.incrementMinorCycleCount( );
-	loopcontrols.setPeakResidual( residual.getAt(tmpPos_p) );
-	//	loopcontrols.setIntegratedFlux( model.getAt(tmpPos_p) );
-	loopcontrols.addSummaryMinor( decid, model.getAt(tmpPos_p), residual.getAt(tmpPos_p) );
+	loopcontrols.setPeakResidual( peakresidual );
+	loopcontrols.addSummaryMinor( deconvolverid, subimageid, modelflux, peakresidual );
       }
 
-    loopcontrols.setUpdatedModelFlag( iters>0 );
+    // same as checking on itscycleniter.....
+    loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
+
+    os << "[D" << deconvolverid << ":S" << subimageid << "]"
+       <<" iters=" << startiteration << "-" << loopcontrols.getIterDone()
+       << ", peakres=" << startpeakresidual << "-" << peakresidual 
+       << ", model=" << startmodelflux << "-" << modelflux
+       << LogIO::POST;
 
 }
 
   Bool SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
-				 Int /*currentiteration*/, 
-				 Float currentresidual )
+				   Float currentresidual )
   {
     return loopcontrols.majorCycleRequired(currentresidual);
   }
@@ -157,12 +167,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     residual.putAt( residual.getAt(tmpPos_p) - comp  , tmpPos_p );
   }
 
-  void SDAlgorithmBase::restore( ImageInterface<Float>  &image, Float /*beam*/, ImageInterface<Float>  &/*model*/, ImageInterface<Float>  &/*residual*/, ImageInterface<Float>  &/*weight*/ )
+  void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmBase","restore",WHERE) );
     
-    os << "Smooth model and add residuals for " << image.name() << ". Optionally, PB-correct too." << LogIO::POST;
+    os << "Smooth model and add residuals for " << imagestore->getName() 
+       << ". Optionally, PB-correct too." << LogIO::POST;
 
   }
 

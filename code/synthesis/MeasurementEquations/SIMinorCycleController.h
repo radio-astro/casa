@@ -90,9 +90,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /* Getter Methods for the control variables */
     Float getLoopGain(); 
-    Float getCycleFactor();
 
     void incrementMinorCycleCount();
+
+    Int getIterDone();
+    Int getCycleNiter();
+    Float getCycleThreshold();
 
     /* This method resets the iteration counter for the cycle */
     void resetCycleIter();
@@ -100,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Flag to note that the model has been updated */
     void setUpdatedModelFlag(Bool updatedmodel);
 
-    void addSummaryMinor(uInt decid, Float model, Float peakresidual);
+   void addSummaryMinor(uInt deconvolverid, uInt subimageid, Float model, Float peakresidual);
     
     /* Variables to track status inside each Deconvolver */
     Float getPeakResidual();
@@ -114,10 +117,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  protected:
     /* Control Variables */
     Int    itsCycleNiter;
-    
     Float itsCycleThreshold;
-    
-    Float itsCycleFactor;
     Float itsLoopGain;
     
     Bool  itsUpdatedModelFlag;
@@ -129,14 +129,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /* Useful only for reporting */
     Int   itsTotalIterDone; // Total iterations done by deconvolver
-    Float itsIntegratedFlux;
 
     /* This variable keeps track of the maximum number of iterations done
        during a major cycle */
     Int   itsMaxCycleIterDone;
     
-   Float itsPeakResidual;
    Float itsMaxPsfSidelobe;
+
+   Float itsPeakResidual;
+   Float itsIntegratedFlux;
    
 
     /* Summary Variable */

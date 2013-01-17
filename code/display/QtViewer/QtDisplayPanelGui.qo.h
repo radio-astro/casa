@@ -524,17 +524,15 @@ class QtDisplayPanelGui : public QtPanelBase {
   void initFit2DTool();
   void hideFit2DTool();
 
+  void updateHistogram( viewer::QtRegion* qtRegion, viewer::Region::RegionChanges change );
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
-  BinPlotWidget* binPlotWidget;
   HistogramMain* histogrammer;
   Fit2DTool* fitTool;
 
   //Docking/Dock Widgets
   string addAnimationDockWidget();
-  string addHistogramDockWidget();
   QDockWidget*  animDockWidget_;
-  QDockWidget* histogramDockWidget_;
   viewer::QtRegionDock  *regionDock_;
   QDockWidget*  trkgDockWidget_;
   QWidget*    trkgWidget_;
@@ -549,8 +547,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void reset_status_bar( );
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
-  void updateHistogram( viewer::QtRegion* qtRegion, std::string str );
-  void updateHistogramSelection( int id );
+
+  void histogramRegionUpdate( int id, viewer::Region::RegionChanges change=viewer::Region::RegionChangeCreate);
   void showHistogram();
   void refreshHistogrammer();
   void showFitInteractive();
@@ -560,6 +558,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void add2DFitOverlay( QList<RegionShape*> fitMarkers );
   void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
   void addResidualFitImage( String path );
+
 
  public:
  

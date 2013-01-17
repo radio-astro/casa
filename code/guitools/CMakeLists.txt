@@ -50,6 +50,9 @@ qt4_wrap_cpp( outfiles_qoh
   Histogram/FitWidget.qo.h
   Histogram/RangeControlsWidget.qo.h
   Histogram/SaveHistogramWidget.qo.h
+  Histogram/BinCountWidget.qo.h
+  Histogram/ChannelRangeWidget.qo.h
+  Histogram/ZoomWidget.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -66,6 +69,9 @@ casa_qt4_wrap_ui( outfiles_ui
   Histogram/FitWidget.ui
   Histogram/RangeControlsWidget.ui
   Histogram/SaveHistogramWidget.ui
+  Histogram/BinCountWidget.ui
+  Histogram/ChannelRangeWidget.ui
+  Histogram/ZoomWidget.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc Feather/Feather.qrc OPTIONS -name Feather )
@@ -102,6 +108,9 @@ casa_add_library( guitools
   Histogram/ToolTipPicker.cc
   Histogram/ColorDelegate.cc
   Histogram/Histogram.cc
+  Histogram/BinCountWidget.cc
+  Histogram/ChannelRangeWidget.cc
+  Histogram/ZoomWidget.cc
   )
 	
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )

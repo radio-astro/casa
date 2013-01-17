@@ -322,6 +322,7 @@ Enumtcl/PrimaryBeamDescription.cc
 Enumtcl/PrimitiveDataType.cc
 Enumtcl/ProcessorSubType.cc
 Enumtcl/ProcessorType.cc
+Enumtcl/RadialVelocityReferenceCode.cc
 Enumtcl/ReceiverBand.cc
 Enumtcl/ReceiverSideband.cc
 Enumtcl/SBType.cc
@@ -661,6 +662,7 @@ install (FILES
 	Enumtcl/PrimitiveDataType.h
 	Enumtcl/ProcessorSubType.h
 	Enumtcl/ProcessorType.h
+	Enumtcl/RadialVelocityReferenceCode.h
 	Enumtcl/ReceiverBand.h
 	Enumtcl/ReceiverSideband.h
 	Enumtcl/SBType.h

@@ -37,17 +37,19 @@ namespace casa {
 class FitterGaussian : public Fitter {
 public:
 	FitterGaussian();
+	virtual QString getSolutionStatistics() const;
 	void setPeak( double peakValue );
 	void setCenter( double centerValue );
 	void setFWHM( double fwhmValue );
-	double getPeak() const;
-	double getCenter() const;
-	double getFWHM() const;
+
 	virtual bool doFit();
 	virtual void clearFit();
 	virtual void toAscii( QTextStream& stream ) const;
 	virtual ~FitterGaussian();
 private:
+	double getPeak() const;
+	double getCenter() const;
+	double getFWHM() const;
 	bool estimateCenterPeak();
 	bool estimateFWHM();
 	int getPeakIndex() const;
@@ -57,6 +59,12 @@ private:
 	bool peakSpecified;
 	bool centerSpecified;
 	bool fwhmSpecified;
+	float solutionPeak;
+	float solutionCenter;
+	float solutionFWHM;
+	float solutionChiSquared;
+	float solutionRMS;
+	bool solutionConverged;
 };
 
 } /* namespace casa */

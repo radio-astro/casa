@@ -81,6 +81,7 @@ private slots:
 private:
 	FitWidget( const FitWidget& );
 	FitWidget& operator=( const FitWidget& );
+	void setSolutionVisible( bool visible );
 	void resetFWHM( double newCenter );
 	enum FitMode {GAUSSIAN_MODE, POISSON_MODE, NO_MODE };
 	Fitter* fitter;
