@@ -66,8 +66,8 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 
 <!-- ===================================== -->
 
-   <method type="function" name="initminorcycle">
-   <shortdescription>Initialize the minor cycle (gather, norm, findpeakres)</shortdescription>
+   <method type="function" name="normalizeimage">
+   <shortdescription>Gather images if needed, normalize, and find peak residual</shortdescription>
 
 <description>
 </description>
@@ -93,6 +93,19 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 <returns type="record"/>
 </method>
 
+
+<!-- ===================================== -->
+
+   <method type="function" name="restore">
+   <shortdescription>Restore images</shortdescription>
+
+<description>
+</description>
+<input>
+</input>
+
+<returns type="bool"/>
+</method>
 
 <!-- ===================================== -->
 

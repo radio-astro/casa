@@ -832,7 +832,8 @@ class specfit_test(unittest.TestCase):
                                 self.assertTrue((abs(res["gs"]["fwhmErr"][8,8,0,0,:] - expfwhmerrtrue[str(birdiesigma)]) < 1e-7).all())
                             else:
                                 self.assertTrue(abs(res["gs"]["fwhm"][0,0,0,0,0] - expfwhmfalse[str(birdiesigma)]) < 1e-7)
-                                self.assertTrue(abs(res["gs"]["fwhmErr"][0,0,0,0,0] - expfwhmerrfalse[str(birdiesigma)]) < 1e-7)
+                                print "*** got " + str(abs(res["gs"]["fwhmErr"][0,0,0,0,0] - expfwhmerrfalse[str(birdiesigma)]))
+                                self.assertTrue(abs(res["gs"]["fwhmErr"][0,0,0,0,0] - expfwhmerrfalse[str(birdiesigma)]) < 1e-5)
                             myia.open(outsigma)
                             if (birdiesigma == 0 or birdiesigma == 1):
                                 self.assertTrue((mymax*myia.getchunk() == fullsigma).all())

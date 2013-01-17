@@ -125,8 +125,7 @@ cl := emptycomponentlist();
 
 <example>
 
-include 'componentlist.g'
-cl := componentlist('crux.cl');
+cl.open('crux.cl');
 
 </example>
 </method>
@@ -945,22 +944,19 @@ and available in Glish as mycl.
   </input>
   <returns type="bool"/>
   <example>
-    
-      include 'componentlist.g'
-      cl := emptycomponentlist();
+
       cl.simulate(2)
-      cl.edit(1);
-      cl.setflux(2, [2.78, 0, 0, 0]);
+      cl.setflux(1, [2.78, 0, 0, 0]);
       cl.rename('test.cl');
       cl.close();
     
-  </example>
-  <comments>
-    This example creates a componentlist with two components. The
+  <!-- </example> -->
+  <!-- <comments> -->
+    This example creates a componentlist with two components. <!--The
     component editor gui is then called on the first component to set the
-    parameters to the desired ones, and the setflux function is used to
-    modify the second one. The list is then saved on disk. I use short
-    scripts like this a lot during testing. 
+    parameters to the desired ones, and--> The setflux function is used to
+    modify the second component.  The list is then saved on disk. 
+    I use short scripts like this a lot during testing. 
 
     I expect bad things will happen if you save the list to disk,
     using the <link anchor="componentmodels:componentlist.close.function">close</link>
@@ -968,7 +964,8 @@ and available in Glish as mycl.
     button) or if you modify the same component using any of the set
     functions while it is being modified by the gui.
 
-  </comments>
+  <!-- </comments> -->
+  </example>
 </method>
 
  
@@ -2032,9 +2029,8 @@ specified component</shortdescription>
   <returns type="string"><description>A string specifying the current component shape</description></returns>
   <example>
     
-      include 'componentlist.g'
-      cl := componentlist('crux.cl');
-      print 'The first component has a', cl.shapetype(1), ' shape';
+      cl = cl.open('crux.cl');
+      print 'The first component has a', cl.shapetype(0), ' shape';
     
   </example>
   <comments>

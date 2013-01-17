@@ -51,8 +51,8 @@ class sdflag_worker(sdutil.sdtask_template):
         outformat = self.outform.upper()
         if (outformat == 'MS'): outformat = 'MS2'
         if self.overwrite and os.path.exists(self.project) \
-               and (os.path.samefile(self.project,self.infile)) \
-               and (outformat != informat):
+           and (sdutil.get_abspath(self.project) == sdutil.get_abspath(self.infile)) \
+           and (outformat != informat):
             msg = "The input and output data format must be identical when "
             msg += "their names are identical and overwrite=True. "
             msg += "%s and %s given for input and output, respectively." % (informat, outformat)
@@ -88,7 +88,7 @@ class sdflag_worker(sdutil.sdtask_template):
         
         # Copy the original data (CAS-3987)
         if self.is_disk_storage \
-               and (os.path.samefile(self.project,self.infile)):
+           and (sdutil.get_abspath(self.project) == sdutil.get_abspath(self.infile)):
             self.scan = sorg.copy()
         else:
             self.scan = sorg

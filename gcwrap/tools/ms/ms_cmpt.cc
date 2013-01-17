@@ -2457,7 +2457,6 @@ bool ms::statwt(const bool dorms,                const bool byantenna,
 
   try {
     *itsLog << LogOrigin("ms", "statwt");
-    *itsLog << LogIO::SEVERE << "Not implemented yet." << LogIO::POST;
 
     Reweighter reweighter(itsMS->tableName(), dorms, minsamp);
 

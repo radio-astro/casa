@@ -89,7 +89,7 @@ This is used to construct {\tt synthesisiterbot} tool.
 
 <!-- ===================================== -->
 
-   <method type="function" name="getsubiterbot">
+   <method type="function" name="getminorcyclecontrols">
    <shortdescription>Get the controller for a minor cycle</shortdescription>
 
 <description>
@@ -102,7 +102,7 @@ This is used to construct {\tt synthesisiterbot} tool.
 
 <!-- ===================================== -->
 
-   <method type="function" name="endminorcycle">
+   <method type="function" name="mergeexecrecord">
    <shortdescription>Update the iterbot with iteration stats from the deconvolver</shortdescription>
 
 <description>
@@ -118,7 +118,7 @@ This is used to construct {\tt synthesisiterbot} tool.
 
 <!-- ===================================== -->
 
-   <method type="function" name="initminorcycle">
+   <method type="function" name="mergeinitrecord">
    <shortdescription>Initialize the iterbot with starting peak residuals</shortdescription>
 
 <description>

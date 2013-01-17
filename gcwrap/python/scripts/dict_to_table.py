@@ -58,7 +58,7 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None, keepcolor
         if hasattr(barecol, 'has_key'):
             if barecol.has_key('comment'):
                 barecol = barecol.get('data')
-            if me.ismeasure(barecol):
+            if type(barecol)==dict and me.ismeasure(barecol):
                 barecol = barecol['m0']
             # if qa.isquantity(data) can't be trusted.
             if hasattr(barecol, 'has_key') and barecol.has_key('unit') and barecol.has_key('value'):
@@ -197,7 +197,7 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None, keepcolor
             data = indict[c]  # Note the trickle-down nature below.
             if hasattr(indict[c], 'has_key') and indict[c].has_key('comment'):
                 data = data['data']
-            if me.ismeasure(data):
+            if type(data)==dict and me.ismeasure(data):
                 mytb.putcolkeyword(c, 'MEASINFO', {'Ref': data['refer'],
                                                    'type': data['type']})
                 data = data['m0']   # = quantity         
