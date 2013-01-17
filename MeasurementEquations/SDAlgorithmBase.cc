@@ -57,7 +57,12 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-  SDAlgorithmBase::SDAlgorithmBase()
+  SDAlgorithmBase::SDAlgorithmBase():
+    tmpPos_p( IPosition() ),
+    itsImages( NULL ),
+    itsDecSlices (),
+    itsResidual(), itsPsf(), itsModel(),
+    itsComp(0.0)
  {
 
    // TESTING place-holder for the position of the clean component.
@@ -70,72 +75,70 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
  }
 
-  // TODO :  Overloadable function to be called from the Mapper. 
-  // Use this to tell the Mapper how to partition
-  // the image for separate calls to 'deconvolve'.
-  // Give codes to signal one or more of the following.
-    ///    - channel planes separate
-    ///    - stokes planes separate
-    ///    - partitioned-image clean (facets ?)
 
-  // Later, can add more complex partitioning schemes.... 
-  // but there will be one place to do it, per deconvolver.
-
-  void SDAlgorithmBase::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
-  {  
-    onechan = True;
-    onepol = True;
-  }
-
-  Bool SDAlgorithmBase::deconvolve( SIMinorCycleController &loopcontrols, 
-				    ImageInterface<Float>  &residual, 
-				    ImageInterface<Float>  &psf, 
-				    ImageInterface<Float>  &model, 
-				    CountedPtr<SDMaskHandler> /*maskhandler*/, 
-				    uInt subimageid,
+  void SDAlgorithmBase::deconvolve( SIMinorCycleController &loopcontrols, 
+				    CountedPtr<SIImageStore> &imagestore,
 				    Int deconvolverid)
   {
-
     LogIO os( LogOrigin("SDAlgorithmBase","deconvolve",WHERE) );
 
-    Int startiteration = loopcontrols.getIterDone();
-    Float peakresidual=residual.getAt(tmpPos_p);
-    Float modelflux=model.getAt(tmpPos_p);
+    itsImages = imagestore;  // TODOO : This is a private store of all full images that all functions here can use.
 
-    Float startpeakresidual = peakresidual;
-    Float startmodelflux = modelflux;
+    // Make a list of Slicers.
+    partitionImages();
 
-    while ( ! checkStop( loopcontrols,  peakresidual ) )
+    os << "Run minor-cycle on " << itsDecSlices.nelements() 
+       << " slices of [" << deconvolverid << "]:" << itsImages->getName()
+       << " [ CycleThreshold=" << loopcontrols.getCycleThreshold()
+       << ", CycleNiter=" << loopcontrols.getCycleNiter() 
+       << ", Gain=" << loopcontrols.getLoopGain()
+       << " ]" << LogIO::POST;
+
+
+    for( uInt subimageid=0; subimageid<itsDecSlices.nelements(); subimageid++)
       {
-	Float comp=0.0;
+	// Assign current subimages.
+	initializeSubImages( subimageid );
 
-	// Optionally, fiddle with maskhandler for autoboxing.... 
-	// mask = maskhandler->makeAutoBox();
+	Int startiteration = loopcontrols.getIterDone();
+	Float peakresidual=getPeakResidual();
+	Float modelflux=getIntegratedFlux();
 
-	findNextComponent( residual, psf, loopcontrols.getLoopGain(), comp );
-	  
-	updateResidual( residual, comp );
-	updateModel ( model, comp );
+	Float startpeakresidual = peakresidual;
+	Float startmodelflux = modelflux;
 
-	peakresidual = residual.getAt(tmpPos_p);
-	modelflux = model.getAt(tmpPos_p);
-
-	loopcontrols.incrementMinorCycleCount( );
-	loopcontrols.setPeakResidual( peakresidual );
-	loopcontrols.addSummaryMinor( deconvolverid, subimageid, modelflux, peakresidual );
-      }
-
-    // same as checking on itscycleniter.....
-    loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
-
-    os << "[D" << deconvolverid << ":S" << subimageid << "]"
-       <<" iters=" << startiteration << "-" << loopcontrols.getIterDone()
-       << ", peakres=" << startpeakresidual << "-" << peakresidual 
-       << ", model=" << startmodelflux << "-" << modelflux
-       << LogIO::POST;
-
-}
-
+	while ( ! checkStop( loopcontrols,  peakresidual ) )
+	  {
+	    // Optionally, fiddle with maskhandler for autoboxing.... 
+	    // mask = maskhandler->makeAutoBox();
+	    
+	    findNextComponent( loopcontrols.getLoopGain() );
+	    
+	    updateResidual();
+	    updateModel ();
+	    
+	    peakresidual = getPeakResidual();
+	    modelflux = getIntegratedFlux();
+	    
+	    loopcontrols.incrementMinorCycleCount( );
+	    loopcontrols.setPeakResidual( peakresidual );
+	    loopcontrols.addSummaryMinor( deconvolverid, subimageid, modelflux, peakresidual );
+	  }// end of minor cycle iterations for this subimage.
+	
+	// same as checking on itscycleniter.....
+	loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
+	
+	os << "[D" << deconvolverid << ":S" << subimageid << "]"
+	   <<" iters=" << startiteration << "-" << loopcontrols.getIterDone()
+	   << ", peakres=" << startpeakresidual << "-" << peakresidual 
+	   << ", model=" << startmodelflux << "-" << modelflux
+	   << LogIO::POST;
+	
+	loopcontrols.resetCycleIter(); 
+	
+      }// end of SubImage Loop
+  }// end of deconvolve
+  
   Bool SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
 				   Float currentresidual )
   {
@@ -143,28 +146,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  void SDAlgorithmBase::findNextComponent( ImageInterface<Float>  &residual, 
-					 ImageInterface<Float>  &/*psf*/, Float loopgain, 
-					 Float  &comp )
+  void SDAlgorithmBase::findNextComponent( Float loopgain )
   {
     //    comp = loopgain * residual;
 
-    comp =  loopgain * residual.getAt(tmpPos_p);
+    itsComp =  loopgain * itsResidual.getAt(tmpPos_p);
 
   }
 
-  void SDAlgorithmBase::updateModel( ImageInterface<Float>  &model, Float  &comp )
+  void SDAlgorithmBase::updateModel()
   {
-    //    model = model + comp;
-
-    model.putAt( model.getAt(tmpPos_p) + comp  , tmpPos_p );
-
+    itsModel.putAt( itsModel.getAt(tmpPos_p) + itsComp  , tmpPos_p );
   }
 
-  void SDAlgorithmBase::updateResidual( ImageInterface<Float>  &residual, Float  &comp )
+  void SDAlgorithmBase::updateResidual()
   {
-    //    residual = residual - comp;
-    residual.putAt( residual.getAt(tmpPos_p) - comp  , tmpPos_p );
+    itsResidual.putAt( itsResidual.getAt(tmpPos_p) - itsComp  , tmpPos_p );
   }
 
   void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
@@ -175,6 +172,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Smooth model and add residuals for " << imagestore->getName() 
        << ". Optionally, PB-correct too." << LogIO::POST;
 
+  }
+
+  Float SDAlgorithmBase::getPeakResidual()
+  {
+    return itsResidual.getAt(tmpPos_p);
+  }
+
+  Float SDAlgorithmBase::getIntegratedFlux()
+  {
+    return itsModel.getAt(tmpPos_p);
+  }
+
+
+  // Use this decide how to partition
+  // the image for separate calls to 'deconvolve'.
+  // Give codes to signal one or more of the following.
+    ///    - channel planes separate
+    ///    - stokes planes separate
+    ///    - partitioned-image clean (facets ?)
+  // Later, can add more complex partitioning schemes.... 
+  // but there will be one place to do it, per deconvolver.
+  void SDAlgorithmBase::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
+  {  
+    onechan = True;
+    onepol = True;
+  }
+
+  /// Make a list of Slices, to send sequentially to the deconvolver.
+  /// Loop over this list of reference subimages in the 'deconvolve' call.
+  /// This will support...
+  ///    - channel cube clean
+  ///    - stokes cube clean
+  ///    - partitioned-image clean (facets ?)
+  ///    - 3D deconvolver
+  void SDAlgorithmBase::partitionImages()
+  {
+    LogIO os( LogOrigin("SDAlgorithmBase","partitionImages",WHERE) );
+
+    IPosition imshape = itsImages->getShape();
+
+    uInt nx = imshape[0];
+    uInt ny = imshape[1];
+    uInt npol = imshape[2];
+    uInt nchan = imshape[3];
+
+    /// (1) /// Set up the Deconvolver Slicers.
+
+    // Ask the deconvolver what shape it wants.
+    Bool onechan=False, onepol=False;
+    queryDesiredShape(onechan, onepol);
+
+    uInt nSubImages = ( (onechan)?imshape[3]:1 ) * ( (onepol)?imshape[2]:1 ) ;
+    uInt polstep = (onepol)?1:npol;
+    uInt chanstep = (onechan)?1:nchan;
+
+    itsDecSlices.resize( nSubImages );
+
+    uInt subindex=0;
+    for(uInt pol=0; pol<npol; pol+=polstep)
+      {
+	for(uInt chan=0; chan<nchan; chan+=chanstep)
+	  {
+	    AlwaysAssert( subindex < nSubImages , AipsError );
+	    IPosition substart(4,0,0,pol,chan);
+	    IPosition substop(4,nx-1,ny-1, pol+polstep-1, chan+chanstep-1);
+	    itsDecSlices[subindex] = Slicer(substart, substop, Slicer::endIsLast);
+	    subindex++;
+	  }
+      }
+
+  }// end of partitionImages
+
+
+  void SDAlgorithmBase::initializeSubImages(uInt subim)
+  {
+    itsResidual = SubImage<Float>( *(itsImages->residual()), itsDecSlices[subim], True );
+    itsPsf = SubImage<Float>( *(itsImages->psf()), itsDecSlices[subim], True );
+    itsModel = SubImage<Float>( *(itsImages->model()), itsDecSlices[subim], True );
   }
 
 } //# NAMESPACE CASA - END

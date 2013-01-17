@@ -85,10 +85,7 @@ protected:
   void divideResidualImageByWeight();
 
   // For the deconvolver, decide how many sliced deconvolution calls to make
-  Vector<Slicer> partitionImages();
-
-  // Call the deconvolver here, for each slice.
-  void deconvolve();
+  //  Vector<Slicer> partitionImages();
 
   // Check if images exist on disk and are all the same shape
   Bool checkImagesOnDisk();
@@ -110,7 +107,7 @@ protected:
 
   uInt itsDeconvolverId;
 
-  Vector<Slicer> itsDecSlices;
+  //  Vector<Slicer> itsDecSlices;
 
   //  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsResidual, itsWeight;
   //CountedPtr<PagedImage<Float> > itsModel;

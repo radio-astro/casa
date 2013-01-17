@@ -36,6 +36,9 @@
 #include <measures/Measures/MDirection.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/TempImage.h>
+#include <images/Images/SubImage.h>
+#include <images/Regions/ImageRegion.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -66,6 +69,8 @@ class SIImageStore
   Bool doesModelImageExist();
 
   void allocateRestoredImage();
+
+  void normalizeByWeight();
 
 protected:
 
