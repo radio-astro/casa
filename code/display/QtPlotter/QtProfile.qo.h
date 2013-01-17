@@ -49,6 +49,8 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 
+#include <display/region/QtRegion.qo.h>
+
 #include <graphics/X11/X_enter.h>
 #include <QDir>
 #include <QColor>
@@ -127,6 +129,7 @@ public:
 	void setPath( QString filePath ){
 		imagePath = filePath;
 	}
+
 
 	//Allows the profiler to come up specialized to do spectroscopy
 	//or another task.
@@ -250,9 +253,16 @@ private:
    			Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
    void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
    								const Vector<double> &wxv, const Vector<double> &wyv );
+   bool getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+   		Vector<Float> &z_xval, Vector<Float> &z_yval,
+   		const String& xytype, const String& specaxis,
+   		const Int& whichStokes, const Int& whichTabular,
+   		const Int& whichLinear, const String& xunits,
+   		const String& specFrame, const Int &combineType,
+   		const Int& whichQuality, const String& restValue );
    bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
-		   const String& coordinateType, const String& xAxisUnit,
-		   Vector<Float> &z_xval, Vector<Float> &z_yval);
+   		   const String& coordinateType, const String& xAxisUnit,
+   		   Vector<Float> &z_xval, Vector<Float> &z_yval );
    bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
    void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
 									const Vector<double> wxv, const Vector<double> wyv );
@@ -321,6 +331,11 @@ private:
    LogIO *itsLog;
    Int ordersOfM_;
    Bool newCollapseVals;
+
+   static const QString PLOT_TYPE_FLUX;
+   static const QString PLOT_TYPE_MEAN;
+   static const QString PLOT_TYPE_MEDIAN;
+   static const QString PLOT_TYPE_SUM;
 
    class spectra_info {
    public:
