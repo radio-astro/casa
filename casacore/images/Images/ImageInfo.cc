@@ -235,8 +235,10 @@ Bool ImageInfo::getRestoringBeam (LoggerHolder& logger) {
 					pa = Quantity(x, Unit(String("deg")));
 				}
 			}
-			if (minor.getValue() > major.getValue()) {
-				return False;
+			if (!(minor.isConform("rad") && major.isConform("rad") && pa.isConform("rad"))
+			    || (minor.getValue() > major.getValue())
+			    ) {
+			        return False;
 			}
 			_beams = ImageBeamSet(GaussianBeam(major, minor, pa));
 			return True;
