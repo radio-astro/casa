@@ -144,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       // Normalize the residual image. i.e. Calculate the principal solution  
       divideResidualImageByWeight();
-      
+
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
       //SISubIterBot loopController(subIterBotRecord);
       loopController.setPeakResidual( getPeakResidual() );
@@ -165,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try {
       loopController.setCycleControls(minorCycleControlRec);
-      deconvolve();
+      itsDeconvolver->deconvolve( loopController, itsImages, itsDeconvolverId );
       returnRecord = loopController.getCycleExecutionRecord();
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
@@ -247,58 +247,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    // Make a list of Slicers.
-    itsDecSlices = partitionImages();
-
     return foundFullImage;
 
   }
 
-
-  /// Make a list of Slices, to send sequentially to the deconvolver.
-  /// Loop over this list of reference subimages in the 'deconvolve' call.
-  /// This will support...
-  ///    - channel cube clean
-  ///    - stokes cube clean
-  ///    - partitioned-image clean (facets ?)
-  ///    - 3D deconvolver
-  Vector<Slicer> SynthesisDeconvolver::partitionImages()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","partitionImages",WHERE) );
-
-    uInt nx = itsImageShape[0];
-    uInt ny = itsImageShape[1];
-    uInt npol = itsImageShape[2];
-    uInt nchan = itsImageShape[3];
-
-    /// (1) /// Set up the Deconvolver Slicers.
-
-    // Ask the deconvolver what shape it wants.
-    Bool onechan=False, onepol=False;
-    itsDeconvolver->queryDesiredShape(onechan, onepol);
-
-    uInt nSubImages = ( (onechan)?itsImageShape[3]:1 ) * ( (onepol)?itsImageShape[2]:1 ) ;
-    uInt polstep = (onepol)?1:npol;
-    uInt chanstep = (onechan)?1:nchan;
-
-    Vector<Slicer> decSlices( nSubImages );
-
-    uInt subindex=0;
-    for(uInt pol=0; pol<npol; pol+=polstep)
-      {
-	for(uInt chan=0; chan<nchan; chan+=chanstep)
-	  {
-	    AlwaysAssert( subindex < nSubImages , AipsError );
-	    IPosition substart(4,0,0,pol,chan);
-	    IPosition substop(4,nx-1,ny-1, pol+polstep-1, chan+chanstep-1);
-	    decSlices[subindex] = Slicer(substart, substop, Slicer::endIsLast);
-	    subindex++;
-	  }
-      }
-
-    return decSlices;
-
-  }// end of partitionImages
 
 
   void SynthesisDeconvolver::gatherImages()
@@ -318,7 +270,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // If Weight image is not specified, treat it as though it were filled with ones. 
     // ( i.e.  itsWeight = NULL )
 
-    os << "Dividing the residual image " << itsImageName+String(".residual") << " by the weightimage " << itsImageName+String(".weight") << LogIO::POST;
+    itsImages->normalizeByWeight();
+
   }
 
   // #############################################
@@ -326,37 +279,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // #############################################
   // #############################################
 
-
-  // Run the deconvolver for each Slice.
-  // This means, for iteration control, each SubImage is treated the same as a separate Mapper.
-  void SynthesisDeconvolver::deconvolve()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","deconvolve",WHERE) );
-
-    Bool isModelUpdated=False;
-
-    os << "Run minor-cycle on " << itsDecSlices.nelements() 
-       << " slices of [" << itsDeconvolverId << "]:" << itsImageName
-       << " [ CycleThreshold=" << loopController.getCycleThreshold()
-       << ", CycleNiter=" << loopController.getCycleNiter() 
-       << ", Gain=" << loopController.getLoopGain()
-       << " ]" << LogIO::POST;
-
-    for( uInt subim=0; subim<itsDecSlices.nelements(); subim++)
-      {
-
-	//cout << "Mapper : " << itsMapperId << "  Deconvolving : " << decSlices[subim] << endl;
-	SubImage<Float> subResidual( *(itsImages->residual()), itsDecSlices[subim], True );
-	SubImage<Float> subPsf( *(itsImages->psf()), itsDecSlices[subim], True );
-	SubImage<Float> subModel( *(itsImages->model()), itsDecSlices[subim], True );
-	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
-
-	itsDeconvolver->deconvolve( loopController, subResidual, subPsf, subModel, itsMaskHandler, subim, itsDeconvolverId);
-        loopController.resetCycleIter();
-
-      }
-    loopController.setUpdatedModelFlag( isModelUpdated );
-  }
 
   // Calculate the peak residual for this mapper
   Float SynthesisDeconvolver::getPeakResidual()

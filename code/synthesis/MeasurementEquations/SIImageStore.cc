@@ -213,6 +213,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
+  void SIImageStore::normalizeByWeight()
+  {
+    LogIO os( LogOrigin("SIImageStore","doesModelImageExist",WHERE) );
+    
+    os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
