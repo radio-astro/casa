@@ -9,6 +9,8 @@
 // Copyright: See COPYING file that comes with this distribution
 //
 //
+#include <assert.h>
+
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 #include <tables/Tables/TableDesc.h>

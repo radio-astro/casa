@@ -32,7 +32,7 @@ public:
   enum InterpolationType {NearestInterpolation = 0,
                           LinearInterpolation,
                           PolynomialInterpolation,
-                          CSplineInterpolation};
+                          CubicSplineInterpolation};
   enum InterpolationAxis {TimeAxis = 0,
                           FrequencyAxis,
                           NumAxis};

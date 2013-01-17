@@ -32,7 +32,11 @@
 #include "STIdxIter.h"
 #include "Calibrator.h"
 #include "PSAlmaCalibrator.h"
+#include "Interpolator1D.h"
 #include "NearestInterpolator1D.h"
+#include "BufferedLinearInterpolator1D.h"
+#include "PolynomialInterpolator1D.h"
+#include "CubicSplineInterpolator1D.h"
 #include <atnf/PKSIO/SrcType.h>
 
 
@@ -61,6 +65,10 @@ void STApplyCal::init()
   caltype_ = STCalEnum::NoType;
   doTsys_ = False;
   interp_.resize((int)STCalEnum::NumAxis);
+  // default is linear interpolation
+  for (unsigned int i = 0; i < interp_.size(); i++) {
+    interp_[i] = STCalEnum::LinearInterpolation;
+  }
 }
 
 void STApplyCal::setTarget(CountedPtr<Scantable> target)
@@ -124,9 +132,7 @@ void STApplyCal::apply(Bool insitu)
     calibrator_ = new PSAlmaCalibrator();
 
   // interpolator
-  interpolatorS_ = new NearestInterpolator1D();
-  interpolatorT_ = new NearestInterpolator1D();
-  interpolatorF_ = new NearestInterpolator1D();
+  initInterpolator();
 
   // select data
   sel_.reset();
@@ -262,13 +268,13 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   Vector<uInt> skyIdx = timeSort(timeSky);
   os_ << "skyIdx = " << skyIdx << LogIO::POST;
 
-  double *xa = new double[skyIdx.nelements()];
-  float *ya = new float[skyIdx.nelements()];
+  Double *xa = new Double[skyIdx.nelements()];
+  Float *ya = new Float[skyIdx.nelements()];
   IPosition ipos(1, skyIdx.nelements());
-  Vector<double> timeSkySorted(ipos, xa, TAKE_OVER);
+  Vector<Double> timeSkySorted(ipos, xa, TAKE_OVER);
   Vector<Float> tmpOff(ipos, ya, TAKE_OVER);
   for (uInt i = 0 ; i < skyIdx.nelements(); i++) {
-    timeSkySorted[i] = (double)timeSky[skyIdx[i]];
+    timeSkySorted[i] = timeSky[skyIdx[i]];
     os_ << "timeSkySorted[" << i << "]-timeSkySorted[0]=" << timeSkySorted[i] - timeSkySorted[0] << LogIO::POST;
   }
   os_ << "timeSkySorted-timeSkySorted[0]=" << timeSkySorted-timeSkySorted[0] << LogIO::POST;
@@ -279,7 +285,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   Vector<uInt> tsysIdx;
   Vector<Double> timeTsys(nrowTsys);
   Matrix<Float> tsys;
-  Vector<double> timeTsysSorted;
+  Vector<Double> timeTsysSorted;
   Vector<Float> tmpTsys;
   if (doTsys) {
     os_ << "doTsys" << LogIO::POST;
@@ -301,13 +307,13 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     tsysIdx = timeSort(timeTsys);
     os_ << "tsysIdx = " << tsysIdx << LogIO::POST;
 
-    double *xb = new double[tsysIdx.nelements()];
-    float *yb = new float[tsysIdx.nelements()];
+    Double *xb = new Double[tsysIdx.nelements()];
+    Float *yb = new Float[tsysIdx.nelements()];
     IPosition ipos(1, tsysIdx.nelements());
     timeTsysSorted.takeStorage(ipos, xb, TAKE_OVER);
     tmpTsys.takeStorage(ipos, yb, TAKE_OVER);
     for (uInt i = 0 ; i < tsysIdx.nelements(); i++) {
-      timeTsysSorted[i] = (double)timeTsys[tsysIdx[i]];
+      timeTsysSorted[i] = timeTsys[tsysIdx[i]];
       os_ << "timeTsysSorted[" << i << "]-timeTsysSorted[0]=" << timeTsysSorted[i] - timeTsysSorted[0] << LogIO::POST;
     }
     os_ << "timeTsysSorted=" << timeTsysSorted << LogIO::POST;
@@ -327,12 +333,12 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     calibrator_->setSource(on);
 
     // interpolation
-    double t0 = (double)timeCol(irow);
+    Double t0 = timeCol(irow);
     for (uInt ichan = 0; ichan < nchanSp; ichan++) {
       Vector<Float> spOffSlice = spoff.row(ichan);
       //os_ << "spOffSlice = " << spOffSlice << LogIO::POST;
       for (uInt j = 0; j < skyIdx.nelements(); j++) {
-        tmpOff[j] = (float)spOffSlice[skyIdx[j]];
+        tmpOff[j] = spOffSlice[skyIdx[j]];
       }
       interpolatorS_->setY(ya, skyIdx.nelements());
       iOff[ichan] = interpolatorS_->interpolate(t0);
@@ -344,13 +350,13 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     Vector<Float> iTsys(IPosition(1,nchanSp), Y, TAKE_OVER);
     if (doTsys) {
       // Tsys correction
-      float *yt = new float[nchanTsys];
+      Float *yt = new Float[nchanTsys];
       Vector<Float> iTsysT(IPosition(1,nchanTsys), yt, TAKE_OVER);
-      float *yb = tmpTsys.data();
+      Float *yb = tmpTsys.data();
       for (uInt ichan = 0; ichan < nchanTsys; ichan++) {
         Vector<Float> tsysSlice = tsys.row(ichan);
         for (uInt j = 0; j < tsysIdx.nelements(); j++) {
-          tmpTsys[j] = (float)tsysSlice[tsysIdx[j]];
+          tmpTsys[j] = tsysSlice[tsysIdx[j]];
         }
         interpolatorT_->setY(yb, tsysIdx.nelements());
         iTsysT[ichan] = interpolatorT_->interpolate(t0);
@@ -367,7 +373,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
         os_ << "fsp = " << fsp << LogIO::POST;
         interpolatorF_->setY(yt, nchanTsys);
         for (uInt ichan = 0; ichan < nchanSp; ichan++) {
-          iTsys[ichan] = (Float)interpolatorF_->interpolate(fsp[ichan]);
+          iTsys[ichan] = interpolatorF_->interpolate(fsp[ichan]);
         }
       }
     }
@@ -449,4 +455,94 @@ Vector<Double> STApplyCal::getBaseFrequency(uInt whichrow)
   return r;
 }
 
+void STApplyCal::initInterpolator()
+{
+  int ta = (int)STCalEnum::TimeAxis;
+  int fa = (int)STCalEnum::FrequencyAxis;
+  int order = (order_ > 0) ? order_ : 1;
+  switch (interp_[ta]) {
+  case STCalEnum::NearestInterpolation:
+    {
+      os_ << "use NearestInterpolator in time axis" << LogIO::POST;
+      interpolatorS_ = new NearestInterpolator1D<Double, Float>();
+      interpolatorT_ = new NearestInterpolator1D<Double, Float>();
+      break;
+    }
+  case STCalEnum::LinearInterpolation:
+    {
+      os_ << "use BufferedLinearInterpolator in time axis" << LogIO::POST;
+      interpolatorS_ = new BufferedLinearInterpolator1D<Double, Float>();
+      interpolatorT_ = new BufferedLinearInterpolator1D<Double, Float>();
+      break;      
+    }
+  case STCalEnum::CubicSplineInterpolation:
+    {
+      os_ << "use CubicSplineInterpolator in time axis" << LogIO::POST;
+      interpolatorS_ = new CubicSplineInterpolator1D<Double, Float>();
+      interpolatorT_ = new CubicSplineInterpolator1D<Double, Float>();
+      break;
+    }
+  case STCalEnum::PolynomialInterpolation:
+    {
+      os_ << "use PolynomialInterpolator in time axis" << LogIO::POST;
+      if (order == 0) {
+        interpolatorS_ = new NearestInterpolator1D<Double, Float>();
+        interpolatorT_ = new NearestInterpolator1D<Double, Float>();
+      }
+      else {
+        interpolatorS_ = new PolynomialInterpolator1D<Double, Float>();
+        interpolatorT_ = new PolynomialInterpolator1D<Double, Float>();
+        interpolatorS_->setOrder(order);
+        interpolatorT_->setOrder(order);
+      }
+      break;
+    }
+  default:
+    {
+      os_ << "use BufferedLinearInterpolator in time axis" << LogIO::POST;
+      interpolatorS_ = new BufferedLinearInterpolator1D<Double, Float>();
+      interpolatorT_ = new BufferedLinearInterpolator1D<Double, Float>();
+      break;      
+    }
+  }
+   
+  switch (interp_[fa]) {
+  case STCalEnum::NearestInterpolation:
+    {
+      os_ << "use NearestInterpolator in frequency axis" << LogIO::POST;
+      interpolatorF_ = new NearestInterpolator1D<Double, Float>();
+      break;
+    }
+  case STCalEnum::LinearInterpolation:
+    {
+      os_ << "use BufferedLinearInterpolator in frequency axis" << LogIO::POST;
+      interpolatorF_ = new BufferedLinearInterpolator1D<Double, Float>();
+      break;      
+    }
+  case STCalEnum::CubicSplineInterpolation:
+    {
+      os_ << "use CubicSplineInterpolator in frequency axis" << LogIO::POST;
+      interpolatorF_ = new CubicSplineInterpolator1D<Double, Float>();
+      break;
+    }
+  case STCalEnum::PolynomialInterpolation:
+    {
+      os_ << "use PolynomialInterpolator in frequency axis" << LogIO::POST;
+      if (order == 0) {
+        interpolatorF_ = new NearestInterpolator1D<Double, Float>();
+      }
+      else {
+        interpolatorF_ = new PolynomialInterpolator1D<Double, Float>();
+        interpolatorF_->setOrder(order);
+      }
+      break;
+    }
+  default:
+    {
+      os_ << "use LinearInterpolator in frequency axis" << LogIO::POST;
+      interpolatorF_ = new BufferedLinearInterpolator1D<Double, Float>();
+      break;      
+    }
+  }
+}
 }

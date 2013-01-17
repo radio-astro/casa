@@ -79,10 +79,7 @@ set( ASAP_SRCS
      ${SRCDIR}/STApplyCal.cpp
      ${SRCDIR}/Calibrator.cpp
      ${SRCDIR}/PSAlmaCalibrator.cpp
-     ${SRCDIR}/Locator.cpp
-     ${SRCDIR}/BisectionLocator.cpp
-     ${SRCDIR}/Interpolator1D.cpp
-     ${SRCDIR}/NearestInterpolator1D.cpp )
+     ${SRCDIR}/STBaselineParamTable.cpp )
 
 set( ASAP_PYSRCS
 #     ${SRCDIR}/python_Plotter2.cpp
