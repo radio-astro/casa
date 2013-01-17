@@ -54,6 +54,8 @@
 
 #include <display/region/QtRegionDock.qo.h>
 
+
+
 #define SEXAGPREC 9
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func ) {
@@ -126,6 +128,7 @@ namespace casa {
 
 	Region::~Region( ){
 	    dock_->removeRegion(mystate);
+	    signal_region_change( region::RegionChangeDelete );
 	    disconnect(mystate, 0, 0, 0);
 	}
 
@@ -349,6 +352,7 @@ namespace casa {
 		dock_->addWeaklySelectedRegion(this);
 		dock_->selectRegion(mystate, scroll_dock);
 		dock_->selectedCountUpdateNeeded( );
+		signal_region_change( region::RegionChangeSelected );
 	}
 
 	void Region::weaklyUnselectLimited( ) {
@@ -2693,7 +2697,6 @@ if (!markCenter()) return;
 	}
 
 		void Region::signal_region_change( region::RegionChanges change ) {
-
 			if ( hold_signals > 0 ) {
 				held_signals[change] = true;
 				return;
@@ -2702,18 +2705,24 @@ if (!markCenter()) return;
 			switch ( change ) {
 				case region::RegionChangeUpdate:
 				case region::RegionChangeCreate:
+				case region::RegionChangeDelete:
 				case region::RegionChangeReset:
 				case region::RegionChangeFocus:
 				case region::RegionChangeModified:
 				case region::RegionChangeNewChannel:
+				case region::RegionChangeSelected:
 					{
 						region::RegionTypes type;
 						QList<int> pixelx, pixely;
 						QList<double> worldx, worldy;
 
-						fetch_details( type, pixelx, pixely, worldx, worldy );
+						if ( change != region::RegionChangeDelete ){
+							fetch_details( type, pixelx, pixely, worldx, worldy );
 
-						if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
+							if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ){
+								return;
+							}
+						}
 
 						if ( change == region::RegionChangeCreate ) {
 							dock_->emitCreate( this );
@@ -2726,7 +2735,7 @@ if (!markCenter()) return;
 					}
 					break;
 
-				case region::RegionChangeDelete:
+
 				case region::RegionChangeStatsUpdate:
 				case region::RegionChangeLabel:
 					// fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",

@@ -56,8 +56,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
     image( NULL ), binPlot( this ),
-    NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), IMAGE_ID(-1),
-	toolTipPicker(NULL), contextMenuZoom(this),
+    NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), IMAGE_ID(-1), contextMenuZoom(this),
     zoomActionContext(NULL), zoomWidgetContext( NULL ),
     zoomActionMenu(NULL), zoomWidgetMenu( NULL ),
     lambdaAction("Lambda",this), centerPeakAction( "(Center,Peak)",this),
@@ -932,10 +931,8 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 	return curve;
 }
 
-
-
 void BinPlotWidget::defineCurveHistogram( int id, const QColor& histogramColor ){
-	if ( histogramMap.contains(id) && histogramMap[id] ){
+	if ( histogramMap.contains(id)){
 		int pointCount = histogramMap[id]->getDataCount();
 		QVector<double> xValues(2);
 		QVector<double> yValues(2);
@@ -996,14 +993,15 @@ void BinPlotWidget::deleteImageRegion( int id ){
 		QList<int> keyList = histogramMap.keys();
 		if ( keyList.size() > 0 ){
 			selectedId = keyList[0];
+			if ( histogramFound ){
+				reset();
+			}
 		}
 		else {
 			selectedId = -1;
 		}
 	}
-	if ( histogramFound ){
-		resetRegion();
-	}
+
 }
 
 void BinPlotWidget::postMessage( const QString& msg ){
@@ -1032,7 +1030,6 @@ bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 			selectedId = id;
 			resetRegion();
 		}
-
 	}
 	else {
 		qWarning() << "Please specify an image before specifying an image region";
@@ -1134,7 +1131,7 @@ bool BinPlotWidget::isPrincipalHistogram( int id ) const {
 void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		bool clearCurves ){
 	defineCurve( id, curveColor, clearCurves );
-	if ( isPrincipalHistogram( id ) && histogramMap[id] ){
+	if ( isPrincipalHistogram( id ) ){
 		setValidatorLimits();
 		vector<float> xVector = histogramMap[id]->getXValues();
 		vector<float> yVector = histogramMap[id]->getYValues();

@@ -44,7 +44,7 @@ namespace casa {
 			enum PointLocation { PointInside = 1 << 0, PointHandle = 1 << 1, PointOutside = 1 << 2 };
 
 			enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeReset, RegionChangeFocus, RegionChangeModified,
-								 RegionChangeLabel, RegionChangeDelete, RegionChangeStatsUpdate, RegionChangeNewChannel };
+								 RegionChangeLabel, RegionChangeDelete, RegionChangeStatsUpdate, RegionChangeNewChannel, RegionChangeSelected };
 
 			class PointInfo {
 				public:

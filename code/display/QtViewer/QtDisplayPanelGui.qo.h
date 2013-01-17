@@ -73,6 +73,7 @@ class AnimatorHolder;
 class BinPlotWidget;
 class HistogramMain;
 class Fit2DTool;
+//class PVCutManager;
 
 template <class T> class ImageInterface;
 
@@ -287,6 +288,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void putrc( const std::string &key, const std::string &val );
   void showMomentsCollapseImageProfile();
   void showSpecFitImageProfile();
+  void disconnectHistogram();
 
  signals:
 
@@ -473,6 +475,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
   QTextEdit* qst_;
+
   
   QtProfile* profile_;		//# Profile window
   String savedTool_;		//# (for restoring left button)
@@ -524,13 +527,14 @@ class QtDisplayPanelGui : public QtPanelBase {
   void hideHistogram();
   void initFit2DTool();
   void hideFit2DTool();
-  void updateHistogram( viewer::Region* qtRegion, viewer::region::RegionChanges change );
-
+  void resetHistogram( viewer::Region* qtRegion );
+  viewer::Region* findRegion( int id );
 
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   HistogramMain* histogrammer;
   Fit2DTool* fitTool;
+  //PVCutManager* pvCutManager;
 
   //Docking/Dock Widgets
   string addAnimationDockWidget();
@@ -552,7 +556,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_update(QtDisplayData*);
   void showHistogram();
   void refreshHistogrammer();
-  void histogramRegionUpdate( int, viewer::region::RegionChanges change = viewer::region::RegionChangeCreate );
+  void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
   void showFitInteractive();
   void refreshFit();
   void addSkyComponentOverlay(String path);

@@ -122,6 +122,7 @@ public slots:
 	void setDisplayLogY( bool display );
 	void setDisplayLogX( bool display );
 	void clearFit();
+	void clearAll();
 
 	//Saving the Histogram
 	void toAscii( const QString& filePath );
@@ -148,7 +149,6 @@ private slots:
 	void lambdaSpecified();
 	void fwhmSpecified();
 	void fitDone( const QString& msg );
-	void clearAll();
 	void zoomContextFinished();
 	void zoomMenuFinished();
 	void resetGaussianFitMarker();

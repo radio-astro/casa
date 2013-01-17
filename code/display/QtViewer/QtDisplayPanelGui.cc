@@ -81,7 +81,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
-								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ),
+								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ),/* pvCutManager( NULL ),*/
 								   regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
@@ -279,7 +279,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	initAnimationHolder();
 	string animloc = addAnimationDockWidget();
 
-	initHistogramHolder();
 	initFit2DTool();
 
 	std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
@@ -381,8 +380,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		/*vwMenu_->addSeparator();
 		pvCutAct_  = new QAction ("PV Cut",this);
 		connect(pvCutAct_,    SIGNAL(triggered(bool)),  SLOT(showPVCut(bool)));
-		vwMenu_->addAction( pvCutAct_ );*/
-
+		vwMenu_->addAction( pvCutAct_ );
+*/
 		delete rawVwMenu;
 	}
 
@@ -657,77 +656,170 @@ void QtDisplayPanelGui::initAnimationHolder(){
 	}
 }
 
+//---------------------------------------------------------------------------------
+//                                      Histogram
+//---------------------------------------------------------------------------------
 
-void QtDisplayPanelGui::initHistogramHolder(){
-
+void QtDisplayPanelGui::showHistogram(){
 	if ( histogrammer == NULL ){
-		histogrammer = new HistogramMain(false,true,true,this);
-		histogrammer->setDisplayPlotTitle( true );
-		histogrammer->setDisplayAxisTitles( true );
+		this->initHistogramHolder();
+	}
+	//Send it the latest image
+	refreshHistogrammer();
 
-		//Image updates
-		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
-		//Region updates
-		PanelDisplay* panelDisplay = qdp_->panelDisplay();
-		std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
-		if (pos) {
-			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
-			if ( qrs ) {
-				connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
-						const QList<double> &, const QList<int> &, const QList<int> &,
-						const QString &, const QString &, const QString &, int, int ) ),
-						this, SLOT( histogramRegionUpdate( int) ) );
-				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+	//Image updates
+	connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
+	//Region updates
+	PanelDisplay* panelDisplay = qdp_->panelDisplay();
+	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
+	if (pos) {
+		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+		if ( qrs ) {
+			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> & ) ),
-						this, SLOT( histogramRegionUpdate( int, viewer::region::RegionChanges) ));
-			}
+						this, SLOT( histogramRegionChange( int, viewer::region::RegionChanges) ));
+			//So the histogram has the latest in regions
+			histogramRegionChange( -1, viewer::region::RegionChangeUpdate );
 		}
-		refreshHistogrammer();
+	}
+
+
+	histogrammer->show();
+}
+
+void QtDisplayPanelGui::hideHistogram(){
+	histogrammer->hide();
+}
+
+void QtDisplayPanelGui::disconnectHistogram(){
+	//Disconnect all the signals and slots
+	//Image updates
+	disconnect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
+	//Region updates
+	PanelDisplay* panelDisplay = qdp_->panelDisplay();
+	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
+	if (pos) {
+		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+		if ( qrs ) {
+			disconnect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> & ) ),
+						this, SLOT( histogramRegionChange( int, viewer::region::RegionChanges) ));
+		}
 	}
 }
 
-void QtDisplayPanelGui::histogramRegionUpdate( int id, viewer::region::RegionChanges change){
-	std::list<viewer::Region*> regionList = regions();
-	std::list<viewer::Region*>::iterator regionIterator = regionList.begin();
-	while( regionIterator != regionList.end() ){
-		viewer::Region* region = (*regionIterator);
-		int regionId = region->getId();
-		if ( regionId == id ){
-			updateHistogram( region, change );
-			break;
-		}
-		regionIterator++;
-	}
-	if ( regionIterator == regionList.end() ){
-		qDebug() << "histogramRegionUpdate: "<<"Could not find region with id="<<id;
-	}
-}
-
-
-void QtDisplayPanelGui::updateHistogram( viewer::Region* qtRegion, viewer::region::RegionChanges change ){
-	if ( qtRegion != NULL ){
-		int regionId = qtRegion->getId();
-		if ( change != viewer::region::RegionChangeDelete ){
-			List<QtDisplayData*> rdds = qdp_->registeredDDs();
-			for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-				QtDisplayData* pdd = qdds.getRight();
-				if(pdd != 0 && pdd->dataType() == "image") {
-					ImageInterface<float>* img = pdd->imageInterface();
-					PanelDisplay* ppd = qdp_->panelDisplay();
-					if (ppd != 0 && img != 0) {
-						DisplayData* displayData = pdd->dd();
-						if (ppd->isCSmaster(displayData)) {
-							ImageRegion* imageRegion = qtRegion->getImageRegion(displayData);
-							if ( imageRegion != NULL ){
-								histogrammer->setImageRegion( imageRegion, regionId );
-							}
+void QtDisplayPanelGui::refreshHistogrammer(){
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	bool imageFound = false;
+	int registeredCount = rdds.len();
+	if ( registeredCount > 0 ){
+		for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+			QtDisplayData* pdd = qdds.getRight();
+			if(pdd != 0 && pdd->dataType() == "image") {
+				ImageInterface<float>* img = pdd->imageInterface();
+				PanelDisplay* ppd = qdp_->panelDisplay();
+				if (ppd != 0 && img != 0) {
+					if (ppd->isCSmaster(pdd->dd())) {
+						histogrammer->setImage( img );
+						const viewer::ImageProperties & imgProperties = pdd->imageProperties( );
+						if ( imgProperties.hasSpectralAxis() ){
+							int spectralAxisNum = imgProperties.spectralAxisNumber();
+							const Vector<int> imgShape = imgProperties.shape();
+							int channelCount = imgShape[spectralAxisNum];
+							histogrammer->setChannelCount( channelCount );
 						}
+						else {
+							histogrammer->setChannelCount( 1 );
+						}
+						imageFound = true;
+						break;
 					}
 				}
 			}
 		}
+	}
+	else {
+		histogrammer->hide();
+	}
+	if ( !imageFound ){
+		histogrammer->setImage( NULL );
+	}
+}
+
+void QtDisplayPanelGui::initHistogramHolder(){
+	if ( histogrammer == NULL ){
+		histogrammer = new HistogramMain(false,true,true,this);
+		histogrammer->setDisplayPlotTitle( true );
+		histogrammer->setDisplayAxisTitles( true );
+		//So we can disconnect the signals and not chew up bandwidth
+		connect( histogrammer, SIGNAL(closing()), this, SLOT(disconnectHistogram()));
+	}
+}
+
+viewer::Region* QtDisplayPanelGui::findRegion( int id ) {
+	std::list<viewer::Region*> regionList = regions();
+	std::list<viewer::Region*>::iterator regionIterator = regionList.begin();
+	viewer::Region* targetRegion = NULL;
+	while( regionIterator != regionList.end() ){
+		viewer::Region* region = (*regionIterator);
+		int regionId = region->getId();
+		if ( regionId == id ){
+			targetRegion = region;
+			break;
+		}
+		regionIterator++;
+	}
+	return targetRegion;
+}
+
+
+void QtDisplayPanelGui::histogramRegionChange( int id, viewer::region::RegionChanges change){
+	if ( change == viewer::region::RegionChangeCreate ||
+					change == viewer::region::RegionChangeUpdate ||
+					change == viewer::region::RegionChangeModified ){
+		if ( id != -1 ){
+			viewer::Region* region = findRegion( id );
+			resetHistogram( region );
+		}
 		else {
-			histogrammer->deleteImageRegion( regionId );
+			//Update all the histograms because we haven't been listening for awhile
+			std::list<viewer::Region*> regionList = regions();
+			std::list<viewer::Region*>::iterator regionIterator = regionList.begin();
+			while( regionIterator != regionList.end() ){
+				viewer::Region* region = (*regionIterator);
+				resetHistogram( region );
+				regionIterator++;
+			}
+		}
+	}
+	else if ( change == viewer::region::RegionChangeDelete ){
+		histogrammer->deleteImageRegion( id );
+	}
+	else if ( change == viewer::region::RegionChangeSelected ){
+		histogrammer->imageRegionSelected( id );
+	}
+}
+
+
+void QtDisplayPanelGui::resetHistogram( viewer::Region* region ){
+	if ( region != NULL ){
+		List<QtDisplayData*> rdds = qdp_->registeredDDs();
+		for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+			QtDisplayData* pdd = qdds.getRight();
+			if(pdd != 0 && pdd->dataType() == "image") {
+				ImageInterface<float>* img = pdd->imageInterface();
+				PanelDisplay* ppd = qdp_->panelDisplay();
+				if (ppd != 0 && img != 0) {
+					DisplayData* displayData = pdd->dd();
+					if (ppd->isCSmaster(displayData)) {
+						ImageRegion* imageRegion = region->getImageRegion(displayData);
+						if ( imageRegion != NULL ){
+							int regionId = region->getId();
+							histogrammer->setImageRegion( imageRegion, regionId );
+						}
+					}
+				}
+			}
 		}
 	}
 	else {
@@ -862,6 +954,9 @@ void QtDisplayPanelGui::remove2DFitOverlay( QList<RegionShape*> fitMarkers ){
 
 /*void QtDisplayPanelGui::showPVCut( bool show ){
 	qDebug() << "Need code for showing a PVCut";
+	if ( pvCutManager == NULL ){
+		pvCutManager = new PVCutManager();
+	}
 }*/
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {
@@ -876,6 +971,8 @@ QtDisplayPanelGui::~QtDisplayPanelGui() {
 	if(qsm_!=0) delete qsm_;
 	if(qdm_!=0) delete qdm_;
 	if(qdo_!=0) delete qdo_;
+
+	//delete pvCutManager;
 }
 
 int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
@@ -2638,51 +2735,6 @@ void QtDisplayPanelGui::showMomentsCollapseImageProfile(){
 	}
 }
 
-void QtDisplayPanelGui::showHistogram(){
-	histogrammer->show();
-}
-
-void QtDisplayPanelGui::hideHistogram(){
-	histogrammer->hide();
-}
-
-void QtDisplayPanelGui::refreshHistogrammer(){
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
-	bool imageFound = false;
-	int registeredCount = rdds.len();
-	if ( registeredCount > 0 ){
-		for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-			QtDisplayData* pdd = qdds.getRight();
-			if(pdd != 0 && pdd->dataType() == "image") {
-				ImageInterface<float>* img = pdd->imageInterface();
-				PanelDisplay* ppd = qdp_->panelDisplay();
-				if (ppd != 0 && img != 0) {
-					if (ppd->isCSmaster(pdd->dd())) {
-						histogrammer->setImage( img );
-						const viewer::ImageProperties & imgProperties = pdd->imageProperties( );
-						if ( imgProperties.hasSpectralAxis() ){
-							int spectralAxisNum = imgProperties.spectralAxisNumber();
-							const Vector<int> imgShape = imgProperties.shape();
-							int channelCount = imgShape[spectralAxisNum];
-							histogrammer->setChannelCount( channelCount );
-						}
-						else {
-							histogrammer->setChannelCount( 1 );
-						}
-						imageFound = true;
-						break;
-					}
-				}
-			}
-		}
-	}
-	else {
-		histogrammer->hide();
-	}
-	if ( !imageFound ){
-		histogrammer->setImage( NULL );
-	}
-}
 
 void QtDisplayPanelGui::showSpecFitImageProfile(){
 	showImageProfile();

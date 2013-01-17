@@ -28,6 +28,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Regions/ImageRegion.h>
 #include <QMessageBox>
+#include <QCloseEvent>
 
 namespace casa {
 
@@ -187,6 +188,12 @@ bool HistogramMain::generateImage( const QString& imagePath,
 
 void HistogramMain::postStatusMessage( const QString& statusMsg ){
 	ui.statusbar->showMessage( statusMsg, 60000 );
+}
+
+void HistogramMain::closeEvent( QCloseEvent* event){
+	plotWidget->clearAll();
+	emit closing();
+	event->accept();
 }
 
 
