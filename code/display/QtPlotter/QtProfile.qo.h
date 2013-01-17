@@ -350,6 +350,7 @@ private:
 
 
    typedef std::map<int,spectra_info> SpectraInfoMap;
+   const int NO_REGION_ID;
    int current_region_id;
    SpectraInfoMap spectra_info_map;
 

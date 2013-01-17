@@ -100,11 +100,12 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
  lastWX(Vector<Double>()), lastWY(Vector<Double>()),
  z_eval(Vector<Float>()), region(""), rc(viewer::getrc()), rcid_(rcstr),
  itsPlotType(QtProfile::PMEAN), itsLog(new LogIO()), ordersOfM_(0),
- current_region_id(0),
+ NO_REGION_ID(-1),
  colorSummaryWidget( NULL ), legendPreferencesDialog( NULL ),newOverplots( false )
 {
 	setupUi(this);
 	initPlotterResource();
+	current_region_id = NO_REGION_ID;
 
 	setBackgroundRole(QPalette::Dark);
 
@@ -1173,16 +1174,31 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 
 	if (!isVisible()) return;
 	if (!analysis) return;
-
 	if ( type == viewer::region::RegionChangeDelete ){
+		SpectraInfoMap::iterator it = spectra_info_map.find(id_);
+		if ( it != spectra_info_map.end() ){
+			spectra_info_map.erase( it );
+			it = spectra_info_map.find(id_);
+		}
+		if ( id_ == current_region_id ){
+			pixelCanvas -> clearCurve();
+			current_region_id = NO_REGION_ID;
+		}
 		return;
 	}
-	else if ( type == viewer::region::RegionChangeFocus )
+	//Normally we go off the region selected event because the focus event is called
+	//both when a region loses(bad) or gains focus(good).  However, in the case we
+	//don't have a current_region_id, we'll take anything.
+	else if ( type == viewer::region::RegionChangeSelected ||
+			(type == viewer::region::RegionChangeFocus && current_region_id == NO_REGION_ID )){
 		current_region_id = id_;			// viewer region focus has changed
-	else if ( type == viewer::region::RegionChangeNewChannel )
+	}
+	else if ( type == viewer::region::RegionChangeNewChannel ){
 		return;						// viewer moving to new channel
-	else if ( id_ != current_region_id )
+	}
+	else if ( id_ != current_region_id ){
 		return;						// some other region
+	}
 
 	SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 	if ( it == spectra_info_map.end( ) ) return;
