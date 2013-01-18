@@ -225,12 +225,13 @@ void MSSummary::listMain (LogIO& os, Bool verbose) const
 void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Bool fillRecord) const
 {
-
-
 	if (nrow()<=0) {
 		os << "The MAIN table is empty: there are no data!!!" << endl << LogIO::POST;
 		return;
 	}
+	// FIXME implementation should be migrated to use MSMetaDataOnDemand class
+	MSMetaDataOnDemand md(pMS, 50);
+
 	// Make objects
 	ROMSColumns msc(*pMS);
 	Double startTime, stopTime;
@@ -321,7 +322,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 
 		// Table containing this iteration:
 		Table obsarrtab(obsarriter.table());
-
 		// Extract (zero-based) OBSID and ARRID for this iteration:
 		ROTableVector<Int> obsidcol(obsarrtab,"OBSERVATION_ID");
 		Int obsid(obsidcol(0));
@@ -495,7 +495,10 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						if (name.length()>20) name.replace(19,1,'*');
 						os.output().width(widthField); os << name.at(0,20);
 
-						os.output().width(widthnrow); os << thisnrow;
+						//os.output().width(widthnrow); os << thisnrow;
+						os.output().width(widthnrow);
+						os <<  md.nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+
 						os.output().width(widthInttim); os << meanIntTim;
 						os.output().width(widthLead); os << " ";
 						os << spwids;
@@ -659,7 +662,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		// push OBS/ARR iteration
 		obsarriter.next();
 	} // end of OBS/ARR iteration
-
 	if (verbose){
 		os << "           (nRows = Total number of rows per scan) " << endl;
 		os << LogIO::POST;
@@ -1053,7 +1055,7 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 		os << endl;
 
 
-		MSMetaDataOnDemand msmd(*pMS);
+		MSMetaDataOnDemand msmd(pMS, 20);
 		vector<MPosition> antPos = msmd.getAntennaPositions();
 		Bool posIsITRF = antPos[0].type() != MPosition::ITRF;
 		vector<Quantum<Vector<Double> > > offsets = msmd.getAntennaOffsets(antPos);
