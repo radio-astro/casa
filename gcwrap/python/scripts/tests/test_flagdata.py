@@ -883,6 +883,80 @@ class test_selections_alma(test_base):
         self.assertEqual(res['spw']['4']['flagged'], 22752, 'spw=4 should not be flagged')
         self.assertEqual(res['spw']['4']['total'], 22752, 'spw=4 should not be flagged')
 
+    # CAS-4682
+#    def test_null_field_selection1(self):
+#        '''flagdata: handle non-existing field in agent's parameters in list mode'''
+#        input = ["field='Mars'",
+#                 "field='BLA'",   # non-existing field
+#                 "field='J1037-295'"]
+#        
+#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=True)
+#        res = flagdata(vis=self.vis, mode='summary')
+#        # It should flag field 1 and 2
+#        self.assertEqual(res['field']['J1037-295']['flagged'], 256560)
+#        self.assertEqual(res['field']['J1058+015']['flagged'], 0)
+#        self.assertEqual(res['field']['Mars']['flagged'], 96216)
+#        self.assertEqual(res['flagged'], 256560+96216)
+#                             
+#    def test_null_field_selection2(self):
+#        '''flagdata: do not handle non-existing field in agent's parameters in list mode'''
+#        input = ["field='Mars'",
+#                 "field='BLA'",   # non-existing field
+#                 "field='J1037-295'"]
+#        
+#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=False)
+#        res = flagdata(vis=self.vis, mode='summary')
+#        # It should flag nothing
+#        self.assertEqual(res['field']['Mars']['flagged'], 0)
+#        self.assertEqual(res['field']['J1058+015']['flagged'], 0)
+#        self.assertEqual(res['field']['J1037-295']['flagged'], 0)
+        
+    def test_null_intent_selection1(self):
+        '''flagdata: handle unknown scan intent in list mode'''
+        
+        input = ["intent='FOCUS",   # non-existing intent
+                 "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
+                 "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
+                 "intent='CALIBRATE_AMPLI_ON_SOURC",
+                 "intent='*DELAY*'"] # non-existing
+       
+        flagdata(vis=self.vis, mode='list', inpfile=input)
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 80184)
+        self.assertEqual(res['scan']['2']['flagged'], 96216)
+        self.assertEqual(res['flagged'], 80184+96216)
+ 
+#    def test_null_intent_selection2(self):
+#        '''flagdata: do not handle unknown scan intent in list mode'''
+#        
+#        input = ["intent='FOCUS",   # non-existing intent
+#                 "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
+#                 "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
+#                 "intent='CALIBRATE_AMPLI_ON_SOURC",
+#                 "intent='*DELAY*'"] # non-existing
+#       
+#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=False)
+#        res = flagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['scan']['1']['flagged'], 0)
+#        self.assertEqual(res['flagged'], 0)
+
+#    def test_null_selections1(self):
+#        '''flagdata: handle NULL MS selections in list mode'''
+#        
+#        input = ["intent='FOCUS",   # non-existing intent
+#                 "scan='1'", # scan=1
+#                 "field='J1037-295,ngc3256,Titan'", # field Titan doesn't exist
+#                 "intent='CALIBRATE_AMPLI_ON_SOURCE'"] # scan=2
+#               
+##        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=True)
+#        flagdata(vis=self.vis, mode='list', inpfile=input)
+#        res = flagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['scan']['1']['flagged'], 80184)
+#        self.assertEqual(res['scan']['2']['flagged'], 96216)
+#        self.assertEqual(res['field']['J1037-295']['flagged'], 256560)
+#        self.assertEqual(res['field']['ngc3256']['flagged'], 721632)
+#        self.assertEqual(res['flagged'], 80184+256560+721632)
+
 class test_selections2(test_base):
     '''Test other selections'''
     
@@ -1249,8 +1323,7 @@ class test_list_list(test_base):
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
                 
-        
-        
+       
 class test_clip(test_base):
     """flagdata:: Test of mode = 'clip'"""
     
