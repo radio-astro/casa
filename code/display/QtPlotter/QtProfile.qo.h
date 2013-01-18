@@ -49,7 +49,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 
-#include <display/region/QtRegion.qo.h>
+#include <display/region/Region.qo.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
