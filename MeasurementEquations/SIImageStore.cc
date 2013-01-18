@@ -71,6 +71,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImageName=String("");
     itsImageShape=IPosition();
 
+    itsValidity = False;
+
   }
 
   SIImageStore::SIImageStore(String imagename) 
@@ -84,27 +86,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsResidual = new PagedImage<Float> (itsImageName+String(".residual"));
 	itsPsf = new PagedImage<Float> (itsImageName+String(".psf"));
 	itsWeight = new PagedImage<Float> (itsImageName+String(".weight"));
+	itsModel = new PagedImage<Float> (itsImageName+String(".model"));
 
 	itsImageShape = itsResidual->shape();
+	
+	if( ( itsPsf->shape() != itsImageShape ) ||
+	    ( itsWeight->shape() != itsImageShape ) ||
+	    ( itsModel->shape() != itsImageShape ) )
+	  {
+	    throw( AipsError("Shapes of "+itsImageName+".{residual,psf,weight,model} are not identical") );
+	  }
 
       }
     else
       {
+	/// Make this more intelligent. For instance, don't always need 'weight' and model for different stages.
 	throw( AipsError( "Images do not exist. Please create them" ) );
       }
 
-    if( doesModelImageExist() )
-      {
-	itsModel = new PagedImage<Float> (itsImageName+String(".model"));
-      }
-    else
-      {
-	throw( AipsError( "Model Image does not exist. Please create it" ) );
-      }
+    itsValidity = True;
   }
 
   SIImageStore::SIImageStore(String imagename, 
-			     CountedPtr<CoordinateSystem> imcoordsys, 
+			     CoordinateSystem &imcoordsys, 
 			     IPosition imshape)
   {
     LogIO os( LogOrigin("SIImageStore","Open new Images",WHERE) );
@@ -121,17 +125,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Images already exist. Overwriting them";
       }
 
-    itsResidual = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".residual"));
-    itsPsf = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".psf"));
-    itsWeight = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".weight"));
-    
-    if( doesModelImageExist() )
-      {
-	os << "Model Image already exists. Overwriting it";
-      }
-    itsModel = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".model"));
+    itsResidual = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".residual"));
+    itsPsf = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".psf"));
+    itsWeight = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".weight"));
+    itsModel = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".model"));
+
+    itsResidual->set(0.0);
+    itsPsf->set(0.2);
+    itsWeight->set(1.0);
+    itsModel->set(0.0);
 
     os << LogIO::POST;
+    
+    itsValidity=True;
 
   }
 
@@ -141,6 +147,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   SIImageStore::~SIImageStore() 
   {
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  void SIImageStore::setModelImage( String modelname )
+  {
+    LogIO os( LogOrigin("SIImageStore","setModelImage",WHERE) );
+    
+    Directory immodel( modelname+String(".model") );
+    if( !immodel.exists() ) 
+      {
+	os << "Starting model image does not exist. No initial prediction will be done" << LogIO::POST;
+	return;
+      }
+
+    CountedPtr<PagedImage<Float> > model = new PagedImage<Float>( modelname+String(".model") );
+    // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
+
+    if( model->shape() != itsModel->shape() )
+      {
+	// For now, throw an exception.
+	throw( AipsError( "Input model image "+modelname+".model is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
+      }
+
+    // Then, add its contents to itsModel.
+    itsModel->put( itsModel->get() + model->get() );
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,36 +221,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Directory impsf( itsImageName+String(".psf") );
     Directory imresidual( itsImageName+String(".residual") );
     Directory imweight( itsImageName+String(".weight") );
-
-    return impsf.exists() & imresidual.exists() & imweight.exists();
-  }
-
-  Bool SIImageStore::doesModelImageExist()
-  {
-    LogIO os( LogOrigin("SIImageStore","doesModelImageExist",WHERE) );
-    // Check if the model image exists.
-    // If it exists, then...
-    //   If the shape is not right, attempt a re-grid onto itsImageShape here.
-    //   If it's a component list, but the FTM needs an image, evaluate the model image here.
-    //   If none of the above here, then complain.
-
     Directory immodel( itsImageName+String(".model") );
-    return immodel.exists();
+
+    return impsf.exists() & imresidual.exists() & imweight.exists() & immodel.exists();
   }
 
-
-  void SIImageStore::allocateRestoredImage()
+   void SIImageStore::allocateRestoredImage()
   {
 
     //    itsImage = new PagedImage<Float> (itsImageShape, *imcoordsys, itsImageName+String(".residual"));
   }
 
+  void SIImageStore::resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight )
+  {
+    if( resetpsf ) itsPsf->set(0.0);
+    if( resetresidual ) itsResidual->set(0.0);
+    if( resetweight ) itsWeight->set(0.0);
+  }
 
-  void SIImageStore::normalizeByWeight()
+  void SIImageStore::addImages( CountedPtr<SIImageStore> imagestoadd,
+				Bool addpsf, Bool addresidual, Bool addweight)
+  {
+    if(addpsf)
+      {
+	LatticeExpr<Float> adderPsf( *itsPsf + *(imagestoadd->psf()) ); 
+	itsPsf->copyData(adderPsf);
+      }
+    if(addresidual)
+      {
+	LatticeExpr<Float> adderRes( *itsResidual + *(imagestoadd->residual()) ); 
+	itsResidual->copyData(adderRes);
+      }
+    if(addweight)
+      {
+	LatticeExpr<Float> adderWeight( *itsWeight + *(imagestoadd->weight()) ); 
+	itsWeight->copyData(adderWeight);
+      }
+  }
+
+  void SIImageStore::normalizeByWeight(Float weightlimit)
   {
     LogIO os( LogOrigin("SIImageStore","doesModelImageExist",WHERE) );
-    
     os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+
+    LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
+    LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
+
+    LatticeExpr<Float> ratio( ( (*itsResidual) * mask ) / ( (*itsWeight) + maskinv) );
+    itsResidual->copyData(ratio);
+    
+    // createMask
+
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

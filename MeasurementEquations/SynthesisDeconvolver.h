@@ -75,6 +75,7 @@ class SynthesisDeconvolver
   void getCopyOfResidualAndMask( TempImage<Float> &/*residual*/, TempImage<Float>& /*mask*/ );
   void setMask( TempImage<Float> &/*mask*/ );
 
+  void setStartingModel(Record modpars);
 
 protected:
 
@@ -88,7 +89,7 @@ protected:
   //  Vector<Slicer> partitionImages();
 
   // Check if images exist on disk and are all the same shape
-  Bool checkImagesOnDisk();
+  void setupImagesOnDisk();
   Bool doImagesExist( String imagename );
 
   /////////////// Member Objects
@@ -100,10 +101,10 @@ protected:
   Vector<CountedPtr<SIImageStore> > itsPartImages;
 
   IPosition itsImageShape;
-  CountedPtr<CoordinateSystem> itsCoordSys;
   
   String itsImageName;
   Vector<String> itsPartImageNames;
+  String itsStartingModelName;
 
   uInt itsDeconvolverId;
 

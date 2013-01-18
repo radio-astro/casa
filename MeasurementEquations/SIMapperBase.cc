@@ -89,14 +89,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMapperBase","initImages",WHERE) );
 
     // Initialize all these images.
-    Array<Float> pixels( itsImageShape );
-    pixels = 0.0;
-    itsImages->residual()->set(0.0); 
-    itsImages->psf()->set(0.0);
-    itsImages->psf()->set(0.2);
-    itsImages->model()->set(0.0);
-    itsImages->weight()->set(1.0);
-
     //////////////////////////////////// ONLY FOR TESTING //////////////////////////////////
     // Initial Peak Residuals - for single-pixel-image testing.
     // In the real world, this is the gridded/imaged data.

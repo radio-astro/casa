@@ -50,7 +50,7 @@ class SIImageStore
   SIImageStore();
   SIImageStore(String imagename);
   SIImageStore(String imagename, 
-	       CountedPtr<CoordinateSystem> imcoordsys, 
+	       CoordinateSystem &imcoordsys, 
 	       IPosition imshape);
 
   ~SIImageStore();
@@ -65,12 +65,19 @@ class SIImageStore
   CountedPtr<PagedImage<Float> > model();
   CountedPtr<PagedImage<Float> > image();
 
+  void setModelImage( String modelname );
+
   Bool doImagesExist();
-  Bool doesModelImageExist();
 
   void allocateRestoredImage();
 
-  void normalizeByWeight();
+  void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
+  void addImages( CountedPtr<SIImageStore> imagestoadd, 
+		  Bool addpsf, Bool addresidual, Bool addweight );
+
+  void normalizeByWeight(Float weightlimit);
+
+  Bool isValid(){return itsValidity;}
 
 protected:
 
@@ -80,6 +87,8 @@ protected:
   String itsImageName;
   CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
   
+
+  Bool itsValidity;
 
 };
 
