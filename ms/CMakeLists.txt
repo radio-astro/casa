@@ -158,7 +158,10 @@ ${BISON_MSStateGram_OUTPUTS}
 ${FLEX_MSStateGram_OUTPUTS}
 )
 
-target_link_libraries (casa_ms casa_measures)
+target_link_libraries (
+casa_ms casa_measures
+${Boost_LIBRARIES}
+)
 
 add_subdirectory (apps)
 
