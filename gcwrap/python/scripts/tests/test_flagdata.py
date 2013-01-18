@@ -330,7 +330,7 @@ class test_shadow(test_base):
         if os.path.exists("cas2399.txt"):
             os.system('rm -rf cas2399.txt')
         
-        input = 'name=VLA01\n'+\
+        myinput = 'name=VLA01\n'+\
                 'diameter=25.0\n'+\
                 'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
                 'name=VLA02\n'+\
@@ -344,7 +344,7 @@ class test_shadow(test_base):
                 'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
 
         filename = 'cas2399.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         
         flagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename)
         res = flagdata(vis=self.vis, mode='summary')
@@ -358,7 +358,7 @@ class test_shadow(test_base):
             os.system('rm -rf myants.txt')
         
         # Create antennafile in disk
-        input = 'name=VLA01\n'+\
+        myinput = 'name=VLA01\n'+\
                 'diameter=25.0\n'+\
                 'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
                 'name=VLA02\n'+\
@@ -372,12 +372,12 @@ class test_shadow(test_base):
                 'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
 
         antfile = 'myants.txt'
-        create_input(input, antfile)
+        create_input(myinput, antfile)
         
         # Create list file
-        input = "mode='shadow' tolerance=10.0 addantenna='myants.txt'"
+        myinput = "mode='shadow' tolerance=10.0 addantenna='myants.txt'"
         filename = 'listfile.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         
         # Flag
         flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='withdict.txt')
@@ -551,11 +551,11 @@ class test_msselection(test_base):
     def test_autocorr3(self):
         '''flagdata: flag auto-corrs in list mode'''
         # creat input list
-        input = "scan='1' mode='manual' autocorr=true reason='AUTO'\n"\
+        myinput = "scan='1' mode='manual' autocorr=true reason='AUTO'\n"\
                 "scan='3' autocorr=True reason='AUTO'\n"\
                 "scan='4' reason='ALL'"
         filename = 'listauto.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         
         # select only the autocorr reasons to flag
         flagdata(vis=self.vis, mode='list', inpfile=filename, reason='AUTO', action='apply')
@@ -886,11 +886,11 @@ class test_selections_alma(test_base):
     # CAS-4682
 #    def test_null_field_selection1(self):
 #        '''flagdata: handle non-existing field in agent's parameters in list mode'''
-#        input = ["field='Mars'",
+#        myinput = ["field='Mars'",
 #                 "field='BLA'",   # non-existing field
 #                 "field='J1037-295'"]
 #        
-#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=True)
+#        flagdata(vis=self.vis, mode='list', inpfile=myinput, handleMSexception=True)
 #        res = flagdata(vis=self.vis, mode='summary')
 #        # It should flag field 1 and 2
 #        self.assertEqual(res['field']['J1037-295']['flagged'], 256560)
@@ -900,11 +900,11 @@ class test_selections_alma(test_base):
 #                             
 #    def test_null_field_selection2(self):
 #        '''flagdata: do not handle non-existing field in agent's parameters in list mode'''
-#        input = ["field='Mars'",
+#        myinput = ["field='Mars'",
 #                 "field='BLA'",   # non-existing field
 #                 "field='J1037-295'"]
 #        
-#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=False)
+#        flagdata(vis=self.vis, mode='list', inpfile=myinput, handleMSexception=False)
 #        res = flagdata(vis=self.vis, mode='summary')
 #        # It should flag nothing
 #        self.assertEqual(res['field']['Mars']['flagged'], 0)
@@ -914,13 +914,13 @@ class test_selections_alma(test_base):
     def test_null_intent_selection1(self):
         '''flagdata: handle unknown scan intent in list mode'''
         
-        input = ["intent='FOCUS",   # non-existing intent
+        myinput = ["intent='FOCUS",   # non-existing intent
                  "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
                  "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
                  "intent='CALIBRATE_AMPLI_ON_SOURC",
                  "intent='*DELAY*'"] # non-existing
        
-        flagdata(vis=self.vis, mode='list', inpfile=input)
+        flagdata(vis=self.vis, mode='list', inpfile=myinput)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184)
         self.assertEqual(res['scan']['2']['flagged'], 96216)
@@ -929,13 +929,13 @@ class test_selections_alma(test_base):
 #    def test_null_intent_selection2(self):
 #        '''flagdata: do not handle unknown scan intent in list mode'''
 #        
-#        input = ["intent='FOCUS",   # non-existing intent
+#        myinput = ["intent='FOCUS",   # non-existing intent
 #                 "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
 #                 "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
 #                 "intent='CALIBRATE_AMPLI_ON_SOURC",
 #                 "intent='*DELAY*'"] # non-existing
 #       
-#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=False)
+#        flagdata(vis=self.vis, mode='list', inpfile=myinput, handleMSexception=False)
 #        res = flagdata(vis=self.vis, mode='summary')
 #        self.assertEqual(res['scan']['1']['flagged'], 0)
 #        self.assertEqual(res['flagged'], 0)
@@ -943,13 +943,13 @@ class test_selections_alma(test_base):
 #    def test_null_selections1(self):
 #        '''flagdata: handle NULL MS selections in list mode'''
 #        
-#        input = ["intent='FOCUS",   # non-existing intent
+#        myinput = ["intent='FOCUS",   # non-existing intent
 #                 "scan='1'", # scan=1
 #                 "field='J1037-295,ngc3256,Titan'", # field Titan doesn't exist
 #                 "intent='CALIBRATE_AMPLI_ON_SOURCE'"] # scan=2
 #               
-##        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=True)
-#        flagdata(vis=self.vis, mode='list', inpfile=input)
+##        flagdata(vis=self.vis, mode='list', inpfile=myinput, handleMSexception=True)
+#        flagdata(vis=self.vis, mode='list', inpfile=myinput)
 #        res = flagdata(vis=self.vis, mode='summary')
 #        self.assertEqual(res['scan']['1']['flagged'], 80184)
 #        self.assertEqual(res['scan']['2']['flagged'], 96216)
@@ -981,9 +981,9 @@ class test_selections2(test_base):
     def test_observation2(self):
         '''flagdata: observation ID selections in list mode'''
         # creat input list
-        input = "observation='0' mode='manual'"
+        myinput = "observation='0' mode='manual'"
         filename = 'obs2.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         
         flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False)
         res = flagdata(vis=self.vis, mode='summary')
@@ -1046,10 +1046,10 @@ class test_list_file(test_base):
     def test_file1(self):
         '''flagdata: apply flags from a list and do not save'''
         # creat input list
-        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manualflag\n"\
+        myinput = "scan=1~3 mode=manual\n"+"scan=5 mode=manualflag\n"\
                 "#scan='4'"
         filename = 'list1.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         
         # apply and don't save to MS. Ignore comment line
         flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False, action='apply')
@@ -1060,9 +1060,9 @@ class test_list_file(test_base):
     def test_file2(self):
         '''flagdata: only save parameters without running the tool'''
         # creat input list
-        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        myinput = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
         filename = 'list2.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
 
         # save to another file
         if os.path.exists("myflags.txt"):
@@ -1077,9 +1077,9 @@ class test_list_file(test_base):
     def test_file3(self):
         '''flagdata: flag and save list to FLAG_CMD'''
         # creat input list
-        input = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
+        myinput = "scan=1~3 mode=manual\n"+"scan=5 mode=manual\n"
         filename = 'list3.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
 
         # Delete any rows from FLAG_CMD
         flagcmd(vis=self.vis, action='clear', clearall=True)
@@ -1113,9 +1113,9 @@ class test_list_file(test_base):
         self.setUp_data4tfcrop()
         
         # creat input list
-        input = "mode='clip' clipzeros=true reason='CLIP_ZERO'"
+        myinput = "mode='clip' clipzeros=true reason='CLIP_ZERO'"
         filename = 'list5.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
 
         # Save to FLAG_CMD
         flagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True)
@@ -1129,12 +1129,12 @@ class test_list_file(test_base):
     def test_file6(self):
         '''flagdata: select by reason in list mode from a file'''
         # creat input list
-        input = "mode='manual' scan='1' reason='SCAN_1'\n"\
+        myinput = "mode='manual' scan='1' reason='SCAN_1'\n"\
                 "mode='manual' scan='2'\n"\
                 "scan='3' reason='SCAN_3'\n"\
                 "scan='4' reason=''"
         filename = 'list6.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         
         # Select one reason
         flagdata(vis=self.vis, mode='list', inpfile=filename, reason='SCAN_3')
@@ -1186,12 +1186,12 @@ class test_list_file(test_base):
     def test_reason3(self):
         '''flagdata: replace input reason from file with cmdreason'''
         # creat input list
-        input = "mode='manual' scan='1' reason='SCAN_1'\n"\
+        myinput = "mode='manual' scan='1' reason='SCAN_1'\n"\
                 "mode='manual' scan='2'\n"\
                 "scan='3' reason='SCAN_3'\n"\
                 "scan='4' reason=''"
         filename = 'input3.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         
         flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='reason3.txt',
                   cmdreason='MANUALFLAG', action='')
@@ -1211,12 +1211,12 @@ class test_list_list(test_base):
     def test_list1(self):
         '''flagdata: apply flags from a Python list and do not save'''
         # creat input list
-        input = ["scan='1~3' mode='manual'",
+        myinput = ["scan='1~3' mode='manual'",
                  "scan='5' mode='manualflag'",
                  "#scan='4'"]
         
         # apply and don't save to MS. Ignore comment line
-        flagdata(vis=self.vis, mode='list', inpfile=input, savepars=False, action='apply')
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, savepars=False, action='apply')
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 0)
         self.assertEqual(res['flagged'], 1711206, 'Total flagged does not match')
@@ -1224,14 +1224,14 @@ class test_list_list(test_base):
     def test_list2(self):
         '''flagdata: only save parameters without running the tool'''
         # creat input list
-        input = ["scan='1~3' mode='manual'",
+        myinput = ["scan='1~3' mode='manual'",
                  "scan='5' mode='manual'"]
 
         # save to another file
         if os.path.exists("myflags.txt"):
             os.system('rm -rf myflags.txt')
             
-        flagdata(vis=self.vis, mode='list', inpfile=input, savepars=True, action='', outfile='myflags.txt')
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, savepars=True, action='', outfile='myflags.txt')
         
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 0, 'No flags should have been applied')
@@ -1239,19 +1239,19 @@ class test_list_list(test_base):
     def test_list3(self):
         '''flagdata: Compare flags from flagdata and flagcmd'''
         # creat input list
-        input = ["scan='1~3' mode='manual'",
+        myinput = ["scan='1~3' mode='manual'",
                  "scan='5' mode='manual'"]
  
         # Delete any rows from FLAG_CMD
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag from list and save to FLAG_CMD
-        flagdata(vis=self.vis, mode='list', inpfile=input)
+        flagdata(vis=self.vis, mode='list', inpfile=myinput)
         res1 = flagdata(vis=self.vis, mode='summary')
         
         # Unflag and save in flagcmd using the cmd mode
         flagdata(vis=self.vis, mode='unflag')
-        flagcmd(vis=self.vis, inpmode='list', inpfile=input)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=myinput)
         res2 = flagdata(vis=self.vis, mode='summary')
 
         # Verify
@@ -1264,10 +1264,10 @@ class test_list_list(test_base):
         self.setUp_data4tfcrop()
         
         # creat input list
-        input = ["mode='clip' clipzeros=true reason='CLIP_ZERO'"]
+        myinput = ["mode='clip' clipzeros=true reason='CLIP_ZERO'"]
 
         # Save to FLAG_CMD
-        flagdata(vis=self.vis, mode='list', inpfile=input, action='', savepars=True)
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, action='', savepars=True)
         
         # Run in flagcmd and select by reason
         flagcmd(vis=self.vis, action='apply', reason='CLIP_ZERO')
@@ -1278,26 +1278,26 @@ class test_list_list(test_base):
     def test_list5(self):
         '''flagdata: select by reason in list mode from a list'''
         # creat input list
-        input = ["mode='manual' scan='1' reason='SCAN_1'",
+        myinput = ["mode='manual' scan='1' reason='SCAN_1'",
                 "mode='manual' scan='2'",
                 "scan='3' reason='SCAN_3'",
                 "scan='4' reason=''"]
         
         # Select one reason
-        flagdata(vis=self.vis, mode='list', inpfile=input, reason='SCAN_3')
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, reason='SCAN_3')
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['3']['flagged'], 762048, 'Should flag only reason=SCAN_3')
         self.assertEqual(res['flagged'], 762048, 'Should flag only reason=SCAN_3')
         
         # Select list of reasons
-        flagdata(vis=self.vis, mode='list', inpfile=input, reason=['','SCAN_1'])
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, reason=['','SCAN_1'])
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 95256, 'Should flag reason=\'\'')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
         
         # No reason selection
         flagdata(vis=self.vis, mode='unflag')
-        flagdata(vis=self.vis, mode='list', inpfile=input)
+        flagdata(vis=self.vis, mode='list', inpfile=myinput)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['2']['flagged'], 238140)
@@ -1309,12 +1309,12 @@ class test_list_list(test_base):
     def test_reason_list(self):
         '''flagdata: replace input reason from list with cmdreason'''
         # creat input list
-        input = ["mode='manual' scan='1' reason='SCAN_1'",
+        myinput = ["mode='manual' scan='1' reason='SCAN_1'",
                 "mode='manual' scan='2'",
                 "scan='3' reason='SCAN_3'",
                 "scan='4' reason=''"]
         
-        flagdata(vis=self.vis, mode='list', inpfile=input, savepars=True, outfile='reason3.txt',
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, savepars=True, outfile='reason3.txt',
                   cmdreason='MANUALFLAG', action='')
         
         # Apply the flag cmds
@@ -1522,10 +1522,10 @@ class test_tsys(test_base):
 
         # Get the same results when flagging using a file
         flagdata(vis=self.vis, mode='unflag')
-        input = "mode='clip' datacolumn='FPARAM' correlation='Sol1' clipzeros=True clipminmax=[0.,600.]\n"\
+        myinput = "mode='clip' datacolumn='FPARAM' correlation='Sol1' clipzeros=True clipminmax=[0.,600.]\n"\
                 "mode='extend' extendpols=True growfreq=0.0 growtime=0.0"
         filename = 'callist.txt'
-        create_input(input, filename)
+        create_input(myinput, filename)
         flagdata(vis=self.vis, mode='list', inpfile=filename)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['total'], 129024)
