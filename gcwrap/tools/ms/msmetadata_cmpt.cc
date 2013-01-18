@@ -34,16 +34,19 @@
 
 #include <casa/Containers/Record.h>
 #include <casa/Logging/LogIO.h>
-//#include <casacore/casa/OS/PrecTimer.h>
-#include <measures/Measures/MeasureHolder.h>
 #include <casa/Quanta/QuantumHolder.h>
-
+#include <measures/Measures/MeasureHolder.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSMetaDataOnDemand.h>
 #include <ms/MeasurementSets/MSMetaDataPreload.h>
 
 #include <casa/namespace.h>
 
 #define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __FUNCTION__, __LINE__);
 // common method scaffold
+
+#define COMMA ,
+
 #define _FUNC(BODY) \
 	try { \
 		_ORIGIN; \
@@ -125,7 +128,10 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 				<< "Must be either an integer or integer array."
 				<< LogIO::EXCEPTION;
 		}
-		return _vectorStringToStdVectorString(_msmd->getAntennaNames(myIDs));
+		std::map<String COMMA uInt> namesToIDsMap;
+		return _vectorStringToStdVectorString(
+			_msmd->getAntennaNames(namesToIDsMap COMMA myIDs)
+		);
 	)
 }
 
@@ -188,6 +194,15 @@ record* msmetadata::antennaposition(const string& name) {
 	)
 }
 
+variant* msmetadata::baselines() {
+	_FUNC (
+		Matrix<Bool> baselines = _msmd->getUniqueBaselines();
+		vector<bool> values = baselines.tovector();
+		vector<int> shape = baselines.shape().asStdVector();
+		return new variant(values, shape);
+	)
+}
+
 vector<int> msmetadata::chanavgspws() {
 	_FUNC (
 		return _setUIntToVectorInt(_msmd->getChannelAvgSpw());
@@ -199,6 +214,12 @@ bool msmetadata::done() {
 		_msmd.reset(0);
 		return true;
 	)
+}
+
+record* msmetadata::effexposuretime() {
+	return fromRecord(
+		QuantumHolder(_msmd->getEffectiveTotalExposureTime()).toRecord()
+	);
 }
 
 vector<int> msmetadata::fdmspws() {
@@ -349,6 +370,12 @@ int msmetadata::nantennas() {
 	)
 }
 
+int msmetadata::nbaselines() {
+	_FUNC(
+		return _msmd->nBaselines();
+	)
+}
+
 int msmetadata::nfields() {
 	_FUNC(
 		return _msmd->nFields();
@@ -373,9 +400,9 @@ int msmetadata::nstates() {
 	)
 }
 
-int msmetadata::nvis() {
+int msmetadata::nrows() {
 	_FUNC(
-		return _msmd->nVisibilities();
+		return _msmd->nRows();
 	)
 }
 
@@ -399,11 +426,79 @@ record* msmetadata::observatoryposition(const int which) {
 	)
 }
 
-bool msmetadata::open(const string& msname) {
-	_FUNC2(
-		_msmd.reset(new MSMetaDataPreload(MeasurementSet(msname)));
+void msmetadata::_init(const casa::MeasurementSet *const &ms, const bool preload, const float cachesize) {
+	if (preload) {
+		_msmd.reset(new MSMetaDataPreload(*ms));
+		uInt nACRows = _msmd->nRows(MSMetaData::AUTO);
+		uInt nXCRows = _msmd->nRows(MSMetaData::CROSS);
+		Double unflaggedACRows;
+		Double unflaggedXCRows;
+		vector<Double> unflaggedFieldNACRows, unflaggedFieldNXCRows;
+		std::map<uInt, Double> unflaggedScanNACRows, unflaggedScanNXCRows;
+		_msmd->getUnflaggedRowStats(
+			unflaggedACRows, unflaggedXCRows,
+			unflaggedFieldNACRows, unflaggedFieldNXCRows,
+			unflaggedScanNACRows, unflaggedScanNXCRows
+		);
+
 		*_log << LogIO::NORMAL << "Read metadata from "
-			<< _msmd->nVisibilities() << " visibilities." << LogIO::POST;
+			<< _msmd->nRows() << " rows ("
+			<< (unflaggedACRows + unflaggedXCRows) << " unflagged)." << LogIO::POST;
+		*_log << LogIO::NORMAL << "  Number of cross correlation rows: "
+			<< nXCRows << " (" << unflaggedXCRows << " unflagged)"
+			<< LogIO::POST;
+		*_log << LogIO::NORMAL << "  Number of autocorrelation rows: "
+			<< nACRows << " (" << unflaggedACRows << " unflagged)"
+			<< LogIO::POST;
+	}
+	else {
+		_msmd.reset(new MSMetaDataOnDemand(ms, cachesize));
+	}
+
+}
+
+
+bool msmetadata::open(const string& msname, const bool preload, const float cachesize) {
+	_FUNC2(
+		/*
+		if (preload) {
+			_msmd.reset(new MSMetaDataPreload(MeasurementSet(msname)));
+		}
+		else {
+			_ms.reset(new MeasurementSet(msname));
+			_msmd.reset(new MSMetaDataOnDemand(_ms.get(), cachesize));
+		}
+		uInt nACRows;
+		uInt nXCRows;
+		std::map<uInt COMMA uInt> scanToNACRowsMap;
+		std::map<uInt COMMA uInt> scanToNXCRowsMap;
+		vector<uInt> sourceToNACRowsMap;
+		vector<uInt> sourceToNXCRowsMap;
+		_msmd->getRowStats(
+			nACRows, nXCRows, scanToNACRowsMap, scanToNXCRowsMap,
+			sourceToNACRowsMap, sourceToNXCRowsMap
+		);
+		Double nUnflaggedACRows;
+		Double nUnflaggedXCRows;
+		_msmd->getUnflaggedRowStats(nUnflaggedACRows, nUnflaggedXCRows);
+		*_log << LogIO::NORMAL << "Read metadata from "
+			<< _msmd->nRows() << " rows ("
+			<< (nUnflaggedACRows + nUnflaggedXCRows) << " unflagged)." << LogIO::POST;
+		*_log << LogIO::NORMAL << "  Number of cross correlation rows: "
+			<< nXCRows << " (" << nUnflaggedXCRows << " unflagged)"
+			<< LogIO::POST;
+		*_log << LogIO::NORMAL << "  Number of autocorrelation rows: "
+			<< nACRows << " (" << nUnflaggedACRows << " unflagged)"
+			<< LogIO::POST;
+		*/
+		if (preload) {
+			MeasurementSet ms(msname);
+			_init(&ms, preload, cachesize);
+		}
+		else {
+			_ms.reset(new MeasurementSet(msname));
+			_init(_ms.get(), preload, cachesize);
+		}
 		return true;
 	)
 }
@@ -543,10 +638,19 @@ vector<int> msmetadata::wvrspws() {
 	)
 }
 
+/*
 msmetadata::msmetadata(const MeasurementSet& ms) : _msmd(new MSMetaDataPreload(ms)), _log(new LogIO()) {
 	*_log << LogIO::NORMAL << "Read metadata from "
-		<< _msmd->nVisibilities() << " visibilities." << LogIO::POST;
+		<< _msmd->nRows() << " rows." << LogIO::POST;
 }
+*/
+
+msmetadata::msmetadata(
+	const MeasurementSet *const &ms, const bool preload, const float cachesize
+) : _msmd(0), _ms(0), _log(new LogIO()) {
+	_init(ms, preload, cachesize);
+}
+
 
 vector<string> msmetadata::_fieldNames(const set<uint>& ids) {
 	return _vectorStringToStdVectorString(

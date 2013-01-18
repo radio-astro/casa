@@ -212,6 +212,23 @@ windows in the dataset and close the tool.
             </example>
         </method>
 
+        <method type="function" name="baselines">
+            <shortdescription>Get a two dimensional boolean array representing baselines for data recorded in the MS.</shortdescription>
+            <returns type="any"><any type="variant"/></returns>
+            <description>
+                Get a two dimensional boolean array representing baselines for data recorded in the MS. A value of True means
+                there is at least one row in the MS main table for that baseline, False means no rows for that baseline. Autocorrelation
+                "baseline" information is also present via the values along the diagonal.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the baseline matrix for this data set
+    baselines = msmd.baselines()
+    msmd.done()
+            </example>
+        </method>
+        
+        
         <method type="function" name="chanavgspws">
             <shortdescription>Get an array of spectral window IDs used for channel averages. These are windows that do have 1 channel.</shortdescription>
             <returns type="intArray"/>
@@ -240,6 +257,31 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="effexposuretime">
+            <shortdescription>Get the effective exposure (on-source integration time)</shortdescription>
+            <returns type="record"/>
+            <description>
+                Get the effective exposure time (equivalent to what might be more commonly known as total integration
+                time or total sample time) is calculated by summing over all rows in the main MS table, excluding
+                autocorrelations or rows where FLAG_ROW is false, thusly:
+                
+                sum[over i] (exposure[i]*sum[over j](UFBW[i, j])/ncorrelations[i] )/ nmaxbaselines
+                
+                where exposure[i] is the value of EXPOSURE for the ith row, the inner sum is performed over each correlation
+                for that row, UFBW is the unflagged fractional bandwidth is determined by summing all the widths of the
+                unflagged channels for that correlation and dividing by the total bandwidth of all spectral windows observed
+                at the timestamp of row i, ncorrelations is the number of correlations determined by the number of rows in
+                the FLAG matrix for MS row i, and nmaxbaselines is the maximum number of antenna pairs,
+                nantennas*(nantennas-1)/2, where nantennas is the number of antennas in the ANTENNA table. This method returns
+                a quantity (a dictionary having a numerical value and a string unit).
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the effective exposure time.
+    exposure_time = msmd.effexposuretime()
+    msmd.done()
+            </example>
+        </method>
         <method type="function" name="fdmspws">
             <shortdescription>Get an array of spectral window IDs used for FDM. These are windows that do not have 64, 128, or 256 channels.</shortdescription>
             <returns type="intArray"/>
@@ -494,6 +536,20 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="nbaselines">
+            <shortdescription>Get the number of baselines represented in the main MS table.</shortdescription>
+            <returns type="int"/>
+            <description>
+                Get the number of unique baselines (antenna pairs) represented in the main MS table. This can, in theory, be less than
+                n*(n-1)/2 (n being the number of antennas in the ANTENNA table), if data for certain baselines
+                are not included in the main MS table. Autocorrelation "baselines" are not included in this count.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    number_of_baselines = msmd.nbaselines()
+    msmd.done()
+            </example>
+        </method>
         
         <method type="function" name="nfields">
             <shortdescription>Get the number of fields associated with the MS.</shortdescription>
@@ -547,7 +603,7 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
-        <method type="function" name="nvis">
+        <method type="function" name="nrows">
             <shortdescription>Get the number of visibilities (from the main table) associated with the MS.</shortdescription>
             <returns type="int"/>
             <description>
@@ -555,7 +611,7 @@ windows in the dataset and close the tool.
             </description>
             <example>
     msmd.open("my.ms")
-    number_of_visibilities = msmd.nvis()
+    number_of_visibilities = msmd.nrows()
     msmd.done()
             </example>
         </method>
@@ -600,6 +656,14 @@ windows in the dataset and close the tool.
                 <param type="string" direction="in" name="msfile">
                     <description>Name of the existing measurement set</description>
                     <value/>
+                </param>
+                <param type="bool" direction="in" name="preload">
+                    <description>Preload metadata into cache? If False, ms is interrogated on demand and optionally metadata is cached. </description>
+                    <value>false</value>
+                </param>
+                <param type="float" direction="in" name="maxcache">
+                    <descrition>Maximum cache size, in megabytes, to use. Only used if preload=False. </descrition>
+                    <value>50</value>
                 </param>
             </input>
             <returns type="bool"/>

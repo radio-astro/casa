@@ -573,12 +573,12 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
    return rstat;
 }
 
-msmetadata* ms::metadata() {
+msmetadata* ms::metadata(const bool preload, const float cachesize) {
 	try {
 		if (detached()) {
 			return 0;
 		}
-		return new msmetadata(*itsMS);
+		return new msmetadata(itsMS, preload, cachesize);
 	}
 	catch(const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
