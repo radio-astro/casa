@@ -173,7 +173,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     // Then, add its contents to itsModel.
-    itsModel->put( itsModel->get() + model->get() );
+    //itsModel->put( itsModel->get() + model->get() );
+    itsModel->put( model->get() );
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,12 +258,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	LatticeExpr<Float> adderWeight( *itsWeight + *(imagestoadd->weight()) ); 
 	itsWeight->copyData(adderWeight);
       }
+    ///cout << "Res : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << "  Wt : " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
   }
 
+  // Make another for the PSF too.
   void SIImageStore::divideResidualByWeight(Float weightlimit)
   {
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
     os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+
+    ///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
 
     LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
     LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );

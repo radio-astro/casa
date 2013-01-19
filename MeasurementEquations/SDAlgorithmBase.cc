@@ -87,6 +87,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Make a list of Slicers.
     partitionImages();
 
+    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+
+
     os << "Run minor-cycle on " << itsDecSlices.nelements() 
        << " slices of [" << deconvolverid << "]:" << itsImages->getName()
        << " [ CycleThreshold=" << loopcontrols.getCycleThreshold()

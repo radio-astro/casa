@@ -91,7 +91,7 @@ protected:
   //  Vector<Slicer> partitionImages();
 
   // Check if images exist on disk and are all the same shape
-  void setupImagesOnDisk();
+  Bool setupImagesOnDisk();
   Bool doImagesExist( String imagename );
 
   /////////////// Member Objects

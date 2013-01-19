@@ -53,6 +53,7 @@ class SIMapperCollection
 		  CountedPtr<FTMachine> ftmachine);
 
   Int nMappers();
+  Vector<String> getImageNames();
 
   //// For KG : Need to add the interface for 'vb' flowing through here....
   void initializeGrid(Int mapperid);
