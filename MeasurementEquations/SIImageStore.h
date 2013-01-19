@@ -75,7 +75,8 @@ class SIImageStore
   void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
-  void normalizeByWeight(Float weightlimit);
+  void divideResidualByWeight(Float weightlimit);
+  void divideModelByWeight(Float weightlimit);
 
   Bool isValid(){return itsValidity;}
 

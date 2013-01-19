@@ -259,9 +259,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }
 
-  void SIImageStore::normalizeByWeight(Float weightlimit)
+  void SIImageStore::divideResidualByWeight(Float weightlimit)
   {
-    LogIO os( LogOrigin("SIImageStore","doesModelImageExist",WHERE) );
+    LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
     os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
 
     LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
@@ -269,6 +269,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LatticeExpr<Float> ratio( ( (*itsResidual) * mask ) / ( (*itsWeight) + maskinv) );
     itsResidual->copyData(ratio);
+    
+    // createMask
+
+  }
+
+  void SIImageStore::divideModelByWeight(Float weightlimit)
+  {
+    LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
+    os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+
+    LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
+    LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
+
+    LatticeExpr<Float> ratio( ( (*itsModel) * mask ) / ( (*itsModel) + maskinv) );
+    itsModel->copyData(ratio);
     
     // createMask
 

@@ -81,9 +81,11 @@ protected:
 
   // Gather all part images to the 'full' one
   void gatherImages();
+  void scatterModel();
 
   // Normalize. This can later change to be more general, i.e. used for PB-correction too...
-  void divideResidualImageByWeight();
+  void divideResidualByWeight();
+  void divideModelByWeight();
 
   // For the deconvolver, decide how many sliced deconvolution calls to make
   //  Vector<Slicer> partitionImages();
