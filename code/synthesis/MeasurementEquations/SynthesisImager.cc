@@ -285,6 +285,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
       }    
+
+    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+
   }// end of runMajorCycle
   
   
@@ -410,7 +413,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Int nmappers = itsMappers.nMappers();
     
-    os << "Run major cycle for " << nmappers << " images" << LogIO::POST;
+    os << "Run major cycle for " << nmappers << " image(s) : " 
+       << itsMappers.getImageNames() << LogIO::POST;
 
     ///////// (1) Initialize all the FTMs.
     for(Int mp=0;mp<nmappers;mp++)

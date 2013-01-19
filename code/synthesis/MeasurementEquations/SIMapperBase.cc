@@ -167,6 +167,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // rec = itsFTM->toRecord();
     return rec;
   }
-   
+
+  String SIMapperBase::getImageName()
+  {
+    return itsImages->getName();
+  }
+
 } //# NAMESPACE CASA - END
 

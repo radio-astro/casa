@@ -134,11 +134,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record returnRecord;
 
     try {
-      // Do the Gather if/when needed and check that images exist on disk.
-      setupImagesOnDisk();
-      // By now, all 'full' images have been gathered, but not normalized. Even in the non-parallel case.
-      // Normalize the residual image. i.e. Calculate the principal solution  
-      divideResidualByWeight();
+      // Do the Gather if/when needed and check that images exist on disk. Normalize by Weights too.
+      gatherImages();
 
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
       //SISubIterBot loopController(subIterBotRecord);
@@ -163,8 +160,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsDeconvolver->deconvolve( loopController, itsImages, itsDeconvolverId );
       returnRecord = loopController.getCycleExecutionRecord();
 
-      // Set the model image in itsImages. If it's the same image name, this is a no-op internally.
-      divideModelByWeight(); // This is currently a no-op
       scatterModel(); // This is a no-op for the single-node case.
 
     } catch(AipsError &x) {
@@ -179,9 +174,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  void SynthesisDeconvolver::setupImagesOnDisk() 
+  Bool SynthesisDeconvolver::setupImagesOnDisk() 
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupImagesOnDisk",WHERE) );
+
+    Bool needToGatherImages=False;
 
     // Check if full images exist, and open them if possible.
     Bool foundFullImage=False;
@@ -267,7 +264,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 
 	// By now, all partial images and the full images exist on disk, and have the same shape.
-	gatherImages();
+	needToGatherImages=True;
 
       }
     else // No partial images supplied. Operating only with full images.
@@ -282,30 +279,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
     
-
+    return needToGatherImages;
   }// end of setupImagesOnDisk
 
 
 
   void SynthesisDeconvolver::gatherImages()
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver", "gatherImages",WHERE) );
-    os << "Gather residual, psf, weight images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
 
-    AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
+    Bool needToGatherImages = setupImagesOnDisk();
 
-    // Add intelligence to modify all only the first time, but later, only residual;
-    itsImages->resetImages( /*psf*/True, /*residual*/True, /*weight*/True ); 
-
-    for( uInt part=0;part<itsPartImages.nelements();part++)
+    if( needToGatherImages )
       {
-	itsImages->addImages( itsPartImages[part], /*psf*/True, /*residual*/True, /*weight*/True );
-      }
+	LogIO os( LogOrigin("SynthesisDeconvolver", "gatherImages",WHERE) );
+	
+	os << "Gather residual, psf, weight images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
+	
+	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
+	
+	// Add intelligence to modify all only the first time, but later, only residual;
+	itsImages->resetImages( /*psf*/True, /*residual*/True, /*weight*/True ); 
+	
+	for( uInt part=0;part<itsPartImages.nelements();part++)
+	  {
+	    itsImages->addImages( itsPartImages[part], /*psf*/True, /*residual*/True, /*weight*/True );
+	  }
+
+      }// end of image gathering.
+    
+    // Normalize by the weight image.
+    divideResidualByWeight();
 
   }// end of gatherImages
 
   void SynthesisDeconvolver::scatterModel()
   {
+
+    divideModelByWeight(); // This is currently a no-op
+
     LogIO os( LogOrigin("SynthesisDeconvolver", "scatterModel",WHERE) );
 
     if( itsPartImages.nelements() > 0 )
