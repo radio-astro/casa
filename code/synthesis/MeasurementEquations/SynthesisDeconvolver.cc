@@ -136,6 +136,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try {
       // Do the Gather if/when needed and check that images exist on disk.
       setupImagesOnDisk();
+      // By now, all 'full' images have been gathered, but not normalized. Even in the non-parallel case.
+      // Normalize the residual image. i.e. Calculate the principal solution  
+      divideResidualByWeight();
 
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
       //SISubIterBot loopController(subIterBotRecord);
@@ -159,6 +162,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       loopController.setCycleControls(minorCycleControlRec);
       itsDeconvolver->deconvolve( loopController, itsImages, itsDeconvolverId );
       returnRecord = loopController.getCycleExecutionRecord();
+
+      // Set the model image in itsImages. If it's the same image name, this is a no-op internally.
+      divideModelByWeight(); // This is currently a no-op
+      scatterModel(); // This is a no-op for the single-node case.
+
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
     }
@@ -250,7 +258,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << "Only partial images exist. Need to make full images" << LogIO::POST;
 
 	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
-	    PagedImage<Float> temppart( itsImageName+".residual" );
+	    PagedImage<Float> temppart( itsPartImageNames[0]+".residual" );
 	    IPosition tempshape = temppart.shape();
 	    CoordinateSystem tempcsys = temppart.coordinates();
 
@@ -274,10 +282,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
     
-    // By now, all 'full' images have been gathered, but not normalized. Even in the non-parallel case.
-    // Normalize the residual image. i.e. Calculate the principal solution  
-    divideResidualImageByWeight();
-    
 
   }// end of setupImagesOnDisk
 
@@ -300,16 +304,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }// end of gatherImages
 
-  void SynthesisDeconvolver::divideResidualImageByWeight()
+  void SynthesisDeconvolver::scatterModel()
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver", "divFullImageByWeight",WHERE) );
+    LogIO os( LogOrigin("SynthesisDeconvolver", "scatterModel",WHERE) );
+
+    if( itsPartImages.nelements() > 0 )
+      {
+	os << "Send the model from : " << itsImageName << " to all nodes :" << itsPartImageNames << LogIO::POST;
+	
+	for( uInt part=0;part<itsPartImages.nelements();part++)
+	  {
+	    itsPartImages[part]->setModelImage( itsImages->getName() );
+	  }
+      }
+  }// end of gatherImages
+
+
+  void SynthesisDeconvolver::divideResidualByWeight()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver", "divideResidualByWeight",WHERE) );
 
     // If Weight image is not specified, treat it as though it were filled with ones. 
     // ( i.e.  itsWeight = NULL )
 
-    itsImages->normalizeByWeight( 0.1 );
+    itsImages->divideResidualByWeight( 0.1 );
 
   }
+
+  void SynthesisDeconvolver::divideModelByWeight()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver", "divideModelByWeight",WHERE) );
+
+    // If Weight image is not specified, treat it as though it were filled with ones. 
+    // ( i.e.  itsWeight = NULL )
+
+    /// This is a no-op here.... Need a way to activate this only for A-Projection.
+    ///    itsImages->divideModelByWeight( 0.1 );
+
+  }
+
+
+
 
   // #############################################
   // #############################################
