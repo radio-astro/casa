@@ -375,16 +375,22 @@ class imagecont():
         try:
             
             for kk in range(majcycle):
-                retval=im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf')
+                retval=im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf') 
+                if(not os.path.exists(imname+'.image')):
+                ##all channels flagged for example...make 0 images for concat later
+                    im.make(imname+'.image')
+                    im.make(imname+'.model')
+                    im.make(imname+'.residual')
+                    im.make(imname+'.psf')
+            im.done()
+            del im
+        except Exception as instance:
             if(not os.path.exists(imname+'.image')):
                 ##all channels flagged for example...make 0 images for concat later
                 im.make(imname+'.image')
                 im.make(imname+'.model')
                 im.make(imname+'.residual')
                 im.make(imname+'.psf')
-            im.done()
-            del im
-        except Exception as instance:
             im.done()
             del im
             if(string.count(str(instance), 'PSFZero') <1):
@@ -535,10 +541,24 @@ class imagecont():
          #  ia.done()
         ####                
         if(len(inim)==1):
-            ib=ia.fromimage(ourfile=cubeimage, infile=inim[0], overwrite=True)
+            ib=ia.fromimage(outfile=cubeimage, infile=inim[0], overwrite=True)
         else:
-            ib=ia.imageconcat(outfile=cubeimage, infiles=inim,  
-                              axis=3, relax=True,  overwrite=True)
+            #ib=ia.imageconcat(outfile=cubeimage, infiles=inim,  
+            #                  axis=3, relax=True,  overwrite=True)
+            ############
+            strnames='"'
+            for k in range(len(inim)):
+                strnames=strnames+' '+inim[k] if (k > 0) else strnames+inim[k] 
+            strnames=strnames+'"'
+            comm='imageconcat '+ strnames + ' '+ cubeimage
+            casalog.post('Command '+comm)
+            exitval=os.system(comm)
+            #print "exitval", exitval
+            if(exitval > 0):
+                raise Exception('Failed to concat '+str(inim))  
+            ib=casac.image()
+            ib.open(cubeimage)
+            ##############
         ia.done()
         ##### CAS-4423 temp
         #if(len(elbeamo) >0):
