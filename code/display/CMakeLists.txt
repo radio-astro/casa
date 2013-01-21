@@ -114,6 +114,7 @@ qt4_wrap_cpp( outfiles_qoh
   region/QtRegionDock.qo.h
   region/QtRegionState.qo.h
   region/QtRegionStats.qo.h
+  Slicer/SlicerMainWindow.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -136,6 +137,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/QtDataOptionsPanel.ui
   QtViewer/QtRegionMgr.ui
   QtViewer/QtDataMgrMsSelect.ui
+  QtViewer/Preferences.ui
   QtPlotter/QtProfileGUI.ui
   QtPlotter/QtProfilePrefsGUI.ui
   QtPlotter/CanvasHolder.ui
@@ -176,7 +178,7 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtRegionState.ui
   region/QtImageRegionStats.ui
   region/QtMsRegionStats.ui
-  QtViewer/Preferences.ui
+  Slicer/SlicerMainWindow.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
@@ -496,6 +498,8 @@ casa_add_library( display
   RegionShapes/RSFileReaderWriter.cc
   RegionShapes/RSUtils.cc
   RegionShapes/XMLFileReaderWriter.cc
+  Slicer/SlicerMainWindow.cc
+  Slicer/SliceWorker.cc
   Utilities/DisplayOptions.cc
   Utilities/DlHandle.cc
   Utilities/DlTarget.cc

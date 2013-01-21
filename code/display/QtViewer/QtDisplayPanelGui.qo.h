@@ -73,7 +73,7 @@ class AnimatorHolder;
 class BinPlotWidget;
 class HistogramMain;
 class Fit2DTool;
-//class PVCutManager;
+class SlicerMainWindow;
 
 template <class T> class ImageInterface;
 
@@ -489,8 +489,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
-      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_/*, *pvCutAct_*/;
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_, *slicerAct_,
+      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -534,7 +534,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   AnimatorHolder* animationHolder;
   HistogramMain* histogrammer;
   Fit2DTool* fitTool;
-  //PVCutManager* pvCutManager;
+  SlicerMainWindow* sliceTool;
 
   //Docking/Dock Widgets
   string addAnimationDockWidget();
@@ -555,7 +555,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
   void showHistogram();
-  void refreshHistogrammer();
+  void showSlicer();
+  void resetListenerImage();
   void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
   void showFitInteractive();
   void refreshFit();
@@ -564,8 +565,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   void add2DFitOverlay( QList<RegionShape*> fitMarkers );
   void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
   void addResidualFitImage( String path );
-  //void showPVCut(bool show);
-
+  void sliceChanged( int regionId, viewer::region::RegionChanges change,
+  		const QList<double> & worldX, const QList<double> & worldY,
+  		const QList<int> &pixelX, const QList<int> & pixelY );
 
  public:
  
