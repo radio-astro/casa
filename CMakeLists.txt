@@ -701,6 +701,7 @@ install (FILES
 	DESTINATION include/casacode/synthesis/Utilities
 	)
 casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
+casa_add_executable( synthesis imageconcat apps/utils/imageconcat.cc )
 casa_add_assay( synthesis MSVis/test/tHanningSmooth.cc )
 casa_add_assay( synthesis MSVis/test/tMSCalEnums.cc )
 casa_add_assay( synthesis MSVis/test/tUVSub.cc )
