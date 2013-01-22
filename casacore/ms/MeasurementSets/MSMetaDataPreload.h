@@ -143,6 +143,11 @@ public:
 	// Get the times for the specified scans
 	std::set<Double> getTimesForScans(const std::set<uInt>& scans);
 
+	// get the time range for the specified scan. The vector returned will contain two elements,
+	// the start and stop time of the scan, determined from min(TIME_CENTROID(x)-0.5*INTERVAL(x)) and
+	// max(TIME_CENTROID(x)-0.5*INTERVAL(x))
+	std::vector<Double> getTimeRangeForScan(uInt scan);
+
 	// get the times for the specified scan
 	// std::set<Double> getTimesForScan(const uInt scan) const;
 
@@ -268,6 +273,7 @@ private:
 	AOSFMapI _scanToNACRowsMap, _scanToNXCRowsMap;
 	AOSFMapD _scanToNUnflaggedACRowsMap, _scanToNUnflaggedXCRowsMap;
 	vector<Double> _fieldToNUnflaggedACRows, _fieldToNUnflaggedXCRows;
+	std::map<Int, vector<Double> > _scanToTimeRange;
 
 	// disallow copy constructor and = operator
 	MSMetaDataPreload(const MSMetaData&);

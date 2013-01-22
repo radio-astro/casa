@@ -387,7 +387,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			ROTableVector<Int> stidcol(t,"STATE_ID");
 
 			// this timestamp
-			Double thistime(timecol(0));
+			//Double thistime(timecol(0));
 
 			// this scan_number
 			Int thisscan(scncol(0));
@@ -500,8 +500,10 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						os.output().setf(ios::right, ios::adjustfield);
 						os <<  _msmd->nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
 						ostringstream xx;
-						xx << std::fixed << setprecision(2) << std::right
-							<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+						xx << std::fixed << setprecision(2)
+							<< _msmd->nUnflaggedRows(
+								MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0)
+							);
 						os.output().width(widthNUnflaggedRow);
 						os << xx.str();
 
@@ -551,7 +553,8 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 					}
 
 					// new btime:
-					btime=thistime;
+					// btime=thistime;
+					btime = _msmd->getTimeRangeForScan(thisscan)[0];
 					// next last day is this day
 					lastday=day;
 
@@ -561,13 +564,16 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				}
 
 				//						etime=thistime;
-				etime=timecol(nrow-1);   //CAS-2751
-
+				//etime=timecol(nrow-1);   //CAS-2751
+				etime = _msmd->getTimeRangeForScan(thisscan)[1];
 			} else {
+				vector<Double> timeRange = _msmd->getTimeRangeForScan(thisscan);
 				// initialize btime and etime
-				btime=thistime;
+				//btime=thistime;
+				btime = timeRange[0];
 				//						etime=thistime;
-				etime=timecol(nrow-1);  //CAS-2751
+				//etime=timecol(nrow-1);  //CAS-2751
+				etime = timeRange[1];
 				// no longer first time thru
 				firsttime=False;
 			}
@@ -622,7 +628,14 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			os.output().setf(ios::left, ios::adjustfield);
 			if (name.length()>20) name.replace(19,1,'*');
 			os.output().width(widthField); os << name.at(0,20);
-			os.output().width(widthnrow); os << thisnrow;
+			os.output().width(widthnrow);
+			os.output().setf(ios::right, ios::adjustfield);
+			os << _msmd->nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+			ostringstream xx;
+			xx << std::fixed << setprecision(2)
+				<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+			os.output().width(widthNUnflaggedRow);
+			os << xx.str();
 			os.output().width(widthInttim); os << meanIntTim;
 			os.output().width(widthLead);  os << "  ";
 			os << spwids;

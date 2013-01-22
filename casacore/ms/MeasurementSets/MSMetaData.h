@@ -174,7 +174,13 @@ public:
 	virtual std::set<Double> getTimesForScans(const std::set<uInt>& scans) = 0;
 
 	// get the times for the specified scan. No need to be implemented or overridden in subclasses.
+	// The return values come from the TIME column.
 	std::set<Double> getTimesForScan(const uInt scan);
+
+	// get the time range for the specified scan. The vector returned will contain two elements,
+	// the start and stop time of the scan, determined from min(TIME_CENTROID(x)-0.5*INTERVAL(x)) and
+	// max(TIME_CENTROID(x)-0.5*INTERVAL(x))
+	virtual std::vector<Double> getTimeRangeForScan(uInt scan) = 0;
 
 	// get the stateIDs associated with the specified scan number.
 	virtual std::set<uInt> getStatesForScan(const uInt scan) = 0;
@@ -267,15 +273,6 @@ public:
 
 	virtual Double nUnflaggedRows(CorrelationType cType, uInt fieldID) = 0;
 
-	/*
-	// get the number of unflagged auto correlation and cross correlation rows.
-	virtual void getUnflaggedRowStats(
-		Double& nACRows, Double& nXCRows,
-		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows
-	) = 0;
-	*/
 	inline virtual Float getCache() const { return 0;}
 
 protected:
@@ -330,6 +327,10 @@ protected:
 	static void _checkTolerance(const Double tol);
 
 	static Vector<Double> _getTimes(const MeasurementSet& ms);
+
+	static Vector<Double> _getTimeCentroids(const MeasurementSet& ms);
+
+	static Vector<Double> _getIntervals(const MeasurementSet& ms);
 
 	static Vector<Bool> _getFlagRows(const MeasurementSet& ms);
 
@@ -422,6 +423,11 @@ protected:
 		const vector<uInt>& dataDescIDToSpwMap,
 		const vector<SpwProperties>& spwInfo,
 		const MeasurementSet& ms
+	);
+
+	static std::map<Int, vector<Double> > _getScanToTimeRangeMap(
+		const Vector<Int>& scans, const Vector<Double>& timeCentroids,
+		const Vector<Double>& intervals
 	);
 
 private:

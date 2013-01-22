@@ -154,6 +154,11 @@ public:
 	// Get the times for the specified scans
 	std::set<Double> getTimesForScans(const std::set<uInt>& scans);
 
+	// get the time range for the specified scan. The vector returned will contain two elements,
+	// the start and stop time of the scan, determined from min(TIME_CENTROID(x)-0.5*INTERVAL(x)) and
+	// max(TIME_CENTROID(x)-0.5*INTERVAL(x))
+	std::vector<Double> getTimeRangeForScan(uInt scan);
+
 	// get the times for the specified scan
 	// std::set<Double> getTimesForScan(const uInt scan) const;
 
@@ -245,16 +250,6 @@ public:
 
 	Double nUnflaggedRows(CorrelationType cType, uInt fieldID);
 
-	/*
-	// get the number of unflagged auto correlation and cross correlation rows.
-	void getUnflaggedRowStats(
-		Double& nACRows, Double& nXCRows,
-		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows
-	);
-	*/
-
 	inline Float getCache() const { return _cacheMB;}
 
 private:
@@ -292,6 +287,7 @@ private:
 	const String _taqlTableName;
 	const vector<const Table*> _taqlTempTable;
 	std::tr1::shared_ptr<ArrayColumn<Bool> > _flagsColumn;
+	std::map<Int, vector<Double> > _scanToTimeRangeMap;
 
 	// disallow copy constructor and = operator
 	MSMetaDataOnDemand(const MSMetaDataOnDemand&);
@@ -307,15 +303,6 @@ private:
 	// uInt _getNumberOfPolarizations();
 
 	void _setSpwInfo(const MeasurementSet& ms);
-
-	/*
-	void _getDataColumnNames(
-		String& dataName, String& correctedName,
-		String& modelName
-	) const;
-	*/
-
-	//static vector<uInt> _getScans(const MeasurementSet& ms);
 
 	// set metadata from OBSERVATION table
 	void _setObservation(const MeasurementSet& ms);
