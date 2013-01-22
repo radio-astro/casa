@@ -1246,17 +1246,25 @@ the ms definition itself. -->
      </returns>
 
   <description>
-    This function will print a summary of the measurement set to the
+    This method will print a summary of the measurement set to the
     system logger. The verbose argument provides some control on how
     much information is displayed.
 
 
-    This function can also return, in the header argument, a record
+    This method can also return, in the header argument, a record
     containing the following fields.
     \begin{description}
       \item[nrow]       Number of rows in the measurement set
       \item[name]       Name of the measurement set
     \end{description}
+    
+    DESCRIPTION OF ALGORITHM TO CALCULATE THE NUMBER OF UNFLAGGED ROWS
+    The number of unflagged rows (the nUnflRows columns in the scans and fields portions of the listing) is
+    calculated by summing the fractional unflagged bandwidth for each row (and hence why the number of unflagged
+    rows, in general, is not an integer). Thus a row which has half of its
+    total bandwidth flagged contributes 0.5 rows to the unflagged row count. A row with 20 of 32 channels of
+    homogeneous width contributes 20/32 = 0.625 rows to the unflagged row count. A row with a value of False
+    in the FLAG_ROW column is not counted in the number of unflagged rows.
   </description>
   <example>
     

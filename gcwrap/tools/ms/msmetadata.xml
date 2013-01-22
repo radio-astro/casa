@@ -127,14 +127,18 @@ windows in the dataset and close the tool.
         <method type="function" name="antennaoffset">
             <shortdescription>Get the offset position of the specified antenna relative to the array reference position.</shortdescription>
             <input>
-                <param type="int" direction="in" name="which">
+                <param type="any" direction="in" name="which">
                     <description>Zero-based antenna in the ANTENNA table.</description>
-                    <value>0</value>
+                    <any type="variant" limittypes="string int"/>
+                    <value type="int">0</value>
+                    
                 </param>
             </input>
             <returns type="record"/>
             <description>
-                Get the offset position of the specified antenna relative to the array reference position. The returned
+                Get the offset position of the specified antenna relative to the array reference position. Antenna may
+                be specified as a zero-based integer (row number in the ANTENNA table) or a string representing a valid
+                antenna name. The returned
                 record contains the longitude, latitude, and elevation offsets as quantity records. The reported longitude and
                 latitude offsets are measured along the surface of a sphere whose center is coincident with the center of
                 the earth and whose surface contains the observatory reference position.
@@ -142,28 +146,7 @@ windows in the dataset and close the tool.
             <example>
     msmd.open("my.ms")
     # get the offset of the (zero-based) 3rd antenna in the ANTENNA table
-    antennna_offset = msmd.antennaoffset(3)[0]
-    msmd.done()
-            </example>
-        </method>
-        
-        <method type="function" name="antennaoffset">
-            <shortdescription>Get the offset position of the specified antenna relative to the array reference position.</shortdescription>
-            <input>
-                <param type="string" direction="in" name="name">
-                    <description>Antenna name.</description>
-                    <value/>
-                </param>
-            </input>
-            <returns type="record"/>
-            <description>
-                Get the offset position of the specified antenna relative to the array reference position. The returned
-                record contains the longitude, latitude, and elevation offsets as quantity records. The reported longitude and
-                latitude offsets are measured along the surface of a sphere whose center is coincident with the center of
-                the earth and whose surface contains the observatory reference position.
-            </description>
-            <example>
-    msmd.open("my.ms")
+    antennna_offset = msmd.antennaoffset(3)
     # get the offset of antenna DV02
     antennna_offset = msmd.antennaoffset('DV02')
     msmd.done()
@@ -605,13 +588,30 @@ windows in the dataset and close the tool.
         
         <method type="function" name="nrows">
             <shortdescription>Get the number of visibilities (from the main table) associated with the MS.</shortdescription>
-            <returns type="int"/>
+            <input>
+                <param type="bool" direction="in" name="auto">
+                    <description>Include autocorrelation data? If False, only cross correlation rows will be summed.</description>
+                    <value>true</value>
+                </param>
+                <param type="bool" direction="in" name="flagged">
+                    <description>Include flagged data? If False, only unflagged or patially flagged rows will be summed.</description>
+                    <value>true</value>
+                </param>
+            </input>
+            <returns type="double"/>
             <description>
                 Get the number of visibilities (from the main table) associated with the MS.
             </description>
             <example>
     msmd.open("my.ms")
-    number_of_visibilities = msmd.nrows()
+    # get the total number of rows
+    nrows = msmd.nrows()
+    # got the number of cross correlation rows
+    ncross = msmd.nrows(auto=False)
+    # get the number of unflagged rows
+    ngood = msmd.nrows(flagged=False)
+    # get the number of unflagged cross correlation rows
+    ncrossunflagged = msmd.nrows(auto=False, flagged=False)
     msmd.done()
             </example>
         </method>

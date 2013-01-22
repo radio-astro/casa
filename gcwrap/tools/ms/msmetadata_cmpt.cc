@@ -95,6 +95,7 @@ vector<int> msmetadata::antennaids(const variant& names) {
 		}
 		return _vectorUIntToVectorInt(_msmd->getAntennaIDs(myNames));
 	)
+	return vector<int>();
 }
 
 vector<string> msmetadata::antennanames(const variant& antennaids) {
@@ -133,11 +134,23 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 			_msmd->getAntennaNames(namesToIDsMap COMMA myIDs)
 		);
 	)
+	return vector<string>();
 }
 
-record* msmetadata::antennaoffset(const int which) {
+record* msmetadata::antennaoffset(const variant& which) {
 	_FUNC(
-		Quantum<Vector<Double> > out = _msmd->getAntennaOffset(which);
+		variant::TYPE type = which.type();
+		Quantum<Vector<Double> > out;
+		if (type == variant::INT) {
+			out = _msmd->getAntennaOffset(which.toInt());
+		}
+		else if (type == variant::STRING) {
+			out = _msmd->getAntennaOffset(which.toString());
+		}
+		else {
+			*_log << "Unsupported type for input parameter which. Supported types are int and string"
+				<< LogIO::EXCEPTION;
+		}
 		Vector<Double> v = out.getValue();
 		String u = out.getUnit();
 		QuantumHolder longitude(casa::Quantity(v[0], u));
@@ -153,27 +166,7 @@ record* msmetadata::antennaoffset(const int which) {
 		outRec.defineRecord("elevation offset", x);
 		return fromRecord(outRec);
 	)
-}
-
-
-record* msmetadata::antennaoffset(const string& name) {
-	_FUNC(
-		Quantum<Vector<Double> > out = _msmd->getAntennaOffset(name);
-		Vector<Double> v = out.getValue();
-		String u = out.getUnit();
-		QuantumHolder longitude(casa::Quantity(v[0], u));
-		QuantumHolder latitude(casa::Quantity(v[1], u));
-		QuantumHolder elevation(casa::Quantity(v[2], u));
-		Record x;
-		Record outRec;
-		longitude.toRecord(x);
-		outRec.defineRecord("longitude offset", x);
-		latitude.toRecord(x);
-		outRec.defineRecord("latitude offset", x);
-		elevation.toRecord(x);
-		outRec.defineRecord("elevation offset", x);
-		return fromRecord(outRec);
-	)
+	return 0;
 }
 
 record* msmetadata::antennaposition(const int which) {
@@ -183,6 +176,7 @@ record* msmetadata::antennaposition(const int which) {
 		out.toRecord(outRec);
 		return fromRecord(outRec);
 	)
+	return 0;
 }
 
 record* msmetadata::antennaposition(const string& name) {
@@ -192,6 +186,7 @@ record* msmetadata::antennaposition(const string& name) {
 		out.toRecord(outRec);
 		return fromRecord(outRec);
 	)
+	return 0;
 }
 
 variant* msmetadata::baselines() {
@@ -201,12 +196,14 @@ variant* msmetadata::baselines() {
 		vector<int> shape = baselines.shape().asStdVector();
 		return new variant(values, shape);
 	)
+	return 0;
 }
 
 vector<int> msmetadata::chanavgspws() {
 	_FUNC (
 		return _setUIntToVectorInt(_msmd->getChannelAvgSpw());
 	)
+	return vector<int>();
 }
 
 bool msmetadata::done() {
@@ -214,18 +211,21 @@ bool msmetadata::done() {
 		_msmd.reset(0);
 		return true;
 	)
+	return false;
 }
 
 record* msmetadata::effexposuretime() {
 	return fromRecord(
 		QuantumHolder(_msmd->getEffectiveTotalExposureTime()).toRecord()
 	);
+	return 0;
 }
 
 vector<int> msmetadata::fdmspws() {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getFDMSpw());
 	)
+	return vector<int>();
 }
 
 variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
@@ -238,12 +238,14 @@ variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
 			return new variant(_setUIntToVectorInt(ids));
 		}
 	)
+	return 0;
 }
 
 vector<int> msmetadata::fieldsforname(const string& name) {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getFieldIDsForField(name));
 	)
+	return vector<int>();
 }
 
 variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
@@ -261,6 +263,7 @@ variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
 			);
 		}
 	)
+	return 0;
 }
 
 variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames) {
@@ -285,6 +288,7 @@ variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames
 			);
 		}
 	)
+	return 0;
 }
 
 variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {
@@ -303,18 +307,21 @@ variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {
 			);
 		}
 	)
+	return 0;
 }
 
 vector<int> msmetadata::fieldsfortimes(const double center, const double tol) {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getFieldsForTimes(center, tol));
 	)
+	return vector<int>();
 }
 
 vector<string> msmetadata::intents() {
 	_FUNC(
 		return _setStringToVectorString(_msmd->getIntents());
 	)
+	return vector<string>();
 }
 
 vector<string> msmetadata::intentsforscan(int scan) {
@@ -324,6 +331,7 @@ vector<string> msmetadata::intentsforscan(int scan) {
 		}
 		return _setStringToVectorString(_msmd->getIntentsForScan(scan));
 	)
+	return vector<string>();
 }
 
 vector<string> msmetadata::intentsforspw(int spw) {
@@ -333,6 +341,7 @@ vector<string> msmetadata::intentsforspw(int spw) {
 		}
 		return _setStringToVectorString(_msmd->getIntentsForSpw(spw));
 	)
+	return vector<string>();
 }
 
 vector<string> msmetadata::namesforfields(const variant& fieldids) {
@@ -362,54 +371,70 @@ vector<string> msmetadata::namesforfields(const variant& fieldids) {
 			_msmd->getFieldNamesForFieldIDs(fieldIDs)
 		);
 	)
+	return vector<string>();
 }
 
 int msmetadata::nantennas() {
 	_FUNC(
 		return _msmd->nAntennas();
 	)
+	return 0;
 }
 
 int msmetadata::nbaselines() {
 	_FUNC(
 		return _msmd->nBaselines();
 	)
+	return 0;
 }
 
 int msmetadata::nfields() {
 	_FUNC(
 		return _msmd->nFields();
 	)
+	return 0;
+
 }
 
 int msmetadata::nscans() {
 	_FUNC(
 		return _msmd->nScans();
 	)
+	return 0;
 }
 
 int msmetadata::nspw() {
 	_FUNC(
 		return _msmd->nSpw();
 	)
+	return 0;
 }
 
 int msmetadata::nstates() {
 	_FUNC(
 		return _msmd->nStates();
 	)
+	return 0;
 }
 
-int msmetadata::nrows() {
+double msmetadata::nrows(const bool ac, const bool flagged) {
 	_FUNC(
-		return _msmd->nRows();
+		if (ac) {
+			return flagged ? _msmd->nRows() : _msmd->nUnflaggedRows();
+		}
+		else {
+			return flagged ? _msmd->nRows(MSMetaData::CROSS)
+				: _msmd->nUnflaggedRows(MSMetaData::CROSS);
+		}
 	)
+	return 0;
 }
 
 vector<string> msmetadata::observatorynames() {
 	_FUNC(
 		return _vectorStringToStdVectorString(_msmd->getObservatoryNames());
 	)
+	return vector<string>();
 }
 
 record* msmetadata::observatoryposition(const int which) {
@@ -424,6 +449,7 @@ record* msmetadata::observatoryposition(const int which) {
 		}
 		return fromRecord(outRec);
 	)
+	return 0;
 }
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const bool preload, const float cachesize) {
@@ -431,15 +457,8 @@ void msmetadata::_init(const casa::MeasurementSet *const &ms, const bool preload
 		_msmd.reset(new MSMetaDataPreload(*ms));
 		uInt nACRows = _msmd->nRows(MSMetaData::AUTO);
 		uInt nXCRows = _msmd->nRows(MSMetaData::CROSS);
-		Double unflaggedACRows;
-		Double unflaggedXCRows;
-		vector<Double> unflaggedFieldNACRows, unflaggedFieldNXCRows;
-		std::map<uInt, Double> unflaggedScanNACRows, unflaggedScanNXCRows;
-		_msmd->getUnflaggedRowStats(
-			unflaggedACRows, unflaggedXCRows,
-			unflaggedFieldNACRows, unflaggedFieldNXCRows,
-			unflaggedScanNACRows, unflaggedScanNXCRows
-		);
+		Double unflaggedACRows = _msmd->nUnflaggedRows(MSMetaData::AUTO);
+		Double unflaggedXCRows = _msmd->nUnflaggedRows(MSMetaData::CROSS);
 
 		*_log << LogIO::NORMAL << "Read metadata from "
 			<< _msmd->nRows() << " rows ("
@@ -501,12 +520,14 @@ bool msmetadata::open(const string& msname, const bool preload, const float cach
 		}
 		return true;
 	)
+	return false;
 }
 
 vector<int> msmetadata::scannumbers() {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getScanNumbers());
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::scansforfield(const variant& field) {
@@ -522,12 +543,14 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 			throw AipsError("Unacceptable type for field parameter.");
 		}
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::scansforintent(const string& intent) {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getScansForIntent(intent));
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::scansforspw(const int spw) {
@@ -537,12 +560,14 @@ vector<int> msmetadata::scansforspw(const int spw) {
 		}
 		return _setUIntToVectorInt(_msmd->getScansForSpw(spw));
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::scansfortimes(const double center, const double tol) {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getScansForTimes(center, tol));
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::scansforstate(const int state) {
@@ -552,12 +577,14 @@ vector<int> msmetadata::scansforstate(const int state) {
 		}
 		return _setUIntToVectorInt(_msmd->getScansForState(state));
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::spwsforintent(const string& intent) {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getSpwsForIntent(intent));
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::spwsforfield(const variant& field) {
@@ -573,6 +600,7 @@ vector<int> msmetadata::spwsforfield(const variant& field) {
 			throw AipsError("Unacceptable type for field parameter.");
 		}
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::spwsforscan(const int scan) {
@@ -582,6 +610,8 @@ vector<int> msmetadata::spwsforscan(const int scan) {
 		}
 		return _setUIntToVectorInt(_msmd->getSpwsForScan(scan));
 	)
+	return vector<int>();
+
 }
 
 vector<int> msmetadata::statesforscan(const int scan) {
@@ -591,6 +621,7 @@ vector<int> msmetadata::statesforscan(const int scan) {
 		}
 		return _setUIntToVectorInt(_msmd->getStatesForScan(scan));
 	)
+	return vector<int>();
 }
 
 vector<double> msmetadata::timesforfield(const int field) {
@@ -600,6 +631,7 @@ vector<double> msmetadata::timesforfield(const int field) {
 		}
 		return _setDoubleToVectorDouble(_msmd->getTimesForField(field));
 	)
+	return vector<double>();
 }
 
 vector<double> msmetadata::timesforscan(const int scan) {
@@ -609,6 +641,7 @@ vector<double> msmetadata::timesforscan(const int scan) {
 		}
 		return _setDoubleToVectorDouble(_msmd->getTimesForScan(scan));
 	)
+	return vector<double>();
 }
 
 vector<double> msmetadata::timesforscans(const vector<int>& scans) {
@@ -624,18 +657,21 @@ vector<double> msmetadata::timesforscans(const vector<int>& scans) {
 		std::set<uInt> scanSet(scans.begin(), scans.end());
 		return _setDoubleToVectorDouble(_msmd->getTimesForScans(scanSet));
 	)
+	return vector<double>();
 }
 
 vector<int> msmetadata::tdmspws() {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getTDMSpw());
 	)
+	return vector<int>();
 }
 
 vector<int> msmetadata::wvrspws() {
 	_FUNC(
 		return _setUIntToVectorInt(_msmd->getWVRSpw());
 	)
+	return vector<int>();
 }
 
 /*
