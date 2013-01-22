@@ -68,8 +68,8 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  _scanToTimesMap(), _intentToFieldIDMap(),
 	  _fieldToTimesMap(), _observatoryPositions(0),
 	  _antennaOffsets(0), _uniqueBaselines(0, 0),
-	  _exposureTime(0), _unflaggedACRows(0),
-	  _unflaggedXCRows(0), _unflaggedFieldNACRows(0),
+	  _exposureTime(0), _nUnflaggedACRows(0),
+	  _nUnflaggedXCRows(0), _unflaggedFieldNACRows(0),
 	  _unflaggedFieldNXCRows(0), _unflaggedScanNACRows(),
 	  _unflaggedScanNXCRows(),
 	  _taqlTableName(
@@ -77,7 +77,7 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  ),
 	  _taqlTempTable(
 		File(ms->tableName()).exists() ? 0 : 1, ms
-	  ) {}
+	  ), _flagsColumn() {}
 
 MSMetaDataOnDemand::~MSMetaDataOnDemand() {}
 
@@ -236,6 +236,82 @@ uInt MSMetaDataOnDemand::nRows(CorrelationType cType, uInt fieldID) {
 	AOSFMapI scanToNACRowsMap, scanToNXCRowsMap;
 	vector<uInt> fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	if (cType == AUTO) {
+		return fieldToNACRowsMap[fieldID];
+	}
+	else if (cType == CROSS) {
+		return fieldToNXCRowsMap[fieldID];
+	}
+	else {
+		return fieldToNACRowsMap[fieldID] + fieldToNXCRowsMap[fieldID];
+	}
+}
+
+Double MSMetaDataOnDemand::nUnflaggedRows() {
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	return nACRows + nXCRows;
+}
+Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType) {
+
+	if (cType == BOTH) {
+		return nUnflaggedRows();
+	}
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	if (cType == AUTO) {
+		return nACRows;
+	}
+	else {
+		return nXCRows;
+	}
+}
+
+Double MSMetaDataOnDemand::nUnflaggedRows(
+	CorrelationType cType, uInt arrayID, uInt observationID,
+	uInt scanNumber, uInt fieldID
+) {
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	if (cType == AUTO) {
+		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+	else if (cType == CROSS) {
+		return scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+	else {
+		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID]
+		    + scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+}
+
+Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType, uInt fieldID) {
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
 		fieldToNXCRowsMap
@@ -859,6 +935,24 @@ std::tr1::shared_ptr<Vector<Double> > MSMetaDataOnDemand::_getTimes() {
 	return times;
 }
 
+std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaDataOnDemand::_getFlags() {
+	if (_flagsColumn && ! _flagsColumn->nrow() > 0) {
+			return _flagsColumn;
+		}
+		std::tr1::shared_ptr<ArrayColumn<Bool> > flagsColumn(
+			MSMetaData::_getFlags(*_ms)
+		);
+		uInt mysize = 0;
+		for (uInt i=0; i<flagsColumn->nrow(); i++) {
+			mysize += flagsColumn->get(i).size();
+		}
+		if (_cacheUpdated(sizeof(Bool)*mysize)) {
+			_flagsColumn = flagsColumn;
+		}
+		return flagsColumn;
+}
+
+
 std::set<Double> MSMetaDataOnDemand::getTimesForScans(
 	const std::set<uInt>& scans
 ) {
@@ -1236,15 +1330,14 @@ Quantity MSMetaDataOnDemand::getEffectiveTotalExposureTime() {
 	return eTime;
 }
 
-void MSMetaDataOnDemand::getUnflaggedRowStats(
+void MSMetaDataOnDemand::_getUnflaggedRowStats(
 	Double& nACRows, Double& nXCRows,
-	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-	std::map<uInt, Double>& scanNACRows,
-	std::map<uInt, Double>& scanNXCRows
+	AOSFMapD& scanNACRows, AOSFMapD& scanNXCRows,
+	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows
 ) {
 	if (! _unflaggedFieldNACRows.empty()) {
-		nACRows = _unflaggedACRows;
-		nXCRows = _unflaggedXCRows;
+		nACRows = _nUnflaggedACRows;
+		nXCRows = _nUnflaggedXCRows;
 		fieldNACRows = _unflaggedFieldNACRows;
 		fieldNXCRows = _unflaggedFieldNXCRows;
 		scanNACRows = _unflaggedScanNACRows;
@@ -1254,23 +1347,21 @@ void MSMetaDataOnDemand::getUnflaggedRowStats(
 	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
 	std::set<uInt> a, b, c, d;
-	std::auto_ptr<ArrayColumn<Bool> > flags;
-	flags.reset(_getFlags(*_ms));
 
-	_getUnflaggedRowStats(
+	MSMetaData::_getUnflaggedRowStats(
 		nACRows, nXCRows, fieldNACRows,
 		fieldNXCRows, scanNACRows, scanNXCRows, *ant1,
 		*ant2, _getFlagRows(*_ms), *_getDataDescIDs(),
 		_getDataDescIDToSpwMap(),
-		_getSpwInfo(a, b, c, d), *flags, *_getFieldIDs(),
-		*_getScans()
+		_getSpwInfo(a, b, c, d), *MSMetaData::_getFlags(*_ms), *_getFieldIDs(),
+		*_getScans(), *_getObservationIDs(), *_getArrayIDs()
 	);
 	uInt mysize = fieldNACRows.size() + fieldNXCRows.size()
 		+ scanNACRows.size() + scanNXCRows.size();
 	mysize *= sizeof(Double);
 	if (_cacheUpdated(mysize)) {
-		_unflaggedACRows = nACRows;
-		_unflaggedXCRows = nXCRows;
+		_nUnflaggedACRows = nACRows;
+		_nUnflaggedXCRows = nXCRows;
 		_unflaggedFieldNACRows = fieldNACRows;
 		_unflaggedFieldNXCRows = fieldNXCRows;
 		_unflaggedScanNACRows = scanNACRows;

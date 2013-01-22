@@ -520,10 +520,6 @@ void MSMetaData::_getRowStats(
 	uInt nObs = nObservations();
 	uInt nArr = nArrays();
 	uInt nfields = nFields();
-	/*
-	scanToNACRowsMap.resize(nArr);
-	scanToNXCRowsMap.resize(nArr);
-	*/
 	for (uInt arrID=0; arrID<nArr; arrID++) {
 		for (uInt obsID=0; obsID<nObs; obsID++) {
 			for (
@@ -550,20 +546,11 @@ void MSMetaData::_getRowStats(
 			nACRows++;
 			scanToNACRowsMap[*arIter][*oIter][*sIter][*fIter]++;
 			fieldToNACRowsMap[*fIter]++;
-			/*
-			cout << "*** scanToNACRowsMap[*oIter][*sIter][*fIter] "
-				<< scanToNACRowsMap[*oIter][*sIter][*fIter] << endl;
-				*/
 		}
 		else {
 			nXCRows++;
 			scanToNXCRowsMap[*arIter][*oIter][*sIter][*fIter]++;
 			fieldToNXCRowsMap[*fIter]++;
-			/*
-			cout << "*** scanToNXCRowsMap[*oIter][*sIter][*fIter] "
-				<< scanToNXCRowsMap[*oIter][*sIter][*fIter] << endl;
-				*/
-
 		}
 		a1Iter++;
 		a2Iter++;
@@ -577,14 +564,15 @@ void MSMetaData::_getRowStats(
 void MSMetaData::_getUnflaggedRowStats(
 	Double& nACRows, Double& nXCRows,
 	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-	std::map<uInt, Double>& scanNACRows,
-	std::map<uInt, Double>& scanNXCRows,
+	AOSFMapD& scanNACRows,
+	AOSFMapD& scanNXCRows,
 	const Vector<Int>& ant1, const Vector<Int>& ant2,
 	const Vector<Bool>& flagRow, const Vector<Int>& dataDescIDs,
 	const vector<uInt>& dataDescIDToSpwMap,
 	const vector<SpwProperties>& spwInfo,
 	const ArrayColumn<Bool>& flags,
-	const Vector<Int>& fieldIDs, const Vector<Int>& scans
+	const Vector<Int>& fieldIDs, const Vector<Int>& scans,
+	const Vector<Int>& obsIDs, const Vector<Int>& arIDs
 ) {
 	nACRows = 0;
 	nXCRows = 0;
@@ -594,57 +582,110 @@ void MSMetaData::_getUnflaggedRowStats(
 	scanNACRows.clear();
 	scanNXCRows.clear();
 	std::set<uInt> scanNumbers = getScanNumbers();
-	std::set<uInt>::const_iterator end = scanNumbers.end();
-	for (
-		std::set<uInt>::const_iterator iter=scanNumbers.begin();
-		iter!=end; iter++
-	) {
-		scanNACRows[*iter] = 0;
-		scanNXCRows[*iter] = 0;
-	}
-
-	uInt nAnts = nAntennas();
-	uInt maxNBaselines = nAnts*(nAnts-1)/2;
-	for (uInt i=0; i< ant1.size(); i++) {
-		if (flagRow[i]) {
-			SpwProperties spwProp = spwInfo[dataDescIDToSpwMap[dataDescIDs[i]]];
-			Vector<Double> channelWidths(
-				Vector<Double>(spwProp.chanwidths)
-			);
-			Matrix<Bool> flagsMatrix(flags.get(i));
-			uInt nCorrelations = flagsMatrix.nrow();
-			Double denom = spwProp.bandwidth*maxNBaselines*nCorrelations;
-			for (uInt corr=0; corr<nCorrelations; corr++) {
-				MaskedArray<Double> flaggedChannelWidths(
-					channelWidths, flagsMatrix.row(corr), True
-				);
-				Double effectiveBW = sum(flaggedChannelWidths);
-				Double x = effectiveBW/denom;
-				if (ant1[i] == ant2[i]) {
-					nACRows += x;
-					fieldNACRows[fieldIDs[i]] += x;
-					scanNACRows[scans[i]] += x;
-				}
-				else {
-					nXCRows += x;
-					fieldNXCRows[fieldIDs[i]] += x;
-					scanNXCRows[scans[i]] += x;
-				}
+	std::set<uInt>::const_iterator lastScan = scanNumbers.end();
+	uInt nObs = nObservations();
+	uInt nArr = nArrays();
+	for (uInt arrID=0; arrID<nArr; arrID++) {
+		for (uInt obsID=0; obsID<nObs; obsID++) {
+			for (
+				std::set<uInt>::const_iterator scanNum=scanNumbers.begin();
+				scanNum!=lastScan; scanNum++
+			) {
+				scanNACRows[arrID][obsID][*scanNum] = vector<Double>(nfields, 0);
+				scanNXCRows[arrID][obsID][*scanNum] = vector<Double>(nfields, 0);
 			}
 		}
 	}
+
+	Vector<Int>::const_iterator aEnd = ant1.end();
+	Vector<Int>::const_iterator a1Iter = ant1.begin();
+	Vector<Int>::const_iterator a2Iter = ant2.begin();
+	Vector<Int>::const_iterator sIter = scans.begin();
+	Vector<Int>::const_iterator fIter = fieldIDs.begin();
+	Vector<Int>::const_iterator oIter = obsIDs.begin();
+	Vector<Int>::const_iterator arIter = arIDs.begin();
+	Vector<Int>::const_iterator dIter = dataDescIDs.begin();
+	Vector<Bool>::const_iterator flagIter = flagRow.begin();
+	uInt i = 0;
+    uInt64 count = 0;
+	while (a1Iter!=aEnd) {
+		if (*flagIter) {
+			SpwProperties spwProp = spwInfo[dataDescIDToSpwMap[*dIter]];
+			Vector<Double> channelWidths(
+				Vector<Double>(spwProp.chanwidths)
+			);
+			const Matrix<Bool>& flagsMatrix(flags.get(i));
+            count += flagsMatrix.size();
+            Double x = 0;
+            if (allTrue(flagsMatrix)) {
+                // all channels are unflagged
+                x = 1;
+            }
+            else if (! anyTrue(flagsMatrix)) {
+                // do nothing. All channels are flagged for this row
+                continue;
+            }
+            else {
+                // some channels are flagged, some aren't
+			    uInt nCorrelations = flagsMatrix.nrow();
+			    Double denom = spwProp.bandwidth*nCorrelations;
+			    Double bwSum = 0;
+
+			    for (uInt corr=0; corr<nCorrelations; corr++) {
+                    Vector<Bool> corrRow = flagsMatrix.row(corr);
+                    if (allTrue(corrRow)) {
+                        // all channels for this correlation are unflagged
+                        bwSum += spwProp.bandwidth;
+                    }
+                    else if (! anyTrue(corrRow)) {
+                        // do nothing, all channels for this correlation
+                        // have been flagged
+                        continue;
+                    }
+                    else {
+                        // some channels are flagged for this correlation, some aren't
+                        MaskedArray<Double> unFlaggedChannelWidths(
+	    				    channelWidths, corrRow, True
+		    		    );
+                        bwSum += sum(unFlaggedChannelWidths);
+                    }
+			    }
+			    x = bwSum/denom;
+            }
+			if (*a1Iter == *a2Iter) {
+				fieldNACRows[*fIter] += x;
+				scanNACRows[*arIter][*oIter][*sIter][*fIter] += x;
+			}
+			else {
+				fieldNXCRows[*fIter]+= x;
+				scanNXCRows[*arIter][*oIter][*sIter][*fIter] += x;
+			}
+		}
+		a1Iter++;
+		a2Iter++;
+		sIter++;
+		fIter++;
+		arIter++;
+		oIter++;
+		flagIter++;
+		dIter++;
+		i++;
+	}
+	nACRows = sum(Vector<Double>(fieldNACRows));
+	nXCRows = sum(Vector<Double>(fieldNXCRows));
+
 }
 
 void MSMetaData::_getUnflaggedRowStats(
 	Double& nACRows, Double& nXCRows,
 	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-	std::map<uInt, Double>& scanNACRows,
-	std::map<uInt, Double>& scanNXCRows,
+	AOSFMapD& scanNACRows,
+	AOSFMapD& scanNXCRows,
 	const vector<uInt>& dataDescIDToSpwMap,
 	const vector<SpwProperties>& spwInfo,
 	const MeasurementSet& ms
 ) {
-	String taql = "select FLAG, DATA_DESC_ID, ANTENNA1, ANTENNA2, SCAN_NUMBER, FIELD_ID, FLAG_ROW from "
+	String taql = "select FLAG, ARRAY_ID, OBSERVATION_ID, DATA_DESC_ID, ANTENNA1, ANTENNA2, SCAN_NUMBER, FIELD_ID, FLAG_ROW from "
 		+ ms.tableName() + " where FLAG_ROW==True";
 	Table result(tableCommand(taql));
 	std::auto_ptr<ArrayColumn<Bool> > flags(
@@ -659,7 +700,9 @@ void MSMetaData::_getUnflaggedRowStats(
 		ScalarColumn<Int>(result, "DATA_DESC_ID").getColumn(),
 		dataDescIDToSpwMap, spwInfo, *flags,
 		ScalarColumn<Int>(result, "FIELD_ID").getColumn(),
-		ScalarColumn<Int>(result, "SCAN_NUMBER").getColumn()
+		ScalarColumn<Int>(result, "SCAN_NUMBER").getColumn(),
+		ScalarColumn<Int>(result, "OBSERVATION_ID").getColumn(),
+		ScalarColumn<Int>(result, "ARRAY_ID").getColumn()
 	);
 }
 

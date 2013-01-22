@@ -223,13 +223,17 @@ public:
 	// collecting unflagged data.
 	Quantity getEffectiveTotalExposureTime();
 
-	// get the number of unflagged auto correlation and cross correlation rows.
-	void getUnflaggedRowStats(
-		Double& nACRows, Double& nXCRows,
-		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows
+	// get the number of unflagged rows
+	Double nUnflaggedRows();
+
+	Double nUnflaggedRows(CorrelationType cType);
+
+	Double nUnflaggedRows(
+		CorrelationType cType, uInt arrayID, uInt observationID,
+		uInt scanNumber, uInt fieldID
 	);
+
+	Double nUnflaggedRows(CorrelationType cType, uInt fieldID);
 
 private:
 	Vector<Int> _antenna1,	_antenna2, _dataDescIDs,
@@ -262,8 +266,8 @@ private:
 	Vector<Bool> _flagRow;
 	std::auto_ptr<ArrayColumn<Bool> > _flags;
 	AOSFMapI _scanToNACRowsMap, _scanToNXCRowsMap;
-	vector<Double> _nUnflaggedFieldNACRows, _nUnflaggedFieldNXCRows;
-	std::map<uInt, Double> _nUnflaggedScanNACRows, _nUnflaggedScanNXCRows;
+	AOSFMapD _scanToNUnflaggedACRowsMap, _scanToNUnflaggedXCRowsMap;
+	vector<Double> _fieldToNUnflaggedACRows, _fieldToNUnflaggedXCRows;
 
 	// disallow copy constructor and = operator
 	MSMetaDataPreload(const MSMetaData&);

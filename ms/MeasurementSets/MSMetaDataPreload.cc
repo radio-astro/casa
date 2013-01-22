@@ -144,6 +144,51 @@ uInt MSMetaDataPreload::nRows(CorrelationType cType, uInt fieldID) {
 	}
 }
 
+
+Double MSMetaDataPreload::nUnflaggedRows() {
+	return _nUnflaggedACRows + _nUnflaggedXCRows;
+}
+
+Double MSMetaDataPreload::nUnflaggedRows(CorrelationType cType) {
+	if (cType == AUTO) {
+		return _nUnflaggedACRows;
+	}
+	else if (cType == CROSS) {
+		return _nUnflaggedXCRows;
+	}
+	else {
+		return nUnflaggedRows();
+	}
+}
+
+Double MSMetaDataPreload::nUnflaggedRows(
+	CorrelationType cType, uInt arrayID, uInt observationID,
+	uInt scanNumber, uInt fieldID
+) {
+	if (cType == AUTO) {
+		return _scanToNUnflaggedACRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+	else if (cType == CROSS) {
+		return _scanToNUnflaggedXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+	else {
+		return _scanToNUnflaggedACRowsMap[arrayID][observationID][scanNumber][fieldID]
+		    + _scanToNUnflaggedXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+}
+
+Double MSMetaDataPreload::nUnflaggedRows(CorrelationType cType, uInt fieldID) {
+	if (cType == AUTO) {
+		return _fieldToNUnflaggedACRows[fieldID];
+	}
+	else if (cType == CROSS) {
+		return _fieldToNUnflaggedXCRows[fieldID];
+	}
+	else {
+		return _fieldToNUnflaggedACRows[fieldID] + _fieldToNUnflaggedXCRows[fieldID];
+	}
+}
+
 std::set<uInt> MSMetaDataPreload::getScansForState(const uInt stateID) {
 	if (stateID >= _nStates) {
 		throw AipsError(
@@ -606,20 +651,6 @@ Quantity MSMetaDataPreload::getEffectiveTotalExposureTime() {
 	return _totalEffectiveExposureTime;
 }
 
-void MSMetaDataPreload::getUnflaggedRowStats(
-	Double& nACRows, Double& nXCRows,
-	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-	std::map<uInt, Double>& scanNACRows,
-	std::map<uInt, Double>& scanNXCRows
-) {
-	nACRows = _nUnflaggedACRows;
-	nXCRows = _nUnflaggedXCRows;
-	fieldNACRows = _nUnflaggedFieldNACRows;
-	fieldNXCRows = _nUnflaggedFieldNXCRows;
-	scanNACRows = _nUnflaggedScanNACRows;
-	scanNXCRows = _nUnflaggedScanNXCRows;
-}
-
 
 void MSMetaDataPreload::_makeTotalEffectiveExposureTime(const MeasurementSet& ms) {
 	std::map<Double, Double> timeToBWMap = _getTimeToTotalBWMap(
@@ -714,7 +745,7 @@ void MSMetaDataPreload::_makeFieldNameToTimesMap(const MeasurementSet& ms) {
 
 void MSMetaDataPreload::_makeRowStats(const MeasurementSet& ms) {
 	_getAntennas(_antenna1, _antenna2, ms);
-	_getRowStats(
+	MSMetaData::_getRowStats(
 		_nACRows, _nXCRows, _scanToNACRowsMap,
 		_scanToNXCRowsMap, _fieldToNACRowsMap,
 		_fieldToNXCRowsMap, _antenna1, _antenna2,
@@ -729,11 +760,13 @@ void MSMetaDataPreload::_makeRowStats(const MeasurementSet& ms) {
 		_spwInfo, *_flags
 	);
 	*/
-	_getUnflaggedRowStats(
-		_nUnflaggedACRows, _nUnflaggedXCRows, _nUnflaggedFieldNACRows,
-		_nUnflaggedFieldNXCRows, _nUnflaggedScanNACRows, _nUnflaggedScanNXCRows,
+	MSMetaData::_getUnflaggedRowStats(
+		_nUnflaggedACRows, _nUnflaggedXCRows,
+		_fieldToNUnflaggedACRows, _fieldToNUnflaggedXCRows,
+		_scanToNUnflaggedACRowsMap, _scanToNUnflaggedXCRowsMap,
 		_dataDescToSpwMap, _spwInfo, ms
 	);
+
 }
 
 /*
