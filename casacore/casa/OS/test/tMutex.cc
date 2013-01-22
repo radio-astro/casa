@@ -123,12 +123,20 @@ void testNormal()
 {
   cout << "Test NORMAL ..." << endl;
   Mutex mutex(Mutex::Normal);
-  // Usually an an unlock does not fail.
-  try {
-    mutex.unlock();
-  } catch (AipsError& x) {
-    cout << x.what() << endl;
-  }
+
+  // For normal mutexes, unlocking an unlocked mutex is specified as
+  // producing undefined behavior.  In this case, it appears to leave
+  // foul up the internal nUsers field of the mutex which causes the
+  // destructor for fail (EBUSY) which throws an exception.
+  // jjacobs (2013-01-17)
+    //  // Usually an an unlock does not fail.
+    //  try {
+    //    mutex.unlock();
+    //  } catch (AipsError& x) {
+    //    cout << x.what() << endl;
+    //  }
+
+
   // First lock should succeed.
   mutex.lock();
   // Doing another lock results in a deadlock, so we don't do that.

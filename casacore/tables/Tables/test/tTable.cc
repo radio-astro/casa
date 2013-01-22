@@ -255,7 +255,10 @@ void b (Bool doExcp)
 	try {
 	    tab.addColumn (ScalarColumnDesc<Int>("ab"));
 	} catch (AipsError x) {
+            cout << "Expected TableInvOper exception occurred:" << endl;
+            cout << ">>>" << endl;
 	    cout << x.getMesg() << endl;             // table not writable
+            cout << "<<<" << endl;
 	} 
     }
     ROScalarColumn<Int> ab2(tab,"ab");
