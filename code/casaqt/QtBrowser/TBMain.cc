@@ -331,7 +331,7 @@ void TBMain::editTable(TBTableTabs* ttabs, bool edit) {
 void TBMain::openTable() {
     if(waiting) return;
 
-    QString f = QtFileDialog::qgetExistingDir(this, tr("Find Data"));
+    QString f = QtFileDialog::qgetExistingDir(this, tr("Find Data"), ".");
     
     if(!f.isEmpty()) {
         openTable(qPrintable(f));
