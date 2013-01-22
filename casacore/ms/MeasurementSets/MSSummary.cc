@@ -66,19 +66,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // will get rubbish.  Also sets string to separate subtable output.
 //
 MSSummary::MSSummary (const MeasurementSet& ms)
-: pMS(&ms),
+: pMS(&ms), _msmd(new MSMetaDataOnDemand(&ms, 50.0)),
   dashlin1(replicate("-",80)),
   dashlin2(replicate("=",80))
 {}
 
 MSSummary::MSSummary (const MeasurementSet* ms)
-: pMS(ms),
+: pMS(ms), _msmd(new MSMetaDataOnDemand(ms, 50.0)),
   dashlin1(replicate("-",80)),
   dashlin2(replicate("=",80))
 {}
 
 MSSummary::MSSummary (const MeasurementSet* ms, const String msname)
-: pMS(ms),
+: pMS(ms), _msmd(new MSMetaDataOnDemand(ms, 50)),
   dashlin1(replicate("-",80)),
   dashlin2(replicate("=",80)),
   msname_p(msname)
@@ -95,7 +95,7 @@ MSSummary::~MSSummary ()
 //
 Int MSSummary::nrow () const
 {
-	return pMS->nrow();
+	return _msmd->nRows();
 }
 
 
@@ -122,6 +122,7 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 		return False;
 	} else {
 		pMS = pTemp;
+		_msmd.reset(new MSMetaDataOnDemand(&ms, 50));
 		return True;
 	}
 }
@@ -229,8 +230,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		os << "The MAIN table is empty: there are no data!!!" << endl << LogIO::POST;
 		return;
 	}
-	// FIXME implementation should be migrated to use MSMetaDataOnDemand class
-	MSMetaDataOnDemand md(pMS, 50);
 
 	// Make objects
 	ROMSColumns msc(*pMS);
@@ -307,6 +306,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	Int widthFieldId = 5;
 	Int widthField = 20;
 	Int widthnrow = 7;
+	Int widthNUnflaggedRow = 10;
 	Int widthInttim = 7;
 
 	// Set up iteration over OBSID and ARRID:
@@ -338,7 +338,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			datetime.replace(25+timeref.length(),1,")");
 			os << datetime;
 			os << "Scan  FldId FieldName "
-					<<"          nRows   Int(s)   SpwIds      ScanIntent" << endl;
+					<<"          nRows   nUnflRows   Int(s)   SpwIds      ScanIntent" << endl;
 		}
 
 		/* CAS-2751. Sort the table by scan then field (not timestamp)
@@ -497,7 +497,13 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 
 						//os.output().width(widthnrow); os << thisnrow;
 						os.output().width(widthnrow);
-						os <<  md.nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+						os.output().setf(ios::right, ios::adjustfield);
+						os <<  _msmd->nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+						ostringstream xx;
+						xx << std::fixed << setprecision(2) << std::right
+							<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+						os.output().width(widthNUnflaggedRow);
+						os << xx.str();
 
 						os.output().width(widthInttim); os << meanIntTim;
 						os.output().width(widthLead); os << " ";
@@ -1054,11 +1060,9 @@ void MSSummary::listAntenna (LogIO& os, Bool verbose) const
 		os << "z";
 		os << endl;
 
-
-		MSMetaDataOnDemand msmd(pMS, 20);
-		vector<MPosition> antPos = msmd.getAntennaPositions();
+		vector<MPosition> antPos = _msmd->getAntennaPositions();
 		Bool posIsITRF = antPos[0].type() != MPosition::ITRF;
-		vector<Quantum<Vector<Double> > > offsets = msmd.getAntennaOffsets(antPos);
+		vector<Quantum<Vector<Double> > > offsets = _msmd->getAntennaOffsets(antPos);
 
 		// For each ant
 		for (Int i=0; i<nAnt; i++) {
@@ -1216,7 +1220,8 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		Int widthDec   = 16;
 		Int widthType  =  8;
 		Int widthSrc   =  6;
-		Int widthnVis  =  7;
+		Int widthnVis  =  8;
+		Int widthNUnflaggedRows = 11;
 
 		outrec.define("nfields", Int(fieldId.nelements()));
 		if (verbose) {}  // null, always same output
@@ -1231,10 +1236,14 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		os.output().width(widthDec);	os << " Decl";
 		os.output().width(widthType);	os << "Epoch";
 		if (srcok) {os.output().width(widthSrc);	os << "SrcId";}
-		if (nVisPerField_.nelements()>0)
-		{os.output().width(widthnVis);	os << "nRows";}
+		if (nVisPerField_.nelements()>0) {
+			os.output().setf(ios::right, ios::adjustfield);
+			os.output().width(widthnVis);
+			os << "nRows";
+			os.output().width(widthNUnflaggedRows);
+			os << "nUnflRows";
+		}
 		os << endl;
-
 		// loop through fields
 		for (uInt i=0; i<fieldId.nelements(); i++) {
 			uInt fld=fieldId(i);
@@ -1254,8 +1263,16 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 				os.output().width(widthType);
 				os << MDirection::showType(mRaDec.getRefPtr()->getType());
 				if (srcok) {os.output().width(widthSrc);	os << msFC.sourceId()(fld);}
-				if (nVisPerField_.nelements()>fld)
-				{os.output().width(widthnVis);	os << nVisPerField_(fld);}
+				if (nVisPerField_.nelements()>fld) {
+					os.output().setf(ios::right, ios::adjustfield);
+					os.output().width(widthnVis);
+					os << _msmd->nRows(MSMetaData::BOTH, fld);
+					os.output().width(widthNUnflaggedRows);
+					ostringstream xx;
+					xx << std::fixed << setprecision(2) << std::right
+						<< _msmd->nUnflaggedRows(MSMetaData::BOTH, fld);
+					os << xx.str();
+				}
 				os << endl;
 				if(fillRecord){
 					Record fieldrec;

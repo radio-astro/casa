@@ -255,6 +255,19 @@ public:
 	// get the effective total exposure time. This is the effective time spent collecting unflagged data.
 	virtual Quantity getEffectiveTotalExposureTime() = 0;
 
+	// get the number of unflagged rows
+	virtual Double nUnflaggedRows() = 0;
+
+	virtual Double nUnflaggedRows(CorrelationType cType) = 0;
+
+	virtual Double nUnflaggedRows(
+		CorrelationType cType, uInt arrayID, uInt observationID,
+		uInt scanNumber, uInt fieldID
+	) = 0;
+
+	virtual Double nUnflaggedRows(CorrelationType cType, uInt fieldID) = 0;
+
+	/*
 	// get the number of unflagged auto correlation and cross correlation rows.
 	virtual void getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
@@ -262,7 +275,7 @@ public:
 		std::map<uInt, Double>& scanNACRows,
 		std::map<uInt, Double>& scanNXCRows
 	) = 0;
-
+	*/
 	inline virtual Float getCache() const { return 0;}
 
 protected:
@@ -370,14 +383,6 @@ protected:
 		const vector<MSMetaData::SpwProperties>& spwInfo
 	);
 
-	/*
-	static void _getAntennas(
-		std::auto_ptr<Vector<Int> >& ant1,
-		std::auto_ptr<Vector<Int> >& ant2,
-		const MeasurementSet& ms
-	);
-
-	*/
 	static void _getAntennas(
 		Vector<Int>& ant1, Vector<Int>& ant2, const MeasurementSet& ms
 	);
@@ -397,22 +402,23 @@ protected:
 	void _getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
 		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows,
+		AOSFMapD& scanNACRows,
+		AOSFMapD& scanNXCRows,
 		const Vector<Int>& ant1, const Vector<Int>& ant2,
 		const Vector<Bool>& flagRow, const Vector<Int>& dataDescIDs,
 		const vector<uInt>& dataDescIDToSpwMap,
 		const vector<SpwProperties>& spwInfo,
 		const ArrayColumn<Bool>& flags,
-		const Vector<Int>& fieldIDs, const Vector<Int>& scan
+		const Vector<Int>& fieldIDs, const Vector<Int>& scan,
+		const Vector<Int>& obsIDs, const Vector<Int>& arIDs
 	);
 
 	// this version does a TAQL query to call the number of possible rows
 	void _getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
 		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows,
+		AOSFMapD& scanNACRows,
+		AOSFMapD& scanNXCRows,
 		const vector<uInt>& dataDescIDToSpwMap,
 		const vector<SpwProperties>& spwInfo,
 		const MeasurementSet& ms

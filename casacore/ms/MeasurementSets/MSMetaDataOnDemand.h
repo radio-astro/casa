@@ -233,6 +233,19 @@ public:
 	// get the effective total exposure time. This is the effective time spent collecting unflagged data.
 	Quantity getEffectiveTotalExposureTime();
 
+	// get the number of unflagged rows
+	Double nUnflaggedRows();
+
+	Double nUnflaggedRows(CorrelationType cType);
+
+	Double nUnflaggedRows(
+		CorrelationType cType, uInt arrayID, uInt observationID,
+		uInt scanNumber, uInt fieldID
+	);
+
+	Double nUnflaggedRows(CorrelationType cType, uInt fieldID);
+
+	/*
 	// get the number of unflagged auto correlation and cross correlation rows.
 	void getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
@@ -240,6 +253,7 @@ public:
 		std::map<uInt, Double>& scanNACRows,
 		std::map<uInt, Double>& scanNXCRows
 	);
+	*/
 
 	inline Float getCache() const { return _cacheMB;}
 
@@ -272,11 +286,12 @@ private:
 	vector<Quantum<Vector<Double> > > _antennaOffsets;
 	Matrix<Bool> _uniqueBaselines;
 	Quantity _exposureTime;
-	Double _unflaggedACRows, _unflaggedXCRows;
+	Double _nUnflaggedACRows, _nUnflaggedXCRows;
 	vector<Double> _unflaggedFieldNACRows, _unflaggedFieldNXCRows;
-	std::map<uInt, Double> _unflaggedScanNACRows, _unflaggedScanNXCRows;
+	AOSFMapD _unflaggedScanNACRows, _unflaggedScanNXCRows;
 	const String _taqlTableName;
 	const vector<const Table*> _taqlTempTable;
+	std::tr1::shared_ptr<ArrayColumn<Bool> > _flagsColumn;
 
 	// disallow copy constructor and = operator
 	MSMetaDataOnDemand(const MSMetaDataOnDemand&);
@@ -340,6 +355,9 @@ private:
 
 	std::tr1::shared_ptr<Vector<Double> > _getTimes();
 
+	std::tr1::shared_ptr<ArrayColumn<Bool> > _getFlags();
+
+
 	std::map<uInt, std::set<uInt> > _getScanToStatesMap();
 
 	Bool _cacheUpdated(const Float incrementInBytes);
@@ -366,6 +384,14 @@ private:
 		AOSFMapI& scanToNXCRowsMap,
 		vector<uInt>& fieldToNACRowsMap,
 		vector<uInt>& fieldToNXCRowsMap
+	);
+
+	void _getUnflaggedRowStats(
+		Double& nACRows, Double& nXCRows,
+		AOSFMapD& scanToNACRowsMap,
+		AOSFMapD& scanToNXCRowsMap,
+		vector<Double>& fieldToNACRowsMap,
+		vector<Double>& fieldToNXCRowsMap
 	);
 
 };
