@@ -12,6 +12,8 @@
 //
 #include <assert.h>
 
+#include <set>
+
 #include <casa/OS/File.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/Directory.h>
@@ -1047,17 +1049,20 @@ private:
   }
   void addSpectralWindow( Int sid, uInt fid )
   {
-    if ( !processedFreqId[fid] ) {
+    if (processedFreqId.find((uInt)fid) == processedFreqId.end() 
+        || processedIFNO.find((uInt)sid) == processedIFNO.end() ) {
       uInt nrow = spwtab.nrow() ;
       while( (Int)nrow <= sid ) {
         spwtab.addRow( 1, True ) ;
         nrow++ ;
       }
-      processedFreqId[fid] = True ;
+      processedFreqId.insert((uInt)fid);
+      processedIFNO.insert((uInt)sid);
     }
     else {
       return ;
     }
+      
 
     Double rp = refpix[fid] ;
     Double rv = refval[fid] ;
@@ -1168,7 +1173,6 @@ private:
     Vector<Double> rv = rvcol.getColumn() ;
     Vector<Double> ic = iccol.getColumn() ;
     for ( uInt i = 0 ; i < id.nelements() ; i++ ) {
-      processedFreqId.insert( pair<uInt,Bool>( id[i], False ) ) ;
       refpix.insert( pair<uInt,Double>( id[i], rp[i] ) ) ;
       refval.insert( pair<uInt,Double>( id[i], rv[i] ) ) ;
       increment.insert( pair<uInt,Double>( id[i], ic[i] ) ) ;
@@ -1461,7 +1465,8 @@ private:
   Block<Int> ddEntry;
   Block<Int> feedEntry;
   vector< Vector<Int> > polEntry;
-  map<uInt,Bool> processedFreqId;
+  set<uInt> processedFreqId;
+  set<uInt> processedIFNO;
   map<uInt,Double> refpix;
   map<uInt,Double> refval;
   map<uInt,Double> increment;

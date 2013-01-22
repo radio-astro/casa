@@ -57,7 +57,9 @@ public:
   void push(STCalTsysTable *table);
 
   // set interpolation method
-  void setInterpolation(STCalEnum::InterpolationAxis axis, STCalEnum::InterpolationType itype, casa::Int order=-1);
+  //void setInterpolation(STCalEnum::InterpolationAxis axis, STCalEnum::InterpolationType itype, casa::Int order=-1);
+  void setTimeInterpolation(STCalEnum::InterpolationType itype, casa::Int order=-1);
+  void setFrequencyInterpolation(STCalEnum::InterpolationType itype, casa::Int order=-1);
 
   // set IF (spw) mapping for Tsys transfer
   void setTsysTransfer(casa::uInt from, casa::Vector<casa::uInt> to);
@@ -68,6 +70,12 @@ public:
   // split target data and store it to disk
   void save(const casa::String &name);
 
+  // reset all settings except target scantable
+  void reset();
+
+  // reset all settings
+  void completeReset();
+  
 private:
   // initialization
   void init();
@@ -99,8 +107,8 @@ private:
   casa::CountedPtr<Calibrator> calibrator_;
 
   // interpolation method
-  std::vector<STCalEnum::InterpolationType> interp_;
-  casa::Bool is2d_;
+  STCalEnum::InterpolationType iTime_;
+  STCalEnum::InterpolationType iFreq_;
   casa::Int order_;
   casa::CountedPtr<Interpolator1D<casa::Double, casa::Float> > interpolatorT_;
   casa::CountedPtr<Interpolator1D<casa::Double, casa::Float> > interpolatorF_;

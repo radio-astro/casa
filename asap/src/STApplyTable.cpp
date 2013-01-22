@@ -160,8 +160,8 @@ STCalEnum::CalType STApplyTable::stringToType(const String &caltype)
 Block<Double> STApplyTable::getFrequenciesRow(uInt id)
 {
   const TableRecord &rec = table_.keywordSet();
-  rec.print(os_.output());
-  os_ << LogIO::POST;
+  //rec.print(os_.output());
+  //os_ << LogIO::POST;
   Table ftab = rec.asTable("FREQUENCIES");
   Table t = ftab(ftab.col("ID") == id);
   ROTableColumn col(t, "REFPIX");

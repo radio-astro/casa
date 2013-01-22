@@ -33,6 +33,10 @@ public:
   // @see Interpolator1D::setData
   void setData(T *x, U *y, unsigned int n);
 
+  // Override Interpolate1D::setX.
+  // @see Interpolate1D::setX()
+  void setX(T *x, unsigned int n);
+
   // Override Interpolator1D::setY.
   // @see Interpolator1D::setY()
   void setY(U *y, unsigned int n);

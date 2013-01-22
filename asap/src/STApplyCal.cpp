@@ -64,11 +64,16 @@ void STApplyCal::init()
 {
   caltype_ = STCalEnum::NoType;
   doTsys_ = False;
-  interp_.resize((int)STCalEnum::NumAxis);
-  // default is linear interpolation
-  for (unsigned int i = 0; i < interp_.size(); i++) {
-    interp_[i] = STCalEnum::LinearInterpolation;
-  }
+}
+
+void STApplyCal::reset()
+{
+}
+
+void STApplyCal::completeReset()
+{
+  reset();
+  target_ = 0;
 }
 
 void STApplyCal::setTarget(CountedPtr<Scantable> target)
@@ -84,6 +89,7 @@ void STApplyCal::setTarget(const String &name)
 
 void STApplyCal::push(STCalSkyTable *table)
 {
+  os_.origin(LogOrigin("STApplyCal","push",WHERE));
   skytable_.push_back(table);
   STCalEnum::CalType caltype = STApplyTable::getCalType(table);
   os_ << "caltype=" <<  caltype << LogIO::POST;
@@ -101,14 +107,21 @@ void STApplyCal::push(STCalTsysTable *table)
   doTsys_ = True;
 }
 
-void STApplyCal::setInterpolation(STCalEnum::InterpolationAxis axis, STCalEnum::InterpolationType itype, Int order)
+void STApplyCal::setTimeInterpolation(STCalEnum::InterpolationType itype, Int order)
 {
-  interp_[(int)axis] = itype;
+  iTime_ = itype;
+  order_ = order;
+}
+
+void STApplyCal::setFrequencyInterpolation(STCalEnum::InterpolationType itype, Int order)
+{
+  iFreq_ = itype;
   order_ = order;
 }
 
 void STApplyCal::setTsysTransfer(uInt from, Vector<uInt> to)
 {
+  os_.origin(LogOrigin("STApplyCal","setTsysTransfer",WHERE));
   os_ << "from=" << from << ", to=" << to << LogIO::POST;
   map<uInt, Vector<uInt> >::iterator i = spwmap_.find(from);
   if (i == spwmap_.end()) {
@@ -127,6 +140,7 @@ void STApplyCal::setTsysTransfer(uInt from, Vector<uInt> to)
 
 void STApplyCal::apply(Bool insitu)
 {
+  os_.origin(LogOrigin("STApplyCal","apply",WHERE));
   // calibrator
   if (caltype_ == STCalEnum::CalPSAlma)
     calibrator_ = new PSAlmaCalibrator();
@@ -142,7 +156,7 @@ void STApplyCal::apply(Bool insitu)
   }
   target_->setSelection(sel_);
 
-  os_ << "sel_.print()=" << sel_.print() << LogIO::POST;
+  //os_ << "sel_.print()=" << sel_.print() << LogIO::POST;
 
   // working data
   if (insitu)
@@ -150,15 +164,14 @@ void STApplyCal::apply(Bool insitu)
   else
     work_ = new Scantable(*target_, false);
 
-  os_ << "work_->nrow()=" << work_->nrow() << LogIO::POST;
+  //os_ << "work_->nrow()=" << work_->nrow() << LogIO::POST;
 
   // list of apply tables for sky calibration
   Vector<uInt> skycalList;
   uInt numSkyCal = 0;
   uInt nrowSky = 0;
-  // list of apply tables for Tsys calibration
-//   Vector<uInt> tsyscalList;
 
+  // list of apply tables for Tsys calibration
   for (uInt i = 0 ; i < skytable_.size(); i++) {
     STCalEnum::CalType caltype = STApplyTable::getCalType(skytable_[i]);
     if (caltype == caltype_) {
@@ -178,7 +191,6 @@ void STApplyCal::apply(Bool insitu)
   while (!iter->pastEnd()) {
     Vector<uInt> ids = iter->current();
     Vector<uInt> rows = iter->getRows(SHARE);
-    os_ << "ids=" << ids << LogIO::POST;
     if (rows.nelements() > 0)
       doapply(ids[0], ids[2], ids[1], rows, skycalList);
     iter->next();
@@ -191,11 +203,9 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
                          Vector<uInt> &rows,
                          Vector<uInt> &skylist)
 {
-  os_ << "skylist=" << skylist << LogIO::POST;
-  os_ << "rows=" << rows << LogIO::POST;
+  os_.origin(LogOrigin("STApplyCal","doapply",WHERE));
   Bool doTsys = doTsys_;
 
-  //STSelector sel = sel_;
   STSelector sel;
   vector<int> id(1);
   id[0] = beamno;
@@ -204,7 +214,6 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   sel.setIFs(id);
   id[0] = polno;
   sel.setPolarizations(id);  
-  os_ << "sel=" << sel.print() << LogIO::POST;
 
   // apply selection to apply tables
   uInt nrowSky = 0;
@@ -232,41 +241,31 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     nchanTsys = tsystable_[0]->nchan(tsysifno);
     ftsys = tsystable_[0]->getBaseFrequency(0);
     interpolatorF_->setX(ftsys.data(), nchanTsys);
-    os_ << "nchanTsys=" << nchanTsys << LogIO::POST;
     id[0] = (int)tsysifno;
     sel.setIFs(id);
     for (uInt i = 0; i < tsystable_.size() ; i++) {
       tsystable_[i]->setSelection(sel);
       nrowTsys += tsystable_[i]->nrow();
-      os_ << "nrowTsys=" << nrowTsys << LogIO::POST;
     }
   }
 
   uInt nchanSp = skytable_[skylist[0]]->nchan(ifno);
-  os_ << "nchanSp = " << nchanSp << LogIO::POST;
   Vector<Double> timeSky(nrowSky);
   Matrix<Float> spoff(nchanSp, nrowSky);
   Vector<Float> iOff(nchanSp);
   nrowSky = 0;
-  os_ << "spoff.shape()=" << spoff.shape() << LogIO::POST;
   for (uInt i = 0 ; i < skylist.nelements(); i++) {
     STCalSkyTable *p = skytable_[skylist[i]];
-    os_ << "table " << i << ": nrow=" << p->nrow() << LogIO::POST;
     Vector<Double> t = p->getTime();
     Matrix<Float> sp = p->getSpectra();
-    os_ << "sp.shape()=" << sp.shape() << LogIO::POST;
-    os_ << "t.nelements()=" << t.nelements() << LogIO::POST;
     for (uInt j = 0; j < t.nelements(); j++) {
       timeSky[nrowSky] = t[j];
-      os_ << "timeSky[" << nrowSky << "]-timeSky[0]=" << timeSky[nrowSky] - timeSky[0] << LogIO::POST;
       spoff.column(nrowSky) = sp.column(j);
       nrowSky++;
     }
   }
-  os_ << "timeSky-timeSky[0]=" << timeSky-timeSky[0] << LogIO::POST;
 
   Vector<uInt> skyIdx = timeSort(timeSky);
-  os_ << "skyIdx = " << skyIdx << LogIO::POST;
 
   Double *xa = new Double[skyIdx.nelements()];
   Float *ya = new Float[skyIdx.nelements()];
@@ -275,13 +274,10 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   Vector<Float> tmpOff(ipos, ya, TAKE_OVER);
   for (uInt i = 0 ; i < skyIdx.nelements(); i++) {
     timeSkySorted[i] = timeSky[skyIdx[i]];
-    os_ << "timeSkySorted[" << i << "]-timeSkySorted[0]=" << timeSkySorted[i] - timeSkySorted[0] << LogIO::POST;
   }
-  os_ << "timeSkySorted-timeSkySorted[0]=" << timeSkySorted-timeSkySorted[0] << LogIO::POST;
 
   interpolatorS_->setX(xa, skyIdx.nelements());
 
-  os_ << "doTsys = " << doTsys << LogIO::POST;
   Vector<uInt> tsysIdx;
   Vector<Double> timeTsys(nrowTsys);
   Matrix<Float> tsys;
@@ -294,9 +290,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     nrowTsys = 0;
     for (uInt i = 0 ; i < tsystable_.size(); i++) {
       STCalTsysTable *p = tsystable_[i];
-      os_ << "p->nrow()=" << p->nrow() << LogIO::POST;
       Vector<Double> t = p->getTime();
-      os_ << "t=" << t << LogIO::POST;
       Matrix<Float> ts = p->getTsys();
       for (uInt j = 0; j < t.nelements(); j++) {
         timeTsys[nrowTsys] = t[j];
@@ -305,7 +299,6 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
       }
     }
     tsysIdx = timeSort(timeTsys);
-    os_ << "tsysIdx = " << tsysIdx << LogIO::POST;
 
     Double *xb = new Double[tsysIdx.nelements()];
     Float *yb = new Float[tsysIdx.nelements()];
@@ -314,18 +307,17 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     tmpTsys.takeStorage(ipos, yb, TAKE_OVER);
     for (uInt i = 0 ; i < tsysIdx.nelements(); i++) {
       timeTsysSorted[i] = timeTsys[tsysIdx[i]];
-      os_ << "timeTsysSorted[" << i << "]-timeTsysSorted[0]=" << timeTsysSorted[i] - timeTsysSorted[0] << LogIO::POST;
     }
-    os_ << "timeTsysSorted=" << timeTsysSorted << LogIO::POST;
     interpolatorT_->setX(xb, tsysIdx.nelements());
   }
 
   Table tab = work_->table();
   ArrayColumn<Float> spCol(tab, "SPECTRA");
+  ArrayColumn<Float> tsysCol(tab, "TSYS");
   ScalarColumn<Double> timeCol(tab, "TIME");
   Vector<Float> on;
   for (uInt i = 0; i < rows.nelements(); i++) {
-    os_ << "start row " << i << LogIO::POST;
+    os_ << "start i = " << i << " (row = " << rows[i] << ")" << LogIO::POST;
     uInt irow = rows[i];
 
     // target spectral data
@@ -361,16 +353,13 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
         interpolatorT_->setY(yb, tsysIdx.nelements());
         iTsysT[ichan] = interpolatorT_->interpolate(t0);
       }
-      os_ << "iTsysT=" << iTsysT << LogIO::POST;
       if (nchanSp == 1) {
         // take average
         iTsys[0] = mean(iTsysT);
       }
       else {
         // interpolation on frequency axis
-        os_ << "getBaseFrequency for target" << LogIO::POST;
         Vector<Double> fsp = getBaseFrequency(rows[i]);
-        os_ << "fsp = " << fsp << LogIO::POST;
         interpolatorF_->setY(yt, nchanTsys);
         for (uInt ichan = 0; ichan < nchanSp; ichan++) {
           iTsys[ichan] = interpolatorF_->interpolate(fsp[ichan]);
@@ -380,16 +369,16 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     else {
       iTsys = 1.0;
     } 
-    os_ << "iTsys=" << iTsys << LogIO::POST;
+    //os_ << "iTsys=" << iTsys << LogIO::POST;
     calibrator_->setScaler(iTsys);
   
     // do calibration
     calibrator_->calibrate();
 
     // update table
-    os_ << "calibrated=" << calibrator_->getCalibrated() << LogIO::POST; 
+    //os_ << "calibrated=" << calibrator_->getCalibrated() << LogIO::POST; 
     spCol.put(irow, calibrator_->getCalibrated());
-    
+    tsysCol.put(irow, iTsys);
   }
   
 
@@ -420,7 +409,7 @@ uInt STApplyCal::getIFForTsys(uInt to)
   for (map<casa::uInt, Vector<uInt> >::iterator i = spwmap_.begin(); 
        i != spwmap_.end(); i++) {
     Vector<uInt> tolist = i->second;
-    os_ << i->first << ": tolist=" << tolist << LogIO::POST;
+    os_ << "from=" << i->first << ": tolist=" << tolist << LogIO::POST;
     for (uInt j = 0; j < tolist.nelements(); j++) {
       if (tolist[j] == to)
         return i->first;
@@ -457,10 +446,9 @@ Vector<Double> STApplyCal::getBaseFrequency(uInt whichrow)
 
 void STApplyCal::initInterpolator()
 {
-  int ta = (int)STCalEnum::TimeAxis;
-  int fa = (int)STCalEnum::FrequencyAxis;
+  os_.origin(LogOrigin("STApplyCal","initInterpolator",WHERE));
   int order = (order_ > 0) ? order_ : 1;
-  switch (interp_[ta]) {
+  switch (iTime_) {
   case STCalEnum::NearestInterpolation:
     {
       os_ << "use NearestInterpolator in time axis" << LogIO::POST;
@@ -506,7 +494,7 @@ void STApplyCal::initInterpolator()
     }
   }
    
-  switch (interp_[fa]) {
+  switch (iFreq_) {
   case STCalEnum::NearestInterpolation:
     {
       os_ << "use NearestInterpolator in frequency axis" << LogIO::POST;

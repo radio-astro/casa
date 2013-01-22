@@ -41,6 +41,13 @@ void CubicSplineInterpolator1D<T, U>::setData(T *x, U *y, unsigned int n)
 }
 
 template <class T, class U>
+void CubicSplineInterpolator1D<T, U>::setX(T *x, unsigned int n)
+{
+  Interpolator1D<T, U>::setX(x, n);
+  reusable_ = false;
+}
+
+template <class T, class U>
 void CubicSplineInterpolator1D<T, U>::setY(U *y, unsigned int n)
 {
   Interpolator1D<T, U>::setY(y, n);
@@ -93,9 +100,10 @@ void CubicSplineInterpolator1D<T, U>::evaly2()
   u[0] = 0.0;
 
   // Solve tridiagonal system.
-  // Here, tridiagonal matrix is decomposed to triangular matrix
-  // u stores upper triangular components while y2_ stores 
-  // right-hand side vector.
+  // Here, tridiagonal matrix is decomposed to upper triangular 
+  // matrix. u stores upper triangular components while y2_ stores 
+  // right-hand side vector. The diagonal elements are normalized 
+  // to 1.
   T a1 = this->x_[1] - this->x_[0];
   T a2, bi;
   for (unsigned int i = 1; i < ny2_ - 1; i++) {
