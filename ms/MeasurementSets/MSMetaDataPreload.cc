@@ -58,10 +58,6 @@ MSMetaDataPreload::MSMetaDataPreload(const MeasurementSet& ms)
 	_makeAntennaInfo(ms);
 	_makeScanToStateMap(ms);
 	_makeFieldNameToTimesMap(ms);
-	/*
-	_makeBaselineToTimesMap(ms);
-	_makeBaselineToStatesMap();
-	*/
 	_makeUniqueBaselines(ms);
 	_makeDataDescID(ms);
 	_makeDataDescIDToSpwMap(ms);
@@ -439,6 +435,12 @@ std::set<Double> MSMetaDataPreload::getTimesForScans(
 	}
 	return times;
 }
+
+std::vector<Double> MSMetaDataPreload::getTimeRangeForScan(uInt scan) {
+	_checkScan(scan);
+	return _scanToTimeRange[scan];
+}
+
 
 std::set<uInt> MSMetaDataPreload::getStatesForScan(const uInt scan) {
 	_checkScan(scan);
@@ -926,6 +928,9 @@ void MSMetaDataPreload::_makeScanToTimeMap(const MeasurementSet& ms) {
 		curScan++;
 		curTime++;
 	}
+	_scanToTimeRange = _getScanToTimeRangeMap(
+		_scans, _getTimeCentroids(ms), _getIntervals(ms)
+	);
 }
 
 /*

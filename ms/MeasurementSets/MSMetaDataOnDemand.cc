@@ -972,6 +972,22 @@ std::set<Double> MSMetaDataOnDemand::getTimesForScans(
 	return times;
 }
 
+vector<Double> MSMetaDataOnDemand::getTimeRangeForScan(uInt scan) {
+	_checkScan(scan, getScanNumbers());
+	if (! _scanToTimeRangeMap.empty()) {
+		return _scanToTimeRangeMap[scan];
+	}
+	std::map<Int, vector<Double> > mymap = _getScanToTimeRangeMap(
+		*_getScans(), _getTimeCentroids(*_ms), _getIntervals(*_ms)
+	);
+	uInt mysize = mymap.size()*(sizeof(Int)+2*sizeof(Double));
+	if (_cacheUpdated(mysize)) {
+		_scanToTimeRangeMap = mymap;
+	}
+	return mymap[scan];
+}
+
+
 std::set<uInt> MSMetaDataOnDemand::getStatesForScan(const uInt scan) {
 	_checkScan(scan, getScanNumbers());
 	return _getScanToStatesMap().find(scan)->second;

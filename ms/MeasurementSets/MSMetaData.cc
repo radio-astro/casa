@@ -261,6 +261,16 @@ Vector<Double> MSMetaData::_getTimes(const MeasurementSet& ms) {
 	return ScalarColumn<Double>(ms, timeColName).getColumn();
 }
 
+Vector<Double> MSMetaData::_getTimeCentroids(const MeasurementSet& ms) {
+	String timeCentroidColName = MeasurementSet::columnName(MSMainEnums::TIME_CENTROID);
+	return ScalarColumn<Double>(ms, timeCentroidColName).getColumn();
+}
+
+Vector<Double> MSMetaData::_getIntervals(const MeasurementSet& ms) {
+	String intervalColName = MeasurementSet::columnName(MSMainEnums::INTERVAL);
+	return ScalarColumn<Double>(ms, intervalColName).getColumn();
+}
+
 Vector<Bool> MSMetaData::_getFlagRows(const MeasurementSet& ms) {
 	String flagRowColName = MeasurementSet::columnName(MSMainEnums::FLAG_ROW);
 	return ScalarColumn<Bool>(ms, flagRowColName).getColumn();
@@ -478,18 +488,34 @@ std::map<Double, Double> MSMetaData::_getTimeToTotalBWMap(
 	return timeToBWMap;
 }
 
-/*
-void MSMetaData::_getAntennas(
-	std::auto_ptr<Vector<Int> >& ant1,
-	std::auto_ptr<Vector<Int> >& ant2,
-	const MeasurementSet& ms
+std::map<Int, vector<Double> > MSMetaData::_getScanToTimeRangeMap(
+	const Vector<Int>& scans, const Vector<Double>& timeCentroids,
+	const Vector<Double>& intervals
 ) {
-	Vector<Int> a1, a2;
-	_getAntennas(a1, a2, ms);
-	ant1.reset(new Vector<Int>(a1));
-	ant2.reset(new Vector<Int>(a2));
+	std::map<Int, vector<Double> > out;
+	Vector<Int>::const_iterator sIter = scans.begin();
+	Vector<Int>::const_iterator sEnd = scans.end();
+	Vector<Double>::const_iterator  tIter = timeCentroids.begin();
+	Vector<Double>::const_iterator  iIter = intervals.begin();
+	while (sIter != sEnd) {
+		Double half = *iIter/2;
+		if (out.find(*sIter) == out.end()) {
+			out[*sIter] = vector<Double>(2, *tIter-half);
+			out[*sIter][1] = *tIter+half;
+		}
+		else {
+			out[*sIter][0] = min(out[*sIter][0], *tIter-half);
+			out[*sIter][1] = max(out[*sIter][1], *tIter+half);
+		}
+		sIter++;
+		tIter++;
+		iIter++;
+	}
+
+	return out;
 }
-*/
+
+
 void MSMetaData::_getAntennas(
 	Vector<Int>& ant1, Vector<Int>& ant2, const MeasurementSet& ms
 ) {
