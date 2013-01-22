@@ -375,21 +375,34 @@ class imagecont():
         try:
             
             for kk in range(majcycle):
-                retval=im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf')
+                retval=im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf') 
+                if(not os.path.exists(imname+'.image')):
+                ##all channels flagged for example...make 0 images for concat later
+                    im.make(imname+'.image')
+                    im.make(imname+'.model')
+                    im.make(imname+'.residual')
+                    im.make(imname+'.psf')
             im.done()
             del im
         except Exception as instance:
+            if(not os.path.exists(imname+'.image')):
+                ##all channels flagged for example...make 0 images for concat later
+                im.make(imname+'.image')
+                im.make(imname+'.model')
+                im.make(imname+'.residual')
+                im.make(imname+'.psf')
             im.done()
             del im
             if(string.count(str(instance), 'PSFZero') <1):
                 raise Exception(instance)
         if(maskname != ''):
             shutil.rmtree(maskname, True)
+        
+        #self.putchanimage(imroot+'.model', imname+'.model', startchan, False)
+        #self.putchanimage(imroot+'.residual', imname+'.residual', startchan, False)
+        #self.putchanimage(imroot+'.image', imname+'.image', startchan, False)
+        #self.putchanimage(imroot+'.psf', imname+'.psf', startchan, False)
         return retval
-        #self.putchanimage(imroot+'.model', imname+'.model', imchan*chanchunk)
-        #self.putchanimage(imroot+'.residual', imname+'.residual', imchan*chanchunk)
-        #self.putchanimage(imroot+'.image', imname+'.image', imchan*chanchunk)
-
 
 
     def imagechan_new(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, cubeim='imagecube', imroot='newmodel', imchan=0, chanchunk=1, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0]):
@@ -528,17 +541,34 @@ class imagecont():
          #  ia.done()
         ####                
         if(len(inim)==1):
-            ib=ia.fromimage(ourfile=cubeimage, infile=inim[0], overwrite=True)
+            ib=ia.fromimage(outfile=cubeimage, infile=inim[0], overwrite=True)
         else:
-            ib=ia.imageconcat(outfile=cubeimage, infiles=inim,  
-                              axis=3, relax=True,  overwrite=True)
+            #ib=ia.imageconcat(outfile=cubeimage, infiles=inim,  
+            #                  axis=3, relax=True,  overwrite=True)
+            ############
+            strnames='"'
+            for k in range(len(inim)):
+                strnames=strnames+' '+inim[k] if (k > 0) else strnames+inim[k] 
+            strnames=strnames+'"'
+            comm='imageconcat '+ strnames + ' '+ cubeimage
+            casalog.post('Command '+comm)
+            exitval=os.system(comm)
+            #print "exitval", exitval
+            if(exitval > 0):
+                raise Exception('Failed to concat '+str(inim))  
+            ib=casac.image()
+            ib.open(cubeimage)
+            ##############
         ia.done()
         ##### CAS-4423 temp
         #if(len(elbeamo) >0):
         #   ib.setrestoringbeam(beam=elbeamo)
         #####
         if(csys != None):
-            ib.setcoordsys(csys=csys.torecord())
+            if(type(csys)==dict):
+                ib.setcoordsys(csys=csys)
+            else:
+                ib.setcoordsys(csys=csys.torecord())
         ib.done()
         if(removeinfile):
             for k in range(len(inim)):
@@ -562,7 +592,7 @@ class imagecont():
         #imdata=ia.getchunk()
         #immask=ia.getchunk(getmask=True)
         ##############
-        ia.done()
+        ia,=gentools(['ia'])
         ia.open(cubimage)
         cubeshape=ia.shape()
         #if inimshape[0:3]!=cubeshape[0:3]: 
@@ -570,7 +600,7 @@ class imagecont():
         k=0
         ib,=gentools(['ia'])
         for chan in chans:
-            print 'chan', chan
+            casalog.post('Doing chan_' + str(chan))
             if(os.path.exists(inim[k])):
                 ib.open(inim[k])
                 inimshape=ib.shape()
@@ -589,13 +619,14 @@ class imagecont():
             ###########
             
             ########
-                ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+                #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
             ###########
-                ###ia.insert(infile=inim[k], locate=blc)
+                ia.insert(infile=inim[k], locate=blc)
                 if(removeinfile):
                     ia.removefile(inim[k])
             k+=1
-        ia.close()
+        ia.done()
+        del ia
         tb.clearlocks()
         #casalog.post('putLOCKS:  '+ str(inim)+ ' ---  ' + str(tb.listlocks()))
         

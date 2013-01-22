@@ -25,8 +25,7 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (list/manual/clip/shadow/quack/\
-elevation/tfcrop/rflag/extend/unflag/summary)</description>
+                <description>Flagging mode</description>
                 <value>manual</value>
                 <allowed kind="enum">
                     <value>list</value>
@@ -52,13 +51,13 @@ elevation/tfcrop/rflag/extend/unflag/summary)</description>
 
             <!-- LIST parameters -->
             <param type="any" name="inpfile" subparam="true">
-                <description>Input ASCII file or Python list of strings with flag commands.</description>
+            <description>Input ASCII file or Python list of strings with flag commands.</description>
                 <any type="variant" limittypes="string stringArray"/>
                 <value type="string"></value>
             </param>
 
             <param type="any" name="reason" subparam="true">
-                        <description>Select by REASON types</description>
+            <description>Select by REASON types</description>
                         <any type="variant" limittypes="string stringArray"/>
                         <value type="string">any</value>
             </param>
@@ -993,7 +992,7 @@ The task will flag a subset of data based on the following modes of operation:
                     options: 1,2,3
                         Note: This is experimental !
 
-        rflag -- Detect outliers based on the RFLAG algorithm (ref. E.Greisen, AIPS, 2011).
+        rflag -- Detect outliers based on the RFlag algorithm (ref. E.Greisen, AIPS, 2011).
                  The polarization expression is given by the correlation parameter.
 
                  Iterate through the data in chunks of time.  For each chunk, calculate local
@@ -1039,17 +1038,24 @@ The task will flag a subset of data based on the following modes of operation:
                         showing data-statistics and thresholds (the same thresholds as those
                         written out to 'tdevfile.txt' and 'fdevfile.txt'). 
            
-                        Note : The rflag algorithm was originally developed by Eric Greisen in 
+                        Note : The RFlag algorithm was originally developed by Eric Greisen in 
                                 AIPS (31DEC11).
                         AIPS documentation : Section E.5 of the AIPS cookbook
                         (Appendix E : Special Considerations for EVLA data calibration and imaging in AIPS,
                         http://www.aips.nrao.edu/cook.html#CEE )
 
-                        Note : Since this algorithm operates with two passes through each
+                        Note1 : Since this algorithm operates with two passes through each
                            chunk of data (time and freq axes), some data points get flagged
                            twice. This can affect the flag-percentage estimate printed in the
                            logger at runtime.  An accurate estimate can be obtained via the
                            summary mode.
+
+                        Note2: RFlag calculates statistics across all selected correlations. 
+                          Therefore, if there is a significant amplitude difference between 
+                          parallel-hand and cross-hand correlations, or between different 
+                          solutions in a gain table, it is advisable to pre-select subsets of 
+                          correlations (or sols) on which to run one instance of RFlag. 
+                          For example, correlation='RR,LL' or correlation='ABS sol1,sol2'.
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before running the algorithm.
                      options: 'scan' or any other float value or string containing the units.
@@ -1404,7 +1410,7 @@ The task will flag a subset of data based on the following modes of operation:
     
         flagdata('cal-X54.B1', mode='clip', clipzeros=True, datacolumn='CPARAM')
         
-    16) Clip data with SNR &lt;4.0.
+    16) Clip data from a cal table with SNR &lt;4.0.
     
         flagdata('cal-X54.B1', mode='clip', clipminmax=[0.0,4.0], clipoutside=False, datacolumn='SNR')
     

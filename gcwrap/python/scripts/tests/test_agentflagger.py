@@ -70,9 +70,20 @@ class test_base(unittest.TestCase):
                         "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-
         self.unflag_table()
 
+    def setUp_flagdatatest_alma(self):
+        self.vis = "flagdatatest-alma.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            os.system('cp -r ' + \
+                        os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_table()
 
     def unflag_table(self):
 
@@ -663,11 +674,44 @@ class test_bpass(test_base):
         assert abs(summary['report2']['flagged'] - 2*30427) <= 10
         assert abs(summary['report2']['correlation']['Sol2']['flagged'] - 30427) <= 5        
 
-#class test_MS(test_base):
-#
-#    def setUP(self):
-#        self.setUp_4Ants()
-#   
+class test_MS(test_base):
+
+    def setUp(self):
+        self.setUp_flagdatatest_alma()
+
+    def test_null_intent_selection1(self):
+        '''Agentflagger: handle unknown scan intent in list mode'''
+        
+        aflocal = casac.agentflagger()
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        aflocal.parsemanualparameters(intent='FOCUS') # non-existing intent
+        aflocal.parsemanualparameters(intent='CALIBRATE_POINTING_ON_SOURCE') # scan=1
+        aflocal.parsemanualparameters(intent='CALIBRATE_AMPLI_ON_SOURCE') # scan=2
+        aflocal.parsemanualparameters(intent='CALIBRATE_AMPLI_ON_SOURC') # typo
+        aflocal.parsemanualparameters(intent='*DELAY*') # non-existing
+        aflocal.parsesummaryparameters()
+        aflocal.init()
+        summary = aflocal.run()
+        aflocal.done()
+        self.assertEqual(summary['report0']['scan']['1']['flagged'], 80184)
+        self.assertEqual(summary['report0']['scan']['2']['flagged'], 96216)
+        self.assertEqual(summary['report0']['flagged'], 80184+96216)
+         
+#    def test_null_intent_selection2(self):
+#        '''flagdata: do not handle unknown scan intent in list mode'''
+#        
+#        input = ["intent='FOCUS",   # non-existing intent
+#                 "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
+#                 "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
+#                 "intent='CALIBRATE_AMPLI_ON_SOURC",
+#                 "intent='*DELAY*'"] # non-existing
+#       
+#        flagdata(vis=self.vis, mode='list', inpfile=input, handleMSexception=False)
+#        res = flagdata(vis=self.vis, mode='summary')
+#        self.assertEqual(res['scan']['1']['flagged'], 0)
+#        self.assertEqual(res['flagged'], 0)
+   
 #    def test_catchNullSel(self):
 #        '''AgentFlagger: Catch null selections'''
 #        aflocal = casac.agentflagger()
@@ -681,7 +725,7 @@ class test_bpass(test_base):
 #        
 #    def test_donotcatchNullSel(self):
 #        '''AgentFlagger: do not catch null selections'''
-#        
+        
     
 class test_display(test_base):
     """AgentFlagger:: Automatic test to check basic behaviour of display GUI using pause=False option """
@@ -784,4 +828,5 @@ def suite():
     return [test_tsys,
             test_bpass,
             test_display,
+            test_MS,
             cleanup]

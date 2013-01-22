@@ -911,7 +911,8 @@ def getUnion(vis, cmddict):
     dicpars['timerange'] = '' 
     # Correlations should be handled only by the agents
     dicpars['correlation'] = ''
-    dicpars['intent'] = ints
+    # CAS-4682, do not create union for intents
+    dicpars['intent'] = ''
     dicpars['feed'] = feeds
     dicpars['array'] = arrays
     dicpars['uvrange'] = uvs

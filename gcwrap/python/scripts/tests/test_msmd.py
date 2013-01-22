@@ -392,7 +392,7 @@ class msmd_test(unittest.TestCase):
         
     def test_nvis(self):
         """ Test nvis()"""
-        self.assertTrue(self.md.nvis() == 15363)
+        self.assertTrue(self.md.nrows() == 15363)
         
     def test_scannumbers(self):
         """ Test scannumbers()"""

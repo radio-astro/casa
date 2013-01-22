@@ -184,7 +184,14 @@ class sdbaseline_engine(sdutil.sdtask_engine):
         for k in keys:
             self.__register(k)
 
+        # parameters for clipping
+        if self.blfunc.lower() != 'poly':
+            keys = getattr(self, 'clip_keys')
+            for k in keys:
+                self.__register(k)
+
         # common parameters
+        self.__register('mask', 'masklist')
         self.__register('plot', 'verify')
         self.__register('showprogress')
         self.__register('minnrow')

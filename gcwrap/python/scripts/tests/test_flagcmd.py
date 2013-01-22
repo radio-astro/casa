@@ -149,15 +149,15 @@ class test_manual(test_base):
         self.setUp_multi()
         
     def test_observation(self):
-        input = "observation='1'"
-        filename = create_input(input)
+        myinput = "observation='1'"
+        filename = create_input(myinput)
         
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
 
     def test_compatibility(self):
-        input = "observation='1' mode='manualflag'"
-        filename = create_input(input)
+        myinput = "observation='1' mode='manualflag'"
+        filename = create_input(myinput)
         
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
@@ -179,9 +179,9 @@ class test_alma(test_base):
     def test_intent(self):
         '''flagcmd: test scan intent selection'''
         
-        input = "intent='CAL*POINT*'\n"\
+        myinput = "intent='CAL*POINT*'\n"\
                 "#scan=3,4"
-        filename = create_input(input)
+        filename = create_input(myinput)
         
         # flag POINTING CALIBRATION scans and ignore comment line
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
@@ -235,16 +235,16 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        input = "scan=1"
-        filename = create_input(input)
+        myinput = "scan=1"
+        filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         
         # Flag using tfcrop agent from file
         # Note : For this test, scan=4 gives identical flags on 32/64 bit machines,
         #           and one flag difference on a Mac (32)
         #           Other scans give differences at the 0.005% level.
-        input = "scan=4 mode=tfcrop correlation='ABS_RR'"
-        filename = create_input(input)
+        myinput = "scan=4 mode=tfcrop correlation='ABS_RR'"
+        filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
@@ -263,13 +263,13 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        input = "scan=1"
-        filename = create_input(input)
+        myinput = "scan=1"
+        filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
 
         # Flag using the quack agent
-        input = "scan=1~3 mode=quack quackinterval=1.0"
-        filename = create_input(input)
+        myinput = "scan=1~3 mode=quack quackinterval=1.0"
+        filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         
         # Unapply only the quack line
@@ -286,13 +286,13 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        input = "scan=1"
-        filename = create_input(input)
+        myinput = "scan=1"
+        filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
 
         # Flag using the quack agent
-        input = "scan=1~3 mode=quack quackinterval=1.0"
-        filename = create_input(input)
+        myinput = "scan=1~3 mode=quack quackinterval=1.0"
+        filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         
         # Unapply only the manual line
@@ -341,13 +341,13 @@ class test_savepars(test_base):
         
         ########## TEST 1 
         # create text file called flagcmd.txt
-        input = "scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
-        filename = create_input(input)
+        myinput = "scan=4 mode=clip correlation=ABS_RR clipminmax=[0,4]\n"
+        filename = create_input(myinput)
         filename1 = 'filename1.txt'
         os.system('cp '+filename+' '+filename1)
 
         # save command to MS
-        flagcmd(vis=self.vis, action='list', inpmode='list', inpfile=[input], savepars=True)
+        flagcmd(vis=self.vis, action='list', inpmode='list', inpfile=[myinput], savepars=True)
         
         # list/save to a file
         os.system('rm -rf myflags.txt')
@@ -358,8 +358,8 @@ class test_savepars(test_base):
         
         ########## TEST 2 
         # create another input
-        input = "scan=1~3 mode=manual\n"
-        filename = create_input(input)
+        myinput = "scan=1~3 mode=manual\n"
+        filename = create_input(myinput)
         
         # apply and don't save to MS
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
@@ -448,7 +448,7 @@ class test_shadow(test_base):
         '''flagcmd: shadow by antennas not present in MS'''
         
         # Create antennafile in disk
-        input = 'name=VLA01\n'+\
+        myinput = 'name=VLA01\n'+\
                 'diameter=25.0\n'+\
                 'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
                 'name=VLA02\n'+\
@@ -465,20 +465,20 @@ class test_shadow(test_base):
 #        if os.path.exists(antfile):
 #            os.system('rm -rf myants.txt')
 
-        filename = create_input(input)
+        filename = create_input(myinput)
 
         # Create command line
-        input = ["mode='shadow' tolerance=10.0 addantenna='flagcmd.txt'"]
+        myinput = ["mode='shadow' tolerance=10.0 addantenna='flagcmd.txt'"]
 #        filename = 'cmdfile.txt'
 #        if os.path.exists(filename):
 #            os.system('rm -rf cmdfile.txt')
         
-#        create_input(input, filename)
+#        create_input(myinput, filename)
         
         # Flag
         flagcmd(vis=self.vis, action='clear', clearall=True)
 #        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=filename)
-        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=input)
+        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=myinput)
         
         # Check flags
         res = flagdata(vis=self.vis, mode='summary')
@@ -660,8 +660,8 @@ class test_cmdbandpass(test_base):
     def test_list_field_Selection_for_bpass(self):
         """Flagcmd:: Manually flag a bpass-based CalTable using file in list mode """
         
-        input = "field='3C286_A'"
-        filename = create_input(input)
+        myinput = "field='3C286_A'"
+        filename = create_input(myinput)
 
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename)
         summary=flagdata(vis=self.vis, mode='summary')
