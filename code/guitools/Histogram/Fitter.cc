@@ -32,8 +32,7 @@ Fitter::Fitter() {
 
 void Fitter::setData( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
 	clearFit();
-	//fitValues.resize(0);
-	dataFitted = false;
+
 	int xValueSize = dataValuesX.size();
 	xValues.resize( xValueSize );
 	for ( int i = 0; i < xValueSize; i++ ){
@@ -46,12 +45,28 @@ void Fitter::setData( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
 	}
 }
 
+QString Fitter::formatResultLine( QString label, float value ) const {
+	QString resultLine( label );
+	resultLine.append( "\t");
+	resultLine.append( QString::number( value));
+	resultLine.append( "\n");
+	return resultLine;
+}
+
 void Fitter::setRMS( double value ){
 	rmsError = value;
 }
 
 bool Fitter::isFit() const {
 	return dataFitted;
+}
+
+void Fitter::clearFit(){
+	fitValues.resize( 0 );
+	errorMsg = "";
+	statusMsg = "";
+	dataFitted = false;
+	rmsError = 0;
 }
 
 Vector<Float> Fitter::getFitValues() const {

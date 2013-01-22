@@ -139,7 +139,7 @@ void MWCPolylineTool::keyPressed(const WCPositionEvent &ev) {
 }
 
 
-void MWCPolylineTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCPolylineTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   if ( itsMode==Off || itsMode==Ready) return;
   if ( ev.worldCanvas()!=itsCurrentWC ) return;
 
@@ -167,7 +167,7 @@ void MWCPolylineTool::moved(const WCMotionEvent &ev, const viewer::Region::regio
 }
 
 
-void MWCPolylineTool::keyReleased(const WCPositionEvent &ev) {
+void MWCPolylineTool::keyReleased(const WCPositionEvent &/*ev*/) {
   Bool needsHandles=False;
   if ( itsMode==Move || itsMode==Resize ) {
     itsMode=Ready;
@@ -188,7 +188,7 @@ void MWCPolylineTool::otherKeyPressed(const WCPositionEvent &ev) {
 }
 
 
-void MWCPolylineTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) { 
+void MWCPolylineTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) { 
   if (itsMode==Off) return;
 
   setClipToDrawArea();

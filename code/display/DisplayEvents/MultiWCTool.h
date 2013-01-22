@@ -34,7 +34,7 @@
 #include <display/DisplayEvents/WCMotionEH.h>
 #include <display/DisplayEvents/WCRefreshEH.h>
 #include <display/DisplayEvents/DisplayTool.h>
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -145,7 +145,7 @@ class MultiWCTool : public DisplayTool,
   virtual void keyReleased(const WCPositionEvent &/*ev*/);
   virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
   virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent & /*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void moved(const WCMotionEvent & /*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
   virtual void updateRegion() {}
   virtual void clicked(Int /*x*/, Int /*y*/) {}
   virtual void doubleClicked(Int /*x*/, Int /*y*/) {}
@@ -153,7 +153,7 @@ class MultiWCTool : public DisplayTool,
 
   // Draw whatever should be drawn (if anything) on current WC.
   // Should only be called by refresh event handler.
-  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
   // Copy back-to-front buffer (erasing all MWCTool drawings),
   // then cause this (and all MWCTools on current WC's PC)

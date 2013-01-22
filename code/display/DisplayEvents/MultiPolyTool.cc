@@ -53,86 +53,87 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     void MultiPolyTool::keyPressed(const WCPositionEvent &ev) {
+		Int x = ev.pixX();
+		Int y = ev.pixY();
+		WorldCanvas *wc = ev.worldCanvas( );
+		if ( ! wc->inDrawArea(x, y) ) return;
 
-	Int x = ev.pixX();
-	Int y = ev.pixY();
-	WorldCanvas *wc = ev.worldCanvas( );
-	if ( ! wc->inDrawArea(x, y) ) return;
+		// finish building the polygon...
+		// could still be needed for flagging measurement sets...
+		if ( ev.modifiers( ) & Display::KM_Double_Click )  {
+			if ( memory::nullptr.check(building_polygon) == false ) {
+				// upon double-click close polygon if more than 3 vertices...
+				// otherwise, add another vertex...
+				if ( building_polygon->numVertices( ) > 3 ) {
+					// greater than 3 because the last vertex is pre-loaded
+					// and adjusted as the user moves the mouse...
+					building_polygon->closeFigure( );
+					building_polygon = memory::nullptr;
 
-	// finish building the polygon...
-	// could still be needed for flagging measurement sets...
-	if ( ev.modifiers( ) & Display::KM_Double_Click )  {
-	    if ( memory::nullptr.check(building_polygon) == false ) {
-		// upon double-click close polygon if more than 3 vertices...
-		// otherwise, add another vertex...
-		if ( building_polygon->numVertices( ) > 3 ) {
-		    // greater than 3 because the last vertex is pre-loaded
-		    // and adjusted as the user moves the mouse...
-		    building_polygon->closeFigure( );
-		    building_polygon = memory::nullptr;
-
-		    // avoid degenerate polygons...
-		    if ( memory::nullptr.check(creating_region) == false ) {
-			if ( creating_region->degenerate( ) ) {
-			    viewer::Region *nix = creating_region.get( );
-			    rfactory->revokeRegion(nix);
+					// avoid degenerate polygons...
+					if ( memory::nullptr.check(creating_region) == false ) {
+						if ( creating_region->degenerate( ) ) {
+							viewer::Region *nix = creating_region.get( );
+							rfactory->revokeRegion(nix);
+						}
+						creating_region = memory::nullptr;
+						viewer::Region::creatingRegionEnd( );
+					}
+					refresh( );
+					return;
+				} else {
+					double linx1, liny1;
+					try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
+					building_polygon->addVertex( linx1, liny1, true );
+					building_polygon->addVertex( linx1, liny1 );
+					refresh( );
+					return;
+				}
 			}
-			creating_region = memory::nullptr;
-		    }
-		    refresh( );
-		    return;
-		} else {
-		    double linx1, liny1;
-		    try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
-		    building_polygon->addVertex( linx1, liny1, true );
-		    building_polygon->addVertex( linx1, liny1 );
-		    refresh( );
-		    return;
+			doubleClicked(x, y);
 		}
-	    }
-	    doubleClicked(x, y);
-	}
 
-	double linx1, liny1;
-	try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
+		double linx1, liny1;
+		try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
 
-	// constructing a polygon...
-	if ( memory::nullptr.check(building_polygon) == false ) {
-	    building_polygon->addVertex( linx1, liny1, true );
-	    building_polygon->addVertex( linx1, liny1 );
-	    refresh( );
-	    return;
-	}
+		// constructing a polygon...
+		if ( memory::nullptr.check(building_polygon) == false ) {
+			building_polygon->addVertex( linx1, liny1, true );
+			building_polygon->addVertex( linx1, liny1 );
+			refresh( );
+			return;
+		}
 
-	// traverse in reverse order because the last region created is "on top"...
-	// check for click within a handle...
-	for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
-	    if ( (resizing_region_handle = (*iter)->clickHandle( linx1, liny1 )) != 0 ) {
-		resizing_region = *iter;		// enter resizing state
-		moving_regions.clear( );		// ensure that moving state is clear...
+#if INCLUDE_OLD_CODE
+		// traverse in reverse order because the last region created is "on top"...
+		// check for click within a handle...
+		for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
+			if ( (resizing_region_handle = (*iter)->clickHandle( linx1, liny1 )) != 0 ) {
+				resizing_region = *iter;		// enter resizing state
+				moving_regions.clear( );		// ensure that moving state is clear...
+				return;
+			}
+		}
+
+		// check for click within one (or more) regions...
+		resizing_region = memory::nullptr;
+		moving_regions.clear( );			// ensure that moving state is clear...
+		for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
+			if ( (*iter)->clickWithin( linx1, liny1 ) )
+				moving_regions.push_back(*iter);
+		}
+		moving_linx_ = linx1;
+		moving_liny_ = liny1;
+		if ( moving_regions.size( ) > 0 ) return;
+#endif
+		// start new rectangle
+		start_new_polygon( wc, x, y );		// enter resizing state
+		polygonReady();
 		return;
-	    }
 	}
 
-	// check for click within one (or more) regions...
-	resizing_region = memory::nullptr;
-	moving_regions.clear( );			// ensure that moving state is clear...
-	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
-	    if ( (*iter)->clickWithin( linx1, liny1 ) )
-		moving_regions.push_back(*iter);
-	}
-	moving_linx_ = linx1;
-	moving_liny_ = liny1;
-	if ( moving_regions.size( ) > 0 ) return;
 
-	// start new rectangle
-	start_new_polygon( wc, x, y );		// enter resizing state
-	polygonReady();
-	return;
-    }
-
-
-    void MultiPolyTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type &selected_regions) {
+    void MultiPolyTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type &selected_regions) {
 
 	if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
 
@@ -161,17 +162,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    return;
 	}
 
-	int size = selected_regions.size( );
-	for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
-	    unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
-	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
-	    region_selected = region_selected | viewer::Region::regionSelected(result);
+	std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
+	if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
+		int size = selected_regions.size( );
+		for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
+			unsigned int result = (*iter)->mouseMovement(linx,liny,size > 0);
+			refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
+			region_selected = region_selected | viewer::Region::regionSelected(result);
+		}
+
+		if ( refresh_needed ) {
+			refresh( );
+		}
 	}
 
-	if ( refresh_needed ) {
-	    refresh( );
-	}
-
+#if USE_TRANSLATE_MOVING_REGIONS_INSTEAD
+	// there seems to be skew between this code and RegionToolManager::translate_moving_regions
 	//---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 	if ( moving_regions.size( ) > 0 ) {
 	    // resize the rectangle
@@ -186,6 +192,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    moving_liny_ = liny1;
 	}
 	//---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+#endif
 
 	if(itsMode==Off || itsMode==Ready) return;
 	if(!itsCurrentWC->inDrawArea(x,y)) return;
@@ -202,7 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    pY = pY + dy;
 	    set(pX, pY);	// move all the points by (dx,dy)
 	    itsBaseMoveX = x;
-	    itsBaseMoveY = y;  
+	    itsBaseMoveY = y;
 	    updateRegion(); }
 
 	else if (itsMode == Resize) {
@@ -210,7 +217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    updateRegion(); }
 
 	itsEmitted = False;  // changed polygon => not yet emitted.
-	refresh();  
+	refresh();
     }
 
 
@@ -256,83 +263,96 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// this callback is unused (and useless?) on glish level (12/01)
 
 
-    void MultiPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
-	const int pixel_step = 1;
-	WorldCanvas *wc = ev.worldCanvas( );
-	if ( wc == itsCurrentWC && 
-	     ( ev.key() == Display::K_Escape ||
-	       ev.key() == Display::K_Left ||
-	       ev.key() == Display::K_Right ||
-	       ev.key() == Display::K_Up ||
-	       ev.key() == Display::K_Down ) ) {
-	    uInt x = ev.pixX();
-	    uInt y = ev.pixY();
+	void MultiPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
+		if ( memory::nullptr.check(creating_region) == false &&
+			 ev.key( ) != Display::K_Escape ) {
+			// when creating a polygon, non-escape keys are ignored...
+			return;
+		}
+			
+		const int pixel_step = 1;
+		WorldCanvas *wc = ev.worldCanvas( );
+		if ( wc == itsCurrentWC &&
+			 ( ev.key() == Display::K_Escape ||
+			   ev.key() == Display::K_Left ||
+			   ev.key() == Display::K_Right ||
+			   ev.key() == Display::K_Up ||
+			   ev.key() == Display::K_Down ) ) {
+			uInt x = ev.pixX();
+			uInt y = ev.pixY();
 
-	    resizing_region = memory::nullptr;
-	    moving_regions.clear( );		// ensure that moving state is clear...
-
-	    double linx, liny;
-	    try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
-
-	    bool refresh_needed = false;
-	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ) {
-		if ( (*iter)->regionVisible( ) ) {
-		    unsigned int result = (*iter)->mouseMovement(linx,liny,false);
-		    if ( viewer::Region::regionSelected(result) ) {
-			if ( ev.key() == Display::K_Escape ) {
-			    polygonlist::iterator xi = iter; ++xi;
-			    polygons.erase( iter );
-			    refresh_needed = true;
-			    iter = xi;
-			} else {
-			    double dx=0, dy=0;
-			    try {
-				switch ( ev.key( ) ) {
-				    case Display::K_Left:
-					viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
-					break;
-				    case Display::K_Right:
-					viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
-					break;
-				    case Display::K_Down:
-					viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
-					break;
-				    case Display::K_Up:
-					viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
-					break;
-				    default:
-					break;
-				}
-			    } catch(...) { continue; }
-			    (*iter)->move( dx, dy );
-			    refresh_needed = true;
-			    ++iter;
+			resizing_region = memory::nullptr;
+			moving_regions.clear( );		// ensure that moving state is clear...
+			if ( memory::nullptr.check(creating_region) == false ) {
+				viewer::Region *nix = creating_region.get( );
+				rfactory->revokeRegion(nix);
+				viewer::Region::creatingRegionEnd( );
+				creating_region = memory::nullptr;
+				building_polygon = memory::nullptr;
 			}
-		    } else { ++iter; }
-		} else { ++iter; }
-	    }
-	    if ( refresh_needed ) refresh( );
-	}
-    }
 
-    void MultiPolyTool::draw(const WCRefreshEvent & /*ev*/, const viewer::Region::region_list_type &selected_regions) {
+			double linx, liny;
+			try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
+
+			bool refresh_needed = false;
+			for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ) {
+				if ( (*iter)->regionVisible( ) ) {
+					unsigned int result = (*iter)->mouseMovement(linx,liny,false);
+					if ( viewer::Region::regionSelected(result) ) {
+						if ( ev.key() == Display::K_Escape ) {
+							polygonlist::iterator xi = iter; ++xi;
+							polygons.erase( iter );
+							refresh_needed = true;
+							iter = xi;
+						} else {
+							double dx=0, dy=0;
+							try {
+								switch ( ev.key( ) ) {
+									case Display::K_Left:
+										viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+										break;
+									case Display::K_Right:
+										viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+										break;
+									case Display::K_Down:
+										viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+										break;
+									case Display::K_Up:
+										viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+										break;
+									default:
+										break;
+								}
+							} catch(...) { continue; }
+							(*iter)->move( dx, dy );
+							refresh_needed = true;
+							++iter;
+						}
+					} else { ++iter; }
+				} else { ++iter; }
+			}
+			if ( refresh_needed ) refresh( );
+		}
+	}
+
+    void MultiPolyTool::draw(const WCRefreshEvent & /*ev*/, const viewer::region::region_list_type &selected_regions) {
 	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter )
 	    (*iter)->draw( selected_regions.size( ) > 0 );
     }
 
 
-    void MultiPolyTool::revokeRegion( viewer::Region *p ) {
-	viewer::Polygon *poly = dynamic_cast<viewer::Polygon*>(p);
-	if ( poly == 0 ) return;
+	void MultiPolyTool::revokeRegion( viewer::Region *p ) {
+		viewer::Polygon *poly = dynamic_cast<viewer::Polygon*>(p);
+		if ( poly == 0 ) return;
 
-	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
-	    if ( (*iter).get( ) == poly ) {
-		polygons.erase( iter );
-		refresh( );
-		break;
-	    }
+		for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
+			if ( (*iter).get( ) == poly ) {
+				polygons.erase( iter );
+				refresh( );
+				break;
+			}
+		}
 	}
-    }
 
     void MultiPolyTool::reset(Bool skipRefresh) {
 	Bool existed = (itsMode!=Off);
@@ -396,7 +416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
 	Int nabove = 0, nbelow = 0; // counts of crossing lines above and below
-  
+
 	Vector<Int> pX, pY;
 	get(pX, pY);
 	Int i, j;
@@ -418,26 +438,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void MultiPolyTool::checkPoint( WorldCanvas * /*wc*/, State &state ) {
 	for ( polygonlist::iterator iter = ((MultiPolyTool*) this)->polygons.begin(); iter != polygons.end(); ++iter ) {
-	    viewer::Region::PointInfo point_state = (*iter)->checkPoint( state.x( ), state.y( ) );
+	    viewer::region::PointInfo point_state = (*iter)->checkPoint( state.x( ), state.y( ) );
 	    // should consider introducing a cptr_ref which somehow allows creating a
 	    // base class reference based on a counted pointer to a derived class...
 	    state.insert( this, &*(*iter), point_state );
 	}
     }
 
-    static std::set<viewer::Region::RegionTypes> multi_poly_tool_region_set;
-    const std::set<viewer::Region::RegionTypes> &MultiPolyTool::regionsCreated( ) const {
+    static std::set<viewer::region::RegionTypes> multi_poly_tool_region_set;
+    const std::set<viewer::region::RegionTypes> &MultiPolyTool::regionsCreated( ) const {
 	if ( multi_poly_tool_region_set.size( ) == 0 ) {
-	    multi_poly_tool_region_set.insert( viewer::Region::PolyRegion );
+	    multi_poly_tool_region_set.insert( viewer::region::PolyRegion );
 	}
 	return multi_poly_tool_region_set;
     }
 
-    bool MultiPolyTool::create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas *wc,
+    bool MultiPolyTool::create( viewer::region::RegionTypes /*region_type*/, WorldCanvas *wc,
 				const std::vector<std::pair<double,double> > &pts,
-				const std::string &label, viewer::Region::TextPosition label_pos, const std::vector<int> &label_off,
+				const std::string &label, viewer::region::TextPosition label_pos, const std::vector<int> &label_off,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
-				const std::string &line_color, viewer::Region::LineStyle line_style, unsigned int line_width,
+				const std::string &line_color, viewer::region::LineStyle line_style, unsigned int line_width,
 				bool is_annotation, VOID */*region_specific_state*/ ) {
 	if ( pts.size( ) <= 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
@@ -456,29 +476,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void MultiPolyTool::start_new_polygon( WorldCanvas *wc, int x, int y ) {
 
-	// As originally requested by Kumar, any non-modified regions would be erased when a
-	// new one was started, but Juergen said that new regions should not automatically cause
-	// other regions to disappear... instead, there <ESC> should cause the selected regions
-	// to be be deleted...      <drs>
-	// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        // for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
-	//     // the only change that will count as "modifying" is a non-zero length name
-	//     if ( (*iter)->modified( ) == false ) {
-	// 	rectangles.erase( iter );
-	// 	continue;
-	//     }
-	// }
+		// As originally requested by Kumar, any non-modified regions would be erased when a
+		// new one was started, but Juergen said that new regions should not automatically cause
+		// other regions to disappear... instead, there <ESC> should cause the selected regions
+		// to be be deleted...      <drs>
+		// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+		// for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
+		//     // the only change that will count as "modifying" is a non-zero length name
+		//     if ( (*iter)->modified( ) == false ) {
+		// 	rectangles.erase( iter );
+		// 	continue;
+		//     }
+		// }
 
-	itsCurrentWC = wc;
+		itsCurrentWC = wc;
 
-	double linx, liny;
-	try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
-	creating_region = building_polygon = (rfactory->polygon( wc, linx, liny ));
-	building_polygon->addVertex(linx,liny);
-	resizing_region_handle = 1;
-	polygons.push_back( building_polygon );
-	moving_regions.clear( );		// ensure that moving state is clear...
-    }
+		double linx, liny;
+		try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
+		creating_region = building_polygon = (rfactory->polygon( wc, linx, liny ));
+		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));
+		building_polygon->addVertex(linx,liny);
+		resizing_region_handle = 1;
+		polygons.push_back( building_polygon );
+		moving_regions.clear( );		// ensure that moving state is clear...
+	}
 
 } //# NAMESPACE CASA - END
-

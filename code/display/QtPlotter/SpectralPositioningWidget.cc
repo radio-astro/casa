@@ -448,8 +448,8 @@ void SpectralPositioningWidget::updateRegion( const Vector<Double> px, const Vec
 		worldYValues = wy;
 	}
 	else {
-		qDebug() << "Update region: unrecognized size! px.size="<<px.size()
-				<<" py.size="<<py.size()<<" wx.size="<<wx.size()<<" wy.size="<<wy.size();
+		//qDebug() << "Update region: unrecognized size! px.size="<<px.size()
+		//		<<" py.size="<<py.size()<<" wx.size="<<wx.size()<<" wy.size="<<wy.size();
 	}
 
 	updateUI();

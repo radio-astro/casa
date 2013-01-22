@@ -26,7 +26,7 @@
 //# $Id: $
 
 
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <casa/namespace.h>
 #include <casa/OS/EnvVar.h>

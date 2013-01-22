@@ -75,23 +75,23 @@ class SynthesisDeconvolver
   void getCopyOfResidualAndMask( TempImage<Float> &/*residual*/, TempImage<Float>& /*mask*/ );
   void setMask( TempImage<Float> &/*mask*/ );
 
+  void setStartingModel(Record modpars);
 
 protected:
 
   // Gather all part images to the 'full' one
   void gatherImages();
+  void scatterModel();
 
   // Normalize. This can later change to be more general, i.e. used for PB-correction too...
-  void divideResidualImageByWeight();
+  void divideResidualByWeight();
+  void divideModelByWeight();
 
   // For the deconvolver, decide how many sliced deconvolution calls to make
-  Vector<Slicer> partitionImages();
-
-  // Call the deconvolver here, for each slice.
-  void deconvolve();
+  //  Vector<Slicer> partitionImages();
 
   // Check if images exist on disk and are all the same shape
-  Bool checkImagesOnDisk();
+  Bool setupImagesOnDisk();
   Bool doImagesExist( String imagename );
 
   /////////////// Member Objects
@@ -103,14 +103,14 @@ protected:
   Vector<CountedPtr<SIImageStore> > itsPartImages;
 
   IPosition itsImageShape;
-  CountedPtr<CoordinateSystem> itsCoordSys;
   
   String itsImageName;
   Vector<String> itsPartImageNames;
+  String itsStartingModelName;
 
   uInt itsDeconvolverId;
 
-  Vector<Slicer> itsDecSlices;
+  //  Vector<Slicer> itsDecSlices;
 
   //  CountedPtr<PagedImage<Float> > itsImage, itsPsf, itsResidual, itsWeight;
   //CountedPtr<PagedImage<Float> > itsModel;

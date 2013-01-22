@@ -69,6 +69,8 @@ class SIMapperBase
 
   virtual Record getFTMRecord();
 
+  String getImageName();
+
 protected:
   //////////////////// Member Functions
 

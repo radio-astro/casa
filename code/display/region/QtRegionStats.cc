@@ -27,7 +27,7 @@
 
 #include <display/region/QtRegionStats.qo.h>
 #include <QtGui/QStackedWidget>
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
 #include <display/region/RegionInfo.h>
 #include <display/DisplayErrors.h>
 

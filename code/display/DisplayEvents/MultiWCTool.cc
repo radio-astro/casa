@@ -181,7 +181,7 @@ void MultiWCTool::refresh() {
 
 
 void MultiWCTool::operator()(const WCRefreshEvent &ev) {
-  static viewer::Region::region_list_type empty;
+  static viewer::region::region_list_type empty;
   if (	itsCurrentWC != 0 &&
 	ev.worldCanvas() == itsCurrentWC &&
 	ev.reason() == Display::BackCopiedToFront &&
@@ -190,7 +190,7 @@ void MultiWCTool::operator()(const WCRefreshEvent &ev) {
 }
 
 void MultiWCTool::operator()(const WCMotionEvent &ev) {
-  static viewer::Region::region_list_type empty;
+  static viewer::region::region_list_type empty;
   moved(ev,empty);
 }
 
@@ -220,12 +220,12 @@ void MultiWCTool::resetClip() {
 // Callbacks: responses to events.  To be implemented by derived classes
 // as needed.
 
-void MultiWCTool::keyPressed(const WCPositionEvent &ev) {  }
+void MultiWCTool::keyPressed(const WCPositionEvent &/*ev*/) {  }
 void MultiWCTool::keyReleased(const WCPositionEvent &) {  }
 void MultiWCTool::otherKeyPressed(const WCPositionEvent &) {  }
 void MultiWCTool::otherKeyReleased(const WCPositionEvent &) {  }
-void MultiWCTool::moved(const WCMotionEvent & /*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) { }
-void MultiWCTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {  }
+void MultiWCTool::moved(const WCMotionEvent & /*ev*/, const viewer::region::region_list_type & /*selected_regions*/) { }
+void MultiWCTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {  }
 
 
 

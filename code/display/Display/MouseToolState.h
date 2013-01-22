@@ -40,11 +40,10 @@
 namespace casa {
     namespace QtMouseToolNames {
 
-	enum { nTools = 12 };
+	enum { nTools = 13 };
   
-	extern const std::string ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,
-	                    POINT, RECTANGLE, ELLIPSE, POLYGON, POLYLINE,
-	                    RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE;
+	extern const std::string ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,	POINT, RECTANGLE, ELLIPSE, POLYGON, POLYLINE,
+					RULERLINE, POSITIONVELOCITY, MULTICROSSHAIR, ANNOTATIONS, NONE;
 
 	//# nTools is an invalid tool index (or stands for "none") in these arrays.
 	extern const std::string     tools[nTools+1], longnames[nTools+1], helptexts[nTools+1];

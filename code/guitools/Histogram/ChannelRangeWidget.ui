@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>259</width>
-    <height>65</height>
+    <height>69</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,7 +32,20 @@
      <item>
       <widget class="QCheckBox" name="automaticChannelCheckBox">
        <property name="text">
-        <string>Automatic Channel Tracking</string>
+        <string>Track Channel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="channelLineEdit">
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>

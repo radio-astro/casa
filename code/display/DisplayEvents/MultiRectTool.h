@@ -38,6 +38,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	namespace viewer {
+		class QtRegionDock;
+	}
+
 // <summary>
 // Base class for MultiWorldCanvas event-based rectangle tools
 // </summary>
@@ -117,12 +121,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    void revokeRegion( viewer::Region * );
 
 	    // returns a set which indicates regions this creator creates...
-	    const std::set<viewer::Region::RegionTypes> &regionsCreated( ) const;
+	    const std::set<viewer::region::RegionTypes> &regionsCreated( ) const;
 
-	    bool create( viewer::Region::RegionTypes /*region_type*/, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
-			 const std::string &/*label*/, viewer::Region::TextPosition /*label_pos*/, const std::vector<int> &/*label_off*/,
+	    bool create( viewer::region::RegionTypes /*region_type*/, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
+			 const std::string &/*label*/, viewer::region::TextPosition /*label_pos*/, const std::vector<int> &/*label_off*/,
 			 const std::string &/*font*/, int /*font_size*/, int /*font_style*/, const std::string &/*font_color*/,
-			 const std::string &/*line_color*/, viewer::Region::LineStyle /*line_style*/, unsigned int /*line_width*/,
+			 const std::string &/*line_color*/, viewer::region::LineStyle /*line_style*/, unsigned int /*line_width*/,
 			 bool /*annotation*/, VOID */*region_specific_state*/ );
 
 	    RegionToolTypes type( ) const { return RECTTOOL; }
@@ -137,14 +141,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    virtual void keyPressed(const WCPositionEvent &ev);
 	    virtual void keyReleased(const WCPositionEvent &ev);
 	    virtual void otherKeyPressed(const WCPositionEvent &ev);
-	    virtual void moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/);
+	    virtual void moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/);
 	    // </group>
 
 	    // draw the rectangle (if any) on the object's currently active WC.
 	    // Only to be called by the base class refresh event handler.  Derived
 	    // objects should use refresh() if they need to redraw, but even that
 	    // is normally handled automatically.
-	    virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+	    virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
 	    // Output callback functions--to be overridden in derived class.
 	    // Called when there is a double click inside/outside the rectangle
@@ -163,7 +167,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // to be used by them, as well as internally.
 	    virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
 
+		virtual bool checkType( viewer::region::RegionTypes t ) { return t == viewer::region::RectRegion; }
 	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID *region_specific_state ) const;
+
 
 	    viewer::RegionSource *rfactory;
 
@@ -227,6 +233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    rectanglelist rectangles;
 	    PanelDisplay *pd_;
+
     };
 
 } //# NAMESPACE CASA - END

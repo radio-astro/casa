@@ -77,7 +77,7 @@ void MWCRulerlineTool::keyPressed(const WCPositionEvent &ev) {
   }
 }
 
-void MWCRulerlineTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCRulerlineTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   if (!itsActive) return;
   itsX2 = ev.pixX(); itsY2 = ev.pixY();
   refresh();
@@ -89,7 +89,7 @@ void MWCRulerlineTool::keyReleased(const WCPositionEvent &ev) {
 
   reset();
 }
-void MWCRulerlineTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCRulerlineTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
   // draws a line from initial to final mouse position,
   // when the button is down.
   if (!itsActive) return;
@@ -127,7 +127,7 @@ void MWCRulerlineTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::r
   // get the corner point in world-coordinates
   world3(0) = world1(0);
   world3(1) = world2(1);
-  for (Int index=2; index<world2.size(); index++)
+  for (Int index=2; index<(Int)world2.size(); index++)
 	  world3(index) = world2(index);
 
   // get the corner point in pixel-coordinates

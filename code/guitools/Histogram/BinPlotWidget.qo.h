@@ -119,8 +119,10 @@ signals:
 public slots:
 	void fitModeChanged();
 	void setDisplayStep( bool display );
-	void setDisplayLog( bool display );
+	void setDisplayLogY( bool display );
+	void setDisplayLogX( bool display );
 	void clearFit();
+	void clearAll();
 
 	//Saving the Histogram
 	void toAscii( const QString& filePath );
@@ -147,7 +149,6 @@ private slots:
 	void lambdaSpecified();
 	void fwhmSpecified();
 	void fitDone( const QString& msg );
-	void clearAll();
 	void zoomContextFinished();
 	void zoomMenuFinished();
 	void resetGaussianFitMarker();
@@ -252,14 +253,16 @@ private:
     HistogramMarkerPoisson* fitEstimateMarkerPoisson;
 
     //Plot Display
+    const QString LOG_COUNT;
+    const QString LOG_INTENSITY;
     QAction stepFunctionNoneAction;
     QAction stepFunctionAction;
     QAction stepFunctionFilledAction;
-    QAction logAction;
+    QAction logActionY;
     QAction logActionX;
     QAction clearAction;
     enum HistogramOptions{HISTOGRAM_FILLED,HISTOGRAM_OUTLINE,HISTOGRAM_LINE};
-    bool displayLog;
+    bool displayLogY;
     bool displayLogX;
     QMenu contextMenuDisplay;
 

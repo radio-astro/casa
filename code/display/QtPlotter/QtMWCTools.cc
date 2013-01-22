@@ -71,7 +71,7 @@ void QtPolyTool::setCoordType(const String& t) {
 }
 
 //////////////Ellipse tool//////////////////
-QtEllipseTool::QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtELRegion(rf,pd) 
+QtEllipseTool::QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtELRegion(rf, pd) 
 {
   setObjectName("EllipseTool");
 }
@@ -102,7 +102,7 @@ void QtEllipseTool::setCoordType(const String& t) {
 }
 
 //////////////rect tool//////////////////
-QtRectTool::QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtRTRegion(rf,pd) 
+	QtRectTool::QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtRTRegion(rf,pd) 
 {
   setObjectName("RectTool"); 
 }

@@ -39,7 +39,7 @@ Matrix<Float> LatticePADMVector<Complex>::getAmplitude(const Matrix<Complex>& da
 }
 
 template <>
-Matrix<Float> LatticePADMVector<Float>::getAmplitude(const Matrix<Float>& data) const
+Matrix<Float> LatticePADMVector<Float>::getAmplitude(const Matrix<Float>& /*data*/) const
 //
 // Never called
 //

@@ -33,7 +33,7 @@
 #include <display/region/QtRegionDock.ui.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
-#include <display/region/Region.h>
+#include <display/region/Region.qo.h>
 
 namespace casa {
 
@@ -42,7 +42,7 @@ namespace casa {
 
     namespace viewer {
 
-	class QtRegion;
+	class Region;
 	class QtRegionState;
 	class ds9writer;
 	class Region;
@@ -54,10 +54,10 @@ namespace casa {
 		QtRegionDock( QtDisplayPanelGui *, QWidget* parent=0 );
 		~QtRegionDock();
 
-		void addRegion(QtRegion *,QtRegionState*,int index = -1);
+		void addRegion(Region *,QtRegionState*,int index = -1);
 		int indexOf(QtRegionState*) const;
 		void removeRegion(QtRegionState*);
-		void selectRegion(QtRegionState*);
+		void selectRegion(QtRegionState*,bool scroll=true);
 
 		void status( const std::string &msg, const std::string &type="info" );
 
@@ -74,55 +74,57 @@ namespace casa {
 		// called to signal that selected region state needs to be updated...
 		void selectedCountUpdateNeeded( );
 		// retrieve the selected region state...
-		size_t selectedRegionCount( ) { return selected_region_list_.size( ); }
+		size_t selectedRegionCount( ) { return selected_region_set_.size( ); }
+		const region::region_list_type &selectedRegionSet( ) { return selected_region_set_; }
 		size_t markedRegionCount( ) { return marked_region_set_.size( ); }
-		const std::list<Region*> &selectedRegions( ) { return selected_region_list_; }
-		const Region::region_list_type &selectedRegionSet( ) { return selected_region_set_; }
-		const Region::region_list_type &weaklySelectedRegionSet( ) { return weakly_selected_region_set_; }
+		const region::region_list_type &markedRegionSet( ) { return marked_region_set_; }
+		const region::region_list_type &weaklySelectedRegionSet( ) { return weakly_selected_region_set_; }
 		void clearWeaklySelectedRegionSet( );
-		bool isWeaklySelectedRegion( const QtRegion * ) const;
-		void addWeaklySelectedRegion( QtRegion * );
-		void removeWeaklySelectedRegion( QtRegion * );
+		bool isWeaklySelectedRegion( const Region * ) const;
+		void addWeaklySelectedRegion( Region * );
+		void removeWeaklySelectedRegion( Region * );
 
 		void dismiss( );
 
-		std::list<QtRegion*> regions( ) const { return region_list; }
+		std::list<Region*> regions( ) const { return region_list; }
 		// zero length string indicates OK!
 		std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file,
 					   std::string format, std::string ds9_csys="pixel" );
 
 		void updateRegionStats( );
-		void emitCreate( QtRegion * );
+		void emitCreate( Region * );
 
-		void deleteRegions( const Region::region_list_type & );
+		int numFrames( ) const;
+		void deleteRegions( const region::region_list_type & );
+		void revokeRegion( Region *r );
 
-	    signals:
-		// triggers deletion elsewhere of QtRegion containing this QtRegionState
-		// which then causes the removal of this QtRegionState...
-		void deleteRegion(QtRegionState*);
-		// notice sent after QtRegionState is removed from QStackWidget,
-		// *and* after QtRegion has already been deleted...
-		// also sent when a region is created (see std::string arg)...
-		void regionChange( viewer::QtRegion *, std::string );
-		void deleteAllRegions( );
-		void regionSelected( int id );
-		void saveRegions( std::list<QtRegionState*>, RegionTextList & );
-		void saveRegions( std::list<QtRegionState*>, ds9writer & );
-		void loadRegions( bool &handled, const QString &path, const QString &type );
+		signals:
+			// triggers deletion elsewhere of Region containing this QtRegionState
+			// which then causes the removal of this QtRegionState...
+			void deleteRegion(QtRegionState*);
+			// notice sent after QtRegionState is removed from QStackWidget,
+			// *and* after Region has already been deleted...
+			// also sent when a region is created (see std::string arg)...
+			void regionChange( viewer::Region *, std::string );
+			void deleteAllRegions( );
+			void regionSelected( int id );
+			void saveRegions( std::list<QtRegionState*>, RegionTextList & );
+			void saveRegions( std::list<QtRegionState*>, ds9writer & );
+			void loadRegions( bool &handled, const QString &path, const QString &type );
 
-		void region_stack_change(QWidget*);
+			void region_stack_change(QWidget*);
 
-	    public slots:
-		void updateRegionState(QtDisplayData*);
+		public slots:
+			void updateRegionState(QtDisplayData*);
 
-	    private slots:
-		void stack_changed(int);
-		void change_stack(int);
-		void delete_current_region(bool);
-		void delete_all_regions(bool);
-		void output_region_event(const QString &what, const QString &where, const QString &type, const QString &csys );
-		void handle_visibility(bool);
-		void emit_region_stack_change( int );
+		private slots:
+			void stack_changed(int);
+			void change_stack(int);
+			void delete_current_region(bool);
+			void delete_all_regions(bool);
+			void output_region_event(const QString &what, const QString &where, const QString &type, const QString &csys );
+			void handle_visibility(bool);
+			void emit_region_stack_change( int );
 
 	    protected:
 		void enterEvent( QEvent* );
@@ -138,19 +140,19 @@ namespace casa {
 		QString current_save_dir;
 		QString current_load_dir;
 		bool dismissed;
+		bool mouse_in_dock;
 
-		typedef std::list<QtRegion*> region_list_t;
+		typedef std::list<Region*> region_list_t;
 		region_list_t region_list;
-		typedef std::map<QtRegionState*,QtRegion*> region_map_t;
+		typedef std::map<QtRegionState*,Region*> region_map_t;
 		region_map_t region_map;
 
 		// maintain a count of selected regions, information which is used
 		// to determine the corner treatment when drawing regions...
-		std::list<Region*> selected_region_list_;
-		Region::region_list_type selected_region_set_;
-		Region::region_list_type weakly_selected_region_set_;
-		Region::region_list_type marked_region_set_;
-		void update_selected_region_info( );
+		region::region_list_type selected_region_set_;
+		region::region_list_type weakly_selected_region_set_;
+		region::region_list_type marked_region_set_;
+		void update_region_statistics( );
 
 	};
     }

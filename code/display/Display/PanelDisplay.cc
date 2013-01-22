@@ -56,7 +56,7 @@ PanelDisplay::PanelDisplay(PixelCanvas* pixelcanvas,
   itsGeometrySet(False),
   itsWCLI(0),
   itsWCHLI(0),
-  itsMWCTools(static_cast<MultiWCTool* >(0), uInt(10)) {
+  itsMWCTools( std::tr1::shared_ptr<MultiWCTool>( ), uInt(10) ) {
   myWCLI = new ConstListIter<WorldCanvas* >(itsWCList);
   itsWCLI = new ListIter<WorldCanvas* >(itsWCList);
   itsWCHLI = new ListIter<WorldCanvasHolder* >(itsWCHList);
@@ -552,32 +552,29 @@ Bool PanelDisplay::hasTools() {
 
 
 void PanelDisplay::updateTools(Bool remove, Bool add) {
-  if (itsMWCTools.ndefined() == 0) {
-    return;
-  }
-  for (uInt i=0; i < itsMWCTools.ndefined(); i++) {
-    MultiWCTool* tool = itsMWCTools.getVal(i);
-    if (remove) {
-      tool->removeWorldCanvases(this);
-    }
-    if (add) {
-      tool->addWorldCanvases(this);
-    }
-  }
+	if (itsMWCTools.ndefined() == 0) {
+		return;
+	}
+	for (uInt i=0; i < itsMWCTools.ndefined(); i++) {
+		if (remove) {
+			itsMWCTools.getVal(i)->removeWorldCanvases(this);
+		}
+		if (add) {
+			itsMWCTools.getVal(i)->addWorldCanvases(this);
+		}
+	}
 }
 
 void PanelDisplay::disableTools() {
-   for (uInt i=0; i < itsMWCTools.ndefined(); i++) {
-    MultiWCTool* tool = itsMWCTools.getVal(i);
-    tool->disable();
-   }
+	for (uInt i=0; i < itsMWCTools.ndefined(); i++) {
+		itsMWCTools.getVal(i)->disable( );
+	}
 }
 
 void PanelDisplay::enableTools() {
-   for (uInt i=0; i < itsMWCTools.ndefined(); i++) {
-    MultiWCTool* tool = itsMWCTools.getVal(i);
-    tool->enable();
-   }
+	for (uInt i=0; i < itsMWCTools.ndefined(); i++) {
+		itsMWCTools.getVal(i)->enable();
+	}
 }
 
 void PanelDisplay::enableTool(const String& toolname) {
@@ -608,7 +605,7 @@ void PanelDisplay::setToolKey(const String& toolname,
   }
 }
 
-void PanelDisplay::addTool(const String& key, MultiWCTool* value) {
+void PanelDisplay::addTool(const String& key, const std::tr1::shared_ptr<MultiWCTool> &value) {
   if (!itsMWCTools.isDefined(key)) {
     itsMWCTools.define(key, value);
     value->addWorldCanvases(this);
@@ -616,17 +613,16 @@ void PanelDisplay::addTool(const String& key, MultiWCTool* value) {
 }
 
 void PanelDisplay::removeTool(const String& key) {
-  if(!itsMWCTools.isDefined(key)) return;
-  MultiWCTool* tool = itsMWCTools(key);
-  itsMWCTools.remove(key);
-  if (tool==0) return;
-  tool->removeWorldCanvases(this);
-  delete tool;
+	if(!itsMWCTools.isDefined(key)) return;
+	std::tr1::shared_ptr<MultiWCTool> tool = itsMWCTools(key);
+	itsMWCTools.remove(key);
+	if ( tool.get( ) == 0 ) return;
+	tool->removeWorldCanvases(this);
 }
 
-MultiWCTool* PanelDisplay::getTool(const String& key) {
-  if(!itsMWCTools.isDefined(key)) return 0;
-  return itsMWCTools(key);
+const std::tr1::shared_ptr<MultiWCTool> PanelDisplay::getTool(const String& key) {
+	if(!itsMWCTools.isDefined(key)) return std::tr1::shared_ptr<MultiWCTool>( );
+	return itsMWCTools(key);
 }
 
  float PanelDisplay::getDrawUnit(  ) const {

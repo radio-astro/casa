@@ -40,14 +40,21 @@ namespace casa {
 
     namespace viewer {
 
+	// carry over from QtRegion... hopefully, removed soon...
+	class QtRegionSourceKernel;
+
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 	// this means that coordinate transformation is required each time the region is drawn.
 	class Ellipse : public Rectangle {
 	    public:
 		~Ellipse( );
-		Ellipse( WorldCanvas *wc, double x1, double y1, double x2, double y2) :
-		    Rectangle( wc, x1, y1, x2, y2 ) { }
+		Ellipse( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2) :
+			Rectangle( wc, d, x1, y1, x2, y2 ) { }
+
+		// carry over from QtRegion... hopefully, removed soon...
+		Ellipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double x1, double y1, double x2, double y2, bool hold_signals=false ) :
+			Rectangle( "ellipse", wc, factory->dock( ), x1, y1, x2, y2, hold_signals ) { }
 
 		// returns mouse movement state
 		unsigned int mouseMovement( double x, double y, bool other_selected );
@@ -55,6 +62,9 @@ namespace casa {
 		AnnotationBase *annotation( ) const;
 
 		bool flag( MSAsRaster * ) { return false; }
+
+		// fetch region type...
+		region::RegionTypes type( ) const { return region::EllipseRegion; }
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_centers(  );
@@ -65,7 +75,7 @@ namespace casa {
 		// rectangle of an Ellipse...
 		void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
 
-		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+		virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;
 
 		void drawRegion( bool );

@@ -42,14 +42,21 @@ namespace casa {
 
     namespace viewer {
 
+	// carry over from QtRegion... hopefully, removed soon...
+	class QtRegionSourceKernel;
+
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 	// this means that coordinate transformation is required each time the region is drawn.
 	class Point : public Rectangle {
 	    public:
 		~Point( );
-		Point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
-					Rectangle( wc, x, y, x, y ), marker_(sym){ }
+		Point( WorldCanvas *wc, QtRegionDock *d, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
+					Rectangle( wc, d, x, y, x, y ), marker_(sym){ /***updateStatistics***/ }
+
+		// carry over from QtRegion... hopefully, removed soon...
+	Point( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false, QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_DOT ) :
+					Rectangle( "point", wc, factory->dock( ), x, y, x, y, hold_signals, sym ), marker_(sym){ /***updateStatistics***/ }
 
 		bool setMarker( QtMouseToolNames::PointRegionSymbols sym );
 
@@ -58,10 +65,7 @@ namespace casa {
 		bool clickWithin( double x, double y ) const;
 
 		// returns point state (Region::PointLocation)
-		PointInfo checkPoint( double x, double y ) const;
-		// how much to scale the symbol used to mark point regions...
-		// assumed to go from 0 to 9...
-		virtual int markerScale( ) const = 0;
+		region::PointInfo checkPoint( double x, double y ) const;
 
 		// returns mouse movement state
 		unsigned int mouseMovement( double x, double y, bool other_selected );
@@ -72,16 +76,19 @@ namespace casa {
 		// points cannot be degenerate...
 		bool degenerate( ) const { return false; }
 
+		// fetch region type...
+		region::RegionTypes type( ) const { return region::PointRegion; }
+
 	    protected:
 
 		static const int radius;
 
-		virtual void fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+		virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;
 
 		void drawRegion( bool );
 
-		std::list<RegionInfo> *generate_dds_centers(bool /*skycomp*/);
+		std::list<RegionInfo> *generate_dds_centers( );
 
 		QtMouseToolNames::PointRegionSymbols marker_;
 

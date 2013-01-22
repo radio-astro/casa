@@ -48,27 +48,26 @@ String Plotter::formattedDateString(const String& format, double value,
     
     // Values to be used in formatted String.
     Time t;
-    unsigned long hours = 0, minutes = 0;
+    int64_t hours = 0;
+    uint64_t minutes = 0;
     double seconds = 0;
     
     // Calculate relative values, if needed.
     if(isRelative) {
         // Put - in front for negative value.
-        if(value < 0) ss << '-';
         if(scale == DATE_MJ_DAY) {
             double temp = value * 24;
-            hours = (unsigned long)temp;
+            hours = int64_t(temp);
             temp -= hours;
             temp *= 60;
-            minutes = (unsigned long)temp;
+            minutes = uint64_t(std::abs(temp));
             temp *= 60;
-            seconds = temp;
-            
+            seconds = std::abs(temp);
         } else if(scale == DATE_MJ_SEC) {
-            hours = (unsigned long)(value / 3600);
+            hours = (int64_t)(value / 3600);
             double temp = value - (hours * 3600);
-            minutes = (unsigned long)(temp / 60);
-            temp -= minutes * 60;
+            minutes = (uint64_t)(std::abs(temp / 60));
+            temp = std::abs(temp) - minutes * 60;
             seconds = temp;
         }
         
@@ -113,7 +112,7 @@ String Plotter::formattedDateString(const String& format, double value,
                     if(t.hours() < 10) ss << '0';
                     ss << t.hours();
                 } else {
-                    if(hours < 10) ss << '0';
+                    if(hours < 10 && hours > 0) ss << '0';
                     ss << hours;
                 }
                 break;

@@ -81,7 +81,7 @@ void MWCCrosshairTool::keyPressed(const WCPositionEvent &ev) {
 				// to any derived handlers (Gtk...)
 }
 
-void MWCCrosshairTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCCrosshairTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   if (!itsBtnDn) return;
   WorldCanvas *wc = ev.worldCanvas();
   if (wc != itsCurrentWC) {	// shouldn't happen.
@@ -163,7 +163,7 @@ void MWCCrosshairTool::getWorld(Double &x, Double &y) const {
   y = itsWorld(1);
 }
 
-void MWCCrosshairTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCCrosshairTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
   if(!itsShow) {itsShowing = False; return;  }
   Int x, y; get(x, y);
   if(!itsCurrentWC->inDrawArea(x, y)) { itsShowing = False; return;  }

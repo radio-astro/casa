@@ -42,7 +42,7 @@
 
 namespace casa {
     namespace viewer {
-	std::map< Region::RegionTypes, RegionCreator::creator_list_type*> RegionCreator::creator_map;
+	std::map< region::RegionTypes, RegionCreator::creator_list_type*> RegionCreator::creator_map;
 	RegionCreator::creator_list_type RegionCreator::unsorted_creators;
 
 	RegionCreator::RegionCreator( ) {
@@ -53,7 +53,7 @@ namespace casa {
 	    // remove all the references 
 	    for ( creator_map_type::iterator it = creator_map.begin( );
 		  it != creator_map.end(); ++it ) {
-		// Region::RegionTypes tt = (*it).first;
+		// region::RegionTypes tt = (*it).first;
 		creator_list_type::iterator me_in_list = std::find((*it).second->begin(),(*it).second->end(),this);
 		if ( me_in_list != (*it).second->end( ) ) {
 		    (*it).second->erase(me_in_list);
@@ -61,13 +61,13 @@ namespace casa {
 	    }
 	}
 
-	const RegionCreator::creator_list_type &RegionCreator::findCreator( Region::RegionTypes type ) {
+	const RegionCreator::creator_list_type &RegionCreator::findCreator( region::RegionTypes type ) {
 
 	    // sort newly constructed creators...
 	    for ( creator_list_type::iterator creator_it=unsorted_creators.begin( );
 		  creator_it != unsorted_creators.end( ); ++creator_it ) {
-		const std::set<Region::RegionTypes> &types = (*creator_it)->regionsCreated( );
-		for( std::set<Region::RegionTypes>::iterator types_it=types.begin( );
+		const std::set<region::RegionTypes> &types = (*creator_it)->regionsCreated( );
+		for( std::set<region::RegionTypes>::iterator types_it=types.begin( );
 		     types_it != types.end( ); ++types_it ) {
 		    creator_list_type *dlist = 0;
 		    FIND_LIST(dlist,*types_it)

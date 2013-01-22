@@ -43,7 +43,8 @@ public:
 	Vector<Float> getFitValues() const;
 	Vector<Float> getFitValuesX() const;
 	virtual bool doFit() = 0;
-	virtual void clearFit()=0;
+	virtual void clearFit();
+
 	virtual void toAscii( QTextStream& out ) const;
 	bool isFit() const;
 	virtual QString getSolutionStatistics() const = 0;
@@ -52,6 +53,7 @@ public:
 	virtual ~Fitter();
 
 protected:
+	QString formatResultLine( QString label, float value ) const;
 	Vector<Float> xValues;
 	Vector<Float> yValues;
 	Vector<Float> fitValues;

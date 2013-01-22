@@ -407,6 +407,7 @@ void QtCanvas::clearCurve(){
     delete selectedAnnotation;
     selectedAnnotation = NULL;
     emit curvesChanged();
+    refreshPixmap();
 }
 
 void QtCanvas::clearMolecularLines( bool refresh ){

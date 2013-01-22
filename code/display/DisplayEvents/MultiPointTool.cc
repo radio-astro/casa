@@ -29,29 +29,29 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double,
-									     VOID *region_specific_state_ptr ) const {
+	std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double,
+																			 VOID *region_specific_state_ptr ) const {
 
-	viewer::PointMarkerState *pms = dynamic_cast<viewer::PointMarkerState*>(region_specific_state_ptr);
-	QtMouseToolNames::PointRegionSymbols sym;
-	int size = 1;
-	if ( pms != 0 ) {
-	    sym = pms->type( );
-	    size = pms->scale( );
-	} else {
-	    sym = rfactory->currentPointSymbolType( );
-	}
+		viewer::PointMarkerState *pms = dynamic_cast<viewer::PointMarkerState*>(region_specific_state_ptr);
+		QtMouseToolNames::PointRegionSymbols sym;
+		int size = 1;
+		if ( pms != 0 ) {
+			sym = pms->type( );
+			size = pms->scale( );
+		} else {
+			sym = rfactory->currentPointSymbolType( );
+		}
 
-	return rfactory->point( wc, x, y, sym, size );
+		return rfactory->point( wc, x, y, sym, size );
     }
 
-    static std::set<viewer::Region::RegionTypes> multi_point_tool_region_set;
-    const std::set<viewer::Region::RegionTypes> &MultiPointTool::regionsCreated( ) const {
-	if ( multi_point_tool_region_set.size( ) == 0 ) {
-	    multi_point_tool_region_set.insert( viewer::Region::PointRegion );
+	static std::set<viewer::region::RegionTypes> multi_point_tool_region_set;
+	const std::set<viewer::region::RegionTypes> &MultiPointTool::regionsCreated( ) const {
+		if ( multi_point_tool_region_set.size( ) == 0 ) {
+			multi_point_tool_region_set.insert( viewer::region::PointRegion );
+		}
+		return multi_point_tool_region_set;
 	}
-	return multi_point_tool_region_set;
-    }
 
 
 } //# NAMESPACE CASA - END

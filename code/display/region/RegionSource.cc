@@ -25,6 +25,7 @@
 //#
 //# $Id: $
 #include <display/region/RegionSource.h>
+#include <display/region/Region.qo.h>
 #include <algorithm>
 
 namespace casa {

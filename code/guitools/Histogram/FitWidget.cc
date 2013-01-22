@@ -172,14 +172,18 @@ void FitWidget::setValues( int id, Vector<Float> dataValuesX, Vector<Float> data
 }
 
 void FitWidget::fitSelected( int index ){
-	ui.fitStackedWidget->setCurrentIndex( index );
-	if ( index == GAUSSIAN_MODE ){
-		fitter = fitterGaussian;
+	int oldIndex = ui.fitStackedWidget->currentIndex();
+	if ( oldIndex != index ){
+		clearFit();
+		ui.fitStackedWidget->setCurrentIndex( index );
+		if ( index == GAUSSIAN_MODE ){
+			fitter = fitterGaussian;
+		}
+		else if ( index == POISSON_MODE ){
+			fitter = fitterPoisson;
+		}
+		emit fitModeChanged();
 	}
-	else if ( index == POISSON_MODE ){
-		fitter = fitterPoisson;
-	}
-	emit fitModeChanged();
 }
 
 //-----------------------------------------------------------
@@ -205,7 +209,6 @@ Vector<Float> FitWidget::getFitValuesX() const {
 void FitWidget::setSolutionVisible( bool visible ){
 	ui.fitResultsTextEdit->setVisible( visible );
 	ui.line->setVisible( visible );
-	ui.fitResultsLabel->setVisible( visible );
 }
 
 void FitWidget::doFit() {
@@ -221,15 +224,8 @@ void FitWidget::doFit() {
 	if ( successfulFit ){
 		//We keep the initial estimates as they are, but update
 		//the solution statistics.
-		if ( isGaussian() ){
-			//setCenterPeak( fitterGaussian->getCenter(), fitterGaussian->getPeak() );
-			//setFWHM( fitterGaussian->getFWHM() );
-			QString solutionStats = fitterGaussian->getSolutionStatistics();
-			ui.fitResultsTextEdit->setText( solutionStats );
-		}
-		else {
-			setLambda( fitterPoisson->getLambda() );
-		}
+		QString solutionStats = fitter->getSolutionStatistics();
+		ui.fitResultsTextEdit->setText( solutionStats );
 		QString statusMessage = fitter->getStatusMessage();
 		emit dataFitted(statusMessage);
 	}

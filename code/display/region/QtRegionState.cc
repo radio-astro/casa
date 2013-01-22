@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <QDebug>
 #include <QFileInfo>
-#include <display/region/QtRegion.qo.h>
+#include <display/region/Region.qo.h>
 #include <display/region/QtRegionState.qo.h>
 #include <casadbus/types/nullptr.h>
 #include <QFileDialog>
@@ -57,7 +57,7 @@ void QtRegionState::init( ) {
 	}
 }
 
-QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
+QtRegionState::QtRegionState( const QString &n, Region *r, QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
 							QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0),
 							pre_dd_change_statistics_count(-1) {
 	setupUi(this);
@@ -211,7 +211,7 @@ QtRegionState::QtRegionState( const QString &n, QtRegion *r, QtMouseToolNames::P
 		region_->selectedCountUpdateNeeded( );
 	}
 
-void QtRegionState::reset( const QString &n, QtRegion *r ) {
+void QtRegionState::reset( const QString &n, Region *r ) {
 	region_type->setText(QApplication::translate("QtRegionState", n.toAscii( ).constData( ), 0, QApplication::UnicodeUTF8));
 	region_ = r;
 
@@ -223,7 +223,12 @@ void QtRegionState::reset( const QString &n, QtRegion *r ) {
 
 void QtRegionState::updateCoord( ) { emit positionVisible(true); }
 
+void QtRegionState::updateStatistics(  ) {
+	updateStatistics( region( )->statistics( ) );
+}
+
 void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
+
 	if ( stats == 0 || stats->size() == 0 ) {
 		if ( pre_dd_change_statistics_count != -1 ) clearStatistics( );
 		pre_dd_change_statistics_count = -1;
@@ -255,9 +260,7 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 	if ( first == 0 ) throw internal_error( );
 	std::list<RegionInfo>::iterator stat_iter = stats->begin();
-	if ( memory::nullptr.check(stat_iter->list( )) ) {
-		// fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
-	} else {
+	if ( ! memory::nullptr.check(stat_iter->list( )) ) {
 		first->updateStatistics(*stat_iter);
 	}
 
@@ -271,9 +274,7 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	for ( int i=1; i < statistics_group->count() && ++stat_iter != stats->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( memory::nullptr.check(stat_iter->list( )) ) {
-			// fprintf( stderr, "YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2\n" );
-		} else {
+		if ( ! memory::nullptr.check(stat_iter->list( )) ) {
 			cur->updateStatistics(*stat_iter);
 		}
 		prev->setNext( statistics_group, cur );
@@ -323,9 +324,7 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 	QtRegionStats *first = dynamic_cast<QtRegionStats*>(centers_group->widget(0));
 	if ( first == 0 ) throw internal_error( );
 	std::list<RegionInfo>::iterator center_iter = centers->begin();
-	if ( memory::nullptr.check(center_iter->list( )) ) {
-		//fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
-	} else {
+	if ( ! memory::nullptr.check(center_iter->list( )) ) {
 		first->updateStatistics(*center_iter);
 	}
 	if ( num < 2 ) return;
@@ -334,9 +333,7 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 	for ( int i=1; i < centers_group->count() && ++center_iter != centers->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( memory::nullptr.check(center_iter->list( )) ) {
-			// fprintf( stderr, "YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2\n" );
-		} else {
+		if ( ! memory::nullptr.check(center_iter->list( )) ) {
 			cur->updateStatistics(*center_iter);
 		}
 		prev->setNext( centers_group, cur );
@@ -373,11 +370,11 @@ std::string QtRegionState::centerColor( ) const {
 	return cc.toStdString( );
 }
 
-Region::LineStyle QtRegionState::lineStyle( ) const {
+region::LineStyle QtRegionState::lineStyle( ) const {
 	QString ls = line_style->currentText( );
-	if ( ls == "dashed" ) return Region::DashLine;
-	else if ( ls == "dotted" ) return Region::DotLine;
-	else return Region::SolidLine;
+	if ( ls == "dashed" ) return region::DashLine;
+	else if ( ls == "dotted" ) return region::DotLine;
+	else return region::SolidLine;
 }
 
 void QtRegionState::setMarkerScale( int v ) {
@@ -398,8 +395,8 @@ std::string QtRegionState::textFont( ) const {
 
 int QtRegionState::textFontStyle( ) const {
 	int result = 0;
-	if ( font_italic->isChecked( ) ) result = result | Region::ItalicText;
-	if ( font_bold->isChecked( ) ) result = result | Region::BoldText;
+	if ( font_italic->isChecked( ) ) result = result | region::ItalicText;
+	if ( font_bold->isChecked( ) ) result = result | region::BoldText;
 	return result;
 }
 
@@ -408,17 +405,17 @@ std::string QtRegionState::textValue( ) const {
 	return txt.toStdString( );
 }
 
-Region::TextPosition QtRegionState::textPosition( ) const {
+region::TextPosition QtRegionState::textPosition( ) const {
 	int pos = text_position->value( );
 	switch ( pos ) {
 	case 1:
-		return Region::LeftText;
+		return region::LeftText;
 	case 2:
-		return Region::TopText;
+		return region::TopText;
 	case 3:
-		return Region::RightText;
+		return region::RightText;
 	default:
-		return Region::BottomText;
+		return region::BottomText;
 	}
 }
 
@@ -429,18 +426,18 @@ void QtRegionState::textPositionDelta( int &x, int &y ) const {
 
 
 void QtRegionState::setTextValue( const std::string &l ) { text->setText( QString::fromStdString(l) ); }
-void QtRegionState::setTextPosition( Region::TextPosition pos ) {
+void QtRegionState::setTextPosition( region::TextPosition pos ) {
 	switch ( pos ) {
-	case Region::TopText:
+	case region::TopText:
 		text_position->setValue(2);
 		break;
-	case Region::RightText:
+	case region::RightText:
 		text_position->setValue(3);
 		break;
-	case Region::BottomText:
+	case region::BottomText:
 		text_position->setValue(4);
 		break;
-	case Region::LeftText:
+	case region::LeftText:
 		text_position->setValue(1);
 		break;
 	}
@@ -468,8 +465,8 @@ void QtRegionState::setTextFontSize( int s ) {
 }
 
 void QtRegionState::setTextFontStyle( int s ) {
-	if ( s & Region::BoldText ) font_bold->setCheckState(Qt::Checked);
-	if ( s & Region::ItalicText ) font_italic->setCheckState(Qt::Checked);
+	if ( s & region::BoldText ) font_bold->setCheckState(Qt::Checked);
+	if ( s & region::ItalicText ) font_italic->setCheckState(Qt::Checked);
 }
 
 void QtRegionState::setTextColor( const std::string &c ) {
@@ -492,16 +489,16 @@ void QtRegionState::setLineColor( const std::string &c ) {
 	}
 }
 
-void QtRegionState::setLineStyle( Region::LineStyle s ) {
+void QtRegionState::setLineStyle( region::LineStyle s ) {
 	switch ( s ) {
-	case Region::SolidLine:
+	case region::SolidLine:
 		line_style->setCurrentIndex(0);
 		break;
-	case Region::LSDoubleDashed:
-	case Region::DashLine:
+	case region::LSDoubleDashed:
+	case region::DashLine:
 		line_style->setCurrentIndex(1);
 		break;
-	case Region::DotLine:
+	case region::DotLine:
 		line_style->setCurrentIndex(2);
 		break;
 	}
@@ -740,16 +737,31 @@ void QtRegionState::nowVisible( ) {
 	}
 }
 
+	std::string QtRegionState::mode( ) const {
+		QString cat = categories->tabText(categories->currentIndex( ));
+		if ( cat == "properties" ) {
+			QString state = states->tabText(categories->currentIndex( ));
+			if ( state == "coordinates" ) return "position";
+			if ( state == "line" ) return "line";
+			if ( state == "text" ) return "text";
+		} else if ( cat == "stats" ) {
+			return "statistics";
+		} else if ( cat == "fit" ) {
+			return "fitting";
+		} else if ( cat == "file" ) {
+			return "output";
+		}
+		return "";
+	}
+
 void QtRegionState::category_change( int index ) {
+	// this (something of a hack) is required to allow the configuraiton
+	// (i.e. with the same context & state as the user configured here)
+	// to be set for newly created regions...
 	std::pair<int,int> &tab_state = region_->tabState( );
 	QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
 	tab_state.first = index;
-
-	    QString cat = categories->tabText(index);
-		if ( cat == "stats" )
-			emit statisticsVisible( true );
-		else
-			emit statisticsVisible( false );
+	region_->refresh_state_gui( ); /***updateStatistics***/
 }
 
 void QtRegionState::states_change( int ) {
@@ -835,13 +847,13 @@ void QtRegionState::frame_max_change( int v ) {
 }
 
 // invoked from QtRegionDock...
-void QtRegionState::justExposed( ) {
-	QString cat = categories->tabText(categories->currentIndex( ));
-	if ( cat == "stats" )
-		emit statisticsVisible( true );
-	else
-		emit statisticsVisible( false );
-}
+// void QtRegionState::justExposed( ) {
+// 	QString cat = categories->tabText(categories->currentIndex( ));
+// 	if ( cat == "stats" )
+// 		emit statisticsVisible( true );
+// 	else
+// 		emit statisticsVisible( false );
+// }
 
 std::string QtRegionState::bounding_index_to_string( int index ) const {
 	switch ( index ) {
@@ -855,55 +867,55 @@ std::string QtRegionState::bounding_index_to_string( int index ) const {
 	return("rad");
 }
 
-void QtRegionState::getCoordinatesAndUnits( Region::Coord &c, Region::Units &xu, Region::Units &yu, std::string &bounding_units ) const {
+void QtRegionState::getCoordinatesAndUnits( region::Coord &c, region::Units &xu, region::Units &yu, std::string &bounding_units ) const {
 	switch ( coordinate_system->currentIndex( ) ) {
-	case 0: c = Region::J2000; break;
-	case 1: c = Region::B1950; break;
-	case 2: c = Region::Galactic; break;
-	case 3: c = Region::SuperGalactic; break;
-	case 4: c = Region::Ecliptic; break;
-	default: c = Region::J2000; break;
+	case 0: c = region::J2000; break;
+	case 1: c = region::B1950; break;
+	case 2: c = region::Galactic; break;
+	case 3: c = region::SuperGalactic; break;
+	case 4: c = region::Ecliptic; break;
+	default: c = region::J2000; break;
 	}
 	switch ( x_units->currentIndex( ) ) {
-	case 0: xu = Region::Radians; break;
-	case 1: xu = Region::Degrees; break;
-	case 2: xu = Region::Sexagesimal; break;
-	case 3: xu = Region::Pixel; break;
-	default: xu = Region::Radians; break;
+	case 0: xu = region::Radians; break;
+	case 1: xu = region::Degrees; break;
+	case 2: xu = region::Sexagesimal; break;
+	case 3: xu = region::Pixel; break;
+	default: xu = region::Radians; break;
 	}
 	switch ( y_units->currentIndex( ) ) {
-	case 0: yu = Region::Radians; break;
-	case 1: yu = Region::Degrees; break;
-	case 2: yu = Region::Sexagesimal; break;
-	case 3: yu = Region::Pixel; break;
-	default: yu = Region::Radians; break;
+	case 0: yu = region::Radians; break;
+	case 1: yu = region::Degrees; break;
+	case 2: yu = region::Sexagesimal; break;
+	case 3: yu = region::Pixel; break;
+	default: yu = region::Radians; break;
 	}
 
 	bounding_units = bounding_index_to_string(dim_units->currentIndex( ));
 
 }
 
-void QtRegionState::setCoordinatesAndUnits( Region::Coord c, Region::Units xu, Region::Units yu, const std::string &bounding_units ) {
+void QtRegionState::setCoordinatesAndUnits( region::Coord c, region::Units xu, region::Units yu, const std::string &bounding_units ) {
 	switch( c ) {
-	case Region::J2000: coordinate_system->setCurrentIndex( 0 ); break;
-	case Region::B1950: coordinate_system->setCurrentIndex( 1 ); break;
-	case Region::Galactic: coordinate_system->setCurrentIndex( 2 ); break;
-	case Region::SuperGalactic: coordinate_system->setCurrentIndex( 3 ); break;
-	case Region::Ecliptic: coordinate_system->setCurrentIndex( 4 ); break;
+	case region::J2000: coordinate_system->setCurrentIndex( 0 ); break;
+	case region::B1950: coordinate_system->setCurrentIndex( 1 ); break;
+	case region::Galactic: coordinate_system->setCurrentIndex( 2 ); break;
+	case region::SuperGalactic: coordinate_system->setCurrentIndex( 3 ); break;
+	case region::Ecliptic: coordinate_system->setCurrentIndex( 4 ); break;
 	default: coordinate_system->setCurrentIndex( 0 ); break;
 	}
 	switch ( xu ) {
-	case Region::Radians: x_units->setCurrentIndex( 0 ); break;
-	case Region::Degrees: x_units->setCurrentIndex( 1 ); break;
-	case Region::Sexagesimal: x_units->setCurrentIndex( 2 ); break;
-	case Region::Pixel: x_units->setCurrentIndex( 3 ); break;
+	case region::Radians: x_units->setCurrentIndex( 0 ); break;
+	case region::Degrees: x_units->setCurrentIndex( 1 ); break;
+	case region::Sexagesimal: x_units->setCurrentIndex( 2 ); break;
+	case region::Pixel: x_units->setCurrentIndex( 3 ); break;
 	default: x_units->setCurrentIndex( 0 ); break;
 	}
 	switch ( yu ) {
-	case Region::Radians: y_units->setCurrentIndex( 0 ); break;
-	case Region::Degrees: y_units->setCurrentIndex( 1 ); break;
-	case Region::Sexagesimal: y_units->setCurrentIndex( 2 ); break;
-	case Region::Pixel: y_units->setCurrentIndex( 3 ); break;
+	case region::Radians: y_units->setCurrentIndex( 0 ); break;
+	case region::Degrees: y_units->setCurrentIndex( 1 ); break;
+	case region::Sexagesimal: y_units->setCurrentIndex( 2 ); break;
+	case region::Pixel: y_units->setCurrentIndex( 3 ); break;
 	default: y_units->setCurrentIndex( 0 ); break;
 	}
 

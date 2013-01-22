@@ -96,13 +96,13 @@ namespace casa {
 	    return ellipse;
 	}
 
-	void Ellipse::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+	void Ellipse::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 					    std::vector<std::pair<double,double> > &world_pts ) const {
 
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-	    type = EllipseRegion;
-	    RegionTypes x;
+	    type = region::EllipseRegion;
+		region::RegionTypes x;
 	    Rectangle::fetch_region_details( x, pixel_pts, world_pts );
 	}
 
@@ -126,10 +126,10 @@ namespace casa {
 		if (getDrawCenter())
 			drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
 
-		if ( selected ) {
+		if ( selected && memory::nullptr.check( creating_region ) ) {
 
 			// draw outline rectangle for resizing the ellipse...
-			pushDrawingEnv(DotLine);
+			pushDrawingEnv(region::DotLine);
 			pc->drawRectangle( x1, y1, x2, y2 );
 			popDrawingEnv( );
 
@@ -156,7 +156,7 @@ namespace casa {
 			int hy2 = y2 - s;
 			int hy3 = y2;	// set handle coordinates
 			if (s) {
-				pushDrawingEnv( Region::SolidLine);
+				pushDrawingEnv( region::SolidLine);
 				if ( weaklySelected( ) ) {
 					if ( marked_region_count( ) > 0 && mouse_in_region ) {
 						pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
@@ -191,10 +191,10 @@ namespace casa {
 		if ( visible_ == false ) return result;
 
 		if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
-			if ( mouse_in_region == false ) weaklySelect( );
+			weaklySelect( mouse_in_region == false );
 			mouse_in_region = true;
-			result |= MouseSelected;
-			result |= MouseRefresh;
+			result |= region::MouseSelected;
+			result |= region::MouseRefresh;
 			selected_ = true;
 			draw( other_selected );
 			if ( other_selected == false ) {
@@ -203,11 +203,11 @@ namespace casa {
 				selectedInCanvas( );
 			}
 		} else if ( selected_ == true ) {
-			if ( mouse_in_region == true ) weaklyUnselect( );
+			weaklyUnselect( );
 			mouse_in_region = false;
 			selected_ = false;
 			draw( other_selected );
-			result |= MouseRefresh;
+			result |= region::MouseRefresh;
 		}
 		return result;
 	}

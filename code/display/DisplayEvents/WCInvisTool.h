@@ -61,7 +61,7 @@ class WCInvisTool : public WCTool {
   // <group>
   virtual void keyPressed(const WCPositionEvent &/*ev*/);
   virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
   // </group>
 
   // Function called when a position is ready

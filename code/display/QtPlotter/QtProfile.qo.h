@@ -49,7 +49,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 
-#include <display/region/QtRegion.qo.h>
+#include <display/region/Region.qo.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -130,6 +130,7 @@ public:
 		imagePath = filePath;
 	}
 
+
 	//Allows the profiler to come up specialized to do spectroscopy
 	//or another task.
 	void setPurpose( ProfileTaskMonitor::PURPOSE purpose );
@@ -208,7 +209,7 @@ public slots:
 			const QList<int> &pixel_x, const QList<int> &pixel_y,
 			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
 
-	void updateRegion( int, viewer::Region::RegionChanges,
+	void updateRegion( int, viewer::region::RegionChanges,
 			   const QList<double> &world_x, const QList<double> &world_y,
 			   const QList<int> &pixel_x, const QList<int> &pixel_y );
 	void pixelsChanged(int, int );
@@ -349,6 +350,7 @@ private:
 
 
    typedef std::map<int,spectra_info> SpectraInfoMap;
+   const int NO_REGION_ID;
    int current_region_id;
    SpectraInfoMap spectra_info_map;
 

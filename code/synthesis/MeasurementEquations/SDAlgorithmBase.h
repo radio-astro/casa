@@ -53,40 +53,39 @@ public:
 
   // Empty constructor
   SDAlgorithmBase();
-  ~SDAlgorithmBase();
+ virtual  ~SDAlgorithmBase();
 
-
-  // Decide how to iterate through the image axes.
-  // The Mapper will call 'deconvolve' with pieces of only this shape.
-  void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
-
-  // 
-  Bool deconvolve( SIMinorCycleController& loopController,  
-		   ImageInterface<Float> &residual, 
-		   ImageInterface<Float> &psf, 
-		   ImageInterface<Float> &model, 
-		   CountedPtr<SDMaskHandler> maskhandler, 
-		   uInt subimageid,
+  // In the base class. Non virtual.
+  void deconvolve( SIMinorCycleController& loopController,  
+		   CountedPtr<SIImageStore> &imagestore,
 		   Int deconvolverid);
 
-  // eventually, send in images by reference.
-  void findNextComponent( ImageInterface<Float>  &residual, 
-			  ImageInterface<Float>  &psf, 
-			  Float loopgain, 
-			  Float &comp );
-  void updateModel( ImageInterface<Float> &model, 
-		    Float  &comp );
-  void updateResidual( ImageInterface<Float> &residual, 
-		       Float  &comp );
 
-  void restore( CountedPtr<SIImageStore> imagestore );
-
-  Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
+  virtual void restore( CountedPtr<SIImageStore> imagestore );
 
 protected:
 
+  // Local functions to be overloaded by various algorithm deconvolvers.
+  virtual void findNextComponent( Float loopgain );
+  virtual void updateModel();
+  virtual void updateResidual();
+  virtual Float getPeakResidual();
+  virtual Float getIntegratedFlux();
+  virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+
+  // Non virtual. Implemented only in the base class.
+  Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
+  void partitionImages();
+  void initializeSubImages(uInt subim);
+
   // For debugging.
   IPosition tmpPos_p;
+
+  // Image Store
+  CountedPtr<SIImageStore> itsImages;
+  Vector<Slicer> itsDecSlices;
+  SubImage<Float> itsResidual, itsPsf, itsModel;
+  Float itsComp;
 
 };
 

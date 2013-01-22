@@ -50,7 +50,7 @@ void MWCPannerTool::keyPressed(const WCPositionEvent &ev) {
   itsActive = True;
 }
 
-void MWCPannerTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCPannerTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   if (!itsActive) return;
   itsX2 = ev.pixX(); itsY2 = ev.pixY();
   refresh();
@@ -170,7 +170,7 @@ void MWCPannerTool::pan(Vector<Double> &shift) {
   zoomed(blc, trc);
 }
 
-void MWCPannerTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCPannerTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
   // draws a line from initial to final mouse position,
   // when the button is down.
   if (!itsActive) return;

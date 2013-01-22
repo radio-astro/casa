@@ -507,11 +507,11 @@ void Fit2DTool::clearRegions(){
 	}
 }
 
-void Fit2DTool::updateRegion( int id, viewer::Region::RegionChanges changes,
+void Fit2DTool::updateRegion( int id, viewer::region::RegionChanges changes,
 		const QList<double> &/*world_x*/, const QList<double> &/*world_y*/,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ){
 	if ( pixel_x.size() == 2 && pixel_y.size() == 2 ){
-		if ( changes != viewer::Region::RegionChangeDelete ){
+		if ( changes != viewer::region::RegionChangeDelete ){
 			RegionBox* box = regions[id];
 			if ( box != NULL ){
 				box->update( pixel_x, pixel_y );

@@ -34,7 +34,7 @@
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/GaussianShape.h>
-#include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>

@@ -50,9 +50,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    namespace viewer {
-	class Preferences;
-    }
+	namespace viewer { class Preferences; }
 
 class String;
 class QtViewer;
@@ -75,6 +73,7 @@ class AnimatorHolder;
 class BinPlotWidget;
 class HistogramMain;
 class Fit2DTool;
+//class PVCutManager;
 
 template <class T> class ImageInterface;
 
@@ -111,8 +110,11 @@ class QtDisplayPanelGui : public QtPanelBase {
   // access to graphics panel 'base'....
   QtDisplayPanel* displayPanel() { return qdp_;  }
 
-  typedef std::list<viewer::QtRegion*> region_list_t;
-  region_list_t regions( ) { return regionDock_ ? regionDock_->regions( ) : std::list<viewer::QtRegion*>( ); }
+  typedef std::list<viewer::Region*> region_list_t;
+  region_list_t regions( ) { return regionDock_ ? regionDock_->regions( ) : std::list<viewer::Region*>( ); }
+  // region coupling between QtRegionDock and QtRegionSource(s)...
+  void revokeRegion( viewer::Region *r ) { qdp_->revokeRegion(r); }
+
   
   // public toolbars, for inserting custom buttons.
   QToolBar* customToolBar;	//# limited room
@@ -286,10 +288,11 @@ class QtDisplayPanelGui : public QtPanelBase {
   void putrc( const std::string &key, const std::string &val );
   void showMomentsCollapseImageProfile();
   void showSpecFitImageProfile();
+  void disconnectHistogram();
 
  signals:
 
-    void regionChange( viewer::QtRegion *, std::string );
+    void regionChange( viewer::Region *, std::string );
 
     void axisToolUpdate( QtDisplayData *controlling_dd );
 
@@ -472,6 +475,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QtRegionManager* qrm_;      //# Region manager window.
   QtRegionShapeManager* qsm_; //# Region shape manager window.
   QTextEdit* qst_;
+
   
   QtProfile* profile_;		//# Profile window
   String savedTool_;		//# (for restoring left button)
@@ -486,7 +490,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
       *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
-      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_/*, *pvCutAct_*/;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -523,16 +527,19 @@ class QtDisplayPanelGui : public QtPanelBase {
   void hideHistogram();
   void initFit2DTool();
   void hideFit2DTool();
+  void resetHistogram( viewer::Region* qtRegion );
+  viewer::Region* findRegion( int id );
 
-  void updateHistogram( viewer::QtRegion* qtRegion, viewer::Region::RegionChanges change );
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   HistogramMain* histogrammer;
   Fit2DTool* fitTool;
+  //PVCutManager* pvCutManager;
 
   //Docking/Dock Widgets
   string addAnimationDockWidget();
   QDockWidget*  animDockWidget_;
+  QDockWidget*  histogramDockWidget_;
   viewer::QtRegionDock  *regionDock_;
   QDockWidget*  trkgDockWidget_;
   QWidget*    trkgWidget_;
@@ -547,10 +554,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   void reset_status_bar( );
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
-
-  void histogramRegionUpdate( int id, viewer::Region::RegionChanges change=viewer::Region::RegionChangeCreate);
   void showHistogram();
   void refreshHistogrammer();
+  void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
   void showFitInteractive();
   void refreshFit();
   void addSkyComponentOverlay(String path);
@@ -558,6 +564,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void add2DFitOverlay( QList<RegionShape*> fitMarkers );
   void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
   void addResidualFitImage( String path );
+  //void showPVCut(bool show);
 
 
  public:

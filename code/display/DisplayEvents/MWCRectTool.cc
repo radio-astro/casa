@@ -121,7 +121,7 @@ void MWCRectTool::keyPressed(const WCPositionEvent &ev) {
   return;
 }
 
-void MWCRectTool::moved(const WCMotionEvent &ev, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCRectTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
   if (!itsActive) return;
   if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
 
@@ -223,7 +223,7 @@ void MWCRectTool::get(Int &x1, Int &y1) const {
   x1 = ifloor(pix(0)+.5); y1 = ifloor(pix(1)+.5);  }
 
 
-void MWCRectTool::draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/) {
+void MWCRectTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
   if(!itsRectangleExists) return;
 
   setClipToWC();

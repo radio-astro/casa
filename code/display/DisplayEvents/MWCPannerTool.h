@@ -103,13 +103,13 @@ class MWCPannerTool : public MultiWCTool, public DTVisible {
   // <group>
   virtual void keyPressed(const WCPositionEvent &/*ev*/);
   virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
   virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
   // </group>
 
   // draw the pan vector on a PixelCanvas.  (To be called only by the
   // base class refresh event handler).
-  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::Region::region_list_type & /*selected_regions*/);
+  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
   // Output callback to indicate that we have zoomed.  Override to
   // handle, if needed.

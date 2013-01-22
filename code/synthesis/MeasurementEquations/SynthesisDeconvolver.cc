@@ -62,8 +62,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsMaskHandler(NULL),
 				       itsImages(CountedPtr<SIImageStore>()),
 				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
-                                       itsImageShape(IPosition()),
-				       itsCoordSys(NULL),
                                        itsImageName(""),
                                        itsPartImageNames(Vector<String>(0)),
 				       itsDeconvolverId(0),
@@ -136,15 +134,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record returnRecord;
 
     try {
-      // Do the Gather if/when needed and check that images exist on disk.
-      if( !checkImagesOnDisk() ) 
-	{
-	  throw( AipsError("Cannot validate images on disk, before starting") );
-	}
-      
-      // Normalize the residual image. i.e. Calculate the principal solution  
-      divideResidualImageByWeight();
-      
+      // Do the Gather if/when needed and check that images exist on disk. Normalize by Weights too.
+      gatherImages();
+
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
       //SISubIterBot loopController(subIterBotRecord);
       loopController.setPeakResidual( getPeakResidual() );
@@ -165,8 +157,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try {
       loopController.setCycleControls(minorCycleControlRec);
-      deconvolve();
+      itsDeconvolver->deconvolve( loopController, itsImages, itsDeconvolverId );
       returnRecord = loopController.getCycleExecutionRecord();
+
+      scatterModel(); // This is a no-op for the single-node case.
+
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
     }
@@ -179,9 +174,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  Bool SynthesisDeconvolver::checkImagesOnDisk() 
+  Bool SynthesisDeconvolver::setupImagesOnDisk() 
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver","checkImagesOnDisk",WHERE) );
+    LogIO os( LogOrigin("SynthesisDeconvolver","setupImagesOnDisk",WHERE) );
+
+    Bool needToGatherImages=False;
 
     // Check if full images exist, and open them if possible.
     Bool foundFullImage=False;
@@ -205,159 +202,201 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	try
 	  {
-	    itsPartImages = new SIImageStore( itsPartImageNames[part] );
+	    itsPartImages[part] = new SIImageStore( itsPartImageNames[part] );
 	    foundPartImages |= True;
 	  }
 	catch(AipsError &x)
 	  {
 	    //throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
-	    foundFullImage = False;
+	    foundPartImages = False;
+	  }
+      }
+    if( foundPartImages == False) 
+      { 
+	itsPartImages.resize(0); 
+      }
+    else // Check that all have the same shape.
+      {
+	AlwaysAssert( itsPartImages.nelements() > 0 , AipsError );
+	IPosition tempshape = itsPartImages[0]->getShape();
+	for( uInt part=1; part<itsPartImages.nelements(); part++ )
+	  {
+	    if( tempshape != itsPartImages[part]->getShape() )
+	      {
+		throw( AipsError("Shapes of partial images to be combined, do not match") );
+	      }
 	  }
       }
 
 
+
+    // Make sure all images exist and are consistent with each other. At the end, itsImages should be valid
     if( foundPartImages == True ) // Partial Images exist. Check that 'full' exists, and do the gather. 
       {
 	if ( foundFullImage == True ) // Full image exists. Just check that shapes match with parts.
 	  {
-	    os << "Need to check if part images have the same shape as the full image" << LogIO::POST;
+	    os << "Partial and Full images exist. Checking if part images have the same shape as the full image : ";
+	    IPosition fullshape = itsImages->getShape();
+	    
+	    for ( uInt part=0; part < itsPartImages.nelements() ; part++ )
+	      {
+		IPosition partshape = itsPartImages[part]->getShape();
+		if( partshape != fullshape )
+		  {
+		    os << "NO" << LogIO::POST;
+		    throw( AipsError("Shapes of the partial and full images on disk do not match. Cannot gather") );
+		  }
+	      }
+	    os << "Yes" << LogIO::POST;
+
 	  }
 	else // Full image does not exist. Need to make it, using the shape and coords of part[0]
 	  {
-	    os << "Part images exist. Need to make full image" << LogIO::POST;
-	    ///itsImages = new SIImageStore( itsImageName, *coordsys, itsImageShape);
+	    os << "Only partial images exist. Need to make full images" << LogIO::POST;
+
+	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
+	    PagedImage<Float> temppart( itsPartImageNames[0]+".residual" );
+	    IPosition tempshape = temppart.shape();
+	    CoordinateSystem tempcsys = temppart.coordinates();
+
+	    itsImages = new SIImageStore( itsImageName, tempcsys, tempshape );
 	    foundFullImage = True;
 	  }
 
-	itsImageShape = itsImages->residual()->shape();
-
 	// By now, all partial images and the full images exist on disk, and have the same shape.
-	gatherImages();
+	needToGatherImages=True;
 
       }
     else // No partial images supplied. Operating only with full images.
       {
-	if ( foundFullImage == True ) // Just open them and check that shapes match each other.
+	if ( foundFullImage == True ) 
 	  {
-	    itsImageShape = itsImages->residual()->shape(); // Check with shapes of psf and weight.
+	    os << "Full images exist : " << itsImageName << LogIO::POST;
 	  }
 	else // No full image on disk either. Error.
 	  {
-	    return False;
+	    throw( AipsError("No images named " + itsImageName + " found on disk. No partial images found either.") );
 	  }
       }
+    
+    return needToGatherImages;
+  }// end of setupImagesOnDisk
 
-    // Make a list of Slicers.
-    itsDecSlices = partitionImages();
-
-    return foundFullImage;
-
-  }
-
-
-  /// Make a list of Slices, to send sequentially to the deconvolver.
-  /// Loop over this list of reference subimages in the 'deconvolve' call.
-  /// This will support...
-  ///    - channel cube clean
-  ///    - stokes cube clean
-  ///    - partitioned-image clean (facets ?)
-  ///    - 3D deconvolver
-  Vector<Slicer> SynthesisDeconvolver::partitionImages()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","partitionImages",WHERE) );
-
-    uInt nx = itsImageShape[0];
-    uInt ny = itsImageShape[1];
-    uInt npol = itsImageShape[2];
-    uInt nchan = itsImageShape[3];
-
-    /// (1) /// Set up the Deconvolver Slicers.
-
-    // Ask the deconvolver what shape it wants.
-    Bool onechan=False, onepol=False;
-    itsDeconvolver->queryDesiredShape(onechan, onepol);
-
-    uInt nSubImages = ( (onechan)?itsImageShape[3]:1 ) * ( (onepol)?itsImageShape[2]:1 ) ;
-    uInt polstep = (onepol)?1:npol;
-    uInt chanstep = (onechan)?1:nchan;
-
-    Vector<Slicer> decSlices( nSubImages );
-
-    uInt subindex=0;
-    for(uInt pol=0; pol<npol; pol+=polstep)
-      {
-	for(uInt chan=0; chan<nchan; chan+=chanstep)
-	  {
-	    AlwaysAssert( subindex < nSubImages , AipsError );
-	    IPosition substart(4,0,0,pol,chan);
-	    IPosition substop(4,nx-1,ny-1, pol+polstep-1, chan+chanstep-1);
-	    decSlices[subindex] = Slicer(substart, substop, Slicer::endIsLast);
-	    subindex++;
-	  }
-      }
-
-    return decSlices;
-
-  }// end of partitionImages
 
 
   void SynthesisDeconvolver::gatherImages()
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver", "gatherImages",WHERE) );
 
-    //AlwaysAssert( itsResidual , AipsError ) ; /// Check that all image pointers are valid here.
+    Bool needToGatherImages = setupImagesOnDisk();
 
-    os << "Gather residual, psf, weight images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
+    if( needToGatherImages )
+      {
+	LogIO os( LogOrigin("SynthesisDeconvolver", "gatherImages",WHERE) );
+	
+	os << "Gather residual, psf, weight images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
+	
+	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
+	
+	// Add intelligence to modify all only the first time, but later, only residual;
+	itsImages->resetImages( /*psf*/True, /*residual*/True, /*weight*/True ); 
+	
+	for( uInt part=0;part<itsPartImages.nelements();part++)
+	  {
+	    itsImages->addImages( itsPartImages[part], /*psf*/True, /*residual*/True, /*weight*/True );
+	  }
 
-  }
+      }// end of image gathering.
+    
+    // Normalize by the weight image.
+    divideResidualByWeight();
 
-  void SynthesisDeconvolver::divideResidualImageByWeight()
+  }// end of gatherImages
+
+  void SynthesisDeconvolver::scatterModel()
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver", "divFullImageByWeight",WHERE) );
+
+    divideModelByWeight(); // This is currently a no-op
+
+    LogIO os( LogOrigin("SynthesisDeconvolver", "scatterModel",WHERE) );
+
+    if( itsPartImages.nelements() > 0 )
+      {
+	os << "Send the model from : " << itsImageName << " to all nodes :" << itsPartImageNames << LogIO::POST;
+	
+	for( uInt part=0;part<itsPartImages.nelements();part++)
+	  {
+	    itsPartImages[part]->setModelImage( itsImages->getName() );
+	  }
+      }
+  }// end of gatherImages
+
+
+  void SynthesisDeconvolver::divideResidualByWeight()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver", "divideResidualByWeight",WHERE) );
 
     // If Weight image is not specified, treat it as though it were filled with ones. 
     // ( i.e.  itsWeight = NULL )
 
-    os << "Dividing the residual image " << itsImageName+String(".residual") << " by the weightimage " << itsImageName+String(".weight") << LogIO::POST;
+    itsImages->divideResidualByWeight( 0.1 );
+
   }
 
-  // #############################################
-  // #############################################
-  // #############################################
-  // #############################################
-
-
-  // Run the deconvolver for each Slice.
-  // This means, for iteration control, each SubImage is treated the same as a separate Mapper.
-  void SynthesisDeconvolver::deconvolve()
+  void SynthesisDeconvolver::divideModelByWeight()
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver","deconvolve",WHERE) );
+    LogIO os( LogOrigin("SynthesisDeconvolver", "divideModelByWeight",WHERE) );
 
-    Bool isModelUpdated=False;
+    // If Weight image is not specified, treat it as though it were filled with ones. 
+    // ( i.e.  itsWeight = NULL )
 
-    os << "Run minor-cycle on " << itsDecSlices.nelements() 
-       << " slices of [" << itsDeconvolverId << "]:" << itsImageName
-       << " [ CycleThreshold=" << loopController.getCycleThreshold()
-       << ", CycleNiter=" << loopController.getCycleNiter() 
-       << ", Gain=" << loopController.getLoopGain()
-       << " ]" << LogIO::POST;
+    /// This is a no-op here.... Need a way to activate this only for A-Projection.
+    ///    itsImages->divideModelByWeight( 0.1 );
 
-    for( uInt subim=0; subim<itsDecSlices.nelements(); subim++)
-      {
-
-	//cout << "Mapper : " << itsMapperId << "  Deconvolving : " << decSlices[subim] << endl;
-	SubImage<Float> subResidual( *(itsImages->residual()), itsDecSlices[subim], True );
-	SubImage<Float> subPsf( *(itsImages->psf()), itsDecSlices[subim], True );
-	SubImage<Float> subModel( *(itsImages->model()), itsDecSlices[subim], True );
-	//// MASK too....  SubImage subMask( *itsResidual, decSlices[subim], True );
-
-	itsDeconvolver->deconvolve( loopController, subResidual, subPsf, subModel, itsMaskHandler, subim, itsDeconvolverId);
-        loopController.resetCycleIter();
-
-      }
-    loopController.setUpdatedModelFlag( isModelUpdated );
   }
 
+
+
+
+  // #############################################
+  // #############################################
+  // #############################################
+  // #############################################
+
+  // Set a starting model.
+  // NOTE : This is to be called only when the deconvolver is being used stand-alone.
+  //  When used with SynthesisImager, the starting model needs to go only into SI, not SD.
+  void SynthesisDeconvolver::setStartingModel(Record modpars)
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","setStartingModel",WHERE) );
+    String modelname("");
+    try{
+      
+      if( modpars.isDefined("modelname") )  // A single string
+	{ modelname = modpars.asString( RecordFieldId("modelname")); }
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in reading starting model: "+x.getMesg()) );
+      }
+    
+    try
+      {
+	
+	if( modelname.length()>0 && !itsImages.null() )
+	  {
+	    os << "Setting " << modelname << " as starting model for deconvolution " << LogIO::POST;
+	    itsImages->setModelImage( modelname );
+	  }
+	
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in setting  starting model for deconvolution: "+x.getMesg()) );
+      }
+
+  }
+  
+  
   // Calculate the peak residual for this mapper
   Float SynthesisDeconvolver::getPeakResidual()
   {

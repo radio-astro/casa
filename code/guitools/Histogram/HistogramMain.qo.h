@@ -32,6 +32,8 @@
 #include <guitools/Histogram/ImageLoader.qo.h>
 #include <guitools/Histogram/SaveHistogramWidget.qo.h>
 
+class QCloseEvent;
+
 namespace casa {
 
 class BinPlotWidget;
@@ -72,6 +74,11 @@ public:
 
 signals:
 	void rangeChanged();
+	void closing();
+
+protected:
+	//Clean up images and regions because we are going down
+	virtual void closeEvent(QCloseEvent* event);
 
 private slots:
 	void openFileLoader();

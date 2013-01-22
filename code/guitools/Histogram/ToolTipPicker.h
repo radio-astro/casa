@@ -35,7 +35,8 @@ public:
 	ToolTipPicker( int xAxis, int yAxis, int selectionFlags, RubberBand rubberBand,
 			DisplayMode trackorMode, QwtPlotCanvas* canvas );
 	void setData( const std::vector<float>& xVal, const std::vector<float>& yVal );
-	void setLogScale( bool logScale );
+	void setLogScaleY( bool logScale );
+	void setLogScaleX( bool logScale );
 	virtual QwtText trackerText( const QwtDoublePoint & pos ) const;
 	virtual ~ToolTipPicker();
 
@@ -44,7 +45,8 @@ private:
 	std::pair<float,float> getRangeY() const;
 	std::vector<float> xVector;
 	std::vector<float> yVector;
-	bool logScale;
+	bool logScaleY;
+	bool logScaleX;
 };
 
 } /* namespace casa */

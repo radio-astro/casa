@@ -98,12 +98,12 @@ AgentFlagger::done()
 
 	dataselection_p = Record();
 
-/*
+	/*
 	if (! dataselection_p.empty()) {
 		Record temp;
 		dataselection_p = temp;
 	}
-*/
+	 */
 
 	if (! agentParams_p.empty()) {
 		Record temp;
@@ -264,9 +264,9 @@ AgentFlagger::selectData(Record selrec)
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::selectData(String field, String spw, String array,
-						String feed, String scan, String antenna,
-						String uvrange,  String timerange, String correlation,
-						String intent, String observation)
+		String feed, String scan, String antenna,
+		String uvrange,  String timerange, String correlation,
+		String intent, String observation)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -494,7 +494,7 @@ bool
 AgentFlagger::initAgents()
 {
 
-    LogIO os(LogOrigin("AgentFlagger",__FUNCTION__));
+	LogIO os(LogOrigin("AgentFlagger",__FUNCTION__));
 
 	if (! fdh_p){
 		os << LogIO::SEVERE << "There is no MS attached. Please run af.open first." << LogIO::POST;
@@ -545,133 +545,137 @@ AgentFlagger::initAgents()
 	uChar loglevel = LogIO::DEBUGGING;
 	Bool retstate = true;
 
-		// Loop through the vector of agents
-		for (size_t i=0; i < list_size; i++) {
+	// Loop through the vector of agents
+	for (size_t i=0; i < list_size; i++) {
 
-			// Get agent record
-			Record agent_rec = agents_config_list_p[i];
-			if (dbg){
-				os<< LogIO::NORMAL<< "Record["<<i<<"].nfields()="<<agent_rec.nfields()<<LogIO::POST;
-				ostringstream os;
-				agent_rec.print(os);
-				String str(os.str());
-				cout << str << endl;
 
-			}
-
-			// Change the log level if apply=True in a mixed state
-			Bool apply = true;
-			if (agent_rec.isDefined("apply")) {
-				agent_rec.get("apply", apply);
-			}
-
-			if (mixed and apply){
-				agent_rec.define("loglevel", loglevel);
-			}
-
-			// Get the mode
-			String mode;
-			agent_rec.get("mode", mode);
-
-			// Set the new time interval only once
-			if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or
-					mode.compare("rflag") == 0)) {
-				fdh_p->setTimeInterval(max_p);
-				timeset_p = true;
-			}
-
-			// Change the new iteration approach only once
-			if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
-				or mode.compare("rflag") == 0 or mode.compare("display") == 0)) {
-				if (combinescans_p)
-					fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
-				else
-					fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
-
-				iterset_p = true;
-			}
-
-			FlagAgentBase *fa=NULL;
-
-			try
-			{
-				// jagonzal: CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
-				Bool createAgent = true;
-				if (((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0
-					or mode.compare("clip") == 0 or mode.compare("display") == 0))
-					and (agent_rec.fieldNumber ("datacolumn") >= 0))
-				{
-					String datacolumn;
-					agent_rec.get("datacolumn", datacolumn);
-					datacolumn.upcase();
-
-					if ((datacolumn.compare("CORRECTED") == 0) or (datacolumn.compare("RESIDUAL") == 0))
-					{
-						createAgent = fdh_p->checkIfColumnExists(MS::columnName(MS::CORRECTED_DATA));
-						if (!createAgent)
-						{
-							String name;
-							agent_rec.get("name",name);
-							os << LogIO::WARN << "Agent " << name << " cannot be created, necessary CORRECTED_DATA column is not available" << LogIO::POST;
-						}
-					}
-				}
-
-				// Create this agent if the necessary columns are available
-				if (createAgent)
-				{
-					FlagAgentBase *tfa = FlagAgentBase::create(fdh_p, agent_rec);
-					fa = tfa;
-				}
-			}
-			catch(AipsError x)
-			{
-			  fa=NULL;
-			  // Send out a useful message, and stop adding agents to the list.
-			  // All valid agents before the problematic one, will remain in agents_list_p
-			  // A subsequent call to initAgents() will add to the list.
-			  ostringstream oss;
-			  agent_rec.print(oss);
-			  String recstr(oss.str());
-			  while(recstr.contains('\n'))
-			    {
-			      recstr = recstr.replace(recstr.index('\n'),1,", ");
-			    }
-
-			  os << LogIO::SEVERE << "Error in creating agent : " << x.getMesg() << endl
-					  << "Input parameters : " << recstr << LogIO::POST;
-			  retstate=false;
-			  break;
-
-			}
-
-				if (fa == NULL){
-					String name;
-					agent_rec.get("name",name);
-					os << LogIO::WARN << "Agent "<< name<< " is NULL. Skipping it."<<LogIO::POST;
-					continue;
-				}
-
-				// Get the last summary agent to list the results back to the task
-				if (mode.compare("summary") == 0) {
-					summaryAgent_p = (FlagAgentSummary *) fa;
-				}
-
-				// Get the display agent.
-				if (mode.compare("display") == 0){
-					displayAgent_p = (FlagAgentDisplay *) fa;
-				}
-
-				// Add the agent to the FlagAgentList
-				agents_list_p.push_back(fa);
-
+		// Get agent record
+		Record agent_rec = agents_config_list_p[i];
+		if (dbg){
+			os<< LogIO::NORMAL<< "Record["<<i<<"].nfields()="<<agent_rec.nfields()<<LogIO::POST;
+			ostringstream os;
+			agent_rec.print(os);
+			String str(os.str());
+			cout << str << endl;
 
 		}
-		os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
-				LogIO::POST;
+
+		// Change the log level if apply=True in a mixed state
+		Bool apply = true;
+		if (agent_rec.isDefined("apply")) {
+			agent_rec.get("apply", apply);
+		}
+
+		if (mixed and apply){
+			agent_rec.define("loglevel", loglevel);
+		}
+
+		// Get the mode
+		String mode;
+		agent_rec.get("mode", mode);
+
+		// Set the new time interval only once
+		if (!timeset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0 or
+				mode.compare("rflag") == 0)) {
+			fdh_p->setTimeInterval(max_p);
+			timeset_p = true;
+		}
+
+		// Change the new iteration approach only once
+		if (!iterset_p and (mode.compare("tfcrop") == 0 or mode.compare("extend") == 0
+				or mode.compare("rflag") == 0 or mode.compare("display") == 0)) {
+			if (combinescans_p)
+				fdh_p->setIterationApproach(FlagDataHandler::COMBINE_SCANS_MAP_ANTENNA_PAIRS_ONLY);
+			else
+				fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
+
+			iterset_p = true;
+		}
+
+		// Get the agent name
+		String agent_name;
+		agent_rec.get("name",agent_name);
+
+		FlagAgentBase *fa = 0;
+
+		try
+		{
+			// jagonzal: CAS-3943 (flagdata seg-faults when non-existent data column is to be read)
+			Bool createAgent = true;
+			if (((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0
+					or mode.compare("clip") == 0 or mode.compare("display") == 0))
+					and (agent_rec.fieldNumber ("datacolumn") >= 0))
+			{
+				String datacolumn;
+				agent_rec.get("datacolumn", datacolumn);
+				datacolumn.upcase();
+
+				if ((datacolumn.compare("CORRECTED") == 0) or (datacolumn.compare("RESIDUAL") == 0))
+				{
+					createAgent = fdh_p->checkIfColumnExists(MS::columnName(MS::CORRECTED_DATA));
+					if (!createAgent)
+					{
+						os << LogIO::WARN << "Agent " << agent_name << " cannot be created, necessary CORRECTED_DATA column is not available" << LogIO::POST;
+					}
+				}
+			}
+
+			// Create this agent if the necessary columns are available
+			if (createAgent)
+			{
+				FlagAgentBase *tfa = FlagAgentBase::create(fdh_p, agent_rec);
+				fa = tfa;
+			}
+		}
+		catch(AipsError x)
+		{
+			fa = 0;
+			// Send out a useful message, and stop adding agents to the list.
+			// All valid agents before the problematic one, will remain in agents_list_p
+			// A subsequent call to initAgents() will add to the list.
+			ostringstream oss;
+			agent_rec.print(oss);
+			String recstr(oss.str());
+			while(recstr.contains('\n'))
+			{
+				recstr = recstr.replace(recstr.index('\n'),1,", ");
+			}
+
+			os << LogIO::WARN << "Cannot create agent "<< agent_name << ": "
+					<< x.getMesg() << LogIO::POST;
+			os << LogIO::DEBUG1<< "Input parameters : " << recstr << LogIO::POST;
+			continue;
+
+		}
+
+		if (fa == 0){
+			os << LogIO::WARN << "Agent "<< agent_name<< " is NULL. Skipping it."<<LogIO::POST;
+			continue;
+		}
+
+		// Get the last summary agent to list the results back to the task
+		if (mode.compare("summary") == 0) {
+			summaryAgent_p = (FlagAgentSummary *) fa;
+		}
+
+		// Get the display agent.
+		if (mode.compare("display") == 0){
+			displayAgent_p = (FlagAgentDisplay *) fa;
+		}
+
+		// Add the agent to the FlagAgentList
+		agents_list_p.push_back(fa);
+
+
+	}
+	os << LogIO::NORMAL << "There are "<< agents_list_p.size()<<" valid agents in list"<<
+			LogIO::POST;
 
 	// Clear the list so that this method cannot be called twice
 	agents_config_list_p.clear();
+
+	if (agents_list_p.size() < 1)
+		retstate = false;
 
 	return retstate;
 }
@@ -1093,10 +1097,10 @@ AgentFlagger::validateDataColumn(String datacol)
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::parseManualParameters(String field, String spw, String array,
-								   String feed, String scan, String antenna,
-								   String uvrange,  String timerange, String correlation,
-								   String intent, String observation, Bool autocorr,
-								   Bool apply)
+		String feed, String scan, String antenna,
+		String uvrange,  String timerange, String correlation,
+		String intent, String observation, Bool autocorr,
+		Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1139,9 +1143,9 @@ AgentFlagger::parseManualParameters(String field, String spw, String array,
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::parseClipParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange, String correlation,
-   	    String intent, String observation, String datacolumn,
-   	    Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool clipzeros, Bool apply)
+		String antenna, String uvrange, String timerange, String correlation,
+		String intent, String observation, String datacolumn,
+		Vector<Double> clipminmax, Bool clipoutside, Bool channelavg, Bool clipzeros, Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1189,9 +1193,9 @@ AgentFlagger::parseClipParameters(String field, String spw, String array, String
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::parseQuackParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange, String correlation,
-   	    String intent, String observation, String quackmode, Double quackinterval,
-   	    Bool quackincrement, Bool apply)
+		String antenna, String uvrange, String timerange, String correlation,
+		String intent, String observation, String quackmode, Double quackinterval,
+		Bool quackincrement, Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1236,8 +1240,8 @@ AgentFlagger::parseQuackParameters(String field, String spw, String array, Strin
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::parseElevationParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange,String correlation,
-   	    String intent, String observation, Double lowerlimit, Double upperlimit, Bool apply)
+		String antenna, String uvrange, String timerange,String correlation,
+		String intent, String observation, Double lowerlimit, Double upperlimit, Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1281,11 +1285,11 @@ AgentFlagger::parseElevationParameters(String field, String spw, String array, S
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::parseTfcropParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange, String correlation,
-   	    String intent, String observation, Double ntime, Bool combinescans,
-   	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
-   	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
-   	    Bool apply)
+		String antenna, String uvrange, String timerange, String correlation,
+		String intent, String observation, Double ntime, Bool combinescans,
+		String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
+		String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
+		Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1339,9 +1343,9 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::parseExtendParameters(String field, String spw, String array, String feed, String scan,
-   	    String antenna, String uvrange, String timerange, String correlation, String intent,
-   	    String observation, Double ntime, Bool combinescans, Bool extendpols, Double growtime,
-   	    Double growfreq, Bool growaround, Bool flagneartime, Bool flagnearfreq, Bool apply)
+		String antenna, String uvrange, String timerange, String correlation, String intent,
+		String observation, Double ntime, Bool combinescans, Bool extendpols, Double growtime,
+		Double growfreq, Bool growaround, Bool flagneartime, Bool flagnearfreq, Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1394,10 +1398,10 @@ AgentFlagger::parseExtendParameters(String field, String spw, String array, Stri
 // ---------------------------------------------------------------------
 bool
 AgentFlagger::parseSummaryParameters(String field, String spw, String array,
-								   String feed, String scan, String antenna,
-								   String uvrange,  String timerange, String correlation,
-								   String intent, String observation,
-								   Bool spwchan, Bool spwcorr, Bool basecnt)
+		String feed, String scan, String antenna,
+		String uvrange,  String timerange, String correlation,
+		String intent, String observation,
+		Bool spwchan, Bool spwcorr, Bool basecnt)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
