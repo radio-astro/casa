@@ -196,6 +196,8 @@ public:
   // Get the image type (returns name of derived class).
   virtual String imageType() const;
 
+  static String className();
+
   // A PagedImage is always persistent.
   virtual Bool isPersistent() const;
 
@@ -386,7 +388,6 @@ public:
   // If needed, reopen a temporarily closed Image.
   virtual void reopen();
 
-
 private:
   // Function to return the internal Table object to the RegionHandler.
   static Table& getTable (void* imagePtr, Bool writable);
@@ -426,6 +427,7 @@ private:
 
   PagedArray<T>  map_p;
   LatticeRegion* regionPtr_p;
+  const static String _className;
 
   //# Make members of parent class known.
 public:
