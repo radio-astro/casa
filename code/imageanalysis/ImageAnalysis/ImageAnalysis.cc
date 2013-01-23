@@ -2773,120 +2773,155 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	// as either vectors of strings or one string with separators.
 	// Hence the code below that deals with it.   Also in image.g we therefore
 	// give the default value as a blank string rather than a null vector.
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, _log.get(), False, AxesSpecifier(), stretchMask
-	);
-	// Create ImageMoments object
-	ImageMoments<Float> momentMaker(subImage, *_log, overwrite, True);
-	if ( imageMomentsProgressMonitor != NULL ){
-		momentMaker.setProgressMonitor( imageMomentsProgressMonitor );
-	}
-	// Set which moments to output
-	if (!momentMaker.setMoments(whichmoments + 1)) {
-		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-	}
-	// Set moment axis
-	if (axis >= 0) {
-		momentMaker.setMomentAxis(axis);
-	}
-	if (subImage.imageInfo().hasMultipleBeams()) {
-		const CoordinateSystem& csys = subImage.coordinates();
-		if (csys.hasSpectralAxis() && axis == csys.spectralAxisNumber()) {
-			*_log << LogIO::WARN << "This image has multiple beams and you determining "
-				<< " moments along the spectral axis. Interpret your results carefully"
-				<< LogIO::POST;
-		}
-		else if (csys.hasPolarizationCoordinate() && axis == csys.polarizationAxisNumber()) {
-			*_log << LogIO::WARN << "This image has multiple beams and you determining "
-				<< " moments along the polarization axis. Interpret your results carefully"
-				<< LogIO::POST;
-		}
-	}
-	// Set moment methods
-	if (method.nelements() > 0 && method(0) != "") {
-		String tmp;
-		for (uInt i = 0; i < method.nelements(); i++) {
-			tmp += method(i) + " ";
-		}
-		Vector<Int> intmethods = momentMaker.toMethodTypes(tmp);
-		if (!momentMaker.setWinFitMethod(intmethods)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-	}
-	// Set smoothing
-	if (kernels.nelements() >= 1 && kernels(0) != "" && smoothaxes.size() >= 1
-			&& kernelwidths.nelements() >= 1) {
-		String tmp;
-		for (uInt i = 0; i < kernels.nelements(); i++) {
-			tmp += kernels(i) + " ";
-		}
-		//
-		Vector<Int> intkernels = VectorKernel::toKernelTypes(kernels);
-		Vector<Int> intaxes(smoothaxes);
-		if (!momentMaker.setSmoothMethod(intaxes, intkernels, kernelwidths)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-	}
-	// Set pixel include/exclude range
-	if (!momentMaker.setInExCludeRange(includepix, excludepix)) {
-		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-	}
-	// Set SNR cutoff
-	if (!momentMaker.setSnr(peaksnr, stddev)) {
-		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-	}
-	// Set velocity type
-	if (!velocityType.empty()) {
-		MDoppler::Types velType;
-		if (!MDoppler::getType(velType, velocityType)) {
-			*_log << LogIO::WARN << "Illegal velocity type, using RADIO"
-					<< LogIO::POST;
-			velType = MDoppler::RADIO;
-		}
-		momentMaker.setVelocityType(velType);
-	}
-	// Set output names
-	if (smoothout != "" && !momentMaker.setSmoothOutName(smoothout)) {
-		*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-	}
-	// Set plotting attributes
-	PGPlotter plotter;
-	if (!pgdevice.empty()) {
-		//      try {
-		plotter = PGPlotter(pgdevice);
-		//      } catch (AipsError x) {
-		//          *_log << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-		//          return False;
-		//      }
-		Vector<Int> nxy(2);
-		nxy(0) = nx;
-		nxy(1) = ny;
-		if (nx < 0 || ny < 0)
-			nxy.resize(0);
-		if (!momentMaker.setPlotting(plotter, nxy, yind)) {
-			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-	}
-	// If no file name given for one moment image, make TempImage.
-	// Else PagedImage results
-	Bool doTemp = False;
-	if (out.empty() && whichmoments.nelements() == 1) {
-		doTemp = True;
-	}
-	// Create moments
-	PtrBlock<MaskedLattice<Float>*> images;
-	momentMaker.createMoments(images, doTemp, out, removeAxis);
 
-	momentMaker.closePlotting();
-	// Return handle of first image
-	ImageInterface<Float>* pIm =
-			dynamic_cast<ImageInterface<Float>*> (images[0]);
-	// Clean up pointer block except for the one pointed by pIm
-	for (uInt i = 1; i < images.nelements(); i++) {
-		delete images[i];
+	String tmpImageName;
+	Record r;
+	std::auto_ptr<ImageInterface<Float> > pIm;
+	try {
+		std::auto_ptr<ImageInterface<Float> > x;
+		if (_image->imageType() != PagedImage<Float>::className()) {
+			tmpImageName = String::createRandomAlphaNumeric(6) + ".moments.scratch.image";
+			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
+					<< "so converting to a CASA temporary paged image named "
+					<< tmpImageName << " first which will be written to the current directory" << LogIO::POST;
+			x.reset(subimage(tmpImageName, r, ""));
+		}
+		else {
+			x.reset(
+					SubImage<Float>::createSubImage(
+							*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+							mask, _log.get(), False, AxesSpecifier(), stretchMask
+					).cloneII()
+			);
+		}
+		// Create ImageMoments object
+		ImageMoments<Float> momentMaker(*x, *_log, overwrite, True);
+		if ( imageMomentsProgressMonitor != NULL ){
+			momentMaker.setProgressMonitor( imageMomentsProgressMonitor );
+		}
+		// Set which moments to output
+		if (!momentMaker.setMoments(whichmoments + 1)) {
+			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+		}
+		// Set moment axis
+		if (axis >= 0) {
+			momentMaker.setMomentAxis(axis);
+		}
+		if (x->imageInfo().hasMultipleBeams()) {
+			const CoordinateSystem& csys = x->coordinates();
+			if (csys.hasSpectralAxis() && axis == csys.spectralAxisNumber()) {
+				*_log << LogIO::WARN << "This image has multiple beams and you determining "
+						<< " moments along the spectral axis. Interpret your results carefully"
+						<< LogIO::POST;
+			}
+			else if (csys.hasPolarizationCoordinate() && axis == csys.polarizationAxisNumber()) {
+				*_log << LogIO::WARN << "This image has multiple beams and you determining "
+						<< " moments along the polarization axis. Interpret your results carefully"
+						<< LogIO::POST;
+			}
+		}
+		// Set moment methods
+		if (method.nelements() > 0 && method(0) != "") {
+			String tmp;
+			for (uInt i = 0; i < method.nelements(); i++) {
+				tmp += method(i) + " ";
+			}
+			Vector<Int> intmethods = momentMaker.toMethodTypes(tmp);
+			if (!momentMaker.setWinFitMethod(intmethods)) {
+				*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+			}
+		}
+		// Set smoothing
+		if (kernels.nelements() >= 1 && kernels(0) != "" && smoothaxes.size() >= 1
+				&& kernelwidths.nelements() >= 1) {
+			String tmp;
+			for (uInt i = 0; i < kernels.nelements(); i++) {
+				tmp += kernels(i) + " ";
+			}
+			//
+			Vector<Int> intkernels = VectorKernel::toKernelTypes(kernels);
+			Vector<Int> intaxes(smoothaxes);
+			if (!momentMaker.setSmoothMethod(intaxes, intkernels, kernelwidths)) {
+				*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+			}
+		}
+		// Set pixel include/exclude range
+		if (!momentMaker.setInExCludeRange(includepix, excludepix)) {
+			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+		}
+		// Set SNR cutoff
+		if (!momentMaker.setSnr(peaksnr, stddev)) {
+			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+		}
+		// Set velocity type
+		if (!velocityType.empty()) {
+			MDoppler::Types velType;
+			if (!MDoppler::getType(velType, velocityType)) {
+				*_log << LogIO::WARN << "Illegal velocity type, using RADIO"
+						<< LogIO::POST;
+				velType = MDoppler::RADIO;
+			}
+			momentMaker.setVelocityType(velType);
+		}
+		// Set output names
+		if (smoothout != "" && !momentMaker.setSmoothOutName(smoothout)) {
+			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+		}
+		// Set plotting attributes
+		PGPlotter plotter;
+		if (!pgdevice.empty()) {
+			//      try {
+			plotter = PGPlotter(pgdevice);
+			//      } catch (AipsError x) {
+			//          *_log << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+			//          return False;
+			//      }
+			Vector<Int> nxy(2);
+			nxy(0) = nx;
+			nxy(1) = ny;
+			if (nx < 0 || ny < 0)
+				nxy.resize(0);
+			if (!momentMaker.setPlotting(plotter, nxy, yind)) {
+				*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
+			}
+		}
+		// If no file name given for one moment image, make TempImage.
+		// Else PagedImage results
+		Bool doTemp = False;
+		if (out.empty() && whichmoments.nelements() == 1) {
+			doTemp = True;
+		}
+		// Create moments
+		PtrBlock<MaskedLattice<Float>*> images;
+		momentMaker.createMoments(images, doTemp, out, removeAxis);
+
+		momentMaker.closePlotting();
+		// Return handle of first image
+		pIm.reset(
+				dynamic_cast<ImageInterface<Float>*> (images[0])
+		);
+		// Clean up pointer block except for the one pointed by pIm
+		for (uInt i = 1; i < images.nelements(); i++) {
+			delete images[i];
+		}
 	}
-	return pIm;
+	catch (const AipsError& x) {
+		if (! tmpImageName.empty()) {
+			Directory dir(tmpImageName);
+			if (dir.exists()) {
+				dir.removeRecursive(False);
+			}
+		}
+		RETHROW(x);
+	}
+	if (! tmpImageName.empty()) {
+		Directory dir(tmpImageName);
+		if (dir.exists()) {
+			dir.removeRecursive(False);
+		}
+	}
+
+	return pIm.release();
 }
 
 void ImageAnalysis::setMomentsProgressMonitor( ImageMomentsProgressMonitor* progressMonitor ){
