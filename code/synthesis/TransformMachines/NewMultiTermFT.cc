@@ -61,7 +61,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 #define PSOURCE False
-#define psource (IPosition(4,256,256,0,0))
+#define psource (IPosition(4,1536,1536,0,0))
   
   //---------------------------------------------------------------------- 
   //-------------------- constructors and descructors ---------------------- 
@@ -100,8 +100,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     if(subftm->name()=="AWProjectWBFT") 
       {
-	doWideBandPBCorrection_p = ((AWProjectWBFT*)subftm)->getDOPBCorrection();
-	useConjBeams_p = ((AWProjectWBFT*)subftm)->getConjBeams();
+	// doWideBandPBCorrection_p = ((AWProjectWBFT*)subftm)->getDOPBCorrection();
+	// useConjBeams_p = ((AWProjectWBFT*)subftm)->getConjBeams();
+	setDOPBCorrection(((AWProjectWBFT*)subftm)->getDOPBCorrection());
+	setConjBeams(((AWProjectWBFT*)subftm)->getConjBeams());
+
 	pblimit_p = ((AWProjectWBFT*)subftm)->getPBLimit();
 	cout << "dowideband : " << doWideBandPBCorrection_p << " conjbeams : " << useConjBeams_p << endl;
       }
@@ -264,15 +267,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float freq=0.0,mulfactor=1.0;
     Vector<Double> selfreqlist(vb.frequency());
     
+    // DComplex modcount=0.0;
+
     for (uInt pol=0; pol< uInt((vb.modelVisCube()).shape()[0]); pol++)
       for (uInt chn=0; chn< uInt(vb.nChannel()); chn++)
 	for (uInt row=0; row< uInt(vb.nRow()); row++)
 	  {
+	    // modcount += ( vb.modelVisCube())(pol,chn,row);
 	    freq = selfreqlist(IPosition(1,chn));
 	    mulfactor = ((freq-reffreq_p)/reffreq_p);
 	    (vb.modelVisCube())(pol,chn,row) *= pow(mulfactor, (Int) thisterm);
 	  }
     
+    // cout << "field : " << vb.fieldId() << " spw : " 
+    // 	 << vb.spectralWindow() << "  --- predicted model before taylor wt mult :" 
+    // 	 << thisterm << "  sumvis : " << modcount << endl;
+
     return True;
   }
   
@@ -318,10 +328,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	// Model contains only avgPB scaling, but no PB frequency dependence
 	// Divide all terms of the model image by the sensitivity image only (from Taylor0)
-	for(uInt taylor=0;taylor<nterms_p;taylor++)
-	  {
-	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);
-	  }
+	if (doWideBandPBCorrection_p)
+	  for(uInt taylor=0;taylor<nterms_p;taylor++)
+	    {
+	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
+	    }
       }
     else 
       {
@@ -415,10 +426,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Accumulate model visibilities across Taylor terms
 	modviscube_p += vb.modelVisCube();
       }
-    
     // Set the vb.modelviscube to what has been accumulated
     vb.setModelVisCube(modviscube_p);
-    
   }
   
   void NewMultiTermFT::finalizeToVis()

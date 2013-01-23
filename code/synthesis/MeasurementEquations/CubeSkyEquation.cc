@@ -970,6 +970,7 @@ CubeSkyEquation::configureAsyncIo (ROVisibilityIterator * & oldRvi, VisibilityIt
     oldWvi = NULL;
 
     Bool isEnabled;
+    AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
     //    Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Imager.asyncio", False);
 
     //isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
@@ -1889,6 +1890,7 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
   LogIO os(LogOrigin("CubeSkyEquation", "tmpNormalizeImage"));
 
   if (dopsf) return;
+
   
   SubImage<Float> *gSSliceVec;
   SubImage<Float> *ggSSliceVec;
@@ -1914,8 +1916,26 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 	    
 	    sliceCube(gSSliceVec, sm_->gS(index), cubeSlice, nCubeSlice);
 	    
-	    LatticeExpr<Float> le(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
-	    gSSliceVec->copyData(le);
+	    //
+	    // If the FTM is NewMultiTermFT and is configure to not
+	    // apply PB corrections, don't apply the PB correction
+	    // here either.
+	    //
+	    LatticeExpr<Float> le;
+	    if ((ft_->name()=="NewMultiTermFT"))
+	      {
+		if (((NewMultiTermFT *)ft_)->getDOPBCorrection())
+		  {
+		    le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
+		    // le=LatticeExpr<Float>(*gSSliceVec); // The negative sign is in FTM::normalizeImage()
+		    gSSliceVec->copyData(le);
+		  }
+	      }
+	    else
+	      {
+		le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(*ggSSliceVec), 0.0)); // The negative sign is in FTM::normalizeImage()
+		gSSliceVec->copyData(le);
+	      }
 	    
 	    // if (dopsf) 
 	    // 	{
