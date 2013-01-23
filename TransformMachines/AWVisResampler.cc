@@ -272,7 +272,7 @@ namespace casa{
     Vector<Int> igrdpos(4);
 
     Complex phasor, nvalue, wt;
-    Double norm;
+    Complex norm;
     Vector<Int> cfShape;
     cfShape=vbRow2CFBMap_p(0)->getStorage()(0,0,0)->getStorage()->shape().asVector();
     Vector<Int> convOrigin = (cfShape)/2;
@@ -475,7 +475,8 @@ namespace casa{
 					  // 			   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
 #include <synthesis/TransformMachines/FortranizedLoopsToGrid.cc>
 					}
-				      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);
+				      //				      cerr << "Norm = " << norm << endl;
+				      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow)*abs(norm);
 				      //		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
 				    }
 				}

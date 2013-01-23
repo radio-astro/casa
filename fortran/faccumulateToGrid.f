@@ -26,7 +26,7 @@
       integer convOrigin(4), cfShape(4), loc(4), igrdpos(4)
       double precision sinDPA, cosDPA
       integer finitePointingOffset, doPSFOnly
-      double precision norm
+      complex norm
       complex phaseGrad(phNX, phNY)
 
       integer l_phaseGradOriginX, l_phaseGradOriginY
@@ -61,7 +61,7 @@
      $           iCFPos(3), iCFPos(4))/cfArea
             if (wVal > 0.0) wt = conjg(wt)
 
-            norm = norm + real(wt)
+            norm = norm + (wt)
 
             if ((finitePointingOffset .eq. 1) .and.
      $              (doPSFOnly .eq. 0)) then
@@ -104,7 +104,7 @@
       integer convOrigin(4), cfShape(4), loc(4), igrdpos(4)
       double precision sinDPA, cosDPA
       integer finitePointingOffset, doPSFOnly
-      double precision norm
+      complex norm
       complex phaseGrad(phNX, phNY)
 
       integer l_phaseGradOriginX, l_phaseGradOriginY
@@ -139,7 +139,7 @@
      $           iCFPos(3), iCFPos(4))/cfArea
             if (wVal > 0.0) wt = conjg(wt)
 
-            norm = norm + real(wt)
+            norm = norm + (wt)
 
             if ((finitePointingOffset .eq. 1) .and.
      $              (doPSFOnly .eq. 0)) then

@@ -580,7 +580,7 @@ namespace casa{
     Int i;
     Double x, freq, df;
     
-    if(0<=ap->band && ap->band<BeamCalcGeometries_p.size()){
+    if((0<=ap->band) && (ap->band<(Int)BeamCalcGeometries_p.size())){
       geom = &(BeamCalcGeometries_p[ap->band]);
     }
     else{
