@@ -66,6 +66,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+template <class T> const String PagedImage<T>::_className = "PagedImage";
+
 template <class T> 
 PagedImage<T>::PagedImage (const TiledShape& shape, 
 			   const CoordinateSystem& coordinateInfo, 
@@ -252,7 +254,12 @@ void PagedImage<T>::restoreAll (const TableRecord& rec)
 template<class T>
 String PagedImage<T>::imageType() const
 {
-  return "PagedImage";
+  return _className;
+}
+
+template<class T>
+String PagedImage<T>::className() {
+	return _className;
 }
 
 template<class T>
