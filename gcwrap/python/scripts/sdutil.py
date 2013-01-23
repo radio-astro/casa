@@ -198,7 +198,7 @@ class sdtask_template(sdtask_interface):
             if hasattr(self,'restfreq'):
                 rfset = self.restfreq not in ['',[]]
                 if self.specunit == 'km/s':
-                    if len(self.scan.get_restfreqs()[0]) == 0 and not rfset:
+                    if len(self.scan.get_restfreqs().values()[0]) == 0 and not rfset:
                         raise Exception('Restfreq must be given')
                     if rfset:
                         fval = normalise_restfreq(self.restfreq)
