@@ -126,7 +126,7 @@ public:
 
 
     virtual void origin ();
-    virtual void advance ();
+    virtual void next ();
 
     //   +=========================+
     //   |                         |
