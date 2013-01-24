@@ -123,6 +123,7 @@ casa_add_library( synthesis
   MSVis/VisibilityIterator2.cc
   MSVis/VisibilityIteratorImpl2.cc
   MSVis/TransformingVi2.cc
+  MSVis/AveragingTvi2.cc
   MSVis/FinalTvi2.cc
 ####  MSVis/VisibilityIteratorImplAsync2.cc
   MSVis/VisImagingWeight.cc
@@ -491,6 +492,7 @@ install (FILES
         MSVis/VisibilityIteratorImpl2.h
         MSVis/VisibilityIteratorImplAsync2.h
         MSVis/TransformingVi2.h
+	MSVis/AveragingTvi2.h
 	MSVis/FinalTvi2.h
 	MSVis/VisibilityProcessing.h
 	MSVis/MSMoments.tcc
@@ -708,6 +710,7 @@ casa_add_assay( synthesis MSVis/test/tUVSub.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIterator.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIteratorAsync.cc )
 casa_add_assay( synthesis MSVis/test/VisibilityProcessing_Test.cc )
+casa_add_assay( synthesis MSVis/test/AveragingTvi2_Test.cc )
 casa_add_assay( synthesis MSVis/test/tVisIter.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
