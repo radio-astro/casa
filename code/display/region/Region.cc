@@ -712,41 +712,50 @@ if (!markCenter()) return;
 
 
 	bool Region::doubleClick( double /*x*/, double /*y*/ ) {
-	    std::list<RegionInfo> *info = generate_dds_statistics( );
-	    for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
-		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
-		if (memory::nullptr.check(stats))
-		  continue;
-		// fprintf( stdout, "(%s)%s\n", (*iter).label().c_str( ),
-		// 	 (*iter).type( ) == RegionInfo::MsInfoType ? " ms" :
-		// 	 (*iter).type( ) == RegionInfo::ImageInfoType ? " image" : "" );
-		size_t width = 0;
-		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ++stats_iter ) {
-		    size_t w = (*stats_iter).first.size( );
-		    if ( w > width ) width = w;
-		    w = (*stats_iter).second.size( );
-		    if ( w > width ) width = w;
+		int output_count = 0;
+		const char buf[ ] = "---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----\n";
+		std::list<RegionInfo> *info = generate_dds_statistics( );
+		for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
+			std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
+
+			if (memory::nullptr.check(stats))
+				continue;
+
+			// output label....
+			fputs( buf, stdout );
+			fprintf( stdout, "(%s)\n", (*iter).label().c_str( ) );
+			output_count++;
+
+			size_t width = 0;
+			for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ++stats_iter ) {
+				size_t w = (*stats_iter).first.size( );
+				if ( w > width ) width = w;
+				w = (*stats_iter).second.size( );
+				if ( w > width ) width = w;
+			}
+			char format[10];
+			sprintf( format, "%%%lus ", (width > 0 && width < 30 ? width : 15) );
+			for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ) {
+				RegionInfo::stats_t::iterator row = stats_iter;
+				for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
+					fprintf( stdout, format, (*row).first.c_str( ) );
+					++row;
+				}
+				fprintf( stdout, "\n");
+				row = stats_iter;
+				for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
+					fprintf( stdout, format, (*row).second.c_str( ) );
+					++row;
+				}
+				fprintf( stdout, "\n" );
+				stats_iter = row;
+			}
 		}
-		char format[10];
-		sprintf( format, "%%%lus ", (width > 0 && width < 30 ? width : 15) );
-		for ( RegionInfo::stats_t::iterator stats_iter = stats->begin( ); stats_iter != stats->end( ); ) {
-		    RegionInfo::stats_t::iterator row = stats_iter;
-		    for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
-			fprintf( stdout, format, (*row).first.c_str( ) );
-			++row;
-		    }
-		    fprintf( stdout, "\n");
-		    row = stats_iter;
-		    for ( int i=0; i < 5 && row != stats->end( ); ++i ) {
-			fprintf( stdout, format, (*row).second.c_str( ) );
-			++row;
-		    }
-		    fprintf( stdout, "\n" );
-		    stats_iter = row;
-		}
-	    }
-	    delete info;
-	    return false;
+
+		if ( output_count > 0 ) fputs( buf, stdout );
+
+		delete info;
+		return false;
 	}
 
 	static std::string as_string( double v ) {
