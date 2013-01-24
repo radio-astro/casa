@@ -119,6 +119,7 @@ class VisibilityIteratorImpl2 : public ViImplementation2 {
     friend class ViImplAsync2;
     friend class VisibilityIterator2;
     friend class VLAT; // allow VI lookahead thread class to access protected functions
+    friend class VisBuffer2Adapter;
     // VLAT should not access private parts, especially variables
 
 public:
@@ -258,6 +259,10 @@ public:
 
     //reference to actual ms in interator
     virtual const MeasurementSet & ms () const;
+
+    // advance the iteration
+
+    virtual void next ();
 
     // Advance to the next Chunk of data
     virtual void nextChunk ();
@@ -581,10 +586,6 @@ protected:
 
     virtual const Table attachTable () const;
 
-    // advance the iteration
-
-    virtual void advance ();
-
     virtual void applyPendingChanges ();
 
     // set the iteration state
@@ -661,6 +662,9 @@ protected:
     MFrequency::Convert makeFrequencyConverter (Double time, Int otherFrameOfReference,
                                                 Bool toObservedFrame) const;
 
+    // Allow access to the MSColumns object; for use by VisBuffer2Adapter *KLUGE*
+
+    const ROMSColumns * msColumnsKluge () const;
 
     // Method to reset the VI back to the start.  Unlike the public version
     // there is a parameter to allow forcing the rewind even if the
