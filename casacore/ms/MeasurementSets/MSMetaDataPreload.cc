@@ -400,6 +400,127 @@ std::set<uInt> MSMetaDataPreload::getWVRSpw() {
 	return _wvrspw;
 }
 
+vector<Double> MSMetaDataPreload::getBandWidths() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<Double> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->bandwidth);
+	}
+	return out;
+}
+
+vector<vector<Double> > MSMetaDataPreload::getChanFreqs() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<vector<Double> > out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->chanfreqs);
+	}
+	return out;
+}
+
+vector<vector<Double> > MSMetaDataPreload::getChanWidths() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<vector<Double> > out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->chanwidths);
+	}
+	return out;
+}
+
+vector<Int> MSMetaDataPreload::getNetSidebands() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<Int> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->netsideband);
+	}
+	return out;
+}
+
+vector<Double> MSMetaDataPreload::getMeanFreqs() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<Double> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->meanfreq);
+	}
+	return out;
+}
+
+vector<uInt> MSMetaDataPreload::nChans() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<uInt> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->nchans);
+	}
+	return out;
+}
+
+vector<vector<Double> > MSMetaDataPreload::getEdgeChans() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<vector<Double> > out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->edgechans);
+	}
+	return out;
+}
+
+vector<uInt> MSMetaDataPreload::getBBCNos() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	if (! _hasBBCNo) {
+		throw AipsError("This MS's SPECTRAL_WINDOW table does not have a BBC_NO column");
+	}
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<uInt> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->bbcno);
+	}
+	return out;
+}
+
+vector<String> MSMetaDataPreload::getSpwNames() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
+	vector<String> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->name);
+	}
+	return out;
+}
+
+
 std::set<uInt> MSMetaDataPreload::getScansForTimes(
 	const Double center, const Double tol
 ) {
@@ -944,6 +1065,7 @@ void MSMetaDataPreload::_makeTimeToExposureMap(const MeasurementSet& ms) {
 
 void MSMetaDataPreload::_setSpwInfo(const MeasurementSet& ms) {
 	_spwInfo = _getSpwInfo(_avgspw, _tdmspw, _fdmspw, _wvrspw, ms);
+	_hasBBCNo = hasBBCNo(ms);
 }
 
 void MSMetaDataPreload::_makeSpwToScanMap() {

@@ -1754,6 +1754,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		Int widthNumChan	=  6;
 		Int widthCorrTypes	= msPolC.corrType()(0).nelements()*4;
 		Int widthCorrType	=  4;
+		uInt widthBBCNo = 8;
 
 		// Write the column headers
 		os.output().setf(ios::left, ios::adjustfield);
@@ -1768,11 +1769,22 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().width(widthFreq);	os << "ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
+		Bool hasBBCNo = MSMetaData::hasBBCNo(*pMS);
+		if (hasBBCNo) {
+			os.output().width(widthBBCNo);
+			os << " BBC Num ";
+		}
 		os.output().width(widthCorrTypes);  os << " Corrs";
 		os << endl;
 
-		os.output().precision(9);
+		vector<String> names = _msmd->getSpwNames();
+		vector<uInt> nChans = _msmd->nChans();
+		vector<vector<Double> > chanFreqs = _msmd->getChanFreqs();
+		vector<vector<Double> > chanWidths = _msmd->getChanWidths();
+		vector<Double> bandwidths = _msmd->getBandWidths();
+		vector<uInt> bbcNo = hasBBCNo ? _msmd->getBBCNos() : vector<uInt>();
 
+		os.output().precision(9);
 		// For each row of the DataDesc subtable, write the info
 		for (uInt i=0; i<ddId.nelements(); i++) {
 			Int dd=ddId(i);
@@ -1784,24 +1796,29 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os.output().width(widthSpwId); os << (spw);
 			// 2nd column: SPW name
 			os.output().width(widthName);
-			os << msSWC.name()(spw) << " ";
+			os << names[spw] << " ";
 
 			// 3rd column: number of channels in the spectral window
 			os.output().setf(ios::right, ios::adjustfield);
-			os.output().width(widthNumChan);		os << msSWC.numChan()(spw) << " ";
+			os.output().width(widthNumChan);
+			os << nChans[spw] << " ";
 			// 4th column: Reference Frame info
 			os.output().setf(ios::left, ios::adjustfield);
 			os.output().width(widthFrame);
 			os<< msSWC.refFrequencyMeas()(spw).getRefString();
 			// 5th column: Chan 1 freq (may be at high freq end of band!)
 			os.output().width(widthFrqNum);
-			os<< msSWC.chanFreq()(spw)(IPosition(1,0))/1.0e6;
+			os<< chanFreqs[spw][0]/1.0e6;
 			// 6th column: channel resolution
 			os.output().width(widthFrqNum+2);
-			os << msSWC.chanWidth()(spw)(IPosition(1,0))/1000;
+			os << chanWidths[spw][0]/1000;
 			// 7th column: total bandwidth of the spectral window
 			os.output().width(widthFrqNum);
-			os<< msSWC.totalBandwidth()(spw)/1000;
+			os<< bandwidths[spw]/1000;
+			if (hasBBCNo) {
+				os.output().width(widthBBCNo);
+				os<< bbcNo[spw];
+			}
 			// 8th column: reference frequency
 			//			os.output().width(widthFrqNum);
 			//			os<< msSWC.refFrequency()(spw)/1.0e6;

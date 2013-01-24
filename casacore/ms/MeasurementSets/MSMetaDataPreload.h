@@ -240,6 +240,24 @@ public:
 
 	Double nUnflaggedRows(CorrelationType cType, uInt fieldID);
 
+	vector<Double> getBandWidths();
+
+	vector<vector<Double> > getChanFreqs();
+
+	vector<vector<Double> > getChanWidths();
+
+	vector<Int> getNetSidebands();
+
+	vector<Double> getMeanFreqs();
+
+	vector<uInt> nChans();
+
+	vector<vector<Double> > getEdgeChans();
+
+	vector<uInt> getBBCNos();
+
+	vector<String> getSpwNames();
+
 private:
 	Vector<Int> _antenna1,	_antenna2, _dataDescIDs,
 		_scans, _fieldIds, _states, _obsIDs, _arrayIDs;
@@ -274,6 +292,7 @@ private:
 	AOSFMapD _scanToNUnflaggedACRowsMap, _scanToNUnflaggedXCRowsMap;
 	vector<Double> _fieldToNUnflaggedACRows, _fieldToNUnflaggedXCRows;
 	std::map<Int, vector<Double> > _scanToTimeRange;
+	Bool _hasBBCNo;
 
 	// disallow copy constructor and = operator
 	MSMetaDataPreload(const MSMetaData&);

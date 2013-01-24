@@ -252,6 +252,25 @@ public:
 
 	inline Float getCache() const { return _cacheMB;}
 
+	vector<Double> getBandWidths();
+
+	vector<vector<Double> > getChanFreqs();
+
+	vector<vector<Double> > getChanWidths();
+
+	vector<Int> getNetSidebands();
+
+	vector<Double> getMeanFreqs();
+
+	vector<uInt> nChans();
+
+	vector<vector<Double> > getEdgeChans();
+
+	vector<uInt> getBBCNos();
+
+	vector<String> getSpwNames();
+
+
 private:
 	const MeasurementSet* _ms;
 	Float _cacheMB;
