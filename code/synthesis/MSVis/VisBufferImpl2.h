@@ -162,7 +162,7 @@ public:
 
     virtual Bool isAttached () const;
     virtual Bool isFillable () const;
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows);
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearTheCache = True);
     virtual void validateShapes () const;
 
 
@@ -331,7 +331,6 @@ protected:
     // to a VisIter. Will remain synchronized with iterator.
 
     //virtual void cacheCopy (const VisBufferImpl2 & other, Bool markAsCached);
-    virtual void cacheClear (Bool markAsCached = False);
 
     void adjustWeightFactorsAndFlags (Matrix <Float> & rowWeightFactors,
                                       Bool useWeightSpectrum,
@@ -349,19 +348,24 @@ protected:
     void averageFlagInfoChannels (const Matrix<Int> & averagingBounds,
                                   Int nChannelsOut, Bool useWeightSpectrum);
 
-    template<class T>
+    template<typename T>
     void averageVisCubeChannels (T & dataCache,
                                  Int nChanOut,
                                  const Matrix<Int>& averagingbounds);
+
+    virtual void cacheClear (Bool markAsCached = False);
+    virtual void cacheResizeAndZero (const VisBufferComponents2 & exclusions = VisBufferComponents2());
 
     virtual void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
     void computeRowWeightFactors (Matrix <Float> & rowWeightFactors, Bool useWeightSpectrum);
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
-                                       Int nRows, Int nChannels, Int nCorrelations
-                                       ,const Vector<Int> & correlations);
+                                       Int nRows, Int nChannels, Int nCorrelations,
+                                       const Vector<Int> & correlations);
 
+    virtual void copyRow (Int sourceRow, Int destinationRow);
+    virtual void deleteRows (const Vector<Int> & rowsToDelete);
     virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents);
     virtual void dirtyComponentsAdd (VisBufferComponent2 component);
     virtual void dirtyComponentsClear ();
@@ -375,6 +379,7 @@ protected:
     virtual void sortCorrelationsAux (Bool makeSorted);
     virtual VisibilityIterator2 * getViP () const; // protected, non-const access to VI
     void registerCacheItem (VbCacheItemBase *);
+    virtual void resizeRows (Int newNRows);
     virtual void stateCopy (const VisBufferImpl2 & other); // copy relevant noncached members
     virtual void setFillable (Bool isFillable);
     virtual void setRekeyable (Bool isRekeyable);
@@ -387,6 +392,7 @@ protected:
     virtual Cube<Complex> & visCubeRef (); // [nC,nF,nR]
     virtual Cube<Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
+//    virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
 
 private:
 
