@@ -2495,7 +2495,7 @@ if (!markCenter()) return;
 
 		    Double beamArea = 0;
 		    ImageInfo ii = image->imageInfo();
-		    GaussianBeam beam = ii.restoringBeam();
+		    GaussianBeam beam = ii.restoringBeam(zIndex);
 		    CoordinateSystem cSys = image->coordinates();
 		    std::string imageUnits = image->units().getName();
 		    std::transform( imageUnits.begin(), imageUnits.end(), imageUnits.begin(), ::toupper );
@@ -2524,7 +2524,7 @@ if (!markCenter()) return;
 
 		} catch (const casa::AipsError& err) {
 		    std::string errMsg_ = err.getMesg();
-		     //fprintf( stderr, "Region::getLayerStats( ): %s\n", errMsg_.c_str() );
+		    // fprintf( stderr, "Region::getLayerStats( ): <AipsError> %s\n", errMsg_.c_str() );
 		    return 0;
 		} catch (...) {
 		    std::string errMsg_ = "Unknown error computing region statistics.";
