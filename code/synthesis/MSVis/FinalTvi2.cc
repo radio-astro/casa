@@ -57,9 +57,9 @@ FinalTvi2::origin ()
 }
 
 void
-FinalTvi2::advance ()
+FinalTvi2::next ()
 {
-    TransformingVi2::advance();
+    TransformingVi2::next();
 
     configureNewSubchunk ();
 }

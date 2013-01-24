@@ -51,9 +51,9 @@ TransformingVi2::~TransformingVi2 ()
 }
 
 void
-TransformingVi2::advance ()
+TransformingVi2::next ()
 {
-     getVii()->advance ();
+     getVii()->next ();
 }
 
 Bool
@@ -552,6 +552,13 @@ TransformingVi2::spectralWindow ()  const
 }
 
 void
+TransformingVi2::spectralWindows (Vector<Int> & spws) const
+{
+    getVii()->spectralWindows (spws);
+}
+
+
+void
 TransformingVi2::stateId (Vector<Int> & stateids)  const
 {
      getVii()->stateId (stateids);
@@ -660,104 +667,104 @@ TransformingVi2::weightSpectrumExists ()  const
 }
 
 void
-TransformingVi2::writeBackChanges (VisBuffer2 * vb)
+TransformingVi2::writeBackChanges (VisBuffer2 * /*vb*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeFlag (const Matrix<Bool> & flag)
+TransformingVi2::writeFlag (const Matrix<Bool> & /*flag*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeFlag (const Cube<Bool> & flag)
+TransformingVi2::writeFlag (const Cube<Bool> & /*flag*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeFlagCategory (const Array<Bool>& fc)
+TransformingVi2::writeFlagCategory (const Array<Bool>& /*fc*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeFlagRow (const Vector<Bool> & rowflags)
+TransformingVi2::writeFlagRow (const Vector<Bool> & /*rowflags*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeModel (const RecordInterface& rec, Bool iscomponentlist,
-                            Bool incremental)
+TransformingVi2::writeModel (const RecordInterface& /*rec*/, Bool /*iscomponentlist*/,
+                            Bool /*incremental*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeSigma (const Vector<Float> & sig)
+TransformingVi2::writeSigma (const Vector<Float> & /*sig*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeSigmaMat (const Matrix<Float> & sigmat)
+TransformingVi2::writeSigmaMat (const Matrix<Float> & /*sigmat*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes)
+TransformingVi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeVisCorrected (const Cube<Complex> & vis)
+TransformingVi2::writeVisCorrected (const Cube<Complex> & /*vis*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeVisModel (const Matrix<CStokesVector> & visibilityStokes)
+TransformingVi2::writeVisModel (const Matrix<CStokesVector> & /*visibilityStokes*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeVisModel (const Cube<Complex> & vis)
+TransformingVi2::writeVisModel (const Cube<Complex> & /*vis*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeVisObserved (const Matrix<CStokesVector> & visibilityStokes)
+TransformingVi2::writeVisObserved (const Matrix<CStokesVector> & /*visibilityStokes*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeVisObserved (const Cube<Complex> & vis)
+TransformingVi2::writeVisObserved (const Cube<Complex> & /*vis*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeWeight (const Vector<Float> & wt)
+TransformingVi2::writeWeight (const Vector<Float> & /*wt*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeWeightMat (const Matrix<Float> & wtmat)
+TransformingVi2::writeWeightMat (const Matrix<Float> & /*wtmat*/)
 {
     Tvi2NotImplemented ();
 }
 
 void
-TransformingVi2::writeWeightSpectrum (const Cube<Float> & wtsp)
+TransformingVi2::writeWeightSpectrum (const Cube<Float> & /*wtsp*/)
 {
     Tvi2NotImplemented ();
 }

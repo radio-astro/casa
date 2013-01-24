@@ -124,7 +124,7 @@ public:
 
     virtual void origin ();
     virtual Bool more () const;
-    virtual void advance ();
+    virtual void next ();
     virtual Subchunk getSubchunkId () const;
 
     // Methods to control chunk iterator
@@ -289,6 +289,8 @@ public:
     // Return current SpectralWindow
 
     virtual Int spectralWindow () const;
+
+    virtual void spectralWindows (Vector<Int> & spws) const;
 
     // Return MJD midpoint of interval.
 
