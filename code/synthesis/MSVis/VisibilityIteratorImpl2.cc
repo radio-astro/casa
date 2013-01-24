@@ -909,6 +909,12 @@ VisibilityIteratorImpl2::moreChunks () const
     return msIter_p.more ();
 }
 
+const ROMSColumns *
+VisibilityIteratorImpl2::msColumnsKluge () const
+{
+    return & msIter_p.msColumns();
+}
+
 Int
 VisibilityIteratorImpl2::msId () const
 {
@@ -1194,7 +1200,7 @@ VisibilityIteratorImpl2::positionMsIterToASelectedSpectralWindow ()
 }
 
 void
-VisibilityIteratorImpl2::advance ()
+VisibilityIteratorImpl2::next ()
 {
     ThrowIf (! more_p, "Attempt to advance subchunk past end of chunk");
 

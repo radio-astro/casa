@@ -12,6 +12,8 @@
 #include <synthesis/MSVis/VisBuffer2.h>
 #include <casa/BasicSL/String.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisibilityIteratorImpl2.h>
 
 using casa::utilj::toStdError;
 
@@ -29,8 +31,11 @@ class VisBuffer2Adapter : public VisBuffer {
 
 public:
 
-    VisBuffer2Adapter (VisBuffer2 * vb) : vb2_p (vb) , vb2Rw_p (vb) {}
-    VisBuffer2Adapter (const VisBuffer2 * vb) : vb2_p (vb), vb2Rw_p (0) {}
+    VisBuffer2Adapter (VisBuffer2 * vb, const VisibilityIteratorImpl2 * vi) : vb2_p (vb) , vb2Rw_p (vb)
+    {
+        msColumns_p = vi->msColumnsKluge();
+    }
+    VisBuffer2Adapter (const VisBuffer2 * vb) : msColumns_p (0), vb2_p (vb), vb2Rw_p (0) {}
 
     ~VisBuffer2Adapter () {}
 
@@ -367,11 +372,13 @@ public:
     virtual void removeScratchCols(){ IllegalOperation(); }
 
     // Access the current ROMSColumns object via VisIter
-    virtual const ROMSColumns & msColumns() const { IllegalOperation(); }
+    virtual const ROMSColumns & msColumns() const
+    {
+        Assert (msColumns_p != 0);
+        return * msColumns_p;
+    }
 
     virtual  Int numberAnt () const{ return vb2_p-> nAntennas (); }
-
-
 
     // Get all selected spectral windows not just the one in the actual buffer
     virtual void allSelectedSpectralWindows(Vector<Int>& , Vector<Int>& )
@@ -402,6 +409,7 @@ public:
 
 private:
 
+    const ROMSColumns * msColumns_p; // [use]
     const vi::VisBuffer2 * vb2_p; // [use]
     vi::VisBuffer2 * vb2Rw_p; // [use]
 
