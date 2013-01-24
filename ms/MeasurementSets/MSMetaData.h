@@ -275,6 +275,26 @@ public:
 
 	inline virtual Float getCache() const { return 0;}
 
+	static Bool hasBBCNo(const MeasurementSet& ms);
+
+	virtual vector<Double> getBandWidths() = 0;
+
+	virtual vector<vector<Double> > getChanFreqs() = 0;
+
+	virtual vector<vector<Double> > getChanWidths() = 0;
+
+	virtual vector<Int> getNetSidebands() = 0;
+
+	virtual vector<Double> getMeanFreqs() = 0;
+
+	virtual vector<uInt> nChans() = 0;
+
+	virtual vector<vector<Double> > getEdgeChans() = 0;
+
+	virtual vector<uInt> getBBCNos() = 0;
+
+	virtual vector<String> getSpwNames() = 0;
+
 protected:
 
 	// (array_id, observation_id, scan_number, field_id) -> stuff mappings
@@ -289,6 +309,8 @@ protected:
 		Double meanfreq;
 		uInt nchans;
 		vector<Double> edgechans;
+		uInt bbcno;
+		String name;
 	};
 
 	static uInt _getNStates(const MeasurementSet& ms);
@@ -431,6 +453,7 @@ protected:
 	);
 
 private:
+
 	// This comment from thunter in the original ValueMapping python class
 	// # Determine the number of polarizations for the first OBSERVE_TARGET intent.
     // # Used by plotbandpass for BPOLY plots since the number of pols cannot be inferred

@@ -33,6 +33,7 @@
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/TableProxy.h>
@@ -286,17 +287,14 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 	std::set<uInt>& avgSpw, std::set<uInt>& tdmSpw, std::set<uInt>& fdmSpw,
 	std::set<uInt>& wvrSpw, const MeasurementSet& ms
 ) {
-	const MSSpectralWindow spw = ms.spectralWindow();
-	String bandwidthColName = MSSpectralWindow::columnName(MSSpectralWindowEnums::TOTAL_BANDWIDTH);
-	ScalarColumn<Double> bwCol(spw, bandwidthColName);
-	Vector<Double> bws = bwCol.getColumn();
-	String cfColName = MSSpectralWindow::columnName(MSSpectralWindowEnums::CHAN_FREQ);
-	ArrayColumn<Double> cfCol(spw, cfColName);
-	String cwColName = MSSpectralWindow::columnName(MSSpectralWindowEnums::CHAN_WIDTH);
-	ArrayColumn<Double> cwCol(spw, cwColName);
-	String nsColName = MSSpectralWindow::columnName(MSSpectralWindowEnums::NET_SIDEBAND);
-	ScalarColumn<Int> nsCol(spw, nsColName);
-	Vector<Int> nss = nsCol.getColumn();
+	ROMSSpWindowColumns spwCols(ms.spectralWindow());
+	Vector<Double> bws = spwCols.totalBandwidth().getColumn();
+	ArrayColumn<Double> cfCol = spwCols.chanFreq();
+	ArrayColumn<Double> cwCol = spwCols.chanWidth();
+	Vector<Int> nss  = spwCols.netSideband().getColumn();
+	Vector<String> name = spwCols.name().getColumn();
+	Bool myHasBBCNo = hasBBCNo(ms);
+	Vector<Int> bbcno = myHasBBCNo ? spwCols.bbcNo().getColumn() : Vector<Int>();
 	SpwProperties props;
 	vector<Double> freqLimits(2);
 	Vector<Double> tmp;
@@ -306,7 +304,7 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 		props.chanfreqs.resize(0);
 		tmp.resize(0);
 		cfCol.get(i, tmp);
-		tmp.tovector(props.chanfreqs);
+		props.chanfreqs = tmp.tovector();
 		freqLimits[0] = min(tmp);
 		freqLimits[1] = max(tmp);
 		props.edgechans = freqLimits;
@@ -316,8 +314,11 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 		// coded this way in ValueMapping
 		props.netsideband = nss[i] == 2 ? 1 : -1;
 		props.meanfreq = mean(tmp);
-		tmp.tovector(props.chanfreqs);
 		props.nchans = props.chanfreqs.size();
+		props.name = name[i];
+		if (myHasBBCNo) {
+			props.bbcno = bbcno[i];
+		}
 		spwInfo.push_back(props);
 		if (props.nchans==64 || props.nchans==128 || props.nchans==256) {
 			tdmSpw.insert(i);
@@ -333,6 +334,10 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 		}
 	}
 	return spwInfo;
+}
+
+Bool MSMetaData::hasBBCNo(const MeasurementSet& ms) {
+	return ms.spectralWindow().isColumn(MSSpectralWindowEnums::BBC_NO);
 }
 
 Vector<Int> MSMetaData::_getScans(const MeasurementSet& ms) {
