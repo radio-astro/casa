@@ -45,7 +45,7 @@ public:
     virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
                                     Bool fetchIfNeeded = True) {}
 
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows) {}
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool) {}
     virtual const vi::VisibilityIterator2 * getVi () const {return NULL;}
 
     virtual Bool isAttached () const {return True;}
