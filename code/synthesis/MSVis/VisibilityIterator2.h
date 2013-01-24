@@ -186,7 +186,17 @@ public:
 
 private:
 
+};
 
+class VisibilityIterator2;
+
+class ViFactory {
+
+public:
+
+    virtual ~ViFactory () {}
+
+    virtual VisibilityIterator2 * createVi () = 0;
 };
 
 // <summary>
@@ -304,6 +314,9 @@ class VisibilityIterator2 : private boost::noncopyable
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected
                                 // functions VLAT should not access private parts,
                                 // especially variables
+
+    friend class AveragingTvi2Factory;
+
 public:
 
   class Factory { // Interface for implementation creation factory
@@ -986,14 +999,21 @@ protected:
 
   // advance the iteration
 
-  virtual void advance();
-
   void originChunks(Bool forceRewind);
 
 private:
 
   ViImplementation2 * impl_p;
 };
+
+class AveragingTvi2Factory {
+
+public:
+
+VisibilityIterator2 * createVi (MeasurementSet * ms, Double interval,
+                                Double chunkInterval, Int averagingFactor);
+};
+
 
 } // end namespace vi
 

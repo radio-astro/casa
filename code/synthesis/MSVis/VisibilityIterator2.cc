@@ -24,6 +24,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <scimath/Mathematics/RigidVector.h>
 #include <scimath/Mathematics/SquareMatrix.h>
+#include <synthesis/MSVis/AveragingTvi2.h>
 #include <synthesis/MSVis/ViFrequencySelection.h>
 #include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/MSVis/VisBuffer2.h>
@@ -119,16 +120,10 @@ VisibilityIterator2::~VisibilityIterator2 ()
 }
 
 void
-VisibilityIterator2::next ()
-{
-    advance ();
-}
-
-void
-VisibilityIterator2::advance ()
+VisibilityIterator2::next()
 {
     CheckImplementationPointerR ();
-    impl_p->advance ();
+    impl_p->next ();
 }
 
 Bool
@@ -1211,6 +1206,33 @@ SubtableColumns::weather() const
     return msIter_p.msColumns().weather();
 }
 
+VisibilityIterator2 *
+AveragingTvi2Factory::createVi (MeasurementSet * ms,
+                                Double interval,
+                                Double chunkInterval,
+                                Int averagingFactor)
+{
+    // Start off with an empty VI
+
+    VisibilityIterator2 * vi2 = new VisibilityIterator2 ();
+
+    // Create a simple VI implementation to perform the reading.
+
+    Block<MeasurementSet> mss (1, * ms);
+    Block<Int> sortColumns;
+    Double averagingInterval = interval * averagingFactor;
+    Int nAveragesPerChunk = chunkInterval / averagingInterval * 1.001;
+
+    VisibilityIteratorImpl2 * vii2 = new VisibilityIteratorImpl2 (vi2, mss, sortColumns, True,
+                                                                  chunkInterval, VbPlain, False);
+
+    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vii2, averagingInterval, nAveragesPerChunk, 0);
+
+    vi2->impl_p = averagingTvi2;
+
+    return vi2;
+
+}
 
 } // end namespace vi
 

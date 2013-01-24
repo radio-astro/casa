@@ -148,7 +148,7 @@ public:
 
     virtual void origin () = 0;
     virtual Bool more () const = 0;
-    virtual void advance () = 0;
+    virtual void next () = 0;
     virtual Subchunk getSubchunkId () const = 0;
 
     // Methods to control chunk iterator
