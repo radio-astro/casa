@@ -27,6 +27,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<value></value>
 	</param>
 
+	<param type="bool" name="excludechans" subparam="true">
+		<description>exclude Spectral window:channel selection in fitspw for fitting</description>
+		<value>False</value>
+	</param>
+        
+
         <param type="string" name="combine">
                 <description>Data axes to combine for the continuum estimation (none, or spw and/or scan)</description>
                 <value></value>
@@ -52,7 +58,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<description>Create vis + ".cont" to hold the continuum estimate.</description>
 		<value>False</value>
 	</param>
-
+        
+  <constraints>
+            <when param="fitspw">
+                  <notequals type="string" value="">
+                    <default param="excludechans"><value type="bool">False</value>
+                    </default>
+                  </notequals>
+            </when>
+  </constraints>
 </input>
 <example>
 
@@ -94,6 +108,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	          See the note under combine.
 		default: '' (all)
                 example: fitspw='0:5~30;40~55'
+         &gt;&gt;&gt; expandable parameter for fitspw 
+          excludechans - if Ture, it will exclude the spws:channels specified in fitspw i
+                         for the fit
+                defalut: False (use fitspw for the fit) 
         combine -- Data axes to combine for the continuum estimate.
 	        It must include 'spw' if spw contains spws that are not in
 	        fitspw!
