@@ -189,6 +189,17 @@ record* msmetadata::antennaposition(const string& name) {
 	return 0;
 }
 
+
+int msmetadata::baseband(int spw) {
+	_FUNC2 (
+		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
+		}
+		return _msmd->getBBCNos()[spw];
+	)
+	return 0;
+}
+
 variant* msmetadata::baselines() {
 	_FUNC (
 		Matrix<Bool> baselines = _msmd->getUniqueBaselines();
@@ -206,6 +217,16 @@ vector<int> msmetadata::chanavgspws() {
 	return vector<int>();
 }
 
+vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
+	_FUNC2 (
+		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
+		}
+		return _msmd->getChanFreqs()[spw].getValue(Unit(unit)).tovector();
+	)
+	return vector<double>();
+}
+
 bool msmetadata::done() {
 	_FUNC2(
 		_msmd.reset(0);
@@ -213,6 +234,7 @@ bool msmetadata::done() {
 	)
 	return false;
 }
+
 
 record* msmetadata::effexposuretime() {
 	return fromRecord(
@@ -344,6 +366,16 @@ vector<string> msmetadata::intentsforspw(int spw) {
 	return vector<string>();
 }
 
+double msmetadata::meanfreq(int spw, const string& unit) {
+	_FUNC2 (
+		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
+		}
+		return _msmd->getMeanFreqs()[spw].getValue(Unit(unit));
+	)
+	return 0;
+}
+
 vector<string> msmetadata::namesforfields(const variant& fieldids) {
 	_FUNC(
 		variant::TYPE myType = fieldids.type();
@@ -387,6 +419,17 @@ int msmetadata::nbaselines() {
 	)
 	return 0;
 }
+
+int msmetadata::nchan(int spw) {
+	_FUNC2 (
+		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
+		}
+		return _msmd->nChans()[spw];
+	)
+	return 0;
+}
+
 
 int msmetadata::nfields() {
 	_FUNC(
@@ -479,37 +522,6 @@ void msmetadata::_init(const casa::MeasurementSet *const &ms, const bool preload
 
 bool msmetadata::open(const string& msname, const bool preload, const float cachesize) {
 	_FUNC2(
-		/*
-		if (preload) {
-			_msmd.reset(new MSMetaDataPreload(MeasurementSet(msname)));
-		}
-		else {
-			_ms.reset(new MeasurementSet(msname));
-			_msmd.reset(new MSMetaDataOnDemand(_ms.get(), cachesize));
-		}
-		uInt nACRows;
-		uInt nXCRows;
-		std::map<uInt COMMA uInt> scanToNACRowsMap;
-		std::map<uInt COMMA uInt> scanToNXCRowsMap;
-		vector<uInt> sourceToNACRowsMap;
-		vector<uInt> sourceToNXCRowsMap;
-		_msmd->getRowStats(
-			nACRows, nXCRows, scanToNACRowsMap, scanToNXCRowsMap,
-			sourceToNACRowsMap, sourceToNXCRowsMap
-		);
-		Double nUnflaggedACRows;
-		Double nUnflaggedXCRows;
-		_msmd->getUnflaggedRowStats(nUnflaggedACRows, nUnflaggedXCRows);
-		*_log << LogIO::NORMAL << "Read metadata from "
-			<< _msmd->nRows() << " rows ("
-			<< (nUnflaggedACRows + nUnflaggedXCRows) << " unflagged)." << LogIO::POST;
-		*_log << LogIO::NORMAL << "  Number of cross correlation rows: "
-			<< nXCRows << " (" << nUnflaggedXCRows << " unflagged)"
-			<< LogIO::POST;
-		*_log << LogIO::NORMAL << "  Number of autocorrelation rows: "
-			<< nACRows << " (" << nUnflaggedACRows << " unflagged)"
-			<< LogIO::POST;
-		*/
 		if (preload) {
 			MeasurementSet ms(msname);
 			_init(&ms, preload, cachesize);
@@ -578,6 +590,16 @@ vector<int> msmetadata::scansforstate(const int state) {
 		return _setUIntToVectorInt(_msmd->getScansForState(state));
 	)
 	return vector<int>();
+}
+
+int msmetadata::sideband(int spw) {
+	_FUNC2 (
+		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
+		}
+		return _msmd->getNetSidebands()[spw];
+	)
+	return 0;
 }
 
 vector<int> msmetadata::spwsforintent(const string& intent) {

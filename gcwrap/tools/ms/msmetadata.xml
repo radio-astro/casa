@@ -195,6 +195,25 @@ windows in the dataset and close the tool.
             </example>
         </method>
 
+        <method type="function" name="baseband">
+            <shortdescription>Get the baseband for the specified spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Spectral window ID.</description>
+                </param>
+            </input>
+            <returns type="int"/>
+            <description>
+                Get the baseband for the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get baseband for spectral window 2.
+    baseband = msmd.baseband(2)
+    msmd.done()
+            </example>
+        </method>
+
         <method type="function" name="baselines">
             <shortdescription>Get a two dimensional boolean array representing baselines for data recorded in the MS.</shortdescription>
             <returns type="any"><any type="variant"/></returns>
@@ -226,6 +245,29 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="chanfreqs">
+            <shortdescription>Get an array of channel frequencies for the specified spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Spectral window ID.</description>
+                </param>
+                <param type="string" direction="in" name="unit">
+                    <description>Convert frequencies to this unit.</description>
+                    <value>Hz</value>
+                </param>
+            </input>
+            <returns type="doubleArray"/>
+            <description>
+                Get an array of channel frequencies for the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the channel frequencies for spectral window 2.
+    chan_freqs = msmd.chanfreqs(2)
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="done">
             <shortdescription>Close this tool and reclaim system resources associated with it.</shortdescription>
             <returns type="bool"/>
@@ -239,6 +281,8 @@ windows in the dataset and close the tool.
                 msmd.done()
             </example>
         </method>
+        
+        
         
         <method type="function" name="effexposuretime">
             <shortdescription>Get the effective exposure (on-source integration time)</shortdescription>
@@ -483,6 +527,29 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="meanfreq">
+            <shortdescription>Get the mean frequency for the specified spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Spectral window ID.</description>
+                </param>
+                <param type="string" direction="in" name="unit">
+                    <description>Convert frequencies to this unit.</description>
+                    <value>Hz</value>
+                </param>
+            </input>
+            <returns type="double"/>
+            <description>
+                Get the mean frequency for the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the mean frequency for spectral window 2.
+    mean_freq = msmd.meanfreq(2)
+    msmd.done()
+            </example>
+        </method>
+        
          <method type="function" name="nantennas">
             <shortdescription>Get the number of antennas associated with the MS.</shortdescription>
             <returns type="int"/>
@@ -530,6 +597,24 @@ windows in the dataset and close the tool.
             <example>
     msmd.open("my.ms")
     number_of_baselines = msmd.nbaselines()
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="nchan">
+            <shortdescription>Get the number of channels associated with the specified spectral window.</shortdescription>
+            <returns type="int"/>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Zero-based spw ID for which to get the number of channels.</description>
+                </param>
+            </input>
+            <description>
+                Get the number of channels associated with the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    nchan = msmd.nchan(3)
     msmd.done()
             </example>
         </method>
@@ -794,7 +879,25 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
-
+        
+        <method type="function" name="sideband">
+            <shortdescription>Get the sideband for the specified spectral window.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="spw">
+                    <description>Spectral window ID.</description>
+                </param>
+            </input>
+            <returns type="int"/>
+            <description>
+                Get the sideband for the specified spectral window.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get sideband for spectral window 2.
+    sideband = msmd.sideband(2)
+    msmd.done()
+            </example>
+        </method>
         <method type="function" name="spwsforfield">
             <shortdescription>Get an array of the unique spectral window IDs for the specified field.</shortdescription>
              <input>
