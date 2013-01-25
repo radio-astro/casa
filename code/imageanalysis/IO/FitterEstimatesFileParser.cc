@@ -44,19 +44,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 FitterEstimatesFileParser::FitterEstimatesFileParser (
 		const String& filename,
 		const ImageInterface<Float>& image
-	) : componentList(), peakValues(0), xposValues(0), yposValues(0),
-		majValues(0), minValues(0), paValues(0), contents("") {
-	itsLog = new LogIO();
+	) : _componentList(), _fixedValues(0), _log(new LogIO()),
+		_peakValues(0), _xposValues(0), _yposValues(0),
+		_majValues(0), _minValues(0), _paValues(0), _contents("") {
 
 	RegularFile myFile(filename);
-	itsLog->origin(LogOrigin("FitterEstimatesFileParser","constructor"));
+	_log->origin(LogOrigin("FitterEstimatesFileParser","constructor"));
 
 	if (! myFile.exists()) {
-		*itsLog << LogIO::NORMAL << "Estimates file " << filename << " does not exist"
+		*_log << LogIO::NORMAL << "Estimates file " << filename << " does not exist"
 			<< LogIO::EXCEPTION;
 	}
 	if (! myFile.isReadable()) {
-		*itsLog << LogIO::NORMAL << "Estimates file " << filename << " is not readable"
+		*_log << LogIO::NORMAL << "Estimates file " << filename << " is not readable"
 			<< LogIO::EXCEPTION;
 	}
 	_parseFile(myFile);
@@ -64,26 +64,24 @@ FitterEstimatesFileParser::FitterEstimatesFileParser (
 
 }
 
-FitterEstimatesFileParser::~FitterEstimatesFileParser() {
-	delete itsLog;
-}
+FitterEstimatesFileParser::~FitterEstimatesFileParser() {}
 
 ComponentList FitterEstimatesFileParser::getEstimates() const {
-	return componentList;
+	return _componentList;
 }
 
 Vector<String> FitterEstimatesFileParser::getFixed() const {
-	return fixedValues;
+	return _fixedValues;
 }
 
 String FitterEstimatesFileParser::getContents() const {
-	return contents;
+	return _contents;
 }
 
 void FitterEstimatesFileParser::_parseFile(
 	const RegularFile& myFile
 ) {
-	itsLog->origin(LogOrigin("FitterEstimatesFileParser","_parseFile"));
+	_log->origin(LogOrigin("FitterEstimatesFileParser","_parseFile"));
 
 	RegularFileIO fileIO(myFile);
 	// I doubt a genuine estimates file will ever have this many characters
@@ -92,16 +90,16 @@ void FitterEstimatesFileParser::_parseFile(
 	int nRead;
 
 	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
-		*itsLog << LogIO::NORMAL << "read: " << nRead << LogIO::POST;
+		*_log << LogIO::NORMAL << "read: " << nRead << LogIO::POST;
 		String chunk(buffer, bufSize);
 
-		contents += chunk;
+		_contents += chunk;
 	}
 	// get the last chunk
 	String chunk(buffer, nRead);
-	contents += chunk;
+	_contents += chunk;
 
-	Vector<String> lines = stringToVector(contents, '\n');
+	Vector<String> lines = stringToVector(_contents, '\n');
 	Regex blankLine("^[ \n\t\r\v\f]+$",1000);
 	uInt componentIndex = 0;
 	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); iter++) {
@@ -111,7 +109,7 @@ void FitterEstimatesFileParser::_parseFile(
 		}
 		uInt commaCount = iter->freq(',');
 		if (commaCount < 5 || commaCount > 6) {
-			*itsLog << "bad format for line " << *iter << LogIO::EXCEPTION;
+			*_log << "bad format for line " << *iter << LogIO::EXCEPTION;
 		}
 		Vector<String> parts = stringToVector(*iter);
 		for (Vector<String>::iterator viter = parts.begin(); viter != parts.end(); viter++) {
@@ -127,59 +125,59 @@ void FitterEstimatesFileParser::_parseFile(
 		String pa = parts[5];
 
 		String fixedMask;
-		peakValues.resize(componentIndex + 1, True);
+		_peakValues.resize(componentIndex + 1, True);
 //		fluxValues.resize(componentIndex + 1, True);
-		xposValues.resize(componentIndex + 1, True);
-		yposValues.resize(componentIndex + 1, True);
-		majValues.resize(componentIndex + 1, True);
-		minValues.resize(componentIndex + 1, True);
-		paValues.resize(componentIndex + 1, True);
-		fixedValues.resize(componentIndex + 1, True);
+		_xposValues.resize(componentIndex + 1, True);
+		_yposValues.resize(componentIndex + 1, True);
+		_majValues.resize(componentIndex + 1, True);
+		_minValues.resize(componentIndex + 1, True);
+		_paValues.resize(componentIndex + 1, True);
+		_fixedValues.resize(componentIndex + 1, True);
 
 		if (! peak.matches(RXdouble) ) {
-			*itsLog << "File " << filename << ", line " << *iter
+			*_log << "File " << filename << ", line " << *iter
 				<< ": peak value " << peak << " is not numeric"
 				<< LogIO::EXCEPTION;
 		}
-		peakValues(componentIndex) = String::toDouble(peak);
+		_peakValues(componentIndex) = String::toDouble(peak);
 
 		if (! xpos.matches(RXdouble) ) {
-			*itsLog << "File " << filename << ", line " << *iter
+			*_log << "File " << filename << ", line " << *iter
 				<< ": x position value " << xpos << " is not numeric"
 				<< LogIO::EXCEPTION;
 		}
-		xposValues(componentIndex) = String::toDouble(xpos);
+		_xposValues(componentIndex) = String::toDouble(xpos);
 
 		if (! ypos.matches(RXdouble) ) {
-			*itsLog << "File " << filename << ", line " << *iter
+			*_log << "File " << filename << ", line " << *iter
 				<< ": y position value " << ypos << " is not numeric"
 				<< LogIO::EXCEPTION;
 		}
-		yposValues(componentIndex) = String::toDouble(ypos);
+		_yposValues(componentIndex) = String::toDouble(ypos);
 
 		Quantity majQuantity;
 		if (! readQuantity(majQuantity, maj)) {
-			*itsLog << "File " << filename << ", line " << *iter
+			*_log << "File " << filename << ", line " << *iter
 				<< ": Major axis value " << maj << " is not a quantity"
 				<< LogIO::EXCEPTION;
 		}
-		majValues(componentIndex) = majQuantity;
+		_majValues(componentIndex) = majQuantity;
 
 		Quantity minQuantity;
 		if (! readQuantity(minQuantity, min)) {
-			*itsLog << "File " << filename << ", line " << *iter
+			*_log << "File " << filename << ", line " << *iter
 				<< ": Major axis value " << min << " is not a quantity"
 				<< LogIO::EXCEPTION;
 		}
-		minValues(componentIndex) = minQuantity;
+		_minValues(componentIndex) = minQuantity;
 
 		Quantity paQuantity;
 		if (! readQuantity(paQuantity, pa)) {
-			*itsLog << "File " << filename << ", line " << *iter
+			*_log << "File " << filename << ", line " << *iter
 				<< ": Position angle value " << pa << " is not a quantity"
 				<< LogIO::EXCEPTION;
 		}
-		paValues(componentIndex) = paQuantity;
+		_paValues(componentIndex) = paQuantity;
 
 		if (parts.size() == 7) {
 			fixedMask = parts[6];
@@ -191,13 +189,13 @@ void FitterEstimatesFileParser::_parseFile(
 					*siter != 'a' && *siter != 'b' && *siter != 'f'
 					&& *siter != 'p' && *siter != 'x' && *siter != 'y'
 				) {
-					*itsLog << "fixed parameter ID " << String(*siter) << " is not recognized"
+					*_log << "fixed parameter ID " << String(*siter) << " is not recognized"
 						<< LogIO::EXCEPTION;
 				}
 			}
-			fixedValues(componentIndex) = fixedMask;
+			_fixedValues(componentIndex) = fixedMask;
 		}
-		fixedValues(componentIndex) = fixedMask;
+		_fixedValues(componentIndex) = fixedMask;
 		componentIndex++;
 	}
 }
@@ -206,8 +204,8 @@ void FitterEstimatesFileParser::_createComponentList(
 	const ImageInterface<Float>& image
 ) {
 	ConstantSpectrum spectrum;
-    CoordinateSystem csys = image.coordinates();
-    Vector<Double> pos(image.ndim(),0);
+    const CoordinateSystem csys = image.coordinates();
+    Vector<Double> pos(2,0);
     ImageMetaData metadata(image);
     Vector<Int> dirAxesNums = metadata.directionAxesNumbers();
     Vector<Double> world;
@@ -227,7 +225,7 @@ void FitterEstimatesFileParser::_createComponentList(
 	// does the image have a restoring beam?
     if (image.imageInfo().hasBeam()) {
         if (image.imageInfo().hasMultipleBeams()) {
-            *itsLog << LogIO::WARN << "This image has multiple beams. The first will be "
+            *_log << LogIO::WARN << "This image has multiple beams. The first will be "
                 << "used to determine flux density estimates." << LogIO::POST;
         }
         resArea = Quantity(
@@ -243,30 +241,31 @@ void FitterEstimatesFileParser::_createComponentList(
 		}
 		else {
 			// can't find  pixel size, which is extremely bad!
-			*itsLog << "Unable to determine the resolution element area of image "
+			*_log << "Unable to determine the resolution element area of image "
 					<< image.name()<< LogIO::EXCEPTION;
 		}
 	}
-	for(uInt i=0; i<peakValues.size(); i++) {
-		pos[dirAxesNums[0]] = xposValues[i];
-		pos[dirAxesNums[1]] = yposValues[i];
-        csys.toWorld(world, pos);
-        Quantity ra(world[0], "rad");
-        Quantity dec(world[1], "rad");
+    Vector<String> units = csys.directionCoordinate().worldAxisUnits();
+    String raUnit = units[0];
+    String decUnit = units[1];
+	for(uInt i=0; i<_peakValues.size(); i++) {
+		pos[dirAxesNums[0]] = _xposValues[i];
+		pos[dirAxesNums[1]] = _yposValues[i];
+        csys.directionCoordinate().toWorld(world, pos);
+        Quantity ra(world[0], raUnit);
+        Quantity dec(world[1], decUnit);
         MDirection mdir(ra, dec, mtype);
 
         GaussianShape gaussShape(
-        	mdir, majValues[i], minValues[i], paValues[i]
+        	mdir, _majValues[i], _minValues[i], _paValues[i]
         );
 		Unit brightnessUnit = image.units();
 		// Estimate the flux density
-
-		Quantity fluxQuantity = Quantity(peakValues[i], brightnessUnit) * intensityToFluxConversion;
+		Quantity fluxQuantity = Quantity(_peakValues[i], brightnessUnit) * intensityToFluxConversion;
 		fluxQuantity.convert("Jy");
 		fluxQuantity = fluxQuantity*gaussShape.getArea()/resArea;
 		// convert to Jy again to get rid of the superfluous sr/(sr)
 		fluxQuantity.convert("Jy");
-
 		// Just fill the Stokes which aren't being fit with the same value as
 		// the Stokes that is. Doesn't matter that the other three are bogus
 		// for the purposes of this, since we only fit one stokes at a time
@@ -278,7 +277,7 @@ void FitterEstimatesFileParser::_createComponentList(
 		Quantum<Vector<Double> > fluxVector(fluxStokes, fluxQuantity.getUnit());
 		Flux<Double> flux(fluxVector);
         SkyComponent skyComp(flux, gaussShape, spectrum);
-        componentList.add(skyComp);
+        _componentList.add(skyComp);
 	}
 
 }
