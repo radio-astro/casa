@@ -295,9 +295,11 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 
 	if (coordinates && coordinates->hasDirectionCoordinate()) {
 		const DirectionCoordinate dirCoord = coordinates->directionCoordinate();
+		const Vector<Int> dirAxes = coordinates->directionAxesNumbers();
+		const Vector<String> units = coordinates->worldAxisUnits();
 		Vector<Double> world(dirCoord.nWorldAxes(), 0), pixel(dirCoord.nPixelAxes(), 0);
-		world[0] = longitude.getValue();
-		world[1] = lat.getValue();
+		world[0] = longitude.getValue(units[dirAxes[0]]);
+		world[1] = lat.getValue(units[dirAxes[1]]);
 		// TODO do the pixel computations in another method
 		if (dirCoord.toPixel(pixel, world)) {
 			Vector<Double> increment = dirCoord.increment();
