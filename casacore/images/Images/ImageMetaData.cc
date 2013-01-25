@@ -150,30 +150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }    
         return areValid;
     }
-/*
-    // This method was copied from ImageStatistics and modified.
-    Bool ImageMetaData::getBeamArea(
-    	Double& beamArea, const Unit& unit, const Int channel,
-    	const Int polarization
-    ) const {
-    	beamArea = -1.0;
-    	if (! hasDirectionCoordinate() ) {
-    		return False;
-    	}
-    	//TODO merge ImageInfo into ImageMetaData
-    	GaussianBeam beam = _info.restoringBeam(channel, polarization);
-    	String imageUnits = _units.getName();
-    	imageUnits.upcase();
 
-    	if (! beam.isNull() && imageUnits.contains("/BEAM")) {
-    		beamArea = beam.getArea(unit);
-    		return True;
-    	}
-    	else {
-    		return False;
-    	}
-    }
-*/
     Bool ImageMetaData::getDirectionPixelArea(Quantity& pixelArea) const {
     	pixelArea = -1.0;
     	if (!hasDirectionCoordinate()) {
@@ -181,7 +158,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	}
     	DirectionCoordinate dCoord = _coordinates.directionCoordinate(directionCoordinateNumber());
     	Vector<Double> increment = dCoord.increment();
-    	pixelArea  = Quantity(fabs(increment[0]*increment[1]), String("sr"));
+    	Vector<String> units = dCoord.worldAxisUnits();
+    	Quantity ra(1, units[0]);
+    	Quantity dec(1, units[1]);
+    	Quantity pix = ra*dec;
+    	pixelArea  = Quantity(fabs(increment[0]*increment[1]), pix.getUnit());
     	return True;
     }
 
