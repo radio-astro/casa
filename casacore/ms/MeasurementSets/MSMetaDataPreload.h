@@ -242,13 +242,13 @@ public:
 
 	vector<Double> getBandWidths();
 
-	vector<vector<Double> > getChanFreqs();
+	vector<Quantum<Vector<Double> > > getChanFreqs();
 
 	vector<vector<Double> > getChanWidths();
 
 	vector<Int> getNetSidebands();
 
-	vector<Double> getMeanFreqs();
+	vector<Quantity> getMeanFreqs();
 
 	vector<uInt> nChans();
 
