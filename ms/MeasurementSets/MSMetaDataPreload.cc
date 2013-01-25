@@ -413,10 +413,10 @@ vector<Double> MSMetaDataPreload::getBandWidths() {
 	return out;
 }
 
-vector<vector<Double> > MSMetaDataPreload::getChanFreqs() {
+vector<Quantum<Vector<Double> > > MSMetaDataPreload::getChanFreqs() {
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
 	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
-	vector<vector<Double> > out;
+	vector<Quantum<Vector<Double> > > out;
 	for (
 		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
 		iter!=end; iter++
@@ -452,10 +452,10 @@ vector<Int> MSMetaDataPreload::getNetSidebands() {
 	return out;
 }
 
-vector<Double> MSMetaDataPreload::getMeanFreqs() {
+vector<Quantity> MSMetaDataPreload::getMeanFreqs() {
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
 	vector<MSMetaData::SpwProperties>::const_iterator end = _spwInfo.end();
-	vector<Double> out;
+	vector<Quantity> out;
 	for (
 		vector<MSMetaData::SpwProperties>::const_iterator iter=_spwInfo.begin();
 		iter!=end; iter++

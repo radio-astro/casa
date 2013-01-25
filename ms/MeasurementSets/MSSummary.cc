@@ -1779,7 +1779,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 
 		vector<String> names = _msmd->getSpwNames();
 		vector<uInt> nChans = _msmd->nChans();
-		vector<vector<Double> > chanFreqs = _msmd->getChanFreqs();
+		vector<Quantum<Vector<Double> > > chanFreqs = _msmd->getChanFreqs();
 		vector<vector<Double> > chanWidths = _msmd->getChanWidths();
 		vector<Double> bandwidths = _msmd->getBandWidths();
 		vector<uInt> bbcNo = hasBBCNo ? _msmd->getBBCNos() : vector<uInt>();
@@ -1808,7 +1808,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os<< msSWC.refFrequencyMeas()(spw).getRefString();
 			// 5th column: Chan 1 freq (may be at high freq end of band!)
 			os.output().width(widthFrqNum);
-			os<< chanFreqs[spw][0]/1.0e6;
+			os<< chanFreqs[spw].getValue("MHz")[0];
 			// 6th column: channel resolution
 			os.output().width(widthFrqNum+2);
 			os << chanWidths[spw][0]/1000;

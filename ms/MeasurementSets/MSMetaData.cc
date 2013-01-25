@@ -290,43 +290,42 @@ vector<MSMetaData::SpwProperties>  MSMetaData::_getSpwInfo(
 	ROMSSpWindowColumns spwCols(ms.spectralWindow());
 	Vector<Double> bws = spwCols.totalBandwidth().getColumn();
 	ArrayColumn<Double> cfCol = spwCols.chanFreq();
+	Array<String> cfUnits;
+	cfCol.keywordSet().get("QuantumUnits", cfUnits);
 	ArrayColumn<Double> cwCol = spwCols.chanWidth();
 	Vector<Int> nss  = spwCols.netSideband().getColumn();
 	Vector<String> name = spwCols.name().getColumn();
 	Bool myHasBBCNo = hasBBCNo(ms);
 	Vector<Int> bbcno = myHasBBCNo ? spwCols.bbcNo().getColumn() : Vector<Int>();
-	SpwProperties props;
 	vector<Double> freqLimits(2);
 	Vector<Double> tmp;
-	vector<SpwProperties> spwInfo;
+	vector<SpwProperties> spwInfo(bws.size());
 	for (uInt i=0; i<bws.size(); i++) {
-		props.bandwidth = bws[i];
-		props.chanfreqs.resize(0);
+		spwInfo[i].bandwidth = bws[i];
 		tmp.resize(0);
 		cfCol.get(i, tmp);
-		props.chanfreqs = tmp.tovector();
+		spwInfo[i].chanfreqs = Quantum<Vector<Double> >(tmp, *cfUnits.begin());
+		spwInfo[i].meanfreq = Quantity(mean(tmp), *cfUnits.begin());
 		freqLimits[0] = min(tmp);
 		freqLimits[1] = max(tmp);
-		props.edgechans = freqLimits;
+		spwInfo[i].edgechans = freqLimits;
 		tmp.resize(0);
 		cwCol.get(i, tmp);
-		props.chanwidths = tmp.tovector();
+		spwInfo[i].chanwidths = tmp.tovector();
 		// coded this way in ValueMapping
-		props.netsideband = nss[i] == 2 ? 1 : -1;
-		props.meanfreq = mean(tmp);
-		props.nchans = props.chanfreqs.size();
-		props.name = name[i];
+		spwInfo[i].netsideband = nss[i] == 2 ? 1 : -1;
+		spwInfo[i].nchans = tmp.size();
+		spwInfo[i].name = name[i];
 		if (myHasBBCNo) {
-			props.bbcno = bbcno[i];
+			spwInfo[i].bbcno = bbcno[i];
 		}
-		spwInfo.push_back(props);
-		if (props.nchans==64 || props.nchans==128 || props.nchans==256) {
+		if (spwInfo[i].nchans==64 || spwInfo[i].nchans==128 || spwInfo[i].nchans==256) {
 			tdmSpw.insert(i);
 		}
-		else if (props.nchans==1) {
+		else if (spwInfo[i].nchans==1) {
 			avgSpw.insert(i);
 		}
-		else if (props.nchans==4) {
+		else if (spwInfo[i].nchans==4) {
 			wvrSpw.insert(i);
 		}
 		else {

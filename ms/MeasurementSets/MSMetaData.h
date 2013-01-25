@@ -279,13 +279,13 @@ public:
 
 	virtual vector<Double> getBandWidths() = 0;
 
-	virtual vector<vector<Double> > getChanFreqs() = 0;
+	virtual vector<Quantum<Vector<Double> > > getChanFreqs() = 0;
 
 	virtual vector<vector<Double> > getChanWidths() = 0;
 
 	virtual vector<Int> getNetSidebands() = 0;
 
-	virtual vector<Double> getMeanFreqs() = 0;
+	virtual vector<Quantity> getMeanFreqs() = 0;
 
 	virtual vector<uInt> nChans() = 0;
 
@@ -303,10 +303,10 @@ protected:
 
 	struct SpwProperties {
 		Double bandwidth;
-		vector<Double> chanfreqs;
+		Quantum<Vector<Double> > chanfreqs;
 		vector<Double> chanwidths;
 		Int netsideband;
-		Double meanfreq;
+		Quantity meanfreq;
 		uInt nchans;
 		vector<Double> edgechans;
 		uInt bbcno;
