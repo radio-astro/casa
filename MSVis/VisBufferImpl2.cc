@@ -98,7 +98,7 @@ protected:
 
     Bool isKey () const { return isKey_p;}
 
-    virtual void setAsPresent () = 0;
+    virtual void setAsPresent () const = 0;
     void setIsKey (Bool isKey)
     {
         isKey_p = isKey;
@@ -144,7 +144,7 @@ public:
         isDirty_p = False;
     }
 
-    void copyRowElement (Int /*sourceRow*/, Int /*destinationRow*/) {} // noop
+    virtual void copyRowElement (Int /*sourceRow*/, Int /*destinationRow*/) {} // noop
 
 
     virtual void
@@ -169,7 +169,7 @@ public:
     {
         if (! isPresent_p){
             fill ();
-            isPresent_p = True;
+            setAsPresent ();
             isDirty_p = False;
         }
 
@@ -181,7 +181,7 @@ public:
     {
         if (! isPresent_p){
             fill ();
-            isPresent_p = True;
+            setAsPresent();
         }
 
         // Caller is getting a modifiabled reference to the
@@ -249,7 +249,7 @@ public:
 
         ThrowIf (! isShapeOk (), shapeErrorMessage() );
 
-        isPresent_p = True;
+        setAsPresent();
         isDirty_p = True;
     }
 
@@ -267,7 +267,7 @@ public:
 
         ThrowIf (! isShapeOk (), shapeErrorMessage() );
 
-        isPresent_p = True;
+        setAsPresent();
         isDirty_p = True;
     }
 
@@ -278,7 +278,7 @@ public:
         // For internal use for items which aren't really demand-fetched
 
         item_p = newItem;
-        isPresent_p = True;
+        setAsPresent();
         isDirty_p = False;
     }
 
@@ -347,17 +347,18 @@ protected:
     virtual void
     copy (const VbCacheItemBase * otherRaw, Bool fetchIfNeeded)
     {
-        const VbCacheItem<T> * other = dynamic_cast <const VbCacheItem<T> *> (otherRaw);
+        const VbCacheItem<T, IsComputed> * other =
+            dynamic_cast <const VbCacheItem<T, IsComputed> *> (otherRaw);
         copyAux (other, fetchIfNeeded);
     }
 
     void
-    copyAux (const VbCacheItem<T> * other, bool fetchIfNeeded)
+    copyAux (const VbCacheItem<T, IsComputed> * other, bool fetchIfNeeded)
     {
         if (other->isPresent()){
 
             item_p = other->item_p;
-            isPresent_p = True;
+            setAsPresent ();
             isDirty_p = False;
         }
         else if (fetchIfNeeded){
@@ -377,7 +378,7 @@ protected:
     }
 
     void
-    setAsPresent ()
+    setAsPresent () const
     {
         isPresent_p = True;
     }
@@ -398,6 +399,13 @@ public:
 
     virtual ~VbCacheItemArray () {}
 
+
+
+    virtual void copyRowElement (Int sourceRow, Int destinationRow)
+    {
+        copyRowElementAux (this->getItem(), sourceRow, destinationRow);
+    }
+
     void
     initialize (VisBufferCache * cache,
                 VisBufferImpl2 * vb,
@@ -406,7 +414,7 @@ public:
                 ShapePattern shapePattern = NoCheck,
                 Bool isKey = True)
     {
-        VbCacheItem<T>::initialize (cache, vb, filler, component, isKey);
+        VbCacheItem<T, IsComputed>::initialize (cache, vb, filler, component, isKey);
         shapePattern_p = shapePattern;
     }
 
@@ -467,16 +475,15 @@ public:
         ThrowIf (this->isKey() && ! this->getVb()->isRekeyable (),
                  "This VisBuffer is does not allow row key values to be changed.");
 
-        // Now chekc for a conformant shape.
+        // Now check for a conformant shape.
 
         IPosition itemShape = newItem.shape();
         Bool parameterShapeOk = shapePattern_p == NoCheck ||
                                 itemShape == this->getVb()->getValidShape (shapePattern_p);
         ThrowIf (! parameterShapeOk,
-                 shapeErrorMessage (& itemShape));
+                 "Invalid parameter shape:: " + shapeErrorMessage (& itemShape));
 
         VbCacheItem<T,IsComputed>::set (newItem);
-
     }
 
     template <typename U>
@@ -493,11 +500,11 @@ public:
         ThrowIf (shapePattern_p == NoCheck,
                  "No shape error message for NoCheck type array");
 
-        ThrowIf (isShapeOk (),
+        ThrowIf (isShapeOk () && badShape == 0,
                  "Shape is OK so no error message.");
 
         String badShapeString = (badShape != 0) ? badShape->toString()
-                                             : this->getItem().shape().toString();
+                                                : this->getItem().shape().toString();
 
         ostringstream os;
 
@@ -517,8 +524,39 @@ protected:
     assign (T & dst, const T & src)
     {
         dst.assign (src);
-
     }
+
+    static void
+    copyRowElementAux (Cube<typename T::ElementType> & cube, Int sourceRow, Int destinationRow)
+    {
+        IPosition shape = cube.shape();
+        Int nI = shape(1);
+        Int nJ = shape(0);
+
+        for (Int i = 0; i < nI; i++){
+            for (Int j = 0; j < nJ; j++){
+                cube (j, i, destinationRow) = cube (j, i, sourceRow);
+            }
+        }
+    }
+
+    static void
+    copyRowElementAux (Matrix<typename T::ElementType> & matrix, Int sourceRow, Int destinationRow)
+    {
+        IPosition shape = matrix.shape();
+        Int nJ = shape(0);
+
+        for (Int j = 0; j < nJ; j++){
+            matrix (j, destinationRow) = matrix (j, sourceRow);
+        }
+    }
+
+    static void
+    copyRowElementAux (Vector<typename T::ElementType> & vector, Int sourceRow, Int destinationRow)
+    {
+        vector (destinationRow) = vector (sourceRow);
+    }
+
 private:
 
     ShapePattern shapePattern_p;
@@ -542,7 +580,7 @@ public:
     VbCacheItemArray <Vector<Int> > antenna1_p;
     VbCacheItemArray <Vector<Int> > antenna2_p;
     VbCacheItem <Int> arrayId_p;
-    VbCacheItemArray <Vector<SquareMatrix<Complex, 2> > > cjones_p;
+    VbCacheItemArray <Vector<SquareMatrix<Complex, 2> >, True> cjones_p;
     VbCacheItemArray <Cube<Complex> > correctedVisCube_p;
     VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
     VbCacheItemArray <Vector<Int> > corrType_p;
@@ -557,7 +595,7 @@ public:
     VbCacheItemArray <Vector<Float> > feed2Pa_p;
     VbCacheItem <Int> fieldId_p;
     VbCacheItemArray <Matrix<Bool> > flag_p;
-    VbCacheItemArray <Array<Bool> > flagCategory_p;
+    //VbCacheItemArray <Array<Bool> > flagCategory_p;
     VbCacheItemArray <Cube<Bool> > flagCube_p;
     VbCacheItemArray <Vector<Bool> > flagRow_p;
     VbCacheItemArray <Cube<Float> > floatDataCube_p;
@@ -746,7 +784,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2);
     fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId);
     flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
-    flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
+    //flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
         // required column but not used in casa, make it a nocheck for shape validation
     flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr, False);
     flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow, FlagRow, Nr, False);
@@ -903,9 +941,10 @@ VisBufferImpl2::cacheResizeAndZero (const VisBufferComponents2 & exclusions)
 
         //
 
-        (*i)->resize (False);
 
-        (*i)->setAsPresent ();
+       (*i)->resize (False);
+
+       (*i)->setAsPresent();
     }
 }
 
@@ -1565,12 +1604,13 @@ VisBufferImpl2::setRekeyable (Bool isRekeyable)
 }
 
 void
-VisBufferImpl2::setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearTheCache)
+VisBufferImpl2::setShape (Int nCorrelations, Int nChannels, Int nRows,
+                          Bool clearTheCache)
 {
     ThrowIf (! isRekeyable(), "Operation setShape is illegal on nonrekeyable VisBuffer");
 
     if (clearTheCache){
-        cacheClear (True); // leave values alone so that array could be reused
+        cacheClear (False); // leave values alone so that array could be reused
     }
 
     cache_p->nCorrelations_p.setSpecial(nCorrelations);
@@ -1857,6 +1897,13 @@ VisBufferImpl2::setDataDescriptionId (Int value)
     cache_p->dataDescriptionId_p.set (value);
 }
 
+void
+VisBufferImpl2::setDataDescriptionIds (const Vector<Int> & value)
+{
+    cache_p->dataDescriptionIds_p.set (value);
+}
+
+
 const Vector<MDirection> &
 VisBufferImpl2::direction1 () const
 {
@@ -1944,13 +1991,14 @@ VisBufferImpl2::setFlag (const Matrix<Bool>& value)
 const Array<Bool> &
 VisBufferImpl2::flagCategory () const
 {
-    return cache_p->flagCategory_p.get ();
+    Throw ("Flag Categories not supported.");
 }
 
 void
-VisBufferImpl2::setFlagCategory (const Array<Bool>& value)
+VisBufferImpl2::setFlagCategory (const Array<Bool>& /*value*/)
 {
-    cache_p->flagCategory_p.set (value);
+    ThrowIf (True, "Flag Categories not supported.");
+    //cache_p->flagCategory_p.set (value);
 }
 
 const Cube<Bool> &
@@ -2472,8 +2520,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
             // to other virtual methods which can potentially access the modified model
             // field.
 
-            VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this),
-                                    dynamic_cast <const VisibilityIteratorImpl2 *> (getVi()));
+            VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this));
             state_p->visModelData_p.getModelVis (vb2a);
         }
     }
@@ -2700,11 +2747,13 @@ VisBufferImpl2::fillFlag (Matrix<Bool>& value) const
 }
 
 void
-VisBufferImpl2::fillFlagCategory (Array<Bool>& value) const
+VisBufferImpl2::fillFlagCategory (Array<Bool>& /*value*/) const
 {
+  ThrowIf (True, "Flag Categories not supported.");
+
   CheckVisIter();
 
-  getViP()->flagCategory (value);
+  //getViP()->flagCategory (value);
 }
 
 void
