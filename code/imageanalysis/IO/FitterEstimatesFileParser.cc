@@ -35,7 +35,6 @@
 #include <components/ComponentModels/GaussianShape.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 
 
@@ -206,10 +205,9 @@ void FitterEstimatesFileParser::_createComponentList(
 	ConstantSpectrum spectrum;
     const CoordinateSystem csys = image.coordinates();
     Vector<Double> pos(2,0);
-    ImageMetaData metadata(image);
-    Vector<Int> dirAxesNums = metadata.directionAxesNumbers();
+    Vector<Int> dirAxesNums = csys.directionAxesNumbers();
     Vector<Double> world;
-    Int dirCoordNumber = metadata.directionCoordinateNumber();
+    Int dirCoordNumber = csys.directionCoordinateNumber();
     const DirectionCoordinate& dirCoord = csys.directionCoordinate(
      	dirCoordNumber
     );
@@ -219,7 +217,6 @@ void FitterEstimatesFileParser::_createComponentList(
 	// here. To do that, we need to know the brightness units of the image.
 
 	Quantity resArea;
-	ImageMetaData md(image);
 	Quantity intensityToFluxConversion(1.0, "beam");
 
 	// does the image have a restoring beam?
@@ -236,14 +233,7 @@ void FitterEstimatesFileParser::_createComponentList(
     else {
 		// if no restoring beam, let's hope the the brightness units are
 		// in [prefix]Jy/pixel and let's find the pixel size.
-		if(md.getDirectionPixelArea(resArea)) {
-			intensityToFluxConversion.setUnit("pixel");
-		}
-		else {
-			// can't find  pixel size, which is extremely bad!
-			*_log << "Unable to determine the resolution element area of image "
-					<< image.name()<< LogIO::EXCEPTION;
-		}
+    	resArea = dirCoord.getPixelArea();
 	}
     Vector<String> units = csys.directionCoordinate().worldAxisUnits();
     String raUnit = units[0];

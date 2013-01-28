@@ -6194,19 +6194,13 @@ Bool ImageAnalysis::getFreqProfile(
 	    bUName.downcase();
 	    if(bUName.contains("/beam")){
 		
-		ImageMetaData md(*_image);
-		if(!md.hasDirectionCoordinate()){
+		const CoordinateSystem csys = _image->coordinates();
+		if(!csys.hasDirectionCoordinate()){
 		    *_log << LogIO::WARN << "No DirectionCoordinate - cannot convert flux density"
 			    << LogIO::POST;
 		    return False;
 		}
-		
-		Quantity pixArea; 
-		if(!md.getDirectionPixelArea(pixArea)){
-		    *_log << LogIO::WARN << "Cannot determine solid angle of direction pixel"
-			    << LogIO::POST;
-		    return False;
-		}
+		Quantity pixArea = csys.directionCoordinate().getPixelArea();
         // FIXME we need to deal with multi beam images
 		Double beamArea;
         if (_image->imageInfo().hasBeam()) {

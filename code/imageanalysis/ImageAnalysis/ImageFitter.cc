@@ -599,16 +599,11 @@ void ImageFitter::_setFluxes() {
 		rmsPeak,
 		_bUnit
 	);
-	ImageMetaData md(*_getImage());
-	Quantity resArea;
 	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
     	? Quantity(1.0, "beam")
     	: Quantity(1.0, "pixel");
+	Quantity resArea = _getImage()->coordinates().directionCoordinate().getPixelArea();
 
-    if (! md.getDirectionPixelArea(resArea)) {
-		*_getLog() << LogIO::EXCEPTION
-			<< "Pixel area could not be determined";
-	}
     if (intensityToFluxConversion.getUnit() == "beam") {
         try {
             Unit unit = resArea.getUnit();
