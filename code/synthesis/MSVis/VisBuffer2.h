@@ -334,8 +334,9 @@ public:
     virtual Int arrayId () const = 0;
     virtual void setArrayId (Int value) = 0;
     virtual Int dataDescriptionId () const = 0;
-    virtual const Vector<Int> & dataDescriptionIds () const = 0; // [nR]
     virtual void setDataDescriptionId (Int value) = 0;
+    virtual const Vector<Int> & dataDescriptionIds () const = 0; // [nR]
+    virtual void setDataDescriptionIds (const Vector<Int> & ) = 0; // [nR]
     virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
     virtual const Vector<MDirection> & direction2 () const = 0; // [nR]
     virtual const Vector<Double> & exposure () const = 0; // [nR]

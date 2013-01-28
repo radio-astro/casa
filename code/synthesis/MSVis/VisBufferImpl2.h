@@ -247,8 +247,9 @@ public:
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
     virtual const Vector<Int> & correlationTypes () const;
     virtual Int dataDescriptionId () const;
-    virtual const Vector<Int> & dataDescriptionIds () const;
     virtual void setDataDescriptionId (Int value);
+    virtual const Vector<Int> & dataDescriptionIds () const;
+    virtual void setDataDescriptionIds (const Vector<Int> & ); // [nR]
     virtual const Vector<MDirection> & direction1 () const;
     virtual const Vector<MDirection> & direction2 () const;
     virtual const Vector<Double> & exposure () const;

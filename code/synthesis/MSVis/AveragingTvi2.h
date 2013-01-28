@@ -71,6 +71,7 @@ private:
     Int ddidLastUsed_p; // ddId last used to produce a subchunk.
     Bool inputViiAdvanced_p; // true if input VII was advanced but data not used
     const Int nAveragesPerChunk_p; // number of subchunks per chunk on output
+    Bool subchunkExists_p;
     avg::VbSet * vbSet_p;
 };
 
