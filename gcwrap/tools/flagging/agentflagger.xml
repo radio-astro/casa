@@ -967,11 +967,11 @@ for the time and frequency mode.
      </param>
 
             <param type="double" name="ntime">
-                <description>Time-range to use for each chunk (in seconds or minutes)</description>
+                <description>Time-range to use for each chunk (in seconds or minutes). Default:</description>
                 <value>0.0</value>
             </param>
             <param type="bool" name="combinescans">
-                <description>Accumulate data across scans.</description>
+                <description>Accumulate data across scans depending on the value of ntime. Default:</description>
                 <value>false</value>
             </param>
     
@@ -1024,7 +1024,10 @@ for the time and frequency mode.
 <example>
 The correlation parameter can be used with an operator for the tfcrop mode.
 The operator should be written only once and it will affect all the polarizations
-given in the string. See the example below:
+given in the string. Note that if ntime='scan' and combinescans=True, all the scans will
+be loaded at once, thus requesting a lot of memory depending on the available spws.
+The parameter combinescans should be set to True only when ntime is specified as a 
+time-interval (not 'scan').
 
 af.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='ABS_XX,XY')
 </example>
