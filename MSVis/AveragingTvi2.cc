@@ -90,7 +90,7 @@ protected:
     Int nBaselines () const;
     void prepareIds (const VisBuffer2 * vb);
     void removeMissingBaselines ();
-    void setupBaselineIndices (Int nAntennas);
+    void setupBaselineIndices (Int nAntennas, const VisBuffer2 * vb);
 
 private:
 
@@ -364,6 +364,7 @@ VbAvg::copyRowIdValues (const VisBuffer2 * input, Int row, Int baselineIndex)
 {
     copyRowIdValue (input, row, & VisBuffer2::antenna1, & VisBuffer2::setAntenna1, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::antenna2, & VisBuffer2::setAntenna2, baselineIndex);
+    copyRowIdValue (input, row, & VisBuffer2::dataDescriptionIds, & VisBuffer2::setDataDescriptionIds, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::feed1, & VisBuffer2::setFeed1, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::feed1, & VisBuffer2::setFeed1, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::processorId, & VisBuffer2::setProcessorId, baselineIndex);
@@ -486,8 +487,7 @@ VbAvg::finalizeRowData ()
 
     // Fill in the time and the interval
 
-    Vector<Double> x;
-    x = startTime_p;
+    Vector<Double> x (nBaselines(), startTime_p);
     setTime (x);
 
     x = averagingInterval_p;
@@ -516,6 +516,7 @@ void
 VbAvg::markEmpty ()
 {
     empty_p = True;
+    complete_p = False;
 }
 
 Int
@@ -539,14 +540,16 @@ VbAvg::prepareForFirstData (const VisBuffer2 * vb)
 
     weightSum_p.resize (IPosition (3, vb->nCorrelations(), vb->nChannels(), nBaselines));
 
-    setupBaselineIndices (nAntennas);
+    setupBaselineIndices (nAntennas, vb);
 
     // Reshape the inherited members from VisBuffer2
 
     setShape (vb->nCorrelations(), vb->nChannels(), nBaselines);
 
-    cacheResizeAndZero(VisBufferComponents2::these(VisibilityObserved, VisibilityCorrected,
-                                                   VisibilityModel, Unknown));
+    VisBufferComponents2 exclusions =
+        VisBufferComponents2::these(VisibilityObserved, VisibilityCorrected,
+                                    VisibilityModel, CorrType, JonesC, Unknown);
+    cacheResizeAndZero(exclusions);
 
     prepareIds (vb);
 
@@ -610,7 +613,7 @@ VbAvg::removeMissingBaselines ()
 
 
 void
-VbAvg::setupBaselineIndices(int nAntennas)
+VbAvg::setupBaselineIndices(int nAntennas, const VisBuffer2 * vb)
 {
     // Create a square matrix to hold the mappings between pairs of
     // antennas to the baseline number.  This includes autocorrelations.
@@ -624,12 +627,38 @@ VbAvg::setupBaselineIndices(int nAntennas)
     baselineIndices_p = -1;
     Int baseline = 0;
 
+    // Use the baseline order of this VisBuffer2 to set up the default mapping
+    // from VB baselines to averaged baselines; unless this is a partial VB
+    // then this should be optimum and if not, it only applies for the current
+    // average.  If the first vb is normal then it should eliminate the need to
+    // copy-down the rows of the VisBuffer for baselines that are possible but
+    // not present.
+    //
+    // Also be sure that multiple occurrences of the same baseline do not fould
+    // things up.
+
+    for (Int vbRow = 0; vbRow < vb->nRows(); vbRow ++){
+
+        Int a1 = vb->antenna1()(vbRow);
+        Int a2 = vb->antenna2()(vbRow);
+
+        if (a2 <= a1 && baselineIndices_p (a1, a2) < 0){
+            baselineIndices_p (a1, a2) = baseline ++;
+        }
+
+    }
+
+    // Now put a mapping in for any baselines that weren't in the current VB
+    // just in case they appear later.  These will be at the end so won't
+    // require shifting data down if they are not present.
+
     for (Int row = 0; row < nAntennas; row ++){
 
         for (Int column = 0; column <= row; column ++){
 
-            baselineIndices_p (row, column) = baseline ++;
-
+            if (baselineIndices_p (row, column) < 0){
+                baselineIndices_p (row, column) = baseline ++;
+            }
         }
     }
 }
@@ -642,7 +671,7 @@ VbAvg::vbPastAveragingInterval (const VisBuffer2 * vb) const
 
     Double t = vb->time()(0);
 
-    Bool isPast = t >= (startTime_p + averagingInterval_p);
+    Bool isPast = ! empty_p && t >= (startTime_p + averagingInterval_p);
 
     return isPast;
 }
@@ -877,7 +906,7 @@ AveragingTvi2::determineDdidToUse() const
 Bool
 AveragingTvi2::more () const
 {
-    return subchunksReady();
+    return subchunkExists_p;
 }
 
 Bool
@@ -889,6 +918,8 @@ AveragingTvi2::moreChunks () const
 void
 AveragingTvi2::next ()
 {
+    subchunkExists_p = False;
+
     produceSubchunk ();
 }
 
@@ -902,6 +933,8 @@ AveragingTvi2::nextChunk ()
     // Advance the input to the next chunk as well.
 
     getVii()->nextChunk ();
+
+    subchunkExists_p = False;
 }
 
 void
@@ -911,6 +944,7 @@ AveragingTvi2::origin ()
 
     getVii()->origin();
     inputViiAdvanced_p = True;
+    subchunkExists_p = False;
 
     // Zero out the accumulators
 
@@ -926,6 +960,7 @@ AveragingTvi2::originChunks ()
 {
     vbSet_p->flush (True);
     getVii()->originChunks();
+    subchunkExists_p = False;
 }
 
 void
@@ -979,6 +1014,8 @@ AveragingTvi2::produceSubchunk ()
         vbSet_p->transferAverage(ddId, getVisBuffer());
 
         ddidLastUsed_p = ddId;
+
+        subchunkExists_p = True;
     }
 }
 
