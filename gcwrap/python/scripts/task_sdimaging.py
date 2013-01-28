@@ -83,7 +83,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             self.close_table()
             casalog.post("restfreq set to %s"%self.restfreq, "INFO")
         self.__register('restfreq')
-            
+        
+        # outframe (force using the current frame)
+        self.__register('outframe', '')
+        
         # 
         # spw
         self.spwid=-1

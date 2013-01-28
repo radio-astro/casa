@@ -461,11 +461,14 @@ void plotms::setPlotAxes(const string& xAxis, const string& yAxis,
         const string& xDataColumn, const string& yDataColumn,
         const bool updateImmediately, const int plotIndex) {
     launchApp();
+    string x = xAxis, y = yAxis;
+    if(x == "residual") x = "corrected-model";
+    if(y == "residual") y = "corrected-model";
     Record params;
-    if(!xAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_X, xAxis);
+    if(!x.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_X, x);
     if(!xDataColumn.empty())
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_X, xDataColumn);
-    if(!yAxis.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_Y, yAxis);
+    if(!y.empty()) params.define(PlotMSDBusApp::PARAM_AXIS_Y, y);
     if(!yDataColumn.empty())
         params.define(PlotMSDBusApp::PARAM_DATACOLUMN_Y, yDataColumn);
     if(params.nfields() == 0) return;

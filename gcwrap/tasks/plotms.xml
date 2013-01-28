@@ -95,6 +95,8 @@ MS Parameters
         <value>corrected</value>
         <value>model</value>
         <value>residual</value>
+        <value>corrected-model</value>
+        <value>data-model</value>
       </allowed>
     </param>    
 
@@ -160,6 +162,8 @@ MS Parameters
         <value>corrected</value>
         <value>model</value>
         <value>residual</value>
+        <value>corrected-model</value>
+        <value>data-model</value>
       </allowed>
     </param>
 
@@ -1164,7 +1168,9 @@ Constraints
                         valid options:  'data'      (observed)
                                         'corrected'='corr'
                                         'model'
-                                        'residual'  (corrected - model)
+                                        'residual'  (aliases 'corrected-model')
+                                        'corrected-model'
+                                        'data-model'
     
     selectdata -- data selection parameters flag
                   default: True  (reveals data selection parameters

@@ -189,6 +189,14 @@
       for each scan, so in a time-averaged MS 'Int' = 9.83s more likely
       means 5 10s integrations and 1 9s integration (timebin) than 6
       9.83s integrations. 
+      
+    DESCRIPTION OF ALGORITHM TO CALCULATE THE NUMBER OF UNFLAGGED ROWS
+    The number of unflagged rows (the nUnflRows columns in the scans and fields portions of the listing) is
+    calculated by summing the fractional unflagged bandwidth for each row (and hence why the number of unflagged
+    rows, in general, is not an integer). Thus a row which has half of its
+    total bandwidth flagged contributes 0.5 rows to the unflagged row count. A row with 20 of 32 channels of
+    homogeneous width contributes 20/32 = 0.625 rows to the unflagged row count. A row with a value of False
+    in the FLAG_ROW column is not counted in the number of unflagged rows.
  </example>
  </task>
  </casaxml>

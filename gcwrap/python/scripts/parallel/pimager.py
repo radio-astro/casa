@@ -574,7 +574,7 @@ class pimager():
                 timerange='', uvrange='', baselines='', scan='', observation='', pbcorr=False, minpb=0.2, 
                 contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
                 numthreads=1, savemodel=False, nterms=2,
-                painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+                painc=360.0, pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
                 epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True):
         if(nterms==1):
             self.pcont(msname=msname, imagename=imagename, imsize=imsize, 
@@ -729,9 +729,10 @@ class pimager():
                     for k in range(numcpu):
                         cj=c.check_job(out[k],False)
                         overone=(overone and cj)
+                        #print "k,cj:",k," ",cj
                     #print 'maj, cj, dwght', maj, cj, donewgt[k]                    
                     over=overone
-                self.combineimages(rootnames=imlist, nterms=nterms, outputrootname=imagename)
+                self.combineimages(rootnames=imlist, nterms=nterms, outputrootname=imagename,dopbcorr=dopbcorr, pblimit=pblimit)
                 if((maskimage == '') or (maskimage==[])):
                     maskimage=imagename+'.mask'
                     ia.removefile(maskimage)
@@ -811,12 +812,19 @@ class pimager():
                     ia.open(models[0])
                     print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
                     ia.done()
-                    
+                    ia.open(sumwts[0]);
+                    wtImageMax = ia.statistics()['max'][0];
+                    ia.close();
                     for k in range(len(imlist)):
                         for tt in range(nterms):
-                            ia.open(imlist[k]+'.model.tt'+str(tt))
-                            ia.insert(infile=models[tt], locate=[0,0,0,0])
-                            ia.done()
+                            if (dopbcorr==True):
+                                ia.open(imlist[k]+'.model.tt'+str(tt)) # Model images for the nodes
+                                ia.insert(infile=models[tt], locate=[0,0,0,0])
+                                ia.done()
+                            else:
+                                scatteredModel = imlist[k]+'.model.tt'+str(tt);
+                                self.normalizemodel_mt(wtImageMax, scatteredModel, models[tt], imlist[k]+'.sumwt.tt'+str(tt), sumwts,
+                                                       dopbcorr,pblimit);
                     casalog.filter("INFO")
                     maj +=1
             ia.open(imlist[numcpu-1]+'.image.tt0')
@@ -834,7 +842,34 @@ class pimager():
             c.pgc('del a')
 
 
-    def combineimages(self, rootnames=[], nterms=2, outputrootname=''):
+    def normalizeresiduals_mt(self, nterms=2, combinedresiduals=[], combinedsumwts=[],dopbcorr=True,pblimit=0.1):
+        ia.open(combinedsumwts[0]);
+        maxCombinedSumWts0 = ia.statistics()['max'][0];
+        ia.close();
+        for tt in range(0,nterms):
+            ia.open(combinedresiduals[tt]);
+            condition='"'+combinedsumwts[0] +'"'+ " > " + str(maxCombinedSumWts0*pblimit);
+            val1='"' + combinedresiduals[tt] + '"'+ '/' + '"'+combinedsumwts[0] + '"';
+            val2 = str(0.0);
+            cmd = "iif("+condition+","+val1+","+val2+")";
+            #ia.calc('"' + combinedresiduals[tt] + '"/"' + combinedsumwts[0]+'"');
+            print "normalizeresiduals_mt::Cmd=",cmd;
+            ia.calc(cmd);
+            ia.done();
+
+    def normalizemodel_mt(self, maxsumwt, scatteredModel="", model="", partialsumwts="", combinedsumwts=[], dopbcorr=True,pblimit=0.1):
+        if (dopbcorr==False):
+            ia.open(scatteredModel);
+            condition = '"' + combinedsumwts[0] + '"' + " > " + str(maxsumwt*pblimit);
+            val1 = '"' + model + '"' + '*' + str(maxsumwt) + '/' + '"' + combinedsumwts[0] + '"';
+            val2 = str(0.0);
+            cmd  = "iif("+condition+","+val1+","+val2+")";
+            print "normalizemodel_mt::Cmd=",cmd;
+            #ia.calc('"'+ model + '"*"' + maxsumwt +'"/"' + combinedsumwts[0]+'"');# + '"/"' + partialsumwts + '"');
+            ia.calc(cmd);
+            ia.done();
+
+    def combineimages(self, rootnames=[], nterms=2, outputrootname='',dopbcorr=True,pblimit=0.1):
         casalog.filter("ERROR")
         combmodels=[]
         combpsfs=[]
@@ -847,6 +882,7 @@ class pimager():
             combresiduals.append(outputrootname+'.residual.tt'+str(tt))
             combwts.append(outputrootname+'.sumwt.tt'+str(tt))
             combimages.append(outputrootname+'.image.tt'+str(tt))
+            
             if not os.path.exists( combmodels[tt] ):
                 self.copyimage(inimage=rootnames[0]+'.model.tt'+ str(tt), outimage=combmodels[tt], init=True)
             if not os.path.exists( combresiduals[tt] ):
@@ -857,17 +893,29 @@ class pimager():
                 self.copyimage(inimage=rootnames[0]+'.image.tt'+ str(tt), outimage=combimages[tt], init=True)
             for chunk in range(0,ncpu):
                 chunkresidual=rootnames[chunk]+'.residual.tt'+str(tt)
-                ia.open(combresiduals[tt])
-                ia.calc( '"'+combresiduals[tt] + '"+"' + chunkresidual + '"*"' + rootnames[chunk]+'.sumwt.tt0"' )
-                ###note the above is multiplying by weight of tt0 
-                ia.close()
+                if (dopbcorr==True):
+                    ia.open(combresiduals[tt])
+                    ia.calc( '"'+combresiduals[tt] + '"+"' + chunkresidual + '"*"' + rootnames[chunk]+'.sumwt.tt0"' )
+                     ###note the above is multiplying by weight of tt0 
+                    ia.close()
+                else:
+                    ia.open(rootnames[chunk]+'.sumwt.tt0');
+                    chunkMaxSumWt = ia.statistics()['max'][0];
+                    ia.close();
+                    ia.open(combresiduals[tt]);
+                    ia.calc('"'+combresiduals[tt] + '"' + '+' + '"' + chunkresidual + '"' + '*' + str(chunkMaxSumWt));
+                    ia.close();
+                    
                 ia.open(combwts[tt])
                 ia.calc( '"'+combwts[tt] + '"+"' + rootnames[chunk]+'.sumwt.tt'+str(tt)+'"')
                 ia.close()
             ## Normalize residuals by number of chunks.
-            ia.open( combresiduals[tt] )
-            ia.calc( '"'+combresiduals[tt] + '"/"' + combwts[0]+'"' )
-            ia.done()
+            # ia.open( combresiduals[tt] )
+            # ia.calc( '"'+combresiduals[tt] + '"/"' + combwts[0]+'"' )
+            # ia.done()
+
+        self.normalizeresiduals_mt(nterms, combresiduals, combwts, dopbcorr,pblimit);
+
         for tt in range(0,2*nterms-1):  
             combpsfs.append(outputrootname+'.psf.tt'+str(tt));
             if not os.path.exists( combpsfs[tt] ):
@@ -880,7 +928,11 @@ class pimager():
                 ia.close()
             ## Normalize PSFs 
             ia.open( combpsfs[tt] )
-            ia.calc('"'+ combpsfs[tt] + '"/"' + combwts[0] +'"')
+            condition = '"' + combwts[0] + '"' + " > " + str(pblimit);
+            val1 = '"' + combpsfs[tt] + '"/"' + combwts[0] + '"';
+            val2 = str(0.0);
+            cmd = "iif("+condition+","+val1+","+val2+")";
+            ia.calc(cmd)
             ia.done()
         casalog.filter("INFO")
         #done

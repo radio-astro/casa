@@ -66,11 +66,77 @@ class PySynthesisImager:
     def __init__(self,casalog,params):
         # SI Tool is a list, for the serial case of length 1
         self.siTools = []
-        self.nchunks = 1
+        slef.dcTools = []
+        self.ibTool = casac.synthesisiterbot()
         self.casalog = casalog
         self.params = params
         self.listofimagedefinitions = []
         self.casalog.origin('tclean')
+
+    def calculateImages(self):
+        # If any of the input images is a cube, all fields must be cubes
+        # with the same LSRK output channelization
+
+        # Do Cube Image if:
+        # 1) All output images have the same LSRK channelization
+        # 2) Total Pixel * nchan (memory footprint) is greater than some
+        #    threshold (like 2 core's worth)
+
+        # Information from the cluster
+        numNodes = 1
+        numCorePerNode = 4
+        memoryPerNode = 24
+
+        cubeImage = False
+        totalPixels = 0
+        for imdef in imageParameters:
+            totalPixels += 1
+            
+            if imdef.nchan > 1:
+                cubeImage = True
+                break
+
+        if cubeImage:
+            # Partition on output channel and time
+
+            # If we partition only based on memory how many chunks do we need
+            numChunks = math.ceil(totalPixels * imageParameters[0].nchan
+                                  / (float(memoryPerNode)/numCorePerNode))
+
+            # Match numChunks to an integral number * the number of cores
+            numChunks = math.ceil(numChunks/(numCorePerNode * numNodes)) * \
+                        numCorePerNode * numNodes
+            
+            # All fields have numChunk deconvoler subimages specified
+            # by range of output channel.
+            
+            
+
+        else:
+            # Continuum case partition on input channel and time
+            # could still be multiple channels here (particularly if we
+            # are in the case of small images w/ different LSRK channels
+
+            # See how many engines we can get per node
+            enginesPerNode = numCorePerNode
+            while totalPixels > memoryPerNode/enginesPerNode:
+                enginesPerNode -= 1
+
+            numChunks = enginesPerNode * numNodes
+
+            # Here all deconvolvers see all fields the data selection can
+            # be in time or data channel (or both)
+
+
+
+        imagingPlan = {'imagingSet':[], 'imageCombination':{}}
+
+        imageSet = {'deconvolverField':[imageParameters],
+                    'dataselection':[dataselection]}
+
+        imagingPlan['imagingSet'].append(imageSet)
+
+        return imagingPlan
 
 
     def checkParameters(self):
@@ -90,106 +156,66 @@ class PySynthesisImager:
     def initialize(self):
         self.casalog.origin('tclean.initialize')
 
-        # Create the tool we are going to use (only one in this case)
-        for (selection, images) in self.calculateChunks():
-            print selection
-            print images
-            self.initializeTool(selection, images)
+        imagingPlan = self.calculateImages()
+
+        for imageSet in imagingPlan:
+            for selection in imageSet['dataselection']:
+                siTool = casac.synthesisimager()
+                siTool.selectdata(selpars = selection)
+                for image in imageSet.deconvolverField:
+                    siTool.defineImage(image) #Part Image Name
+                    siTool.setupimaging(gridpars=self.params['imaging'])
+                    siTool.initmapper()
+                self.siTools.append(siTool)
+
+            for image in imageSet.deconvolverField:
+                dcTool = casac.synthesisdeconvolver()
+                dcTool.setupdeconvolution(decpars={}) #List of Part Names
+                self.dcTools.append(dcTool)
 
         # Setup the tool to have the iteration control
-        self.siTools[0].setupiteration(iterpars=self.params['iteration'])
-
-    def initializeTool(self, selectionParameters, imageParameters):
-        # This method adds an additional tool to the list of tools
-        self.casalog.origin('tclean.initializeTool')
-        siTool = casac.synthesisimager()
-        siTool.selectdata(selpars = selectionParameters)
-        
-        ## Loop over each image for multi-field like cases
-        for eachimdef in imageParameters:
-            # Init a mapper for each individual field
-            siTool.defineimage(impars=eachimdef)
-            siTool.setupimaging(gridpars=self.params['imaging'])
-            siTool.setupdeconvolution(decpars=self.params['deconvolution'])
-            siTool.initmapper()
-        ## End loop on 'multi-fields' here....
-
-        self.siTools.append(siTool)
-
-    def calculateChunks(self):
-        # This probably will move to c++ at some point but for now:
-        # Return tuples of dataselection / imagedefinition pairs one for
-        # each tool
-        chunkList = []
-
-        if self.nchunks == 1:
-            # Nothing to do, single chunk
-            return [(self.params['dataselection'],
-                     self.listofimagedefinitions)]
-            
-        for ch in range(0,self.nchunks):
-            casalog.origin('parallel.tclean.runMinorCycle')
-            casalog.post('Initialize for chunk '+str(ch))
-
-            selpars = copy.deepcopy( self.params['dataselection'] )
-            imdefs = copy.deepcopy( self.listofimagedefinitions )
-
-            # Set up the chunks to parallelize on
-            for dat in range(0,len(self.params['dataselection']['spw'] )):
-                selpars['spw'][dat] = \
-                   self.params['dataselection']['spw'][dat] + ':'+str(ch)
-
-            # Change the image name for each chunk
-            for im in range(0, len(self.listofimagedefinitions)):
-                imdefs[im]['imagename'] = \
-                  self.listofimagedefinitions[im]['imagename'] + '_' + str(ch)
-
-            chunkList.append((selpars, imdefs))
-        return chunkList
+        self.ibTool.setupiteration(iterpars=self.params['iteration'])
 
     def runMajorCycle(self):
         self.casalog.origin('tclean.runMajorCycle')
 
         # Get the controls from the first
-        controlRecord = self.siTools[0].getmajorcyclecontrols()
+        controlRecord = self.ibTools.getmajorcyclecontrols()
                 
         # To Parallelize: move this across all engines
         for siTool in self.siTools:
             siTool.executemajorcycle(controlRecord);
 
-        self.siTools[0].endmajorcycle()
+        self.ibTools.endmajorcycle()
             
     def runMinorCycle(self):
         self.casalog.origin('tclean.runMinorCycle')
 
-        returnBotList = []
+        execSummaryList = []
         # Get the conrols from the first
-        subIterBot = self.siTools[0].getsubiterbot();
+        minorCycleControls = self.ibTool.getsubiterbot();
 
-        # JSK ToDo: we need to run on all tools once we have selective
-        # execution of the deconvolver
-        
-        # for siTool in self.siTools:
-        for siTool in self.siTools[:1]:
-            returnBotList.append(siTool.executeminorcycle(subIterBot))
-
+        for dcTool in self.dcTools:
+            minorExecSummayList.append(dcTool.executeminorcycle(minorCycleControls))
+            
         # Report the results to the first controller
-        for returnBot in returnBotList:
-            self.siTools[0].endminorcycle(returnBot);
+        for execSummary in execSummaryList:
+            self.ibTools.endminorcycle(execSummary)
             
 
     def runLoops(self):
         self.casalog.origin('tclean.runLoops')
         self.runMajorCycle()
-        while not self.siTools[0].cleanComplete():
+        while not self.ibTool.cleanComplete():
             self.runMinorCycle()
             self.runMajorCycle()
 
     def finalize(self):
-        self.siTools[0].endloops()
+        #self.ibTools.endloops()
+        pass
 
     def returninfo(self):
-        return self.siTools[0].getiterationsummary()
+        return self.ibTool.getiterationsummary()
 
 
     ###### Start : Parameter-checking functions ##################

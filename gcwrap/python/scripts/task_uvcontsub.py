@@ -16,7 +16,7 @@ from virtualconcat_cli import  virtualconcat_cli as virtualconcat
 
 mycb, myms, mytb = gentools(['cb', 'ms', 'tb'])
 
-def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
+def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, want_cont):
     
     if ParallelTaskHelper.isParallelMS(vis):
         helper = ParallelTaskHelper('uvcontsub', locals())
@@ -101,15 +101,21 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             raise Exception, 'Visibility data set not found - please verify the name'
 
         #
-        #locfitspw=__exclude_channels(vis,field,fitspw)
+        if excludechans:
+            locfitspw=_exclude_channels(vis,field,fitspw)
+            casalog.post("Exclude channels in fitspw: spws:channels will be used in the fit are:%s" % locfitspw)
+        else:
+            locfitspw=fitspw
         #print "locfitspw=",locfitspw
         mytb.open(vis + '/SPECTRAL_WINDOW')
         allspw = '0~' + str(mytb.nrows() - 1)
         mytb.close()
         if 'spw' not in combine:
-            spwmfitspw = subtract_spws(spw, fitspw)
+            #spwmfitspw = subtract_spws(spw, fitspw)
+            spwmfitspw = subtract_spws(spw, locfitspw)
             if spwmfitspw == 'UNKNOWN':
-                spwmfitspw = subtract_spws(allspw, fitspw)
+                #spwmfitspw = subtract_spws(allspw, fitspw)
+                spwmfitspw = subtract_spws(allspw, locfitspw)
             if spwmfitspw:
                 raise Exception, "combine must include 'spw' when the fit is being applied to spws outside fitspw."
         
@@ -119,12 +125,14 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         
         # The working copy will need all of the channels in fitspw + spw, so we
         # may or may not need to filter it down to spw at the end.
-        myfitspw = fitspw
+        #myfitspw = fitspw
+        myfitspw = locfitspw
         myspw = spw
 
         # We only need the spws in the union of fitspw and spw, but keep all
         # the channels or the weights (as used by calibrater) will be messed up.
-        tempspw = re.sub(r':[^,]+', '', join_spws(fitspw, spw))
+        #tempspw = re.sub(r':[^,]+', '', join_spws(fitspw, spw))
+        tempspw = re.sub(r':[^,]+', '', join_spws(locfitspw, spw))
         if tempspw == allspw:
             tempspw = ''
         if tempspw:
@@ -135,7 +143,8 @@ def uvcontsub(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             casalog.post('will be renumbered to start from 0 in the output!')
 
             # Now get myfitspw.
-            myfitspw = update_spwchan(vis, tempspw, fitspw)
+            #myfitspw = update_spwchan(vis, tempspw, fitspw)
+            myfitspw = update_spwchan(vis, tempspw, locfitspw)
             myspw = update_spwchan(vis, tempspw, spw)
 
         final_csvis = csvis
@@ -287,9 +296,8 @@ def _exclude_channels(vis,field,infitspw):
     prevspwid=None
     newchanlist=[]
     nsels=len(usersels)
-    print "Usersels=",usersels
+    #print "Usersels=",usersels
     for isel in range(nsels):
-        print "isel=",isel
         prevspwid = spwid
         spwid=usersels[isel][0] 
         lochan=usersels[isel][1]
@@ -299,7 +307,6 @@ def _exclude_channels(vis,field,infitspw):
         # find left and right side ranges of the selected range
         if spwid != prevspwid:
             # first line in the selected spw
-            print "first round"
             if lochan > 0:
                 outloL=0
                 outhiL=lochan-1
@@ -312,7 +319,7 @@ def _exclude_channels(vis,field,infitspw):
                 else:
                     outhiR=0 # higher end of the user selected range reaches maxchanid
                              # so no right hand side range
-                print "outloL,outhiL,outloR,outhiR==", outloL,outhiL,outloR,outhiR
+                #print "outloL,outhiL,outloR,outhiR==", outloL,outhiL,outloR,outhiR
             else:
                 # no left hand side range
                 outloL=0
@@ -345,7 +352,8 @@ def _exclude_channels(vis,field,infitspw):
             newchanlist.append([spwid,outloL,outhiL,stp])
         if (not(outloR == 0 and outhiR == 0)) and outloR <= outhiR:
             newchanlist.append([spwid,outloR,outhiR,stp])
-    print "newchanlist=",newchanlist
+    #print "newchanlist=",newchanlist
+
     #return newchanlist
     # create spw selection string from newchanlist
     spwstr=''

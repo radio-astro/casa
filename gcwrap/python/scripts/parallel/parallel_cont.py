@@ -847,6 +847,8 @@ class imagecont():
            ## rename extra psfs....
            ##im.getextrapsfs(multifieldid=0, psfs = psfs[ntaylor:npsftaylor])
            for p in range( nterms, npsftaylor ):
-              os.system('mv '+imname+'.TempPsf.'+str(p)+' '+psfs[p]) 
+               cmd='mv '+imname+'.TempPsf.'+str(p)+' '+psfs[p];
+               print "Rename extra PSFs: ",cmd;
+               os.system(cmd);
         #casalog.post('CACHE:  '+ str(tb.showcache()))
         

@@ -1467,7 +1467,10 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
       casa::String baseframe("LSRK");
       if(itsMS && !(itsMS->isNull())){
 	ROMSSpWindowColumns spwc(itsMS->spectralWindow());
-	baseframe = MFrequency::showType(spwc.measFreqRef()(0));
+	int spw0 = 0;
+	if (spwid.size() > 0 && spwid[0] > 0 && spwid[0] < (int) spwc.nrow())
+	  spw0 = spwid[0];
+	baseframe = MFrequency::showType(spwc.measFreqRef()(spw0));
       }
       casa::String cframe=toCasaString(outframe);
       if(cframe=="") {
