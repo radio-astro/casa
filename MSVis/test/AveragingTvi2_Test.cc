@@ -104,7 +104,18 @@ namespace vi {
 
 namespace test {
 
-#define DeltaEq(act,exp,tol) ((exp != 0) ? (abs(((act)-(exp))/(exp)) < tol) : (abs(act)<tol))
+template<typename T, typename U>
+Bool deltaEq(const T & act, const U & exp, Double tol)
+{
+    Bool eq;
+
+    if (exp != 0){
+        eq = abs((act - exp) / exp) < tol;
+    }
+    else{
+        eq = abs(act) < tol;
+    }
+};
 
 void
 Tester::checkRowData (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
@@ -112,14 +123,14 @@ Tester::checkRowData (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
 {
     for (Int row = 0; row < vb->nRows(); row ++){
 
-        TestErrorIf (! DeltaEq (vb->timeInterval()(row), averagingFactor, .001),
+        TestErrorIf (! deltaEq (vb->timeInterval()(row), averagingFactor, .001),
                      String::format ("For interval: expected %f got %f at subchunk=%d, msRow=%d",
                                      vb->timeInterval()(row),
                                      (Double) averagingFactor,
                                      subchunk,
                                      row+firstRow));
 
-        TestErrorIf (! DeltaEq (vb->time()(row), averagingFactor * subchunk, .001),
+        TestErrorIf (! deltaEq (vb->time()(row), averagingFactor * subchunk, .001),
                      String::format ("For time: expected %f got %f at subchunk=%d, msRow=%d",
                                      vb->time()(row),
                                      averagingFactor,
@@ -229,14 +240,14 @@ class GenerateRamp : public Generator<Complex> {
 
 public:
 
-    GenerateRamp () : counter_p (4096, 0), previousTime_p (4096, -1) {}
+    GenerateRamp () : counter_p (4096, -1), previousTime_p (4096, -1) {}
 
     Complex
     operator() (const FillState & fillState, Int channel, Int correlation) const
     {
         // Generate a ramp that increments every new set of baselines.
 
-        if (! DeltaEq (fillState.time_p, previousTime_p [fillState.spectralWindow_p], 1E10)){
+        if (! deltaEq (fillState.time_p, previousTime_p [fillState.spectralWindow_p], 1E-10)){
 
             counter_p [fillState.spectralWindow_p] += 1;
             previousTime_p [fillState.spectralWindow_p] = fillState.time_p;
@@ -263,10 +274,15 @@ Tester::createMs (const String & msName)
 
     msf_p = new MsFactory (msName);
 
-    msf_p->setTimeInfo (0,1000,1);
+    msf_p->setTimeInfo (0,100,1);
+    msf_p->addSpectralWindows(1); // only on spw for now
 
     auto_ptr<GenerateRamp> rampGenerator (new GenerateRamp());
     msf_p->setDataGenerator(MSMainEnums::DATA, rampGenerator.get());
+
+    auto_ptr<GenerateConstant<Bool> > generateFalse (new GenerateConstant<Bool> (False));
+    msf_p->setDataGenerator(MSMainEnums::FLAG, generateFalse.get());
+    msf_p->setDataGenerator(MSMainEnums::FLAG_ROW, generateFalse.get());
 
     pair<MeasurementSet *, Int> p = msf_p->createMs ();
 
