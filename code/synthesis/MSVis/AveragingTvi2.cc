@@ -570,6 +570,7 @@ VbAvg::prepareIds (const VisBuffer2 * vb)
 
     setAntenna1 (minusOne);
     setAntenna2 (minusOne);
+    setDataDescriptionIds (minusOne);
     setFeed1 (minusOne);
     setFeed2 (minusOne);
     setProcessorId (minusOne);
