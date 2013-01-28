@@ -182,6 +182,7 @@ public:
   inline Double getRow(Int chnk,Int irel) { return *(row_[chnk]->data()+irel); };
 
   inline Double getWt(Int chnk,Int irel) { return *(wt_[chnk]->data()+irel); };
+  inline Double getWtxAmp(Int chnk, Int irel) { return *(wtxamp_[chnk]->data()+irel); }
 
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
@@ -302,7 +303,7 @@ protected:
   PtrBlock<Vector<Float>*> pa_;
 
   // Data (the heavy part)
-  PtrBlock<Array<Float>*> amp_, pha_, real_, imag_;
+  PtrBlock<Array<Float>*> amp_, pha_, real_, imag_, wtxamp_;
   PtrBlock<Array<Bool>*> flag_;
   PtrBlock<Vector<Bool>*> flagrow_;
   

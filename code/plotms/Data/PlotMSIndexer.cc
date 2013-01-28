@@ -731,6 +731,10 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
     getmethod = &PlotMSCacheBase::getWt;
     break;
 
+  case PMS::WTxAMP:
+    getmethod = &PlotMSCacheBase::getWtxAmp;
+    break;
+
   case PMS::AZ0:
     getmethod = &PlotMSCacheBase::getAz0;
     break;
@@ -810,6 +814,7 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
   case PMS::DELAY:
   case PMS::SWP:
   case PMS::OPAC:
+  case PMS::WTxAMP:
     indexmethod = &PlotMSIndexer::getIndex1110;
     break;
 

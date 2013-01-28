@@ -1131,6 +1131,30 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
       *wt_[vbnum] = vb.weightMat();
       break;
     }
+    case PMS::WTxAMP: {
+      switch(data) {
+      case PMS::DATA:
+        *wtxamp_[vbnum] = amplitude(vb.visCube());
+        break;
+      case PMS::MODEL:
+        *wtxamp_[vbnum] = amplitude(vb.modelVisCube());
+        break;
+      case PMS::CORRECTED:
+        *wtxamp_[vbnum] = amplitude(vb.correctedVisCube());
+        break;
+      case PMS::CORRMODEL:
+        *wtxamp_[vbnum] = amplitude(vb.correctedVisCube() - vb.visCube());
+        break;
+      case PMS::DATAMODEL:
+        *wtxamp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
+        break;
+      }
+      uInt nchannels = vb.nChannel();
+      Cube<Float> wtA(*wtxamp_[vbnum]);
+      for(uInt c = 0; c < nchannels; ++c) {
+          wtA.xzPlane(c) = wtA.xzPlane(c) * vb.weightMat();
+      }
+    }
     case PMS::AZ0:
     case PMS::EL0: {
       Vector<Double> azel;
