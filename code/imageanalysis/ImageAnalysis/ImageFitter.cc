@@ -145,7 +145,7 @@ ComponentList ImageFitter::fit() {
 	Vector<String> allowFluxUnits(1, "Jy.km/s");
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
-	String resultsString = _resultsHeadder();
+	String resultsString = _resultsHeader();
 	*_getLog() << LogIO::NORMAL << resultsString << LogIO::POST;
 	ComponentList compList;
 	Bool anyConverged = False;
@@ -513,7 +513,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 
 }
 
-String ImageFitter::_resultsHeadder() const {
+String ImageFitter::_resultsHeader() const {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << "Input parameters ---" << endl;
@@ -1217,7 +1217,6 @@ void ImageFitter::_fitsky(
 	for (uInt i = 0; i < n; i++) {
 		estimate(i) = _estimates.component(i);
 	}
-
 	converged = False;
 	const uInt nModels = models.nelements();
 	const uInt nGauss = _doZeroLevel ? nModels - 1 : nModels;
@@ -1387,7 +1386,9 @@ void ImageFitter::_fitsky(
 		converged = False;
 		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
+		return;
 	}
+
 	Vector<SkyComponent> result(_doZeroLevel ? nModels - 1 : nModels);
 	Double facToJy;
 	uInt j = 0;
@@ -1412,7 +1413,6 @@ void ImageFitter::_fitsky(
 				solution, stokes, xIsLong, deconvolveIt,
 				_getImage()->imageInfo().restoringBeam(_chanPixNumber, _stokesPixNumber)
 			);
-
 			String error;
 			Record r;
 			result(j).flux().toRecord(error, r);

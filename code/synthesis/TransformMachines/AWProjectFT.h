@@ -173,10 +173,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   void setEPJones(EPJones* ep_j) {epJ = ep_j;}
     void setEPJones(SolvableVisJones* ep_j) {epJ_p = ep_j;}
     
-    void setDOPBCorrection(Bool doit=True) {doPBCorrection=doit;};
-    Bool getDOPBCorrection() {return doPBCorrection;};
-    void setConjBeams(Bool useit=True) {conjBeams_p=useit;};
-    Bool getConjBeams() {return conjBeams_p;};
+    virtual void setDOPBCorrection(Bool doit=True) {doPBCorrection=doit;};
+    virtual Bool getDOPBCorrection() {return doPBCorrection;};
+    virtual void setConjBeams(Bool useit=True) {conjBeams_p=useit;};
+    virtual Bool getConjBeams() {return conjBeams_p;};
 
     virtual Float getPBLimit() {return pbLimit_p;};
     // Initialize transform to Visibility plane using the image

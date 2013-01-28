@@ -146,9 +146,9 @@ public:
     // **If these are changed, also update: xmlcasa/tasks/plotms.xml.**
     // <group>
     PMS_ENUM1(DataColumn, dataColumns, dataColumnStrings, dataColumn,
-              DATA, CORRECTED, MODEL, RESIDUAL)
+              DATA, CORRECTED, MODEL, CORRMODEL, DATAMODEL)
     PMS_ENUM2(DataColumn, dataColumns, dataColumnStrings, dataColumn,
-              "data", "corrected", "model", "residual")
+              "data", "corrected", "model", "corrected-model", "data-model")
     // </group>
               
     // Returns whether or not the given axis needs the second data parameter to

@@ -144,8 +144,9 @@ public:
   //{getWeightImage(weightImage, weights, 0);};
   //void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights, 
   //                                const Int taylorindex);
-  void getWeightImage(ImageInterface<Float>& /*weightImage*/, Matrix<Float>& /*weights*/)
-  {throw(AipsError("NewMultiTermFT::getWeightImage() should not be called"));}
+  void getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& weights)
+  {subftms_p[0]->getWeightImage(weightImage, weights);}
+  //  {throw(AipsError("NewMultiTermFT::getWeightImage() should not be called"));}
 
   // Save and restore the NewMultiTermFT to and from a record
   virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False);
@@ -164,6 +165,11 @@ public:
       cout << tix << " : " << (subftms_p[tix])->name() << "   " ;
     cout << endl;
   };
+
+  virtual void setDOPBCorrection(Bool doit=True) {doWideBandPBCorrection_p=doit;};
+  virtual Bool getDOPBCorrection() {return doWideBandPBCorrection_p;};
+  virtual void setConjBeams(Bool useit=True) {useConjBeams_p=useit;};
+  virtual Bool getConjBeams() {return useConjBeams_p;};
 
 
 protected:

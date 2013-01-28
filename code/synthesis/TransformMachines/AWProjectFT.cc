@@ -1085,7 +1085,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	conjPolMat = pop_p->makeConjPolMat(visPolMap,polMap);
 	conjPolIndexMat = pop_p->makeConjPol2CFMat(visPolMap,polMap);
-	
+
 	convFuncCtor_p->setPolMap(polMap);
 	convFuncCtor_p->setSpwSelection(spwChanSelFlag_p);
 	convFuncCtor_p->setSpwFreqSelection(spwFreqSel_p);
@@ -1214,9 +1214,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     log_p << "Total flux in model image (before avgPB normalization): " 
 	  << sum((*(modelImageVec[0])).get()) 
-	  << " predicing SPW = " <<vb.spectralWindow() 
-	  << " Pointing Offset = " << convFuncCtor_p->findPointingOffset(*(compImageVec[0]), vb)
-	  << " Qualifier String = " << sensitivityPatternQualifier_p 
+	  // << " predicing SPW = " <<vb.spectralWindow() 
+	  // << " Pointing Offset = " << convFuncCtor_p->findPointingOffset(*(compImageVec[0]), vb)
+	  // << " Qualifier String = " << sensitivityPatternQualifier_p 
 	  << LogIO::POST;
     if(doPBCorrection) 
       {
@@ -2233,9 +2233,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.conjBeams_p=conjBeams_p;
 
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
-    visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
-				    paChangeDetector.getParAngleTolerance(),
-				    chanMap,polMap,pointingOffset);
+    if (makingPSF)
+      visResampler_p->makeVBRow2CFMap(*cfwts2_p,*convFuncCtor_p, vb,
+				      paChangeDetector.getParAngleTolerance(),
+				      chanMap,polMap,pointingOffset);
+    else
+      visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
+				      paChangeDetector.getParAngleTolerance(),
+				      chanMap,polMap,pointingOffset);
     //    VBRow2CFMapType theMap(visResampler_p->getVBRow2CFMap());
     VBRow2CFBMapType& theMap=visResampler_p->getVBRow2CFBMap();
     //

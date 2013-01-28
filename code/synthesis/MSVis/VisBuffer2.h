@@ -170,7 +170,7 @@ public:
     virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
                                     Bool fetchIfNeeded = True) = 0;
 
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows) = 0;
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool copyValues = False) = 0;
     virtual void validateShapes () const = 0;
 
     // For attached VBs this returns the VI the VB is attached to.  For free
@@ -513,6 +513,7 @@ protected:
     virtual Cube<Complex> & visCubeRef () = 0; // [nC,nF,nR]
     virtual Cube<Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
+    //virtual Cube<Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 

@@ -76,7 +76,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
       for (uInt i=0;i<loadData.size();++i) {
 	switch (loadData[i]) {
 	case PMS::CORRECTED:
-	case PMS::RESIDUAL: {
+	case PMS::CORRMODEL: {
 	  throw(AipsError("CORRECTED_DATA not present, please use DATA"));
 	  break;
 	}
@@ -737,10 +737,15 @@ void MSCache::forceVBread(VisBuffer& vb,
 	vb.correctedVisCube();
 	break;
       }
-      case PMS::RESIDUAL: {
+      case PMS::CORRMODEL: {
 	vb.correctedVisCube();
 	vb.modelVisCube();
 	break;
+      }
+      case PMS::DATAMODEL: {
+        vb.visCube();
+        vb.modelVisCube();
+        break;
       }
       default:
 	break;
@@ -774,28 +779,32 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
     case PMS::IMAG: {
       switch(loadData[i]) {
       case PMS::DATA: {
-	//	cout << "Arranging to load VC." << endl;
-	vba.setDoVC();
-	break;
+        // cout << "Arranging to load VC." << endl;
+        vba.setDoVC();
+        break;
       }
       case PMS::MODEL: {
-	//	cout << "Arranging to load MVC." << endl;
-	vba.setDoMVC();
-	break;
+        // cout << "Arranging to load MVC." << endl;
+        vba.setDoMVC();
+        break;
       }
       case PMS::CORRECTED: {
-	//	cout << "Arranging to load CVC." << endl;
-	vba.setDoCVC();
-	break;
+        // cout << "Arranging to load CVC." << endl;
+        vba.setDoCVC();
+        break;
       }
-      case PMS::RESIDUAL: {
-	//	cout << "Arranging to load CVC & MVC." << endl;
-	vba.setDoCVC();
-	vba.setDoMVC();
-	break;
+      case PMS::CORRMODEL: {
+        // cout << "Arranging to load CVC & MVC." << endl;
+        vba.setDoCVC();
+        vba.setDoMVC();
+        break;
+      }
+      case PMS::DATAMODEL: {
+        vba.setDoVC();
+        vba.setDoMVC();
       }
       default:
-	break;
+        break;
       }
       break;
     }
@@ -1022,9 +1031,13 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	*amp_[vbnum] = amplitude(vb.correctedVisCube());
 	break;
       }
-      case PMS::RESIDUAL: {
-	*amp_[vbnum] = amplitude(vb.correctedVisCube()-vb.modelVisCube());
+      case PMS::CORRMODEL: {
+	*amp_[vbnum] = amplitude(vb.correctedVisCube() - vb.modelVisCube());
 	break;
+      }
+      case PMS::DATAMODEL: {
+        *amp_[vbnum] = amplitude(vb.visCube() - vb.modelVisCube());
+        break;
       }
       }
       break;
@@ -1032,20 +1045,25 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
     case PMS::PHASE: {
       switch(data) {
       case PMS::DATA: {
-	*pha_[vbnum] = phase(vb.visCube())*(180.0/C::pi);
+	*pha_[vbnum] = phase(vb.visCube()) * 180.0 / C::pi;
 	break;
       }
       case PMS::MODEL: {
-	*pha_[vbnum] = phase(vb.modelVisCube())*(180.0/C::pi);
+	*pha_[vbnum] = phase(vb.modelVisCube()) * 180.0 / C::pi;
 	break;
       }
       case PMS::CORRECTED: {
-	*pha_[vbnum] = phase(vb.correctedVisCube())*(180.0/C::pi);
+	*pha_[vbnum] = phase(vb.correctedVisCube()) * 180.0 / C::pi;
 	break;
       }
-      case PMS::RESIDUAL: {
-	*pha_[vbnum] = phase(vb.correctedVisCube()-vb.modelVisCube())*(180.0/C::pi);
+      case PMS::CORRMODEL: {
+	*pha_[vbnum] = phase(vb.correctedVisCube() - vb.modelVisCube()) *
+            180.0 / C::pi;
 	break;
+      }
+      case PMS::DATAMODEL: {
+        *pha_[vbnum] = phase(vb.visCube() - vb.modelVisCube()) * 180 / C::pi;
+        break;
       }
       }
       break;
@@ -1065,9 +1083,13 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	*real_[vbnum] = real(vb.correctedVisCube());
 	break;
       }
-      case PMS::RESIDUAL: {
-	*real_[vbnum] = real(vb.correctedVisCube())-real(vb.modelVisCube());
+      case PMS::CORRMODEL: {
+	*real_[vbnum] = real(vb.correctedVisCube()) - real(vb.modelVisCube());
 	break;
+      }
+      case PMS::DATAMODEL: {
+        *real_[vbnum] = real(vb.visCube()) - real(vb.modelVisCube());
+        break;
       }
       }
       break;
@@ -1086,9 +1108,13 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	*imag_[vbnum] = imag(vb.correctedVisCube());
 	break;
       }
-      case PMS::RESIDUAL: {
-	*imag_[vbnum] = imag(vb.correctedVisCube())-imag(vb.modelVisCube());
+      case PMS::CORRMODEL: {
+	*imag_[vbnum] = imag(vb.correctedVisCube()) - imag(vb.modelVisCube());
 	break;
+      }
+      case PMS::DATAMODEL: {
+        *imag_[vbnum] = imag(vb.visCube()) - imag(vb.modelVisCube());
+        break;
       }
       }
       break;

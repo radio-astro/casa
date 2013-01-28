@@ -120,7 +120,7 @@ void QtFileWidget::setFile(const String& f) {
 
 void QtFileWidget::browse() {
     QString f;
-    if(isDirectory_) f = QtFileDialog::qgetExistingDir(this);
+    if(isDirectory_) f = QtFileDialog::qgetExistingDir(this, "", ".");
     else if(isSave_) f = QtFileDialog::qgetAnyFile(this);
     else             f = QtFileDialog::qgetExistingFile(this);
     if(!f.isEmpty()) file->setText(f);

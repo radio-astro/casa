@@ -102,13 +102,13 @@ class FitterEstimatesFileParser {
 		String getContents() const;
 
 	private:
-		ComponentList componentList;
-		Vector<String> fixedValues;
-		LogIO* itsLog;
-		Vector<Double> peakValues, xposValues, yposValues;
+		ComponentList _componentList;
+		Vector<String> _fixedValues;
+		std::auto_ptr<LogIO> _log;
+		Vector<Double> _peakValues, _xposValues, _yposValues;
 		//Vector<Quantity> fluxValues, majValues, minValues, paValues;
-		Vector<Quantity> majValues, minValues, paValues;
-		String contents;
+		Vector<Quantity> _majValues, _minValues, _paValues;
+		String _contents;
 
 		// default constructor cannot be called.
 		FitterEstimatesFileParser();

@@ -175,7 +175,7 @@ private:
 
 	void _finishConstruction(const String& estimatesFilename);
 
-	String _resultsHeadder() const;
+	String _resultsHeader() const;
 
 
 	// summarize the results in a nicely formatted string

@@ -51,6 +51,7 @@
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
+#include <display/Slicer/SlicerMainWindow.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 #include <display/RegionShapes/RegionShapes.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
@@ -77,11 +78,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   qsm_(0), qst_(0),
 								   profile_(0), savedTool_(QtMouseToolNames::NONE),
 								   profileDD_(0),
-								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0)/*, pvCutAct_(0)*/,
+								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
-								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ),/* pvCutManager( NULL ),*/
+								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ), sliceTool( NULL ),
 								   regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
@@ -197,6 +198,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	momentsCollapseAct_ = tlMenu_->addAction("Collapes/Moments...");
 	histogramAct_ = tlMenu_->addAction( "Histogram...");
 	fitAct_ = tlMenu_->addAction( "Fit...");
+	slicerAct_ = tlMenu_->addAction( "Slice...");
 
 	vwMenu_       = menuBar()->addMenu("&View");
 	// (populated after creation of toolbars/dockwidgets).
@@ -377,11 +379,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		for(Int i=sep+1; i<nActions; i++) vwMenu_->addAction(vwActions[i]);
 		if (0<sep && sep<nActions-1)      vwMenu_->addSeparator();
 		for(Int i=0; i<sep; i++)          vwMenu_->addAction(vwActions[i]);
-		/*vwMenu_->addSeparator();
-		pvCutAct_  = new QAction ("PV Cut",this);
-		connect(pvCutAct_,    SIGNAL(triggered(bool)),  SLOT(showPVCut(bool)));
-		vwMenu_->addAction( pvCutAct_ );
-*/
+
 		delete rawVwMenu;
 	}
 
@@ -460,6 +458,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
 	histogramAct_->setToolTip("Histogram Functionality");
 	fitAct_->setToolTip( "Interactive 2D Fitting");
+	slicerAct_->setToolTip( "Produce a 1D slice from the image");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");
 	if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
@@ -504,6 +503,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(momentsCollapseAct_, SIGNAL(triggered()), SLOT(showMomentsCollapseImageProfile()));
 	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 	connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
+	connect(slicerAct_, SIGNAL(triggered()), SLOT(showSlicer()));
 	// connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
 	connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
 	connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
@@ -665,10 +665,10 @@ void QtDisplayPanelGui::showHistogram(){
 		this->initHistogramHolder();
 	}
 	//Send it the latest image
-	refreshHistogrammer();
+	resetListenerImage();
 
 	//Image updates
-	connect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
+	connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
 	//Region updates
 	PanelDisplay* panelDisplay = qdp_->panelDisplay();
 	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
@@ -688,13 +688,13 @@ void QtDisplayPanelGui::showHistogram(){
 }
 
 void QtDisplayPanelGui::hideHistogram(){
-	histogrammer->hide();
+	if ( histogrammer != NULL ){
+		histogrammer->hide();
+	}
 }
 
 void QtDisplayPanelGui::disconnectHistogram(){
 	//Disconnect all the signals and slots
-	//Image updates
-	disconnect( qdp_, SIGNAL(registrationChange()), this, SLOT(refreshHistogrammer()));
 	//Region updates
 	PanelDisplay* panelDisplay = qdp_->panelDisplay();
 	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
@@ -708,7 +708,7 @@ void QtDisplayPanelGui::disconnectHistogram(){
 	}
 }
 
-void QtDisplayPanelGui::refreshHistogrammer(){
+void QtDisplayPanelGui::resetListenerImage(){
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	bool imageFound = false;
 	int registeredCount = rdds.len();
@@ -720,17 +720,23 @@ void QtDisplayPanelGui::refreshHistogrammer(){
 				PanelDisplay* ppd = qdp_->panelDisplay();
 				if (ppd != 0 && img != 0) {
 					if (ppd->isCSmaster(pdd->dd())) {
-						histogrammer->setImage( img );
-						const viewer::ImageProperties & imgProperties = pdd->imageProperties( );
-						if ( imgProperties.hasSpectralAxis() ){
-							int spectralAxisNum = imgProperties.spectralAxisNumber();
-							const Vector<int> imgShape = imgProperties.shape();
-							int channelCount = imgShape[spectralAxisNum];
-							histogrammer->setChannelCount( channelCount );
+						if ( sliceTool != NULL ){
+							sliceTool->setImage( img );
 						}
-						else {
-							histogrammer->setChannelCount( 1 );
+						if ( histogrammer != NULL ){
+							histogrammer->setImage( img );
+							const viewer::ImageProperties & imgProperties = pdd->imageProperties( );
+							if ( imgProperties.hasSpectralAxis() ){
+								int spectralAxisNum = imgProperties.spectralAxisNumber();
+								const Vector<int> imgShape = imgProperties.shape();
+								int channelCount = imgShape[spectralAxisNum];
+								histogrammer->setChannelCount( channelCount );
+							}
+							else {
+								histogrammer->setChannelCount( 1 );
+							}
 						}
+
 						imageFound = true;
 						break;
 					}
@@ -779,7 +785,9 @@ void QtDisplayPanelGui::histogramRegionChange( int id, viewer::region::RegionCha
 					change == viewer::region::RegionChangeModified ){
 		if ( id != -1 ){
 			viewer::Region* region = findRegion( id );
-			resetHistogram( region );
+			if ( region != NULL ){
+				resetHistogram( region );
+			}
 		}
 		else {
 			//Update all the histograms because we haven't been listening for awhile
@@ -952,12 +960,7 @@ void QtDisplayPanelGui::remove2DFitOverlay( QList<RegionShape*> fitMarkers ){
 	}
 }
 
-/*void QtDisplayPanelGui::showPVCut( bool show ){
-	qDebug() << "Need code for showing a PVCut";
-	if ( pvCutManager == NULL ){
-		pvCutManager = new PVCutManager();
-	}
-}*/
+
 
 QtDisplayPanelGui::~QtDisplayPanelGui() {
 
@@ -971,8 +974,6 @@ QtDisplayPanelGui::~QtDisplayPanelGui() {
 	if(qsm_!=0) delete qsm_;
 	if(qdm_!=0) delete qdm_;
 	if(qdo_!=0) delete qdo_;
-
-	//delete pvCutManager;
 }
 
 int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
@@ -1347,6 +1348,9 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	}
 	if ( histogrammer != NULL ){
 		histogrammer->setChannelValue( frm );
+	}
+	if ( sliceTool != NULL ){
+		sliceTool->updateChannel( frm );
 	}
 }
 // Public slots: may be safely operated programmatically (i.e.,
@@ -2741,6 +2745,53 @@ void QtDisplayPanelGui::showSpecFitImageProfile(){
 	if ( profile_ != NULL ){
 		profile_->setPurpose(ProfileTaskMonitor::SPECTROSCOPY);
 	}
+}
+
+void QtDisplayPanelGui::sliceChanged( int regionId, viewer::region::RegionChanges change,
+		const QList<double> & worldX, const QList<double> & worldY,
+		const QList<int> &pixelX, const QList<int> & pixelY ){
+	if ( sliceTool != NULL ){
+		viewer::Region* region = findRegion( regionId );
+		//Note until the mouse tool is working
+		//key off the blc/trc coordinates of a rectangle.
+		viewer::region::RegionTypes defaultType = viewer::region::RectRegion;
+		viewer::region::RegionTypes regionType = defaultType;
+		if ( region != NULL ){
+			regionType = region->type();
+		}
+		if ( regionType == defaultType ){
+			if ( change == viewer::region::RegionChangeDelete ){
+				sliceTool->deletePolyLine( regionId );
+			}
+			else {
+				sliceTool->updatePolyLine( regionId, worldX, worldY, pixelX, pixelY );
+			}
+		}
+	}
+}
+
+void QtDisplayPanelGui::showSlicer(){
+	if ( sliceTool == NULL ){
+		sliceTool = new SlicerMainWindow( this );
+
+		//Image updates
+		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
+
+		//Region updates
+		PanelDisplay* panelDisplay = qdp_->panelDisplay();
+		std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
+		if (pos) {
+			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+			if ( qrs ) {
+				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+								const QList<int> &, const QList<int> & ) ),
+								this, SLOT( sliceChanged( int, viewer::region::RegionChanges, const QList<double>&, const QList<double>&,
+										const QList<int>&, const QList<int> &) ));
+			}
+		}
+		resetListenerImage();
+	}
+	sliceTool->show();
 }
 
 }
