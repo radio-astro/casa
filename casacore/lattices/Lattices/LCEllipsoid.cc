@@ -377,7 +377,6 @@ void LCEllipsoid::defineMask() {
 	// Initialize some variables for the loop below.
 	Float center0 = itsCenter(0) - boundingBox().start()(0);
 	Float radsq0 = itsRadii(0) * itsRadii(0);
-	Int np = length(0);
 	IPosition pos (nrdim, 0);
 	Vector<Float> center (nrdim);
 	Vector<Float> radsq (nrdim);
@@ -402,13 +401,13 @@ void LCEllipsoid::defineMask() {
 			d = sqrt(d * radsq0);
 			d += _epsilon[0];
 			Int start = max(Int(center0 - d + 1 - _epsilon[i]), 0);
-			Int end = min(Int(center0 + d + _epsilon[i]), np);
+			Int end = min(Int(center0 + d + _epsilon[i]), length(0) - 1);
 			for (Int j=start; j<=end; j++) {
 				maskData[j] = True;
 			}
 		}
 		// Go to the next line and update the line distance.
-		maskData += np;
+		maskData += length(0);
 		for (i=1; i<nrdim; i++) {
 			distsq -= dist(i);
 			if (++pos(i) < length(i)) {

@@ -154,6 +154,11 @@ public:
 	// Get the times for the specified scans
 	std::set<Double> getTimesForScans(const std::set<uInt>& scans);
 
+	// get the time range for the specified scan. The vector returned will contain two elements,
+	// the start and stop time of the scan, determined from min(TIME_CENTROID(x)-0.5*INTERVAL(x)) and
+	// max(TIME_CENTROID(x)-0.5*INTERVAL(x))
+	std::vector<Double> getTimeRangeForScan(uInt scan);
+
 	// get the times for the specified scan
 	// std::set<Double> getTimesForScan(const uInt scan) const;
 
@@ -233,15 +238,38 @@ public:
 	// get the effective total exposure time. This is the effective time spent collecting unflagged data.
 	Quantity getEffectiveTotalExposureTime();
 
-	// get the number of unflagged auto correlation and cross correlation rows.
-	void getUnflaggedRowStats(
-		Double& nACRows, Double& nXCRows,
-		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows
+	// get the number of unflagged rows
+	Double nUnflaggedRows();
+
+	Double nUnflaggedRows(CorrelationType cType);
+
+	Double nUnflaggedRows(
+		CorrelationType cType, uInt arrayID, uInt observationID,
+		uInt scanNumber, uInt fieldID
 	);
 
+	Double nUnflaggedRows(CorrelationType cType, uInt fieldID);
+
 	inline Float getCache() const { return _cacheMB;}
+
+	vector<Double> getBandWidths();
+
+	vector<Quantum<Vector<Double> > > getChanFreqs();
+
+	vector<vector<Double> > getChanWidths();
+
+	vector<Int> getNetSidebands();
+
+	vector<Quantity> getMeanFreqs();
+
+	vector<uInt> nChans();
+
+	vector<vector<Double> > getEdgeChans();
+
+	vector<uInt> getBBCNos();
+
+	vector<String> getSpwNames();
+
 
 private:
 	const MeasurementSet* _ms;
@@ -272,11 +300,13 @@ private:
 	vector<Quantum<Vector<Double> > > _antennaOffsets;
 	Matrix<Bool> _uniqueBaselines;
 	Quantity _exposureTime;
-	Double _unflaggedACRows, _unflaggedXCRows;
+	Double _nUnflaggedACRows, _nUnflaggedXCRows;
 	vector<Double> _unflaggedFieldNACRows, _unflaggedFieldNXCRows;
-	std::map<uInt, Double> _unflaggedScanNACRows, _unflaggedScanNXCRows;
+	AOSFMapD _unflaggedScanNACRows, _unflaggedScanNXCRows;
 	const String _taqlTableName;
 	const vector<const Table*> _taqlTempTable;
+	std::tr1::shared_ptr<ArrayColumn<Bool> > _flagsColumn;
+	std::map<Int, vector<Double> > _scanToTimeRangeMap;
 
 	// disallow copy constructor and = operator
 	MSMetaDataOnDemand(const MSMetaDataOnDemand&);
@@ -292,15 +322,6 @@ private:
 	// uInt _getNumberOfPolarizations();
 
 	void _setSpwInfo(const MeasurementSet& ms);
-
-	/*
-	void _getDataColumnNames(
-		String& dataName, String& correctedName,
-		String& modelName
-	) const;
-	*/
-
-	//static vector<uInt> _getScans(const MeasurementSet& ms);
 
 	// set metadata from OBSERVATION table
 	void _setObservation(const MeasurementSet& ms);
@@ -340,6 +361,9 @@ private:
 
 	std::tr1::shared_ptr<Vector<Double> > _getTimes();
 
+	std::tr1::shared_ptr<ArrayColumn<Bool> > _getFlags();
+
+
 	std::map<uInt, std::set<uInt> > _getScanToStatesMap();
 
 	Bool _cacheUpdated(const Float incrementInBytes);
@@ -366,6 +390,14 @@ private:
 		AOSFMapI& scanToNXCRowsMap,
 		vector<uInt>& fieldToNACRowsMap,
 		vector<uInt>& fieldToNXCRowsMap
+	);
+
+	void _getUnflaggedRowStats(
+		Double& nACRows, Double& nXCRows,
+		AOSFMapD& scanToNACRowsMap,
+		AOSFMapD& scanToNXCRowsMap,
+		vector<Double>& fieldToNACRowsMap,
+		vector<Double>& fieldToNXCRowsMap
 	);
 
 };

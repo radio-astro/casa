@@ -35,6 +35,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class MeasurementSet;
 class LogIO;
+class MSMetaData;
 
 // <summary>Provides and lists information about the header of an image</summary>
 // <use visibility=export>
@@ -158,6 +159,7 @@ public:
 private:
 // Pointer to MS
    const MeasurementSet* pMS;
+   std::auto_ptr<MSMetaData> _msmd;
 
 // Formatting strings
    const String dashlin1, dashlin2;

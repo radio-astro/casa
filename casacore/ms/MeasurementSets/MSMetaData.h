@@ -174,7 +174,13 @@ public:
 	virtual std::set<Double> getTimesForScans(const std::set<uInt>& scans) = 0;
 
 	// get the times for the specified scan. No need to be implemented or overridden in subclasses.
+	// The return values come from the TIME column.
 	std::set<Double> getTimesForScan(const uInt scan);
+
+	// get the time range for the specified scan. The vector returned will contain two elements,
+	// the start and stop time of the scan, determined from min(TIME_CENTROID(x)-0.5*INTERVAL(x)) and
+	// max(TIME_CENTROID(x)-0.5*INTERVAL(x))
+	virtual std::vector<Double> getTimeRangeForScan(uInt scan) = 0;
 
 	// get the stateIDs associated with the specified scan number.
 	virtual std::set<uInt> getStatesForScan(const uInt scan) = 0;
@@ -255,15 +261,39 @@ public:
 	// get the effective total exposure time. This is the effective time spent collecting unflagged data.
 	virtual Quantity getEffectiveTotalExposureTime() = 0;
 
-	// get the number of unflagged auto correlation and cross correlation rows.
-	virtual void getUnflaggedRowStats(
-		Double& nACRows, Double& nXCRows,
-		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows
+	// get the number of unflagged rows
+	virtual Double nUnflaggedRows() = 0;
+
+	virtual Double nUnflaggedRows(CorrelationType cType) = 0;
+
+	virtual Double nUnflaggedRows(
+		CorrelationType cType, uInt arrayID, uInt observationID,
+		uInt scanNumber, uInt fieldID
 	) = 0;
 
+	virtual Double nUnflaggedRows(CorrelationType cType, uInt fieldID) = 0;
+
 	inline virtual Float getCache() const { return 0;}
+
+	static Bool hasBBCNo(const MeasurementSet& ms);
+
+	virtual vector<Double> getBandWidths() = 0;
+
+	virtual vector<Quantum<Vector<Double> > > getChanFreqs() = 0;
+
+	virtual vector<vector<Double> > getChanWidths() = 0;
+
+	virtual vector<Int> getNetSidebands() = 0;
+
+	virtual vector<Quantity> getMeanFreqs() = 0;
+
+	virtual vector<uInt> nChans() = 0;
+
+	virtual vector<vector<Double> > getEdgeChans() = 0;
+
+	virtual vector<uInt> getBBCNos() = 0;
+
+	virtual vector<String> getSpwNames() = 0;
 
 protected:
 
@@ -273,12 +303,14 @@ protected:
 
 	struct SpwProperties {
 		Double bandwidth;
-		vector<Double> chanfreqs;
+		Quantum<Vector<Double> > chanfreqs;
 		vector<Double> chanwidths;
 		Int netsideband;
-		Double meanfreq;
+		Quantity meanfreq;
 		uInt nchans;
 		vector<Double> edgechans;
+		uInt bbcno;
+		String name;
 	};
 
 	static uInt _getNStates(const MeasurementSet& ms);
@@ -317,6 +349,10 @@ protected:
 	static void _checkTolerance(const Double tol);
 
 	static Vector<Double> _getTimes(const MeasurementSet& ms);
+
+	static Vector<Double> _getTimeCentroids(const MeasurementSet& ms);
+
+	static Vector<Double> _getIntervals(const MeasurementSet& ms);
 
 	static Vector<Bool> _getFlagRows(const MeasurementSet& ms);
 
@@ -370,14 +406,6 @@ protected:
 		const vector<MSMetaData::SpwProperties>& spwInfo
 	);
 
-	/*
-	static void _getAntennas(
-		std::auto_ptr<Vector<Int> >& ant1,
-		std::auto_ptr<Vector<Int> >& ant2,
-		const MeasurementSet& ms
-	);
-
-	*/
 	static void _getAntennas(
 		Vector<Int>& ant1, Vector<Int>& ant2, const MeasurementSet& ms
 	);
@@ -397,28 +425,35 @@ protected:
 	void _getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
 		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows,
+		AOSFMapD& scanNACRows,
+		AOSFMapD& scanNXCRows,
 		const Vector<Int>& ant1, const Vector<Int>& ant2,
 		const Vector<Bool>& flagRow, const Vector<Int>& dataDescIDs,
 		const vector<uInt>& dataDescIDToSpwMap,
 		const vector<SpwProperties>& spwInfo,
 		const ArrayColumn<Bool>& flags,
-		const Vector<Int>& fieldIDs, const Vector<Int>& scan
+		const Vector<Int>& fieldIDs, const Vector<Int>& scan,
+		const Vector<Int>& obsIDs, const Vector<Int>& arIDs
 	);
 
 	// this version does a TAQL query to call the number of possible rows
 	void _getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
 		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows,
+		AOSFMapD& scanNACRows,
+		AOSFMapD& scanNXCRows,
 		const vector<uInt>& dataDescIDToSpwMap,
 		const vector<SpwProperties>& spwInfo,
 		const MeasurementSet& ms
 	);
 
+	static std::map<Int, vector<Double> > _getScanToTimeRangeMap(
+		const Vector<Int>& scans, const Vector<Double>& timeCentroids,
+		const Vector<Double>& intervals
+	);
+
 private:
+
 	// This comment from thunter in the original ValueMapping python class
 	// # Determine the number of polarizations for the first OBSERVE_TARGET intent.
     // # Used by plotbandpass for BPOLY plots since the number of pols cannot be inferred

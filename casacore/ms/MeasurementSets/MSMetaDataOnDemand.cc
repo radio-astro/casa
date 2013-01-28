@@ -68,8 +68,8 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  _scanToTimesMap(), _intentToFieldIDMap(),
 	  _fieldToTimesMap(), _observatoryPositions(0),
 	  _antennaOffsets(0), _uniqueBaselines(0, 0),
-	  _exposureTime(0), _unflaggedACRows(0),
-	  _unflaggedXCRows(0), _unflaggedFieldNACRows(0),
+	  _exposureTime(0), _nUnflaggedACRows(0),
+	  _nUnflaggedXCRows(0), _unflaggedFieldNACRows(0),
 	  _unflaggedFieldNXCRows(0), _unflaggedScanNACRows(),
 	  _unflaggedScanNXCRows(),
 	  _taqlTableName(
@@ -77,7 +77,7 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  ),
 	  _taqlTempTable(
 		File(ms->tableName()).exists() ? 0 : 1, ms
-	  ) {}
+	  ), _flagsColumn() {}
 
 MSMetaDataOnDemand::~MSMetaDataOnDemand() {}
 
@@ -236,6 +236,82 @@ uInt MSMetaDataOnDemand::nRows(CorrelationType cType, uInt fieldID) {
 	AOSFMapI scanToNACRowsMap, scanToNXCRowsMap;
 	vector<uInt> fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	if (cType == AUTO) {
+		return fieldToNACRowsMap[fieldID];
+	}
+	else if (cType == CROSS) {
+		return fieldToNXCRowsMap[fieldID];
+	}
+	else {
+		return fieldToNACRowsMap[fieldID] + fieldToNXCRowsMap[fieldID];
+	}
+}
+
+Double MSMetaDataOnDemand::nUnflaggedRows() {
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	return nACRows + nXCRows;
+}
+Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType) {
+
+	if (cType == BOTH) {
+		return nUnflaggedRows();
+	}
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	if (cType == AUTO) {
+		return nACRows;
+	}
+	else {
+		return nXCRows;
+	}
+}
+
+Double MSMetaDataOnDemand::nUnflaggedRows(
+	CorrelationType cType, uInt arrayID, uInt observationID,
+	uInt scanNumber, uInt fieldID
+) {
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
+		nACRows, nXCRows, scanToNACRowsMap,
+		scanToNXCRowsMap, fieldToNACRowsMap,
+		fieldToNXCRowsMap
+	);
+	if (cType == AUTO) {
+		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+	else if (cType == CROSS) {
+		return scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+	else {
+		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID]
+		    + scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+	}
+}
+
+Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType, uInt fieldID) {
+	Double nACRows, nXCRows;
+	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
+	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
 		fieldToNXCRowsMap
@@ -770,6 +846,153 @@ std::set<uInt> MSMetaDataOnDemand::getTDMSpw() {
 	return tdmSpw;
 }
 
+vector<Double> MSMetaDataOnDemand::getBandWidths() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<Double> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->bandwidth);
+	}
+	return out;
+}
+
+vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getChanFreqs() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<Quantum<Vector<Double> > > out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->chanfreqs);
+	}
+	return out;
+}
+
+vector<vector<Double> > MSMetaDataOnDemand::getChanWidths() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<vector<Double> > out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->chanwidths);
+	}
+	return out;
+}
+
+vector<Int> MSMetaDataOnDemand::getNetSidebands() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<Int> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->netsideband);
+	}
+	return out;
+}
+
+vector<Quantity> MSMetaDataOnDemand::getMeanFreqs() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<Quantity> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->meanfreq);
+	}
+	return out;
+}
+
+vector<uInt> MSMetaDataOnDemand::nChans() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<uInt> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->nchans);
+	}
+	return out;
+}
+
+vector<vector<Double> > MSMetaDataOnDemand::getEdgeChans() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<vector<Double> > out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->edgechans);
+	}
+	return out;
+}
+
+vector<uInt> MSMetaDataOnDemand::getBBCNos() {
+	if (! hasBBCNo(*_ms)) {
+		throw AipsError("This MS's SPECTRAL_WINDOW table does not have a BBC_NO column");
+	}
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<uInt> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->bbcno);
+	}
+	return out;
+}
+
+vector<String> MSMetaDataOnDemand::getSpwNames() {
+	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
+	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
+		avgSpw, tdmSpw, fdmSpw, wvrSpw
+	);
+	vector<MSMetaData::SpwProperties>::const_iterator end = props.end();
+	vector<String> out;
+	for (
+		vector<MSMetaData::SpwProperties>::const_iterator iter=props.begin();
+		iter!=end; iter++
+	) {
+		out.push_back(iter->name);
+	}
+	return out;
+}
+
 std::set<uInt> MSMetaDataOnDemand::getFDMSpw() {
 	if (! _fdmSpw.empty()) {
 		return _fdmSpw;
@@ -859,6 +1082,24 @@ std::tr1::shared_ptr<Vector<Double> > MSMetaDataOnDemand::_getTimes() {
 	return times;
 }
 
+std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaDataOnDemand::_getFlags() {
+	if (_flagsColumn && ! _flagsColumn->nrow() > 0) {
+			return _flagsColumn;
+		}
+		std::tr1::shared_ptr<ArrayColumn<Bool> > flagsColumn(
+			MSMetaData::_getFlags(*_ms)
+		);
+		uInt mysize = 0;
+		for (uInt i=0; i<flagsColumn->nrow(); i++) {
+			mysize += flagsColumn->get(i).size();
+		}
+		if (_cacheUpdated(sizeof(Bool)*mysize)) {
+			_flagsColumn = flagsColumn;
+		}
+		return flagsColumn;
+}
+
+
 std::set<Double> MSMetaDataOnDemand::getTimesForScans(
 	const std::set<uInt>& scans
 ) {
@@ -876,6 +1117,21 @@ std::set<Double> MSMetaDataOnDemand::getTimesForScans(
 		);
 	}
 	return times;
+}
+
+vector<Double> MSMetaDataOnDemand::getTimeRangeForScan(uInt scan) {
+	_checkScan(scan, getScanNumbers());
+	if (! _scanToTimeRangeMap.empty()) {
+		return _scanToTimeRangeMap[scan];
+	}
+	std::map<Int, vector<Double> > mymap = _getScanToTimeRangeMap(
+		*_getScans(), _getTimeCentroids(*_ms), _getIntervals(*_ms)
+	);
+	uInt mysize = mymap.size()*(sizeof(Int)+2*sizeof(Double));
+	if (_cacheUpdated(mysize)) {
+		_scanToTimeRangeMap = mymap;
+	}
+	return mymap[scan];
 }
 
 std::set<uInt> MSMetaDataOnDemand::getStatesForScan(const uInt scan) {
@@ -1236,15 +1492,14 @@ Quantity MSMetaDataOnDemand::getEffectiveTotalExposureTime() {
 	return eTime;
 }
 
-void MSMetaDataOnDemand::getUnflaggedRowStats(
+void MSMetaDataOnDemand::_getUnflaggedRowStats(
 	Double& nACRows, Double& nXCRows,
-	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-	std::map<uInt, Double>& scanNACRows,
-	std::map<uInt, Double>& scanNXCRows
+	AOSFMapD& scanNACRows, AOSFMapD& scanNXCRows,
+	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows
 ) {
 	if (! _unflaggedFieldNACRows.empty()) {
-		nACRows = _unflaggedACRows;
-		nXCRows = _unflaggedXCRows;
+		nACRows = _nUnflaggedACRows;
+		nXCRows = _nUnflaggedXCRows;
 		fieldNACRows = _unflaggedFieldNACRows;
 		fieldNXCRows = _unflaggedFieldNXCRows;
 		scanNACRows = _unflaggedScanNACRows;
@@ -1254,171 +1509,27 @@ void MSMetaDataOnDemand::getUnflaggedRowStats(
 	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
 	std::set<uInt> a, b, c, d;
-	std::auto_ptr<ArrayColumn<Bool> > flags;
-	flags.reset(_getFlags(*_ms));
 
-	_getUnflaggedRowStats(
+	MSMetaData::_getUnflaggedRowStats(
 		nACRows, nXCRows, fieldNACRows,
 		fieldNXCRows, scanNACRows, scanNXCRows, *ant1,
 		*ant2, _getFlagRows(*_ms), *_getDataDescIDs(),
 		_getDataDescIDToSpwMap(),
-		_getSpwInfo(a, b, c, d), *flags, *_getFieldIDs(),
-		*_getScans()
+		_getSpwInfo(a, b, c, d), *MSMetaData::_getFlags(*_ms), *_getFieldIDs(),
+		*_getScans(), *_getObservationIDs(), *_getArrayIDs()
 	);
 	uInt mysize = fieldNACRows.size() + fieldNXCRows.size()
 		+ scanNACRows.size() + scanNXCRows.size();
 	mysize *= sizeof(Double);
 	if (_cacheUpdated(mysize)) {
-		_unflaggedACRows = nACRows;
-		_unflaggedXCRows = nXCRows;
+		_nUnflaggedACRows = nACRows;
+		_nUnflaggedXCRows = nXCRows;
 		_unflaggedFieldNACRows = fieldNACRows;
 		_unflaggedFieldNXCRows = fieldNXCRows;
 		_unflaggedScanNACRows = scanNACRows;
 		_unflaggedScanNXCRows = scanNXCRows;
 	}
 }
-
-/*
-vector<std::set<uInt> > MSMetaDataOnDemand::_getSpwToFieldMap() {
-	if (! _spwToFieldIDsMap.empty()) {
-		return _spwToFieldIDsMap;
-	}
-	vector<std::set<uInt> > spwToFieldIDsMap(_nSpw());
-	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
-	vector<uInt> dataDescToSpwMap = _getDataDescIDToSpwMap();
-	std::tr1::shared_ptr<Vector<Int> > fieldIds = _getFieldIDs();
-	Vector<Int>::const_iterator dataDescID=dataDescIDs->begin();
-	Vector<Int>::const_iterator end = dataDescIDs->end();
-	Vector<Int>::const_iterator fieldID = fieldIds->begin();
-	while (dataDescID != end) {
-		Int spw = dataDescToSpwMap[*dataDescID];
-		spwToFieldIDsMap[spw].insert(*fieldID);
-		dataDescID++;
-		fieldID++;
-	}
-	vector<std::set<uInt> >::const_iterator end1 = spwToFieldIDsMap.end();
-	uInt mysize = 0;
-	for (
-		vector<std::set<uInt> >::const_iterator iter=spwToFieldIDsMap.begin();
-		iter!=end1; iter++
-	) {
-		mysize += iter->size();
-	}
-	mysize *= sizeof(uInt);
-	if (_cacheUpdated(mysize)) {
-		_spwToFieldIDsMap = spwToFieldIDsMap;
-	}
-	return spwToFieldIDsMap;
-}
-*/
-
-/*
-uInt MSMetaDataOnDemand::_getNumberOfPolarizations() {
-	Int myscan = -1;
-	std::set<uInt> uniqueScans = getScanNumbers();
-	for (
-		std::set<uInt>::const_iterator scanNum=uniqueScans.begin();
-		scanNum!=uniqueScans.end(); scanNum++
-	) {
-		std::set<String> intents = getIntentsForScan(*scanNum);
-		for (
-			std::set<String>::const_iterator intent=intents.begin();
-			intent!=intents.end(); intent++
-		) {
-			if (intent->contains("OBSERVE_TARGET")) {
-				myscan = *scanNum;
-				break;
-			}
-		}
-		if (myscan >= 0) {
-			break;
-		}
-	}
-	if (myscan < 0) {
-		// if there is no OBSERVE_TARGET, then just use the first scan
-		myscan = 0;
-	}
-
-	String dataName, correctedName, modelName;
-	_getDataColumnNames(
-		dataName, correctedName,
-		modelName
-	);
-	ArrayColumn<Complex> dataCol(
-		_ms, dataName
-	);
-	Array<Complex> arr;
-	uInt nPolarizations;
-	if (myscan == 0) {
-		// assume the first row in the table is for the first scan, to save time
-		dataCol.get(0, arr);
-		nPolarizations = arr.shape()[0];
-	}
-	else {
-		Vector<Int> scans = MSMetaData::_getScans(_ms);
-		nPolarizations = 0;
-		uInt i = 0;
-		for (
-			Vector<Int>::const_iterator scanNum=scans.begin();
-			scanNum!=scans.end(); scanNum++, i++
-		) {
-			if (*scanNum == myscan) {
-				dataCol.get(i, arr);
-				nPolarizations = arr.shape()[0];
-				break;
-			}
-		}
-	}
-	return nPolarizations;
-}
-*/
-
-/*
-void MSMetaDataOnDemand::_getDataColumnNames(
-	String& dataName, String& correctedName,
-	String& modelName
-) const {
-	dataName = "";
-	correctedName = "";
-	modelName = "";
-	TableProxy t(_ms);
-	Vector<String> colNames = t.columnNames();
-	std::set<String> cNames(colNames.begin(), colNames.end());
-	std::set<String>::const_iterator end = cNames.end();
-	if (cNames.find("FLOAT_DATA") != end) {
-		dataName = "FLOAT_DATA";
-		correctedName = "FLOAT_DATA";
-	}
-	else if (cNames.find("DATA") != end) {
-		dataName = "DATA";
-	}
-	if (cNames.find("CORRECTED_DATA") != end) {
-		correctedName = "CORRECTED_DATA";
-	}
-	if (cNames.find("MODEL_DATA") != end) {
-		modelName = "MODEL_DATA";
-	}
-}
-*/
-
-/*
-vector<std::set<uInt> > MSMetaDataOnDemand::_getSpwToScansMap() {
-	vector<std::set<uInt> > spwToScansMap(nSpw());
-	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
-	Vector<Int>::const_iterator curDDID = dataDescIDs->begin();
-	Vector<Int>::const_iterator end = dataDescIDs->end();
-	vector<uInt> dataDescToSpwMap = _getDataDescIDToSpwMap();
-	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
-	Vector<Int>::const_iterator curScan = scans->begin();
-	while (curDDID != end) {
-		Int spw = dataDescToSpwMap[*curDDID];
-		spwToScansMap[spw].insert(*curScan);
-		curDDID++;
-		curScan++;
-	}
-	return spwToScansMap;
-}
-*/
 
 vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
 	if (! _spwToIntentsMap.empty()) {
@@ -1509,7 +1620,7 @@ vector<MSMetaData::SpwProperties> MSMetaDataOnDemand::_getSpwInfo(
 		vector<SpwProperties>::const_iterator iter=spwInfo.begin();
 		iter!=end; iter++
 	) {
-		mysize += 2*sizeof(Double)*iter->chanfreqs.size();
+		mysize += 2*(sizeof(Double)*iter->nchans + 20);
 		mysize += sizeof(Double)*iter->edgechans.size();
 	}
 	if (_cacheUpdated(mysize)) {

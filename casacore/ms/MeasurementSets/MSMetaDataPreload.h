@@ -143,6 +143,11 @@ public:
 	// Get the times for the specified scans
 	std::set<Double> getTimesForScans(const std::set<uInt>& scans);
 
+	// get the time range for the specified scan. The vector returned will contain two elements,
+	// the start and stop time of the scan, determined from min(TIME_CENTROID(x)-0.5*INTERVAL(x)) and
+	// max(TIME_CENTROID(x)-0.5*INTERVAL(x))
+	std::vector<Double> getTimeRangeForScan(uInt scan);
+
 	// get the times for the specified scan
 	// std::set<Double> getTimesForScan(const uInt scan) const;
 
@@ -223,13 +228,35 @@ public:
 	// collecting unflagged data.
 	Quantity getEffectiveTotalExposureTime();
 
-	// get the number of unflagged auto correlation and cross correlation rows.
-	void getUnflaggedRowStats(
-		Double& nACRows, Double& nXCRows,
-		vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows,
-		std::map<uInt, Double>& scanNACRows,
-		std::map<uInt, Double>& scanNXCRows
+	// get the number of unflagged rows
+	Double nUnflaggedRows();
+
+	Double nUnflaggedRows(CorrelationType cType);
+
+	Double nUnflaggedRows(
+		CorrelationType cType, uInt arrayID, uInt observationID,
+		uInt scanNumber, uInt fieldID
 	);
+
+	Double nUnflaggedRows(CorrelationType cType, uInt fieldID);
+
+	vector<Double> getBandWidths();
+
+	vector<Quantum<Vector<Double> > > getChanFreqs();
+
+	vector<vector<Double> > getChanWidths();
+
+	vector<Int> getNetSidebands();
+
+	vector<Quantity> getMeanFreqs();
+
+	vector<uInt> nChans();
+
+	vector<vector<Double> > getEdgeChans();
+
+	vector<uInt> getBBCNos();
+
+	vector<String> getSpwNames();
 
 private:
 	Vector<Int> _antenna1,	_antenna2, _dataDescIDs,
@@ -262,8 +289,10 @@ private:
 	Vector<Bool> _flagRow;
 	std::auto_ptr<ArrayColumn<Bool> > _flags;
 	AOSFMapI _scanToNACRowsMap, _scanToNXCRowsMap;
-	vector<Double> _nUnflaggedFieldNACRows, _nUnflaggedFieldNXCRows;
-	std::map<uInt, Double> _nUnflaggedScanNACRows, _nUnflaggedScanNXCRows;
+	AOSFMapD _scanToNUnflaggedACRowsMap, _scanToNUnflaggedXCRowsMap;
+	vector<Double> _fieldToNUnflaggedACRows, _fieldToNUnflaggedXCRows;
+	std::map<Int, vector<Double> > _scanToTimeRange;
+	Bool _hasBBCNo;
 
 	// disallow copy constructor and = operator
 	MSMetaDataPreload(const MSMetaData&);
