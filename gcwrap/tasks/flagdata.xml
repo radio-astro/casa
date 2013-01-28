@@ -189,7 +189,7 @@
                 <value type="string">scan</value>
             </param>
             <param type="bool" name="combinescans" subparam="true">
-                <description>Accumulate data across scans.</description>
+                <description>Accumulate data across scans depending on the value of ntime.</description>
                 <value>False</value>
             </param>
             <param type="double" name="timecutoff" subparam="true">
@@ -899,10 +899,16 @@ The task will flag a subset of data based on the following modes of operation:
                     example: '1.5min'
                            : 1.2 (taken in seconds)
                         The dataset will be iterated through in time-chunks defined here.
+                        WARNING: if ntime='scan' and combinescans=True, all the scans will
+                        be loaded at once, thus requesting a lot of memory depending on the
+                        available spws.
                 
-               combinescans -- accumulate data across scans.
+               combinescans -- Accumulate data across scans depending on the value of ntime.
                     default: False
-                        This parameter is relevant only ntime is specified as a time-interval (not 'scan')
+                        This parameter should be set to True only when ntime is specified as a 
+                        time-interval (not 'scan'). When set to True, it will remove SCAN from the
+                        sorting columns, therefore it will only accumulate across scans if
+                        ntime is not set to 'scan'.
 
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
@@ -1057,16 +1063,23 @@ The task will flag a subset of data based on the following modes of operation:
                           correlations (or sols) on which to run one instance of RFlag. 
                           For example, correlation='RR,LL' or correlation='ABS sol1,sol2'.
 
-               ntime -- Timerange (in seconds or minutes) over which to buffer data before running the algorithm.
+               ntime -- Timerange (in seconds or minutes) over which to buffer data before running 
+                        the algorithm.
                      options: 'scan' or any other float value or string containing the units.
                      default: 'scan'
                      example: '1.5min'
                             : 1.2 (taken in seconds)
                         The dataset will be iterated through in time-chunks defined here.
+                        WARNING: if ntime='scan' and combinescans=True, all the scans will
+                        be loaded at once, thus requesting a lot of memory depending on the
+                        available spws.
                 
-               combinescans -- accumulate data across scans.
-                      default: False
-                          It only makes sense when ntime not equal 'scan'.                
+               combinescans -- Accumulate data across scans depending on the value of ntime.
+                    default: False
+                        This parameter should be set to True only when ntime is specified as a 
+                        time-interval (not 'scan'). When set to True, it will remove SCAN from the
+                        sorting columns, therefore it will only accumulate across scans if
+                        ntime is not set to 'scan'.
 
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
@@ -1131,10 +1144,16 @@ The task will flag a subset of data based on the following modes of operation:
                      example: '1.5min'
                             : 1.2 (taken in seconds)
                         The dataset will be iterated through in time-chunks defined here.
+                        WARNING: if ntime='scan' and combinescans=True, all the scans will
+                        be loaded at once, thus requesting a lot of memory depending on the
+                        available spws.
                 
-               combinescans -- accumulate data across scans.
-                      default: False
-                          It only makes sense when ntime not equal 'scan'.                
+               combinescans -- Accumulate data across scans depending on the value of ntime.
+                    default: False
+                        This parameter should be set to True only when ntime is specified as a 
+                        time-interval (not 'scan'). When set to True, it will remove SCAN from the
+                        sorting columns, therefore it will only accumulate across scans if
+                        ntime is not set to 'scan'.
 
                extendpols -- Extend flags to all selected correlations
                       default: True
