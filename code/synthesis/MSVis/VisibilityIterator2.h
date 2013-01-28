@@ -309,6 +309,7 @@ class VisibilityIterator2 : private boost::noncopyable
     // facto private.
 
     friend class VisibilityIteratorImpl2;
+    friend class VisBuffer2Adapter;
     friend class VisBufferImpl2;
     friend class VisBufferState;
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected

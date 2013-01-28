@@ -31,14 +31,13 @@ class VisBuffer2Adapter : public VisBuffer {
 
 public:
 
-    VisBuffer2Adapter (VisBuffer2 * vb, const VisibilityIteratorImpl2 * vi) : vb2_p (vb) , vb2Rw_p (vb)
+    VisBuffer2Adapter (VisBuffer2 * vb) : vb2_p (vb) , vb2Rw_p (vb)
     {
-        msColumns_p = vi->msColumnsKluge();
+        msColumns_p = dynamic_cast<const VisibilityIteratorImpl2 *> (vb->getVi()->getImpl())->msColumnsKluge();
     }
     VisBuffer2Adapter (const VisBuffer2 * vb) : msColumns_p (0), vb2_p (vb), vb2Rw_p (0) {}
 
     ~VisBuffer2Adapter () {}
-
 
     virtual VisBuffer & assign(const VisBuffer &, Bool = True) {IllegalOperation();}
 
