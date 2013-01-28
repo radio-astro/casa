@@ -29,7 +29,8 @@ Apply any apply tables to target data
 */
 class STCalEnum  {
 public:
-  enum InterpolationType {NearestInterpolation = 0,
+  enum InterpolationType {DefaultInterpolation = 0,
+                          NearestInterpolation,
                           LinearInterpolation,
                           PolynomialInterpolation,
                           CubicSplineInterpolation};

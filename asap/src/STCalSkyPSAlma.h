@@ -28,7 +28,6 @@
 #include "STCalibration.h"
 #include "STCalSkyTable.h"
 
-
 namespace asap {
 
 /**
@@ -39,10 +38,10 @@ class STCalSkyPSAlma : public STCalibration {
 public:
   STCalSkyPSAlma(casa::CountedPtr<Scantable> &s);
 
-  virtual void calibrate();
-
   ~STCalSkyPSAlma() {;}
+  
 private:
+  void setupSelector();
   void fillCalTable();
 };
 

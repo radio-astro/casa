@@ -31,16 +31,10 @@ namespace asap {
   applytable_ = new STCalTsysTable(*s);
 }
 
-void STCalTsys::calibrate()
+void STCalTsys::setupSelector()
 {
-  STSelector selOrg = scantable_->getSelection();
-  STSelector sel;
-  sel.setIFs(iflist_);
-  scantable_->setSelection(sel);
-  
-  fillCalTable();
-
-  scantable_->setSelection(selOrg);
+  sel_.reset();
+  sel_.setIFs(iflist_);
 }
 
 void STCalTsys::fillCalTable()
@@ -77,8 +71,17 @@ void STCalTsys::fillCalTable()
   while(!iter.pastEnd()) {
     Vector<uInt> rows = iter.getRows(SHARE);
     Vector<uInt> current = iter.current();
+    //os_ << "current=" << current << LogIO::POST;
     uInt len = rows.nelements();
     if (len == 0) {
+      iter.next();
+      continue;
+    }
+    else if (len == 1) {
+      STCalTsysTable *p = dynamic_cast<STCalTsysTable *>(&(*applytable_));
+      uInt irow = rows[0];
+      p->appenddata(0, 0, current[2], current[0], current[1], 
+                    freqidCol(irow), timeSec[irow], elevation[irow], specCol(irow));
       iter.next();
       continue;
     }
@@ -98,6 +101,7 @@ void STCalTsys::fillCalTable()
     uInt irow ;
     uInt jrow ;
     for (uInt i = 0; i < len; i++) {
+      //os_ << "start row " << rows[i] << LogIO::POST;
       irow = rows[i];
       jrow = (i < len-1) ? rows[i+1] : rows[i];
       // accumulate data
@@ -136,6 +140,7 @@ void STCalTsys::fillCalTable()
     }
 
     iter.next() ;
+    //os_ << "end " << current << LogIO::POST;
   }
 }
 

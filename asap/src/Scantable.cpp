@@ -65,6 +65,7 @@
 
 #include "MathUtils.h"
 #include "STAttr.h"
+#include "STBaselineTable.h"
 #include "STLineFinder.h"
 #include "STPolCircular.h"
 #include "STPolLinear.h"
@@ -2635,19 +2636,51 @@ void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, floa
 
     int nRow = nrow();
     std::vector<bool> chanMask;
+    std::vector<bool> finalChanMask;
+    float rms;
+
+    //---
+    bool outBaselineParamTable = false;
+    STBaselineTable* bt = new STBaselineTable(*this);
+    //---
 
     for (int whichrow = 0; whichrow < nRow; ++whichrow) {
       std::vector<float> sp = getSpectrum(whichrow);
       chanMask = getCompositeChanMask(whichrow, mask);
       std::vector<float> params(order+1);
       int nClipped = 0;
-      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, nClipped, thresClip, nIterClip, getResidual);
+      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, finalChanMask, rms, nClipped, thresClip, nIterClip, getResidual);
 
-      setSpectrum(res, whichrow);
+      //---
+      if (outBaselineParamTable) {
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       Double(0.0), // <-- Double(getTime(whichrow, false)), 
+		       uInt(nchan(whichrow)), 
+		       STBaselineFunc::Chebyshev, 
+		       Vector<uInt>(1), // ==> MUST BE Vector<uInt> containing 'order'.
+		       Vector<Float>(), // ==> for ffpar. ** dummy **
+		       uInt(nIterClip), 
+		       Float(thresClip), 
+		       Vector<uInt>(5), // <-- Vector<uInt>(finalChanMask), 
+		       Vector<Float>(params), 
+		       Float(rms));
+      } else {
+	setSpectrum(res, whichrow);
+      }
+      //---
+
       outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "chebyshevBaseline()", params, nClipped);
       showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
     }
     
+    //---
+    if (outBaselineParamTable) {
+      bt->save("chebyparamtable");
+    }
+    //---
+    delete bt;
+
     if (outTextFile) ofs.close();
 
   } catch (...) {
@@ -2696,13 +2729,15 @@ double Scantable::doCalculateModelSelectionCriteria(const std::string& valname, 
 {
   int nparam;
   std::vector<float> params;
+  std::vector<bool> finalChanMask;
+  float rms;
   int nClipped = 0;
   float thresClip = 0.0;
   int nIterClip = 0;
   std::vector<float> res;
   if (blfunc == "chebyshev") {
     nparam = order + 1;
-    res = doChebyshevFitting(spec, mask, order, params, nClipped, thresClip, nIterClip, true);
+    res = doChebyshevFitting(spec, mask, order, params, finalChanMask, rms, nClipped, thresClip, nIterClip, true);
   } else if (blfunc == "sinusoid") {
     std::vector<int> nWaves;
     nWaves.clear();
@@ -2798,6 +2833,9 @@ void Scantable::autoChebyshevBaseline(const std::vector<bool>& mask, int order, 
     int minNRow;
     parseProgressInfo(progressInfo, showProgress, minNRow);
 
+    std::vector<bool> finalChanMask;
+    float rms;
+
     for (int whichrow = 0; whichrow < nRow; ++whichrow) {
       std::vector<float> sp = getSpectrum(whichrow);
 
@@ -2830,7 +2868,7 @@ void Scantable::autoChebyshevBaseline(const std::vector<bool>& mask, int order, 
       //setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
       std::vector<float> params(order+1);
       int nClipped = 0;
-      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, nClipped, thresClip, nIterClip, getResidual);
+      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, finalChanMask, rms, nClipped, thresClip, nIterClip, getResidual);
       setSpectrum(res, whichrow);
 
       outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "autoChebyshevBaseline()", params, nClipped);
@@ -2900,7 +2938,7 @@ double Scantable::getChebyshevPolynomial(int n, double x) {
   }
 }
 
-std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data, const std::vector<bool>& mask, int order, std::vector<float>& params, int& nClipped, float thresClip, int nIterClip, bool getResidual)
+std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data, const std::vector<bool>& mask, int order, std::vector<float>& params, std::vector<bool>& finalMask, float& rms, int& nClipped, float thresClip, int nIterClip, bool getResidual)
 {
   if (data.size() != mask.size()) {
     throw(AipsError("data and mask sizes are not identical"));
@@ -2910,6 +2948,10 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
   }
 
   int nChan = data.size();
+
+  finalMask.clear();
+  finalMask.resize(nChan);
+
   std::vector<int> maskArray;
   std::vector<int> x;
   for (int i = 0; i < nChan; ++i) {
@@ -2917,6 +2959,7 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
     if (mask[i]) {
       x.push_back(i);
     }
+    finalMask[i] = mask[i];
   }
 
   int initNData = x.size();
@@ -3040,20 +3083,23 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
       residual[i] = z1[i] - r1[i];
     }
 
+    double stdDev = 0.0;
+    for (int i = 0; i < nChan; ++i) {
+      stdDev += residual[i]*residual[i]*(double)maskArray[i];
+    }
+    stdDev = sqrt(stdDev/(double)nData);
+    rms = (float)stdDev;
+
     if ((nClip == nIterClip) || (thresClip <= 0.0)) {
       break;
     } else {
-      double stdDev = 0.0;
-      for (int i = 0; i < nChan; ++i) {
-	stdDev += residual[i]*residual[i]*(double)maskArray[i];
-      }
-      stdDev = sqrt(stdDev/(double)nData);
-      
+
       double thres = stdDev * thresClip;
       int newNData = 0;
       for (int i = 0; i < nChan; ++i) {
 	if (abs(residual[i]) >= thres) {
 	  maskArray[i] = 0;
+          finalMask[i] = false;
 	}
 	if (maskArray[i] > 0) {
 	  newNData++;
@@ -3064,6 +3110,7 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
       } else {
 	nData = newNData;
       }
+
     }
   }
 
@@ -4314,47 +4361,42 @@ std::vector<float> Scantable::execFFT(const int whichrow, const std::vector<bool
 float Scantable::getRms(const std::vector<bool>& mask, int whichrow)
 {
   /****
-  double ms1TimeStart, ms1TimeEnd, ms2TimeStart, ms2TimeEnd;
+  double ms1TimeStart, ms1TimeEnd;
   double elapse1 = 0.0;
-  double elapse2 = 0.0;
-
   ms1TimeStart = mathutil::gettimeofday_sec();
   ****/
 
   Vector<Float> spec;
-
   specCol_.get(whichrow, spec);
 
   /****
   ms1TimeEnd = mathutil::gettimeofday_sec();
   elapse1 = ms1TimeEnd - ms1TimeStart;
   std::cout << "rm1   : " << elapse1 << " (sec.)" << endl;
-  ms2TimeStart = mathutil::gettimeofday_sec();
   ****/
 
-  float mean = 0.0;
-  float smean = 0.0;
+  return (float)doGetRms(mask, spec);
+}
+
+double Scantable::doGetRms(const std::vector<bool>& mask, const Vector<Float>& spec)
+{
+  double mean = 0.0;
+  double smean = 0.0;
   int n = 0;
   for (uInt i = 0; i < spec.nelements(); ++i) {
     if (mask[i]) {
-      mean += spec[i];
-      smean += spec[i]*spec[i];
+      double val = (double)spec[i];
+      mean += val;
+      smean += val*val;
       n++;
     }
   }
 
-  mean /= (float)n;
-  smean /= (float)n;
-
-  /****
-  ms2TimeEnd = mathutil::gettimeofday_sec();
-  elapse2 = ms2TimeEnd - ms2TimeStart;
-  std::cout << "rm2   : " << elapse2 << " (sec.)" << endl;
-  ****/
+  mean /= (double)n;
+  smean /= (double)n;
 
   return sqrt(smean - mean*mean);
 }
-
 
 std::string Scantable::formatBaselineParamsHeader(int whichrow, const std::string& masklist, bool verbose, bool csvformat) const
 {

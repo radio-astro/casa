@@ -29,7 +29,6 @@
 #include "STCalibration.h"
 #include "STCalTsysTable.h"
 
-
 namespace asap {
 
 /**
@@ -40,10 +39,10 @@ class STCalTsys : public STCalibration {
 public:
   STCalTsys(casa::CountedPtr<Scantable> &s, vector<int> &iflist);
 
-  virtual void calibrate();
-
   ~STCalTsys() {;}
+  
 private:
+  void setupSelector();
   void fillCalTable();
 
   vector<int> iflist_;

@@ -64,10 +64,36 @@ void STApplyCal::init()
 {
   caltype_ = STCalEnum::NoType;
   doTsys_ = False;
+  iTime_ = STCalEnum::DefaultInterpolation;
+  iFreq_ = STCalEnum::DefaultInterpolation;
 }
 
 void STApplyCal::reset()
 {
+  // call init
+  init();
+
+  // clear apply tables
+  // do not delete object here
+  skytable_.resize(0);
+  tsystable_.resize(0);
+
+  // clear mapping for Tsys transfer
+  spwmap_.clear();
+
+  // reset selector
+  sel_.reset();
+  
+  // delete interpolators
+  interpolatorT_ = 0;
+  interpolatorS_ = 0;
+  interpolatorF_ = 0;
+
+  // clear working scantable
+  work_ = 0;
+  
+  // clear calibrator
+  calibrator_ = 0;
 }
 
 void STApplyCal::completeReset()
@@ -138,7 +164,7 @@ void STApplyCal::setTsysTransfer(uInt from, Vector<uInt> to)
   }
 }
 
-void STApplyCal::apply(Bool insitu)
+void STApplyCal::apply(Bool insitu, Bool filltsys)
 {
   os_.origin(LogOrigin("STApplyCal","apply",WHERE));
   // calibrator
@@ -201,7 +227,8 @@ void STApplyCal::apply(Bool insitu)
 
 void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno, 
                          Vector<uInt> &rows,
-                         Vector<uInt> &skylist)
+                         Vector<uInt> &skylist, 
+                         Bool filltsys)
 {
   os_.origin(LogOrigin("STApplyCal","doapply",WHERE));
   Bool doTsys = doTsys_;
@@ -378,7 +405,8 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     // update table
     //os_ << "calibrated=" << calibrator_->getCalibrated() << LogIO::POST; 
     spCol.put(irow, calibrator_->getCalibrated());
-    tsysCol.put(irow, iTsys);
+    if (filltsys)
+      tsysCol.put(irow, iTsys);
   }
   
 
@@ -420,8 +448,7 @@ uInt STApplyCal::getIFForTsys(uInt to)
 
 void STApplyCal::save(const String &name)
 {
-  if (work_.null())
-    return;
+  assert(!work_.null());
 
   work_->setSelection(sel_);
   work_->makePersistent(name);

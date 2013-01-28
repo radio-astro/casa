@@ -89,6 +89,7 @@ BOOST_PYTHON_MODULE(_asap) {
   asap::python::python_EdgeMarker();
   asap::python::python_PlotHelper();
   asap::python::python_STSideBandSep();
+  asap::python::python_CalibrationManager();
 
 #ifndef HAVE_LIBPYRAP
   // Use built-in pyconversions.h

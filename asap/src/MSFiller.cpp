@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <iostream>
 #include <map>
+#include <set>
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableIter.h>
@@ -79,29 +80,29 @@ public:
     count = 0;
   }
   
-  virtual void enterObservationId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveObservationId(const uInt recordNo, Int columnValue) { }
-  virtual void enterFeedId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveFeedId(const uInt recordNo, Int columnValue) { }
-  virtual void enterFieldId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveFieldId(const uInt recordNo, Int columnValue) { }
-  virtual void enterDataDescId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveDataDescId(const uInt recordNo, Int columnValue) { }
-  virtual void enterScanNo(const uInt recordNo, Int columnValue) { }
-  virtual void leaveScanNo(const uInt recordNo, Int columnValue) { }
-  virtual void enterStateId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveStateId(const uInt recordNo, Int columnValue) { }
-  virtual void enterTime(const uInt recordNo, Double columnValue) { }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) { }
+  virtual void enterObservationId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveObservationId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterFeedId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveFeedId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterFieldId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveFieldId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterDataDescId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveDataDescId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterScanNo(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveScanNo(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterStateId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveStateId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
+  virtual void leaveTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
 
-  virtual Bool visitRecord(const uInt recordNo,
-			   const Int ObservationId,
-			   const Int feedId,
-			   const Int fieldId,
-			   const Int dataDescId,
-			   const Int scanNo,
-			   const Int stateId,
-			   const Double time) { return True ; }
+  virtual Bool visitRecord(const uInt /*recordNo*/,
+			   const Int /*ObservationId*/,
+			   const Int /*feedId*/,
+			   const Int /*fieldId*/,
+			   const Int /*dataDescId*/,
+			   const Int /*scanNo*/,
+			   const Int /*stateId*/,
+			   const Double /*time*/) { return True ; }
 
   virtual Bool visit(Bool isFirst, const uInt recordNo,
 		     const uInt nCols, void const *const colValues[]) {
@@ -350,7 +351,7 @@ public:
     *opacityRF = 0.0 ;
   }
 
-  virtual void enterObservationId(const uInt recordNo, Int columnValue) {
+  virtual void enterObservationId(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: ObservationId: %d\n", recordNo, columnValue);
     // update header 
     if ( header.observer.empty() ) 
@@ -366,14 +367,14 @@ public:
     if ( header.antennaname.empty() )
       getScalar( "TELESCOPE_NAME", (uInt)columnValue, obstab, header.antennaname ) ;
   }
-  virtual void leaveObservationId(const uInt recordNo, Int columnValue) {
+  virtual void leaveObservationId(const uInt /*recordNo*/, Int /*columnValue*/) {
     // update header
     header.nbeam = max( header.nbeam, (Int)nbeam ) ;
 
     nbeam = 0 ;
     feedEntry = -1 ;
   }
-  virtual void enterFeedId(const uInt recordNo, Int columnValue) {
+  virtual void enterFeedId(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: FeedId: %d\n", recordNo, columnValue);
 
     // update feed entry
@@ -386,15 +387,15 @@ public:
     *beamNoRF = (uInt)columnValue ;
     *focusIdRF = (uInt)0 ;
   }
-  virtual void leaveFeedId(const uInt recordNo, Int columnValue) {
-    Int nelem = (Int)feedEntry.nelements() ;
+  virtual void leaveFeedId(const uInt /*recordNo*/, Int /*columnValue*/) {
+    uInt nelem = feedEntry.nelements() ;
     if ( nbeam > nelem ) {
       feedEntry.resize( nelem+64, True ) ;
       Slicer slice( IPosition( 1, nelem ), IPosition( 1, feedEntry.nelements()-1 ) ) ;
       feedEntry( slice ) = -1 ;
     }
   }
-  virtual void enterFieldId(const uInt recordNo, Int columnValue) {
+  virtual void enterFieldId(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: FieldId: %d\n", recordNo, columnValue);
     // update sourceId and fieldName
     getScalar( "SOURCE_ID", (uInt)columnValue, fieldtab, sourceId ) ;
@@ -405,10 +406,10 @@ public:
     // put values
     *fieldNameRF = fieldName ;
   }
-  virtual void leaveFieldId(const uInt recordNo, Int columnValue) {
+  virtual void leaveFieldId(const uInt /*recordNo*/, Int /*columnValue*/) {
     sourceId = -1 ;
   }
-  virtual void enterDataDescId(const uInt recordNo, Int columnValue) {
+  virtual void enterDataDescId(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: DataDescId: %d\n", recordNo, columnValue);
     // update polarization and spectral window ids
     getScalar( "POLARIZATION_ID", (uInt)columnValue, ddtab, polId ) ;
@@ -485,21 +486,21 @@ public:
       *sourceVelocityRF = (Double)0.0 ;
     }
   }
-  virtual void leaveDataDescId(const uInt recordNo, Int columnValue) {
+  virtual void leaveDataDescId(const uInt /*recordNo*/, Int /*columnValue*/) {
     npol = 0 ;
     nchan = 0 ;
     numSysCalRow = 0 ;
   }
-  virtual void enterScanNo(const uInt recordNo, Int columnValue) {
+  virtual void enterScanNo(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: ScanNo: %d\n", recordNo, columnValue);
     // put value
     // scan number is 1-based in MS while 0-based in Scantable
     *scanNoRF = (uInt)columnValue - 1 ;
   }
-  virtual void leaveScanNo(const uInt recordNo, Int columnValue) {
+  virtual void leaveScanNo(const uInt /*recordNo*/, Int /*columnValue*/) {
     cycleNo = 0 ;
   }
-  virtual void enterStateId(const uInt recordNo, Int columnValue) {
+  virtual void enterStateId(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: StateId: %d\n", recordNo, columnValue);
     // SRCTYPE
     Int srcType = getSrcType( columnValue ) ;
@@ -511,7 +512,7 @@ public:
     // put value
     *sourceTypeRF = srcType ;
   }
-  virtual void leaveStateId(const uInt recordNo, Int columnValue) { }
+  virtual void leaveStateId(const uInt /*recordNo*/, Int /*columnValue*/) { }
   virtual void enterTime(const uInt recordNo, Double columnValue) {
     //printf("%u: Time: %f\n", recordNo, columnValue);
     currentTime = MEpoch( Quantity( columnValue, "s" ), MEpoch::UTC ) ;
@@ -542,15 +543,15 @@ public:
     scanRateRF.define( scanrate ) ;
     *weatherIdRF = wid ;
   }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) { }
+  virtual void leaveTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
   virtual Bool visitRecord(const uInt recordNo,
-			   const Int observationId,
-			   const Int feedId,
-			   const Int fieldId,
-			   const Int dataDescId,
-			   const Int scanNo,
-			   const Int stateId,
-			   const Double time)
+			   const Int /*observationId*/,
+			   const Int /*feedId*/,
+			   const Int /*fieldId*/,
+			   const Int /*dataDescId*/,
+			   const Int /*scanNo*/,
+			   const Int /*stateId*/,
+			   const Double /*time*/)
   {
     //printf("%u: %d, %d, %d, %d, %d, %d, %f\n", recordNo,
     //observationId, feedId, fieldId, dataDescId, scanNo, stateId, time);
@@ -578,6 +579,9 @@ public:
     Block<uInt> tcalids( npol, 0 ) ;
     if ( numSysCalRow > 0 ) {
       tcalids = getTcalId( syscalTime[scIdx] ) ;
+    }
+    else {
+      tcalids = getDummyTcalId( spwId ) ;
     }
 
     // put value
@@ -609,7 +613,7 @@ public:
     //printf("Total: %u\n", count);
     // remove redundant rows
     //cout << "filled " << rowidx << " rows out of " << scantable.nrow() << " rows" << endl ;
-    if ( scantable.nrow() > rowidx ) {
+    if ( scantable.nrow() > (Int)rowidx ) {
       uInt numRemove = scantable.nrow() - rowidx ;
       //cout << "numRemove = " << numRemove << endl ;
       Vector<uInt> rows( numRemove ) ;
@@ -981,7 +985,7 @@ private:
     if ( d.ncolumn() > 1 )
       srate = d.column( 1 ) ;
   }
-  void getSourceDirection( Vector<Double> &dir, Vector<Double> &azel, Vector<Double> &srate )
+  void getSourceDirection( Vector<Double> &dir, Vector<Double> &azel, Vector<Double> &/*srate*/ )
   {
     dir = sourceDir.getAngle( "rad" ).getValue() ;
     mf.set( currentTime ) ;
@@ -1243,6 +1247,26 @@ private:
     }
     return tcalids ;
   }
+  Block<uInt> getDummyTcalId( Int spwId )
+  {
+    Block<uInt> idList(4, 0);
+    uInt nfields = syscalRecord.nfields();
+    Int idx = -1;
+    for (uInt i = 0; i< nfields ; i++ ) {
+      String spw = "SPW" + String::toString(spwId);
+      if (syscalRecord.name(i).find(spw) != String::npos) {
+        idx = i;
+        break;
+      }
+    }
+    if ( idx > -1) {
+      Vector<uInt> tmp = syscalRecord.asArrayuInt(idx);
+      for (uInt j = 0 ; j < 4 ; j++) {
+        idList[j] = tmp[0];
+      }
+    }
+    return idList;
+  }
   uInt maxNumPol()
   {
     ROScalarColumn<Int> numCorrCol( poltab, "NUM_CORR" ) ;
@@ -1342,20 +1366,20 @@ public:
     count = 0;
   }
   
-  virtual void enterAntennaId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveAntennaId(const uInt recordNo, Int columnValue) { }
-  virtual void enterFeedId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveFeedId(const uInt recordNo, Int columnValue) { }
-  virtual void enterSpwId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveSpwId(const uInt recordNo, Int columnValue) { }
-  virtual void enterTime(const uInt recordNo, Double columnValue) { }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) { }
+  virtual void enterAntennaId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveAntennaId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterFeedId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveFeedId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterSpwId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveSpwId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
+  virtual void leaveTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
 
-  virtual Bool visitRecord(const uInt recordNo,
-                           const Int antennaId,
-			   const Int feedId,
-			   const Int spwId,
-			   const Double time) { return True ; }
+  virtual Bool visitRecord(const uInt /*recordNo*/,
+                           const Int /*antennaId*/,
+			   const Int /*feedId*/,
+			   const Int /*spwId*/,
+			   const Double /*time*/) { return True ; }
 
   virtual Bool visit(Bool isFirst, const uInt recordNo,
 		     const uInt nCols, void const *const colValues[]) {
@@ -1469,26 +1493,26 @@ public:
     tcalRF.attachToRecord( trec, "TCAL" ) ;
   }
 
-  virtual void enterAntennaId(const uInt recordNo, Int columnValue) {
+  virtual void enterAntennaId(const uInt /*recordNo*/, Int columnValue) {
     if ( columnValue == antenna )
       process = True ;
   }
-  virtual void leaveAntennaId(const uInt recordNo, Int columnValue) {
+  virtual void leaveAntennaId(const uInt /*recordNo*/, Int /*columnValue*/) {
     process = False ;
   }
-  virtual void enterFeedId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveFeedId(const uInt recordNo, Int columnValue) { }
-  virtual void enterSpwId(const uInt recordNo, Int columnValue) { }
-  virtual void leaveSpwId(const uInt recordNo, Int columnValue) { }
-  virtual void enterTime(const uInt recordNo, Double columnValue) {
+  virtual void enterFeedId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveFeedId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterSpwId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveSpwId(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterTime(const uInt recordNo, Double /*columnValue*/) {
     qtime = timeCol( recordNo ) ;
   }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) { }
+  virtual void leaveTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
   virtual Bool visitRecord(const uInt recordNo,
-                           const Int antennaId,
+                           const Int /*antennaId*/,
 			   const Int feedId,
 			   const Int spwId,
-			   const Double time) 
+			   const Double /*time*/) 
   { 
     //cout << "(" << recordNo << "," << antennaId << "," << feedId << "," << spwId << ")" << endl ;
     if ( process ) {
@@ -2048,9 +2072,49 @@ void MSFiller::fillTcal()
   
   traverseTable(sctab, cols, tms, &visitor);
 
+  infillTcal();
+
   //tcalrec_.print( std::cout ) ;
   //double endSec = mathutil::gettimeofday_sec() ;
   //os_ << "end MSFiller::fillTcal() endSec=" << endSec << " (" << endSec-startSec << "sec)" << LogIO::POST ;
+}
+
+void MSFiller::infillTcal()
+{
+  uInt nfields = tcalrec_.nfields() ;
+  set<Int> spwAvailable;
+  for (uInt i = 0; i < nfields; i++) {
+    String name = tcalrec_.name(i);
+    size_t pos1 = name.find(':') + 4;
+    size_t pos2 = name.find(':',pos1);
+    Int spwid = String::toInt(name.substr(pos1,pos2-pos1));
+    //cout << "spwid=" << spwid << endl;
+    spwAvailable.insert(spwid);
+  }
+  Table spwtab = mstable_.spectralWindow();
+  Table tcaltab = table_->tcal().table();
+  ScalarColumn<uInt> idCol(tcaltab, "ID");
+  ScalarColumn<String> timeCol(tcaltab, "TIME");
+  ArrayColumn<Float> tcalCol(tcaltab, "TCAL");
+  ROScalarColumn<Int> numChanCol(spwtab, "NUM_CHAN");
+  Int numSpw = spwtab.nrow();
+  Int dummyFeed = 0;
+  Double dummyTime = 0.0;
+  Vector<uInt> idminmax(2);
+  for (Int i = 0; i < numSpw; i++) {
+    if (spwAvailable.find(i) == spwAvailable.end()) {
+      String key = keyTcal(dummyFeed, i, dummyTime);
+      Vector<Float> tcal(numChanCol(i), 1.0);
+      uInt nrow = tcaltab.nrow();
+      tcaltab.addRow(1);
+      idCol.put(nrow, nrow);
+      timeCol.put(nrow, "");
+      tcalCol.put(nrow, tcal);
+      idminmax = nrow;
+      tcalrec_.define(key, idminmax);
+    }
+  }
+  //tcalrec_.print(cout);
 }
 
 string MSFiller::getFrame()

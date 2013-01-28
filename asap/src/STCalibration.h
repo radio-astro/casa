@@ -18,13 +18,13 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/CountedPtr.h>
+#include <casa/Logging/LogIO.h>
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
 #include "Scantable.h"
 #include "STDefs.h"
 #include "STApplyTable.h"
-
 
 namespace asap {
 
@@ -36,14 +36,21 @@ class STCalibration {
 public:
   STCalibration(casa::CountedPtr<Scantable> &s);
 
-  virtual void calibrate() = 0;
+  void calibrate();
 
   virtual ~STCalibration() {;}
 
   void save(casa::String name) {applytable_->save(name);}
+  //const STApplyTable &applytable() {return *applytable_;}
+  const casa::CountedPtr<STApplyTable> applytable() {return applytable_;}
 protected:
+  virtual void setupSelector() = 0;
+  virtual void fillCalTable() = 0;
+
+  STSelector sel_;
   casa::CountedPtr<Scantable> scantable_;
   casa::CountedPtr<STApplyTable> applytable_; 
+  casa::LogIO os_;
 };
 
 }

@@ -25,12 +25,12 @@ Apply any apply tables to target data
 @date $Date:$
 @version $Revision:$
 */
-class STBaselineEnum  {
+class STBaselineFunc  {
 public:
-  enum BaselineType {Polynomial = 0,
-                     CSpline,
-                     Sinusoid,
-                     Chebyshev};
+  enum FuncName {Polynomial = 0,
+                 CSpline,
+                 Sinusoid,
+                 Chebyshev};
 };
 
 }

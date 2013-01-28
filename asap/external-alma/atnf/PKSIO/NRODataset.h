@@ -47,9 +47,6 @@
 
 #define SCAN_HEADER_SIZE 424 
 
-
-using namespace std ;
-
 // <summary>
 // Base class for NRO accessor classes.
 // </summary>
@@ -84,7 +81,7 @@ class NRODataset
 {
  public:
   // Constructor 
-  NRODataset( string name ) ;
+  NRODataset( std::string name ) ;
 
   // Destructor 
   virtual ~NRODataset() ;
@@ -105,30 +102,30 @@ class NRODataset
   virtual int fillRecord( int i ) ;
 
   // simple getter
-  string getLOFIL() { return LOFIL ; } ;
-  string getVER() { return VER ; } ;
-  string getGROUP() { return GROUP ; } ;
-  string getPROJ() { return PROJ ; } ;
-  string getSCHED() { return SCHED ; } ;
-  string getOBSVR() { return OBSVR ; } ;
-  string getLOSTM() { return LOSTM ; } ;
-  string getLOETM() { return LOETM ; } ;
+  std::string getLOFIL() { return LOFIL ; } ;
+  std::string getVER() { return VER ; } ;
+  std::string getGROUP() { return GROUP ; } ;
+  std::string getPROJ() { return PROJ ; } ;
+  std::string getSCHED() { return SCHED ; } ;
+  std::string getOBSVR() { return OBSVR ; } ;
+  std::string getLOSTM() { return LOSTM ; } ;
+  std::string getLOETM() { return LOETM ; } ;
   int getARYNM() { return ARYNM ; } ;
   int getNSCAN() { return NSCAN ; } ;
-  string getTITLE() { return TITLE ; } ;
-  string getOBJ() { return OBJ ; } ;
-  string getEPOCH() { return EPOCH ; } ;
+  std::string getTITLE() { return TITLE ; } ;
+  std::string getOBJ() { return OBJ ; } ;
+  std::string getEPOCH() { return EPOCH ; } ;
   double getRA0() { return RA0 ; } ;
   double getDEC0() { return DEC0 ; } ;
   double getGLNG0() { return GLNG0 ; } ;
   double getGLAT0() { return GLAT0 ; } ;
   int getNCALB() { return NCALB ; } ;
   int getSCNCD() { return SCNCD ; } ;
-  string getSCMOD() { return SCMOD ; } ;
+  std::string getSCMOD() { return SCMOD ; } ;
   double getURVEL() { return URVEL ; } ;
-  string getVREF() { return VREF ; } ;
-  string getVDEF() { return VDEF ; } ;
-  string getSWMOD() { return SWMOD ; } ;
+  std::string getVREF() { return VREF ; } ;
+  std::string getVDEF() { return VDEF ; } ;
+  std::string getSWMOD() { return SWMOD ; } ;
   double getFRQSW() { return FRQSW ; } ;   
   double getDBEAM() { return DBEAM ; } ;   
   double getMLTOF() { return MLTOF ; } ;    
@@ -137,7 +134,7 @@ class NRODataset
   double getCMTSOM() { return CMTSOM ; } ;
   double getCMTNODE() { return CMTNODE ; } ;
   double getCMTI() { return CMTI ; } ;
-  string getCMTTM() { return CMTTM ; } ;
+  std::string getCMTTM() { return CMTTM ; } ;
   double getSBDX() { return SBDX ; } ;
   double getSBDY() { return SBDY ; } ;
   double getSBDZ1() { return SBDZ1 ; } ;
@@ -154,52 +151,52 @@ class NRODataset
   int getSCNLEN() { return SCNLEN ; } ;
   int getSBIND() { return SBIND ; } ;
   int getIBIT() { return IBIT ; } ;
-  string getSITE() { return SITE ; } ;
-  vector<string> getRX() { return RX ; } ;
-  vector<double> getHPBW() { return HPBW ; } ;
-  vector<double> getEFFA() { return EFFA ; } ;
-  vector<double> getEFFB() { return EFFB ; } ;
-  vector<double> getEFFL() { return EFFL ; } ;
-  vector<double> getEFSS() { return EFSS ; } ;
-  vector<double> getGAIN() { return GAIN ; } ;
-  vector<string> getHORN() { return HORN ; } ;
-  vector<string> getPOLTP() { return POLTP ; } ;
-  vector<double> getPOLDR() { return POLDR ; } ;
-  vector<double> getPOLAN() { return POLAN ; } ;
-  vector<double> getDFRQ() { return DFRQ ; } ;
-  vector<string> getSIDBD() { return SIDBD ; } ;
-  vector<int> getREFN() { return REFN ; } ;
-  vector<int> getIPINT() { return IPINT ; } ;
-  vector<int> getMULTN() { return MULTN ; } ;
-  vector<double> getMLTSCF() { return MLTSCF ; } ;
-  vector<string> getLAGWIND() { return LAGWIND ; } ;
-  vector<double> getBEBW() { return BEBW ; } ;
-  vector<double> getBERES() { return BERES ; } ;
-  vector<double> getCHWID() { return CHWID ; } ;
-  vector<int> getARRY() { return ARRY ; } ;
-  vector<int> getNFCAL() { return NFCAL ; } ;
-  vector<double> getF0CAL() { return F0CAL ; } ;
-  vector< vector<double> > getFQCAL() { return FQCAL ; } ;
-  vector< vector<double> > getCHCAL() { return CHCAL ; } ;
-  vector< vector<double> > getCWCAL() { return CWCAL ; } ;
-  string getCDMY1() { return CDMY1 ; } ;
-  vector<double> getDSBFC() { return DSBFC ;} ;
+  std::string getSITE() { return SITE ; } ;
+  std::vector<std::string> getRX() { return RX ; } ;
+  std::vector<double> getHPBW() { return HPBW ; } ;
+  std::vector<double> getEFFA() { return EFFA ; } ;
+  std::vector<double> getEFFB() { return EFFB ; } ;
+  std::vector<double> getEFFL() { return EFFL ; } ;
+  std::vector<double> getEFSS() { return EFSS ; } ;
+  std::vector<double> getGAIN() { return GAIN ; } ;
+  std::vector<std::string> getHORN() { return HORN ; } ;
+  std::vector<std::string> getPOLTP() { return POLTP ; } ;
+  std::vector<double> getPOLDR() { return POLDR ; } ;
+  std::vector<double> getPOLAN() { return POLAN ; } ;
+  std::vector<double> getDFRQ() { return DFRQ ; } ;
+  std::vector<std::string> getSIDBD() { return SIDBD ; } ;
+  std::vector<int> getREFN() { return REFN ; } ;
+  std::vector<int> getIPINT() { return IPINT ; } ;
+  std::vector<int> getMULTN() { return MULTN ; } ;
+  std::vector<double> getMLTSCF() { return MLTSCF ; } ;
+  std::vector<std::string> getLAGWIND() { return LAGWIND ; } ;
+  std::vector<double> getBEBW() { return BEBW ; } ;
+  std::vector<double> getBERES() { return BERES ; } ;
+  std::vector<double> getCHWID() { return CHWID ; } ;
+  std::vector<int> getARRY() { return ARRY ; } ;
+  std::vector<int> getNFCAL() { return NFCAL ; } ;
+  std::vector<double> getF0CAL() { return F0CAL ; } ;
+  std::vector< std::vector<double> > getFQCAL() { return FQCAL ; } ;
+  std::vector< std::vector<double> > getCHCAL() { return CHCAL ; } ;
+  std::vector< std::vector<double> > getCWCAL() { return CWCAL ; } ;
+  std::string getCDMY1() { return CDMY1 ; } ;
+  std::vector<double> getDSBFC() { return DSBFC ;} ;
   int getDataSize() { return datasize_ ; } ;
   int getRowNum() { return rowNum_ ; } ;
 
   // get various parameters
   NRODataRecord *getRecord( int i ) ;
-  virtual vector< vector<double> > getSpectrum() ;
-  virtual vector<double> getSpectrum( int i ) ;
+  virtual std::vector< std::vector<double> > getSpectrum() ;
+  virtual std::vector<double> getSpectrum( int i ) ;
   virtual int getIndex( int irow ) ;
   virtual int getPolarizationNum() ;
-  virtual vector<double> getStartIntTime() ;
+  virtual std::vector<double> getStartIntTime() ;
   virtual double getStartIntTime( int i ) ;
   virtual double getScanTime( int i ) ;
   virtual double getMJD( char *time ) ;
-  virtual vector<bool> getIFs() ;
-  virtual vector<double> getFrequencies( int i ) ;
-  virtual uInt getArrayId( string type ) ;
+  virtual std::vector<bool> getIFs() ;
+  virtual std::vector<double> getFrequencies( int i ) ;
+  virtual uInt getArrayId( std::string type ) ;
   virtual uInt getPolNo( int irow ) ;
 
  protected:
@@ -240,31 +237,32 @@ class NRODataset
   virtual double toLSR( double v, double t, double x, double y ) ;
 
   // POLNO from RX
-  uInt polNoFromRX( const char *rx ) ;
+  //uInt polNoFromRX( const char *rx ) ;
+  uInt polNoFromRX( const std::string &rx ) ;
 
   // Type of file record
-  string LOFIL ;
+  std::string LOFIL ;
 
   // Version 
-  string VER ;
+  std::string VER ;
 
   // Group name
-  string GROUP ;
+  std::string GROUP ;
 
   // Project name
-  string PROJ ;
+  std::string PROJ ;
 
   // Name of observation scheduling file
-  string SCHED ;
+  std::string SCHED ;
 
   // Name of observer
-  string OBSVR ;
+  std::string OBSVR ;
 
   // Observation start time with format of "YYYYMMDDHHMMSS" (UTC)
-  string LOSTM ;
+  std::string LOSTM ;
 
   // observation end time with format of "YYYYMMDDHHMMSS" (UTC)
-  string LOETM ;
+  std::string LOETM ;
 
   // Number of arrays (beams and IFs)
   int ARYNM ;
@@ -273,13 +271,13 @@ class NRODataset
   int NSCAN ;
 
   // Title of observation
-  string TITLE ;
+  std::string TITLE ;
 
   // Name of target object 
-  string OBJ ;
+  std::string OBJ ;
 
   // Equinox (B1950 or J2000)
-  string EPOCH ;
+  std::string EPOCH ;
 
   // Right ascension [rad]
   double RA0 ;
@@ -300,19 +298,19 @@ class NRODataset
   int SCNCD ;
 
   // Scan sequence pattern
-  string SCMOD ;
+  std::string SCMOD ;
 
   // User-defined recessional velocity [m/s]
   double URVEL ;
 
   // Reference frame for recessional velocity  (LSR or HEL or GAL)
-  string VREF ;
+  std::string VREF ;
 
   // Definition of recessional velocity  (RAD or OPT)
-  string VDEF ;
+  std::string VDEF ;
 
   // Switching mode  (POS or BEAM or FREQ)
-  string SWMOD ;
+  std::string SWMOD ;
 
   // Switching frequency [Hz]
   double FRQSW ;
@@ -339,7 +337,7 @@ class NRODataset
   double CMTI ;
 
   // Comet: Time of the perihelion passage
-  string CMTTM ;
+  std::string CMTTM ;
 
   // Correction for position of subreflector DX [mm] 
   double SBDX ;
@@ -390,94 +388,94 @@ class NRODataset
   int IBIT ;
 
   // Site (antenna) name  (45m or ASTE)
-  string SITE ;
+  std::string SITE ;
 
   // Dummy data
-  string CDMY1 ;
+  std::string CDMY1 ;
 
   // Type of detector frontend 
-  vector<string> RX ;
+  std::vector<std::string> RX ;
 
   // HPBW [rad]
-  vector<double> HPBW ;
+  std::vector<double> HPBW ;
 
   // Aperture efficiencies 
-  vector<double> EFFA ;
+  std::vector<double> EFFA ;
 
   // Beam efficiencies 
-  vector<double> EFFB ;
+  std::vector<double> EFFB ;
 
   // Antenna efficiencies 
-  vector<double> EFFL ;
+  std::vector<double> EFFL ;
 
   // FSS efficiencies 
-  vector<double> EFSS ;
+  std::vector<double> EFSS ;
 
   // Antenna gain 
-  vector<double> GAIN ;
+  std::vector<double> GAIN ;
 
   // Type of polarization at feed horn  (R or L or H or V)
-  vector<string> HORN ;
+  std::vector<std::string> HORN ;
 
   // Type of polarization  (CIRC or LINR)
-  vector<string> POLTP ;
+  std::vector<std::string> POLTP ;
 
   // Rotation direction of circular polarization
-  vector<double> POLDR ;
+  std::vector<double> POLDR ;
 
   // Polarization angle of linear polarization
-  vector<double> POLAN ;
+  std::vector<double> POLAN ;
 
   // Switching frequency of frequcency switching [Hz]
-  vector<double> DFRQ ;
+  std::vector<double> DFRQ ;
 
   // Type of sideband  (LSB or USB or DSB)
-  vector<string> SIDBD ;
+  std::vector<std::string> SIDBD ;
 
   // Identifier of reference synthesizer
-  vector<int> REFN ;
+  std::vector<int> REFN ;
 
   // Temperature of calibrator
-  vector<int> IPINT ;
+  std::vector<int> IPINT ;
 
   // Beam id of the multi-beam detector
-  vector<int> MULTN ;
+  std::vector<int> MULTN ;
 
   // Scaling factor of the multi-beam detector
-  vector<double> MLTSCF ;
+  std::vector<double> MLTSCF ;
 
   // Type of LAG window  (NONE or HANN or HAMM or BLCK)
-  vector<string> LAGWIND ;
+  std::vector<std::string> LAGWIND ;
 
   // Bandwidth at backend
-  vector<double> BEBW ;
+  std::vector<double> BEBW ;
 
   // Spectral resolution at backend
-  vector<double> BERES ;
+  std::vector<double> BERES ;
 
   // Channel width at backend
-  vector<double> CHWID ;
+  std::vector<double> CHWID ;
 
   // Array usage  (1: used  0: not used)
-  vector<int> ARRY ;
+  std::vector<int> ARRY ;
 
   // Frequency calibration: Number of measurement (max 10)
-  vector<int> NFCAL ;
+  std::vector<int> NFCAL ;
 
   // Frequency calibration: Central frequency [Hz]
-  vector<double> F0CAL ;
+  std::vector<double> F0CAL ;
 
   // Frequency calibration: Measured central frequency [Hz]
-  vector< vector<double> > FQCAL ;
+  std::vector< std::vector<double> > FQCAL ;
 
   // Frequency calibration: Measured channel number
-  vector< vector<double> > CHCAL ;
+  std::vector< std::vector<double> > CHCAL ;
 
   // Frequency calibration: Measured channel width [Hz]
-  vector< vector<double> > CWCAL ;
+  std::vector< std::vector<double> > CWCAL ;
 
   // DSB scaling factor
-  vector<double> DSBFC ;
+  std::vector<double> DSBFC ;
 
   // number of scan
   int scanNum_ ;
@@ -504,7 +502,7 @@ class NRODataset
   NRODataRecord *record_ ;
 
   // input filename
-  string filename_ ;
+  std::string filename_ ;
 
   // file pointer
   FILE *fp_ ;
@@ -516,14 +514,14 @@ class NRODataset
   //LogIO os ;
 
   // reference frequency for each array
-  vector<double> refFreq_ ;
+  std::vector<double> refFreq_ ;
 
   // record to store REFPIX, REFVAL, INCREMENT pair for each array
   Record frec_ ;
 } ;
 
 // debug message output
-template<class T> inline void nro_debug_output( char *name, int len, vector<T> &val ) 
+template<class T> inline void nro_debug_output( char *name, int len, std::vector<T> &val ) 
 {
   for ( int i = 0 ; i < len ; i++ ) {
     if ( i == 0 ) {
@@ -537,7 +535,7 @@ template<class T> inline void nro_debug_output( char *name, int len, vector<T> &
   cout << endl ;
 } 
 
-template<class T> inline void nro_debug_output( char *name, int len1, int len2, vector< vector<T> > &val ) 
+template<class T> inline void nro_debug_output( char *name, int len1, int len2, std::vector< std::vector<T> > &val ) 
 {
   for ( int i = 0 ; i < len1 ; i++ ) {
     for ( int j = 0 ; j < len2 ; j++ ) {

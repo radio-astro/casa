@@ -120,7 +120,7 @@ protected:
   }
 };
 
-class MSFiller
+class MSFiller : public MSFillerUtils
 {
 public:
   explicit MSFiller(CountedPtr<Scantable> stable) ;
@@ -147,9 +147,7 @@ private:
   //void fillHistory() ;
   //void fillFit() ;
   void fillTcal() ;
-
-  // create key for TCAL table
-  String keyTcal( Int feedid, Int spwid, String stime ) ; 
+  void infillTcal() ;
 
   // get frequency frame
   std::string getFrame() ;

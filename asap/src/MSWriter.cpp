@@ -89,7 +89,7 @@ public:
       ret[0] = polmap[0] ;
       ret[1] = polmap[2] ;
       ret[2] = polmap[3] ;
-      ret[4] = polmap[1] ;
+      ret[3] = polmap[1] ;
     }
     else {
       throw( AipsError("npol > 4") ) ;
@@ -216,12 +216,20 @@ public:
     sigmaTemplate = 1.0 ;
   }
   virtual ~DataHolder() {}
-  virtual void post() = 0 ;
+  void post() 
+  {
+    postData() ;
+    postFlag() ;
+    postFlagRow() ;
+    postAuxiliary() ;
+  }
   virtual void reset()
   {
     corr->reset() ;
     flagRow = False ;
     npol = 0 ;
+    for ( uInt i = 0 ; i < 4 ; i++ )
+      isFilled[i] = False ;    
   }
   virtual void accumulate( uInt id, Vector<Float> &sp, Vector<Bool> &fl, Bool &flr )
   {
@@ -229,6 +237,7 @@ public:
     accumulateData( id, sp ) ;
     accumulateFlag( id, fl ) ;
     accumulateFlagRow( id, flr ) ;
+    isFilled[id] = True;
   }
   uInt nPol() { return npol ; }
   uInt nChan() { return nchan ; }
@@ -275,6 +284,12 @@ protected:
   {
     data.row( id ) = sp ;
   }
+  uInt filledIndex()
+  {
+    uInt idx = 0;
+    while( !isFilled[idx] && idx < 4 ) ++idx;
+    return idx;
+  }
   virtual void postData() = 0 ;
   TableRow &row ;
   uInt nchan ;
@@ -289,6 +304,7 @@ protected:
   Matrix<Bool> flag ;
   Matrix<Float> data ;
   Vector<Float> sigmaTemplate ;
+  Bool isFilled[4] ;
 private:
   void makeCorrTypeHandler( String &polType )
   {
@@ -327,21 +343,28 @@ public:
     attachData() ;
   }
   virtual ~FloatDataHolder() {}
-  virtual void post()
-  {
-    postData() ;
-    postFlag() ;
-    postFlagRow() ;
-    postAuxiliary() ;
-  }
 protected:
   virtual void postFlag()
   {
-    flagRF.define( flag( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ; 
+    if ( npol == 2 ) {
+      flagRF.define( flag( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ; 
+    }
+    else {
+      // should be npol == 1
+      uInt idx = filledIndex() ;
+      flagRF.define( flag( IPosition( 2, idx, 0 ), IPosition( 2, idx, nchan-1 ) ) ) ; 
+    }
   }
   virtual void postData()
   {
-    dataRF.define( data( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ;
+    if ( npol == 2 ) {
+      dataRF.define( data( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ;
+    }
+    else {
+      // should be npol == 1
+      uInt idx = filledIndex() ;
+      dataRF.define( data( IPosition( 2, idx, 0 ), IPosition( 2, idx, nchan-1 ) ) ) ; 
+    }
   }
 private:
   void attachData() 
@@ -359,24 +382,6 @@ public:
     attachData() ;
   }
   virtual ~ComplexDataHolder() {}
-  virtual void accumulate( uInt id, Vector<Float> &sp, Vector<Bool> &fl, Bool &flr )
-  {
-    DataHolder::accumulate( id, sp, fl, flr ) ;
-    isFilled[id] = True ;
-  }
-  virtual void post()
-  {
-    postData() ;
-    postFlag() ;
-    postFlagRow() ;
-    postAuxiliary() ;
-  }
-  virtual void reset()
-  {
-    DataHolder::reset() ;
-    for ( uInt i = 0 ; i < 4 ; i++ )
-      isFilled[i] = False ;
-  }
 protected:
   virtual void postFlag()
   {
@@ -387,8 +392,13 @@ protected:
       flag.row( 1 ) = flag.row( 2 ) ;
       flagRF.define( flag ) ;
     }
-    else {
+    else if ( npol == 2 ) {
       flagRF.define( flag( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ; 
+    }
+    else {
+      // should be npol == 1
+      uInt idx = filledIndex() ;
+      flagRF.define( flag( IPosition( 2, idx, 0 ), IPosition( 2, idx, nchan-1 ) ) ) ; 
     }
   }
   virtual void postData()
@@ -417,7 +427,6 @@ private:
     dataRF.attachToRecord( row.record(), "DATA" ) ;
   }
   RecordFieldPtr< Matrix<Complex> > dataRF; 
-  Bool isFilled[4] ;
 };
 
 class BaseMSWriterVisitor: public TableVisitor {
@@ -439,34 +448,34 @@ public:
     count = 0;
   }
   
-  virtual void enterFieldName(const uInt recordNo, const String &columnValue) {
+  virtual void enterFieldName(const uInt /*recordNo*/, const String &/*columnValue*/) {
   }
-  virtual void leaveFieldName(const uInt recordNo, const String &columnValue) {
+  virtual void leaveFieldName(const uInt /*recordNo*/, const String &/*columnValue*/) {
   }
-  virtual void enterBeamNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leaveBeamNo(const uInt recordNo, uInt columnValue) { }
-  virtual void enterScanNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leaveScanNo(const uInt recordNo, uInt columnValue) { }
-  virtual void enterIfNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leaveIfNo(const uInt recordNo, uInt columnValue) { }
-  virtual void enterSrcType(const uInt recordNo, Int columnValue) { }
-  virtual void leaveSrcType(const uInt recordNo, Int columnValue) { }
-  virtual void enterCycleNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leaveCycleNo(const uInt recordNo, uInt columnValue) { }
-  virtual void enterTime(const uInt recordNo, Double columnValue) { }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) { }
-  virtual void enterPolNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leavePolNo(const uInt recordNo, uInt columnValue) { }
+  virtual void enterBeamNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leaveBeamNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void enterScanNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leaveScanNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void enterIfNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leaveIfNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void enterSrcType(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void leaveSrcType(const uInt /*recordNo*/, Int /*columnValue*/) { }
+  virtual void enterCycleNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leaveCycleNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void enterTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
+  virtual void leaveTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
+  virtual void enterPolNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leavePolNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
 
-  virtual Bool visitRecord(const uInt recordNo,
-			   const String &fieldName,
-			   const uInt beamNo,
-			   const uInt scanNo,
-			   const uInt ifNo,
-			   const Int srcType,
-			   const uInt cycleNo,
-			   const Double time,
-			   const uInt polNo) { return True ;}
+  virtual Bool visitRecord(const uInt /*recordNo*/,
+			   const String &/*fieldName*/,
+			   const uInt /*beamNo*/,
+			   const uInt /*scanNo*/,
+			   const uInt /*ifNo*/,
+			   const Int /*srcType*/,
+			   const uInt /*cycleNo*/,
+			   const Double /*time*/,
+			   const uInt /*polNo*/) { return True ;}
 
   virtual Bool visit(Bool isFirst, const uInt recordNo,
 		     const uInt nCols, void const *const colValues[]) {
@@ -692,7 +701,7 @@ public:
     attachPointing() ;
   }
   
-  virtual void enterFieldName(const uInt recordNo, const String &columnValue) {
+  virtual void enterFieldName(const uInt recordNo, const String &/*columnValue*/) {
     //printf("%u: FieldName: %s\n", recordNo, columnValue.c_str());
     fieldName = fieldNameCol.asString( recordNo ) ;
     String::size_type pos = fieldName.find( "__" ) ;
@@ -714,9 +723,9 @@ public:
     // put value
     *fieldIdRF = fieldId ;
   }
-  virtual void leaveFieldName(const uInt recordNo, const String &columnValue) {
+  virtual void leaveFieldName(const uInt /*recordNo*/, const String &/*columnValue*/) {
   }
-  virtual void enterBeamNo(const uInt recordNo, uInt columnValue) {
+  virtual void enterBeamNo(const uInt /*recordNo*/, uInt columnValue) {
     //printf("%u: BeamNo: %u\n", recordNo, columnValue);
     
     feedId = (Int)columnValue ;
@@ -725,16 +734,16 @@ public:
     *feed1RF = feedId ;
     *feed2RF = feedId ;
   }
-  virtual void leaveBeamNo(const uInt recordNo, uInt columnValue) {
+  virtual void leaveBeamNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
   }
-  virtual void enterScanNo(const uInt recordNo, uInt columnValue) {
+  virtual void enterScanNo(const uInt /*recordNo*/, uInt columnValue) {
     //printf("%u: ScanNo: %u\n", recordNo, columnValue);
 
     // put value 
     // SCAN_NUMBER is 0-based in Scantable while 1-based in MS
     *scanNumberRF = (Int)columnValue + 1 ;
   }
-  virtual void leaveScanNo(const uInt recordNo, uInt columnValue) {
+  virtual void leaveScanNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
     subscan = 1 ;
   }
   virtual void enterIfNo(const uInt recordNo, uInt columnValue) {
@@ -751,9 +760,9 @@ public:
 
     addFeed( feedId, spwId ) ;
   }
-  virtual void leaveIfNo(const uInt recordNo, uInt columnValue) {
+  virtual void leaveIfNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
   }
-  virtual void enterSrcType(const uInt recordNo, Int columnValue) {
+  virtual void enterSrcType(const uInt /*recordNo*/, Int columnValue) {
     //printf("%u: SrcType: %d\n", recordNo, columnValue);
 
     Int stateId = addState( columnValue ) ;
@@ -761,12 +770,12 @@ public:
     // put value
     *stateIdRF = stateId ;
   }
-  virtual void leaveSrcType(const uInt recordNo, Int columnValue) {
+  virtual void leaveSrcType(const uInt /*recordNo*/, Int /*columnValue*/) {
   }
-  virtual void enterCycleNo(const uInt recordNo, uInt columnValue) {
+  virtual void enterCycleNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
     //printf("%u: CycleNo: %u\n", recordNo, columnValue);
   }
-  virtual void leaveCycleNo(const uInt recordNo, uInt columnValue) {
+  virtual void leaveCycleNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
   }
   virtual void enterTime(const uInt recordNo, Double columnValue) {
     //printf("%u: Time: %f\n", recordNo, columnValue);
@@ -796,7 +805,7 @@ public:
     *intervalRF = interval ;
     *exposureRF = interval ;
   }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) {
+  virtual void leaveTime(const uInt /*recordNo*/, Double /*columnValue*/) {
     if ( holder->nPol() > 0 ) {
       Int polId = addPolarization() ;
       Int ddId = addDataDescription( polId, spwId ) ;
@@ -813,20 +822,20 @@ public:
       holder->reset() ;
     }
   }
-  virtual void enterPolNo(const uInt recordNo, uInt columnValue) {
+  virtual void enterPolNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
     //printf("%u: PolNo: %d\n", recordNo, columnValue);
   }
-  virtual void leavePolNo(const uInt recordNo, uInt columnValue) {
+  virtual void leavePolNo(const uInt /*recordNo*/, uInt /*columnValue*/) {
   }
 
   virtual Bool visitRecord(const uInt recordNo,
-			   const String &fieldName,
-			   const uInt beamNo,
-			   const uInt scanNo,
-			   const uInt ifNo,
-			   const Int srcType,
-			   const uInt cycleNo,
-			   const Double time,
+			   const String &/*fieldName*/,
+			   const uInt /*beamNo*/,
+			   const uInt /*scanNo*/,
+			   const uInt /*ifNo*/,
+			   const Int /*srcType*/,
+			   const uInt /*cycleNo*/,
+			   const Double /*time*/,
 			   const uInt polNo) {
     //printf("%u: %s, %u, %u, %u, %d, %u, %f, %d\n", recordNo,
     //       fieldName.c_str(), beamNo, scanNo, ifNo, srcType, cycleNo, time, polNo);
@@ -974,7 +983,10 @@ private:
     }
     
     Int numCorr = holder->nPol() ;
-    Matrix<Int> corrProduct = corrProductTemplate[numCorr] ;
+    Matrix<Int> corrProduct = corrProductTemplate[numCorr].copy() ;
+    if ( numCorr == 1 && (corrType[0] == Stokes::YY || corrType[0] == Stokes::LL ) ) {
+      corrProduct = 1;
+    }
 
     if ( idx == -1 ) {
       uInt nrow = poltab.nrow() ;
@@ -1182,7 +1194,7 @@ private:
   }
   void attachSubtables()
   {
-    const TableRecord &keys = table.keywordSet() ;
+    //const TableRecord &keys = table.keywordSet() ;
     TableRecord &mskeys = ms.rwKeywordSet() ;
 
     // FIELD table
@@ -1221,7 +1233,7 @@ private:
     stateIdRF.attachToRecord( r, "STATE_ID" ) ;
 
     // constant values
-    Int id = 0 ;
+    //Int id = 0 ;
     RecordFieldPtr<Int> intRF( r, "OBSERVATION_ID" ) ;
     *intRF = 0 ;
     intRF.attachToRecord( r, "ANTENNA1" ) ;
@@ -1489,20 +1501,20 @@ public:
     count = 0;
   }
   
-  virtual void enterBeamNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leaveBeamNo(const uInt recordNo, uInt columnValue) { }
-  virtual void enterIfNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leaveIfNo(const uInt recordNo, uInt columnValue) { }
-  virtual void enterPolNo(const uInt recordNo, uInt columnValue) { }
-  virtual void leavePolNo(const uInt recordNo, uInt columnValue) { }
-  virtual void enterTime(const uInt recordNo, Double columnValue) { }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) { }
+  virtual void enterBeamNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leaveBeamNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void enterIfNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leaveIfNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void enterPolNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void leavePolNo(const uInt /*recordNo*/, uInt /*columnValue*/) { }
+  virtual void enterTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
+  virtual void leaveTime(const uInt /*recordNo*/, Double /*columnValue*/) { }
 
-  virtual Bool visitRecord(const uInt recordNo,
-			   const uInt beamNo,
-			   const uInt ifNo,
-			   const uInt polNo,
-			   const Double time) { return True ;}
+  virtual Bool visitRecord(const uInt /*recordNo*/,
+			   const uInt /*beamNo*/,
+			   const uInt /*ifNo*/,
+			   const uInt /*polNo*/,
+			   const Double /*time*/) { return True ;}
 
   virtual Bool visit(Bool isFirst, const uInt recordNo,
 		     const uInt nCols, void const *const colValues[]) {
@@ -1673,14 +1685,14 @@ class BaseTcalProcessor
 {
 public:
   BaseTcalProcessor( ROArrayColumn<Float> &tcalCol )
-    : col( tcalCol )
+    : col_( tcalCol )
   {}
   virtual ~BaseTcalProcessor() {}
-  void setTcalId( Vector<uInt> &tcalId ) { id.assign( tcalId ) ; } 
+  void setTcalId( Vector<uInt> &tcalId ) { id_.assign( tcalId ) ; } 
   virtual Array<Float> getTcal() = 0 ;
 protected:
-  ROArrayColumn<Float> col ;
-  Vector<uInt> id ;
+  ROArrayColumn<Float> col_ ;
+  Vector<uInt> id_ ;
 };
 
 class TcalProcessor : public BaseTcalProcessor
@@ -1692,10 +1704,10 @@ public:
   virtual ~TcalProcessor() {}
   virtual Array<Float> getTcal()
   {
-    uInt npol = id.nelements() ;
+    uInt npol = id_.nelements() ;
     Vector<Float> tcal( npol ) ;
     for ( uInt ipol = 0 ; ipol < npol ; ipol++ )
-      tcal[ipol] = col( id[ipol] ).data()[0] ;
+      tcal[ipol] = col_( id_[ipol] ).data()[0] ;
     //cout << "TcalProcessor: tcal = " << tcal << endl ;
     return tcal ;
   }
@@ -1710,13 +1722,14 @@ public:
   virtual ~TcalSpectrumProcessor() {}
   virtual Array<Float> getTcal()
   {
-    uInt npol = id.nelements() ;
-    Vector<Float> tcal0 = col( 0 ) ;
+    uInt npol = id_.nelements() ;
+    //Vector<Float> tcal0 = col_( 0 ) ;
+    Vector<Float> tcal0 = col_( id_[0] ) ;
     uInt nchan = tcal0.nelements() ;
     Matrix<Float> tcal( npol, nchan ) ;
     tcal.row( 0 ) = tcal0 ;
     for ( uInt ipol = 1 ; ipol < npol ; ipol++ ) 
-      tcal.row( ipol ) = col( id[ipol] ) ;
+      tcal.row( ipol ) = col_( id_[ipol] ) ;
     return tcal ;
   }
 };
@@ -1727,7 +1740,8 @@ public:
   MSSysCalVisitor( const Table &from, Table &to )
     : BaseMSSysCalVisitor( from ),
       sctab( to ),
-      rowidx( 0 )
+      rowidx( 0 ),
+      polno_()
   {
     scrow = TableRow( sctab ) ;
 
@@ -1778,11 +1792,11 @@ public:
 
   }
 
-  virtual void enterBeamNo(const uInt recordNo, uInt columnValue) 
+  virtual void enterBeamNo(const uInt /*recordNo*/, uInt columnValue) 
   { 
     *feedIdRF = (Int)columnValue ;
   }
-  virtual void leaveBeamNo(const uInt recordNo, uInt columnValue) 
+  virtual void leaveBeamNo(const uInt /*recordNo*/, uInt /*columnValue*/) 
   { 
   }
   virtual void enterIfNo(const uInt recordNo, uInt columnValue) 
@@ -1795,14 +1809,11 @@ public:
 
     *specWinIdRF = (Int)columnValue ;
   }
-  virtual void leaveIfNo(const uInt recordNo, uInt columnValue) 
+  virtual void leaveIfNo(const uInt /*recordNo*/, uInt /*columnValue*/) 
   { 
     //cout << "leaveIfNo" << endl ;
     post() ;
-    lastTsys->reset() ;
-    lastTcalId.resize() ;
-    theTsys->reset() ;
-    theTcalId.resize() ;
+    reset(true);
     startTime = 0.0 ;
     endTime = 0.0 ;
   }
@@ -1816,15 +1827,14 @@ public:
       endTime = columnValue * 86400.0 + 0.5 * interval ;
     }
   }
-  virtual void leaveTime(const uInt recordNo, Double columnValue) 
+  virtual void leaveTime(const uInt /*recordNo*/, Double columnValue) 
   { 
     //cout << "leaveTime" << endl ;
     if ( isUpdated() ) {
       post() ;
       *lastTsys = *theTsys ;
       lastTcalId = theTcalId ;
-      theTsys->reset() ;
-      theTcalId.resize() ;
+      reset(false);
       startTime = columnValue * 86400.0 - 0.5 * interval ;
       endTime = columnValue * 86400.0 + 0.5 * interval ;
     }
@@ -1837,34 +1847,43 @@ public:
     //cout << "enterPolNo" << endl ;
     Vector<Float> tsys = tsysCol( recordNo ) ;
     uInt tcalId = tcalIdCol.asuInt( recordNo ) ;
-    // lastTsys.nrow() must be npol 
-    if ( lastTsys->nrow() == columnValue )
+    polno_.insert( columnValue ) ;
+    uInt numPol = polno_.size() ;
+    if ( lastTsys->nrow() < numPol )
       lastTsys->appendTsys( recordNo ) ;
-    // lastTcalId.nelements() must be npol
-    if ( lastTcalId.nelements() == columnValue ) 
-      appendTcalId( lastTcalId, tcalId, columnValue ) ;
-    // theTsys.nrow() must be npol
-    if ( theTsys->nrow() == columnValue )
+    if ( lastTcalId.nelements() <= numPol ) 
+      appendTcalId( lastTcalId, tcalId, numPol-1 ) ;
+    if ( theTsys->nrow() < numPol )
       theTsys->appendTsys( recordNo ) ;
     else {
-      theTsys->setTsys( recordNo, columnValue ) ;
+      theTsys->setTsys( recordNo, numPol-1 ) ;
     }
-    if ( theTcalId.nelements() == columnValue )
-      appendTcalId( theTcalId, tcalId, columnValue ) ;
+    if ( theTcalId.nelements() < numPol )
+      appendTcalId( theTcalId, tcalId, numPol-1 ) ;
     else 
-      setTcalId( theTcalId, tcalId, columnValue ) ;
+      setTcalId( theTcalId, tcalId, numPol-1 ) ;
   }
-  virtual void leavePolNo( const uInt recordNo, uInt columnValue )
+  virtual void leavePolNo( const uInt /*recordNo*/, uInt /*columnValue*/ )
   {
   }
     
 private:
-  void appendTcalId( Vector<uInt> &v, uInt &elem, uInt &polId )
+  void reset(bool completely)
+  {
+    if (completely) {
+      lastTsys->reset() ;
+      lastTcalId.resize() ;
+    }
+    theTsys->reset() ;
+    theTcalId.resize() ;
+    polno_.clear();
+  }
+  void appendTcalId( Vector<uInt> &v, uInt &elem, uInt polId )
   {
     v.resize( polId+1, True ) ;
     v[polId] = elem ;
   }
-  void setTcalId( Vector<uInt> &v, uInt &elem, uInt &polId )
+  void setTcalId( Vector<uInt> &v, uInt &elem, uInt polId )
   {
     v[polId] = elem ;
   }
@@ -1890,8 +1909,9 @@ private:
     *intervalRF = interval ;
     tcalProcessor->setTcalId( lastTcalId ) ;
     Array<Float> tcal = tcalProcessor->getTcal() ;
+    Array<Float> tsys = lastTsys->getTsys() ;
     tcalRF.define( tcal ) ;
-    tsysRF.define( lastTsys->getTsys() ) ;
+    tsysRF.define( tsys ) ;
     sctab.addRow( 1, True ) ;
     scrow.put( rowidx ) ;
     rowidx++ ;
@@ -1899,10 +1919,7 @@ private:
   
   Bool isUpdated()
   {
-    Bool ret = False ;
-    ret = anyNE( theTcalId, lastTcalId ) ;
-    if ( !ret ) 
-      ret = anyNE( theTsys->getTsys(), lastTsys->getTsys() ) ;
+    Bool ret = (anyNE( theTcalId, lastTcalId ) || anyNE( theTsys->getTsys(), lastTsys->getTsys() )) ;
     return ret ;
   }
 
@@ -1914,6 +1931,7 @@ private:
   
   CountedPtr<BaseTsysHolder> lastTsys,theTsys;
   Vector<uInt> lastTcalId,theTcalId;
+  set<uInt> polno_;
   CountedPtr<BaseTcalProcessor> tcalProcessor ;
   Vector<Bool> effectiveTcal;
 
@@ -1927,10 +1945,10 @@ private:
 
 MSWriter::MSWriter(CountedPtr<Scantable> stable) 
   : table_(stable),
+    mstable_(NULL),
     isWeather_(False),
     tcalSpec_(False),
     tsysSpec_(False),
-    mstable_(NULL),
     ptTabName_("")
 {
   os_ = LogIO() ;

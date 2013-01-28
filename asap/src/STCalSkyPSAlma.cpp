@@ -28,17 +28,11 @@ STCalSkyPSAlma::STCalSkyPSAlma(CountedPtr<Scantable> &s)
   applytable_ = new STCalSkyTable(*s, "PSALMA");
 }
 
-void STCalSkyPSAlma::calibrate()
+void STCalSkyPSAlma::setupSelector()
 {
+  sel_.reset();
   vector<int> types(1,SrcType::PSOFF);
-  STSelector selOrg = scantable_->getSelection();
-  STSelector sel;
-  sel.setTypes(types);
-  scantable_->setSelection(sel);
-  
-  fillCalTable();
-
-  scantable_->setSelection(selOrg);
+  sel_.setTypes(types);
 }
 
 void STCalSkyPSAlma::fillCalTable()
@@ -77,6 +71,14 @@ void STCalSkyPSAlma::fillCalTable()
     Vector<uInt> current = iter.current();
     uInt len = rows.nelements();
     if (len == 0) {
+      iter.next();
+      continue;
+    }
+    else if (len == 1) {
+      STCalSkyTable *p = dynamic_cast<STCalSkyTable *>(&(*applytable_));
+      uInt irow = rows[0];
+      p->appenddata(0, 0, current[2], current[0], current[1], 
+                    freqidCol(irow), timeSec[irow], elevation[irow], specCol(irow));
       iter.next();
       continue;
     }

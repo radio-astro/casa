@@ -32,6 +32,7 @@
 
 #include <atnf/PKSIO/NRODataset.h>
 #include <casa/OS/Time.h>
+#include <casa/Utilities/Regex.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
 #include <measures/Measures/MeasConvert.h>
@@ -376,7 +377,7 @@ vector<double> NRODataset::getSpectrum( int i )
     //cerr << "NRODataset::getSpectrum()  zero spectrum (" << i << ")" << endl ;
     LogIO os( LogOrigin("NRODataset","getSpectrum",WHERE) ) ;
     os << LogIO::WARN << "zero spectrum for row " << i << LogIO::POST ;
-    if ( spec.size() != nchan )
+    if ( spec.size() != (unsigned int)nchan )
       spec.resize( nchan ) ;
     for ( vector<double>::iterator i = spec.begin() ;
           i != spec.end() ; i++ )
@@ -417,7 +418,7 @@ vector<double> NRODataset::getSpectrum( int i )
       //cerr << "NRODataset::getSpectrum()  ispec[" << i << "] is out of range" << endl ;
       LogIO os( LogOrigin( "NRODataset", "getSpectrum", WHERE ) ) ;
       os << LogIO::SEVERE << "ivalue for row " << i << " is out of range" << LogIO::EXCEPTION ;
-      if ( spec.size() != nchan )
+      if ( spec.size() != (unsigned int)nchan )
         spec.resize( nchan ) ;
       for ( vector<double>::iterator i = spec.begin() ;
             i != spec.end() ; i++ )
@@ -839,21 +840,33 @@ uInt NRODataset::getPolNo( int i )
   int idx = getIndex( i ) ;
 //   cout << "HORN[" << idx << "]=" << HORN[idx] 
 //        << ", RX[" << idx << "]=" << RX[idx] << endl ;
-  return polNoFromRX( RX[idx].c_str() ) ;
+  return polNoFromRX( RX[idx] ) ;
 }
 
-uInt NRODataset::polNoFromRX( const char *rx ) 
+uInt NRODataset::polNoFromRX( const string &rx ) 
 {
   uInt polno = 0 ;
-  // 2012/03/15 TN
-  // T100H/V is multi-polarization receiver which is installed 
-  // on NRO 45m telescope. Here, POLNO is assigned as follows: 
+  // 2013/01/23 TN
+  // In NRO 45m telescope, naming convension for dual-polarization 
+  // receiver is as follows:
   // 
-  //    POLNO=0: T100H
-  //          1: T100V
+  //    xxxH for horizontal component,
+  //    xxxV for vertical component.
   // 
-  // For other receivers, POLNO is always 0.
-  if ( strncmp( rx, "T100V", 5 ) == 0 )
-    polno = 1 ;
+  // Exception is H20ch1/ch2.
+  // Here, POLNO is assigned as follows:
+  // 
+  //    POLNO=0: xxxH or H20ch1
+  //          1: xxxV or H20ch2
+  //
+  // For others, POLNO is always 0.
+  String rxString(rx);
+  rxString.trim();
+  //cout << "rx='" << rxString << "' (size " << rxString.size() << ")" << endl;
+  Regex reRx("(.*V|H20ch2)$");
+  if (reRx.match(rxString.c_str(), rxString.size()) != String::npos) {
+    //cout << "match!" << endl;
+    polno = 1;
+  }
   return polno ;
 }

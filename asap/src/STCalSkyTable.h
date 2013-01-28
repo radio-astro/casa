@@ -57,6 +57,7 @@ public:
   casa::uInt nchan(casa::uInt ifno);
 
   //casa::Vector<casa::Double> getBaseFrequency(casa::uInt whichrow);
+
 private:
   static const casa::String name_;
   const casa::String caltype_;

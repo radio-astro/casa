@@ -56,6 +56,7 @@ namespace asap {
     void python_EdgeMarker();
     void python_PlotHelper();
     void python_STSideBandSep();
+    void python_CalibrationManager();
 
   } // python
 } //asap

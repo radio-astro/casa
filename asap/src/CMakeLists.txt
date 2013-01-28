@@ -79,7 +79,8 @@ set( ASAP_SRCS
      ${SRCDIR}/STApplyCal.cpp
      ${SRCDIR}/Calibrator.cpp
      ${SRCDIR}/PSAlmaCalibrator.cpp
-     ${SRCDIR}/STBaselineParamTable.cpp )
+     ${SRCDIR}/STBaselineTable.cpp
+     ${SRCDIR}/CalibrationManager.cpp )
 
 set( ASAP_PYSRCS
 #     ${SRCDIR}/python_Plotter2.cpp
@@ -104,6 +105,7 @@ set( ASAP_PYSRCS
      ${SRCDIR}/python_EdgeMarker.cpp
      ${SRCDIR}/python_PlotHelper.cpp
      ${SRCDIR}/python_STSideBandSep.cpp
+     ${SRCDIR}/python_CalibrationManager.cpp
      ${SRCDIR}/python_asap.cpp )
 
 add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} )

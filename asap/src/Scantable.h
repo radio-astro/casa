@@ -747,6 +747,8 @@ private:
 					  const std::vector<bool>& mask,
 					  int order,
 					  std::vector<float>& params,
+					  std::vector<bool>& finalMask, 
+					  float& rms, 
 					  int& nClipped,
 					  float thresClip=3.0, 
 					  int nIterClip=1,
@@ -817,6 +819,7 @@ private:
 					   const std::vector<bool>& mask, 
 					   const std::string& blfunc, 
 					   int order);
+  double doGetRms(const std::vector<bool>& mask, const casa::Vector<casa::Float>& spec);
 
 };
 
