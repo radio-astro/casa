@@ -86,6 +86,10 @@ if( CMAKE_BUILD_TYPE STREQUAL Debug )
   set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
 endif()
 
+if( INTERACTIVE_ITERATION )
+	add_definitions( -DINTERACTIVE_ITERATION )
+endif()
+
 include( UsePrivatePath )
 if( NOT RE_CMAKE )
     string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
