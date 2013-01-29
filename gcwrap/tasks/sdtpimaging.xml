@@ -116,7 +116,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name ="gridfunction" subparam="true">
-            <description>gridding function for imaging ("BOX","SF","PB")</description>
+            <description>gridding function for imaging ("BOX","SF","PB","GAUSS","GJINC")</description>
             <value>BOX</value>
             <allowed kind="enum">
                 <value>BOX</value>
