@@ -89,7 +89,9 @@ class fluxscale1_test(unittest.TestCase):
         refdict={'1': {'spidxerr': np.array([ 0.,  0.,  0.]), 'spidx': np.array([ 0.,  0.,  0.]), \
                  'fluxdErr': np.array([0.00055571]), \
                  'fieldName': '1445+09900002_0', 'numSol': np.array([54]), \
-                 'fluxd': np.array([0.16825763])}, \
+                 #'fluxd': np.array([0.16825763])}, \
+                 # flux density seems changed a bit. Updated - 2013.01.29 TT
+                 'fluxd': np.array([0.16825765])}, \
                  'freq': np.array([1.41266507e+09]), \
                  'spwName': np.array(['none'], dtype='|S5'), \
                  'spwID': np.array([0])} 
@@ -179,7 +181,6 @@ class fluxscale2_test(unittest.TestCase):
  
 def suite():
     return [fluxscale1_test, fluxscale2_test]
-
 
 
 
