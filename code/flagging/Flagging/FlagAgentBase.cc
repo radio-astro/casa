@@ -432,14 +432,14 @@ FlagAgentBase::runCore()
 				iterateInRows();
 				break;
 			}
-			// Iterate trough rows (i.e. baselines)
+			// Iterate through rows (i.e. baselines)
 			// manual,quack
 			case ROWS:
 			{
 				iterateRows();
 				break;
 			}
-			// Iterate trough rows (i.e. baselines) doing a common pre-processing before
+			// Iterate through rows (i.e. baselines) doing a common pre-processing before
 			// elevation, shadow, summary
 			case ROWS_PREPROCESS_BUFFER:
 			{
@@ -447,7 +447,7 @@ FlagAgentBase::runCore()
 				iterateRows();
 				break;
 			}
-			// Iterate trough (time,freq) maps per antenna pair
+			// Iterate through (time,freq) maps per antenna pair
 			// tfcrop,rflag
 			case ANTENNA_PAIRS:
 			{
@@ -466,14 +466,14 @@ FlagAgentBase::runCore()
 
 				break;
 			}
-			// Iterate trough (time,freq) maps per antenna pair
+			// Iterate through (time,freq) maps per antenna pair
 			// extension
 			case ANTENNA_PAIRS_FLAGS:
 			{
 				iterateAntennaPairsFlags();
 				break;
 			}
-			// Navigate trough (time,freq) maps per antenna pair
+			// Navigate through (time,freq) maps per antenna pair
 			// display
 			case ANTENNA_PAIRS_INTERACTIVE:
 			{
@@ -481,7 +481,7 @@ FlagAgentBase::runCore()
 				iterateAntennaPairsInteractive(flagDataHandler_p->getAntennaPairMap());
 				break;
 			}
-			// Iterate trough (time,freq) maps per antenna pair doing a common pre-processing before
+			// Iterate through (time,freq) maps per antenna pair doing a common pre-processing before
 			// Not used by any of the available agents at the moment
 			case ANTENNA_PAIRS_PREPROCESS_BUFFER:
 			{
@@ -802,8 +802,13 @@ FlagAgentBase::setDataSelection(Record config)
 			{
 				polarizationSelection_p = sanitizedExpression;
 				parser.setPolnExpr(polarizationSelection_p);
-				if (flagDataHandler_p->parseExpression(parser))
+				// parseExpression should not be called for a Cal table
+				// until MS Selection can handle correlation parameter for
+				// cal tables.
+				if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET and
+						flagDataHandler_p->parseExpression(parser))
 				{
+
 					polarizationList_p=parser.getPolMap();
 					filterPols_p=true;
 
@@ -817,6 +822,7 @@ FlagAgentBase::setDataSelection(Record config)
 					*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
 					*logger_p << LogIO::DEBUG1 << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
 				}
+
 			}
 			else
 			{
@@ -1279,6 +1285,7 @@ FlagAgentBase::setAgentParameters(Record config)
 		expression_p.upcase();
 
 		// These are the float columns that do not support complex operators
+		// It should fall back to the default REAL
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
 				(dataColumn_p.compare("SNR") == 0) )
 		{
@@ -1290,10 +1297,17 @@ FlagAgentBase::setAgentParameters(Record config)
 			{
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
-							<< "; selecting REAL ALL by default. "
+							<< "; selecting REAL by default. "
 							<< " Keep in mind that complex operators are not supported for FPARAM/SNR"
 							<< LogIO::POST;
-				expression_p = "REAL ALL";
+
+				String new_expression;
+				if (expression_p.find("_") != string::npos)
+					new_expression = expression_p.after("_");
+				else
+					new_expression = expression_p.after(" ");
+
+				expression_p = "REAL " + new_expression;
 			}
 			else if (expression_p.find("REAL") == string::npos)
 			{
@@ -1949,7 +1963,7 @@ FlagAgentBase::iterateRows()
 				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
 	}
 
-	// Loop trough selected rows
+	// Loop through selected rows
 	Int rowIdx = 0;
 	bool flagRow = false;
 	vector<uInt>::iterator rowIter;
@@ -2023,7 +2037,7 @@ FlagAgentBase::iterateInRows()
 				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") "<< LogIO::POST;
 	}
 
-	// Iterate trough rows
+	// Iterate through rows
 	Int rowIdx = 0;
 	vector<uInt>::iterator rowIter;
 	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
@@ -2077,7 +2091,7 @@ FlagAgentBase::iterateAntennaPairs()
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG2 <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
+		*logger_p << LogIO::DEBUG2 <<  " Iterating through " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
 	}
 
 
@@ -2172,7 +2186,7 @@ FlagAgentBase::iterateAntennaPairsFlags()
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG2 <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
+		*logger_p << LogIO::DEBUG2 <<  " Iterating through " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
 	}
 
 
@@ -2237,7 +2251,7 @@ FlagAgentBase::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr
 	// Check if the visibility expression is suitable for this spw
 	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
-	// Iterate trough antenna pair map
+	// Iterate through antenna pair map
 	std::pair<Int,Int> antennaPair;
 	antennaPairMapIterator myAntennaPairMapIterator;
 	for (myAntennaPairMapIterator=antennaPairMap_ptr->begin(); myAntennaPairMapIterator != antennaPairMap_ptr->end(); ++myAntennaPairMapIterator)

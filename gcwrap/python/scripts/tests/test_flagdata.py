@@ -1495,7 +1495,7 @@ class test_tsys(test_base):
         """Flagdata:: Test clipping first calibration solution product of FPARAM 
         column using a minmax range """
 
-        flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='Sol1',
+        flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='REAL_Sol1',
                  clipzeros=True, clipminmax=[0.,600.])
         res=flagdata(vis=self.vis, mode='summary')
         
@@ -1570,7 +1570,7 @@ class test_tsys(test_base):
         self.assertEqual(res['flagged'], 1192.0)
         
     def test_invalid_datacol(self):
-        '''Flagdata: invalida data column should fall back to default'''
+        '''Flagdata: invalid data column should fall back to default'''
         flagdata(vis=self.vis, mode='clip', clipminmax=[0.,600.],datacolumn='PARAMERR')
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1192.0)
@@ -1634,9 +1634,33 @@ class test_tsys(test_base):
         self.assertEqual(res['correlation']['Sol2']['flagged'], 442.0)
         self.assertEqual(res['correlation']['Sol2']['total'], 64512.0)
 
+    def test_clip_fparm_error_abs1(self):
+        """Flagdata:: Error case test when a complex operator is used with CalTables """
+
+        flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='ABS_Sol1',
+                 clipzeros=True, clipminmax=[0.,600.])
+        res=flagdata(vis=self.vis, mode='summary')
+
+        self.assertEqual(res['total'], 129024)
+        self.assertEqual(res['flagged'], 750)
+        self.assertEqual(res['correlation']['Sol1']['flagged'], 750.0)
+        self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
+
+    def test_clip_fparm_error_abs12(self):
+        """Flagdata:: Fall back to default REAL operator """
+
+        flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='ABS Sol1,Sol2',
+                 clipzeros=True, clipminmax=[0.,600.])
+        res=flagdata(vis=self.vis, mode='summary')
+
+        self.assertEqual(res['total'], 129024)
+        self.assertEqual(res['flagged'], 1192)
+        self.assertEqual(res['correlation']['Sol1']['flagged'], 750.0)
+        self.assertEqual(res['correlation']['Sol2']['flagged'], 442)
+
     def test_clip_snr_all(self):
-        """Flagdata:: Test cliping all calibration solution products of SNR c
-        olumn using a minmax range for Tsys CalTable"""
+        """Flagdata:: Test cliping all calibration solution products of SNR
+        column using a minmax range for Tsys CalTable"""
 
         flagdata(vis=self.vis, mode='clip', datacolumn='SNR', correlation='',
                  clipzeros=True, clipminmax=[0.,2.])

@@ -362,7 +362,7 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 			return false;
 		}
 
-		os << LogIO::NORMAL << "Will use data column "<< datacolumn <<  LogIO::POST;
+		os << LogIO::DEBUG1 << "Will use data column "<< datacolumn <<  LogIO::POST;
 		agentParams_p.define("datacolumn", datacolumn);
 	}
 
@@ -510,7 +510,7 @@ AgentFlagger::initAgents()
 		return false;
 	}
 
-	os<< LogIO::DEBUGGING<< "There are initially "<< agents_config_list_p.size()<<
+	os<< LogIO::DEBUG1<< "There are initially "<< agents_config_list_p.size()<<
 			" agents in the list"<<LogIO::POST;
 
 	// Check if list has a mixed state of apply and unapply parameters
@@ -592,7 +592,7 @@ AgentFlagger::initAgents()
 			iterset_p = true;
 		}
 
-		// Get the agent name
+		// Agent's name
 		String agent_name;
 		agent_rec.get("name",agent_name);
 
