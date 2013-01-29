@@ -39,6 +39,9 @@
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
 #include <casadbus/utilities/DBusBase.h>
 
+#ifdef INTERACTIVE_ITERATION
+#include <casadbus/interfaces/SynthImager.adaptor.h>
+#endif
 
 /* Future Decl */
 class casa::Record;
