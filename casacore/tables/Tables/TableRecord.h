@@ -241,6 +241,8 @@ public:
     // </note>
     TableRecord& operator= (const TableRecord& other);
     
+    Bool operator== (const TableRecord & other); // always throws; needed for template compatibility
+
     // Release resources associated with this object.
     ~TableRecord();
 
@@ -528,6 +530,24 @@ inline Bool TableRecord::areTablesMultiUsed() const
 {
     return ref().areTablesMultiUsed();
 }
+
+inline Bool
+TableRecord::operator== (const TableRecord & /*other*/)
+{
+    // Kluge to allow this class to interoperate with the templated ScalarColumnData<T>.
+    // In some situations, ScalarColumnData's T can specify the use of a sential value to
+    // indicate the value is undefined.  This requires that T provide operator==.  However,
+    // this prevent the TableRecord from being used without going to the large effort to
+    // properly define the operator.  So, the class is defined and implemented which allows
+    // use in the template but if it were ever to be called it will throw the exception
+    // and at that time a real == operator will need to be defined (if that's feasible).
+    // See also JIRA CAS-4827.  (jjacobs 2013-1-29)
+
+    throw AipsError ("TableRecord::operator== not implemented; declared for template compatibility",
+                     __FILE__, __LINE__);
+
+    return False;
+}// always throws; needed for template compatibility
 
 
 
