@@ -5455,7 +5455,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Matrix<Double> spidx(nFld,3,0.0);
     Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
-    Vector<Double> refFreq(nFld,0.0);
+    //Vector<Double> refFreq(nFld,0.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
       uInt tranidx=tranField(iTran);
@@ -5472,10 +5472,11 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	Vector<Double> freqs;
 	freqs=solFreq(scaleOK.column(tranidx)).getCompressedArray();
 
+	// shift mean(log(freq)) later
 	// Reference frequency is first in the list
-	refFreq(tranidx)=freqs[0];
-	freqs/=refFreq(tranidx);
-
+	//refFreq(tranidx)=freqs[0];
+	//freqs/=refFreq(tranidx);
+        //
         // calculate spectral index
         // fit the per-spw fluxes to get spectral index
         LinearFit<Double> fitter;
@@ -5493,7 +5494,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
         Polynomial< AutoDiff<Double> > bp(fitorder);
         fitter.setFunction(bp);
 
-        Vector<Double> log_relsolFreq=log10(freqs);
+        // shift the zero point to the mean of log(freq)
+        Double meanLogFreq=mean(log10(freqs));
+        Vector<Double> log_relsolFreq=log10(freqs)-meanLogFreq;
+        //Vector<Double> log_relsolFreq=log10(freqs);
         Vector<Double> log_fd=log10(fds);
 
 	// The error in the log of fds is fderrs/fds
@@ -5511,9 +5515,12 @@ void SolvableVisJones::fluxscale(const String& outfile,
 //	oFitMsg += "Flux density = "+String::toString<Double>(exp10(soln(0)));
 	oFitMsg += "Flux density = "+String::toString<Double>(pow(10.0,(soln(0))));
 //	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);
-        Double ferr=(errs(0)>0.0 ? pow(10.0,(errs(0))) : 0.0);
+//      Double ferr=(errs(0)>0.0 ? pow(10.0,(errs(0))) : 0.0);
+//	correct for the proper propagation of error
+        Double ferr=(errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
 	oFitMsg += " +/- "+String::toString<Double>(ferr); 
-	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
+//	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
+	oFitMsg += " (freq="+String::toString<Double>(pow(10.0,meanLogFreq)/1.0e9)+" GHz)";
         for (uInt j=1; j<soln.nelements();j++) {
           if (j==1) {
             oFitMsg += " spidx="+String::toString<Double>(soln(1)); 
