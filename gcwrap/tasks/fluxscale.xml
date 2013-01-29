@@ -104,10 +104,17 @@
        polarizations, divided by the square root of the number of 
        antennas and polarizations available.  If the flux densities 
        for multiple spws exist, fitted spectral index and (for nspw>2)
-       curvature are also reported. The MODEL_DATA column
-       is currently _not_ revised to reflect the flux densities
-       derived by fluxscale.  Use setjy to set the MODEL_DATA column,
-       if necessary.
+       curvature are also reported. The fit is done for 
+       log(flux density) = a_o + a_1*(log(frequency)) + a_2*(log(frequency))**2 
+       where log(frequnecy) is with respect to the mean of log(frequency). 
+       This reference frequency is reported in the logger along with the 
+       flux density at that frequency.  The fit results are also reported 
+       in the returned Python dictionary (the solutions are in 'spidx' 
+       in the following order: a_o [log(S) at the zero point], a_1 [spectral index], 
+       and a_2 [curvature]. And their errors are in 'spidxerr').  
+       The MODEL_DATA column is currently _not_ revised to reflect the flux 
+       densities derived by fluxscale.  Use setjy to set the MODEL_DATA 
+       column, if necessary.
 
        The constant gain constraint is usually a reasonable assumption
        for the electronic systems on typical antennas.  It is
