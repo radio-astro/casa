@@ -575,6 +575,9 @@ protected:
 
     void addDataSelection (const MeasurementSet & ms);
 
+    void allSpectralWindowsSelected (Vector<Int> & spectralWindows,
+                                     Vector<Int> & nChannels) const; /*KLUGE*/
+
     void attachColumnsSafe (const Table & t);
 
     // attach the column objects to the currently selected table

@@ -172,6 +172,7 @@ public:
 	virtual const Vector<uInt> & rowIds () const {Vector<uInt> dummy; return dummy;}
 	virtual Int spectralWindow () const {Int dummy; return dummy;}
 	virtual const Vector<Int> & spectralWindows () const {Vector<Int> dummy; return dummy;}
+        virtual void setSpectralWindows (const Vector<Int> & /*spectralWindows*/) {}
 
     virtual void setFillable (Bool isFillable) {}
     virtual const Vector<Int> & dataDescriptionIds () const {Vector<Int> dummy; return dummy;}

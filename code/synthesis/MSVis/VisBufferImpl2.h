@@ -290,6 +290,7 @@ public:
     virtual const Matrix<Float> & sigmaMat () const;
     virtual Int spectralWindow () const;
     virtual const Vector<Int> & spectralWindows () const;
+    virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
     virtual const Vector<Int> & stateId () const;
     virtual void setStateId (const Vector<Int> & value);
     virtual const Vector<Double> & time () const;

@@ -152,7 +152,7 @@ Tester::checkVisCubes (VisBuffer2 * vb, VisibilityIterator2 * vi, Int subchunk,
 
             for (Int correlation = 0; correlation < vb->nCorrelations(); correlation ++){
 
-                checkVisCube (firstRow + row, vb->spectralWindow(), row, channel, correlation,
+                checkVisCube (firstRow + row, vb->spectralWindows()(row), row, channel, correlation,
                               vb->visCube(), "Visibility", vb->antenna1()(row),
                               vb->antenna2()(row), subchunk, averagingFactor, vb->time()(row));
 
@@ -170,7 +170,7 @@ Tester::checkVisCube (Int rowId, Int spectralWindow, Int row, Int channel, Int c
                          spectralWindow) * 10 + correlation) * 10 + channel;
 
 
-    Float real = (subchunkIndex * averagingFactor) + ((averagingFactor - 1) / 2);
+    Float real = (subchunkIndex * averagingFactor) + ((averagingFactor - 1) / 2.0);
 
     Complex z0 (real, imaginary);
     //z0 *= factor_p;
@@ -213,7 +213,17 @@ Tester::doTests (Int nArgs, char * args [])
         String msName ("AveragingTvi2.ms");
         boost::tie (ms, nRows) = createMs (msName);
 
+        printf ("Starting unaveraged pass\n");
+
         sweepMs (msName, 1, 10, 1); // interval, chunkInterval, factor
+
+        printf ("Starting averaging of 2 samples pass\n");
+
+        sweepMs (msName, 1, 10, 2);
+
+        printf ("Starting averaging of 4 samples pass\n");
+
+        sweepMs (msName, 1, 12, 4);
 
 
     }
@@ -332,6 +342,7 @@ Tester::sweepMs (const String & msName, Double interval,
     VisibilityIterator2 * vi = factory.createVi (& ms, interval, chunkInterval, averagingFactor);
     VisBuffer2 * vb = vi->getVisBuffer();
 
+    Int chunk = 0;
     Int subchunk = 0;
     Int firstRow = 0;
 
@@ -347,6 +358,7 @@ Tester::sweepMs (const String & msName, Double interval,
             firstRow += vb->nRows();
 
         }
+        chunk ++;
     }
 }
 
