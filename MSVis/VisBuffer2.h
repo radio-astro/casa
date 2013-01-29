@@ -493,6 +493,8 @@ public:
     virtual Int spectralWindow () const = 0;
 
     virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
+    virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
+
 
     static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
 

@@ -446,6 +446,10 @@ public:
 
             this->getItem().resize (desiredShape, copyValues);
 
+            if (! copyValues){
+                this->getItem() = typename T::ElementType();
+            }
+
         }
     }
 
@@ -561,9 +565,6 @@ private:
 
     ShapePattern shapePattern_p;
 };
-
-
-
 
 class VisBufferCache {
 
@@ -1114,9 +1115,10 @@ VisBufferImpl2::deleteRows (const Vector<Int> & rowsToDelete)
     }
 
     Int newNRows = nRows() - rowsToDelete.nelements();
-    resizeRows (newNRows);
 
     setShape (nCorrelations (), nChannels (), newNRows, False);
+
+    resizeRows (newNRows);
 }
 
 void
@@ -2162,6 +2164,13 @@ VisBufferImpl2::spectralWindows () const
 {
 	return cache_p->spectralWindows_p.get ();
 }
+
+void
+VisBufferImpl2::setSpectralWindows (const Vector<Int> & spectralWindows)
+{
+    cache_p->spectralWindows_p.set (spectralWindows);
+}
+
 
 const Vector<Int> &
 VisBufferImpl2::stateId () const

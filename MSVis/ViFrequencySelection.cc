@@ -64,6 +64,26 @@ FrequencySelection::getFrameOfReference () const
     return referenceFrame_p;
 }
 
+//set<Int>
+//FrequencySelections::getSpectralWindowSelection (Int msIndex) const
+//{
+//    set<Int> result;
+//
+//    for (SelectedWindows::const_iterator i = selectedWindows_p.begin();
+//            i != selectedWindows_p.end();
+//            i ++){
+//
+//        if (i->first != msIndex){
+//            continue;
+//        }
+//
+//        result.insert (i->second);
+//    }
+//
+//    return result;
+//}
+
+
 void
 FrequencySelectionUsingChannels::add (Int spectralWindow, Int firstChannel,
                                       Int nChannels, Int increment)
@@ -127,6 +147,30 @@ FrequencySelectionUsingChannels::getSelectedWindows () const
 
     return result;
 }
+
+Int
+FrequencySelectionUsingChannels::getNChannels (Int spectralWindowId) const
+{
+
+    Int result = 0;
+
+    if (elements_p.empty()){
+
+    }
+    else {
+
+        for (Elements::const_iterator i = elements_p.begin();
+                i != elements_p.end();
+                i ++){
+
+            if (i->spectralWindow_p == spectralWindowId){
+                result += i->nChannels_p;
+            }
+        }
+    }
+    return result;
+}
+
 
 
 String

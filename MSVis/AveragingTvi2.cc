@@ -370,6 +370,7 @@ VbAvg::copyRowIdValues (const VisBuffer2 * input, Int row, Int baselineIndex)
     copyRowIdValue (input, row, & VisBuffer2::processorId, & VisBuffer2::setProcessorId, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::scan, & VisBuffer2::setScan, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::observationId, & VisBuffer2::setObservationId, baselineIndex);
+    copyRowIdValue (input, row, & VisBuffer2::spectralWindows, & VisBuffer2::setSpectralWindows, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::stateId, & VisBuffer2::setStateId, baselineIndex);
 }
 
@@ -429,6 +430,10 @@ VbAvg::getBaselineIndex (Int antenna1, Int antenna2) const
 void
 VbAvg::finalizeAverage ()
 {
+    if (empty_p){
+        return; // nothing to finalize
+    }
+
     finalizeCubeData ();
 
     finalizeRowData ();
@@ -544,7 +549,7 @@ VbAvg::prepareForFirstData (const VisBuffer2 * vb)
 
     // Reshape the inherited members from VisBuffer2
 
-    setShape (vb->nCorrelations(), vb->nChannels(), nBaselines);
+    setShape (vb->nCorrelations(), vb->nChannels(), nBaselines, False);
 
     VisBufferComponents2 exclusions =
         VisBufferComponents2::these(VisibilityObserved, VisibilityCorrected,
@@ -566,7 +571,7 @@ VbAvg::prepareIds (const VisBuffer2 * vb)
 {
     // Set these row ID values to indicate they are unknown
 
-    Vector<Int> minusOne (nRows(), -1);
+    Vector<Int> minusOne (nBaselines(), -1);
 
     setAntenna1 (minusOne);
     setAntenna2 (minusOne);
@@ -576,6 +581,7 @@ VbAvg::prepareIds (const VisBuffer2 * vb)
     setProcessorId (minusOne);
     setScan (minusOne);
     setObservationId (minusOne);
+    setSpectralWindows (minusOne);
     setStateId (minusOne);
 
     // Copy the value from the input VB
@@ -774,6 +780,8 @@ VbSet::flush (Bool okIfNonempty)
 
         delete a->second;
     }
+
+    vbAveragers_p.clear();
 }
 
 Int
@@ -977,7 +985,7 @@ AveragingTvi2::produceSubchunk ()
 
     while (needMoreInputData){
 
-        if (! inputViiAdvanced_p){
+        if (! inputViiAdvanced_p && getVii()->more()){
 
             getVii()->next();
             inputViiAdvanced_p = getVii()->more();

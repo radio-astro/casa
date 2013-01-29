@@ -1095,6 +1095,48 @@ VisibilityIteratorImpl2::subtableColumns () const
 }
 
 void
+VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & spectralWindows,
+                                                     Vector<Int> & nChannels) const
+{
+    const FrequencySelectionUsingChannels * selection =
+        dynamic_cast <const FrequencySelectionUsingChannels *> (& frequencySelections_p->get (msId()));
+    Assert (selection != 0);
+
+    if (selection->empty()){
+
+        this->spectralWindows (spectralWindows);
+
+        nChannels.resize (spectralWindows.nelements());
+
+        for (Int i = 0; i < spectralWindows.nelements(); i ++){
+
+            Int spectralWindowId = spectralWindows (i);
+
+            nChannels (i) = getSpectralWindowChannels (msId (), spectralWindowId).size();
+        }
+    }
+    else {
+
+        set<Int> windows = selection->getSelectedWindows();
+
+        spectralWindows.resize (windows.size());
+        nChannels.resize (windows.size());
+
+        Int i = 0;
+
+        for (set<Int>::iterator j = windows.begin(); j != windows.end(); j++){
+
+            spectralWindows (i) = * j;
+
+            nChannels (i) = selection->getNChannels (* j);
+            i++;
+
+        }
+    }
+}
+
+
+void
 VisibilityIteratorImpl2::useImagingWeight (const VisImagingWeight & imWgt)
 {
     imwgt_p = imWgt;
@@ -2980,7 +3022,7 @@ VisibilityIteratorImpl2::writeSigmaMat (const Matrix<Float> & sigMat)
 }
 
 void
-VisibilityIteratorImpl2::writeModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental)
+VisibilityIteratorImpl2::writeModel(const RecordInterface& /*rec*/, Bool /*iscomponentlist*/, Bool /*incremental*/)
 {
 
 #warning "--> Reimplement putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental)"

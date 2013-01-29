@@ -33,9 +33,23 @@ public:
 
     VisBuffer2Adapter (VisBuffer2 * vb) : vb2_p (vb) , vb2Rw_p (vb)
     {
-        msColumns_p = dynamic_cast<const VisibilityIteratorImpl2 *> (vb->getVi()->getImpl())->msColumnsKluge();
+        construct();
     }
-    VisBuffer2Adapter (const VisBuffer2 * vb) : msColumns_p (0), vb2_p (vb), vb2Rw_p (0) {}
+    VisBuffer2Adapter (const VisBuffer2 * vb) : msColumns_p (0), vb2_p (vb), vb2Rw_p (0)
+    {
+        construct();
+    }
+
+    void
+    construct ()
+    {
+        const VisibilityIteratorImpl2 * vi =
+            dynamic_cast<const VisibilityIteratorImpl2 *> (vb2_p->getVi()->getImpl());
+
+        msColumns_p = vi->msColumnsKluge();
+
+        vi->allSpectralWindowsSelected (spectralWindows_p, nChannels_p);
+    }
 
     ~VisBuffer2Adapter () {}
 
@@ -158,7 +172,10 @@ public:
 
     // Gets SPECTRAL_WINDOW/CHAN_FREQ (in Hz, acc. to the MS def'n v.2).
     virtual Vector<Double>& frequency() { IllegalOperation(); }
-    virtual const Vector<Double>& frequency() const { IllegalOperation(); }
+    virtual const Vector<Double>& frequency() const
+    {
+        return vb2_p->getFrequencies(0);
+    }
 
     //the following method is to convert the observed frequencies
     // This conversion may not be accurate for some frame
@@ -380,8 +397,11 @@ public:
     virtual  Int numberAnt () const{ return vb2_p-> nAntennas (); }
 
     // Get all selected spectral windows not just the one in the actual buffer
-    virtual void allSelectedSpectralWindows(Vector<Int>& , Vector<Int>& )
-    { IllegalOperation(); }
+    virtual void allSelectedSpectralWindows(Vector<Int>& spectralWindows, Vector<Int>& nChannels)
+    {
+        spectralWindows.assign (spectralWindows_p);
+        nChannels.assign (nChannels_p);
+    }
 
     virtual void getChannelSelection(Block< Vector<Int> >& ,
 				   Block< Vector<Int> >& ,
@@ -408,7 +428,10 @@ public:
 
 private:
 
+
     const ROMSColumns * msColumns_p; // [use]
+    Vector<Int> nChannels_p;
+    Vector<Int> spectralWindows_p;
     const vi::VisBuffer2 * vb2_p; // [use]
     vi::VisBuffer2 * vb2Rw_p; // [use]
 
