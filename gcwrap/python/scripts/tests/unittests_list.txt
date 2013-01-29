@@ -104,6 +104,7 @@ test_rg_fromtextfile            dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      takeshi.nakazato@nao.ac.jp
+test_sdcal2                     takeshi.nakazato@nao.ac.jp
 test_sdcoadd                    kana.sugi@nao.ac.jp
 test_sdfit                      wataru.kawasaki@nao.ac.jp
 test_sdflag                     wataru.kawasaki@nao.ac.jp

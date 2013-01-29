@@ -149,6 +149,7 @@ scripts/task_predictcomp.py
 scripts/task_rmtables.py
 scripts/task_sdbaseline.py
 scripts/task_sdcal.py
+scripts/task_sdcal2.py
 scripts/task_sdcoadd.py
 scripts/task_sdfit.py
 scripts/task_sdflag.py
