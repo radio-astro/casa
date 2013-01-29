@@ -185,7 +185,7 @@ def flagcmd(
                         listmode = ''
                     elif isinstance(inpfile, str):
         
-                        casalog.post('Reading from input file')
+                        casalog.post('Reading from input file '+inpfile)
                         cmdlist = fh.readFile(inpfile)
         
                         # Make a FLAG_CMD compatible dictionary and select by reason
@@ -2057,7 +2057,7 @@ def readCalCmds(caltable, msfile, flaglist, rows, reason, useapplied):
 
         elif isinstance(flaglist, str):
 
-            casalog.post('Reading from input file')
+            casalog.post('Reading from input file '+flaglist)
             cmdlist = fh.readFile(flaglist)
 
             # Make a FLAG_CMD compatible dictionary and select by reason

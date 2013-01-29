@@ -263,7 +263,7 @@ def flagdata(vis,
                     if inpfile == '':
                          casalog.post('Input file is empty', 'ERROR')
                          
-                    casalog.post('Will read commands from a file')
+                    casalog.post('Will read commands from the file '+inpfile)
                     flaglist = fh.readFile(inpfile)
                     casalog.post('%s'%flaglist,'DEBUG')
                     
