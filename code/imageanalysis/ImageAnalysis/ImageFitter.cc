@@ -1372,6 +1372,8 @@ void ImageFitter::_fitsky(
 	Array<Float> sigma;
 	// residMask constant so do not recalculate out_pixelmask
 	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+
 	if (status == Fit2D::OK) {
 		*_getLog() << LogIO::NORMAL << "Number of iterations = "
 			<< fitter.numberIterations() << LogIO::POST;
@@ -1379,7 +1381,6 @@ void ImageFitter::_fitsky(
 	}
 	else {
 		converged = False;
-		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return;
 	}
@@ -1616,9 +1617,9 @@ void ImageFitter::_encodeSkyComponentError(
 	// Position.  Use the pixel to world widths converter again.
 	// Or do something simpler ?
 	// X
-	dParameters(2) = errors(1) == 0 ? 1e-12 : errors(1);
+	dParameters(2) = errors(1) == 0 ? 1e-10 : errors(1);
 	// Y
-	dParameters(3) = errors(2) == 0 ? 1e-12 : errors(2);
+	dParameters(3) = errors(2) == 0 ? 1e-10 : errors(2);
 	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
 	Bool flipped = ImageUtilities::pixelWidthsToWorld(
 			os, wParameters, dParameters,
