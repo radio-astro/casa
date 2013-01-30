@@ -1,2 +1,0 @@
-1000 casa/Utilities/BinarySearch.cc casa/Arrays/Vector.h 
-     template Int binarySearch(Bool &, Vector<Int> const &, Int const &, uInt, Int) 

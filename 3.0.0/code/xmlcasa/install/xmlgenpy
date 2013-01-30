@@ -1,9 +1,0 @@
-#!/bin/sh
-CASAROOT=`echo $CASAPATH | awk '{print $1}'`
-CASALIB=`echo $CASAPATH | awk '{printf "%s/%s/lib", $1, $2}'`
-SAXONJAR=${CASALIB}/saxon8.jar
-if [ ! -e $SAXONJAR ] ; then
-	SAXONJAR=${CASAROOT}/java/saxon8.jar
-fi
-java -jar $SAXONJAR $1.xml  $CASAROOT/share/xml/casa2pycli.xsl > $1_cli.py
-java -jar $SAXONJAR $1.xml  $CASAROOT/share/xml/casa2pyimp.xsl > $1.py

@@ -1,6 +1,0 @@
-#!/bin/sh
-
-ipdir=$PWD/..
-
-cd $ipdir/dist
-scp * ipython@ipython.scipy.org:www/dist/testing/
