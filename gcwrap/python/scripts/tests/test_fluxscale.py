@@ -91,13 +91,17 @@ class fluxscale1_test(unittest.TestCase):
                  'fieldName': '1445+09900002_0', 'numSol': np.array([54]), \
                  #'fluxd': np.array([0.16825763])}, \
                  # flux density seems changed a bit. Updated - 2013.01.29 TT
+		 # for linux on current trunk 22670
+		 # for OSX 10.6 got the previous value 
                  'fluxd': np.array([0.16825765])}, \
                  'freq': np.array([1.41266507e+09]), \
                  'spwName': np.array(['none'], dtype='|S5'), \
                  'spwID': np.array([0])} 
         
         diff_fluxd=abs(refdict['1']['fluxd'][0]-thisdict['1']['fluxd'][0])/refdict['1']['fluxd'][0]
-        self.assertTrue(diff_fluxd<1.5e-8)
+        #self.assertTrue(diff_fluxd<1.5e-8)
+	# increase the tolerance level
+        self.assertTrue(diff_fluxd<1.5e-7)
         
             
     def test_incremental(self): 
@@ -182,8 +186,3 @@ class fluxscale2_test(unittest.TestCase):
 def suite():
     return [fluxscale1_test, fluxscale2_test]
 
-
-
-
-
-        
