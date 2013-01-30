@@ -1605,6 +1605,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
@@ -1701,6 +1702,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
 	uvw(2,i)=vb.uvw()(i)(2);
       }
+
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
@@ -2291,11 +2294,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // This is the convention for dphase
-    dphase*=-1.0;
+    //    dphase*=-1.0;
 
     Cube<Int> flags(vb.flagCube().shape());
     flags=0;
@@ -2464,11 +2468,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // This is the convention for dphase
-    dphase*=-1.0;
+    //dphase*=-1.0;
     
     
     Cube<Int> flags(vb.flagCube().shape());
@@ -2659,11 +2664,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	uvw(2,i)=vb.uvw()(i)(2);
       }
     
+    doUVWRotation_p=True;
     rotateUVW(uvw, dphase, vb);
     refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
     
     // This is the convention for dphase
-    dphase*=-1.0;
+    //dphase*=-1.0;
     
     Cube<Int> flags(vb.flagCube().shape());
     flags=0;

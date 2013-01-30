@@ -42,24 +42,36 @@
       l_phaseGradOriginY=phNY/2 + 1
 
       do iy=-scaledSupport(2),scaledSupport(2) 
-         iloc(2)=nint(scaledSampling(2)*iy+off(2))
+c         iloc(2)=nint(scaledSampling(2)*iy+off(2))
+         iloc(2)=nint(scaledSampling(2)*iy+off(2)-1)
          iCFPos(2)=iloc(2)+convOrigin(2)+1
          l_igrdpos(2) = loc(2)+iy+1
          do ix=-scaledSupport(1),scaledSupport(1)
-            iloc(1)=nint(scaledSampling(1)*ix+off(1))
+c            iloc(1)=nint(scaledSampling(1)*ix+off(1))
+            iloc(1)=nint(scaledSampling(1)*ix+off(1)-1)
             iCFPos(1) = iloc(1) + convOrigin(1) + 1
             l_igrdpos(1) = loc(1) + ix + 1
-            
+C            
+C Conjugate the CF to account for the W-term and poln. squint.  This is
+C the equivalent of the A^\dag operator in the A-Projection paper (A&A 487,
+C 419-429 (2008); http://arxiv.org/abs/0805.0834) for the antenna optics (plus
+C geometric effects like the w-term) 
+C
             wt = convFuncV(iCFPos(1), iCFPos(2), 
      $           iCFPos(3), iCFPos(4))
             if (wVal > 0.0)  wt = conjg(wt)
-
+            
             norm = norm + (wt)
-
+C
+C     Apply the conjugate of the phase gradient.  This, along with
+C     conjg(phasor) later, is the equivalent of applying the A^\dag
+C     operator in the A-Projection paper for mosaic imaging.
+C
             if (finitePointingOffset .eq. 1) then
-               wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX, 
-     $              iloc(2) + l_phaseGradOriginY)
+               wt = wt * conjg(phaseGrad(iloc(1) + l_phaseGradOriginX, 
+     $              iloc(2) + l_phaseGradOriginY))
             endif
+
 c$$$            tt = phaseGrad(iloc(1) + l_phaseGradOriginX, 
 c$$$     $              iloc(2) + l_phaseGradOriginY)
 c$$$            if (scaledSupport(1) .eq. 5) then
@@ -77,7 +89,16 @@ c$$$            endif
 
             nvalue = nvalue + wt * grid(l_igrdpos(1), l_igrdpos(2), 
      $           l_igrdpos(3), l_igrdpos(4))
+c$$$            write (*,*) (nvalue), 
+c$$$     $           (wt),
+c$$$     $           (grid(l_igrdpos(1), l_igrdpos(2), 
+c$$$     $           l_igrdpos(3), l_igrdpos(4))),
+c$$$     $           abs(wt * grid(l_igrdpos(1), l_igrdpos(2), 
+c$$$     $           l_igrdpos(3), l_igrdpos(4))),
+c$$$     $           phaseGrad(iloc(1) + l_phaseGradOriginX, 
+c$$$     $           iloc(2) + l_phaseGradOriginY),ix,iy,norm
          enddo
       enddo
       nvalue = nvalue *conjg(phasor)/norm
+c$$$      stop
       end
