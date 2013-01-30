@@ -274,7 +274,7 @@ class test_rflag(test_base):
         
     def test_rflag1(self):
         '''flagdata:: Test1 of mode = rflag : automatic thresholds'''
-        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[]);
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 42728.0)
         self.assertEqual(res['antenna']['ea19']['flagged'], 18411.0)
@@ -283,7 +283,7 @@ class test_rflag(test_base):
     def test_rflag2(self):
         '''flagdata:: Test2 of mode = rflag : partially-specified thresholds'''
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[[1,10,0.1],[1,11,0.07]], \
-                       freqdev=0.5);
+                       freqdev=0.5, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary',spw='9,10,11')
         self.assertEqual(res['flagged'], 52411)
         self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
@@ -295,15 +295,15 @@ class test_rflag(test_base):
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
                       freqdev='fdevfile.txt', action='calculate');
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt', action='apply');
+                      freqdev='fdevfile.txt', action='apply', flagbackup=False)
         res1 = flagdata(vis=self.vis, mode='summary')
         # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
         #      and then read back in via list mode. 
         #      Also test the 'savepars' when timedev and freqdev are specified differently...
-        flagdata(vis=self.vis,mode='unflag');
+        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
                       freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
-        flagdata(vis=self.vis, mode='list', inpfile='outcmd.txt');
+        flagdata(vis=self.vis, mode='list', inpfile='outcmd.txt', flagbackup=False)
         res2 = flagdata(vis=self.vis, mode='summary')
 
         #print res1['flagged'], res2['flagged']
@@ -312,7 +312,7 @@ class test_rflag(test_base):
 
     def test_rflag4(self):
         '''flagdata:: Test4 of mode = rflag : correlation selection'''
-        flagdata(vis=self.vis, mode='rflag', spw='9,10', correlation='rr,ll');
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', correlation='rr,ll', flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['correlation']['RR']['flagged'], 9781.0)
         self.assertEqual(res['correlation']['LL']['flagged'], 10355.0)
@@ -346,7 +346,8 @@ class test_shadow(test_base):
         filename = 'cas2399.txt'
         create_input(myinput, filename)
         
-        flagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename)
+        flagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename,
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
         self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
@@ -380,7 +381,8 @@ class test_shadow(test_base):
         create_input(myinput, filename)
         
         # Flag
-        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='withdict.txt')
+        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='withdict.txt',
+                 flagbackup=False)
         
         # Check flags
         res = flagdata(vis=self.vis, mode='summary')
@@ -531,7 +533,7 @@ class test_msselection(test_base):
         
     def test_autocorr1(self):
         '''flagdata: flag only auto-correlations with antenna selection'''
-        flagdata(vis=self.vis, mode='manual', antenna='VA05&&&')
+        flagdata(vis=self.vis, mode='manual', antenna='VA05&&&', flagbackup=False)
         s = flagdata(vis = self.vis, mode="summary",basecnt=True)['baseline']
         assert s['VA05&&VA05']['flagged'] == 7560
         assert s['VA01&&VA05']['flagged'] == 0
@@ -544,7 +546,7 @@ class test_msselection(test_base):
 
     def test_autocorr2(self):
         '''flagdata: flag auto-corrs with parameter'''
-        flagdata(vis=self.vis, autocorr=True)
+        flagdata(vis=self.vis, autocorr=True, flagbackup=False)
         s = flagdata(vis = self.vis, mode="summary")
         self.assertEqual(s['flagged'], 203994)
         
@@ -558,7 +560,8 @@ class test_msselection(test_base):
         create_input(myinput, filename)
         
         # select only the autocorr reasons to flag
-        flagdata(vis=self.vis, mode='list', inpfile=filename, reason='AUTO', action='apply')
+        flagdata(vis=self.vis, mode='list', inpfile=filename, reason='AUTO', action='apply',
+                 flagbackup=False)
         s = flagdata(vis = self.vis, mode="summary", basecnt=True)
         self.assertEqual(s['scan']['4']['flagged'], 0)
         self.assertEqual(s['baseline']['VA09&&VA28']['flagged'], 0)
@@ -635,11 +638,11 @@ class test_statistics_queries(test_base):
     def test021(self):
         '''flagdata: Test of flagging statistics and queries'''
         
-        flagdata(vis=self.vis, correlation='LL', savepars=False)
-        flagdata(vis=self.vis, spw='0:17~19', savepars=False)
-        flagdata(vis=self.vis, antenna='VA05&&VA09', savepars=False)
-        flagdata(vis=self.vis, antenna='VA14', savepars=False)
-        flagdata(vis=self.vis, field='1', savepars=False)
+        flagdata(vis=self.vis, correlation='LL', savepars=False, flagbackup=False)
+        flagdata(vis=self.vis, spw='0:17~19', savepars=False, flagbackup=False)
+        flagdata(vis=self.vis, antenna='VA05&&VA09', savepars=False, flagbackup=False)
+        flagdata(vis=self.vis, antenna='VA14', savepars=False, flagbackup=False)
+        flagdata(vis=self.vis, field='1', savepars=False, flagbackup=False)
         s = flagdata(vis=self.vis, mode='summary', minrel=0.9, spwchan=True, basecnt=True)
         assert s['antenna'].keys() == ['VA14']
         assert 'VA05&&VA09' in s['baseline'].keys()
@@ -657,25 +660,25 @@ class test_statistics_queries(test_base):
     def test_chanavg0(self):
         print "Test of channel average"
         flagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], correlation='ABS_RR',
-                 savepars=False)
+                 savepars=False, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1414186)
 
     def test_chanavg1(self):
         flagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], correlation='ABS_RR',
-                 savepars=False)
+                 savepars=False, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1347822)
 
     def test_chanavg2(self):
         flagdata(vis=self.vis, mode='clip',channelavg=False, clipminmax=[30., 60.], spw='0:0~10', 
-                 correlation='ABS_RR', savepars=False)
+                 correlation='ABS_RR', savepars=False, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 242053)
 
     def test_chanavg3(self):
         flagdata(vis=self.vis, mode='clip',channelavg=True, clipminmax=[30., 60.], spw='0:0~10',
-                 correlation='ABS_RR', savepars=False)
+                 correlation='ABS_RR', savepars=False, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 231374)
                
@@ -688,7 +691,8 @@ class test_statistics_queries(test_base):
 #
     def test9(self):
         '''flagdata: quack mode'''
-        flagdata(vis=self.vis, mode='quack', quackmode='beg', quackinterval=1, savepars=False)
+        flagdata(vis=self.vis, mode='quack', quackmode='beg', quackinterval=1, savepars=False,
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 329994)
 
@@ -700,34 +704,36 @@ class test_statistics_queries(test_base):
 
     def test11(self):
         '''flagdata: quack mode'''
-        flagdata(vis=self.vis, mode='quack', quackmode='end', quackinterval=1, savepars=False)
+        flagdata(vis=self.vis, mode='quack', quackmode='end', quackinterval=1, savepars=False,
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 2520882)
 
     def test12(self):
         '''flagdata: quack mode'''
-        flagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, savepars=False)
+        flagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, savepars=False,
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 2524284)
 
     def test13(self):
         '''flagdata: quack mode, quackincrement'''
         flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True,
-                 savepars=False)
+                 savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 571536)
 
         flagdata(vis=self.vis, mode='quack', quackinterval=20, quackmode='endb', quackincrement=True,
-                 savepars=False)
+                 savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 857304)
         
         flagdata(vis=self.vis, mode='quack', quackinterval=150, quackmode='endb', quackincrement=True,
-                 savepars=False)
+                 savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1571724)
         
         flagdata(vis=self.vis, mode='quack', quackinterval=50, quackmode='endb', quackincrement=True,
-                 savepars=False)
+                 savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2854278, 1762236)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
 
 
 
@@ -745,12 +751,12 @@ class test_selections(test_base):
                 
     def test_antenna(self):
         '''flagdata: antenna selection'''
-        flagdata(vis=self.vis, antenna='VA02', savepars=False)
+        flagdata(vis=self.vis, antenna='VA02', savepars=False,flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='VA02'), 196434, 196434)
 
     def test_spw(self):
         '''flagdata: spw selection'''
-        flagdata(vis=self.vis, spw='0', savepars=False)
+        flagdata(vis=self.vis, spw='0', savepars=False,flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
 
     def test_spw_list(self):
@@ -759,17 +765,18 @@ class test_selections(test_base):
         if os.path.exists(spwfile):
             os.system('rm -rf '+spwfile)
                    
-        flagdata(vis=self.vis, spw='0:1~10', savepars=True, outfile=spwfile)
+        flagdata(vis=self.vis, spw='0:1~10', savepars=True, outfile=spwfile, flagbackup=False)
         res0 = flagdata(vis=self.vis, mode='summary', spwchan=True)
         self.assertEqual(res0['flagged'], 453060, 'Only channels 1~10 should be flagged')
         
         # Unflag
-        flagdata(vis=self.vis, mode='unflag')
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         ures = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(ures['flagged'], 0)
         
         # Flag using the saved list
-        flagdata(vis=self.vis, mode='list', inpfile=spwfile, action='apply')
+        flagdata(vis=self.vis, mode='list', inpfile=spwfile, action='apply',
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary', spwchan=True)
         self.assertEqual(res0['flagged'], res['flagged'])        
                   
@@ -788,15 +795,16 @@ class test_selections(test_base):
         self.assertEqual(res['spw:channel']['0:11']['flagged'], 0)
 
     def test_correlation(self):
-        flagdata(vis=self.vis, correlation='LL', savepars=False)
+        flagdata(vis=self.vis, correlation='LL', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
         test_eq(flagdata(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
-        flagdata(vis=self.vis, correlation='LL,RR', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+        flagdata(vis=self.vis, correlation='LL,RR', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
-        flagdata(vis=self.vis, mode='clip', correlation='NORM_RR,LL', clipminmax=[0.,3.])
+        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+        flagdata(vis=self.vis, mode='clip', correlation='NORM_RR,LL', clipminmax=[0.,3.],
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 204979)
 #        flagdata(vis=self.vis, correlation='LL RR')
@@ -805,22 +813,23 @@ class test_selections(test_base):
 
     def test_field(self):
         '''flagdata: field selection'''
-        flagdata(vis=self.vis, field='0', savepars=False)
+        flagdata(vis=self.vis, field='0', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 39186)
 
     def test_uvrange(self):
         '''flagdata: uvrange selection'''
-        flagdata(vis=self.vis, uvrange='200~400m', savepars=False)
+        flagdata(vis=self.vis, uvrange='200~400m', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='VA02'), 196434, 55944)
 
     def test_timerange(self):
         '''flagdata: timerange selection'''
-        flagdata(vis=self.vis, timerange='09:50:00~10:20:00', savepars=False)
+        flagdata(vis=self.vis, timerange='09:50:00~10:20:00', savepars=False,
+                 flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 6552)
 
     def test_array(self):
         '''flagdata: array selection'''
-        flagdata(vis=self.vis, array='0', savepars=False)
+        flagdata(vis=self.vis, array='0', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
                 
     def test_action(self):
@@ -831,11 +840,11 @@ class test_selections(test_base):
 
     def test_missing_corr_product(self):
         '''CAS-4234: Keep going when one of the corr products is not available but others are present'''
-        flagdata(vis=self.vis, correlation='LL,LR', savepars=False)
+        flagdata(vis=self.vis, correlation='LL,LR', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 98217)
         test_eq(flagdata(vis=self.vis, mode='summary', correlation='RR'), 1427139, 0)
-        flagdata(vis=self.vis, mode='unflag', savepars=False)
-        flagdata(vis=self.vis, correlation='LL,RR,RL', savepars=False)
+        flagdata(vis=self.vis, mode='unflag', savepars=False, flagbackup=False)
+        flagdata(vis=self.vis, correlation='LL,RR,RL', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
 
@@ -854,29 +863,33 @@ class test_selections_alma(test_base):
         
     def test_wvr(self):
         '''flagdata: flag WVR correlation'''
-        flagdata(vis=self.vis, correlation='I', savepars=False)
+        flagdata(vis=self.vis, correlation='I', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 22752)
 
     def test_abs_wvr(self):
         '''flagdata: clip ABS_WVR'''
-        flagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False)
+        flagdata(vis=self.vis, mode='clip',clipminmax=[0,50], correlation='ABS_WVR', savepars=False,
+                 flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 22752)
         
     def test_abs_i(self):
         '''flagdata: clip ABS_I. Do not flag WVR'''
-        flagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False)
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0,50], correlation='ABS_I', savepars=False,
+                 flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 0)
 
     def test_abs_all(self):
         '''flagdata: clip ABS ALL. Do not flag WVR'''
-        flagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False)
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0,1], correlation='ABS ALL', savepars=False,
+                 flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'),1154592, 130736)
         test_eq(flagdata(vis=self.vis, mode='summary', correlation='I'),22752, 0)
 
     def test_spw(self):
         '''flagdata: flag various spw'''
         # Test that a white space in the spw parameter is taken correctly
-        flagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False)
+        flagdata(vis=self.vis, mode='manual', spw='1,3, 4', savepars=False,
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['spw']['0']['flagged'], 0, 'spw=0 should not be flagged')
         self.assertEqual(res['spw']['1']['flagged'], 552960, 'spw=1 should be fully flagged')
@@ -920,7 +933,7 @@ class test_selections_alma(test_base):
                  "intent='CALIBRATE_AMPLI_ON_SOURC",
                  "intent='*DELAY*'"] # non-existing
        
-        flagdata(vis=self.vis, mode='list', inpfile=myinput)
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184)
         self.assertEqual(res['scan']['2']['flagged'], 96216)
@@ -966,7 +979,7 @@ class test_selections2(test_base):
     def test_observation1(self):
         '''flagdata: observation ID selections'''
         # string
-        flagdata(vis=self.vis, observation='1', savepars=False)
+        flagdata(vis=self.vis, observation='1', savepars=False, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 28500)
         self.assertEqual(res['total'], 2882778)
@@ -985,7 +998,8 @@ class test_selections2(test_base):
         filename = 'obs2.txt'
         create_input(myinput, filename)
         
-        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False)
+        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=False,
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['observation']['0']['flagged'], 2854278.0)
         self.assertEqual(res['observation']['1']['flagged'], 0, 'Only observation 0 should be flagged')
@@ -1005,34 +1019,36 @@ class test_elevation(test_base):
         
         test_eq(flagdata(vis=self.vis, mode='summary'), self.all, 0)
 
-        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 50, savepars=False)
+        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 50, savepars=False,
+                 flagbackup=False)
 
         test_eq(flagdata(vis=self.vis, mode='summary'), self.all, 0)
 
-        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 55, savepars=False)
+        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 55, savepars=False,
+                 flagbackup=False)
 
         test_eq(flagdata(vis=self.vis, mode='summary'), self.all, self.x55)
 
-        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 60, savepars=False)
+        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 60, savepars=False,
+                 flagbackup=False)
 
         test_eq(flagdata(vis=self.vis, mode='summary'), self.all, self.x60)
 
-        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 65, savepars=False)
+        flagdata(vis = self.vis, mode = 'elevation', lowerlimit = 65, savepars=False,
+                 flagbackup=False)
 
         test_eq(flagdata(vis=self.vis, mode='summary'), self.all, self.x65)
 
     def test_upper(self):
-        flagdata(vis = self.vis, mode = 'elevation', upperlimit = 60, savepars=False)
+        flagdata(vis = self.vis, mode = 'elevation', upperlimit = 60, savepars=False,
+                 flagbackup=False)
 
         test_eq(flagdata(vis=self.vis, mode='summary'), self.all, self.all - self.x60)
 
 
     def test_interval(self):
-        flagdata(vis = self.vis,
-                  mode = 'elevation',
-                  lowerlimit = 55,
-                  upperlimit = 60,
-                  savepars=False)
+        flagdata(vis = self.vis,mode = 'elevation',lowerlimit = 55,upperlimit = 60,
+                  savepars=False,flagbackup=False)
 
         test_eq(flagdata(vis=self.vis, mode='summary'), self.all, self.all - (self.x60 - self.x55))
 
@@ -1085,7 +1101,8 @@ class test_list_file(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag from list and save to FLAG_CMD
-        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True)
+        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True,
+                 flagbackup=False)
         
         # Verify
         if os.path.exists("myflags.txt"):
@@ -1101,7 +1118,7 @@ class test_list_file(test_base):
         
         # Test that action='none' is also accepted
         flagdata(vis=self.vis, mode='quack', quackmode='tail', quackinterval=1, action='none', 
-                 savepars=True)
+                 savepars=True, flagbackup=False)
         
         flagcmd(vis=self.vis, action='apply')
         res = flagdata(vis=self.vis, mode='summary')
@@ -1137,20 +1154,22 @@ class test_list_file(test_base):
         create_input(myinput, filename)
         
         # Select one reason
-        flagdata(vis=self.vis, mode='list', inpfile=filename, reason='SCAN_3')
+        flagdata(vis=self.vis, mode='list', inpfile=filename, reason='SCAN_3',
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['3']['flagged'], 762048, 'Should flag only reason=SCAN_3')
         self.assertEqual(res['flagged'], 762048, 'Should flag only reason=SCAN_3')
         
         # Select list of reasons
-        flagdata(vis=self.vis, mode='list', inpfile=filename, reason=['','SCAN_1'])
+        flagdata(vis=self.vis, mode='list', inpfile=filename, reason=['','SCAN_1'],
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 95256, 'Should flag reason=\'\'')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
         
         # No reason selection
-        flagdata(vis=self.vis, mode='unflag')
-        flagdata(vis=self.vis, mode='list', inpfile=filename)
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['2']['flagged'], 238140)
@@ -1178,7 +1197,8 @@ class test_list_file(test_base):
                   cmdreason='CLIPSCAN2_3', outfile='reason2.txt', action='')
 
         # Apply flag cmd
-        flagdata(vis=self.vis, mode='list', inpfile='reason2.txt',reason='CLIPSCAN2_3')
+        flagdata(vis=self.vis, mode='list', inpfile='reason2.txt',reason='CLIPSCAN2_3',
+                 flagbackup=False)
         
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 69568)
@@ -1197,7 +1217,8 @@ class test_list_file(test_base):
                   cmdreason='MANUALFLAG', action='')
         
         # Apply the flag cmds
-        flagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG')
+        flagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG',
+                 flagbackup=False)
         
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
@@ -1246,11 +1267,11 @@ class test_list_list(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag from list and save to FLAG_CMD
-        flagdata(vis=self.vis, mode='list', inpfile=myinput)
+        flagdata(vis=self.vis, mode='list', inpfile=myinput,flagbackup=False)
         res1 = flagdata(vis=self.vis, mode='summary')
         
         # Unflag and save in flagcmd using the cmd mode
-        flagdata(vis=self.vis, mode='unflag')
+        flagdata(vis=self.vis, mode='unflag',flagbackup=False)
         flagcmd(vis=self.vis, inpmode='list', inpfile=myinput)
         res2 = flagdata(vis=self.vis, mode='summary')
 
@@ -1284,20 +1305,22 @@ class test_list_list(test_base):
                 "scan='4' reason=''"]
         
         # Select one reason
-        flagdata(vis=self.vis, mode='list', inpfile=myinput, reason='SCAN_3')
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, reason='SCAN_3',
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['3']['flagged'], 762048, 'Should flag only reason=SCAN_3')
         self.assertEqual(res['flagged'], 762048, 'Should flag only reason=SCAN_3')
         
         # Select list of reasons
-        flagdata(vis=self.vis, mode='list', inpfile=myinput, reason=['','SCAN_1'])
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, reason=['','SCAN_1'],
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['4']['flagged'], 95256, 'Should flag reason=\'\'')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Should flag reason=SCAN_1')
         
         # No reason selection
-        flagdata(vis=self.vis, mode='unflag')
-        flagdata(vis=self.vis, mode='list', inpfile=myinput)
+        flagdata(vis=self.vis, mode='unflag',flagbackup=False)
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134)
         self.assertEqual(res['scan']['2']['flagged'], 238140)
@@ -1318,7 +1341,8 @@ class test_list_list(test_base):
                   cmdreason='MANUALFLAG', action='')
         
         # Apply the flag cmds
-        flagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG')
+        flagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG',
+                 flagbackup=False)
         
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
@@ -1332,7 +1356,7 @@ class test_clip(test_base):
         
     def test_clipzeros(self):
     	'''flagdata: clip only zero-value data'''
-        flagdata(vis=self.vis, mode='clip', clipzeros=True)
+        flagdata(vis=self.vis, mode='clip', clipzeros=True, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'],274944,'Should clip only spw=8')
         
@@ -1347,11 +1371,12 @@ class test_CASA_4_0_bug_fix(test_base):
         """flagdata: Test uvrange given in lambda units"""
                 
         flagdata(vis=self.vis,mode='manual',uvrange='<2klambda')
-        flagdata(vis=self.vis,mode='clip')
+        flagdata(vis=self.vis,mode='clip', flagbackup=False)
         summary_ref = flagdata(vis=self.vis,mode='summary')
         
-        flagdata(vis=self.vis,mode='unflag')
-        flagdata(vis=self.vis,mode='list',inpfile=["uvrange='<2Klambda'","mode='clip'"])
+        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+        flagdata(vis=self.vis,mode='list',inpfile=["uvrange='<2Klambda'","mode='clip'"],
+                 flagbackup=False)
         summary_out = flagdata(vis=self.vis,mode='summary')
         
         self.assertEqual(summary_out['flagged'],summary_ref['flagged'],'uvrange given in lambda is not properly translated into meters')
@@ -1369,15 +1394,15 @@ class test_CASA_4_0_bug_fix(test_base):
     def test_CAS_4200(self):
         """flagdata: Test quack mode with quackinterval 0"""
         
-        flagdata(vis=self.vis,mode='quack',quackinterval=0)
+        flagdata(vis=self.vis,mode='quack',quackinterval=0, flagbackup=False)
         summary_zero = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(summary_zero['flagged'],0,'Error in quack mode with quack interval 0')
         
-        flagdata(vis=self.vis,mode='quack',quackinterval=1)
+        flagdata(vis=self.vis,mode='quack',quackinterval=1, flagbackup=False)
         summary_one = flagdata(vis=self.vis,mode='summary')
         
-        flagdata(vis=self.vis,mode='unflag')
-        flagdata(vis=self.vis,mode='quack')
+        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
+        flagdata(vis=self.vis,mode='quack', flagbackup=False)
         summary_default = flagdata(vis=self.vis,mode='summary')
         
         self.assertEqual(summary_one['flagged'],summary_default['flagged'],'Error in quack mode with quack interval 1')
@@ -1443,7 +1468,7 @@ class test_tsys(test_base):
 
     def test_unsupported_shadow(self):
         '''Flagdata: Unsupported shadow mode'''
-        res = flagdata(vis=self.vis, mode='shadow')
+        res = flagdata(vis=self.vis, mode='shadow', flagbackup=False)
         self.assertEqual(res, {})
         
     def test_mixed_list(self):
@@ -1453,7 +1478,7 @@ class test_tsys(test_base):
                 "mode='shadow'",
                 "spw='5'"]
         
-        flagdata(vis=self.vis, mode='list', inpfile=cmds)
+        flagdata(vis=self.vis, mode='list', inpfile=cmds, flagbackup=False)
         res = flagdata(vis=self.vis,mode='summary',spw='1,3,5')
         self.assertEqual(res['spw']['1']['flagged'], 32256)
         self.assertEqual(res['spw']['3']['flagged'], 0)
@@ -1463,19 +1488,19 @@ class test_tsys(test_base):
 
     def test_invalid_scan(self):
         '''Flagdata: unsupported scan selection'''
-        res = flagdata(vis=self.vis, scan='1,2')
+        res = flagdata(vis=self.vis, scan='1,2', flagbackup=False)
         self.assertEqual(res, {})
 
     def test_default_fparam(self):
         '''Flagdata: default data column FPARAM'''
-        flagdata(vis=self.vis, mode='clip', clipminmax=[0,500])
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0,500], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 5325)
         
     def test_manual_field_selection(self):
         """Flagdata:: Manually flag a Tsys-based CalTable using field selection"""
 
-        flagdata(vis=self.vis, field='0')
+        flagdata(vis=self.vis, field='0', flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         
         self.assertEqual(res['field']['3c279']['flagged'], 9216)
@@ -1486,7 +1511,7 @@ class test_tsys(test_base):
     def test_manual_antenna_selection(self):
         """Flagdata:: Manually flag a Tsys-based CalTable using antenna selection"""
 
-        flagdata(vis=self.vis, antenna='DV09')
+        flagdata(vis=self.vis, antenna='DV09', flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['antenna']['DV09']['flagged'], 14336)
         self.assertEqual(res['antenna']['DV10']['flagged'], 0)
@@ -1496,7 +1521,7 @@ class test_tsys(test_base):
         column using a minmax range """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='REAL_Sol1',
-                 clipzeros=True, clipminmax=[0.,600.])
+                 clipzeros=True, clipminmax=[0.,600.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         
         self.assertEqual(res['total'], 129024.0)
@@ -1521,12 +1546,12 @@ class test_tsys(test_base):
         self.assertEqual(res['correlation']['Sol2']['flagged'], 750)
 
         # Get the same results when flagging using a file
-        flagdata(vis=self.vis, mode='unflag')
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
         myinput = "mode='clip' datacolumn='FPARAM' correlation='Sol1' clipzeros=True clipminmax=[0.,600.]\n"\
                 "mode='extend' extendpols=True growfreq=0.0 growtime=0.0"
         filename = 'callist.txt'
         create_input(myinput, filename)
-        flagdata(vis=self.vis, mode='list', inpfile=filename)
+        flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['total'], 129024)
         self.assertEqual(res['flagged'], 1500)
@@ -1538,7 +1563,7 @@ class test_tsys(test_base):
         column using a minmax range """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='Sol2',
-                 clipzeros=True, clipminmax=[0.,600.])
+                 clipzeros=True, clipminmax=[0.,600.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         
         self.assertEqual(res['total'], 129024.0)
@@ -1553,7 +1578,7 @@ class test_tsys(test_base):
         FPARAM column using a minmax range """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='Sol1,Sol2',
-                 clipzeros=True, clipminmax=[0.,600.])
+                 clipzeros=True, clipminmax=[0.,600.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
 
         self.assertEqual(res['total'], 129024.0)
@@ -1565,13 +1590,15 @@ class test_tsys(test_base):
                 
     def test_invalid_corr(self):
         '''Flagdata: default correlation should be REAL_ALL in this case'''
-        flagdata(vis=self.vis, mode='clip', correlation='ABS_ALL',clipminmax=[0.,600.])
+        flagdata(vis=self.vis, mode='clip', correlation='ABS_ALL',clipminmax=[0.,600.],
+                 flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1192.0)
         
     def test_invalid_datacol(self):
         '''Flagdata: invalid data column should fall back to default'''
-        flagdata(vis=self.vis, mode='clip', clipminmax=[0.,600.],datacolumn='PARAMERR')
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0.,600.],datacolumn='PARAMERR',
+                 flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1192.0)
                 
@@ -1581,7 +1608,7 @@ class test_tsys(test_base):
         column using a minmax range """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='',
-                 clipzeros=True, clipminmax=[0.,600.])
+                 clipzeros=True, clipminmax=[0.,600.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')       
         self.assertEqual(res['total'], 129024.0)
         self.assertEqual(res['flagged'], 1192.0)
@@ -1595,7 +1622,7 @@ class test_tsys(test_base):
         products of FPARAM column"""
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='',
-                 clipzeros=True)
+                 clipzeros=True, flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
                
         self.assertEqual(res['total'], 129024.0)
@@ -1609,7 +1636,8 @@ class test_tsys(test_base):
     def test_clip_nans_fparm_all(self):
         """Flagdata:: Test cliping only NaNs/Infs in all calibration solution products of FPARAM column"""
 
-        flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='')
+        flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='',
+                 flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         
         self.assertEqual(res['total'], 129024.0)
@@ -1624,7 +1652,7 @@ class test_tsys(test_base):
         """Flagdata:: Error case test when a complex operator is used with CalTables """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='ABS_ALL',
-                 clipzeros=True, clipminmax=[0.,600.])
+                 clipzeros=True, clipminmax=[0.,600.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
 
         self.assertEqual(res['total'], 129024.0)
@@ -1638,7 +1666,7 @@ class test_tsys(test_base):
         """Flagdata:: Error case test when a complex operator is used with CalTables """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='ABS_Sol1',
-                 clipzeros=True, clipminmax=[0.,600.])
+                 clipzeros=True, clipminmax=[0.,600.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
 
         self.assertEqual(res['total'], 129024)
@@ -1650,7 +1678,7 @@ class test_tsys(test_base):
         """Flagdata:: Fall back to default REAL operator """
 
         flagdata(vis=self.vis, mode='clip', datacolumn='FPARAM', correlation='ABS Sol1,Sol2',
-                 clipzeros=True, clipminmax=[0.,600.])
+                 clipzeros=True, clipminmax=[0.,600.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
 
         self.assertEqual(res['total'], 129024)
@@ -1663,7 +1691,7 @@ class test_tsys(test_base):
         column using a minmax range for Tsys CalTable"""
 
         flagdata(vis=self.vis, mode='clip', datacolumn='SNR', correlation='',
-                 clipzeros=True, clipminmax=[0.,2.])
+                 clipzeros=True, clipminmax=[0.,2.], flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
 
         self.assertEqual(res['total'], 129024.0)
@@ -1675,7 +1703,7 @@ class test_tsys(test_base):
 
     def test_spw_selection(self):
         '''Flagdata: Select spw in cal tables'''
-        flagdata(vis=self.vis, mode='manual', spw='1,3')
+        flagdata(vis=self.vis, mode='manual', spw='1,3', flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['spw']['1']['flagged'],32256)
         self.assertEqual(res['spw']['3']['flagged'],32256)
@@ -1683,7 +1711,7 @@ class test_tsys(test_base):
 
     def test_channel_selection(self):
         '''Flagdata: Select spw:channel in cal tables'''
-        flagdata(vis=self.vis, mode='manual', spw='*:0~8,*:120~127')
+        flagdata(vis=self.vis, mode='manual', spw='*:0~8,*:120~127', flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary', spwchan=True)
         self.assertEqual(res['spw']['1']['flagged'],4284)
         self.assertEqual(res['spw']['3']['flagged'],4284)
@@ -1703,9 +1731,9 @@ class test_bandpass(test_base):
 
     def test_unsupported_modes(self):
         '''Flagdata: elevation and shadow are not supported in cal tables'''
-        res = flagdata(vis=self.vis, mode='elevation')
+        res = flagdata(vis=self.vis, mode='elevation', flagbackup=False)
         self.assertEqual(res, {})
-        res = flagdata(vis=self.vis, mode='shadow')
+        res = flagdata(vis=self.vis, mode='shadow', flagbackup=False)
         self.assertEqual(res, {})
 
     def test_nullselections(self):
@@ -1715,13 +1743,14 @@ class test_bandpass(test_base):
 
     def test_default_cparam(self):
         '''Flagdata: flag CPARAM as the default column'''
-        flagdata(vis=self.vis, mode='clip', clipzeros=True)
+        flagdata(vis=self.vis, mode='clip', clipzeros=True, flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 11078.0, 'Should use CPARAM as the default column')
 
     def test_invalid_datacol(self):
         '''Flagdata: invalida data column should fall back to default'''
-        flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='PARAMERR')
+        flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='PARAMERR',
+                 flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 11078.0)
                 
@@ -1729,7 +1758,7 @@ class test_bandpass(test_base):
     def test_manual_field_selection_for_bpass(self):
         """Flagdata:: Manually flag a bpass-based CalTable using field selection"""
         
-        flagdata(vis=self.vis, field='3C286_A')
+        flagdata(vis=self.vis, field='3C286_A', flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         
         self.assertEqual(summary['field']['3C286_A']['flagged'], 499200.0)
@@ -1740,7 +1769,8 @@ class test_bandpass(test_base):
     def test_list_field_Selection_for_bpass(self):
         """Flagdata:: Manually flag a bpass-based CalTable using list mode """
         
-        flagdata(vis=self.vis, mode='list', inpfile=["field='3C286_A'"])
+        flagdata(vis=self.vis, mode='list', inpfile=["field='3C286_A'"],
+                 flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['field']['3C286_A']['flagged'], 499200.0)
         self.assertEqual(summary['field']['3C286_B']['flagged'], 0)
@@ -1749,7 +1779,7 @@ class test_bandpass(test_base):
 
     def test_manual_antenna_selection_for_bpass(self):
         """Flagdata:: Manually flag a bpass-based CalTable using antenna selection"""
-        flagdata(vis=self.vis, antenna='ea09')
+        flagdata(vis=self.vis, antenna='ea09', flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['antenna']['ea09']['flagged'], 48000.0)
         self.assertEqual(summary['antenna']['ea10']['flagged'], 0.0)
@@ -1757,7 +1787,8 @@ class test_bandpass(test_base):
     def test_list_antenna_Selection_for_bpass(self):
         """Flagdata:: Manually flag a bpass-based CalTable using list mode"""
         
-        flagdata(vis=self.vis, mode='list', inpfile=["antenna='ea09'"])
+        flagdata(vis=self.vis, mode='list', inpfile=["antenna='ea09'"],
+                 flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['antenna']['ea09']['flagged'], 48000.0)
         self.assertEqual(summary['antenna']['ea10']['flagged'], 0.0)
@@ -1765,7 +1796,8 @@ class test_bandpass(test_base):
     def test_clip_nan_and_inf_cparam_all_for_bpass(self):
         """Flagdata:: Clip only NaNs and Infs in all calibration solutions of CPARAM column"""
 
-        flagdata(vis=self.vis, mode='clip',datacolumn='CPARAM', correlation='')
+        flagdata(vis=self.vis, mode='clip',datacolumn='CPARAM', correlation='',
+                 flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['total'], 1248000.0)
         self.assertEqual(summary['flagged'], 0.0)
@@ -1777,7 +1809,8 @@ class test_bandpass(test_base):
     def test_clip_minmax_cparam_all_for_bpass(self):
         """Flagdata:: Clip all calibration solutions of CPARAM column using a minmax range"""
 
-        flagdata(vis=self.vis, mode='clip',clipzeros=True, clipminmax=[0,0.3], datacolumn='CPARAM')
+        flagdata(vis=self.vis, mode='clip',clipzeros=True, clipminmax=[0,0.3], datacolumn='CPARAM',
+                 flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['flagged'], 11175.0)
         self.assertEqual(summary['total'], 1248000)
@@ -1789,7 +1822,7 @@ class test_bandpass(test_base):
         minmax range for bpass CalTable"""
 
         flagdata(vis=self.vis, mode='clip', clipzeros=True,clipminmax=[0.,550.],datacolumn='snr',
-                 correlation='')
+                 correlation='', flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['total'], 1248000.0)
         self.assertEqual(summary['flagged'], 74371.0)
@@ -1800,7 +1833,8 @@ class test_bandpass(test_base):
 
     def test_clip_one_list(self):
         '''Flagdata: Flag one solution using one command in a list'''
-        flagdata(vis=self.vis, mode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1'"])
+        flagdata(vis=self.vis, mode='list', inpfile=["mode='clip' clipminmax=[0,3] correlation='REAL_Sol1'"],
+                 flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 309388)
         self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
@@ -1808,7 +1842,7 @@ class test_bandpass(test_base):
     def test_rflag_cparam_sol2_for_bpass(self):
         """Flagdata:: Test rflag solution 2 of CPARAM column for bpass"""
 
-        flagdata(vis=self.vis, mode='rflag', correlation='Sol2')
+        flagdata(vis=self.vis, mode='rflag', correlation='Sol2', flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['flagged'], 13197)
         self.assertEqual(summary['correlation']['Sol1']['flagged'], 0)
@@ -1817,8 +1851,10 @@ class test_bandpass(test_base):
     def test_tfcrop_cparam_all_for_bpass(self):
         """Flagdata:: Test tfcrop in ABS_ALL calibration solutions of CPARAM column"""
 
-        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='ABS_ALL',clipzeros=True)
-        flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='ABS_ALL')
+        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='ABS_ALL',clipzeros=True,
+                 flagbackup=False)
+        flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='ABS_ALL',
+                 flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
 #        self.assertTrue(abs(summary['flagged'] - 63861.0) <= 5)
 #        self.assertEqual(abs(summary['flagged'] - 69369) <= 5)
@@ -1830,14 +1866,17 @@ class test_bandpass(test_base):
         """Flagdata:: Test tfcrop first calibration solution product of CPARAM column, 
         and then extend to the other solution for bpass CalTable"""
 
-        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='Sol1',clipzeros=True)
-        flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='Sol1')
+        flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='Sol1',clipzeros=True,
+                 flagbackup=False)
+        flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='Sol1',
+                 flagbackup=False)
         pre=flagdata(vis=self.vis, mode='summary')
         assert abs(pre['flagged'] - 30426) <= 5
         assert abs(pre['correlation']['Sol1']['flagged'] - 30426) <= 5
         
         # Extend to other solution
-        flagdata(vis=self.vis, mode='extend', extendpols=True, growfreq=0.0, growtime=0.0)
+        flagdata(vis=self.vis, mode='extend', extendpols=True, growfreq=0.0, growtime=0.0,
+                 flagbackup=False)
         pos=flagdata(vis=self.vis, mode='summary')
         assert abs(pos['flagged'] - 2*30426) <= 10
         assert abs(pos['correlation']['Sol2']['flagged'] - 30426) <= 5        
