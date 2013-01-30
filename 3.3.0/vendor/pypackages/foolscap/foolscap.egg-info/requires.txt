@@ -1,4 +1,0 @@
-twisted >= 2.4.0
-
-[secure_connections]
-pyOpenSSL
