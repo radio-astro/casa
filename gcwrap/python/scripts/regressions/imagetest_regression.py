@@ -1714,7 +1714,7 @@ def imagetest(which=None, size=[32,32,8]):
                                            2*imshape[2]])
         if not myim:
             stop('imagefromshape constructor 1 failed')
-        myim.done
+        myim.done()
         #
         ex = imname+'+'+imname2
         try:
@@ -3323,6 +3323,7 @@ def imagetest(which=None, size=[32,32,8]):
                 #print "Expected Exception: ", e
                 note("Excepted occurred as expected.")
                 bb = {}
+            myim.done()
             if bb:
                 stop('boundingbox 5 unexpectedly did not fail')
 
@@ -4810,6 +4811,7 @@ def imagetest(which=None, size=[32,32,8]):
             region=rg.box(blc=[32, 32, 0],
             trc=[96, 96, 0])
         )
+        myim.done()
         if not cl1:
             stop('fitcomponents 1 failed')
         if not cl1['converged']:

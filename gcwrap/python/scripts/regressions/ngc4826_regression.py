@@ -303,13 +303,15 @@ clean(vis='n4826_tboth.ms',imagename='tmosaic',
 	 cyclefactor=3, usescratch=False)
 
 ia.open(infile='tmosaic.image');
-ia.moments(outfile='n4826_tmom0.im',
-	   moments=0,axis=3,includepix=[0.070,1000.0],
-	   mask='indexin(3,[3:24])') 
-ia.moments(outfile='n4826_tmom1.im',
-	   moments=1,axis=3,includepix=[0.007,1000.0],
-	   mask='indexin(3,[3:24])') 
+mom0_ia = ia.moments(outfile='n4826_tmom0.im',
+                     moments=0,axis=3,includepix=[0.070,1000.0],
+                     mask='indexin(3,[3:24])')
+mom0_ia.close()
+mom1_ia = ia.moments(outfile='n4826_tmom1.im',
+                     moments=1,axis=3,includepix=[0.007,1000.0],
+                     mask='indexin(3,[3:24])') 
 ia.close()
+mom1_ia.close()
 
 ###################################################
 ## Write image to a fits file:

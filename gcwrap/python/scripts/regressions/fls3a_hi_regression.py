@@ -125,6 +125,7 @@ ia.open('FLS3a_HI.image')
 statistics=ia.statistics()
 thistest_immax=statistics['max'][0]
 thistest_imrms=statistics['rms'][0]
+ia.close()
 
 #
 #hi_max=25.577

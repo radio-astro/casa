@@ -1224,6 +1224,7 @@ class immoment_test2(unittest.TestCase):
             dropdeg=True
         )
         cc = mask.getchunk()
+        mask.done()
         for i in range(shape[0]):
             for j in range(shape[1]):
                 if cc[i,j] < 0.01:
