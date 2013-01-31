@@ -21,6 +21,8 @@
 //# $Id: $
 
 #include <synthesis/MeasurementEquations/SIIterBot.h>
+#include <casadbus/session/DBusSession.h>
+#include <casadbus/utilities/BusAccess.h>
 
 /* Include file for the lock guard */
 #include <boost/thread/locks.hpp>
@@ -35,14 +37,11 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   ////////////////////////////////////
-  /// SIIterBot implementation ///
+  /// SIIterBot_state implementation ///
   ////////////////////////////////////
   
-  // All SIIterBots must have 'type' and 'name' defined.
-  SIIterBot::SIIterBot(const std::string &serviceName):
-#ifdef INTERACTIVE_ITERATION
-                       DBusService(serviceName),
-#endif
+  // All SIIterBot_states must have 'type' and 'name' defined.
+  SIIterBot_state::SIIterBot_state( ) :
                        itsMinPsfFraction(0.05),
                        itsMaxPsfFraction(0.8),
                        itsMaxPsfSidelobe(0.0),
@@ -69,18 +68,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                        itsSummaryMajor(IPosition(1,0))
 
   {
-    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
+    LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
   }
     
-  SIIterBot::~SIIterBot()
-  {
-#ifdef INTERACTIVE_ITERATION
-    disconnect();
-#endif
-  }
+	SIIterBot_state::~SIIterBot_state() { }
 
-
-  bool SIIterBot::interactiveInputRequired(){
+  bool SIIterBot_state::interactiveInputRequired(){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex); 
     return (itsInteractiveMode &&
             (itsMaxCycleIterDone+itsInteractiveIterDone>=itsInteractiveNiter ||
@@ -88,7 +81,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
              itsPauseFlag));
   }
 
-  void SIIterBot::waitForInteractiveInput() {
+  void SIIterBot_state::waitForInteractiveInput() {
     /* Check that we have at least one controller */
     if (getNumberOfControllers() == 0) {
       /* Spawn a Viewer set up for interactive */
@@ -100,7 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       interactionPending = true;
       pushDetails();
 #ifdef INTERACTIVE_ITERATION
-      interactionRequired(interactionPending);
+/*FIXME      interactionRequired(interactionPending); */
 #endif
     }
 
@@ -112,13 +105,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (updateNeeded) {
       updateNeeded = false;
 #ifdef INTERACTIVE_ITERATION
-      interactionRequired(false);
+/*FIXME      interactionRequired(false); */
 #endif
       pushDetails();
     }
   }
 
-  bool SIIterBot::cleanComplete(){
+  bool SIIterBot_state::cleanComplete(){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 
     //    printOut("CleanComplete", False);
@@ -132,8 +125,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  Record SIIterBot::getMinorCycleControls(){
-    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
+  Record SIIterBot_state::getMinorCycleControls(){
+    LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
      boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 
 
@@ -166,7 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return returnRecord;
   }
 
-  void SIIterBot::mergeCycleInitializationRecord(Record& initRecord){
+  void SIIterBot_state::mergeCycleInitializationRecord(Record& initRecord){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
     
     itsPeakResidual = max(itsPeakResidual,
@@ -180,10 +173,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  void SIIterBot::mergeCycleExecutionRecord(Record& execRecord){
+  void SIIterBot_state::mergeCycleExecutionRecord(Record& execRecord){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
 
-    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
+    LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 
     mergeMinorCycleSummary(execRecord.asArrayDouble
                            (RecordFieldId("summaryminor")));
@@ -203,7 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SIIterBot::mergeMinorCycleSummary(const Array<Double>& summary){
+  void SIIterBot_state::mergeMinorCycleSummary(const Array<Double>& summary){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);  
     
     IPosition cShp = itsSummaryMinor.shape();
@@ -239,7 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
     #ifdef INTERACTIVE_ITERATION
-  void SIIterBot::controlUpdate(const std::map<std::string,
+  void SIIterBot_state::controlUpdate(const std::map<std::string,
                                 DBus::Variant>& updatedParams) {
     Record controlRecord=toRecord(updatedParams);
     setControlsFromRecord(controlRecord);
@@ -250,7 +243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
     #endif
 
-  void SIIterBot::interactionComplete() {
+  void SIIterBot_state::interactionComplete() {
     changePauseFlag(false);
     itsInteractiveIterDone = 0;    
     {
@@ -262,39 +255,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 #ifdef INTERACTIVE_ITERATION
-  std::map<std::string,DBus::Variant> SIIterBot::getDetails(){
+  std::map<std::string,DBus::Variant> SIIterBot_state::getDetails(){
     return fromRecord(getDetailsRecord());
   }
 #endif
 
-  void SIIterBot::pushDetails() {
+  void SIIterBot_state::pushDetails() {
     #ifdef INTERACTIVE_ITERATION
-    detailUpdate(fromRecord(getDetailsRecord()));
+/*FIXME    detailUpdate(fromRecord(getDetailsRecord())); */
     #endif
   }
 
-  void SIIterBot::pushSummary(){
+  void SIIterBot_state::pushSummary(){
     //boost::lock_guard<boost::recursive_mutex> guard(countMutex);
     std::cout << __FUNCTION__ << "executing" << std::endl;
     //    summaryUpdate();
   }
 
-  DBus::Variant SIIterBot::getSummary() {
+  DBus::Variant SIIterBot_state::getSummary() {
     std::cout << __FUNCTION__ << " executing" << std::endl;
   }
 
-  int SIIterBot::getNumberOfControllers(){
+  int SIIterBot_state::getNumberOfControllers(){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     return itsControllerCount;
   }
 
-  bool SIIterBot::incrementController() {
+  bool SIIterBot_state::incrementController() {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsControllerCount++;
     return true;
   }
 
-  bool SIIterBot::decrementController() {
+  bool SIIterBot_state::decrementController() {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsControllerCount--;
     return true;
@@ -302,7 +295,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /* ------------ End of runtime parameter getters -------- */
 
-  void SIIterBot::incrementMajorCycleCount()
+  void SIIterBot_state::incrementMajorCycleCount()
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     itsMajorDone++;
@@ -316,14 +309,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMaxCycleIterDone = 0;
   }
 
-  Int SIIterBot::getMajorCycleCount()
+  Int SIIterBot_state::getMajorCycleCount()
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     return itsMajorDone;
   }
   
-  Record SIIterBot::getSummaryRecord() {
-    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
+  Record SIIterBot_state::getSummaryRecord() {
+    LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     Record returnRecord = getDetailsRecord();
     returnRecord.define( RecordFieldId("summaryminor"), itsSummaryMinor);
@@ -334,7 +327,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // TODO : Optimize this storage and resizing ? Or call this only now and then... ?
 
-  void SIIterBot::addSummaryMajor()
+  void SIIterBot_state::addSummaryMajor()
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
 
@@ -346,7 +339,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      itsSummaryMajor( IPosition(1, shp[0] ) ) = itsIterDone;
   }// end of addSummaryMajor
   
-  void SIIterBot::updateCycleThreshold() {
+  void SIIterBot_state::updateCycleThreshold() {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     
     Float psffraction = itsMaxPsfSidelobe * itsCycleFactor;
@@ -358,44 +351,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pushDetails();
   }
 
-//   Float SIIterBot::getMaxPsfSidelobe()
+//   Float SIIterBot_state::getMaxPsfSidelobe()
 //   {
 //     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 //     return itsMaxPsfSidelobe;
 //   }
 
-//   void SIIterBot::setMaxPsfSidelobe(Float maxSidelobe)
+//   void SIIterBot_state::setMaxPsfSidelobe(Float maxSidelobe)
 //   {
 //     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 //     itsMaxPsfSidelobe = maxSidelobe;
 //   }
 
-//   Float SIIterBot::getMaxPsfFraction()
+//   Float SIIterBot_state::getMaxPsfFraction()
 //   {
 //     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 //     return itsMaxPsfFraction;
 //   }
 
-//   void SIIterBot::setMaxPsfFraction(Float maxPsfFraction)
+//   void SIIterBot_state::setMaxPsfFraction(Float maxPsfFraction)
 //   {
 //     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 //     itsMaxPsfFraction = maxPsfFraction;
 //   }
 
-//   Float SIIterBot::getMinPsfFraction()
+//   Float SIIterBot_state::getMinPsfFraction()
 //   {
 //     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 //     return itsMinPsfFraction;
 //   }
 
-//   void SIIterBot::setMinPsfFraction(Float minPsfFraction)
+//   void SIIterBot_state::setMinPsfFraction(Float minPsfFraction)
 //   {
 //     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 //     itsMinPsfFraction = minPsfFraction;
 //   }
 
-  Record SIIterBot::getDetailsRecord(){
-    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
+  Record SIIterBot_state::getDetailsRecord(){
+    LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     Record returnRecord;
 
@@ -422,17 +415,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      returnRecord.define( RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
      returnRecord.define( RecordFieldId("maxpsffraction"), itsMaxPsfFraction);
      returnRecord.define( RecordFieldId("minpsffraction"), itsMinPsfFraction);
+	 returnRecord.define( RecordFieldId("interactivemode"), itsInteractiveMode);
 
      return returnRecord;
   }
 
-  void SIIterBot::changeNiter( Int niter )
+  void SIIterBot_state::changeNiter( Int niter )
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsNiter = niter;
   }
 
-  void SIIterBot::changeCycleNiter( Int cycleniter )
+  void SIIterBot_state::changeCycleNiter( Int cycleniter )
   {
      boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
      if (cycleniter <= 0)  
@@ -441,59 +435,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        itsCycleNiter = cycleniter;
   }
 
-  void SIIterBot::changeInteractiveNiter( Int interactiveNiter )
+  void SIIterBot_state::changeInteractiveNiter( Int interactiveNiter )
   {
      boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
      itsInteractiveNiter = interactiveNiter;
   }
 
-  void SIIterBot::changeThreshold( Float threshold )
+  void SIIterBot_state::changeThreshold( Float threshold )
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsThreshold = threshold;
   }
 
-  void SIIterBot::changeCycleThreshold( Float cyclethreshold )
+  void SIIterBot_state::changeCycleThreshold( Float cyclethreshold )
   {
      boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
      itsCycleThreshold = cyclethreshold;
   }
 
-  void SIIterBot::changeInteractiveThreshold( Float interactivethreshold )
+  void SIIterBot_state::changeInteractiveThreshold( Float interactivethreshold )
   {
      boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
      itsInteractiveThreshold = interactivethreshold;
   }
 
-  void SIIterBot::changeLoopGain( Float loopgain )
+  void SIIterBot_state::changeLoopGain( Float loopgain )
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
     itsLoopGain = loopgain;
   }
 
-  void SIIterBot::changeCycleFactor(Float cyclefactor)
+  void SIIterBot_state::changeCycleFactor(Float cyclefactor)
   {
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsCycleFactor = cyclefactor;
   }
 
-  void SIIterBot::changeInteractiveMode(const bool& interactiveEnabled){
+  void SIIterBot_state::changeInteractiveMode(const bool& interactiveEnabled){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsInteractiveMode = interactiveEnabled;
   }
 
-  void SIIterBot::changePauseFlag(const bool& pauseEnabled){
+  void SIIterBot_state::changePauseFlag(const bool& pauseEnabled){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsPauseFlag = pauseEnabled;
   }
 
-  void SIIterBot::changeStopFlag(const bool& stopEnabled){
+  void SIIterBot_state::changeStopFlag(const bool& stopEnabled){
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
     itsStopFlag = stopEnabled;
   }
 
-  void SIIterBot::setControlsFromRecord(Record &recordIn){
-    LogIO os( LogOrigin("SIIterBot",__FUNCTION__,WHERE) );
+  void SIIterBot_state::setControlsFromRecord(Record &recordIn){
+    LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
     boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
 
     /* Note it is important that niter get set first as we catch
@@ -529,7 +523,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    }
 
   /* Print out contents of the IterBot. For debugging. */
-  void SIIterBot::printOut(String prefix, Bool verbose)
+  void SIIterBot_state::printOut(String prefix, Bool verbose)
   {
     if( verbose == True )
       {
@@ -569,8 +563,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     << endl;
       }
 
-
   }
+
+	SIIterBot_adaptor::SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> s, const std::string &serviceName) :
+						DBus::ObjectAdaptor( DBusSession::instance().connection( ), 
+											 dbus::adaptor_object(serviceName).c_str()),
+						state(s) { }
+
+	SIIterBot_adaptor::~SIIterBot_adaptor() {
+#ifdef INTERACTIVE_ITERATION
+		disconnect();
+#endif
+	}
+
+  std::map<std::string,DBus::Variant> 
+  SIIterBot_state::fromRecord(Record record){
+    std::map<std::string,DBus::Variant> returnMap;
+    
+    for (unsigned int idx = 0; idx < record.nfields(); ++idx) {
+      RecordFieldId id(idx);      
+      switch (record.dataType(id)) {
+      case TpBool:
+        {
+          DBus::Variant v;
+          v.writer().append_bool(record.asBool(id));
+          returnMap[record.name(id)] = v;
+        }
+        break;
+      case TpInt:
+        {
+          DBus::Variant v;
+          v.writer().append_int32(record.asInt(id));
+          returnMap[record.name(id)] = v;
+        }
+        break;
+      case TpFloat:
+        {
+          DBus::Variant v;
+          v.writer().append_double(record.asFloat(id));
+          returnMap[record.name(id)] = v;
+        }
+        break;
+      case TpDouble:
+        {
+          DBus::Variant v;
+          v.writer().append_double(record.asDouble(id));
+          returnMap[record.name(id)] = v;
+        }
+        break;
+      default:
+        std::cout << "Error: Unsupported Type" << std::endl;
+      }
+    }
+    return returnMap;
+  }
+
+	Record SIIterBot_state::toRecord(std::map<std::string,DBus::Variant> mapIn) {
+    Record returnRecord;
+    
+    std::map<std::string,DBus::Variant>::iterator iter;
+    for ( iter = mapIn.begin(); iter != mapIn.end(); ++iter) {
+      DBus::MessageIter dbusMI = (*iter).second.reader();
+      
+      switch (dbusMI.type()) {
+//       case DBus::Type::TYPE_BOOLEAN:
+//         returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_bool());
+//         break;
+      case 105: //DBus::Type::Type_INT32:
+        returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_int32());
+        break;
+      case 100: //DBus::Type::TYPE_DOUBLE:
+        returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_double());
+        break;
+//       case DBus::Type::TYPE_STRING:
+//         returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_string());
+//         break;
+      default:
+        std::cout << "Unsupported type: " << dbusMI.type() << std::endl;
+      }
+    }
+    return returnRecord;
+  }  
+
 
 } //# NAMESPACE CASA - END
 
