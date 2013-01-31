@@ -981,7 +981,8 @@ chans = ''
 momfile = prefix + '.moments'
 outfile = momfile
 
-immoments()
+res = immoments()
+res.done()
 
 momzeroimage = momfile + '.integrated'
 momoneimage = momfile + '.weighted_coord'
