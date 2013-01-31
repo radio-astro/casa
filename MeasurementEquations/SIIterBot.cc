@@ -274,6 +274,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   DBus::Variant SIIterBot_state::getSummary() {
     std::cout << __FUNCTION__ << " executing" << std::endl;
+	return DBus::Variant( );
   }
 
   int SIIterBot_state::getNumberOfControllers(){
@@ -566,8 +567,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 	SIIterBot_adaptor::SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> s, const std::string &serviceName) :
+#ifdef INTERACTIVE_ITERATION
 						DBus::ObjectAdaptor( DBusSession::instance().connection( ), 
-											 dbus::adaptor_object(serviceName).c_str()),
+											   dbus::adaptor_object(serviceName).c_str()),
+#endif
 						state(s) { }
 
 	SIIterBot_adaptor::~SIIterBot_adaptor() {
