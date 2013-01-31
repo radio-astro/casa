@@ -50,7 +50,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	namespace viewer { class Preferences; }
+	namespace viewer {
+		class Preferences;
+		class CleanGui;
+	}
 
 class String;
 class QtViewer;
@@ -490,7 +493,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
       *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_, *slicerAct_,
-      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+      *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -536,6 +539,11 @@ class QtDisplayPanelGui : public QtPanelBase {
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
 
+  // interactive clean...
+  void initCleanTool( );
+  viewer::CleanGui *clean_tool;
+  
+
   //Docking/Dock Widgets
   string addAnimationDockWidget();
   QDockWidget*  animDockWidget_;
@@ -559,6 +567,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void resetListenerImage();
   void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
   void showFitInteractive();
+  void showCleanTool( );
   void refreshFit();
   void addSkyComponentOverlay(String path);
   void removeSkyComponentOverlay( String path );

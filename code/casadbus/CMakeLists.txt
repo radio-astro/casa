@@ -62,7 +62,9 @@ casa_add_library( casadbus
   utilities/Conversion.cc
   utilities/Diagnostic.cc
   utilities/DBusBase.cc
+  utilities/io.cc
   viewer/ViewerProxy.cc
+  synthesis/ImagerControl.cc
   interfaces/SynthImager.proxy.h
   interfaces/SynthImager.adaptor.h
   plotserver/PlotServerProxy.proxy.h
@@ -115,3 +117,5 @@ install (FILES
 	viewer/ViewerProxy.h
 	DESTINATION include/casacode/casadbus/viewer
 	)
+
+casa_add_assay( casadbus session/test/dDBusSession.cc )

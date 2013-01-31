@@ -37,8 +37,6 @@
 
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
-//#include <casadbus/utilities/DBusBase.h>
-
 
 /* Future Decl */
 class casa::Record;

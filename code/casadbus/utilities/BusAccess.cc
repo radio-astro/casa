@@ -118,43 +118,43 @@ namespace casa {
 
 	std::string path( const std::string &name ) {
 
-	    static double cache_time = 0;
-	    // these could be expanded to be a map of previous i/o, but mainly we want
-	    // to insure that multiple calls to path()/object() in the same immediate
-	    // interval, e.g. for multiple calls for arguments of a ctor, are consistent...
-	    static std::string cache_input;
-	    static std::string cache_output;
+		static double cache_time = 0;
+		// these could be expanded to be a map of previous i/o, but mainly we want
+		// to insure that multiple calls to path()/object() in the same immediate
+		// interval, e.g. for multiple calls for arguments of a ctor, are consistent...
+		static std::string cache_input;
+		static std::string cache_output;
 
-	    struct timeval tv = { 0, 0 };
-	    gettimeofday( &tv, 0 );
+		struct timeval tv = { 0, 0 };
+		gettimeofday( &tv, 0 );
 
-	    double current_time = (double) tv.tv_sec + (double) tv.tv_usec / (double) 1000000000;
-	    if ( current_time > (cache_time + double(CACHE_INTERVAL)) || cache_input != name ) {
+		double current_time = (double) tv.tv_sec + (double) tv.tv_usec / (double) 1000000000;
+		if ( current_time > (cache_time + double(CACHE_INTERVAL)) || cache_input != name ) {
 
-		casa::DBusSession &session = casa::DBusSession::instance( );
-		std::vector<std::string> objects;
-		std::string prefix( CASA_PREFIX + name );
-		for ( int retries=0; retries < 10; ++retries ) {
-		    std::vector<std::string> name_list(session.listNames( ));
-		    for ( std::vector<std::string>::iterator iter = name_list.begin(); iter != name_list.end( ); ++iter ) {
-			if ( ! iter->compare(0,prefix.size(),prefix) ) {
-			    objects.push_back(*iter);
+			casa::DBusSession &session = casa::DBusSession::instance( );
+			std::vector<std::string> objects;
+			std::string prefix( CASA_PREFIX + name );
+			for ( int retries=0; retries < 10; ++retries ) {
+				std::vector<std::string> name_list(session.listNames( ));
+				for ( std::vector<std::string>::iterator iter = name_list.begin(); iter != name_list.end( ); ++iter ) {
+					if ( ! iter->compare(0,prefix.size(),prefix) ) {
+						objects.push_back(*iter);
+					}
+				}
+				if ( objects.size( ) > 0 ) {
+					break;
+				} else {
+					sleep(1);
+				}
 			}
-		    }
-		    if ( objects.size( ) > 0 ) {
-			break;
-		    } else {
-			sleep(1);
-		    }
+			if ( objects.size( ) <= 0 ) {
+				throw AipsError("no " + name + "s available");
+			}
+			cache_time = current_time;
+			cache_input = name;
+			cache_output = objects[objects.size( )-1];
 		}
-		if ( objects.size( ) <= 0 ) {
-		    throw AipsError("no " + name + "s available");
-		}
-		cache_time = current_time;
-		cache_input = name;
-		cache_output = objects[objects.size( )-1];
-	    }
-	    return cache_output;
+		return cache_output;
 	}
 
 	std::string object( const std::string &name ) {

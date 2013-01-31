@@ -35,6 +35,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 #include <synthesis/MeasurementEquations/SIIterBot.h>
+#include <boost/thread/thread.hpp>
 
 //#include<casa/random.h>
 
@@ -59,6 +60,9 @@ class SynthesisIterBot
 
   // Copy constructor and assignment operator
 
+  // launch thread which opens DBus connection...
+  void openDBus( );
+
   // make all pure-inputs const
   void setupIteration(Record iterpars);
 
@@ -82,12 +86,14 @@ protected:
 
   /////////////// Member Objects
 
-  SIIterBot itsLoopController;
+	std::tr1::shared_ptr<SIIterBot_state> itsLoopController;
 
     /////////////// All input parameters
 
  private:
   static string generateServiceName();
+  boost::thread  *dbus_thread;
+  void dbus_thread_launch_pad( );
 };
 
 

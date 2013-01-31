@@ -44,7 +44,7 @@ namespace casa {
 	static DBusSession &instance( );
 	std::vector<std::string> listNames( ) { return ListNames( ); }
 	DBus::Connection &connection( ) { return conn; }
-	dbus::Dispatcher &dispatcher( ) { return dispatcher_; }
+	dbus::Dispatcher &dispatcher( ) { return *dispatcher_; }
 
     private:
 
@@ -52,7 +52,7 @@ namespace casa {
 	DBusSession( DBus::Connection & );
 	DBusSession( );
 
-	static dbus::Dispatcher dispatcher_;
+	static dbus::Dispatcher *dispatcher_;
 
 	// pure virtual functions (i.e. dbus signals)
 	void NameOwnerChanged(const std::string&, const std::string&, const std::string&);
@@ -62,16 +62,17 @@ namespace casa {
 	friend class init_dispatcher;
     };  
 
-    static class init_dispatcher {
-        public:
-	    init_dispatcher( ) {
-		if ( ! initalized ) {
-		    initalized = true;
-		    DBus::default_dispatcher = &DBusSession::dispatcher_;
+	static class init_dispatcher {
+    	public:
+		init_dispatcher( ) {
+			if ( ! initalized ) {
+				initalized = true;
+				DBusSession::dispatcher_ = new dbus::Dispatcher( );
+				DBus::default_dispatcher = DBusSession::dispatcher_;
+			}
 		}
-	    }
-        private:
-	    static bool initalized;
+		private:
+			static bool initalized;
     } init_dispatcher_;
 
 }

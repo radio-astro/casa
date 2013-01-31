@@ -55,6 +55,7 @@
 #include <display/region/QtRegionSource.qo.h>
 #include <display/RegionShapes/RegionShapes.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
+#include <display/Clean/CleanGui.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -78,12 +79,12 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   qsm_(0), qst_(0),
 								   profile_(0), savedTool_(QtMouseToolNames::NONE),
 								   profileDD_(0),
-								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
+								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
 								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ), sliceTool( NULL ),
-								   regionDock_(0),
+								   clean_tool(0), regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
 	// initialize the "pix" unit, et al...
@@ -199,6 +200,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	histogramAct_ = tlMenu_->addAction( "Histogram...");
 	fitAct_ = tlMenu_->addAction( "Fit...");
 	slicerAct_ = tlMenu_->addAction( "Slice...");
+
+	// cleanAct_ = tlMenu_->addAction( "Interactive Clean..." );
 
 	vwMenu_       = menuBar()->addMenu("&View");
 	// (populated after creation of toolbars/dockwidgets).
@@ -504,6 +507,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 	connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
 	connect(slicerAct_, SIGNAL(triggered()), SLOT(showSlicer()));
+
+	if ( cleanAct_ ) connect(cleanAct_, SIGNAL(triggered()), SLOT(showCleanTool( )));
+
 	// connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
 	connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
 	connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
@@ -924,6 +930,16 @@ void QtDisplayPanelGui::addResidualFitImage( String path ){
 	if ( dd == NULL ){
 		qDebug() << "Could not add residual image to viewer: "<<path.c_str();
 	}
+}
+
+void QtDisplayPanelGui::initCleanTool( ) {
+	clean_tool = new viewer::CleanGui( );
+	clean_tool->hide( );
+}
+
+void QtDisplayPanelGui::showCleanTool( ) {
+	if ( clean_tool == 0 ) initCleanTool( );
+	clean_tool->show( );
 }
 
 void QtDisplayPanelGui::addSkyComponentOverlay( String path ){

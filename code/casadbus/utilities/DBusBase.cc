@@ -46,6 +46,7 @@ namespace casa {
 
   std::map<std::string,DBus::Variant> 
   DBusThreadedBase::fromRecord(Record record){
+
     std::map<std::string,DBus::Variant> returnMap;
     
     for (unsigned int idx = 0; idx < record.nfields(); ++idx) {

@@ -51,307 +51,185 @@
 #include <synthesis/MeasurementEquations/SynthesisIterBot.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
+#include <casadbus/session/DBusSession.h>
 
 #include <sys/types.h>
 #include <unistd.h>
 using namespace std;
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SynthesisIterBot::SynthesisIterBot() : 
-    itsLoopController(SynthesisIterBot::generateServiceName())  
-  {
-  }
+	SynthesisIterBot::SynthesisIterBot() : itsLoopController(new SIIterBot_state( )),
+										   dbus_thread(NULL) { }
+
+	void SynthesisIterBot::openDBus( ) {
+		if ( dbus_thread != NULL ) return;
+		dbus_thread = new boost::thread(boost::bind(&SynthesisIterBot::dbus_thread_launch_pad,this));
+	}
+
+	void SynthesisIterBot::dbus_thread_launch_pad( ) {
+		SIIterBot_adaptor dbus_adaptor(itsLoopController,generateServiceName());
+		casa::DBusSession::instance().dispatcher( ).enter( );
+		std::cout << "Service Loop Exited: " << time(0) << std::endl;
+		dbus_thread->detach();
+		dbus_thread = NULL;
+	}
+
+	SynthesisIterBot::~SynthesisIterBot() {
+		LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
+		os << "SynthesisIterBot destroyed" << LogIO::POST;
+	}
+
+	void SynthesisIterBot::setIterationDetails(Record iterpars) {
+		LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
+		try {
+			//itsLoopController.reset( new SIIterBot("SynthesisImage_"));
+			if ( itsLoopController ) itsLoopController->setControlsFromRecord(iterpars);
+		} catch(AipsError &x) {
+			throw( AipsError("Error in updating iteration parameters : " + x.getMesg()) );
+		}
+	}
+
+	Record SynthesisIterBot::getIterationDetails() {
+		LogIO os( LogOrigin("SynthesisIterBot","getIterationDetails",WHERE) );
+		Record returnRecord;
+		try {
+			if ( itsLoopController)
+				returnRecord = itsLoopController->getDetailsRecord();
+		} catch(AipsError &x) {
+			throw( AipsError("Error in retrieving iteration parameters : " + x.getMesg()) );
+		}
+		return returnRecord;
+	}
+
+	Record SynthesisIterBot::getIterationSummary() {
+		LogIO os( LogOrigin("SynthesisIterBot","getIterationSummary",WHERE) );
+		Record returnRecord;
+		try {
+			if ( itsLoopController )
+				returnRecord = itsLoopController->getSummaryRecord();
+		} catch(AipsError &x) {
+			throw( AipsError("Error in retrieving iteration parameters : " + x.getMesg()) );
+		}
+		return returnRecord;
+	}
+
+
+	void SynthesisIterBot::setupIteration(Record iterpars) {
+		LogIO os( LogOrigin("SynthesisIterBot","setupIteration",WHERE) );
+		os << "Set Iteration Control Options." << LogIO::POST;
+		try {
+			setIterationDetails(iterpars);
+		} catch(AipsError &x) {
+			throw( AipsError("Error in constructing SkyModel : "+x.getMesg()) );
+		}
+	} //end of setupIteration
   
-
-  SynthesisIterBot::~SynthesisIterBot() 
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
-    os << "SynthesisIterBot destroyed" << LogIO::POST;
-  }
-  
-  
-  void SynthesisIterBot::setIterationDetails(Record iterpars)
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
-    try
-      {
-        //itsLoopController.reset( new SIIterBot("SynthesisImage_"));
-        itsLoopController.setControlsFromRecord(iterpars);
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in updating iteration parameters : " +
-                         x.getMesg()) );
-      }
-  }
-
-  Record SynthesisIterBot::getIterationDetails()
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","getIterationDetails",WHERE) );
-    Record returnRecord;
-    try {
-      returnRecord = itsLoopController.getDetailsRecord();
-    } catch(AipsError &x) {
-      throw( AipsError("Error in retrieving iteration parameters : " +
-                       x.getMesg()) );
-    }
-    return returnRecord;
-  }
-
-  Record SynthesisIterBot::getIterationSummary()
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","getIterationSummary",WHERE) );
-    Record returnRecord;
-    try {
-      returnRecord = itsLoopController.getSummaryRecord();
-    } catch(AipsError &x) {
-      throw( AipsError("Error in retrieving iteration parameters : " +
-                       x.getMesg()) );
-    }
-    return returnRecord;
-  }
-
-
-  void SynthesisIterBot::setupIteration(Record iterpars)
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","setupIteration",WHERE) );
-    os << "Set Iteration Control Options." << LogIO::POST;
-     try
-      {
-        setIterationDetails(iterpars);
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing SkyModel : "+x.getMesg()) );
-      }
-  } //end of setupIteration
-  
-  void SynthesisIterBot::setInteractiveMode(Bool interactiveMode) 
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","setupIteration",WHERE) );
-    os << "Setting intractive mode to " 
-       << ((interactiveMode) ? "Active" : "Inactive") << LogIO::POST;
-    try {
-      itsLoopController.changeInteractiveMode(interactiveMode);
-    } catch(AipsError &x) {
-      throw( AipsError("Error Setting Interactive Mode : "+x.getMesg()) );
-    }
-  }
+	void SynthesisIterBot::setInteractiveMode(Bool interactiveMode) {
+		LogIO os( LogOrigin("SynthesisIterBot","setupIteration",WHERE) );
+		os << "Setting intractive mode to " 
+		   << ((interactiveMode) ? "Active" : "Inactive") << LogIO::POST;
+		try {
+			if ( itsLoopController )
+				itsLoopController->changeInteractiveMode(interactiveMode);
+		} catch(AipsError &x) {
+			throw( AipsError("Error Setting Interactive Mode : "+x.getMesg()) );
+		}
+	}
   
   
-  bool SynthesisIterBot::cleanComplete() {
-    bool returnValue;
-    try {
-      //Float peakResidual = itsLoopController.getPeakResidual(); // This should go..
-      returnValue=itsLoopController.cleanComplete();
-    } catch (AipsError &x) {
-      throw( AipsError("Error checking clean complete state : "+x.getMesg()) );
-    }
-    return returnValue; 
-  }
+	bool SynthesisIterBot::cleanComplete() {
+		bool returnValue;
+		try {
+			//Float peakResidual = itsLoopController.getPeakResidual(); // This should go..
+			if ( itsLoopController )
+				returnValue=itsLoopController->cleanComplete();
+		} catch (AipsError &x) {
+			throw( AipsError("Error checking clean complete state : "+x.getMesg()) );
+		}
+		return returnValue; 
+	}
 
-  /* /// Replaced by a direct call to 'restore' of the SynthesisDeconvolver
-  void  SynthesisIterBot::endLoops()//SIIterBot& loopcontrol)
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","endLoops",WHERE) );
-    
-    try
-      {
-        if (itsLoopController.get() == NULL) 
-          throw( AipsError("Iteration Control un-initialized"));
+	void SynthesisIterBot::endMajorCycle() {
+		LogIO os( LogOrigin("SynthesisIterBot","endMajorCycle",WHERE) );
 
-        if(itsLoopController->getUpdatedModelFlag() ==True)
-	  {
-	    os << "Restore Image (and normalize to Flat Sky) " << LogIO::POST;
-	    itsSkyModel.restore( itsMappers );
-	  }
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing image coordinate system : "+
-                         x.getMesg()) );
-      }
-  }// end of endLoops
-  */
-
-
-    /* This method makes all decisions about how the major cycle should 
-       execute.  The output of this is passed to the runMajorCycle method
-    */
-  /// Not sure we need this anymore. Best to re-implement this logic in a better place.
-  /*
-  Record SynthesisIterBot::getMajorCycleControls()
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","getMajorCycleControls",WHERE) );
-    Record returnRecord;
-
-    try
-      {
-        if (itsLoopController.get() == NULL) 
-          throw( AipsError("Iteration Control un-initialized"));
-
- 	if(itsLoopController->getCompletedNiter()==0 &&
-           startmodel_p.length()>1 )
- 	  {
-            itsLoopController->setUpdatedModelFlag(true);
- 	  }
-	
-	if(itsLoopController->getMajorCycleCount() ==0)
-	  {
-	    os << "Make PSFs, weights and initial dirty/residual images. " ;
-	  }
-	else
-	  {
-	    if(! itsLoopController->getUpdatedModelFlag())
-	      {
-		os << "No new model. No need to update residuals in a major cycle." << LogIO::POST;
-		return returnRecord;//With appropriate flag
-	      }
-	    os << "Update residual image in major cycle " << 
-              String::toString(itsLoopController->getMajorCycleCount()) << ". ";
-	  }
-	
-	if(itsLoopController->cleanComplete(itsMappers.findPeakResidual()) &&
-           itsLoopController->getUpdatedModelFlag())
-	  {
-	    if(usescratch_p==True)
-	      {
-		os << "Save image model to MS in MODEL_DATA column on disk" 
-                   << LogIO::POST;
-	      }
-	    else
-	      {
-		os << "Save image model to MS as a Record for on-the-fly prediction" << LogIO::POST;
-	      }
-	  }
-	else
-	  {
-	    os << LogIO::POST;
-	  }
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in setting up Major Cycle : "+x.getMesg()) );
-      }
-    return returnRecord;
-  }
-  */
-
-  void SynthesisIterBot::endMajorCycle()
-  {
-    LogIO os( LogOrigin("SynthesisIterBot","endMajorCycle",WHERE) );
-
-    try{
-      itsLoopController.incrementMajorCycleCount();
-      itsLoopController.addSummaryMajor();
-    } catch(AipsError &x) {
-      throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
-    }    
-  }
+		try {
+			if ( itsLoopController ) {
+				itsLoopController->incrementMajorCycleCount();
+				itsLoopController->addSummaryMajor();
+			}
+		} catch(AipsError &x) {
+			throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
+		}    
+	}
 
   
-  Record SynthesisIterBot::getSubIterBot()
-  {
-    Record returnRecord;
+	Record SynthesisIterBot::getSubIterBot() {
+		Record returnRecord;
+		LogIO os( LogOrigin("SynthesisIterBot","getSubIterBot",WHERE) );
 
-    LogIO os( LogOrigin("SynthesisIterBot","getSubIterBot",WHERE) );
-    try
-      {
-	//Float peakResidual = itsLoopController.getPeakResidual(); /// This can go
-	//Float integratedFlux = itsLoopController.getIntegratedFlux(); // This can go too.
-	
-	//// Commented out... this info should already be there, after the previous 'mergeSubIterBot' calls.
-        //itsLoopController->setMaxPsfSidelobe(maxPsfSidelobe);
-        //itsLoopController->updateCycleThreshold(peakResidual);
+		try {
+			if ( itsLoopController ) {
+				if (itsLoopController->interactiveInputRequired()) {
+					pauseForUserInteraction();
+				}
+				returnRecord = itsLoopController->getMinorCycleControls();
+			}
 
-	/// Commented out temporarily. 
+		} catch(AipsError &x) {
+			throw( AipsError("Error in constructing SubIterBot : "+x.getMesg()) );
+		}
+		return returnRecord;
+	}
 
-//         os << "Start Minor-Cycle iterations with peak residual = " << peakResidual;
-//         os << " and model flux = " << integratedFlux << LogIO::POST;
-        
-//         os << " [ cyclethreshold = " << itsLoopController.getCycleThreshold() ;
-//         os << " max iter per field/chan/pol = " << itsLoopController.getCycleNiter() ;
-//         os << " loopgain = " << itsLoopController.getLoopGain() ;
-//         os << " ]" << LogIO::POST;
+	void SynthesisIterBot::startMinorCycle(Record& initializationRecord) {
+		try {
+			LogIO os( LogOrigin("SynthesisIterBot",__FUNCTION__,WHERE) );
+			if ( itsLoopController )
+				itsLoopController->mergeCycleInitializationRecord(initializationRecord);
+		} catch(AipsError &x) {
+			throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
+		}
+	}
 
-        if (itsLoopController.interactiveInputRequired()) {
-          pauseForUserInteraction();
-        }
+	void SynthesisIterBot::endMinorCycle(Record& executionRecord) {
+		try {
+			//SISubIterBot loopController(subIterBotRecord);
+			LogIO os( LogOrigin("SynthesisIterBot",__FUNCTION__,WHERE) );
+			if ( itsLoopController )
+				itsLoopController->mergeCycleExecutionRecord(executionRecord);
+		} catch(AipsError &x) {
+			throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
+		}
+	}
 
-        returnRecord = itsLoopController.getMinorCycleControls();
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing SubIterBot : "+x.getMesg()) );
-      }
-    return returnRecord;
-  }
+	void SynthesisIterBot::pauseForUserInteraction() {
+		LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
+		os << "Waiting for interactive clean feedback" << LogIO::POST;
 
-  void SynthesisIterBot::startMinorCycle(Record& initializationRecord) {
-    try {
-      LogIO os( LogOrigin("SynthesisIterBot",__FUNCTION__,WHERE) );
-      itsLoopController.mergeCycleInitializationRecord(initializationRecord);
-    } catch(AipsError &x) {
-      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
-    }
-  }
+		/* This call will make sure that the current values of loop control are
+		   available in the GUI and will not return until the user hits the
+		   button */
+		if ( itsLoopController ) {
+			itsLoopController->waitForInteractiveInput();
 
-  void SynthesisIterBot::endMinorCycle(Record& executionRecord) {
-    try {
-      //SISubIterBot loopController(subIterBotRecord);
-      LogIO os( LogOrigin("SynthesisIterBot",__FUNCTION__,WHERE) );
-      itsLoopController.mergeCycleExecutionRecord(executionRecord);
-    } catch(AipsError &x) {
-      throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
-    }
-  }
-
-  void SynthesisIterBot::pauseForUserInteraction()
-  {
-    LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
-
-    os << "Waiting for interactive clean feedback" << LogIO::POST;
-
-    /* This call will make sure that the current values of loop control are
-       available in the GUI and will not return until the user hits the
-       button */
-    itsLoopController.waitForInteractiveInput();
-    // UUU comment out the above line to test if plumbing around interaction is OK.
-
-    /*    
-    Int nmappers = itsMappers.nMappers();
-    for(Int mp=0;mp<nmappers;mp++)
-      {
-	TempImage<Float> dispresidual, dispmask;
-	// Memory for these image copies are allocated inside the SIMapper
-	itsMappers.getMapper(mp)->getCopyOfResidualAndMask( dispresidual, dispmask );
-
-	///// Send dispresidual and dispmask to the GUI.
-	///// Receive dispmask back from the GUI ( on click-to-set-mask for this field )
-
-	itsMappers.getMapper(mp)->setMask( dispmask );
-      }
-    */
-
-  }// end of pauseForUserInteraction
+		}// end of pauseForUserInteraction
+	}
 
 
-  string SynthesisIterBot::generateServiceName() {
-    ostringstream name;
-     timeval tp;
-     gettimeofday(&tp, NULL);
-     name << "SynthesisImager" <<tp.tv_sec << "_" << std::setw(6) 
-          << std::setfill('0') << tp.tv_usec;
-     return name.str();
-   }
-
+	string SynthesisIterBot::generateServiceName() {
+		ostringstream name;
+		timeval tp;
+		gettimeofday(&tp, NULL);
+		name << "SynthesisImager" <<tp.tv_sec << "_" << std::setw(6) 
+			 << std::setfill('0') << tp.tv_usec;
+		return name.str();
+	}
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////    Internal Functions start here.  These are not visible to the tool layer.
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 } //# NAMESPACE CASA - END
 

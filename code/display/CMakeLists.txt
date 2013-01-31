@@ -114,6 +114,7 @@ qt4_wrap_cpp( outfiles_qoh
   region/QtRegionDock.qo.h
   region/QtRegionState.qo.h
   region/QtRegionStats.qo.h
+  Clean/CleanGui.qo.h
   Slicer/SlicerMainWindow.qo.h
   )
 
@@ -179,6 +180,7 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtImageRegionStats.ui
   region/QtMsRegionStats.ui
   Slicer/SlicerMainWindow.ui
+  Clean/CleanGui.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
@@ -525,6 +527,7 @@ casa_add_library( display
   ds9/ds9parse.cc
 #  ${FLEX_ds9lex_OUTPUTS}
   ds9/ds9lex.cc
+  Clean/CleanGui.cc
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )

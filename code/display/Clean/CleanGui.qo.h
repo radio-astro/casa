@@ -1,5 +1,4 @@
-//# DBusSession.cc: provide a common connection to dbus for casa
-//# Copyright (C) 2009
+//# Copyright (C) 2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +22,45 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
-#include <casadbus/session/DBusSession.h>
+#ifndef DISPLAY_CLEANGUI_H_
+#define DISPLAY_CLEANGUI_H_
+
+#include <QDialog>
+#include <display/Clean/CleanGui.ui.h>
+
+#if 0
+#include <QProgressDialog>
+#include <QFileDialog>
+#include <casa/aipstype.h>
+#include <display/Fit/FindSourcesDialog.qo.h>
+#include <display/Fit/PixelRangeDialog.qo.h>
+#include <display/Fit/ResidualHistogramDialog.qo.h>
+#include <display/Fit/Fit2DLogDialog.qo.h>
+#include <display/region/QtRegionSource.qo.h>
+#endif
 
 namespace casa {
 
-    static const char *DBUS_SERVER_NAME = "org.freedesktop.DBus";
-    static const char *DBUS_SERVER_PATH = "/org/freedesktop/DBus";
+	namespace viewer {
 
-    bool init_dispatcher::initalized = false;
-    dbus::Dispatcher *DBusSession::dispatcher_;
+		class CleanGui : public QDialog, private Ui::CleanGui {
+			Q_OBJECT
+			public:
+				CleanGui( QWidget *parent = 0 );
+				virtual ~CleanGui( );
 
-    DBusSession &DBusSession::instance( ) {
-	static DBus::Connection bus = DBus::Connection::SessionBus();
-	static DBusSession the_session(bus);
-	return the_session;
-    }
+			signals:
 
-    DBusSession::DBusSession( DBus::Connection &c )
-    : ::DBus::ObjectProxy( c, DBUS_SERVER_PATH, DBUS_SERVER_NAME), conn(c)  { }
-    void DBusSession::NameOwnerChanged(const std::string&, const std::string&, const std::string&) { }
-    void DBusSession::NameLost(const std::string&) { } 
-    void DBusSession::NameAcquired(const std::string&) { }
+			public slots:
 
+			private slots:
+				void selection_change( );
+
+			private:
+				// this class is not intended for copy or assignment...
+				CleanGui( const CleanGui & );
+				CleanGui operator=( const CleanGui & );
+		};
+	}
 }
+#endif

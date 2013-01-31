@@ -114,6 +114,15 @@ namespace casa {
 	    }
 	}
 
+	std::map<std::string,variant> toStdMap( const std::map<std::string,DBus::Variant> &src ) {
+		typedef std::map<std::string,variant> std_variant_map_t;
+		std_variant_map_t result;
+		typedef std::map<std::string,DBus::Variant> dbus_variant_map_t;
+		for ( dbus_variant_map_t::const_iterator it=src.begin( ); it != src.end( ); ++it ) {
+			result.insert(std_variant_map_t::value_type(it->first,toVariant(it->second)));
+		}
+		return result;
+	}
 
       /************** causes problems with linux **************
        ************** without extra includes...  **************/
