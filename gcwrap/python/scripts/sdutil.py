@@ -74,7 +74,8 @@ class sdtask_manager(object):
         return self.obj
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.obj.finalize()
+        # explicitly call destructure to make sure it is called here
+        self.obj.__del__()
         del self.obj
         if exc_type:
             return False
@@ -98,6 +99,9 @@ class sdtask_interface(object):
     def __init__(self, **kwargs):
         for (k,v) in kwargs.items():
             setattr(self, k, v)
+
+    def __del__(self):
+        pass
 
     def initialize(self):
         raise NotImplementedError('initialize is abstract method')
@@ -126,6 +130,10 @@ class sdtask_template(sdtask_interface):
         self.is_disk_storage = (sd.rcParams['scantable.storage'] == 'disk')
         # attribute for tasks that return any result
         self.result = None
+
+    def __del__(self, base=sdtask_interface):
+        self.cleanup()
+        super(sdtask_template,self).__del__()
 
     def initialize(self):
         if hasattr(self, 'infile'):
@@ -159,7 +167,7 @@ class sdtask_template(sdtask_interface):
         self.save()
 
         # some cleanup should be defined here
-        self.cleanup()
+        #self.cleanup()
 
     def initialize_scan(self):
         # initialize scantable object to work with
@@ -223,11 +231,12 @@ class sdtask_template_imaging(sdtask_interface):
         self.table, self.imager = gentools(['tb','im'])
         self.__set_subtable_name()
 
-    def __del__(self):
+    def __del__(self, base=sdtask_interface):
         # table and imager must be closed when the instance
         # is deleted
         self.close_table()
         self.close_imager()
+        super(sdtask_template_imaging,self).__del__()
 
     def open_table(self, name, nomodify=True):
         if self.is_table_opened:
