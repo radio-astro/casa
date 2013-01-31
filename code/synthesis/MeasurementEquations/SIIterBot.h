@@ -267,6 +267,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 											{
 #ifdef INTERACTIVE_ITERATION
 												return state->getDetails( );
+#else
+												return std::map< std::string, ::DBus::Variant >( );
 #endif
 											}
 				::DBus::Variant getSummary( )
