@@ -4902,7 +4902,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
 				 const Vector<String>& fldNames,
 				 fluxScaleStruct& oFluxScaleStruct,
 				 const String& oListFile,
-                                 const Bool& incremental) {
+                                 const Bool& incremental,
+                                 const Int& fitorder) {
 
   //  cout << "REVISED FLUXSCALE" << endl;
   //String outCalTabName="_tmp_testfluxscaletab";
@@ -5480,18 +5481,34 @@ void SolvableVisJones::fluxscale(const String& outfile,
         // calculate spectral index
         // fit the per-spw fluxes to get spectral index
         LinearFit<Double> fitter;
-        uInt fitorder; 
+        uInt myfitorder; 
         if (nValidFlux > 2) {
-          fitorder=2;
+          if (fitorder > 2) {
+             logSink() << LogIO::WARN << "Currently only support fitorder < 3, using fitorder=2 instead" 
+                       << LogIO::POST;
+             myfitorder = 2;
+          }
+          else {
+             if (fitorder < 0) {
+               logSink() << LogIO::WARN
+                         << "fitorder=" << fitorder 
+                         << " not supported. Using fitorder=1" 
+                         << LogIO::POST;    
+               myfitorder = 1;
+             }
+             else {
+               myfitorder = (uInt)fitorder;
+             }
+          }
         }
         else {
-          fitorder=1;
+          myfitorder = 1;
         }
         // set fitting for spectral index, alpha and beta(curvature)
         // with S = S_o*f/f0^(alpha+beta*log(f/fo))
         // fitting y = c + alpha*x + beta*x^2
         // log(S/S0)=alpha*log(f/f0) + beta*log(f/f0)**2
-        Polynomial< AutoDiff<Double> > bp(fitorder);
+        Polynomial< AutoDiff<Double> > bp(myfitorder);
         fitter.setFunction(bp);
 
         // shift the zero point to the mean of log(freq)
@@ -5511,7 +5528,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
         } 
         oFitMsg =" Fitted spectrum for ";
 	oFitMsg += fldNames(tranidx);
-        oFitMsg += " with fitorder="+String::toString<Int>(fitorder)+": ";
+        oFitMsg += " with fitorder="+String::toString<Int>(myfitorder)+": ";
 //	oFitMsg += "Flux density = "+String::toString<Double>(exp10(soln(0)));
 	oFitMsg += "Flux density = "+String::toString<Double>(pow(10.0,(soln(0))));
 //	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);

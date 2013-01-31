@@ -70,6 +70,11 @@
 			<description>incremental caltable</description>
 			<value>False</value>
 		</param>
+              
+                <param type="int" name="fitorder">
+                        <description>order of spectral fitting</description>
+                        <value>1</value> 
+                </param>
 	</input>
     <output>
     <param type="any" name="fluxd">
@@ -185,6 +190,11 @@
                NOTE: If you use the incremental option, note that BOTH this incremental 
                fluxscale table AND an amplitude vs. time table should be supplied in applycal.
 
+       fitorder -- Polynomial order of the spectral fitting for valid flux densities 
+                with multiple spws.  Currently only support 1 (spectral index only) or 
+                2 (spectral index and curvature).  It falls back to a lower fitorder if 
+                there are not enough solutions to fit with the requested fitorder.
+                default: 1
  </example>
  </task>
  </casaxml>
