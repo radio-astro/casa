@@ -12,7 +12,7 @@
             It has two main types of operation. One type
             will read the parameters from the interface and flag
             using any of the various available modes. Ther other type
-            will read the commands from a text file or a Python list of strings,
+            will read the commands from text files or a Python list of strings,
             containing a list of flag commands (each line containing data selection
             parameters and any parameter specific for the mode being 
             requested). Please see examples at the end of this help.
@@ -51,7 +51,7 @@
 
             <!-- LIST parameters -->
             <param type="any" name="inpfile" subparam="true">
-            <description>Input ASCII file or Python list of strings with flag commands.</description>
+            <description>Input ASCII file, list of files or Python list of strings with flag commands.</description>
                 <any type="variant" limittypes="string stringArray"/>
                 <value type="string"></value>
             </param>
@@ -581,10 +581,10 @@
             This task can flag a Measurement Set or a calibration table. It has 
             two main types of operation. One type will read the parameters from 
             the interface and flag using any of the various available modes. The 
-            other type will read the commands from a text file or a Python list of 
-            strings, containing a list of flag commands (each line containing data 
-            selection parameters and any parameter specific for the mode being 
-            requested). Please see examples at the end of this help.
+            other type will read the commands from a text file, a list of files or 
+            a Python list of strings, containing a list of flag commands (each line 
+            containing data selection parameters and any parameter specific for the 
+            mode being requested). Please see examples at the end of this help.
             
             It is also possible to only save the parameters set in the interface 
             without flagging. The parameters can be saved in the FLAG_CMD sub-table 
@@ -716,8 +716,8 @@ The task will flag a subset of data based on the following modes of operation:
         default: 'manual'
 
         list -- Flag according to the data selection and flag commands specified in the input list.
-                The input list may come from a text file or from a Python list of strings.
-                Each input line may contain data selection parameters and any parameter
+                The input list may come from a text file, a list of text files or from a Python list 
+                of strings. Each input line may contain data selection parameters and any parameter 
                 specific to the mode given in the line. Default values will be used for
                 the parameters that are not present in the line. Each line will be taken 
                 as a command to the task. If data is pre-selected using any of the selection 
@@ -735,18 +735,21 @@ The task will flag a subset of data based on the following modes of operation:
                       An empty action is useful only to save the parameters of the list
                       to a file or to the FLAG_CMD sub-table.
                   
-               inpfile -- Input ASCII file or a Python list of command strings.
+               inpfile -- Input ASCII file, list of files or a Python list of command strings.
                   default: ''
-                  options: [] or '' with filename.
-                  Example1: the following commands can be saved into a file and given
-                            to the task (e.g. save it to flags.txt).
+                  options: [] with flag commands or 
+                           [] with filenames or 
+                           '' with a filename.
+                  Example1: the following commands can be saved to a file or group of files
+                            and given to the task (e.g. save it to flags.txt).
                   
                      scan='1~3' mode='manual'
                      mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False
                      spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0
                      mode='extend' extendpols=True
 
-                    flagdata(vis,mode='list',inpfile='flags.txt')
+                    flagdata(vis, mode='list', inpfile='flags.txt') or
+                    flagdata(vis, mode='list', inpfile=['onlineflags.txt','otherflags.txt'])
 
                   Example2: the same commands can be given in a Python list on the command line
                              to the task.
@@ -757,16 +760,19 @@ The task will flag a subset of data based on the following modes of operation:
 
                      flagdata(vis,mode='list',inpfile=cmd)                    
         
-               reason -- select flag commands based on REASON(s) 
+               reason -- select flag commands based on REASON(s) .
                    default: 'any' (all flags regardless of reason)
                             can be a string, or list of strings
                    example: reason='FOCUS_ERROR'
                             reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
+
+                   If inpfile is a list of files, the reasons given in this
+                   parameter will apply to all the files.
     
                    NOTE: what is within the string is literally
                    matched, e.g. reason='' matches only blank reasons, 
                    and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
-                   matches this compound reason string only
+                   matches this compound reason string only.
                      
                   See the syntax for writing flag commands at the end of this help.                  
 

@@ -254,10 +254,24 @@ def flagdata(vis,
             try:            
                 # Is it a file or a Python list?
                 if isinstance(inpfile, list):
-                    # Make a FLAG_CMD compatible dictionary. Select by reason if requested
-                    casalog.post('Will read commands from a Python list')
-                    flagcmd = fh.makeDict(inpfile, reason)
                     
+                    # It is a list of input files
+                    if os.path.isfile(inpfile[0]):
+                        flaglist = []
+                        for ifile in inpfile:
+                            casalog.post('Will read commands from the file '+ifile)                    
+                            flaglist = flaglist + fh.readFile(ifile)
+                        
+                        # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                        flagcmd = fh.makeDict(flaglist, reason)
+                    
+                    # It is a list of strings with flag commands
+                    else:
+                        # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                        casalog.post('Will read commands from a Python list')
+                        flagcmd = fh.makeDict(inpfile, reason)
+                    
+                # It is only one file
                 elif isinstance(inpfile, str):
                     
                     if inpfile == '':
