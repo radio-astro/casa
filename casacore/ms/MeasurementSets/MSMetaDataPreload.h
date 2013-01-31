@@ -258,6 +258,9 @@ public:
 
 	vector<String> getSpwNames();
 
+	std::map<uInt, Double> getAverageIntervalsForScan(uInt scan);
+
+
 private:
 	Vector<Int> _antenna1,	_antenna2, _dataDescIDs,
 		_scans, _fieldIds, _states, _obsIDs, _arrayIDs;
@@ -292,6 +295,7 @@ private:
 	AOSFMapD _scanToNUnflaggedACRowsMap, _scanToNUnflaggedXCRowsMap;
 	vector<Double> _fieldToNUnflaggedACRows, _fieldToNUnflaggedXCRows;
 	std::map<Int, vector<Double> > _scanToTimeRange;
+	std::map<Int, std::map<uInt, Double> > _scanSpwToIntervalMap;
 	Bool _hasBBCNo;
 
 	// disallow copy constructor and = operator

@@ -493,14 +493,20 @@ std::map<Double, Double> MSMetaData::_getTimeToTotalBWMap(
 }
 
 std::map<Int, vector<Double> > MSMetaData::_getScanToTimeRangeMap(
+	std::map<Int, std::map<uInt, Double> >& scanSpwToAverageIntervalMap,
 	const Vector<Int>& scans, const Vector<Double>& timeCentroids,
-	const Vector<Double>& intervals
+	const Vector<Double>& intervals, const Vector<Int>& dataDescIDs,
+	const vector<uInt>& dataDesIDToSpwMap,
+	const std::set<uInt>& uniqueScans
 ) {
 	std::map<Int, vector<Double> > out;
 	Vector<Int>::const_iterator sIter = scans.begin();
+	Vector<Int>::const_iterator dIter = dataDescIDs.begin();
 	Vector<Int>::const_iterator sEnd = scans.end();
 	Vector<Double>::const_iterator  tIter = timeCentroids.begin();
 	Vector<Double>::const_iterator  iIter = intervals.begin();
+	scanSpwToAverageIntervalMap.clear();
+	std::map<Int, std::map<uInt, uInt> > counts;
 	while (sIter != sEnd) {
 		Double half = *iIter/2;
 		if (out.find(*sIter) == out.end()) {
@@ -511,14 +517,29 @@ std::map<Int, vector<Double> > MSMetaData::_getScanToTimeRangeMap(
 			out[*sIter][0] = min(out[*sIter][0], *tIter-half);
 			out[*sIter][1] = max(out[*sIter][1], *tIter+half);
 		}
+		scanSpwToAverageIntervalMap[*sIter][dataDesIDToSpwMap[*dIter]] += *iIter;
+		counts[*sIter][dataDesIDToSpwMap[*dIter]]++;
 		sIter++;
 		tIter++;
 		iIter++;
+		dIter++;
 	}
-
+	for (
+		std::set<uInt>::const_iterator sIter=uniqueScans.begin();
+		sIter!=uniqueScans.end(); sIter++
+	) {
+		std::map<uInt, uInt>::const_iterator cIter = counts[*sIter].begin();
+		std::map<uInt, uInt>::const_iterator end = counts[*sIter].end();
+		std::map<uInt, Double>::iterator aIter = scanSpwToAverageIntervalMap[*sIter].begin();
+		while (cIter!=end) {
+			aIter->second /= counts[*sIter][aIter->first];
+			//scanSpwToAverageIntervalMap[*sIter][*aIter] /= counts[*sIter][*aIter];
+			cIter++;
+			aIter++;
+		}
+	}
 	return out;
 }
-
 
 void MSMetaData::_getAntennas(
 	Vector<Int>& ant1, Vector<Int>& ant2, const MeasurementSet& ms

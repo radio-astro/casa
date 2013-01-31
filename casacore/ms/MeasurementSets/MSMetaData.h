@@ -295,6 +295,10 @@ public:
 
 	virtual vector<String> getSpwNames() = 0;
 
+	// the returned map are the average intervals for each spectral window for the
+	// specified scan
+	virtual std::map<uInt, Double> getAverageIntervalsForScan(uInt scan) = 0;
+
 protected:
 
 	// (array_id, observation_id, scan_number, field_id) -> stuff mappings
@@ -448,9 +452,13 @@ protected:
 	);
 
 	static std::map<Int, vector<Double> > _getScanToTimeRangeMap(
+		std::map<Int, std::map<uInt, Double> >& scanSpwToAverageIntervalMap,
 		const Vector<Int>& scans, const Vector<Double>& timeCentroids,
-		const Vector<Double>& intervals
+		const Vector<Double>& intervals, const Vector<Int>& dataDescIDs,
+		const vector<uInt>& dataDesIDToSpwMap,
+		const std::set<uInt>& uniqueScans
 	);
+
 
 private:
 

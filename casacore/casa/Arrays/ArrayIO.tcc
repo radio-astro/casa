@@ -142,6 +142,26 @@ LogIO &operator<<(LogIO &os, const Array<T> &a)
 }
 
 template<class T>
+ostream &operator<<(ostream &s, const std::set<T> &a) {
+	ostringstream oss;
+	std::ostream_iterator<T> out_it (oss,", ");
+	copy ( a.begin(), a.end(), out_it );
+	String sout = oss.str();
+	sout.trim();
+	sout.rtrim(',');
+	s << "[" << sout << "]";
+	return s;
+}
+
+template<class T>
+LogIO &operator<<(LogIO &os, const std::set<T> &a)
+{
+    os.output() << a;
+    return os;
+}
+
+
+template<class T>
 AipsIO &operator<<(AipsIO &ios, const Array<T> &a)
 {
     putArray (ios, a, "Array");
