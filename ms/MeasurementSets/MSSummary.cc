@@ -58,7 +58,6 @@
 #include <casa/iomanip.h>
 #include <casa/iostream.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //
@@ -307,7 +306,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	Int widthField = 20;
 	Int widthnrow = 7;
 	Int widthNUnflaggedRow = 10;
-	Int widthInttim = 7;
+	//Int widthInttim = 7;
 
 	// Set up iteration over OBSID and ARRID:
 	Block<String> icols(2);
@@ -338,7 +337,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			datetime.replace(25+timeref.length(),1,")");
 			os << datetime;
 			os << "Scan  FldId FieldName "
-					<<"          nRows   nUnflRows   Int(s)   SpwIds      ScanIntent" << endl;
+					<<"          nRows   nUnflRows   SpwIds   Average Interval(s)    ScanIntent" << endl;
 		}
 
 		/* CAS-2751. Sort the table by scan then field (not timestamp)
@@ -358,7 +357,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Vector<Int> fldids(1,0);
 		Vector<Int> ddids(1,0);
 		Vector<Int> stids(1,0); // State IDs
-		Vector<Int> spwids;
+		//Vector<Int> spwids;
 		Int nfld(1);
 		Int nddi(1);
 		Int nst(1);
@@ -372,6 +371,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		os.output().precision(3);
 		Int subsetscan=0;
 		// Iterate over scans/fields:
+		std::set<uInt> spw;
 		while (!stiter.pastEnd()) {
 
 			// ms table at this scan
@@ -465,11 +465,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 					// this MJD
 					day=floor(MVTime(btime/C::day).day());
 
-					// Spws
-					spwids.resize(lastddids.nelements());
-					for (uInt iddi=0; iddi<spwids.nelements();++iddi)
-						spwids(iddi)=specwindids(lastddids(iddi));
-
+					spw = _msmd->getSpwsForScan(lastscan);
 					String name=fieldnames(lastfldids(0));
 
 					if (verbose) {
@@ -507,12 +503,29 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						os.output().width(widthNUnflaggedRow);
 						os << xx.str();
 
-						os.output().width(widthInttim); os << meanIntTim;
-						os.output().width(widthLead); os << " ";
-						os << spwids;
-						if (spwids.size() <= 9) {
-							os.output().width(28 - (3*spwids.size())); os << " ";
+						//os.output().width(widthInttim); os << meanIntTim;
+						os.output().width(widthLead); os << "  ";
+
+						os << spw;
+						/*
+						if (spw.size() <= 9) {
+							os.output().width(28 - (3*spw.size())); os << " ";
 						}
+						*/
+						os.output().width(widthLead); os << "  ";
+
+						std::map<uInt, Double> intToScanMap = _msmd->getAverageIntervalsForScan(lastscan);
+						os << "[";
+						for (
+							std::set<uInt>::const_iterator iter=spw.begin();
+							iter!=spw.end(); iter++
+						) {
+							if (iter!=spw.begin()) {
+								os << ", ";
+							}
+							os << intToScanMap[*iter];
+						}
+						os << "] ";
 						// The Obsmode column can be empty only report them if it is not
 						String obsMode = "";
 						if (obsModes.size() > (unsigned int) 0) {
@@ -539,7 +552,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						subScanRecord.define("StateId", laststids(0));
 						subScanRecord.define("nRow", thisnrow);
 						subScanRecord.define("IntegrationTime", meanIntTim);
-						subScanRecord.define("SpwIds", spwids);
+						subScanRecord.define("SpwIds", Vector<Int>(spw));
 						scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 						if(!outRec.isDefined(scanrecid)){
 							outRec.defineRecord(scanrecid, scanRecord);
@@ -601,10 +614,12 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		day=floor(MVTime(btime/C::day).day());
 
 		// Spws
-		spwids.resize(lastddids.nelements());
+		//spwids.resize(lastddids.nelements());
+		/*
 		for (uInt iddi=0; iddi<spwids.nelements();++iddi)
 			spwids(iddi)=specwindids(lastddids(iddi));
-
+	*/
+		spw = _msmd->getSpwsForScan(lastscan);
 		String name=fieldnames(lastfldids(0));
 		if (verbose) {
 			// Print out final scan's times, fields, ddis
@@ -636,12 +651,34 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
 			os.output().width(widthNUnflaggedRow);
 			os << xx.str();
-			os.output().width(widthInttim); os << meanIntTim;
+//			os.output().width(widthInttim); os << meanIntTim;
 			os.output().width(widthLead);  os << "  ";
-			os << spwids;
-			if (spwids.size() <= 9) {
-				os.output().width(28 - (3*spwids.size())); os << " ";
+			ostringstream oss;
+			ostream_iterator<uInt> out_it (oss,", ");
+			copy ( spw.begin(), spw.end(), out_it );
+			String spwout = oss.str();
+			spwout.trim();
+			spwout.rtrim(',');
+			os << "[" << spwout << "]";
+			/*
+			if (spw.size() <= 9) {
+				os.output().width(28 - (3*spw.size())); os << " ";
 			}
+			*/
+			os.output().width(widthLead); os << "  ";
+
+			std::map<uInt, Double> intToScanMap = _msmd->getAverageIntervalsForScan(lastscan);
+			os << "[";
+			for (
+				std::set<uInt>::const_iterator iter=spw.begin();
+				iter!=spw.end(); iter++
+			) {
+				if (iter!=spw.begin()) {
+					os << ", ";
+				}
+				os << intToScanMap[*iter];
+			}
+			os << "] ";
 			// The Obsmode column can be empty only report them if it is not
 			String obsMode = "";
 			if (obsModes.size() > (unsigned int) 0) {
@@ -666,7 +703,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			subScanRecord.define("FieldName", name);
 			subScanRecord.define("nRow", thisnrow);
 			subScanRecord.define("IntegrationTime", meanIntTim);
-			subScanRecord.define("SpwIds", spwids);
+			subScanRecord.define("SpwIds", Vector<Int>(spw));
 			scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 			if(!outRec.isDefined(scanrecid)){
 				outRec.defineRecord(scanrecid, scanRecord);

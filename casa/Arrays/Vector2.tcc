@@ -41,6 +41,20 @@ Vector<T>::Vector(const vector<T, U> &other)
 
 template<class T>
 template<class U>
+
+Vector<T>::Vector(const std::set<U> &other)
+  : Array<T>(IPosition(1, other.size())) {
+  uInt i=0;
+  for (
+		  typename std::set<U>::const_iterator pos=other.begin();
+		  pos != other.end(); pos++
+	) {
+	  (*this)[i++] = *pos;
+  }
+}
+
+template<class T>
+template<class U>
 void Array<T>::tovector(vector<T, U> &out) const {
   Bool deleteIt;
   const T *stor = this->getStorage(deleteIt);

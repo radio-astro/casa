@@ -562,6 +562,11 @@ std::vector<Double> MSMetaDataPreload::getTimeRangeForScan(uInt scan) {
 	return _scanToTimeRange[scan];
 }
 
+std::map<uInt, Double> MSMetaDataPreload::getAverageIntervalsForScan(uInt scan) {
+	_checkScan(scan);
+	return _scanSpwToIntervalMap[scan];
+}
+
 
 std::set<uInt> MSMetaDataPreload::getStatesForScan(const uInt scan) {
 	_checkScan(scan);
@@ -1050,7 +1055,9 @@ void MSMetaDataPreload::_makeScanToTimeMap(const MeasurementSet& ms) {
 		curTime++;
 	}
 	_scanToTimeRange = _getScanToTimeRangeMap(
-		_scans, _getTimeCentroids(ms), _getIntervals(ms)
+		_scanSpwToIntervalMap,
+		_scans, _getTimeCentroids(ms), _getIntervals(ms),
+		_dataDescIDs, _dataDescToSpwMap, _uniqueScans
 	);
 }
 
