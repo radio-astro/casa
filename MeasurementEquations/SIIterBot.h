@@ -250,7 +250,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				bool incrementController( )	{ return state->incrementController( ); }
 				bool decrementController( )	{ return state->decrementController( ); }
 				void controlUpdate(const std::map< std::string, ::DBus::Variant >& newParams)
-											{ state->controlUpdate(newParams); }
+											{
+#ifdef INTERACTIVE_ITERATION
+												state->controlUpdate(newParams);
+#endif
+											}
 				void interactionComplete( )
 											{ state->interactionComplete( ); }
 				void changePauseFlag(const bool& pauseState)
@@ -260,7 +264,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				void changeInteractiveMode(const bool& interactiveMode)
 											{ state->changeInteractiveMode(interactiveMode); }
 				std::map< std::string, ::DBus::Variant > getDetails( )
-											{ return state->getDetails( ); }
+											{
+#ifdef INTERACTIVE_ITERATION
+												return state->getDetails( );
+#endif
+											}
 				::DBus::Variant getSummary( )
 											{ return state->getSummary( ); }
 
