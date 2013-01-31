@@ -29,6 +29,7 @@
 // System utilities (for profiling macros)
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
+#include <dbus-c++/dbus.h> /*for DBus::Variant... probably can be removed with *_adaptor class*/
 
 
 // Boost Libraries for mutex and noncopyable semantics
