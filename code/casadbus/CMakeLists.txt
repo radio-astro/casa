@@ -83,6 +83,8 @@ casa_add_library( casadbus
   utilities/Conversion.cc
   utilities/Diagnostic.cc
   utilities/DBusBase.cc
+  synthesis/ImagerControl.cc
+  utilities/io.cc
   viewer/ViewerProxy.cc
   plotserver/PlotServerProxy.proxy.h
   session/DBusSession.proxy.h

@@ -42,14 +42,20 @@
 ********************************************************************************************
 *******************************************************************************************/
 #include <casadbus/types/variant.h>
+#ifdef INTERACTIVE_ITERATION
 #include <casadbus/interfaces/SynthImager.proxy.h>
+#endif
 #include <casadbus/utilities/Conversion.h>
 
 namespace casa {
 
-	class ImagerControl: private edu::nrao::casa::SynthImager_proxy,
+	class ImagerControl
+#ifdef INTERACTIVE_ITERATION
+							: private edu::nrao::casa::SynthImager_proxy,
 							public DBus::IntrospectableProxy,
-							public DBus::ObjectProxy {
+							public DBus::ObjectProxy
+#endif
+							{
 		public:
 			static std::string dbusName( ) { return ""; }
 
@@ -63,7 +69,13 @@ namespace casa {
 			void disconnect( ) { }
 
 			std::map<std::string,dbus::variant> getDetails( )
-				{ return dbus::toStdMap( edu::nrao::casa::SynthImager_proxy::getDetails( ) ); }
+				{
+#ifdef INTERACTIVE_ITERATION
+					return dbus::toStdMap( edu::nrao::casa::SynthImager_proxy::getDetails( ) );
+#else
+					return std::map<std::string,dbus::variant>( );
+#endif
+				}
 			/******************************************************************************
 			**********methods*provided*by*SynthImager_proxy********************************
 			*******************************************************************************

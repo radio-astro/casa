@@ -4,7 +4,10 @@
 #include <casadbus/utilities/Conversion.h>
 
 namespace casa {
-    ImagerControl::ImagerControl( const std::string &name ) : 
-		DBus::ObjectProxy( DBusSession::instance().connection( ), dbus::object(name).c_str(), dbus::path(name).c_str() ) { }
+    ImagerControl::ImagerControl( const std::string &name )
+#ifdef INTERACTIVE_ITERATION
+			: DBus::ObjectProxy( DBusSession::instance().connection( ), dbus::object(name).c_str(), dbus::path(name).c_str() )
+#endif
+	{ }
 
 }
