@@ -50,6 +50,8 @@ namespace casa {
 MSMetaDataPreload::MSMetaDataPreload(const MeasurementSet& ms)
 	: _scans(), _uniqueScans(), _times(),
 	  _scanToTimesMap(), _nStates(0) {
+	_makeDataDescIDToSpwMap(ms);
+	_makeDataDescID(ms);
 	_makeScanToTimeMap(ms);
 	// _makeTimeToExposureMap(ms);
 	_makeFieldsAndSources(ms);
@@ -59,8 +61,6 @@ MSMetaDataPreload::MSMetaDataPreload(const MeasurementSet& ms)
 	_makeScanToStateMap(ms);
 	_makeFieldNameToTimesMap(ms);
 	_makeUniqueBaselines(ms);
-	_makeDataDescID(ms);
-	_makeDataDescIDToSpwMap(ms);
 	_setNumberOfPolarizations(ms);
 	_setSpwInfo(ms);
 	_makeSpwToScanMap();
