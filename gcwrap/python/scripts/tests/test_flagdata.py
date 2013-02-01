@@ -1176,7 +1176,43 @@ class test_list_file(test_base):
         self.assertEqual(res['scan']['3']['flagged'], 762048)
         self.assertEqual(res['scan']['4']['flagged'], 95256)
         self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
+
+    def test_file7(self):
+        '''flagdata: Flag commands from three files'''
+        # creat first input file
+        myinput = "scan='1'\n"\
+                "scan='2'\n"\
+                "scan='3'"
+        filename1 = 'list7a.txt'
+        create_input(myinput, filename1)
         
+        # Create second input file
+        myinput = "scan='5'\n"\
+                "scan='6'\n"\
+                "scan='7'"        
+        filename2 = 'list7b.txt'
+        create_input(myinput, filename2)
+        
+         # Create third input file
+        myinput = "scan='4' mode='clip' clipminmax=[0,4]" 
+        filename3 = 'list7c.txt'
+        create_input(myinput, filename3)
+       
+        flagdata(vis=self.vis, mode='list', inpfile=[filename1,filename2,filename3],
+                 flagbackup=False)
+        
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['2']['flagged'], 238140)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['4']['flagged'], 6696)
+        self.assertEqual(res['scan']['5']['flagged'], 142884)
+        self.assertEqual(res['scan']['6']['flagged'], 857304)
+        self.assertEqual(res['scan']['7']['flagged'], 190512)
+        self.assertEqual(res['total'],2854278)
+        self.assertEqual(res['flagged'],2765718)
+
+               
     def test_reason1(self):
         '''flagdata: add_reason to FLAG_CMD'''
         flagcmd(vis=self.vis, action='clear', clearall=True)
@@ -1223,6 +1259,43 @@ class test_list_file(test_base):
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
         
+    def test_reason4(self):
+        '''flagdata: select by reason from two files'''
+        # creat first input file
+        myinput = "scan='1' spw='0:10~20' reason='NONE'\n"\
+                "scan='2' reason='EVEN'\n"\
+                "scan='3' reason='ODD'"
+        filename1 = 'reasonfile1.txt'
+        create_input(myinput, filename1)
+        
+        # Create second input file
+        myinput = "scan='5' reason='ODD'\n"\
+                "scan='6' reason='EVEN'\n"\
+                "scan='7' reason='ODD'"        
+        filename2 = 'reasonfile2.txt'
+        create_input(myinput, filename2)
+        
+        # Apply flag cmds on ODD reason
+        flagdata(vis=self.vis, mode='list', inpfile=[filename1,filename2], reason='ODD',
+                 flagbackup=False)
+        
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['5']['flagged'], 142884)
+        self.assertEqual(res['scan']['6']['flagged'], 0)
+        self.assertEqual(res['scan']['7']['flagged'], 190512)
+        self.assertEqual(res['flagged'], 762048+142884+190512)
+        
+        # Apply flag cmds on NONE reason
+        flagdata(vis=self.vis, mode='unflag')
+        flagdata(vis=self.vis, mode='list', inpfile=[filename1,filename2], reason='NONE',
+                 flagbackup=False)
+        
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 99198)
+        self.assertEqual(res['flagged'], 99198)
+
+
 class test_list_list(test_base):
     """Test of mode = 'list' using input list"""
     
