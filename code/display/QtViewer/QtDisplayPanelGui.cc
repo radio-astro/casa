@@ -933,13 +933,20 @@ void QtDisplayPanelGui::addResidualFitImage( String path ){
 }
 
 void QtDisplayPanelGui::initCleanTool( ) {
-	clean_tool = new viewer::CleanGui( );
-	clean_tool->hide( );
+	try {
+		clean_tool = new viewer::CleanGui( );
+		clean_tool->hide( );
+	} catch(...) {
+		clean_tool = 0;
+		logger << LogIO::WARN
+				<< "no dbus session available..."
+				<< LogIO::POST;
+	}
 }
 
 void QtDisplayPanelGui::showCleanTool( ) {
 	if ( clean_tool == 0 ) initCleanTool( );
-	clean_tool->show( );
+	if ( clean_tool ) clean_tool->show( );
 }
 
 void QtDisplayPanelGui::addSkyComponentOverlay( String path ){

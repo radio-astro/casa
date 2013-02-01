@@ -47,20 +47,21 @@ namespace casa {
 			clean_processes->setColumnCount(1);
 			clean_processes->setHeaderLabels(label_list);
 
-			casa::DBusSession &session = casa::DBusSession::instance( );
-			typedef std::vector<std::string> namelist_t;
-			namelist_t names = session.listNames( );
-			unsigned int count = 0;
 			QTreeWidgetItem *current_item = 0;
-			for ( namelist_t::iterator it = names.begin( ); it != names.end( ); ++it ) {
-				if ( it->compare( 0, sizeof(imager_address)-1, imager_address ) == 0 ) {
-					std::string value = *it;
-					value.erase( 0, sizeof(imager_address)-1 );
-					QTreeWidgetItem *item = new QTreeWidgetItem(clean_processes);
-					if ( current_item == 0 ) current_item = item;
-					item->setText( 0, QString::fromStdString(value) );
+			try {
+				casa::DBusSession &session = casa::DBusSession::instance( );
+				typedef std::vector<std::string> namelist_t;
+				namelist_t names = session.listNames( );
+				for ( namelist_t::iterator it = names.begin( ); it != names.end( ); ++it ) {
+					if ( it->compare( 0, sizeof(imager_address)-1, imager_address ) == 0 ) {
+						std::string value = *it;
+						value.erase( 0, sizeof(imager_address)-1 );
+						QTreeWidgetItem *item = new QTreeWidgetItem(clean_processes);
+						if ( current_item == 0 ) current_item = item;
+						item->setText( 0, QString::fromStdString(value) );
+					}
 				}
-			}
+			} catch( ... ) { }
 
 			//****
 			//**** setup signals here
