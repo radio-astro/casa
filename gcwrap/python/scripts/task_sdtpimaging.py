@@ -142,9 +142,10 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                 for j in xrange(self.nsubscan[i]):
                     # may be need to iterate on each antenna 
                     # identify 'scan' by STATE ID
-                    #subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
-                    subtb = self.table.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (self.antid,self.antid,self.scans[i],self.subscans[i][j]))
-                    datcol = subtb.getcol(self.datacol)
+                    #selsubtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                    selsubtb = self.table.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (self.antid,self.antid,self.scans[i],self.subscans[i][j]))
+                    datcol = selsubtb.getcol(self.datacol)
+                    selsubtb.close()
                     if self.npol > 1 and self.selnpol == 1:
                         #casalog.post( "select %s data..." % corrtypestr[selpol] )
                         rdatcol = datcol[self.selpol].real
@@ -291,6 +292,7 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                     #subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
                     subtb=self.table.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (self.antid,self.antid,self.scans[i],self.subscans[i][j]))
                     fcolall = subtb.getcol('FLAG')
+                    subtb.close()
                     if self.npol > 1 and self.selnpol == 1:
                         fcol=fcolall[self.selpol]
                     else:
@@ -304,7 +306,7 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                     fdatac = numpy.concatenate([fdatac,fcoln])
             fdatcol[np] = fdatac
             #flagc=tb.getcol('FLAG')
-        subtb.close()
+        #subtb.close()
         fdatacm = fdatcol.reshape(self.npol,1,len(fdatac))
         self.table.putcol('FLAG', fdatacm, startrow=startrow, rowincr=rowincr)
         #print "Scans flagged: %s" % list(flagscanset)

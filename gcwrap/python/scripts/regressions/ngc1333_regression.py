@@ -982,6 +982,7 @@ if doimage:
     statistics=ia.statistics()
     thistest_immax=statistics['max'][0]
     thistest_imrms=statistics['rms'][0]
+    ia.close()
 # 7499.6601 (n1333_both.ms)
 
 # test values 
