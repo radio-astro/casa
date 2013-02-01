@@ -1412,10 +1412,17 @@ void ImageFitter::_fitsky(
 			String error;
 			Record r;
 			result(j).flux().toRecord(error, r);
-			_encodeSkyComponentError(
-				*_getLog(), result(j), facToJy, allAxesSubImage,
-				solution, errors, stokes, xIsLong
-			);
+            try {
+                _encodeSkyComponentError(
+				    *_getLog(), result(j), facToJy, allAxesSubImage,
+				    solution, errors, stokes, xIsLong
+			    );
+            }
+            catch (const AipsError& x) {
+                *_getLog() << "POTENTIAL DEFECT: Fitter converged but exception caught in post processing. "
+                    << "This may be a bug. Conact us with the image and the input parameters "
+                    << "you used and we will have a look." << LogIO::EXCEPTION;
+            }
 			_curResults.add(result(j));
 			j++;
 		}
