@@ -468,7 +468,7 @@ class test_shadow(test_base):
         filename = create_input(myinput)
 
         # Create command line
-        myinput = ["mode='shadow' tolerance=10.0 addantenna='flagcmd.txt'"]
+        myinput = ["mode='shadow' tolerance=0.0 addantenna='flagcmd.txt'"]
 #        filename = 'cmdfile.txt'
 #        if os.path.exists(filename):
 #            os.system('rm -rf cmdfile.txt')
@@ -482,9 +482,9 @@ class test_shadow(test_base):
         
         # Check flags
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
-        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
-        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
+        self.assertEqual(res['antenna']['VLA3']['flagged'], 3752)
+        self.assertEqual(res['antenna']['VLA4']['flagged'], 1320)
+        self.assertEqual(res['antenna']['VLA5']['flagged'], 1104)        
 
 
 # Test rflag inputs with filenames, as well as inline thresholds.
