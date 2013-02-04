@@ -297,7 +297,7 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
     def test_exception10(self):
         """test_exception10: Empty iflist for Tsys calibration"""
         try:
-            self.res=sdcal2(infile=self.rawfile,calmode='tsys',iflist=[],outfile=self.outfile)
+            self.res=sdcal2(infile=self.rawfile,calmode='tsys',tsysiflist=[],outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -371,7 +371,7 @@ class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
     outfile=prefix+'.tsys.out'
     tsystable=prefix+'.tsys'
     calmode='tsys'
-    iflist=[1]
+    tsysiflist=[1]
     
     def setUp(self):
         self.res=None
@@ -389,7 +389,7 @@ class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
 
     def test_tsyscal00(self):
         """test_tsyscal00: Tsys calibration"""
-        sdcal2(infile=self.rawfile,calmode=self.calmode,iflist=self.iflist,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile=self.outfile)
 
         self._comparecal(self.outfile, self.tsystable, 'TSYS')
         
@@ -397,7 +397,7 @@ class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
         """test_tsyscal01: Tsys calibration, overwrite existing table"""
         if (not os.path.exists(self.tsystable)):
             shutil.copytree(self.rawfile, self.outfile)
-        sdcal2(infile=self.rawfile,calmode=self.calmode,iflist=self.iflist,outfile=self.outfile,overwrite=True)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile=self.outfile,overwrite=True)
 
         self._comparecal(self.outfile, self.tsystable, 'TSYS')
 
@@ -416,7 +416,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
     tsystable=prefix+'.tsys'
     reftables=[prefix+'.asap.ref',prefix+'.asap.noTsys.ref',prefix+'.asap.cspline.ref']
     calmode='apply'
-    iflist=[1]
+    tsysiflist=[1]
     ifmap={1:[5,6]}
     
     def setUp(self):
@@ -484,7 +484,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
     def test_applycal06(self):
         """test_applycal06: calibrate sky as well as Tsys and apply them on-the-fly"""
         self.calmode='ps,tsys,apply'
-        sdcal2(infile=self.rawfile,calmode=self.calmode,iflist=self.iflist,ifmap=self.ifmap,outfile=self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,ifmap=self.ifmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
 

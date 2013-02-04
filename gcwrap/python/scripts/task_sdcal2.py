@@ -11,12 +11,11 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdcal2(infile, calmode, skytable, tsystable, interp, ifmap, scanlist, field, iflist, pollist, outfile, overwrite):
-    worker = sdcal2_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
-
+def sdcal2(infile, calmode, fraction, noff, width, elongated, tsysiflist, skytable, tsystable, interp, ifmap, scanlist, field, iflist, pollist, outfile, overwrite):
+    with sdutil.sdtask_manager(sdcal2_worker, locals()) as worker: 
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
 class sdcal2_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
@@ -54,7 +53,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             elif self.calmode == 'tsys':
                 # generate Tsys table
                 self.check_outfile()
-                self.check_iflist()
+                self.check_tsysiflist()
                 self.dotsys = True
             else:
                 # generate sky table
@@ -71,12 +70,14 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.skymode = self.calmode.split(sep)[0]
         else:
             # generate sky and Tsys table and apply them on-the-fly
-            self.check_iflist()
+            self.check_tsysiflist()
             self.check_update()
             self.dosky = True
             self.dotsys = True
             self.doapply = True
             self.skymode = self.calmode.split(sep)[0]
+
+        casalog.post('INFO', 'sky calibration mode: \'%s\''%(self.skymode))
 
     def check_infile(self):
         if not is_scantable(self.infile):
@@ -147,8 +148,8 @@ class sdcal2_worker(sdutil.sdtask_template):
         if not isinstance(self.ifmap, dict) or len(self.ifmap) == 0:
             raise Exception('ifmap must be non-empty dictionary.')
 
-    def check_iflist(self):
-        if len(self.iflist) == 0:
+    def check_tsysiflist(self):
+        if len(self.tsysiflist) == 0:
             raise Exception('You must specify iflist as a list of IFNOs for Tsys calibration.')
 
     def check_update(self):
@@ -174,11 +175,12 @@ class sdcal2_worker(sdutil.sdtask_template):
     def execute(self):
         self.manager.set_data(self.scan)
         if self.dosky:
+            self.set_caloption()
             self.manager.set_calmode(self.skymode)
             self.manager.calibrate()
         if self.dotsys:
             self.manager.set_calmode('tsys')
-            self.manager.set_tsys_spw(self.iflist)
+            self.manager.set_tsys_spw(self.tsysiflist)
             self.manager.calibrate()
         if self.doapply:
             if len(self.skytable) > 0:
@@ -198,7 +200,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             if len(self.interp_freq) > 0:
                 self.manager.set_freq_interpolation(self.interp_freq)
             for (k,v) in self.ifmap.items():
-                self.manager.set_tsys_transfer(k,v)
+                self.manager.set_tsys_transfer(int(k),list(v))
             self.manager.apply(self.insitu, True)
 
     def save(self):
@@ -212,3 +214,14 @@ class sdcal2_worker(sdutil.sdtask_template):
             
     def cleanup(self):
         self.manager.reset()
+
+    def set_caloption(self):
+        if self.skymode == 'otf':
+            opt = {'fraction': self.fraction,
+                   'width': self.width,
+                   'elongated': self.elongated}
+            self.manager.set_calibration_options(opt)
+        elif self.skymode == 'otfraster':
+            opt = {'fraction': self.fraction,
+                   'npts': self.noff}
+            self.manager.set_calibration_options(opt)
