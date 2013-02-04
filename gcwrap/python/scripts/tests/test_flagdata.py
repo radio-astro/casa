@@ -1249,11 +1249,11 @@ class test_list_file(test_base):
         filename = 'input3.txt'
         create_input(myinput, filename)
         
-        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='reason3.txt',
+        flagdata(vis=self.vis, mode='list', inpfile=filename, savepars=True, outfile='reason3a.txt',
                   cmdreason='MANUALFLAG', action='')
         
         # Apply the flag cmds
-        flagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG',
+        flagdata(vis=self.vis, mode='list', inpfile='reason3a.txt', reason='MANUALFLAG',
                  flagbackup=False)
         
         res = flagdata(vis=self.vis, mode='summary')
@@ -1410,11 +1410,11 @@ class test_list_list(test_base):
                 "scan='3' reason='SCAN_3'",
                 "scan='4' reason=''"]
         
-        flagdata(vis=self.vis, mode='list', inpfile=myinput, savepars=True, outfile='reason3.txt',
+        flagdata(vis=self.vis, mode='list', inpfile=myinput, savepars=True, outfile='reason3b.txt',
                   cmdreason='MANUALFLAG', action='')
         
         # Apply the flag cmds
-        flagdata(vis=self.vis, mode='list', inpfile='reason3.txt', reason='MANUALFLAG',
+        flagdata(vis=self.vis, mode='list', inpfile='reason3b.txt', reason='MANUALFLAG',
                  flagbackup=False)
         
         res = flagdata(vis=self.vis, mode='summary')

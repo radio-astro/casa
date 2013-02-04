@@ -82,11 +82,17 @@ def flagdata(vis,
     
     casalog.origin('flagdata')
     
-    # jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
+    # (CAS-4119): Use absolute paths for input files to ensure that the engines find them
     if isinstance(inpfile, str) and inpfile != "":                   
         inpfile = os.path.abspath(inpfile)
         fh.addAbsPath(inpfile)
         
+    elif isinstance(inpfile, list) and os.path.isfile(inpfile[0]):
+        # It is a list of input files
+        for inputfile in range(len(inpfile)):
+            inpfile[inputfile] = os.path.abspath(inpfile[inputfile])
+            fh.addAbsPath(inpfile[inputfile])
+            
     if (outfile != ""):
         outfile = os.path.abspath(outfile)        
         
@@ -115,7 +121,13 @@ def flagdata(vis,
 
 
     # Save all the locals()
-    orig_locals = locals()
+    orig_locals = locals().copy()
+    # inputfile may have been added to the locals dictionary. The cluster does not
+    # recognize it as a parameter for the task, so we have to remove it.
+    if orig_locals.__contains__('inputfile'):
+        del orig_locals['inputfile']
+        
+    
     iscal = False
     
     # Check if vis is a cal table:

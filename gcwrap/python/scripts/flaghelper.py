@@ -122,7 +122,7 @@ def readFile(inputfile):
 # jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
 def addAbsPath(input_file):
     '''Read in the lines from an input file
-    inputfile -->  file in disk with a list of strings per line
+    input_file -->  file in disk with a list of strings per line
     
     Re-writes the file changing relative file names to absolute file names
     '''        
