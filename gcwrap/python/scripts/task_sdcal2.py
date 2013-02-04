@@ -47,7 +47,7 @@ class sdcal2_worker(sdutil.sdtask_template):
                 self.check_tsystable()
                 self.check_outfile()
                 self.check_interp()
-                self.check_ifmap()
+                self.check_ifmap2()
                 self.check_update()
                 self.doapply = True
             elif self.calmode == 'tsys':
@@ -63,6 +63,7 @@ class sdcal2_worker(sdutil.sdtask_template):
         elif num_separator == 1:
             # generate sky table and apply it on-the-fly
             self.check_tsystable()
+            self.check_ifmap2()
             self.check_interp()
             self.check_update()
             self.dosky = True
@@ -71,6 +72,8 @@ class sdcal2_worker(sdutil.sdtask_template):
         else:
             # generate sky and Tsys table and apply them on-the-fly
             self.check_tsysiflist()
+            self.check_ifmap()
+            self.check_interp()
             self.check_update()
             self.dosky = True
             self.dotsys = True
@@ -148,6 +151,10 @@ class sdcal2_worker(sdutil.sdtask_template):
         if not isinstance(self.ifmap, dict) or len(self.ifmap) == 0:
             raise Exception('ifmap must be non-empty dictionary.')
 
+    def check_ifmap2(self):
+        if len(self.tsystable) > 0:
+            self.check_ifmap()
+            
     def check_tsysiflist(self):
         if len(self.tsysiflist) == 0:
             raise Exception('You must specify iflist as a list of IFNOs for Tsys calibration.')

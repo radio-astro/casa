@@ -359,6 +359,126 @@ class sdcal2_skycal_ps(sdcal2_caltest_base,unittest.TestCase):
         self._comparecal(self.outfile, self.skytable)
         
 ###
+# Test sky calibration (calmode='otf')
+###
+class sdcal2_skycal_otf(sdcal2_caltest_base,unittest.TestCase):
+    """
+    Test sky calibration (calmode='otf')
+    """
+    # Input and output names
+    rawfile='lissajous.asap'
+    prefix='lissajous'
+    skytable=prefix+'.sky.out'
+    outfile=prefix+'.asap.out'
+    skytable_ref=prefix+'.sky'
+    outfile_ref=prefix+'.asap_cal2'
+    calmode='otf'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.outfile)):
+            shutil.copytree(self.datapath+self.outfile_ref, self.outfile_ref)
+        if (not os.path.exists(self.skytable_ref)):
+            shutil.copytree(self.datapath+self.skytable_ref, self.skytable_ref)
+
+        default(sdcal2)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_skycal_otf00(self):
+        """test_skycal_otf00: Sky calibration for calmode='otf' (ALMA)"""
+        sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.skytable)
+
+        self._comparecal(self.skytable, self.skytable_ref)
+        
+    def test_skycal_otf01(self):
+        """test_skycal_otf01: Sky calibration for calmode='otf' (ALMA), overwrite existing table"""
+        if (not os.path.exists(self.skytable_ref)):
+            shutil.copytree(self.rawfile, self.skytable)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.skytable,overwrite=True)
+
+        self._comparecal(self.skytable, self.skytable_ref)
+
+    def test_skycal_otf02(self):
+        """test_skycal_otf02: Sky calibration for calmode='otf' (ALMA), apply existing sky table (otf)"""
+        self.calmode='apply'
+        sdcal2(infile=self.rawfile,calmode=self.calmode,skytable=self.skytable_ref,outfile=self.outfile)
+
+        self._compare(self.outfile, self.outfile_ref, False)
+
+    def test_skycal_otf03(self):
+        """test_skycal_otf03: Sky calibration with calmode='otf' (ALMA), apply on-the-fly"""
+        self.calmode='otf,apply'
+        sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.outfile)
+
+        self._compare(self.outfile, self.outfile_ref, False)
+       
+###
+# Test sky calibration (calmode='otfraster')
+###
+class sdcal2_skycal_otfraster(sdcal2_caltest_base,unittest.TestCase):
+    """
+    Test sky calibration (calmode='otfraster')
+    """
+    # Input and output names
+    rawfile='raster.asap'
+    prefix='raster'
+    skytable=prefix+'.sky.out'
+    outfile=prefix+'.asap.out'
+    skytable_ref=prefix+'.sky'
+    outfile_ref=prefix+'.asap_cal2'
+    calmode='otfraster'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.outfile)):
+            shutil.copytree(self.datapath+self.outfile_ref, self.outfile_ref)
+        if (not os.path.exists(self.skytable_ref)):
+            shutil.copytree(self.datapath+self.skytable_ref, self.skytable_ref)
+
+        default(sdcal2)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_skycal_otfraster00(self):
+        """test_skycal_otfraster00: Sky calibration for calmode='otfraster' (ALMA)"""
+        sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.outfile)
+
+        self._comparecal(self.outfile, self.skytable_ref)
+        
+    def test_skycal_otfraster01(self):
+        """test_skycal_otfraster01: Sky calibration for calmode='otfraster' (ALMA), overwrite existing table"""
+        if (not os.path.exists(self.skytable_ref)):
+            shutil.copytree(self.rawfile, self.outfile)
+        sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.outfile,overwrite=True)
+
+        self._comparecal(self.outfile, self.skytable_ref)
+        
+    def test_skycal_otfraster02(self):
+        """test_skycal_otfraster02: Sky calibration for calmode='otfraster' (ALMA), apply existing sky table"""
+        self.calmode='apply'
+        sdcal2(infile=self.rawfile,calmode=self.calmode,skytable=self.skytable_ref,outfile=self.outfile)
+
+        self._compare(self.outfile, self.outfile_ref, False)
+
+    def test_skycal_otfraster03(self):
+        """test_skycal_otfraster03: Sky calibration with calmode='otfraster' (ALMA), apply on-the-fly"""
+        self.calmode='otfraster,apply'
+        sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.outfile)
+
+        self._compare(self.outfile, self.outfile_ref, False)
+
+###
 # Test Tsys calibration (calmode='tsys')
 ###
 class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
@@ -445,7 +565,7 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
         self._compare(self.outfile, self.reftables[0], True)
         
     def test_applycal01(self):
-        """test_applycal01: apply existing skytable"""
+        """test_applycal01: apply existing skytable (ps)"""
         sdcal2(infile=self.rawfile,calmode=self.calmode,skytable=self.skytable,ifmap=self.ifmap,outfile=self.outfile)
 
         self._compare(self.outfile, self.reftables[1], False)
@@ -495,7 +615,9 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
         sdcal2(infile=self.rawfile,calmode=self.calmode,skytable=self.skytable,tsystable=self.tsystable,ifmap=self.ifmap,outfile=self.outfile,overwrite=True)
 
         self._compare(self.outfile, self.reftables[0], 'TSYS')
+        
 
 def suite():
     return [sdcal2_exceptions, sdcal2_skycal_ps,
+            sdcal2_skycal_otf, sdcal2_skycal_otfraster,
             sdcal2_tsyscal, sdcal2_applycal]
