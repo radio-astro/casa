@@ -58,7 +58,7 @@
 
     The simplest and most common way to attach an msmd tool to a
     measurement set is to use the <link
-    anchor="ms:msmd.open">ms.open</link> method which requires that
+    anchor="ms:msmd.open">msmd.open</link> method which requires that
     you specify the name of the measurement set table.
     
     NOTE: Any modifications to an MS while an associated msmd tool is open
@@ -72,8 +72,9 @@
 Example:
 
 msmd.open("3C273XC1.MS")
-msmd.nspw()
-ms.done()
+# get the number of spectral windows
+nspw = msmd.nspw()
+msmd.done()
 	\end{verbatim}
 We open the tool by querying the MS for its metadata. We then get the number of spectral
 windows in the dataset and close the tool.
@@ -634,6 +635,12 @@ windows in the dataset and close the tool.
         
         <method type="function" name="nspw">
             <shortdescription>Get the number of spectral windows associated with the MS.</shortdescription>
+            <input>
+                <param type="bool" direction="in" name="includewvr">
+                    <description>Include wvr spectral windows? If false, exclude wvr windows from count.</description>
+                    <value>true</value>
+                </param>
+            </input>
             <returns type="int"/>
             <description>
                 This method will return the number of spectral windows in the associated MS.
