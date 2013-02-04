@@ -56,7 +56,10 @@ using namespace casac;
 }
 %typemap(in) string& {
    if(PyString_Check($input)){
+      if(!$1)
         $1 = new string(PyString_AsString($input));
+      else
+        *$1 = string(PyString_AsString($input));
    } else {
         PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
         return NULL;
