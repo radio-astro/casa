@@ -243,12 +243,12 @@ std::set<uInt> MSMetaDataPreload::getSpwsForIntent(const String& intent) {
 	return spws;
 }
 
-uInt MSMetaDataPreload::nSpw() {
-	return _spwInfo.size();
+uInt MSMetaDataPreload::nSpw(Bool includeWVR) {
+	return includeWVR ? _spwInfo.size() : _spwInfo.size() - getWVRSpw().size();
 }
 
 std::set<String> MSMetaDataPreload::getIntentsForSpw(const uInt spw) {
-	if (spw >= nSpw()) {
+	if (spw >= nSpw(True)) {
 		throw AipsError(
 			_ORIGIN + "spectral window out of range"
 		);
@@ -323,7 +323,7 @@ std::set<uInt> MSMetaDataPreload::getSpwsForScan(const uInt scan) {
 }
 
 std::set<uInt> MSMetaDataPreload::getScansForSpw(const uInt spw) {
-	if (spw >= nSpw()) {
+	if (spw >= nSpw(True)) {
 		throw AipsError(
 			"MSMetaData::" + String(__FUNCTION__)
 			+ " : spectral window out of range"

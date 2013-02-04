@@ -576,17 +576,17 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForIntent(const String& intent) {
 	return spws;
 }
 
-uInt MSMetaDataOnDemand::nSpw() {
+uInt MSMetaDataOnDemand::nSpw(Bool includewvr) {
 	if (_nSpw > 0) {
-		return _nSpw;
+		return includewvr ? _nSpw : _nSpw - getWVRSpw().size();
 	}
 	uInt nSpw = _ms->spectralWindow().nrow();
 	_nSpw = nSpw;
-	return nSpw;
+	return includewvr ? nSpw : nSpw - getWVRSpw().size();
 }
 
 std::set<String> MSMetaDataOnDemand::getIntentsForSpw(const uInt spw) {
-	if (spw >= nSpw()) {
+	if (spw >= nSpw(True)) {
 		throw AipsError(
 			_ORIGIN + "spectral window out of range"
 		);
@@ -668,7 +668,7 @@ vector<String> MSMetaDataOnDemand::_getFieldNames() {
 }
 
 std::set<uInt> MSMetaDataOnDemand::getFieldIDsForSpw(const uInt spw) {
-	uInt myNSpw = nSpw();
+	uInt myNSpw = nSpw(True);
 	if (spw >= myNSpw) {
 		throw AipsError(_ORIGIN + "spectral window out of range");
 	}
@@ -731,7 +731,7 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const uInt scan) {
 }
 
 std::set<uInt> MSMetaDataOnDemand::getScansForSpw(const uInt spw) {
-	uInt myNSpw = nSpw();
+	uInt myNSpw = nSpw(True);
 	if (spw >= myNSpw) {
 		throw AipsError(
 			_ORIGIN + "spectral window out of range"
@@ -1148,7 +1148,7 @@ void MSMetaDataOnDemand::_getTimesAndInvervals(
 	if (_cacheUpdated(mysize)) {
 		_scanToTimeRangeMap = scanToTimeRangeMap;
 	}
-	mysize = scanSpwToIntervalMap.size() * nSpw() * sizeof(Double);
+	mysize = scanSpwToIntervalMap.size() * nSpw(True) * sizeof(Double);
 	if (_cacheUpdated(mysize)) {
 		_scanSpwToIntervalMap = scanSpwToIntervalMap;
 	}
