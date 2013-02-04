@@ -64,7 +64,7 @@ public:
 	std::set<uInt> getSpwsForIntent(const String& intent);
 
 	// get number of spectral windows
-	uInt nSpw();
+	uInt nSpw(Bool includeWVR);
 
 	// get the number of rows
 	uInt nRows() const;

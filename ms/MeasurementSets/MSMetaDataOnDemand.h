@@ -75,7 +75,7 @@ public:
 	virtual std::set<uInt> getSpwsForIntent(const String& intent);
 
 	// get number of spectral windows
-	uInt nSpw();
+	uInt nSpw(Bool includewvr);
 
 	// get the number of visibilities
 	uInt nRows() const;

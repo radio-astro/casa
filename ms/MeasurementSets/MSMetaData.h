@@ -94,7 +94,7 @@ public:
 	virtual std::set<uInt> getSpwsForIntent(const String& intent) = 0;
 
 	// get number of spectral windows
-	virtual uInt nSpw() = 0;
+	virtual uInt nSpw(Bool includewvr) = 0;
 
 	// get the number of rows
 	virtual uInt nRows() const = 0;
