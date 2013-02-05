@@ -122,10 +122,12 @@
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
 
-      cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
-     $     scaledSampling, off, convOrigin, cfShape,
-     $     cfNX, cfNY, cfNP, cfNC)
+c$$$      cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
+c$$$     $     scaledSampling, off, convOrigin, cfShape,
+c$$$     $     cfNX, cfNY, cfNP, cfNC)
       
+      cfArea=1.0
+
       do iy=-scaledSupport(2),scaledSupport(2) 
          iloc(2)=nint(scaledSampling(2)*iy+off(2)-1)
          iCFPos(2)=iloc(2)+convOrigin(2)+1
@@ -153,6 +155,17 @@ c$$$            endif
             grid(l_igrdpos(1), l_igrdpos(2), l_igrdpos(3), l_igrdpos(4)) 
      $           =grid(l_igrdpos(1), l_igrdpos(2), 
      $           l_igrdpos(3), l_igrdpos(4)) + nvalue * wt
+
+c$$$            write (*,*) abs(nvalue), 
+c$$$     $           abs(wt),
+c$$$     $           abs(grid(l_igrdpos(1), l_igrdpos(2), 
+c$$$     $           l_igrdpos(3), l_igrdpos(4))),
+c$$$     $           abs(wt * grid(l_igrdpos(1), l_igrdpos(2), 
+c$$$     $           l_igrdpos(3), l_igrdpos(4))),
+c$$$     $           phaseGrad(iloc(1) + l_phaseGradOriginX, 
+c$$$     $           iloc(2) + l_phaseGradOriginY),ix,iy,norm
+
+
          enddo
       enddo
       end

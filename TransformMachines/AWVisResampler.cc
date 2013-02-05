@@ -279,8 +279,8 @@ namespace casa{
     Double sinDPA=0.0, cosDPA=1.0;
     Double cfScale=1.0, cfRefFreq;
 
-    // Timer timer;
-    // timer.mark();
+    Timer timer;
+    timer.mark();
     rbeg = 0;       rend = vbs.nRow_p;
     rbeg = vbs.beginRow_p;
     rend = vbs.endRow_p;
@@ -314,7 +314,8 @@ namespace casa{
     CFBuffer& cfb = *vbRow2CFBMap_p(0);
     cfb.getCoordList(fVals,wVals,mNdx, mVals, conjMNdx, conjMVals, fIncr, wIncr);
     Vector<Double> pointingOffset(cfb.getPointingOffset());
-    
+    runTimeG1_p += timer.real();
+
     //    cfb.show("Test: ",cout);
 
     nw = wVals.nelements();
@@ -323,7 +324,7 @@ namespace casa{
 
     // Vector<Bool> polsDone_l; polsDone_l.resize(nGridPol); polsDone_l.set(False);
     // Vector<Bool> chansDone_l; chansDone_l.resize(nDataChan); chansDone_l.set(False);
-
+    timer.mark();
    Cube<Bool> allPolNChanDone_l;
    if (accumCFs)
      {
@@ -355,7 +356,8 @@ namespace casa{
 
    //   Double conjRefFreq = mean(vbs.freq_p);
    Double conjRefFreq = vbs.imRefFreq();
-   
+   Int vbSpw = (vbs.vb_p)->spectralWindow();
+    runTimeG2_p += timer.real();   
     for(Int irow=rbeg; irow< rend; irow++){   
       //      if ((vbs.uvw_p.nelements() == 0)) 
 
@@ -371,11 +373,14 @@ namespace casa{
 		  
 		  if((targetIMChan>=0) && (targetIMChan<nGridChan)) 
 		    {
-		      Double conjFreq=sqrt(2*conjRefFreq*conjRefFreq - freq[ichan]*freq[ichan]);
+		      timer.mark();
 		      Double dataWVal = vbs.vb_p->uvw()(irow)(2);
 		      Int wndx = cfb.nearestWNdx(abs(dataWVal)*freq[ichan]/C::c);
-		      Int fndx = cfb.nearestFreqNdx(freq[ichan]),
-			conjFNdx =cfb.nearestFreqNdx(conjFreq);
+		      // Double conjFreq=sqrt(2*conjRefFreq*conjRefFreq - freq[ichan]*freq[ichan]);
+		      // Int fndx = cfb.nearestFreqNdx(freq[ichan]),
+		      // 	conjFNdx =cfb.nearestFreqNdx(conjFreq);
+		      Int fndx=cfb.nearestFreqNdx(vbSpw,ichan), conjFNdx=cfb.nearestFreqNdx(vbSpw,ichan,True);
+		      runTimeG3_p += timer.real();
 		      
 		      Float s;
 		      //
@@ -386,6 +391,7 @@ namespace casa{
 		      //
 		      //------------------------------------------------------------------------------
 		      //
+		      timer.mark();
 		      cfb.getParams(cfRefFreq, s, support(0), support(1),conjFNdx,wndx,0);
 		      sampling(0) = sampling(1) = s;
 
@@ -407,9 +413,14 @@ namespace casa{
 		      scaledSampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
 		      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
 		      scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
+
+		      support = scaledSupport = 3;
+		      runTimeG4_p += timer.real();
 		      
+		      timer.mark();
 		      sgrid(pos,loc,off, phasor, irow, vbs.uvw_p, dphase_p[irow], freq[ichan], 
 			    uvwScale_p, offset_p, scaledSampling);
+		      runTimeG5_p += timer.real();
 		      
 		      if (onGrid(nx, ny, nw, loc, support)) 
 			{
@@ -441,6 +452,7 @@ namespace casa{
 					  Complex* convFuncV;
 					  // Vector<Float> sampling;
 					  // Vector<Int> support;
+					  timer.mark();
 					  if ( //(!dopsf) && 
 					      //					      (CONJBEAMS==True)) // UUU : With conjugate beams...
 					      vbs.conjBeams_p)
@@ -457,6 +469,7 @@ namespace casa{
 					      support.assign(scaledSupport);
 					      sampling.assign(scaledSampling);
 					    }
+					  runTimeG6_p += timer.real();
 					  
 					  convOrigin=cfShape/2;
 					  Bool psfOnly=((dopsf==True) && (accumCFs==False));
@@ -473,7 +486,9 @@ namespace casa{
 					  // 			   support,sampling,
 					  // 			   off, convOrigin, cfShape, loc, igrdpos,
 					  // 			   sinDPA, cosDPA,finitePointingOffsets,psfOnly);
+timer.mark();
 #include <synthesis/TransformMachines/FortranizedLoopsToGrid.cc>
+runTimeG7_p += timer.real();
 					}
 				      //				      cerr << "Norm = " << norm << endl;
 				      sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow)*abs(norm);
@@ -488,7 +503,7 @@ namespace casa{
 	}
     } // End row-loop
     // exit(0);
-    //    runTime_p += timer.real();
+    runTimeG_p = timer.real() + runTimeG1_p + runTimeG2_p + runTimeG3_p + runTimeG4_p + runTimeG5_p + runTimeG6_p + runTimeG7_p;
     T *tt=(T *)gridStore;
     grid.putStorage(tt,gDummy);
   }
@@ -557,7 +572,8 @@ namespace casa{
 			       (fabs(pointingOffset(0))>0) ||  
 			       (fabs(pointingOffset(1))>0)
 			       );
-    
+    Int vbSpw = (vbs.vb_p)->spectralWindow();
+
     for(Int irow=rbeg; irow<rend; irow++) {
       if(!rowFlag[irow]) {
 	CFBuffer& cfb = *vbRow2CFBMap_p(irow);
@@ -574,7 +590,8 @@ namespace casa{
 	    //	    lambda = C::c/freq[ichan];
 	    Double dataWVal = (vbs.vb_p->uvw()(irow)(2));
 	    Int wndx = cfb.nearestWNdx(abs(dataWVal)*freq[ichan]/C::c);
-	    Int fndx = cfb.nearestFreqNdx(freq[ichan]);
+	    //Int fndx = cfb.nearestFreqNdx(freq[ichan]);
+	    Int fndx = cfb.nearestFreqNdx(vbSpw,ichan);
 	    
 	    //	    cerr << "Grid: " << ichan << " " << freq[ichan] << " " << fndx << endl;
 	    
@@ -649,7 +666,9 @@ namespace casa{
 			// 		   scaledSupport, scaledSampling, off, convOrigin, 
 			// 		   cfShape, loc, phasor, sinDPA, cosDPA, 
 			// 		   finitePointingOffset, cached_phaseGrad_p);
+Timer timer;
 #include <synthesis/TransformMachines/FortranizedLoopsFromGrid.cc>
+runTimeDG_p += timer.real();
 
 			 // //--------------------------------------------------------------------------------
 			 // IPosition phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
