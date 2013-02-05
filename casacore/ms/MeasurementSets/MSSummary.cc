@@ -1781,10 +1781,18 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os << " ("<<nSpw<<" unique spectral windows and ";
 		os << nPol << " unique polarization setups)"<<endl;
 
+		vector<String> names = _msmd->getSpwNames();
+		Int widthName = 5;
+		for (
+			vector<String>::const_iterator iter=names.begin();
+			iter!=names.end(); iter++
+		) {
+			widthName = max(widthName, iter->size());
+		}
+
 		// Define the column widths
 		Int widthLead	=  2;
 		Int widthSpwId       =  7;
-		Int widthName = 10;
 		Int widthFrame      =  6;
 		Int widthFreq	= 12;
 		Int widthFrqNum	= 12;
@@ -1793,28 +1801,29 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		Int widthCorrType	=  4;
 		uInt widthBBCNo = 8;
 
+
+
 		// Write the column headers
 		os.output().setf(ios::left, ios::adjustfield);
 		os.output().width(widthLead);	os << "  ";
 		os.output().width(widthSpwId);	os << "SpwID  ";
 		os.output().width(widthName);	os << "Name  ";
 		os.output().setf(ios::right, ios::adjustfield);
-		os.output().width(widthNumChan);	os << "#Chans" << " ";
+		os.output().width(widthNumChan);	os << " #Chans" << " ";
 		os.output().setf(ios::left, ios::adjustfield);
-		os.output().width(widthFrame);      os << "Frame";
-		os.output().width(widthFreq);	os << "Ch1(MHz)";
-		os.output().width(widthFreq);	os << "ChanWid(kHz) ";
+		os.output().width(widthFrame);      os << "  Frame";
+		os.output().width(widthFreq);	os << "   Ch1(MHz)";
+		os.output().width(widthFreq);	os << " ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
 		Bool hasBBCNo = MSMetaData::hasBBCNo(*pMS);
 		if (hasBBCNo) {
 			os.output().width(widthBBCNo);
-			os << " BBC Num ";
+			os << "BBC Num ";
 		}
 		os.output().width(widthCorrTypes);  os << " Corrs";
 		os << endl;
 
-		vector<String> names = _msmd->getSpwNames();
 		vector<uInt> nChans = _msmd->nChans();
 		vector<Quantum<Vector<Double> > > chanFreqs = _msmd->getChanFreqs();
 		vector<vector<Double> > chanWidths = _msmd->getChanWidths();
@@ -1840,10 +1849,12 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os.output().width(widthNumChan);
 			os << nChans[spw] << " ";
 			// 4th column: Reference Frame info
-			os.output().setf(ios::left, ios::adjustfield);
+			// os.output().setf(ios::left, ios::adjustfield);
 			os.output().width(widthFrame);
 			os<< msSWC.refFrequencyMeas()(spw).getRefString();
 			// 5th column: Chan 1 freq (may be at high freq end of band!)
+			os.output().setf(ios::fixed);
+			os.output().precision(3);
 			os.output().width(widthFrqNum);
 			os<< chanFreqs[spw].getValue("MHz")[0];
 			// 6th column: channel resolution
@@ -1851,6 +1862,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os << chanWidths[spw][0]/1000;
 			// 7th column: total bandwidth of the spectral window
 			os.output().width(widthFrqNum);
+			os.output().precision(1);
 			os<< bandwidths[spw]/1000;
 			if (hasBBCNo) {
 				os.output().width(widthBBCNo);
