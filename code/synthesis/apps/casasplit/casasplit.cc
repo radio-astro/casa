@@ -88,7 +88,8 @@ int main(int argc, char* argv[]) {
       ++opts_processed;
     }
     if(opt == "-p"){
-      t_correlation = upcase(args[1]);
+      t_correlation = args[1];
+      t_correlation.upcase();
       ++args;              // <- Like "shift".
       ++opts_processed;
     }
