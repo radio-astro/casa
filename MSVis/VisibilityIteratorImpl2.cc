@@ -777,12 +777,19 @@ VisibilityIteratorImpl2::getBeamOffsets () const
 Vector<Double>
 VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference) const
 {
+
     // Get the channel information object (basically contains info from the
     // spectral window subtable).
 
-    Int msId = this->msId ();
-    Int spectralWindowId = spectralWindow();
 
+    return getFrequencies (time, frameOfReference, this->spectralWindow(), this->msId());
+
+}
+
+Vector<Double>
+VisibilityIteratorImpl2::getFrequencies (Double time, Int frameOfReference,
+                                         Int spectralWindowId, Int msId) const
+{
     const SpectralWindowChannels & spectralWindowChannels =
         getSpectralWindowChannels (msId, spectralWindowId);
 
@@ -1108,7 +1115,7 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & spectralWindo
 
         nChannels.resize (spectralWindows.nelements());
 
-        for (Int i = 0; i < spectralWindows.nelements(); i ++){
+        for (Int i = 0; i < (int) spectralWindows.nelements(); i ++){
 
             Int spectralWindowId = spectralWindows (i);
 

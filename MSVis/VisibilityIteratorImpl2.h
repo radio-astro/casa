@@ -621,6 +621,9 @@ protected:
     void getColumnRows (const ROScalarColumn<T> & column, Vector<T> & array) const;
 
     Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
+    Vector<Double> getFrequencies (Double time, Int frameOfReference,
+                                   Int spectralWindowId, Int msId) const; // helper method
+
     Vector<Int> getChannels (Double time, Int frameOfReference) const;
     Vector<Int> getCorrelations () const;
 
