@@ -3546,7 +3546,6 @@ cl.close()
 </example>
 </method>
 
-
 <method type="function" name="deconvolvefrombeam">
    <shortdescription> Helper function to deconvolve the given source Gaussian
    from a beam Gaussian to return a model Gaussian
@@ -3597,6 +3596,39 @@ print 'pa=',recout['fit']['pa']
 
 
 """
+
+</example>
+</method>
+
+
+
+<method type="function" name="beamforconvolvedsize">
+   <shortdescription>Determine the size of the beam necessary to convolve with the given source to reach the given convolved (source+beam) size</shortdescription>
+
+<description>
+    Determine the size of the beam necessary to convolve with the given source to reach the given convolved (source+beam) size.
+</description>
+
+<input>
+  <param type="any"  name="source">
+    <any type="variant"/>
+    <description>Three quantities that define the deconvolved source major axis, minor axis and position angle</description>
+    <value></value>
+  </param>
+  <param type="any"  name="convolved">
+    <any type="variant"/>
+    <description>Three quantities that define the convolved source (source+beam) major axis, minor axis and position angle. Do not specify if beam is specified.</description>
+    <value></value>
+  </param>
+</input>
+<returns type="record">
+  <description> record containing the necessary beam Gaussian parameters</description>
+</returns>
+
+<example>
+
+# get the beam necessary to convolve the specified source with to achieve the target convolved source size (source convolved with beam).
+beam = ia.beamforconvolvedsize(source=["1arcsec", "1arcsec", "0deg"], convolved="3arcsec", "2arcsec", "45deg"])
 
 </example>
 </method>

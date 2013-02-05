@@ -1046,6 +1046,55 @@ record* image::deconvolvefrombeam(
 	}
 }
 
+
+record* image::beamforconvolvedsize(
+	const variant& source, const variant& convolved
+) {
+
+	try {
+		*_log << _ORIGIN;
+		Vector<casa::Quantity> sourceParam, convolvedParam;
+		if (
+			! toCasaVectorQuantity(source, sourceParam)
+			|| sourceParam.size() != 3
+		) {
+			throw(AipsError("Cannot understand source values"));
+		}
+		if (
+			! toCasaVectorQuantity(convolved, convolvedParam)
+			&& convolvedParam.size() != 3
+		) {
+			throw(AipsError("Cannot understand target values"));
+		}
+		Angular2DGaussian mySource(sourceParam[0], sourceParam[1], sourceParam[2]);
+		GaussianBeam myConvolved(convolvedParam[0], convolvedParam[1], convolvedParam[2]);
+		GaussianBeam neededBeam;
+		try {
+			mySource.deconvolve(neededBeam, myConvolved);
+		}
+		catch (const AipsError& x) {
+			*_log << "Unable to reach target resolution of "
+				<< myConvolved << " Input source "
+				<< mySource << " is probably too large."
+				<< LogIO::EXCEPTION;
+		}
+		Record ret;
+		QuantumHolder qh(neededBeam.getMajor());
+		ret.defineRecord("major", qh.toRecord());
+		qh = QuantumHolder(neededBeam.getMinor());
+		ret.defineRecord("minor", qh.toRecord());
+		qh = QuantumHolder(neededBeam.getPA());
+		ret.defineRecord("pa", qh.toRecord());
+		return fromRecord(ret);
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+
 bool image::remove(const bool finished, const bool verbose) {
 	bool rstat(false);
 	try {
