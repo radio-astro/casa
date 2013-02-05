@@ -39,7 +39,6 @@ endforeach (file)
 set (tests
 dImageHistograms
 dImageInterface
-dImageMoments
 dImageStatistics
 dImageSummary
 dPagedImage
@@ -56,7 +55,6 @@ tHDF5Image
 tImage2DConvolver
 tImageConcat
 tImageConvolver
-tImageDecomposer
 tImageEmpty
 tImageExpr2Gram
 tImageExpr3Gram
@@ -66,10 +64,8 @@ tImageFFT
 tImageFit1D
 tImageInfo
 tImageMetaData
-tImageMoments
 tImagePolarimetry
 tImageRegrid
-tImageSourceFinder
 tImageStatistics
 tImageUtilities
 tLELSpectralIndex
@@ -77,7 +73,6 @@ tMIRIADImage
 tPagedImage2
 tPagedImage
 tRebinImage
-tSepImConvolver
 tSubImage
 tTempImage
 tImageBeamSet
