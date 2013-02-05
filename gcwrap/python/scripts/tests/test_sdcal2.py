@@ -357,6 +357,14 @@ class sdcal2_skycal_ps(sdcal2_caltest_base,unittest.TestCase):
         sdcal2(infile=self.rawfile,calmode=self.calmode,outfile=self.outfile,overwrite=True)
 
         self._comparecal(self.outfile, self.skytable)
+
+    def test_skycal_ps02(self):
+        """test_skycal_ps02: Default outfile name for sky calibration."""
+        sdcal2(infile=self.rawfile,calmode=self.calmode,outfile='',overwrite=True)
+        defaultname = self.rawfile.rstrip('/')+'_sky'
+        self.assertTrue(os.path.exists(defaultname),
+                        msg='Failed to generate default outfile name.')
+        self._comparecal(defaultname, self.skytable)
         
 ###
 # Test sky calibration (calmode='otf')
@@ -520,6 +528,14 @@ class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
         sdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile=self.outfile,overwrite=True)
 
         self._comparecal(self.outfile, self.tsystable, 'TSYS')
+
+    def test_tsyscal02(self):
+        """test_tsyscal02: Default outfile name for Tsys calibration."""
+        sdcal2(infile=self.rawfile,calmode=self.calmode,tsysiflist=self.tsysiflist,outfile='',overwrite=True)
+        defaultname = self.rawfile.rstrip('/')+'_tsys'
+        self.assertTrue(os.path.exists(defaultname),
+                        msg='Failed to generate default outfile name.')
+        self._comparecal(defaultname, self.tsystable, 'TSYS')
 
 ###
 # Test apply calibration

@@ -215,9 +215,11 @@ class sdcal2_worker(sdutil.sdtask_template):
             if not self.insitu:
                 self.manager.split(self.outfile)
         elif self.dosky:
-            self.manager.save_caltable(self.outfile)
+            outfile = sdutil.get_default_outfile_name(self.infile, self.outfile, '_sky')
+            self.manager.save_caltable(outfile)
         elif self.dotsys:
-            self.manager.save_caltable(self.outfile)
+            outfile = sdutil.get_default_outfile_name(self.infile, self.outfile, '_tsys')
+            self.manager.save_caltable(outfile)
             
     def cleanup(self):
         self.manager.reset()
