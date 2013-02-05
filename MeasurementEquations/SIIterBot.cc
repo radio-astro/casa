@@ -42,6 +42,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   // All SIIterBot_states must have 'type' and 'name' defined.
   SIIterBot_state::SIIterBot_state( ) :
+						itsDescription("no description is currently available..."),
                        itsMinPsfFraction(0.05),
                        itsMaxPsfFraction(0.8),
                        itsMaxPsfSidelobe(0.0),
@@ -254,6 +255,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     interactionCond.notify_all();
   }
 
+	std::string SIIterBot_state::getDescription( ) {
+		boost::lock_guard<boost::recursive_mutex> guard(descriptionMutex);
+		return itsDescription;
+	}
+
+	void SIIterBot_state::setDescription( const std::string &value ) {
+		boost::lock_guard<boost::recursive_mutex> guard(descriptionMutex);    
+		itsDescription = value;
+	}
+
 #ifdef INTERACTIVE_ITERATION
   std::map<std::string,DBus::Variant> SIIterBot_state::getDetails(){
     return fromRecord(getDetailsRecord());
@@ -388,35 +399,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     itsMinPsfFraction = minPsfFraction;
 //   }
 
-  Record SIIterBot_state::getDetailsRecord(){
-    LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
-    boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
-    Record returnRecord;
+	Record SIIterBot_state::getDetailsRecord(){
+		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
+		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
+		Record returnRecord;
 
-    /* Control Variables */
-    returnRecord.define(RecordFieldId("niter"), itsNiter);
-    returnRecord.define(RecordFieldId("cycleniter"), itsCycleNiter);
-    returnRecord.define(RecordFieldId("interactiveniter"),itsInteractiveNiter);
+		/* Control Variables */
+		returnRecord.define(RecordFieldId("niter"), itsNiter);
+		returnRecord.define(RecordFieldId("cycleniter"), itsCycleNiter);
+		returnRecord.define(RecordFieldId("interactiveniter"),itsInteractiveNiter);
 
-    returnRecord.define( RecordFieldId("threshold"),  itsThreshold);    
-    returnRecord.define( RecordFieldId("cyclethreshold"),itsCycleThreshold);
-    returnRecord.define( RecordFieldId("interactivethreshold"),
-                         itsInteractiveThreshold);  
+		returnRecord.define( RecordFieldId("threshold"),  itsThreshold);    
+		returnRecord.define( RecordFieldId("cyclethreshold"),itsCycleThreshold);
+		returnRecord.define( RecordFieldId("interactivethreshold"), itsInteractiveThreshold);  
 
-    returnRecord.define( RecordFieldId("loopgain"),  itsLoopGain);
-    returnRecord.define( RecordFieldId("cyclefactor"), itsCycleFactor);
+		returnRecord.define( RecordFieldId("loopgain"),  itsLoopGain);
+		returnRecord.define( RecordFieldId("cyclefactor"), itsCycleFactor);
 
-    /* Status Reporting Variables */
-    returnRecord.define( RecordFieldId("iterdone"),  itsIterDone);
-    returnRecord.define( RecordFieldId("cycleiterdone"),  itsMaxCycleIterDone);
-    returnRecord.define( RecordFieldId("interactiveiterdone"), 
-                         itsInteractiveIterDone + itsMaxCycleIterDone);
+		/* Status Reporting Variables */
+		returnRecord.define( RecordFieldId("iterdone"),  itsIterDone);
+		returnRecord.define( RecordFieldId("cycleiterdone"),  itsMaxCycleIterDone);
+		returnRecord.define( RecordFieldId("interactiveiterdone"), 
+							 itsInteractiveIterDone + itsMaxCycleIterDone);
     
-     returnRecord.define( RecordFieldId("nmajordone"),  itsMajorDone);
-     returnRecord.define( RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
-     returnRecord.define( RecordFieldId("maxpsffraction"), itsMaxPsfFraction);
-     returnRecord.define( RecordFieldId("minpsffraction"), itsMinPsfFraction);
-	 returnRecord.define( RecordFieldId("interactivemode"), itsInteractiveMode);
+		returnRecord.define( RecordFieldId("nmajordone"),  itsMajorDone);
+		returnRecord.define( RecordFieldId("maxpsfsidelobe"), itsMaxPsfSidelobe);
+		returnRecord.define( RecordFieldId("maxpsffraction"), itsMaxPsfFraction);
+		returnRecord.define( RecordFieldId("minpsffraction"), itsMinPsfFraction);
+		returnRecord.define( RecordFieldId("interactivemode"), itsInteractiveMode);
+
+		/* report clean's state */
+		returnRecord.define( RecordFieldId("cleanstate"), itsStopFlag ? "stopped" :
+		                                                  itsPauseFlag ? "paused" : "running" );
 
      return returnRecord;
   }
@@ -579,73 +593,79 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 	}
 
-  std::map<std::string,DBus::Variant> 
-  SIIterBot_state::fromRecord(Record record){
-    std::map<std::string,DBus::Variant> returnMap;
+	std::map<std::string,DBus::Variant> SIIterBot_state::fromRecord(Record record){
+		std::map<std::string,DBus::Variant> returnMap;
     
-    for (unsigned int idx = 0; idx < record.nfields(); ++idx) {
-      RecordFieldId id(idx);      
-      switch (record.dataType(id)) {
-      case TpBool:
-        {
-          DBus::Variant v;
-          v.writer().append_bool(record.asBool(id));
-          returnMap[record.name(id)] = v;
-        }
-        break;
-      case TpInt:
-        {
-          DBus::Variant v;
-          v.writer().append_int32(record.asInt(id));
-          returnMap[record.name(id)] = v;
-        }
-        break;
-      case TpFloat:
-        {
-          DBus::Variant v;
-          v.writer().append_double(record.asFloat(id));
-          returnMap[record.name(id)] = v;
-        }
-        break;
-      case TpDouble:
-        {
-          DBus::Variant v;
-          v.writer().append_double(record.asDouble(id));
-          returnMap[record.name(id)] = v;
-        }
-        break;
-      default:
-        std::cout << "Error: Unsupported Type" << std::endl;
-      }
-    }
-    return returnMap;
-  }
+		for (unsigned int idx = 0; idx < record.nfields(); ++idx) {
+			RecordFieldId id(idx);      
+			switch (record.dataType(id)) {
+				case TpBool:
+					{
+						DBus::Variant v;
+						v.writer().append_bool(record.asBool(id));
+						returnMap[record.name(id)] = v;
+					}
+					break;
+				case TpInt:
+					{
+						DBus::Variant v;
+						v.writer().append_int32(record.asInt(id));
+						returnMap[record.name(id)] = v;
+					}
+					break;
+				case TpFloat:
+					{
+						DBus::Variant v;
+						v.writer().append_double(record.asFloat(id));
+						returnMap[record.name(id)] = v;
+					}
+					break;
+				case TpDouble:
+					{
+						DBus::Variant v;
+						v.writer().append_double(record.asDouble(id));
+						returnMap[record.name(id)] = v;
+					}
+					break;
+				case TpString:
+					{
+						DBus::Variant v;
+						v.writer().append_string(record.asString(id).c_str( ));
+						returnMap[record.name(id)] = v;
+					}
+					break;
+				default:
+					std::cout << "fromRecord Error: Unsupported Type" << std::endl;
+			}
+		}
+		return returnMap;
+	}
 
 	Record SIIterBot_state::toRecord(std::map<std::string,DBus::Variant> mapIn) {
-    Record returnRecord;
+		Record returnRecord;
     
-    std::map<std::string,DBus::Variant>::iterator iter;
-    for ( iter = mapIn.begin(); iter != mapIn.end(); ++iter) {
-      DBus::MessageIter dbusMI = (*iter).second.reader();
+		std::map<std::string,DBus::Variant>::iterator iter;
+		for ( iter = mapIn.begin(); iter != mapIn.end(); ++iter) {
+			DBus::MessageIter dbusMI = (*iter).second.reader();
       
-      switch (dbusMI.type()) {
-//       case DBus::Type::TYPE_BOOLEAN:
-//         returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_bool());
-//         break;
-      case 105: //DBus::Type::Type_INT32:
-        returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_int32());
-        break;
-      case 100: //DBus::Type::TYPE_DOUBLE:
-        returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_double());
-        break;
-//       case DBus::Type::TYPE_STRING:
-//         returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_string());
-//         break;
-      default:
-        std::cout << "Unsupported type: " << dbusMI.type() << std::endl;
-      }
-    }
-    return returnRecord;
+			switch (dbusMI.type()) {
+				case 'b':
+					returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_bool());
+					break;
+				case 'i': //DBus::Type::Type_INT32:
+					returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_int32());
+					break;
+				case 'd': //DBus::Type::TYPE_DOUBLE:
+					returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_double());
+					break;
+				case 's':
+					returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_string());
+					break;
+				default:
+					std::cout << "toRecord Error: Unsupported Type: " << (char) dbusMI.type() << std::endl;
+			}
+		}
+		return returnRecord;
   }  
 
 

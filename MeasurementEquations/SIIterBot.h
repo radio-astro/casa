@@ -156,6 +156,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			bool decrementController();
 			int  getNumberOfControllers();
 
+			std::string getDescription( );
+			void setDescription( const std::string &value );
+
 #ifdef INTERACTIVE_ITERATION
 			std::map<std::string,DBus::Variant> getDetails();
 #endif
@@ -184,6 +187,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			/* For testing/debugging. Print out the contents of the iterbot */
 			void printOut(String prefix, Bool verbose); 
 
+			std::string itsDescription;
+
 			Float itsMinPsfFraction;
 			Float itsMaxPsfFraction;
 			Float itsMaxPsfSidelobe;
@@ -197,6 +202,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   underlying state variables
 			*/
 			boost::recursive_mutex recordMutex;
+			boost::recursive_mutex descriptionMutex; /** protects itsDescription **/
 
 			/* Control Variables */
 			Int    itsNiter;
@@ -263,6 +269,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 											{ state->changeStopFlag(stopState); }
 				void changeInteractiveMode(const bool& interactiveMode)
 											{ state->changeInteractiveMode(interactiveMode); }
+				std::string getDescription( )
+											{ return state->getDescription( ); }
 				std::map< std::string, ::DBus::Variant > getDetails( )
 											{
 #ifdef INTERACTIVE_ITERATION
