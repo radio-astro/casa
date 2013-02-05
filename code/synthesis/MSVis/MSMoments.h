@@ -38,7 +38,7 @@
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <ms/MeasurementSets/MSSelectionKeywords.h>
 #include <images/Images/MomentsBase.h>
-#include <images/Images/MomentCalculator.h>
+#include <imageanalysis/ImageAnalysis/MomentCalculator.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

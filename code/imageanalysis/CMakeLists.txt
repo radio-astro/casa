@@ -83,15 +83,25 @@ install (FILES
 install (FILES
 	ImageAnalysis/ImageAnalysis.h
 	ImageAnalysis/ImageCollapser.h
+	ImageAnalysis/ImageDecomposer.h
+	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImageMoments.h
+	ImageAnalysis/ImageMoments.tcc
 	ImageAnalysis/ImagePadder.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
 	ImageAnalysis/ImageProfileFitter.h
+	ImageAnalysis/ImageSourceFinder.h
+	ImageAnalysis/ImageSourceFinder.tcc
 	ImageAnalysis/ImageStatsCalculator.h
 	ImageAnalysis/ImageTask.h
-	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/ImageTransposer.h
+	ImageAnalysis/MomentCalculator.h
+	ImageAnalysis/MomentCalculator.tcc
+	ImageAnalysis/PVGenerator.h
+	ImageAnalysis/SepImageConvolver.h
+	ImageAnalysis/SepImageConvolver.tcc
 	ImageAnalysis/SpectralCollapser.h
 	DESTINATION include/casacode/imageanalysis/ImageAnalysis
 	)
@@ -116,15 +126,20 @@ casa_add_assay( imageanalysis Annotations/test/tAnnText.cc )
 casa_add_assay( imageanalysis Annotations/test/tAnnVector.cc )
 casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
+casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageSourceFinder.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageInputProcessor.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageProfileFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageTransposer.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tSepImageConvolver.cc )
 
 casa_add_assay( imageanalysis IO/test/tFitterEstimatesFileParser.cc )
 casa_add_assay( imageanalysis IO/test/tProfileFitterEstimatesFileParser.cc )

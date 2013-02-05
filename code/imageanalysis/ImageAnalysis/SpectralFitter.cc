@@ -33,7 +33,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <images/Images/ImageFit1D.h>
 #include <images/Images/ImageUtilities.h>
-#include <images/Images/ImageMoments.h>
+#include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSQualityImage.h>
 #include <images/Images/MIRIADImage.h>

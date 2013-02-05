@@ -34,7 +34,7 @@
 #include <casa/OS/SymLink.h>
 #include <coordinates/Coordinates/QualityCoordinate.h>
 #include <images/Images/ImageUtilities.h>
-#include <images/Images/ImageMoments.h>
+#include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSQualityImage.h>
 #include <images/Images/MIRIADImage.h>
@@ -42,6 +42,8 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <lattices/Lattices/LatticeUtilities.h>
+
+#include <imageanalysis/ImageAnalysis/ImageMoments.h>
 
 namespace casa {
 SpectralCollapser::SpectralCollapser(ImageInterface<Float> * image):
