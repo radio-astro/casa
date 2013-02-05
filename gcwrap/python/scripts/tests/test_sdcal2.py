@@ -405,7 +405,7 @@ class sdcal2_skycal_otf(sdcal2_caltest_base,unittest.TestCase):
         self._comparecal(self.skytable, self.skytable_ref)
 
     def test_skycal_otf02(self):
-        """test_skycal_otf02: Sky calibration for calmode='otf' (ALMA), apply existing sky table (otf)"""
+        """test_skycal_otf02: Sky calibration for calmode='otf' (ALMA), apply existing sky table"""
         self.calmode='apply'
         sdcal2(infile=self.rawfile,calmode=self.calmode,skytable=self.skytable_ref,outfile=self.outfile)
 
