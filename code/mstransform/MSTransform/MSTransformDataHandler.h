@@ -23,27 +23,51 @@
 #ifndef MSTransformDataHandler_H_
 #define MSTransformDataHandler_H_
 
-#include <casacore/casa/aipstype.h>
-#include <casacore/casa/BasicSL/String.h>
+// To handle configuration records
 #include <casacore/casa/Containers/Record.h>
-#include <casacore/casa/Logging/LogIO.h>
 
-#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+// To handle variant parameters
+#include <stdcasa/StdCasa/CasacSupport.h>
+
+// Measurement Set Selection
+#include <ms/MeasurementSets/MSSelection.h>
+
+// To use Sub-Ms class
 #include <synthesis/MSVis/SubMS.h>
 
+// VisibityIterator / VisibilityBuffer framework
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 
-#include <tables/Tables/TableRow.h>
+// To get observatory position from observatory name
+#include <measures/Measures/MeasTable.h>
+
+// To post formatted msgs via ostringstream
+#include <iomanip>
+
+// To apply hanning smooth
+#include <scimath/Mathematics/Smooth.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+// MS Transform Framework utilities
+namespace MSTransformations
+{
+	// Returns 1/sqrt(wt) or -1, depending on whether wt is positive..
+	Double wtToSigma(Double wt);
+}
 
+// Forward declarations
+struct spwInfo;
+
+// Map definition
 typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
-typedef map<Int,map<uInt, pair<uInt,Double> > > inputOutputWeightChannelMap;
-typedef map< pair<Int,Int>,vector<uInt> > baselineMap;
+typedef map< pair< pair<Int,Int> , pair<Int,Int> >,vector<uInt> > baselineMap;
+typedef map<Int,map<uInt, uInt > > inputSpwChanMap;
+typedef map<Int,pair < spwInfo, spwInfo > > inputOutputSpwMap;
 
+// Struct definition
 struct channelInfo {
 
 	Int SPW_id;
@@ -53,14 +77,12 @@ struct channelInfo {
 	Double CHAN_WIDTH;
 	Double EFFECTIVE_BW;
 	Double RESOLUTION;
-	Double outChannelFraction;
 
 	channelInfo()
 	{
 		SPW_id = -1;
 		inpChannel = 0;
 		outChannel = 0;
-		outChannelFraction = 0;
 
 		CHAN_FREQ = -1;
 		CHAN_WIDTH = -1;
@@ -121,25 +143,30 @@ struct spwInfo {
 
 	spwInfo()
 	{
-		NUM_CHAN = 0;
-		CHAN_FREQ.resize(0);
-		CHAN_WIDTH.resize(0);
-		EFFECTIVE_BW.resize(0);
-		RESOLUTION.resize(0);
-		TOTAL_BANDWIDTH = 0;
-		REF_FREQUENCY = 0;
-		upperBound = 0;
-		lowerBound = 0;
+		initialize(0);
 	}
 
-
 	spwInfo(uInt nChannels)
+	{
+		initialize(nChannels);
+	}
+
+	spwInfo(Vector<Double> &chanFreq,Vector<Double> &chanWidth)
+	{
+		initialize(chanFreq.size());
+		CHAN_FREQ = chanFreq;
+		CHAN_WIDTH = chanWidth;
+		update();
+	}
+
+	void initialize(uInt nChannels)
 	{
 		NUM_CHAN = nChannels;
 		CHAN_FREQ.resize(nChannels);
 		CHAN_WIDTH.resize(nChannels);
 		EFFECTIVE_BW.resize(nChannels);
 		RESOLUTION.resize(nChannels);
+		CHAN_FREQ_aux.resize(nChannels);
 		TOTAL_BANDWIDTH = 0;
 		REF_FREQUENCY = 0;
 		upperBound = 0;
@@ -150,7 +177,12 @@ struct spwInfo {
 	{
 		upperBound = CHAN_FREQ(NUM_CHAN-1)+0.5*CHAN_FREQ(NUM_CHAN-1);
 		lowerBound = CHAN_FREQ(0)-0.5*CHAN_FREQ(0);
-		TOTAL_BANDWIDTH =upperBound - lowerBound;
+		TOTAL_BANDWIDTH = upperBound - lowerBound;
+		REF_FREQUENCY = CHAN_FREQ(0);
+
+		CHAN_FREQ_aux = CHAN_FREQ;
+		EFFECTIVE_BW = CHAN_WIDTH;
+		RESOLUTION = CHAN_WIDTH;
 	}
 
 	uInt NUM_CHAN;
@@ -158,19 +190,14 @@ struct spwInfo {
 	Vector<Double> CHAN_WIDTH;
 	Vector<Double> EFFECTIVE_BW;
 	Vector<Double> RESOLUTION;
+	Vector<Double> CHAN_FREQ_aux;
 	Double TOTAL_BANDWIDTH;
 	Double REF_FREQUENCY;
 	Double upperBound;
 	Double lowerBound;
 };
 
-
-namespace tvf
-{
-	// Returns 1/sqrt(wt) or -1, depending on whether wt is positive..
-	Double wtToSigma(Double wt);
-}
-
+//  MSTransformDataHandler definition
 class MSTransformDataHandler
 {
 
@@ -195,23 +222,38 @@ public:
 
 protected:
 
-	void checkFillFlagCategory();
-	void checkFillWeightSpectrum();
-	void checkDataColumnsToFill();
-	void setIterationApproach();
-	void generateIterator();
+	void parseMsSpecParams(Record &configuration);
+	void parseDataSelParams(Record &configuration);
+	void parseFreqTransParams(Record &configuration);
+	void parseChanAvgParams(Record &configuration);
+	void parseRefFrameTransParams(Record &configuration);
+	void parseFreqSpecParams(Record &configuration);
 
-	void combineSpwSubtable();
+	void initRefFrameTransParams();
+	void initDataSelectionParams();
+
+	void regridSpwSubTable();
+	void regridAndCombineSpwSubtable();
 	void reindexSourceSubTable();
 	void reindexDDISubTable();
 	void reindexFeedSubTable();
 	void reindexSysCalSubTable();
 	void reindexFreqOffsetSubTable();
-	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
 
+	void checkFillFlagCategory();
+	void checkFillWeightSpectrum();
+	void checkDataColumnsToFill();
+	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
+	void setIterationApproach();
+	void generateIterator();
+
+	void initFrequencyTransGrid(vi::VisBuffer2 *vb);
 	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillAuxCols(vi::VisBuffer2 *vb,RefRows &rowRef);
+
+	template <class T> void writeVariableVector(const Vector<T> &inputVector, Vector<T> &auxVector, ScalarColumn<T> &outputCol, RefRows &rowRef, Bool constant=False, Bool reindex=False, map<Int,Int> *inputOutputIndexMap=NULL);
+	template <class T> void writeScalar(T inputScalar, Vector<T> &auxVector, ScalarColumn<T> &outputCol, RefRows &rowRef, Bool reindex=False, map<Int,Int> *inputOutputIndexMap=NULL);
 
 	template <class T> void writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef);
 	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef);
@@ -222,9 +264,9 @@ protected:
 
 	template <class T> void writeTransformedVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, vi::VisBuffer2 *vb, Bool convolveFlags=False);
 	template <class T> void writeTransformedMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef, vi::VisBuffer2 *vb, Bool convolveFlags=False);
-	template <class T> void writeTransformedCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef, vi::VisBuffer2 *vb, Bool convolveFlags=False);
+	template <class T> void writeTransformedCube(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
 
-	// Input-Output MS parameters
+	// MS specification parameters
 	String inpMsName_p;
 	String outMsName_p;
 	String datacolumn_p;
@@ -242,9 +284,34 @@ protected:
 	String scanIntentSelection_p;
 	String observationSelection_p;
 
-	// Spectral transformation parameters
+	// Input-Output index maps
+	map<Int,Int> inputOutputObservationIndexMap_p;
+	map<Int,Int> inputOutputArrayIndexMap_p;
+	map<Int,Int> inputOutputScanIndexMap_p;
+	map<Int,Int> inputOutputScanIntentIndexMap_p;
+	map<Int,Int> inputOutputFieldIndexMap_p;
+	map<Int,Int> inputOutputSPWIndexMap_p;
+
+	// Frequency transformation parameters
 	Bool combinespws_p;
-	Vector<Int> chanSpec_p;
+	Bool hanningSmooth_p;
+	String interpolationMethodPar_p;
+
+	// Channel average parameters
+	Bool channelAverage_p;
+
+	// Reference Frame Transformation parameters
+	Bool refFrameTransformation_p;
+	casac::variant *phaseCenterPar_p;
+	String restFrequency_p;
+	String outputReferenceFramePar_p;
+
+	// Frequency specification parameters
+	String mode_p;
+	String start_p;
+	String width_p;
+	int nChan_p;
+	String velocityType_p;
 
 	// Time transformation parameters
 	Double timeBin_p;
@@ -255,7 +322,7 @@ protected:
 	MeasurementSet *inputMs_p;
 	MeasurementSet *selectedInputMs_p;
 	MeasurementSet *outputMs_p;
-	ROMSColumns *inputMsCols_p;
+	ROMSColumns *selectedInputMsCols_p;
 	MSColumns *outputMsCols_p;
 
 	// VI/VB related members
@@ -267,13 +334,24 @@ protected:
 	Bool fillWeightSpectrum_p;
 	Bool correctedToData_p;
 	dataColMap dataColMap_p;
+	MSMainEnums::PredefinedColumns mainColumn_p;
 
-	// Spectral transformation members
-	inputOutputWeightChannelMap inputOutputWeightChannelMap_p;
+	// Frequency transformation members
 	baselineMap baselineMap_p;
-	spwInfo combinedSpw_p;
+	vector<uInt> rowIndex_p;
+	inputSpwChanMap spwChannelMap_p;
+	uInt interpolationMethod_p;
+	inputOutputSpwMap inputOutputSpwMap_p;
 
-	// Looging
+	// Reference Frame Transformation members
+	MFrequency::Types inputReferenceFrame_p;
+	MFrequency::Types outputReferenceFrame_p;
+	MPosition observatoryPosition_p;
+	MEpoch observationTime_p;
+	MDirection phaseCenter_p;
+	MFrequency::Convert freqTransEngine_p;
+
+	// Loging
 	LogIO logger_p;
 };
 

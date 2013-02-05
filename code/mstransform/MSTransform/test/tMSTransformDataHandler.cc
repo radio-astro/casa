@@ -35,8 +35,8 @@ int main(int argc, char **argv)
 	Record configuration;
 
 	// Data selection parameters
-	String inputMS,outputMS, datacolumn;
-	Bool combinespws;
+	String inputMS,outputMS, datacolumn, width;
+	Bool combinespws, hanning, regridms, freqaverage;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
 
 	// Parse input parameters
@@ -66,8 +66,38 @@ int main(int argc, char **argv)
 		else if (parameter == string("-combinespws"))
 		{
 			combinespws = Bool(atoi(value.c_str()));
-			configuration.define ("combinespws", combinespws);
+			configuration.define ("combinespws", Bool(combinespws));
 			cout << "Combine Spectral Windows is: " << combinespws << endl;
+		}
+		else if (parameter == string("-hanning"))
+		{
+			hanning = Bool(atoi(value.c_str()));
+			configuration.define ("hanning", Bool(hanning));
+			cout << "Hanning Smooth is: " << hanning << endl;
+		}
+		else if (parameter == string("-regridms"))
+		{
+			regridms = Bool(atoi(value.c_str()));
+			configuration.define ("regridms", Bool(regridms));
+			cout << "Regrid MS is: " << regridms << endl;
+		}
+		else if (parameter == string("-width"))
+		{
+			width = value;
+			configuration.define ("width", width);
+			cout << "Width is: " << width << endl;
+		}
+		else if (parameter == string("-freqaverage"))
+		{
+			freqaverage = Bool(atoi(value.c_str()));
+			configuration.define ("freqaverage", Bool(freqaverage));
+			cout << "Frequency Average is: " << freqaverage << endl;
+		}
+		else if (parameter == string("-freqbin"))
+		{
+			width = value;
+			configuration.define ("freqbin", width);
+			cout << "Frequency bin is: " << width << endl;
 		}
 		else if (parameter == string("-spw"))
 		{
