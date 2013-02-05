@@ -41,6 +41,8 @@
 
 namespace casa {
 
+	class ImagerControl;
+
 	namespace viewer {
 
 		class CleanGui : public QDialog, private Ui::CleanGui {
@@ -55,11 +57,25 @@ namespace casa {
 
 			private slots:
 				void selection_change( );
+				void check_box_change( QTreeWidgetItem*, int );
+
+				void play_button_event( );
+				void pause_button_event( );
+				void stop_button_event( );
+				void refresh_button_event( );
 
 			private:
+				enum clean_state_t { UNDEFINED, PAUSED, RUNNING, STOPPED };
 				// this class is not intended for copy or assignment...
 				CleanGui( const CleanGui & );
 				CleanGui operator=( const CleanGui & );
+
+				// update information for the process currently selected...
+				void refresh( );
+
+				ImagerControl *ic;
+				int current_process_index;
+				clean_state_t current_process_state;
 		};
 	}
 }

@@ -201,7 +201,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	fitAct_ = tlMenu_->addAction( "Fit...");
 	slicerAct_ = tlMenu_->addAction( "Slice...");
 
-	// cleanAct_ = tlMenu_->addAction( "Interactive Clean..." );
+	cleanAct_ = tlMenu_->addAction( "Interactive Clean..." );
 
 	vwMenu_       = menuBar()->addMenu("&View");
 	// (populated after creation of toolbars/dockwidgets).

@@ -53,9 +53,6 @@ namespace casa {
 	    return result;
 	}
 
-#if 0
-	Record *toRecord( const std::map<std::string, DBus::Variant> &map );
-#endif
     }
 }
 

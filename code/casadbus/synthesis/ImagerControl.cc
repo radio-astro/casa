@@ -10,4 +10,6 @@ namespace casa {
 #endif
 	{ }
 
+	ImagerControl::~ImagerControl( ) {  fprintf( stderr, "\t\tImagerControl::~ImagerControl( )\n" ); }
+
 }

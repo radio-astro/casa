@@ -23,6 +23,9 @@
     <signal name="interactionRequired">
       <arg direction="out" type="b" name="required"/>
     </signal>
+    <method name="getDescription">
+      <arg direction="out" type="s"/>
+    </method>
     <method name="getDetails">
       <arg direction="out" type="a{sv}"/>
     </method>
