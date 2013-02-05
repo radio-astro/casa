@@ -474,7 +474,7 @@ if($1){
    }
 }
 
-%typemap(freearg) vector<int> &rownr {
+%typemap(freearg) const std::vector<int>& rownr {
    delete $1;
 }
 
