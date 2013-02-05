@@ -105,8 +105,6 @@ Images/ImageConcat.h
 Images/ImageConcat.tcc
 Images/ImageConvolver.h
 Images/ImageConvolver.tcc
-Images/ImageDecomposer.h
-Images/ImageDecomposer.tcc
 Images/ImageExpr.h
 Images/ImageExpr.tcc
 Images/ImageExprGram.h
@@ -122,8 +120,6 @@ Images/ImageInfo.h
 Images/ImageInterface.h
 Images/ImageInterface.tcc
 Images/ImageMetaData.h
-Images/ImageMoments.h
-Images/ImageMoments.tcc
 Images/ImageMomentsProgress.h
 Images/ImageOpener.h
 Images/ImagePolProxy.h
@@ -131,8 +127,6 @@ Images/ImagePolarimetry.h
 Images/ImageProxy.h
 Images/ImageRegrid.h
 Images/ImageRegrid.tcc
-Images/ImageSourceFinder.h
-Images/ImageSourceFinder.tcc
 Images/ImageStatistics.h
 Images/ImageStatistics.tcc
 Images/ImageSummary.h
@@ -144,16 +138,12 @@ Images/ImageUtilities2.tcc
 Images/LELImageCoord.h
 Images/MIRIADImage.h
 Images/MaskSpecifier.h
-Images/MomentCalculator.h
-Images/MomentCalculator.tcc
 Images/MomentsBase.h
 Images/MomentsBase.tcc
 Images/PagedImage.h
 Images/PagedImage.tcc
 Images/RebinImage.h
 Images/RebinImage.tcc
-Images/SepImageConvolver.h
-Images/SepImageConvolver.tcc
 Images/SubImage.h
 Images/SubImage.tcc
 Images/TempImage.h
