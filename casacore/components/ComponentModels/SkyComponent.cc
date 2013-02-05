@@ -47,6 +47,8 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
+#include <iomanip>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 SkyComponent::SkyComponent()
@@ -311,7 +313,7 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 			raPix.set(roundDouble(raPixErr));
 			decPix.set(roundDouble(decPixErr));
 			precision = precisionForValueErrorPairs(raPix, decPix);
-			position << setprecision(precision);
+			position << std::fixed <<  setprecision(precision);
 			position << "       --- ra:   " << pixel[0];
 			if (dra.getValue() == 0) {
 				position << " (fixed)" << endl;
