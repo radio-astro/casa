@@ -11,21 +11,17 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
-    worker = sdstat_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
-    
-    return worker.result
+    with sdutil.sdtask_manager(sdstat_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
+        
+        return worker.result
         
 
 class sdstat_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdstat_worker,self).__init__(**kwargs)
-
-    def __del__(self):
-        # restore scantable when the instance is deleted
-        self.cleanup()
 
     def parameter_check(self):
         # If outfile is set, sd.rcParams['verbose'] must be True
@@ -119,7 +115,7 @@ class sdstat_worker(sdutil.sdtask_template):
         sd.rcParams['verbose'] = self.verbose_saved
 
         # restore original scantable
-        if self.restorer is not None:
+        if hasattr(self,'restorer') and self.restorer is not None:
             self.restorer.restore()
 
     def __calc_stats(self):

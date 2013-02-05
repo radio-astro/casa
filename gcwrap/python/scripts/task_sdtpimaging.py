@@ -14,10 +14,10 @@ interactive=False
 @sdutil.sdtask_decorator
 def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, spw, stokes, createimage, outfile, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
     # NEED to include spw, src? name for movingsource param. in function argument
-    worker = sdtpimaging_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdtpimaging_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
 
 class sdtpimaging_worker(sdutil.sdtask_template_imaging):
@@ -28,9 +28,6 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
     stokestypes=['undef','I','Q','U','V','RR','RL','LR','LL','XX','XY','YX','YY','RX','RY','LX','LY','XR','XL','YR','YL']
     def __init__(self, **kwargs):
         super(sdtpimaging_worker,self).__init__(**kwargs)
-
-    def __del__(self, base=sdutil.sdtask_template_imaging):
-        super(sdtpimaging_worker,self).__del__()
 
     def parameter_check(self):
         # use FLOAT_DATA if exists

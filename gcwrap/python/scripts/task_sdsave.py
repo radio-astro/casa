@@ -7,19 +7,16 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdsave(infile, antenna, getpt, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, restfreq, outfile, outform, overwrite):
-    worker = sdsave_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdsave_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
 
 class sdsave_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdsave_worker,self).__init__(**kwargs)
         self.suffix = '_saved'
-
-    def __del__(self):
-        self.cleanup()
 
     def parameter_check(self):
         # for restore information
@@ -59,7 +56,7 @@ class sdsave_worker(sdutil.sdtask_template):
         sdutil.save(self.scan, self.outfile, self.outform, self.overwrite)
         
     def cleanup(self):
-        if self.restore:
+        if hasattr(self,'restore') and self.restore:
             casalog.post( "Restoreing MOLECULE_ID column in %s "%self.infile )
             self.original_scan._setmolidcol_list(self.molids)
             

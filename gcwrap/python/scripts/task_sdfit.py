@@ -9,21 +9,17 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
-    worker = sdfit_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdfit_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
-    return worker.result
+        return worker.result
 
 
 class sdfit_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdfit_worker,self).__init__(**kwargs)
-
-    def __del__(self):
-        # restore scantable when the instance is deleted
-        self.cleanup()
 
     def parameter_check(self):
         self.doguess = not ((self.fitmode.lower()=='list') and (self.invertmask))
@@ -78,7 +74,7 @@ class sdfit_worker(sdutil.sdtask_template):
 
     def cleanup(self):
         # restore original scantable
-        if self.restorer is not None:
+        if hasattr(self,'restorer') and self.restorer is not None:
             self.restorer.restore()
 
     def __fit(self):

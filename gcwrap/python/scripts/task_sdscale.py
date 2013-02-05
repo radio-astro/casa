@@ -7,10 +7,10 @@ from asap.scantable import is_scantable, is_ms
 
 @sdutil.sdtask_decorator
 def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
-    worker = sdscale_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdscale_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
 
 class sdscale_worker(sdutil.sdtask_template):

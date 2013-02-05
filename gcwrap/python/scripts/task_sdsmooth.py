@@ -9,10 +9,10 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, chanwidth, verify, outfile, outform, overwrite, plotlevel):
-    worker = sdsmooth_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdsmooth_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
 
 class sdsmooth_worker(sdutil.sdtask_template):

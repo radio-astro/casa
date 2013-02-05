@@ -166,9 +166,6 @@ class sdtask_template(sdtask_interface):
         # Save result on disk if necessary
         self.save()
 
-        # some cleanup should be defined here
-        #self.cleanup()
-
     def initialize_scan(self):
         # initialize scantable object to work with
         raise NotImplementedError('initialize_scan is abstract method')
@@ -236,6 +233,7 @@ class sdtask_template_imaging(sdtask_interface):
         # is deleted
         self.close_table()
         self.close_imager()
+        self.cleanup()
         super(sdtask_template_imaging,self).__del__()
 
     def open_table(self, name, nomodify=True):
@@ -272,9 +270,7 @@ class sdtask_template_imaging(sdtask_interface):
         self.compile()
 
     def finalize(self):
-        self.cleanup()
-        self.close_table()
-        self.close_imager()
+        pass
 
     def parameter_check(self):
         pass

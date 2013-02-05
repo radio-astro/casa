@@ -7,10 +7,10 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
-    worker = sdflagmanager_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdflagmanager_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
     
 
 class sdflagmanager_worker(sdutil.sdtask_template):

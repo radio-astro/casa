@@ -6,10 +6,6 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdlist(infile, antenna, scanaverage, outfile, overwrite):
-##     worker = sdlist_worker(**locals())
-##     worker.initialize()
-##     worker.execute()
-##     worker.finalize()
     with sdutil.sdtask_manager(sdlist_worker, locals()) as worker:
         worker.initialize()
         worker.execute()

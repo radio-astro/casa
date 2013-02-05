@@ -8,20 +8,16 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdcoadd(infiles, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
-    worker = sdcoadd_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdcoadd_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
 
 class sdcoadd_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdcoadd_worker,self).__init__(**kwargs)
         self.suffix = '_coadd'
-
-    def __del__(self):
-        # restore all the scantables when the instance is deleted
-        self.cleanup()
 
     def initialize(self):
         self.nfile = len(self.infiles)
@@ -92,7 +88,8 @@ class sdcoadd_worker(sdutil.sdtask_template):
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
         
     def cleanup(self):
-        for r in self.restorer:
-            if r:
-                r.restore()
+        if hasattr(self,'restorer'):
+            for r in self.restorer:
+                if r:
+                    r.restore()
 
