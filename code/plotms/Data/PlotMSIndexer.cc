@@ -1368,10 +1368,11 @@ void PlotMSIndexer::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
   Cube<Bool> flagcube(plotmscache_->flag(currChunk_));
   flagcube(corr,chan,bsln)=flag;
 
-  // unset flagrow when unflagging
+  // unset flagrow when unflagging (if present in cache)
   if (!flag) {
     Vector<Bool> flagrow(plotmscache_->flagrow(currChunk_));
-    flagrow(bsln)=False;
+    if (flagrow.nelements()>0)
+      flagrow(bsln)=False;
   }
 }
 
