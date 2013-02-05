@@ -27,16 +27,13 @@
 #include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
-#include <images/Images/ImageDecomposer.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageMoments.h>
 #include <images/Images/ImageRegrid.h>
-#include <images/Images/ImageSourceFinder.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageSummary.h>
 #include <images/Images/ImageTwoPtCorr.h>
@@ -44,7 +41,6 @@
 #include <images/Images/LELImageCoord.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/RebinImage.h>
-#include <images/Images/SepImageConvolver.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
