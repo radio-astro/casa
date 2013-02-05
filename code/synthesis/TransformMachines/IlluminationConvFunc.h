@@ -87,6 +87,7 @@ namespace casa{
 			  const CountedPtr<PolOuterProduct>& ,//pop,
 			  casa::Float, 
 			  const Vector<Double>& /*uvScale*/, const Vector<Double>& /*uvOffset*/,
+			  const Matrix<Double>& /*freqSelection*/,
 			  casa::CFStore2&, casa::CFStore2&) {};
     void setPolMap(const casa::Vector<int>&polMap) {(void)polMap;};
     void setFeedStokes(const casa::Vector<int>&feedStokes) {(void)feedStokes;};

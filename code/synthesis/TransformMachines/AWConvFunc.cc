@@ -562,6 +562,7 @@ namespace casa{
 	fValues[0]=imRefFreq_p;
 
 	// // Return the max. freq. from the list of selected SPWs
+	// fValues.resize(1);
 	// Double maxFreq=0.0;
 	// for (Int i=0;i<spwFreqSelection_p.shape()(0);i++)
 	//   if (spwFreqSelection_p(i,2) > maxFreq) maxFreq=spwFreqSelection_p(i,2);
@@ -576,7 +577,7 @@ namespace casa{
 
 	nSpw = spwFreqSelection_p.shape()(0);
 	fValues.resize(nSpw);
-	dNU = (spwFreqSelection_p(0,1) - spwFreqSelection_p(0,2));
+	//	dNU = (spwFreqSelection_p(0,1) - spwFreqSelection_p(0,2));
 	for(Int i=0;i<nSpw;i++) 
 	  {
 	    fValues(i)=spwFreqSelection_p(i,2);
@@ -602,6 +603,7 @@ namespace casa{
 				    const CountedPtr<PolOuterProduct>& pop,
 				    const Float pa,
 				    const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				    const Matrix<Double>& vbFreqSelection,
 				    CFStore2& cfs2,
 				    CFStore2& cfwts2)
   {
@@ -813,7 +815,7 @@ namespace casa{
 	//   (coords.increment()(0)*screen.shape()(0));
 
 	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
-	  innerQuaterFraction=1.5;
+	  innerQuaterFraction=1.0;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
@@ -922,12 +924,12 @@ namespace casa{
     else 
       threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
-    //    threshold *= aTerm_p->getSupportThreshold()*0.1;
+    threshold *= aTerm_p->getSupportThreshold();
+    //    threshold *=  0.1;
     // if (aTerm_p->isNoOp()) 
     //   threshold *= 1e-3; // This is the threshold used in "standard" FTMchines
     // else
 
-      threshold *= aTerm_p->getSupportThreshold();
     //
     // Find the support size of the conv. function in pixels
     //
@@ -961,9 +963,10 @@ namespace casa{
     
     Bool found = setUpCFSupport(func, xSupport, ySupport, sampling,peak);
 
-    Int supportBuffer = aTerm_p->getOversampling();;
+    Int supportBuffer = aTerm_p->getOversampling()*2;
     Int bot=(Int)(ConvFuncOrigin-sampling*xSupport-supportBuffer),//-convSampling/2, 
       top=(Int)(ConvFuncOrigin+sampling*xSupport+supportBuffer);//+convSampling/2;
+    //    bot *= 2; top *= 2;
     bot = max(0,bot);
     top = min(top, func.shape()(0)-1);
     

@@ -118,7 +118,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), runTime(0.0)
+      rotatedConvFunc_p(),cfs2_p(), cfwts2_p()
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -174,7 +174,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p(), runTime(0.0)
+      rotatedConvFunc_p()
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -334,7 +334,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	cfs2_p = other.cfs2_p;
 	cfwts2_p = other.cfwts2_p;
 	paNdxProcessed_p = other.paNdxProcessed_p;
-	runTime= other.runTime;
 	imRefFreq_p = other.imRefFreq_p;
 	conjBeams_p = other.conjBeams_p;
       };
@@ -1094,7 +1093,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
-					 pop_p, pa, uvScale, uvOffset,
+					 pop_p, pa, uvScale, uvOffset,spwFreqSel_p,
 					 *cfs2_p, *cfwts2_p);
 	//	log_l << "Converting WTCFs to wide-band versions" << LogIO::POST;
 	//	makeWBCFWt(*cfwts2_p, imRefFreq_p);
@@ -1167,6 +1166,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		<< (Int)(memUsed) << unit << " out of a maximum of "
 		<< HostInfo::memoryTotal(true)/1024 << " MB" << LogIO::POST;
 	  
+	  //
+	  // Initialize any internal maps that may be used later for
+	  // efficient access.
+	  //
+	  cfs2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
+	  cfwts2_p->initMaps(vb,spwFreqSel_p,imRefFreq_p);
 	}
       }
     // cfs2_p->makePersistent("test.cf");
@@ -1419,8 +1424,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "finalizeToVis[R&D]"));
     
-    //cerr << "Run time = " << runTime << endl;
-    //runTime=0.0;
+    cerr << "De-gridding run time = " << visResampler_p->runTimeDG_p << endl;
+    visResampler_p->runTimeDG_p=0.0;
 
     if(isTiled) 
       {
