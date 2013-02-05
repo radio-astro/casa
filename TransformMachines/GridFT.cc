@@ -1329,7 +1329,12 @@ Bool GridFT::fromRecord(String& error,
   if(!FTMachine::fromRecord(error, inRec))
     return False;
   gridder=0; imageCache=0; lattice=0; arrayLattice=0;
-  cachesize=inRec.asInt64("cachesize");
+  //For some reason int64 seems to be getting lost...
+  //this is not an important parameter...so filing a jira 
+  if(inRec.isDefined("cachesize"))
+    cachesize=inRec.asInt64("cachesize");
+  else
+    cachesize=1000000;
   inRec.get("tilesize", tilesize);
   inRec.get("convtype", convType);
   inRec.get("uvscale", uvScale);
