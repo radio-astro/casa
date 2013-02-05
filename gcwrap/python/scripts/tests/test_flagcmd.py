@@ -41,6 +41,25 @@ def create_input(str_text,fname=''):
     
     # return the name of the file
     return inp
+
+def create_input1(str_text, filename):
+    '''Save the string in a text file'''
+    
+    inp = filename
+    cmd = str_text
+    
+    # remove file first
+    if os.path.exists(inp):
+        os.system('rm -f '+ inp)
+        
+    # save to a file    
+    with open(inp, 'w') as f:
+        f.write(cmd)
+        
+    f.close()
+    
+    return
+
     
 # Path for data
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/flagdata/"
@@ -152,14 +171,16 @@ class test_manual(test_base):
         myinput = "observation='1'"
         filename = create_input(myinput)
         
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False,
+                flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
 
     def test_compatibility(self):
         myinput = "observation='1' mode='manualflag'"
         filename = create_input(myinput)
         
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False,
+                flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
         
     def test_autocorr(self):
@@ -184,7 +205,8 @@ class test_alma(test_base):
         filename = create_input(myinput)
         
         # flag POINTING CALIBRATION scans and ignore comment line
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False,
+                flagbackup=False)
         test_eq(flagdata(vis=self.vis,mode='summary', antenna='2'), 377280, 26200)
         res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184, 'Only scan 1 should be flagged')
@@ -196,7 +218,7 @@ class test_alma(test_base):
         # Test the correct parsing with empty parameter such as antenna=''
         flagcmd(vis=self.vis, inpmode='list', 
                  inpfile=["intent='CAL*POINT*' field=''","scan='3,4' antenna=''","scan='5'"], 
-                 action='apply', savepars=False)
+                 action='apply', savepars=False, flagbackup=False)
         res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 80184)
         self.assertEqual(res['scan']['4']['flagged'], 48132)
@@ -216,7 +238,8 @@ class test_alma(test_base):
         res = flagcmd(vis=self.vis, action='extract', useapplied=True)
         
         # Apply to clip only WVR
-        flagcmd(vis=self.vis, inpmode='list', inpfile=[res[0]['command']], savepars=False, action='apply')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[res[0]['command']], savepars=False, action='apply',
+                flagbackup=False)
         ret = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(ret['flagged'], 22752)
         self.assertEqual(ret['correlation']['I']['flagged'], 22752)
@@ -245,7 +268,8 @@ class test_unapply(test_base):
         #           Other scans give differences at the 0.005% level.
         myinput = "scan=4 mode=tfcrop correlation='ABS_RR'"
         filename = create_input(myinput)
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
         res = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(res['scan']['1']['flagged'], 568134, 'Whole scan=1 should be flagged')
         #self.assertEqual(res['scan']['4']['flagged'], 1201, 'scan=4 should be partially flagged')
@@ -265,12 +289,14 @@ class test_unapply(test_base):
         # Flag using manual agent
         myinput = "scan=1"
         filename = create_input(myinput)
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
 
         # Flag using the quack agent
         myinput = "scan=1~3 mode=quack quackinterval=1.0"
         filename = create_input(myinput)
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
         
         # Unapply only the quack line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=1, savepars=True)
@@ -288,12 +314,14 @@ class test_unapply(test_base):
         # Flag using manual agent
         myinput = "scan=1"
         filename = create_input(myinput)
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
 
         # Flag using the quack agent
         myinput = "scan=1~3 mode=quack quackinterval=1.0"
         filename = create_input(myinput)
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
         
         # Unapply only the manual line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
@@ -310,11 +338,11 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
         
         # Flag several scans and save them to FLAG_CMD with APPLIED=True
-        flagdata(vis=self.vis, scan='7', savepars=True)
-        flagdata(vis=self.vis, scan='1', savepars=True)
-        flagdata(vis=self.vis, scan='2', savepars=True)
-        flagdata(vis=self.vis, scan='3', savepars=True)
-        flagdata(vis=self.vis, scan='4', savepars=True)
+        flagdata(vis=self.vis, scan='7', savepars=True, flagbackup=False)
+        flagdata(vis=self.vis, scan='1', savepars=True, flagbackup=False)
+        flagdata(vis=self.vis, scan='2', savepars=True, flagbackup=False)
+        flagdata(vis=self.vis, scan='3', savepars=True, flagbackup=False)
+        flagdata(vis=self.vis, scan='4', savepars=True, flagbackup=False)
         
         # There should be 5 cmds in FLAG_CMD. Unapply row=1 and set APPLIED to False
         flagcmd(vis=self.vis, action='unapply', tablerows=1, savepars=False)
@@ -362,7 +390,8 @@ class test_savepars(test_base):
         filename = create_input(myinput)
         
         # apply and don't save to MS
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False,
+                flagbackup=False)
         
         # list and check that parameters were not saved to MS
         os.system('rm -rf myflags.txt')
@@ -371,7 +400,7 @@ class test_savepars(test_base):
         
         ########### TEST 3 
         # apply cmd from TEST 1 and update APPLIED column
-        flagcmd(vis=self.vis, action='apply', savepars=False)
+        flagcmd(vis=self.vis, action='apply', savepars=False, flagbackup=False)
         
         # scans=1~3 should be fully flagged
         res = flagdata(vis=self.vis, mode='summary')
@@ -409,7 +438,8 @@ class test_XML(test_base):
         # Now apply them by selecting the reasons and save in another file
         # 507 cmds crash on my computer.
         reasons = ['ANTENNA_NOT_ON_SOURCE','FOCUS_ERROR','SUBREFLECTOR_ERROR']
-        flagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt')
+        flagcmd(vis=self.vis, action='apply', reason=reasons, savepars=True, outfile='myxml.txt',
+                flagbackup=False)
                 
         # Compare with original XML
         self.assertTrue(filecmp.cmp('origxml.txt', 'myxml.txt',1), 'Files should be equal')
@@ -423,7 +453,7 @@ class test_XML(test_base):
         # The MS only contains clip and shadow commands
         
         # Apply the shadow command
-        flagcmd(vis=self.vis, action='apply', reason='SHADOW')
+        flagcmd(vis=self.vis, action='apply', reason='SHADOW', flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 240640)
         
@@ -434,7 +464,7 @@ class test_XML(test_base):
         flagcmd(vis=self.vis, inpmode='list', inpfile=["correlation='XX,RR,RL'"], action='list',
                 savepars=True)
         
-        flagcmd(vis=self.vis, action='apply')
+        flagcmd(vis=self.vis, action='apply', flagbackup=False)
         
         res = flagdata(vis=self.vis, mode='summary')
         
@@ -478,7 +508,7 @@ class test_shadow(test_base):
         # Flag
         flagcmd(vis=self.vis, action='clear', clearall=True)
 #        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=filename)
-        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=myinput)
+        flagcmd(vis=self.vis, action='apply', inpmode='list', inpfile=myinput, flagbackup=False)
         
         # Check flags
         res = flagdata(vis=self.vis, mode='summary')
@@ -530,8 +560,8 @@ class test_rflag(test_base):
 
         commlist=['mode=rflag spw=9,10 timedev='+filename1+' freqdev='+filename2]
 
-        flagdata(vis=self.vis,mode='unflag');
-        flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply')
+        flagdata(vis=self.vis,mode='unflag', flagbackup=False);
+        flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply', flagbackup=False)
         res3 = flagdata(vis=self.vis, mode='summary')
         print "(3) Finished flagcmd test : using tdevfile, fdevfile in the cmd (test 1)) : ", res3['flagged']
 
@@ -540,8 +570,8 @@ class test_rflag(test_base):
         commlist=['mode=rflag spw=9,10 timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
                           freqdev=[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]']
 
-        flagdata(vis=self.vis,mode='unflag');
-        flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply')
+        flagdata(vis=self.vis,mode='unflag', flagbackup=False);
+        flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply', flagbackup=False)
         res4 = flagdata(vis=self.vis, mode='summary')
 
         print "(4) Finished flagcmd test : using cmd arrays : ", res4['flagged']
@@ -549,7 +579,7 @@ class test_rflag(test_base):
 
         # (5) Use the outcmd.txt file generated by (2). 
         #       i.e. re-run the threshold-generation of (2) with savepars=True
-        flagdata(vis=self.vis,mode='unflag');
+        flagdata(vis=self.vis,mode='unflag', flagbackup=False);
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
                       freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
         flagcmd(vis=self.vis, inpmode='list', inpfile='outcmd.txt');
@@ -565,7 +595,8 @@ class test_rflag(test_base):
         """
         # (6) flagcmd AUTO. Should give same answers as test_flagdata[test_rflag1]
         flagdata(vis=self.vis,mode='unflag');
-        flagcmd(vis=self.vis, inpmode='list', inpfile=['mode=rflag spw=9,10'], action='apply')
+        flagcmd(vis=self.vis, inpmode='list', inpfile=['mode=rflag spw=9,10'], action='apply',
+                flagbackup=False)
         res6 = flagdata(vis=self.vis, mode='summary')
         print "(6) Finished flagcmd test : auto : ", res6['flagged']
 
@@ -587,7 +618,7 @@ class test_actions(test_base):
         if os.path.exists('fourplot.png'):
             os.remove('fourplot.png')
         
-    def test_plot(self):
+    def test_action_plot(self):
         '''flagcmd: Test action=plot'''
         outplot = 'fourplot.png'
         flagcmd(vis=self.vis, inpmode='list', 
@@ -600,7 +631,7 @@ class test_actions(test_base):
         self.assertTrue(os.path.exists(outplot),'Plot file was not created')
 
         
-    def test_list1(self):
+    def test_action_list1(self):
          '''flagcmd: action=list with inpmode from a list'''
          flagcmd(vis=self.vis, action='clear', clearall=True)         
          cmd = ["spw='5~7'","spw='1'"]
@@ -612,7 +643,7 @@ class test_actions(test_base):
          res=flagdata(vis=self.vis, mode='summary')
          self.assertEqual(res['flagged'],1099776)  
         
-    def test_list2(self):
+    def test_action_list2(self):
          '''flagcmd: action=list with inpmode from a file'''
          flagcmd(vis=self.vis, action='clear', clearall=True)         
          cmd = "spw='5~7'\n"+\
@@ -625,6 +656,71 @@ class test_actions(test_base):
          
          res=flagdata(vis=self.vis, mode='summary')
          self.assertEqual(res['flagged'],1099776)  
+
+    def test_CAS4819(self):
+        '''flagcmd: CAS-4819, Flag commands from three files'''
+        self.setUp_ngc5921()
+        # creat first input file
+        myinput = "scan='1'\n"\
+                "scan='2'\n"\
+                "scan='3'"
+        filename1 = 'list7a.txt'
+        create_input1(myinput, filename1)
+        
+        # Create second input file
+        myinput = "scan='5'\n"\
+                "scan='6'\n"\
+                "scan='7'"        
+        filename2 = 'list7b.txt'
+        create_input1(myinput, filename2)
+        
+         # Create third input file
+        myinput = "scan='4' mode='clip' clipminmax=[0,4]" 
+        filename3 = 'list7c.txt'
+        create_input1(myinput, filename3)
+       
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[filename1,filename2,filename3],
+                 flagbackup=False, action='apply')
+        
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['2']['flagged'], 238140)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['4']['flagged'], 6696)
+        self.assertEqual(res['scan']['5']['flagged'], 142884)
+        self.assertEqual(res['scan']['6']['flagged'], 857304)
+        self.assertEqual(res['scan']['7']['flagged'], 190512)
+        self.assertEqual(res['total'],2854278)
+        self.assertEqual(res['flagged'],2765718)
+
+    def test_list_reason1(self):
+        '''flagcmd: select by reason from two files'''
+        self.setUp_ngc5921()
+        # creat first input file
+        myinput = "scan='1' spw='0:10~20' reason='NONE'\n"\
+                "scan='2' reason='EVEN'\n"\
+                "scan='3' reason='ODD'"
+        filename1 = 'reasonfile1.txt'
+        create_input1(myinput, filename1)
+        
+        # Create second input file
+        myinput = "scan='5' reason='ODD'\n"\
+                "scan='6' reason='EVEN'\n"\
+                "scan='7' reason='ODD'"        
+        filename2 = 'reasonfile2.txt'
+        create_input1(myinput, filename2)
+        
+        # Apply flag cmds on ODD reason
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[filename1,filename2], reason='ODD',
+                 flagbackup=False, action='apply')
+        
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['scan']['5']['flagged'], 142884)
+        self.assertEqual(res['scan']['6']['flagged'], 0)
+        self.assertEqual(res['scan']['7']['flagged'], 190512)
+        self.assertEqual(res['flagged'], 762048+142884+190512)
+        
         
 class test_cmdbandpass(test_base):
     """Flagcmd:: Test flagging task with Bpass-based CalTable """
@@ -642,14 +738,15 @@ class test_cmdbandpass(test_base):
 
     def test_default_cparam(self):
         '''Flagcmd: flag CPARAM as the default column'''
-        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipzeros=True"])
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["mode='clip' clipzeros=True"],
+                flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 11078, 'Should use CPARAM as the default column')
         
     def test_manual_field_selection_for_bpass(self):
         """Flagcmd:: Manually flag a bpass-based CalTable using field selection"""
         
-        flagcmd(vis=self.vis, inpmode='list', inpfile=["field='3C286_A'"])
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["field='3C286_A'"], flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         
         self.assertEqual(summary['field']['3C286_A']['flagged'], 499200.0)
@@ -663,7 +760,7 @@ class test_cmdbandpass(test_base):
         myinput = "field='3C286_A'"
         filename = create_input(myinput)
 
-        flagcmd(vis=self.vis, inpmode='list', inpfile=filename)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['field']['3C286_A']['flagged'], 499200.0)
         self.assertEqual(summary['field']['3C286_B']['flagged'], 0)
@@ -678,7 +775,7 @@ class test_cmdbandpass(test_base):
         flagdata(vis=msfile, antenna='ea09', action='', savepars=True)
         
         self.setUp_bpass_case()
-        flagcmd(vis=self.vis, inpfile=msfile, action='apply')
+        flagcmd(vis=self.vis, inpfile=msfile, action='apply', flagbackup=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['antenna']['ea09']['flagged'], 48000.0)
         self.assertEqual(summary['antenna']['ea10']['flagged'], 0.0)

@@ -165,7 +165,7 @@
 
     The flagcmd task will flag data based on the commands input on inpmode:
         table = input from FLAG_CMD table in MS
-        list  = input from a file or a (Python) list of command strings
+        list  = input from a file, list of files or a (Python) list of command strings
         xml   = input from Flag.xml in the MS given by vis
 
     Batch operations include : apply/unapply/list/plot/clear/extract
@@ -246,20 +246,24 @@
                unapplied flags
 
 
-       inpmode "list" -- input commands from an ASCII file or via a list of strings.
+       inpmode "list" -- input commands from an ASCII file, a list of files or via a list of strings.
    
-          inpfile -- name of an ASCII file or a list of strings.
+          inpfile -- name of an ASCII file, list of files or a list of Python strings.
                default: '' 
-               options: [] or '' with filename.
-                  example1: the following commands can be saved into a file and given
-                            to the task (e.g. save it to flags.txt).
+               options: [] with flag commands or 
+                        [] with filenames or 
+                        '' with a filename.
+                  example1: the following commands can be saved to a file or group of files
+                            and given to the task (e.g. save it to flags.txt).
                   
                      scan='1~3' mode='manual'
                      mode='clip' clipminmax=[0,2] correlation='ABS_XX' clipoutside=False
                      spw='9' mode='tfcrop' correlation='ABS_YY' ntime=51.0
                      mode='extend' extendpols=True
 
-                    flagcmd(vis, inpmode='list',inpfile='flags.txt')
+                    flagcmd(vis, inpmode='list',inpfile='flags.txt') or
+                    flagcmd(vis, inpmode='list', inpfile=['onlineflags.txt','flags.txt'])
+
 
                example2: the same commands can be written in a Python list of strings and given
                              to the task.
@@ -276,6 +280,9 @@
                         can be a string, or list of strings
                example: reason='FOCUS_ERROR'
                         reason=['FOCUS_ERROR','SUBREFLECTOR_ERROR']
+
+               If inpfile is a list of files, the reasons given in this
+               parameter will apply to all the files.
 
                NOTE: what is within the string is literally
                mateched, e.g. reason='' matches only blank reasons, 

@@ -174,15 +174,25 @@ def flagcmd(
                         casalog.post('Input list is empty', 'ERROR')
                         
                     elif isinstance(inpfile, list):
-                        casalog.post('Reading from input list')
-                        cmdlist = inpfile
-            
-                        casalog.post('Input ' + str(cmdlist.__len__())
-                                     + ' lines from input list')
-                        # Make a FLAG_CMD compatible dictionary and select by reason
-                        myflagcmd = fh.makeDict(cmdlist, reason)
-    
+                    # It is a list of input files
+                        if os.path.isfile(inpfile[0]):
+                            cmdlist = []
+                            for ifile in inpfile:
+                                casalog.post('Will read commands from the file '+ifile)                    
+                                cmdlist = cmdlist + fh.readFile(ifile)
+                        
+                                # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                                myflagcmd = fh.makeDict(cmdlist, reason)
+                                
+                        # It is a list of strings with flag commands
+                        else:
+                            # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                            casalog.post('Will read commands from a Python list')
+                            myflagcmd = fh.makeDict(inpfile, reason)
+                                
                         listmode = ''
+                    
+                    # It is only one file
                     elif isinstance(inpfile, str):
         
                         casalog.post('Reading from input file '+inpfile)

@@ -319,7 +319,6 @@ class test_rflag(test_base):
         self.assertEqual(res['correlation']['LR']['flagged'], 0,)
         self.assertEqual(res['correlation']['RL']['flagged'], 0,)
 
-
 class test_shadow(test_base):
     def setUp(self):
         self.setUp_shadowdata2()
@@ -1177,8 +1176,8 @@ class test_list_file(test_base):
         self.assertEqual(res['scan']['4']['flagged'], 95256)
         self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
 
-    def test_file7(self):
-        '''flagdata: Flag commands from three files'''
+    def test_file_CAS4819(self):
+        '''flagdata: CAS-4819, Flag commands from three files'''
         # creat first input file
         myinput = "scan='1'\n"\
                 "scan='2'\n"\
