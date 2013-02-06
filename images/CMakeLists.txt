@@ -59,7 +59,6 @@ Images/ImageFITS2Converter.cc
 Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
-Images/ComponentImager.cc
 Images/ImageMomentsProgressMonitor.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
@@ -85,7 +84,6 @@ LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUT
 
 install (FILES
 Images/AntennaResponses.h
-Images/ComponentImager.h
 Images/CurvedImage2D.h
 Images/CurvedImage2D.tcc
 Images/ExtendImage.h
