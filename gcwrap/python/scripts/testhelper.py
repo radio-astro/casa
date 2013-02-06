@@ -9,10 +9,13 @@ from taskinit import casalog,tb
 import numpy as np
 
 '''
-A set of helper functions for unit tests:
+A set of common helper functions for unit tests:
    compTables - compare two CASA tables
+   compVarColTables - Compare a variable column of two tables
    DictDiffer - a class with methods to take a difference of two 
                 Python dictionaries
+   verify_ms - Function to verify spw and channels information in an MS   
+   create_input - Save the string in a text file with the given name           
 '''
 
 def compTables(referencetab, testtab, excludecols, tolerance=0.001):
@@ -217,4 +220,71 @@ class DictDiffer(object):
         return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])            
     def unchanged(self):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
+
+
+def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
+    '''Function to verify spw and channels information in an MS
+       msname        --> name of MS to verify
+       expnumspws    --> expected number of SPWs in the MS
+       expnumchan    --> expected number of channels in spw
+       inspw         --> SPW ID
+       expchanfreqs  --> list with expected channel frequencies
+           Returns a list with True or False and a state message'''
     
+    msg = ''
+    tb.open(msname+'/SPECTRAL_WINDOW')
+    nc = tb.getcell("NUM_CHAN", inspw)
+    nr = tb.nrows()
+    cf = tb.getcell("CHAN_FREQ", inspw)
+    tb.close()
+    tb.open(msname)
+    dimdata = tb.getcell("FLAG", 0)[0].size
+    tb.close()
+    if not (nr==expnumspws):
+        msg =  "Found "+str(nr)+", expected "+str(expnumspws)+" spectral windows in "+msname
+        return [False,msg]
+    if not (nc == expnumchan):
+        msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in spw "+str(inspw)+" in "+msname
+        return [False,msg]
+    if not (dimdata == expnumchan):
+        msg = "Found "+ str(dimdata) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
+        return [False,msg]
+
+    if not (expchanfreqs==[]):
+        print "Testing channel frequencies ..."
+        print cf
+        print expchanfreqs
+        if not (expchanfreqs.size == expnumchan):
+            msg =  "Internal error: array of expected channel freqs should have dimension ", expnumchan
+            return [False,msg]
+        df = (cf - expchanfreqs)/expchanfreqs
+        if not (abs(df) < 1E-8).all:
+            msg = "channel frequencies in spw "+str(inspw)+" differ from expected values by (relative error) "+str(df)
+            return [False,msg]
+
+    return [True,msg]
+
+
+def create_input(str_text, filename):
+    '''Save the string in a text file with the given name
+    str_text    --> string to save
+    filename    --> name of the file to save
+            It will remove the filename if it exist!'''
+    
+    inp = filename    
+    cmd = str_text
+    
+    # remove file first
+    if os.path.exists(inp):
+        os.system('rm -f '+ inp)
+    
+    try:
+        # save to a file    
+        with open(inp, 'w') as f:
+            f.write(cmd)
+            
+    finally:  
+        f.close()
+    
+    return
+
