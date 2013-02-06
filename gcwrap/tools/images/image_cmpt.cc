@@ -23,7 +23,6 @@
 #include <casa/Utilities/Assert.h>
 #include <components/ComponentModels/SkyCompRep.h>
 
-#include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
@@ -1070,7 +1069,14 @@ record* image::beamforconvolvedsize(
 		GaussianBeam myConvolved(convolvedParam[0], convolvedParam[1], convolvedParam[2]);
 		GaussianBeam neededBeam;
 		try {
-			mySource.deconvolve(neededBeam, myConvolved);
+			if (mySource.deconvolve(neededBeam, myConvolved)) {
+				// result is a point source which is non-physical in this
+				// case, so throw an exception
+				*_log << "Unable to reach target resolution of "
+					<< myConvolved << " Input source "
+					<< mySource << " is probably too large."
+					<< LogIO::EXCEPTION;
+			}
 		}
 		catch (const AipsError& x) {
 			*_log << "Unable to reach target resolution of "
