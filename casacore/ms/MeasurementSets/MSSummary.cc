@@ -1787,7 +1787,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			vector<String>::const_iterator iter=names.begin();
 			iter!=names.end(); iter++
 		) {
-			widthName = max(widthName, iter->size());
+			widthName = max(widthName, (Int)iter->size());
 		}
 
 		// Define the column widths
