@@ -11,7 +11,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdcal2(infile, calmode, fraction, noff, width, elongated, tsysiflist, skytable, tsystable, interp, ifmap, scanlist, field, iflist, pollist, outfile, overwrite):
+def sdcal2(infile, calmode, fraction, noff, width, elongated, tsysiflist, applytable, interp, ifmap, scanlist, field, iflist, pollist, outfile, overwrite):
     with sdutil.sdtask_manager(sdcal2_worker, locals()) as worker: 
         worker.initialize()
         worker.execute()
@@ -43,11 +43,10 @@ class sdcal2_worker(sdutil.sdtask_template):
             # single calibration process
             if self.calmode == 'apply':
                 # apply sky (and Tsys) tables
-                self.check_skytable()
-                self.check_tsystable()
+                self.check_applytable()
                 self.check_outfile()
                 self.check_interp()
-                self.check_ifmap2()
+                #self.check_ifmap2()
                 self.check_update()
                 self.doapply = True
             elif self.calmode == 'tsys':
@@ -62,8 +61,7 @@ class sdcal2_worker(sdutil.sdtask_template):
                 self.skymode = self.calmode
         elif num_separator == 1:
             # generate sky table and apply it on-the-fly
-            self.check_tsystable()
-            self.check_ifmap2()
+            #self.check_ifmap2()
             self.check_interp()
             self.check_update()
             self.dosky = True
@@ -72,7 +70,7 @@ class sdcal2_worker(sdutil.sdtask_template):
         else:
             # generate sky and Tsys table and apply them on-the-fly
             self.check_tsysiflist()
-            self.check_ifmap()
+            #self.check_ifmap()
             self.check_interp()
             self.check_update()
             self.dosky = True
@@ -95,40 +93,22 @@ class sdcal2_worker(sdutil.sdtask_template):
                 else:
                     casalog.post('INFO','Overwrite %s ...'%(self.outfile))
                     os.system('rm -rf %s'%(self.outfile))
-    def check_skytable(self):
-        # length should be > 0 either skytable is string or string list
-        if len(self.skytable) == 0:
-            raise Exception('Name of the sky table must be given.')
+    def check_applytable(self):
+        # length should be > 0 either applytable is string or string list
+        if len(self.applytable) == 0:
+            raise Exception('Name of the apply table must be given.')
 
-        if type(self.skytable) == str:
+        if type(self.applytable) == str:
             # string 
-            if not os.path.exists(self.skytable):
-                raise Exception('Sky table \'%s\' does not exist.'%(self.skytable))
+            if not os.path.exists(self.applytable):
+                raise Exception('Apply table \'%s\' does not exist.'%(self.applytable))
         else:
             # string list
-            for tab in self.skytable:
+            for tab in self.applytable:
                 if len(tab) == 0:
-                    raise Exception('Name of the sky table must be given.')
+                    raise Exception('Name of the apply table must be given.')
                 elif not os.path.exists(tab):
-                    raise Exception('Sky table \'%s\' does not exist.'%(self.skytable))
-
-    def check_tsystable(self):
-        # length should be > 0 either tsystable is string or string list
-        if len(self.tsystable) == 0:
-            casalog.post('WARN','Tsys table is not given, no Tsys scaling will be done.')
-            return
-
-        if type(self.tsystable) == str:
-            # string 
-            if not os.path.exists(self.tsystable):
-                raise Exception('Tsys table \'%s\' does not exist.'%(self.tsystable))
-        else:
-            # string list
-            for tab in self.tsystable:
-                if len(tab) == 0:
-                    pass
-                elif not os.path.exists(tab):
-                    raise Exception('Tsys table \'%s\' does not exist.'%(self.tsystable))
+                    raise Exception('Apply table \'%s\' does not exist.'%(tab))
 
     def check_interp(self):
         if len(self.interp) == 0:
@@ -152,7 +132,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             raise Exception('ifmap must be non-empty dictionary.')
 
     def check_ifmap2(self):
-        if len(self.tsystable) > 0:
+        #if len(self.tsystable) > 0:
             self.check_ifmap()
             
     def check_tsysiflist(self):
@@ -190,18 +170,24 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.manager.set_tsys_spw(self.tsysiflist)
             self.manager.calibrate()
         if self.doapply:
-            if len(self.skytable) > 0:
-                if isinstance(self.skytable,str):
-                    self.manager.add_skytable(self.skytable)
-                else:
-                    for tab in self.skytable:
-                        self.manager.add_skytable(tab)
-            if len(self.tsystable) > 0:
-                if isinstance(self.tsystable,str):
-                    self.manager.add_tsystable(self.tsystable)
-                else:
-                    for tab in self.tsystable:
-                        self.manager.add_tsystable(tab)
+            if isinstance(self.applytable,str):
+                if len(self.applytable) > 0:
+                    self.manager.add_applytable(self.applytable)
+            else:
+                for tab in self.applytable:
+                    self.manager.add_applytable(tab)
+##             if len(self.skytable) > 0:
+##                 if isinstance(self.skytable,str):
+##                     self.manager.add_skytable(self.skytable)
+##                 else:
+##                     for tab in self.skytable:
+##                         self.manager.add_skytable(tab)
+##             if len(self.tsystable) > 0:
+##                 if isinstance(self.tsystable,str):
+##                     self.manager.add_tsystable(self.tsystable)
+##                 else:
+##                     for tab in self.tsystable:
+##                         self.manager.add_tsystable(tab)
             if len(self.interp_time) > 0:
                 self.manager.set_time_interpolation(self.interp_time)
             if len(self.interp_freq) > 0:

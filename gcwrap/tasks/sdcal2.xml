@@ -69,14 +69,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value></value>
     </param>
 
-    <param type="any" name="skytable" subparam="true">
-        <description>(List of) sky tables</description>
-        <any type="variant" limittype="string stringArray"/>
-        <value type="string"></value>
-    </param>
-
-    <param type="any" name="tsystable" subparam="true">
-        <description>(List of) tsys tables</description>
+    <param type="any" name="applytable" subparam="true">
+        <description>(List of) sky and/or tsys tables</description>
         <any type="variant" limittype="string stringArray"/>
         <value type="string"></value>
     </param>
@@ -137,21 +131,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals value="tsys"/>
                 <default param="tsysiflist"><value type="intArray"/></default>
             <equals value="apply">
-                <default param="skytable"><value type="string"></value></default>
-                <default param="tsystable"><value type="string"></value></default>
+                <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>
                 <default param="ifmap"><value type="dict">{}</value></default>
             </equals>
             <equals value="ps,apply">
-                <default param="skytable"><value type="string"></value></default>
-                <default param="tsystable"><value type="string"></value></default>
+                <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>
                 <default param="ifmap"><value type="dict">{}</value></default>
             </equals>
             <equals value="ps,tsys,apply">
                 <default param="tsysiflist"><value type="intArray"/></default>
-                <default param="skytable"><value type="string"></value></default>
-                <default param="tsystable"><value type="string"></value></default>
+                <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>
                 <default param="ifmap"><value type="dict">{}</value></default>
             </equals>
@@ -159,8 +150,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="fraction"><value type="string">10%</value></default>
                 <default param="width"><value type="double">0.5</value></default>
                 <default param="elongated"><value type="bool">False</value></default>
-                <default param="skytable"><value type="string"></value></default>
-                <default param="tsystable"><value type="string"></value></default>
+                <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>
                 <default param="ifmap"><value type="dict">{}</value></default>
             </equals>
@@ -169,16 +159,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="width"><value type="double">0.5</value></default>
                 <default param="elongated"><value type="bool">False</value></default>
                 <default param="tsysiflist"><value type="intArray"/></default>
-                <default param="skytable"><value type="string"></value></default>
-                <default param="tsystable"><value type="string"></value></default>
+                <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>
                 <default param="ifmap"><value type="dict">{}</value></default>
             </equals>
             <equals value="otfraster,apply">
                 <default param="fraction"><value type="string">10%</value></default>
                 <default param="noff"><value type="int">-1</value></default>
-                <default param="skytable"><value type="string"></value></default>
-                <default param="tsystable"><value type="string"></value></default>
+                <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>
                 <default param="ifmap"><value type="dict">{}</value></default>
             </equals>
@@ -186,8 +174,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="fraction"><value type="string">10%</value></default>
                 <default param="noff"><value type="int">-1</value></default>
                 <default param="tsysiflist"><value type="intArray"/></default>
-                <default param="skytable"><value type="string"></value></default>
-                <default param="tsystable"><value type="string"></value></default>
+                <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>
                 <default param="ifmap"><value type="dict">{}</value></default>
             </equals>
@@ -240,12 +227,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                no effect if you don't want to do Tsys 
                                calibration.
                          default: []
-                 skytable -- List of sky calibration tables you want to 
-                             apply.
+                 applytable -- List of sky/Tsys calibration tables you want to 
+                               apply.
                          default: ''
-                 tsystable -- List of Tsys calibration tables you want to 
-                              apply.
-                         default: '' 
                  interp -- Interpolation method in time and frequency axis. 
                            Set comma separated method strings if you want 
                            to use different interpolation in time and 
