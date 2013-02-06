@@ -42,6 +42,7 @@ namespace casa {
 			setupUi(this);
 			const QString WINDOW_TITLE( "Clean Tool");
 			this->setWindowTitle( WINDOW_TITLE );
+			default_send_tooltip = send_button->toolTip( );
 
 			QStringList label_list;
 			label_list << "id";
@@ -74,6 +75,16 @@ namespace casa {
 			connect( play_button, SIGNAL(pressed( )), SLOT(play_button_event( )) );
 			connect( pause_button, SIGNAL(pressed( )), SLOT(pause_button_event( )) );
 			connect( refresh_button, SIGNAL(pressed( )), SLOT(refresh_button_event( )) );
+
+			connect( niter_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+			connect( threshold_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+			connect( cycle_niter_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+			connect( interactive_niter_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+			connect( cycle_threshold_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+			connect( interactive_threshold_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+			connect( cycle_factor_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+			connect( loop_gain_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
+
 
 			basic_frame->setEnabled(false);
 			advanced_frame->setEnabled(false);
@@ -137,8 +148,42 @@ namespace casa {
 			} else {
 				basic_frame->setEnabled(false);
 				advanced_frame->setEnabled(false);
+				refresh( );
 				ic->decrementController( );
 			}
+		}
+
+		void CleanGui::set_send_needed( bool needed ) {
+			if ( needed ) {
+				send_button->setStyleSheet("color: red");
+				send_button->setToolTip("values changed, update needed...");
+			} else {
+				send_button->setStyleSheet("color: black");
+				send_button->setToolTip(default_send_tooltip);
+			}
+		}
+
+		void CleanGui::entry_changed_event( const QString &str ) {
+			std::map<QObject*,QString>::const_iterator it = stored_values.find(QObject::sender( ));
+			if ( it != stored_values.end( ) ) {
+				if ( str != it->second ) {
+					set_send_needed(true);
+					return;
+				}
+			}
+
+			// here we know that the current entry has been returned to its "stored" value...
+			// or this is an event from some entry not stored in our map... either way, we
+			// will traverse and check all the values...
+			for ( std::map<QObject*,QString>::const_iterator it = stored_values.begin( );
+				  it != stored_values.end( ); ++it ) {
+				QLineEdit *ptr = dynamic_cast<QLineEdit*>(it->first);
+				if ( it->second != ptr->text( ) ) {
+					set_send_needed(true);
+					return;
+				}
+			}
+			set_send_needed(false);
 		}
 
 		void CleanGui::selection_change( ) {
@@ -202,9 +247,12 @@ namespace casa {
 				it = details.find("threshold");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::DOUBLE ) {
 					double threshold = it->second.getDouble( );
-					threshold_entry->setText(QString::number(threshold));
+					QString val = QString::number(threshold);
+					threshold_entry->setText(val);
+					stored_values[threshold_entry] = val;
 				} else {
 					threshold_entry->clear( );
+					stored_values[threshold_entry] = "";
 				}
 				/***********************************************************************
 				******  Fill in the niter...                                      ******
@@ -212,9 +260,12 @@ namespace casa {
 				it = details.find("niter");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::INT ) {
 					int niter = it->second.getInt( );
-					niter_entry->setText(QString::number(niter));
+					QString val = QString::number(niter);
+					niter_entry->setText(val);
+					stored_values[niter_entry] = val;
 				} else {
 					niter_entry->clear( );
+					stored_values[niter_entry] = "";
 				}
 
 				/***********************************************************************
@@ -229,9 +280,12 @@ namespace casa {
 				it = details.find("cycleniter");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::INT ) {
 					int niter = it->second.getInt( );
-					cycle_niter_entry->setText(QString::number(niter));
+					QString val = QString::number(niter);
+					cycle_niter_entry->setText(val);
+					stored_values[cycle_niter_entry] = val;
 				} else {
 					cycle_niter_entry->clear( );
+					stored_values[cycle_niter_entry] = "";
 				}
 
 				/***********************************************************************
@@ -240,9 +294,12 @@ namespace casa {
 				it = details.find("cyclethreshold");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::DOUBLE ) {
 					double threshold = it->second.getDouble( );
-					cycle_threshold_entry->setText(QString::number(threshold));
+					QString val = QString::number(threshold);
+					cycle_threshold_entry->setText(val);
+					stored_values[cycle_threshold_entry] = val;
 				} else {
 					cycle_threshold_entry->clear( );
+					stored_values[cycle_threshold_entry] = "";
 				}
 
 				/***********************************************************************
@@ -251,9 +308,12 @@ namespace casa {
 				it = details.find("interactiveniter");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::INT ) {
 					int niter = it->second.getInt( );
-					interactive_niter_entry->setText(QString::number(niter));
+					QString val = QString::number(niter);
+					interactive_niter_entry->setText(val);
+					stored_values[interactive_niter_entry] = val;
 				} else {
 					interactive_niter_entry->clear( );
+					stored_values[interactive_niter_entry] = "";
 				}
 
 				/***********************************************************************
@@ -262,9 +322,12 @@ namespace casa {
 				it = details.find("interactivethreshold");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::DOUBLE ) {
 					double threshold = it->second.getDouble( );
-					interactive_threshold_entry->setText(QString::number(threshold));
+					QString val = QString::number(threshold);
+					interactive_threshold_entry->setText(val);
+					stored_values[interactive_threshold_entry] = val;
 				} else {
 					interactive_threshold_entry->clear( );
+					stored_values[interactive_threshold_entry] = "";
 				}
 
 				/***********************************************************************
@@ -273,9 +336,12 @@ namespace casa {
 				it = details.find("cyclefactor");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::DOUBLE ) {
 					double factor = it->second.getDouble( );
-					cycle_factor_entry->setText(QString::number(factor));
+					QString val = QString::number(factor);
+					cycle_factor_entry->setText(val);
+					stored_values[cycle_factor_entry] = val;
 				} else {
 					cycle_factor_entry->clear( );
+					stored_values[cycle_factor_entry] = "";
 				}
 
 
@@ -285,9 +351,12 @@ namespace casa {
 				it = details.find("loopgain");
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::DOUBLE ) {
 					double gain = it->second.getDouble( );
-					loop_gain_entry->setText(QString::number(gain));
+					QString val = QString::number(gain);
+					loop_gain_entry->setText(val);
+					stored_values[loop_gain_entry] = val;
 				} else {
 					loop_gain_entry->clear( );
+					stored_values[loop_gain_entry] = "";
 				}
 
 				/***********************************************************************
@@ -307,6 +376,8 @@ namespace casa {
 					clean_state_label->setText("error");
 					current_process_state = UNDEFINED;
 				}
+
+				set_send_needed(false);
 
 			} catch ( ... ) {
 				fprintf( stderr, "\t\toops...\n" );

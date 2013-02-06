@@ -64,6 +64,8 @@ namespace casa {
 				void stop_button_event( );
 				void refresh_button_event( );
 
+				void entry_changed_event(const QString&);
+
 			private:
 				enum clean_state_t { UNDEFINED, PAUSED, RUNNING, STOPPED };
 				// this class is not intended for copy or assignment...
@@ -72,10 +74,16 @@ namespace casa {
 
 				// update information for the process currently selected...
 				void refresh( );
+				// indicate (or unindicate) that values have changed,
+				// and a send is required...
+				void set_send_needed( bool );
 
 				ImagerControl *ic;
 				int current_process_index;
 				clean_state_t current_process_state;
+
+				std::map<QObject*,QString> stored_values;
+				QString default_send_tooltip;
 		};
 	}
 }
