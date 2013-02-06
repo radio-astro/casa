@@ -72,7 +72,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/GaussianConvert.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
-#include <images/Images/ComponentImager.h>
+#include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
