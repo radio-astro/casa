@@ -122,12 +122,10 @@
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
 
-c$$$      cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
-c$$$     $     scaledSampling, off, convOrigin, cfShape,
-c$$$     $     cfNX, cfNY, cfNP, cfNC)
+      cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
+     $     scaledSampling, off, convOrigin, cfShape,
+     $     cfNX, cfNY, cfNP, cfNC)
       
-      cfArea=1.0
-
       do iy=-scaledSupport(2),scaledSupport(2) 
          iloc(2)=nint(scaledSampling(2)*iy+off(2)-1)
          iCFPos(2)=iloc(2)+convOrigin(2)+1
