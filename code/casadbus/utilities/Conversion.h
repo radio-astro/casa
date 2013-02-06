@@ -38,21 +38,21 @@
 namespace casa {
 
     namespace dbus {
-	std::map<std::string, DBus::Variant> *fromRecord( const Record &theRecord );
+		Record toRecord( const std::map<std::string,DBus::Variant> &mapIn );
+		std::map<std::string,DBus::Variant> fromRecord( const Record &record );
 
-	variant toVariant( const DBus::Variant &src );
-	std::map<std::string,variant> toStdMap( const std::map<std::string,DBus::Variant> &src );
+		variant toVariant( const DBus::Variant &src );
+		std::map<std::string,variant> toStdMap( const std::map<std::string,DBus::Variant> &src );
 
-	DBus::Variant fromVariant( const variant &src );
-	void show( const variant &v );
+		DBus::Variant fromVariant( const variant &src );
+		void show( const variant &v );
 
-	template<class t> std::vector<double> af( const Vector<t> &other ) {
-	    std::vector<double> result(other.nelements( ));
-	    for (unsigned int x=0; x < result.size(); ++x)
-		result[x] = (double) other[x];
-	    return result;
-	}
-
+		template<class t> std::vector<double> af( const Vector<t> &other ) {
+			std::vector<double> result(other.nelements( ));
+			for (unsigned int x=0; x < result.size(); ++x)
+				result[x] = (double) other[x];
+			return result;
+		}
     }
 }
 

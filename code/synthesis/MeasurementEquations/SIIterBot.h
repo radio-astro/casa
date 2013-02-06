@@ -56,10 +56,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			SIIterBot_state( const SIIterBot_state & );
 			SIIterBot_state &operator=( const SIIterBot_state & );
 
-			/* Methods to make translating to/from the map easy */
-			static std::map<std::string,DBus::Variant> fromRecord(Record);
-			static Record toRecord(std::map<std::string,DBus::Variant>);
-
 		public:
 			SIIterBot_state( );
 			~SIIterBot_state();

@@ -187,246 +187,80 @@ namespace casa {
 
 	void show( const variant &v ) { show(v,0); }
 
-	std::map<std::string, DBus::Variant> *fromRecord( const Record & /*theRec*/ ) {
-	    std::map<std::string, DBus::Variant> *transcribedRec = new std::map<std::string, DBus::Variant>( );
-
-	    DBus::Variant result;
-	    if ( 0 ) {
-	      DBus::MessageIter resulti = result.writer( );
-	      const std::string resultsig = "{" + DBus::type<std::string>::sig() + DBus::type<DBus::Variant>::sig() + "}";
-	      DBus::MessageIter mapi = resulti.new_array(resultsig.c_str());
-
-	      DBus::MessageIter dicti = mapi.new_dict_entry( );
-	      dicti.append_string("vector");
-	      std::string arraysig   = DBus::type<int>::sig( );
-	      DBus::MessageIter varianti = dicti.new_variant(arraysig.c_str( ));
-	      varianti.append_int32( 199 );
-	      dicti.close_container(varianti);
-	      mapi.close_container(dicti);
-
-	      dicti = mapi.new_dict_entry( );
-	      dicti.append_string("shape");
-	      varianti = dicti.new_variant(arraysig.c_str( ));
-	      varianti.append_int32( 200 );
-	      dicti.close_container(varianti);
-	      mapi.close_container(dicti);
-
-	      resulti.close_container(mapi);
-	    } else {
-	      DBus::MessageIter resulti = result.writer( );
-	      DBus::MessageIter structi = resulti.new_struct( );
-	      std::string arraysig   = DBus::type<int>::sig( );
-	      DBus::MessageIter arrayi = structi.new_array(arraysig.c_str());
-	      arrayi.append_int32( 199 );
-	      arrayi.append_int32( 299 );
-	      structi.close_container(arrayi);
-	      std::string shapesig = DBus::type<int>::sig( );
-	      DBus::MessageIter shapei = structi.new_array(shapesig.c_str());
-	      shapei.append_int32( 2 );
-	      shapei.append_int32( 1 );
-	      structi.close_container(shapei);
-	      resulti.close_container(structi);
-	    }
-
-	    transcribedRec->insert(std::make_pair("one is the lonelyist" ,result));
-	    return transcribedRec;
-	}
-
-
-#if 0
-	    std::map<std::string, DBus::Variant> *transcribedRec = new std::map<std::string, DBus::Variant>( );
-	    fprintf( stderr, "\t\t\t\there #1\n");
-	    for(uInt i=0; i<theRec.nfields(); i++){
-		// std::cerr << theRec.name(i) << " " << theRec.dataType(i) << std::endl;
-		switch(theRec.dataType(i)){
-		case TpBool :
-		    SET_VARIANT(bool,asBool(i))
-		    break;
-		case TpChar :
-		case TpUChar :
-		    SET_VARIANT(int32,asuChar(i))
-		    break;
-		case TpShort :
-		case TpUShort :
-		    SET_VARIANT(int32,asShort(i))
-		    break;
-		case TpInt :
-		    SET_VARIANT(int32,asInt(i))
-		    break;
-		case TpUInt :
-		    SET_VARIANT(uint32,asuInt(i))
-		    break;
-		case TpFloat :
-		    SET_VARIANT(double,asFloat(i))
-		    break;
-		case TpDouble :
-		    SET_VARIANT(double,asDouble(i))
-		    break;
-		case TpTable :
-		case TpString :
-		    SET_VARIANT(string,asString(i).c_str( ))
-		    break;
-		case TpArrayBool :
-		    {
-		    fprintf( stderr, "\t\t\t\there #2\n");
-		    Array<bool> tmpArray = theRec.asArrayBool(i);
-		    Vector<int> tmpShape = (tmpArray.shape()).asVector();
-		    //std::cerr << "Vector Shape " << tmpShape << std::endl;
-		    DBus::Variant result;
-		    DBus::MessageIter resulti = result.writer( );
-		    const std::string resultsig = "{" + DBus::type<std::string>::sig() + DBus::type<DBus::Variant>::sig() + "}";
-
-
-		    fprintf( stderr, "\t\t\t\there #3 - %s\n", resultsig.c_str());
-		    DBus::MessageIter mapi = resulti.new_array(resultsig.c_str());
-		    DBus::MessageIter dicti = mapi.new_dict_entry( );
-		    fprintf( stderr, "\t\t\t\there #4 - %s\n", resultsig.c_str());
-		    fflush(stderr);
-		    dicti.append_string("vector");
-// 		    ::operator <<( dicti, std::string("vector") );							// c++ is crappy
-		    fprintf( stderr, "\t\t\t\there #5\n");
-		    fflush(stderr);
-		    const std::string arraysig   = DBus::type<std::vector<int> >::sig( );
-		    DBus::MessageIter varianti = dicti.new_variant(arraysig.c_str( ));
-		    fprintf( stderr, "\t\t\t\there #6 - %s\n", arraysig.c_str());
-		    fflush(stderr);
-		    DBus::MessageIter arrayi = varianti.new_array(arraysig.c_str());
-		    fprintf( stderr, "\t\t\t\there #7 - %s\n", arraysig.c_str());
-		    fflush(stderr);
-		    const std::string elementsig = DBus::type<bool>::sig( );
-		    fprintf( stderr, "\t\t\t\there #7a - %s\n", elementsig.c_str());
-		    fflush(stderr);
-		    bool deleteIt;
-		    fprintf( stderr, "\t\t\t\there #8\n");
-		    fflush(stderr);
-		    const bool *vec = tmpArray.getStorage(deleteIt);
-		    for ( int x = 0; x < tmpArray.nelements(); ++x ) {
-			arrayi.append_int32( vec[x] );
-// 			::operator <<( arrayi, (int) vec[x] );
-		    }
-		    fprintf( stderr, "\t\t\t\there #9\n");
-		    tmpArray.freeStorage( vec, deleteIt );
-		    varianti.close_container(arrayi);
-		    dicti.close_container(varianti);
-		    fprintf( stderr, "\t\t\t\there #10\n");
-		    mapi.close_container(dicti);
-		    dicti = mapi.new_dict_entry( );
-		    dicti.append_string( "shape" );
-		    fprintf( stderr, "\t\t\t\there #11\n");
-		    const std::string shapesig   = DBus::type<std::vector<int> >::sig( );
-		    varianti = dicti.new_variant(shapesig.c_str());
-		    DBus::MessageIter shapei = varianti.new_array(shapesig.c_str());
-		    const int *shape = tmpShape.getStorage(deleteIt);
-		    fprintf( stderr, "\t\t\t\there #12\n");
-		    for ( int x = 0; x < tmpShape.nelements(); ++x ) {
-			::operator <<( shapei, shape[x] );
-		    }
-		    fprintf( stderr, "\t\t\t\there #13\n");
-		    tmpShape.freeStorage( shape, deleteIt );
-		    fprintf( stderr, "\t\t\t\there #14\n");
-		    varianti.close_container(shapei);
-		    dicti.close_container(varianti);
-		    fprintf( stderr, "\t\t\t\there #15\n");
-		    mapi.close_container(dicti);
-		    resulti.close_container(mapi);
-		    transcribedRec->insert(std::make_pair(theRec.name(i).c_str(),result));
-		    }
-		    break;
-#endif
-#if 0
-		case TpArrayChar :
-		case TpArrayUChar :
-		case TpArrayShort :
-		case TpArrayUShort :
-		case TpArrayInt :
-		case TpArrayUInt :
-		    {
-		    Array<Int> tmpArray = theRec.asArrayInt(i);
-		    Vector<Int> tmpShape = (tmpArray.shape()).asVector();
-		    std::vector<Int> vecShape;
-		    tmpShape.tovector(vecShape);
-		    std::vector<Int> tmpVec;
-		    tmpArray.tovector(tmpVec);
-		    transcribedRec->insert(theRec.name(i).c_str(), variant(tmpVec, vecShape));
-		    }
-		    break;
-		case TpArrayFloat :
-		    {
-		    Array<Float> tmpArray = theRec.asArrayFloat(i);
-		    Vector<Int> tmpShape = (tmpArray.shape()).asVector();
-		    //std::cerr << "Vector Shape " << tmpShape << std::endl;
-		    std::vector<Int> vecShape;
-		    tmpShape.tovector(vecShape);
-		    std::vector<Float> tmpVec;
-		    tmpArray.tovector(tmpVec);
-		    std::vector<Double> dtmpVec(tmpVec.size());
-		    for(unsigned int j=0;j<tmpVec.size();j++)
-			dtmpVec[j] = tmpVec[j];
-		    transcribedRec->insert(theRec.name(i).c_str(), variant(dtmpVec, vecShape));
-		    }
-		    break;
-		case TpArrayDouble :
-		    {
-		    Array<Double> tmpArray = theRec.asArrayDouble(i);
-		    Vector<Int> tmpShape = (tmpArray.shape()).asVector();
-		    //std::cerr << "Vector Shape " << tmpShape << std::endl;
-		    std::vector<Int> vecShape;
-		    tmpShape.tovector(vecShape);
-		    std::vector<Double> tmpVec;
-		    tmpArray.tovector(tmpVec);
-		    transcribedRec->insert(theRec.name(i).c_str(), variant(tmpVec, vecShape));
-		    }
-		    break;
-		case TpArrayString :
-		    {
-		    Array<String> tmpArray = theRec.asArrayString(i);
-		    Vector<Int> tmpShape = (tmpArray.shape()).asVector();
-		    std::vector<Int> vecShape;
-		    tmpShape.tovector(vecShape);
-		    std::vector<casa::String> tmpVec;
-		    tmpArray.tovector(tmpVec);
-		    std::vector<std::string> dtmpVec(tmpVec.size());
-		    for(unsigned int j=0;j<tmpVec.size();j++)
-			dtmpVec[j] = tmpVec[j].c_str();
-		    transcribedRec->insert(theRec.name(i).c_str(), variant(dtmpVec, vecShape));
-		    }
-		    break;
-		case TpRecord :
-		    {
-		    //std::cerr << "casa::fromRecord is Record" << std::endl;
-		    record *dummy = fromRecord(theRec.asRecord(i));
-		    variant dum2(dummy);
-		    transcribedRec->insert(theRec.name(i).c_str(), dum2);
-		    }
-		    break;
-		case TpComplex :
-		    std::cerr << "casa::dbus::fromRecord TpComplex, not yet supported" << std::endl;
-		    break;
-		case TpDComplex :
-		    std::cerr << "casa::dbus::fromRecord TpDComplex, not yet supported" << std::endl;
-		    break;
-		case TpArrayComplex :
-		    std::cerr << "casa::dbus::fromRecord TpArrayComplex, not yet supported" << std::endl;
-		    break;
-		case TpArrayDComplex :
-		    std::cerr << "casa::dbus::fromRecord TpArrayDComplex, not yet supported" << std::endl;
-		    break;
-		case TpOther :
-		    std::cerr << "casa::dbus::fromRecord TpOther, oops" << std::endl;
-		    break;
-		case TpQuantity :
-		    std::cerr << "casa::dbus::fromRecord TpQuantity, oops" << std::endl;
-		    break;
-		case TpArrayQuantity :
-		    std::cerr << "casa::dbus::fromRecord TpArrayQuantity, oops" << std::endl;
-		    break;
-		default :
-		    std::cerr << "casa::dbus::fromRecord unknown type, oops" << std::endl;
-		    break;
+		Record toRecord(const std::map<std::string,DBus::Variant> &mapIn) {
+			Record returnRecord;
+    
+			std::map<std::string,DBus::Variant>::const_iterator iter;
+			for ( iter = mapIn.begin(); iter != mapIn.end(); ++iter) {
+				DBus::MessageIter dbusMI = (*iter).second.reader();
+      
+				switch (dbusMI.type()) {
+					case 'b':
+						returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_bool());
+						break;
+					case 'i': //DBus::Type::Type_INT32:
+						returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_int32());
+						break;
+					case 'd': //DBus::Type::TYPE_DOUBLE:
+						returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_double());
+						break;
+					case 's':
+						returnRecord.define(RecordFieldId((*iter).first),dbusMI.get_string());
+						break;
+					default:
+						std::cerr << "toRecord (" << __FILE__ << ":" << __LINE__ << ") unsupported type: " << (char) dbusMI.type() << std::endl;
+				}
+			}
+			return returnRecord;
 		}
-	    }
-	    return transcribedRec;
-	}
-#endif
+
+
+		std::map<std::string,DBus::Variant> fromRecord( const Record &record ) {
+			std::map<std::string,DBus::Variant> returnMap;
+    
+			for (unsigned int idx = 0; idx < record.nfields(); ++idx) {
+				RecordFieldId id(idx);      
+				switch (record.dataType(id)) {
+					case TpBool:
+						{
+							DBus::Variant v;
+							v.writer().append_bool(record.asBool(id));
+							returnMap[record.name(id)] = v;
+						}
+						break;
+					case TpInt:
+						{
+							DBus::Variant v;
+							v.writer().append_int32(record.asInt(id));
+							returnMap[record.name(id)] = v;
+						}
+						break;
+					case TpFloat:
+						{
+							DBus::Variant v;
+							v.writer().append_double(record.asFloat(id));
+							returnMap[record.name(id)] = v;
+						}
+						break;
+					case TpDouble:
+						{
+							DBus::Variant v;
+							v.writer().append_double(record.asDouble(id));
+							returnMap[record.name(id)] = v;
+						}
+						break;
+					case TpString:
+						{
+							DBus::Variant v;
+							v.writer().append_string(record.asString(id).c_str( ));
+							returnMap[record.name(id)] = v;
+						}
+						break;
+					default:
+						std::cerr << "fromRecord (" << __FILE__ << ":" << __LINE__ << ") unsupported type" << std::endl;
+				}
+			}
+			return returnMap;
+		}
     }
 }
