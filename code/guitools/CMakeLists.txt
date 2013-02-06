@@ -87,6 +87,7 @@ casa_add_library( guitools
   Feather/Preferences.cc
   Feather/PreferencesColor.cc
   Feather/FeatherPlot.cc
+  Feather/FeatherCurve.cc
   Feather/ExternalAxis.cc
   Feather/ExternalAxisWidget.cc
   Feather/ExternalAxisWidgetLeft.cc

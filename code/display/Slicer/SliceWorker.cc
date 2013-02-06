@@ -75,20 +75,6 @@ void SliceWorker::setMethod( const String& method ){
 
 void SliceWorker::run(){
 	Assert( imageAnalysis != NULL );
-
-	/*qDebug()<< "Vertices:";
-	for ( int i = 0; i < verticesX.size(); i++ ){
-		qDebug() << verticesX[i]<<" and "<<verticesY[i];
-	}
-	qDebug() << "Axes:";
-	for ( int i = 0; i < axes.size(); i++ ){
-		qDebug() << " axes="<<axes[i];
-	}
-	qDebug() << "Coords:";
-	for ( int i = 0; i < coords.size(); i++ ){
-		qDebug() << " coords="<<coords[i];
-	}
-	qDebug() << "Sample count="<<sampleCount<<" method="<<method.c_str();*/
 	sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
 			axes, coords, sampleCount, method);
 }
@@ -137,6 +123,24 @@ QVector<double> SliceWorker::getPixels() const {
 		pixels = getFromArray( pixelArray );
 	}
 	return pixels;
+}
+
+void SliceWorker::toAscii( QTextStream& stream ) const {
+	QVector<double> distances = getDistances();
+	QVector<double> xPositions = getXPositions();
+	QVector<double> yPositions = getYPositions();
+	QVector<double> pixels = getPixels();
+	int count = distances.size();
+	if ( count > 0 ){
+		const QString END_OF_LINE( "\n");
+		stream << "Region: "<< QString::number(id)<< END_OF_LINE;
+		stream << "Distance"<<"X Position"<<"Y Position"<<"Pixel";
+		for ( int i = 0; i < count; i++ ){
+			stream << QString::number( distances[i]) << QString::number( xPositions[i])<<
+					QString::number(yPositions[i]) << QString::number(pixels[i]) << END_OF_LINE;
+		}
+		stream << END_OF_LINE;
+	}
 }
 
 SliceWorker::~SliceWorker() {

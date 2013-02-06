@@ -171,6 +171,10 @@ void FeatherMain::preferencesChanged(){
 	plotHolder->setDisplayOriginalSlice( preferences.isDisplayOriginalFunctions());
 	plotHolder->setDisplayOutputSlice( preferences.isDisplayOutputFunctions());
 	plotHolder->setDisplayYGraphs( !preferences.isDisplayXOnly() );
+
+	plotHolder->setLogScale( preferences.isLogUV(), preferences.isLogAmplitude() );
+	plotHolder->refreshPlots();
+
 	plotHolder->layoutPlotWidgets();
 }
 

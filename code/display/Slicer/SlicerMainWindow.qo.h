@@ -32,18 +32,19 @@
 #include <qwt_plot.h>
 
 class QwtPlotCurve;
+class QCursor;
 
 namespace casa {
 
 template <class T> class ImageInterface;
 class ImageAnalysis;
 class SliceWorker;
+class SliceZoomer;
+class SliceColorPreferences;
 
-class SlicerMainWindow : public QMainWindow
-{
+class SlicerMainWindow : public QMainWindow {
+
     Q_OBJECT
-
-
 
 public:
     SlicerMainWindow(QWidget *parent = 0);
@@ -55,24 +56,42 @@ public:
     void setImage( ImageInterface<float>* img );
     ~SlicerMainWindow();
 
+
+
 private slots:
 	void clearCurves();
 	void autoCountChanged( bool selected );
+	void exportSlice();
+	void showColorDialog();
+	void resetColors();
+	void zoomIn();
+	void zoomNeutral();
+	void zoomOut();
+	bool checkZoom();
+
 
 private:
+	void initializeZooming();
 	SlicerMainWindow( const SlicerMainWindow& mainWindow );
 	SlicerMainWindow& operator=( const SlicerMainWindow&  other);
+
+	void initAxisFont( int axisId, const QString& axisTitle );
 	int populateSampleCount() const;
 	String populateMethod() const;
-	void addSliceToPlot( QVector<double>& xValues,QVector<double>& yValues );
+	void addSliceToPlot( QVector<double>& xValues, QVector<double>& yValues, int regionId );
 	SliceWorker* getSlicerFor( int regionId );
-	void setAxisTitle( int axisId, const QString& title );
 	void clearSlicers();
 	void sliceFinished( int id );
-    ImageInterface<float>* image;
+	bool toImageFormat( const QString& fileName, const QString& format );
+	bool toASCII( const QString& fileName );
+
+
+	ImageInterface<float>* image;
     ImageAnalysis* imageAnalysis;
+    SliceColorPreferences* colorPreferences;
     QMap<int, SliceWorker*> slicerMap;
-    QList<QwtPlotCurve*> curveList;
+    QMap<int, QwtPlotCurve*> curveMap;
+    SliceZoomer* plotZoomer;
     Vector<Double> polyX;
     Vector<Double> polyY;
     Vector<Int> axes;

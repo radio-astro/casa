@@ -116,6 +116,7 @@ qt4_wrap_cpp( outfiles_qoh
   region/QtRegionStats.qo.h
   Clean/CleanGui.qo.h
   Slicer/SlicerMainWindow.qo.h
+  Slicer/SliceColorPreferences.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -180,6 +181,7 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtImageRegionStats.ui
   region/QtMsRegionStats.ui
   Slicer/SlicerMainWindow.ui
+  Slicer/SliceColorPreferences.ui
   Clean/CleanGui.ui
   )
 
@@ -187,7 +189,7 @@ casa_qt4_add_resources( outfiles_qrc QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAut
 casa_qt4_add_resources( outfiles_qrc QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
 casa_qt4_add_resources( outfiles_qrc QtPlotter/QtDrawer.qrc OPTIONS -name QtDrawer )
 casa_qt4_add_resources( outfiles_qrc QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
-
+casa_qt4_add_resources( outfiles_qrc Slicer/Slicer.qrc OPTIONS -name Slicer )
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code
 
@@ -502,6 +504,8 @@ casa_add_library( display
   RegionShapes/XMLFileReaderWriter.cc
   Slicer/SlicerMainWindow.cc
   Slicer/SliceWorker.cc
+  Slicer/SliceColorPreferences.cc
+  Slicer/SliceZoomer.cc
   Utilities/DisplayOptions.cc
   Utilities/DlHandle.cc
   Utilities/DlTarget.cc

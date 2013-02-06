@@ -186,6 +186,12 @@ void PlotHolder::setDisplayScatterPlot( bool visible ){
 	displayScatter = visible;
 }
 
+void PlotHolder::refreshPlots(){
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->refresh();
+	}
+}
+
 void PlotHolder::setDisplayOutputSlice( bool visible ){
 	displayOutputSlice = visible;
 }
@@ -206,7 +212,11 @@ void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& 
 	}
 }
 
-
+void PlotHolder::setLogScale( bool uvScale, bool logScale ){
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->setLogScale( uvScale, logScale );
+	}
+}
 //------------------------------------------------------------------------
 //                          Data
 //------------------------------------------------------------------------

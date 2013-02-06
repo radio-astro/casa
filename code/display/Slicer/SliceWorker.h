@@ -29,6 +29,7 @@
 #include <casa/Arrays/Vector.h>
 #include <QThread>
 #include <QVector>
+#include <QTextStream>
 
 namespace casa {
 
@@ -38,13 +39,14 @@ class Record;
 class SliceWorker : public QThread {
 
 public:
-	SliceWorker( int id );
+	SliceWorker(int id);
 	void setImageAnalysis( ImageAnalysis* analysis );
 	void setVertices( const Vector<Double>& xValues, const Vector<Double>& yValues );
 	void setAxes( const Vector<Int>& axes );
 	void setCoords( const Vector<Int>& coords );
 	void setSampleCount( int count );
 	void setMethod( const String& method );
+	void toAscii( QTextStream& stream ) const;
 	virtual void run();
 	QVector<double> getDistances() const;
 	QVector<double> getXPositions() const;

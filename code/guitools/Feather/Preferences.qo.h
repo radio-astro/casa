@@ -43,6 +43,8 @@ public:
     bool isDisplayLegend() const;
     bool isDisplayOutputScatterPlot() const;
     bool isDisplayXOnly() const;
+    bool isLogAmplitude() const;
+    bool isLogUV() const;
     int getLineThickness() const;
     int getDotSize() const;
     ~Preferences();
@@ -67,6 +69,8 @@ private:
 	const static QString DISPLAY_OUTPUT_SCATTERPLOT;
 	const static QString DISPLAY_Y_PLOTS;
 	const static QString DOT_SIZE;
+	const static QString LOG_AMPLITUDE;
+	const static QString LOG_UV;
 
     Ui::PreferencesClass ui;
     int lineThickness;
@@ -76,6 +80,8 @@ private:
     bool displayOutputScatterPlot;
     bool displayYPlots;
     bool displayLegend;
+    bool logAmplitude;
+    bool logUV;
 };
 
 }
