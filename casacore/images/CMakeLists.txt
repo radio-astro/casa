@@ -49,7 +49,6 @@ Images/FITSImgParser.cc
 Images/FITSQualityImage.cc
 Images/FITSQualityMask.cc
 Images/PagedImage2.cc
-Images/ImagePolProxy.cc
 Images/ImageExprParse.cc
 Images/ImageOpener.cc
 Images/LELImageCoord.cc
@@ -120,7 +119,6 @@ Images/ImageInterface.tcc
 Images/ImageMetaData.h
 Images/ImageMomentsProgress.h
 Images/ImageOpener.h
-Images/ImagePolProxy.h
 Images/ImagePolarimetry.h
 Images/ImageProxy.h
 Images/ImageRegrid.h
