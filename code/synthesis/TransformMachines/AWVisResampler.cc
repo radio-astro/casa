@@ -414,7 +414,6 @@ namespace casa{
 		      scaledSupport[0]  = SynthesisUtils::nint(support[0]/cfScale);
 		      scaledSupport[1]  = SynthesisUtils::nint(support[1]/cfScale);
 
-		      support = scaledSupport = 3;
 		      runTimeG4_p += timer.real();
 		      
 		      timer.mark();
