@@ -63,7 +63,7 @@
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMomentsProgress.h>
-#include <images/Images/Image2DConvolver.h>
+#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/MomentCalculator.h>

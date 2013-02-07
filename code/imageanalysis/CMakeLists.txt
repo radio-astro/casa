@@ -84,6 +84,8 @@ install (FILES
 	)
 install (FILES
 	ImageAnalysis/ComponentImager.h
+	ImageAnalysis/Image2DConvolver.h
+	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageDecomposer.h
@@ -132,6 +134,7 @@ casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tComponentImager.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )

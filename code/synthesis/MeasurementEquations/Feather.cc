@@ -48,7 +48,6 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageUtilities.h>
-#include <images/Images/Image2DConvolver.h>
 #include <synthesis/TransformMachines/PBMath.h>
 #include <lattices/Lattices/LatticeExpr.h> 
 #include <lattices/Lattices/LatticeFFT.h>
