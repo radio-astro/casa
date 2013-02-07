@@ -250,20 +250,23 @@ protected:
 	void initFrequencyTransGrid(vi::VisBuffer2 *vb);
 	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
-	void fillAuxCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 
-	template <class T> void writeVariableVector(const Vector<T> &inputVector, Vector<T> &auxVector, ScalarColumn<T> &outputCol, RefRows &rowRef, Bool constant=False, Bool reindex=False, map<Int,Int> *inputOutputIndexMap=NULL);
-	template <class T> void writeScalar(T inputScalar, Vector<T> &auxVector, ScalarColumn<T> &outputCol, RefRows &rowRef, Bool reindex=False, map<Int,Int> *inputOutputIndexMap=NULL);
+	// To transform re-indexable columns
+	template <class T> void fillAndReindexScalar(T inputScalar, Vector<T> &outputVector, Bool reindex, map<Int,Int> &inputOutputIndexMap);
+	template <class T> void mapAndReindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, Bool reindex, map<Int,Int> &inputOutputIndexMap, Bool constant=False);
+	template <class T> void reindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap, Bool constant=False);
 
+	// To transform non re-indexable columns
+	template <class T> void mapVector(const Vector<T> &inputVector, Vector<T> &outputVector);
+	template <class T> void mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix);
+	template <class T> void mapAndAverageVector(const Vector<T> &inputVector, Vector<T> &outputVector,Bool convolveFlags=False,vi::VisBuffer2 *vb=NULL);
+	template <class T> void mapAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,Bool convolveFlags=False,vi::VisBuffer2 *vb=NULL);
+
+	// When no transformations are needed, and the only combination axis is SPW
 	template <class T> void writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef);
 	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef);
 	template <class T> void writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef);
 
-	template <class T> void transformVector(const Vector<T> &inputVector, Vector<T> &outputVector, vi::VisBuffer2 *vb, Bool convolveFlags=False);
-	template <class T> void transformMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix, vi::VisBuffer2 *vb, Bool convolveFlags=False);
-
-	template <class T> void writeTransformedVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, vi::VisBuffer2 *vb, Bool convolveFlags=False);
-	template <class T> void writeTransformedMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef, vi::VisBuffer2 *vb, Bool convolveFlags=False);
 	template <class T> void writeTransformedCube(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
 
 	// MS specification parameters

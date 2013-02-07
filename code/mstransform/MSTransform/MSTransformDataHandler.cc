@@ -674,7 +674,7 @@ void MSTransformDataHandler::initDataSelectionParams()
 
 	if (!observationSelection_p.empty())
 	{
-		mssel.setSpwExpr(observationSelection_p);
+		mssel.setObservationExpr(observationSelection_p);
 		Vector<Int> observationList = mssel.getObservationList(inputMs_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Observations Ids are " << observationList << LogIO::POST;
 
@@ -686,7 +686,7 @@ void MSTransformDataHandler::initDataSelectionParams()
 
 	if (!arraySelection_p.empty())
 	{
-		mssel.setSpwExpr(arraySelection_p);
+		mssel.setArrayExpr(arraySelection_p);
 		Vector<Int> arrayList = mssel.getSubArrayList(inputMs_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Arrays Ids are " << arrayList << LogIO::POST;
 
@@ -698,7 +698,7 @@ void MSTransformDataHandler::initDataSelectionParams()
 
 	if (!scanSelection_p.empty())
 	{
-		mssel.setSpwExpr(scanSelection_p);
+		mssel.setScanExpr(scanSelection_p);
 		Vector<Int> scanList = mssel.getScanList(inputMs_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Scans Ids are " << scanList << LogIO::POST;
 
@@ -710,7 +710,7 @@ void MSTransformDataHandler::initDataSelectionParams()
 
 	if (!scanIntentSelection_p.empty())
 	{
-		mssel.setSpwExpr(scanIntentSelection_p);
+		mssel.setStateExpr(scanIntentSelection_p);
 		Vector<Int> scanIntentList = mssel.getStateObsModeList(inputMs_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Scans Intents Ids are " << scanIntentList << LogIO::POST;
 
@@ -722,7 +722,7 @@ void MSTransformDataHandler::initDataSelectionParams()
 
 	if (!fieldSelection_p.empty())
 	{
-		mssel.setSpwExpr(fieldSelection_p);
+		mssel.setFieldExpr(fieldSelection_p);
 		Vector<Int> fieldList = mssel.getFieldList(inputMs_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Fields Ids are " << fieldList << LogIO::POST;
 
@@ -981,8 +981,6 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 
     // Flush changes
     outputMs_p->flush(True);
-
-    /// Modify SPW subtable ///////////////////
 
 	return;
 }
@@ -1565,165 +1563,341 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 // ----------------------------------------------------------------------------------------
 void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
-	// Auxiliary Vectors
-	Vector<Int> tmpInt(rowRef.nrow(),0);
-	Vector<Double> tmpDouble(rowRef.nrow(),0);
+	// Declare common auxiliary variables
+	Vector<Int> tmpVectorInt(rowRef.nrow(),0);
 
-	// Scalar columns re-indexed
-	writeScalar(vb->arrayId(),tmpInt,outputMsCols_p->arrayId(),rowRef,!arraySelection_p.empty(),&inputOutputArrayIndexMap_p);
-	writeScalar(vb->fieldId(),tmpInt,outputMsCols_p->fieldId(),rowRef,!fieldSelection_p.empty(),&inputOutputFieldIndexMap_p);
+	fillAndReindexScalar(vb->arrayId(),tmpVectorInt,!arraySelection_p.empty(),inputOutputArrayIndexMap_p);
+	outputMsCols_p->arrayId().putColumnCells(rowRef,tmpVectorInt);
+
+	fillAndReindexScalar(vb->fieldId(),tmpVectorInt,!fieldSelection_p.empty(),inputOutputFieldIndexMap_p);
+	outputMsCols_p->fieldId().putColumnCells(rowRef,tmpVectorInt);
 
 	if (combinespws_p)
 	{
-		writeScalar(0,tmpInt,outputMsCols_p->dataDescId(),rowRef);
-	}
-	else
-	{
-		writeScalar(vb->spectralWindow(),tmpInt,outputMsCols_p->dataDescId(),rowRef,!spwSelection_p.empty(),&inputOutputSPWIndexMap_p);
-	}
+		// Declare extra auxiliary variables
+		Vector<Double> tmpVectorDouble(rowRef.nrow(),0.0);
+		Vector<Bool> tmpVectorBool(rowRef.nrow(),False);
+		Matrix<Float> tmpMatrixFloat(IPosition(2,vb->nCorrelations(),rowRef.nrow()),0.0);
 
-	// Constant vector columns re-indexed
-	writeVariableVector(vb->observationId(),tmpInt,outputMsCols_p->observationId(),rowRef,True,!observationSelection_p.empty(),&inputOutputObservationIndexMap_p);
-	writeVariableVector(vb->scan(),tmpInt,outputMsCols_p->scanNumber(),rowRef,!timespan_p.contains("scan"),!scanSelection_p.empty(),&inputOutputScanIndexMap_p);
-	writeVariableVector(vb->stateId(),tmpInt,outputMsCols_p->stateId(),rowRef,!timespan_p.contains("state"),!scanIntentSelection_p.empty(),&inputOutputScanIntentIndexMap_p);
+		// Spectral Window
+		tmpVectorInt = 0;
+		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
 
-	// Variable vector columns not re-indexed
-	writeVariableVector(vb->antenna1(),tmpInt,outputMsCols_p->antenna1(),rowRef);
-	writeVariableVector(vb->antenna2(),tmpInt,outputMsCols_p->antenna2(),rowRef);
-	writeVariableVector(vb->feed1(),tmpInt,outputMsCols_p->feed1(),rowRef);
-	writeVariableVector(vb->feed2(),tmpInt,outputMsCols_p->feed2(),rowRef);
-	writeVariableVector(vb->processorId(),tmpInt,outputMsCols_p->processorId(),rowRef);
-	writeVariableVector(vb->time(),tmpDouble,outputMsCols_p->time(),rowRef);
-	writeVariableVector(vb->timeCentroid(),tmpDouble,outputMsCols_p->timeCentroid(),rowRef);
-	writeVariableVector(vb->timeInterval(),tmpDouble,outputMsCols_p->interval(),rowRef);
-	writeVariableVector(vb->exposure(),tmpDouble,outputMsCols_p->exposure(),rowRef);
+		// Scan
+		mapAndReindexVector(vb->scan(),tmpVectorInt,!scanSelection_p.empty(),inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
+		outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
 
-	// Transform UVW
-	if (combinespws_p)
-	{
-		writeTransformedMatrix(vb->uvw(),outputMsCols_p->uvw(),rowRef,vb,False);
-	}
-	else
-	{
-		writeMatrix(vb->uvw(),outputMsCols_p->uvw(),rowRef);
-	}
+		// State
+		mapAndReindexVector(vb->stateId(),tmpVectorInt,!scanIntentSelection_p.empty(),inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
+		outputMsCols_p->stateId().putColumnCells(rowRef,tmpVectorInt);
 
+		// Observation
+		mapAndReindexVector(vb->observationId(),tmpVectorInt,!observationSelection_p.empty(),inputOutputObservationIndexMap_p,True);
+		outputMsCols_p->observationId().putColumnCells(rowRef,tmpVectorInt);
 
-	// FLAG_ROW has to be re-calculated because different SPWs may have different flags
-	if (combinespws_p)
-	{
-		writeTransformedVector(vb->flagRow(),outputMsCols_p->flagRow(),rowRef,vb,False);
-	}
-	else
-	{
-		Vector<Bool> tmpBool(rowRef.nrow(),False);
-		writeVariableVector(vb->flagRow(),tmpBool,outputMsCols_p->flagRow(),rowRef);
-	}
+		// Non re-indexable vector columns
+		mapVector(vb->antenna1(),tmpVectorInt);
+		outputMsCols_p->antenna1().putColumnCells(rowRef,tmpVectorInt);
+		mapVector(vb->antenna2(),tmpVectorInt);
+		outputMsCols_p->antenna2().putColumnCells(rowRef,tmpVectorInt);
+		mapVector(vb->feed1(),tmpVectorInt);
+		outputMsCols_p->feed1().putColumnCells(rowRef,tmpVectorInt);
+		mapVector(vb->feed2(),tmpVectorInt);
+		outputMsCols_p->feed2().putColumnCells(rowRef,tmpVectorInt);
+		mapVector(vb->processorId(),tmpVectorInt);
+		outputMsCols_p->processorId().putColumnCells(rowRef,tmpVectorInt);
+		mapVector(vb->time(),tmpVectorDouble);
+		outputMsCols_p->time().putColumnCells(rowRef,tmpVectorDouble);
+		mapVector(vb->timeCentroid(),tmpVectorDouble);
+		outputMsCols_p->timeCentroid().putColumnCells(rowRef,tmpVectorDouble);
+		mapVector(vb->timeInterval(),tmpVectorDouble);
+		outputMsCols_p->interval().putColumnCells(rowRef,tmpVectorDouble);
+		mapVector(vb->exposure(),tmpVectorDouble);
+		outputMsCols_p->exposure().putColumnCells(rowRef,tmpVectorDouble);
 
-	// Weights can be re-used to calculate sigma
-	Matrix<Float> weights;
-	if (combinespws_p)
-	{
-		transformMatrix(vb->weightMat(),weights, vb,True);
-	}
-	else
-	{
-		weights = vb->weightMat();
-	}
-	outputMsCols_p->weight().putColumnCells(rowRef, weights);
+		// Non re-indexable matrix columns
+		Matrix<Double> tmpUvw(IPosition(2,3,rowRef.nrow()),0.0);
+		mapMatrix(vb->uvw(),tmpUvw);
+		outputMsCols_p->uvw().putColumnCells(rowRef,tmpUvw);
 
+		// Averaged vector columns
+		mapAndAverageVector(vb->flagRow(),tmpVectorBool);
+		outputMsCols_p->flagRow().putColumnCells(rowRef,tmpVectorBool);
 
-	// Sigma must be redefined to 1/weight when corrected data becomes data
-	if (correctedToData_p)
-	{
-		arrayTransformInPlace(weights, MSTransformations::wtToSigma);
-		outputMsCols_p->sigma().putColumnCells(rowRef, weights);
-	}
-	else
-	{
-		if (combinespws_p)
+		// Averaged matrix columns
+		mapAndAverageMatrix(vb->weightMat(),tmpMatrixFloat);
+		outputMsCols_p->weight().putColumnCells(rowRef,tmpMatrixFloat);
+
+		// Sigma must be redefined to 1/weight when corrected data becomes data
+		if (correctedToData_p)
 		{
-			writeTransformedMatrix(vb->sigmaMat(),outputMsCols_p->sigma(),rowRef,vb,True);
+			arrayTransformInPlace(tmpMatrixFloat, MSTransformations::wtToSigma);
+			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 		}
 		else
 		{
-			writeMatrix(vb->sigmaMat(),outputMsCols_p->sigma(),rowRef);
+			mapAndAverageMatrix(vb->sigmaMat(),tmpMatrixFloat);
+			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
+		}
+	}
+	else
+	{
+		// Spectral Window
+		fillAndReindexScalar(vb->spectralWindow(),tmpVectorInt,!spwSelection_p.empty(),inputOutputSPWIndexMap_p);
+		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
+
+		// Scan
+		if (!scanSelection_p.empty())
+		{
+			reindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
+			outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
+		}
+		else
+		{
+			outputMsCols_p->scanNumber().putColumnCells(rowRef,vb->scan());
+		}
+
+		// State
+		if (!scanIntentSelection_p.empty())
+		{
+			reindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
+			outputMsCols_p->stateId().putColumnCells(rowRef,tmpVectorInt);
+		}
+		else
+		{
+			outputMsCols_p->stateId().putColumnCells(rowRef,vb->stateId());
+		}
+
+		// Observation
+		if (!observationSelection_p.empty())
+		{
+			reindexVector(vb->observationId(),tmpVectorInt,inputOutputObservationIndexMap_p,True);
+			outputMsCols_p->observationId().putColumnCells(rowRef,tmpVectorInt);
+		}
+		else
+		{
+			outputMsCols_p->observationId().putColumnCells(rowRef,vb->observationId());
+		}
+
+		// Non re-indexable columns
+		outputMsCols_p->antenna1().putColumnCells(rowRef,vb->antenna1());
+		outputMsCols_p->antenna2().putColumnCells(rowRef,vb->antenna2());
+		outputMsCols_p->feed1().putColumnCells(rowRef,vb->feed1());
+		outputMsCols_p->feed2().putColumnCells(rowRef,vb->feed2());
+		outputMsCols_p->processorId().putColumnCells(rowRef,vb->processorId());
+		outputMsCols_p->time().putColumnCells(rowRef,vb->time());
+		outputMsCols_p->timeCentroid().putColumnCells(rowRef,vb->timeCentroid());
+		outputMsCols_p->interval().putColumnCells(rowRef,vb->timeInterval());
+		outputMsCols_p->exposure().putColumnCells(rowRef,vb->exposure());
+		outputMsCols_p->uvw().putColumnCells(rowRef,vb->uvw());
+		outputMsCols_p->flagRow().putColumnCells(rowRef,vb->flagRow());
+
+		Matrix<Float> weights = vb->weightMat();
+		outputMsCols_p->weight().putColumnCells(rowRef, weights);
+
+		// Sigma must be redefined to 1/weight when corrected data becomes data
+		if (correctedToData_p)
+		{
+			arrayTransformInPlace(weights, MSTransformations::wtToSigma);
+			outputMsCols_p->sigma().putColumnCells(rowRef, weights);
+		}
+		else
+		{
+			outputMsCols_p->sigma().putColumnCells(rowRef, vb->sigmaMat());
 		}
 	}
 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeVariableVector(const Vector<T> &inputVector, Vector<T> &auxVector, ScalarColumn<T> &outputCol, RefRows &rowRef, Bool constant, Bool reindex, map<Int,Int> *inputOutputIndexMap)
+// -----------------------------------------------------------------------
+// Fill the output vector with an input scalar
+// re-indexed according to the data selection
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::fillAndReindexScalar(T inputScalar, Vector<T> &outputVector, Bool reindex, map<Int,Int> &inputOutputIndexMap)
+{
+	if (reindex)
+	{
+		outputVector = inputOutputIndexMap[inputScalar];
+	}
+	else
+	{
+		outputVector = inputScalar;
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Fill the output vector with the data from an input vector mapped in
+// (SPW,Scan,State) tuples, and re-indexed according to the data selection
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::mapAndReindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, Bool reindex, map<Int,Int> &inputOutputIndexMap, Bool constant)
 {
 	if (constant)
 	{
-		if (reindex)
-		{
-			T value = (*inputOutputIndexMap)[inputVector(0)];
-			auxVector = value;
-		}
-		else if (combinespws_p)
-		{
-			IPosition shape = inputVector.shape();
-			shape(0) = rowRef.nrows();
-		    Array<T> outputArray(shape,const_cast<T*>(inputVector.getStorage(MSTransformations::False)),SHARE);
-		    outputCol.putColumnCells(rowRef, outputArray);
-		    return;
-		}
-		else
-		{
-			outputCol.putColumnCells(rowRef, inputVector);
-			return;
-		}
+		fillAndReindexScalar(inputVector(0),outputVector,reindex,inputOutputIndexMap);
 	}
 	else
 	{
-		if (combinespws_p)
+		if (reindex)
 		{
-			if (reindex)
+			for (uInt index=0; index<rowIndex_p.size();index++)
 			{
-				for (uInt index=0; index<rowRef.nrow();index++)
-				{
-					auxVector(index) = (*inputOutputIndexMap)[inputVector(rowIndex_p[index])];
-				}
-			}
-			else
-			{
-				for (uInt index=0; index<rowRef.nrow();index++)
-				{
-					auxVector(index) = inputVector(rowIndex_p[index]);
-				}
+				outputVector(index) = inputOutputIndexMap[inputVector(rowIndex_p[index])];
 			}
 		}
 		else
 		{
-			if (reindex)
-			{
-				for (uInt index=0; index<rowRef.nrow();index++)
-				{
-					auxVector(index) = (*inputOutputIndexMap)[inputVector(index)];
-				}
-			}
-			else
-			{
-				outputCol.putColumnCells(rowRef, inputVector);
-				return;
-			}
+			mapVector(inputVector,outputVector);
 		}
 	}
 
-
-	outputCol.putColumnCells(rowRef, auxVector);
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeScalar(T inputScalar, Vector<T> &auxVector, ScalarColumn<T> &outputCol, RefRows &rowRef, Bool reindex, map<Int,Int> *inputOutputIndexMap)
+// -----------------------------------------------------------------------
+// Fill the output vector with the data from an input
+// vector re-indexed according to the data selection
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::reindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap, Bool constant)
 {
-	T valueToWrite = inputScalar;
-	if (reindex) valueToWrite = (*inputOutputIndexMap)[inputScalar];
-	auxVector = valueToWrite;
-	outputCol.putColumnCells(rowRef, auxVector);
+	if (constant)
+	{
+		T value = inputOutputIndexMap[inputVector(0)];
+		outputVector = value;
+	}
+	else
+	{
+		for (uInt index=0; index<inputVector.shape()[0];index++)
+		{
+			outputVector(index) = inputOutputIndexMap[inputVector(index)];
+		}
+	}
+
+	return;
+}
+
+// ------------------------------------------------------------------------------------
+// Fill the data from an input vector with shape [nBaselinesxnSPWsxnScans/nStates]
+// into an output vector with shape [nBaselinesxnScans/nStates]
+// ------------------------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::mapVector(const Vector<T> &inputVector, Vector<T> &outputVector)
+{
+	for (uInt index=0; index<rowIndex_p.size();index++)
+	{
+		outputVector(index) = inputVector(rowIndex_p[index]);
+	}
+
+	return;
+}
+
+// ------------------------------------------------------------------------------------
+// Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWsxnScans/nStates]
+// into an output matrix with shape [nCol,nBaselinesxnScans/nStates]
+// ------------------------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix)
+{
+	// Get number of columns
+	uInt nCols = outputMatrix.shape()(0);
+
+	for (uInt index=0; index<rowIndex_p.size();index++)
+	{
+		for (uInt col = 0; col < nCols; col++)
+		{
+			outputMatrix(col,index) = inputMatrix(col,rowIndex_p[index]);
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------------------
+// Fill the data from an input vector with shape [nBaselinesxnSPWs] into an
+// output vector with shape [nBaselines] averaging the values from all SPWS
+// -----------------------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::mapAndAverageVector(const Vector<T> &inputVector, Vector<T> &outputVector,Bool convolveFlags,vi::VisBuffer2 *vb)
+{
+	uInt row;
+	uInt baseline_index = 0;
+	vector<uInt> baselineRows;
+	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+	{
+		// Get baseline rows vector
+		baselineRows = iter->second;
+
+		// Compute combined value from each SPW
+		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		{
+			row = *iter;
+			outputVector(baseline_index) += inputVector(row);
+		}
+
+		baseline_index += 1;
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------------------
+// Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWs] into an
+// output matrix with shape [nCol,nBaselines] accumulating the averaging from all SPWS
+// -----------------------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::mapAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,Bool convolveFlags,vi::VisBuffer2 *vb)
+{
+	// Get number of columns
+	uInt nCols = outputMatrix.shape()(0);
+
+    // Access FLAG_ROW in case we need to convolute the average
+	Vector<Bool> flags;
+	if (convolveFlags) flags = vb->flagRow();
+
+    // Fill output array with the combined data from each SPW
+	uInt row;
+	uInt baseline_index = 0;
+	Double normalizingFactor = 0;
+	Double contributionFactor = 0;
+	vector<uInt> baselineRows;
+	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+	{
+		// Get baseline rows vector
+		baselineRows = iter->second;
+
+		// Reset normalizing factor
+		normalizingFactor = 0;
+
+		// Compute combined value from each SPW
+		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		{
+			row = *iter;
+			if (convolveFlags)
+			{
+				contributionFactor = !flags(row);
+			}
+			else
+			{
+				contributionFactor = 1;
+			}
+
+			for (uInt col = 0; col < nCols; col++)
+			{
+				outputMatrix(col,baseline_index) += contributionFactor*inputMatrix(col,row);
+			}
+
+			normalizingFactor += contributionFactor;
+		}
+
+		// Normalize accumulated value
+		if (normalizingFactor>0)
+		{
+			for (uInt col = 0; col < nCols; col++)
+			{
+				outputMatrix(col,baseline_index) /= normalizingFactor;
+			}
+		}
+
+		baseline_index += 1;
+	}
 
 	return;
 }
@@ -1887,14 +2061,14 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     {
     	if (combinespws_p)
     	{
-    		// TODO
-    	}
-    	else
-    	{
             IPosition shapeFlagCategory = vb->flagCategory().shape();
             shapeFlagCategory(3) = rowRef.nrow();
             Array<Bool> flagCategory(shapeFlagCategory,const_cast<Bool*>(vb->flagCategory().getStorage(MSTransformations::False)),SHARE);
         	outputMsCols_p->flagCategory().putColumnCells(rowRef, flagCategory);
+    	}
+    	else
+    	{
+        	outputMsCols_p->flagCategory().putColumnCells(rowRef, vb->flagCategory());
     	}
     }
 
@@ -1936,144 +2110,6 @@ template <class T> void MSTransformDataHandler::writeCube(const Cube<T> &inputCu
 	shape(2) = rowRef.nrows();
     Array<T> outputArray(shape,const_cast<T*>(inputCube.getStorage(MSTransformations::False)),SHARE);
     outputCol.putColumnCells(rowRef, outputArray);
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-// Fill the data from an input vector with shape [nBaselinesxnSPWs] into an
-// output vector with shape [nBaselines] accumulating the values from all SPWS
-// -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::transformVector(const Vector<T> &inputVector, Vector<T> &outputVector, vi::VisBuffer2 *vb, Bool convolveFlags)
-{
-	// Create output array
-	IPosition shape = inputVector.shape();
-	shape(0) = baselineMap_p.size();
-
-	// Re-shape output vector but don't copy values
-	outputVector.resize(shape,False);
-
-	// Re-initialize output vector
-	outputVector = T();
-
-    // Fill output array with the combined data from each SPW
-	uInt row;
-	uInt baseline_index = 0;
-	vector<uInt> baselineRows;
-	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
-	{
-		// Get baseline rows vector
-		baselineRows = iter->second;
-
-		// Compute combined value from each SPW
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
-		{
-			row = *iter;
-			outputVector(baseline_index) += inputVector(row);
-		}
-
-		baseline_index += 1;
-	}
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-// Fill the data from an input vector with shape [nCol,nBaselinesxnSPWs] into an
-// output vector with shape [nCol,nBaselines] accumulating the values from all SPWS
-// -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::transformMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix, vi::VisBuffer2 *vb, Bool convolveFlags)
-{
-	// Create output array
-	IPosition shape = inputMatrix.shape();
-	shape(1) = baselineMap_p.size();
-	uInt nCols = shape(0);
-
-	// Re-shape output matrix but don't copy values
-	outputMatrix.resize(shape,False);
-
-	// Re-initialize output matrix
-	outputMatrix = T();
-
-    // Access FLAG_ROW in case we need to convolute the average
-    Vector<Bool> flags = vb->flagRow();
-
-    // Fill output array with the combined data from each SPW
-	uInt row;
-	uInt baseline_index = 0;
-	Double normalizingFactor = 0;
-	Double contributionFactor = 0;
-	vector<uInt> baselineRows;
-	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
-	{
-		// Get baseline rows vector
-		baselineRows = iter->second;
-
-		// Reset normalizing factor
-		normalizingFactor = 0;
-
-		// Compute combined value from each SPW
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
-		{
-			row = *iter;
-			if (convolveFlags)
-			{
-				contributionFactor = !flags(row);
-			}
-			else
-			{
-				contributionFactor = 1;
-			}
-
-			for (uInt col = 0; col < nCols; col++)
-			{
-				outputMatrix(col,baseline_index) += contributionFactor*inputMatrix(col,row);
-			}
-
-			normalizingFactor += contributionFactor;
-		}
-
-		// Normalize accumulated value
-		if (normalizingFactor>0)
-		{
-			for (uInt col = 0; col < nCols; col++)
-			{
-				outputMatrix(col,baseline_index) /= normalizingFactor;
-			}
-		}
-
-		baseline_index += 1;
-	}
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-// Get and write transformed vector to output MS
-// -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeTransformedVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol,RefRows &rowRef,vi::VisBuffer2 *vb, Bool convolveFlags)
-{
-	// Get transformed vector
-	Vector<T> outputVector;
-	transformVector(inputVector, outputVector, vb, convolveFlags);
-
-	// Write transformed vector
-	outputCol.putColumnCells(rowRef, outputVector);
-
-	return;
-}
-
-// -----------------------------------------------------------------------
-// Get and write transformed matrix to output MS
-// -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeTransformedMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol,RefRows &rowRef,vi::VisBuffer2 *vb, Bool convolveFlags)
-{
-	// Get transformed matrix
-	Matrix<T> outputMatrix;
-	transformMatrix(inputMatrix, outputMatrix, vb, convolveFlags);
-
-	// Write transformed matrix
-	outputCol.putColumnCells(rowRef, outputMatrix);
 
 	return;
 }

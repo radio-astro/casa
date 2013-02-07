@@ -35,9 +35,12 @@ int main(int argc, char **argv)
 	Record configuration;
 
 	// Data selection parameters
-	String inputMS,outputMS, datacolumn, width;
+	String inputMS,outputMS, datacolumn;
 	Bool combinespws, hanning, regridms, freqaverage;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
+
+	Int nchan;
+	String start, width;
 
 	// Parse input parameters
 	for (unsigned short i=0;i<argc-1;i++)
@@ -81,6 +84,18 @@ int main(int argc, char **argv)
 			configuration.define ("regridms", Bool(regridms));
 			cout << "Regrid MS is: " << regridms << endl;
 		}
+		else if (parameter == string("-nchan"))
+		{
+			nchan = atoi(value.c_str());
+			configuration.define ("nchan", nchan);
+			cout << "nchan is: " << nchan << endl;
+		}
+		else if (parameter == string("-start"))
+		{
+			start = value;
+			configuration.define ("start", start);
+			cout << "Start is: " << start << endl;
+		}
 		else if (parameter == string("-width"))
 		{
 			width = value;
@@ -104,6 +119,12 @@ int main(int argc, char **argv)
 			spw = value;
 			configuration.define ("spw", spw);
 			cout << "Spectral Window selection is: " << spw << endl;
+		}
+		else if (parameter == string("-field"))
+		{
+			field = value;
+			configuration.define ("field", field);
+			cout << "Field selection is: " << field << endl;
 		}
 	}
 
