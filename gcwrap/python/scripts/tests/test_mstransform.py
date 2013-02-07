@@ -69,7 +69,7 @@ class test_cvel1(test_base):
         self.setUp_cveltest()
         
     def test_cveltest3(self):
-        '''mstransform: Input and output vis set'''
+        '''mstransform: Do not apply any transformation. Default values.'''
         
         outfile = 'cveltest3.ms'
         rval = mstransform(vis=self.vis, outputvis=outfile, datacolumn='data')
@@ -77,21 +77,21 @@ class test_cvel1(test_base):
         ret = th.verify_ms(outfile, 1, 64, 0)
         self.assertTrue(ret[0],ret[1])
         
-class test_cvel2(test_base):
-    def setUp(self):
-        self.setUp_ngc4826()
-
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf cveltest*.ms')
-        
-    def test_cveltest4(self):
-        '''mstransform: I/O vis set, more complex input vis, one field selected'''
-        outfile = 'cveltest4.ms'
-        rval = mstransform(vis=self.vis, outputvis=outfile, datacolumn='data')
-        self.assertNotEqual(rval,False)
-        ret = th.verify_ms(outfile, 1, 64, 0)
-        self.assertTrue(ret[0],ret[1])
+#class test_cvel2(test_base):
+#    def setUp(self):
+#        self.setUp_ngc4826()
+#
+#    def tearDown(self):
+#        os.system('rm -rf '+ self.vis)
+#        os.system('rm -rf cveltest*.ms')
+#        
+#    def test_cveltest4(self):
+#        '''mstransform: Do not apply any transformation '''
+#        outfile = 'cveltest4.ms'
+#        rval = mstransform(vis=self.vis, outputvis=outfile, datacolumn='data')
+#        self.assertNotEqual(rval,False)
+#        ret = th.verify_ms(outfile, 1, 64, 0)
+#        self.assertTrue(ret[0],ret[1])
 
                      
 class test_combspw(test_base):
@@ -130,7 +130,50 @@ class test_combspw(test_base):
         cvel(vis=self.vis, outputvis='combcvel1.ms', spw='0:60~63,1:60~63')
         ret = th.verify_ms('combcvel1.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
+
+class test_regridms(test_base):
+    '''Tests for regridms'''
+       
+    def setUp(self):
+        self.setUp_data4tfcrop()
         
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf reg*.ms')
+        
+    def test_regrid1(self):
+        '''mstransform: Default of regridms parameters'''
+        
+        outputms = "reg1.ms"
+        mstransform(vis=self.vis, outputvis=outputms, regridms=True)
+        self.assertTrue(os.path.exists(outputms))
+        
+        # The output should be the same as the input
+        for i in range(16):
+            ret = th.verify_ms(outputms, 16, 64, i)
+            self.assertTrue(ret[0],ret[1])
+            
+    def test_regrid2(self):
+        '''mstransform: Default regridms with spw selection'''
+        
+        outputms = "reg2.ms"
+        mstransform(vis=self.vis, outputvis=outputms, regridms=True, spw='1,3,5,7')
+        self.assertTrue(os.path.exists(outputms))
+        
+        # The output should be the same as the input
+        for i in range(4):
+            ret = th.verify_ms(outputms, 4, 64, i)
+            self.assertTrue(ret[0],ret[1])
+            
+    def test_regrid3(self):
+        '''mstransform: Regrid MS'''
+        self.setUp_ngc4826()
+        outputms = "reg3.ms"
+        mstransform(vis=self.vis, outputvis=outputms, regridms=True, spw='0',field = '1',
+             nchan = 32, start = 10)
+
+
+
  
 # Cleanup class 
 class cleanup(test_base):
@@ -149,4 +192,5 @@ def suite():
     return [test_combspw,
             test_cvel1,
             test_cvel2,
+            test_regridms,
             cleanup]
