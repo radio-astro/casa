@@ -23,7 +23,6 @@
 #include <casa/Utilities/Assert.h>
 #include <components/ComponentModels/SkyCompRep.h>
 
-#include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageExpr.h>
