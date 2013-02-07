@@ -209,7 +209,7 @@ def mstransform(
             pass
             config['hanning'] = True
         if regridms:
-            casalog.post('MS regridding is not yet implemented', 'WARN')
+            casalog.post('Parse MS regridding parameters')
             
             config['regridms'] = True
             config['mode'] = mode
@@ -217,7 +217,7 @@ def mstransform(
             config['start'] = str(start)
             config['width'] = str(width)
             config['interpolation'] = interpolation
-            config['phasecenter'] = str(phasecenter)
+            config['phasecenter'] = phasecenter
             config['restfreq'] = restfreq
             config['outframe'] = outframe
             config['veltype'] = veltype

@@ -228,7 +228,7 @@ def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
        expnumspws    --> expected number of SPWs in the MS
        expnumchan    --> expected number of channels in spw
        inspw         --> SPW ID
-       expchanfreqs  --> list with expected channel frequencies
+       expchanfreqs  --> numpy array with expected channel frequencies
            Returns a list with True or False and a state message'''
     
     msg = ''
@@ -252,8 +252,8 @@ def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
 
     if not (expchanfreqs==[]):
         print "Testing channel frequencies ..."
-        print cf
-        print expchanfreqs
+#        print cf
+#        print expchanfreqs
         if not (expchanfreqs.size == expnumchan):
             msg =  "Internal error: array of expected channel freqs should have dimension ", expnumchan
             return [False,msg]
@@ -265,6 +265,32 @@ def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
     return [True,msg]
 
 
+def getChannels(msname, spwid, chanlist):
+    '''From a list of channel indices, return their frequencies
+       msname       --> name of MS
+       spwid        --> spw ID
+       chanlist     --> list of channel indices
+       Return a numpy array, the same size of chanlist, with the frequencies'''
+    
+    try:
+        try:
+            tb.open(msname+'/SPECTRAL_WINDOW')
+        except:
+            print 'Cannot open table '+msname+'SPECTRAL_WINDOW'
+            
+        cf = tb.getcell("CHAN_FREQ", spwid)
+        
+        # Get only the requested channels
+        b = [cf[i] for i in chanlist]
+        selchans = np.array(b)
+    
+    finally:
+        tb.close()
+        
+    return selchans
+    
+    
+    
 def create_input(str_text, filename):
     '''Save the string in a text file with the given name
     str_text    --> string to save

@@ -49,7 +49,7 @@ class test_base(unittest.TestCase):
         
     def setUp_ngc4826(self):
         # data set with spw=0, 64 channels in LSRK
-        self.vis = 'ngc4826.ms'
+        self.vis = 'ngc4826a.ms'
         if os.path.exists(self.vis):
            self.cleanup()
             
@@ -60,11 +60,17 @@ class test_base(unittest.TestCase):
         os.system('rm -rf '+ self.vis)
 
 
-
-# Add tests from test_cvel.py
+class test_Split(test_base):
+    '''Tests to compare with the split task'''
+    def setUp(self):
+        self.setUp_data4tfcrop()
+        
+        
+    
 # Look at tests in test_cvel-B.py
-class test_cvel1(test_base):
-    '''Tests without any transformation applied'''
+class test_Cvel1(test_base):
+    '''Tests to compare with the cvel task'''
+    
     def setUp(self):
         self.setUp_cveltest()
         
@@ -94,7 +100,7 @@ class test_cvel1(test_base):
 #        self.assertTrue(ret[0],ret[1])
 
                      
-class test_combspw(test_base):
+class test_Combspw(test_base):
     ''' Tests for combinespws'''
     
     def setUp(self):
@@ -131,15 +137,16 @@ class test_combspw(test_base):
         ret = th.verify_ms('combcvel1.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
 
-class test_regridms(test_base):
+class test_Regridms(test_base):
     '''Tests for regridms'''
        
     def setUp(self):
         self.setUp_data4tfcrop()
         
     def tearDown(self):
+        pass
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf reg*.ms')
+#        os.system('rm -rf reg*.ms')
         
     def test_regrid1(self):
         '''mstransform: Default of regridms parameters'''
@@ -166,17 +173,22 @@ class test_regridms(test_base):
             self.assertTrue(ret[0],ret[1])
             
     def test_regrid3(self):
-        '''mstransform: Regrid MS'''
+        '''mstransform: Regrid MS with one field and one spw'''
         self.setUp_ngc4826()
         outputms = "reg3.ms"
         mstransform(vis=self.vis, outputvis=outputms, regridms=True, spw='0',field = '1',
-             nchan = 32, start = 10)
-
+             nchan = 32, start = 10, datacolumn='DATA')
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Verify that output channels are correct
+        inpfreq = th.getChannels(outputms, 0, range(10,32,1))
+        ret = th.verify_ms(outputms, 1, 32, 0, inpfreq)
+        self.assertTrue(ret[0],ret[1])        
 
 
  
 # Cleanup class 
-class cleanup(test_base):
+class Cleanup(test_base):
     
     def tearDown(self):
         os.system('rm -rf ngc5921.*ms*')
@@ -189,8 +201,8 @@ class cleanup(test_base):
 
 
 def suite():
-    return [test_combspw,
-            test_cvel1,
-            test_cvel2,
-            test_regridms,
-            cleanup]
+    return [test_Split,
+            test_Combspw,
+            test_Cvel1,
+            test_Regridms,
+            Cleanup]
