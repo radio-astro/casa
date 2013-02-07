@@ -16,19 +16,6 @@ test_image.im/logtable/table.dat
 test_image.im/logtable/table.f0
 test_image.im/logtable/table.info
 test_image.im/logtable/table.lock
-test_image2dconvolver_convolved.fits
-test_image2dconvolver.fits
-test_image2dconvolver_multibeam.im/logtable/table.dat
-test_image2dconvolver_multibeam.im/logtable/table.info
-test_image2dconvolver_multibeam.im/logtable/table.info
-test_image2dconvolver_multibeam.im/logtable/table.f0
-test_image2dconvolver_multibeam.im/logtable/table.lock
-test_image2dconvolver_multibeam.im/table.dat
-test_image2dconvolver_multibeam.im/table.f0
-test_image2dconvolver_multibeam.im/table.f0_TSM0
-test_image2dconvolver_multibeam.im/table.info
-test_image2dconvolver_multibeam.im/table.lock
-
 )
 
 foreach (file ${datafiles})
@@ -51,7 +38,6 @@ tFITSExtImage
 tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
-tImage2DConvolver
 tImageConcat
 tImageConvolver
 tImageEmpty

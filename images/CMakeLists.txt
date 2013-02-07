@@ -95,8 +95,6 @@ Images/FITSQualityImage.h
 Images/FITSQualityMask.h
 Images/HDF5Image.h
 Images/HDF5Image.tcc
-Images/Image2DConvolver.h
-Images/Image2DConvolver.tcc
 Images/ImageBeamSet.h
 Images/ImageConcat.h
 Images/ImageConcat.tcc
