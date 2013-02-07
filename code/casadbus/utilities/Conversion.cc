@@ -150,6 +150,19 @@ namespace casa {
 	    return result;
 	}
 
+	std::map<std::string,DBus::Variant> fromStdMap( const std::map<std::string,variant> &src ) {
+		typedef std::map<std::string,DBus::Variant> out_t;
+		typedef std::map<std::string,variant> in_t;
+		out_t result;
+		for ( in_t::const_iterator it = src.begin(); it != src.end( ); ++it ) {
+			DBus::Variant val;
+			::DBus::MessageIter vi = val.writer();
+			fromVariant( vi, it->second );
+			result[it->first] = val;
+		}
+		return result;	
+	}
+
 	static void show( const variant &v, int level ) {
 #if LOCAL_FILE_DEBUG
 	    std::cout << "****************************** " << v.typeString( ) << " *****************************c" << std::endl;

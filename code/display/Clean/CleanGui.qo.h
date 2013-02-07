@@ -25,19 +25,10 @@
 #ifndef DISPLAY_CLEANGUI_H_
 #define DISPLAY_CLEANGUI_H_
 
+#include <map>
+#include <casadbus/types/variant.h>
 #include <QDialog>
 #include <display/Clean/CleanGui.ui.h>
-
-#if 0
-#include <QProgressDialog>
-#include <QFileDialog>
-#include <casa/aipstype.h>
-#include <display/Fit/FindSourcesDialog.qo.h>
-#include <display/Fit/PixelRangeDialog.qo.h>
-#include <display/Fit/ResidualHistogramDialog.qo.h>
-#include <display/Fit/Fit2DLogDialog.qo.h>
-#include <display/region/QtRegionSource.qo.h>
-#endif
 
 namespace casa {
 
@@ -51,14 +42,11 @@ namespace casa {
 				CleanGui( QWidget *parent = 0 );
 				virtual ~CleanGui( );
 
-			signals:
-
-			public slots:
-
 			private slots:
 				void selection_change( );
 				void check_box_change( QTreeWidgetItem*, int );
 
+				void send_state_event( );
 				void play_button_event( );
 				void pause_button_event( );
 				void stop_button_event( );
@@ -74,15 +62,18 @@ namespace casa {
 
 				// update information for the process currently selected...
 				void refresh( );
+				std::map<std::string,dbus::variant> collect( );
+
 				// indicate (or unindicate) that values have changed,
 				// and a send is required...
 				void set_send_needed( bool );
+				void allow_editing( bool );
 
 				ImagerControl *ic;
 				int current_process_index;
 				clean_state_t current_process_state;
 
-				std::map<QObject*,QString> stored_values;
+				std::map<QObject*,QString> current_clean_state;
 				QString default_send_tooltip;
 		};
 	}

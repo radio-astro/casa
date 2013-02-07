@@ -42,7 +42,9 @@ namespace casa {
 		std::map<std::string,DBus::Variant> fromRecord( const Record &record );
 
 		variant toVariant( const DBus::Variant &src );
+
 		std::map<std::string,variant> toStdMap( const std::map<std::string,DBus::Variant> &src );
+		std::map<std::string,DBus::Variant> fromStdMap( const std::map<std::string,variant> &src );
 
 		DBus::Variant fromVariant( const variant &src );
 		void show( const variant &v );

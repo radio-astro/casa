@@ -110,12 +110,18 @@ namespace casa {
 					return std::map<std::string,dbus::variant>( );
 #endif
 				}
+
+		    void controlUpdate(const std::map<std::string,dbus::variant>& newParams) {
+#ifdef INTERACTIVE_ITERATION
+				edu::nrao::casa::SynthImager_proxy::controlUpdate( dbus::fromStdMap(newParams) );
+#endif
+			}
+
 			/******************************************************************************
 			**********methods*provided*by*SynthImager_proxy********************************
 			*******************************************************************************
 		    bool incrementController()
 		    bool decrementController()
-		    void controlUpdate(const std::map< std::string, ::DBus::Variant >& newParams)
 		    void interactionComplete()
 		    void changeInteractiveMode(const bool& interactiveMode)
 		    std::map< std::string, ::DBus::Variant > getDetails()

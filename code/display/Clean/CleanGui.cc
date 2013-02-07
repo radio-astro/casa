@@ -44,6 +44,19 @@ namespace casa {
 			this->setWindowTitle( WINDOW_TITLE );
 			default_send_tooltip = send_button->toolTip( );
 
+			// these are freed when 'this' is freed...
+			QDoubleValidator *double_validator = new QDoubleValidator(this);
+			QIntValidator *int_validator = new QIntValidator(this);
+
+			threshold_entry->setValidator(double_validator);
+			niter_entry->setValidator(int_validator);
+			cycle_niter_entry->setValidator(int_validator);
+			cycle_threshold_entry->setValidator(double_validator);
+			interactive_niter_entry->setValidator(int_validator);
+			interactive_threshold_entry->setValidator(double_validator);
+			cycle_factor_entry->setValidator(double_validator);
+			loop_gain_entry->setValidator(double_validator);
+
 			QStringList label_list;
 			label_list << "id";
 			clean_processes->setColumnCount(1);
@@ -69,6 +82,8 @@ namespace casa {
 			//****
 			//**** setup signals here
 			//****
+			connect( send_button, SIGNAL(pressed( )), SLOT(send_state_event( )) );
+
 			connect( clean_processes, SIGNAL(itemSelectionChanged()), SLOT(selection_change()) );
 			connect( clean_processes, SIGNAL(itemChanged(QTreeWidgetItem*,int)), SLOT(check_box_change(QTreeWidgetItem*,int)) );
 			connect( stop_button, SIGNAL(pressed( )), SLOT(stop_button_event( )) );
@@ -85,13 +100,19 @@ namespace casa {
 			connect( cycle_factor_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
 			connect( loop_gain_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
 
+			allow_editing(false);
 
-			basic_frame->setEnabled(false);
-			advanced_frame->setEnabled(false);
 			if ( current_item != 0 ) {
 				clean_processes->setCurrentItem( current_item, 0 );
 			}
 
+		}
+
+		void CleanGui::send_state_event( ) {
+			if ( ic == NULL ) return;
+			ic->controlUpdate(collect( ));
+			set_send_needed(false);
+			refresh( );
 		}
 
 		void CleanGui::play_button_event( ) {
@@ -143,11 +164,9 @@ namespace casa {
 			if ( ic == NULL ) return;
 			if ( item->checkState(index) != Qt::Unchecked ) {
 				ic->incrementController( );
-				basic_frame->setEnabled(true);
-				advanced_frame->setEnabled(true);
+				allow_editing(true);
 			} else {
-				basic_frame->setEnabled(false);
-				advanced_frame->setEnabled(false);
+				allow_editing(false);
 				refresh( );
 				ic->decrementController( );
 			}
@@ -163,9 +182,21 @@ namespace casa {
 			}
 		}
 
+		void CleanGui::allow_editing( bool ok ) {
+			if ( ok ) {
+				basic_frame->setEnabled(true);
+				advanced_frame->setEnabled(true);
+				send_button->setEnabled(true);
+			} else {
+				basic_frame->setEnabled(false);
+				advanced_frame->setEnabled(false);
+				send_button->setEnabled(false);
+			}
+		}
+
 		void CleanGui::entry_changed_event( const QString &str ) {
-			std::map<QObject*,QString>::const_iterator it = stored_values.find(QObject::sender( ));
-			if ( it != stored_values.end( ) ) {
+			std::map<QObject*,QString>::const_iterator it = current_clean_state.find(QObject::sender( ));
+			if ( it != current_clean_state.end( ) ) {
 				if ( str != it->second ) {
 					set_send_needed(true);
 					return;
@@ -175,8 +206,8 @@ namespace casa {
 			// here we know that the current entry has been returned to its "stored" value...
 			// or this is an event from some entry not stored in our map... either way, we
 			// will traverse and check all the values...
-			for ( std::map<QObject*,QString>::const_iterator it = stored_values.begin( );
-				  it != stored_values.end( ); ++it ) {
+			for ( std::map<QObject*,QString>::const_iterator it = current_clean_state.begin( );
+				  it != current_clean_state.end( ); ++it ) {
 				QLineEdit *ptr = dynamic_cast<QLineEdit*>(it->first);
 				if ( it->second != ptr->text( ) ) {
 					set_send_needed(true);
@@ -191,8 +222,7 @@ namespace casa {
 			/***********************************************************************
 			****** Checking tree item's checkbox makes this viewer a controller ****
 			***********************************************************************/
-			basic_frame->setEnabled(false);
-			advanced_frame->setEnabled(false);
+			allow_editing(false);
 
 			QList<QTreeWidgetItem *> lst = clean_processes->selectedItems( );
 			if (!lst.empty()) {
@@ -208,7 +238,12 @@ namespace casa {
 					}
 					ic = new ImagerControl( IMAGER_NAME + process_id.toStdString( ) );
 					current_process_index = index;
-					if ( ic ) refresh( );
+
+					if ( ic ) {
+						refresh( );
+						if ( item->checkState(0) != Qt::Unchecked )
+							allow_editing(true);
+					}
 				} catch ( const AipsError &err ) {
 					std::cerr << "loading clean info failed (at " << __FILE__ << ":" << __LINE__ <<  "): " <<
 						err.getMesg( ) << std::endl;
@@ -219,9 +254,10 @@ namespace casa {
 			}
 		}
 
+
 		void CleanGui::refresh( ) {
 			try {
-				fflush(stderr);
+
 				typedef std::map<std::string,dbus::variant> details_t;
 				details_t details = ic->getDetails( );
 #if DEBUG
@@ -249,10 +285,10 @@ namespace casa {
 					double threshold = it->second.getDouble( );
 					QString val = QString::number(threshold);
 					threshold_entry->setText(val);
-					stored_values[threshold_entry] = val;
+					current_clean_state[threshold_entry] = val;
 				} else {
 					threshold_entry->clear( );
-					stored_values[threshold_entry] = "";
+					current_clean_state[threshold_entry] = "";
 				}
 				/***********************************************************************
 				******  Fill in the niter...                                      ******
@@ -262,10 +298,10 @@ namespace casa {
 					int niter = it->second.getInt( );
 					QString val = QString::number(niter);
 					niter_entry->setText(val);
-					stored_values[niter_entry] = val;
+					current_clean_state[niter_entry] = val;
 				} else {
 					niter_entry->clear( );
-					stored_values[niter_entry] = "";
+					current_clean_state[niter_entry] = "";
 				}
 
 				/***********************************************************************
@@ -282,10 +318,10 @@ namespace casa {
 					int niter = it->second.getInt( );
 					QString val = QString::number(niter);
 					cycle_niter_entry->setText(val);
-					stored_values[cycle_niter_entry] = val;
+					current_clean_state[cycle_niter_entry] = val;
 				} else {
 					cycle_niter_entry->clear( );
-					stored_values[cycle_niter_entry] = "";
+					current_clean_state[cycle_niter_entry] = "";
 				}
 
 				/***********************************************************************
@@ -296,10 +332,10 @@ namespace casa {
 					double threshold = it->second.getDouble( );
 					QString val = QString::number(threshold);
 					cycle_threshold_entry->setText(val);
-					stored_values[cycle_threshold_entry] = val;
+					current_clean_state[cycle_threshold_entry] = val;
 				} else {
 					cycle_threshold_entry->clear( );
-					stored_values[cycle_threshold_entry] = "";
+					current_clean_state[cycle_threshold_entry] = "";
 				}
 
 				/***********************************************************************
@@ -310,10 +346,10 @@ namespace casa {
 					int niter = it->second.getInt( );
 					QString val = QString::number(niter);
 					interactive_niter_entry->setText(val);
-					stored_values[interactive_niter_entry] = val;
+					current_clean_state[interactive_niter_entry] = val;
 				} else {
 					interactive_niter_entry->clear( );
-					stored_values[interactive_niter_entry] = "";
+					current_clean_state[interactive_niter_entry] = "";
 				}
 
 				/***********************************************************************
@@ -324,10 +360,10 @@ namespace casa {
 					double threshold = it->second.getDouble( );
 					QString val = QString::number(threshold);
 					interactive_threshold_entry->setText(val);
-					stored_values[interactive_threshold_entry] = val;
+					current_clean_state[interactive_threshold_entry] = val;
 				} else {
 					interactive_threshold_entry->clear( );
-					stored_values[interactive_threshold_entry] = "";
+					current_clean_state[interactive_threshold_entry] = "";
 				}
 
 				/***********************************************************************
@@ -338,10 +374,10 @@ namespace casa {
 					double factor = it->second.getDouble( );
 					QString val = QString::number(factor);
 					cycle_factor_entry->setText(val);
-					stored_values[cycle_factor_entry] = val;
+					current_clean_state[cycle_factor_entry] = val;
 				} else {
 					cycle_factor_entry->clear( );
-					stored_values[cycle_factor_entry] = "";
+					current_clean_state[cycle_factor_entry] = "";
 				}
 
 
@@ -353,10 +389,10 @@ namespace casa {
 					double gain = it->second.getDouble( );
 					QString val = QString::number(gain);
 					loop_gain_entry->setText(val);
-					stored_values[loop_gain_entry] = val;
+					current_clean_state[loop_gain_entry] = val;
 				} else {
 					loop_gain_entry->clear( );
-					stored_values[loop_gain_entry] = "";
+					current_clean_state[loop_gain_entry] = "";
 				}
 
 				/***********************************************************************
@@ -384,6 +420,75 @@ namespace casa {
 				fflush( stderr );
 			}
 
+		}
+
+		std::map<std::string,dbus::variant> CleanGui::collect( ) {
+			typedef std::map<std::string,dbus::variant> details_t;
+			details_t result;
+			try {
+				/***********************************************************************
+				******  Is interaction currently enabled?                         ******
+				***********************************************************************/
+				// interactive_label->text( );
+
+				/***********************************************************************
+				******  Fill in the threshold...                                  ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "threshold",
+													 threshold_entry->text( ).toDouble( ) ));
+
+				/***********************************************************************
+				******  Fill in the niter...                                      ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "niter",
+													 niter_entry->text( ).toInt( ) ));
+
+				/***********************************************************************
+				******  Fill in cycle niter...                                    ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "cycleniter",
+													 cycle_niter_entry->text( ).toInt( ) ));
+
+				/***********************************************************************
+				******  Fill in cycle threshold...                                ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "cyclethreshold",
+													 cycle_threshold_entry->text( ).toDouble( ) ));
+
+				/***********************************************************************
+				******  Fill in interactive niter...                              ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "interactiveniter",
+													 interactive_niter_entry->text( ).toInt( ) ));
+
+				/***********************************************************************
+				******  Fill in interactive threshold...                          ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "interactivethreshold",
+													 interactive_threshold_entry->text( ).toDouble( ) ));
+
+				/***********************************************************************
+				******  Fill in cycle factor entry...                             ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "cyclefactor",
+													 cycle_factor_entry->text( ).toDouble( ) ));
+
+				/***********************************************************************
+				******  Fill in loop gain entry...                                ******
+				***********************************************************************/
+				result.insert(details_t::value_type( "loopgain",
+													 loop_gain_entry->text( ).toDouble( ) ));
+
+				/***********************************************************************
+				******  Fill in current clean state...                            ******
+				***********************************************************************/
+				//it = details.find("cleanstate");
+
+			} catch ( ... ) {
+				fprintf( stderr, "\t\toops...\n" );
+				fflush( stderr );
+			}
+			return result;
 		}
 
 		CleanGui::~CleanGui( ) {  }
