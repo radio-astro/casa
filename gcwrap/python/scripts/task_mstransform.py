@@ -209,7 +209,7 @@ def mstransform(
             pass
             config['hanning'] = True
         if regridms:
-            casalog.post('Parse MS regridding parameters')
+            casalog.post('Parse regridding parameters')
             
             config['regridms'] = True
             config['mode'] = mode
