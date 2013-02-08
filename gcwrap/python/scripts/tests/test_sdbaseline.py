@@ -333,11 +333,11 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
                    'baserms': 0.13134850561618805,
                    'basestd': 0.1313575953245163}
     # reference values for specunit='GHz'
-    ref_pol0if0f = {'linemaxpos': 4102.0, 'linesum': 101.49118804931641,
+    ref_pol0if0f = {'linemaxpos': 4102.0, 'linesum': 103.81603241,
                     'linemax': 1.6132903099060059,
-                    'baserms': 0.15236321091651917,
-                    'basestd': 0.15236999094486237}
-    ref_pol0if2f = {'linemaxpos': 3045.0, 'linesum': 129.6041259765625,
+                    'baserms': 0.150215059519, 
+                    'basestd': 0.150225445628}
+    ref_pol0if2f = {'linemaxpos': 3045.0, 'linesum': 127.797515869,
                     'linemax': 2.0308537483215332,
                     'baserms': 0.13158561289310455,
                     'basestd': 0.13159450888633728}
