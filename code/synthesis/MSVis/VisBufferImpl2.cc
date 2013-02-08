@@ -447,7 +447,7 @@ public:
             this->getItem().resize (desiredShape, copyValues);
 
             if (! copyValues){
-                this->getItem() = typename T::ElementType();
+                this->getItem() = typename T::value_type();
             }
 
         }
@@ -531,7 +531,7 @@ protected:
     }
 
     static void
-    copyRowElementAux (Cube<typename T::ElementType> & cube, Int sourceRow, Int destinationRow)
+    copyRowElementAux (Cube<typename T::value_type> & cube, Int sourceRow, Int destinationRow)
     {
         IPosition shape = cube.shape();
         Int nI = shape(1);
@@ -545,7 +545,7 @@ protected:
     }
 
     static void
-    copyRowElementAux (Matrix<typename T::ElementType> & matrix, Int sourceRow, Int destinationRow)
+    copyRowElementAux (Matrix<typename T::value_type> & matrix, Int sourceRow, Int destinationRow)
     {
         IPosition shape = matrix.shape();
         Int nJ = shape(0);
@@ -556,7 +556,7 @@ protected:
     }
 
     static void
-    copyRowElementAux (Vector<typename T::ElementType> & vector, Int sourceRow, Int destinationRow)
+    copyRowElementAux (Vector<typename T::value_type> & vector, Int sourceRow, Int destinationRow)
     {
         vector (destinationRow) = vector (sourceRow);
     }
@@ -583,7 +583,7 @@ public:
     VbCacheItem <Int> arrayId_p;
     VbCacheItemArray <Vector<SquareMatrix<Complex, 2> >, True> cjones_p;
     VbCacheItemArray <Cube<Complex> > correctedVisCube_p;
-    VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
+//    VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
     VbCacheItemArray <Vector<Int> > corrType_p;
     VbCacheItem <Int> dataDescriptionId_p;
     VbCacheItemArray <Vector<Int> > dataDescriptionIds_p;
@@ -602,7 +602,7 @@ public:
     VbCacheItemArray <Cube<Float> > floatDataCube_p;
     VbCacheItemArray <Matrix<Float> > imagingWeight_p;
     VbCacheItemArray <Cube<Complex> > modelVisCube_p;
-    VbCacheItemArray <Matrix<CStokesVector> > modelVisibility_p;
+//    VbCacheItemArray <Matrix<CStokesVector> > modelVisibility_p;
     VbCacheItem <Int> nAntennas_p;
     VbCacheItem <Int> nChannels_p;
     VbCacheItem <Int> nCorrelations_p;
@@ -624,7 +624,7 @@ public:
     VbCacheItemArray <Vector<Double> > timeInterval_p;
     VbCacheItemArray <Matrix<Double> > uvw_p;
     VbCacheItemArray <Cube<Complex> > visCube_p;
-    VbCacheItemArray <Matrix<CStokesVector> > visibility_p;
+//    VbCacheItemArray <Matrix<CStokesVector> > visibility_p;
     VbCacheItemArray <Vector<Float> > weight_p;
     VbCacheItemArray <Matrix<Float> > weightMat_p;
     VbCacheItemArray <Cube<Float> > weightSpectrum_p;
@@ -771,8 +771,8 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC, JonesC);
     correctedVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeCorrected,
                                    VisibilityCubeCorrected, NcNfNr, False);
-    correctedVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityCorrected,
-                                      VisibilityCorrected, NcNfNr, False);
+//    correctedVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityCorrected,
+//                                      VisibilityCorrected, NcNfNr, False);
     corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType, CorrType);
     dataDescriptionId_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionId, DataDescriptionId);
     dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds, DataDescriptionIds);
@@ -792,7 +792,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData, FloatData, NcNfNr, False);
     imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight);
     modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel, NcNfNr, False);
-    modelVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel, NoCheck, False);
+//    modelVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel, NoCheck, False);
     nAntennas_p.initialize (this, vb, &VisBufferImpl2::fillNAntennas, NAntennas);
     nChannels_p.initialize (this, vb, &VisBufferImpl2::fillNChannel, NChannels);
     nCorrelations_p.initialize (this, vb, &VisBufferImpl2::fillNCorr, NCorrelations);
@@ -814,7 +814,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     timeInterval_p.initialize (this, vb, &VisBufferImpl2::fillTimeInterval, TimeInterval, Nr);
     uvw_p.initialize (this, vb, &VisBufferImpl2::fillUvw, Uvw, I3Nr);
     visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved, VisibilityCubeObserved, NcNfNr, False);
-    visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
+//    visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
     weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, Nr, False);
     weightMat_p.initialize (this, vb, &VisBufferImpl2::fillWeightMat, WeightMat, NoCheck, False);
     weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum, WeightSpectrum, NcNfNr, False);
@@ -2250,17 +2250,17 @@ VisBufferImpl2::setVisCubeCorrected (const Cube<Complex> & value)
     cache_p->correctedVisCube_p.set (value);
 }
 
-const Matrix<CStokesVector> &
-VisBufferImpl2::visCorrected () const
-{
-    return cache_p->correctedVisibility_p.get ();
-}
+//const Matrix<CStokesVector> &
+//VisBufferImpl2::visCorrected () const
+//{
+//    return cache_p->correctedVisibility_p.get ();
+//}
 
-void
-VisBufferImpl2::setVisCorrected (const Matrix<CStokesVector> & value)
-{
-    cache_p->correctedVisibility_p.set (value);
-}
+//void
+//VisBufferImpl2::setVisCorrected (const Matrix<CStokesVector> & value)
+//{
+//    cache_p->correctedVisibility_p.set (value);
+//}
 
 const Cube<Float> &
 VisBufferImpl2::visCubeFloat () const
@@ -2298,74 +2298,74 @@ VisBufferImpl2::setVisCubeModel (const Cube<Complex> & value)
     cache_p->modelVisCube_p.set (value);
 }
 
-const Matrix<CStokesVector> &
-VisBufferImpl2::visModel () const
-{
-    return cache_p->modelVisibility_p.get ();
-}
+//const Matrix<CStokesVector> &
+//VisBufferImpl2::visModel () const
+//{
+//    return cache_p->modelVisibility_p.get ();
+//}
 
-void
-VisBufferImpl2::setVisModel (Matrix<CStokesVector> & value)
-{
-    cache_p->modelVisibility_p.set (value);
-}
+//void
+//VisBufferImpl2::setVisModel (Matrix<CStokesVector> & value)
+//{
+//    cache_p->modelVisibility_p.set (value);
+//}
 
-void
-VisBufferImpl2::setVisCubeModel(const Vector<Float>& stokesIn)
-{
-
-  enum {I, Q, U, V};
-
-  Vector<Float> stokes (4, 0.0);
-
-  stokes [I] = 1.0;  // Stokes parameters, nominally unpolarized, unit I
-
-  for (uInt i = 0; i < stokesIn.nelements(); ++i){
-      stokes [i] = stokesIn [i];
-  }
-
-  // Convert to correlations, according to basis
-
-  Vector<Complex> stokesFinal (4, Complex(0.0)); // initially all zero
-
-  if (polarizationFrame() == MSIter::Circular){
-    stokesFinal(0) = Complex(stokes [I] + stokes [V]);
-    stokesFinal(1) = Complex(stokes [Q], stokes [U]);
-    stokesFinal(2) = Complex(stokes [Q], -stokes [U]);
-    stokesFinal(3) = Complex(stokes [I] - stokes [V]);
-  }
-  else if (polarizationFrame() == MSIter::Linear) {
-    stokesFinal(0) = Complex(stokes [I] + stokes [Q]);
-    stokesFinal(1) = Complex(stokes [U], stokes [V]);
-    stokesFinal(2) = Complex(stokes [U], -stokes [V]);
-    stokesFinal(3) = Complex(stokes [I] - stokes [Q]);
-  }
-  else {
-    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
-  }
-
-  // A map onto the actual correlations in the VisBuffer
-
-  Vector<Int> corrmap = correlationTypes ();
-  corrmap -= corrmap(0);
-
-  ThrowIf (max(corrmap) >= 4,  "HELP! The correlations in the data are not normal!");
-
-  // Set the modelVisCube accordingly
-
-  Cube<Complex> visCube (getViP()->visibilityShape(), 0.0);
-
-  for (Int icorr = 0; icorr < nCorrelations (); ++icorr){
-    if (abs(stokesFinal(corrmap(icorr))) > 0.0) {
-      visCube (Slice (icorr, 1, 1), Slice(), Slice()).set(stokesFinal (corrmap (icorr)));
-    }
-  }
-
-  cache_p->modelVisCube_p.set (visCube);
-
-  // Lookup flux density calibrator scaling, and apply it per channel...
-  //  TBD
-}
+//void
+//VisBufferImpl2::setVisCubeModel(const Vector<Float>& stokesIn)
+//{
+//
+//  enum {I, Q, U, V};
+//
+//  Vector<Float> stokes (4, 0.0);
+//
+//  stokes [I] = 1.0;  // Stokes parameters, nominally unpolarized, unit I
+//
+//  for (uInt i = 0; i < stokesIn.nelements(); ++i){
+//      stokes [i] = stokesIn [i];
+//  }
+//
+//  // Convert to correlations, according to basis
+//
+//  Vector<Complex> stokesFinal (4, Complex(0.0)); // initially all zero
+//
+//  if (polarizationFrame() == MSIter::Circular){
+//    stokesFinal(0) = Complex(stokes [I] + stokes [V]);
+//    stokesFinal(1) = Complex(stokes [Q], stokes [U]);
+//    stokesFinal(2) = Complex(stokes [Q], -stokes [U]);
+//    stokesFinal(3) = Complex(stokes [I] - stokes [V]);
+//  }
+//  else if (polarizationFrame() == MSIter::Linear) {
+//    stokesFinal(0) = Complex(stokes [I] + stokes [Q]);
+//    stokesFinal(1) = Complex(stokes [U], stokes [V]);
+//    stokesFinal(2) = Complex(stokes [U], -stokes [V]);
+//    stokesFinal(3) = Complex(stokes [I] - stokes [Q]);
+//  }
+//  else {
+//    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
+//  }
+//
+//  // A map onto the actual correlations in the VisBuffer
+//
+//  Vector<Int> corrmap = correlationTypes ();
+//  corrmap -= corrmap(0);
+//
+//  ThrowIf (max(corrmap) >= 4,  "HELP! The correlations in the data are not normal!");
+//
+//  // Set the modelVisCube accordingly
+//
+//  Cube<Complex> visCube (getViP()->visibilityShape(), 0.0);
+//
+//  for (Int icorr = 0; icorr < nCorrelations (); ++icorr){
+//    if (abs(stokesFinal(corrmap(icorr))) > 0.0) {
+//      visCube (Slice (icorr, 1, 1), Slice(), Slice()).set(stokesFinal (corrmap (icorr)));
+//    }
+//  }
+//
+//  cache_p->modelVisCube_p.set (visCube);
+//
+//  // Lookup flux density calibrator scaling, and apply it per channel...
+//  //  TBD
+//}
 
 
 const Cube<Complex> &
@@ -2392,17 +2392,17 @@ VisBufferImpl2::setVisCube (const Cube<Complex> & value)
     cache_p->visCube_p.set (value);
 }
 
-const Matrix<CStokesVector> &
-VisBufferImpl2::vis () const
-{
-    return cache_p->visibility_p.get ();
-}
+//const Matrix<CStokesVector> &
+//VisBufferImpl2::vis () const
+//{
+//    return cache_p->visibility_p.get ();
+//}
 
-void
-VisBufferImpl2::setVis (Matrix<CStokesVector> & value)
-{
-    cache_p->visibility_p.set (value);
-}
+//void
+//VisBufferImpl2::setVis (Matrix<CStokesVector> & value)
+//{
+//    cache_p->visibility_p.set (value);
+//}
 
 const Vector<Float> &
 VisBufferImpl2::weight () const
@@ -2994,29 +2994,29 @@ VisBufferImpl2::fillUvw (Matrix<Double>& value) const
   getViP()->uvw (value);
 }
 
-void
-VisBufferImpl2::fillVisibilityCorrected (Matrix<CStokesVector>& value) const
-{
-    CheckVisIter ();
+//void
+//VisBufferImpl2::fillVisibilityCorrected (Matrix<CStokesVector>& value) const
+//{
+//    CheckVisIter ();
+//
+//    getViP()->visibilityCorrected (value);
+//}
 
-    getViP()->visibilityCorrected (value);
-}
+//void
+//VisBufferImpl2::fillVisibilityModel (Matrix<CStokesVector>& value) const
+//{
+//    CheckVisIter ();
+//
+//    getViP()->visibilityModel (value);
+//}
 
-void
-VisBufferImpl2::fillVisibilityModel (Matrix<CStokesVector>& value) const
-{
-    CheckVisIter ();
-
-    getViP()->visibilityModel (value);
-}
-
-void
-VisBufferImpl2::fillVisibilityObserved (Matrix<CStokesVector>& value) const
-{
-    CheckVisIter ();
-
-    getViP()->visibilityObserved (value);
-}
+//void
+//VisBufferImpl2::fillVisibilityObserved (Matrix<CStokesVector>& value) const
+//{
+//    CheckVisIter ();
+//
+//    getViP()->visibilityObserved (value);
+//}
 
 
 void

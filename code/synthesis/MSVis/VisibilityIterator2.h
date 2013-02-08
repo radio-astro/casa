@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forward decl
 
-class CStokesVector;
+//class CStokesVector;
 class MDirection;
 class MSDerivedValues;
 class MSIter;
@@ -591,9 +591,9 @@ public:
   // If the MS does not contain all polarizations, only the parallel
   // hand polarizations are used.
 
-  void writeVisCorrected (const Matrix<CStokesVector>& vis);
-  void writeVisModel (const Matrix<CStokesVector>& vis);
-  void writeVisObserved (const Matrix<CStokesVector>& vis);
+//  void writeVisCorrected (const Matrix<CStokesVector>& vis);
+//  void writeVisModel (const Matrix<CStokesVector>& vis);
+//  void writeVisObserved (const Matrix<CStokesVector>& vis);
 
   // Write/modify the visibilities
   // This writes the data as found in the MS, Cube(npol,nchan,nrow).
@@ -904,9 +904,9 @@ protected:
   // If the MS doesn't contain all polarizations, it is assumed it
   // contains one or two parallel hand polarizations.
 
-  virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
-  virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
-  virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
+//  virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
+//  virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
+//  virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
 
   // Return the shape of the visibility Cube
 

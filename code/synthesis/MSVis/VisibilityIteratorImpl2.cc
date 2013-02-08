@@ -38,7 +38,7 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
-#include <synthesis/MSVis/StokesVector.h>
+//#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/MSVis/MeasurementSet2.h>
 #include <synthesis/MSVis/MSUtil.h>
 #include <synthesis/MSVis/UtilJ.h>
@@ -2258,103 +2258,104 @@ VisibilityIteratorImpl2::floatData (Cube<Float> & fcube) const
     }
 }
 
-void
-VisibilityIteratorImpl2::visibilityCorrected (Matrix<CStokesVector> & vis) const
-{
-    getVisibilityAsStokes (vis, columns_p.corrVis_p);
+//void
+//VisibilityIteratorImpl2::visibilityCorrected (Matrix<CStokesVector> & vis) const
+//{
+//    getVisibilityAsStokes (vis, columns_p.corrVis_p);
+//
+//}
 
-}
-void
-VisibilityIteratorImpl2::visibilityModel (Matrix<CStokesVector> & vis) const
-{
-    getVisibilityAsStokes (vis, columns_p.modelVis_p);
-}
+//void
+//VisibilityIteratorImpl2::visibilityModel (Matrix<CStokesVector> & vis) const
+//{
+//    getVisibilityAsStokes (vis, columns_p.modelVis_p);
+//}
 
-void
-VisibilityIteratorImpl2::visibilityObserved (Matrix<CStokesVector> & vis) const
-{
-    getVisibilityAsStokes (vis, columns_p.vis_p);
-}
+//void
+//VisibilityIteratorImpl2::visibilityObserved (Matrix<CStokesVector> & vis) const
+//{
+//    getVisibilityAsStokes (vis, columns_p.vis_p);
+//}
 
-void
-VisibilityIteratorImpl2::getVisibilityAsStokes (Matrix<CStokesVector> & visibilityStokes,
-                                                    const ROArrayColumn<Complex> & column) const
-{
-    // Read in the raw visibility data
-
-    Cube<Complex> visibilityRaw;
-
-    getColumnRows (column, visibilityRaw);
-
-    // Resize the result (Matrix<CStokesVector>) to match up with the
-    // shape of the data.
-
-    Int nFrequencies = visibilityRaw.shape()(1);
-
-    visibilityStokes.resize (nFrequencies, rowBounds_p.subchunkNRows_p);
-
-    // Convert the polarizations into a Stokes Vector for each channel, row.
-    // The cases where only 1 or 2 polarizations are present require some
-    // assumptions/approximations be made to fill out the vector.
-    //
-    // The original implementation used a pointer based scheme to optimize
-    // the performance.  If this routine turns out to be too sluggish then
-    // an enhancement along those lines might be worthy the added opacity.
-
-    if (nPolarizations_p == 4){
-
-        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
-            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-
-                CStokesVector & stokesVector = visibilityStokes (frequency, row);
-
-                for (Int polarization = 0; polarization < 4; polarization ++){
-
-                    stokesVector (polarization) = visibilityRaw (polarization, frequency, row);
-
-                }
-            }
-        }
-    }
-    else if (nPolarizations_p == 2){
-
-        //  Assume XX,YY or RR,LL are provided.  Set cross terms to zero.
-
-        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
-            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-
-                CStokesVector & stokesVector = visibilityStokes (frequency, row);
-
-                stokesVector (0) = visibilityRaw (0, frequency, row);
-                stokesVector (1) = 0;
-                stokesVector (2) = 0;
-                stokesVector (3) = visibilityRaw (1, frequency, row);
-            }
-        }
-    }
-    else if (nPolarizations_p == 1){
-
-        // Assume provided polarization is an estimate of Stokes I (one of RR,LL,XX,YY).
-        // Cross terms are then zero.
-
-        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
-            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-
-                CStokesVector & stokesVector = visibilityStokes (frequency, row);
-
-                stokesVector (0) = visibilityRaw (0, frequency, row);
-                stokesVector (3) = stokesVector (0);
-                stokesVector (1) = 0;
-                stokesVector (2) = 0;
-            }
-        }
-
-    }
-    else{
-        ThrowIf (True, String::format ("Unexpected number of polarizations: %d; should be 1, 2 or 4",
-                                       nPolarizations_p));
-    }
-}
+//void
+//VisibilityIteratorImpl2::getVisibilityAsStokes (Matrix<CStokesVector> & visibilityStokes,
+//                                                    const ROArrayColumn<Complex> & column) const
+//{
+//    // Read in the raw visibility data
+//
+//    Cube<Complex> visibilityRaw;
+//
+//    getColumnRows (column, visibilityRaw);
+//
+//    // Resize the result (Matrix<CStokesVector>) to match up with the
+//    // shape of the data.
+//
+//    Int nFrequencies = visibilityRaw.shape()(1);
+//
+//    visibilityStokes.resize (nFrequencies, rowBounds_p.subchunkNRows_p);
+//
+//    // Convert the polarizations into a Stokes Vector for each channel, row.
+//    // The cases where only 1 or 2 polarizations are present require some
+//    // assumptions/approximations be made to fill out the vector.
+//    //
+//    // The original implementation used a pointer based scheme to optimize
+//    // the performance.  If this routine turns out to be too sluggish then
+//    // an enhancement along those lines might be worthy the added opacity.
+//
+//    if (nPolarizations_p == 4){
+//
+//        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
+//            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
+//
+//                CStokesVector & stokesVector = visibilityStokes (frequency, row);
+//
+//                for (Int polarization = 0; polarization < 4; polarization ++){
+//
+//                    stokesVector (polarization) = visibilityRaw (polarization, frequency, row);
+//
+//                }
+//            }
+//        }
+//    }
+//    else if (nPolarizations_p == 2){
+//
+//        //  Assume XX,YY or RR,LL are provided.  Set cross terms to zero.
+//
+//        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
+//            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
+//
+//                CStokesVector & stokesVector = visibilityStokes (frequency, row);
+//
+//                stokesVector (0) = visibilityRaw (0, frequency, row);
+//                stokesVector (1) = 0;
+//                stokesVector (2) = 0;
+//                stokesVector (3) = visibilityRaw (1, frequency, row);
+//            }
+//        }
+//    }
+//    else if (nPolarizations_p == 1){
+//
+//        // Assume provided polarization is an estimate of Stokes I (one of RR,LL,XX,YY).
+//        // Cross terms are then zero.
+//
+//        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
+//            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
+//
+//                CStokesVector & stokesVector = visibilityStokes (frequency, row);
+//
+//                stokesVector (0) = visibilityRaw (0, frequency, row);
+//                stokesVector (3) = stokesVector (0);
+//                stokesVector (1) = 0;
+//                stokesVector (2) = 0;
+//            }
+//        }
+//
+//    }
+//    else{
+//        ThrowIf (True, String::format ("Unexpected number of polarizations: %d; should be 1, 2 or 4",
+//                                       nPolarizations_p));
+//    }
+//}
 
 void
 VisibilityIteratorImpl2::uvw (Matrix<Double> & uvwmat) const
@@ -2860,75 +2861,76 @@ VisibilityIteratorImpl2::writeFlagRow (const Vector<Bool> & rowflags)
     putColumnRows (columns_p.flagRow_p, rowflags);
 }
 
-void
-VisibilityIteratorImpl2::writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes)
-{
-    Cube<Complex> visCube;
+//void
+//VisibilityIteratorImpl2::writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes)
+//{
+//    Cube<Complex> visCube;
+//
+//    convertVisFromStokes (visibilityStokes, visCube);
+//
+//    writeVisCorrected (visCube);
+//}
 
-    convertVisFromStokes (visibilityStokes, visCube);
+//void
+//VisibilityIteratorImpl2::writeVisModel (const Matrix<CStokesVector> & visibilityStokes)
+//{
+//    Cube<Complex> visCube;
+//
+//    convertVisFromStokes (visibilityStokes, visCube);
+//
+//    writeVisModel (visCube);
+//}
 
-    writeVisCorrected (visCube);
-}
+//void
+//VisibilityIteratorImpl2::writeVisObserved (const Matrix<CStokesVector> & visibilityStokes)
+//{
+//    Cube<Complex> visCube;
+//
+//    convertVisFromStokes (visibilityStokes, visCube);
+//
+//    writeVisObserved (visCube);
+//}
 
-void
-VisibilityIteratorImpl2::writeVisModel (const Matrix<CStokesVector> & visibilityStokes)
-{
-    Cube<Complex> visCube;
-
-    convertVisFromStokes (visibilityStokes, visCube);
-
-    writeVisModel (visCube);
-}
-                                                  void
-VisibilityIteratorImpl2::writeVisObserved (const Matrix<CStokesVector> & visibilityStokes)
-{
-    Cube<Complex> visCube;
-
-    convertVisFromStokes (visibilityStokes, visCube);
-
-    writeVisObserved (visCube);
-}
-
-void
-VisibilityIteratorImpl2::convertVisFromStokes (const Matrix<CStokesVector> & visibilityStokes,
-                                                    Cube<Complex> & visibilityCube)
-{
-    Int nRows = rowBounds_p.subchunkNRows_p;
-    Int nFrequencies = channelSelector_p->getNFrequencies();
-    Int nPolarizations = this->nPolarizations();
-
-    visibilityCube.resize (nPolarizations, nFrequencies, nRows);
-
-    // The cube could be walked through using pointer operations rather than
-    // using cube references.  If the straight-forward implementation below
-    // proves to be too slow, then it can be reimplemented using pointer
-    // operations.
-
-    for (Int row = 0; row < nRows; row ++) {
-
-        for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-
-            const CStokesVector & v = visibilityStokes (frequency, row);
-
-            if (nPolarizations == 4){
-
-                visibilityCube (0, frequency, row) = v (0);
-                visibilityCube (1, frequency, row) = v (1);
-                visibilityCube (2, frequency, row) = v (2);
-                visibilityCube (3, frequency, row) = v (3);
-            }
-            else if (nPolarizations == 2){
-
-                visibilityCube (0, frequency, row) = v (0);
-                visibilityCube (1, frequency, row) = v (3);
-            }
-            else if (nPolarizations == 1){
-
-                visibilityCube (0, frequency, row) = (v (0) + v (3)) / 2;
-            }
-        }
-    }
-}
+//void
+//VisibilityIteratorImpl2::convertVisFromStokes (const Matrix<CStokesVector> & visibilityStokes,
+//                                                    Cube<Complex> & visibilityCube)
+//{
+//    Int nRows = rowBounds_p.subchunkNRows_p;
+//    Int nFrequencies = channelSelector_p->getNFrequencies();
+//    Int nPolarizations = this->nPolarizations();
+//
+//    visibilityCube.resize (nPolarizations, nFrequencies, nRows);
+//
+//    // The cube could be walked through using pointer operations rather than
+//    // using cube references.  If the straight-forward implementation below
+//    // proves to be too slow, then it can be reimplemented using pointer
+//    // operations.
+//
+//    for (Int row = 0; row < nRows; row ++) {
+//
+//        for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
+//
+//            const CStokesVector & v = visibilityStokes (frequency, row);
+//
+//            if (nPolarizations == 4){
+//
+//                visibilityCube (0, frequency, row) = v (0);
+//                visibilityCube (1, frequency, row) = v (1);
+//                visibilityCube (2, frequency, row) = v (2);
+//                visibilityCube (3, frequency, row) = v (3);
+//            }
+//            else if (nPolarizations == 2){
+//
+//                visibilityCube (0, frequency, row) = v (0);
+//                visibilityCube (1, frequency, row) = v (3);
+//            }
+//            else if (nPolarizations == 1){
+//
+//                visibilityCube (0, frequency, row) = (v (0) + v (3)) / 2;
+//            }
+//        }
+//    }
+//}
 
 void
 VisibilityIteratorImpl2::writeVisCorrected (const Cube<Complex> & vis)
@@ -3105,12 +3107,12 @@ VisibilityIteratorImpl2::initializeBackWriters ()
 
     // Now do the visibilities.
 
-    backWriters_p [VisibilityObserved] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeVisObserved, & VisBuffer2::vis);
-    backWriters_p [VisibilityCorrected] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeVisCorrected, & VisBuffer2::visCorrected);
-    backWriters_p [VisibilityModel] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeVisModel, & VisBuffer2::visModel);
+//    backWriters_p [VisibilityObserved] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeVisObserved, & VisBuffer2::vis);
+//    backWriters_p [VisibilityCorrected] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeVisCorrected, & VisBuffer2::visCorrected);
+//    backWriters_p [VisibilityModel] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeVisModel, & VisBuffer2::visModel);
 
     backWriters_p [VisibilityCubeObserved] =
         makeBackWriter (& VisibilityIteratorImpl2::writeVisObserved, & VisBuffer2::visCube);
