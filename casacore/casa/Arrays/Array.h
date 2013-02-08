@@ -170,8 +170,6 @@ template<class T> class Array : public ArrayBase
 {
 public:
 
-    typedef T ElementType;
-
     // Result has dimensionality of zero, and  nelements is zero.
     Array();
 
