@@ -609,6 +609,8 @@ int main(int argc,  char* argv[])
 {
   using namespace boost::program_options;
 
+  int rval = 0;
+
   options_description desc("Allowed options");
   positional_options_description p;
   defineOptions(desc, p);
@@ -772,7 +774,17 @@ int main(int argc,  char* argv[])
     std::cout<<inp<<std::endl;
 
     std::cerr<<"Calculating the coefficients now...";
-    boost::ptr_list<LibAIR::ALMAResBase> rlist=LibAIR::doALMAAbsRet(inp);
+    boost::ptr_list<LibAIR::ALMAResBase> rlist;
+    try {
+      rlist=LibAIR::doALMAAbsRet(inp);
+    }
+    catch(const std::runtime_error rE){
+      std::cerr << std::endl << "WARNING: problem while calculating coefficients:"
+		<< std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
+      std::cout << std::endl << "WARNING: problem while calculating coefficients:"
+		<< std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
+      rval = -2;
+    }
     std::cerr<<"done!"
 	     <<std::endl;
 
@@ -886,5 +898,5 @@ int main(int argc,  char* argv[])
 #endif
 
 
-  return 0;
+  return rval;
 }
