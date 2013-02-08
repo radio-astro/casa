@@ -60,7 +60,8 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-	SynthesisIterBot::SynthesisIterBot() : itsLoopController(new SIIterBot_state( )),
+	SynthesisIterBot::SynthesisIterBot() : actionRequestSync(new SIIterBot_callback( )),
+										   itsLoopController(new SIIterBot_state(actionRequestSync)),
 										   dbus_thread(NULL) { }
 
 	void SynthesisIterBot::openDBus( ) {

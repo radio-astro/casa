@@ -375,6 +375,9 @@
                  <layout class="QHBoxLayout" name="horizontalLayout_5">
                   <item>
                    <widget class="QGroupBox" name="cycle_niter_box">
+                    <property name="toolTip">
+                     <string>Iteration limit per chan/pol/field before the next major cycle</string>
+                    </property>
                     <property name="title">
                      <string>cycle niter</string>
                     </property>
@@ -399,6 +402,9 @@
                   </item>
                   <item>
                    <widget class="QGroupBox" name="interactive_niter_box">
+                    <property name="toolTip">
+                     <string>Iteration limit per chan/pol/field before pausing for interaction</string>
+                    </property>
                     <property name="title">
                      <string>interactive niter</string>
                     </property>
@@ -427,6 +433,9 @@
                  <layout class="QHBoxLayout" name="horizontalLayout_6">
                   <item>
                    <widget class="QGroupBox" name="cycle_threshold_box">
+                    <property name="toolTip">
+                     <string>Stopping threshold per chan/pol/field to trigger a major cycle</string>
+                    </property>
                     <property name="title">
                      <string>cycle threshold</string>
                     </property>
@@ -451,6 +460,9 @@
                   </item>
                   <item>
                    <widget class="QGroupBox" name="interactive_threshold_box">
+                    <property name="toolTip">
+                     <string>Stopping threshold per chan/pol/field to pause for interaction</string>
+                    </property>
                     <property name="title">
                      <string>interactive threshold</string>
                     </property>
@@ -479,6 +491,11 @@
                  <layout class="QHBoxLayout" name="horizontalLayout_7">
                   <item>
                    <widget class="QGroupBox" name="cycle_factor_box">
+                    <property name="toolTip">
+                     <string>Scale factor to control cleaning depth.
+1 = peak psf sidelobe level.
+&lt;1 = deeper</string>
+                    </property>
                     <property name="title">
                      <string>cycle factor</string>
                     </property>
@@ -503,6 +520,9 @@
                   </item>
                   <item>
                    <widget class="QGroupBox" name="loop_gain_box">
+                    <property name="toolTip">
+                     <string>Iteration step size (0&lt;loopgain&lt;1)</string>
+                    </property>
                     <property name="title">
                      <string>loop gain</string>
                     </property>
