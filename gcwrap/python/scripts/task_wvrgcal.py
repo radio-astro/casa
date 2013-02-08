@@ -186,11 +186,14 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 				mycb.close()
 			return True
 		else:
-			if(rval < 32512):
-				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
+			if(rval == 32512):
+				raise Exception, "wvrgcal executable not available."
+			elif(rval == 65280):
+				casalog.post(theexecutable+' terminated with exit code '+str(rval),'SEVERE')
 				return False
 			else:
-				raise Exception, "wvrgcal executable not available."
+				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
+				return False
 	
 	except Exception, instance:
 		print '*** Error *** ',instance
