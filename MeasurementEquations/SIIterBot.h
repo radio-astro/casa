@@ -50,6 +50,23 @@ class casa::Record;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+	class SIIterBot_adaptor;
+
+	class SIIterBot_callback {
+		public:
+			SIIterBot_callback( ) : adaptor(0) { }
+			~SIIterBot_callback( ) { }
+			void interactionRequired(bool);
+
+			void addHandler( SIIterBot_adaptor* );
+			void removeHandler( SIIterBot_adaptor* );
+
+		private:
+			boost::recursive_mutex mutex;
+			SIIterBot_adaptor *adaptor;
+
+	};
+
 	class SIIterBot_state {
 		private:
 			// make SIIterBot_state uncopyable...
@@ -57,9 +74,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			SIIterBot_state &operator=( const SIIterBot_state & );
 
 		public:
-			SIIterBot_state( );
-			~SIIterBot_state();
-    
+			SIIterBot_state( std::tr1::shared_ptr<SIIterBot_callback> );
+			~SIIterBot_state( );
+
+			/****
+			***** allow or deny callbacks which are funneled through dbus,
+			***** a shared pointer is explicitly NOT used here to avoid a cycle.
+			****/
+			void acceptCallbacks( SIIterBot_adaptor *siba ) { callback->addHandler(siba); }
+			void denyCallbacks( SIIterBot_adaptor *siba ) { callback->removeHandler(siba); }
+
 			/* Wait for an Interactive Clean Cycle */
 			bool interactiveInputRequired();
 			void waitForInteractiveInput(); 
@@ -236,6 +260,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int itsNSummaryFields;
 			Array<Double> itsSummaryMinor;
 			Array<Int>    itsSummaryMajor;
+
+			std::tr1::shared_ptr<SIIterBot_callback> callback;
 	};
 
 	class SIIterBot_adaptor
@@ -251,6 +277,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 				bool incrementController( )	{ return state->incrementController( ); }
 				bool decrementController( )	{ return state->decrementController( ); }
+
+				void interactionRequired( const bool &val ) {
+#ifdef INTERACTIVE_ITERATION
+					edu::nrao::casa::SynthImager_adaptor::interactionRequired( val );
+#endif
+				}
 				void controlUpdate(const std::map< std::string, ::DBus::Variant >& newParams)
 											{
 #ifdef INTERACTIVE_ITERATION

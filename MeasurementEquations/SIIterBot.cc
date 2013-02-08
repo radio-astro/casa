@@ -30,19 +30,41 @@
 
 /* Records Interface */
 #include <casa/Containers/Record.h>
-
-#include <math.h> // For FLT_MAX
+#include <casadbus/types/nullptr.h>		// for casa::memory::nullptr
+#include <math.h>						// For FLT_MAX
 
 #
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+	////////////////////////////////////
+	/// SIIterBot_callback implementation ///
+	////////////////////////////////////
+	void SIIterBot_callback::interactionRequired( bool val ) {
+		boost::lock_guard<boost::recursive_mutex> guard(mutex); 
+		if ( adaptor != 0 )
+			adaptor->interactionRequired(val);
+	}
+
+	void SIIterBot_callback::addHandler( SIIterBot_adaptor *adapt ) {
+		boost::lock_guard<boost::recursive_mutex> guard(mutex); 
+		if ( adaptor == 0 )
+			adaptor = adapt;
+		
+	}
+	void SIIterBot_callback::removeHandler( SIIterBot_adaptor *adapt ) {
+		boost::lock_guard<boost::recursive_mutex> guard(mutex); 
+		if ( adaptor == adapt )
+			adaptor = 0;
+	}
+
   
 	////////////////////////////////////
 	/// SIIterBot_state implementation ///
 	////////////////////////////////////
   
 	// All SIIterBot_states must have 'type' and 'name' defined.
-	SIIterBot_state::SIIterBot_state( ) :
+	SIIterBot_state::SIIterBot_state( std::tr1::shared_ptr<SIIterBot_callback> cb ) :
 						itsDescription("no description is currently available..."),
 						itsMinPsfFraction(0.05),
 						itsMaxPsfFraction(0.8),
@@ -67,7 +89,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsMajorDone(0),
 						itsNSummaryFields(6),
 						itsSummaryMinor(IPosition(2,6,0)),
-						itsSummaryMajor(IPosition(1,0))
+						itsSummaryMajor(IPosition(1,0)),
+						callback(cb)
 	{
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 	}
@@ -92,9 +115,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(!interactionPending) {
 			interactionPending = true;
 			pushDetails( );
-#ifdef INTERACTIVE_ITERATION
-/*FIXME      interactionRequired(interactionPending); */
-#endif
+			if ( memory::nullptr.check(callback) == false )
+				callback->interactionRequired(interactionPending);
 		}
 
 		/* Wait on Condition variable */
@@ -104,9 +126,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (updateNeeded) {
 			updateNeeded = false;
-#ifdef INTERACTIVE_ITERATION
-/*FIXME      interactionRequired(false); */
-#endif
+			if ( memory::nullptr.check(callback) == false )
+				callback->interactionRequired(false);
 			pushDetails();
 		}
 	}
@@ -542,10 +563,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #ifdef INTERACTIVE_ITERATION
 				DBus::ObjectAdaptor( DBusSession::instance().connection( ), dbus::adaptor_object(serviceName).c_str()),
 #endif
-				state(s) { }
+				state(s) {
+#ifdef INTERACTIVE_ITERATION
+		state->acceptCallbacks(this);
+#endif
+	}
 
 	SIIterBot_adaptor::~SIIterBot_adaptor() {
 #ifdef INTERACTIVE_ITERATION
+		state->denyCallbacks(this);
 		disconnect();
 #endif
 	}
