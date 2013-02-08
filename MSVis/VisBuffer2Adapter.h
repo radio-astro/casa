@@ -257,13 +257,13 @@ public:
     virtual const Matrix<Double>& uvwMat() const { return vb2_p-> uvw(); }
 
     virtual Matrix<CStokesVector>& visibility() { IllegalOperation (); }
-    virtual const Matrix<CStokesVector>& visibility() const { return vb2_p-> vis(); }
+    virtual const Matrix<CStokesVector>& visibility() const { IllegalOperation (); }
 
     virtual Matrix<CStokesVector>& modelVisibility() { IllegalOperation (); }
-    virtual const Matrix<CStokesVector>& modelVisibility() const { return vb2_p-> visModel(); }
+    virtual const Matrix<CStokesVector>& modelVisibility() const { IllegalOperation (); }
 
     virtual Matrix<CStokesVector>& correctedVisibility() { IllegalOperation (); }
-    virtual const Matrix<CStokesVector>& correctedVisibility() const { return vb2_p-> visCorrected(); }
+    virtual const Matrix<CStokesVector>& correctedVisibility() const { IllegalOperation (); }
 
     virtual Cube<Complex>& visCube() { IllegalOperation (); }
     virtual const Cube<Complex>& visCube() const { return vb2_p-> visCube(); }
@@ -410,7 +410,7 @@ public:
     virtual void setFloatDataCube(const Cube<Float>& fcube){ CheckWritability(); vb2Rw_p-> setVisCubeFloat(fcube); }
 
     // Set model according to a Stokes vector
-    virtual void setModelVisCube(const Vector<Float>& stokes){ CheckWritability(); vb2Rw_p-> setVisCubeModel(stokes); }
+    virtual void setModelVisCube(const Vector<Float>& stokes){ IllegalOperation (); }
 
     // Reference external model visibilities
     virtual void refModelVis(const Matrix<CStokesVector>& ){ IllegalOperation(); }

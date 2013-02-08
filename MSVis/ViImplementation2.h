@@ -41,7 +41,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <typename T> class Array;
 template <typename T> class Block;
-class CStokesVector;
+//class CStokesVector;
 template <typename T> class Cube;
 template <typename T> class Matrix;
 class MDirection;
@@ -348,9 +348,9 @@ public:
     // If the MS doesn't contain all polarizations, it is assumed it
     // contains one or two parallel hand polarizations.
 
-    virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const = 0;
-    virtual void visibilityModel (Matrix<CStokesVector> & vis) const = 0;
-    virtual void visibilityObserved (Matrix<CStokesVector> & vis) const = 0;
+//    virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const = 0;
+//    virtual void visibilityModel (Matrix<CStokesVector> & vis) const = 0;
+//    virtual void visibilityObserved (Matrix<CStokesVector> & vis) const = 0;
 
     // Return the shape of the visibility Cube
 
@@ -543,9 +543,9 @@ public:
     // in the original MS.
     // If the MS does not contain all polarizations, only the parallel
     // hand polarizations are used.
-    virtual void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes) = 0;
-    virtual void writeVisModel (const Matrix<CStokesVector> & visibilityStokes) = 0;
-    virtual void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes) = 0;
+//    virtual void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes) = 0;
+//    virtual void writeVisModel (const Matrix<CStokesVector> & visibilityStokes) = 0;
+//    virtual void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes) = 0;
 
     // Write/modify the visibilities
     // This writes the data as found in the MS, Cube (npol,nchan,nrow).

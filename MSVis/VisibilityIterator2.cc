@@ -931,26 +931,26 @@ VisibilityIterator2::visibilityObserved (Cube<Complex>& vis) const
     impl_p->visibilityObserved (vis);
 }
 
-void
-VisibilityIterator2::visibilityCorrected (Matrix<CStokesVector>& vis) const
-{
-    CheckImplementationPointerR ();
-    impl_p->visibilityCorrected (vis);
-}
+//void
+//VisibilityIterator2::visibilityCorrected (Matrix<CStokesVector>& vis) const
+//{
+//    CheckImplementationPointerR ();
+//    impl_p->visibilityCorrected (vis);
+//}
 
-void
-VisibilityIterator2::visibilityModel (Matrix<CStokesVector>& vis) const
-{
-    CheckImplementationPointerR ();
-    impl_p->visibilityModel (vis);
-}
+//void
+//VisibilityIterator2::visibilityModel (Matrix<CStokesVector>& vis) const
+//{
+//    CheckImplementationPointerR ();
+//    impl_p->visibilityModel (vis);
+//}
 
-void
-VisibilityIterator2::visibilityObserved (Matrix<CStokesVector>& vis) const
-{
-    CheckImplementationPointerR ();
-    impl_p->visibilityObserved (vis);
-}
+//void
+//VisibilityIterator2::visibilityObserved (Matrix<CStokesVector>& vis) const
+//{
+//    CheckImplementationPointerR ();
+//    impl_p->visibilityObserved (vis);
+//}
 
 IPosition
 VisibilityIterator2::visibilityShape () const
@@ -1021,26 +1021,26 @@ VisibilityIterator2::writeSigmaMat (const Matrix<Float>& sigmat)
     impl_p->writeSigmaMat (sigmat);
 }
 
-void
-VisibilityIterator2::writeVisCorrected (const Matrix<CStokesVector>& vis)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeVisCorrected (vis);
-}
+//void
+//VisibilityIterator2::writeVisCorrected (const Matrix<CStokesVector>& vis)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeVisCorrected (vis);
+//}
 
-void
-VisibilityIterator2::writeVisModel (const Matrix<CStokesVector>& vis)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeVisModel (vis);
-}
+//void
+//VisibilityIterator2::writeVisModel (const Matrix<CStokesVector>& vis)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeVisModel (vis);
+//}
 
-void
-VisibilityIterator2::writeVisObserved (const Matrix<CStokesVector>& vis)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeVisObserved (vis);
-}
+//void
+//VisibilityIterator2::writeVisObserved (const Matrix<CStokesVector>& vis)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeVisObserved (vis);
+//}
 
 void
 VisibilityIterator2::writeVisCorrected (const Cube<Complex>& vis)
@@ -1221,7 +1221,7 @@ AveragingTvi2Factory::createVi (MeasurementSet * ms,
     Block<MeasurementSet> mss (1, * ms);
     Block<Int> sortColumns;
     Double averagingInterval = interval * averagingFactor;
-    Int nAveragesPerChunk = chunkInterval / averagingInterval * 1.001;
+    Int nAveragesPerChunk = (Int) (chunkInterval / averagingInterval * 1.001);
 
     VisibilityIteratorImpl2 * vii2 = new VisibilityIteratorImpl2 (vi2, mss, sortColumns, True,
                                                                   chunkInterval, VbPlain, False);

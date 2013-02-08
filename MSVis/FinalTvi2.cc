@@ -197,21 +197,22 @@ FinalTvi2::writeFlagCategory(const Array<Bool>& /*fc*/)
     Throw ("Not Implemented");
 }
 
-void
-FinalTvi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
-{
-    Throw ("Not Implemented");
-}
-void
-FinalTvi2::writeVisModel (const Matrix<CStokesVector> & /*visibilityStokes*/)
-{
-    Throw ("Not Implemented");
-}
-void
-FinalTvi2::writeVisObserved (const Matrix<CStokesVector> & /*visibilityStokes*/)
-{
-    Throw ("Not Implemented");
-}
+//void
+//FinalTvi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
+//{
+//    Throw ("Not Implemented");
+//}
+
+//void
+//FinalTvi2::writeVisModel (const Matrix<CStokesVector> & /*visibilityStokes*/)
+//{
+//    Throw ("Not Implemented");
+//}
+//void
+//FinalTvi2::writeVisObserved (const Matrix<CStokesVector> & /*visibilityStokes*/)
+//{
+//    Throw ("Not Implemented");
+//}
 
 void
 FinalTvi2::writeVisCorrected (const Cube<Complex> & /*vis*/)

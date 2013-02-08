@@ -388,13 +388,13 @@ public:
     virtual const Cube<Complex> & visCube () const = 0; // [nC,nF,nR]
     virtual void setVisCube(const Complex & c) = 0;
     virtual void setVisCube (const Cube<Complex> &) = 0; // [nC,nF,nR]
-    virtual const Matrix<CStokesVector> & vis () const = 0; // [nF,nR]
-    virtual void setVis (Matrix<CStokesVector> &) = 0; // [nF,nR]
+//    virtual const Matrix<CStokesVector> & vis () const = 0; // [nF,nR]
+//    virtual void setVis (Matrix<CStokesVector> &) = 0; // [nF,nR]
 
     virtual const Cube<Complex> & visCubeCorrected () const = 0; // [nC,nF,nR]
     virtual void setVisCubeCorrected (const Cube<Complex> &) = 0; // [nC,nF,nR]
-    virtual const Matrix<CStokesVector> & visCorrected () const = 0; // [nF,nR]
-    virtual void setVisCorrected (const Matrix<CStokesVector> &) = 0; // [nF,nR]
+//    virtual const Matrix<CStokesVector> & visCorrected () const = 0; // [nF,nR]
+//    virtual void setVisCorrected (const Matrix<CStokesVector> &) = 0; // [nF,nR]
 
     virtual const Cube<Float> & visCubeFloat () const = 0; // [nC,nF,nR]
     virtual void setVisCubeFloat (const Cube<Float> &) = 0; // [nC,nF,nR]
@@ -402,9 +402,9 @@ public:
     virtual const Cube<Complex> & visCubeModel () const = 0; // [nC,nF,nR]
     virtual void setVisCubeModel(const Complex & c) = 0;
     virtual void setVisCubeModel(const Cube<Complex>& vis) = 0; // [nC,nF,nR]
-    virtual void setVisCubeModel(const Vector<Float>& stokes) = 0; // [1..4]
-    virtual const Matrix<CStokesVector> & visModel () const = 0; // [nF,nR]
-    virtual void setVisModel (Matrix<CStokesVector> &) = 0; // [nF,nR]
+//    virtual void setVisCubeModel(const Vector<Float>& stokes) = 0; // [1..4]
+//    virtual const Matrix<CStokesVector> & visModel () const = 0; // [nF,nR]
+//    virtual void setVisModel (Matrix<CStokesVector> &) = 0; // [nF,nR]
 
     //--------------------------------------------------------
     //

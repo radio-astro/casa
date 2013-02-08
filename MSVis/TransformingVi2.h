@@ -322,9 +322,9 @@ public:
     // If the MS doesn't contain all polarizations, it is assumed it
     // contains one or two parallel hand polarizations.
 
-    virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
-    virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
-    virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
+//    virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
+//    virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
+//    virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
 
     // Return the shape of the visibility Cube
 
@@ -517,9 +517,9 @@ public:
     // in the original MS.
     // If the MS does not contain all polarizations, only the parallel
     // hand polarizations are used.
-    virtual void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
-    virtual void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
-    virtual void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
+//    virtual void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
+//    virtual void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
+//    virtual void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
 
     // Write/modify the visibilities
     // This writes the data as found in the MS, Cube (npol,nchan,nrow).
