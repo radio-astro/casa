@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <!-- MAIN PARAMETERS -->
 
     <param type="string" name="mode">
-      <description>Mask method (copy,expand,merge,delete,setdefaultmask)</description>
+      <description>Mask method (list, copy,expand,delete,setdefaultmask)</description>
       <value>list</value>
       <allowed kind="enum">
         <value>list</value> 
@@ -153,9 +153,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 Modes : 
 -------------
 
+list : list internal masks in inpimage to the log
 copy :  Copy/merge masks and regrid if necessary to a new or existing mask
 expand : Expand a mask from one range of freqs to another range
-list : list internal masks in inpimage to the log
 delete : delete an internal mask from an image (if the deleted mask was a default mask,
          the task chooses the first one in the remaining internal mask list (as appears 
          in the log when do listing with mode='list') 
@@ -190,7 +190,7 @@ inpmask : Name(s) of input mask(s)
          'myimage:mask0' : use(true/false) internal mask 
          'myimage'  : use the inpimage values to make a mask (zero/non-zero).
                       Non-zero values are normalized to one in the process.
-         (merge mode)
+         (copy mode)
          Specify the image mask(s), T/F mask(s), and region(s) to be merged in a list of strings.
          The regions can be specified directly in the CASA region format or in the text file(s) contains
          the regions. 
