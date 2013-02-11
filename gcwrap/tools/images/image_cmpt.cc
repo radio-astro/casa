@@ -34,7 +34,6 @@
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageSummary.h>
-#include <images/Images/ImageTwoPtCorr.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/LELImageCoord.h>
 #include <images/Images/PagedImage.h>
