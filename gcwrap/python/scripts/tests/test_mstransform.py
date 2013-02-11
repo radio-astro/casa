@@ -86,23 +86,8 @@ class test_Split(test_base):
         
     
 # TODO: Look at tests in test_cvel-B.py too
-class test_Cvel1(test_base):
-    '''Tests to compare with the cvel task'''
-    
-    def setUp(self):
-        self.setUp_cveltest()
-        
-    def test_cveltest3(self):
-        '''mstransform: Do not apply any transformation. Default values.'''
-        
-        outfile = 'cveltest3.ms'
-        rval = mstransform(vis=self.vis, outputvis=outfile, datacolumn='data')
-        self.assertNotEqual(rval,False)
-        ret = th.verify_ms(outfile, 1, 64, 0)
-        self.assertTrue(ret[0],ret[1])
-        
                      
-class test_Combspw(test_base):
+class test_Combspw1(test_base):
     ''' Tests for combinespws'''
     
     def setUp(self):
@@ -112,20 +97,20 @@ class test_Combspw(test_base):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf combspw*.ms')
                 
-    def test_combspw1(self):
+    def test_combspw1_1(self):
         '''mstransform: Combine four spws into one'''
         
-        outputms = "combspw1.ms"
+        outputms = "combspw11.ms"
         mstransform(vis=self.vis, outputvis=outputms, combinespws=True, spw='0~3')
         self.assertTrue(os.path.exists(outputms))
         
         ret = th.verify_ms(outputms, 1, 256, 0)
         self.assertTrue(ret[0],ret[1])
         
-    def test_combspw2(self):
+    def test_combspw1_2(self):
         '''mstransform: Combine some channels of two spws'''
         
-        outputms = "combspw2.ms"
+        outputms = "combspw12.ms"
         mstransform(vis=self.vis, outputvis=outputms, combinespws=True, spw='0:60~63,1:60~63')
         self.assertTrue(os.path.exists(outputms))
         
@@ -139,11 +124,11 @@ class test_Combspw(test_base):
         ret = th.verify_ms('combcvel1.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
 
-    def test_combspw3(self):
+    def test_combspw1_3(self):
         '''mstransform: Split MS with two spws, one field selected'''
         # cvel: test7
         self.setUp_jupiter()
-        outputms = 'combspw3.ms'
+        outputms = 'combspw13.ms'
         mstransform(vis=self.vis, outputvis=outputms, combinespws=True, spw='0,1',field = '12',
              datacolumn='DATA')
         
@@ -151,6 +136,38 @@ class test_Combspw(test_base):
         ret = th.verify_ms(outputms, 1, 2, 0)
         self.assertTrue(ret[0],ret[1])
 
+class test_Combspw2(test_base):
+    ''' Tests for combinespws'''
+    
+    def setUp(self):
+        self.setUp_g19()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf combspw*.ms')
+
+    def test_combspw2_1(self):
+        '''mstransform: Combine MS with two 24 spws and 128 channels each'''
+        # cvel: test27
+        outputms = 'combspw21.ms'
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, datacolumn='DATA')
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 2440, 0)
+        self.assertTrue(ret[0],ret[1])
+
+    def test_combspw2_2(self):
+        '''mstransform: Combine MS with two 24 spws and 128 channels each, channel_b mode'''
+        # cvel: test30
+        # channel_b does not force an equidistant grid
+        outputms = 'combspw22.ms'
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True, datacolumn='DATA',
+                    mode='channel_b')
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 2425, 0)
+        self.assertTrue(ret[0],ret[1])
+        
 
 class test_Regridms1(test_base):
     '''Tests for regridms using Four_ants_3C286.ms'''
@@ -350,7 +367,7 @@ class test_Regridms3(test_base):
         self.assertTrue(ret[0],ret[1])        
 
 class test_Regridms4(test_base):
-    '''Tests for regridms using Jupiter MS'''
+    '''Tests for regridms using G19 MS'''
        
     def setUp(self):
         self.setUp_g19()
@@ -369,14 +386,227 @@ class test_Regridms4(test_base):
                     phasecenter="J2000 18h25m56.09 -12d04m28.20", datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        # Compare input->output channel frequencies
-        # TODO: verify the following checks. I think it is not
-        # checking the frequencies correctly.
-        inpfreq = th.getChannels(self.vis, 0, range(100,110,1))
-        print inpfreq.size
-        ret = th.verify_ms(outputms, 1, 10, 0, inpfreq)
+        # TODO: how to verify that the frequencies are correct?
+        ret = th.verify_ms(outputms, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])        
 
+    def test_regrid4_2(self):
+        '''mstransform: Regrid MS with 24 spws to combine, channel mode, 111 output channels'''
+        # cvel: test20
+        outputms = "reg42.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True,
+                    mode='channel', nchan=111, start=201, width=3, 
+                    phasecenter="J2000 18h25m56.09 -12d04m28.20", datacolumn='DATA')
+        self.assertTrue(os.path.exists(outputms))
+        
+        ret = th.verify_ms(outputms, 1, 111, 0)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_regrid4_3(self):
+        '''mstransform: Regrid MS with 24 spws to combine, mode frequency, 111 output channels'''
+        # cvel: test21
+        outputms = "reg43.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True,
+                    mode='frequency', nchan=21, start='229587.0MHz', width='1600kHz', 
+                    phasecenter="J2000 18h25m56.09 -12d04m28.20", datacolumn='DATA')
+        self.assertTrue(os.path.exists(outputms))
+        
+        ret = th.verify_ms(outputms, 1, 21, 0)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_regrid4_4(self):
+        '''mstransform: Regrid MS with 24 spws to combine, mode frequency, negative with, 210 output channels'''
+        # cvel: test22
+        outputms = "reg44.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True,
+                    mode='frequency', nchan=210, start='229588.0MHz', width='-2400kHz', 
+                    phasecenter="J2000 18h25m56.09 -12d04m28.20", datacolumn='DATA')
+        self.assertTrue(os.path.exists(outputms))
+        
+        ret = th.verify_ms(outputms, 1, 210, 0)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_regrid4_5(self):
+        '''mstransform: Regrid and combine 24 spws in radio mode, create 30 output channels'''
+        # cvel: test23
+        outputms = "reg45.ms"
+        vrad = (220398.676E6 - 229586E6)/220398.676E6 * 2.99792E8
+        vwidth = ((220398.676E6 - 229586E6+1600E3)/220398.676E6 * 2.99792E8) - vrad
+        vrad = vrad-vwidth/2.
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True,
+                    mode='velocity', nchan = 30, restfreq = '220398.676MHz', start = str(vrad)+'m/s',
+                    width = str(vwidth)+'m/s', phasecenter = "J2000 18h25m56.09 -12d04m28.20",
+                    veltype = 'radio', datacolumn='DATA')
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 30, 0)
+        self.assertTrue(ret[0],ret[1])        
+
+        
+    def test_regrid4_6(self):
+        '''mstransform: Regrid and combine 24 spws in optical vel type, create 40 output channels'''
+        # cvel: test25
+        outputms = "reg46.ms"
+        lambda0 = 2.99792E8/220398.676E6
+        lambda1 = 2.99792E8/229586E6
+        lambda2 = 2.99792E8/(229586E6+1600E3)
+        vopt = (lambda1-lambda0)/lambda0 * 2.99792E8
+        vwidth = vopt - (lambda2-lambda0)/lambda0 * 2.99792E8
+        vopt = vopt-vwidth/2.
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True, mode='velocity',
+            nchan = 40, restfreq = '220398.676MHz', start = str(vopt)+'m/s', width = str(vwidth)+'m/s',
+            phasecenter = "J2000 18h25m56.09 -12d04m28.20", veltype = 'optical', datacolumn='data')
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 40, 0)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_regrid4_7(self):
+        '''mstransform: Regrid 1 spw with default nchan'''
+        # cvel: test43
+        outputms = "reg47.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, regridms=True, mode='channel',
+            spw='1', start=98, width=3, phasecenter="J2000 18h25m56.09 -12d04m28.20")
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 10, 0)
+        self.assertTrue(ret[0],ret[1])   
+             
+    def test_regrid4_8(self):
+        '''mstransform: Regrid 2 spw2 with default nchan'''
+        # cvel: test44
+        outputms = "reg48.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True, mode='channel',
+            spw='1,15', start=198, width=3, phasecenter="J2000 18h25m56.09 -12d04m28.20")
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 10, 0)
+        self.assertTrue(ret[0],ret[1])   
+
+
+        
+class test_Regridms5(test_base):
+    '''Tests to compare with the cvel task using test.ms'''
+    
+    def setUp(self):
+        self.setUp_cveltest()
+        
+    def test_regrid5_1(self):
+        '''mstransform: Test effect of sign of width parameter: channel mode, width positive'''
+        #cvel: test35
+        outputms = 'reg51.ms'
+                
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, regridms=True,
+                           spw='0', datacolumn='data', nchan=3, start=1, width=1)
+        self.assertTrue(os.path.exists(outputms))
+
+        # Get input channel frequencies to compare
+        inpfreq = th.getChannels(self.vis, 0, range(1,4,1))
+        
+        # compare with output created channels
+        ret = th.verify_ms(outputms, 1, 3, 0, inpfreq)
+        self.assertTrue(ret[0],ret[1])
+        
+    def test_regrid5_2(self):
+        '''mstransform: Test effect of sign of width parameter: channel mode, width negative'''
+        #cvel: test36
+        outputms = 'reg52.ms'
+                
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, regridms=True,
+                           spw='0', datacolumn='data', nchan=3, start=3, width=1)
+        self.assertTrue(os.path.exists(outputms))
+
+        # Get input channel frequencies to compare
+        inpfreq = th.getChannels(self.vis, 0, range(1,4,1))
+        
+        # compare with output created channels
+        ret = th.verify_ms(outputms, 1, 3, 0, inpfreq)
+        self.assertTrue(ret[0],ret[1])
+
+    # Wait until fftshift interpolation is implemented by Justo
+    # TODO: add the other cvel tests with this interpolation
+#    def test_regrid5_3(self):
+#        '''mstransform: Test fftshift regridding: channel mode, width positive'''
+#        #cvel: test48
+#        outputms = 'reg53.ms'
+#                
+#        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, regridms=True,
+#                           nchan=3, start=1, width=1, interpolation='fftshift', datacolumn='data')
+#        self.assertTrue(os.path.exists(outputms))
+#
+#        # Get input channel frequencies to compare
+#        inpfreq = th.getChannels(self.vis, 0, range(1,4,1))
+#        
+#        # compare with output created channels
+#        ret = th.verify_ms(outputms, 1, 3, 0, inpfreq)
+#        self.assertTrue(ret[0],ret[1])
+
+
+
+
+
+class test_Hanning(test_base):
+    
+    def setUp(self):
+        self.setUp_g19()
+        
+    def tearDown(self):
+        pass
+        os.system('rm -rf '+ self.vis)
+#        os.system('rm -rf reg*.ms')
+
+    def test_hanning1(self):
+        '''mstransform: Apply Hanning smoothing in MS with 24 spws. Do not combine spws.'''
+        outputms = "hann1.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, hanning=True,
+                    datacolumn='data')
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 24, 128, 0)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verify_ms(outputms, 24, 128, 2)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verify_ms(outputms, 24, 128, 15)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verify_ms(outputms, 24, 128, 18)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verify_ms(outputms, 24, 128, 23)
+        self.assertTrue(ret[0],ret[1])        
+
+# Uncomment after the seg fault is fixed
+#    def test_hanning2(self):
+#        '''mstransform: Apply Hanning smoothing and select spw=1.'''
+#        # cvel: test33
+#        outputms = "hann2.ms"
+#        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, hanning=True,
+#                    spw='1')
+#        
+#        self.assertTrue(os.path.exists(outputms))
+#        ret = th.verify_ms(outputms, 1, 128, 0)
+#        self.assertTrue(ret[0],ret[1])        
+
+    def test_hanning3(self):
+        '''mstransform: Apply Hanning smoothing and combine spw=1,2,3.'''
+        outputms = "hann3.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, hanning=True,
+                    spw='1,2,3', datacolumn='data')
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 1448, 0)
+        self.assertTrue(ret[0],ret[1])        
+            
+    def test_hanning4(self):
+        '''mstransform: Apply Hanning smoothing  and combine 24 spws; change frame to BARY'''
+        # cvel: test32
+        outputms = "hann4.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True, hanning=True,
+                    mode='channel', datacolumn='data', outframe = "BARY",
+                    phasecenter = "J2000 18h25m56.09 -12d04m28.20")
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verify_ms(outputms, 1, 2440, 0)
+        self.assertTrue(ret[0],ret[1])        
+        
 # Cleanup class 
 class Cleanup(test_base):
     
@@ -392,10 +622,12 @@ class Cleanup(test_base):
 
 def suite():
     return [test_Split,
-            test_Combspw,
-            test_Cvel1,
+            test_Combspw1,
+            test_Combspw2,
             test_Regridms1,
             test_Regridms2,
             test_Regridms3,
             test_Regridms4,
+            test_Regridms5,
+            test_Hanning,
             Cleanup]

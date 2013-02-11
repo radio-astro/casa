@@ -200,13 +200,11 @@ def mstransform(
             config['combinespws'] = True
         if freqaverage:
             casalog.post('Frequency averaging is not yet implemented', 'WARN')
-            pass
-            config['freqaverage'] = True
-            config['freqbin'] = freqbin
-            config['useweights'] = useweights
+#            config['freqaverage'] = True
+#            config['freqbin'] = freqbin
+#            config['useweights'] = useweights
         if hanning:
-            casalog.post('Hanning smoothing is not yet implemented', 'WARN')
-            pass
+            casalog.post('Apply Hanning smoothing')
             config['hanning'] = True
         if regridms:
             casalog.post('Parse regridding parameters')
@@ -223,15 +221,13 @@ def mstransform(
             config['veltype'] = veltype
         if separatespws:
             casalog.post('Separation of spws is not yet implemented', 'WARN')
-            pass
-            config['nspws'] = nspws # this will change
+#            config['nspws'] = nspws # this will change
         if timeaverage:
             casalog.post('Time averaging is not yet implemented', 'WARN')
-            pass
-            config['timebin'] = timebin
-            config['timespan'] = timespan
-            config['quantize_c'] = quantize_c
-            config['minbaselines'] = minbaselines
+#            config['timebin'] = timebin
+#            config['timespan'] = timespan
+#            config['quantize_c'] = quantize_c
+#            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         mtlocal.config(config)

@@ -153,6 +153,13 @@ MSTransform::configure(Record config)
 
 	// TODO: should I check all the other parameters in the config_p Record?
 	// Which other parameters should be checked here?
+
+	ostringstream os;
+	config_p.print(os);
+	String str(os.str());
+	log_p << LogIO::DEBUG1 << " Configuration Record " << LogIO::POST;
+	log_p << LogIO::DEBUG1 << str << LogIO::POST;
+
 	return true;
 }
 
