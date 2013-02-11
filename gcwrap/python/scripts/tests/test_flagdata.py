@@ -346,11 +346,12 @@ class test_shadow(test_base):
         filename = 'cas2399.txt'
         create_input(input, filename)
         
-        flagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename)
+        flagdata(vis=self.vis, mode='shadow', tolerance=0.0, addantenna=filename,flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
-        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
-        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
+        ##print res['antenna']['VLA3']['flagged'], res['antenna']['VLA4']['flagged'], res['antenna']['VLA5']['flagged']
+        self.assertEqual(res['antenna']['VLA3']['flagged'], 3752)
+        self.assertEqual(res['antenna']['VLA4']['flagged'], 1320)
+        self.assertEqual(res['antenna']['VLA5']['flagged'], 1104)
         
     def test_addantenna(self):
         '''flagdata: use antenna file in list mode'''
@@ -375,7 +376,7 @@ class test_shadow(test_base):
         create_input(input, antfile)
         
         # Create list file
-        input = "mode='shadow' tolerance=10.0 addantenna='myants.txt'"
+        myinput = "mode='shadow' tolerance=0.0 addantenna='myants.txt'"
         filename = 'listfile.txt'
         create_input(input, filename)
         
@@ -384,9 +385,9 @@ class test_shadow(test_base):
         
         # Check flags
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
-        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
-        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
+        self.assertEqual(res['antenna']['VLA3']['flagged'], 3752)
+        self.assertEqual(res['antenna']['VLA4']['flagged'], 1320)
+        self.assertEqual(res['antenna']['VLA5']['flagged'], 1104)
 
 class test_flagmanager(test_base):
     
