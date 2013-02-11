@@ -134,6 +134,9 @@ def predictcomp(objname=None, standard=None, epoch=None,
             for k in ('shape', 'spectrum'):
                 retval[k] = comp[k]
             if antennalist:
+                retval['spectrum']['bl0flux']={}
+                retval['spectrum']['bl0flux']['value']=zeroblf[0]
+                retval['spectrum']['bl0flux']['unit']='Jy'
                 retval['savedfig'] = savefig
                 if not bl0flux:
                   zeroblf=[0.0]
