@@ -103,6 +103,8 @@ install (FILES
 	ImageAnalysis/ImageStatsCalculator.h
 	ImageAnalysis/ImageTask.h
 	ImageAnalysis/ImageTransposer.h
+	ImageAnalysis/ImageTwoPtCorr.h
+	ImageAnalysis/ImageTwoPtCorr.tcc
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/PVGenerator.h
