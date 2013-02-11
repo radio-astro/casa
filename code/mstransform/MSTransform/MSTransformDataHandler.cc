@@ -118,6 +118,7 @@ void MSTransformDataHandler::initialize()
 	inputOutputScanIntentIndexMap_p.clear();
 	inputOutputFieldIndexMap_p.clear();
 	inputOutputSPWIndexMap_p.clear();
+	outputInputSPWIndexMap_p.clear();
 
 	// Frequency specification parameters
 	channelAverage_p = False;
@@ -741,6 +742,7 @@ void MSTransformDataHandler::initDataSelectionParams()
 		for (uInt index=0; index < spwList.size(); index++)
 		{
 			inputOutputSPWIndexMap_p[spwList(index)] = index;
+			outputInputSPWIndexMap_p[index] = spwList(index);
 		}
 	}
 
@@ -768,9 +770,19 @@ void MSTransformDataHandler::regridSpwSubTable()
     ScalarColumn<Double> refFrequencyCol = spwCols.refFrequency();
     ScalarColumn<Double> totalBandwidthCol = spwCols.totalBandwidth();
 
+    Int spwId;
     for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
     {
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Regridding SPW with Id " <<  spw_idx << LogIO::POST;
+    	if (outputInputSPWIndexMap_p.size()>0)
+    	{
+    		spwId = outputInputSPWIndexMap_p[spw_idx];
+    	}
+    	else
+    	{
+    		spwId = spw_idx;
+    	}
+
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Regridding SPW with Id " <<  spwId << LogIO::POST;
 
     	// Get input frequencies and widths
     	Vector<Double> inputChanFreq(chanFreqCol(spw_idx));
@@ -829,7 +841,7 @@ void MSTransformDataHandler::regridSpwSubTable()
         logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
         // Add input-output SPW pair to map
-    	inputOutputSpwMap_p[spw_idx] = std::make_pair(inputSpw,outputSpw);
+    	inputOutputSpwMap_p[spwId] = std::make_pair(inputSpw,outputSpw);
     }
 
     // Flush changes
@@ -908,8 +920,6 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << inputSpw.CHAN_FREQ_aux(0) << " Hz"
     		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << inputSpw.CHAN_FREQ_aux(inputSpw.NUM_CHAN -1) << " Hz";
     logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
-
-    /// Determine input SPW structure ////////////////////
 
     /// Determine output SPW structure ///////////////////
 
@@ -1566,10 +1576,10 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	// Declare common auxiliary variables
 	Vector<Int> tmpVectorInt(rowRef.nrow(),0);
 
-	fillAndReindexScalar(vb->arrayId(),tmpVectorInt,!arraySelection_p.empty(),inputOutputArrayIndexMap_p);
+	fillAndReindexScalar(vb->arrayId(),tmpVectorInt,inputOutputArrayIndexMap_p.size(),inputOutputArrayIndexMap_p);
 	outputMsCols_p->arrayId().putColumnCells(rowRef,tmpVectorInt);
 
-	fillAndReindexScalar(vb->fieldId(),tmpVectorInt,!fieldSelection_p.empty(),inputOutputFieldIndexMap_p);
+	fillAndReindexScalar(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p.size(),inputOutputFieldIndexMap_p);
 	outputMsCols_p->fieldId().putColumnCells(rowRef,tmpVectorInt);
 
 	if (combinespws_p)
@@ -1584,15 +1594,15 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Scan
-		mapAndReindexVector(vb->scan(),tmpVectorInt,!scanSelection_p.empty(),inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
+		mapAndReindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p.size(),inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
 		outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
 
 		// State
-		mapAndReindexVector(vb->stateId(),tmpVectorInt,!scanIntentSelection_p.empty(),inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
+		mapAndReindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p.size(),inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
 		outputMsCols_p->stateId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Observation
-		mapAndReindexVector(vb->observationId(),tmpVectorInt,!observationSelection_p.empty(),inputOutputObservationIndexMap_p,True);
+		mapAndReindexVector(vb->observationId(),tmpVectorInt,inputOutputObservationIndexMap_p.size(),inputOutputObservationIndexMap_p,True);
 		outputMsCols_p->observationId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Non re-indexable vector columns
@@ -1647,7 +1657,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Scan
-		if (!scanSelection_p.empty())
+		if (inputOutputScanIndexMap_p.size())
 		{
 			reindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
 			outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
@@ -1658,7 +1668,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 
 		// State
-		if (!scanIntentSelection_p.empty())
+		if (inputOutputScanIntentIndexMap_p.size())
 		{
 			reindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
 			outputMsCols_p->stateId().putColumnCells(rowRef,tmpVectorInt);
@@ -1669,7 +1679,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 
 		// Observation
-		if (!observationSelection_p.empty())
+		if (inputOutputObservationIndexMap_p.size())
 		{
 			reindexVector(vb->observationId(),tmpVectorInt,inputOutputObservationIndexMap_p,True);
 			outputMsCols_p->observationId().putColumnCells(rowRef,tmpVectorInt);
@@ -1925,11 +1935,16 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (combinespws_p)
 				{
-					writeTransformedCube(vb->visCube(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+					regridAndCombineCubes(vb->visCube(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+				}
+				else if (refFrameTransformation_p or channelAverage_p)
+				{
+					regridCubes(vb->visCube(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 				}
 				else
 				{
 					writeCube(vb->visCube(),outputMsCols_p->data(),rowRef);
+					writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
 				}
 				break;
 			}
@@ -1948,22 +1963,32 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				{
 					if (combinespws_p)
 					{
-						writeTransformedCube(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+						regridAndCombineCubes(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+					}
+					else if (refFrameTransformation_p or channelAverage_p)
+					{
+						regridCubes(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
 						writeCube(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef);
+						writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
 					}
 				}
 				else
 				{
 					if (combinespws_p)
 					{
-						writeTransformedCube(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef,vb,outputFlagCol);
+						regridAndCombineCubes(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef,vb,outputFlagCol);
+					}
+					else if (refFrameTransformation_p or channelAverage_p)
+					{
+						regridCubes(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
 						writeCube(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef);
+						writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
 					}
 				}
 				break;
@@ -1983,22 +2008,32 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				{
 					if (combinespws_p)
 					{
-						writeTransformedCube(vb->visCubeModel(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+						regridAndCombineCubes(vb->visCubeModel(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+					}
+					else if (refFrameTransformation_p or channelAverage_p)
+					{
+						regridCubes(vb->visCubeModel(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
 						writeCube(vb->visCubeModel(),outputMsCols_p->data(),rowRef);
+						writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
 					}
 				}
 				else
 				{
 					if (combinespws_p)
 					{
-						writeTransformedCube(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef,vb,outputFlagCol);
+						regridAndCombineCubes(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef,vb,outputFlagCol);
+					}
+					else if (refFrameTransformation_p or channelAverage_p)
+					{
+						regridCubes(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
 						writeCube(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef);
+						writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
 					}
 				}
 				break;
@@ -2016,11 +2051,16 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (combinespws_p)
 				{
-					writeTransformedCube(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef,vb,outputFlagCol);
+					regridAndCombineCubes(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef,vb,outputFlagCol);
+				}
+				else if (refFrameTransformation_p or channelAverage_p)
+				{
+					regridCubes(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef,vb,outputFlagCol);
 				}
 				else
 				{
 					writeCube(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef);
+					writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
 				}
 				break;
 			}
@@ -2038,17 +2078,15 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	}
 
 
-	if (!combinespws_p)
-	{
-		writeCube(vb->flagCube(),outputMsCols_p->flag(),rowRef);
-	}
-
-
     if (fillWeightSpectrum_p)
     {
     	if (combinespws_p)
     	{
-    		writeTransformedCube(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef,vb,False);
+    		regridAndCombineCubes(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef,vb,False);
+    	}
+    	else if (refFrameTransformation_p or channelAverage_p)
+    	{
+    		regridCubes(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef,vb,False);
     	}
     	else
     	{
@@ -2115,10 +2153,50 @@ template <class T> void MSTransformDataHandler::writeCube(const Cube<T> &inputCu
 }
 
 // -----------------------------------------------------------------------
-// Fill the data from an input cube with shape [nPol,nChan,nBaselinesxnSPWs] into
-// an output cube with shape [nPol,nChanxnSPWs,nBaselines] resolving overlaps
+// Apply frequency transformations to each SPWs separately, writing the
+// result plane by plane (i.e. row by row) to reduce memory usage
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeTransformedCube(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol)
+template <class T> void MSTransformDataHandler::regridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol)
+{
+	// Get input flag cube
+	const Cube<Bool> inputFlagCube = vb->flagCube();
+
+	// Get spw and define output plane shape
+	Int spw = vb->spectralWindow();
+
+	// Get input cube shape
+	IPosition inputCubeShape = inputDataCube.shape();
+	uInt nInputCorrelations = inputCubeShape(0);
+	uInt nInputChannels = inputCubeShape(1);
+	uInt nRows = inputCubeShape(2);
+
+	// Define output plane shape
+	IPosition outputPlaneShape(2,nInputCorrelations, inputOutputSpwMap_p[spw].second.NUM_CHAN);
+
+	// Iterate row by row in order to extract a plane
+	for (uInt rowIndex=0; rowIndex < nRows; rowIndex++)
+	{
+		// Initialize output planes
+		Matrix<T> outputPlaneData(outputPlaneShape,T());
+		Matrix<Bool> outputPlaneFlags(outputPlaneShape,MSTransformations::False);
+
+		// Access by reference to the matrix of data corresponding to this row
+		Matrix<T> inputPlaneData = inputDataCube.xyPlane(rowIndex);
+		Matrix<Bool> inputPlaneFlags = inputFlagCube.xyPlane(rowIndex);
+
+		// Transform input planes and write them
+		transformAndWritePlaneOfData(spw,rowRef.firstRow()+rowIndex,inputPlaneData,inputPlaneFlags,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+	}
+
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Apply frequency transformations combining SPWs and writing the
+// result plane by plane (i.e. row by row) to reduce memory usage
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::regridAndCombineCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol)
 {
 	// Get input flag cube
 	const Cube<Bool> inputFlagCube = vb->flagCube();
@@ -2166,69 +2244,95 @@ template <class T> void MSTransformDataHandler::writeTransformedCube(const Cube<
 			}
 		}
 
-		// Interpolate each polarization separately
-		for (uInt pol = 0; pol < nInputCorrelations; pol++)
-		{
-			// NOTE: Vector.row() method returns a reference
-			Vector<T> input_data = inputPlaneData.row(pol);
-			Vector<Bool> input_flags = inputPlaneFlags.row(pol);
-			Vector<T> output_data = outputPlaneData.row(pol);
-			Vector<Bool> output_flags = outputPlaneFlags.row(pol);
-
-			if (hanningSmooth_p)
-			{
-				Vector<T> intermediate_data(input_data.shape(),T());
-				Vector<Bool> intermediate_flags(input_data.shape(),MSTransformations::False);
-
-			    Smooth<T>::hanning(	intermediate_data, 	// the output
-			    					intermediate_flags, // the output flags
-			    					input_data, 		// the input
-			    					input_flags, 		// the input flags
-			    					False);
-
-			    InterpolateArray1D<Double,T>::interpolate(	output_data, // Output data
-			    											output_flags, // Output flags
-			    											inputOutputSpwMap_p[0].second.CHAN_FREQ, // Output channel frequencies
-			    											inputOutputSpwMap_p[0].first.CHAN_FREQ_aux, // Input channel frequencies
-			    											intermediate_data, // Input data
-			    											intermediate_flags, // Input Flags
-			    											interpolationMethod_p, // Interpolation method
-			    											MSTransformations::False, // A good data point has its flag set to False
-			    											MSTransformations::False // If False extrapolated data points are set flagged
-									    					);
-			}
-			else
-			{
-			    InterpolateArray1D<Double,T>::interpolate(	output_data, // Output data
-			    											output_flags, // Output flags
-			    											inputOutputSpwMap_p[0].second.CHAN_FREQ, // Output channel frequencies
-			    											inputOutputSpwMap_p[0].first.CHAN_FREQ_aux, // Input channel frequencies
-			    											input_data, // Input data
-			    											input_flags, // Input Flags
-			    											interpolationMethod_p, // Interpolation method
-			    											MSTransformations::False, // A good data point has its flag set to False
-			    											MSTransformations::False // If False extrapolated data points are set flagged
-									    					);
-			}
-
-
-		}
-
-		// Write output planes
-		outputDataCol.setShape(rowRef.firstRow()+baseline_index,outputPlaneShape);
-		outputDataCol.put(rowRef.firstRow()+baseline_index, outputPlaneData);
-
-		if (outputFlagCol != NULL)
-		{
-			outputFlagCol->setShape(rowRef.firstRow()+baseline_index,outputPlaneShape);
-			outputFlagCol->put(rowRef.firstRow()+baseline_index, outputPlaneFlags);
-		}
+		// Transform input planes and write them
+		transformAndWritePlaneOfData(0,rowRef.firstRow()+baseline_index,inputPlaneData,inputPlaneFlags,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
 
 		baseline_index += 1;
 	}
 
 	return;
 }
+
+// -----------------------------------------------------------------------
+// Transform input data and flags planes and write them to the output MS
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int inputSpw, uInt row, Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+{
+	// Get input number of correlations
+	uInt nCorrs = inputDataPlane.shape()(0);
+
+	// Get output plane shape
+	IPosition outputPlaneShape = outputDataPlane.shape();
+
+	// Iterate correlation by correlation in order to extract a vector
+	for (uInt corrIndex=0; corrIndex < nCorrs; corrIndex++)
+	{
+		// Access by reference to the channels corresponding to this correlation
+		Vector<T> input_data = inputDataPlane.row(corrIndex);
+		Vector<Bool> input_flags = inputFlagsPlane.row(corrIndex);
+		Vector<T> output_data = outputDataPlane.row(corrIndex);
+		Vector<Bool> output_flags = outputFlagsPlane.row(corrIndex);
+
+		transformStripeOfData(inputSpw,input_data,input_flags,output_data,output_flags);
+	}
+
+	// Write output planes
+	outputDataCol.setShape(row,outputPlaneShape);
+	outputDataCol.put(row, outputDataPlane);
+
+	if (outputFlagCol != NULL)
+	{
+		outputFlagCol->setShape(row,outputPlaneShape);
+		outputFlagCol->put(row, outputFlagsPlane);
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Transform input data and flags stripes (i.e. corresponding to only one correlation)
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::transformStripeOfData(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+{
+	if (hanningSmooth_p)
+	{
+		Vector<T> intermediate_data(inputDataStripe.shape(),T());
+		Vector<Bool> intermediate_flags(inputDataStripe.shape(),MSTransformations::False);
+
+	    Smooth<T>::hanning(	intermediate_data, 		// the output data
+	    					intermediate_flags, 	// the output flags
+	    					inputDataStripe, 		// the input data
+	    					inputFlagsStripe, 		// the input flags
+	    					False);
+
+	    InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
+	    											outputFlagsStripe, // Output flags
+	    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Output channel frequencies
+	    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // Input channel frequencies
+	    											intermediate_data, // Input data
+	    											intermediate_flags, // Input Flags
+	    											interpolationMethod_p, // Interpolation method
+	    											MSTransformations::False, // A good data point has its flag set to False
+	    											MSTransformations::False // If False extrapolated data points are set flagged
+							    					);
+	}
+	else
+	{
+	    InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
+	    											outputFlagsStripe, // Output flags
+	    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Output channel frequencies
+	    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // Input channel frequencies
+	    											inputDataStripe, // Input data
+	    											inputFlagsStripe, // Input Flags
+	    											interpolationMethod_p, // Interpolation method
+	    											MSTransformations::False, // A good data point has its flag set to False
+	    											MSTransformations::False // If False extrapolated data points are set flagged
+							    					);
+	}
+
+	return;
+}
+
 
 
 } //# NAMESPACE CASA - END

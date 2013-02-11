@@ -267,7 +267,10 @@ protected:
 	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef);
 	template <class T> void writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef);
 
-	template <class T> void writeTransformedCube(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
+	template <class T> void regridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
+	template <class T> void regridAndCombineCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
+	template <class T> void transformAndWritePlaneOfData(Int inputSpw, uInt row, Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol=NULL);
+	template <class T> void transformStripeOfData(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
 
 	// MS specification parameters
 	String inpMsName_p;
@@ -294,6 +297,7 @@ protected:
 	map<Int,Int> inputOutputScanIntentIndexMap_p;
 	map<Int,Int> inputOutputFieldIndexMap_p;
 	map<Int,Int> inputOutputSPWIndexMap_p;
+	map<Int,Int> outputInputSPWIndexMap_p;
 
 	// Frequency transformation parameters
 	Bool combinespws_p;
