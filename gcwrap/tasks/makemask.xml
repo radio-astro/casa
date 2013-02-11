@@ -47,7 +47,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <param type="any" name="inpmask" subparam="true">
             <!-- for merge, inpmask can be list -->
               <any type="variant" limittypes="string stringArray"/>
-              <description>mask(s) to be processed: image masks,T/F internal masks(Need to include parent image names)</description>
+              <description>mask(s) to be processed: image masks,T/F internal masks(Need to include parent image names),regions(for copy mode)</description>
  
               <value type="string"></value>
             </param>
@@ -184,7 +184,7 @@ inpmask : Name(s) of input mask(s)
          To specify an image (zero/non-zero) mask, just give a image name (e.g. myimage1.im)
          To specify an internal (T/F) mask, you must give a parent image name and the internal mask name
          seperated by a colon. (e.g. myimage1.im:mask0). The internal mask names can be found by running
-         the makemask task in mode='list'. 
+         the makemask task in mode='list'.
  
          (expand mode)
          'myimage:mask0' : use(true/false) internal mask 
