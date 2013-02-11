@@ -125,8 +125,6 @@ Images/ImageStatistics.h
 Images/ImageStatistics.tcc
 Images/ImageSummary.h
 Images/ImageSummary.tcc
-Images/ImageTwoPtCorr.h
-Images/ImageTwoPtCorr.tcc
 Images/ImageUtilities.h
 Images/ImageUtilities2.tcc
 Images/LELImageCoord.h
