@@ -608,7 +608,7 @@ class test_Hanning(test_base):
 
     def test_hanning5(self):
         '''mstransform: Hanning theoretical and calculated values should be the same'''
-        # hanning: test3
+        # hanning: test4
         self.setUp_ngc5921()
         outputms = "hann5.ms"
         
@@ -627,13 +627,13 @@ class test_Hanning(test_base):
         mstransform(vis=self.vis, outputvis=outputms, datacolumn='data', hanning=True)
 
         # After running the task
-        flag_col = th.getVarCol(self.vis, 'FLAG')
+        flag_col = th.getVarCol(outputms, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [True])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
         self.assertTrue(flag_col['r1'][0][62] == [True])
 
-        corr_col = th.getVarCol(self.msfile, 'DATA')
+        corr_col = th.getVarCol(outputms, 'DATA')
         nrows = len(corr_col)
         
       # Loop over every 2nd row,pol and get the data for each channel
@@ -649,7 +649,7 @@ class test_Hanning(test_base):
                     dataB = data_col[row][pol][chan-1]
                     dataA = data_col[row][pol][chan+1]
         
-                    Smoothed = self.calc(dataB,data,dataA)
+                    Smoothed = th.calculateHanning(dataB,data,dataA)
                     CorData = corr_col[row][pol][chan]
                     
                     # Check the difference
