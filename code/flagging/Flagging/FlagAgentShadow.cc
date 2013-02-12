@@ -163,6 +163,8 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 
 	  }
 	
+
+	firststep_p=False; // Set to True, to print a debug message (antenna uvw coordinates for the first row in the first visbuffer seen by this code...
 	
 }// end of constructor
   
@@ -306,10 +308,16 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	    endrownr = row_i;
 	  }
       }
+
+
+    Int antenna1, antenna2;
     
     // (1) Now, for all rows between 'rownr' and 'endrownr', calculate shadowed Ants.
     // This row range represents all listed baselines in the "current" timestep.
-    Int antenna1, antenna2;
+    /*  
+	///
+	/// Commenting out this section, to force recalculation of UVWs for all baselines
+	///
     for (Int row_i=rownr;row_i<=endrownr;row_i++)
       {
 	// Retrieve antenna ids
@@ -331,8 +339,11 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 	decideBaselineShadow(uvDistance, w, antenna1, antenna2);
 	
       }// end of for 'row'
-    
-    // (2) Now, if there are any untouched baselines, calculate 'uvw' for all antennas, and fill in missing baselines. 
+    */
+
+
+    // (2) Now, if there are any untouched baselines, calculate 'uvw' for all antennas, 
+    //      and fill in missing baselines. 
     // This is the part that picks up invisible antennas, whether they come from the antenna_subtable or
     // are externally supplied.
     if(product(listBaselines)==False)
@@ -359,13 +370,20 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 		    v = v2-v1;
 		    w = w2-w1;
 		    uvDistance = sqrt(u*u + v*v);
-		    
+
+		    if(firststep_p==True) // this is only a debug message here....
+		      {
+			cout << "Ant1 : " << antenna1 << " : " << u1 << "," << v1 << "," << w1 << "      Ant2 : " << antenna2 << " : "  << u2 << "," << v2<< "," << w2 << "      UVW : " << u << "," << v << "," << w << endl;
+		      }
+
 		    decideBaselineShadow(uvDistance, w, antenna1, antenna2);
 		  }
 	      }
 	  }
       }
-    
+
+    firststep_p=False;// debug message should happen only once (at most).
+
   }// end of calculateShadowedAntennas
   
   uInt FlagAgentShadow::baselineIndex(uInt nAnt, uInt a1, uInt a2)
@@ -390,7 +408,27 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
     // Check if one of the antennas can be shadowed
     if (uvDistance < antennaDistance - shadowTolerance_p)
       {
-	if (w>0)
+	///////////////////////////////////////////////////////
+        // Conventions.
+        // (A) For a Right Handed coordinate system, with 'w' pointing towards the source....
+        //       ( as defined here : http://casa.nrao.edu/Memos/229.html#SECTION00041000000000000000 )
+        //     if(w>0) antenna1 is shadowed by antenna2
+        //     if(w<0) antenna2 is shadowed by antenna1
+	//
+	//     This is implemented in casapy 3.4 and 4.0
+	//
+	// (B) For a Left Handed Coordinate system, with 'w' pointing away from the source...
+        //      ( You get B by flipping the sign on all three axes (u,v,w) of A ).
+	//      This is what is present in the data (i.e. filler, simulator, (our use of Measures?)).
+	//     if(w<0) antenna1 is shadowed by antenna2
+        //     if(w>0) antenna2 is shadowed by antenna1
+	//
+	//     This is implemented in casapy 4.1 ( from 1 Feb 2013 onwards ).
+	//
+	///////////////////////////////////////////////////////
+
+	//	if (w>0)  ////// as in casapy 3.4 and casapy 4.0 
+	if (w<0) ////// casapy 4.1 onwards.
 	  {
 	    if (std::find (shadowedAntennas_p.begin(), shadowedAntennas_p.end(), antenna1) == shadowedAntennas_p.end())
 	      {
@@ -504,196 +542,196 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
   
 #if 0
 
-  // Copy of the old version of this function. It has code for "always recalculate UVW, never recalc UVW
-  // and 'decide when to calc UVW'.  Above, only the 'decide when to calc UVW' part is used.
-  void FlagAgentShadow::calculateShadowedAntennas(const VisBuffer &visBuffer, Int rownr)
-  {
-    // Init the list of antennas. 
-    shadowedAntennas_p.clear();
-    Double u,v,w, uvDistance;
-    Int nAnt = shadowAntennaDiameters_p.nelements(); 
+  // // Copy of the old version of this function. It has code for "always recalculate UVW, never recalc UVW
+  // // and 'decide when to calc UVW'.  Above, only the 'decide when to calc UVW' part is used.
+  // void FlagAgentShadow::calculateShadowedAntennas(const VisBuffer &visBuffer, Int rownr)
+  // {
+  //   // Init the list of antennas. 
+  //   shadowedAntennas_p.clear();
+  //   Double u,v,w, uvDistance;
+  //   Int nAnt = shadowAntennaDiameters_p.nelements(); 
     
-    // Init the list of baselines, to later decide which to read and which to recalculate.
-    Vector<Bool> listBaselines(nAnt*(nAnt-1)/2);
-    listBaselines = False;
+  //   // Init the list of baselines, to later decide which to read and which to recalculate.
+  //   Vector<Bool> listBaselines(nAnt*(nAnt-1)/2);
+  //   listBaselines = False;
     
-    //uInt countread=0;
-    //uInt countcalc=0;
-    //Double reftime = 4.794e+09;
+  //   //uInt countread=0;
+  //   //uInt countcalc=0;
+  //   //Double reftime = 4.794e+09;
     
-    if (decideUVW_p==True)
-      {
-        // We know the starting row for this timestep. Find the ending row.
-        // This assumes that all baselines are grouped together. 
-	// This is guaranteed by the sort-order defined for the visIterator.
-        Int endrownr = rownr;
-	Double timeval = visBuffer.timeCentroid()(rownr) ;
-	for (Int row_i=rownr;row_i<visBuffer.nRow();row_i++)
-	  {
-	    if(timeval < visBuffer.timeCentroid()(row_i)) // we have touched the next timestep
-	      {
-		endrownr = row_i-1;
-		break;
-	      }
-	    else
-	      {
-		endrownr = row_i;
-	      }
-	  }
+  //   if (decideUVW_p==True)
+  //     {
+  //       // We know the starting row for this timestep. Find the ending row.
+  //       // This assumes that all baselines are grouped together. 
+  // 	// This is guaranteed by the sort-order defined for the visIterator.
+  //       Int endrownr = rownr;
+  // 	Double timeval = visBuffer.timeCentroid()(rownr) ;
+  // 	for (Int row_i=rownr;row_i<visBuffer.nRow();row_i++)
+  // 	  {
+  // 	    if(timeval < visBuffer.timeCentroid()(row_i)) // we have touched the next timestep
+  // 	      {
+  // 		endrownr = row_i-1;
+  // 		break;
+  // 	      }
+  // 	    else
+  // 	      {
+  // 		endrownr = row_i;
+  // 	      }
+  // 	  }
 	
-	//cout << "For time : " << timeval-4.73423e+09 << " start : " << rownr << " end : " << endrownr << endl;
+  // 	//cout << "For time : " << timeval-4.73423e+09 << " start : " << rownr << " end : " << endrownr << endl;
 	
-	// Now, for all rows between 'rownr' and 'endrownr', calculate shadowed Ants.
-        // This row range represents all listed baselines in the "current" timestep.
-	Int antenna1, antenna2;
-	for (Int row_i=rownr;row_i<=endrownr;row_i++)
-	  {
-	    // Retrieve antenna ids
-	    antenna1 = visBuffer.antenna1()(row_i);
-	    antenna2 = visBuffer.antenna2()(row_i);
+  // 	// Now, for all rows between 'rownr' and 'endrownr', calculate shadowed Ants.
+  //       // This row range represents all listed baselines in the "current" timestep.
+  // 	Int antenna1, antenna2;
+  // 	for (Int row_i=rownr;row_i<=endrownr;row_i++)
+  // 	  {
+  // 	    // Retrieve antenna ids
+  // 	    antenna1 = visBuffer.antenna1()(row_i);
+  // 	    antenna2 = visBuffer.antenna2()(row_i);
 	    
-	    // Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
-	    if (antenna1 == antenna2) continue;
+  // 	    // Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
+  // 	    if (antenna1 == antenna2) continue;
 	    
-	    // Record the baseline being processed
-	    listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
+  // 	    // Record the baseline being processed
+  // 	    listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
 	    
-	    // Compute uv distance
-	    u = visBuffer.uvw()(row_i)(0);
-	    v = visBuffer.uvw()(row_i)(1);
-	    w = visBuffer.uvw()(row_i)(2);
-	    uvDistance = sqrt(u*u + v*v);
+  // 	    // Compute uv distance
+  // 	    u = visBuffer.uvw()(row_i)(0);
+  // 	    v = visBuffer.uvw()(row_i)(1);
+  // 	    w = visBuffer.uvw()(row_i)(2);
+  // 	    uvDistance = sqrt(u*u + v*v);
 	    
-            //if(row_i==0 && rownr==0) cout << " Row : " << row_i << "   uvdist : " << uvDistance << " w : " << w << " time-x : " << visBuffer.timeCentroid()(row_i)-reftime << endl;
+  //           //if(row_i==0 && rownr==0) cout << " Row : " << row_i << "   uvdist : " << uvDistance << " w : " << w << " time-x : " << visBuffer.timeCentroid()(row_i)-reftime << endl;
 	    
-	    decideBaselineShadow(uvDistance, w, antenna1, antenna2);
-	    //countread++;
+  // 	    decideBaselineShadow(uvDistance, w, antenna1, antenna2);
+  // 	    //countread++;
 	    
-	  }// end of for 'row'
+  // 	  }// end of for 'row'
 	
-	// Now, if there are any untouched baselines, calculate 'uvw' for all antennas, and fill in missing baselines. 
-	if(product(listBaselines)==False)
-	  {
-	    // For the current timestep, compute UVWs for all antennas.
-	    //    uvwAnt_p will be filled these values.
-	    computeAntUVW(visBuffer, rownr);
+  // 	// Now, if there are any untouched baselines, calculate 'uvw' for all antennas, and fill in missing baselines. 
+  // 	if(product(listBaselines)==False)
+  // 	  {
+  // 	    // For the current timestep, compute UVWs for all antennas.
+  // 	    //    uvwAnt_p will be filled these values.
+  // 	    computeAntUVW(visBuffer, rownr);
 	    
-	    for (Int antenna1=0; antenna1<nAnt; antenna1++)
-	      {	    
-		Double u1=uvwAnt_p(0,antenna1), v1=uvwAnt_p(1,antenna1), w1=uvwAnt_p(2,antenna1);
-		for (Int antenna2=antenna1; antenna2<nAnt; antenna2++)
-		  {
-		    // Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
-		    if (antenna1 == antenna2) continue;
+  // 	    for (Int antenna1=0; antenna1<nAnt; antenna1++)
+  // 	      {	    
+  // 		Double u1=uvwAnt_p(0,antenna1), v1=uvwAnt_p(1,antenna1), w1=uvwAnt_p(2,antenna1);
+  // 		for (Int antenna2=antenna1; antenna2<nAnt; antenna2++)
+  // 		  {
+  // 		    // Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
+  // 		    if (antenna1 == antenna2) continue;
 		    
-		    if(listBaselines[baselineIndex(nAnt,antenna1,antenna2)] == False)
-		      {
-			Double u2=uvwAnt_p(0,antenna2), v2=uvwAnt_p(1,antenna2), w2=uvwAnt_p(2,antenna2);
+  // 		    if(listBaselines[baselineIndex(nAnt,antenna1,antenna2)] == False)
+  // 		      {
+  // 			Double u2=uvwAnt_p(0,antenna2), v2=uvwAnt_p(1,antenna2), w2=uvwAnt_p(2,antenna2);
 			
-			u = u2-u1;
-			v = v2-v1;
-			w = w2-w1;
-			uvDistance = sqrt(u*u + v*v);
-			//countcalc++;
+  // 			u = u2-u1;
+  // 			v = v2-v1;
+  // 			w = w2-w1;
+  // 			uvDistance = sqrt(u*u + v*v);
+  // 			//countcalc++;
 			
-			//if(rownr==0 && antenna1==tant1 && antenna2==tant2) cout << " (r)Row : " << rownr << "   uvdist : " << uvDistance << "  w : " << w << " time-x : " << visBuffer.timeCentroid()(rownr)-reftime << endl;
+  // 			//if(rownr==0 && antenna1==tant1 && antenna2==tant2) cout << " (r)Row : " << rownr << "   uvdist : " << uvDistance << "  w : " << w << " time-x : " << visBuffer.timeCentroid()(rownr)-reftime << endl;
 			
-			decideBaselineShadow(uvDistance, w, antenna1, antenna2);
+  // 			decideBaselineShadow(uvDistance, w, antenna1, antenna2);
 			
-			listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
-		      }
-		  }
-	      }
-	  }
+  // 			listBaselines[baselineIndex(nAnt,antenna1,antenna2)] = True;
+  // 		      }
+  // 		  }
+  // 	      }
+  // 	  }
 	
-      }
-    else if(recalculateUVW_p)
-      {
-	//  (1) For the current timestep, compute UVWs for all antennas.
-	//    uvwAnt_p will be filled these values.
-	computeAntUVW(visBuffer, rownr);
+  //     }
+  //   else if(recalculateUVW_p)
+  //     {
+  // 	//  (1) For the current timestep, compute UVWs for all antennas.
+  // 	//    uvwAnt_p will be filled these values.
+  // 	computeAntUVW(visBuffer, rownr);
 	
-	// debug code.
-	// Int   tant1 = visBuffer.antenna1()(rownr);
-	// Int   tant2 = visBuffer.antenna2()(rownr);
+  // 	// debug code.
+  // 	// Int   tant1 = visBuffer.antenna1()(rownr);
+  // 	// Int   tant2 = visBuffer.antenna2()(rownr);
 	
-	//  (2) For all antenna pairs, calculate UVW of the baselines, and check for shadowing.
-	for (Int antenna1=0; antenna1<nAnt; antenna1++)
-	  {	    
-	    Double u1=uvwAnt_p(0,antenna1), v1=uvwAnt_p(1,antenna1), w1=uvwAnt_p(2,antenna1);
-	    for (Int antenna2=antenna1; antenna2<nAnt; antenna2++)
-	      {
-		// Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
-		if (antenna1 == antenna2) continue;
+  // 	//  (2) For all antenna pairs, calculate UVW of the baselines, and check for shadowing.
+  // 	for (Int antenna1=0; antenna1<nAnt; antenna1++)
+  // 	  {	    
+  // 	    Double u1=uvwAnt_p(0,antenna1), v1=uvwAnt_p(1,antenna1), w1=uvwAnt_p(2,antenna1);
+  // 	    for (Int antenna2=antenna1; antenna2<nAnt; antenna2++)
+  // 	      {
+  // 		// Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
+  // 		if (antenna1 == antenna2) continue;
 		
-		Double u2=uvwAnt_p(0,antenna2), v2=uvwAnt_p(1,antenna2), w2=uvwAnt_p(2,antenna2);
+  // 		Double u2=uvwAnt_p(0,antenna2), v2=uvwAnt_p(1,antenna2), w2=uvwAnt_p(2,antenna2);
 		
-		u = u2-u1;
-		v = v2-v1;
-		w = w2-w1;
-		uvDistance = sqrt(u*u + v*v);
-		//countcalc++;
+  // 		u = u2-u1;
+  // 		v = v2-v1;
+  // 		w = w2-w1;
+  // 		uvDistance = sqrt(u*u + v*v);
+  // 		//countcalc++;
 		
-                //if(rownr==0 && antenna1==tant1 && antenna2==tant2) cout << " (r)Row : " << rownr << "   uvdist : " << uvDistance << "  w : " << w << " time-x : " << visBuffer.timeCentroid()(rownr)-reftime << endl;
+  //               //if(rownr==0 && antenna1==tant1 && antenna2==tant2) cout << " (r)Row : " << rownr << "   uvdist : " << uvDistance << "  w : " << w << " time-x : " << visBuffer.timeCentroid()(rownr)-reftime << endl;
 		
-		decideBaselineShadow(uvDistance, w, antenna1, antenna2);
+  // 		decideBaselineShadow(uvDistance, w, antenna1, antenna2);
 		
-	      }// end for antenna2
-	  }// end for antenna1
+  // 	      }// end for antenna2
+  // 	  }// end for antenna1
 	
-      }// end of recalculateUVW_p==True
-    else // recalculateUVW_p = False
-      {
+  //     }// end of recalculateUVW_p==True
+  //   else // recalculateUVW_p = False
+  //     {
 	
-        // We know the starting row for this timestep. Find the ending row.
-        // This assumes that all baselines are grouped together. 
-	// This is guaranteed by the sort-order defined for the visIterator.
-        Int endrownr = rownr;
-	Double timeval = visBuffer.timeCentroid()(rownr) ;
-	for (Int row_i=rownr;row_i<visBuffer.nRow();row_i++)
-	  {
-	    if(timeval < visBuffer.timeCentroid()(row_i)) // we have touched the next timestep
-	      {
-		endrownr = row_i-1;
-		break;
-	      }
-	    else
-	      {
-		endrownr = row_i;
-	      }
-	  }
+  //       // We know the starting row for this timestep. Find the ending row.
+  //       // This assumes that all baselines are grouped together. 
+  // 	// This is guaranteed by the sort-order defined for the visIterator.
+  //       Int endrownr = rownr;
+  // 	Double timeval = visBuffer.timeCentroid()(rownr) ;
+  // 	for (Int row_i=rownr;row_i<visBuffer.nRow();row_i++)
+  // 	  {
+  // 	    if(timeval < visBuffer.timeCentroid()(row_i)) // we have touched the next timestep
+  // 	      {
+  // 		endrownr = row_i-1;
+  // 		break;
+  // 	      }
+  // 	    else
+  // 	      {
+  // 		endrownr = row_i;
+  // 	      }
+  // 	  }
 	
-	//cout << "For time : " << timeval-4.73423e+09 << " start : " << rownr << " end : " << endrownr << endl;
+  // 	//cout << "For time : " << timeval-4.73423e+09 << " start : " << rownr << " end : " << endrownr << endl;
 	
-	// Now, for all rows between 'rownr' and 'endrownr', calculate shadowed Ants.
-        // This row range represents all baselines in the "current" timestep.
-	Int antenna1, antenna2;
-	for (Int row_i=rownr;row_i<=endrownr;row_i++)
-	  {
-	    // Retrieve antenna ids
-	    antenna1 = visBuffer.antenna1()(row_i);
-	    antenna2 = visBuffer.antenna2()(row_i);
+  // 	// Now, for all rows between 'rownr' and 'endrownr', calculate shadowed Ants.
+  //       // This row range represents all baselines in the "current" timestep.
+  // 	Int antenna1, antenna2;
+  // 	for (Int row_i=rownr;row_i<=endrownr;row_i++)
+  // 	  {
+  // 	    // Retrieve antenna ids
+  // 	    antenna1 = visBuffer.antenna1()(row_i);
+  // 	    antenna2 = visBuffer.antenna2()(row_i);
 	    
-	    // Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
-	    if (antenna1 == antenna2) continue;
+  // 	    // Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
+  // 	    if (antenna1 == antenna2) continue;
 	    
-	    // Compute uv distance
-	    u = visBuffer.uvw()(row_i)(0);
-	    v = visBuffer.uvw()(row_i)(1);
-	    w = visBuffer.uvw()(row_i)(2);
-	    uvDistance = sqrt(u*u + v*v);
-	    //countread++;
+  // 	    // Compute uv distance
+  // 	    u = visBuffer.uvw()(row_i)(0);
+  // 	    v = visBuffer.uvw()(row_i)(1);
+  // 	    w = visBuffer.uvw()(row_i)(2);
+  // 	    uvDistance = sqrt(u*u + v*v);
+  // 	    //countread++;
 	    
-            //if(row_i==0 && rownr==0) cout << " Row : " << row_i << "   uvdist : " << uvDistance << " w : " << w << " time-x : " << visBuffer.timeCentroid()(row_i)-reftime << endl;
+  //           //if(row_i==0 && rownr==0) cout << " Row : " << row_i << "   uvdist : " << uvDistance << " w : " << w << " time-x : " << visBuffer.timeCentroid()(row_i)-reftime << endl;
 	    
-	    decideBaselineShadow(uvDistance, w, antenna1, antenna2);
+  // 	    decideBaselineShadow(uvDistance, w, antenna1, antenna2);
 	    
-	  }// end of for 'row'
-      }
+  // 	  }// end of for 'row'
+  //     }
     
-    //cout << "Row : " << rownr << "  read : " << countread << "   calc : " << countcalc << endl;
+  //   //cout << "Row : " << rownr << "  read : " << countread << "   calc : " << countcalc << endl;
     
-  }// end of calculateShadowedAntennas
+  // }// end of calculateShadowedAntennas
   
   
 #endif

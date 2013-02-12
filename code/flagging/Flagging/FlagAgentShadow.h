@@ -99,7 +99,9 @@ private:
         // Private variables that change with each timestep
         Matrix<Double> uvwAnt_p;
         Double currTime_p;
-        
+
+        Bool firststep_p; // helper variable to control a debug print statement
+    
 };
 
 } //# NAMESPACE CASA - END
