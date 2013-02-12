@@ -350,3 +350,11 @@ def createInput(str_text, filename):
     
     return
 
+def calculateHanning(dataB,data,dataA):
+    '''Calculate the Hanning smoothing of each element'''
+    const0 = 0.25
+    const1 = 0.5
+    const2 = 0.25
+    S = const0*dataB + const1*data + const2*dataA
+    return S
+
