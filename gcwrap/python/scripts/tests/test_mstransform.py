@@ -23,7 +23,7 @@ class test_base(unittest.TestCase):
         if os.path.exists(self.vis):
            self.cleanup()
             
-        os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
 
     def setUp_ngc5921(self):
@@ -33,9 +33,8 @@ class test_base(unittest.TestCase):
         if os.path.exists(self.vis):
            self.cleanup()
             
-        os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
-
 
     def setUp_data4tfcrop(self):
         # data set with spw=0~15, 64 channels each in TOPO
@@ -44,7 +43,7 @@ class test_base(unittest.TestCase):
         if os.path.exists(self.vis):
            self.cleanup()
             
-        os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
         
     def setUp_ngc4826(self):
@@ -53,7 +52,7 @@ class test_base(unittest.TestCase):
         if os.path.exists(self.vis):
            self.cleanup()
             
-        os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
 
     def setUp_jupiter(self):
@@ -62,7 +61,7 @@ class test_base(unittest.TestCase):
         if os.path.exists(self.vis):
            self.cleanup()
             
-        os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
         
     def setUp_g19(self):
@@ -71,7 +70,7 @@ class test_base(unittest.TestCase):
         if os.path.exists(self.vis):
            self.cleanup()
             
-        os.system('cp -rL '+datapath + self.vis +' '+ self.vis)
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
         
     def cleanup(self):
