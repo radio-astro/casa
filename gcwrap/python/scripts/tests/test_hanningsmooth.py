@@ -38,15 +38,6 @@ class hanningsmooth_test(unittest.TestCase):
         
         shutil.rmtree('mynewms.ms',ignore_errors=True)
 
-               
-    def calculateHanning(self,dataB,data,dataA):
-        '''Calculate the Hanning smoothing of each element'''
-        const0 = 0.25
-        const1 = 0.5
-        const2 = 0.25
-        S = const0*dataB + const1*data + const2*dataA
-        return S
-
     def test0(self):
         '''Test 0: Default values'''
         self.res = hanningsmooth()
@@ -103,7 +94,7 @@ class hanningsmooth_test(unittest.TestCase):
                     dataB = data_col[row][pol][chan-1]
                     dataA = data_col[row][pol][chan+1]
         
-                    Smoothed = self.calculateHanning(dataB,data,dataA)
+                    Smoothed = th.calculateHanning(dataB,data,dataA)
                     CorData = corr_col[row][pol][chan]
                     
                     # Check the difference
@@ -144,7 +135,7 @@ class hanningsmooth_test(unittest.TestCase):
                     dataB = data_col[row][pol][chan-1]
                     dataA = data_col[row][pol][chan+1]
         
-                    Smoothed = self.calculateHanning(dataB,data,dataA)
+                    Smoothed = th.calculateHanning(dataB,data,dataA)
                     CorData = corr_col[row][pol][chan]
                     
                     # Check the difference
