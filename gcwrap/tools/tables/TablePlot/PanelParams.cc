@@ -42,30 +42,30 @@ PlotOptions::PlotOptions()
    /* Some colours that do not contrast well with white, 
            have been left out */
    pylabcolourstring = String("black,default,blue,green,cyan,red,yellow,darkorange,");
-   pylabcolourstring += String("aliceblue,aqua,blueviolet,brown,burlywood,");
+   pylabcolourstring += String("aqua,blueviolet,brown,burlywood,");
    pylabcolourstring += String("chartreuse,chocolate,coral,cornflowerblue,");
    pylabcolourstring += String("crimson,darkblue,darkcyan,darkgoldenrod,");
    pylabcolourstring += String("darkgray,darkgreen,darkkhaki,darkmagenta,");
    pylabcolourstring += String("darkolivegreen,darkorange,darkorchid,darkred,");
    pylabcolourstring += String("darksalmon,darkseagreen,darkslateblue,darkslategray,");
    pylabcolourstring += String("darkturquoise,darkviolet,deeppink,deepskyblue,");
-   pylabcolourstring += String("dimgray,dodgerblue,firebrick,floralwhite,forestgreen,");
-   pylabcolourstring += String("fuchsia,gainsboro,ghostwhite,gold,goldenrod,gray,");
-   pylabcolourstring += String("greenyellow,honeydew,hotpink,indianred,indigo,ivory,khaki,");
-   pylabcolourstring += string("lavender,lavenderblush,lawngreen,lemonchiffon,lightblue,");
-   pylabcolourstring += String("lightcoral,lightcyan,lightgoldenrodyellow,lightgreen,");
+   pylabcolourstring += String("dimgray,dodgerblue,firebrick,forestgreen,");
+   pylabcolourstring += String("fuchsia,gainsboro,gold,goldenrod,gray,");
+   pylabcolourstring += String("greenyellow,hotpink,indianred,indigo,khaki,");
+   pylabcolourstring += string("lavender,lawngreen,lightblue,");
+   pylabcolourstring += String("lightcoral,lightgoldenrodyellow,lightgreen,");
    pylabcolourstring += String("lightgrey,lightpink,lightsalmon,lightseagreen,");
-   pylabcolourstring += String("lightskyblue,lightslategray,lightsteelblue,lightyellow,");
-   pylabcolourstring += String("lime,limegreen,linen,maroon,mediumaquamarine,");
+   pylabcolourstring += String("lightskyblue,lightslategray,lightsteelblue,");
+   pylabcolourstring += String("lime,limegreen,maroon,mediumaquamarine,");
    pylabcolourstring += String("mediumblue,mediumorchid,mediumpurple,mediumseagreen,");
    pylabcolourstring += String("mediumslateblue,mediumspringgreen,mediumturquoise,");
-   pylabcolourstring += String("mediumvioletred,midnightblue,mintcream,mistyrose,");
-   pylabcolourstring += String("moccasin,navajowhite,navy,oldlace,olive,olivedrab,");
+   pylabcolourstring += String("mediumvioletred,midnightblue,");
+   pylabcolourstring += String("moccasin,navy,olive,olivedrab,");
    pylabcolourstring += String("orange,orchid,orangered,palegoldenrod,palegreen,");
-   pylabcolourstring += String("palevioletred,papayawhip,peachpuff,peru,pink,plum,");
+   pylabcolourstring += String("palevioletred,peru,pink,plum,");
    pylabcolourstring += String("powderblue,purple,rosybrown,royalblue,saddlebrown,");
-   pylabcolourstring += String("salmon,sandybrown,seagreen,seashell,sienna,silver,");
-   pylabcolourstring += String("skyblue,slateblue,slategray,snow,springgreen,cornsilk,");
+   pylabcolourstring += String("salmon,sandybrown,seagreen,sienna,silver,");
+   pylabcolourstring += String("skyblue,slateblue,slategray,springgreen,cornsilk,");
    pylabcolourstring += String("steelblue,tan,teal,thistle,tomato,turquoise,violet,");
    pylabcolourstring += String("wheat,yellowgreen,aquamarine,azure,bisque,cadetblue");
    // no magenta. reserved for flags.
