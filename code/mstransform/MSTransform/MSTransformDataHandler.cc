@@ -570,6 +570,17 @@ void MSTransformDataHandler::close()
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::setup()
 {
+	// Check if we really need to combine SPWs
+	if (combinespws_p)
+	{
+		uInt nInputSpws = outputMs_p->spectralWindow().nrow();
+		if (nInputSpws < 2)
+		{
+			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "There is only one selected SPW, no need to combine " << LogIO::POST;
+			combinespws_p = False;
+		}
+	}
+
 	if (combinespws_p)
 	{
 		initRefFrameTransParams();
@@ -751,14 +762,14 @@ void MSTransformDataHandler::initDataSelectionParams()
 
 
 // -----------------------------------------------------------------------
-// Method to reggrid each SPW separately in the SPW sub-table
+// Method to re-grid each SPW separately in the SPW sub-table
 // It also sets the input/output frequency arrays to be used by the interpolations
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::regridSpwSubTable()
 {
 	// Access Spectral Window sub-table
 	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
-    Int nInputSpws = spwTable.nrow();
+    uInt nInputSpws = spwTable.nrow();
     MSSpWindowColumns spwCols(spwTable);
 
     // Access columns which have to be modified
@@ -851,7 +862,7 @@ void MSTransformDataHandler::regridSpwSubTable()
 }
 
 // -----------------------------------------------------------------------
-// Method to combine and reggrid the SPW sub-table
+// Method to combine and re-grid the SPW sub-table
 // It also sets the input/output frequency arrays to be used by the interpolations
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::regridAndCombineSpwSubtable()
@@ -860,7 +871,7 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 
 	// Access Spectral Window sub-table
 	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
-    Int nInputSpws = spwTable.nrow();
+    uInt nInputSpws = spwTable.nrow();
     MSSpWindowColumns spwCols(spwTable);
 
     // Access columns which have to be modified
