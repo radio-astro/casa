@@ -189,8 +189,9 @@ def mstransform(
         # Add to dictionary only the non-empty parameters
         config = {}
         config = mth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
-                    spw=spw, array=array, scan=scan, antenna=antenna, uvrange=uvrange, 
-                    time=timerange, intent=intent, observation=str(observation),feed=feed)
+                    spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
+                    uvrange=uvrange,time=timerange, intent=intent, observation=str(observation),
+                    feed=feed)
         
         config['datacolumn'] = datacolumn
         config['realmodelcol'] = realmodelcol
