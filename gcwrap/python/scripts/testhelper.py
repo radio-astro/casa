@@ -222,7 +222,7 @@ class DictDiffer(object):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
 
 
-def verify_ms(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
+def verifyMS(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
     '''Function to verify spw and channels information in an MS
        msname        --> name of MS to verify
        expnumspws    --> expected number of SPWs in the MS
@@ -270,7 +270,7 @@ def getChannels(msname, spwid, chanlist):
        msname       --> name of MS
        spwid        --> spw ID
        chanlist     --> list of channel indices
-       Return a numpy array, the same size of chanlist, with the frequencies'''
+    Return a numpy array, the same size of chanlist, with the frequencies'''
     
     try:
         try:
@@ -290,8 +290,44 @@ def getChannels(msname, spwid, chanlist):
     return selchans
     
     
+def getColDesc(table, colname):
+    '''Get the description of a column in a table
+       table    --> name of table or MS
+       colname  --> column name
+    Return a dictionary with the column description'''
     
-def create_input(str_text, filename):
+    coldesc = {}
+    try:
+        try:
+            tb.open(table)            
+            coldesc = tb.getcoldesc(colname)
+        except:
+            pass                        
+    finally:
+        tb.close()
+        
+    return coldesc
+
+def getVarCol(table, colname):
+    '''Return the requested variable column
+       table    --> name of table or MS
+       colname  --> column name
+    Return the column as a dictionary'''
+    
+    col = {}
+    try:
+        try:
+            tb.open(table)
+            col = tb.getvarcol(colname)
+        except:
+            print 'Cannot open table '+table
+
+    finally:
+        tb.close()
+        
+    return col
+   
+def createInput(str_text, filename):
     '''Save the string in a text file with the given name
     str_text    --> string to save
     filename    --> name of the file to save

@@ -104,7 +104,7 @@ class test_Combspw1(test_base):
         mstransform(vis=self.vis, outputvis=outputms, combinespws=True, spw='0~3')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 256, 0)
+        ret = th.verifyMS(outputms, 1, 256, 0)
         self.assertTrue(ret[0],ret[1])
         
     def test_combspw1_2(self):
@@ -115,13 +115,13 @@ class test_Combspw1(test_base):
         self.assertTrue(os.path.exists(outputms))
         
         # The spws contain gaps, therefore the number of channels is bigger
-        ret = th.verify_ms(outputms, 1, 68, 0)
+        ret = th.verifyMS(outputms, 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
         
         # Compare with cvel results
         default(cvel)
         cvel(vis=self.vis, outputvis='combcvel1.ms', spw='0:60~63,1:60~63')
-        ret = th.verify_ms('combcvel1.ms', 1, 68, 0)
+        ret = th.verifyMS('combcvel1.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
 
     def test_combspw1_3(self):
@@ -133,7 +133,7 @@ class test_Combspw1(test_base):
              datacolumn='DATA')
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 2, 0)
+        ret = th.verifyMS(outputms, 1, 2, 0)
         self.assertTrue(ret[0],ret[1])
 
 class test_Combspw2(test_base):
@@ -153,7 +153,7 @@ class test_Combspw2(test_base):
         mstransform(vis=self.vis, outputvis=outputms, combinespws=True, datacolumn='DATA')
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 2440, 0)
+        ret = th.verifyMS(outputms, 1, 2440, 0)
         self.assertTrue(ret[0],ret[1])
 
     def test_combspw2_2(self):
@@ -165,7 +165,7 @@ class test_Combspw2(test_base):
                     mode='channel_b')
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 2425, 0)
+        ret = th.verifyMS(outputms, 1, 2425, 0)
         self.assertTrue(ret[0],ret[1])
         
 
@@ -189,7 +189,7 @@ class test_Regridms1(test_base):
         
         # The output should be the same as the input
         for i in range(16):
-            ret = th.verify_ms(outputms, 16, 64, i)
+            ret = th.verifyMS(outputms, 16, 64, i)
             self.assertTrue(ret[0],ret[1])
             
     def test_regrid1_2(self):
@@ -201,7 +201,7 @@ class test_Regridms1(test_base):
         
         # The output should be the same as the input
         for i in range(4):
-            ret = th.verify_ms(outputms, 4, 64, i)
+            ret = th.verifyMS(outputms, 4, 64, i)
             self.assertTrue(ret[0],ret[1])
 
 class test_Regridms2(test_base):
@@ -224,8 +224,8 @@ class test_Regridms2(test_base):
         self.assertTrue(os.path.exists(outputms))
         
         # Verify that output channels are correct
-        inpfreq = th.getChannels(self.vis, 0, range(10,32,1))
-        ret = th.verify_ms(outputms, 1, 32, 0, inpfreq)
+        inpfreq = th.getChannels(self.vis, 0, range(10,42,1))
+        ret = th.verifyMS(outputms, 1, 32, 0, inpfreq)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid2_2(self):
@@ -237,7 +237,7 @@ class test_Regridms2(test_base):
                     outframe='BARY', phasecenter=1, datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 2, 0)
+        ret = th.verifyMS(outputms, 1, 2, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid2_3(self):
@@ -250,7 +250,7 @@ class test_Regridms2(test_base):
                         outframe='BARY', phasecenter=12, datacolumn='DATA')
             self.assertTrue(os.path.exists(outputms))
             
-            ret = th.verify_ms(outputms, 1, 2, 0)
+            ret = th.verifyMS(outputms, 1, 2, 0)
             self.assertTrue(ret[0],ret[1])        
         except:
             print "\n**** Expected Error! ****"
@@ -264,12 +264,12 @@ class test_Regridms2(test_base):
                     outframe='lsrd', datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 10, 0)
+        ret = th.verifyMS(outputms, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])      
         
         # Verify that output channels are correct
-        inpfreq = th.getChannels(self.vis, 0, range(2,11,1))
-        ret = th.verify_ms(outputms, 1, 10, 0, inpfreq)
+        inpfreq = th.getChannels(self.vis, 0, range(2,12,1))
+        ret = th.verifyMS(outputms, 1, 10, 0, inpfreq)
         self.assertTrue(ret[0],ret[1])        
 
 
@@ -292,7 +292,7 @@ class test_Regridms3(test_base):
                     spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 1, 0)
+        ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])  
         
         # Now, do only the regridding and do not combine spws
@@ -301,9 +301,9 @@ class test_Regridms3(test_base):
                     spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 2, 1, 0)
+        ret = th.verifyMS(outputms, 2, 1, 0)
         self.assertTrue(ret[0],ret[1])  
-        ret = th.verify_ms(outputms, 2, 1, 1)
+        ret = th.verifyMS(outputms, 2, 1, 1)
         self.assertTrue(ret[0],ret[1])  
               
 
@@ -315,7 +315,7 @@ class test_Regridms3(test_base):
                     spw='0,1',field = '10',mode='channel', nchan=1, start=1, datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 1, 0)
+        ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid3_3(self):
@@ -327,7 +327,7 @@ class test_Regridms3(test_base):
                     datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 1, 0)
+        ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid3_4(self):
@@ -338,7 +338,7 @@ class test_Regridms3(test_base):
                     field = '10',mode='channel', nchan=1, start=1, outframe='lsrk', datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 1, 0)
+        ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid3_5(self):
@@ -350,7 +350,7 @@ class test_Regridms3(test_base):
                     datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 2, 0)
+        ret = th.verifyMS(outputms, 1, 2, 0)
         self.assertTrue(ret[0],ret[1])        
 
 
@@ -363,7 +363,7 @@ class test_Regridms3(test_base):
                     outframe='', datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 1, 0)
+        ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
 class test_Regridms4(test_base):
@@ -387,7 +387,7 @@ class test_Regridms4(test_base):
         self.assertTrue(os.path.exists(outputms))
         
         # TODO: how to verify that the frequencies are correct?
-        ret = th.verify_ms(outputms, 1, 10, 0)
+        ret = th.verifyMS(outputms, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid4_2(self):
@@ -399,7 +399,7 @@ class test_Regridms4(test_base):
                     phasecenter="J2000 18h25m56.09 -12d04m28.20", datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 111, 0)
+        ret = th.verifyMS(outputms, 1, 111, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid4_3(self):
@@ -411,7 +411,7 @@ class test_Regridms4(test_base):
                     phasecenter="J2000 18h25m56.09 -12d04m28.20", datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 21, 0)
+        ret = th.verifyMS(outputms, 1, 21, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid4_4(self):
@@ -423,7 +423,7 @@ class test_Regridms4(test_base):
                     phasecenter="J2000 18h25m56.09 -12d04m28.20", datacolumn='DATA')
         self.assertTrue(os.path.exists(outputms))
         
-        ret = th.verify_ms(outputms, 1, 210, 0)
+        ret = th.verifyMS(outputms, 1, 210, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid4_5(self):
@@ -439,7 +439,7 @@ class test_Regridms4(test_base):
                     veltype = 'radio', datacolumn='DATA')
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 30, 0)
+        ret = th.verifyMS(outputms, 1, 30, 0)
         self.assertTrue(ret[0],ret[1])        
 
         
@@ -458,7 +458,7 @@ class test_Regridms4(test_base):
             phasecenter = "J2000 18h25m56.09 -12d04m28.20", veltype = 'optical', datacolumn='data')
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 40, 0)
+        ret = th.verifyMS(outputms, 1, 40, 0)
         self.assertTrue(ret[0],ret[1])        
 
     def test_regrid4_7(self):
@@ -469,7 +469,7 @@ class test_Regridms4(test_base):
             spw='1', start=98, width=3, phasecenter="J2000 18h25m56.09 -12d04m28.20")
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 10, 0)
+        ret = th.verifyMS(outputms, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])   
              
     def test_regrid4_8(self):
@@ -480,7 +480,7 @@ class test_Regridms4(test_base):
             spw='1,15', start=198, width=3, phasecenter="J2000 18h25m56.09 -12d04m28.20")
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 10, 0)
+        ret = th.verifyMS(outputms, 1, 10, 0)
         self.assertTrue(ret[0],ret[1])   
 
 
@@ -504,7 +504,7 @@ class test_Regridms5(test_base):
         inpfreq = th.getChannels(self.vis, 0, range(1,4,1))
         
         # compare with output created channels
-        ret = th.verify_ms(outputms, 1, 3, 0, inpfreq)
+        ret = th.verifyMS(outputms, 1, 3, 0, inpfreq)
         self.assertTrue(ret[0],ret[1])
         
     def test_regrid5_2(self):
@@ -520,7 +520,7 @@ class test_Regridms5(test_base):
         inpfreq = th.getChannels(self.vis, 0, range(1,4,1))
         
         # compare with output created channels
-        ret = th.verify_ms(outputms, 1, 3, 0, inpfreq)
+        ret = th.verifyMS(outputms, 1, 3, 0, inpfreq)
         self.assertTrue(ret[0],ret[1])
 
     # Wait until fftshift interpolation is implemented by Justo
@@ -538,7 +538,7 @@ class test_Regridms5(test_base):
 #        inpfreq = th.getChannels(self.vis, 0, range(1,4,1))
 #        
 #        # compare with output created channels
-#        ret = th.verify_ms(outputms, 1, 3, 0, inpfreq)
+#        ret = th.verifyMS(outputms, 1, 3, 0, inpfreq)
 #        self.assertTrue(ret[0],ret[1])
 
 
@@ -562,15 +562,15 @@ class test_Hanning(test_base):
                     datacolumn='data')
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 24, 128, 0)
+        ret = th.verifyMS(outputms, 24, 128, 0)
         self.assertTrue(ret[0],ret[1])        
-        ret = th.verify_ms(outputms, 24, 128, 2)
+        ret = th.verifyMS(outputms, 24, 128, 2)
         self.assertTrue(ret[0],ret[1])        
-        ret = th.verify_ms(outputms, 24, 128, 15)
+        ret = th.verifyMS(outputms, 24, 128, 15)
         self.assertTrue(ret[0],ret[1])        
-        ret = th.verify_ms(outputms, 24, 128, 18)
+        ret = th.verifyMS(outputms, 24, 128, 18)
         self.assertTrue(ret[0],ret[1])        
-        ret = th.verify_ms(outputms, 24, 128, 23)
+        ret = th.verifyMS(outputms, 24, 128, 23)
         self.assertTrue(ret[0],ret[1])        
 
 # Uncomment after the seg fault is fixed
@@ -582,7 +582,7 @@ class test_Hanning(test_base):
 #                    spw='1')
 #        
 #        self.assertTrue(os.path.exists(outputms))
-#        ret = th.verify_ms(outputms, 1, 128, 0)
+#        ret = th.verifyMS(outputms, 1, 128, 0)
 #        self.assertTrue(ret[0],ret[1])        
 
     def test_hanning3(self):
@@ -592,7 +592,7 @@ class test_Hanning(test_base):
                     spw='1,2,3', datacolumn='data')
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 1448, 0)
+        ret = th.verifyMS(outputms, 1, 1448, 0)
         self.assertTrue(ret[0],ret[1])        
             
     def test_hanning4(self):
@@ -604,8 +604,60 @@ class test_Hanning(test_base):
                     phasecenter = "J2000 18h25m56.09 -12d04m28.20")
         
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verify_ms(outputms, 1, 2440, 0)
+        ret = th.verifyMS(outputms, 1, 2440, 0)
         self.assertTrue(ret[0],ret[1])        
+
+    def test_hanning5(self):
+        '''mstransform: Hanning theoretical and calculated values should be the same'''
+        # hanning: test3
+        self.setUp_ngc5921()
+        outputms = "hann5.ms"
+        
+        # The hanningsmooth task flags the first and last channels. Check it!
+        # Before running the task
+        flag_col = th.getVarCol(self.vis, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [False])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [False])
+        
+        # Get the DATA column before the transformation
+        data_col = th.getVarCol(self.vis, 'DATA')
+        
+
+        mstransform(vis=self.vis, outputvis=outputms, datacolumn='data', hanning=True)
+
+        # After running the task
+        flag_col = th.getVarCol(self.vis, 'FLAG')
+        self.assertTrue(flag_col['r1'][0][0] == [True])
+        self.assertTrue(flag_col['r1'][0][1] == [False])
+        self.assertTrue(flag_col['r1'][0][61] == [False])
+        self.assertTrue(flag_col['r1'][0][62] == [True])
+
+        corr_col = th.getVarCol(self.msfile, 'DATA')
+        nrows = len(corr_col)
+        
+      # Loop over every 2nd row,pol and get the data for each channel
+        max = 1e-05
+        for i in range(1,nrows,2) :
+            row = 'r%s'%i            
+            # polarization is 0-1
+            for pol in range(0,2) :
+                # array's channels is 0-63
+                for chan in range(1,62) :
+                    # channels must start from second and end before the last
+                    data = data_col[row][pol][chan]
+                    dataB = data_col[row][pol][chan-1]
+                    dataA = data_col[row][pol][chan+1]
+        
+                    Smoothed = self.calc(dataB,data,dataA)
+                    CorData = corr_col[row][pol][chan]
+                    
+                    # Check the difference
+                    self.assertTrue(abs(CorData-Smoothed) < max )
+
+
+
         
 # Cleanup class 
 class Cleanup(test_base):
