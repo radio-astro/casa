@@ -4,6 +4,7 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
+import testhelper as th
 import unittest
 
 '''
@@ -37,32 +38,14 @@ class hanningsmooth_test(unittest.TestCase):
         
         shutil.rmtree('mynewms.ms',ignore_errors=True)
 
-        
-    def checkcol(self,table,colname):
-        '''Check if requested column exists'''
-        tb.open(table)
-        col = tb.getvarcol(colname)
-        if ((not col) or (len(col) == 0)):
-            tb.close()
-            return False
-        else:
-            tb.close()
-            return True
-        
-    def calc(self,dataB,data,dataA):
-        '''Calculate the hanning smooth of each element'''
+               
+    def calculateHanning(self,dataB,data,dataA):
+        '''Calculate the Hanning smoothing of each element'''
         const0 = 0.25
         const1 = 0.5
         const2 = 0.25
         S = const0*dataB + const1*data + const2*dataA
         return S
-
-    def getvarcol(self,table,colname):
-        '''Return the requested column'''
-        tb.open(table)
-        col = tb.getvarcol(colname)
-        tb.close()
-        return col
 
     def test0(self):
         '''Test 0: Default values'''
@@ -79,13 +62,14 @@ class hanningsmooth_test(unittest.TestCase):
         '''Test 2: Check that output column is created'''
         self.res = hanningsmooth(vis=self.msfile, datacolumn='corrected')
         self.assertEqual(self.res,None)
-        self.assertTrue(self.checkcol(self.msfile, 'CORRECTED_DATA'))
+        cd = th.getColDesc(self.msfile, 'CORRECTED_DATA')
+        self.assertTrue(len(cd))
         
     def test3(self):
         '''Test 3: Theoretical and calculated values should be the same with datacolumn==CORRECTED'''
 
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [False])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
@@ -94,15 +78,16 @@ class hanningsmooth_test(unittest.TestCase):
         self.res = hanningsmooth(vis=self.msfile, datacolumn='corrected')
 
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [True])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
         self.assertTrue(flag_col['r1'][0][62] == [True])
 
-        self.assertTrue(self.checkcol(self.msfile, 'CORRECTED_DATA'))
-        data_col = self.getvarcol(self.msfile, 'DATA')
-        corr_col = self.getvarcol(self.msfile, 'CORRECTED_DATA')
+        cd = th.getColDesc(self.msfile, 'CORRECTED_DATA')
+        self.assertTrue(len(cd))
+        data_col = th.getVarCol(self.msfile, 'DATA')
+        corr_col = th.getVarCol(self.msfile, 'CORRECTED_DATA')
         nrows = len(corr_col)
         
       # Loop over every 2nd row,pol and get the data for each channel
@@ -118,7 +103,7 @@ class hanningsmooth_test(unittest.TestCase):
                     dataB = data_col[row][pol][chan-1]
                     dataA = data_col[row][pol][chan+1]
         
-                    Smoothed = self.calc(dataB,data,dataA)
+                    Smoothed = self.calculateHanning(dataB,data,dataA)
                     CorData = corr_col[row][pol][chan]
                     
                     # Check the difference
@@ -128,19 +113,19 @@ class hanningsmooth_test(unittest.TestCase):
         '''Test 4: Theoretical and calculated values should be the same with datacolumn==DATA'''
 
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [False])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
         self.assertTrue(flag_col['r1'][0][62] == [False])
         
-        data_col = self.getvarcol(self.msfile, 'DATA')
+        data_col = th.getVarCol(self.msfile, 'DATA')
         self.res = hanningsmooth(vis=self.msfile,datacolumn='data')
-        corr_col = self.getvarcol(self.msfile, 'DATA')
+        corr_col = th.getVarCol(self.msfile, 'DATA')
         nrows = len(corr_col)
 
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [True])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
@@ -159,7 +144,7 @@ class hanningsmooth_test(unittest.TestCase):
                     dataB = data_col[row][pol][chan-1]
                     dataA = data_col[row][pol][chan+1]
         
-                    Smoothed = self.calc(dataB,data,dataA)
+                    Smoothed = self.calculateHanning(dataB,data,dataA)
                     CorData = corr_col[row][pol][chan]
                     
                     # Check the difference
@@ -169,14 +154,15 @@ class hanningsmooth_test(unittest.TestCase):
         '''Test 5: Check that output MS is created '''
         shutil.rmtree('mynewms.ms',ignore_errors=True)
         self.res = hanningsmooth(vis=self.msfile, outputvis='mynewms.ms')
-        self.assertTrue(self.checkcol('mynewms.ms', 'DATA'))
+        cd = th.getColDesc('mynewms.ms', 'DATA')
+        self.assertTrue(len(cd))
 
     def test6(self):
         '''Test 6: Flagging should be correct with datacolumn==ALL'''
         clearcal(vis=self.msfile)
         
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [False])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
@@ -185,7 +171,7 @@ class hanningsmooth_test(unittest.TestCase):
         self.res = hanningsmooth(vis=self.msfile,datacolumn='all')
 
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [True])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
@@ -196,7 +182,7 @@ class hanningsmooth_test(unittest.TestCase):
         clearcal(vis=self.msfile)
         
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [False])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
@@ -205,7 +191,7 @@ class hanningsmooth_test(unittest.TestCase):
         self.res = cvel(vis=self.msfile, outputvis='cvelngc.ms', hanning=True)
 
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol('cvelngc.ms', 'FLAG')
+        flag_col = th.getVarCol('cvelngc.ms', 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [True])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
@@ -216,7 +202,7 @@ class hanningsmooth_test(unittest.TestCase):
         clearcal(vis=self.msfile)
         
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol(self.msfile, 'FLAG')
+        flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [False])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][61] == [False])
@@ -225,7 +211,7 @@ class hanningsmooth_test(unittest.TestCase):
         self.res = cvel(vis=self.msfile, outputvis='cvelngc.ms', hanning=True, outframe='cmb')
 
       # check correct flagging (just for one row as a sample)
-        flag_col = self.getvarcol('cvelngc.ms', 'FLAG')
+        flag_col = th.getVarCol('cvelngc.ms', 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [True])
         self.assertTrue(flag_col['r1'][0][1] == [False])
         self.assertTrue(flag_col['r1'][0][2] == [False])
