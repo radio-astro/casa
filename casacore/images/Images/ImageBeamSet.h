@@ -220,6 +220,14 @@ public:
 	// get the axis number for the specified type. Return -1 if there is no such axis
 	Int getAxis(const AxisType type) const;
 
+	// Get a beam to which all other beams in the set can be convolved.
+	// If all other beams can be convolved to the maximum area beam in the set, that beam will be returned.
+	// If not, this is guaranteed to be the minimum area beam to which
+	// all beams in the set can be convolved if all but one of the beams in the set can be convolved to the beam in the set with the
+	// largest area. Otherwise, the returned beam may or may not be the smallest possible beam to which all the beams in the set
+	// can be convolved.
+	GaussianBeam getCommonBeam() const;
+
 private:
 
 	typedef std::map<AxisType, uInt> AxesMap;
@@ -265,6 +273,12 @@ private:
 		IPosition& pos, const vector<IPosition>& map,
 		const Int polarization
 	) const;
+
+	static void _transformEllipseByScaling(
+		Double& transformedMajor, Double& transformedMinor,
+		Double& transformedPa, Double major, Double minor,
+		Double pa, Double xScaleFactor, Double yScaleFactor
+	);
 
 };
 

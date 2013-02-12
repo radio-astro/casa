@@ -345,6 +345,261 @@ int main() {
         		}
         	}
         }
+        {
+        	cout << "*** test getCommonBeam 1" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(0, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(60, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 30) < 1e-7, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") < 4.486, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") < 3.292, AipsError);
+        }
+        {
+        	cout << "*** test getCommonBeam 2" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(20, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(80, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 50) < 1e-7, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") < 4.486, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") < 3.292, AipsError);
+        }
+        {
+        	cout << "*** test getCommonBeam 3" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(1, "deg")
+            );
+        	GaussianBeam beam2(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(89, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 45) < 1e-7, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") < 4.042, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") < 3.958, AipsError);
+        }
+        {
+        	cout << "*** test getCommonBeam 4" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(0, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(90, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	//AlwaysAssert(abs(myBeam.getPA("deg", True) - 45) < 1e-7, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") == 4, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") == 4, AipsError);
+
+        }
+        {
+        	cout << "*** test getCommonBeam 5" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(0, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(1.5, "arcsec"), Quantity(1, "arcsec"),
+        		Quantity(90, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	AlwaysAssert(myBeam.getPA("deg", True) == 0, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") == 4, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") == 2, AipsError);
+        }
+        {
+        	cout << "*** test getCommonBeam 6" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(8, "arcsec"), Quantity(1, "arcsec"),
+        		Quantity(0, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(4, "arcsec"), Quantity(1, "arcsec"),
+        		Quantity(20, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 2.76795337) < 1e-5, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") < 8.377, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") < 1.628, AipsError);
+        }
+        {
+        	cout << "*** test getCommonBeam 7" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(1, "arcsec"),
+        		Quantity(0, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(8, "arcsec"), Quantity(1, "arcsec"),
+        		Quantity(20, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 17.232049) < 1e-5, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") < 8.369, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") < 1.626, AipsError);
+        }
+        {
+        	cout << "*** test getCommonBeam 8" << endl;
+        	Matrix<GaussianBeam> beams(1, 4);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(0, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(60, "deg")
+        	);
+        	GaussianBeam beam3(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(20, "deg")
+        	);
+        	GaussianBeam beam4(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(40, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	beams(0, 2) = beam3;
+        	beams(0, 3) = beam4;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	/*
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 17.232049) < 1e-5, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") < 8.369, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") < 1.626, AipsError);
+        	*/
+        }
+        {
+        	cout << "*** test getCommonBeam 9" << endl;
+        	Matrix<GaussianBeam> beams(1, 4);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(0, "deg")
+        	);
+        	GaussianBeam beam2(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(20, "deg")
+        	);
+        	GaussianBeam beam3(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(40, "deg")
+        	);
+        	GaussianBeam beam4(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(60, "deg")
+        	);
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	beams(0, 2) = beam3;
+        	beams(0, 3) = beam4;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	/*
+        	AlwaysAssert(abs(myBeam.getPA("deg", True) - 17.232049) < 1e-5, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") < 8.369, AipsError);
+        	AlwaysAssert(myBeam.getMinor("arcsec") < 1.626, AipsError);
+        	*/
+        }
+        {
+        	cout << "*** test getCommonBeam 10" << endl;
+        	Matrix<GaussianBeam> beams(1, 2);
+        	GaussianBeam beam1(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(0, "deg")
+            );
+        	GaussianBeam beam2(
+        		Quantity(1, "arcsec"), Quantity(1, "arcsec"),
+        		Quantity(0, "deg")
+            );
+        	beams(0, 0) = beam1;
+        	beams(0, 1) = beam2;
+        	Vector<ImageBeamSet::AxisType> types(2);
+        	types[0] = ImageBeamSet::SPECTRAL;
+        	types[1] = ImageBeamSet::POLARIZATION;
+        	ImageBeamSet beamSet(beams, types);
+        	GaussianBeam myBeam = beamSet.getCommonBeam();
+        	cout << "Minimum area enclosing beam " << myBeam << endl;
+        	AlwaysAssert(myBeam.getPA("deg", True) == 0, AipsError);
+        	AlwaysAssert(myBeam.getMajor("arcsec") == 4, AipsError);
+            AlwaysAssert(myBeam.getMinor("arcsec") == 2, AipsError);
+        }
 	}
 	catch (const AipsError& x) {
 		cout << x.getMesg() << endl;
