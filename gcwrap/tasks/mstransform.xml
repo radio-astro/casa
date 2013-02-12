@@ -350,10 +350,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     Experimental version of task mstransform.
 
-    NOTE: This first version of the task only implements the
-          combinespws transformation. Parameters marked with
-          TBI (to-be-implemented) will be implemented later in
-          in this cycle.
+    NOTE: TBI means to-be-implemented.
 
     The task mstransform can do the same functionalities available
     in concat, cvel, partition and split without the need to read and write
@@ -522,11 +519,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             options: 'flags', 'spectral'
 
 
---- Hanning smoothing parameters --- (TBI)
+--- Hanning smoothing parameters --- 
     hanning -- Hanning smooth frequency channel data to remove Gibbs ringing.
         default: False
 
---- Regrid parameters --- (TBI)
+--- Regrid parameters ---
     regridms -- Regrid the MS to a new spw, channel structure or frame.
         default: False
 
