@@ -26,8 +26,6 @@
 // #include <casa/Utilities/GenSort.h>
 #include <images/Images/ImageBeamSet.h>
 
-#include <scimath/Mathematics/QuarticPolynomialSolver.h>
-
 #include <vector>
 
 // debug only
