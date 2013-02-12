@@ -506,7 +506,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     combinespws -- Combine the input spws into a new output spw.
         default: False
 
---- Frequency averaging parameters ---(TBI)
+--- Frequency averaging parameters ---
     freqaverage -- Average data in frequency. 
         default: False
 

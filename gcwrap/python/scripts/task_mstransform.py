@@ -199,10 +199,11 @@ def mstransform(
             casalog.post('Combine spws %s into new output spw'%spw)
             config['combinespws'] = True
         if freqaverage:
-            casalog.post('Frequency averaging is not yet implemented', 'WARN')
-#            config['freqaverage'] = True
-#            config['freqbin'] = freqbin
-#            config['useweights'] = useweights
+            casalog.post('Parse frequency averaging parameters')
+            config['freqaverage'] = True
+            # TODO: the freqbin parameter may need to be a list too
+            config['freqbin'] = str(freqbin)
+            config['useweights'] = useweights
         if hanning:
             casalog.post('Apply Hanning smoothing')
             config['hanning'] = True

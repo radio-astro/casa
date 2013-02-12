@@ -541,9 +541,6 @@ class test_Regridms5(test_base):
 #        self.assertTrue(ret[0],ret[1])
 
 
-
-
-
 class test_Hanning(test_base):
     
     def setUp(self):
@@ -572,17 +569,16 @@ class test_Hanning(test_base):
         ret = th.verifyMS(outputms, 24, 128, 23)
         self.assertTrue(ret[0],ret[1])        
 
-# Uncomment after the seg fault is fixed
-#    def test_hanning2(self):
-#        '''mstransform: Apply Hanning smoothing and select spw=1.'''
-#        # cvel: test33
-#        outputms = "hann2.ms"
-#        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, hanning=True,
-#                    spw='1')
-#        
-#        self.assertTrue(os.path.exists(outputms))
-#        ret = th.verifyMS(outputms, 1, 128, 0)
-#        self.assertTrue(ret[0],ret[1])        
+    def test_hanning2(self):
+        '''mstransform: Apply Hanning smoothing and select spw=1.'''
+        # cvel: test33
+        outputms = "hann2.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, hanning=True,
+                    spw='1')
+        
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verifyMS(outputms, 1, 128, 0)
+        self.assertTrue(ret[0],ret[1])        
 
     def test_hanning3(self):
         '''mstransform: Apply Hanning smoothing and combine spw=1,2,3.'''
@@ -623,7 +619,6 @@ class test_Hanning(test_base):
         # Get the DATA column before the transformation
         data_col = th.getVarCol(self.vis, 'DATA')
         
-
         mstransform(vis=self.vis, outputvis=outputms, datacolumn='data', hanning=True)
 
         # After running the task
@@ -656,8 +651,43 @@ class test_Hanning(test_base):
                     self.assertTrue(abs(CorData-Smoothed) < max )
 
 
-
+class test_FreqAvg(test_base):
+    
+    def setUp(self):
+        self.setUp_g19()
         
+    def tearDown(self):
+        pass
+        os.system('rm -rf '+ self.vis)
+#        os.system('rm -rf reg*.ms')
+
+    def test_freqavg1(self):
+        '''mstranform: Average 20 channels of one spw'''
+        outputms = "favg1.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='2', freqaverage=True, freqbin=20)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verifyMS(outputms, 1, 6, 0)
+        self.assertTrue(ret[0],ret[1])        
+        
+    def test_freqavg2(self):
+        '''mstranform: Select a few channels to average from one spw'''
+        outputms = "favg2.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='2:10~20', freqaverage=True, freqbin=2)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verifyMS(outputms, 1, 5, 0)
+        self.assertTrue(ret[0],ret[1])        
+        
+    def test_freqavg3(self):
+        '''mstranform: Average all channels of one spw'''
+        outputms = "favg3.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='23', freqaverage=True, freqbin=128)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verifyMS(outputms, 1, 1, 0)
+        self.assertTrue(ret[0],ret[1])        
+       
 # Cleanup class 
 class Cleanup(test_base):
     
@@ -681,4 +711,5 @@ def suite():
             test_Regridms4,
             test_Regridms5,
             test_Hanning,
+            test_FreqAvg,
             Cleanup]
