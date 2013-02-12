@@ -346,36 +346,8 @@ class test_shadow(test_base):
         filename = 'cas2399.txt'
         create_input(input, filename)
         
-        flagdata(vis=self.vis, mode='shadow', tolerance=10.0, addantenna=filename)
-        res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
-        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
-        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)
-        
-    def test_addantenna(self):
-        '''flagdata: use antenna file in list mode'''
-        if os.path.exists("myants.txt"):
-            os.system('rm -rf myants.txt')
-        
-        # Create antennafile in disk
-        input = 'name=VLA01\n'+\
-                'diameter=25.0\n'+\
-                'position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]\n'+\
-                'name=VLA02\n'+\
-                'diameter=25.0\n'+\
-                'position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]\n'+\
-                'name=VLA09\n'+\
-                'diameter=25.0\n'+\
-                'position=[-1601197.2182404203, -5041974.3604805721, 3554875.1995636248]\n'+\
-                'name=VLA10\n'+\
-                'diameter=25.0\n'+\
-                'position=[-1601227.3367843349,-5041975.7011900628,3554859.1642644769]\n'            
-
-        antfile = 'myants.txt'
-        create_input(input, antfile)
-        
-        # Create list file
-        input = "mode='shadow' tolerance=10.0 addantenna='myants.txt'"
+        flagdata(vis=self.vis, mode='shadow', tolerance=0.0, addantenna=filename,flagbackup=False)
+        myinput = "mode='shadow' tolerance=0.0 addantenna='myants.txt'"
         filename = 'listfile.txt'
         create_input(input, filename)
         
@@ -384,9 +356,9 @@ class test_shadow(test_base):
         
         # Check flags
         res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['antenna']['VLA18']['flagged'], 3364)
-        self.assertEqual(res['antenna']['VLA19']['flagged'], 1124)
-        self.assertEqual(res['antenna']['VLA20']['flagged'], 440)        
+        self.assertEqual(res['antenna']['VLA3']['flagged'], 3752)
+        self.assertEqual(res['antenna']['VLA4']['flagged'], 1320)
+        self.assertEqual(res['antenna']['VLA5']['flagged'], 1104)
 
 class test_flagmanager(test_base):
     
