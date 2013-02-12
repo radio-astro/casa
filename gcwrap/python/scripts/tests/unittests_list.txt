@@ -30,6 +30,7 @@ test_hanningsmooth              scastro@eso.org
 test_ia_adddegaxes              dmehring@nrao.edu
 test_ia_continuumsub            dmehring@nrao.edu
 test_ia_convertflux             dmehring@nrao.edu
+test_ia_commonbeam              dmehring@nrao.edu
 test_ia_convolve                dmehring@nrao.edu
 test_ia_convolve2d              dmehring@nrao.edu
 test_ia_decompose               dmehring@nrao.edu

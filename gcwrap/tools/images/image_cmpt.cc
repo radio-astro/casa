@@ -1098,6 +1098,42 @@ record* image::beamforconvolvedsize(
 	}
 }
 
+record* image::commonbeam() {
+	try {
+		*_log << _ORIGIN;
+		if (detached()) {
+			return 0;
+		}
+		ImageInfo myInfo = _image->getImage()->imageInfo();
+		if (! myInfo.hasBeam()) {
+			throw AipsError("This image has no beam(s).");
+		}
+		GaussianBeam beam;
+		if (myInfo.hasSingleBeam()) {
+			*_log << LogIO::WARN
+				<< "This image only has one beam, so just returning that"
+				<< LogIO::POST;
+			beam = myInfo.restoringBeam();
+
+		}
+		else {
+			// multiple beams in this image
+			beam = myInfo.getBeamSet().getCommonBeam();
+		}
+		beam.setPA(casa::Quantity(beam.getPA("deg", True), "deg"));
+		Record x = beam.toRecord();
+		x.defineRecord("pa", x.asRecord("positionangle"));
+		x.removeField("positionangle");
+		return fromRecord(x);
+
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+
+}
 
 bool image::remove(const bool finished, const bool verbose) {
 	bool rstat(false);
@@ -2618,7 +2654,7 @@ image::restoringbeam(int channel, int polarization) {
 				channel, polarization
 			)
 		);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

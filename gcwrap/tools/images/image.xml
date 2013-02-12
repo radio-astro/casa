@@ -3600,8 +3600,6 @@ print 'pa=',recout['fit']['pa']
 </example>
 </method>
 
-
-
 <method type="function" name="beamforconvolvedsize">
    <shortdescription>Determine the size of the beam necessary to convolve with the given source to reach the given convolved (source+beam) size</shortdescription>
 
@@ -3629,6 +3627,34 @@ print 'pa=',recout['fit']['pa']
 
 # get the beam necessary to convolve the specified source with to achieve the target convolved source size (source convolved with beam).
 beam = ia.beamforconvolvedsize(source=["1arcsec", "1arcsec", "0deg"], convolved="3arcsec", "2arcsec", "45deg"])
+
+</example>
+</method>
+
+<method type="function" name="commonbeam">
+   <shortdescription>Determine a beam to which all beams in an image can be convolved.</shortdescription>
+
+    <description>
+        Determine a beam to which all beams in an image can be convolved.
+        If the image does not have a beam, an exception will be thrown.
+        If the image has a single beam, that beam will be returned.
+        If the image has multiple beams, this will be the beam with the largest area in the image
+        beam set if all the other beams can be convolved to that beam. If not, this is guaranteed to be the minimum area beam to which
+        all beams in the set can be convolved if all but one of the beams in the set can be convolved to the beam in the set with the
+        largest area. Otherwise, the returned beam may or may not be the smallest possible beam to which all the beams in the set
+        can be convolved.
+    </description>
+
+    <returns type="record">
+        <description> record containing the necessary beam Gaussian parameters</description>
+    </returns>
+
+    <example>
+
+    ia.open("mymultibeamimage.im")
+    cb = ia.commonbeam()
+    # convolve all the planes in the image with that beam
+    ia.convolve2d(outfile="myconvolvedimage.im", major=cb["major], minor=cb["minor"], pa=cb["pa"], targetres=T)
 
 </example>
 </method>
