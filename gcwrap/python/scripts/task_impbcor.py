@@ -84,7 +84,7 @@ def impbcor(
         return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-    if (myia):
-        myia.done()
-        del myia
-    return False
+        raise
+    finally:
+        if (myia):
+            myia.done()
