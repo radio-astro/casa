@@ -67,10 +67,9 @@ from taskinit import *
 def impbcor(
     imagename=None, pbimage=None, outfile=None, overwrite=None,
     box=None, region=None, chans=None, stokes=None, mask=None,
-    mode=None, cutoff=None, wantreturn=None, stretch=None
+    mode=None, cutoff=None,  stretch=None
 ):
     casalog.origin('impbcor')
-    retval = None
     myia = iatool()
     try:
         if (not myia.open(imagename)):
@@ -80,14 +79,12 @@ def impbcor(
             box=box, region=region, chans=chans, stokes=stokes,
             mask=mask, mode=mode, cutoff=cutoff, stretch=stretch
         )
-        if wantreturn:
-            retval = ia_tool
-        else:
-            ia_tool.done()
-            del ia_tool
+        ia_tool.done()
+        myia.done()
+        return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
     if (myia):
         myia.done()
         del myia
-    return retval
+    return False

@@ -104,13 +104,12 @@ def run_pbcor(
 
 def run_impbcor(
     imagename, pbimage, outfile, overwrite, region, box, chans,
-    stokes, mask, mode, cutoff, wantreturn
+    stokes, mask, mode, cutoff
 ):
     return impbcor(
         imagename=imagename, pbimage=pbimage, outfile=outfile,
         overwrite=overwrite, region=region, box=box, chans=chans,
-        stokes=stokes, mask=mask, mode=mode, cutoff=cutoff,
-        wantreturn=wantreturn
+        stokes=stokes, mask=mask, mode=mode, cutoff=cutoff
     )
 
 class impbcor_test(unittest.TestCase):
@@ -129,6 +128,7 @@ class impbcor_test(unittest.TestCase):
                 shutil.rmtree(f)
             else:
                 os.remove(f)
+            self.assertTrue(len(tb.showcache()) == 0)
 
     def checkImage(self, gotImage, expectedName):
         expected = iatool()                                
@@ -186,7 +186,7 @@ class impbcor_test(unittest.TestCase):
                             outfile=outfile, overwrite=overwrite,
                             region=region, box=box, chans=chans,
                             stokes=stokes, mask=mask, mode=mode,
-                            cutoff=cutoff, wantreturn=wantreturn
+                            cutoff=cutoff
                         )
                     )
         # no image name given
@@ -274,23 +274,17 @@ class impbcor_test(unittest.TestCase):
                     self.checkImage(outfile, expected)
                     shutil.rmtree(outfile)
                 else:
-                    for wantreturn in [True, False]:
-                        outfile = outfile + str(wantreturn)
-                        mytool = run_impbcor(
-                            imagename=imagename, pbimage=pbimage,
-                            outfile=outfile, overwrite=overwrite,
-                            region=region, box=box, chans=chans,
-                            stokes=stokes, mask=mask, mode=mode,
-                            cutoff=cutoff, wantreturn=wantreturn
-                        )
-                        if (wantreturn):
-                            print "*** " + str(type(mytool)) + " " + str(type(ia))
-                            self.assertTrue(type(mytool) == type(ia))
-                            self.checkImage(mytool, expected)
-                        else:
-                            self.assertTrue(mytool == None)
-                            self.checkImage(outfile, expected)
-                        shutil.rmtree(outfile)
+                    outfile = outfile
+                    res = run_impbcor(
+                        imagename=imagename, pbimage=pbimage,
+                        outfile=outfile, overwrite=overwrite,
+                        region=region, box=box, chans=chans,
+                        stokes=stokes, mask=mask, mode=mode,
+                        cutoff=cutoff
+                    )
+                    self.assertTrue(res)
+                    self.checkImage(outfile, expected)
+                    shutil.rmtree(outfile)
 
     def test_1(self):
         """impbcor: Test full image divide"""
@@ -341,19 +335,17 @@ class impbcor_test(unittest.TestCase):
                 )
                 self.assertTrue(type(yy) == type(zz))
                 yy.done()
+                zz.done()
             else:
                 zz = impbcor(
                     imagename=im2, pbimage=pb2,
-                    mask=mymask + ">0", stretch=False,
-                    wantreturn=True
+                    mask=mymask + ">0", stretch=False
                 )
-                self.assertTrue(zz == None)
+                self.assertFalse(zz)
                 zz = impbcor(
-                    imagename=im2, pbimage=pb2, mask=mymask + ">0", stretch=True,
-                    wantreturn=True
+                    imagename=im2, pbimage=pb2, mask=mymask + ">0", stretch=True
                 )
-                self.assertTrue(type(zz) == type(ia))
-            zz.done()
+                self.assertTrue(zz)
         
 
 def suite():

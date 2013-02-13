@@ -63,10 +63,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>PB cutoff. If mode is "d", all values less than this will be masked. If "m", all values greater will be masked. Less than 0, no cutoff. Default no cutoff</description>
             <value>-1.0</value>
         </param>
-        <param type="bool" direction="in" name="wantreturn">
-            <description>Return an image tool referencing the corrected image?</description>
-            <value>False</value>
-        </param>
         <param type="bool" direction="in" name="stretch" subparam="true">
             <description>Stretch the mask if necessary and possible? See help par.stretch </description>
             <value>False</value>
@@ -93,13 +89,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          </when>
         </constraints>
     </input>
-    <returns type="image"/>
+    <returns type="bool"/>
     <example>
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 pbimage          Name of the image (CASA, FITS, MIRIAD) of the primary beam pattern or an array of pixel values.
-outfile          Name of output CASA image. If not specified, no image is written
-                 but an image analysis tool which references the output image is returned.
+outfile          Name of output CASA image. Must be specified.
 overwrite        If output file is specified, controls if an already existing file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
@@ -116,9 +111,6 @@ mask             Mask to use. See help par.mask. Default is none.
 stretch          Stretch the input mask if necessary and possible. See help par.mask.
 mode             Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"
 cutoff           PB cutoff. If mode is "d", all values less than this will be masked. If "m", all values greater will be masked. Less than 0, no cutoff. Default no cutoff
-wantreturn       If true, return an image analysis tool referencing the collapsed image, if
-                 false, return false.
-        
 
 DESCRIPTION
 Correct an image for primary beam attenuation using an image of the primary beam pattern.
@@ -129,8 +121,7 @@ coordinate which is the same as the direction coordinate in the input image and
 its direction plane must be the same shape as that of the input image. Alternatively,
 pbimage can be an array of pixel values in which case the same dimensionality and
 shape constraints apply.
-An image tool referencing the corrected image is returned if wantreturn=True. The corrected image will also
-be written to disk if outfile is not empty (and overwrite=True if outfile already exists).
+
 One can choose between dividing the image by the primary beam pattern (mode="divide") or
 multiplying the image by the primary beam pattern (mode="multiply"). One can also choose
 to specify a cutoff limit for the primary beam pattern. For mode="divide", for all pixels
