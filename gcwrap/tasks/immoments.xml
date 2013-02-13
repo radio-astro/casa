@@ -93,7 +93,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </constraints>
 
 </input>
-<returns type="image"/>
+<returns type="bool"/>
 
 <example>
 	The spectral moment distributions at each pixel are
@@ -163,9 +163,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         Example for finding the 1-momment, intensity-weighted
         coordinate, often used for finding velocity fields.
-        mymoments = immoments( axis=&quot;spec&quot;, imagename=&quot;myimage&quot;, moment=1, outfile=&quot;velocityfields&quot; )
-        # do stuff with image
-        mymoments.done()
+        immoments( axis=&quot;spec&quot;, imagename=&quot;myimage&quot;, moment=1, outfile=&quot;velocityfields&quot; )
 
         Example finding the spectral mean, -1 moment, on a specified region
         of the image as defined by the box and stokes parameters
@@ -175,7 +173,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         moment    =  -1
 
         axis      = &quot;spec&quot;
-        stoke     = &quot;I&quot;
+        stokes     = &quot;I&quot;
         box       = [55,12,97,32]
         go
 
@@ -183,8 +181,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         data used to calculate the 0-moments, integrated values.  In
         this case the mask is from the calibrated.im file and all values
         that have a value greater than 0.5 will be positive in the mask..
-        mymoments = immoments( &quot;clean.image&quot;, axis=&quot;spec&quot;, mask=&quot;calibrated.im>0.5&quot;, outfile=&quot;mom_withmask.im&quot; )
-        mymoments.done()
+        immoments( &quot;clean.image&quot;, axis=&quot;spec&quot;, mask=&quot;calibrated.im>0.5&quot;, outfile=&quot;mom_withmask.im&quot; )
         
 If an image has multiple (per-channel beams) and the moment axis is equal to the
 spectral axis, each channel will be convolved with a beam that is equal to the beam

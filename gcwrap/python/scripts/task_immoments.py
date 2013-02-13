@@ -101,12 +101,8 @@ def immoments(
         raise Exception, 'Output file, '+outfile+\
               ' exists. immoment can not proceed, please\n'\
               'remove it or change the output file name.'
-    elif ( len( outfile ) < 1 ):
-        casalog.post( "The outfile paramter is empty, consequently the" \
-                      +" moment image will NOT be\nsaved on disk," \
-                      +" but an image tool (ia) will be returned and if the" \
-                      +" returned value\nis saved then you can used in" \
-                      +" the same way the image tool (ia). can", 'WARN' )    
+    elif ( len( outfile ) ==  1 ):
+        raise Exception, 'outfile is not specified but must be'
         
     _myia = iatool()
     try:
@@ -127,7 +123,8 @@ def immoments(
             stretch=stretch
         )
         _myia.done()
-        return retValue
+        retValue.done()
+        return True
     except Exception, instance:
         _myia.done()
         print '*** Error ***',instance
