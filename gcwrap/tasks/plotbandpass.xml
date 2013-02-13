@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="plotbandpass" category="visualization, calibration">
+
+  <shortdescription>Makes detailed plots of Tsys and bandpass solutions.</shortdescription>
+      
+  <description>Developed at the NAASC, this is a generic task to display CASA Tsys and 
+  bandpass solution tables with options to overlay them in various
+  combinations, and/or with an atmospheric transmission or sky temperature
+  model.  It works with both the 'new' (casa 3.4) and 'old' calibration
+  table formats, and allows for mixed mode spws (e.g. TDM and FDM for ALMA).
+  It uses the new msmd tool to access the information about an ms.
+  </description>
+
+  <input>
+    <param type="string" name="caltable" mustexist="true">
+      <description>Input table name, either a bandpass solution or a Tsys solution</description>
+      <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+      <description>A comma-delimited string list of antennas (either names or integer indices) for which to display solutions.  Default = all antennas.</description>
+      <any type="variant" limittypes="string int list"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="field">
+      <description>A comma-delimited string list of fields (either names or integer indices) for which to display solutions.  Default = all fields.</description>
+      <any type="variant" limittypes="string int list"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="spw">
+      <description>A comma-delimited string list of spws for which to display solutions.  Default = all spws.</description>
+      <any type="variant" limittypes="string int list"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="yaxis">
+      <description>The quantity to plot on the y-axis.</description>
+      <value>amp</value>
+      <allowed kind="enum">
+      <value>amp</value>
+      <value>ampdb</value>
+      <value>phase</value>
+      <value>tsys</value>
+      <value>both</value>
+      <value>bothdb</value>
+      <value>ap</value>
+      <value>apdb</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="xaxis">
+      <description>The quantity to plot on the x-axis.</description>
+      <value>chan</value>
+      <allowed kind="enum">
+      <value>chan</value>
+      <value>freq</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="figfile">
+      <description>The name of the plot file to produce.</description>
+      <value></value>
+    </param>
+
+    <param type="doubleArray" name="plotrange">
+      <description>The axes limits to use [x0,x1,y0,y1].</description>
+      <value type="doubleArray">0,0,0,0</value>
+    </param>
+
+    <param type="string" name="caltable2">
+      <description>A second cal table, of type BPOLY or B, to overlay on a B table</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="overlay">
+      <description></description>
+      <value type="string"></value>
+      <allowed kind="enum">
+         <value></value>
+         <value>antenna</value>
+         <value>time</value>
+      </allowed>
+    </param>
+
+    <param type="bool" name="showflagged">
+      <description>Show the values of the solution, even if flagged</description>
+      <value>False</value>
+    </param>
+
+    <param type="string" name="timeranges">
+      <description>Show only these timeranges, the first timerange being 1</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="bool" name="buildpdf">
+      <description>If True and figfile is set, assemble pngs into a pdf</description>
+      <value>False</value>
+    </param>
+
+    <param type="string" name="caltable3">
+      <description>A third cal table, of type BPOLY, to overlay on the first two tables</description>
+      <value></value>
+    </param>
+
+    <param type="int" name="markersize">
+      <description>Size of points</description>
+      <value>3</value>
+    </param>
+
+    <param type="int" name="density">
+      <description>dpi to use in creating PNGs and PDFs (default=108)"</description>
+      <value>108</value>
+    </param>
+
+    <param type="bool" name="interactive">
+      <description>if False, then run to completion automatically without pause</description>
+      <value>True</value>
+    </param>
+
+    <param type="any" name="showpoints">
+      <description>Draw points for the data (default=F for amp, T for phase)</description>
+      <any type="variant" limittypes="string bool"/>
+      <value type="string">auto</value>
+    </param>
+
+    <param type="any" name="showlines">
+      <description>Draw lines connecting the data (default=T for amp, F for phase)</description>
+      <any type="variant" limittypes="string bool"/>
+      <value type="string">auto</value>
+    </param>
+
+    <param type="any" name="subplot">
+      <description>11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored</description>
+      <any type="variant" limittypes="string int"/>
+      <value type="string">22</value>
+      <allowed kind="enum">
+         <value type="int">11</value>
+         <value type="int">22</value>
+         <value type="int">32</value>
+         <value type="int">42</value>
+         <value type="string">11</value>
+         <value type="string">22</value>
+         <value type="string">32</value>
+         <value type="string">42</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="zoom">
+      <description>"intersect" will zoom to overlap region of caltable with caltable2</description>
+      <allowed kind="enum">
+      <value>intersect</value>
+      <value></value>
+      </allowed>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="poln">
+      <description>Polarizations to plot: "" = all, or "RR","RL","LR","LL","XX","XY","YX","YY","RR,LL","XX,YY"</description>
+      <any type="variant" limittypes="list string"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="bool" name="showatm">
+      <description>Compute and overlay the atmospheric transmission curve</description>
+      <value>False</value>
+    </param>
+
+    <param type="any" name="pwv">
+      <any type="variant" limittypes="double string"/>
+      <description>Define the pwv to use for the showatm option: "auto" or value in mm</description>
+      <value type="string">auto</value>
+    </param>
+
+    <param type="string" name="gs">
+      <description>Full path for ghostscript command (in case it is not found)</description>
+      <value>gs</value>
+    </param>
+
+    <param type="string" name="convert">
+      <description>Full path for the ImageMagick convert command (in case it is not found)</description>
+      <value>convert</value>
+    </param>
+
+    <param type="any" name="chanrange" subparam="true">
+      <description>Set xrange ("5~100") over which to autoscale y-axis for xaxis="freq"</description>
+      <any type="variant" limittypes="string list"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="double" name="solutionTimeThresholdSeconds">
+      <description>Consider 2 solutions simultaneous if within this interval in seconds"</description>
+      <value type="double">60.0</value>
+    </param>
+
+    <param type="bool" name="debug">
+      <description>Print verbose messages for debugging purposes</description>
+      <value>False</value>
+    </param>
+
+    <param type="any" name="phase" subparam="true">
+      <description>The y-axis limits to use for phase plots when yaxis="both"</description>
+      <any type="variant" limittypes="string list"/>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="vis">
+      <description>name of the ms for this table, in case it does not match the string in the caltable</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="bool" name="showtsky"> 
+      <description>Compute and overlay the sky temperature curve instead of transmission</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="showfdm" subparam="true"> 
+      <description>when showing TDM spws with xaxis="freq", draw the locations of the FDM spws</description>
+      <value>False</value>
+    </param>
+
+    <param type="any" name="showatmfield" subparam="true"> 
+      <any type="variant" limittypes="int string"/>
+      <description>for overlay="time", use first observation of this fieldID or name</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="any" name="lo1" subparam="true">
+      <any type="variant" limittypes="string double"/>
+      <description>specify the LO1 setting (in GHz) for the observation (used if showimage=T)</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="bool" name="showimage">
+      <description>also show the atmospheric curve for the image sideband (in black)</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="showatmpoints">
+      <description>Draw atmospheric curve with points instead of a line</description>
+      <value>False</value>
+    </param>
+
+    <param type="string" name="parentms">
+      <description>name of the parent ms, in case the ms has been previously split</description>
+      <value type="string"></value>
+    </param>
+
+    <param type="string" name="pdftk">
+      <description>Full path for pdftk command (in case it is not found)</description>
+      <value>pdftk</value>
+    </param>
+
+    <constraints>
+      <when param="xaxis">
+        <equals value="freq">
+          <default param="chanrange"><value type="string"></value></default>
+          <default param="showfdm"><value type="bool">False</value></default>
+        </equals>
+      </when>
+      <when param="yaxis">
+        <equals value="both">
+          <default param="phase"><value type="string"></value></default>
+        </equals>
+      </when>
+      <when param="overlay">
+        <equals value="time">
+          <default param="showatmfield"><value type="string"></value></default>
+        </equals>
+      </when>
+      <when param="showimage">
+        <equals type="bool" value="True">
+          <default param="lo1"><value type="string"></value></default>
+        </equals>
+      </when>
+    </constraints>
+  </input>
+
+  <returns type="void"/>
+
+  <example>
+
+   This is a tool to plot bandpass and Tsys solutions faster and more flexibly than plotcal. 
+   It will work on both the old style and new style cal tables.  
+
+   Keyword arguments:
+
+ antenna: must be either an ID (int or string or list), or a single antenna name or list
+ buildpdf: True/False, if True and figfile is set, assemble pngs into a pdf
+ caltable: a bandpass table, of type B or BPOLY
+ caltable2: a second cal table, of type BPOLY or B, to overlay on a B table
+ caltable3: a third cal table, of type BPOLY, to overlay on the first two
+ chanrange: set xrange (e.g. "5~100") over which to autoscale y-axis for xaxis='freq'
+ convert: full path for convert command (in case it's not found)
+ density: dpi to use in creating PNGs and PDFs (default=108)
+ field: must be an ID, source name, or list thereof; can use trailing *: 'J*'
+ figfile: the base_name of the png files to save: base_name.antX.spwY.png
+ gs: full path for ghostscript command (in case it's not found)
+ interactive: if False, then figfile will run to completion automatically
+ lo1: specify the LO1 setting (in GHz) for the observation
+ overlay: 'antenna' or 'time', make 1 plot with different items in colors
+ showflagged:  show the values of data, even if flagged
+ markersize: size of points (default=3)
+ ms: name of the ms for this table, in case it does not match the string in the caltable
+ parentms: name of the parent ms, in case the ms has been previously split
+ pdftk: full path for pdftk command (in case it's not found)
+ phase: the y-axis limits to use for phase plots when yaxis='both'
+ plotrange: define axis limits: [x0,x1,y0,y1] where 0,0 means auto
+ poln: polarizations to plot (e.g. 'XX','YY','RR','LL' or '' for both)
+ pwv: define the pwv to use for the showatm option: 'auto' or value in mm
+ showatm: compute and overlay the atmospheric transmission curve
+ showatmfield: use first observation of this fieldID or name
+ showatmPoints: draw atmospheric curve with points instead of a line
+ showfdm: when showing TDM spws with xaxis='freq', draw locations of FDM spws
+ showimage: also show the atmospheric curve for the image sideband (in black)
+ showtsky: compute and overlay the sky temperature curve instead of transmission
+ showlines: draw lines connecting the data (default=T for amp, F for phase)
+ showpoints: draw points for the data (default=F for amp, T for phase)
+ solutionTimeThresholdSeconds: consider 2 solutions simultaneous if within this interval (default=60)
+ spw: must be single ID or list or range (e.g. 0~4, not the original ID)
+ subplot: 11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored
+ timeranges: show only these timeranges, the first timerange being 1
+ xaxis: 'chan' or 'freq'
+ yaxis: 'amp', 'tsys', 'phase', or 'both' amp+phase == 'ap'. Append 'db' for dB
+ zoom: 'intersect' will zoom to overlap region of caltable with caltable2
+
+  </example>
+
+</task>
+
+</casaxml>
