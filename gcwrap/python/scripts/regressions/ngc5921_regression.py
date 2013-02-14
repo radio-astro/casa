@@ -981,8 +981,9 @@ chans = ''
 momfile = prefix + '.moments'
 outfile = momfile
 
-res = immoments()
-res.done()
+# execute, expecting success
+if not immoments():
+    raise Exception, 'Execution of immoments() returned False.'
 
 momzeroimage = momfile + '.integrated'
 momoneimage = momfile + '.weighted_coord'
