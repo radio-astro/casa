@@ -204,7 +204,7 @@ public:
 
     virtual Int polFrame() const { return vb2_p-> polarizationFrame(); }
 
-    virtual Vector<Int>& corrType() { IllegalOperation (); }
+    virtual Vector<Int>& corrType() { return const_cast<Vector<Int> &> (vb2_p-> correlationTypes()); }
     virtual const Vector<Int>& corrType() const { return vb2_p-> correlationTypes(); }
 
     virtual Vector<Float>& sigma() { IllegalOperation (); }
