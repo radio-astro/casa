@@ -17,7 +17,7 @@
    <item>
     <widget class="QRadioButton" name="neutralRadioButton">
      <property name="text">
-      <string>Neutral</string>
+      <string>Full Range</string>
      </property>
     </widget>
    </item>

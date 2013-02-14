@@ -59,14 +59,18 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="methodComboBox"/>
+          <widget class="QComboBox" name="methodComboBox">
+           <property name="toolTip">
+            <string>Method used for interpolation.</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
        <item>
         <widget class="QGroupBox" name="pointCountGroupBox">
          <property name="title">
-          <string>Slice Point Count</string>
+          <string>Sample Point Count</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
@@ -86,6 +90,9 @@
             </item>
             <item>
              <widget class="QCheckBox" name="autoCountCheckBox">
+              <property name="toolTip">
+               <string>Use the default number of sample points.</string>
+              </property>
               <property name="text">
                <string>Automatic</string>
               </property>
@@ -119,7 +126,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="pointCountLineEdit"/>
+             <widget class="QLineEdit" name="pointCountLineEdit">
+              <property name="toolTip">
+               <string>Specify the number of sample points.</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -162,7 +173,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="xAxisComboBox"/>
+          <widget class="QComboBox" name="xAxisComboBox">
+           <property name="toolTip">
+            <string>Specify the values to plot on the x-axis.</string>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_8">
@@ -196,6 +211,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="accumulateCheckBox">
+           <property name="toolTip">
+            <string>Show 1D slices for all regions, not just the currently selected region.</string>
+           </property>
            <property name="text">
             <string>Accumulate Slices</string>
            </property>
@@ -233,6 +251,9 @@
          </item>
          <item>
           <widget class="QPushButton" name="clearButton">
+           <property name="toolTip">
+            <string>Remove all slices from the plot.</string>
+           </property>
            <property name="text">
             <string>Clear</string>
            </property>

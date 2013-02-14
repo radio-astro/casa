@@ -75,6 +75,9 @@
      </item>
      <item>
       <widget class="QCheckBox" name="viewerColorsCheckBox">
+       <property name="toolTip">
+        <string>Use the same colors for the slices as the viewer uses to draw the corresponding regions.  Unchecking this box will allows specification of custom colors.</string>
+       </property>
        <property name="text">
         <string>Viewer Colors</string>
        </property>
@@ -133,6 +136,9 @@
          <width>80</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Custom color for the slice corresponding to the active region.</string>
        </property>
        <property name="text">
         <string/>
@@ -206,6 +212,9 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>List of colors for slices corresponding to non-active regions.</string>
+         </property>
         </widget>
        </item>
        <item>
@@ -228,6 +237,9 @@
            <property name="enabled">
             <bool>false</bool>
            </property>
+           <property name="toolTip">
+            <string>Add a color to the list.</string>
+           </property>
            <property name="text">
             <string>Add...</string>
            </property>
@@ -237,6 +249,9 @@
           <widget class="QPushButton" name="deleteButton">
            <property name="enabled">
             <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Delete the currently selected color from the list.</string>
            </property>
            <property name="text">
             <string>Delete</string>
@@ -292,6 +307,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="okButton">
+       <property name="toolTip">
+        <string>Close the dialog after applying the color changes.</string>
+       </property>
        <property name="text">
         <string>OK</string>
        </property>
@@ -299,6 +317,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="cancelButton">
+       <property name="toolTip">
+        <string>Close the dialog without applying any color changes.</string>
+       </property>
        <property name="text">
         <string>Cancel</string>
        </property>

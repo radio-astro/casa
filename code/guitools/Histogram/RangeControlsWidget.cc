@@ -25,6 +25,7 @@
 
 #include "RangeControlsWidget.qo.h"
 #include <QDoubleValidator>
+#include <QDebug>
 
 namespace casa {
 
@@ -52,8 +53,8 @@ void RangeControlsWidget::setRangeLimits( double min, double max ){
 }
 
 void RangeControlsWidget::clearRange(){
-	ui.minLineEdit->setText( "" );
-	ui.maxLineEdit->setText( "" );
+	ui.minLineEdit->setText( QString::number( rangeMin ) );
+	ui.maxLineEdit->setText( QString::number( rangeMax ) );
 	emit rangeCleared();
 }
 
@@ -73,28 +74,40 @@ pair<double,double> RangeControlsWidget::getMinMaxValues() const {
 
 void RangeControlsWidget::setDataLimits( double min, double max ){
 
-	ui.dataMinLineEdit->setText( QString::number( min ) );
-	ui.dataMaxLineEdit->setText( QString::number( max ) );
 
-	//Reset the range limits if they don't make sense for the
-	//new data.
-	pair<double, double> minMaxRange = this->getMinMaxValues();
-	double rangeLimitMin = minMaxRange.first;
-	double rangeLimitMax = minMaxRange.second;
-	if ( rangeLimitMin < min || rangeLimitMin > max ){
-		rangeLimitMin = min;
+	rangeMin = min;
+	rangeMax = max;
+	if ( ui.minLineEdit->text().length() == 0 &&
+			ui.maxLineEdit->text().length() == 0 ){
+		//We don't have a range so we don't want to send signals
+		//about the range changing, but we do want to update the
+		//text boxes displaying the range.
+		blockSignals( true );
+		ui.minLineEdit->setText( QString::number( rangeMin ));
+		ui.maxLineEdit->setText( QString::number( rangeMax ));
+		blockSignals( false );
 	}
-	if ( rangeLimitMax < min || rangeLimitMax > max ){
-		rangeLimitMax = max;
-	}
-	//If we have a range, we should reset it.
-	pair<double,double> oldRange = getMinMaxValues();
-	if ( oldRange.first != 0 && oldRange.second != 0  ){
-		double newLow = qMax( oldRange.first, rangeLimitMin );
-		double newHigh = qMin( oldRange.second, rangeLimitMax );
-		this->setRange( newLow, newHigh );
-	}
+	else {
+		//Reset the range limits if they don't make sense for the
+		//new data.
+		pair<double, double> minMaxRange = this->getMinMaxValues();
+		double rangeLimitMin = minMaxRange.first;
+		double rangeLimitMax = minMaxRange.second;
+		if ( rangeLimitMin < min || rangeLimitMin > max ){
+			rangeLimitMin = min;
+		}
+		if ( rangeLimitMax < min || rangeLimitMax > max ){
+			rangeLimitMax = max;
+		}
 
+		//If we have a range, we should reset it.
+		pair<double,double> oldRange = getMinMaxValues();
+		if ( oldRange.first != 0 && oldRange.second != 0  ){
+			double newLow = qMax( oldRange.first, rangeLimitMin );
+			double newHigh = qMin( oldRange.second, rangeLimitMax );
+			this->setRange( newLow, newHigh );
+		}
+	}
 }
 
 RangeControlsWidget::~RangeControlsWidget(){
