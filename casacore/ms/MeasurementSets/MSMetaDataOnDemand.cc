@@ -77,7 +77,8 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  ),
 	  _taqlTempTable(
 		File(ms->tableName()).exists() ? 0 : 1, ms
-	  ), _flagsColumn() {}
+	  ), _flagsColumn(), _scanToTimeRangeMap(),
+	  _scanSpwToIntervalMap() {}
 
 MSMetaDataOnDemand::~MSMetaDataOnDemand() {}
 
@@ -575,17 +576,17 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForIntent(const String& intent) {
 	return spws;
 }
 
-uInt MSMetaDataOnDemand::nSpw() {
+uInt MSMetaDataOnDemand::nSpw(Bool includewvr) {
 	if (_nSpw > 0) {
-		return _nSpw;
+		return includewvr ? _nSpw : _nSpw - getWVRSpw().size();
 	}
 	uInt nSpw = _ms->spectralWindow().nrow();
 	_nSpw = nSpw;
-	return nSpw;
+	return includewvr ? nSpw : nSpw - getWVRSpw().size();
 }
 
 std::set<String> MSMetaDataOnDemand::getIntentsForSpw(const uInt spw) {
-	if (spw >= nSpw()) {
+	if (spw >= nSpw(True)) {
 		throw AipsError(
 			_ORIGIN + "spectral window out of range"
 		);
@@ -610,11 +611,19 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const uInt fieldID) {
 	else if (! _fieldToSpwMap[fieldID].empty()) {
 		return _fieldToSpwMap[fieldID];
 	}
-	String taql = "select unique(SPECTRAL_WINDOW_ID) from " + _ms->tableName()
-		+ "/DATA_DESCRIPTION where ROWID() in "
+	String ddIDTable = _ms->tableName() + "/DATA_DESCRIPTION";
+	vector<const Table *> tempTables = _taqlTempTable;
+	if (_taqlTempTable.size() > 0) {
+		ddIDTable = "$2";
+		tempTables.push_back(&_ms->dataDescription());
+	}
+
+
+	String taql = "select unique(SPECTRAL_WINDOW_ID) from " + ddIDTable
+		+ " where ROWID() in "
 		+ "[select unique(DATA_DESC_ID) from " + _taqlTableName
 		+ " where FIELD_ID == " + String::toString(fieldID) + "]";
-	Table result(tableCommand(taql, _taqlTempTable));
+	Table result(tableCommand(taql, tempTables));
 	ROScalarColumn<Int> spwCol(result, "SPECTRAL_WINDOW_ID");
 	vector<uInt> spws = _toUIntVector(spwCol.getColumn().tovector());
 	std::set<uInt> spwIds(spws.begin(), spws.end());
@@ -659,7 +668,7 @@ vector<String> MSMetaDataOnDemand::_getFieldNames() {
 }
 
 std::set<uInt> MSMetaDataOnDemand::getFieldIDsForSpw(const uInt spw) {
-	uInt myNSpw = nSpw();
+	uInt myNSpw = nSpw(True);
 	if (spw >= myNSpw) {
 		throw AipsError(_ORIGIN + "spectral window out of range");
 	}
@@ -701,11 +710,17 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const uInt scan) {
 		return _scanToSpwsMap[scan];
 	}
 	_checkScan(scan, getScanNumbers());
-	String taql = "select unique(SPECTRAL_WINDOW_ID) from " + _ms->tableName()
-		+ "/DATA_DESCRIPTION where ROWID() in "
+	String ddIDTable = _ms->tableName() + "/DATA_DESCRIPTION";
+	vector<const Table *> tempTables = _taqlTempTable;
+	if (_taqlTempTable.size() > 0) {
+		ddIDTable = "$2";
+		tempTables.push_back(&_ms->dataDescription());
+	}
+	String taql = "select unique(SPECTRAL_WINDOW_ID) from " + ddIDTable
+		+ " where ROWID() in "
 		+ "[select unique(DATA_DESC_ID) from " + _taqlTableName
 		+ " where SCAN_NUMBER == " + String::toString(scan) + "]";
-	Table result(tableCommand(taql, _taqlTempTable));
+	Table result(tableCommand(taql, tempTables));
 	ROScalarColumn<Int> spwCol(result, "SPECTRAL_WINDOW_ID");
 	vector<uInt> spws = _toUIntVector(spwCol.getColumn().tovector());
 	std::set<uInt> spwIds(spws.begin(), spws.end());
@@ -716,7 +731,7 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const uInt scan) {
 }
 
 std::set<uInt> MSMetaDataOnDemand::getScansForSpw(const uInt spw) {
-	uInt myNSpw = nSpw();
+	uInt myNSpw = nSpw(True);
 	if (spw >= myNSpw) {
 		throw AipsError(
 			_ORIGIN + "spectral window out of range"
@@ -1119,19 +1134,53 @@ std::set<Double> MSMetaDataOnDemand::getTimesForScans(
 	return times;
 }
 
+void MSMetaDataOnDemand::_getTimesAndInvervals(
+	std::map<Int, vector<Double> >& scanToTimeRangeMap,
+	std::map<Int, std::map<uInt, Double> >& scanSpwToIntervalMap
+) {
+
+	scanToTimeRangeMap = _getScanToTimeRangeMap(
+		scanSpwToIntervalMap,
+		*_getScans(), _getTimeCentroids(*_ms), _getIntervals(*_ms),
+		*_getDataDescIDs(), _getDataDescIDToSpwMap(), getScanNumbers()
+	);
+	uInt mysize = scanToTimeRangeMap.size()*(sizeof(Int)+2*sizeof(Double));
+	if (_cacheUpdated(mysize)) {
+		_scanToTimeRangeMap = scanToTimeRangeMap;
+	}
+	mysize = scanSpwToIntervalMap.size() * nSpw(True) * sizeof(Double);
+	if (_cacheUpdated(mysize)) {
+		_scanSpwToIntervalMap = scanSpwToIntervalMap;
+	}
+}
+
 vector<Double> MSMetaDataOnDemand::getTimeRangeForScan(uInt scan) {
 	_checkScan(scan, getScanNumbers());
 	if (! _scanToTimeRangeMap.empty()) {
 		return _scanToTimeRangeMap[scan];
 	}
-	std::map<Int, vector<Double> > mymap = _getScanToTimeRangeMap(
-		*_getScans(), _getTimeCentroids(*_ms), _getIntervals(*_ms)
+	std::map<Int, vector<Double> > scanToTimeRangeMap;
+	std::map<Int, std::map<uInt, Double> > scanSpwToIntervalMap;
+	_getTimesAndInvervals(
+		scanToTimeRangeMap,
+		scanSpwToIntervalMap
 	);
-	uInt mysize = mymap.size()*(sizeof(Int)+2*sizeof(Double));
-	if (_cacheUpdated(mysize)) {
-		_scanToTimeRangeMap = mymap;
+	return scanToTimeRangeMap[scan];
+}
+
+std::map<uInt, Double> MSMetaDataOnDemand::getAverageIntervalsForScan(uInt scan) {
+	_checkScan(scan, getScanNumbers());
+	if (! _scanSpwToIntervalMap.empty()) {
+		return _scanSpwToIntervalMap[scan];
 	}
-	return mymap[scan];
+	std::map<Int, vector<Double> > scanToTimeRangeMap;
+	std::map<Int, std::map<uInt, Double> > scanSpwToIntervalMap;
+	_getTimesAndInvervals(
+		scanToTimeRangeMap,
+		scanSpwToIntervalMap
+	);
+	return scanSpwToIntervalMap[scan];
+
 }
 
 std::set<uInt> MSMetaDataOnDemand::getStatesForScan(const uInt scan) {

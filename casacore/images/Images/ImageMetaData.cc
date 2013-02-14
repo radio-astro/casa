@@ -151,21 +151,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return areValid;
     }
 
-    Bool ImageMetaData::getDirectionPixelArea(Quantity& pixelArea) const {
-    	pixelArea = -1.0;
-    	if (!hasDirectionCoordinate()) {
-    		return False;
-    	}
-    	DirectionCoordinate dCoord = _coordinates.directionCoordinate(directionCoordinateNumber());
-    	Vector<Double> increment = dCoord.increment();
-    	Vector<String> units = dCoord.worldAxisUnits();
-    	Quantity ra(1, units[0]);
-    	Quantity dec(1, units[1]);
-    	Quantity pix = ra*dec;
-    	pixelArea  = Quantity(fabs(increment[0]*increment[1]), pix.getUnit());
-    	return True;
-    }
-
-
 } //# NAMESPACE CASA - END
 

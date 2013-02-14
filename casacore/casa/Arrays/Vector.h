@@ -39,6 +39,8 @@ WHATEVER_VECTOR_FORWARD_DEC;
 #include <casa/stdvector.h>
 #endif
 
+#include <set>
+
 namespace casa { //#Begin namespace casa
 
 // <summary> A 1-D Specialization of the Array class </summary>
@@ -140,6 +142,9 @@ public:
     // argument needed). </note>
     template <class U>
     Vector(const vector<T, U> &other);
+
+    template <class U>
+    Vector(const std::set<U>& other);
 
     // Define a destructor, otherwise the compiler makes a static one.
     virtual ~Vector();

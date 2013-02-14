@@ -50,6 +50,8 @@ namespace casa {
 MSMetaDataPreload::MSMetaDataPreload(const MeasurementSet& ms)
 	: _scans(), _uniqueScans(), _times(),
 	  _scanToTimesMap(), _nStates(0) {
+	_makeDataDescIDToSpwMap(ms);
+	_makeDataDescID(ms);
 	_makeScanToTimeMap(ms);
 	// _makeTimeToExposureMap(ms);
 	_makeFieldsAndSources(ms);
@@ -59,8 +61,6 @@ MSMetaDataPreload::MSMetaDataPreload(const MeasurementSet& ms)
 	_makeScanToStateMap(ms);
 	_makeFieldNameToTimesMap(ms);
 	_makeUniqueBaselines(ms);
-	_makeDataDescID(ms);
-	_makeDataDescIDToSpwMap(ms);
 	_setNumberOfPolarizations(ms);
 	_setSpwInfo(ms);
 	_makeSpwToScanMap();
@@ -243,12 +243,12 @@ std::set<uInt> MSMetaDataPreload::getSpwsForIntent(const String& intent) {
 	return spws;
 }
 
-uInt MSMetaDataPreload::nSpw() {
-	return _spwInfo.size();
+uInt MSMetaDataPreload::nSpw(Bool includeWVR) {
+	return includeWVR ? _spwInfo.size() : _spwInfo.size() - getWVRSpw().size();
 }
 
 std::set<String> MSMetaDataPreload::getIntentsForSpw(const uInt spw) {
-	if (spw >= nSpw()) {
+	if (spw >= nSpw(True)) {
 		throw AipsError(
 			_ORIGIN + "spectral window out of range"
 		);
@@ -323,7 +323,7 @@ std::set<uInt> MSMetaDataPreload::getSpwsForScan(const uInt scan) {
 }
 
 std::set<uInt> MSMetaDataPreload::getScansForSpw(const uInt spw) {
-	if (spw >= nSpw()) {
+	if (spw >= nSpw(True)) {
 		throw AipsError(
 			"MSMetaData::" + String(__FUNCTION__)
 			+ " : spectral window out of range"
@@ -560,6 +560,11 @@ std::set<Double> MSMetaDataPreload::getTimesForScans(
 std::vector<Double> MSMetaDataPreload::getTimeRangeForScan(uInt scan) {
 	_checkScan(scan);
 	return _scanToTimeRange[scan];
+}
+
+std::map<uInt, Double> MSMetaDataPreload::getAverageIntervalsForScan(uInt scan) {
+	_checkScan(scan);
+	return _scanSpwToIntervalMap[scan];
 }
 
 
@@ -1050,7 +1055,9 @@ void MSMetaDataPreload::_makeScanToTimeMap(const MeasurementSet& ms) {
 		curTime++;
 	}
 	_scanToTimeRange = _getScanToTimeRangeMap(
-		_scans, _getTimeCentroids(ms), _getIntervals(ms)
+		_scanSpwToIntervalMap,
+		_scans, _getTimeCentroids(ms), _getIntervals(ms),
+		_dataDescIDs, _dataDescToSpwMap, _uniqueScans
 	);
 }
 

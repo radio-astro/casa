@@ -58,7 +58,6 @@
 #include <casa/iomanip.h>
 #include <casa/iostream.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //
@@ -307,7 +306,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	Int widthField = 20;
 	Int widthnrow = 7;
 	Int widthNUnflaggedRow = 10;
-	Int widthInttim = 7;
+	//Int widthInttim = 7;
 
 	// Set up iteration over OBSID and ARRID:
 	Block<String> icols(2);
@@ -338,7 +337,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			datetime.replace(25+timeref.length(),1,")");
 			os << datetime;
 			os << "Scan  FldId FieldName "
-					<<"          nRows   nUnflRows   Int(s)   SpwIds      ScanIntent" << endl;
+					<<"          nRows   nUnflRows   SpwIds   Average Interval(s)    ScanIntent" << endl;
 		}
 
 		/* CAS-2751. Sort the table by scan then field (not timestamp)
@@ -358,7 +357,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Vector<Int> fldids(1,0);
 		Vector<Int> ddids(1,0);
 		Vector<Int> stids(1,0); // State IDs
-		Vector<Int> spwids;
+		//Vector<Int> spwids;
 		Int nfld(1);
 		Int nddi(1);
 		Int nst(1);
@@ -372,6 +371,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		os.output().precision(3);
 		Int subsetscan=0;
 		// Iterate over scans/fields:
+		std::set<uInt> spw;
 		while (!stiter.pastEnd()) {
 
 			// ms table at this scan
@@ -465,11 +465,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 					// this MJD
 					day=floor(MVTime(btime/C::day).day());
 
-					// Spws
-					spwids.resize(lastddids.nelements());
-					for (uInt iddi=0; iddi<spwids.nelements();++iddi)
-						spwids(iddi)=specwindids(lastddids(iddi));
-
+					spw = _msmd->getSpwsForScan(lastscan);
 					String name=fieldnames(lastfldids(0));
 
 					if (verbose) {
@@ -507,12 +503,29 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						os.output().width(widthNUnflaggedRow);
 						os << xx.str();
 
-						os.output().width(widthInttim); os << meanIntTim;
-						os.output().width(widthLead); os << " ";
-						os << spwids;
-						if (spwids.size() <= 9) {
-							os.output().width(28 - (3*spwids.size())); os << " ";
+						//os.output().width(widthInttim); os << meanIntTim;
+						os.output().width(widthLead); os << "  ";
+
+						os << spw;
+						/*
+						if (spw.size() <= 9) {
+							os.output().width(28 - (3*spw.size())); os << " ";
 						}
+						*/
+						os.output().width(widthLead); os << "  ";
+
+						std::map<uInt, Double> intToScanMap = _msmd->getAverageIntervalsForScan(lastscan);
+						os << "[";
+						for (
+							std::set<uInt>::const_iterator iter=spw.begin();
+							iter!=spw.end(); iter++
+						) {
+							if (iter!=spw.begin()) {
+								os << ", ";
+							}
+							os << intToScanMap[*iter];
+						}
+						os << "] ";
 						// The Obsmode column can be empty only report them if it is not
 						String obsMode = "";
 						if (obsModes.size() > (unsigned int) 0) {
@@ -539,7 +552,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						subScanRecord.define("StateId", laststids(0));
 						subScanRecord.define("nRow", thisnrow);
 						subScanRecord.define("IntegrationTime", meanIntTim);
-						subScanRecord.define("SpwIds", spwids);
+						subScanRecord.define("SpwIds", Vector<Int>(spw));
 						scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 						if(!outRec.isDefined(scanrecid)){
 							outRec.defineRecord(scanrecid, scanRecord);
@@ -601,10 +614,12 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		day=floor(MVTime(btime/C::day).day());
 
 		// Spws
-		spwids.resize(lastddids.nelements());
+		//spwids.resize(lastddids.nelements());
+		/*
 		for (uInt iddi=0; iddi<spwids.nelements();++iddi)
 			spwids(iddi)=specwindids(lastddids(iddi));
-
+	*/
+		spw = _msmd->getSpwsForScan(lastscan);
 		String name=fieldnames(lastfldids(0));
 		if (verbose) {
 			// Print out final scan's times, fields, ddis
@@ -636,12 +651,34 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
 			os.output().width(widthNUnflaggedRow);
 			os << xx.str();
-			os.output().width(widthInttim); os << meanIntTim;
+//			os.output().width(widthInttim); os << meanIntTim;
 			os.output().width(widthLead);  os << "  ";
-			os << spwids;
-			if (spwids.size() <= 9) {
-				os.output().width(28 - (3*spwids.size())); os << " ";
+			ostringstream oss;
+			ostream_iterator<uInt> out_it (oss,", ");
+			copy ( spw.begin(), spw.end(), out_it );
+			String spwout = oss.str();
+			spwout.trim();
+			spwout.rtrim(',');
+			os << "[" << spwout << "]";
+			/*
+			if (spw.size() <= 9) {
+				os.output().width(28 - (3*spw.size())); os << " ";
 			}
+			*/
+			os.output().width(widthLead); os << "  ";
+
+			std::map<uInt, Double> intToScanMap = _msmd->getAverageIntervalsForScan(lastscan);
+			os << "[";
+			for (
+				std::set<uInt>::const_iterator iter=spw.begin();
+				iter!=spw.end(); iter++
+			) {
+				if (iter!=spw.begin()) {
+					os << ", ";
+				}
+				os << intToScanMap[*iter];
+			}
+			os << "] ";
 			// The Obsmode column can be empty only report them if it is not
 			String obsMode = "";
 			if (obsModes.size() > (unsigned int) 0) {
@@ -666,7 +703,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			subScanRecord.define("FieldName", name);
 			subScanRecord.define("nRow", thisnrow);
 			subScanRecord.define("IntegrationTime", meanIntTim);
-			subScanRecord.define("SpwIds", spwids);
+			subScanRecord.define("SpwIds", Vector<Int>(spw));
 			scanRecord.defineRecord(String::toString(subsetscan), subScanRecord);
 			if(!outRec.isDefined(scanrecid)){
 				outRec.defineRecord(scanrecid, scanRecord);
@@ -1744,10 +1781,18 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os << " ("<<nSpw<<" unique spectral windows and ";
 		os << nPol << " unique polarization setups)"<<endl;
 
+		vector<String> names = _msmd->getSpwNames();
+		Int widthName = 5;
+		for (
+			vector<String>::const_iterator iter=names.begin();
+			iter!=names.end(); iter++
+		) {
+			widthName = max(widthName, (Int)iter->size());
+		}
+
 		// Define the column widths
 		Int widthLead	=  2;
 		Int widthSpwId       =  7;
-		Int widthName = 10;
 		Int widthFrame      =  6;
 		Int widthFreq	= 12;
 		Int widthFrqNum	= 12;
@@ -1756,28 +1801,29 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		Int widthCorrType	=  4;
 		uInt widthBBCNo = 8;
 
+
+
 		// Write the column headers
 		os.output().setf(ios::left, ios::adjustfield);
 		os.output().width(widthLead);	os << "  ";
 		os.output().width(widthSpwId);	os << "SpwID  ";
 		os.output().width(widthName);	os << "Name  ";
 		os.output().setf(ios::right, ios::adjustfield);
-		os.output().width(widthNumChan);	os << "#Chans" << " ";
+		os.output().width(widthNumChan);	os << " #Chans" << " ";
 		os.output().setf(ios::left, ios::adjustfield);
-		os.output().width(widthFrame);      os << "Frame";
-		os.output().width(widthFreq);	os << "Ch1(MHz)";
-		os.output().width(widthFreq);	os << "ChanWid(kHz) ";
+		os.output().width(widthFrame);      os << "  Frame";
+		os.output().width(widthFreq);	os << "   Ch1(MHz)";
+		os.output().width(widthFreq);	os << " ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
 		Bool hasBBCNo = MSMetaData::hasBBCNo(*pMS);
 		if (hasBBCNo) {
 			os.output().width(widthBBCNo);
-			os << " BBC Num ";
+			os << "BBC Num ";
 		}
 		os.output().width(widthCorrTypes);  os << " Corrs";
 		os << endl;
 
-		vector<String> names = _msmd->getSpwNames();
 		vector<uInt> nChans = _msmd->nChans();
 		vector<Quantum<Vector<Double> > > chanFreqs = _msmd->getChanFreqs();
 		vector<vector<Double> > chanWidths = _msmd->getChanWidths();
@@ -1803,10 +1849,12 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os.output().width(widthNumChan);
 			os << nChans[spw] << " ";
 			// 4th column: Reference Frame info
-			os.output().setf(ios::left, ios::adjustfield);
+			// os.output().setf(ios::left, ios::adjustfield);
 			os.output().width(widthFrame);
 			os<< msSWC.refFrequencyMeas()(spw).getRefString();
 			// 5th column: Chan 1 freq (may be at high freq end of band!)
+			os.output().setf(ios::fixed);
+			os.output().precision(3);
 			os.output().width(widthFrqNum);
 			os<< chanFreqs[spw].getValue("MHz")[0];
 			// 6th column: channel resolution
@@ -1814,6 +1862,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os << chanWidths[spw][0]/1000;
 			// 7th column: total bandwidth of the spectral window
 			os.output().width(widthFrqNum);
+			os.output().precision(1);
 			os<< bandwidths[spw]/1000;
 			if (hasBBCNo) {
 				os.output().width(widthBBCNo);

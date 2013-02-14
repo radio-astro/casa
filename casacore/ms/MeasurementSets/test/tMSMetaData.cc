@@ -241,8 +241,9 @@ void testIt(MSMetaData& md) {
 		AlwaysAssert(md.getSpwsForIntent(*intent) == exp, AipsError);
 	}
 	cout << "*** test nSpw()" << endl;
-	uInt nSpw = md.nSpw();
+	uInt nSpw = md.nSpw(True);
 	AlwaysAssert(nSpw == 40, AipsError);
+	AlwaysAssert(md.nSpw(False) == 24, AipsError);
 	cout << "*** test getIntentsForSpw()" << endl;
 	for (uInt spw=0; spw<nSpw; spw++) {
 		std::set<String> exp;
@@ -330,7 +331,7 @@ void testIt(MSMetaData& md) {
 
 		}
 		cout << "*** test getFieldIDsForSpw()" << endl;
-		for (uInt i=0; i<md.nSpw(); i++) {
+		for (uInt i=0; i<md.nSpw(True); i++) {
 			std::set<uInt> exp;
 			std::set<String> expNames;
 			if (i==0) {
@@ -409,7 +410,7 @@ void testIt(MSMetaData& md) {
 			AlwaysAssert(md.getSpwsForScan(*scan) == exp, AipsError);
 		}
 		cout << "*** test getScansForSpw()" << endl;
-		for (uInt i=0; i<md.nSpw(); i++) {
+		for (uInt i=0; i<md.nSpw(True); i++) {
 			std::set<uInt> exp;
 			if (i==0) {
 				uInt myints[] = {

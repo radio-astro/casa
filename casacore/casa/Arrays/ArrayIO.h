@@ -35,6 +35,8 @@
 //# Forward declarations
 #include <casa/iosfwd.h>
 
+#include <set>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class AipsIO;
@@ -45,6 +47,7 @@ template<class T> class Matrix;
 template<class T> class Vector;
 template<class T> class Cube;
 template<class T> class Block;
+
 
 // <summary>
 //    Input/output operators for Arrays.
@@ -109,9 +112,14 @@ template<class T> class Block;
 
 template<class T> ostream &operator << (ostream &, const Array<T> &);
 
+template<class T> ostream &operator << (ostream &, const std::set<T> &);
+
 // Write a formatted copy of the array to the LogIO output object. Merely calls
 // the ostream operator<< in turn.
 template<class T> LogIO &operator<<(LogIO &os, const Array<T> &a);
+
+template<class T> LogIO &operator<<(LogIO &os, const std::set<T> &a);
+
 
 // Read an ascii representation of an array. All types with an <src><<</src>
 // operator can be handled. The basic format of the input should be:

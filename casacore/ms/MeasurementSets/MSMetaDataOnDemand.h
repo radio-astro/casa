@@ -75,7 +75,7 @@ public:
 	virtual std::set<uInt> getSpwsForIntent(const String& intent);
 
 	// get number of spectral windows
-	uInt nSpw();
+	uInt nSpw(Bool includewvr);
 
 	// get the number of visibilities
 	uInt nRows() const;
@@ -270,6 +270,8 @@ public:
 
 	vector<String> getSpwNames();
 
+	std::map<uInt, Double> getAverageIntervalsForScan(uInt scan);
+
 
 private:
 	const MeasurementSet* _ms;
@@ -307,6 +309,7 @@ private:
 	const vector<const Table*> _taqlTempTable;
 	std::tr1::shared_ptr<ArrayColumn<Bool> > _flagsColumn;
 	std::map<Int, vector<Double> > _scanToTimeRangeMap;
+	std::map<Int, std::map<uInt, Double> > _scanSpwToIntervalMap;
 
 	// disallow copy constructor and = operator
 	MSMetaDataOnDemand(const MSMetaDataOnDemand&);
@@ -398,6 +401,11 @@ private:
 		AOSFMapD& scanToNXCRowsMap,
 		vector<Double>& fieldToNACRowsMap,
 		vector<Double>& fieldToNXCRowsMap
+	);
+
+	void _getTimesAndInvervals(
+		std::map<Int, vector<Double> >& scanToTimeRangeMap,
+		std::map<Int, std::map<uInt, Double> >& scanSpwToIntervalMap
 	);
 
 };

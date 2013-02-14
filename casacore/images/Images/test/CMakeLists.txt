@@ -16,19 +16,6 @@ test_image.im/logtable/table.dat
 test_image.im/logtable/table.f0
 test_image.im/logtable/table.info
 test_image.im/logtable/table.lock
-test_image2dconvolver_convolved.fits
-test_image2dconvolver.fits
-test_image2dconvolver_multibeam.im/logtable/table.dat
-test_image2dconvolver_multibeam.im/logtable/table.info
-test_image2dconvolver_multibeam.im/logtable/table.info
-test_image2dconvolver_multibeam.im/logtable/table.f0
-test_image2dconvolver_multibeam.im/logtable/table.lock
-test_image2dconvolver_multibeam.im/table.dat
-test_image2dconvolver_multibeam.im/table.f0
-test_image2dconvolver_multibeam.im/table.f0_TSM0
-test_image2dconvolver_multibeam.im/table.info
-test_image2dconvolver_multibeam.im/table.lock
-
 )
 
 foreach (file ${datafiles})
@@ -39,12 +26,10 @@ endforeach (file)
 set (tests
 dImageHistograms
 dImageInterface
-dImageMoments
 dImageStatistics
 dImageSummary
 dPagedImage
 tAntennaResponses
-tComponentImager
 tExtendImage
 tFITSImage
 tFITSImgParser
@@ -53,10 +38,8 @@ tFITSExtImage
 tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
-tImage2DConvolver
 tImageConcat
 tImageConvolver
-tImageDecomposer
 tImageEmpty
 tImageExpr2Gram
 tImageExpr3Gram
@@ -66,10 +49,8 @@ tImageFFT
 tImageFit1D
 tImageInfo
 tImageMetaData
-tImageMoments
 tImagePolarimetry
 tImageRegrid
-tImageSourceFinder
 tImageStatistics
 tImageUtilities
 tLELSpectralIndex
@@ -77,7 +58,6 @@ tMIRIADImage
 tPagedImage2
 tPagedImage
 tRebinImage
-tSepImConvolver
 tSubImage
 tTempImage
 tImageBeamSet
