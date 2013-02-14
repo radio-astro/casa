@@ -81,6 +81,10 @@ if( NOT CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE RelWithDebInfo )
 endif()
 
+if( INTERACTIVE_ITERATION )
+	add_definitions( -DINTERACTIVE_ITERATION )
+endif()
+
 if( CMAKE_BUILD_TYPE STREQUAL Debug )
   add_definitions( -DAIPS_DEBUG )
   set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
@@ -572,7 +576,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.180
+           VERSION 1.0.189
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h

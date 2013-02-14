@@ -192,7 +192,7 @@ record* msmetadata::antennaposition(const string& name) {
 
 int msmetadata::baseband(int spw) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
 			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
 		}
 		return _msmd->getBBCNos()[spw];
@@ -219,7 +219,7 @@ vector<int> msmetadata::chanavgspws() {
 
 vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
 			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
 		}
 		return _msmd->getChanFreqs()[spw].getValue(Unit(unit)).tovector();
@@ -368,7 +368,7 @@ vector<string> msmetadata::intentsforspw(int spw) {
 
 double msmetadata::meanfreq(int spw, const string& unit) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
 			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
 		}
 		return _msmd->getMeanFreqs()[spw].getValue(Unit(unit));
@@ -422,7 +422,7 @@ int msmetadata::nbaselines() {
 
 int msmetadata::nchan(int spw) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
 			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
 		}
 		return _msmd->nChans()[spw];
@@ -446,9 +446,9 @@ int msmetadata::nscans() {
 	return 0;
 }
 
-int msmetadata::nspw() {
+int msmetadata::nspw(bool includewvr) {
 	_FUNC(
-		return _msmd->nSpw();
+		return _msmd->nSpw(includewvr);
 	)
 	return 0;
 }
@@ -594,7 +594,7 @@ vector<int> msmetadata::scansforstate(const int state) {
 
 int msmetadata::sideband(int spw) {
 	_FUNC2 (
-		if (spw < 0 || spw >= (int)_msmd->nSpw()) {
+		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
 			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
 		}
 		return _msmd->getNetSidebands()[spw];

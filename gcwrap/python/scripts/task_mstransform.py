@@ -189,8 +189,9 @@ def mstransform(
         # Add to dictionary only the non-empty parameters
         config = {}
         config = mth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
-                    spw=spw, array=array, scan=scan, antenna=antenna, uvrange=uvrange, 
-                    time=timerange, intent=intent, observation=str(observation),feed=feed)
+                    spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
+                    uvrange=uvrange,time=timerange, intent=intent, observation=str(observation),
+                    feed=feed)
         
         config['datacolumn'] = datacolumn
         config['realmodelcol'] = realmodelcol
@@ -199,23 +200,22 @@ def mstransform(
             casalog.post('Combine spws %s into new output spw'%spw)
             config['combinespws'] = True
         if freqaverage:
-            casalog.post('Frequency averaging is not yet implemented', 'WARN')
-            pass
+            casalog.post('Parse frequency averaging parameters')
             config['freqaverage'] = True
-            config['freqbin'] = freqbin
+            # TODO: the freqbin parameter may need to be a list too
+            config['freqbin'] = str(freqbin)
             config['useweights'] = useweights
         if hanning:
-            casalog.post('Hanning smoothing is not yet implemented', 'WARN')
-            pass
+            casalog.post('Apply Hanning smoothing')
             config['hanning'] = True
         if regridms:
-            casalog.post('MS regridding is not yet implemented', 'WARN')
-            pass
+            casalog.post('Parse regridding parameters')
+            
             config['regridms'] = True
             config['mode'] = mode
             config['nchan'] = nchan
-            config['start'] = start
-            config['width'] = width
+            config['start'] = str(start)
+            config['width'] = str(width)
             config['interpolation'] = interpolation
             config['phasecenter'] = phasecenter
             config['restfreq'] = restfreq
@@ -223,15 +223,13 @@ def mstransform(
             config['veltype'] = veltype
         if separatespws:
             casalog.post('Separation of spws is not yet implemented', 'WARN')
-            pass
-            config['nspws'] = nspws # this will change
+#            config['nspws'] = nspws # this will change
         if timeaverage:
             casalog.post('Time averaging is not yet implemented', 'WARN')
-            pass
-            config['timebin'] = timebin
-            config['timespan'] = timespan
-            config['quantize_c'] = quantize_c
-            config['minbaselines'] = minbaselines
+#            config['timebin'] = timebin
+#            config['timespan'] = timespan
+#            config['quantize_c'] = quantize_c
+#            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         mtlocal.config(config)

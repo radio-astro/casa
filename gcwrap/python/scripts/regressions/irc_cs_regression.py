@@ -9,13 +9,13 @@ import os
 
 os.system('rm -rf IRC+10216_rawACSmod irc_cs_reducedSCAN0_CYCLE0_BEAM0_IF0.txt irc_cs_reduced.eps irc_cs_fit.txt')
 
-casapath=os.environ['CASAPATH'].split()[0]
-datapath=casapath+'/data/regression/ATST5/IRC+10216/IRC+10216_rawACSmod'
-copystring='cp -r '+datapath+' .'
+casapath = os.environ['CASAPATH'].split()[0]
+datapath = casapath+'/data/regression/ATST5/IRC+10216/IRC+10216_rawACSmod'
+copystring = 'cp -r '+datapath+' .'
 os.system(copystring)
 
-startTime=time.time()
-startProc=time.clock()
+startTime = time.time()
+startProc = time.clock()
 
 #   Project: AGBT06A_018_01
 #Observation: GBT(1 antennas)
@@ -52,9 +52,9 @@ startProc=time.clock()
 # Scans: 237-240,249-252 Setup 2 HC3N et al
 # Scans: 241-248         Setup 3 SiO et al
 
-casapath=os.environ['CASAPATH']
+casapath = os.environ['CASAPATH']
 import asap as sd			#import ASAP package into CASA			#GBTIDL
-os.environ['CASAPATH']=casapath		#IRC+10216 (CS line reduction only)
+os.environ['CASAPATH'] = casapath		#IRC+10216 (CS line reduction only)
 					#Notes:
 					#scan numbers (zero-based) as compared to GBTIDL
 
@@ -62,40 +62,40 @@ os.environ['CASAPATH']=casapath		#IRC+10216 (CS line reduction only)
 					#  -- merge spectral windows with tolerance
 
 
-s=sd.scantable('IRC+10216_rawACSmod',False)#load the data without averaging		# filein,'IRC.raw.fits'
+s = sd.scantable('IRC+10216_rawACSmod', False)#load the data without averaging		# filein,'IRC.raw.fits'
 #Cannot find any matching Tcal at/near the data timestamp. Set Tcal=0.0
 
 #s.summary()				#summary info					# summary
 											# fileout,'IRC+10216.reduced.fits'
 s.set_fluxunit('K')         		# make 'K' default unit
 
-scal=sd.calnod(s,[229,230])		# Calibrate CS scans	                        # for i=230,231,2 do begin getps,i,ifnum=3,plnum=0,units='Ta*',
+scal = sd.calnod(s, [229,230])		# Calibrate CS scans	                        # for i=230,231,2 do begin getps,i,ifnum=3,plnum=0,units='Ta*',
 del s                                   # remove s from memory
 # recalculate az/el (NOT needed for GBT data)
 antennaname = scal.get_antennaname()
 if ( antennaname != 'GBT'): scal.recalc_azel() 	  # recalculate az/el to 		# tau=0.09 & accum & getps, i, ifnum=3,plnum=1,units='Ta*',
 scal.opacity(0.09)			# do opacity correction				# tau=0.09 & accum & end & ave
-sel=sd.selector()			# Prepare a selection				# 
+sel = sd.selector()			# Prepare a selection				# 
 sel.set_ifs(3)				# select CS IF					#
 scal.set_selection(sel)			# get this IF					#
-stave=sd.average_time(scal,weight='tintsys')	# average in time			# 
-spave=stave.average_pol(weight='tsys')	# average polarizations;Tsys-weighted average   #
+stave = sd.average_time(scal, weight='tintsys')	# average in time			# 
+spave = stave.average_pol(weight='tsys')	# average polarizations;Tsys-weighted average   #
 sd.plotter.plot(spave)			# plot						# 
 											# 
 					# do some smoothing				# 
-spave.smooth('boxcar',5)		# boxcar 5					# boxcar,5
-spave.auto_poly_baseline(order=1,threshold=5,chan_avg_limit=4)	# baseline fit order=2	# nregion,[200,1500,2600,3500]
+spave.smooth('boxcar', 5)		# boxcar 5					# boxcar,5
+spave.auto_poly_baseline(order=1, threshold=5, chan_avg_limit=4)	# baseline fit order=2	# nregion,[200,1500,2600,3500]
 sd.plotter.plot(spave)			# plot						# nfit,2
 											# baseline
 spave.set_unit('GHz')									# freq
 sd.plotter.plot(spave)
 sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
-sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
+sd.plotter.axhline(color='r', linewidth=2) # zline                                       # zline
 sd.plotter.save('irc_cs_reduced.eps')	# save postscript spectrum			# write_ps,'irc_cs.ps'
 
 spave.set_unit('channel')								# chan
-rmsmask=spave.create_mask([800,1500])  # get rms of line free regions                   # stats,800,1500
-rms=spave.stats(stat='rms',mask=rmsmask)                                                                
+rmsmask = spave.create_mask([800,1500])  # get rms of line free regions                   # stats,800,1500
+curr_rms = spave.stats(stat='rms', mask=rmsmask)                                                                
 					#---------------------------------------------- # Chans   bchan   echan      Xmin      Xmax      Ymin      Ymax
 											#   701     800    1500     800.0    1500.0  -0.29621   0.36313
 					#  rms
@@ -104,18 +104,18 @@ rms=spave.stats(stat='rms',mask=rmsmask)
 					# IF[3] = 0.147
 					#----------------------------------------------
 					# LINE
-linemask=spave.create_mask([1850,2300])
-max=spave.stats('max',linemask)	   	#  IF[3] = 3.325
-sum=spave.stats('sum',linemask)	   	#  IF[3] = 627.922
-median=spave.stats('median',linemask) 	#  IF[3] = 1.305
-mean=spave.stats('mean',linemask)	#  IF[3] = 1.392
+linemask = spave.create_mask([1850,2300])
+curr_max = spave.stats('max', linemask)	   	#  IF[3] = 3.325
+curr_sum = spave.stats('sum', linemask)	   	#  IF[3] = 627.922
+curr_median = spave.stats('median', linemask) 	#  IF[3] = 1.305
+curr_mean = spave.stats('mean', linemask)	#  IF[3] = 1.392
 											#  Chans  bchan    echan      Xmin      Xmax       Ymin    Ymax
 											#    451   1850     2300    1850.0    2300.0   -0.36467  2.3805
 											#                   Mean    Median       RMS   Variance    Area
 											#                0.98944   0.92886   0.54541    0.29747  446.24
 
 # Save the spectrum
-spave.save('irc_cs.spc','ASCII',True)	# save the spectrum				# write_ascii,'irc_cs.spc'
+spave.save('irc_cs.spc', 'ASCII', True)	# save the spectrum				# write_ascii,'irc_cs.spc'
 #spave.save('irc_cs.ms','MS2',True) # save as an MS					# NA
 #
 endProc = time.clock()
@@ -127,35 +127,41 @@ endTime = time.time()
 #irc_sum=627.5
 # Regression values of CASA 2.3(#6654)+ASAP 2.2.0(#1448)
 # on 64bit REL5.2 (2008/12/01)
-irc_max=3.325
-irc_rms=0.1473
-irc_sum=627.9
-diff_max = abs((irc_max-max[0])/irc_max)
-diff_rms = abs((irc_rms-rms[0])/irc_rms)
-diff_sum = abs((irc_sum-sum[0])/irc_sum)
+irc_max = 3.325
+irc_rms = 0.1473
+irc_sum = 627.9
+diff_max = abs( (irc_max - curr_max[0]) / irc_max )
+diff_rms = abs( (irc_rms - curr_rms[0]) / irc_rms )
+diff_sum = abs( (irc_sum - curr_sum[0]) / irc_sum )
 
 import datetime
-datestring=datetime.datetime.isoformat(datetime.datetime.today())
-outfile='irc.cs.'+datestring+'.log'
-logfile=open(outfile,'w')
+datestring = datetime.datetime.isoformat(datetime.datetime.today())
+outfile = 'irc.cs.'+datestring+'.log'
+logfile = open(outfile, 'w')
 
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
 if (diff_max < 0.05): print >>logfile,'* Passed spectrum max test '
-print >>logfile,'*  Spectrum max '+str(max)
+print >>logfile,'*  Spectrum max '+str(curr_max)
 if (diff_rms < 0.05): print >>logfile,'* Passed spectrum rms test '
-print >>logfile,'*  Spectrum rms '+str(rms)
+print >>logfile,'*  Spectrum rms '+str(curr_rms)
 if (diff_sum < 0.05): print >>logfile,'* Passed spectrum (line) sum test'
-print >>logfile,'*  Line integral '+str(sum)
+print >>logfile,'*  Line integral '+str(curr_sum)
 if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
-	regstate=True
+	regstate = True
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for IRC-CS'
         print >>logfile,'---'
+        print ''
+        print 'Regression PASSED'
+        print ''
 else:
-	regstate=False
+	regstate = False
         print >>logfile,'----FAILED Regression test for IRC-CS'
+        print ''
+        print 'Regression FAILED'
+        print ''
 print >>logfile,'*********************************'
 
 print >>logfile,''

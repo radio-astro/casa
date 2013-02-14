@@ -1,4 +1,4 @@
-##########################################################################
+#############################################
 # imfit_test.py
 #
 # Copyright (C) 2008, 2009
@@ -95,13 +95,13 @@ def run_collapse(
 
 def run_imcollapse(
     imagename, function, axes, outfile, region, box, chans,
-    stokes, mask, overwrite, wantreturn, stretch=False
+    stokes, mask, overwrite, stretch=False
 ):
     return imcollapse(
         imagename=imagename, function=function, axes=axes,
         outfile=outfile, region=region, box=box, chans=chans,
         stokes=stokes, mask=mask, overwrite=overwrite,
-        wantreturn=wantreturn, stretch=stretch
+        stretch=stretch
     )
 
 class imcollapse_test(unittest.TestCase):
@@ -112,6 +112,7 @@ class imcollapse_test(unittest.TestCase):
 
     def tearDown(self):
         os.remove(good_image)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def checkImage(self, gotImage, expectedName):
         expected = iatool()                                
@@ -162,8 +163,7 @@ class imcollapse_test(unittest.TestCase):
                         run_imcollapse(
                             imagename, function, axes,
                             outfile, region, box, chans,
-                            stokes, mask, overwrite,
-                            wantreturn
+                            stokes, mask, overwrite
                         )
                     )
         # no image name given
@@ -203,15 +203,11 @@ class imcollapse_test(unittest.TestCase):
                 else:
                     for wantreturn in [True, False]:
                         outname = outname + str(wantreturn)
-                        mytool = run_imcollapse(
+                        res = run_imcollapse(
                             good_image, "mean", 0, outname, "", "",
-                            "", "", "", False, wantreturn
+                            "", "", "", False
                         )
-                        if (wantreturn):
-                            self.assertTrue(type(mytool) == type(ia))
-                            self.checkImage(mytool, expected)
-                        else:
-                            self.assertTrue(mytool == None)
+                        self.assertTrue(res)
                         self.checkImage(outname, expected)
                 shutil.rmtree(outname)
 
@@ -231,18 +227,13 @@ class imcollapse_test(unittest.TestCase):
                     self.checkImage(mytool, expected)
                     self.checkImage(outname, expected)
                 else:
-                    for wantreturn in [True, False]:
-                        outname = outname + str(wantreturn)
-                        mytool = run_imcollapse(
-                            good_image, "mean", 2, outname, "", "",
-                            "", "", "", False, wantreturn
-                        )
-                        if (wantreturn):
-                            self.assertTrue(type(mytool) == type(ia))
-                            self.checkImage(mytool, expected)
-                        else:
-                            self.assertTrue(mytool == None)
-                        self.checkImage(outname, expected)
+                    outname = outname + "imcollapse"
+                    res = run_imcollapse(
+                    good_image, "mean", 2, outname, "", "",
+                        "", "", "", False
+                    )
+                    self.assertTrue(res)
+                    self.checkImage(outname, expected)
                 shutil.rmtree(outname)
 
     def test_3(self):
@@ -268,23 +259,18 @@ class imcollapse_test(unittest.TestCase):
                 self.checkImage(mytool, expected)
                 self.checkImage(outname, expected)
             else:
-                for wantreturn in [True, False]:
-                    outname = outname + str(wantreturn)
-                    # check that can overwrite previous output. Then check output image
-                    mytool = run_imcollapse(
-                        good_image, "sum", 1, outname, "", box,
-                        chans, stokes, "", False, wantreturn
-                    )
-                    mytool = run_imcollapse(
-                        good_image, "sum", 1, outname, "", box,
-                        chans, stokes, "", True, wantreturn
-                    )
-                    if (wantreturn):
-                        self.assertTrue(type(mytool) == type(ia))
-                        self.checkImage(mytool, expected)
-                    else:
-                        self.assertTrue(mytool == None)
-                    self.checkImage(outname, expected)
+               outname = outname + "imcollapse"
+               # check that can overwrite previous output. Then check output image
+               res = run_imcollapse(
+                    good_image, "sum", 1, outname, "", box,
+                    chans, stokes, "", False
+               )
+               res = run_imcollapse(
+                    good_image, "sum", 1, outname, "", box,
+                    chans, stokes, "", True
+               )
+               self.assertTrue(res)
+               self.checkImage(outname, expected)
             shutil.rmtree(outname)
 
     def test_4(self):
@@ -300,37 +286,18 @@ class imcollapse_test(unittest.TestCase):
                 self.assertTrue(type(mytool) == type(ia))
                 self.checkImage(mytool, expected)
             else:
-                mytool = run_imcollapse(
-                    good_image, "mean", 2, "", "", "",
-                    "", "", "", False, True
+                self.assertFalse(
+                    run_imcollapse(
+                        good_image, "mean", 2, "", "", "",
+                        "", "", "", False
+                    )
                 )
-                self.assertTrue(type(mytool) == type(ia))
-                self.checkImage(mytool, expected)
-
-    def test_5(self):
-        """imcollapse: not wanting a tool returned results in None being returned"""
-        expected = "collapse_avg_2.fits"
-        shutil.copy(datapath + expected, expected)
-        mytool = run_imcollapse(
-            good_image, "mean", 2, "", "", "",
-            "", "", "", False, False
-        )
-        self.assertTrue(mytool == None)
-
         
     def test_6(self):
         """imcollapse: memory only images can be collapsed"""
         mytool = run_collapse(
             good_image, "mean", 2, "", "", "",
             "", "", "", False
-        )
-        mytool2 = mytool.collapse("mean", 3)
-        expected = [3, 3, 1, 1]
-        self.assertTrue(all(mytool2.shape() == expected))
-        
-        mytool = run_imcollapse(
-            good_image, "mean", 2, "", "", "",
-            "", "", "", False, True
         )
         mytool2 = mytool.collapse("mean", 3)
         expected = [3, 3, 1, 1]
@@ -350,12 +317,13 @@ class imcollapse_test(unittest.TestCase):
                     self.assertTrue(type(mytool) == type(ia))
                     self.checkImage(mytool, expected)
                 else:
-                    mytool = run_imcollapse(
-                        good_image, "mean", [0, 1], "", "", "",
-                        "", "", "", False, True
+                    outfile = "test_7.out"
+                    res = run_imcollapse(
+                        good_image, "mean", [0, 1], outfile, "", "",
+                        "", "", "", overwrite=True
                     )
-                    self.assertTrue(type(mytool) == type(ia))
-                    self.checkImage(mytool, expected)
+                    self.assertTrue(res)
+                    self.checkImage(outfile, expected)
 
     def test_8(self):
         """imcollapse: test both OTF and permanent masking works"""
@@ -390,11 +358,13 @@ class imcollapse_test(unittest.TestCase):
                             )
                             self.assertTrue(type(mytool) == type(ia))
                         else:
-                            mytool = run_imcollapse(
+                            outfile = "test8.im"
+                            res = run_imcollapse(
                                 good_image_im, func, axes, outfile, "", "",
-                                "", "", mask, False, True
+                                "", "", mask, True
                             )
-                            self.assertTrue(type(mytool) == type(ia))
+                            self.assertTrue(type(res))
+                            mytool.open(outfile)
                         npts = mytool.statistics()["npts"]
                         mytool.close()
                         mytool.done()
@@ -419,11 +389,12 @@ class imcollapse_test(unittest.TestCase):
             zz = mytool.subimage("", dropdeg=T)
             got = zz.getchunk()
             self.assertTrue((got == exp).all())
-            
-            mytool = run_imcollapse(
-                good_image, "median", i, "", "", "",
-                "", "", "", False, True
+            outfile = "test_CAS_3418.im"
+            res = run_imcollapse(
+                good_image, "median", i, outfile, "", "",
+                "", "", "", overwrite=True
             )
+            mytool.open(outfile)
             zz = mytool.subimage("", dropdeg=T)
             got = zz.getchunk()
             self.assertTrue((got == exp).all())
@@ -464,12 +435,15 @@ class imcollapse_test(unittest.TestCase):
                     good_image, "mean", 0, "", "", "", "",
                     "", maskim + ">0", False, stretch=True
                 )
+                self.assertTrue(type(yy) == type(ia))
+                yy.done()
             else:
-                yy = run_imcollapse(
-                    good_image, "mean", 0, "", "", "", "",
-                    "", maskim + ">0", False, True, True
+                outfile = "test_stretch.im"
+                res = run_imcollapse(
+                    good_image, "mean", 0, outfile, "", "", "",
+                    "", maskim + ">0", False, stretch=True
                 )
-            self.assertTrue(type(yy) == type(ia))
+                self.assertTrue(res)
             
     def test_CAS3737(self):
         """ imcollapse: test tabular spectral axis has correct collapsed reference value """
@@ -484,11 +458,12 @@ class imcollapse_test(unittest.TestCase):
             mytool.done()
             frac = got/expected - 1
             self.assertTrue(frac < 1e-6 and frac > -1e-6)
-        
-            mytool = run_imcollapse(
-                image, "mean", 2, "", "", "",
-                chans, "", "", False, True
+            outfile = "test_CAS3737"
+            res = run_imcollapse(
+                image, "mean", 2, outfile, "", "",
+                chans, "", "", False
             )
+            mytool.open(outfile)
             got = mytool.toworld([0,0,0])["numeric"][2]
             mytool.done()
             frac = got/expected - 1

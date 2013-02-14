@@ -22,6 +22,7 @@ def asap_init():
     os.environ['CASAPATH']=casapath
     from sdbaseline_cli import sdbaseline_cli as sdbaseline
     from sdcal_cli import sdcal_cli as sdcal
+    from sdcal2_cli import sdcal2_cli as sdcal2
     from sdcoadd_cli import sdcoadd_cli as sdcoadd
     from sdfit_cli import sdfit_cli as sdfit
     from sdflag_cli import sdflag_cli as sdflag
@@ -41,6 +42,7 @@ def asap_init():
     myf['sd']=sd
     myf['sdbaseline']=sdbaseline
     myf['sdcal']=sdcal
+    myf['sdcal2']=sdcal2
     myf['sdcoadd']=sdcoadd
     myf['sdfit']=sdfit
     myf['sdflag']=sdflag

@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>axis=2</example>
     </param>
     <param type="string" name="outfile">
-        <description>Name of output CASA image.</description>
+        <description>Name of output CASA image. Must be specified.</description>
         <value/>
         <example>outfile='collapsed.im'</example>
     </param>
@@ -60,11 +60,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="mask">
         <description>Mask to use. See help par.mask. Default is none.</description>
         <value type="string"/>
-    </param>
-    <param type="bool" name="wantreturn">
-        <description>Should an image analysis tool referencing the collapsed image be returned?</description>
-        <value>False</value>
-        <example>wantreturn=true</example>
     </param>
     <param type="bool" name="overwrite" subparam="true">
         <description>Overwrite exisitng ouput file if it exists?</description>
@@ -100,7 +95,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </when>
     </constraints>
 </input>
-<returns type="image"/>
+<returns type="bool"/>
 
 <example>
 PARAMETER SUMMARY
@@ -110,9 +105,8 @@ function         Function used to compute aggregation of pixel values along the 
                  sum, variance. Minimum match is supported for the function parameter (eg,
                  function="r" will compute the rms of the pixel values).
 axis             Zero-based axis number(s) or minimal match strings to compress.
-outfile          Name of output CASA image. If not specified, no image is written
-                 but an image analysis tool which references the output image is returned.
-overwrite        If output file is specified, controls if an already existing file by the
+outfile          Name of output CASA image. Must be specified.
+overwrite        Controls if an already existing file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
 box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
@@ -127,8 +121,6 @@ stokes           Contiguous stokes planes specification. Not used if region is s
 mask             Mask to use. See help par.mask. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
                  See help par.stretch.
-wantreturn       If true, return an image analysis tool referencing the collapsed image, if
-                 false, return false.
 
 This task collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
 specified axis. It computes the specified aggregate function for pixel values along the specified axes
@@ -142,17 +134,7 @@ Axes can be specified as a single integer or array of integers indicating the ze
 which to collapse the image. Axes may also be specified as a single or array of strings which minimally
 and uniquely match (ignoring case) world axes names in the image (eg "dec" or ["ri, "d"] for
 collapsing along the declination axis or along the right ascension and declination axes, respectively).
-        
-If outfile is not specified (or contains only white spaces), no image is written but, if wantreturn=True,
-the collapsed image is still able to be accessed via the returned image analysis tool which references
-the collpased image. If the returned object is not wanted it should still be captured and deleted via its
-done() method. If this is not done, there is no gaurantee for when the python garbage collector will delete
-it. If the returned object is wanted, it should be deleted as soon as possible for the same reasons, eg
-        
-collapsed_image = imcollapse(..., wantreturn=T)
-# do things (or not) with collapsed_image and when done with object, do
-collapsed_image.done()
-
+         
 The reference pixel of the collapsed axis is set to 0 and its reference value is set to the mean
 of the the first and last values of that axis in the specified region of the input image.
 
@@ -166,10 +148,8 @@ function="mean"
 axis=2
 box="127,127,383,383"
 chans="8~119"
-collapsed = imcollapse(imagename=imagename, outfile=outfile, function=function, axes=axis, box=box, chans=chans, wantreturn=True)
-# manipulate collapsed
-collapsed.done()
-T
+imcollapse(imagename=imagename, outfile=outfile, function=function, axes=axis, box=box, chans=chans)
+
 </example>
 
 </task>

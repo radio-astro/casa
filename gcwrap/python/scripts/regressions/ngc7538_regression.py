@@ -140,6 +140,7 @@ ia.open('ngc7538d.cube.image')
 # ia.statistics returns dictionary with 'return','statsout'
 # get the second value in the dictionary (statsout)
 statistics=ia.statistics()
+ia.close()
 # note thistest_immax will be a list with one value 
 thistest_immax=statistics['max'][0]
 # note thistest_imrms will be a list with one value 

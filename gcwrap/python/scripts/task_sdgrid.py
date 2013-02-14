@@ -8,10 +8,10 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, convsupport, truncate, gwidth, jwidth, weight, clipminmax, outfile, overwrite, npix, cell, center, plot):
-    worker = sdgrid_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdgrid_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
 
 class sdgrid_worker(sdutil.sdtask_interface):

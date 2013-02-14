@@ -19,13 +19,13 @@ os.system('rm -rf IRC+10216_rawACSmod IRC+10216_rawACSmod_cal IRC+10216_rawACSmo
 #enable/disable plotting
 doplot = False 
 
-casapath=os.environ['CASAPATH'].split()[0]
-datapath=casapath+'/data/regression/ATST5/IRC+10216/IRC+10216_rawACSmod'
-copystring='cp -r '+datapath+' .'
+casapath = os.environ['CASAPATH'].split()[0]
+datapath = casapath+'/data/regression/ATST5/IRC+10216/IRC+10216_rawACSmod'
+copystring = 'cp -r '+datapath+' .'
 os.system(copystring)
 
-startTime=time.time()
-startProc=time.clock()
+startTime = time.time()
+startProc = time.clock()
 
 #   Project: AGBT06A_018_01
 #Observation: GBT(1 antennas)
@@ -71,7 +71,7 @@ asap_init()                             #load ASAP module
 
 # summary
 #default(sdlist)
-#infile='IRC+10216_rawACSmod'
+#infile = 'IRC+10216_rawACSmod'
 #sdlist()
 
 if doplot:
@@ -82,40 +82,40 @@ else:
 # calibartion,averaging, smoothing, and baseline removal
 # calibrate nod scans for CS line (IF=3)
 default(sdreduce)
-infile='IRC+10216_rawACSmod'
-fluxunit='K'
-calmode='nod'
-scanlist=[236,237,238,239,248,249,250,251]
-iflist=[17]
-average=True
-scanaverage=False
-timeaverage=True # average in time
-tweight='tintsys' # weighted by iteg time and Tsys for time averaging
-polaverage=True  # average polarization
-pweight='tsys'   # weighted by Tsys for polarization averaging
-tau=0.09         # do opacity correction
+infile = 'IRC+10216_rawACSmod'
+fluxunit = 'K'
+calmode = 'nod'
+scanlist = [236,237,238,239,248,249,250,251]
+iflist = [17]
+average = True
+scanaverage = False
+timeaverage = True # average in time
+tweight = 'tintsys' # weighted by iteg time and Tsys for time averaging
+polaverage = True  # average polarization
+pweight = 'tsys'   # weighted by Tsys for polarization averaging
+tau = 0.09         # do opacity correction
 # do boxcar smoothing with channel width=5
-kernel='boxcar'
-kwidth=5
+kernel = 'boxcar'
+kwidth = 5
 # output
 #fit and remove baselines
-maskmode='auto'
-thresh=5
-avg_limit=4
-blfunc='poly'
-order=2
-overwrite=True
-plotlevel=localplotlevel
+maskmode = 'auto'
+thresh = 5
+avg_limit = 4
+blfunc = 'poly'
+order = 2
+overwrite = True
+plotlevel = localplotlevel
 sdreduce()
-localoutfile=infile+'_cal'
+localoutfile = infile+'_cal'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
    default(sdplot)
-   infile=localoutfile
-   specunit='GHz'
-   outfile='irc_hc3n_reduced.eps'
+   infile = localoutfile
+   specunit = 'GHz'
+   outfile = 'irc_hc3n_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
    sdplot()
@@ -125,31 +125,31 @@ else:
 # statistics
 default(sdstat)
 # select line free regions to get rms
-infile=localoutfile
-masklist=[200,1500]
-xstat=sdstat()
-rms=xstat['rms']
+infile = localoutfile
+masklist = [200,1500]
+xstat = sdstat()
+curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
-masklist=[1800,2400]
-xstat=sdstat()
+masklist = [1800,2400]
+xstat = sdstat()
 xstat
-max=xstat['max']
-sum=xstat['sum']
-median=xstat['median']
-mean=xstat['mean']
+curr_max = xstat['max']
+curr_sum = xstat['sum']
+curr_median = xstat['median']
+curr_mean = xstat['mean']
 
 # Save the spectrum
 # in different formats
 default(sdsave)
-infile=localoutfile
-outfile='irc_hc3n_reduced'
-outform='ASCII'
-overwrite=True
+infile = localoutfile
+outfile = 'irc_hc3n_reduced'
+outform = 'ASCII'
+overwrite = True
 sdsave()
-#outfile='irc_hc3n_reduced.ms'
-#outform='MS2'
+#outfile = 'irc_hc3n_reduced.ms'
+#outform = 'MS2'
 #sdsave()
 
 #
@@ -162,29 +162,29 @@ endTime = time.time()
 #irc_sum=474.123
 # Regression values of CASA 2.3(#6654)+ASAP 2.2.0(#1448)
 # on 64bit REL5.2 (2008/12/01)
-irc_max=1.827
-irc_rms=0.02213
-irc_sum=474.1
-diff_max = abs((irc_max-max)/irc_max)
-diff_rms = abs((irc_rms-rms)/irc_rms)
-diff_sum = abs((irc_sum-sum)/irc_sum)
+irc_max = 1.827
+irc_rms = 0.02213
+irc_sum = 474.1
+diff_max = abs( (irc_max - curr_max) / irc_max )
+diff_rms = abs( (irc_rms - curr_rms) / irc_rms )
+diff_sum = abs( (irc_sum - curr_sum) / irc_sum )
 
 import datetime
-datestring=datetime.datetime.isoformat(datetime.datetime.today())
-outfile='irc.hc3n.task'+datestring+'.log'
-logfile=open(outfile,'w')
+datestring = datetime.datetime.isoformat(datetime.datetime.today())
+outfile = 'irc.hc3n.task'+datestring+'.log'
+logfile = open(outfile,'w')
 
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
 if (diff_max < 0.05): print >>logfile,'* Passed spectrum max test '
-print >>logfile,'*  Spectrum max '+str(max)
+print >>logfile,'*  Spectrum max '+str(curr_max)
 if (diff_rms < 0.05): print >>logfile,'* Passed spectrum rms test '
-print >>logfile,'*  Spectrum rms '+str(rms)
+print >>logfile,'*  Spectrum rms '+str(curr_rms)
 if (diff_sum < 0.05): print >>logfile,'* Passed spectrum (line) sum test'
-print >>logfile,'*  Line integral '+str(sum)
+print >>logfile,'*  Line integral '+str(curr_sum)
 if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
-	regstate=True
+	regstate = True
         print ''
         print 'Regression PASSED'
         print ''
@@ -192,7 +192,7 @@ if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
         print >>logfile,'Passed Regression test for IRC-HC3N'
         print >>logfile,'---'
 else:
-	regstate=False
+	regstate = False
         print ''
         print 'Regression FAILED'
         print ''

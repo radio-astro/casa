@@ -123,8 +123,9 @@ csys=ia.coordsys()
 ia.close()
 #### regrid SD image so that shape and coordinate parameters match
 ia.open('n4826_t12mchan.im')
-ia.regrid(outfile='n4826_t12motf.chregrid.im',shape=[256,256,1,30],csys=csys.torecord())
+out_ia = ia.regrid(outfile='n4826_t12motf.chregrid.im',shape=[256,256,1,30],csys=csys.torecord())
 ia.close()
+out_ia.close()
 #### deconvolve SD image with a guess of PB with msclean
 dc.open('n4826_t12motf.chregrid.im', psf='')
 dc.makegaussian('n12m_gaussian.im' ,bmaj='55arcsec', bmin='55arcsec', bpa='0deg',
@@ -133,7 +134,7 @@ dc.close()
 dc.open('n4826_t12motf.chregrid.im', psf='n12m_gaussian.im')
 dc.setscales(scalemethod='uservector', uservector=[30., 60.])
 dc.clean(algorithm='msclean', model='n4826_tjoint2', niter=100, gain=0.3)
-#dc.close()
+dc.close()
 default('clean')
 ##### Mosaic the interferometer data...use model from obtain from deconvolve
 ##### SD image as starting model
@@ -179,6 +180,7 @@ jcfeather1_im=ia.open('n4826_tjoint1.image')
 jc1_stats=ia.statistics();ia.close()
 jcfeather2_im=ia.open('n4826_tjoint2.image')
 jc2_stats=ia.statistics()
+ia.close()
 
 feather1_immax=f1_stats['max'][0]
 feather1_flux=f1_stats['flux'][0]

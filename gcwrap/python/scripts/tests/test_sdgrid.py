@@ -756,6 +756,7 @@ class sdgrid_dec_correction(sdgrid_unittest_base,unittest.TestCase):
         dir0=tb.getcell('DIRECTION',0)
         dir1=tb.getcell('DIRECTION',2)
         dir2=tb.getcell('DIRECTION',npix*2)
+        tb.close()
         dx=dir1[0]-dir0[0]
         dy=dir2[1]-dir0[1]
         #print 'dx=',dx,',dy=',dy

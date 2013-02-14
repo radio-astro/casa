@@ -105,6 +105,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		   beginning with '13'
 	fitspw -- Selection of spectral windows and channels to use in the
 	          fit for the continuum, using general spw:chan syntax.
+                  The ranges of channels also can be specified by frequencies as in
+                  the MS selection syntax.
 	          See the note under combine.
 		default: '' (all)
                 example: fitspw='0:5~30;40~55'

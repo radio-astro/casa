@@ -9,18 +9,15 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
-    worker = sdplot_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
 
 class sdplot_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdplot_worker,self).__init__(**kwargs)
-
-    def __del__(self):
-        self.cleanup()
 
     def initialize_scan(self):
         isScantable = is_scantable(self.infile)
@@ -88,10 +85,6 @@ class sdplot_worker(sdutil.sdtask_template):
         if (self.outfile != '' ) and not ( self.plottype in ['azel','pointing']):
             # currently no way w/o screen display first
             sd.plotter.save(self.outfile)
-
-    def cleanup(self):
-        pass
-        #sd.plotter._data = None
 
     def plot_pointing(self):
         kw = {'scan': self.scan}

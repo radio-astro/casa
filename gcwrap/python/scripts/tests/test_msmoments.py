@@ -192,15 +192,19 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
     rawfile='msmoments0.ms'
     prefix=msmoments_unittest_base.taskname+'Test1'
     outfile=prefix+'.ms'
+    _tb = None
 
     def setUp(self):
         self.res=None
+        self._tb = tbtool()
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
 
         default(msmoments)
 
     def tearDown(self):
+        self._tb.close()
+        del self._tb
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
@@ -213,12 +217,18 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         if (os.path.exists(self.outfile)):
             shutil.rmtree(self.outfile)
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K')
+#         # the task must return table object
+#         self.assertEqual(type(res),type(tb),
+#                          msg='Any error occurred during task execution')
+#         self.assertEqual(res.name().split('/')[-1],self.outfile,
+#                             msg='Returned table is wrong.')
+#         self._compare(res,refval,'K')
 
     def test101(self):
         """Test 101: Integrated intensity"""
@@ -226,12 +236,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.integrated'
         refval=[954.87066650390625,873.48583984375]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K.km/s')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K.km/s')
 
     def test102(self):
         """Test 102: Weighted coordinate (velocity field)"""
@@ -239,12 +249,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.weighted_coord'
         refval=[6.8671870231628418,7.6601519584655762]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'km/s')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'km/s')
 
     def test103(self):
         """Test 103: Weighted dispersion of coordinate (velocity dispersion)"""
@@ -252,12 +262,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.weighted_dispersion_coord'
         refval=[95.011787414550781,95.257194519042969]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'km/s')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'km/s')
 
     def test104(self):
         """Test 104: Median"""
@@ -265,12 +275,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.median'
         refval=[2.8934342861175537,2.6451926231384277]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K')
 
     def test105(self):
         """Test 105: Median coordinate (fail at the moment)"""
@@ -279,7 +289,6 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         refval=[]
         try:
             res=msmoments(infile=self.rawfile,spw=id,moments=moments,outfile=self.outfile)
-            res.close()
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -290,13 +299,6 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
             self.assertTrue(False,
                             msg='Unexpected exception was thrown: %s'%(str(e)))
 
-        #res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        #self.assertEqual(type(res),type(tb),
-        #                 msg='Any error occurred during task execution')
-        #self.assertEqual(res.name().split('/')[-1],self.outfile,
-        #                    msg='Returned table is wrong.')
-        #self._compare(res,refval,'km/s')
 
     def test106(self):
         """Test 106: Standard deviation about the mean"""
@@ -304,12 +306,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.standard_deviation'
         refval=[0.13466399908065796,0.13539622724056244]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K')
 
     def test107(self):
         """Test 107: Rms"""
@@ -317,12 +319,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.rms'
         refval=[2.9006123542785645, 2.6539843082427979]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K')
 
     def test108(self):
         """Test 108: Absolute mean deviation"""
@@ -330,12 +332,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.abs_mean_dev'
         refval=[0.09538549929857254, 0.10068970918655396]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K')
 
     def test109(self):
         """Test 109: Maximum value"""
@@ -343,12 +345,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.maximum'
         refval=[3.9766585826873779, 3.7296187877655029]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K')
 
     def test110(self):
         """Test 110: Coordinate of maximum value"""
@@ -356,12 +358,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.maximum_Coord'
         refval=[45489389568.0, 45489410048.0]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'km/s') #Hz?
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(tb,refval,'km/s') #Hz?
 
     def test111(self):
         """Test 111: Minimum value"""
@@ -369,12 +371,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.minimum'
         refval=[1.7176277637481689, 1.4913345575332642]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'K')
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'K')
 
     def test112(self):
         """Test 112: Coordinate of minimum value"""
@@ -382,12 +384,12 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.minimum_coord'
         refval=[45514190848.0, 45464350720.0]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
-        self.assertEqual(res.name().split('/')[-1],self.outfile,
-                            msg='Returned table is wrong.')
-        self._compare(res,refval,'km/s')# Hz?
+        # the task doesn't return table anymore
+        self.assertTrue(os.path.exists(self.outfile),
+                        msg='Out put table does not exist.')
+        self.assertTrue(self._tb.open(self.outfile),
+                        msg='Failed to open output table')
+        self._compare(self._tb,refval,'km/s')# Hz?
 
     def test113(self):
         """Test 113: Multiple moments (mean + velocity field)"""
@@ -396,21 +398,20 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         refval0=[2.8974850177764893,2.6505289077758789]
         refval1=[6.8671870231628418,7.6601519584655762]
         res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
-        # the task must return table object
-        self.assertEqual(type(res),type(tb),
-                         msg='Any error occurred during task execution')
+        # the task doesn't return table anymore
         # file existence check
         for imom in range(len(moments)):
             name='./'+self.outfile+postfix[imom]
             self.assertEqual(os.path.exists(name),True,
                              msg='%s must exist'%(name))
-        # returned table is result for moments[0]
-        self.assertEqual(res.name().split('/')[-1],self.outfile+postfix[0],
-                            msg='Returned table is wrong.')
-        self._compare(res,refval0,'K')
+        # check moments[0] table
+        self.assertTrue(self._tb.open(self.outfile+postfix[0]),
+                        msg='Failed to open %s table' % postfix[0])
+        self._compare(self._tb,refval0,'K')
         # check second moment
-        tb.open(self.outfile+postfix[1])
-        self._compare(tb,refval1,'km/s')
+        self.assertTrue(self._tb.open(self.outfile+postfix[1]),
+                        msg='Failed to open %s table' %  postfix[1])
+        self._compare(self._tb,refval1,'km/s')
 
 def suite():
     return [msmoments_test0,msmoments_test1]

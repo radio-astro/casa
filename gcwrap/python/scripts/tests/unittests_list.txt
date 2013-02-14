@@ -30,6 +30,7 @@ test_hanningsmooth              scastro@eso.org
 test_ia_adddegaxes              dmehring@nrao.edu
 test_ia_continuumsub            dmehring@nrao.edu
 test_ia_convertflux             dmehring@nrao.edu
+test_ia_commonbeam              dmehring@nrao.edu
 test_ia_convolve                dmehring@nrao.edu
 test_ia_convolve2d              dmehring@nrao.edu
 test_ia_decompose               dmehring@nrao.edu
@@ -104,6 +105,7 @@ test_rg_fromtextfile            dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      takeshi.nakazato@nao.ac.jp
+test_sdcal2                     takeshi.nakazato@nao.ac.jp
 test_sdcoadd                    kana.sugi@nao.ac.jp
 test_sdfit                      wataru.kawasaki@nao.ac.jp
 test_sdflag                     wataru.kawasaki@nao.ac.jp

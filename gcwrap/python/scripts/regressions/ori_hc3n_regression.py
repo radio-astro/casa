@@ -12,13 +12,13 @@ import os
 
 os.system('rm -rf OrionS_rawACSmod orions_hc3n_reducedSCAN0_CYCLE0_BEAM0_IF0.txt orions_hc3n_reduced.eps orions_hc3n_fit.txt')
 
-casapath=os.environ['CASAPATH']
-datapath=casapath.split()[0]+'/data/regression/ATST5/OrionS/OrionS_rawACSmod'
-copystring='cp -r '+datapath+' .'
+casapath = os.environ['CASAPATH']
+datapath = casapath.split()[0]+'/data/regression/ATST5/OrionS/OrionS_rawACSmod'
+copystring = 'cp -r '+datapath+' .'
 os.system(copystring)
 
-startTime=time.time()
-startProc=time.clock()
+startTime = time.time()
+startProc = time.clock()
 
 #           MeasurementSet Name:  /home/rohir3/jmcmulli/SD/OrionS_rawACSmod      MS Version 2
 #
@@ -56,45 +56,45 @@ import asap as sd			#import ASAP package into CASA			#GBTIDL
 
 					#changes made to get to OrionS_rawACSmod
 					#modifications to label sig/ref positions
-os.environ['CASAPATH']=casapath
+os.environ['CASAPATH'] = casapath
 
 
-s=sd.scantable('OrionS_rawACSmod',False)#load the data without averaging		# filein,'Orion-S.raw.fits'
+s = sd.scantable('OrionS_rawACSmod', False)#load the data without averaging		# filein,'Orion-S.raw.fits'
 
 #s.summary()				#summary info					# summary
 											# fileout,'Orion-S-reduced.fits'
 s.set_fluxunit('K')         		# make 'K' default unit
 
-scal=sd.calps(s,[20,21,22,23])		# Calibrate HC3N scans				# for i=21,24,2 do begin getps,i,ifnum=0,plnum=0,units='Ta*',
+scal = sd.calps(s, [20,21,22,23])		# Calibrate HC3N scans				# for i=21,24,2 do begin getps,i,ifnum=0,plnum=0,units='Ta*',
 #
 del s					# remove s from memory
 antennaname = scal.get_antennaname()
 # recalculate az/el (NOT needed for GBT data)
 if ( antennaname != 'GBT'): scal.recalc_azel()      # recalculate az/el to 		# tau=0.09 & accum & getps, i, ifnum=0,plnum=1,units='Ta*',
 scal.opacity(0.09)			# do opacity correction				# tau=0.09 & accum & end & ave
-sel=sd.selector()			# Prepare a selection
+sel = sd.selector()			# Prepare a selection
 sel.set_ifs(0)				# select HC3N IF
 scal.set_selection(sel)			# get this IF
-stave=sd.average_time(scal,weight='tintsys')	# average in time
-spave=stave.average_pol(weight='tsys')	# average polarizations;Tsys-weighted (1/Tsys**2) average
+stave = sd.average_time(scal, weight='tintsys')	# average in time
+spave = stave.average_pol(weight='tsys')	# average polarizations;Tsys-weighted (1/Tsys**2) average
 sd.plotter.plot(spave)			# plot
 
 # what is going on with autoscaling?
 
 					# do some smoothing
 spave.smooth('boxcar',5)		# boxcar 5					# boxcar,5
-spave.auto_poly_baseline(edge=[50],order=2,threshold=5,chan_avg_limit=4)   # baseline fit order=2	  # chan & nregion,[500,3000,5000,7500] & nfit,2
+spave.auto_poly_baseline(edge=[50], order=2, threshold=5, chan_avg_limit=4)   # baseline fit order=2	  # chan & nregion,[500,3000,5000,7500] & nfit,2
 sd.plotter.plot(spave)			# plot						# baseline
 
 spave.set_unit('GHz')									# freq
 sd.plotter.plot(spave)
 sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
-sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
+sd.plotter.axhline(color='r', linewidth=2) # zline                                       # zline
 sd.plotter.save('orions_hc3n_reduced.eps')# save postscript spectrum		        # write_ps,'orions_hc3n.ps'
 
 spave.set_unit('channel')								# chan
-rmsmask=spave.create_mask([5000,7000])  # get rms of line free regions                  # stats,5000,7000
-rms=spave.stats(stat='rms',mask=rmsmask)                                                                
+rmsmask = spave.create_mask([5000,7000])  # get rms of line free regions                  # stats,5000,7000
+curr_rms = spave.stats(stat='rms', mask=rmsmask)                                                                
                                         #---------------------------------------------- # Chans   bchan   echan      Xmin      Xmax      Ymin      Ymax
 											#  2001    5000    7000    5000.0    7000.0  -0.33294   0.27287
 					#  rms
@@ -103,11 +103,11 @@ rms=spave.stats(stat='rms',mask=rmsmask)
 					# IF[0] = 0.049
 					#----------------------------------------------
 					# LINE
-linemask=spave.create_mask([3900,4200])
-max=spave.stats('max',linemask)		#  IF[0] = 0.919
-sum=spave.stats('sum',linemask)		#  IF[0] = 65.092
-median=spave.stats('median',linemask)	#  IF[0] = 0.093
-mean=spave.stats('mean',linemask)	#  IF[0] = 0.216
+linemask = spave.create_mask([3900,4200])
+curr_max = spave.stats('max', linemask)		#  IF[0] = 0.919
+curr_sum = spave.stats('sum', linemask)		#  IF[0] = 65.092
+curr_median = spave.stats('median', linemask)	#  IF[0] = 0.093
+curr_mean = spave.stats('mean', linemask)	#  IF[0] = 0.216
 											# Chans  bchan    echan      Xmin      Xmax        Ymin     Ymax
 											#   301   3900     4200    3900.0    4200.0    -0.21815   1.0648
                        									#                  Mean    Median       RMS    Variance     Area
@@ -115,10 +115,10 @@ mean=spave.stats('mean',linemask)	#  IF[0] = 0.216
 					# Fitting
 spave.set_unit('channel')		# set units to channel				# chan
 sd.plotter.plot(spave)			# plot spectrum				
-f=sd.fitter()
-msk=spave.create_mask([3928,4255])	# create region around line			# gregion,[4000,4200]
+f = sd.fitter()
+msk = spave.create_mask([3928,4255])	# create region around line			# gregion,[4000,4200]
 f.set_function(gauss=1)			# set a single gaussian component		# ngauss,1
-f.set_scan(spave,msk)			# set the data and region for the fitter	# gparamvalues,0,[1.,4100.,100.]
+f.set_scan(spave, msk)			# set the data and region for the fitter	# gparamvalues,0,[1.,4100.,100.]
 f.fit()					# fit						# gauss
 f.plot(residual=True)			# plot residual
 f.get_parameters()			# retrieve fit parameters
@@ -139,7 +139,7 @@ f.get_parameters()			# retrieve fit parameters
 f.store_fit('orions_hc3n_fit.txt') 	# store fit					# *copy and paste from log*
 
 # Save the spectrum
-spave.save('orions_hc3n_reduced','ASCII',True)	# save the spectrum			# write_ascii,'orions_hc3n.spc'
+spave.save('orions_hc3n_reduced', 'ASCII', True)	# save the spectrum			# write_ascii,'orions_hc3n.spc'
 #spave.save('orions_hc3n_reduced.ms','MS2',True) # save as an MS				# NA
 
 endProc = time.clock()
@@ -152,35 +152,41 @@ endTime = time.time()
 #hc3n_sum=64.994
 # Regression values of CASA 2.3(#6654)+ASAP 2.2.0(#1448)
 # on 64bit REL5.2 (2008/12/01)
-hc3n_max=0.9186
-hc3n_rms=0.04912
-hc3n_sum=65.09
-diff_max = abs((hc3n_max-max[0])/hc3n_max)
-diff_rms = abs((hc3n_rms-rms[0])/hc3n_rms)
-diff_sum = abs((hc3n_sum-sum[0])/hc3n_sum)
+hc3n_max = 0.9186
+hc3n_rms = 0.04912
+hc3n_sum = 65.09
+diff_max = abs( (hc3n_max - curr_max[0]) / hc3n_max )
+diff_rms = abs( (hc3n_rms - curr_rms[0]) / hc3n_rms )
+diff_sum = abs( (hc3n_sum - curr_sum[0]) / hc3n_sum )
 
 import datetime
-datestring=datetime.datetime.isoformat(datetime.datetime.today())
-outfile='ori.hc3n.'+datestring+'.log'
-logfile=open(outfile,'w')
+datestring = datetime.datetime.isoformat(datetime.datetime.today())
+outfile = 'ori.hc3n.'+datestring+'.log'
+logfile = open(outfile, 'w')
 
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
 if (diff_max < 0.05): print >>logfile,'* Passed spectrum max test '
-print >>logfile,'*  Spectrum max '+str(max)
+print >>logfile,'*  Spectrum max '+str(curr_max)
 if (diff_rms < 0.05): print >>logfile,'* Passed spectrum rms test '
-print >>logfile,'*  Spectrum rms '+str(rms)
+print >>logfile,'*  Spectrum rms '+str(curr_rms)
 if (diff_sum < 0.05): print >>logfile,'* Passed spectrum (line) sum test'
-print >>logfile,'*  Line integral '+str(sum)
+print >>logfile,'*  Line integral '+str(curr_sum)
 if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)): 
-	regstate=True
+	regstate = True
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for OrionS-HC3N'
         print >>logfile,'---'
+        print ''
+        print 'Regression PASSED'
+        print ''
 else: 
-	regstate=False
+	regstate = False
         print >>logfile,'----FAILED Regression test for OrionS-HC3N'
+        print ''
+        print 'Regression FAILED'
+        print ''
 print >>logfile,'*********************************'
 
 print >>logfile,''

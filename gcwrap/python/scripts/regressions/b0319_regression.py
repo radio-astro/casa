@@ -226,6 +226,7 @@ ms.open('B0319_0317.ms')
 #thistest_amp=pl.mean(ms.range(['corrected_amplitude']).get('corrected_amplitude'))
 #thistest_ph =pl.mean(ms.range(['corrected_phase']).get('corrected_phase'))
 thistest_mod=pl.mean(ms.range(['model_amplitude']).get('model_amplitude'))
+ms.close()
 
 #model amplitude
 model_amp=1.0

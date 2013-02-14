@@ -10,10 +10,10 @@ from numpy import ma, array, logical_not, logical_and
 
 @sdutil.sdtask_decorator
 def sdflag(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
-    worker = sdflag_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
 
 class sdflag_worker(sdutil.sdtask_template):

@@ -1215,9 +1215,65 @@ class sdsave_storageTest( sdsave_unittest_base, unittest.TestCase ):
         print "Comparing input scantable before/after run"
         self._compare_scantable_params(infile,initval)
 
+###
+# Test for frequency labeling
+###
+class sdsave_freq_labeling(unittest.TestCase,sdsave_unittest_base):
+    """
+    Read MS data, write various types of format.
+    """
+    # Input and output names
+    infile='OrionS_rawACSmod_cal2123.ms'
+    prefix=sdsave_unittest_base.taskname+'Test2'
+    outfile=prefix+'.ms'
 
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+        if (not os.path.exists(self.basefile)):
+            shutil.copytree(self.datapath+self.basefile, self.basefile)
+
+        default(sdsave)
+        self._setAttributes()
+        self.scanno=0
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        if (os.path.exists(self.basefile)):
+            shutil.rmtree(self.basefile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test_freq_labeling01(self):
+        """test_freq_labeling01: test for frequency labeling, by importing MS and exporting data to MS and compare frequency label with original MS"""
+        # edit SPECTRAL_WINDOW table
+        tb.open(self.infile+'/SPECTRAL_WINDOW',nomodify=False)
+        mfr=tb.getcol('MEAS_FREQ_REF')
+        mfr[:]=5 # TOPO
+        cf_ref=tb.getvarcol('CHAN_FREQ')
+        tb.putcol('MEAS_FREQ_REF',mfr)
+        tb.close()
+        
+        self.res=sdsave(infile=self.infile,outfile=self.outfile,outform='MS2')
+        self.assertEqual(self.res,None)
+
+        # compare frequency label
+        tb.open(self.outfile+'/SPECTRAL_WINDOW')
+        cf=tb.getvarcol('CHAN_FREQ')
+        tb.close()
+
+        for k in cf.keys():
+            v=cf[k]
+            r=cf_ref[k]
+            maxdiff=abs((v-r)/r).max()
+            self.assertEqual(len(v), len(r),
+                             msg="spw %s: length mismatch"%(int(k[1:])))
+            self.assertTrue(maxdiff < 1.0e-15,
+                            msg="spw %s: frequency labels differ"%(int(k[1:])))
 
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
             sdsave_test3,sdsave_test4,sdsave_test5,
-            sdsave_test6,sdsave_test7,sdsave_storageTest]
+            sdsave_test6,sdsave_test7,sdsave_storageTest,
+            sdsave_freq_labeling]

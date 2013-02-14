@@ -58,14 +58,13 @@ mstransformer::done()
 			mstransformer_p = NULL;
 		}
 
-		return true;
 	} catch (AipsError x) {
 	    Table::relinquishAutoLocks(True);
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
     Table::relinquishAutoLocks(True);
-
+	return true;
 }
 
 bool

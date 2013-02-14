@@ -11,10 +11,10 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
-    worker = sdmath_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdmath_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
 
 class sdmath_worker(sdutil.sdtask_template):
@@ -121,7 +121,8 @@ class sdmath_worker(sdutil.sdtask_template):
 
     def cleanup(self):
         # restore insitu parameter
-        sd.rcParams['insitu'] = self.insitu_saved
+        if hasattr(self,'insitu_saved'):
+            sd.rcParams['insitu'] = self.insitu_saved
 
     def __parse(self):
         self.filenames=[]

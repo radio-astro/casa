@@ -9,7 +9,7 @@ import ast
 from taskinit import *
 
 '''
-A set of helper functions for the tasks tflagdata and flagcmd.
+A set of helper functions for the tasks flagdata and flagcmd.
 I/O functions:
     readFile
     readXML
@@ -94,10 +94,11 @@ def readFile(inputfile):
         try:
             ff = open(flagfile, 'r')
         except:
-            raise Exception, 'Error opening file ' + flagfile
+            casalog.post('Error opening file ' + flagfile,'ERROR')
+            raise 
     else:
-        raise Exception, \
-            'ASCII file not found - please verify the name'
+        casalog.post('ASCII file not found - please verify the name','ERROR')
+        raise 
             
     #
     # Parse file
@@ -105,11 +106,14 @@ def readFile(inputfile):
         cmdlist = []
         for line in ff:
             cmd = line.rstrip()
+            if cmd == '':    
+                continue        
             cmdlist.append(cmd)
 
     except:
-        raise Exception, 'Error reading lines from file ' \
-            + flagtable
+        casalog.post('Error reading lines from file '+ff.name, 'SEVERE')
+        ff.close()
+        raise 
             
     ff.close()
     
@@ -118,7 +122,7 @@ def readFile(inputfile):
 # jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
 def addAbsPath(input_file):
     '''Read in the lines from an input file
-    inputfile -->  file in disk with a list of strings per line
+    input_file -->  file in disk with a list of strings per line
     
     Re-writes the file changing relative file names to absolute file names
     '''        

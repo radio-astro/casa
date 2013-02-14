@@ -48,6 +48,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_hanningsmooth.py
   test_ia_adddegaxes.py
   test_ia_continuumsub.py
+  test_ia_commonbeam.py
   test_ia_convertflux.py
   test_ia_convolve.py
   test_ia_convolve2d.py
@@ -126,6 +127,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_rg_fromtextfile.py
   test_sdbaseline.py
   test_sdcal.py
+  test_sdcal2.py
   test_sdcoadd.py
   test_sdfit.py
   test_sdflag.py

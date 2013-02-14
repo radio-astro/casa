@@ -3,7 +3,7 @@ from taskinit import *
 
 def msmoments( infile, moments, antenna, field, spw, includemask, excludemask, outfile, overwrite):
     
-    retValue=None
+    retms=None
     casalog.origin('msmoments')
 
     try:
@@ -11,11 +11,12 @@ def msmoments( infile, moments, antenna, field, spw, includemask, excludemask, o
             if ( os.path.exists(outfile) ):
                 raise Exception( outfile+" exists." ) 
         ms.open( infile ) 
-        retValue = ms.moments( moments=moments,antenna=antenna,field=field,spw=spw,includemask=includemask,excludemask=excludemask,outfile=outfile,overwrite=overwrite)
+        retms = ms.moments( moments=moments,antenna=antenna,field=field,spw=spw,includemask=includemask,excludemask=excludemask,outfile=outfile,overwrite=overwrite)
 	ms.close()
-        return retValue
+        retms.close()
     except Exception, instance:
-        ms.done()
+        ms.close()
+        if retms: retms.close()
 	print '*** Error ***',instance
 	raise Exception, instance
 	    

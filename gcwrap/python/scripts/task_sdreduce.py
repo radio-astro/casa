@@ -18,20 +18,16 @@ import task_sdbaseline
 
 @sdutil.sdtask_decorator
 def sdreduce(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
-    worker = sdreduce_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdreduce_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
 
 class sdreduce_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdreduce_worker,self).__init__(**kwargs)
         self.suffix = '_cal'
-
-    def __del__(self):
-        # restore scantable when the instance is deleted
-        self.cleanup()
 
     def initialize_scan(self):
         # instantiate scantable
@@ -122,5 +118,5 @@ class sdreduce_worker(sdutil.sdtask_template):
 
     def cleanup(self):
         # restore
-        if self.restorer:
+        if hasattr(self,'restorer') and self.restorer:
             self.restorer.restore()

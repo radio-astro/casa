@@ -186,7 +186,7 @@ def plotms(vis=None,
 
 
         # Set filename and axes
-        vis = os.path.abspath(vis)
+        vis = os.path.abspath(vis.strip())
         pm.setPlotMSFilename(vis, False)
         pm.setPlotAxes(xaxis, yaxis, xdatacolumn, ydatacolumn, False)
         

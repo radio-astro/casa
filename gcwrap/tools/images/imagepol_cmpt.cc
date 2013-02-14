@@ -19,9 +19,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageExpr.h>
-#include <images/Images/ImagePolProxy.h>
-// #include <images/Images/TempImage.h>
-//#include <images/Images/PagedImage.h>
+#include <imageanalysis/ImageAnalysis/ImagePolProxy.h>
 #include <casa/namespace.h>
 
 #include <memory>

@@ -10,20 +10,21 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklist, tmax, tmin, outfile, overwrite):
-    worker = sdimprocess_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdimprocess_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
         
     
 class sdimprocess_worker(sdutil.sdtask_interface):
     def __init__(self, **kwargs):
         super(sdimprocess_worker,self).__init__(**kwargs)
 
-    def __del__(self):
+    def __del__(self, base=sdutil.sdtask_interface):
         # cleanup method must be called when the instance is
         # deleted
         self.cleanup()
+        super(sdimprocess_worker,self).__del__()
 
     def initialize(self):
         self.parameter_check()
@@ -502,23 +503,32 @@ class sdimprocess_worker(sdutil.sdtask_interface):
         outimage.close()
 
     def finalize(self):
-        self.cleanup()
+        pass
 
     def cleanup(self):
         # finalize image analysis tool
-        if self.image is not None:
+        if hasattr(self,'image') and self.image is not None:
             if self.image.isopen(): self.image.done()
-        tools = [self.convimage, self.imageorg,
-                 self.realimage, self.imagimage]
+        tools = ['convimage', 'imageorg', 'realimage', 'imagimage']
         for t in tools:
-            if t and t.isopen(): t.done(remove=True)            
+            if hasattr(self,t):
+                v = getattr(self,t)
+                if v and v.isopen():
+                    v.done(remove=True)
 
         # remove tempolary files
-        filelist = [self.tmpmskname, self.tmpconvname, self.tmppolyname] \
-                   + self.tmprealname + self.tmpimagname
+        filelist = ['tmpmskname', 'tmpconvname', 'tmppolyname',
+                    'tmprealname', 'tmpimagname']
         existing_files = []
-        for f in filelist:
-            if os.path.exists(f):
-                existing_files.append(f)
+        for s in filelist:
+            if hasattr(self, s):
+                f = getattr(self, s)
+                if isinstance(f,list):
+                    for g in f:
+                        if os.path.exists(g):
+                            existing_files.append(g)
+                else:
+                    if os.path.exists(f):
+                        existing_files.append(f)
         cu.removetable(existing_files)
     

@@ -657,7 +657,8 @@ casac::record* calibrater::fluxscale(
 		      const std::string& listfile,
 		      const bool append, 
 		      const std::vector<int>& refspwmap,
-                      const bool incremental)
+                      const bool incremental,
+                      const int fitorder)
 {
 
   casac::record* poOutput;
@@ -700,7 +701,8 @@ casac::record* calibrater::fluxscale(
 			     oFluxD,
 			     tranidx,
 			     oListFile,
-                             incremental);
+                             incremental,
+                             fitorder);
 
     // Associate the field IDs with the field numbers
 

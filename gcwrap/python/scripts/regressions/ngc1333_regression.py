@@ -902,7 +902,6 @@ if doimage:
     outfile = mom0redoutfile
     async = False
     immoments()
-    
     outfile = mom0blueoutfile
     chans='9~15'
     immoments()
@@ -915,7 +914,6 @@ if doimage:
     moments = 1
     includepix=[0.02,100.0]
     immoments()
-
 # Record moment estimation completion time
     if benchmarking:
         momenttime = time.time()
@@ -980,6 +978,7 @@ if doimage:
     statistics=ia.statistics()
     thistest_immax=statistics['max'][0]
     thistest_imrms=statistics['rms'][0]
+    ia.close()
 # 7499.6601 (n1333_both.ms)
 
 # test values 

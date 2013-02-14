@@ -23,28 +23,21 @@
 #include <casa/Utilities/Assert.h>
 #include <components/ComponentModels/SkyCompRep.h>
 
-#include <images/Images/ComponentImager.h>
-#include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
-#include <images/Images/ImageDecomposer.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageMoments.h>
 #include <images/Images/ImageRegrid.h>
-#include <images/Images/ImageSourceFinder.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageSummary.h>
-#include <images/Images/ImageTwoPtCorr.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/LELImageCoord.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/RebinImage.h>
-#include <images/Images/SepImageConvolver.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
@@ -1048,6 +1041,98 @@ record* image::deconvolvefrombeam(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
+}
+
+
+record* image::beamforconvolvedsize(
+	const variant& source, const variant& convolved
+) {
+
+	try {
+		*_log << _ORIGIN;
+		Vector<casa::Quantity> sourceParam, convolvedParam;
+		if (
+			! toCasaVectorQuantity(source, sourceParam)
+			|| sourceParam.size() != 3
+		) {
+			throw(AipsError("Cannot understand source values"));
+		}
+		if (
+			! toCasaVectorQuantity(convolved, convolvedParam)
+			&& convolvedParam.size() != 3
+		) {
+			throw(AipsError("Cannot understand target values"));
+		}
+		Angular2DGaussian mySource(sourceParam[0], sourceParam[1], sourceParam[2]);
+		GaussianBeam myConvolved(convolvedParam[0], convolvedParam[1], convolvedParam[2]);
+		GaussianBeam neededBeam;
+		try {
+			if (mySource.deconvolve(neededBeam, myConvolved)) {
+				// result is a point source which is non-physical in this
+				// case, so throw an exception
+				*_log << "Unable to reach target resolution of "
+					<< myConvolved << " Input source "
+					<< mySource << " is probably too large."
+					<< LogIO::EXCEPTION;
+			}
+		}
+		catch (const AipsError& x) {
+			*_log << "Unable to reach target resolution of "
+				<< myConvolved << " Input source "
+				<< mySource << " is probably too large."
+				<< LogIO::EXCEPTION;
+		}
+		Record ret;
+		QuantumHolder qh(neededBeam.getMajor());
+		ret.defineRecord("major", qh.toRecord());
+		qh = QuantumHolder(neededBeam.getMinor());
+		ret.defineRecord("minor", qh.toRecord());
+		qh = QuantumHolder(neededBeam.getPA());
+		ret.defineRecord("pa", qh.toRecord());
+		return fromRecord(ret);
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+record* image::commonbeam() {
+	try {
+		*_log << _ORIGIN;
+		if (detached()) {
+			return 0;
+		}
+		ImageInfo myInfo = _image->getImage()->imageInfo();
+		if (! myInfo.hasBeam()) {
+			throw AipsError("This image has no beam(s).");
+		}
+		GaussianBeam beam;
+		if (myInfo.hasSingleBeam()) {
+			*_log << LogIO::WARN
+				<< "This image only has one beam, so just returning that"
+				<< LogIO::POST;
+			beam = myInfo.restoringBeam();
+
+		}
+		else {
+			// multiple beams in this image
+			beam = myInfo.getBeamSet().getCommonBeam();
+		}
+		beam.setPA(casa::Quantity(beam.getPA("deg", True), "deg"));
+		Record x = beam.toRecord();
+		x.defineRecord("pa", x.asRecord("positionangle"));
+		x.removeField("positionangle");
+		return fromRecord(x);
+
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+
 }
 
 bool image::remove(const bool finished, const bool verbose) {
@@ -2569,7 +2654,7 @@ image::restoringbeam(int channel, int polarization) {
 				channel, polarization
 			)
 		);
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

@@ -22,13 +22,13 @@ os.system('rm -rf OrionS_rawACSmod orions_hc3n_reducedSCAN0_CYCLE0_BEAM0_IF0.txt
 #enable/disable plotting
 doplot = False
 
-casapath=os.environ['CASAPATH']
-datapath=casapath.split()[0]+'/data/regression/ATST5/OrionS/OrionS_rawACSmod'
-copystring='cp -r '+datapath+' .'
+casapath = os.environ['CASAPATH']
+datapath = casapath.split()[0]+'/data/regression/ATST5/OrionS/OrionS_rawACSmod'
+copystring = 'cp -r '+datapath+' .'
 os.system(copystring)
 
-startTime=time.time()
-startProc=time.clock()
+startTime = time.time()
+startProc = time.clock()
 
 #           MeasurementSet Name:  /home/rohir3/jmcmulli/SD/OrionS_rawACSmod      MS Version 2
 #
@@ -66,12 +66,12 @@ asap_init()                             #load ASAP module
 
 					#changes made to get to OrionS_rawACSmod
 					#modifications to label sig/ref positions
-#os.environ['CASAPATH']=casapath
+#os.environ['CASAPATH'] = casapath
 
 
 # summary
 #default(sdlist)
-#infile='OrionS_rawACSmod'
+#infile = 'OrionS_rawACSmod'
 #sdlist()
 
 if doplot:
@@ -82,58 +82,58 @@ else:
 # calibartion and averaging
 # calibrate position-switched HC3N scans (IF=0) 
 default(sdcal)
-infile='OrionS_rawACSmod'
-fluxunit='K' 
-calmode='ps'
-scanlist=[20,21,22,23]
-iflist=[0]
-scanaverage=False
-timeaverage=True # average in time
-tweight='tintsys' # weighted by integ time and Tsys for time averaging
-polaverage=True  # average polarization
-pweight='tsys'   # weighted by Tsys for pol. averaging 
-tau=0.09         # do opacity correction 
-overwrite=True
-plotlevel=localplotlevel  
+infile = 'OrionS_rawACSmod'
+fluxunit = 'K' 
+calmode = 'ps'
+scanlist = [20,21,22,23]
+iflist = [0]
+scanaverage = False
+timeaverage = True # average in time
+tweight = 'tintsys' # weighted by integ time and Tsys for time averaging
+polaverage = True  # average polarization
+pweight = 'tsys'   # weighted by Tsys for pol. averaging 
+tau = 0.09         # do opacity correction 
+overwrite = True
+plotlevel = localplotlevel  
 sdcal() 
 # output
-localoutfile=infile+'_cal'
+localoutfile = infile+'_cal'
 
 #smoothing
 # do boxcar smoothing with channel width=5
 default(sdsmooth)
 infile = localoutfile
-kernel='boxcar'
-kwidth=5
-overwrite=True
-plotlevel=localplotlevel
+kernel = 'boxcar'
+kwidth = 5
+overwrite = True
+plotlevel = localplotlevel
 sdsmooth()
-localoutfile=infile+'_sm'
+localoutfile = infile+'_sm'
 
 #fit and remove baselines
 # do baseline fit with polynomial order of 2
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
-infile=localoutfile
-maskmode='auto'
-edge=[50]
-thresh=5
-avg_limit=4
-blfunc='poly'
-order=2
-overwrite=True
-plotlevel=localplotlevel
+infile = localoutfile
+maskmode = 'auto'
+edge = [50]
+thresh = 5
+avg_limit = 4
+blfunc = 'poly'
+order = 2
+overwrite = True
+plotlevel = localplotlevel
 sdbaseline()
-localoutfile=infile+'_bs'
+localoutfile = infile+'_bs'
 #sd.plotter.plot(spave)			# plot						# baseline
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file 
 if doplot:
    default(sdplot)
-   infile=localoutfile
-   specunit='GHz'
-   outfile='orions_hc3n_reduced.eps'
+   infile = localoutfile
+   specunit = 'GHz'
+   outfile = 'orions_hc3n_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
    sdplot()
@@ -143,16 +143,16 @@ else:
 # statistics
 default(sdstat)
 # select line free regions to get rms
-infile=localoutfile
-masklist=[5000,7000]
-xstat=sdstat()
-rms=xstat['rms']
+infile = localoutfile
+masklist = [5000,7000]
+xstat = sdstat()
+curr_rms = xstat['rms']
 #rms= 0.04910755529999733
 #rms= 0.049121532589197159 [CASA 2.3(#6654)+ASAP 2.2.0(#1448)]
 #
 # select the line region
-masklist=[3900,4200]
-xstat=sdstat()
+masklist = [3900,4200]
+xstat = sdstat()
 xstat
 #{'eqw': 70.905397021125211,
 # 'max': 0.91880249977111816,
@@ -173,18 +173,18 @@ xstat
 # 'rms': 0.3493553102016449,
 # 'stddev': 0.27483683824539185,
 # 'sum': 65.091751098632812}
-max=xstat['max']
-sum=xstat['sum']
+curr_max = xstat['max']
+curr_sum = xstat['sum']
 # fitting
 default(sdfit)
-infile=localoutfile
+infile = localoutfile
 #sd.plotter.plot(spave)			# plot spectrum
-fitmode='list'
-maskline=[3928,4255]	# create region around line			# gregion,[4000,4200]
-nfit=1
-plotlevel=localplotlevel
-outfile='orions_hc3n_fit.txt'
-xstat=sdfit()
+fitmode = 'list'
+maskline = [3928,4255]	# create region around line			# gregion,[4000,4200]
+nfit = 1
+plotlevel = localplotlevel
+outfile = 'orions_hc3n_fit.txt'
+xstat = sdfit()
 xstat  # print fit statistics 
 #{'cent': [[4091.243408203125, 0.55986660718917847]],
 # 'fwhm': [[70.907455444335938, 1.318385124206543]],
@@ -201,13 +201,13 @@ xstat  # print fit statistics
 # Save the spectrum
 # in different formats
 default(sdsave)
-infile=localoutfile
-outfile='orions_hc3n_reduced'
-outform='ASCII'
-overwrite=True
+infile = localoutfile
+outfile = 'orions_hc3n_reduced'
+outform = 'ASCII'
+overwrite = True
 sdsave()
-outfile='orions_hc3n_reduced.ms'
-outform='MS2'
+outfile = 'orions_hc3n_reduced.ms'
+outform = 'MS2'
 
 endProc = time.clock()
 endTime = time.time()
@@ -219,28 +219,28 @@ endTime = time.time()
 #hc3n_sum=64.994
 # Regression values of CASA 2.3(#6654)+ASAP 2.2.0(#1448)
 # on 64bit REL5.2 (2008/12/01)
-hc3n_max=0.9186
-hc3n_rms=0.04912
-hc3n_sum=65.09
-diff_max = abs((hc3n_max-max)/hc3n_max)
-diff_rms = abs((hc3n_rms-rms)/hc3n_rms)
-diff_sum = abs((hc3n_sum-sum)/hc3n_sum)
+hc3n_max = 0.9186
+hc3n_rms = 0.04912
+hc3n_sum = 65.09
+diff_max = abs( (hc3n_max - curr_max) / hc3n_max )
+diff_rms = abs( (hc3n_rms - curr_rms) / hc3n_rms )
+diff_sum = abs( (hc3n_sum - curr_sum) / hc3n_sum )
 
 import datetime
-datestring=datetime.datetime.isoformat(datetime.datetime.today())
-outfile='ori.hc3n.task.'+datestring+'.log'
-logfile=open(outfile,'w')
+datestring = datetime.datetime.isoformat(datetime.datetime.today())
+outfile = 'ori.hc3n.task.'+datestring+'.log'
+logfile = open(outfile,'w')
 print >>logfile,''
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
 if (diff_max < 0.05): print >>logfile,'* Passed spectrum max test '
-print >>logfile,'*  Spectrum max '+str(max)
+print >>logfile,'*  Spectrum max '+str(curr_max)
 if (diff_rms < 0.05): print >>logfile,'* Passed spectrum rms test '
-print >>logfile,'*  Spectrum rms '+str(rms)
+print >>logfile,'*  Spectrum rms '+str(curr_rms)
 if (diff_sum < 0.05): print >>logfile,'* Passed spectrum (line) sum test'
-print >>logfile,'*  Line integral '+str(sum)
+print >>logfile,'*  Line integral '+str(curr_sum)
 if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)): 
-	regstate=True
+	regstate = True
         print >>logfile,'---'
         print >>logfile,'Passed Regression test for OrionS-HC3N'
         print >>logfile,'---'
@@ -248,7 +248,7 @@ if ((diff_max<0.05) & (diff_rms<0.05) & (diff_sum<0.05)):
         print 'Regression PASSED'
         print ''
 else: 
-	regstate=False
+	regstate = False
         print >>logfile,'----FAILED Regression test for OrionS-HC3N'
         print ''
         print 'Regression FAILED'

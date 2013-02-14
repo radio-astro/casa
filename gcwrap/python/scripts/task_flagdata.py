@@ -82,11 +82,17 @@ def flagdata(vis,
     
     casalog.origin('flagdata')
     
-    # jagonzal (CAS-4119): Use absolute paths for input files to ensure that the engines find them
+    # (CAS-4119): Use absolute paths for input files to ensure that the engines find them
     if isinstance(inpfile, str) and inpfile != "":                   
         inpfile = os.path.abspath(inpfile)
         fh.addAbsPath(inpfile)
         
+    elif isinstance(inpfile, list) and os.path.isfile(inpfile[0]):
+        # It is a list of input files
+        for inputfile in range(len(inpfile)):
+            inpfile[inputfile] = os.path.abspath(inpfile[inputfile])
+            fh.addAbsPath(inpfile[inputfile])
+            
     if (outfile != ""):
         outfile = os.path.abspath(outfile)        
         
@@ -115,7 +121,13 @@ def flagdata(vis,
 
 
     # Save all the locals()
-    orig_locals = locals()
+    orig_locals = locals().copy()
+    # inputfile may have been added to the locals dictionary. The cluster does not
+    # recognize it as a parameter for the task, so we have to remove it.
+    if orig_locals.__contains__('inputfile'):
+        del orig_locals['inputfile']
+        
+    
     iscal = False
     
     # Check if vis is a cal table:
@@ -254,16 +266,30 @@ def flagdata(vis,
             try:            
                 # Is it a file or a Python list?
                 if isinstance(inpfile, list):
-                    # Make a FLAG_CMD compatible dictionary. Select by reason if requested
-                    casalog.post('Will read commands from a Python list')
-                    flagcmd = fh.makeDict(inpfile, reason)
                     
+                    # It is a list of input files
+                    if os.path.isfile(inpfile[0]):
+                        flaglist = []
+                        for ifile in inpfile:
+                            casalog.post('Will read commands from the file '+ifile)                    
+                            flaglist = flaglist + fh.readFile(ifile)
+                        
+                        # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                        flagcmd = fh.makeDict(flaglist, reason)
+                    
+                    # It is a list of strings with flag commands
+                    else:
+                        # Make a FLAG_CMD compatible dictionary. Select by reason if requested
+                        casalog.post('Will read commands from a Python list')
+                        flagcmd = fh.makeDict(inpfile, reason)
+                    
+                # It is only one file
                 elif isinstance(inpfile, str):
                     
                     if inpfile == '':
                          casalog.post('Input file is empty', 'ERROR')
                          
-                    casalog.post('Will read commands from a file')
+                    casalog.post('Will read commands from the file '+inpfile)
                     flaglist = fh.readFile(inpfile)
                     casalog.post('%s'%flaglist,'DEBUG')
                     

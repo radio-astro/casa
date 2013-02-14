@@ -14,10 +14,10 @@ interactive=False
 @sdutil.sdtask_decorator
 def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, spw, stokes, createimage, outfile, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
     # NEED to include spw, src? name for movingsource param. in function argument
-    worker = sdtpimaging_worker(**locals())
-    worker.initialize()
-    worker.execute()
-    worker.finalize()
+    with sdutil.sdtask_manager(sdtpimaging_worker, locals()) as worker:
+        worker.initialize()
+        worker.execute()
+        worker.finalize()
 
 
 class sdtpimaging_worker(sdutil.sdtask_template_imaging):
@@ -28,9 +28,6 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
     stokestypes=['undef','I','Q','U','V','RR','RL','LR','LL','XX','XY','YX','YY','RX','RY','LX','LY','XR','XL','YR','YL']
     def __init__(self, **kwargs):
         super(sdtpimaging_worker,self).__init__(**kwargs)
-
-    def __del__(self, base=sdutil.sdtask_template_imaging):
-        super(sdtpimaging_worker,self).__del__()
 
     def parameter_check(self):
         # use FLOAT_DATA if exists
@@ -142,9 +139,10 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                 for j in xrange(self.nsubscan[i]):
                     # may be need to iterate on each antenna 
                     # identify 'scan' by STATE ID
-                    #subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
-                    subtb = self.table.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (self.antid,self.antid,self.scans[i],self.subscans[i][j]))
-                    datcol = subtb.getcol(self.datacol)
+                    #selsubtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
+                    selsubtb = self.table.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (self.antid,self.antid,self.scans[i],self.subscans[i][j]))
+                    datcol = selsubtb.getcol(self.datacol)
+                    selsubtb.close()
                     if self.npol > 1 and self.selnpol == 1:
                         #casalog.post( "select %s data..." % corrtypestr[selpol] )
                         rdatcol = datcol[self.selpol].real
@@ -291,6 +289,7 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                     #subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (antid,antid,scans[i],subscans[j]))
                     subtb=self.table.query('any(ANTENNA1==%s && ANTENNA2==%s) && SCAN_NUMBER==%s && STATE_ID==%s' % (self.antid,self.antid,self.scans[i],self.subscans[i][j]))
                     fcolall = subtb.getcol('FLAG')
+                    subtb.close()
                     if self.npol > 1 and self.selnpol == 1:
                         fcol=fcolall[self.selpol]
                     else:
@@ -304,7 +303,7 @@ class sdtpimaging_worker(sdutil.sdtask_template_imaging):
                     fdatac = numpy.concatenate([fdatac,fcoln])
             fdatcol[np] = fdatac
             #flagc=tb.getcol('FLAG')
-        subtb.close()
+        #subtb.close()
         fdatacm = fdatcol.reshape(self.npol,1,len(fdatac))
         self.table.putcol('FLAG', fdatacm, startrow=startrow, rowincr=rowincr)
         #print "Scans flagged: %s" % list(flagscanset)

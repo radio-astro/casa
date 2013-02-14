@@ -1290,6 +1290,12 @@ cb.close()
      <description>create a incremental caltable</description>
      <value>false</value>
      </param>
+
+     <param type="int" direction="in" name="fitorder">
+     <description>order for spectral fitting for multiple spws</description>
+     <value>1</value>
+     </param>
+     
 </input>
 
 <returns type="record">

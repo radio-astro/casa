@@ -57,14 +57,15 @@ using namespace casac;
 %typemap(in) string& {
    if(PyString_Check($input)){
       if(!$1)
-         $1 = new string(PyString_AsString($input));
+        $1 = new string(PyString_AsString($input));
       else
-         *$1 = string(PyString_AsString($input));
+        *$1 = string(PyString_AsString($input));
    } else {
         PyErr_SetString(PyExc_TypeError,"argument $1_name must be a string");
         return NULL;
    }
 }
+
 %typemap(typecheck) string& {
    $1 = PyString_Check($input);
 }
@@ -81,6 +82,12 @@ using namespace casac;
 }
 %typemap(typecheck) const string& {
    $1 = PyString_Check($input);
+}
+
+%typemap(freearg) const string& columnname{
+if($1){
+  delete $1;
+}
 }
 
 %typemap(in) StringVec {
@@ -153,6 +160,10 @@ using namespace casac;
 
 %typemap(in) variant& {
    $1 = new variant(pyobj2variant($input, true));
+}
+
+%typemap(freearg) variant& thevalue{
+   delete $1;
 }
 
 %typemap(in) variant* {
@@ -461,6 +472,10 @@ using namespace casac;
          casac::pylist2vector($input,  *$1, shape);
       }
    }
+}
+
+%typemap(freearg) const std::vector<int>& rownr {
+   delete $1;
 }
 
 

@@ -83,6 +83,7 @@ impv.xml
 rmtables.xml
 sdbaseline.xml
 sdcal.xml
+sdcal2.xml
 sdcoadd.xml
 sdfit.xml
 sdflag.xml

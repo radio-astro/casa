@@ -131,7 +131,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</constraints>
 </input>
 
-<returns type="void"/>
+<returns type="bool"/>
 
 <example>
 

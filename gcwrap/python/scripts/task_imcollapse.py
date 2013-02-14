@@ -68,25 +68,22 @@ from taskinit import *
 
 def imcollapse(
     imagename=None, function=None, axes=None, outfile=None, box=None,
-    region=None, chans=None, stokes=None, mask=None, wantreturn=None,
+    region=None, chans=None, stokes=None, mask=None,
     overwrite=None, stretch=None
 ):
     casalog.origin('imcollapse')
-    retval = None
-    myia = iatool()
-    try:
+    try :
+        if (len(outfile) == 0):
+            raise Exception, "oufile must be specified" 
+        myia = iatool() 
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
         ia_tool = myia.collapse(
             function, axes, outfile, region, box, chans,
             stokes, mask, overwrite, stretch
         )
-        if wantreturn:
-            retval = ia_tool
-        else:
-            ia_tool.done()
+        ia_tool.done()
+        return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-    if (myia):
-        myia.done()
-    return retval
+        return False

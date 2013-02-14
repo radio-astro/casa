@@ -238,10 +238,10 @@ def imhead(
     # ############################################################
 
     # # Read the information from the TABLE keywords
-    tbColumns = {}
+    mykeywords = {}
     try:
         tb.open(imagename)
-        tbColumns = tb.getcolkeywords()
+        mykeywords = tb.getkeywords()
         tb.close()
     except:
         casalog.post(str('*** Error *** Unable to open image file ')
@@ -249,16 +249,16 @@ def imhead(
         return False
 
     # Now update our header dictionary.
-    if tbColumns.has_key('imageinfo') and tbColumns['imageinfo'
+    if mykeywords.has_key('imageinfo') and mykeywords['imageinfo'
             ].has_key('objectname'):
-        hd_values['object'] = tbColumns['imageinfo']['objectname']
+        hd_values['object'] = mykeywords['imageinfo']['objectname']
         hd_types['object'] = 'string'
         hd_units['object'] = ''
         hd_comments['object'] = ''
 
-    if tbColumns.has_key('imageinfo') and tbColumns['imageinfo'
+    if mykeywords.has_key('imageinfo') and mykeywords['imageinfo'
             ].has_key('imagetype'):
-        hd_values['imtype'] = tbColumns['imageinfo']['imagetype']
+        hd_values['imtype'] = mykeywords['imageinfo']['imagetype']
         hd_types['imtype'] = 'string'
         hd_units['imtype'] = ''
         hd_comments['imtype'] = ''
@@ -619,10 +619,10 @@ def imhead(
                 # We are dealing with having to add to the table columns.
                 tb.open(imagename, nomodify=False)
                 if hdkey == 'imtype':
-                    tbColumns['imageinfo']['imagetype'] = hdvalue
+                    mykeywords['imageinfo']['imagetype'] = hdvalue
                 else:
-                    tbColumns['imageinfo']['objectname'] = hdvalue
-                tb.putkeywords(tbColumns)
+                    mykeywords['imageinfo']['objectname'] = hdvalue
+                tb.putkeywords(mykeywords)
                 tb.close()
                 casalog.post(hdkey + ' keyword has been ADDED to '
                              + imagename + "'s header", 'NORMAL')
@@ -741,12 +741,12 @@ def imhead(
                 tb.open(imagename, nomodify=False)
                 key = ''
                 if hdkey == 'object':
-                    if (tbColumns['imageinfo'].has_key('objectname')):
-                        tbColumns['imageinfo'].pop('objectname')
+                    if (mykeywords['imageinfo'].has_key('objectname')):
+                        mykeywords['imageinfo'].pop('objectname')
                 else:
-                    tbColumns['imageinfo'].has_key('imagetype')
-                    tbColumns['imageinfo'].pop('imagetype')
-                tb.putcolkeywords(columnname="", value=tbColumns)
+                    mykeywords['imageinfo'].has_key('imagetype')
+                    mykeywords['imageinfo'].pop('imagetype')
+                tb.putcolkeywords(columnname="", value=mykeywords)
                 tb.flush()
                 tb.done()
                 casalog.post(hdkey + ' keyword has been DELETED from '
@@ -863,10 +863,10 @@ def imhead(
                              , 'WARN')
             else:
                 if hdkey == 'object':
-                    tbColumns['imageinfo']['objectname'] = hdvalue
+                    mykeywords['imageinfo']['objectname'] = hdvalue
                 elif hdkey == 'imtype':
-                    tbColumns['imageinfo']['imagetype'] = hdvalue
-                tb.putcolkeywords(columnname="", value=tbColumns)
+                    mykeywords['imageinfo']['imagetype'] = hdvalue
+                tb.putcolkeywords(columnname="", value=mykeywords)
             tb.flush()
             tb.done()
             casalog.post(hdkey + ' keyword has been UPDATED in '

@@ -896,6 +896,27 @@ Bool PlotCal::doPlot(){
     else
       itsPlotOptions.TimePlotChar="o";
 
+    // Enable connection of plot points, only along TIME.
+    // For plotcal, with xaxis='time', separate plots are already made for SPW and Antenna
+    //   so connection across 'tablerow' will connect points in time.
+    // This works even if there is more than one channel.
+    if( itsPlotOptions.PlotSymbol.contains("-"))
+      {
+	if( xAxis_p.contains("TIME") )
+	  {
+	    itsPlotOptions.PlotSymbol.gsub("-","");
+	    itsPlotOptions.Connect = String("tablerow");
+	  }
+	else
+	  {
+	    if( itsPlotOptions.PlotSymbol.length() > 1 )
+	      {
+		os << LogIO::WARN << "Connection of plot points is available only if the X Axis is TIME" << LogIO::POST;
+		itsPlotOptions.PlotSymbol.del("-");
+	      }
+	  }
+      }
+
     if(multiPlot_p){
 
       Int nlayers=0;
@@ -1506,7 +1527,7 @@ Int PlotCal::multiTables(const Table& tablein,
 
     plotsymbol.downcase();
     plotopts_p.define("plotsymbol", plotsymbol);    
-    
+
   }
 
   void PlotCal::fillPlotOptions(){

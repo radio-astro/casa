@@ -18,9 +18,6 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         super(sdimaging_worker,self).__init__(**kwargs)
         self.imager_param = sdutil.parameter_registration(self)
 
-    def __del__(self, base=sdutil.sdtask_template_imaging):
-        super(sdimaging_worker,self).__del__()
-
     def __register(self, key, attr=None, arg_is_value=False):
         self.imager_param.register(key,attr,arg_is_value)
 
