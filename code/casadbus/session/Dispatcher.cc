@@ -39,6 +39,8 @@
 
 
 #include <casadbus/session/Dispatcher.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/poll.h>
 #include <sys/time.h>
 #include <dbus/dbus.h>
@@ -113,6 +115,8 @@ namespace casa {
 
 	void Dispatcher::leave() {
 	    _running = false;
+		char msg[] = "bye";
+		write( _leave_pipe[1], msg, sizeof(msg)-1 );
 	}
 
 	void Dispatcher::do_iteration() {
@@ -166,9 +170,17 @@ namespace casa {
 	}
 
 
+	Dispatcher::Dispatcher( ) : _running(false) {
+		pipe( _leave_pipe );
+		int flags = fcntl( _leave_pipe[0], F_GETFL, 0 );
+		fcntl( _leave_pipe[0], F_SETFL, flags | O_NONBLOCK );
+	}
+
 	Dispatcher::~Dispatcher( ) {
 
 	    _mutex_w.lock();
+		close(_leave_pipe[0]);
+		close(_leave_pipe[1]);
 	    std::list<Watch*>::iterator wi = _watches.begin();
 	    while (wi != _watches.end()) {
 		std::list<Watch*>::iterator wmp = wi;
@@ -200,14 +212,19 @@ namespace casa {
 
 	    _mutex_w.lock();
 	    int nfd = _watches.size();
-	    pollfd fds[nfd];
+	    pollfd fds[nfd+1];
 	    std::list<Watch*>::iterator wi = _watches.begin();
+
+		// allow for Dispatcher::leave( ) to interrupt the event loop...
+		fds[0].fd = _leave_pipe[0];
+		fds[0].events = POLLRDNORM | POLLIN | POLLRDBAND | POLLPRI;
+		fds[0].revents = 0;
 
 	    for (nfd = 0; wi != _watches.end(); ++wi) {
 		if ((*wi)->enabled()) {
-		    fds[nfd].fd = (*wi)->descriptor();
-		    fds[nfd].events = (*wi)->flags();
-		    fds[nfd].revents = 0;
+		    fds[nfd+1].fd = (*wi)->descriptor();
+		    fds[nfd+1].events = (*wi)->flags();
+		    fds[nfd+1].revents = 0;
 
 		    ++nfd;
 		}
@@ -224,7 +241,7 @@ namespace casa {
 	    }
 	    _mutex_t.unlock();
 
-	    poll(fds, nfd, wait_min);
+	    poll(fds, nfd+1, wait_min);
 
 	    timeval now;
 	    gettimeofday(&now, NULL);
@@ -252,15 +269,20 @@ namespace casa {
 	    for (int j = 0; j < nfd; ++j) {
 		std::list<Watch*>::iterator wi;
 
+		if ( fds[0].revents ) {
+			char buf[1024];
+			ssize_t len = read( _leave_pipe[0], buf, sizeof(buf) );
+		}
+
 		for (wi = _watches.begin(); wi != _watches.end();) {
 		    std::list<Watch*>::iterator tmp = wi;
 		    ++tmp;
 
-		    if ((*wi)->enabled() && (*wi)->_fd == fds[j].fd) {
-			if (fds[j].revents) {
-			    (*wi)->_state = fds[j].revents;
+		    if ((*wi)->enabled() && (*wi)->_fd == fds[j+1].fd) {
+			if (fds[j+1].revents) {
+			    (*wi)->_state = fds[j+1].revents;
 			    (*wi)->ready(*(*wi));
-			    fds[j].revents = 0;
+			    fds[j+1].revents = 0;
 			}
 		    }
 		    wi = tmp;
