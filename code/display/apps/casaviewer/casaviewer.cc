@@ -722,6 +722,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 		int nbytes = read( io[0], buffer, sizeof(buffer)-1 );
 		if ( nbytes > 0 ) {
 		    buffer[nbytes] = '\0';
+			// HANDLE: 'FreeFontPath: FPE "unix/:7100" refcount is 2, should be 1; fixing.'
 		    if ( strstr( buffer, "already active" ) ||
 			 strstr( buffer, "server already running" ) ||
 			 strstr( buffer, "SocketCreateListener() failed") ) {

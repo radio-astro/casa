@@ -88,7 +88,7 @@ namespace casa {
 			connect( clean_processes, SIGNAL(itemChanged(QTreeWidgetItem*,int)), SLOT(check_box_change(QTreeWidgetItem*,int)) );
 			connect( stop_button, SIGNAL(pressed( )), SLOT(stop_button_event( )) );
 			connect( play_button, SIGNAL(pressed( )), SLOT(play_button_event( )) );
-			connect( pause_button, SIGNAL(pressed( )), SLOT(pause_button_event( )) );
+			// connect( pause_button, SIGNAL(pressed( )), SLOT(pause_button_event( )) );
 			connect( refresh_button, SIGNAL(pressed( )), SLOT(refresh_button_event( )) );
 
 			connect( niter_entry, SIGNAL(textEdited(const QString&)), SLOT(entry_changed_event(const QString&)) );
@@ -402,12 +402,17 @@ namespace casa {
 				if ( it != details.end( ) && it->second.type( ) == dbus::variant::STRING ) {
 					std::string state = it->second.getString( );
 					clean_state_label->setText(QString::fromStdString(state));
-					if ( state == "paused" )
+					if ( state == "paused" ) {
 						current_process_state = PAUSED;
-					else if ( state == "stopped" )
+						play_button->setIcon(QIcon(":/icons/Anim4_Play.png"));
+					} else if ( state == "stopped" ) {
 						current_process_state = STOPPED;
-					else
+						play_button->setIcon(QIcon(":/icons/Anim4_Play.png"));
+						play_button->setEnabled(false);
+					} else {
+						play_button->setIcon(QIcon(":/icons/Anim7_Pause.png"));
 						current_process_state = RUNNING;
+					}
 				} else {
 					clean_state_label->setText("error");
 					current_process_state = UNDEFINED;
