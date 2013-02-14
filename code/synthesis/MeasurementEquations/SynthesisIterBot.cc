@@ -73,14 +73,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		SIIterBot_adaptor dbus_adaptor(itsLoopController,generateServiceName());
 		casa::DBusSession::instance().dispatcher( ).enter( );
 		std::cout << "Service Loop Exited: " << time(0) << std::endl;
-		dbus_thread->detach();
-		delete dbus_thread;
-		dbus_thread = NULL;
 	}
 
 	SynthesisIterBot::~SynthesisIterBot() {
-		casa::DBusSession::instance().dispatcher( ).leave( );
-		dbus_thread->join( );
+		if ( dbus_thread != NULL ) {
+			casa::DBusSession::instance().dispatcher( ).leave( );
+			dbus_thread->join( );
+			delete dbus_thread;
+			dbus_thread = NULL;
+		}
 		LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
 		os << "SynthesisIterBot destroyed" << LogIO::POST;
 	}
