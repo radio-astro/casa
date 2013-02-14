@@ -204,8 +204,8 @@ class immath_test1(unittest.TestCase):
         for img in imageList:
             os.system('rm -rf ' +img)
             os.system('rm -rf input_test*')
+        self.assertTrue(len(tb.showcache()) == 0)
                        
-
     def test_input2(self):
         '''Immath 2: Test bad input file'''
         #######################################################################
@@ -307,7 +307,6 @@ class immath_test1(unittest.TestCase):
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-
     def test_input7(self):
         '''Immath 7: test outfile'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
@@ -331,10 +330,7 @@ class immath_test1(unittest.TestCase):
         #    Valid modes are: evalexpr, spix, pola, poli
         #    Invalid ???
         #######################################################################
-    
-    
-    
-        
+          
     def test_input8(self):
         '''Immath 8: Test bad region parameter'''
         #######################################################################
@@ -416,7 +412,7 @@ class immath_test1(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']\
                   +"\nError: output file 'input_test12', was not created."\
                   +"\n  RESULTS "+str(results)
-    
+
         self.assertTrue(retValue['success'],retValue['error_msgs'])            
     
     def test_input10(self):
@@ -789,6 +785,7 @@ class immath_test2(unittest.TestCase):
                 
         # FIXME: add links to repository
         for img in imageList2:
+            self.assertTrue(os.path.exists(datapath + img))
             if os.path.isdir(datapath + img):
                 shutil.copytree(datapath + img, img)
             else:
@@ -806,6 +803,13 @@ class immath_test2(unittest.TestCase):
                 shutil.rmtree(img)
             else:
                 os.remove(img)
+        # FIXME need to figure out how to close this table correctly
+        cache_tables = tb.showcache()
+        if (len(cache_tables) > 0):
+            for table in cache_tables:
+                self.assertTrue(table.rfind("/IERSeop97") >= 0)
+        
+
                        
     def copy_img(self):
         '''Copy images to local disk'''
@@ -863,6 +867,14 @@ class immath_test2(unittest.TestCase):
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
                 
+    def _create_expr_test2(self):
+        outimage='expr_test2'
+        if (os.path.exists(outimage)):
+            return True
+        return immath(
+            imagename=imageList2[0], outfile=outimage,
+            expr='IM0', chans='5'
+        );
 
     def test_expr2(self):
         '''Immath expr2: Test extraction of single plane'''
@@ -879,10 +891,10 @@ class immath_test2(unittest.TestCase):
         # Checking the size of the resulting image and a few of the
         # points to make sure they are from the correct plane.
         outimage='expr_test2'
+
         results=None
         try:    
-            results=immath( imagename=imageList2[0], outfile=outimage, \
-                         expr='IM0', chans='5',  );
+            results = self._create_expr_test2()
             #immath( outimage, 'evalexpr', str('"')+image1+str('"[INDEXIN(4,[5])]' ) );
         except Exception, e:
             casalog.post( "Exception occured getting image slice ... "+str(e), 'DEBUG1')        
@@ -926,56 +938,41 @@ class immath_test2(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "Adding slice to a cube image.", 'NORMAL2' )
         outimage="expr_test3"
-    
-        results=None
+        self.assertTrue(os.path.exists(imageList2[0]))
+        results = self._create_expr_test2()
+        results = immath(
+            mode='evalexpr', outfile=outimage,
+            imagename=[ 'expr_test2', imageList2[0] ],
+            expr='IM0+IM1'
+        )
+        # Now do some value checks
+        # of these images and from that get their sizes with the topixel
+        # function, however, we are assuming that its a 256x256x1x46 image.
+        size=[]
         try:
-            results = immath( mode='evalexpr', outfile=outimage,  \
-                    imagename=[ 'expr_test2', imageList2[0] ], \
-                    expr='IM0+IM1' )
+            ia.open( outimage )
+            size=ia.shape()
+            ia.done()
         except Exception, e:
-            casalog.post( "Exception occured getting image slice ... "+str(e), 'DEBUG1')
+            casalog.post( "Exception occured getting image shape ... "+str(e), 'DEBUG1')
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
-               +"\nError: Unable to add a image slice to an image cube."
-    
-    
-        if (  not os.path.exists( outimage ) or results == None ):
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                    +"\nError: outfile '"+outimage+"' was not created."
-        else:
-            # Now do some value checks
-            # of these images and from that get their sizes with the topixel
-            # function, however, we are assuming that its a 256x256x1x46 image.
-            size=[]
-            try:
-                ia.open( outimage )
-                size=ia.shape()
-                ia.close()
-            except Exception, e:
-                casalog.post( "Expception occured getting image shape ... "+str(e), 'DEBUG1')
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError: Unable to get shape of image "+outimage
-            
-            if ( not (size == [256, 256, 1, 46]).all()):
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                      +"\nError: Size of output plane is incorrect: "+str(size)\
-                      +"\n       Excepted a shape of 256x256x1x46"
-            else:
-                myia = iatool()
-                myia.open("expr_test2")
-                chunk1 = myia.getchunk()
-                myia.done()
-                myia.open(imageList2[0])
-                chunk2 = myia.getchunk()
-                myia.done()
-                expected = chunk1 + chunk2
-                myia.open(outimage)
-                got = myia.getchunk()
-                myia.done()
-                self.assertTrue((got - expected < 0.000001 ).all())
+                    +"\nError: Unable to get shape of image "+outimage
+        
+        self.assertTrue((size == [256, 256, 1, 46]).all())
+        
+        myia = iatool()
+        myia.open("expr_test2")
+        chunk1 = myia.getchunk()
+        myia.done()
+        myia.open(imageList2[0])
+        chunk2 = myia.getchunk()
+        myia.done()
+        expected = chunk1 + chunk2
+        myia.open(outimage)
+        got = myia.getchunk()
+        myia.done()
+        self.assertTrue((got - expected < 0.000001 ).all())
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
@@ -998,14 +995,14 @@ class immath_test2(unittest.TestCase):
         errors = ''
     #    retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         casalog.post( "Starting immath INPUT/OUTPUT tests.", 'NORMAL2' )
-    
+        self.assertTrue(len(tb.showcache()) == 0)
         # First make the I, Q, U, and V files.  This step may not be
         # needed if immath learns to do this for the user.
         immath( imageList2[3], expr='IM0', stokes='I', outfile='pol_test_I.im' )
+
         immath( imageList2[3], expr='IM0', stokes='Q', outfile='pol_test_Q.im' )
         immath( imageList2[3], expr='IM0', stokes='U', outfile='pol_test_U.im' )
         immath( imageList2[3], expr='IM0', stokes='V', outfile='pol_test_V.im' )
-    
         imList = ['pol_test_Q.im', 'pol_test_U.im', 'pol_test_V.im']
         myia = iatool()
         # total polarization intensity
@@ -1021,7 +1018,6 @@ class immath_test2(unittest.TestCase):
         myia.open(outfile)
         self.assertTrue(myia.coordsys().stokes()[0] == 'Plinear')
         myia.done()
-        
         imList = ['pol_test_Q.im', 'pol_test_U.im']
         self.assertTrue(immath( imagename=imList, outfile='pol_test2', mode='pola' ))
  
@@ -1178,7 +1174,13 @@ class immath_test3(unittest.TestCase):
             shutil.rmtree(img)     
         
         os.system('rm -rf pola*')
-        os.system('rm -rf poli*')   
+        os.system('rm -rf poli*')
+        # FIXME need to figure out how to close this table correctly
+        cache_tables = tb.showcache()
+        if (len(cache_tables) > 0):
+            for table in cache_tables:
+                self.assertTrue(table.rfind("/IERSeop97") >= 0)
+        
 
     def _comp(self, imagename, mode, outfile, expected, epsilon, polithresh=''):
         self.assertTrue(immath(imagename=imagename, outfile=outfile, mode=mode, polithresh=polithresh))
@@ -1209,7 +1211,9 @@ class immath_test3(unittest.TestCase):
 
         # POLA
         mode = 'pola'
+        
         myia = iatool()
+
         myia.open(POLA_im)
         expected = myia.getchunk()
         myia.done()
@@ -1317,6 +1321,7 @@ class immath_test3(unittest.TestCase):
             self.assertTrue(false)
         except:
             self.assertFalse(os.path.exists(outfile))
+
 
     def test_CAS2943(self):
         """Test the stretch parameter"""
