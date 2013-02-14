@@ -50,7 +50,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	namespace viewer { class Preferences; }
+	namespace viewer {
+		class Preferences;
+		class CleanGui;
+	}
 
 class String;
 class QtViewer;
@@ -489,8 +492,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_, *slicerAct_,
-      *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
+      *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -521,6 +524,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void connectRegionSignals(PanelDisplay* ppd);
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
+
   void updateFrameInformation();
   void initAnimationHolder();
   void initHistogramHolder();
@@ -535,6 +539,11 @@ class QtDisplayPanelGui : public QtPanelBase {
   HistogramMain* histogrammer;
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
+
+  // interactive clean...
+  void initCleanTool( );
+  viewer::CleanGui *clean_tool;
+  
 
   //Docking/Dock Widgets
   string addAnimationDockWidget();
@@ -559,6 +568,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void resetListenerImage();
   void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
   void showFitInteractive();
+  void showCleanTool( );
   void refreshFit();
   void addSkyComponentOverlay(String path);
   void removeSkyComponentOverlay( String path );
@@ -568,6 +578,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   void sliceChanged( int regionId, viewer::region::RegionChanges change,
   		const QList<double> & worldX, const QList<double> & worldY,
   		const QList<int> &pixelX, const QList<int> & pixelY );
+  void addSlice( int id, const QString& shape, const QString&, const QList<double>& worldX,
+  		const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
+  		const QString&, const QString&, const QString&, int, int);
 
  public:
  

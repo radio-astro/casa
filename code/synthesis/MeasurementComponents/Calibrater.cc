@@ -1593,7 +1593,8 @@ void Calibrater::fluxscale(const String& infile,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   Vector<Int>& tranidx,
 			   const String& oListFile,
-                           const Bool& incremental) {
+                           const Bool& incremental,
+                           const Int& fitorder) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -1613,7 +1614,7 @@ void Calibrater::fluxscale(const String& infile,
 
   // Call Vector<Int> version:
   fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
-    oListFile,incremental);
+    oListFile,incremental,fitorder);
 
 }
 
@@ -1625,7 +1626,8 @@ void Calibrater::fluxscale(const String& infile,
 			   const Bool& append,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   const String& oListFile,
-                           const Bool& incremental) {
+                           const Bool& incremental,
+                           const Int& fitorder) {
 
   //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
 
@@ -1694,7 +1696,7 @@ void Calibrater::fluxscale(const String& infile,
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
       //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
       fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
-        oListFile,incremental);
+        oListFile,incremental,fitorder);
 //        oListFile);
      
       // If no outfile specified, use infile (overwrite!)

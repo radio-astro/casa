@@ -47,7 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWVisResampler(): VisibilityResampler(),
 		      cached_phaseGrad_p(),
                       cached_PointingOffset_p()
-    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTime_p=0.0;};
+    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;};
     //    AWVisResampler(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~AWVisResampler()                                         {};
 

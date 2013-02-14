@@ -32,6 +32,7 @@
 #include <QFileInfo>
 #include <display/region/Region.qo.h>
 #include <display/region/QtRegionState.qo.h>
+#include <display/region/QtRegionStats.qo.h>
 #include <casadbus/types/nullptr.h>
 #include <QFileDialog>
 #include <display/DisplayErrors.h>
@@ -57,9 +58,11 @@ void QtRegionState::init( ) {
 	}
 }
 
-QtRegionState::QtRegionState( const QString &n, Region *r, QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
-							QFrame(parent), selected_statistics(-1), region_(r), setting_combo_box(0),
-							pre_dd_change_statistics_count(-1) {
+QtRegionState::QtRegionState( const QString &n, Region *r,
+		QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
+			QFrame(parent), LINE_COLOR_CHANGE("state: line color"),
+			selected_statistics(-1), region_(r), setting_combo_box(0),
+			pre_dd_change_statistics_count(-1) {
 	setupUi(this);
 #if defined(__APPLE__)
 	QFont font( "Lucida Grande", 11 );
@@ -261,7 +264,7 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	if ( first == 0 ) throw internal_error( );
 	std::list<RegionInfo>::iterator stat_iter = stats->begin();
 	if ( ! memory::nullptr.check(stat_iter->list( )) ) {
-		first->updateStatistics(*stat_iter);
+		statisticsUpdate( first, *stat_iter );
 	}
 
 	if ( num < 2 ) {
@@ -275,7 +278,7 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
 		if ( ! memory::nullptr.check(stat_iter->list( )) ) {
-			cur->updateStatistics(*stat_iter);
+			statisticsUpdate( cur, *stat_iter );
 		}
 		prev->setNext( statistics_group, cur );
 		prev = cur;
@@ -287,6 +290,15 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 		statistics_group->setCurrentIndex(statistics_count-1);
 
 	pre_dd_change_statistics_count = -1;
+}
+
+void QtRegionState::statisticsUpdate( QtRegionStats *regionStats, RegionInfo& regionInfo){
+	if ( region_->type() != region::PolylineRegion ){
+		regionStats->updateStatistics(regionInfo);
+	}
+	else {
+		regionStats->updateStatistics(regionInfo, region_ );
+	}
 }
 
 void QtRegionState::reloadStatistics( ) {
@@ -325,7 +337,7 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 	if ( first == 0 ) throw internal_error( );
 	std::list<RegionInfo>::iterator center_iter = centers->begin();
 	if ( ! memory::nullptr.check(center_iter->list( )) ) {
-		first->updateStatistics(*center_iter);
+		statisticsUpdate( first, *center_iter );
 	}
 	if ( num < 2 ) return;
 
@@ -334,7 +346,7 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
 		if ( ! memory::nullptr.check(center_iter->list( )) ) {
-			cur->updateStatistics(*center_iter);
+			statisticsUpdate(cur, *center_iter );
 		}
 		prev->setNext( centers_group, cur );
 		prev = cur;
@@ -566,7 +578,7 @@ void QtRegionState::stackChange( QWidget *top ) {
 	    region_->colorIndex( ) = index;
 
 	QObject *sender = QObject::sender( );
-	emit regionChange( region_, sender == line_color ? "state: line color" : sender == text_color ? "state: text color" : "state" );
+	emit regionChange( region_, sender == line_color ? LINE_COLOR_CHANGE : sender == text_color ? "state: text color" : "state" );
 }
 void QtRegionState::state_change( bool ) { emit refreshCanvas( ); }
 void QtRegionState::state_change( const QString & ) { emit refreshCanvas( ); }

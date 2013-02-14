@@ -72,6 +72,8 @@ public:
     void setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
     		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
     		const QColor& zoomRectColor );
+    void setLogScale( bool uvScale, bool logScale );
+    void refreshPlots();
     void layoutPlotWidgets();
 
     //Dish changes

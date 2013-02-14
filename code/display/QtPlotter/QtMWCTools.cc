@@ -70,6 +70,39 @@ void QtPolyTool::setCoordType(const String& t) {
     updateRegion( );
 }
 
+
+//////////////polyline tool//////////////////
+QtPolylineTool::QtPolylineTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPolylineToolRegion(rf,pd)
+{
+  setObjectName("PolylineTool");
+}
+
+void QtPolylineTool::updateRegion() {
+  if (!itsCurrentWC) return;
+
+  //qDebug() << "ployline ready" << coordType.chars();
+  Vector<Double> wx;
+  Vector<Double> wy;
+  Vector<Double> px;
+  Vector<Double> py;
+  getWorldCoords(wx, wy);
+  getLinearCoords(px, py);
+  //Int nt;
+  //x.shape(nt);
+  //cout << "nt=" << nt << endl;
+  //for (Int i = 0; i << nt; i++) {
+  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
+  //}
+
+  emit wcNotify( coordType, px, py, wx, wy, POLYLINEPROF);
+}
+
+void QtPolylineTool::setCoordType(const String& t) {
+    QtMWCTool::setCoordType(t);
+    updateRegion( );
+}
+
+
 //////////////Ellipse tool//////////////////
 QtEllipseTool::QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtELRegion(rf, pd) 
 {

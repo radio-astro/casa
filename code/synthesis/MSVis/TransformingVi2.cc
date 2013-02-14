@@ -606,11 +606,11 @@ TransformingVi2::visibilityCorrected (Cube<Complex> & vis)  const
      getVii()->visibilityCorrected (vis);
 }
 
-void
-TransformingVi2::visibilityCorrected (Matrix<CStokesVector> & vis)  const
-{
-     getVii()->visibilityCorrected (vis);
-}
+//void
+//TransformingVi2::visibilityCorrected (Matrix<CStokesVector> & vis)  const
+//{
+//     getVii()->visibilityCorrected (vis);
+//}
 
 void
 TransformingVi2::visibilityModel (Cube<Complex> & vis)  const
@@ -618,11 +618,11 @@ TransformingVi2::visibilityModel (Cube<Complex> & vis)  const
      getVii()->visibilityModel (vis);
 }
 
-void
-TransformingVi2::visibilityModel (Matrix<CStokesVector> & vis)  const
-{
-     getVii()->visibilityModel (vis);
-}
+//void
+//TransformingVi2::visibilityModel (Matrix<CStokesVector> & vis)  const
+//{
+//     getVii()->visibilityModel (vis);
+//}
 
 void
 TransformingVi2::visibilityObserved (Cube<Complex> & vis)  const
@@ -630,11 +630,11 @@ TransformingVi2::visibilityObserved (Cube<Complex> & vis)  const
      getVii()->visibilityObserved (vis);
 }
 
-void
-TransformingVi2::visibilityObserved (Matrix<CStokesVector> & vis)  const
-{
-     getVii()->visibilityObserved (vis);
-}
+//void
+//TransformingVi2::visibilityObserved (Matrix<CStokesVector> & vis)  const
+//{
+//     getVii()->visibilityObserved (vis);
+//}
 
 IPosition
 TransformingVi2::visibilityShape ()  const
@@ -715,11 +715,11 @@ TransformingVi2::writeSigmaMat (const Matrix<Float> & /*sigmat*/)
     Tvi2NotImplemented ();
 }
 
-void
-TransformingVi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
-{
-    Tvi2NotImplemented ();
-}
+//void
+//TransformingVi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
+//{
+//    Tvi2NotImplemented ();
+//}
 
 void
 TransformingVi2::writeVisCorrected (const Cube<Complex> & /*vis*/)
@@ -727,11 +727,11 @@ TransformingVi2::writeVisCorrected (const Cube<Complex> & /*vis*/)
     Tvi2NotImplemented ();
 }
 
-void
-TransformingVi2::writeVisModel (const Matrix<CStokesVector> & /*visibilityStokes*/)
-{
-    Tvi2NotImplemented ();
-}
+//void
+//TransformingVi2::writeVisModel (const Matrix<CStokesVector> & /*visibilityStokes*/)
+//{
+//    Tvi2NotImplemented ();
+//}
 
 void
 TransformingVi2::writeVisModel (const Cube<Complex> & /*vis*/)
@@ -739,11 +739,11 @@ TransformingVi2::writeVisModel (const Cube<Complex> & /*vis*/)
     Tvi2NotImplemented ();
 }
 
-void
-TransformingVi2::writeVisObserved (const Matrix<CStokesVector> & /*visibilityStokes*/)
-{
-    Tvi2NotImplemented ();
-}
+//void
+//TransformingVi2::writeVisObserved (const Matrix<CStokesVector> & /*visibilityStokes*/)
+//{
+//    Tvi2NotImplemented ();
+//}
 
 void
 TransformingVi2::writeVisObserved (const Cube<Complex> & /*vis*/)

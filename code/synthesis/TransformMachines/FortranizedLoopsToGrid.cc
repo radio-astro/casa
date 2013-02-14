@@ -60,10 +60,12 @@
   //
   if (isGridSinglePrecision)
     {
-      // Following type cast is so that when this code compiles when
-      // embedded in (via #include) in the templated method
+      // Following type cast is so that this code compiles when
+      // embedded (via #include) in the templated method
       // AWVisResampler::DataToGridImpl_p().  Without this type cast,
-      // a compile-time error occurs.
+      // a compile-time error occurs (because this code gets embedded
+      // in a templated function where the type of gridStore variable
+      // is templated).
       Complex *Complex_gridStore=(Complex *)gridStore;
       faccumulatetogrid_(Complex_gridStore, 
 			 convFuncV, 

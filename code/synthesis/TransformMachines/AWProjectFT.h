@@ -517,7 +517,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStore rotatedConvFunc_p;
     CountedPtr<CFStore2> cfs2_p, cfwts2_p;
     Vector<Int> ConjCFMap_p, CFMap_p;
-    Float runTime;
+
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };
 } //# NAMESPACE CASA - END

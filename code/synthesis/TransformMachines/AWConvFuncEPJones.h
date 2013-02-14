@@ -63,6 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const CountedPtr<PolOuterProduct>& pop,
 				  const Float pa,
 				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
+				  const Matrix<Double>& vbFreqSelection,
 				  CFStore2& cfs,
 				  CFStore2& cfwts);
     virtual Vector<Double> findPointingOffset(const ImageInterface<Complex>& image,

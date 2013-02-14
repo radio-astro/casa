@@ -29,6 +29,7 @@
 #include <casa/Arrays/Vector.h>
 #include <QThread>
 #include <QVector>
+#include <QTextStream>
 
 namespace casa {
 
@@ -39,12 +40,14 @@ class SliceWorker : public QThread {
 
 public:
 	SliceWorker( int id );
+	void updatePolyline();
 	void setImageAnalysis( ImageAnalysis* analysis );
-	void setVertices( const Vector<Double>& xValues, const Vector<Double>& yValues );
+	void setVertices( const QList<int>& xValues, const QList<int>& yValues );
 	void setAxes( const Vector<Int>& axes );
 	void setCoords( const Vector<Int>& coords );
 	void setSampleCount( int count );
 	void setMethod( const String& method );
+	void toAscii( QTextStream& stream ) const;
 	virtual void run();
 	QVector<double> getDistances() const;
 	QVector<double> getXPositions() const;
@@ -58,7 +61,6 @@ private:
 	SliceWorker( const SliceWorker& other );
 	SliceWorker& operator=( const SliceWorker other );
 	QVector<double> getFromArray( const Array<float>& source ) const;
-	int id;
 	ImageAnalysis* imageAnalysis;
 	Record* sliceResult;
 	Vector<Double> verticesX;
@@ -66,6 +68,7 @@ private:
 	Vector<Int> axes;
 	Vector<Int> coords;
 	int sampleCount;
+	int id;
 	String method;
 };
 

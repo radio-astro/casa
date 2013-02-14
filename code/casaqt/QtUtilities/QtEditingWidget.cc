@@ -101,6 +101,7 @@ QtFileWidget::QtFileWidget(bool directory, bool save, QWidget* parent) :
         QtEditingWidget(parent), isDirectory_(directory), isSave_(save) {
     setupUi(this);
     connect(file, SIGNAL(textChanged(const QString&)), SLOT(fileChanged()));
+    connect(file, SIGNAL(editingFinished()), SLOT(trimFileName()));
     connect(FileWidget::browse, SIGNAL(clicked()), SLOT(browse()));
 }
 
@@ -109,11 +110,11 @@ QtFileWidget::~QtFileWidget() { }
 String QtFileWidget::getFile() const { return file->text().toStdString(); }
 void QtFileWidget::setFile(const String& f) {
     blockSignals(true);
-    bool changed = f != itsFile_;
-    
-    itsFile_ = f;
-    file->setText(f.c_str());
-    
+    String f2 = f;
+    f2.trim();
+    bool changed = f2 != itsFile_;
+    itsFile_ = f2;
+    file->setText(f2.c_str());
     blockSignals(false);
     if(changed) emit this->changed();
 }
@@ -129,6 +130,19 @@ void QtFileWidget::browse() {
 void QtFileWidget::fileChanged() {
     emit changed();
     if(getFile() != itsFile_) emit differentFromSet();
+}
+
+void QtFileWidget::trimFileName() {
+    blockSignals(true);
+    String f = file->text().toStdString();
+    f.trim();
+    bool changed = (f != itsFile_);
+    if(changed) {
+        itsFile_ = f;
+    }
+    file->setText(itsFile_.c_str());
+    blockSignals(false);
+    emit this->changed();
 }
 
 }

@@ -32,19 +32,21 @@ namespace casa {
 			// state returned from mouse functions for regions...
 			enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseHandle = 1 << 2 };
 
-			enum RegionTypes { RectRegion, PointRegion, EllipseRegion, PolyRegion, NonRegion };
-			enum RegionSelect { SelectAny, SelectRect, SelectPoint, SelectEllipse, SelectPoly };
+			enum RegionTypes { RectRegion, PointRegion, EllipseRegion, PolyRegion, PolylineRegion, NonRegion };
+			enum RegionSelect { SelectAny, SelectRect, SelectPoint, SelectEllipse, SelectPoly, SelectPolyline };
 			inline RegionTypes select_to_region( RegionSelect select )
 						{ return select == SelectRect ? RectRegion :
 									select == SelectPoint ? PointRegion :
 									select == SelectEllipse ? EllipseRegion :
-									select == SelectPoly ? PolyRegion : NonRegion; }
+									select == SelectPoly ? PolyRegion :
+									select == SelectPolyline ? PolylineRegion : NonRegion; }
 
 
 			enum PointLocation { PointInside = 1 << 0, PointHandle = 1 << 1, PointOutside = 1 << 2 };
 
-			enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeReset, RegionChangeFocus, RegionChangeModified,
-								 RegionChangeLabel, RegionChangeDelete, RegionChangeStatsUpdate, RegionChangeNewChannel, RegionChangeSelected };
+			enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeReset,
+				RegionChangeFocus, RegionChangeModified, RegionChangeLabel, RegionChangeDelete,
+				RegionChangeStatsUpdate, RegionChangeNewChannel, RegionChangeSelected };
 
 			class PointInfo {
 				public:

@@ -107,11 +107,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //========================= Administrative Parts ==========================
     //------------------------------------------------------------------
     //
-    CFBuffer(): wValues_p(), maxXSupport_p(-1), maxYSupport_p(-1), pointingOffset_p(), cfHitsStats() 
+    CFBuffer(): wValues_p(), maxXSupport_p(-1), maxYSupport_p(-1), pointingOffset_p(), cfHitsStats(),
+		freqNdxMapsReady_p(False), freqNdxMap_p(), conjFreqNdxMap_p()
     {};
 
     CFBuffer(Int maxXSup, Int maxYSup):
-      wValues_p(), maxXSupport_p(maxXSup), maxYSupport_p(maxYSup), pointingOffset_p(), cfHitsStats()
+      wValues_p(), maxXSupport_p(maxXSup), maxYSupport_p(maxYSup), pointingOffset_p(), cfHitsStats(),
+      freqNdxMapsReady_p(False), freqNdxMap_p(), conjFreqNdxMap_p()
     {
       // storage_p.resize(1,1,1); 
       // storage_p(0,0,0) = new Array<TT>(dataPtr);
@@ -314,6 +316,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Cube<CountedPtr<CFCell> >& getStorage() {return cfCells_p;};
     void makePersistent(const char *dir);
+
+    void initMaps(const VisBuffer& vb,const Matrix<Double>& freqSelection,const Double& imRefFreq);
+
+    inline Int nearestFreqNdx(const Int& spw, const Int& chan, const Bool conj=False)
+    {
+      if (conj) return conjFreqNdxMap_p[spw][chan];
+      else  return freqNdxMap_p[spw][chan];
+    }
     //
     //============================= Protected Parts ============================
     //------------------------------------------------------------------
@@ -334,7 +344,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nPol_p, nChan_p, nW_p, maxXSupport_p, maxYSupport_p;
     Vector<Double> pointingOffset_p;
     Cube<Int> cfHitsStats;
-
+    Bool freqNdxMapsReady_p;
+    Vector<Vector<Int> > freqNdxMap_p, conjFreqNdxMap_p;
   };
 } //# NAMESPACE CASA - END
 #endif

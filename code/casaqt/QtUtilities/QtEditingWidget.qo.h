@@ -135,6 +135,7 @@ private slots:
 
     // Slot for when the set file changes.
     void fileChanged();
+    void trimFileName();
 };
 
 }

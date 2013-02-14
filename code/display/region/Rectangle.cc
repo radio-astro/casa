@@ -304,10 +304,10 @@ namespace casa {
 			try { linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y ); } catch(...) { return; }
 
 			pixel_pts.resize(2);
-			pixel_pts[0].first = pblc_x;
-			pixel_pts[0].second = pblc_y;
-			pixel_pts[1].first = ptrc_x;
-			pixel_pts[1].second = ptrc_y;
+			pixel_pts[0].first = static_cast<int>(pblc_x);
+			pixel_pts[0].second = static_cast<int>(pblc_y);
+			pixel_pts[1].first = static_cast<int>(ptrc_x);
+			pixel_pts[1].second = static_cast<int>(ptrc_y);
 
 			world_pts.resize(2);
 			world_pts[0].first = wblc_x;

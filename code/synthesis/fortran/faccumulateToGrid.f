@@ -153,6 +153,17 @@ c$$$            endif
             grid(l_igrdpos(1), l_igrdpos(2), l_igrdpos(3), l_igrdpos(4)) 
      $           =grid(l_igrdpos(1), l_igrdpos(2), 
      $           l_igrdpos(3), l_igrdpos(4)) + nvalue * wt
+
+c$$$            write (*,*) abs(nvalue), 
+c$$$     $           abs(wt),
+c$$$     $           abs(grid(l_igrdpos(1), l_igrdpos(2), 
+c$$$     $           l_igrdpos(3), l_igrdpos(4))),
+c$$$     $           abs(wt * grid(l_igrdpos(1), l_igrdpos(2), 
+c$$$     $           l_igrdpos(3), l_igrdpos(4))),
+c$$$     $           phaseGrad(iloc(1) + l_phaseGradOriginX, 
+c$$$     $           iloc(2) + l_phaseGradOriginY),ix,iy,norm
+
+
          enddo
       enddo
       end

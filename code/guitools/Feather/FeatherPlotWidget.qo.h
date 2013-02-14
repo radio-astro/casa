@@ -65,6 +65,8 @@ public:
     void setLineThickness( int thickness );
     void setLegendVisibility( bool v );
     void setDotSize( int size );
+    void setLogScale( bool uvScale, bool logScale );
+    void refresh();
 
     //Actions
     void setPermanentScatter( bool permanentScatter );
@@ -86,7 +88,7 @@ public:
 	bool moveDiameterMarker( const QPoint& pos );
 	double getDishDiameter() const;
 	bool isDiameterSelectorMode() const;
-	void setDishDiameter( double value = -1);
+	void setDishDiameter( double value = -1, bool scale=true);
 	void resetDishDiameterLineColor();
 
 	//Left mouse mode

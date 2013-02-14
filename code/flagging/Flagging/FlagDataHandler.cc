@@ -1051,14 +1051,14 @@ FlagDataHandler::preFetchColumns()
 			}
 			case vi::VisibilityCorrected:
 			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::VisibilityCorrected);
-				}
-				else
-				{
-					visibilityBuffer_p->visCorrected ();
-				}
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::VisibilityCorrected);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->visCorrected ();
+//				}
 				break;
 			}
 			case vi::VisibilityCubeCorrected:
@@ -1245,14 +1245,14 @@ FlagDataHandler::preFetchColumns()
 			}
 			case vi::VisibilityModel:
 			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::VisibilityModel);
-				}
-				else
-				{
-					visibilityBuffer_p->visModel();
-				}
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::VisibilityModel);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->visModel();
+//				}
 				break;
 			}
 			case vi::VisibilityCubeModel:
@@ -1317,14 +1317,14 @@ FlagDataHandler::preFetchColumns()
 			}
 			case vi::VisibilityObserved:
 			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::VisibilityObserved);
-				}
-				else
-				{
-					visibilityBuffer_p->vis();
-				}
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::VisibilityObserved);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->vis();
+//				}
 				break;
 			}
 			case vi::VisibilityCubeObserved:

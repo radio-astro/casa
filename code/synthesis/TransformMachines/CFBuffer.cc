@@ -47,6 +47,12 @@ namespace casa{
     freqValIncr_p = other.freqValIncr_p;
     muellerMask_p.assign(other.muellerMask_p);
     pointingOffset_p.assign(other.pointingOffset_p);
+    freqNdxMapsReady_p = other.freqNdxMapsReady_p;
+
+    freqNdxMap_p.assign(other.freqNdxMap_p);
+    for(Int i=0;i<freqNdxMap_p.nelements();i++) freqNdxMap_p[i].assign(other.freqNdxMap_p[i]);
+    conjFreqNdxMap_p.assign(other.conjFreqNdxMap_p);
+    for(Int i=0;i<conjFreqNdxMap_p.nelements();i++) conjFreqNdxMap_p[i].assign(other.conjFreqNdxMap_p[i]);
   }
   //---------------------------------------------------------------
   //
@@ -217,24 +223,24 @@ namespace casa{
   //  template<class T>  Array<T>& CFBuffer<T>::
   CountedPtr<CFCell>& CFBuffer::getCFCellPtr(const Int& i/*FreqNdx*/, const Int& j/*WNdx*/, const Int& k/*MuellerNdx*/)
   {
-    IPosition shp=cfCells_p.shape();
-    if (cfHitsStats.shape().product()==0)
-      {
-	cfHitsStats.resize(shp);
-	cfHitsStats = 0;
-      }
-    try
-      {
-	AlwaysAssert(((i<shp[0]) && (j<shp[1]) && (k<shp[2])) , AipsError);
-      }
-    catch (AipsError x)
-      {
-	cerr << "#### " << i << " " << j << " " << k << " " << shp << endl;
-	throw(x);
-      }
+    // IPosition shp=cfCells_p.shape();
+    // if (cfHitsStats.shape().product()==0)
+    //   {
+    // 	cfHitsStats.resize(shp);
+    // 	cfHitsStats = 0;
+    //   }
+    // try
+    //   {
+    // 	AlwaysAssert(((i<shp[0]) && (j<shp[1]) && (k<shp[2])) , AipsError);
+    //   }
+    // catch (AipsError x)
+    //   {
+    // 	cerr << "#### " << i << " " << j << " " << k << " " << shp << endl;
+    // 	throw(x);
+    //   }
 
-    cfHitsStats(i,j,k)++;
-    //    cerr << "CFBuffer: Cell: " << i << " " << j << " " << k << " " << cfCells_p(i,j,k)->xSupport_p << endl;
+    // cfHitsStats(i,j,k)++;
+    // //    cerr << "CFBuffer: Cell: " << i << " " << j << " " << k << " " << cfCells_p(i,j,k)->xSupport_p << endl;
     return cfCells_p(i,j,k); // Nfreq x Nw x Nmueller
   }
   //
@@ -395,6 +401,40 @@ namespace casa{
     // Int ndx=min(freqValues_p.nelements()-1,max(0,SynthesisUtils::nint((freqVal-freqValues_p[0])/freqValIncr_p)));
     // return ndx;
   }
+
+
+  void CFBuffer::initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq)
+  {
+    Vector<Double> spwList=freqSelection.column(0);
+    Int maxSpw=(Int)(max(spwList));
+    freqNdxMap_p.resize(maxSpw+1);
+    conjFreqNdxMap_p.resize(maxSpw+1);
+
+    for (Int i=0;i<spwList.nelements(); i++)
+      {
+	Int spw=(Int)freqSelection(i,0);
+	Double fmin=freqSelection(i,1), fmax=freqSelection(i,2), finc=freqSelection(i,3);
+	Int nchan = (Int)((fmax-fmin)/finc + 1);
+	freqNdxMap_p[spw].resize(nchan);
+	conjFreqNdxMap_p[spw].resize(nchan);
+	for (Int c=0;c<nchan;c++)
+	  {
+	    Double freq=fmin+c*finc;
+	    Double conjFreq=sqrt(2*imRefFreq*imRefFreq - freq*freq);
+	    freqNdxMap_p[spw][c]=nearestFreqNdx(freq);
+	    conjFreqNdxMap_p[spw][c]=nearestFreqNdx(conjFreq);
+	  }
+      }
+
+    
+    // cerr << "CFBuffer::initMaps: " 
+    // 	 << freqSelection << endl
+    // 	 << freqValues_p << endl
+    // 	 << freqNdxMap_p << endl
+    // 	 << conjFreqNdxMap_p << endl;
+
+  }
+
 } // end casa namespace
 
 

@@ -72,35 +72,35 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/GaussianConvert.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
-#include <images/Images/ComponentImager.h>
-#include <images/Images/Image2DConvolver.h>
+#include <imageanalysis/ImageAnalysis/ComponentImager.h>
+#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
-#include <images/Images/ImageDecomposer.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageHistograms.h>
-#include <images/Images/ImageMoments.h>
+#include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageRegrid.h>
-#include <images/Images/ImageSourceFinder.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageSummary.h>
-#include <images/Images/ImageTwoPtCorr.h>
+#include <imageanalysis/ImageAnalysis/ImageTwoPtCorr.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/LELImageCoord.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/RebinImage.h>
 #include <images/Regions/RegionManager.h>
-#include <images/Images/SepImageConvolver.h>
+#include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <images/Regions/WCLELMask.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageDecomposer.h>
+#include <imageanalysis/ImageAnalysis/ImageSourceFinder.h>
 #include <lattices/LatticeMath/Fit2D.h>
 #include <lattices/LatticeMath/LatticeFit.h>
 #include <lattices/Lattices/LatticeAddNoise.h>
@@ -6194,19 +6194,13 @@ Bool ImageAnalysis::getFreqProfile(
 	    bUName.downcase();
 	    if(bUName.contains("/beam")){
 		
-		ImageMetaData md(*_image);
-		if(!md.hasDirectionCoordinate()){
+		const CoordinateSystem csys = _image->coordinates();
+		if(!csys.hasDirectionCoordinate()){
 		    *_log << LogIO::WARN << "No DirectionCoordinate - cannot convert flux density"
 			    << LogIO::POST;
 		    return False;
 		}
-		
-		Quantity pixArea; 
-		if(!md.getDirectionPixelArea(pixArea)){
-		    *_log << LogIO::WARN << "Cannot determine solid angle of direction pixel"
-			    << LogIO::POST;
-		    return False;
-		}
+		Quantity pixArea = csys.directionCoordinate().getPixelArea();
         // FIXME we need to deal with multi beam images
 		Double beamArea;
         if (_image->imageInfo().hasBeam()) {

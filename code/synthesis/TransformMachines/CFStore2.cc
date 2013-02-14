@@ -154,6 +154,15 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
+  void CFStore2::initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq)
+  {
+    for (Int i=0;i<storage_p.shape()(0);i++)
+      for (Int j=0;j<storage_p.shape()(1);j++)
+	storage_p(i,j)->initMaps(vb, freqSelection, imRefFreq);
+  }
+  //
+  //---------------------------------------------------------------
+  //
   Double CFStore2::memUsage()
   {
     IPosition cfsShape = getStorage().shape();

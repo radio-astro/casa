@@ -488,6 +488,10 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                     rect.moveCenter(QPoint(xMap.transform(tempx),
                                            yMap.transform(tempy)));
                     if(!brect.intersects(rect)) continue;
+                    if(drawMaskedSymbol) {
+                        if(!samePen) p->setPen(pen);
+                        if(!sameBrush) p->setBrush(brush);
+                    }
                     if(diffColor) {
                         p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
                         p->setPen(
@@ -498,6 +502,10 @@ void QPScatterPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
                     mRect.moveCenter(QPoint(xMap.transform(tempx),
                                             yMap.transform(tempy)));
                     if(!brect.intersects(rect)) continue;
+                    if(drawMaskedSymbol) {
+                        if(!samePen) p->setPen(mpen);
+                        if(!sameBrush) p->setBrush(mbrush);
+                    }
                     if(diffColor) {
                         p->setBrush(m_coloredBrushes[m_coloredData->binAt(i)]);
                         p->setPen(

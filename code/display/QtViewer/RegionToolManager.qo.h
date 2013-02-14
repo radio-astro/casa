@@ -53,7 +53,7 @@ namespace casa {
 			Q_OBJECT
 	    	public:
 
-				enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool };
+				enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool, PolylineTool };
 
 
 				RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanelGui *dpg, PanelDisplay *pd );
@@ -79,7 +79,8 @@ namespace casa {
 						{ return type == RegionTool::POLYTOOL ? region::SelectPoly :
 									type == RegionTool::RECTTOOL ? region::SelectRect :
 									type == RegionTool::POINTTOOL ? region::SelectPoint :
-									type == RegionTool::ELLIPSETOOL ? region::SelectEllipse : region::SelectAny; }
+									type == RegionTool::ELLIPSETOOL ? region::SelectEllipse :
+									type == RegionTool::POLYLINETOOL ? region::SelectPolyline : region::SelectAny; }
 
 				typedef std::pair<double,double> linear_point_type;
 				PanelDisplay *pd;

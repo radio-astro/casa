@@ -779,7 +779,7 @@ vector<uInt> CasacRegionManager::setSpectralRanges(
 	if (! getcoordsys().hasSpectralAxis()) {
 		if (! specification.empty()) {
 			*_getLog() << LogIO::WARN << "Channel specification is "
-				<< "not empty but the coordinate system has not spectral axis."
+				<< "not empty but the coordinate system has no spectral axis."
 				<< "Channel specification will be ignored" << LogIO::POST;
 		}
 		nSelectedChannels = 0;

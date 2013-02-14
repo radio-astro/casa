@@ -38,6 +38,7 @@
 #include <casa/Containers/Block.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/RefRows.h>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa { // namespace casa begins
 
@@ -219,7 +220,7 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
       }
       
       // create MSMoments object 
-      MSMoments<Float> *momentMaker = new MSMoments<Float>( tmpMS, *itsLog, True, False ) ; 
+      CountedPtr< MSMoments<Float> > momentMaker = new MSMoments<Float>( tmpMS, *itsLog, True, False ) ; 
 
       // Set which moments to output
       if (!momentMaker->setMoments(whichmoments + 1)) {
@@ -285,8 +286,6 @@ MeasurementSet* MSAnalysis::moments( const Vector<Int> &whichmoments,
       if (!momentMaker->createMoments(tmpMoments, doTemp, "")) {
         *itsLog << momentMaker->errorMessage() << LogIO::EXCEPTION;
       }
-      delete momentMaker ;
-      momentMaker = 0 ;
       uInt oldSize = msMoments.size() ;
       msMoments.resize( oldSize+tmpMoments.size() ) ;
       for ( uInt j = 0 ; j < tmpMoments.size() ; j++ ) {

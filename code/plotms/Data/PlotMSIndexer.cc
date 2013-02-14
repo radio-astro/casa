@@ -731,6 +731,10 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
     getmethod = &PlotMSCacheBase::getWt;
     break;
 
+  case PMS::WTxAMP:
+    getmethod = &PlotMSCacheBase::getWtxAmp;
+    break;
+
   case PMS::AZ0:
     getmethod = &PlotMSCacheBase::getAz0;
     break;
@@ -810,6 +814,7 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
   case PMS::DELAY:
   case PMS::SWP:
   case PMS::OPAC:
+  case PMS::WTxAMP:
     indexmethod = &PlotMSIndexer::getIndex1110;
     break;
 
@@ -1363,10 +1368,11 @@ void PlotMSIndexer::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
   Cube<Bool> flagcube(plotmscache_->flag(currChunk_));
   flagcube(corr,chan,bsln)=flag;
 
-  // unset flagrow when unflagging
+  // unset flagrow when unflagging (if present in cache)
   if (!flag) {
     Vector<Bool> flagrow(plotmscache_->flagrow(currChunk_));
-    flagrow(bsln)=False;
+    if (flagrow.nelements()>0)
+      flagrow(bsln)=False;
   }
 }
 

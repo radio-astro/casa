@@ -98,7 +98,7 @@ protected:
 
     Bool isKey () const { return isKey_p;}
 
-    virtual void setAsPresent () = 0;
+    virtual void setAsPresent () const = 0;
     void setIsKey (Bool isKey)
     {
         isKey_p = isKey;
@@ -144,7 +144,7 @@ public:
         isDirty_p = False;
     }
 
-    void copyRowElement (Int /*sourceRow*/, Int /*destinationRow*/) {} // noop
+    virtual void copyRowElement (Int /*sourceRow*/, Int /*destinationRow*/) {} // noop
 
 
     virtual void
@@ -169,7 +169,7 @@ public:
     {
         if (! isPresent_p){
             fill ();
-            isPresent_p = True;
+            setAsPresent ();
             isDirty_p = False;
         }
 
@@ -181,7 +181,7 @@ public:
     {
         if (! isPresent_p){
             fill ();
-            isPresent_p = True;
+            setAsPresent();
         }
 
         // Caller is getting a modifiabled reference to the
@@ -249,7 +249,7 @@ public:
 
         ThrowIf (! isShapeOk (), shapeErrorMessage() );
 
-        isPresent_p = True;
+        setAsPresent();
         isDirty_p = True;
     }
 
@@ -267,7 +267,7 @@ public:
 
         ThrowIf (! isShapeOk (), shapeErrorMessage() );
 
-        isPresent_p = True;
+        setAsPresent();
         isDirty_p = True;
     }
 
@@ -278,7 +278,7 @@ public:
         // For internal use for items which aren't really demand-fetched
 
         item_p = newItem;
-        isPresent_p = True;
+        setAsPresent();
         isDirty_p = False;
     }
 
@@ -347,17 +347,18 @@ protected:
     virtual void
     copy (const VbCacheItemBase * otherRaw, Bool fetchIfNeeded)
     {
-        const VbCacheItem<T> * other = dynamic_cast <const VbCacheItem<T> *> (otherRaw);
+        const VbCacheItem<T, IsComputed> * other =
+            dynamic_cast <const VbCacheItem<T, IsComputed> *> (otherRaw);
         copyAux (other, fetchIfNeeded);
     }
 
     void
-    copyAux (const VbCacheItem<T> * other, bool fetchIfNeeded)
+    copyAux (const VbCacheItem<T, IsComputed> * other, bool fetchIfNeeded)
     {
         if (other->isPresent()){
 
             item_p = other->item_p;
-            isPresent_p = True;
+            setAsPresent ();
             isDirty_p = False;
         }
         else if (fetchIfNeeded){
@@ -377,7 +378,7 @@ protected:
     }
 
     void
-    setAsPresent ()
+    setAsPresent () const
     {
         isPresent_p = True;
     }
@@ -398,6 +399,13 @@ public:
 
     virtual ~VbCacheItemArray () {}
 
+
+
+    virtual void copyRowElement (Int sourceRow, Int destinationRow)
+    {
+        copyRowElementAux (this->getItem(), sourceRow, destinationRow);
+    }
+
     void
     initialize (VisBufferCache * cache,
                 VisBufferImpl2 * vb,
@@ -406,7 +414,7 @@ public:
                 ShapePattern shapePattern = NoCheck,
                 Bool isKey = True)
     {
-        VbCacheItem<T>::initialize (cache, vb, filler, component, isKey);
+        VbCacheItem<T, IsComputed>::initialize (cache, vb, filler, component, isKey);
         shapePattern_p = shapePattern;
     }
 
@@ -438,6 +446,10 @@ public:
 
             this->getItem().resize (desiredShape, copyValues);
 
+            if (! copyValues){
+                this->getItem() = typename T::value_type();
+            }
+
         }
     }
 
@@ -467,16 +479,15 @@ public:
         ThrowIf (this->isKey() && ! this->getVb()->isRekeyable (),
                  "This VisBuffer is does not allow row key values to be changed.");
 
-        // Now chekc for a conformant shape.
+        // Now check for a conformant shape.
 
         IPosition itemShape = newItem.shape();
         Bool parameterShapeOk = shapePattern_p == NoCheck ||
                                 itemShape == this->getVb()->getValidShape (shapePattern_p);
         ThrowIf (! parameterShapeOk,
-                 shapeErrorMessage (& itemShape));
+                 "Invalid parameter shape:: " + shapeErrorMessage (& itemShape));
 
         VbCacheItem<T,IsComputed>::set (newItem);
-
     }
 
     template <typename U>
@@ -493,11 +504,11 @@ public:
         ThrowIf (shapePattern_p == NoCheck,
                  "No shape error message for NoCheck type array");
 
-        ThrowIf (isShapeOk (),
+        ThrowIf (isShapeOk () && badShape == 0,
                  "Shape is OK so no error message.");
 
         String badShapeString = (badShape != 0) ? badShape->toString()
-                                             : this->getItem().shape().toString();
+                                                : this->getItem().shape().toString();
 
         ostringstream os;
 
@@ -517,15 +528,43 @@ protected:
     assign (T & dst, const T & src)
     {
         dst.assign (src);
-
     }
+
+    static void
+    copyRowElementAux (Cube<typename T::value_type> & cube, Int sourceRow, Int destinationRow)
+    {
+        IPosition shape = cube.shape();
+        Int nI = shape(1);
+        Int nJ = shape(0);
+
+        for (Int i = 0; i < nI; i++){
+            for (Int j = 0; j < nJ; j++){
+                cube (j, i, destinationRow) = cube (j, i, sourceRow);
+            }
+        }
+    }
+
+    static void
+    copyRowElementAux (Matrix<typename T::value_type> & matrix, Int sourceRow, Int destinationRow)
+    {
+        IPosition shape = matrix.shape();
+        Int nJ = shape(0);
+
+        for (Int j = 0; j < nJ; j++){
+            matrix (j, destinationRow) = matrix (j, sourceRow);
+        }
+    }
+
+    static void
+    copyRowElementAux (Vector<typename T::value_type> & vector, Int sourceRow, Int destinationRow)
+    {
+        vector (destinationRow) = vector (sourceRow);
+    }
+
 private:
 
     ShapePattern shapePattern_p;
 };
-
-
-
 
 class VisBufferCache {
 
@@ -542,9 +581,9 @@ public:
     VbCacheItemArray <Vector<Int> > antenna1_p;
     VbCacheItemArray <Vector<Int> > antenna2_p;
     VbCacheItem <Int> arrayId_p;
-    VbCacheItemArray <Vector<SquareMatrix<Complex, 2> > > cjones_p;
+    VbCacheItemArray <Vector<SquareMatrix<Complex, 2> >, True> cjones_p;
     VbCacheItemArray <Cube<Complex> > correctedVisCube_p;
-    VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
+//    VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
     VbCacheItemArray <Vector<Int> > corrType_p;
     VbCacheItem <Int> dataDescriptionId_p;
     VbCacheItemArray <Vector<Int> > dataDescriptionIds_p;
@@ -557,13 +596,13 @@ public:
     VbCacheItemArray <Vector<Float> > feed2Pa_p;
     VbCacheItem <Int> fieldId_p;
     VbCacheItemArray <Matrix<Bool> > flag_p;
-    VbCacheItemArray <Array<Bool> > flagCategory_p;
+    //VbCacheItemArray <Array<Bool> > flagCategory_p;
     VbCacheItemArray <Cube<Bool> > flagCube_p;
     VbCacheItemArray <Vector<Bool> > flagRow_p;
     VbCacheItemArray <Cube<Float> > floatDataCube_p;
     VbCacheItemArray <Matrix<Float> > imagingWeight_p;
     VbCacheItemArray <Cube<Complex> > modelVisCube_p;
-    VbCacheItemArray <Matrix<CStokesVector> > modelVisibility_p;
+//    VbCacheItemArray <Matrix<CStokesVector> > modelVisibility_p;
     VbCacheItem <Int> nAntennas_p;
     VbCacheItem <Int> nChannels_p;
     VbCacheItem <Int> nCorrelations_p;
@@ -585,7 +624,7 @@ public:
     VbCacheItemArray <Vector<Double> > timeInterval_p;
     VbCacheItemArray <Matrix<Double> > uvw_p;
     VbCacheItemArray <Cube<Complex> > visCube_p;
-    VbCacheItemArray <Matrix<CStokesVector> > visibility_p;
+//    VbCacheItemArray <Matrix<CStokesVector> > visibility_p;
     VbCacheItemArray <Vector<Float> > weight_p;
     VbCacheItemArray <Matrix<Float> > weightMat_p;
     VbCacheItemArray <Cube<Float> > weightSpectrum_p;
@@ -732,8 +771,8 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC, JonesC);
     correctedVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeCorrected,
                                    VisibilityCubeCorrected, NcNfNr, False);
-    correctedVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityCorrected,
-                                      VisibilityCorrected, NcNfNr, False);
+//    correctedVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityCorrected,
+//                                      VisibilityCorrected, NcNfNr, False);
     corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType, CorrType);
     dataDescriptionId_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionId, DataDescriptionId);
     dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds, DataDescriptionIds);
@@ -746,14 +785,14 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2);
     fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId);
     flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
-    flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
+    //flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
         // required column but not used in casa, make it a nocheck for shape validation
     flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr, False);
     flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow, FlagRow, Nr, False);
     floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData, FloatData, NcNfNr, False);
     imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight);
     modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel, NcNfNr, False);
-    modelVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel, NoCheck, False);
+//    modelVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel, NoCheck, False);
     nAntennas_p.initialize (this, vb, &VisBufferImpl2::fillNAntennas, NAntennas);
     nChannels_p.initialize (this, vb, &VisBufferImpl2::fillNChannel, NChannels);
     nCorrelations_p.initialize (this, vb, &VisBufferImpl2::fillNCorr, NCorrelations);
@@ -775,7 +814,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     timeInterval_p.initialize (this, vb, &VisBufferImpl2::fillTimeInterval, TimeInterval, Nr);
     uvw_p.initialize (this, vb, &VisBufferImpl2::fillUvw, Uvw, I3Nr);
     visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved, VisibilityCubeObserved, NcNfNr, False);
-    visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
+//    visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
     weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, Nr, False);
     weightMat_p.initialize (this, vb, &VisBufferImpl2::fillWeightMat, WeightMat, NoCheck, False);
     weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum, WeightSpectrum, NcNfNr, False);
@@ -903,9 +942,10 @@ VisBufferImpl2::cacheResizeAndZero (const VisBufferComponents2 & exclusions)
 
         //
 
-        (*i)->resize (False);
 
-        (*i)->setAsPresent ();
+       (*i)->resize (False);
+
+       (*i)->setAsPresent();
     }
 }
 
@@ -1075,9 +1115,10 @@ VisBufferImpl2::deleteRows (const Vector<Int> & rowsToDelete)
     }
 
     Int newNRows = nRows() - rowsToDelete.nelements();
-    resizeRows (newNRows);
 
     setShape (nCorrelations (), nChannels (), newNRows, False);
+
+    resizeRows (newNRows);
 }
 
 void
@@ -1565,12 +1606,13 @@ VisBufferImpl2::setRekeyable (Bool isRekeyable)
 }
 
 void
-VisBufferImpl2::setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearTheCache)
+VisBufferImpl2::setShape (Int nCorrelations, Int nChannels, Int nRows,
+                          Bool clearTheCache)
 {
     ThrowIf (! isRekeyable(), "Operation setShape is illegal on nonrekeyable VisBuffer");
 
     if (clearTheCache){
-        cacheClear (True); // leave values alone so that array could be reused
+        cacheClear (False); // leave values alone so that array could be reused
     }
 
     cache_p->nCorrelations_p.setSpecial(nCorrelations);
@@ -1857,6 +1899,13 @@ VisBufferImpl2::setDataDescriptionId (Int value)
     cache_p->dataDescriptionId_p.set (value);
 }
 
+void
+VisBufferImpl2::setDataDescriptionIds (const Vector<Int> & value)
+{
+    cache_p->dataDescriptionIds_p.set (value);
+}
+
+
 const Vector<MDirection> &
 VisBufferImpl2::direction1 () const
 {
@@ -1944,13 +1993,14 @@ VisBufferImpl2::setFlag (const Matrix<Bool>& value)
 const Array<Bool> &
 VisBufferImpl2::flagCategory () const
 {
-    return cache_p->flagCategory_p.get ();
+    Throw ("Flag Categories not supported.");
 }
 
 void
-VisBufferImpl2::setFlagCategory (const Array<Bool>& value)
+VisBufferImpl2::setFlagCategory (const Array<Bool>& /*value*/)
 {
-    cache_p->flagCategory_p.set (value);
+    ThrowIf (True, "Flag Categories not supported.");
+    //cache_p->flagCategory_p.set (value);
 }
 
 const Cube<Bool> &
@@ -2115,6 +2165,13 @@ VisBufferImpl2::spectralWindows () const
 	return cache_p->spectralWindows_p.get ();
 }
 
+void
+VisBufferImpl2::setSpectralWindows (const Vector<Int> & spectralWindows)
+{
+    cache_p->spectralWindows_p.set (spectralWindows);
+}
+
+
 const Vector<Int> &
 VisBufferImpl2::stateId () const
 {
@@ -2193,17 +2250,17 @@ VisBufferImpl2::setVisCubeCorrected (const Cube<Complex> & value)
     cache_p->correctedVisCube_p.set (value);
 }
 
-const Matrix<CStokesVector> &
-VisBufferImpl2::visCorrected () const
-{
-    return cache_p->correctedVisibility_p.get ();
-}
+//const Matrix<CStokesVector> &
+//VisBufferImpl2::visCorrected () const
+//{
+//    return cache_p->correctedVisibility_p.get ();
+//}
 
-void
-VisBufferImpl2::setVisCorrected (const Matrix<CStokesVector> & value)
-{
-    cache_p->correctedVisibility_p.set (value);
-}
+//void
+//VisBufferImpl2::setVisCorrected (const Matrix<CStokesVector> & value)
+//{
+//    cache_p->correctedVisibility_p.set (value);
+//}
 
 const Cube<Float> &
 VisBufferImpl2::visCubeFloat () const
@@ -2241,74 +2298,74 @@ VisBufferImpl2::setVisCubeModel (const Cube<Complex> & value)
     cache_p->modelVisCube_p.set (value);
 }
 
-const Matrix<CStokesVector> &
-VisBufferImpl2::visModel () const
-{
-    return cache_p->modelVisibility_p.get ();
-}
+//const Matrix<CStokesVector> &
+//VisBufferImpl2::visModel () const
+//{
+//    return cache_p->modelVisibility_p.get ();
+//}
 
-void
-VisBufferImpl2::setVisModel (Matrix<CStokesVector> & value)
-{
-    cache_p->modelVisibility_p.set (value);
-}
+//void
+//VisBufferImpl2::setVisModel (Matrix<CStokesVector> & value)
+//{
+//    cache_p->modelVisibility_p.set (value);
+//}
 
-void
-VisBufferImpl2::setVisCubeModel(const Vector<Float>& stokesIn)
-{
-
-  enum {I, Q, U, V};
-
-  Vector<Float> stokes (4, 0.0);
-
-  stokes [I] = 1.0;  // Stokes parameters, nominally unpolarized, unit I
-
-  for (uInt i = 0; i < stokesIn.nelements(); ++i){
-      stokes [i] = stokesIn [i];
-  }
-
-  // Convert to correlations, according to basis
-
-  Vector<Complex> stokesFinal (4, Complex(0.0)); // initially all zero
-
-  if (polarizationFrame() == MSIter::Circular){
-    stokesFinal(0) = Complex(stokes [I] + stokes [V]);
-    stokesFinal(1) = Complex(stokes [Q], stokes [U]);
-    stokesFinal(2) = Complex(stokes [Q], -stokes [U]);
-    stokesFinal(3) = Complex(stokes [I] - stokes [V]);
-  }
-  else if (polarizationFrame() == MSIter::Linear) {
-    stokesFinal(0) = Complex(stokes [I] + stokes [Q]);
-    stokesFinal(1) = Complex(stokes [U], stokes [V]);
-    stokesFinal(2) = Complex(stokes [U], -stokes [V]);
-    stokesFinal(3) = Complex(stokes [I] - stokes [Q]);
-  }
-  else {
-    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
-  }
-
-  // A map onto the actual correlations in the VisBuffer
-
-  Vector<Int> corrmap = correlationTypes ();
-  corrmap -= corrmap(0);
-
-  ThrowIf (max(corrmap) >= 4,  "HELP! The correlations in the data are not normal!");
-
-  // Set the modelVisCube accordingly
-
-  Cube<Complex> visCube (getViP()->visibilityShape(), 0.0);
-
-  for (Int icorr = 0; icorr < nCorrelations (); ++icorr){
-    if (abs(stokesFinal(corrmap(icorr))) > 0.0) {
-      visCube (Slice (icorr, 1, 1), Slice(), Slice()).set(stokesFinal (corrmap (icorr)));
-    }
-  }
-
-  cache_p->modelVisCube_p.set (visCube);
-
-  // Lookup flux density calibrator scaling, and apply it per channel...
-  //  TBD
-}
+//void
+//VisBufferImpl2::setVisCubeModel(const Vector<Float>& stokesIn)
+//{
+//
+//  enum {I, Q, U, V};
+//
+//  Vector<Float> stokes (4, 0.0);
+//
+//  stokes [I] = 1.0;  // Stokes parameters, nominally unpolarized, unit I
+//
+//  for (uInt i = 0; i < stokesIn.nelements(); ++i){
+//      stokes [i] = stokesIn [i];
+//  }
+//
+//  // Convert to correlations, according to basis
+//
+//  Vector<Complex> stokesFinal (4, Complex(0.0)); // initially all zero
+//
+//  if (polarizationFrame() == MSIter::Circular){
+//    stokesFinal(0) = Complex(stokes [I] + stokes [V]);
+//    stokesFinal(1) = Complex(stokes [Q], stokes [U]);
+//    stokesFinal(2) = Complex(stokes [Q], -stokes [U]);
+//    stokesFinal(3) = Complex(stokes [I] - stokes [V]);
+//  }
+//  else if (polarizationFrame() == MSIter::Linear) {
+//    stokesFinal(0) = Complex(stokes [I] + stokes [Q]);
+//    stokesFinal(1) = Complex(stokes [U], stokes [V]);
+//    stokesFinal(2) = Complex(stokes [U], -stokes [V]);
+//    stokesFinal(3) = Complex(stokes [I] - stokes [Q]);
+//  }
+//  else {
+//    throw(AipsError("Model-setting only works for CIRCULAR and LINEAR bases, for now."));
+//  }
+//
+//  // A map onto the actual correlations in the VisBuffer
+//
+//  Vector<Int> corrmap = correlationTypes ();
+//  corrmap -= corrmap(0);
+//
+//  ThrowIf (max(corrmap) >= 4,  "HELP! The correlations in the data are not normal!");
+//
+//  // Set the modelVisCube accordingly
+//
+//  Cube<Complex> visCube (getViP()->visibilityShape(), 0.0);
+//
+//  for (Int icorr = 0; icorr < nCorrelations (); ++icorr){
+//    if (abs(stokesFinal(corrmap(icorr))) > 0.0) {
+//      visCube (Slice (icorr, 1, 1), Slice(), Slice()).set(stokesFinal (corrmap (icorr)));
+//    }
+//  }
+//
+//  cache_p->modelVisCube_p.set (visCube);
+//
+//  // Lookup flux density calibrator scaling, and apply it per channel...
+//  //  TBD
+//}
 
 
 const Cube<Complex> &
@@ -2335,17 +2392,17 @@ VisBufferImpl2::setVisCube (const Cube<Complex> & value)
     cache_p->visCube_p.set (value);
 }
 
-const Matrix<CStokesVector> &
-VisBufferImpl2::vis () const
-{
-    return cache_p->visibility_p.get ();
-}
+//const Matrix<CStokesVector> &
+//VisBufferImpl2::vis () const
+//{
+//    return cache_p->visibility_p.get ();
+//}
 
-void
-VisBufferImpl2::setVis (Matrix<CStokesVector> & value)
-{
-    cache_p->visibility_p.set (value);
-}
+//void
+//VisBufferImpl2::setVis (Matrix<CStokesVector> & value)
+//{
+//    cache_p->visibility_p.set (value);
+//}
 
 const Vector<Float> &
 VisBufferImpl2::weight () const
@@ -2472,8 +2529,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
             // to other virtual methods which can potentially access the modified model
             // field.
 
-            VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this),
-                                    dynamic_cast <const VisibilityIteratorImpl2 *> (getVi()));
+            VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this));
             state_p->visModelData_p.getModelVis (vb2a);
         }
     }
@@ -2700,11 +2756,13 @@ VisBufferImpl2::fillFlag (Matrix<Bool>& value) const
 }
 
 void
-VisBufferImpl2::fillFlagCategory (Array<Bool>& value) const
+VisBufferImpl2::fillFlagCategory (Array<Bool>& /*value*/) const
 {
+  ThrowIf (True, "Flag Categories not supported.");
+
   CheckVisIter();
 
-  getViP()->flagCategory (value);
+  //getViP()->flagCategory (value);
 }
 
 void
@@ -2936,29 +2994,29 @@ VisBufferImpl2::fillUvw (Matrix<Double>& value) const
   getViP()->uvw (value);
 }
 
-void
-VisBufferImpl2::fillVisibilityCorrected (Matrix<CStokesVector>& value) const
-{
-    CheckVisIter ();
+//void
+//VisBufferImpl2::fillVisibilityCorrected (Matrix<CStokesVector>& value) const
+//{
+//    CheckVisIter ();
+//
+//    getViP()->visibilityCorrected (value);
+//}
 
-    getViP()->visibilityCorrected (value);
-}
+//void
+//VisBufferImpl2::fillVisibilityModel (Matrix<CStokesVector>& value) const
+//{
+//    CheckVisIter ();
+//
+//    getViP()->visibilityModel (value);
+//}
 
-void
-VisBufferImpl2::fillVisibilityModel (Matrix<CStokesVector>& value) const
-{
-    CheckVisIter ();
-
-    getViP()->visibilityModel (value);
-}
-
-void
-VisBufferImpl2::fillVisibilityObserved (Matrix<CStokesVector>& value) const
-{
-    CheckVisIter ();
-
-    getViP()->visibilityObserved (value);
-}
+//void
+//VisBufferImpl2::fillVisibilityObserved (Matrix<CStokesVector>& value) const
+//{
+//    CheckVisIter ();
+//
+//    getViP()->visibilityObserved (value);
+//}
 
 
 void

@@ -141,6 +141,7 @@ public:
     FrequencySelection * clone () const;
     Bool empty () const;
     const_iterator end () const;
+    Int getNChannels (Int spectralWindowId) const;
     set<int> getSelectedWindows () const;
     String toString () const;
 
@@ -248,7 +249,7 @@ public:
 
 private:
 
-    typedef std::set<pair<Int, Int> > SelectedWindows;
+    typedef std::set<pair<Int, Int> > SelectedWindows; // pair=(msIndex,spwId)
 
     const FrequencySelectionUsingChannels defaultSelection_p;
     mutable Int filterWindow_p;

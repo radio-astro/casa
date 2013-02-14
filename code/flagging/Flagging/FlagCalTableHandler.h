@@ -89,6 +89,7 @@ public:
     virtual void setArrayId (Int value) {}
     virtual Int dataDescriptionId () const {Int dummy; return dummy;}
     virtual void setDataDescriptionId (Int value) {}
+    virtual void setDataDescriptionIds(const casa::Vector<int>&){}
     virtual const Vector<MDirection> & direction1 () const {Vector<MDirection> dummy; return dummy;}
     virtual const Vector<MDirection> & direction2 () const {Vector<MDirection> dummy; return dummy;}
     virtual const Vector<Double> & exposure () const {Vector<Double> dummy; return dummy;}
@@ -171,6 +172,7 @@ public:
 	virtual const Vector<uInt> & rowIds () const {Vector<uInt> dummy; return dummy;}
 	virtual Int spectralWindow () const {Int dummy; return dummy;}
 	virtual const Vector<Int> & spectralWindows () const {Vector<Int> dummy; return dummy;}
+        virtual void setSpectralWindows (const Vector<Int> & /*spectralWindows*/) {}
 
     virtual void setFillable (Bool isFillable) {}
     virtual const Vector<Int> & dataDescriptionIds () const {Vector<Int> dummy; return dummy;}

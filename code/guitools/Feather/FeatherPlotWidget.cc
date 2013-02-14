@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <QGridLayout>
 #include <QMouseEvent>
+#include <QtCore/qmath.h>
 #include <qwt_plot_picker.h>
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
@@ -39,7 +40,8 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
       interferometerWeightColor( Qt::magenta), interferometerDataColor(Qt::blue),
       singleDishFunction( "Low Resolution Slice"), interferometerFunction( "High Resolution Slice"),
       singleDishWeightFunction("Low Resolution Weight"), interferometerWeightFunction( "High Resolution Weight"),
-      permanentScatter( false ),plotTitle(title), MARKER_WIDTH(2){
+      permanentScatter( false ),
+      plotTitle(title), MARKER_WIDTH(2){
 
 	ui.setupUi(this);
 
@@ -58,6 +60,7 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
 	initializeDiameterSelector();
 }
 
+
 FeatherPlotWidget::~FeatherPlotWidget(){
 	delete zoomer;
 	zoomer = NULL;
@@ -66,6 +69,7 @@ FeatherPlotWidget::~FeatherPlotWidget(){
 	delete diameterSelector;
 	diameterSelector = NULL;
 }
+
 
 void FeatherPlotWidget::changePlotType( FeatherPlot::PlotType newPlotType ){
 	//Scatter plots do not change type.
@@ -81,8 +85,8 @@ void FeatherPlotWidget::changePlotType( FeatherPlot::PlotType newPlotType ){
 	}
 }
 
-void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 
+void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 	if ( plot == NULL ){
 		QLayout* layoutPlot = layout();
 		if ( layoutPlot == NULL ){
@@ -103,6 +107,11 @@ void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 //                                 Properties
 //----------------------------------------------------------------------------
 
+void FeatherPlotWidget::refresh(){
+	plot->replot();
+}
+
+
 void FeatherPlotWidget::setLineThickness( int thickness ){
 	if ( diameterSelector != NULL ){
 		QPen pen = diameterSelector->trackerPen();
@@ -117,22 +126,39 @@ void FeatherPlotWidget::setLineThickness( int thickness ){
 		diameterMarker->setSymbol( symbol );
 	}
 	plot->setLineThickness( thickness );
-	plot->replot();
 }
+
 
 void FeatherPlotWidget::setDotSize( int size ){
 	plot->setDotSize( size );
-	plot->replot();
 }
+
 
 void FeatherPlotWidget::setLegendVisibility( bool visible ){
 	plot->setLegendVisibility( visible );
+}
+
+
+void FeatherPlotWidget::setLogScale( bool uvScale, bool ampScale ){
+	double markerPosition = diameterMarker->xValue();
+	bool scaleChanged = plot->setLogScale( uvScale, ampScale );
+	if ( scaleChanged ){
+		if ( uvScale ){
+			markerPosition = qLn( markerPosition ) / qLn( 10 );
+		}
+		else {
+			markerPosition = qPow( 10, markerPosition );
+		}
+		diameterMarker->setXValue( markerPosition );
+	}
 	plot->replot();
 }
+
 
 void FeatherPlotWidget::setPermanentScatter( bool scatter ){
 	permanentScatter = scatter;
 }
+
 
 void FeatherPlotWidget::setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
 		const QColor& scatterColor, const QColor& dishDiameterColor,
@@ -147,23 +173,28 @@ void FeatherPlotWidget::setPlotColors( const QMap<PreferencesColor::FunctionColo
 	resetColors();
 }
 
+
 QWidget* FeatherPlotWidget::getExternalAxisWidget( QwtPlot::Axis position ){
 	return plot->getExternalAxisWidget( position );
 }
 
+
 void FeatherPlotWidget::insertLegend( QWidget* parent ){
 	plot->insertSingleLegend( parent );
 }
+
 
 void FeatherPlotWidget::setRectangleZoomMode(){
 	leftMouseMode = RECTANGLE_ZOOM;
 	changeLeftMouseMode();
 }
 
+
 void FeatherPlotWidget::setDiameterSelectorMode(){
 	leftMouseMode = DIAMETER_SELECTION;
 	changeLeftMouseMode();
 }
+
 
 void FeatherPlotWidget::resetColors(){
 	if ( plot->isSliceCut() ){
@@ -233,9 +264,14 @@ void FeatherPlotWidget::initializeDiameterMarker(){
 }
 
 void FeatherPlotWidget::diameterSelected( const QwtDoublePoint& pos ){
+	//Called when the marker is selected.
 	if ( !plot->isScatterPlot()){
 		double diameter = pos.x();
-		setDishDiameter( diameter );
+		setDishDiameter( diameter, false );
+		//Take out any log scale when we propagate the event up the stack
+		if ( plot->isLogUV() ){
+			diameter = qPow( 10, diameter );
+		}
 		emit dishDiameterChanged( diameter );
 	}
 }
@@ -262,7 +298,7 @@ double FeatherPlotWidget::getDishDiameter() const {
 	return position;
 }
 
-void FeatherPlotWidget::setDishDiameter( double position ){
+void FeatherPlotWidget::setDishDiameter( double position, bool scale ){
 	//Set the size
 	QwtSymbol symbol = diameterMarker->symbol();
 	int canvasHeight = height();
@@ -271,6 +307,11 @@ void FeatherPlotWidget::setDishDiameter( double position ){
 
 	//Set the position
 	if ( position >= 0 ){
+		if ( scale ){
+			if ( plot->isLogUV() ){
+				position = qLn(position) / qLn( 10 );
+			}
+		}
 		diameterMarker->setXValue( position );
 		if ( !plot->isScatterPlot() ){
 			diameterMarker->show();
@@ -278,6 +319,7 @@ void FeatherPlotWidget::setDishDiameter( double position ){
 	}
 	plot->replot();
 }
+
 
 bool FeatherPlotWidget::isDiameterSelectorMode() const {
 	return false;
@@ -304,6 +346,7 @@ void FeatherPlotWidget::initializeZooming(){
 	}
 }
 
+
 void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 	if ( zoomRect.width() > 0 && zoomRect.height() > 0 ){
 		double minX = zoomRect.x();
@@ -317,6 +360,23 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 		}
 		double maxY = minY + zoomRect.height();
 
+		//If we are using a log scale on either axis, we need to convert
+		//the rectangle bounds back to a normal scale.
+		if ( plot->isLogUV() ){
+			if ( !plot->isScatterPlot() ){
+				minX = qPow( 10, minX);
+				maxX = qPow( 10, maxX);
+			}
+		}
+		if ( plot->isLogAmplitude() ){
+			minY = qPow( 10, minY );
+			maxY = qPow( 10, maxY );
+			if ( plot->isScatterPlot() ){
+				minX = qPow( 10, minX);
+				maxX = qPow( 10, maxX);
+			}
+		}
+
 		//If we are a scatter plot, we don't have to let anyone know about
 		//the zoom, just update our own coordinates.
 		if ( plot->isScatterPlot() ){
@@ -328,6 +388,7 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 		}
 	}
 }
+
 
 void FeatherPlotWidget::zoomRectangleWeight( double minX, double maxX  ){
 
@@ -388,6 +449,7 @@ void FeatherPlotWidget::zoomRectangleScatter( double minX, double maxX, double m
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::changeZoom90(bool zoom ){
 	if ( zoom ){
 		plot->clearCurves();
@@ -403,6 +465,11 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 		if ( dishPosition == 0 ){
 			pair<double,double> minMaxPair = getMaxMin( singleDishDataYValues );
 			dishPosition = minMaxPair.second / 3;
+		}
+
+		//If we are using a log scale on the x-axis, we need to undo the log.
+		if ( plot->isLogUV() ){
+			dishPosition = qPow( 10, dishPosition );
 		}
 
 		//Add in the zoomed weight functions
@@ -475,6 +542,7 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 	}
 }
 
+
 void FeatherPlotWidget::zoomNeutral(){
 	FeatherPlot::PlotType originalPlotType = plot->getPlotType();
 	resetPlot( originalPlotType );
@@ -486,6 +554,7 @@ void FeatherPlotWidget::zoomNeutral(){
 	}
 }
 
+
 void FeatherPlotWidget::addZoomNeutralCurves(){
 	if ( plot->isSliceCut()){
 		plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, weightAxis );
@@ -496,6 +565,7 @@ void FeatherPlotWidget::addZoomNeutralCurves(){
 	initializeMarkers();
 	plot->replot();
 }
+
 
 void FeatherPlotWidget::resetZoomRectangleColor(){
 	if ( zoomer != NULL ){
@@ -516,6 +586,7 @@ void FeatherPlotWidget::initializeMarkers(){
 	}
 	this->changeLeftMouseMode();
 }
+
 
 void FeatherPlotWidget::removeMarkers(){
 	diameterMarker->detach();
@@ -554,6 +625,7 @@ void FeatherPlotWidget::addScatterData(){
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::setSingleDishWeight( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
 	singleDishWeightXValues.resize( count );
@@ -566,8 +638,8 @@ void FeatherPlotWidget::setSingleDishWeight( const Vector<Float>& xValues, const
 		plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, weightAxis );
 		plot->replot();
 	}
-
 }
+
 
 void FeatherPlotWidget::setSingleDishData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
@@ -584,6 +656,7 @@ void FeatherPlotWidget::setSingleDishData( const Vector<Float>& xValues, const V
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::setInterferometerWeight( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
 	interferometerWeightXValues.resize( count );
@@ -598,6 +671,7 @@ void FeatherPlotWidget::setInterferometerWeight( const Vector<Float>& xValues, c
 		plot->replot();
 	}
 }
+
 
 void FeatherPlotWidget::setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
@@ -614,11 +688,13 @@ void FeatherPlotWidget::setInterferometerData( const Vector<Float>& xValues, con
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::clearPlot(){
 	removeMarkers();
 	plot->clearCurves();
 	plot->replot();
 }
+
 
 void FeatherPlotWidget::clearLegend(){
 	plot->clearLegend();
@@ -628,7 +704,6 @@ void FeatherPlotWidget::clearLegend(){
 //-------------------------------------------------------------------------------------
 //                             Utility
 //-------------------------------------------------------------------------------------
-
 
 
 void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double maxValue,
@@ -655,7 +730,6 @@ void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double max
 }
 
 
-
 pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const {
 	double minValue = numeric_limits<double>::max();
 	double maxValue = numeric_limits<double>::min();
@@ -670,6 +744,7 @@ pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const
 	pair<double,double> minMaxPair( minValue, maxValue );
 	return minMaxPair;
 }
+
 
 void FeatherPlotWidget::changeLeftMouseMode(){
 	if ( ! plot->isEmpty() ){

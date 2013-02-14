@@ -55,6 +55,7 @@
 #include <display/region/QtRegionSource.qo.h>
 #include <display/RegionShapes/RegionShapes.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
+#include <display/Clean/CleanGui.qo.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -78,12 +79,12 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   qsm_(0), qst_(0),
 								   profile_(0), savedTool_(QtMouseToolNames::NONE),
 								   profileDD_(0),
-								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
+								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
 								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ), sliceTool( NULL ),
-								   regionDock_(0),
+								   clean_tool(0), regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
 	// initialize the "pix" unit, et al...
@@ -198,7 +199,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	momentsCollapseAct_ = tlMenu_->addAction("Collapes/Moments...");
 	histogramAct_ = tlMenu_->addAction( "Histogram...");
 	fitAct_ = tlMenu_->addAction( "Fit...");
-	slicerAct_ = tlMenu_->addAction( "Slice...");
+	cleanAct_ = tlMenu_->addAction( "Interactive Clean..." );
 
 	vwMenu_       = menuBar()->addMenu("&View");
 	// (populated after creation of toolbars/dockwidgets).
@@ -458,7 +459,6 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
 	histogramAct_->setToolTip("Histogram Functionality");
 	fitAct_->setToolTip( "Interactive 2D Fitting");
-	slicerAct_->setToolTip( "Produce a 1D slice from the image");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");
 	if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
@@ -503,7 +503,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(momentsCollapseAct_, SIGNAL(triggered()), SLOT(showMomentsCollapseImageProfile()));
 	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 	connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
-	connect(slicerAct_, SIGNAL(triggered()), SLOT(showSlicer()));
+
+	if ( cleanAct_ ) connect(cleanAct_, SIGNAL(triggered()), SLOT(showCleanTool( )));
+
 	// connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
 	connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
 	connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
@@ -614,6 +616,16 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	status_bar_timer->setInterval( 15000 );
 	connect( status_bar_timer, SIGNAL(timeout()), this, SLOT(clear_status_bar( )) );
 
+	//Slice1D Tool
+	PanelDisplay* panelDisplay = qdp_->panelDisplay();
+	std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
+	if (pos) {
+		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
+		if ( qrs ) {
+			connect( qrs.get(), SIGNAL(show1DSliceTool()), this, SLOT(showSlicer()));
+
+		}
+	}
 }
 
 string QtDisplayPanelGui::addAnimationDockWidget(){
@@ -780,11 +792,19 @@ viewer::Region* QtDisplayPanelGui::findRegion( int id ) {
 
 
 void QtDisplayPanelGui::histogramRegionChange( int id, viewer::region::RegionChanges change){
+	viewer::Region* region = NULL;
+	if ( id != -1 ){
+		region = findRegion( id );
+		if ( region != NULL ){
+			if ( region->type() == viewer::region::PolylineRegion ){
+				return;
+			}
+		}
+	}
 	if ( change == viewer::region::RegionChangeCreate ||
 					change == viewer::region::RegionChangeUpdate ||
 					change == viewer::region::RegionChangeModified ){
 		if ( id != -1 ){
-			viewer::Region* region = findRegion( id );
 			if ( region != NULL ){
 				resetHistogram( region );
 			}
@@ -924,6 +944,23 @@ void QtDisplayPanelGui::addResidualFitImage( String path ){
 	if ( dd == NULL ){
 		qDebug() << "Could not add residual image to viewer: "<<path.c_str();
 	}
+}
+
+void QtDisplayPanelGui::initCleanTool( ) {
+	try {
+		clean_tool = new viewer::CleanGui( );
+		clean_tool->hide( );
+	} catch(...) {
+		clean_tool = 0;
+		logger << LogIO::WARN
+				<< "no dbus session available..."
+				<< LogIO::POST;
+	}
+}
+
+void QtDisplayPanelGui::showCleanTool( ) {
+	if ( clean_tool == 0 ) initCleanTool( );
+	if ( clean_tool ) clean_tool->show( );
 }
 
 void QtDisplayPanelGui::addSkyComponentOverlay( String path ){
@@ -1348,9 +1385,6 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	}
 	if ( histogrammer != NULL ){
 		histogrammer->setChannelValue( frm );
-	}
-	if ( sliceTool != NULL ){
-		sliceTool->updateChannel( frm );
 	}
 }
 // Public slots: may be safely operated programmatically (i.e.,
@@ -2747,25 +2781,42 @@ void QtDisplayPanelGui::showSpecFitImageProfile(){
 	}
 }
 
+void QtDisplayPanelGui::addSlice( int id, const QString& shape, const QString&, const QList<double>& worldX,
+										const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
+										const QString& lineColor, const QString&, const QString&, int, int){
+	if ( shape == "polyline"){
+		sliceTool->addPolyLine( id, viewer::region::RegionChangeCreate,
+				worldX, worldY, pixelX, pixelY, lineColor );
+	}
+}
+
 void QtDisplayPanelGui::sliceChanged( int regionId, viewer::region::RegionChanges change,
 		const QList<double> & worldX, const QList<double> & worldY,
 		const QList<int> &pixelX, const QList<int> & pixelY ){
 	if ( sliceTool != NULL ){
 		viewer::Region* region = findRegion( regionId );
-		//Note until the mouse tool is working
-		//key off the blc/trc coordinates of a rectangle.
-		viewer::region::RegionTypes defaultType = viewer::region::RectRegion;
-		viewer::region::RegionTypes regionType = defaultType;
+		viewer::region::RegionTypes defaultType = viewer::region::PolylineRegion;
 		if ( region != NULL ){
-			regionType = region->type();
+			viewer::region::RegionTypes regionType = region->type();
+			if ( regionType == defaultType ){
+				if ( change == viewer::region::RegionChangeModified ){
+					std::string polyColor = region->lineColor();
+					QString qPolyColor( polyColor.c_str());
+					sliceTool->setCurveColor( regionId, qPolyColor );
+				}
+				else if ( change == viewer::region::RegionChangeNewChannel ){
+					int channelIndex = region->zIndex();
+					sliceTool->updateChannel( channelIndex );
+					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
+				}
+
+				else {
+					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
+				}
+			}
 		}
-		if ( regionType == defaultType ){
-			if ( change == viewer::region::RegionChangeDelete ){
-				sliceTool->deletePolyLine( regionId );
-			}
-			else {
-				sliceTool->updatePolyLine( regionId, worldX, worldY, pixelX, pixelY );
-			}
+		else if ( change == viewer::region::RegionChangeDelete ){
+			sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
 		}
 	}
 }
@@ -2776,10 +2827,11 @@ void QtDisplayPanelGui::showSlicer(){
 
 		//Image updates
 		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
+		resetListenerImage();
 
 		//Region updates
 		PanelDisplay* panelDisplay = qdp_->panelDisplay();
-		std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(panelDisplay->getTool(QtMouseToolNames::POINT));
+		std::tr1::shared_ptr<QtPolylineTool> pos = std::tr1::dynamic_pointer_cast<QtPolylineTool>(panelDisplay->getTool(QtMouseToolNames::POLYLINE));
 		if (pos) {
 			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 			if ( qrs ) {
@@ -2787,9 +2839,19 @@ void QtDisplayPanelGui::showSlicer(){
 								const QList<int> &, const QList<int> & ) ),
 								this, SLOT( sliceChanged( int, viewer::region::RegionChanges, const QList<double>&, const QList<double>&,
 										const QList<int>&, const QList<int> &) ));
+				//So that the slicer knows about regions that were generated
+				//before it was created.
+				connect( qrs.get(), SIGNAL(regionUpdateResponse( int, const QString &, const QString &,
+								const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> &,
+								const QString &, const QString &, const QString &, int, int)),
+								this, SLOT(addSlice( int, const QString&, const QString&, const QList<double>&,
+										const QList<double>&, const QList<int>&, const QList<int>&,
+										const QString&, const QString&, const QString&, int, int)));
+				qrs->generateExistingRegionUpdates();
 			}
 		}
-		resetListenerImage();
+
+
 	}
 	sliceTool->show();
 }

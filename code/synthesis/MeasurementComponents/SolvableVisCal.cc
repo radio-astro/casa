@@ -4902,7 +4902,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
 				 const Vector<String>& fldNames,
 				 fluxScaleStruct& oFluxScaleStruct,
 				 const String& oListFile,
-                                 const Bool& incremental) {
+                                 const Bool& incremental,
+                                 const Int& fitorder) {
 
   //  cout << "REVISED FLUXSCALE" << endl;
   //String outCalTabName="_tmp_testfluxscaletab";
@@ -5455,7 +5456,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Matrix<Double> spidx(nFld,3,0.0);
     Matrix<Double> spidxerr(nFld,3,0.0);
     Matrix<Double> covar;
-    Vector<Double> refFreq(nFld,0.0);
+    //Vector<Double> refFreq(nFld,0.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
       uInt tranidx=tranField(iTran);
@@ -5472,28 +5473,48 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	Vector<Double> freqs;
 	freqs=solFreq(scaleOK.column(tranidx)).getCompressedArray();
 
+	// shift mean(log(freq)) later
 	// Reference frequency is first in the list
-	refFreq(tranidx)=freqs[0];
-	freqs/=refFreq(tranidx);
-
+	//refFreq(tranidx)=freqs[0];
+	//freqs/=refFreq(tranidx);
+        //
         // calculate spectral index
         // fit the per-spw fluxes to get spectral index
         LinearFit<Double> fitter;
-        uInt fitorder; 
+        uInt myfitorder; 
         if (nValidFlux > 2) {
-          fitorder=2;
+          if (fitorder > 2) {
+             logSink() << LogIO::WARN << "Currently only support fitorder < 3, using fitorder=2 instead" 
+                       << LogIO::POST;
+             myfitorder = 2;
+          }
+          else {
+             if (fitorder < 0) {
+               logSink() << LogIO::WARN
+                         << "fitorder=" << fitorder 
+                         << " not supported. Using fitorder=1" 
+                         << LogIO::POST;    
+               myfitorder = 1;
+             }
+             else {
+               myfitorder = (uInt)fitorder;
+             }
+          }
         }
         else {
-          fitorder=1;
+          myfitorder = 1;
         }
         // set fitting for spectral index, alpha and beta(curvature)
         // with S = S_o*f/f0^(alpha+beta*log(f/fo))
         // fitting y = c + alpha*x + beta*x^2
         // log(S/S0)=alpha*log(f/f0) + beta*log(f/f0)**2
-        Polynomial< AutoDiff<Double> > bp(fitorder);
+        Polynomial< AutoDiff<Double> > bp(myfitorder);
         fitter.setFunction(bp);
 
-        Vector<Double> log_relsolFreq=log10(freqs);
+        // shift the zero point to the mean of log(freq)
+        Double meanLogFreq=mean(log10(freqs));
+        Vector<Double> log_relsolFreq=log10(freqs)-meanLogFreq;
+        //Vector<Double> log_relsolFreq=log10(freqs);
         Vector<Double> log_fd=log10(fds);
 
 	// The error in the log of fds is fderrs/fds
@@ -5507,13 +5528,16 @@ void SolvableVisJones::fluxscale(const String& outfile,
         } 
         oFitMsg =" Fitted spectrum for ";
 	oFitMsg += fldNames(tranidx);
-        oFitMsg += " with fitorder="+String::toString<Int>(fitorder)+": ";
+        oFitMsg += " with fitorder="+String::toString<Int>(myfitorder)+": ";
 //	oFitMsg += "Flux density = "+String::toString<Double>(exp10(soln(0)));
 	oFitMsg += "Flux density = "+String::toString<Double>(pow(10.0,(soln(0))));
 //	Double ferr=(errs(0)>0.0 ? exp10(errs(0)) : 0.0);
-        Double ferr=(errs(0)>0.0 ? pow(10.0,(errs(0))) : 0.0);
+//      Double ferr=(errs(0)>0.0 ? pow(10.0,(errs(0))) : 0.0);
+//	correct for the proper propagation of error
+        Double ferr=(errs(0)>0.0 ? log(10)*pow(10.0,(soln(0)))*errs(0) : 0.0);
 	oFitMsg += " +/- "+String::toString<Double>(ferr); 
-	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
+//	oFitMsg += " (freq="+String::toString<Double>(refFreq(tranidx)/1.0e9)+" GHz)";
+	oFitMsg += " (freq="+String::toString<Double>(pow(10.0,meanLogFreq)/1.0e9)+" GHz)";
         for (uInt j=1; j<soln.nelements();j++) {
           if (j==1) {
             oFitMsg += " spidx="+String::toString<Double>(soln(1)); 

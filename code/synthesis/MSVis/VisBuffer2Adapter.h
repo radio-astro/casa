@@ -31,14 +31,28 @@ class VisBuffer2Adapter : public VisBuffer {
 
 public:
 
-    VisBuffer2Adapter (VisBuffer2 * vb, const VisibilityIteratorImpl2 * vi) : vb2_p (vb) , vb2Rw_p (vb)
+    VisBuffer2Adapter (VisBuffer2 * vb) : vb2_p (vb) , vb2Rw_p (vb)
     {
-        msColumns_p = vi->msColumnsKluge();
+        construct();
     }
-    VisBuffer2Adapter (const VisBuffer2 * vb) : msColumns_p (0), vb2_p (vb), vb2Rw_p (0) {}
+    VisBuffer2Adapter (const VisBuffer2 * vb) : msColumns_p (0), vb2_p (vb), vb2Rw_p (0)
+    {
+        construct();
+    }
+
+    void
+    construct ()
+    {
+        const VisibilityIteratorImpl2 * vi =
+            dynamic_cast<const VisibilityIteratorImpl2 *> (vb2_p->getVi()->getImpl());
+
+        msColumns_p = vi->msColumnsKluge();
+
+        vi->allSpectralWindowsSelected (spectralWindows_p, nChannels_p);
+
+    }
 
     ~VisBuffer2Adapter () {}
-
 
     virtual VisBuffer & assign(const VisBuffer &, Bool = True) {IllegalOperation();}
 
@@ -51,30 +65,27 @@ public:
     // <group>
     // Access functions
     //
-    virtual Int & nCorr() { IllegalOperation (); }
+    virtual Int & nCorr() { nCorr_p = vb2_p->nCorrelations(); return nCorr_p;}
     virtual Int nCorr() const { return vb2_p-> nCorrelations(); }
 
-    virtual Int & nChannel() { IllegalOperation (); }
+    virtual Int & nChannel() { nChannelsScalar_p = vb2_p-> nChannels(); return nChannelsScalar_p;}
     virtual Int nChannel() const { return vb2_p-> nChannels(); }
 
     virtual Vector<Int>& channel() { IllegalOperation (); }
     virtual const Vector<Int>& channel() const { IllegalOperation(); }
 
-    virtual Int & nRow() { IllegalOperation(); }
-    virtual Int nRow() const { return vb2_p-> nRows(); }
+    virtual Int & nRow() { nRows_p = vb2_p->nRows (); return nRows_p;}
 
-    virtual Int nRowChunk() const{ IllegalOperation(); }
-
-    virtual Vector<Int>& antenna1() { IllegalOperation (); }
+    virtual Vector<Int>& antenna1() { return const_cast<Vector<Int>&> (vb2_p-> antenna1());}
     virtual const Vector<Int>& antenna1() const { return vb2_p-> antenna1(); }
 
-    virtual Vector<Int>& antenna2() { IllegalOperation (); }
+    virtual Vector<Int>& antenna2() { return const_cast<Vector<Int>&> (vb2_p-> antenna2());}
     virtual const Vector<Int>& antenna2() const { return vb2_p-> antenna2(); }
 
-    virtual Vector<Int>& feed1() { IllegalOperation (); }
+    virtual Vector<Int>& feed1() { return const_cast<Vector<Int>&> (vb2_p-> feed1());}
     virtual const Vector<Int>& feed1() const { return vb2_p-> feed1(); }
 
-    virtual Vector<Int>& feed2() { IllegalOperation (); }
+    virtual Vector<Int>& feed2() { return const_cast<Vector<Int>&> (vb2_p-> feed2());}
     virtual const Vector<Int>& feed2() const { return vb2_p-> feed2(); }
 
     // feed1_pa() and feed2_pa() return an array of parallactic angles
@@ -127,48 +138,64 @@ public:
     virtual Int arrayId() const { return vb2_p-> arrayId(); }
 
     // Return flag for each channel & row
-    virtual Matrix<Bool>& flag() { IllegalOperation (); }
+    virtual Matrix<Bool>& flag() { return const_cast<Matrix<Bool>&> (vb2_p-> flag());}
     virtual const Matrix<Bool>& flag() const { return vb2_p-> flag(); }
 
     // Return flag for each polarization, channel and row
-    virtual Cube<Bool>& flagCube() { IllegalOperation (); }
+    virtual Cube<Bool>& flagCube() { return const_cast<Cube<Bool>&> (vb2_p-> flagCube());}
     virtual const Cube<Bool>& flagCube() const { return vb2_p-> flagCube(); }
 
-    virtual Vector<Bool>& flagRow() { IllegalOperation (); }
+    virtual Vector<Bool>& flagRow() { return const_cast<Vector<Bool>&> (vb2_p-> flagRow());}
     virtual const Vector<Bool>& flagRow() const { return vb2_p-> flagRow(); }
 
     // Return flags for each polarization, channel, category, and row.
     virtual Array<Bool>& flagCategory() { IllegalOperation (); }
     virtual const Array<Bool>& flagCategory() const { return vb2_p-> flagCategory(); }
 
-    virtual Vector<Int>& scan() { IllegalOperation (); }
+    virtual Vector<Int>& scan() { return const_cast<Vector<Int>&> (vb2_p-> scan());}
     virtual const Vector<Int>& scan() const { return vb2_p-> scan(); }
 
     // scalar version for convenience, when scan known constant for
     // entire iteration/buffer.
     virtual Int scan0() { IllegalOperation(); }
 
-    virtual Vector<Int>& processorId() { IllegalOperation (); }
+    virtual Vector<Int>& processorId() { return const_cast<Vector<Int>&> (vb2_p-> processorId());}
     virtual const Vector<Int>& processorId() const { return vb2_p-> processorId(); }
 
-    virtual Vector<Int>& observationId() { IllegalOperation (); }
+    virtual Vector<Int>& observationId() { return const_cast<Vector<Int>&> (vb2_p-> observationId());}
     virtual const Vector<Int>& observationId() const { return vb2_p-> observationId(); }
 
-    virtual Vector<Int>& stateId() { IllegalOperation (); }
+    virtual Vector<Int>& stateId() { return const_cast<Vector<Int>&> (vb2_p-> stateId());}
     virtual const Vector<Int>& stateId() const { return vb2_p-> stateId(); }
 
     // Gets SPECTRAL_WINDOW/CHAN_FREQ (in Hz, acc. to the MS def'n v.2).
-    virtual Vector<Double>& frequency() { IllegalOperation(); }
-    virtual const Vector<Double>& frequency() const { IllegalOperation(); }
-
-    //the following method is to convert the observed frequencies
-    // This conversion may not be accurate for some frame
-    // conversion like topo to lsr except if the spw is in the actual buffer
+    virtual Vector<Double>& frequency() {
+        return const_cast<Vector<Double>&> (vb2_p->getFrequencies(0));
+    }
+    virtual const Vector<Double>& frequency() const
+    {
+        return vb2_p->getFrequencies(0);
+    }
 
     //if ignoreconv=True..frequency is served as is in the data frame
-    virtual void lsrFrequency(const Int &, Vector<Double>&,
-                              Bool & , const Bool =False) const
-    { IllegalOperation(); }
+    virtual void lsrFrequency(const Int & spw, Vector<Double>& freq, Bool & convert,
+                              const Bool ignoreConv = False) const
+    {
+        const VisibilityIteratorImpl2 * vi =
+            dynamic_cast<const VisibilityIteratorImpl2 *> (vb2_p->getVi()->getImpl());
+
+        Int frame = -1;
+        if (ignoreConv){
+            frame = vi->getObservatoryFrequencyType ();
+        }
+        else{
+            frame = MFrequency::LSRK;
+        }
+
+        convert = frame != MFrequency::LSRK; // make this parameter write-only
+
+        freq = vi->getFrequencies (this->time()(0), frame, spw, vi->msId());
+    }
 
     virtual Int numberCoh () const { IllegalOperation(); }
 
@@ -177,7 +204,7 @@ public:
 
     virtual Int polFrame() const { return vb2_p-> polarizationFrame(); }
 
-    virtual Vector<Int>& corrType() { IllegalOperation (); }
+    virtual Vector<Int>& corrType() { return const_cast<Vector<Int> &> (vb2_p-> correlationTypes()); }
     virtual const Vector<Int>& corrType() const { return vb2_p-> correlationTypes(); }
 
     virtual Vector<Float>& sigma() { IllegalOperation (); }
@@ -186,7 +213,7 @@ public:
     virtual Matrix<Float>& sigmaMat() { IllegalOperation (); }
     virtual const Matrix<Float>& sigmaMat() const { return vb2_p-> sigmaMat(); }
 
-    virtual Int & spectralWindow() { IllegalOperation (); }
+    virtual Int & spectralWindow() { spectralWindow_p = vb2_p->spectralWindow(); return spectralWindow_p;}
     virtual Int spectralWindow() const { return vb2_p-> spectralWindow(); }
     virtual Int polarizationId() const { return vb2_p-> polarizationId(); }
     virtual Int& dataDescriptionIdRef() { IllegalOperation(); }
@@ -203,25 +230,45 @@ public:
     virtual Vector<Double>& exposure() { IllegalOperation (); }
     virtual const Vector<Double>& exposure() const { return vb2_p-> exposure(); }
 
-    virtual Vector<RigidVector<Double, 3> >& uvw() { IllegalOperation(); }
+    virtual Vector<RigidVector<Double, 3> >& uvw()
+    {
+        if (uvw_p.empty()){
+
+            const Matrix<Double> & u = vb2_p->uvw();
+
+            Int nRows = u.shape()(1);
+            uvw_p.resize (nRows);
+
+            for (Int i = 0; i < nRows; i++){
+                RigidVector<Double,3> t;
+                for (Int j = 0; j < 3; j++){
+                    t (j) = u (j, i);
+                }
+                uvw_p (i) = t;
+            }
+        }
+
+        return uvw_p;
+    }
+
     virtual const Vector<RigidVector<Double, 3> >& uvw() const { IllegalOperation(); }
 
     virtual Matrix<Double>& uvwMat() { IllegalOperation (); }
     virtual const Matrix<Double>& uvwMat() const { return vb2_p-> uvw(); }
 
     virtual Matrix<CStokesVector>& visibility() { IllegalOperation (); }
-    virtual const Matrix<CStokesVector>& visibility() const { return vb2_p-> vis(); }
+    virtual const Matrix<CStokesVector>& visibility() const { IllegalOperation (); }
 
     virtual Matrix<CStokesVector>& modelVisibility() { IllegalOperation (); }
-    virtual const Matrix<CStokesVector>& modelVisibility() const { return vb2_p-> visModel(); }
+    virtual const Matrix<CStokesVector>& modelVisibility() const { IllegalOperation (); }
 
     virtual Matrix<CStokesVector>& correctedVisibility() { IllegalOperation (); }
-    virtual const Matrix<CStokesVector>& correctedVisibility() const { return vb2_p-> visCorrected(); }
+    virtual const Matrix<CStokesVector>& correctedVisibility() const { IllegalOperation (); }
 
     virtual Cube<Complex>& visCube() { IllegalOperation (); }
     virtual const Cube<Complex>& visCube() const { return vb2_p-> visCube(); }
 
-    virtual Cube<Complex>& modelVisCube() { IllegalOperation (); }
+    virtual Cube<Complex>& modelVisCube() { return const_cast<Cube<Complex> &> (vb2_p->visCubeModel()); }
 
     virtual Cube<Complex>& modelVisCube(const Bool & ) { IllegalOperation (); }
 
@@ -363,7 +410,7 @@ public:
     virtual void setFloatDataCube(const Cube<Float>& fcube){ CheckWritability(); vb2Rw_p-> setVisCubeFloat(fcube); }
 
     // Set model according to a Stokes vector
-    virtual void setModelVisCube(const Vector<Float>& stokes){ CheckWritability(); vb2Rw_p-> setVisCubeModel(stokes); }
+    virtual void setModelVisCube(const Vector<Float>& stokes){ IllegalOperation (); }
 
     // Reference external model visibilities
     virtual void refModelVis(const Matrix<CStokesVector>& ){ IllegalOperation(); }
@@ -381,8 +428,11 @@ public:
     virtual  Int numberAnt () const{ return vb2_p-> nAntennas (); }
 
     // Get all selected spectral windows not just the one in the actual buffer
-    virtual void allSelectedSpectralWindows(Vector<Int>& , Vector<Int>& )
-    { IllegalOperation(); }
+    virtual void allSelectedSpectralWindows(Vector<Int>& spectralWindows, Vector<Int>& nChannels)
+    {
+        spectralWindows.assign (spectralWindows_p);
+        nChannels.assign (nChannels_p);
+    }
 
     virtual void getChannelSelection(Block< Vector<Int> >& ,
 				   Block< Vector<Int> >& ,
@@ -409,7 +459,15 @@ public:
 
 private:
 
+
     const ROMSColumns * msColumns_p; // [use]
+    Vector<Int> nChannels_p;
+    Int nChannelsScalar_p;
+    Int nCorr_p;
+    Int nRows_p;
+    Int spectralWindow_p;
+    Vector<Int> spectralWindows_p;
+    Vector<RigidVector<Double, 3> > uvw_p;
     const vi::VisBuffer2 * vb2_p; // [use]
     vi::VisBuffer2 * vb2Rw_p; // [use]
 

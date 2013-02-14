@@ -44,7 +44,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <typename T> class ArrayColumn;
-class CStokesVector;
+//class CStokesVector;
 template <typename T> class ROArrayColumn;
 template <typename T, Int N> class RigidVector;
 template <typename T, Int N> class SquareMatrix;
@@ -413,9 +413,9 @@ public:
     // Return the visibility 4-vector of polarizations for each channel.
     // If the MS doesn't contain all polarizations, it is assumed it
     // contains one or two parallel hand polarizations.
-    virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
-    virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
-    virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
+//    virtual void visibilityCorrected (Matrix<CStokesVector> & vis) const;
+//    virtual void visibilityModel (Matrix<CStokesVector> & vis) const;
+//    virtual void visibilityObserved (Matrix<CStokesVector> & vis) const;
 
     // Return the shape of the visibility Cube
     virtual IPosition visibilityShape () const;
@@ -541,9 +541,9 @@ public:
     // in the original MS.
     // If the MS does not contain all polarizations, only the parallel
     // hand polarizations are used.
-    void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
-    void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
-    void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
+//    void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
+//    void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
+//    void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
 
     // Write/modify the visibilities
     // This writes the data as found in the MS, Cube (npol,nchan,nrow).
@@ -574,6 +574,9 @@ public:
 protected:
 
     void addDataSelection (const MeasurementSet & ms);
+
+    void allSpectralWindowsSelected (Vector<Int> & spectralWindows,
+                                     Vector<Int> & nChannels) const; /*KLUGE*/
 
     void attachColumnsSafe (const Table & t);
 
@@ -618,6 +621,9 @@ protected:
     void getColumnRows (const ROScalarColumn<T> & column, Vector<T> & array) const;
 
     Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
+    Vector<Double> getFrequencies (Double time, Int frameOfReference,
+                                   Int spectralWindowId, Int msId) const; // helper method
+
     Vector<Int> getChannels (Double time, Int frameOfReference) const;
     Vector<Int> getCorrelations () const;
 
@@ -635,8 +641,8 @@ protected:
 
     VisibilityIterator2 * getViP () const;
 
-    void getVisibilityAsStokes (Matrix<CStokesVector> & visibilityStokes,
-                                const ROArrayColumn<Complex> & column) const;
+//    void getVisibilityAsStokes (Matrix<CStokesVector> & visibilityStokes,
+//                                const ROArrayColumn<Complex> & column) const;
 
     // Ctor auxiliary method
 
@@ -795,8 +801,8 @@ protected:
     template <typename T>
     void putColumnRows (ScalarColumn<T> & column, const Vector <T> & array);
 
-    void convertVisFromStokes (const Matrix<CStokesVector> & visibilityStokes,
-                               Cube<Complex> & visCube);
+//    void convertVisFromStokes (const Matrix<CStokesVector> & visibilityStokes,
+//                               Cube<Complex> & visCube);
 
     class Cache {
 

@@ -110,11 +110,15 @@ qt4_wrap_cpp( outfiles_qoh
   RegionShapes/QtSingleRegionShape.qo.h
   RegionShapes/RSUtils.qo.h
   region/Region.qo.h
+  region/Polyline.qo.h
   region/QtRegionSource.qo.h
   region/QtRegionDock.qo.h
   region/QtRegionState.qo.h
   region/QtRegionStats.qo.h
+  Clean/CleanGui.qo.h
+  Slicer/SlicePlot.qo.h
   Slicer/SlicerMainWindow.qo.h
+  Slicer/SliceColorPreferences.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -178,14 +182,17 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtRegionState.ui
   region/QtImageRegionStats.ui
   region/QtMsRegionStats.ui
+  region/SlicerStats.ui
   Slicer/SlicerMainWindow.ui
+  Slicer/SliceColorPreferences.ui
+  Clean/CleanGui.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
 casa_qt4_add_resources( outfiles_qrc QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
 casa_qt4_add_resources( outfiles_qrc QtPlotter/QtDrawer.qrc OPTIONS -name QtDrawer )
 casa_qt4_add_resources( outfiles_qrc QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
-
+casa_qt4_add_resources( outfiles_qrc Slicer/Slicer.qrc OPTIONS -name Slicer )
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code
 
@@ -292,7 +299,9 @@ casa_add_library( display
   DisplayEvents/MultiPointTool.cc
   DisplayEvents/MultiPointToolImpl.cc
   DisplayEvents/MultiPolyTool.cc
+  DisplayEvents/MultiPolylineTool.cc
   DisplayEvents/MultiPolyToolImpl.cc
+  DisplayEvents/MultiPolylineToolImpl.cc
   DisplayEvents/MWCETRegion.cc
   DisplayEvents/MWCRTRegion.cc
   DisplayEvents/MWCRTZoomer.cc
@@ -500,6 +509,11 @@ casa_add_library( display
   RegionShapes/XMLFileReaderWriter.cc
   Slicer/SlicerMainWindow.cc
   Slicer/SliceWorker.cc
+  Slicer/SliceColorPreferences.cc
+  Slicer/SliceZoomer.cc
+  Slicer/ImageSlice.cc
+  Slicer/SlicePlot.cc
+  Slicer/SliceAxisDraw.cc
   Utilities/DisplayOptions.cc
   Utilities/DlHandle.cc
   Utilities/DlTarget.cc
@@ -517,6 +531,7 @@ casa_add_library( display
   region/Ellipse.cc
   region/Point.cc
   region/Polygon.cc
+  region/Polyline.cc
   region/Region.cc
   ds9/ds9context.cc
   ds9/ds9parser.cc
@@ -525,6 +540,7 @@ casa_add_library( display
   ds9/ds9parse.cc
 #  ${FLEX_ds9lex_OUTPUTS}
   ds9/ds9lex.cc
+  Clean/CleanGui.cc
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )

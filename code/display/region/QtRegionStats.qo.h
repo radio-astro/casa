@@ -8,14 +8,16 @@
 #include <casa/BasicSL/String.h>
 #include <display/region/QtImageRegionStats.ui.h>
 #include <display/region/QtMsRegionStats.ui.h>
+#include <display/region/SlicerStats.ui.h>
 #include <display/region/RegionInfo.h>
+
 
 class QStackedWidget;
 
 namespace casa {
     namespace viewer {
 
-	/* class RegionInfo; */
+    class Region;
 
 	namespace qt {
 
@@ -44,6 +46,17 @@ namespace casa {
 		    RegionInfo::InfoTypes type( ) const { return RegionInfo::MsInfoType; }
 		    virtual QPushButton *next( ) { return next_button; }
 	    };
+
+	    class SliceStats : public stats_t, public Ui::SlicerStats {
+	   		Q_OBJECT
+	   		public:
+	   		    SliceStats( QWidget *parent=0 );
+	   		    RegionInfo::InfoTypes type( ) const { return RegionInfo::SliceInfoType; }
+	   		    virtual QPushButton *next( ) { return next_button; }
+	   		    QWidget* getPlotHolder() { return plotHolderWidget; }
+	   		signals:
+	   			void show1DSliceTool();
+	   	};
 	}
 
 
@@ -59,7 +72,7 @@ namespace casa {
 		void addstats( std::list<std::pair<String,String> > *stats );
 #endif
 
-		void updateStatistics( RegionInfo &stats );
+		void updateStatistics( RegionInfo &stats, Region* region = NULL );
 
 		void setCenterBackground(QString background);
 
@@ -76,7 +89,7 @@ namespace casa {
 
 	    private:
 		QVBoxLayout *layout_;
-		qt::stats_t *new_stats_box( RegionInfo::InfoTypes type );
+		qt::stats_t *new_stats_box( RegionInfo::InfoTypes type, Region* region );
 		qt::stats_t *stats_box_;
 	};
     }

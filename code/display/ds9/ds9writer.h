@@ -44,6 +44,7 @@ namespace casa {
 		bool rectangle( WorldCanvas *, const std::vector<std::pair<double,double> > &pts );
 		bool ellipse( WorldCanvas *, const std::vector<std::pair<double,double> > &pts );
 		bool polygon( WorldCanvas *, const std::vector<std::pair<double,double> > &pts );
+		bool polyline( WorldCanvas *, const std::vector<std::pair<double,double> > &pts );
 		bool point( WorldCanvas *, const std::vector<std::pair<double,double> > &pts );
 	    private:
 		typedef std::map<std::string,std::string> str_map_type;

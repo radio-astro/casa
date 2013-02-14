@@ -1087,6 +1087,9 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 		const QString &/*linecolor*/, const QString & /*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 	if (!isVisible()) return;
 	if (!analysis) return;
+	if (shape == "polyline"){
+		return;
+	}
 
 	//Only treat it as a new region if we haven't already registered
 	//it in the map.  This method executing multiple times was causing

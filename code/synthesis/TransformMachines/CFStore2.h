@@ -61,6 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //-------------------------------------------------------------------------
     void makePersistent(const char *dir,const char *qualifier="");
     //-------------------------------------------------------------------------
+    void initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq);
+    //-------------------------------------------------------------------------
     Bool null() {return (storage_p.size() == 0);};
     //-------------------------------------------------------------------------
     Double memUsage();

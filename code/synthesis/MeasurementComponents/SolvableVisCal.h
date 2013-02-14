@@ -314,7 +314,8 @@ public:
 			 const Vector<String>& fldNames,
 			 fluxScaleStruct& oFluxScaleStruct,
 			 const String& oListFile,
-                         const Bool& incremental)=0;
+                         const Bool& incremental,
+                         const Int& fitorder)=0;
 
   // Report state:
   inline virtual void state() { stateSVC(True); };
@@ -590,7 +591,8 @@ public:
 			 const Vector<String>& ,
 			 SolvableVisCal::fluxScaleStruct&,
 			 const String&,
-                         const Bool&)
+                         const Bool&,
+                         const Int&)
 	{ throw(AipsError("NYI")); };
 
   // SVM-specific write to caltable
@@ -730,7 +732,8 @@ public:
 		 const Vector<String>& fldNames,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
 		 const String& oListFile,
-                 const Bool& incremental=False);
+                 const Bool& incremental=False,
+                 const Int& fitorder=1);
 
   // SVJ-specific write to caltable
   virtual void keepNCT();

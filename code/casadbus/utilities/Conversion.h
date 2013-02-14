@@ -38,23 +38,23 @@
 namespace casa {
 
     namespace dbus {
-	std::map<std::string, DBus::Variant> *fromRecord( const Record &theRecord );
+		Record toRecord( const std::map<std::string,DBus::Variant> &mapIn );
+		std::map<std::string,DBus::Variant> fromRecord( const Record &record );
 
-	variant toVariant( const DBus::Variant &src );
+		variant toVariant( const DBus::Variant &src );
 
-	DBus::Variant fromVariant( const variant &src );
-	void show( const variant &v );
+		std::map<std::string,variant> toStdMap( const std::map<std::string,DBus::Variant> &src );
+		std::map<std::string,DBus::Variant> fromStdMap( const std::map<std::string,variant> &src );
 
-	template<class t> std::vector<double> af( const Vector<t> &other ) {
-	    std::vector<double> result(other.nelements( ));
-	    for (unsigned int x=0; x < result.size(); ++x)
-		result[x] = (double) other[x];
-	    return result;
-	}
+		DBus::Variant fromVariant( const variant &src );
+		void show( const variant &v );
 
-#if 0
-	Record *toRecord( const std::map<std::string, DBus::Variant> &map );
-#endif
+		template<class t> std::vector<double> af( const Vector<t> &other ) {
+			std::vector<double> result(other.nelements( ));
+			for (unsigned int x=0; x < result.size(); ++x)
+				result[x] = (double) other[x];
+			return result;
+		}
     }
 }
 

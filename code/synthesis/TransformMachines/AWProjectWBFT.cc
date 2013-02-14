@@ -1359,7 +1359,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	visResamplerWt_p->finalizeToSky(gwts, sumCFWeight);
 	visResamplerWt_p->releaseBuffers();
       }
-    //cerr << "Run time = " << visResampler_p->runTime_p << endl;
+    cerr << "Gridding run time = " 
+	 << " " << visResampler_p->runTimeG_p 
+	 << " " << visResampler_p->runTimeG1_p 
+	 << " " << visResampler_p->runTimeG2_p 
+	 << " " << visResampler_p->runTimeG3_p 
+	 << " " << visResampler_p->runTimeG4_p 
+	 << " " << visResampler_p->runTimeG5_p 
+	 << " " << visResampler_p->runTimeG6_p 
+	 << " " << visResampler_p->runTimeG7_p 
+	 << endl;
+    visResampler_p->runTimeG_p=visResampler_p->runTimeG1_p=visResampler_p->runTimeG2_p=visResampler_p->runTimeG3_p=visResampler_p->runTimeG4_p=visResampler_p->runTimeG5_p=visResampler_p->runTimeG6_p=visResampler_p->runTimeG7_p=0.0;
   }
   //
   //---------------------------------------------------------------

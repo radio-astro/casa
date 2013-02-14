@@ -105,7 +105,7 @@ class MSTransform
 {
 protected:
 
-	static LogIO os;
+	LogIO log_p;
 
 	// variables used to initialize the MSTransformDataHandler
 	String msname_p;

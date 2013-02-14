@@ -109,6 +109,14 @@ int ExternalAxisWidget::getTickIncrement( int tickCount ) const {
 			dynamicCount = dynamicCount / 3;
 			increment = increment * 3;
 		}
+		else if ( dynamicCount % 5 == 0 ){
+			dynamicCount = dynamicCount / 5;
+			increment = increment * 5;
+		}
+		else if ( dynamicCount % 7 == 0 ){
+			dynamicCount = dynamicCount / 7;
+			increment = increment * 7;
+		}
 		else {
 			//Give up.
 			break;

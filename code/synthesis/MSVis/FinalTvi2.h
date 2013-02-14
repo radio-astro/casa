@@ -184,9 +184,9 @@ public:
     // in the original MS.
     // If the MS does not contain all polarizations, only the parallel
     // hand polarizations are used.
-    virtual void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
-    virtual void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
-    virtual void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
+//    virtual void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
+//    virtual void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
+//    virtual void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
 
     // Write/modify the visibilities
     // This writes the data as found in the MS, Cube (npol,nchan,nrow).

@@ -89,40 +89,41 @@ namespace casa {
 		friend class Dispatcher;
 	};
 
-	class Dispatcher : public DBus::Dispatcher {
+		class Dispatcher : public DBus::Dispatcher {
 
-	    public:
-		Dispatcher() : _running(false) { }
-		~Dispatcher();
+			public:
+				Dispatcher();
+				~Dispatcher();
 
-		// pure virtual functions from Dispatcher
-		void enter();
-		void leave();
+				// pure virtual functions from Dispatcher
+				void enter();
+				void leave();
 
-		DBus::Timeout *add_timeout(DBus::Timeout::Internal *);
-		void rem_timeout(DBus::Timeout *);
+				DBus::Timeout *add_timeout(DBus::Timeout::Internal *);
+				void rem_timeout(DBus::Timeout *);
 
-		DBus::Watch *add_watch(DBus::Watch::Internal *);
-		void rem_watch(DBus::Watch *);
+				DBus::Watch *add_watch(DBus::Watch::Internal *);
+				void rem_watch(DBus::Watch *);
 
-		// helper function
-		void do_iteration();
-		void watch_ready(Watch &);
-		void timeout_expired(Timeout &);
+				// helper function
+				void do_iteration();
+				void watch_ready(Watch &);
+				void timeout_expired(Timeout &);
 
-		void dispatch( );
+				void dispatch( );
 
-	    private:
-		DBus::DefaultMutex _mutex_t;
-		std::list<Timeout*> _timeouts;
+			private:
+				DBus::DefaultMutex _mutex_t;
+				std::list<Timeout*> _timeouts;
 
-		DBus::DefaultMutex _mutex_w;
-		std::list<Watch*> _watches;
+				DBus::DefaultMutex _mutex_w;
+				std::list<Watch*> _watches;
 
-		bool _running;
-		friend class Timeout;
-		friend class Watch;
-	};
+				bool _running;
+				int _leave_pipe[2];
+				friend class Timeout;
+				friend class Watch;
+		};
     }
 }
 

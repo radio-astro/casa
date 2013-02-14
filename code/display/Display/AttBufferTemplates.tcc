@@ -49,7 +49,7 @@ Bool AttributeBuffer::getValue(const String &name, T &value) const
 template <class T>
 Bool AttributeBuffer::getValue(const String &name, Vector<T> &value) const 
 {
-  Vector<T>* tmp;
+  Vector<T>* tmp = NULL;
   DataType dtype = whatType(tmp);
   AttValue::ValueType valType;
   switch(dtype) {

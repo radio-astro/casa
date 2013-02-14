@@ -185,8 +185,10 @@ void PlotMSCacheBase::load(const vector<PMS::Axis>& axes,
 
     // Can't plot averaged weights yet
     if (averaging_.anyAveraging()) {
-      if (axes[0] == (PMS::WT) |
-	  axes[1] == (PMS::WT)) {
+      if (axes[0] == (PMS::WT) ||
+          axes[0] == (PMS::WTxAMP) ||
+          axes[1] == (PMS::WT) ||
+          axes[1] == (PMS::WTxAMP)) {
 	throw(AipsError("Sorry, the Wt axes options do not yet support averaging."));
       }
     }
@@ -402,6 +404,7 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
         case PMS::FLAG_ROW: PMSC_DELETE(flagrow_) break;
 
         case PMS::WT: PMSC_DELETE(wt_) break;
+        case PMS::WTxAMP: PMSC_DELETE(wtxamp_) break;
 
 	case PMS::AZ0: az0_.resize(0); break;
 	case PMS::EL0: el0_.resize(0); break;
@@ -642,6 +645,7 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
   flagrow_.resize(nChunk_,False,True);
 
   wt_.resize(nChunk_,False,True);
+  wtxamp_.resize(nChunk_,False,True);
 
   az0_.resize(nChunk_,True);
   el0_.resize(nChunk_,True);
@@ -680,6 +684,7 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
     flag_[ic] = new Array<Bool>();
     flagrow_[ic] = new Vector<Bool>();
     wt_[ic] = new Matrix<Float>();
+    wtxamp_[ic] = new Array<Float>();
     antenna_[ic] = new Vector<Int>();
     az_[ic] = new Vector<Double>();
     el_[ic] = new Vector<Double>();
@@ -723,6 +728,7 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
   case PMS::SWP:
   case PMS::OPAC:
   case PMS::FLAG:
+  case PMS::WTxAMP:
     axismask(Slice(0,3,1))=True;
     break;
   case PMS::CHANNEL:
@@ -874,6 +880,7 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
     case PMS::WWAVE:
     case PMS::FLAG:
     case PMS::WT:
+    case PMS::WTxAMP:
     case PMS::ANTENNA: 
     case PMS::AZIMUTH: 
     case PMS::ELEVATION: 
@@ -895,7 +902,8 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
             else if(axis == PMS::CHANNEL)  n += chan_[i]->size();
             else if(axis == PMS::CORR)     n += corr_[i]->size();
             else if(axis == PMS::AMP ||
-		    axis == PMS::GAMP)     n += amp_[i]->size();
+                    axis == PMS::GAMP ||
+                    axis == PMS::WTxAMP)   n += amp_[i]->size();
             else if(axis == PMS::PHASE ||
 		    axis == PMS::GPHASE)   n += pha_[i]->size();
             else if(axis == PMS::REAL ||
@@ -915,7 +923,8 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
             else if(axis == PMS::VWAVE)    n += vwave_[i]->size();
             else if(axis == PMS::WWAVE)    n += wwave_[i]->size();
             else if(axis == PMS::FLAG)     n += flag_[i]->size();
-            else if(axis == PMS::WT)       n += wt_[i]->size();
+            else if(axis == PMS::WT ||
+                    axis == PMS::WTxAMP)   n += wt_[i]->size();
             else if(axis == PMS::ANTENNA)  n += antenna_[i]->size();
             else if(axis == PMS::AZIMUTH)  n += az_[i]->size();
             else if(axis == PMS::ELEVATION)n += el_[i]->size();

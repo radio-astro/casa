@@ -36,6 +36,8 @@ const QString Preferences::DISPLAY_LEGEND = "Display Legend";
 const QString Preferences::DISPLAY_OUTPUT_FUNCTIONS = "Display Output Functions";
 const QString Preferences::DISPLAY_OUTPUT_SCATTERPLOT = "Display Output Scatter Plot";
 const QString Preferences::DISPLAY_Y_PLOTS = "Display Y Plots";
+const QString Preferences::LOG_AMPLITUDE = "Logarithm of Amplitude";
+const QString Preferences::LOG_UV = "Logarithm of u/v Axis";
 
 Preferences::Preferences(QWidget *parent)
     : QDialog(parent),
@@ -45,7 +47,9 @@ Preferences::Preferences(QWidget *parent)
       displayOutputFunctions( true ),
       displayOutputScatterPlot( false ),
       displayYPlots( true ),
-      displayLegend(true){
+      displayLegend(true),
+      logAmplitude(false),
+      logUV(false){
 
 	ui.setupUi(this);
 	setWindowTitle( "Feather Plot Display");
@@ -73,7 +77,18 @@ void Preferences::initializeCustomSettings(){
 	displayOutputFunctions = settings.value( DISPLAY_OUTPUT_FUNCTIONS, displayOutputFunctions ).toBool();
 	displayOutputScatterPlot = settings.value( DISPLAY_OUTPUT_SCATTERPLOT, displayOutputScatterPlot).toBool();
 	displayYPlots = settings.value( DISPLAY_Y_PLOTS, displayYPlots ).toBool();
+	logAmplitude = settings.value( LOG_AMPLITUDE, logAmplitude ).toBool();
+	logUV = settings.value( LOG_UV, logUV ).toBool();
 }
+
+bool Preferences::isLogAmplitude() const {
+	return logAmplitude;
+}
+
+bool Preferences::isLogUV() const {
+	return logUV;
+}
+
 bool Preferences::isDisplayOutputFunctions() const {
 	return displayOutputFunctions;
 }
@@ -120,6 +135,8 @@ void Preferences::reset(){
 	ui.outputCheckBox->setChecked( displayOutputFunctions );
 	ui.outputScatterCheckBox->setChecked( displayOutputScatterPlot );
 	ui.yPlotCheckBox->setChecked( displayYPlots );
+	ui.logAmplitudeCheckBox->setChecked( logAmplitude );
+	ui.logUVCheckBox->setChecked( logUV );
 
 }
 
@@ -146,6 +163,12 @@ void Preferences::persist(){
 
 	displayYPlots = ui.yPlotCheckBox->isChecked();
 	settings.setValue( DISPLAY_Y_PLOTS, displayYPlots );
+
+	logAmplitude = ui.logAmplitudeCheckBox->isChecked();
+	settings.setValue( LOG_AMPLITUDE, logAmplitude );
+
+	logUV = ui.logUVCheckBox->isChecked();
+	settings.setValue( LOG_UV, logUV );
 }
 
 Preferences::~Preferences(){

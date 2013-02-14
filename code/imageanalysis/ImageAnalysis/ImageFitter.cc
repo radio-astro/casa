@@ -599,16 +599,11 @@ void ImageFitter::_setFluxes() {
 		rmsPeak,
 		_bUnit
 	);
-	ImageMetaData md(*_getImage());
-	Quantity resArea;
 	Quantity intensityToFluxConversion = _bUnit.contains("/beam")
     	? Quantity(1.0, "beam")
     	: Quantity(1.0, "pixel");
+	Quantity resArea = _getImage()->coordinates().directionCoordinate().getPixelArea();
 
-    if (! md.getDirectionPixelArea(resArea)) {
-		*_getLog() << LogIO::EXCEPTION
-			<< "Pixel area could not be determined";
-	}
     if (intensityToFluxConversion.getUnit() == "beam") {
         try {
             Unit unit = resArea.getUnit();
@@ -1377,14 +1372,15 @@ void ImageFitter::_fitsky(
 	Array<Float> sigma;
 	// residMask constant so do not recalculate out_pixelmask
 	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+
 	if (status == Fit2D::OK) {
-		*_getLog() << LogIO::NORMAL << "Number of iterations = "
-			<< fitter.numberIterations() << LogIO::POST;
+		*_getLog() << LogIO::NORMAL << "Fitter was able to find a solution in "
+			<< fitter.numberIterations() << " iterations." << LogIO::POST;
 		converged = True;
 	}
 	else {
 		converged = False;
-		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return;
 	}
@@ -1416,10 +1412,17 @@ void ImageFitter::_fitsky(
 			String error;
 			Record r;
 			result(j).flux().toRecord(error, r);
-			_encodeSkyComponentError(
-				*_getLog(), result(j), facToJy, allAxesSubImage,
-				solution, errors, stokes, xIsLong
-			);
+            try {
+                _encodeSkyComponentError(
+				    *_getLog(), result(j), facToJy, allAxesSubImage,
+				    solution, errors, stokes, xIsLong
+			    );
+            }
+            catch (const AipsError& x) {
+                *_getLog() << "POTENTIAL DEFECT: Fitter converged but exception caught in post processing. "
+                    << "This may be a bug. Conact us with the image and the input parameters "
+                    << "you used and we will have a look." << LogIO::EXCEPTION;
+            }
 			_curResults.add(result(j));
 			j++;
 		}
@@ -1621,9 +1624,9 @@ void ImageFitter::_encodeSkyComponentError(
 	// Position.  Use the pixel to world widths converter again.
 	// Or do something simpler ?
 	// X
-	dParameters(2) = errors(1) == 0 ? 1e-12 : errors(1);
+	dParameters(2) = errors(1) == 0 ? 1e-8 : errors(1);
 	// Y
-	dParameters(3) = errors(2) == 0 ? 1e-12 : errors(2);
+	dParameters(3) = errors(2) == 0 ? 1e-8 : errors(2);
 	dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
 	Bool flipped = ImageUtilities::pixelWidthsToWorld(
 			os, wParameters, dParameters,

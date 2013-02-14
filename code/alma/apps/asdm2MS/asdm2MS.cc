@@ -2104,7 +2104,7 @@ void fillMain(int		rowNum,
     }
     
     else {
-      // we are in front of non radiometric data , supposedly AP_CORRECTED data.
+      // we are in front of non radiometric data , but data supposedly with AP_CORRECTED data.
       for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size() ; iData++) {
 	if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
 	  /*
@@ -2128,6 +2128,9 @@ void fillMain(int		rowNum,
 	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));	    
 	}
 	else {
+	  /*
+	  ** And now finally the correlation corrected data.
+	  */
 	  correctedTime.push_back(vmsData_p->v_time.at(iData));
 	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
 	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
@@ -2141,9 +2144,11 @@ void fillMain(int		rowNum,
 	  correctedUvw.push_back(vv_uvw.at(iData)(0));
 	  correctedUvw.push_back(vv_uvw.at(iData)(1));
 	  correctedUvw.push_back(vv_uvw.at(iData)(2));
-	  correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
-					     vmsData_p->vv_dataShape.at(iData).at(1),
-					     iter->second));
+	  iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED);
+	  float* theData = cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+				      vmsData_p->vv_dataShape.at(iData).at(1),
+				      iter->second);
+	  correctedData.push_back(theData);
 	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
 	}
       }
@@ -2812,8 +2817,8 @@ int main(int argc, char *argv[]) {
       ("no-pointing", "The Pointing table will be ignored.")
       ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined")
       ("bdf-slice-size", po::value<uint64_t>(&bdfSliceSizeInMb)->default_value(500),  "The maximum amount of memory expressed as an integer in units of megabytes (1024*1024) allocated for BDF data. The default is 500 (megabytes)") 
-      ("parallel", "run with multithreading mode.")
-      ("lazy", "defers the production of the observational data in the MS Main table (DATA column)"); 
+      //("parallel", "run with multithreading mode.")
+      ("lazy", "defers the production of the observational data in the MS Main table (DATA column) - Purely experimental, don't use in production !"); 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
     po::options_description hidden("Hidden options");

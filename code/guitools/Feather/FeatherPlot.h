@@ -26,7 +26,6 @@
 #ifndef FEATHERPLOT_H_
 #define FEATHERPLOT_H_
 
-//#include <QMenu>
 #include <QList>
 #include <qwt_plot.h>
 #include <qwt_legend.h>
@@ -41,6 +40,7 @@ class ExternalAxisWidgetRight;
 class ExternalAxisWidgetLeft;
 class ExternalAxisWidget;
 class ExternalAxis;
+class FeatherCurve;
 
 class FeatherPlot : public QwtPlot {
 
@@ -64,6 +64,11 @@ public:
 	void setLineThickness( int thickness );
 	void setDotSize( int dotSize );
 	void setLegendVisibility( bool visible );
+	/**
+	 * Returns true if the uvScale changed.  The log scale does not
+	 * impact the return of this method.
+	 */
+	bool setLogScale( bool uvScale, bool ampScale );
 
 	//Legend
 	void insertSingleLegend( QWidget* parent );
@@ -71,6 +76,8 @@ public:
 
 	//Accessors
 	FeatherPlot::PlotType getPlotType() const;
+	bool isLogUV() const;
+	bool isLogAmplitude() const;
 	bool isEmpty() const;
 	bool isScatterPlot() const;
 	bool isSliceCut() const;
@@ -84,19 +91,22 @@ private:
 	void setCurveSize( int curveIndex );
 	void updateAxes();
 	void setAxisLabels();
-	void adjustPlotBounds( const QVector<double>& values, QwtPlot::Axis yAxis );
+	void adjustPlotBounds( std::pair<double,double> curveBounds, QwtPlot::Axis yAxis );
 	void resetPlotBounds();
 	void initAxes( );
-	QwtLegend* legend;
+	void setCurveData( FeatherCurve* curve, QwtPlot::Axis yAxis );
 
+	QwtLegend* legend;
 	PlotType plotType;
+
 	int lineThickness;
 	int dotSize;
+	bool scaleLogAmplitude;
+	bool scaleLogUV;
 
 	const int AXIS_COUNT;
 
-
-    QList<QwtPlotCurve*> curves;
+    QList<FeatherCurve*> curves;
 
     //External axis drawing support
     QList<QString> axisLabels;
@@ -107,7 +117,6 @@ private:
     double maxX;
     double minY;
     double maxY;
-
 };
 
 } /* namespace casa */

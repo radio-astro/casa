@@ -334,8 +334,9 @@ public:
     virtual Int arrayId () const = 0;
     virtual void setArrayId (Int value) = 0;
     virtual Int dataDescriptionId () const = 0;
-    virtual const Vector<Int> & dataDescriptionIds () const = 0; // [nR]
     virtual void setDataDescriptionId (Int value) = 0;
+    virtual const Vector<Int> & dataDescriptionIds () const = 0; // [nR]
+    virtual void setDataDescriptionIds (const Vector<Int> & ) = 0; // [nR]
     virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
     virtual const Vector<MDirection> & direction2 () const = 0; // [nR]
     virtual const Vector<Double> & exposure () const = 0; // [nR]
@@ -387,13 +388,13 @@ public:
     virtual const Cube<Complex> & visCube () const = 0; // [nC,nF,nR]
     virtual void setVisCube(const Complex & c) = 0;
     virtual void setVisCube (const Cube<Complex> &) = 0; // [nC,nF,nR]
-    virtual const Matrix<CStokesVector> & vis () const = 0; // [nF,nR]
-    virtual void setVis (Matrix<CStokesVector> &) = 0; // [nF,nR]
+//    virtual const Matrix<CStokesVector> & vis () const = 0; // [nF,nR]
+//    virtual void setVis (Matrix<CStokesVector> &) = 0; // [nF,nR]
 
     virtual const Cube<Complex> & visCubeCorrected () const = 0; // [nC,nF,nR]
     virtual void setVisCubeCorrected (const Cube<Complex> &) = 0; // [nC,nF,nR]
-    virtual const Matrix<CStokesVector> & visCorrected () const = 0; // [nF,nR]
-    virtual void setVisCorrected (const Matrix<CStokesVector> &) = 0; // [nF,nR]
+//    virtual const Matrix<CStokesVector> & visCorrected () const = 0; // [nF,nR]
+//    virtual void setVisCorrected (const Matrix<CStokesVector> &) = 0; // [nF,nR]
 
     virtual const Cube<Float> & visCubeFloat () const = 0; // [nC,nF,nR]
     virtual void setVisCubeFloat (const Cube<Float> &) = 0; // [nC,nF,nR]
@@ -401,9 +402,9 @@ public:
     virtual const Cube<Complex> & visCubeModel () const = 0; // [nC,nF,nR]
     virtual void setVisCubeModel(const Complex & c) = 0;
     virtual void setVisCubeModel(const Cube<Complex>& vis) = 0; // [nC,nF,nR]
-    virtual void setVisCubeModel(const Vector<Float>& stokes) = 0; // [1..4]
-    virtual const Matrix<CStokesVector> & visModel () const = 0; // [nF,nR]
-    virtual void setVisModel (Matrix<CStokesVector> &) = 0; // [nF,nR]
+//    virtual void setVisCubeModel(const Vector<Float>& stokes) = 0; // [1..4]
+//    virtual const Matrix<CStokesVector> & visModel () const = 0; // [nF,nR]
+//    virtual void setVisModel (Matrix<CStokesVector> &) = 0; // [nF,nR]
 
     //--------------------------------------------------------
     //
@@ -492,6 +493,8 @@ public:
     virtual Int spectralWindow () const = 0;
 
     virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
+    virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
+
 
     static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
 

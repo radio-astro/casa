@@ -36,8 +36,11 @@ int main(int argc, char **argv)
 
 	// Data selection parameters
 	String inputMS,outputMS, datacolumn;
-	Bool combinespws;
+	Bool combinespws, hanning, regridms, freqaverage;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
+
+	Int nchan;
+	String start, width;
 
 	// Parse input parameters
 	for (unsigned short i=0;i<argc-1;i++)
@@ -66,14 +69,62 @@ int main(int argc, char **argv)
 		else if (parameter == string("-combinespws"))
 		{
 			combinespws = Bool(atoi(value.c_str()));
-			configuration.define ("combinespws", combinespws);
+			configuration.define ("combinespws", Bool(combinespws));
 			cout << "Combine Spectral Windows is: " << combinespws << endl;
+		}
+		else if (parameter == string("-hanning"))
+		{
+			hanning = Bool(atoi(value.c_str()));
+			configuration.define ("hanning", Bool(hanning));
+			cout << "Hanning Smooth is: " << hanning << endl;
+		}
+		else if (parameter == string("-regridms"))
+		{
+			regridms = Bool(atoi(value.c_str()));
+			configuration.define ("regridms", Bool(regridms));
+			cout << "Regrid MS is: " << regridms << endl;
+		}
+		else if (parameter == string("-nchan"))
+		{
+			nchan = atoi(value.c_str());
+			configuration.define ("nchan", nchan);
+			cout << "nchan is: " << nchan << endl;
+		}
+		else if (parameter == string("-start"))
+		{
+			start = value;
+			configuration.define ("start", start);
+			cout << "Start is: " << start << endl;
+		}
+		else if (parameter == string("-width"))
+		{
+			width = value;
+			configuration.define ("width", width);
+			cout << "Width is: " << width << endl;
+		}
+		else if (parameter == string("-freqaverage"))
+		{
+			freqaverage = Bool(atoi(value.c_str()));
+			configuration.define ("freqaverage", Bool(freqaverage));
+			cout << "Frequency Average is: " << freqaverage << endl;
+		}
+		else if (parameter == string("-freqbin"))
+		{
+			width = value;
+			configuration.define ("freqbin", width);
+			cout << "Frequency bin is: " << width << endl;
 		}
 		else if (parameter == string("-spw"))
 		{
 			spw = value;
 			configuration.define ("spw", spw);
 			cout << "Spectral Window selection is: " << spw << endl;
+		}
+		else if (parameter == string("-field"))
+		{
+			field = value;
+			configuration.define ("field", field);
+			cout << "Field selection is: " << field << endl;
 		}
 	}
 
