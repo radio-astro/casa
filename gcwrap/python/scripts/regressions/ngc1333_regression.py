@@ -901,23 +901,19 @@ if doimage:
     excludepix = [-1]
     outfile = mom0redoutfile
     async = False
-    myres = immoments()
-    myres.done() 
+    immoments()
     outfile = mom0blueoutfile
     chans='9~15'
-    myres = immoments()
-    myres.done()
+    immoments()
 
     outfile = mom0alloutfile
     chans='2~15'
-    myres = immoments()
-    myres.done()
+    immoments()
 
     outfile = mom1alloutfile
     moments = 1
     includepix=[0.02,100.0]
-    myres = immoments()
-    myres.done()
+    immoments()
 # Record moment estimation completion time
     if benchmarking:
         momenttime = time.time()
