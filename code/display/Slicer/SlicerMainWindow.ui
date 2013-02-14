@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>837</width>
     <height>355</height>
    </rect>
   </property>
@@ -341,7 +341,7 @@
     <string>Zoom In</string>
    </property>
   </action>
-   <action name="actionZoomOut">
+  <action name="actionZoomOut">
    <property name="icon">
     <iconset>
      <normaloff>:/images/zoomOut.png</normaloff>:/images/zoomOut.png</iconset>
@@ -353,7 +353,7 @@
     <string>Zoom Out</string>
    </property>
   </action>
-   <action name="actionZoomNeutral">
+  <action name="actionZoomNeutral">
    <property name="icon">
     <iconset>
      <normaloff>:/images/zoomNeutral.png</normaloff>:/images/zoomNeutral.png</iconset>

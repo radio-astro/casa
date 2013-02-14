@@ -108,6 +108,7 @@ void PlotHolder::rectangleZoomed( double minX, double maxX, double minY, double 
 	}
 }
 
+
 void PlotHolder::changePlotType(){
 	bool scatterPlot = plotTypeAction.isChecked();
 	zoom90Action.setEnabled( !scatterPlot );
@@ -127,12 +128,14 @@ void PlotHolder::changePlotType(){
 	}
 }
 
+
 void PlotHolder::changeZoom90(){
 	bool zoom90 = zoom90Action.isChecked();
 	for ( int i = 0; i < plots.size(); i++ ){
 		plots[i]->changeZoom90( zoom90 );
 	}
 }
+
 
 void PlotHolder::zoomNeutral(){
 	zoom90Action.setChecked( false );
@@ -141,16 +144,19 @@ void PlotHolder::zoomNeutral(){
 	}
 }
 
+
 void PlotHolder::showContextMenu( const QPoint& pt ){
 	QPoint globalPos = mapToGlobal( pt );
 	contextMenu.exec( globalPos );
 }
+
 
 void PlotHolder::setRectangleZoomMode(){
 	for ( int i = 0; i < SCATTER_X; i++ ){
 		plots[i]->setRectangleZoomMode();
 	}
 }
+
 
 void PlotHolder::setDiameterSelectorMode(){
 	for ( int i = 0; i < SCATTER_X; i++ ){
@@ -168,11 +174,13 @@ void PlotHolder::setLineThickness( int lineThickness ){
 	}
 }
 
+
 void PlotHolder::setDotSize( int dotSize ){
 	for ( int i = 0; i < plots.size(); i++ ){
 		plots[i]->setDotSize( dotSize );
 	}
 }
+
 
 void PlotHolder::setLegendVisibility( bool visible ){
 	legendVisible = visible;
@@ -182,9 +190,11 @@ void PlotHolder::setLegendVisibility( bool visible ){
 	plots[SLICE_Y]->setLegendVisibility( visible );
 }
 
+
 void PlotHolder::setDisplayScatterPlot( bool visible ){
 	displayScatter = visible;
 }
+
 
 void PlotHolder::refreshPlots(){
 	for ( int i = 0; i < plots.size(); i++ ){
@@ -192,17 +202,21 @@ void PlotHolder::refreshPlots(){
 	}
 }
 
+
 void PlotHolder::setDisplayOutputSlice( bool visible ){
 	displayOutputSlice = visible;
 }
+
 
 void PlotHolder::setDisplayOriginalSlice( bool visible ){
 	displayOriginalSlice = visible;
 }
 
+
 void PlotHolder::setDisplayYGraphs( bool visible ){
 	displayYGraphs = visible;
 }
+
 
 void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
 		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
@@ -211,6 +225,7 @@ void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& 
 		plots[i]->setPlotColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor );
 	}
 }
+
 
 void PlotHolder::setLogScale( bool uvScale, bool logScale ){
 	for ( int i = 0; i < plots.size(); i++ ){
@@ -227,11 +242,13 @@ void PlotHolder::setSingleDishWeight( const Vector<Float>& sDx, const Vector<Flo
 	plots[SLICE_Y]->setSingleDishWeight( sDy, sDyAmp );
 }
 
+
 void PlotHolder::setInterferometerWeight( const Vector<Float>& intx, const Vector<Float>& intxAmp,
 		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
 	plots[SLICE_X]->setInterferometerWeight( intx, intxAmp );
 	plots[SLICE_Y]->setInterferometerWeight( inty, intyAmp );
 }
+
 
 void PlotHolder::setSingleDishData( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
 		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
@@ -241,6 +258,7 @@ void PlotHolder::setSingleDishData( const Vector<Float>& sDx, const Vector<Float
 	plots[SCATTER_Y]->setSingleDishData( sDy, sDyAmp );
 }
 
+
 void PlotHolder::setInterferometerData( const Vector<Float>& intx, const Vector<Float>& intxAmp,
 		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
 	plots[SLICE_X]->setInterferometerData( intx, intxAmp );
@@ -249,11 +267,13 @@ void PlotHolder::setInterferometerData( const Vector<Float>& intx, const Vector<
 	plots[SCATTER_Y]->setInterferometerData( inty, intyAmp );
 }
 
+
 void PlotHolder::setSingleDishDataOriginal( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
 		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
 	plots[SLICE_X_ORIGINAL]->setSingleDishData( sDx, sDxAmp );
 	plots[SLICE_Y_ORIGINAL]->setSingleDishData( sDy, sDyAmp );
 }
+
 
 void PlotHolder::setInterferometerDataOriginal( const Vector<Float>& intx, const Vector<Float>& intxAmp,
 		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
@@ -261,15 +281,18 @@ void PlotHolder::setInterferometerDataOriginal( const Vector<Float>& intx, const
 	plots[SLICE_Y_ORIGINAL]->setInterferometerData( inty, intyAmp );
 }
 
+
 void PlotHolder::updateScatterData( ){
 	plots[SCATTER_X]->addScatterData();
 	plots[SCATTER_Y]->addScatterData();
 }
 
+
 void PlotHolder::dishDiameterXChanged( double value ){
 	plots[SLICE_X]->setDishDiameter( value );
 	plots[SLICE_X_ORIGINAL]->setDishDiameter( value );
 }
+
 
 void PlotHolder::dishDiameterYChanged( double value ){
 	plots[SLICE_Y]->setDishDiameter( value );
@@ -287,11 +310,13 @@ void PlotHolder::addPlots( QGridLayout*& layout, bool displayYGraphs, int rowInd
 	}
 }
 
+
 void PlotHolder::addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout, QwtPlot::Axis axis, int basePlotIndex ){
 	QWidget* axisWidget = plots[basePlotIndex]->getExternalAxisWidget( axis );
 	axisWidget->setParent( this );
 	layout->addWidget( axisWidget, rowIndex, columnIndex );
 }
+
 
 void PlotHolder::emptyLayout(QLayout* layout ){
 	//Take the legend external legend out of the plot.
@@ -321,12 +346,14 @@ void PlotHolder::emptyLayout(QLayout* layout ){
 	legendHolder = NULL;
 }
 
+
 void PlotHolder::adjustLayout( bool scatterPlot ){
 	if ( scatterPlot != tempScatterPlot ){
 		tempScatterPlot = scatterPlot;
 		layoutPlotWidgets();
 	}
 }
+
 
 void PlotHolder::layoutPlotWidgets(){
 	QLayout* plotLayout = layout();

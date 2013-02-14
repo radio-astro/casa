@@ -110,11 +110,13 @@ qt4_wrap_cpp( outfiles_qoh
   RegionShapes/QtSingleRegionShape.qo.h
   RegionShapes/RSUtils.qo.h
   region/Region.qo.h
+  region/Polyline.qo.h
   region/QtRegionSource.qo.h
   region/QtRegionDock.qo.h
   region/QtRegionState.qo.h
   region/QtRegionStats.qo.h
   Clean/CleanGui.qo.h
+  Slicer/SlicePlot.qo.h
   Slicer/SlicerMainWindow.qo.h
   Slicer/SliceColorPreferences.qo.h
   )
@@ -180,6 +182,7 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtRegionState.ui
   region/QtImageRegionStats.ui
   region/QtMsRegionStats.ui
+  region/SlicerStats.ui
   Slicer/SlicerMainWindow.ui
   Slicer/SliceColorPreferences.ui
   Clean/CleanGui.ui
@@ -296,7 +299,9 @@ casa_add_library( display
   DisplayEvents/MultiPointTool.cc
   DisplayEvents/MultiPointToolImpl.cc
   DisplayEvents/MultiPolyTool.cc
+  DisplayEvents/MultiPolylineTool.cc
   DisplayEvents/MultiPolyToolImpl.cc
+  DisplayEvents/MultiPolylineToolImpl.cc
   DisplayEvents/MWCETRegion.cc
   DisplayEvents/MWCRTRegion.cc
   DisplayEvents/MWCRTZoomer.cc
@@ -506,6 +511,9 @@ casa_add_library( display
   Slicer/SliceWorker.cc
   Slicer/SliceColorPreferences.cc
   Slicer/SliceZoomer.cc
+  Slicer/ImageSlice.cc
+  Slicer/SlicePlot.cc
+  Slicer/SliceAxisDraw.cc
   Utilities/DisplayOptions.cc
   Utilities/DlHandle.cc
   Utilities/DlTarget.cc
@@ -523,6 +531,7 @@ casa_add_library( display
   region/Ellipse.cc
   region/Point.cc
   region/Polygon.cc
+  region/Polyline.cc
   region/Region.cc
   ds9/ds9context.cc
   ds9/ds9parser.cc

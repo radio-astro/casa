@@ -42,6 +42,7 @@ namespace casa {
 
 	class Rectangle;
 	class Polygon;
+	class Polyline;
 	class Ellipse;
 
 	class QtRegionDock;
@@ -72,6 +73,8 @@ namespace casa {
 		virtual std::tr1::shared_ptr<Rectangle> rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
 		virtual std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) = 0;
 		virtual std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
+		virtual std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 ) = 0;
+		virtual std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
 		virtual std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
 		virtual std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size ) = 0;
 
@@ -93,6 +96,10 @@ namespace casa {
 								{ return kernel_->polygon(region_creator,wc,x1,y1); }
 		virtual std::tr1::shared_ptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts )
 								{ return kernel_->polygon(region_creator,wc,pts); }
+		virtual std::tr1::shared_ptr<Polyline> polyline( WorldCanvas *wc, double x1, double y1 )
+								{ return kernel_->polyline(region_creator,wc,x1,y1); }
+		virtual std::tr1::shared_ptr<Polyline> polyline( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts )
+										{ return kernel_->polyline(region_creator,wc,pts); }
 		virtual std::tr1::shared_ptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y )
 								{ return kernel_->ellipse(region_creator,wc,blc_x,blc_y,trc_x,trc_y); }
 		virtual std::tr1::shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size )

@@ -492,7 +492,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_, *slicerAct_,
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
       *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
@@ -524,6 +524,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void connectRegionSignals(PanelDisplay* ppd);
   // used to manage generation of the updateAxes( ) signal...
   QtDisplayData *controlling_dd;
+
   void updateFrameInformation();
   void initAnimationHolder();
   void initHistogramHolder();
@@ -577,6 +578,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   void sliceChanged( int regionId, viewer::region::RegionChanges change,
   		const QList<double> & worldX, const QList<double> & worldY,
   		const QList<int> &pixelX, const QList<int> & pixelY );
+  void addSlice( int id, const QString& shape, const QString&, const QList<double>& worldX,
+  		const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
+  		const QString&, const QString&, const QString&, int, int);
 
  public:
  

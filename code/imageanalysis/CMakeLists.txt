@@ -26,6 +26,7 @@ Annotations/AnnEllipse.cc
 Annotations/AnnLine.cc
 Annotations/AnnotationBase.cc
 Annotations/AnnPolygon.cc
+Annotations/AnnPolyline.cc
 Annotations/AnnRectBox.cc
 Annotations/AnnRegion.cc
 Annotations/AnnRotBox.cc
@@ -65,6 +66,7 @@ install (FILES
 	Annotations/AnnEllipse.h
 	Annotations/AnnLine.h
 	Annotations/AnnPolygon.h
+	Annotations/AnnPolyline.h
 	Annotations/AnnRectBox.h
 	Annotations/AnnRegion.h
 	Annotations/AnnRotBox.h

@@ -131,6 +131,7 @@ namespace casa {
 
 			// return the current information mode of the region state, e.g. position, statistics, etc.
 			std::string mode( ) const;
+			const std::string LINE_COLOR_CHANGE;
 
 		signals:
 			void regionChange( viewer::Region *, std::string );
@@ -199,6 +200,7 @@ namespace casa {
 			std::string bounding_index_to_string( int index ) const;
 
 		private:
+			void statisticsUpdate( QtRegionStats *regionStats, RegionInfo& regionInfo);
 			unsigned int setting_combo_box;
 			int pre_dd_change_statistics_count;
 

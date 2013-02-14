@@ -34,6 +34,7 @@
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/AxesDisplayData.h>
 #include <display/DisplayEvents/PCITFiddler.h>
+
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/DisplayEvents/MWCPolylineTool.h>
 #include <display/DisplayEvents/MWCRulerlineTool.h>
@@ -262,7 +263,8 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 	}
 
 
-	polyline_  = new MWCPolylineTool;   pd_->addTool(POLYLINE, std::tr1::shared_ptr<MultiWCTool>(polyline_));
+	polyline_  = new MWCPolylineTool;
+	pd_->addTool(POLYLINE, std::tr1::shared_ptr<MultiWCTool>(polyline_));
 
 	rulerline_  = new MWCRulerlineTool;   pd_->addTool(RULERLINE, std::tr1::shared_ptr<MultiWCTool>(rulerline_));
 

@@ -23,37 +23,54 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef SLICEZOOMER_H_
-#define SLICEZOOMER_H_
+#ifndef IMAGE_SLICE_H_
+#define IMAGE_SLICE_H_
 
-#include <qwt_plot_zoomer.h>
+#include <casa/Arrays/Vector.h>
+#include <QColor>
+#include <QString>
+#include <QList>
+#include <QTextStream>
 
-class QwtPlotCanvas;
-class QKeyEvent;
+class QwtPlotCurve;
+class QwtPlot;
 
 namespace casa {
 
-class SliceZoomer : public QwtPlotZoomer {
+class ImageAnalysis;
+class SliceWorker;
+
+class ImageSlice {
 
 public:
-	SliceZoomer( QwtPlotCanvas* plot);
-	virtual ~SliceZoomer();
-	void zoomIn();
-	void zoomOut();
-	void zoomNeutral();
-	virtual void zoom( const QwtDoubleRect & );
-
-
-protected:
-	virtual void widgetMouseReleaseEvent( QMouseEvent* event );
+	ImageSlice( int id );
+	void setSampleCount( int count );
+	void setAxes( const Vector<Int>& axes );
+	void setCoords( const Vector<Int>& coords );
+	void setCurveColor( QColor color );
+	void setInterpolationMethod( const String& method );
+	void setImageAnalysis( ImageAnalysis* analysis );
+	void setUseViewerColors( bool useViewerColors );
+	void setViewerCurveColor( const QString& colorName );
+	void updatePolyLine(  const QList<int> &pixelX, const QList<int> & pixelY );
+	void toAscii( QTextStream& );
+	void clearCurve();
+	void addPlotCurve( QwtPlot* plot);
+	virtual ~ImageSlice();
+	enum AxisXChoice {DISTANCE,X_POSITION, Y_POSITION};
+	void setAxisXChoice( AxisXChoice choice );
 
 private:
-	bool zoomMode;
-	QwtPlotCanvas* canvas;
-	QPixmap zoomMap;
-	QCursor* zoomCursor;
-
+	void resetPlotCurve();
+	QColor getCurveColor() const;
+	AxisXChoice xAxisChoice;
+	ImageSlice( const ImageSlice& other );
+	ImageSlice operator=( const ImageSlice& other );
+	bool useViewerColors;
+	QColor viewerColor;
+	SliceWorker* sliceWorker;
+	QwtPlotCurve* plotCurve;
 };
 
 } /* namespace casa */
-#endif /* SLICEZOOMER_H_ */
+#endif /* IMAGE_SLICE_H_ */

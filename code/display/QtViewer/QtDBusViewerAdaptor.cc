@@ -571,7 +571,7 @@ namespace casa {
 
 	if ( panel == 0 ) panel = INT_MAX;
 
-	QtDisplayPanelGui *win;
+	QtDisplayPanelGui *win = NULL;
 	panelmap::iterator dpiter = managed_panels.find( panel );
 	if ( dpiter != managed_panels.end( ) ) {
 	    std::list<int> &data = dpiter->second->data();

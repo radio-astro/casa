@@ -30,15 +30,17 @@
 #include <QDebug>
 namespace casa {
 
-SliceWorker::SliceWorker( int id ):sliceResult( NULL ) {
-	this->id = id;
+SliceWorker::SliceWorker( int identifier ):sliceResult( NULL ) {
+	id = identifier;
+	sampleCount = 0;
+	method="";
 }
 
 void SliceWorker::setImageAnalysis( ImageAnalysis* analysis ){
 	imageAnalysis = analysis;
 }
 
-void SliceWorker::setVertices( const Vector<Double>& xValues, const Vector<Double>& yValues ){
+void SliceWorker::setVertices( const QList<int>& xValues, const QList<int>& yValues ){
 	int xCount = xValues.size();
 	int yCount = yValues.size();
 	Assert( xCount == yCount );
@@ -48,6 +50,10 @@ void SliceWorker::setVertices( const Vector<Double>& xValues, const Vector<Doubl
 		verticesX[i] = xValues[i];
 		verticesY[i] = yValues[i];
 	}
+}
+
+void SliceWorker::updatePolyline(){
+
 }
 
 void SliceWorker::setAxes( const Vector<Int>& imageAxes ){
@@ -75,8 +81,19 @@ void SliceWorker::setMethod( const String& method ){
 
 void SliceWorker::run(){
 	Assert( imageAnalysis != NULL );
-	sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
+	if ( method.length() > 0 ){
+		sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
 			axes, coords, sampleCount, method);
+	}
+	else if ( sampleCount > 0 ){
+		sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
+					axes, coords, sampleCount );
+	}
+	else {
+		//Use all default arguments
+		sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
+							axes, coords );
+	}
 }
 
 QVector<double> SliceWorker::getFromArray( const Array<float>& source ) const {
@@ -134,7 +151,7 @@ void SliceWorker::toAscii( QTextStream& stream ) const {
 	if ( count > 0 ){
 		const QString END_OF_LINE( "\n");
 		stream << "Region: "<< QString::number(id)<< END_OF_LINE;
-		stream << "Distance"<<"X Position"<<"Y Position"<<"Pixel";
+		stream << "Distance"<<"X Position"<<"Y Position"<<"Pixel"<<END_OF_LINE;
 		for ( int i = 0; i < count; i++ ){
 			stream << QString::number( distances[i]) << QString::number( xPositions[i])<<
 					QString::number(yPositions[i]) << QString::number(pixels[i]) << END_OF_LINE;

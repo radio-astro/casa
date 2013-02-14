@@ -1,4 +1,3 @@
-//# Polygon.cc: non-GUI polygon region
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,80 +25,148 @@
 //# $Id$
 
 
-#include <display/region/Polygon.h>
+#include <display/region/Polyline.qo.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 
 #include <display/DisplayDatas/PrincipalAxesDD.h>
-#include <images/Regions/WCPolygon.h>
-#include <images/Images/SubImage.h>
 
-#include <imageanalysis/Annotations/AnnPolygon.h>
+#include <imageanalysis/Annotations/AnnPolyline.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/DisplayErrors.h>
+#include <display/Slicer/SlicePlot.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
+#include <display/region/QtRegionState.qo.h>
 #include <display/ds9/ds9writer.h>
 
 namespace casa {
 namespace viewer {
 
-Polygon::Polygon( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts) :
-				Region( "polygon", wc, d ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
+Polyline::Polyline( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts) :
+								Region( "polyline", wc, d ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+								_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
+								slicePlot(NULL){
 	for ( size_t i=0; i < pts.size(); ++i ) {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
 	}
-	closeFigure(false);
+	initPlot();
+	complete = true;
 }
+
 
 // carry over from QtRegion... hopefully, removed soon...
-Polygon::Polygon( QtRegionSourceKernel *rs, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals ) :
-				Region( "polygon", wc, rs->dock( ), hold_signals ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
+Polyline::Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals ) :
+				Region( "polyline", wc, rs->dock( ), hold_signals ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
+				slicePlot(NULL){
 	for ( size_t i=0; i < pts.size(); ++i ) {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
 	}
-	closeFigure(false);
-}
-
-void Polygon::closeFigure( bool signal_complete ) {
+	initPlot();
 	complete = true;
-	unsigned int size = _ref_points_.size( );
-	if ( size > 1 && _ref_points_[size-1].first == _ref_points_[size-2].first &&
-			_ref_points_[size-1].second == _ref_points_[size-2].second ) {
-		_ref_points_.pop_back( );
-		_drawing_points_.pop_back( );
-	}
-	update_reference_bounds_rectangle( );
-	update_drawing_bounds_rectangle( );
-	if ( signal_complete ) {
-		try { polygonComplete( ); } catch (...) { /*fprintf( stderr, "******\tregion selection errors - %s, %d \t******\n", __FILE__, __LINE__ );*/ }
+}
+
+
+Polyline::Polyline( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 ) :
+	Region( "polyline", wc, d ),
+	_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+	_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
+	slicePlot(NULL){
+	_ref_points_.push_back(pt(x1,y1));
+	_drawing_points_.push_back(pt(x1,y1));
+	initPlot();
+}
+
+
+Polyline::Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals) :
+	Region( "polyline", wc, rs->dock( ), hold_signals ),
+	_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+	_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
+	slicePlot(NULL){
+	_ref_points_.push_back(pt(x1,y1));
+	_drawing_points_.push_back(pt(x1,y1));
+	initPlot();
+}
+
+void Polyline::setPlotLineColor(){
+	std::string sliceLineColor = lineColor();
+	QString qtLineColor( sliceLineColor.c_str());
+	slicePlot->setViewerCurveColor( this->id_, qtLineColor );
+	emitUpdate();
+}
+
+void Polyline::initPlot(){
+	if ( slicePlot == NULL ){
+		slicePlot = new SlicePlot();
+		setPlotLineColor();
 	}
 }
 
-void Polygon::addVertex( double x, double y, bool rewrite_last_point ) {
+void Polyline::addPlot(QWidget* parent){
+	slicePlot -> setParent( parent );
+	QLayout* layout = new QHBoxLayout();
+	layout->addWidget( slicePlot );
+	parent->setLayout( layout );
+	connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
+		const QList<double>&,const QList<int> &, const QList<int> &)), this,
+		SLOT(polyLineRegionUpdate(  int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> & )));
+	connect( this, SIGNAL(regionChange( viewer::Region *, std::string )), this,
+			SLOT(polyLineRegionChanged( viewer::Region*, std::string )));
+}
+
+void Polyline::polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
+		const QList<double> & worldX, const QList<double>& worldY,
+		const QList<int> & pixelX, const QList<int> & pixelY){
+	if ( change == viewer::region::RegionChangeNewChannel ){
+		int channelIndex = zIndex();
+		slicePlot->updateChannel(channelIndex);
+	}
+	slicePlot->updatePolyLine(regionId, change, worldX, worldY, pixelX, pixelY);
+}
+
+void Polyline::polyLineRegionChanged( viewer::Region* /*region*/, std::string changeType){
+	if ( changeType == this->state()->LINE_COLOR_CHANGE ){
+		setPlotLineColor();
+	}
+}
+
+void Polyline::updatePolyLine(int regionId, viewer::region::RegionChanges changes,
+		const QList<double> & worldX, const QList<double>& worldY,
+		const QList<int> & pixelX, const QList<int> & pixelY){
+	slicePlot->updatePolyLine( regionId, changes, worldX, worldY, pixelX, pixelY );
+}
+
+void Polyline::addVertex( double x, double y, bool rewrite_last_point ) {
 	if ( rewrite_last_point == false ) {
 		_ref_points_.push_back(pt(x,y));
 		_drawing_points_.push_back(pt(x,y));
 	} else {
 		if ( _ref_points_.size( ) < 1 || _drawing_points_.size( ) < 1 )
-			throw internal_error("polygon inconsistency");
+			throw internal_error("polyline inconsistency");
 		_ref_points_[_ref_points_.size( ) - 1] = pt(x,y);
 		_drawing_points_[_drawing_points_.size( ) - 1] = pt(x,y);
 	}
 	update_drawing_bounds_rectangle( );
 }
 
-void Polygon::polygonComplete( ) {
-	// for polygons signals remain blocked until polygon is complete...
+void Polyline::setCenter(double &x, double &y, double &deltx, double &delty) {
+	_center_x=x;
+	_center_y=y;
+	_center_delta_x=deltx;
+	_center_delta_y=delty;
+}
+
+void Polyline::polylineComplete( ) {
+	// for polylines signals remain blocked until polyline is complete...
+	complete = true;
 	releaseSignals( );
 	updateStateInfo( true, region::RegionChangeModified );
 }
 
-void Polygon::move( double dx, double dy ) {
-
+void Polyline::move( double dx, double dy ) {
 	if ( _drawing_points_.size( ) == 0 ) return;
 
 	_drawing_points_[0].first += dx;
@@ -129,38 +196,47 @@ void Polygon::move( double dx, double dy ) {
 	invalidateCenterInfo();
 }
 
-bool Polygon::within_vertex_handle( double x, double y ) const {
+bool Polyline::within_vertex_handle( double x, double y ) const {
 	double half_handle_delta_x = handle_delta_x / 2.0;
 	double half_handle_delta_y = handle_delta_y / 2.0;
+	bool inHandle = false;
 	for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
 		if ( x >= (_drawing_points_[i].first - half_handle_delta_x) &&
 				x <= (_drawing_points_[i].first + half_handle_delta_x) &&
 				y >= (_drawing_points_[i].second - half_handle_delta_y) &&
-				y <= (_drawing_points_[i].second + half_handle_delta_y) )
-			return true;
+				y <= (_drawing_points_[i].second + half_handle_delta_y) ){
+			inHandle = true;
+			break;
+		}
 	}
-	return false;
+	return inHandle;
 }
 
 // returns point state (Region::PointLocation)
-region::PointInfo Polygon::checkPoint( double x, double y )  const {
+region::PointInfo Polyline::checkPoint( double x, double y )  const {
+	region::PointInfo pointInfo(x, y, region::PointOutside);
+	if ( complete != false ){
+	    unsigned int result = 0;
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+	    if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y )
+			result |= region::PointInside;
+	    unsigned int handle = check_handle( x, y );
+	    if ( handle )
+			result |= region::PointHandle;
+	    if ( result != 0 ){
+	    	pointInfo = region::PointInfo( x,y, result, handle);
+	    }
+	    else {
+	    	pointInfo = region::PointInfo( x,y, (unsigned int)region::PointOutside, handle);
+	    }
+	}
+	return pointInfo;
 
-	if ( complete == false )
-		return region::PointInfo( x, y, region::PointOutside );
-
-	unsigned int result = 0;
-	double blc_x, blc_y, trc_x, trc_y;
-	boundingRectangle( blc_x, blc_y, trc_x, trc_y );
-	if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y )
-		result |= region::PointInside;
-	unsigned int handle = check_handle( x, y );
-	if ( handle )
-		result |= region::PointHandle;
-	return region::PointInfo( x, y, result == 0 ? (unsigned int) region::PointOutside : result, handle );
 }
 
 // returns mouse movement state
-unsigned int Polygon::mouseMovement( double x, double y, bool other_selected ) {
+unsigned int Polyline::mouseMovement( double x, double y, bool other_selected ) {
 	unsigned int result = 0;
 
 	if ( visible_ == false ) return result;
@@ -191,21 +267,21 @@ unsigned int Polygon::mouseMovement( double x, double y, bool other_selected ) {
 	return result;
 }
 
-bool Polygon::clickWithin( double x, double y ) const {
+bool Polyline::clickWithin( double x, double y ) const {
 	double blc_x, blc_y, trc_x, trc_y;
 	boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 	return x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y;
 }
 
 
-void Polygon::output( ds9writer &out ) const {
+void Polyline::output( ds9writer &out ) const {
 	if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	std::string path = QtDisplayData::path(wc_->csMaster());
 	out.setCsysSource(path.c_str( ));
-	out.polygon(wc_,drawing_points( ));
+	out.polyline(wc_,drawing_points( ));
 }
 
-unsigned int Polygon::check_handle( double x, double y ) const {
+unsigned int Polyline::check_handle( double x, double y ) const {
 	double blc_x, blc_y, trc_x, trc_y;
 	boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 	if ( visible_ == false ) return 0;
@@ -217,17 +293,17 @@ unsigned int Polygon::check_handle( double x, double y ) const {
 	// state for resizing (upon click & moving within a handle)...
 	// may not be needed with the new RegionToolManager... or might be...
 	if ( blc ) {
-		((Polygon*)this)->_x_origin_ = ScaleRight;
-		((Polygon*)this)->_y_origin_ = ScaleTop;
+		((Polyline*)this)->_x_origin_ = ScaleRight;
+		((Polyline*)this)->_y_origin_ = ScaleTop;
 	} else if ( tlc ) {
-		((Polygon*)this)->_x_origin_ = ScaleRight;
-		((Polygon*)this)->_y_origin_ = ScaleBottom;
+		((Polyline*)this)->_x_origin_ = ScaleRight;
+		((Polyline*)this)->_y_origin_ = ScaleBottom;
 	} else if ( brc ) {
-		((Polygon*)this)->_x_origin_ = ScaleLeft;
-		((Polygon*)this)->_y_origin_ = ScaleTop;
+		((Polyline*)this)->_x_origin_ = ScaleLeft;
+		((Polyline*)this)->_y_origin_ = ScaleTop;
 	} else if ( trc ) {
-		((Polygon*)this)->_x_origin_ = ScaleLeft;
-		((Polygon*)this)->_y_origin_ = ScaleBottom;
+		((Polyline*)this)->_x_origin_ = ScaleLeft;
+		((Polyline*)this)->_y_origin_ = ScaleBottom;
 	}
 
 	if ( blc || tlc || brc || trc )
@@ -246,9 +322,11 @@ unsigned int Polygon::check_handle( double x, double y ) const {
 	return 0;
 }
 
-int Polygon::clickHandle( double x, double y ) const { return check_handle( x, y ); }
+int Polyline::clickHandle( double x, double y ) const {
+	return check_handle( x, y );
+}
 
-bool Polygon::valid_translation( double dx, double dy, double width_delta, double height_delta ) {
+bool Polyline::valid_translation( double dx, double dy, double width_delta, double height_delta ) {
 
 	if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
 
@@ -264,17 +342,25 @@ bool Polygon::valid_translation( double dx, double dy, double width_delta, doubl
 	boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 	double pt = blc_x + dx - x_delta;
-	if ( pt < lxmin || pt > lxmax ) return false;
+	if ( pt < lxmin || pt > lxmax ){
+		return false;
+	}
 	pt = trc_x + dx + x_delta;
-	if ( pt < lxmin || pt > lxmax ) return false;
+	if ( pt < lxmin || pt > lxmax ){
+		return false;
+	}
 	pt = blc_y + dy - y_delta;
-	if ( pt < lymin || pt > lymax ) return false;
+	if ( pt < lymin || pt > lymax ){
+		return false;
+	}
 	pt = trc_y + dy + y_delta;
-	if ( pt < lymin || pt > lymax ) return false;
+	if ( pt < lymin || pt > lymax ){
+		return false;
+	}
 	return true;
 }
 
-void Polygon::resize( double width_delta, double height_delta ) {
+void Polyline::resize( double width_delta, double height_delta ) {
 	double dx = width_delta / 2.0;
 	double dy = height_delta / 2.0;
 
@@ -299,7 +385,7 @@ void Polygon::resize( double width_delta, double height_delta ) {
 	updateStateInfo( true, region::RegionChangeModified );
 }
 
-int Polygon::moveHandle( int handle, double x, double y ) {
+int Polyline::moveHandle( int handle, double x, double y ) {
 
 	if ( handle >= 1 && handle <= 4 )
 		handle = move_sizing_rectangle_handle( handle, x, y );
@@ -314,7 +400,7 @@ int Polygon::moveHandle( int handle, double x, double y ) {
 	return handle;
 }
 
-int Polygon::move_vertex( int handle, double x, double y ) {
+int Polyline::move_vertex( int handle, double x, double y ) {
 	int vertex = handle - 5;
 	if ( vertex >= (int) _ref_points_.size( ) || vertex < 0 )
 		return 0;
@@ -384,7 +470,7 @@ int Polygon::move_vertex( int handle, double x, double y ) {
 	return handle;
 }
 
-int Polygon::move_sizing_rectangle_handle( int handle, double x, double y ) {
+int Polyline::move_sizing_rectangle_handle( int handle, double x, double y ) {
 	double blc_x, blc_y, trc_x, trc_y;
 	boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
@@ -518,7 +604,7 @@ int Polygon::move_sizing_rectangle_handle( int handle, double x, double y ) {
 	return new_handle;
 }
 
-void Polygon::linearCenter( double &x, double &y ) const {
+void Polyline::linearCenter( double &x, double &y ) const {
 	double blc_x, blc_y, trc_x, trc_y;
 	boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
@@ -526,7 +612,7 @@ void Polygon::linearCenter( double &x, double &y ) const {
 	y = linear_average(blc_y,trc_y);
 }
 
-void Polygon::pixelCenter( double &x, double &y ) const {
+void Polyline::pixelCenter( double &x, double &y ) const {
 	if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	double blc_x, blc_y, trc_x, trc_y;
@@ -538,7 +624,7 @@ void Polygon::pixelCenter( double &x, double &y ) const {
 	try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
 }
 
-void Polygon::drawRegion( bool selected ) {
+void Polyline::drawRegion( bool selected ) {
 	if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	PixelCanvas *pc = wc_->pixelCanvas();
@@ -553,14 +639,12 @@ void Polygon::drawRegion( bool selected ) {
 	if (getDrawCenter())
 		drawCenter( _center_x, _center_y, _center_delta_x, _center_delta_y);
 
-	int first_x = x1, first_y = y1;
 	for ( unsigned int i=1; i < _drawing_points_.size( ); ++i ) {
 		try { linear_to_screen( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x2, y2 ); } catch(...) { return; }
 		pc->drawLine(x1,y1,x2,y2);
 		x1 = x2;
 		y1 = y2;
 	}
-	if ( complete ) pc->drawLine( x1, y1, first_x, first_y );
 
 	if ( selected && memory::nullptr.check( creating_region ) ) {
 
@@ -585,7 +669,7 @@ void Polygon::drawRegion( bool selected ) {
 		handle_delta_x = xdx - blc_x;
 		handle_delta_y = ydy - blc_y;
 
-		// draw outline rectangle for resizing whole polygon...
+		// draw outline rectangle for resizing whole polyline...
 		pushDrawingEnv(region::DotLine);
 		pc->drawRectangle( x1, y1, x2, y2 );
 		popDrawingEnv( );
@@ -601,7 +685,7 @@ void Polygon::drawRegion( bool selected ) {
 		int hy3 = y2;	// set handle coordinates
 
 		if (s) {
-			// draw handles of outline rectangle for resizing whole polygon...
+			// draw handles of outline rectangle for resizing whole polyline...
 			pushDrawingEnv( region::SolidLine);
 			if ( weaklySelected( ) ) {
 				if ( marked_region_count( ) > 0 && mouse_in_region ) {
@@ -657,8 +741,7 @@ void Polygon::drawRegion( bool selected ) {
 	}
 }
 
-AnnotationBase *Polygon::annotation( ) const {
-
+AnnotationBase *Polyline::annotation( ) const {
 	if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
 	const CoordinateSystem &cs = wc_->coordinateSystem( );
@@ -677,37 +760,37 @@ AnnotationBase *Polygon::annotation( ) const {
 	/*Int polaxis =*/ CoordinateUtil::findStokesAxis(stokes, cs);
 	const DisplayData *dd = wc_->displaylist().front();
 
-	AnnPolygon *poly = 0;
+	AnnPolyline *poly = 0;
 	try {
 		std::vector<int> axes = dd->displayAxes( );
 		IPosition shape(cs.nPixelAxes( ));
 		for ( size_t i=0; i < shape.size( ); ++i )
 			shape(i) = dd->dataShape( )[axes[i]];
-		poly = new AnnPolygon( xv, yv, cs, shape, stokes );
+		poly = new AnnPolyline( xv, yv, cs, shape, stokes );
 	} catch ( AipsError &e ) {
-		cerr << "Error encountered creating an AnnPolygon:" << endl;
+		cerr << "Error encountered creating an AnnPolyline:" << endl;
 		cerr << "\t\"" << e.getMesg( ) << "\"" << endl;
 	} catch ( ... ) {
-		cerr << "Error encountered creating an AnnPolygon..." << endl;
+		cerr << "Error encountered creating an AnnPolyline..." << endl;
 	}
 
 	return poly;
 }
 
 // return the *drawing* bounding rectangle...
-void Polygon::boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const {
+void Polyline::boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const {
 	blcx = _drawing_blc_x_;
 	blcy = _drawing_blc_y_;
 	trcx = _drawing_trc_x_;
 	trcy = _drawing_trc_y_;
 }
 
-void Polygon::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
+void Polyline::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 		std::vector<std::pair<double,double> > &world_pts ) const {
 
 	if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-	type = region::PolyRegion;
+	type = region::PolylineRegion;
 
 	pixel_pts.resize(_drawing_points_.size( ));
 	world_pts.resize(_drawing_points_.size( ));
@@ -720,13 +803,17 @@ void Polygon::fetch_region_details( region::RegionTypes &type, std::vector<std::
 		world_pts[i].second = wy;
 
 		double px, py;
-		try { linear_to_pixel( wc_, _drawing_points_[i].first, _drawing_points_[i].second, px, py ); } catch(...) { return; }
-		pixel_pts[i].first  = static_cast<int>(px);
+		try {
+			linear_to_pixel( wc_, _drawing_points_[i].first, _drawing_points_[i].second, px, py );
+		} catch(...) {
+			return;
+		}
+		pixel_pts[i].first = static_cast<int>(px);
 		pixel_pts[i].second = static_cast<int>(py);
 	}
 }
 
-void Polygon::update_drawing_bounds_rectangle( ) {
+void Polyline::update_drawing_bounds_rectangle( ) {
 
 	_drawing_blc_x_ = _drawing_points_[0].first;
 	_drawing_blc_y_ = _drawing_points_[0].second;
@@ -743,7 +830,7 @@ void Polygon::update_drawing_bounds_rectangle( ) {
 	_drawing_height_ = _drawing_trc_y_ - _drawing_blc_y_;
 }
 
-void Polygon::update_reference_bounds_rectangle( ) {
+void Polyline::update_reference_bounds_rectangle( ) {
 	_ref_blc_x_ = _ref_points_[0].first;
 	_ref_blc_y_ = _ref_points_[0].second;
 	_ref_trc_x_ = _ref_points_[0].first;
@@ -759,7 +846,7 @@ void Polygon::update_reference_bounds_rectangle( ) {
 	_ref_height_ = _ref_trc_y_ - _ref_blc_y_;
 }
 
-void Polygon::update_drawing_state( ) {
+void Polyline::update_drawing_state( ) {
 	_drawing_width_ = _drawing_trc_x_ - _drawing_blc_x_;
 	_drawing_height_ = _drawing_trc_y_ - _drawing_blc_y_;
 
@@ -775,7 +862,7 @@ void Polygon::update_drawing_state( ) {
 	}
 }
 
-void Polygon::update_reference_state(  int transformations, int handle, int new_handle ) {
+void Polyline::update_reference_state(  int transformations, int handle, int new_handle ) {
 	// transform reference image to match the new drawing image orientation...
 	if ( transformations & FLIP_X || transformations & FLIP_Y ) {
 		for ( unsigned int i=0; i < _ref_points_.size( ); ++i ) {
@@ -823,7 +910,7 @@ void Polygon::update_reference_state(  int transformations, int handle, int new_
 
 }
 
-std::list<RegionInfo> *Polygon::generate_dds_centers(){
+std::list<RegionInfo> *Polyline::generate_dds_centers(){
 	std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
 
 	if( wc_==0 ) return region_centers;
@@ -867,109 +954,38 @@ std::list<RegionInfo> *Polygon::generate_dds_centers(){
 			if (repeat != processed.end()) continue;
 			processed.insert(std::map<String,bool>::value_type(full_image_name,true));
 
-			Int nAxes = image->ndim( );
-			IPosition shp = image->shape( );
-			const CoordinateSystem &cs = image->coordinates( );
-
-			int zIndex = padd->activeZIndex( );
-			IPosition pos = padd->fixedPosition( );
-			Vector<Int> dispAxes = padd->displayAxes( );
-
-			if ( nAxes == 2 ) dispAxes.resize(2,True);
-
-			if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
-					Int(pos.nelements()) != nAxes ||
-					anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
-				continue;
-
-			if ( dispAxes.nelements() > 2u )
-				pos[dispAxes[2]] = zIndex;
-
-			dispAxes.resize(2,True);
-
-			// select the visible layer in the third and all
-			// hidden axes with a WCBox and a SubImage
-			Quantum<Double> px0(0.,"pix");
-			Vector<Quantum<Double> > blcq(nAxes,px0), trcq(nAxes,px0);
-			for (Int ax = 0; ax < nAxes; ax++) {
-				if ( ax == dispAxes[0] || ax == dispAxes[1]) {
-					trcq[ax].setValue(shp[ax]-1);
-				} else  {
-					blcq[ax].setValue(pos[ax]);
-					trcq[ax].setValue(pos[ax]);
-				}
-			}
-			WCBox box(blcq, trcq, cs, Vector<Int>());
-			ImageRegion     *imgbox = new ImageRegion(box);
-			SubImage<Float> *boxImg = new SubImage<Float>(*image, *imgbox);
-
-			// technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
-			// used here, because it references the "CSmaster" DisplayData which all
-			// of the display options are referenced from... lets hope all of the
-			// coordinate systems are kept in sync...      <drs>
-			const Vector<String> &units = wc_->worldAxisUnits( );
-
-			Quantum<Vector<Double> > qx(x, units[0]), qy(y, units[1]);
-			WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
-
-			ImageRegion *imageregion = new ImageRegion(poly);
-
-			region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd,boxImg,*imageregion)));
-
-			delete imgbox;
-			delete imageregion;
-			delete boxImg;
-		} catch (const casa::AipsError& err) {
+			RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
+			region_centers->push_back(SliceRegionInfo(full_image_name,layercenter));
+		}
+		catch (const casa::AipsError& err) {
 			errMsg_ = err.getMesg();
-			fprintf( stderr, "Polygon::generate_dds_centers( ): %s\n", errMsg_.c_str() );
+			fprintf( stderr, "Polyline::generate_dds_centers( ): %s\n", errMsg_.c_str() );
 			continue;
-		} catch (...) {
+		}
+		catch (...) {
 			errMsg_ = "Unknown error converting region";
-			fprintf( stderr, "Polygon::generate_dds_centers( ): %s\n", errMsg_.c_str() );
+			fprintf( stderr, "Polyline::generate_dds_centers( ): %s\n", errMsg_.c_str() );
 			continue;
 		}
 	}
 	return region_centers;
 }
 
-//		cout << "in Polygon::generate_dds_centers()" <<endl;
-//		return region_centers;
-//	}
+Polyline::~Polyline(){
+	delete slicePlot;
+}
 
-ImageRegion *Polygon::get_image_region( DisplayData *dd ) const {
-
-	if( wc_==0 ) return 0;
-
-	PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
-	if ( padd == 0 ) return 0;
-
-	Vector<Double> lin(2), wld(2);
-	Vector<Double> x(_drawing_points_.size( ));
-	Vector<Double> y(_drawing_points_.size( ));
-	for ( unsigned int i = 0; i < _drawing_points_.size( ); ++i ) {
-		lin(0) = _drawing_points_[i].first;
-		lin(1) = _drawing_points_[i].second;
-		if ( ! wc_->linToWorld(wld, lin)) return 0;
-		x[i] = wld[0];
-		y[i] = wld[1];
+ImageRegion *Polyline::get_image_region( DisplayData *dd ) const {
+	if ( wc_ != NULL  ){
+		PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+		if ( padd != NULL ){
+			ImageInterface<float>* sliceImage = padd->imageinterface( );
+			if ( sliceImage != NULL ){
+				slicePlot->setImage( sliceImage );
+			}
+		}
 	}
-
-	ImageInterface<Float> *image = padd->imageinterface( );
-	if ( image == 0 ) return 0;
-
-	Vector<Int> dispAxes = padd->displayAxes( );
-	dispAxes.resize(2,True);
-
-	const Vector<String> &units = wc_->worldAxisUnits( );
-	const CoordinateSystem &cs = image->coordinates( );
-	Quantum<Vector<Double> > qx(x, units[0]), qy(y, units[1]);
-
-	ImageRegion *result = 0;
-	try {
-		WCPolygon poly(qx, qy, IPosition(dispAxes), cs);
-		result = new ImageRegion(poly);
-	} catch(...) { }
-	return result;
+	return NULL;
 }
 
 }

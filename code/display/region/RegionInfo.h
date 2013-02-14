@@ -41,7 +41,7 @@ namespace casa {
 	class RegionInfo {
 	    public:
 
-		enum InfoTypes { MsInfoType, ImageInfoType, InvalidInfoType };
+		enum InfoTypes { MsInfoType, ImageInfoType, SliceInfoType, InvalidInfoType };
 
 		typedef ImageStatistics<Float>::stat_list stats_t;
 		//typedef std::pair<String,String> center_element;
@@ -78,6 +78,11 @@ namespace casa {
 		~ImageRegionInfo( ) { }
 	};
 	
+	class SliceRegionInfo : public RegionInfo {
+		public:
+			SliceRegionInfo( const std::string &label, stats_t *si ) : RegionInfo(label,si,SliceInfoType) { }
+			~SliceRegionInfo( ) { }
+		};
 
     }
 }

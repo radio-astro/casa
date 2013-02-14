@@ -55,6 +55,7 @@ FeatherPlot::FeatherPlot(QWidget* parent):QwtPlot( parent ),
 	setCanvasBackground( Qt::white );
 }
 
+
 void FeatherPlot::initializePlot( const QString& graphTitle, PlotType plotType ){
 
 	//Store what type of plot we are.
@@ -73,6 +74,7 @@ void FeatherPlot::initializePlot( const QString& graphTitle, PlotType plotType )
 	resetPlotBounds();
 }
 
+
 void FeatherPlot::initAxes(){
 	for ( int i = 0; i < AXIS_COUNT; i++ ){
 		axisBlanks.append( new ExternalAxis() );
@@ -90,6 +92,7 @@ void FeatherPlot::resetPlotBounds(){
 	maxY = std::numeric_limits<double>::min();
 }
 
+
 void FeatherPlot::setAxisLabels(){
 	const QString AMPLITUDE = "Amplitude";
 	const QString DISTANCE = "Distance(m)";
@@ -105,6 +108,7 @@ void FeatherPlot::setAxisLabels(){
 		axisLabels[QwtPlot::yRight] = "Weight "+AMPLITUDE;
 	}
 }
+
 
 FeatherPlot::~FeatherPlot() {
 	for ( int i = 0; i < axisWidgets.size(); i++ ){
@@ -143,6 +147,7 @@ QWidget* FeatherPlot::getExternalAxisWidget( QwtPlot::Axis position ){
 	return axisWidget;
 }
 
+
 void FeatherPlot::updateAxes(){
 	for ( int i = 0; i < AXIS_COUNT; i++ ){
 		if ( axisWidgets[i] != NULL ){
@@ -164,6 +169,7 @@ void FeatherPlot::clearLegend(){
 	}
 }
 
+
 void FeatherPlot::insertSingleLegend( QWidget* parent ){
 	if ( legend == NULL ){
 		legend = new QwtLegend( );
@@ -178,6 +184,7 @@ void FeatherPlot::insertSingleLegend( QWidget* parent ){
 		parent->setLayout( parentLayout );
 	}
 }
+
 
 void FeatherPlot::setLegendVisibility( bool visible ){
 	bool legendVisible = visible && !isScatterPlot();
@@ -195,6 +202,7 @@ FeatherPlot::PlotType FeatherPlot::getPlotType() const{
 	return plotType;
 }
 
+
 bool FeatherPlot::isEmpty() const {
 	bool empty = false;
 	if ( curves.size() == 0 ){
@@ -202,6 +210,7 @@ bool FeatherPlot::isEmpty() const {
 	}
 	return empty;
 }
+
 
 bool FeatherPlot::isScatterPlot() const{
 	bool scatterPlot = false;
@@ -211,6 +220,7 @@ bool FeatherPlot::isScatterPlot() const{
 	return scatterPlot;
 }
 
+
 bool FeatherPlot::isSliceCut() const {
 	bool sliceCut = false;
 	if ( plotType == SLICE_CUT ){
@@ -218,6 +228,7 @@ bool FeatherPlot::isSliceCut() const {
 	}
 	return sliceCut;
 }
+
 
 bool FeatherPlot::isSliceCutOriginal() const {
 	bool sliceCut = false;
@@ -227,9 +238,11 @@ bool FeatherPlot::isSliceCutOriginal() const {
 	return sliceCut;
 }
 
+
 bool FeatherPlot::isLogUV() const {
 	return scaleLogUV;
 }
+
 
 bool FeatherPlot::isLogAmplitude() const {
 	return scaleLogAmplitude;
@@ -250,12 +263,14 @@ void FeatherPlot::setCurveSize( int curveIndex ){
 			dotSize, lineThickness);
 }
 
+
 void FeatherPlot::setLineThickness( int thickness ){
 	lineThickness = thickness;
 	for ( int i = 0; i < curves.size(); i++ ){
 		setCurveSize( i );
 	}
 }
+
 
 void FeatherPlot::setDotSize( int size ){
 	dotSize = size;
@@ -283,11 +298,10 @@ bool FeatherPlot::setLogScale( bool uvLogScale, bool ampLogScale ){
 			QwtPlot::Axis verticalAxis = curves[i]->getVerticalAxis();
 			setCurveData( curves[i], verticalAxis );
 		}
-
-
 	}
 	return uvScaleChanged;
 }
+
 
 void FeatherPlot::clearCurves(){
 	int count = curves.size();
@@ -312,6 +326,7 @@ void FeatherPlot::setFunctionColor( const QString& curveID, const QColor& color 
 	}
 }
 
+
 int FeatherPlot::getCurveIndex( const QString& curveTitle ) const {
 	int curveIndex = -1;
 	for ( int i = 0; i < curves.size(); i++ ){
@@ -323,6 +338,7 @@ int FeatherPlot::getCurveIndex( const QString& curveTitle ) const {
 	}
 	return curveIndex;
 }
+
 
 void FeatherPlot::addDiagonal( QVector<double> values, QColor lineColor, QwtPlot::Axis axis ){
 	//The line y=x.
@@ -343,6 +359,7 @@ void FeatherPlot::addDiagonal( QVector<double> values, QColor lineColor, QwtPlot
 	diagonalLine->setCurveData( values, values );
 	setCurveData( diagonalLine, axis );
 }
+
 
 void FeatherPlot::adjustPlotBounds( std::pair<double,double> curveBounds, QwtPlot::Axis axis ){
 
@@ -378,6 +395,7 @@ void FeatherPlot::setCurveData( FeatherCurve* curve, QwtPlot::Axis yAxis ){
 	updateAxes();
 }
 
+
 void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
 		QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis ){
 
@@ -395,7 +413,6 @@ void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
 			curve->initScatterPlot( dotSize );
 		}
 		curve->setTitle( curveTitle );
-
 	}
 	//We are just going to change the data in an existing curve
 	else {

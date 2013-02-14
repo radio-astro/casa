@@ -1,9 +1,27 @@
-/*
- * FeatherCurve.cc
- *
- *  Created on: Feb 5, 2013
- *      Author: slovelan
- */
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
 
 #include "FeatherCurve.h"
 #include <guitools/Feather/FeatherPlot.h>
@@ -29,7 +47,6 @@ FeatherCurve::FeatherCurve(FeatherPlot* plot, QwtPlot::Axis xAxis,
 }
 
 
-
 void FeatherCurve::initScatterPlot( int dotSize ){
 	plotCurve->setStyle( QwtPlotCurve::Dots );
 	QwtSymbol* symbol = new QwtSymbol();
@@ -39,9 +56,11 @@ void FeatherCurve::initScatterPlot( int dotSize ){
 	scatterPlot = true;
 }
 
+
 void FeatherCurve::setTitle( const QString& title ){
 	plotCurve->setTitle( title );
 }
+
 
 void FeatherCurve::setCurveSize( bool scatterPlot, bool diagonalLine,
 		int dotSize, int lineThickness ){
@@ -66,6 +85,7 @@ void FeatherCurve::setCurveSize( bool scatterPlot, bool diagonalLine,
 	}
 }
 
+
 std::pair<double,double> FeatherCurve::getBoundsX() const {
 	double minValue = minX;
 	double maxValue = maxX;
@@ -84,6 +104,7 @@ std::pair<double,double> FeatherCurve::getBoundsX() const {
 	return std::pair<double,double>(minValue,maxValue);
 }
 
+
 std::pair<double,double> FeatherCurve::getBoundsY() const {
 	double minValue = minY;
 	double maxValue = maxY;
@@ -96,10 +117,12 @@ std::pair<double,double> FeatherCurve::getBoundsY() const {
 	return std::pair<double,double>(minValue,maxValue);
 }
 
+
 QwtPlot::Axis FeatherCurve::getVerticalAxis() const {
 	QwtPlot::Axis verticalAxis = static_cast<QwtPlot::Axis>( plotCurve->yAxis());
 	return verticalAxis;
 }
+
 
 bool FeatherCurve::isWeightCurve() const {
 	bool weightCurve = false;
@@ -109,6 +132,7 @@ bool FeatherCurve::isWeightCurve() const {
 	}
 	return weightCurve;
 }
+
 
 void FeatherCurve::setCurveData( const QVector<double>& xVals, const QVector<double>& yVals ){
 	xValues.resize( xVals.size());
@@ -133,6 +157,7 @@ void FeatherCurve::setCurveData( const QVector<double>& xVals, const QVector<dou
 		}
 	}
 }
+
 
 void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 	if ( uvLog != scaleLogUV || ampLog != scaleLogAmplitude ){
@@ -169,6 +194,7 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 	}
 }
 
+
 double FeatherCurve::logarithm( double value ) const {
 	double logValue = value;
 	Assert( value >= 0 );
@@ -181,11 +207,13 @@ double FeatherCurve::logarithm( double value ) const {
 	return logValue;
 }
 
+
 void FeatherCurve::doLogs( double* values, int count ) const {
 	for ( int i = 0; i < count; i++ ){
 		values[i] = logarithm( values[i]);
 	}
 }
+
 
 void FeatherCurve::resetDataBounds(){
 	minX = std::numeric_limits<float>::max();
@@ -194,15 +222,18 @@ void FeatherCurve::resetDataBounds(){
 	maxY = std::numeric_limits<float>::min();
 }
 
+
 QString FeatherCurve::getTitle() const{
 	return plotCurve->title().text();
 }
+
 
 void FeatherCurve::setCurvePenColor( const QColor& color ){
 	QPen curvePen = plotCurve->pen();
 	curvePen.setColor( color );
 	plotCurve->setPen( curvePen );
 }
+
 
 void FeatherCurve::setFunctionColor( const QColor& color, bool diagonalLine ){
 	if ( !scatterPlot ){
@@ -221,6 +252,7 @@ void FeatherCurve::setFunctionColor( const QColor& color, bool diagonalLine ){
 		}
 	}
 }
+
 
 FeatherCurve::~FeatherCurve() {
 	plotCurve->detach();

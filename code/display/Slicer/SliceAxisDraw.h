@@ -23,37 +23,29 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef SLICEZOOMER_H_
-#define SLICEZOOMER_H_
+#ifndef SLICEAXISDRAW_H_
+#define SLICEAXISDRAW_H_
 
-#include <qwt_plot_zoomer.h>
-
-class QwtPlotCanvas;
-class QKeyEvent;
+#include <qwt_scale_draw.h>
+#include <qwt_text.h>
 
 namespace casa {
 
-class SliceZoomer : public QwtPlotZoomer {
+/**
+ * Overriding QwtScaleDraw in order to provide custom (smaller) fonts for the
+ * tick labels on a plot axis.
+ */
 
+class SliceAxisDraw : public QwtScaleDraw {
 public:
-	SliceZoomer( QwtPlotCanvas* plot);
-	virtual ~SliceZoomer();
-	void zoomIn();
-	void zoomOut();
-	void zoomNeutral();
-	virtual void zoom( const QwtDoubleRect & );
-
-
-protected:
-	virtual void widgetMouseReleaseEvent( QMouseEvent* event );
+	SliceAxisDraw();
+	void setTickFontSize( int size );
+	virtual QwtText label( double tickValue) const;
+	virtual ~SliceAxisDraw();
 
 private:
-	bool zoomMode;
-	QwtPlotCanvas* canvas;
-	QPixmap zoomMap;
-	QCursor* zoomCursor;
-
+	int tickFontSize;
 };
 
 } /* namespace casa */
-#endif /* SLICEZOOMER_H_ */
+#endif /* SLICEAXISDRAW_H_ */

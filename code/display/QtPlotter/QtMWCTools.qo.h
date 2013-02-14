@@ -46,7 +46,8 @@ enum ProfileType
 	SINGPROF,
 	RECTPROF,
 	ELLPROF,
-	POLYPROF
+	POLYPROF,
+	POLYLINEPROF
 };
 
 class QtMWCTool
@@ -92,6 +93,27 @@ protected:
 
 };
 
+class QtPolylineTool: public QtPolylineToolRegion,  public QtMWCTool
+{
+  Q_OBJECT
+
+public:
+  QtPolylineTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
+  virtual ~QtPolylineTool() {}
+
+public slots:
+  void setCoordType(const String& t);
+
+signals:
+  void wcNotify( const String c,
+		 const Vector<Double> px, const Vector<Double> py,
+		 const Vector<Double> wx, const Vector<Double> wy,
+		 const ProfileType ptype);
+
+protected:
+  virtual void updateRegion();
+
+};
 
 class QtEllipseTool: public QtELRegion,  public QtMWCTool
 {

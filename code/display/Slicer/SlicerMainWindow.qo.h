@@ -27,18 +27,14 @@
 #define SLICER_MAINWINDOW_QO_H
 
 #include <QtGui/QMainWindow>
-#include <casa/Arrays/Vector.h>
 #include <display/Slicer/SlicerMainWindow.ui.h>
-#include <qwt_plot.h>
+#include <display/Slicer/SlicePlot.qo.h>
 
-class QwtPlotCurve;
+//class QwtPlotCurve;
 class QCursor;
 
 namespace casa {
 
-template <class T> class ImageInterface;
-class ImageAnalysis;
-class SliceWorker;
 class SliceZoomer;
 class SliceColorPreferences;
 
@@ -49,18 +45,21 @@ class SlicerMainWindow : public QMainWindow {
 public:
     SlicerMainWindow(QWidget *parent = 0);
     void updateChannel( int channel );
-    void updatePolyLine(  int regionId,
+    void updatePolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
 		const QList<double> & worldX, const QList<double> & worldY,
 		const QList<int> &pixelX, const QList<int> & pixelY );
-    void deletePolyLine( int regionId );
+    void addPolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
+    		const QList<double> & worldX, const QList<double> & worldY,
+    		const QList<int> &pixelX, const QList<int> & pixelY, const QString& colorName );
     void setImage( ImageInterface<float>* img );
+    void setCurveColor( int id, const QString& color );
     ~SlicerMainWindow();
-
-
 
 private slots:
 	void clearCurves();
 	void autoCountChanged( bool selected );
+	void sampleCountChanged();
+	void interpolationMethodChanged( const QString& method );
 	void exportSlice();
 	void showColorDialog();
 	void resetColors();
@@ -69,40 +68,25 @@ private slots:
 	void zoomOut();
 	bool checkZoom();
 
-
 private:
 	void initializeZooming();
 	SlicerMainWindow( const SlicerMainWindow& mainWindow );
 	SlicerMainWindow& operator=( const SlicerMainWindow&  other);
 
-	void initAxisFont( int axisId, const QString& axisTitle );
 	int populateSampleCount() const;
-	String populateMethod() const;
-	void addSliceToPlot( QVector<double>& xValues, QVector<double>& yValues, int regionId );
-	SliceWorker* getSlicerFor( int regionId );
-	void clearSlicers();
-	void sliceFinished( int id );
+
+	//Persistence
 	bool toImageFormat( const QString& fileName, const QString& format );
 	bool toASCII( const QString& fileName );
 
-
-	ImageInterface<float>* image;
-    ImageAnalysis* imageAnalysis;
     SliceColorPreferences* colorPreferences;
-    QMap<int, SliceWorker*> slicerMap;
-    QMap<int, QwtPlotCurve*> curveMap;
     SliceZoomer* plotZoomer;
-    Vector<Double> polyX;
-    Vector<Double> polyY;
-    Vector<Int> axes;
-    Vector<Int> coords;
-    QwtPlot slicePlot;
-    QColor sliceCurveColor;
+
+    SlicePlot slicePlot;
+
     QStringList methodList;
     QStringList xAxisList;
-    const QString DISTANCE_AXIS;
-    const QString POSITION_X_AXIS;
-    const QString POSITION_Y_AXIS;
+
     Ui::SlicerMainWindowClass ui;
 
 };

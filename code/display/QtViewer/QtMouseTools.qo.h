@@ -34,6 +34,7 @@
 #include <display/DisplayEvents/MultiEllipseToolImpl.h>
 #include <display/DisplayEvents/MultiPointToolImpl.h>
 #include <display/DisplayEvents/MultiPolyToolImpl.h>
+#include <display/DisplayEvents/MultiPolylineToolImpl.h>
 #include <display/DisplayEvents/MWCETRegion.h>
 #include <display/Display/PanelDisplay.h>
 #include <casa/Containers/Record.h>
@@ -260,6 +261,62 @@ class QtPTRegion: public QtMouseTool, public MultiPolyToolImpl {
 
 };
 
+// <synopsis>
+// QtPolylineToolRegion is the Polyline Region mouse tool that sends a signal
+// when a new polyline is ready.
+// </synopsis>
+class QtPolylineToolRegion: public QtMouseTool, public MultiPolylineToolImpl {
+
+  Q_OBJECT
+
+ public:
+
+  QtPolylineToolRegion(viewer::RegionSourceFactory *rf, PanelDisplay* pd) :
+	  QtMouseTool(), MultiPolylineToolImpl(rf, pd), pd_(pd) {  }
+
+  ~QtPolylineToolRegion() {  }
+
+  // Retrieve the current polyline mouse region record and WCH, if any.
+  // (If nothing is ready, returns False -- be sure to check before using
+  // return parameters.  See implementation for mouseRegion Record format).
+  Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+
+ signals:
+
+  // See regionReady() implementation for format of the record.  (For some
+  // uses, a connecting slot may be able to do without the WCH* parameter).
+  void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+  void echoClicked(Record);
+
+ protected:
+
+  // This callback is invoked by the base when the user double-clicks
+  // inside a polygon defined previously (but see also polygonReady(),
+  // below).  This implementation emits the Qt signal mouseRegionReady()
+  // with an appropriate Record defining the user's polygon mouse selection.
+  // See implementation for format of the record.
+  virtual void regionReady();
+  virtual void clicked(Int x, Int y);
+  virtual void doubleClicked(Int x, Int y);
+
+
+
+  ///////This is not correct !
+  //
+  // This callback is invoked by the base when the polygon is first
+  // defined (by a double-click at last point) or when the mouse is
+  // released after a move/resize.  It was unused in glish.  For Qt,
+  // this will also signal that the polygon region has been fully
+  // 'selected/made ready' (which will preclude the need for the
+  // user to double-click [again] inside the polygon to select it).
+  //virtual void polygonReady() { regionReady();  }
+
+  // is this fix to 1393?
+  virtual void polylineReady() { }
+
+  PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+
+};
 
 
 

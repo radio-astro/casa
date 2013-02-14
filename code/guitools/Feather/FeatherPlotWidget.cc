@@ -60,6 +60,7 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
 	initializeDiameterSelector();
 }
 
+
 FeatherPlotWidget::~FeatherPlotWidget(){
 	delete zoomer;
 	zoomer = NULL;
@@ -68,6 +69,7 @@ FeatherPlotWidget::~FeatherPlotWidget(){
 	delete diameterSelector;
 	diameterSelector = NULL;
 }
+
 
 void FeatherPlotWidget::changePlotType( FeatherPlot::PlotType newPlotType ){
 	//Scatter plots do not change type.
@@ -83,8 +85,8 @@ void FeatherPlotWidget::changePlotType( FeatherPlot::PlotType newPlotType ){
 	}
 }
 
-void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 
+void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 	if ( plot == NULL ){
 		QLayout* layoutPlot = layout();
 		if ( layoutPlot == NULL ){
@@ -104,9 +106,11 @@ void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
 //-----------------------------------------------------------------------------
 //                                 Properties
 //----------------------------------------------------------------------------
+
 void FeatherPlotWidget::refresh(){
 	plot->replot();
 }
+
 
 void FeatherPlotWidget::setLineThickness( int thickness ){
 	if ( diameterSelector != NULL ){
@@ -124,13 +128,16 @@ void FeatherPlotWidget::setLineThickness( int thickness ){
 	plot->setLineThickness( thickness );
 }
 
+
 void FeatherPlotWidget::setDotSize( int size ){
 	plot->setDotSize( size );
 }
 
+
 void FeatherPlotWidget::setLegendVisibility( bool visible ){
 	plot->setLegendVisibility( visible );
 }
+
 
 void FeatherPlotWidget::setLogScale( bool uvScale, bool ampScale ){
 	double markerPosition = diameterMarker->xValue();
@@ -143,14 +150,15 @@ void FeatherPlotWidget::setLogScale( bool uvScale, bool ampScale ){
 			markerPosition = qPow( 10, markerPosition );
 		}
 		diameterMarker->setXValue( markerPosition );
-
 	}
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::setPermanentScatter( bool scatter ){
 	permanentScatter = scatter;
 }
+
 
 void FeatherPlotWidget::setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
 		const QColor& scatterColor, const QColor& dishDiameterColor,
@@ -165,23 +173,28 @@ void FeatherPlotWidget::setPlotColors( const QMap<PreferencesColor::FunctionColo
 	resetColors();
 }
 
+
 QWidget* FeatherPlotWidget::getExternalAxisWidget( QwtPlot::Axis position ){
 	return plot->getExternalAxisWidget( position );
 }
 
+
 void FeatherPlotWidget::insertLegend( QWidget* parent ){
 	plot->insertSingleLegend( parent );
 }
+
 
 void FeatherPlotWidget::setRectangleZoomMode(){
 	leftMouseMode = RECTANGLE_ZOOM;
 	changeLeftMouseMode();
 }
 
+
 void FeatherPlotWidget::setDiameterSelectorMode(){
 	leftMouseMode = DIAMETER_SELECTION;
 	changeLeftMouseMode();
 }
+
 
 void FeatherPlotWidget::resetColors(){
 	if ( plot->isSliceCut() ){
@@ -307,6 +320,7 @@ void FeatherPlotWidget::setDishDiameter( double position, bool scale ){
 	plot->replot();
 }
 
+
 bool FeatherPlotWidget::isDiameterSelectorMode() const {
 	return false;
 }
@@ -331,6 +345,7 @@ void FeatherPlotWidget::initializeZooming(){
 		connect( zoomer, SIGNAL(selected ( const QwtDoubleRect& )), this, SLOT(zoomRectangleSelected( const QwtDoubleRect& )));
 	}
 }
+
 
 void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 	if ( zoomRect.width() > 0 && zoomRect.height() > 0 ){
@@ -373,6 +388,7 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 		}
 	}
 }
+
 
 void FeatherPlotWidget::zoomRectangleWeight( double minX, double maxX  ){
 
@@ -432,6 +448,7 @@ void FeatherPlotWidget::zoomRectangleScatter( double minX, double maxX, double m
 	plot->addDiagonal( xValues, dishDiameterLineColor, scatterAxis );
 	plot->replot();
 }
+
 
 void FeatherPlotWidget::changeZoom90(bool zoom ){
 	if ( zoom ){
@@ -525,6 +542,7 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 	}
 }
 
+
 void FeatherPlotWidget::zoomNeutral(){
 	FeatherPlot::PlotType originalPlotType = plot->getPlotType();
 	resetPlot( originalPlotType );
@@ -536,6 +554,7 @@ void FeatherPlotWidget::zoomNeutral(){
 	}
 }
 
+
 void FeatherPlotWidget::addZoomNeutralCurves(){
 	if ( plot->isSliceCut()){
 		plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, weightAxis );
@@ -546,6 +565,7 @@ void FeatherPlotWidget::addZoomNeutralCurves(){
 	initializeMarkers();
 	plot->replot();
 }
+
 
 void FeatherPlotWidget::resetZoomRectangleColor(){
 	if ( zoomer != NULL ){
@@ -566,6 +586,7 @@ void FeatherPlotWidget::initializeMarkers(){
 	}
 	this->changeLeftMouseMode();
 }
+
 
 void FeatherPlotWidget::removeMarkers(){
 	diameterMarker->detach();
@@ -604,6 +625,7 @@ void FeatherPlotWidget::addScatterData(){
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::setSingleDishWeight( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
 	singleDishWeightXValues.resize( count );
@@ -616,8 +638,8 @@ void FeatherPlotWidget::setSingleDishWeight( const Vector<Float>& xValues, const
 		plot->addCurve( singleDishWeightXValues, singleDishWeightYValues, singleDishWeightColor, singleDishWeightFunction, weightAxis );
 		plot->replot();
 	}
-
 }
+
 
 void FeatherPlotWidget::setSingleDishData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
@@ -634,6 +656,7 @@ void FeatherPlotWidget::setSingleDishData( const Vector<Float>& xValues, const V
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::setInterferometerWeight( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
 	interferometerWeightXValues.resize( count );
@@ -648,6 +671,7 @@ void FeatherPlotWidget::setInterferometerWeight( const Vector<Float>& xValues, c
 		plot->replot();
 	}
 }
+
 
 void FeatherPlotWidget::setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );
@@ -664,11 +688,13 @@ void FeatherPlotWidget::setInterferometerData( const Vector<Float>& xValues, con
 	plot->replot();
 }
 
+
 void FeatherPlotWidget::clearPlot(){
 	removeMarkers();
 	plot->clearCurves();
 	plot->replot();
 }
+
 
 void FeatherPlotWidget::clearLegend(){
 	plot->clearLegend();
@@ -678,7 +704,6 @@ void FeatherPlotWidget::clearLegend(){
 //-------------------------------------------------------------------------------------
 //                             Utility
 //-------------------------------------------------------------------------------------
-
 
 
 void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double maxValue,
@@ -705,7 +730,6 @@ void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double max
 }
 
 
-
 pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const {
 	double minValue = numeric_limits<double>::max();
 	double maxValue = numeric_limits<double>::min();
@@ -720,6 +744,7 @@ pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const
 	pair<double,double> minMaxPair( minValue, maxValue );
 	return minMaxPair;
 }
+
 
 void FeatherPlotWidget::changeLeftMouseMode(){
 	if ( ! plot->isEmpty() ){

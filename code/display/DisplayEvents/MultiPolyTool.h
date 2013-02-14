@@ -198,7 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // should the polygon remain on screen after double clicks?
 	    Bool itsPolygonPersistent;
 
-	    // state of the polygon tool
+	    // state of the polyline tool
 	    enum AdjustMode {
 		Off,	// Nothing exists yet
 		Def,	// defining initial polygon

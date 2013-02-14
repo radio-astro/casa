@@ -23,10 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "SlicerMainWindow.qo.h"
-#include <images/Images/ImageInterface.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <synthesis/MSVis/UtilJ.h>
-#include <display/Slicer/SliceWorker.h>
+
 #include <display/Slicer/SliceZoomer.h>
 #include <display/Slicer/SliceColorPreferences.qo.h>
 
@@ -35,27 +32,26 @@
 #include <QFileDialog>
 #include <QCursor>
 #include <QFile>
-#include <qwt_plot_curve.h>
-#include <qwt_plot_panner.h>
+#include <QIntValidator>
+
+//#include <qwt_plot_panner.h>
 #include <qwt_plot_zoomer.h>
 
 namespace casa {
 
 SlicerMainWindow::SlicerMainWindow(QWidget *parent)
-    : QMainWindow( parent ), image( NULL ), imageAnalysis( NULL ), colorPreferences( NULL ),
-      slicePlot( this ), DISTANCE_AXIS("Distance"),
-      POSITION_X_AXIS("Position X"), POSITION_Y_AXIS("Position Y"){
+    : QMainWindow( parent ),  colorPreferences( NULL ),
+      slicePlot( this, true ){
 	ui.setupUi(this);
-	sliceCurveColor = Qt::blue;
+
 	setWindowTitle( "1D Slice Tool");
 
 	//Sample Size
 	connect( ui.autoCountCheckBox, SIGNAL(toggled(bool)), this, SLOT(autoCountChanged(bool)));
 	ui.autoCountCheckBox->setChecked( true );
-
-	axes.resize( 2 );
-	axes[0] = 0;
-	axes[1] = 1;
+	QIntValidator* sampleCountValidator = new QIntValidator( std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), this);
+	ui.pointCountLineEdit->setValidator( sampleCountValidator );
+	connect( ui.pointCountLineEdit, SIGNAL(editingFinished()), this, SLOT(sampleCountChanged()));
 
 	//Color preferences
 	colorPreferences = new SliceColorPreferences( this );
@@ -67,13 +63,17 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	for ( int i = 0; i < methodList.size(); i++ ){
 		ui.methodComboBox->addItem( methodList[i] );
 	}
+	connect( ui.methodComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(interpolationMethodChanged(const QString&)));
+
+	//Accumulate Slices
+	connect( ui.accumulateCheckBox, SIGNAL(toggled(bool)), &slicePlot, SLOT(setAccumulateSlices(bool)));
 
 	//Add the plot to the widget
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotFrame);
 	layout->setContentsMargins( 0, 0, 0, 0 );
 	layout->addWidget( &slicePlot );
-	slicePlot.setCanvasBackground( Qt::white );
-	initAxisFont( QwtPlot::yLeft, "Intensity");
+
+	slicePlot.initAxisFont( QwtPlot::yLeft, "Intensity");
 
 	//QwtPlotPanner* plotPanner = new QwtPlotPanner( slicePlot.canvas() );
 	//plotPanner->setMouseButton( Qt::RightButton, Qt::NoButton);
@@ -81,9 +81,10 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	ui.plotFrame->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 
 	//X-Axis units
-	ui.xAxisComboBox->addItem( DISTANCE_AXIS );
-	ui.xAxisComboBox->addItem( POSITION_X_AXIS );
-	ui.xAxisComboBox->addItem( POSITION_Y_AXIS );
+	ui.xAxisComboBox->addItem( SlicePlot::DISTANCE_AXIS );
+	ui.xAxisComboBox->addItem( SlicePlot::POSITION_X_AXIS );
+	ui.xAxisComboBox->addItem( SlicePlot::POSITION_Y_AXIS );
+	connect(ui.xAxisComboBox, SIGNAL(currentIndexChanged(const QString&)), &slicePlot, SLOT(setXAxis(const QString&)));
 
 	//Clear
 	connect( ui.clearButton, SIGNAL(clicked()), this, SLOT(clearCurves()));
@@ -94,6 +95,10 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 
 	initializeZooming();
 }
+
+//----------------------------------------------------------------------------------
+//                         Zooming
+//----------------------------------------------------------------------------------
 
 void SlicerMainWindow::initializeZooming(){
 
@@ -141,22 +146,28 @@ void SlicerMainWindow::zoomNeutral(){
 	}
 }
 
+//-----------------------------------------------------------------------
+//             Colors
+//-----------------------------------------------------------------------
+
 void SlicerMainWindow::resetColors(){
-	sliceCurveColor = colorPreferences->getSliceColor();
-	QList<int> keys = curveMap.keys();
-	int keyCount = keys.size();
-	for ( int i = 0; i < keyCount; i++ ){
-		QPen curvePen = curveMap[keys[i]]->pen();
-		curvePen.setColor( sliceCurveColor );
-		curveMap[keys[i]]->setPen(curvePen);
-	}
-	slicePlot.replot();
+	QColor sliceCurveColor = colorPreferences->getSliceColor();
+	bool viewerColors = colorPreferences->isViewerColors();
+	slicePlot.resetCurveColors( viewerColors, sliceCurveColor,
+			colorPreferences->getAccumulatedSliceColors() );
 }
 
 void SlicerMainWindow::showColorDialog(){
 	colorPreferences->show();
 }
 
+void SlicerMainWindow::setCurveColor( int regionId, const QString& colorName ){
+	slicePlot.setViewerCurveColor( regionId, colorName );
+}
+
+//---------------------------------------------------------------------------------
+//                   Export
+//---------------------------------------------------------------------------------
 
 void SlicerMainWindow::exportSlice(){
 	QString fileName = QFileDialog::getSaveFileName(this,tr("Export 1D Slice"),
@@ -177,27 +188,7 @@ void SlicerMainWindow::exportSlice(){
 }
 
 bool SlicerMainWindow::toASCII( const QString& fileName ){
-	QFile file( fileName );
-	bool success = file.open( QIODevice::WriteOnly | QIODevice::Text );
-	const QString LINE_END( "\n");
-	if ( success ){
-		QTextStream out( &file );
-		out.setFieldWidth( 20 );
-		QList<int> keys = curveMap.keys();
-		int keyCount = keys.size();
-		String imageName = image->name();
-		QString title = "1-D Slice(s) for "+QString(imageName.c_str());
-		out << title << LINE_END << LINE_END;
-		for ( int i = 0; i < keyCount; i++ ){
-			if ( slicerMap.contains( keys[i])){
-				slicerMap[keys[i]]->toAscii( out );
-			}
-			out << LINE_END;
-			out.flush();
-		}
-		file.close();
-	}
-	return success;
+	return slicePlot.toAscii( fileName );
 }
 
 
@@ -217,36 +208,24 @@ bool SlicerMainWindow::toImageFormat( const QString& fileName, const QString& fo
 	return imageSaved;
 }
 
-void SlicerMainWindow::initAxisFont( int axisId, const QString& axisTitle ){
-	const int AXIS_FONT_SIZE = 8;
-	QwtText axisLabel( axisTitle );
-	QFont axisFont = slicePlot.axisFont( axisId );
-	axisFont.setPointSize( AXIS_FONT_SIZE );
-	axisFont.setBold( true );
-	axisLabel.setFont( axisFont );
-	slicePlot.setAxisTitle( axisId, axisLabel );
+//-------------------------------------------------------------------------------
+//                        UI SLOTS
+//-------------------------------------------------------------------------------
+
+void SlicerMainWindow::interpolationMethodChanged( const QString& method ){
+	QString methodQ = method;
+	methodQ = methodQ.toLower();
+	slicePlot.setInterpolationMethod( methodQ.toStdString() );
 }
-
-
 
 void SlicerMainWindow::autoCountChanged( bool selected ){
 	ui.pointCountLineEdit->setEnabled( !selected );
 	if ( !selected ){
 		ui.pointCountLineEdit->setText( "0");
 	}
+	sampleCountChanged();
 }
 
-SliceWorker* SlicerMainWindow::getSlicerFor( int regionId ){
-	SliceWorker* slicer = NULL;
-	if ( slicerMap.contains( regionId )){
-		slicer = slicerMap[regionId];
-	}
-	else {
-		slicer = new SliceWorker( regionId );
-		slicerMap.insert( regionId, slicer );
-	}
-	return slicer;
-}
 
 int SlicerMainWindow::populateSampleCount() const {
 	int sampleCount = 0;
@@ -257,130 +236,48 @@ int SlicerMainWindow::populateSampleCount() const {
 	return sampleCount;
 }
 
-String SlicerMainWindow::populateMethod() const {
-	QString methodQ = ui.methodComboBox->currentText();
-	methodQ = methodQ.toLower();
-	return methodQ.toStdString();
+void SlicerMainWindow::sampleCountChanged(){
+	int sampleCount = populateSampleCount();
+	slicePlot.setSampleCount( sampleCount );
 }
 
-void SlicerMainWindow::updatePolyLine(  int regionId,
-		const QList<double> & /*worldX*/, const QList<double> & /*worldY*/,
+//--------------------------------------------------------------------------------
+//               Region and image changes
+//--------------------------------------------------------------------------------
+
+void SlicerMainWindow::updatePolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
+		const QList<double> & worldX, const QList<double> & worldY,
 		const QList<int> &pixelX, const QList<int> & pixelY ){
-	int pixelXCount = pixelX.size();
-	int pixelYCount = pixelY.size();
-	if ( pixelXCount > 0 && pixelYCount > 0 ){
-		Assert( pixelXCount == pixelYCount );
-		polyX.resize( pixelXCount );
-		polyY.resize( pixelYCount );
-		for ( int i = 0; i < pixelXCount; i++ ){
-			polyX[i] = pixelX[i];
-			polyY[i] = pixelY[i];
-		}
-	}
-	if ( imageAnalysis != NULL ){
-		SliceWorker* slicer = getSlicerFor( regionId );
-		slicer->setImageAnalysis( imageAnalysis );
-		slicer->setSampleCount( populateSampleCount());
-		slicer->setVertices( polyX, polyY );
-		slicer->setAxes( axes );
-		slicer->setCoords( coords );
-		slicer->setMethod( populateMethod() );
-		slicer->run();
-		sliceFinished( regionId );
+	slicePlot.updatePolyLine( regionId, regionChanges, worldX, worldY, pixelX, pixelY);
+}
+
+void SlicerMainWindow::addPolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
+   		const QList<double> & worldX, const QList<double> & worldY,
+   		const QList<int> &pixelX, const QList<int> & pixelY, const QString& colorName ){
+	if ( regionChanges == viewer::region::RegionChangeCreate ){
+		slicePlot.updatePolyLine( regionId, regionChanges, worldX, worldY, pixelX, pixelY );
+		slicePlot.setViewerCurveColor( regionId, colorName );
 	}
 }
 
-void SlicerMainWindow::sliceFinished( int regionId ){
-	SliceWorker* slicer = getSlicerFor( regionId );
-	QString xAxisChoice = ui.xAxisComboBox->currentText();
-	QVector<double> xValues;
-	if ( xAxisChoice == DISTANCE_AXIS ){
-		xValues = slicer->getDistances();
 
-	}
-	else if ( xAxisChoice == POSITION_X_AXIS ){
-		xValues = slicer->getXPositions();
-	}
-	else {
-		xValues = slicer->getYPositions();
-	}
-	initAxisFont( QwtPlot::xBottom, xAxisChoice );
-	QVector<double> pixels = slicer->getPixels();
-	addSliceToPlot( xValues, pixels, regionId );
-}
-
-void SlicerMainWindow::deletePolyLine( int regionId){
-	SliceWorker* slicer = slicerMap.take( regionId );
-	delete slicer;
-}
 
 void SlicerMainWindow::updateChannel( int channel ){
-	CoordinateSystem cSys = image->coordinates();
-	int coordCount = image->ndim();
-	coords.resize( coordCount );
-	for ( int i = 0; i < coordCount; i++ ){
-		coords[i] = 0;
-	}
-	if ( cSys.hasSpectralAxis() ){
-		int index = cSys.spectralAxisNumber();
-		coords[index] = channel;
-	}
+	slicePlot.updateChannel( channel );
 }
+
 
 void SlicerMainWindow::clearCurves(){
-	QList<int> keys = curveMap.keys();
-	int keyCount = keys.size();
-	for( int i = 0; i < keyCount; i++ ){
-		QwtPlotCurve* curve = curveMap.take(keys[i]);
-		curve->detach();
-		delete curve;
-	}
+	slicePlot.clearCurves();
 }
 
-
-void SlicerMainWindow::addSliceToPlot( QVector<double>& xValues,
-			QVector<double>& yValues, int regionId ){
-	if ( !ui.accumulateCheckBox->isChecked()){
-		clearCurves();
-	}
-	QwtPlotCurve* curve  = new QwtPlotCurve();
-	curve->setData( xValues, yValues );
-	QPen curvePen( sliceCurveColor );
-	curvePen.setWidth( 1 );
-	curve->setPen(curvePen);
-
-	//We are plotting multiple curves and we now
-	//have an update of one of them
-	if ( curveMap.contains(regionId) ){
-		curveMap[regionId]->detach();
-		delete curveMap[regionId];
-	}
-	curveMap[regionId] = curve;
-
-	curve->attach(&slicePlot);
-	slicePlot.replot();
-}
 
 void SlicerMainWindow::setImage( ImageInterface<float>* img ){
-	if ( img != NULL && image != img ){
-		image = img;
-		delete imageAnalysis;
-		imageAnalysis = new ImageAnalysis( image );
-		updateChannel( 0 );
-	}
+	slicePlot.setImage( img );
 }
 
-void SlicerMainWindow::clearSlicers(){
-	QList<int> keys = slicerMap.keys();
-	int keyCount = keys.size();
-	for ( int i = 0; i < keyCount; i++ ){
-		SliceWorker* slicer = slicerMap.take( keys[i]);
-		delete slicer;
-	}
-}
 
 SlicerMainWindow::~SlicerMainWindow(){
-	clearSlicers();
 	delete plotZoomer;
 }
 }
