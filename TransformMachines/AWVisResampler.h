@@ -140,14 +140,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Double& sinDPA, Double& cosDPA);
 
   template <class T>
-  Double accumulateOnGrid(Array<T>& grid, Complex* __restrict__& convFuncV, 
-			Complex& nvalue,
-			Double& wVal, Vector<Int>& scaledSupport, 
-			Vector<Float>& scaledSampling, Vector<Double>& off,
-			Vector<Int>& convOrigin, Vector<Int>& cfShape,
-			Vector<Int>& loc, Vector<Int>& igrdpos, 
-			Double& sinDPA, Double& cosDPA,
-			Bool& finitePointingOffset, Bool dopsf);
+  Complex accumulateOnGrid(Array<T>& grid, Complex* __restrict__& convFuncV, 
+			   Complex& nvalue,
+			   Double& wVal, Vector<Int>& scaledSupport, 
+			   Vector<Float>& scaledSampling, Vector<Double>& off,
+			   Vector<Int>& convOrigin, Vector<Int>& cfShape,
+			   Vector<Int>& loc, Vector<Int>& igrdpos, 
+			   Double& sinDPA, Double& cosDPA,
+			   Bool& finitePointingOffset, Bool dopsf);
+  template <class T>
+  void XInnerLoop(const Int *scaleSupport, const Float* scaledSampling,
+		  const Double* off,
+		  const Int* loc, Complex& cfArea,  
+		  const Int * __restrict__ iGrdPosPtr,
+		  Complex *__restrict__& convFuncV,
+		  const Int* convOrigin,
+		  Complex& nvalue,
+		  Double& wVal,
+		  Bool& finitePointingOffset,
+		  Bool& doPSFOnly,
+		  T* __restrict__ gridStore,
+		  Int* iloc,
+		  Complex& norm,
+		  Int* igrdpos);
+
   template <class T>
   void accumulateFromGrid(T& nvalue, const T* __restrict__& grid, 
 			  Vector<Int>& iGrdPos,
