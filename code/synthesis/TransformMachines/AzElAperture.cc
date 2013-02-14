@@ -39,12 +39,12 @@ namespace casa{
 
       Double actualPA = getPA(vb), currentCFPA = cfc.pa_p.getValue("rad");
       Double dPA = currentCFPA-actualPA;
-      //      cerr << actualPA << " " << currentCFPA << endl;
       if (fabs(dPA) > 0.1)
 	//      if (fabs(actualPA-currentCFPA) > 0.0)
 	{
 	  Array<TT> inData;
 	  inData.assign(*cfc.getStorage());
+	  // log_l  << actualPA << " " << currentCFPA << LogIO::POST;
 	  // cerr << "dPA = " << actualPA << " " << currentCFPA << " " 
 	  //      << actualPA - currentCFPA << " " << &(*cfc.getStorage()) << endl;
 	  

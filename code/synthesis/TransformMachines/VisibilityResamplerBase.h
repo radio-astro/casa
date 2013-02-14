@@ -42,6 +42,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
+#include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   class VisibilityResamplerBase
@@ -49,7 +50,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public: 
     VisibilityResamplerBase(): 
       uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), spwChanFreq_p(), spwChanConjFreq_p (), convFuncStore_p(), inc_p(),
-      cfMap_p(), conjCFMap_p(), runTimeG_p(0.0), runTimeDG_p(0.0),runTimeG1_p(0.0), runTimeG2_p(0.0), runTimeG3_p(0.0), runTimeG4_p(0.0), runTimeG5_p(0.0), runTimeG6_p(0.0), runTimeG7_p(0.0)
+      cfMap_p(), conjCFMap_p(), runTimeG_p(0.0), runTimeDG_p(0.0),runTimeG1_p(0.0), runTimeG2_p(0.0), runTimeG3_p(0.0), runTimeG4_p(0.0), runTimeG5_p(0.0), runTimeG6_p(0.0), runTimeG7_p(0.0),
+      timer_p()
     {};
     // VisibilityResamplerBase(const CFStore& cfs): 
     //   uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), convFuncStore_p(), inc_p(),
@@ -138,6 +140,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				const Vector<Double>& pointingOffset);
 
     Double runTimeG_p, runTimeDG_p, runTimeG1_p, runTimeG2_p, runTimeG3_p, runTimeG4_p, runTimeG5_p, runTimeG6_p, runTimeG7_p;
+    Timer timer_p;
     //
     //------------------------------------------------------------------------------
     //----------------------------Private parts-------------------------------------

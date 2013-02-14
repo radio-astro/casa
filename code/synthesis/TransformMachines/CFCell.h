@@ -82,12 +82,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //========================= Administrative Parts ==========================
     //------------------------------------------------------------------
     //
-    CFCell(){};
+    CFCell():cfShape_p(){};
 
     CFCell(Array<TT> &dataPtr, CoordinateSystem& cs, Float& /*samp*/)
     {
       if (storage_p.null()) storage_p = new Array<TT>(dataPtr);
       coordSys_p = cs;
+      cfShape_p.assign(storage_p->shape().asVector());
     };
 
     ~CFCell() {};
@@ -96,6 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void makePersistent(const char *dir);
     CountedPtr<CFCell> clone();
     void setParams(const CFCell& other);
+    void initCache() {shape_p=storage_p->shape(); cfShape_p.assign(shape_p.asVector());};
     //
     //============================= Functional Parts ============================
     //------------------------------------------------------------------
@@ -111,6 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    MuellerElementType muellerElement_p;
     Int muellerElement_p;
     Quantity pa_p;
+    Vector<Int> cfShape_p;
   };
 } //# NAMESPACE CASA - END
 #endif
