@@ -2,28 +2,29 @@ from taskinit import *
 
 def impv(
     imagename, outfile, start, end, halfwidth, overwrite,
-    region, chans, stokes, mask, stretch, wantreturn
+    region, chans, stokes, mask, stretch
 ):
     casalog.origin('impv')
-    myia = iatool()
-    mypv = None
+    
     try:
+        if len(outfile) == 0:
+            raise Exception, "outfile must be specified."
+        myia = iatool()
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
-        mypv = myia.pv(
+        print "**** here 0"
+
+        myia.pv(
             outfile=outfile, start=start, end=end,
             halfwidth=halfwidth, overwrite=overwrite, region=region,
             chans=chans, stokes=stokes, mask=mask, stretch=stretch,
-            wantreturn=wantreturn
+            wantreturn=False
         )
-        if (wantreturn):
-            return mypv
-        else:
-            mypv.done()
-            return False
+        myia.done()
+        print "**** here 1"
+        return True
     except Exception, instance:
-        if (mypv):
-            mypv.done()
+        print "**** here 2"
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
         raise
     finally:
