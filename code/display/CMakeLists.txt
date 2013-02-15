@@ -186,6 +186,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Slicer/SlicerMainWindow.ui
   Slicer/SliceColorPreferences.ui
   Clean/CleanGui.ui
+  Clean/ConfirmStop.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
