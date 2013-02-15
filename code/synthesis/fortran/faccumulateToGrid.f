@@ -179,11 +179,9 @@
       l_phaseGradOriginX=phNX/2 + 1
       l_phaseGradOriginY=phNY/2 + 1
       
-c$$$      cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
-c$$$     $     scaledSampling, off, convOrigin, cfShape,
-c$$$     $     cfNX, cfNY, cfNP, cfNC)
-      
-      cfArea = 1.0
+      cfArea = fGetCFArea(convFuncV, wVal, scaledSupport, 
+     $     scaledSampling, off, convOrigin, cfShape,
+     $     cfNX, cfNY, cfNP, cfNC)
 
 
 c$$$!$OMP PARALLEL 
@@ -204,34 +202,34 @@ c$$$!$OMP DO
          iloc(2)=nint(scaledSampling(2)*iy+off(2)-1)
          iCFPos(2)=iloc(2)+convOrigin(2)+1
          l_igrdpos(2) = loc(2)+iy+1
-         call dInnerXLoop(grid, imNX, imNY, imNP, imNC,
-     $        nvalue, scaledSupport, scaledSampling,
-     $        convOrigin, iloc, l_igrdpos, iCFPos, loc,off,
-     $        wVal, cfNX, cfNY, cfNP, cfNC, convFuncV,cfArea,
-     $        phNX, phNY, phaseGrad,
-     $        finitePointingOffset, doPSFOnly,norm)
-c$$$         do ix=-scaledSupport(1),scaledSupport(1)
-c$$$            iloc(1)=nint(scaledSampling(1)*ix+off(1)-1)
-c$$$            iCFPos(1) = iloc(1) + convOrigin(1) + 1
-c$$$            l_igrdpos(1) = loc(1) + ix + 1
-c$$$            
-c$$$            wt = convFuncV(iCFPos(1), iCFPos(2), 
-c$$$     $           iCFPos(3), iCFPos(4))/cfArea
-c$$$            if (wVal > 0.0) wt = conjg(wt)
-c$$$            
-c$$$            norm = norm + (wt)
-c$$$            
-c$$$            if ((finitePointingOffset .eq. 1) .and.
-c$$$     $           (doPSFOnly .eq. 0)) then
-c$$$               wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
-c$$$     $              iloc(2) + l_phaseGradOriginY)
-c$$$            endif
-c$$$            
-c$$$            grid(l_igrdpos(1), l_igrdpos(2), l_igrdpos(3), l_igrdpos(4)) 
-c$$$     $           =grid(l_igrdpos(1), l_igrdpos(2), 
-c$$$     $           l_igrdpos(3), l_igrdpos(4)) + nvalue * wt
-c$$$            
-c$$$         enddo
+c$$$         call dInnerXLoop(grid, imNX, imNY, imNP, imNC,
+c$$$     $        nvalue, scaledSupport, scaledSampling,
+c$$$     $        convOrigin, iloc, l_igrdpos, iCFPos, loc,off,
+c$$$     $        wVal, cfNX, cfNY, cfNP, cfNC, convFuncV,cfArea,
+c$$$     $        phNX, phNY, phaseGrad,
+c$$$     $        finitePointingOffset, doPSFOnly,norm)
+         do ix=-scaledSupport(1),scaledSupport(1)
+            iloc(1)=nint(scaledSampling(1)*ix+off(1)-1)
+            iCFPos(1) = iloc(1) + convOrigin(1) + 1
+            l_igrdpos(1) = loc(1) + ix + 1
+            
+            wt = convFuncV(iCFPos(1), iCFPos(2), 
+     $           iCFPos(3), iCFPos(4))/cfArea
+            if (wVal > 0.0) wt = conjg(wt)
+            
+            norm = norm + (wt)
+            
+            if ((finitePointingOffset .eq. 1) .and.
+     $           (doPSFOnly .eq. 0)) then
+               wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
+     $              iloc(2) + l_phaseGradOriginY)
+            endif
+            
+            grid(l_igrdpos(1), l_igrdpos(2), l_igrdpos(3), l_igrdpos(4)) 
+     $           =grid(l_igrdpos(1), l_igrdpos(2), 
+     $           l_igrdpos(3), l_igrdpos(4)) + nvalue * wt
+            
+         enddo
       enddo
 c$$$!$OMP END DO
 c$$$!$OMP END PARALLEL
