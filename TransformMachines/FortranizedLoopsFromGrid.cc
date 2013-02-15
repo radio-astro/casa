@@ -38,8 +38,8 @@
 
   gridPtr       = grid.getStorage(dummy);
   phaseGradPtr  = cached_phaseGrad_p.getStorage(dummy);
-  supportPtr    = scaledSupport.getStorage(dummy);
-  samplingPtr   = scaledSampling.getStorage(dummy);
+  supportPtr    = support.getStorage(dummy);
+  samplingPtr   = sampling.getStorage(dummy);
   cfShapePtr    = cfShape.getStorage(dummy);
   locPtr        = loc.getStorage(dummy);
   igrdposPtr    = igrdpos.getStorage(dummy);

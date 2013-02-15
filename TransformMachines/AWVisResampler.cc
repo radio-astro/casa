@@ -613,8 +613,8 @@ runTimeG7_p += timer_p.real();
   {
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw, nCFFreq;
     Int achan, apol, rbeg, rend, PolnPlane, ConjPlane;
-    Vector<Float> sampling(2),scaledSampling(2);
-    Vector<Int> support(2),loc(3), iloc(4),tiloc(4), scaledSupport(2);
+    Vector<Float> sampling(2);//scaledSampling(2);
+    Vector<Int> support(2),loc(3), iloc(4),tiloc(4);// scaledSupport(2);
     Vector<Double> pos(2), off(3);
     
     IPosition grdpos(4);
@@ -699,14 +699,14 @@ runTimeG7_p += timer_p.real();
 	    // CoordinateSystem cs; 
 	    // cfb.getParams(cs,s,support(0),support(1),0,wndx,0);
 	    cfb.getParams(cfRefFreq,s,support(0),support(1),fndx,wndx,0);
-	    sampling(0) = sampling(1) = s;
+	    sampling(0) = sampling(1) = SynthesisUtils::nint(s);
 	    
 	    //cfScale = cfRefFreq/freq[ichan];
 	    
-	    sampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
-	    sampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
-	    support[0]  = SynthesisUtils::nint(support[0]/cfScale);
-	    support[1]  = SynthesisUtils::nint(support[1]/cfScale);
+	    // sampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
+	    // sampling[1] = SynthesisUtils::nint(sampling[1]*cfScale);
+	    // support[0]  = SynthesisUtils::nint(support[0]/cfScale);
+	    // support[1]  = SynthesisUtils::nint(support[1]/cfScale);
 	    
 	    sgrid(pos,loc,off,phasor,irow,uvw,dphase_p[irow],freq[ichan],
 		  uvwScale_p,offset_p,sampling);
