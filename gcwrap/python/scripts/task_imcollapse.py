@@ -86,4 +86,8 @@ def imcollapse(
         return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-        return False
+        raise
+    finally:
+        if (myia):
+            myia.done()
+
