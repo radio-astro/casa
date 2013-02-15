@@ -36,6 +36,8 @@
 
 #include <iomanip>
 
+#include <tables/Tables/PlainTable.h>
+
 namespace casa {
 
 const String PVGenerator::_class = "PVGenerator";
@@ -92,8 +94,9 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	if (_start.get() == 0 || _end.get() == 0) {
 		*_getLog() << "Start and/or end points have not been set" << LogIO::EXCEPTION;
 	}
+	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*_getImage()->cloneII(), *_getRegion(), _getMask(),
+		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch()
 	);
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
