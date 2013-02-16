@@ -331,6 +331,7 @@ casa_add_library( synthesis
  MeasurementEquations/SIIterBot.cc
  MeasurementEquations/SynthesisDeconvolver.cc
  MeasurementEquations/SDAlgorithmBase.cc
+ MeasurementEquations/SDAlgorithmHogbomClean.cc
  MeasurementEquations/SDMaskHandler.cc
   )
 
@@ -620,6 +621,7 @@ install (FILES
 	MeasurementEquations/SynthesisDeconvolver.h
 	MeasurementEquations/SDMaskHandler.h
 	MeasurementEquations/SDAlgorithmBase.h
+	MeasurementEquations/SDAlgorithmHogbomClean.h
 	DESTINATION include/casacode/synthesis/MeasurementEquations
 	)
 install (FILES

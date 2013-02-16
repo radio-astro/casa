@@ -75,6 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  /*
   SIImageStore::SIImageStore(String imagename) 
   {
     LogIO os( LogOrigin("SIImageStore","Open existing Images",WHERE) );
@@ -106,6 +107,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsValidity = True;
   }
+  */
+
+  SIImageStore::SIImageStore(String imagename) 
+  {
+    LogIO os( LogOrigin("SIImageStore","Open existing Images",WHERE) );
+
+    itsImageName = imagename;
+
+    // The PSF and Residual images must exist. 
+    if( doesImageExist(itsImageName+String(".residual")) && doesImageExist(itsImageName+String(".psf")) )
+      {
+	itsResidual = new PagedImage<Float> (itsImageName+String(".residual"));
+	itsPsf = new PagedImage<Float> (itsImageName+String(".psf"));
+
+	// The weight image is optional.
+	if( doesImageExist( itsImageName+String(".weight") ) )
+	  {
+	    itsWeight = new PagedImage<Float> (itsImageName+String(".weight"));
+	  }
+	else
+	  {
+	    itsWeight = NULL;
+	  }
+
+	// The model must exist, but if it does not, create it using the shape from residual
+	if( doesImageExist( itsImageName+String(".model") ))
+	  {
+	    itsModel = new PagedImage<Float> (itsImageName+String(".model"));
+	  }
+	else
+	  {
+	    itsModel = new PagedImage<Float> (itsResidual->shape(), itsResidual->coordinates(), itsImageName+String(".model"));
+	    itsModel->set(0.0);
+	  }
+	
+	itsImageShape = itsResidual->shape();
+	if( ( itsPsf->shape() != itsImageShape ) ||
+	    ( (itsWeight.null())?False:(itsWeight->shape() != itsImageShape ) ) ||
+	    ( itsModel->shape() != itsImageShape ) )
+	  {
+	    throw( AipsError("Shapes of "+itsImageName+".{residual,psf,weight,model} are not identical") );
+	  }
+
+      }
+    else
+      {
+	/// Make this more intelligent. For instance, don't always need 'weight' and model for different stages.
+	throw( AipsError( "PSF and Residual Images do not exist. Please create them" ) );
+      }
+
+    itsValidity = True;
+  }// end of Constructor 1
+
 
   SIImageStore::SIImageStore(String imagename, 
 			     CoordinateSystem &imcoordsys, 
@@ -131,15 +185,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsModel = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".model"));
 
     itsResidual->set(0.0);
-    itsPsf->set(0.2);
+    itsPsf->set(1.0);
     itsWeight->set(1.0);
     itsModel->set(0.0);
+
+    if( itsImageShape[0]==3 && itsImageShape[1]==3 )
+      {
+	// Make a PSF with 1 in the center pixel.
+	itsPsf->set(-0.1);
+	for(uInt i=0;i<itsImageShape[2];i++)
+	  for(uInt j=0;j<itsImageShape[3];j++)
+	    {
+	      itsPsf->putAt( 1.0, IPosition(4,1,1,i,j) );
+	    }
+      }
 
     os << LogIO::POST;
     
     itsValidity=True;
 
-  }
+  }// End of constructor 2
 
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,6 +265,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   CountedPtr<PagedImage<Float> > SIImageStore::weight()
   {
+    if( itsWeight.null() )
+      {
+	throw( AipsError("Internal error : Weight Image does not exist. Please check with SIImageStore.hasWeight() before accessing the weight image. If not present, treat it as a scalar = 1.0") );
+      }
     return itsWeight;
   }
   CountedPtr<PagedImage<Float> > SIImageStore::model()
@@ -227,6 +296,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return impsf.exists() & imresidual.exists() & imweight.exists() & immodel.exists();
   }
 
+  // TODO : Move to an image-wrapper class ? Same function exists in SynthesisDeconvolver.
+  Bool SIImageStore::doesImageExist(String imagename)
+  {
+    LogIO os( LogOrigin("SIImageStore","doesImageExist",WHERE) );
+    Directory image( imagename );
+    return image.exists();
+  }
+
+
    void SIImageStore::allocateRestoredImage()
   {
 
@@ -237,12 +315,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( resetpsf ) itsPsf->set(0.0);
     if( resetresidual ) itsResidual->set(0.0);
-    if( resetweight ) itsWeight->set(0.0);
+    if( resetweight && !itsWeight.null() ) itsWeight->set(0.0);
   }
 
   void SIImageStore::addImages( CountedPtr<SIImageStore> imagestoadd,
 				Bool addpsf, Bool addresidual, Bool addweight)
   {
+
+    if( itsWeight.null() )
+      {
+	throw( AipsError("Internal Error : Weight image from major cycle is not present. Cannot gather a weighted sum from all nodes") );
+      }
+
     if(addpsf)
       {
 	LatticeExpr<Float> adderPsf( *itsPsf + *(imagestoadd->psf()) ); 
@@ -265,16 +349,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIImageStore::divideResidualByWeight(Float weightlimit)
   {
     LogIO os( LogOrigin("SIImageStore","divideResidualByWeight",WHERE) );
-    os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
 
-    ///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
-
-    LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
-    LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
-
-    LatticeExpr<Float> ratio( ( (*itsResidual) * mask ) / ( (*itsWeight) + maskinv) );
-    itsResidual->copyData(ratio);
-    
+    if( itsWeight.null() )
+      {
+	os << "Weights are 1.0. Not dividing " << itsImageName+String(".residual") << LogIO::POST;
+      }
+    else
+      {
+	os << "Dividing " << itsImageName+String(".residual") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	
+	///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
+	
+	LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
+	
+	LatticeExpr<Float> ratio( ( (*itsResidual) * mask ) / ( (*itsWeight) + maskinv) );
+	itsResidual->copyData(ratio);
+      }
     // createMask
 
   }
@@ -282,16 +373,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIImageStore::divideModelByWeight(Float weightlimit)
   {
     LogIO os( LogOrigin("SIImageStore","divideModelByWeight",WHERE) );
-    os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
 
-    LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
-    LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
-
-    LatticeExpr<Float> ratio( ( (*itsModel) * mask ) / ( (*itsModel) + maskinv) );
-    itsModel->copyData(ratio);
-    
+    if( itsWeight.null() )
+      {
+	os << "Weights are 1.0. Not dividing " << itsImageName+String(".residual") << LogIO::POST;
+      }
+    else
+      {
+	os << "Dividing " << itsImageName+String(".model") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	
+	LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
+	
+	LatticeExpr<Float> ratio( ( (*itsModel) * mask ) / ( (*itsModel) + maskinv) );
+	itsModel->copyData(ratio);
+      }    
     // createMask
-
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -36,6 +36,7 @@
 #include <measures/Measures/MDirection.h>
 
 #include<synthesis/MeasurementEquations/SDAlgorithmBase.h>
+#include<synthesis/MeasurementEquations/SDAlgorithmHogbomClean.h>
 #include<synthesis/MeasurementEquations/SDMaskHandler.h>
 #include <synthesis/MeasurementEquations/SIMinorCycleController.h>
 

@@ -67,7 +67,10 @@ class SIImageStore
 
   void setModelImage( String modelname );
 
+  Bool hasWeight(){return itsWeightExists;};
+
   Bool doImagesExist();
+  Bool doesImageExist(String imagename);
 
   void allocateRestoredImage();
 
@@ -87,7 +90,7 @@ protected:
   IPosition itsImageShape;
   String itsImageName;
   CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
-  
+  Bool itsWeightExists;
 
   Bool itsValidity;
 
