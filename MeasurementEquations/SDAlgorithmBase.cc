@@ -58,6 +58,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   SDAlgorithmBase::SDAlgorithmBase():
+    itsAlgorithmName("Test"),
     tmpPos_p( IPosition() ),
     itsImages( NULL ),
     itsDecSlices (),
@@ -90,7 +91,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
 
-    os << "Run minor-cycle on " << itsDecSlices.nelements() 
+    os << "Run " << itsAlgorithmName << " minor-cycle on " << itsDecSlices.nelements() 
        << " slices of [" << deconvolverid << "]:" << itsImages->getName()
        << " [ CycleThreshold=" << loopcontrols.getCycleThreshold()
        << ", CycleNiter=" << loopcontrols.getCycleNiter() 
@@ -104,8 +105,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	initializeSubImages( subimageid );
 
 	Int startiteration = loopcontrols.getIterDone();
-	Float peakresidual=getPeakResidual();
-	Float modelflux=getIntegratedFlux();
+	Float peakresidual;
+	Float modelflux;
+
+	initializeDeconvolver( peakresidual, modelflux );
 
 	Float startpeakresidual = peakresidual;
 	Float startmodelflux = modelflux;
@@ -115,18 +118,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Optionally, fiddle with maskhandler for autoboxing.... 
 	    // mask = maskhandler->makeAutoBox();
 	    
-	    findNextComponent( loopcontrols.getLoopGain() );
-	    
-	    updateResidual();
-	    updateModel ();
-	    
-	    peakresidual = getPeakResidual();
-	    modelflux = getIntegratedFlux();
-	    
+	    takeOneStep( loopcontrols.getLoopGain(), peakresidual, modelflux );
+
 	    loopcontrols.incrementMinorCycleCount( );
 	    loopcontrols.setPeakResidual( peakresidual );
 	    loopcontrols.addSummaryMinor( deconvolverid, subimageid, modelflux, peakresidual );
 	  }// end of minor cycle iterations for this subimage.
+
+	finalizeDeconvolver();
 	
 	// same as checking on itscycleniter.....
 	loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
@@ -147,25 +146,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     return loopcontrols.majorCycleRequired(currentresidual);
   }
-  
 
-  void SDAlgorithmBase::findNextComponent( Float loopgain )
+  void SDAlgorithmBase::initializeDeconvolver( Float &peakresidual, Float &modelflux )
   {
-    //    comp = loopgain * residual;
+    tmpPos_p = itsResidual.shape()/2;
+    peakresidual = itsResidual.getAt(tmpPos_p);
+    modelflux = itsModel.getAt(tmpPos_p);
+  }
+
+  void SDAlgorithmBase::takeOneStep( Float loopgain, Float &peakresidual, Float &modelflux)
+  {
 
     itsComp =  loopgain * itsResidual.getAt(tmpPos_p);
-
-  }
-
-  void SDAlgorithmBase::updateModel()
-  {
     itsModel.putAt( itsModel.getAt(tmpPos_p) + itsComp  , tmpPos_p );
-  }
-
-  void SDAlgorithmBase::updateResidual()
-  {
     itsResidual.putAt( itsResidual.getAt(tmpPos_p) - itsComp  , tmpPos_p );
-  }
+
+    peakresidual = itsResidual.getAt(tmpPos_p);
+    modelflux = itsModel.getAt(tmpPos_p);
+  }	    
 
   void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
   {
@@ -175,16 +173,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Smooth model and add residuals for " << imagestore->getName() 
        << ". Optionally, PB-correct too." << LogIO::POST;
 
-  }
-
-  Float SDAlgorithmBase::getPeakResidual()
-  {
-    return itsResidual.getAt(tmpPos_p);
-  }
-
-  Float SDAlgorithmBase::getIntegratedFlux()
-  {
-    return itsModel.getAt(tmpPos_p);
   }
 
 
@@ -215,6 +203,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     IPosition imshape = itsImages->getShape();
 
+
+    // TODO : Check which axes is which first !!!
+    ///// chanAxis_p=CoordinateUtil::findSpectralAxis(dirty_p->coordinates());
+    //// Vector<Stokes::StokesTypes> whichPols;
+    //// polAxis_p=CoordinateUtil::findStokesAxis(whichPols, dirty_p->coordinates());
     uInt nx = imshape[0];
     uInt ny = imshape[1];
     uInt npol = imshape[2];
