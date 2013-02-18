@@ -626,51 +626,51 @@ class split_test_cdsp(SplitChecker):
         self.records[corrsel] = record
         return splitran
 
-    def test_bogus_cd_antid(self):
+    def test_bogus_cd_antid1(self):
         """ANTENNA_ID selection from a bad CALDEVICE"""
         # The resulting CALDEVICE is probably useless; the point is to ensure
         # that split ran to completion.
         check_eq(self.records['bogusCDSP.ms']['CALDEVICE']['ANTENNA_ID'],
                  numpy.array([0, 1, 0, 1]))
 
-    def test_bogus_cd_spwid(self):
+    def test_bogus_cd_spwid1(self):
         """SPECTRAL_WINDOW_ID selection from a bad CALDEVICE"""
         # The resulting CALDEVICE is probably useless; the point is to ensure
         # that split ran to completion.
         check_eq(self.records['bogusCDSP.ms']['CALDEVICE']['SPECTRAL_WINDOW_ID'],
                  numpy.array([0, 0, 1, 1]))
 
-    def test_bogus_cd_antid(self):
+    def test_bogus_cd_antid2(self):
         """ANTENNA_ID selection from a bad SYSPOWER"""
         # The resulting SYSPOWER is probably useless; the point is to ensure
         # that split ran to completion.
         check_eq(self.records['bogusCDSP.ms']['SYSPOWER']['ANTENNA_ID'][89:97],
                  numpy.array([0, 0, 1, 0, 0, 1, 1, 1]))
 
-    def test_bogus_cd_spwid(self):
+    def test_bogus_cd_spwid2(self):
         """SPECTRAL_WINDOW_ID selection from a bad SYSPOWER"""
         # The resulting SYSPOWER is probably useless; the point is to ensure
         # that split ran to completion.
         check_eq(self.records['bogusCDSP.ms']['SYSPOWER']['SPECTRAL_WINDOW_ID'][189:197],
                  numpy.array([0, 1, 0, 0, 0, 1, 1, 1]))
 
-    def test_cd_antid(self):
+    def test_cd_antid1(self):
         """ANTENNA_ID selection from CALDEVICE"""
         check_eq(self.records['cas-3307.ms']['CALDEVICE']['ANTENNA_ID'],
                  numpy.array([0, 1, 0, 1]))
 
-    def test_cd_spwid(self):
+    def test_cd_spwid1(self):
         """SPECTRAL_WINDOW_ID selection from CALDEVICE"""
         check_eq(self.records['cas-3307.ms']['CALDEVICE']['SPECTRAL_WINDOW_ID'],
                  numpy.array([0, 0, 1, 1]))
 
-    def test_cd_antid(self):
+    def test_cd_antid2(self):
         """ANTENNA_ID selection from SYSPOWER"""
         # Purposely take a few from near the end.
         check_eq(self.records['cas-3307.ms']['SYSPOWER']['ANTENNA_ID'][-19:-6],
                  numpy.array([1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1]))
 
-    def test_cd_spwid(self):
+    def test_cd_spwid2(self):
         """SPECTRAL_WINDOW_ID selection from SYSPOWER"""
         check_eq(self.records['cas-3307.ms']['SYSPOWER']['SPECTRAL_WINDOW_ID'][-18:-7],
                  numpy.array([0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1]))
