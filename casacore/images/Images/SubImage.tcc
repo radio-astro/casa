@@ -47,7 +47,6 @@
 
 #include <casa/Arrays.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T>
@@ -310,7 +309,7 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
     			outMaskMgr.reset(ImageRegion::fromLatticeExpression(mymask));
     			break;
     		}
-    		catch (AipsError x) {
+    		catch (const AipsError& x) {
     			if (i == 0) {
     				// not an LEL expression, perhaps it's a clean mask image name
     				mymask += ">=0.5";
