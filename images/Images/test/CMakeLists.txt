@@ -24,7 +24,6 @@ endforeach (file)
 
 
 set (tests
-dImageHistograms
 dImageInterface
 dImageStatistics
 dImageSummary
