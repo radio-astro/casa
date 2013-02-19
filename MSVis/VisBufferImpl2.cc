@@ -48,7 +48,7 @@ namespace vi {
 
 // Possible array shapes of data coming from the main table cells.
 
-typedef enum {NoCheck, Nr, NfNr, NcNfNr, NcNfNcatNr, I3Nr, N_ShapePatterns} ShapePattern;
+typedef enum {NoCheck, Nr, NfNr, NcNr, NcNfNr, NcNfNcatNr, I3Nr, N_ShapePatterns} ShapePattern;
 
 class VisBufferCache;
 
@@ -614,8 +614,8 @@ public:
     VbCacheItemArray <Vector<Int> > processorId_p;
     VbCacheItemArray <Vector<uInt> > rowIds_p;
     VbCacheItemArray <Vector<Int> > scan_p;
-    VbCacheItemArray <Vector<Float> > sigma_p;
-    VbCacheItemArray <Matrix<Float> > sigmaMat_p;
+    VbCacheItemArray <Matrix<Float> > sigma_p;
+    //VbCacheItemArray <Matrix<Float> > sigmaMat_p;
     VbCacheItem <Int> spectralWindow_p;
     VbCacheItem <Vector<Int> > spectralWindows_p;
     VbCacheItemArray <Vector<Int> > stateId_p;
@@ -625,8 +625,8 @@ public:
     VbCacheItemArray <Matrix<Double> > uvw_p;
     VbCacheItemArray <Cube<Complex> > visCube_p;
 //    VbCacheItemArray <Matrix<CStokesVector> > visibility_p;
-    VbCacheItemArray <Vector<Float> > weight_p;
-    VbCacheItemArray <Matrix<Float> > weightMat_p;
+    VbCacheItemArray <Matrix<Float> > weight_p;
+    //VbCacheItemArray <Matrix<Float> > weightMat_p;
     VbCacheItemArray <Cube<Float> > weightSpectrum_p;
 
     CacheRegistry registry_p;
@@ -804,8 +804,8 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     processorId_p.initialize (this, vb, &VisBufferImpl2::fillProcessorId, ProcessorId, Nr);
     rowIds_p.initialize (this, vb, &VisBufferImpl2::fillRowIds, RowIds);
     scan_p.initialize (this, vb, &VisBufferImpl2::fillScan, Scan, Nr);
-    sigma_p.initialize (this, vb, &VisBufferImpl2::fillSigma, Sigma, Nr, False);
-    sigmaMat_p.initialize (this, vb, &VisBufferImpl2::fillSigmaMat, SigmaMat);
+    sigma_p.initialize (this, vb, &VisBufferImpl2::fillSigma, Sigma, NcNr, False);
+    //sigmaMat_p.initialize (this, vb, &VisBufferImpl2::fillSigmaMat, SigmaMat);
     spectralWindow_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindow, SpectralWindow);
     spectralWindows_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindows, SpectralWindows);
     stateId_p.initialize (this, vb, &VisBufferImpl2::fillStateId, StateId, Nr);
@@ -814,9 +814,9 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     timeInterval_p.initialize (this, vb, &VisBufferImpl2::fillTimeInterval, TimeInterval, Nr);
     uvw_p.initialize (this, vb, &VisBufferImpl2::fillUvw, Uvw, I3Nr);
     visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved, VisibilityCubeObserved, NcNfNr, False);
-//    visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
-    weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, Nr, False);
-    weightMat_p.initialize (this, vb, &VisBufferImpl2::fillWeightMat, WeightMat, NoCheck, False);
+    //visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
+    weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, NcNr, False);
+   // weightMat_p.initialize (this, vb, &VisBufferImpl2::fillWeightMat, WeightMat, NoCheck, False);
     weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum, WeightSpectrum, NcNfNr, False);
 
 }
@@ -1403,7 +1403,7 @@ VisBufferImpl2::normalize()
              "Cannot normalize; visCube is missing.");
     ThrowIf (! cache_p->modelVisCube_p.isPresent (),
              "Cannot normalize; modelVisCube is missing.");
-    ThrowIf (! cache_p->weightMat_p.isPresent(),
+    ThrowIf (! cache_p->weight_p.isPresent(),
              "Cannot normalize; weightMap is missing.");
 
     // Get references to the cached values to be used in the
@@ -1416,7 +1416,7 @@ VisBufferImpl2::normalize()
 
     Cube<Complex> & visCube = cache_p->visCube_p.getRef();
     Cube<Complex> & modelCube = cache_p->modelVisCube_p.getRef();
-    Matrix<Float> & weightMat = cache_p->weightMat_p.getRef();
+    Matrix<Float> & weight = cache_p->weight_p.getRef();
 
     // Normalize each row.
 
@@ -1424,12 +1424,12 @@ VisBufferImpl2::normalize()
 
         if (rowFlagged (row)){
 
-            weightMat.column(row) = 0.0f; // Zero weight on this flagged row
+            weight.column(row) = 0.0f; // Zero weight on this flagged row
             continue;
         }
 
         normalizeRow (row, nCorrelations, flagged, visCube,
-                      modelCube, weightMat);
+                      modelCube, weight);
 
     }
 }
@@ -1502,11 +1502,11 @@ VisBufferImpl2::registerCacheItem (VbCacheItemBase * item)
 void
 VisBufferImpl2::resetWeightsUsingSigma ()
 {
-    const Matrix <Float> & sigma = sigmaMat ();
+    const Matrix <Float> & sigma = this->sigma ();
 
     IPosition ip (sigma.shape());
 
-    Matrix <Float> & weight = cache_p->weightMat_p.getRef ();
+    Matrix <Float> & weight = cache_p->weight_p.getRef ();
     weight.resize(ip);
 
     Int nPol(ip(0));
@@ -1533,7 +1533,7 @@ VisBufferImpl2::resetWeightsUsingSigma ()
 
     weight *= Float(nchan);
 
-    cache_p->weightMat_p.setAsPresent ();
+    cache_p->weight_p.setAsPresent ();
 }
 
 void
@@ -1627,6 +1627,7 @@ VisBufferImpl2::setupValidShapes ()
 {
     state_p->validShapes_p [Nr] = IPosition (1, nRows());
     state_p->validShapes_p [NfNr] = IPosition (2, nChannels(), nRows());
+    state_p->validShapes_p [NcNr] = IPosition (2, nCorrelations(), nRows());
     state_p->validShapes_p [NcNfNr] = IPosition (3, nCorrelations(), nChannels(), nRows());
     state_p->validShapes_p [I3Nr] = IPosition (2, 3, nRows());
     //state_p->validShapes [NcNfNcatNr] = IPosition (4, nCorrelations(), nChannels(), nCategories(), nRows());
@@ -1661,7 +1662,7 @@ VisBufferImpl2::sortCorrelationsAux (bool makeSorted)
 
         // First sort the weights
 
-        weightMat();    // (ensures it is filled)
+        weight();    // (ensures it is filled)
 
         Vector<Float> wtmp(nRows ());
         Vector<Float> w1, w2, w3;
@@ -1669,7 +1670,7 @@ VisBufferImpl2::sortCorrelationsAux (bool makeSorted)
         IPosition wtrc (2, 0, nRows () - 1);
         IPosition vec (1, nRows ());
 
-        VisBufferCache::sortCorrelationItem (cache_p->weightMat_p, wblc, wtrc, vec, wtmp, makeSorted);
+        VisBufferCache::sortCorrelationItem (cache_p->weight_p, wblc, wtrc, vec, wtmp, makeSorted);
 
         // Now sort the complex data cubes
 
@@ -2135,23 +2136,23 @@ VisBufferImpl2::setScan (const Vector<Int> & value)
     cache_p->scan_p.set (value);
 }
 
-const Vector<Float> &
+const Matrix<Float> &
 VisBufferImpl2::sigma () const
 {
     return cache_p->sigma_p.get ();
 }
 
 void
-VisBufferImpl2::setSigma (const Vector<Float> & sigma)
+VisBufferImpl2::setSigma (const Matrix<Float> & sigma)
 {
     cache_p->sigma_p.set (sigma);
 }
 
-const Matrix<Float> &
-VisBufferImpl2::sigmaMat () const
-{
-    return cache_p->sigmaMat_p.get ();
-}
+//const Matrix<Float> &
+//VisBufferImpl2::sigmaMat () const
+//{
+//    return cache_p->sigmaMat_p.get ();
+//}
 
 Int
 VisBufferImpl2::spectralWindow () const
@@ -2404,29 +2405,29 @@ VisBufferImpl2::setVisCube (const Cube<Complex> & value)
 //    cache_p->visibility_p.set (value);
 //}
 
-const Vector<Float> &
+const Matrix<Float> &
 VisBufferImpl2::weight () const
 {
     return cache_p->weight_p.get ();
 }
 
 void
-VisBufferImpl2::setWeight (const Vector<Float>& value)
+VisBufferImpl2::setWeight (const Matrix<Float>& value)
 {
     cache_p->weight_p.set (value);
 }
 
-const Matrix<Float> &
-VisBufferImpl2::weightMat () const
-{
-    return cache_p->weightMat_p.get ();
-}
+//const Matrix<Float> &
+//VisBufferImpl2::weightMat () const
+//{
+//    return cache_p->weightMat_p.get ();
+//}
 
-void
-VisBufferImpl2::setWeightMat (const Matrix<Float>& value)
-{
-    cache_p->weightMat_p.set (value);
-}
+//void
+//VisBufferImpl2::setWeightMat (const Matrix<Float>& value)
+//{
+//    cache_p->weightMat_p.set (value);
+//}
 
 const Cube<Float> &
 VisBufferImpl2::weightSpectrum () const
@@ -2434,11 +2435,11 @@ VisBufferImpl2::weightSpectrum () const
     return cache_p->weightSpectrum_p.get ();
 }
 
-//Cube<Float> &
-//VisBufferImpl2::weightSpectrumRef ()
-//{
-//    return cache_p->weightSpectrum_p.getRef();
-//}
+Cube<Float> &
+VisBufferImpl2::weightSpectrumRef ()
+{
+    return cache_p->weightSpectrum_p.getRef();
+}
 
 
 void
@@ -2922,20 +2923,20 @@ VisBufferImpl2::fillScan (Vector<Int>& value) const
 }
 
 void
-VisBufferImpl2::fillSigma (Vector<Float>& value) const
-{
-  CheckVisIter ();
-
-  getViP()->sigma (value);
-}
-
-void
-VisBufferImpl2::fillSigmaMat (Matrix<Float>& value) const
+VisBufferImpl2::fillSigma (Matrix<Float>& value) const
 {
   CheckVisIter ();
 
   getViP()->sigmaMat (value);
 }
+
+//void
+//VisBufferImpl2::fillSigmaMat (Matrix<Float>& value) const
+//{
+//  CheckVisIter ();
+//
+//  getViP()->sigmaMat (value);
+//}
 
 void
 VisBufferImpl2::fillSpectralWindow (Int& value) const
@@ -3020,20 +3021,20 @@ VisBufferImpl2::fillUvw (Matrix<Double>& value) const
 
 
 void
-VisBufferImpl2::fillWeight (Vector<Float>& value) const
-{
-  CheckVisIter ();
-
-  getViP()->weight (value);
-}
-
-void
-VisBufferImpl2::fillWeightMat (Matrix<Float>& value) const
+VisBufferImpl2::fillWeight (Matrix<Float>& value) const
 {
   CheckVisIter ();
 
   getViP()->weightMat (value);
 }
+
+//void
+//VisBufferImpl2::fillWeightMat (Matrix<Float>& value) const
+//{
+//  CheckVisIter ();
+//
+//  getViP()->weightMat (value);
+//}
 
 void
 VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const

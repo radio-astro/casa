@@ -1,8 +1,10 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicMath/Functors.h>
 #include <synthesis/MSVis/AveragingTvi2.h>
+#include <synthesis/MSVis/VisBufferComponents2.h>
 #include <synthesis/MSVis/VisBufferImpl2.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 namespace casa {
 
@@ -10,42 +12,79 @@ namespace vi {
 
 namespace avg {
 
-///////////////////////////////////////////////////////////
-//
-// Code to provide interface to weight function
-
-class WeightFunctionBase {
-public:
-
-    virtual ~WeightFunctionBase () {}
-    Float operator() (Float f) { return apply (f);}
-    virtual Float apply (Float) = 0;
-};
-
-template<typename F>
-class WeightFunction : public WeightFunctionBase {
-public:
-
-    // Provide either a unary function, Float (*) (Float), or
-    // a functor class having a Float operator() (Float) method.
-
-    WeightFunction (F f) : function_p (f) {}
-
-    Float apply (Float f) { return function_p (f);}
-
-private:
-
-    F function_p;
-};
-
-template<typename F>
-WeightFunction<F> * generateWeightFunction (F f) { return new WeightFunction<F> (f);}
-
-Float unity (Float) { return 1.0;}
 
 ///////////////////////////////////////////////////////////
 //
-// Averaging VisBuffer
+// VbAvg: Averaging VisBuffer
+//
+/*
+
+Definition: A baseline sample (baseline for short) is a table row
+with a particular (antenna1, antenna2) pair at a particular time.
+
+
+Averaging does not cross chunk boundaries of the input VI so the
+input VI determines what values are averaged together.  For example,
+if the input VI is allows data from multiple scans into the same chunk
+then some averaging across scans can occur; in this case the scan number
+of the result will be the scan number of the first baseline instance
+seen.
+
+Row-level value treatment
+=========================
+
+The average is approximately computed on a per baseline basis:
+
+averaged_baseline (antenna1, antenna2) =
+    sumOverAveragingInterval (baseline (antenna1, antenna2)) /
+    nBaselinesFoundInInterval
+
+How row-level values are computed
+---------------------------------
+
+Time - Set to time of first baseline making up the average.
+Antenna1 - Copied from instance of baseline
+Antenna2 - Copied from instance of baseline
+Feed1 - Copied from instance of baseline
+Feed2 - Copied from instance of baseline
+Flag_Row - The flag row is the logical "and" of the flag rows
+           averaged together.
+Data_Desc_Id - Copied from instance of baseline
+Processor_Id - Copied from instance of baseline
+Field_Id - Copied from instance of baseline
+Interval - Set to averaging interval
+Exposure - Minimum of the interval and the sum of the exposures
+           from unflagged rows
+Time_Centroid - sum (timeCentroid[i] * exposure[i]) / sum (exposure[i])
+Scan_Number - Copied from instance of baseline
+Sigma - ???
+Array_Id - Copied from instance of baseline
+Observation_Id - Copied from instance of baseline
+State_Id - Copied from instance of baseline
+Uvw - Weighted average of the UVW values for the baseline
+Weight - ???
+
+Cube-level value treatment
+--------------------------
+
+For each baseline (i.e., antenna1, antenna2 pair) the average is
+computed for each correlation (co) and channel (ch) of the data cube.
+
+Data - sum (f(weightSpectrum (co, ch)) * data (co, ch)) /
+       sum (f(weightSpectrum (co, ch)))
+       f :== optional function applied to the weights; default is unity function.
+Corrected_Data - Same was for Data however, VI setup can disable producing
+                 averaged Corrected_Data
+Model_Data - Same was for Data however, VI setup can disable producing
+             averaged Model_Data
+Weight_Spectrum - sum (weightSpectrum (co, ch))
+Flag - Each averaged flag (correlation, channel) is the logical "and"
+       of the flag (correlation, channel) making up the average.
+
+*/
+
+
+
 
 class VbAvg : public VisBufferImpl2 {
 
@@ -53,7 +92,8 @@ public:
 
     typedef Float (* WeightFunction) (Float);
 
-    VbAvg (Double averagingInterval, WeightFunctionBase * weightFunction);
+    VbAvg (Double averagingInterval, WeightFunctionBase * weightFunction,
+           Bool doingCorrectedData, Bool doingModelData, Bool doingWeightSpectrum);
 
     void accumulate (const VisBuffer2 * vb);
     Bool empty () const;
@@ -66,9 +106,9 @@ public:
 protected:
 
     void accumulateCubeData (const VisBuffer2 * input);
-    void accumulateCubeDatum (const VisBuffer2 * vb, Int baselineIndex,
-                              Int correlation, Int channel, Int row,
-                              Bool clearAccumulation);
+    void accumulateCubeElement (const VisBuffer2 * vb, Int baselineIndex,
+                                Int correlation, Int channel, Int row,
+                                Bool clearAccumulation);
     void accumulateExposure (const VisBuffer2 *);
     void accumulateRowData (const VisBuffer2 * input);
     void accumulateTimeCentroid (const VisBuffer2 * input);
@@ -126,7 +166,7 @@ public:
     Bool contains (Int ddId) const;
     void finalizeAverage (Int ddId);
     void finalizeAverages ();
-    void flush (Bool okIfNonempty = False); // delete all averagers
+    void flush (Bool okIfNonempty = False, ViImplementation2 * vi = 0); // delete all averagers
     Int getFirstReadyDdid () const;
     void transferAverage (Int ddId, VisBuffer2 * vb);
     Bool vbPastAveragingInterval (const VisBuffer2 * vb) const;
@@ -139,15 +179,20 @@ private:
     typedef map<Int, VbAvg *> Averagers;
 
     const Double averagingInterval_p;
+    Bool doingCorrectedData_p;
+    Bool doingModelData_p;
+    Bool doingWeightSpectrum_p;
     Averagers vbAveragers_p;
     WeightFunctionBase * weightFunction_p;
 };
 
-VbAvg::VbAvg (Double averagingInterval, WeightFunctionBase * weightFunction)
+VbAvg::VbAvg (Double averagingInterval, WeightFunctionBase * weightFunction,
+              Bool doingCorrectedData, Bool doingModelData, Bool doingWeightSpectrum)
 : averagingInterval_p (averagingInterval),
   complete_p (False),
-  doingCorrectedData_p (False),
-  doingModelData_p (False),
+  doingCorrectedData_p (doingCorrectedData),
+  doingModelData_p (doingModelData),
+  doingWeightSpectrum_p (doingWeightSpectrum),
   empty_p (True),
   weightFunction_p (weightFunction)
 {}
@@ -231,15 +276,15 @@ VbAvg::accumulateCubeData (const VisBuffer2 * vb)
 
                 // Accumulate the sum for each cube element
 
-                accumulateCubeDatum (vb, baselineIndex, correlation, channel, row, flagChange);
+                accumulateCubeElement (vb, baselineIndex, correlation, channel, row, flagChange);
             }
         }
     }
 }
 
 void
-VbAvg::accumulateCubeDatum (const VisBuffer2 * input, Int baselineIndex, Int correlation,
-                           Int channel, Int row, Bool zeroAccumulation)
+VbAvg::accumulateCubeElement (const VisBuffer2 * input, Int baselineIndex, Int correlation,
+                              Int channel, Int row, Bool zeroAccumulation)
 {
     // Zero accumulation is used to restart the accumulation when the flagged state of the
     // element's accumulation changes from flagged to unflagged.
@@ -258,6 +303,18 @@ VbAvg::accumulateCubeDatum (const VisBuffer2 * input, Int baselineIndex, Int cor
     Complex weightedValue = input->visCube () (correlation, channel, row) * weight;
     visCubeRef ()(correlation, channel, baselineIndex) = weightedValue +
         (zeroAccumulation ? 0 : visCube () (correlation, channel, row));
+
+    // The result of averaging for the weight spectrum is to sum up the weights rather
+    // than average them.  The sum is over the raw weights (i.e., rather than optionally
+    // applying a function to the weight as is done for other cube data).
+
+    if (doingWeightSpectrum_p){
+
+        weightSpectrumRef() (correlation, channel, baselineIndex) =
+            input->weightSpectrum () (correlation, channel, row) +
+            (zeroAccumulation ? 0 : weightSpectrum () (correlation, channel, row));
+
+    }
 
     if (doingCorrectedData_p){
 
@@ -300,8 +357,10 @@ void
 VbAvg::accumulateRowData (const VisBuffer2 * input)
 {
     Vector<Double> exposureSum = exposure ();
+    Matrix<Float> sigmaSum = sigma();
     Vector<Double> timeCentroidSum = timeCentroid ();
     Matrix<Double> uvwSum = uvw();
+    Matrix<Float> weightSum = weight();
 
     for (Int row = 0; row < input->nRows(); row ++){
 
@@ -311,11 +370,11 @@ VbAvg::accumulateRowData (const VisBuffer2 * input)
         Int baselineIndex = getBaselineIndex (a1, a2);
 
         Bool & accumulatorRowFlagged = flagRowRef ()(baselineIndex);
-        Bool inputRowFlagged = flagRow () (row);
+        Bool inputRowFlagged = input->flagRow () (row);
 
         copyRowIdValues (input, row, baselineIndex);
 
-        if (! accumulatorRowFlagged && input->flagRow() (row)){
+        if (! accumulatorRowFlagged && inputRowFlagged){
             // good accumulation, bad data --> skip it
         }
         else{
@@ -333,12 +392,19 @@ VbAvg::accumulateRowData (const VisBuffer2 * input)
             for (Int i = 0; i < 3; i++){
                 uvwSum (i, baselineIndex) += input->uvw ()(i, row);
             }
+
+            for (Int i = 0; i < nCorrelations(); i ++){
+                sigmaSum (i, baselineIndex) += input->sigma() (i, row);
+                weightSum (i, baselineIndex) += input->weight () (i, row);
+            }
         }
     }
 
-    setTimeCentroid (timeCentroidSum);
     setExposure (exposureSum);
+    setSigma (sigmaSum);
+    setTimeCentroid (timeCentroidSum);
     setUvw (uvwSum);
+    setWeight (weightSum);
 }
 
 void
@@ -366,7 +432,7 @@ VbAvg::copyRowIdValues (const VisBuffer2 * input, Int row, Int baselineIndex)
     copyRowIdValue (input, row, & VisBuffer2::antenna2, & VisBuffer2::setAntenna2, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::dataDescriptionIds, & VisBuffer2::setDataDescriptionIds, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::feed1, & VisBuffer2::setFeed1, baselineIndex);
-    copyRowIdValue (input, row, & VisBuffer2::feed1, & VisBuffer2::setFeed1, baselineIndex);
+    copyRowIdValue (input, row, & VisBuffer2::feed2, & VisBuffer2::setFeed2, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::processorId, & VisBuffer2::setProcessorId, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::scan, & VisBuffer2::setScan, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::observationId, & VisBuffer2::setObservationId, baselineIndex);
@@ -459,10 +525,6 @@ VbAvg::finalizeCubeData ()
     if (doingModelData_p){
         arrayTransformInPlace<Complex, Float, DivideOp > (visCubeModelRef (), weightSum_p, op);
     }
-
-    if (doingWeightSpectrum_p){
-        setWeightSpectrum (weightSum_p);
-    }
 }
 
 void
@@ -504,7 +566,7 @@ VbAvg::getWeight (const VisBuffer2 * input, Int correlation, Int channel, Int ro
 {
     // Determine how to get the appropriate weight
 
-    Float inputWeight = 1;
+    Float inputWeight = input->weightSpectrum() (correlation, channel, row);
 
     Float outputWeight = (* weightFunction_p) (inputWeight);
 
@@ -542,8 +604,7 @@ VbAvg::prepareForFirstData (const VisBuffer2 * vb)
 
     countsBaseline_p = Vector<Int> (nBaselines, 0);
     counts_p = Cube<Int> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
-
-    weightSum_p.resize (IPosition (3, vb->nCorrelations(), vb->nChannels(), nBaselines));
+    weightSum_p = Cube<Float> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
 
     setupBaselineIndices (nAntennas, vb);
 
@@ -716,7 +777,9 @@ VbSet::accumulate (const VisBuffer2 * input)
 VbAvg *
 VbSet::add (Int ddId)
 {
-    VbAvg * newAverager =  new VbAvg (averagingInterval_p, weightFunction_p);
+    VbAvg * newAverager =  new VbAvg (averagingInterval_p, weightFunction_p,
+                                      doingCorrectedData_p, doingModelData_p,
+                                      doingWeightSpectrum_p);
 
     vbAveragers_p [ddId] = newAverager;
 
@@ -767,9 +830,10 @@ VbSet::finalizeAverages ()
 }
 
 void
-VbSet::flush (Bool okIfNonempty)
+VbSet::flush (Bool okIfNonempty, ViImplementation2 * vi)
 {
-    // Get rid of all of the averagers.
+    // Get rid of all of the averagers.  This is done at
+    // destruction time and when a sweeping into a new MS.
 
     for (Averagers::const_iterator a = vbAveragers_p.begin();
          a != vbAveragers_p.end();
@@ -782,6 +846,15 @@ VbSet::flush (Bool okIfNonempty)
     }
 
     vbAveragers_p.clear();
+
+    if (vi != 0){
+
+        // See if the new MS has corrected and/or model data columns
+
+        doingCorrectedData_p = vi->existsColumn (VisibilityCubeCorrected);
+        doingModelData_p = vi->existsColumn (VisibilityCubeModel);
+        doingWeightSpectrum_p = vi->existsColumn (WeightSpectrum);
+    }
 }
 
 Int
@@ -937,7 +1010,7 @@ AveragingTvi2::nextChunk ()
 {
     // New chunk, so toss all of the accumulators
 
-    vbSet_p->flush (True);
+    vbSet_p->flush (True, getVii());
 
     // Advance the input to the next chunk as well.
 
@@ -967,7 +1040,7 @@ AveragingTvi2::origin ()
 void
 AveragingTvi2::originChunks ()
 {
-    vbSet_p->flush (True);
+    vbSet_p->flush (True, getVii());
     getVii()->originChunks();
     subchunkExists_p = False;
 }

@@ -361,9 +361,9 @@ public:
     virtual void setProcessorId (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & scan () const = 0; // [nR]
     virtual void setScan (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Float> & sigma () const = 0; // [nR]
-    virtual void setSigma (const Vector<Float> & value) = 0; // [nR]
-    virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
+    virtual const Matrix<Float> & sigma () const = 0; // [nR]
+    virtual void setSigma (const Matrix <Float> & value) = 0; // [nR]
+    //virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
     virtual const Vector<Int> & stateId () const = 0; // [nR]
     virtual void setStateId (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Double> & time () const = 0; // [nR]
@@ -374,10 +374,10 @@ public:
     virtual void setTimeInterval (const Vector<Double> & value) = 0; // [nR]
     virtual const Matrix<Double> & uvw () const = 0; // [3,nR]
     virtual void setUvw (const Matrix<Double> & value) = 0; // [3,nR]
-    virtual const Vector<Float> & weight () const = 0; // [nR]
-    virtual void setWeight (const Vector<Float>& value) = 0; // [nR]
-    virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
-    virtual void setWeightMat (const Matrix<Float>& value) = 0; // [nC,nR]
+    virtual const Matrix<Float> & weight () const = 0; // [nR]
+    virtual void setWeight (const Matrix <Float>& value) = 0; // [nR]
+    //virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
+    //virtual void setWeightMat (const Matrix<Float>& value) = 0; // [nC,nR]
     virtual const Cube<Float> & weightSpectrum () const = 0; // [nC,nF,nR]
     virtual void setWeightSpectrum (const Cube<Float>& value) = 0; // [nC,nF,nR]
 
@@ -516,7 +516,7 @@ protected:
     virtual Cube<Complex> & visCubeRef () = 0; // [nC,nF,nR]
     virtual Cube<Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
-    //virtual Cube<Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
+    virtual Cube<Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 

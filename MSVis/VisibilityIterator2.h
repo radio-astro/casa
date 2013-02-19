@@ -188,6 +188,40 @@ private:
 
 };
 
+///////////////////////////////////////////////////////////
+//
+// Code to provide interface to weight function
+
+class WeightFunctionBase {
+public:
+
+    virtual ~WeightFunctionBase () {}
+    Float operator() (Float f) { return apply (f);}
+    virtual Float apply (Float) = 0;
+};
+
+template<typename F>
+class WeightFunction : public WeightFunctionBase {
+public:
+
+    // Provide either a unary function, Float (*) (Float), or
+    // a functor class having a Float operator() (Float) method.
+
+    WeightFunction (F f) : function_p (f) {}
+
+    Float apply (Float f) { return function_p (f);}
+
+private:
+
+    F function_p;
+};
+
+template<typename F>
+WeightFunction<F> * generateWeightFunction (F f) { return new WeightFunction<F> (f);}
+
+Float unity (Float);
+Float identity (Float x);
+
 class VisibilityIterator2;
 
 class ViFactory {
@@ -604,11 +638,11 @@ public:
 
   // Write/modify the weights
 
-  void writeWeight(const Vector<Float>& wt);
+  void writeWeight(const Matrix<Float>& wt);
 
   // Write/modify the weightMat
 
-  virtual void writeWeightMat(const Matrix<Float>& wtmat);
+  //virtual void writeWeightMat(const Matrix<Float>& wtmat);
 
   // Write/modify the weightSpectrum
 
@@ -616,11 +650,11 @@ public:
 
   // Write/modify the Sigma
 
-  void writeSigma(const Vector<Float>& sig);
+  void writeSigma(const Matrix<Float>& sig);
 
   // Write/modify the ncorr x nrow SigmaMat.
 
-  void writeSigmaMat(const Matrix<Float>& sigmat);
+  //void writeSigmaMat(const Matrix<Float>& sigmat);
 
   // This puts a model into the descriptor of the current ms in the iterator
   // Set iscomponentlist to True if the record represent a componentlist
@@ -1012,7 +1046,8 @@ class AveragingTvi2Factory {
 public:
 
 VisibilityIterator2 * createVi (MeasurementSet * ms, Double interval,
-                                Double chunkInterval, Int averagingFactor);
+                                Double chunkInterval, Int averagingFactor,
+                                WeightFunctionBase * weightFunction = 0);
 };
 
 

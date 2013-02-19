@@ -123,8 +123,8 @@ FinalTvi2::writeDataValues (MeasurementSet & /*ms*/, const RefRows & rows)
     columns_p.flag_p.putColumnCells (rows, getVisBuffer()->flagCube());
     columns_p.flagRow_p.putColumnCells (rows, getVisBuffer()->flagRow());
 
-    columns_p.sigma_p.putColumnCells (rows, getVisBuffer()->sigmaMat());
-    columns_p.weight_p.putColumnCells (rows, getVisBuffer()->weightMat());
+    columns_p.sigma_p.putColumnCells (rows, getVisBuffer()->sigma());
+    columns_p.weight_p.putColumnCells (rows, getVisBuffer()->weight());
 
     if (! columns_p.weightSpectrum_p.isNull()){
         columns_p.weightSpectrum_p.putColumnCells (rows, getVisBuffer()->weightSpectrum());

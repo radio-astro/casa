@@ -208,10 +208,10 @@ public:
     virtual const Vector<Int>& corrType() const { return vb2_p-> correlationTypes(); }
 
     virtual Vector<Float>& sigma() { IllegalOperation (); }
-    virtual const Vector<Float>& sigma() const { return vb2_p-> sigma(); }
+    virtual const Vector<Float>& sigma() const { IllegalOperation(); }
 
     virtual Matrix<Float>& sigmaMat() { IllegalOperation (); }
-    virtual const Matrix<Float>& sigmaMat() const { return vb2_p-> sigmaMat(); }
+    virtual const Matrix<Float>& sigmaMat() const { return vb2_p-> sigma(); }
 
     virtual Int & spectralWindow() { spectralWindow_p = vb2_p->spectralWindow(); return spectralWindow_p;}
     virtual Int spectralWindow() const { return vb2_p-> spectralWindow(); }
@@ -290,11 +290,11 @@ public:
 
     // Returns the weights for each row averaged over the parallel hand correlations.
     virtual Vector<Float>& weight() { IllegalOperation(); }
-    virtual const Vector<Float>& weight() const { return vb2_p-> weight(); }
+    virtual const Vector<Float>& weight() const { IllegalOperation(); }
 
     // Returns the nPol_p x curNumRow_p weight matrix.
     virtual Matrix<Float>& weightMat() { IllegalOperation(); }
-    virtual const Matrix<Float>& weightMat() const { return vb2_p-> weightMat(); }
+    virtual const Matrix<Float>& weightMat() const { return vb2_p-> weight(); }
 
     // Is a valid WEIGHT_SPECTRUM available?
     virtual Bool existsWeightSpectrum() const { IllegalOperation(); }
@@ -410,7 +410,7 @@ public:
     virtual void setFloatDataCube(const Cube<Float>& fcube){ CheckWritability(); vb2Rw_p-> setVisCubeFloat(fcube); }
 
     // Set model according to a Stokes vector
-    virtual void setModelVisCube(const Vector<Float>& stokes){ IllegalOperation (); }
+    virtual void setModelVisCube(const Vector<Float>& /*stokes*/){ IllegalOperation (); }
 
     // Reference external model visibilities
     virtual void refModelVis(const Matrix<CStokesVector>& ){ IllegalOperation(); }

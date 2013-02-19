@@ -285,9 +285,9 @@ public:
     virtual const Vector<uInt> & rowIds () const;
     virtual const Vector<Int> & scan () const;
     virtual void setScan (const Vector<Int> & value);
-    virtual const Vector<Float> & sigma () const;
-    virtual void setSigma (const Vector<Float> &);
-    virtual const Matrix<Float> & sigmaMat () const;
+    virtual const Matrix<Float> & sigma () const;
+    virtual void setSigma (const Matrix<Float> &);
+    //virtual const Matrix<Float> & sigmaMat () const;
     virtual Int spectralWindow () const;
     virtual const Vector<Int> & spectralWindows () const;
     virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
@@ -318,10 +318,10 @@ public:
     virtual void setVisCube (const Cube<Complex> &);
 //    virtual const Matrix<CStokesVector> & vis () const;
 //    virtual void setVis (Matrix<CStokesVector> &);
-    virtual const Vector<Float> & weight () const;
-    virtual void setWeight (const Vector<Float>&);
-    virtual const Matrix<Float> & weightMat () const;
-    virtual void setWeightMat (const Matrix<Float>&);
+    virtual const Matrix<Float> & weight () const;
+    virtual void setWeight (const Matrix<Float>&);
+//    virtual const Matrix<Float> & weightMat () const;
+//    virtual void setWeightMat (const Matrix<Float>&);
     virtual const Cube<Float> & weightSpectrum () const;
     virtual void setWeightSpectrum (const Cube<Float>&);
 
@@ -394,7 +394,7 @@ protected:
     virtual Cube<Complex> & visCubeRef (); // [nC,nF,nR]
     virtual Cube<Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
-//    virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
+    virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
 
 private:
 
@@ -462,8 +462,8 @@ private:
     virtual void fillProcessorId (Vector<Int>& value) const;
     virtual void fillRowIds (Vector<uInt>& value) const;
     virtual void fillScan (Vector<Int>& value) const;
-    virtual void fillSigma (Vector<Float>& value) const;
-    virtual void fillSigmaMat (Matrix<Float>& value) const;
+    virtual void fillSigma (Matrix<Float>& value) const;
+    //virtual void fillSigmaMat (Matrix<Float>& value) const;
     virtual void fillSpectralWindow (Int& value) const;
     virtual void fillSpectralWindows  (Vector<Int>& value) const;
     virtual void fillStateId (Vector<Int>& value) const;
@@ -474,8 +474,8 @@ private:
 //    virtual void fillVisibilityCorrected (Matrix<CStokesVector>& value) const;
 //    virtual void fillVisibilityModel (Matrix<CStokesVector>& value) const;
 //    virtual void fillVisibilityObserved (Matrix<CStokesVector>& value) const;
-    virtual void fillWeight (Vector<Float>& value) const;
-    virtual void fillWeightMat (Matrix<Float>& value) const;
+    virtual void fillWeight (Matrix<Float>& value) const;
+    //virtual void fillWeightMat (Matrix<Float>& value) const;
     virtual void fillWeightSpectrum (Cube<Float>& value) const;
 
     VisBufferCache * cache_p;

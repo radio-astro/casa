@@ -704,16 +704,16 @@ TransformingVi2::writeModel (const RecordInterface& /*rec*/, Bool /*iscomponentl
 }
 
 void
-TransformingVi2::writeSigma (const Vector<Float> & /*sig*/)
+TransformingVi2::writeSigma (const Matrix<Float> & /*sig*/)
 {
     Tvi2NotImplemented ();
 }
 
-void
-TransformingVi2::writeSigmaMat (const Matrix<Float> & /*sigmat*/)
-{
-    Tvi2NotImplemented ();
-}
+//void
+//TransformingVi2::writeSigmaMat (const Matrix<Float> & /*sigmat*/)
+//{
+//    Tvi2NotImplemented ();
+//}
 
 //void
 //TransformingVi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
@@ -752,16 +752,16 @@ TransformingVi2::writeVisObserved (const Cube<Complex> & /*vis*/)
 }
 
 void
-TransformingVi2::writeWeight (const Vector<Float> & /*wt*/)
+TransformingVi2::writeWeight (const Matrix<Float> & /*wt*/)
 {
     Tvi2NotImplemented ();
 }
 
-void
-TransformingVi2::writeWeightMat (const Matrix<Float> & /*wtmat*/)
-{
-    Tvi2NotImplemented ();
-}
+//void
+//TransformingVi2::writeWeightMat (const Matrix<Float> & /*wtmat*/)
+//{
+//    Tvi2NotImplemented ();
+//}
 
 void
 TransformingVi2::writeWeightSpectrum (const Cube<Float> & /*wtsp*/)
