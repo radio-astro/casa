@@ -64,10 +64,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
             <value>False</value>
         </param>
-        <param type="bool" name="wantreturn">
-            <description>Return an image analysis tool attached to the created image?</description>
-            <value>True</value>
-        </param>
         <constraints>
             <when param="outfile">
                 <notequals type="string" value="">
@@ -97,9 +93,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <example>
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
-outfile          Name of output CASA image. If not specified, no image is written
-                 but an image analysis tool which references the output image is returned
-                 if wantreturn=True.
+outfile          Name of output CASA image. Must be specified.
 start            The starting pixel in the direction plane (array of two values), such as [20, 5].
 end              The ending pixel in the direction plane (array of two values), such as [200, 300].
 halfwidth        Half width for averaging expressed in pixels perpendicular to the slice. Pixels
@@ -117,8 +111,6 @@ stokes           Contiguous stokes planes specification. If specified, do not sp
 mask             Mask to use. See help par.mask. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
                  See help par.stretch.
-wantreturn       If true, return an image analysis tool referencing the collapsed image, if
-                 false, return false.
 
 Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
 coordinate. The spectral extent of the resulting image will be that provided by the region specification
@@ -126,9 +118,6 @@ or the entire spectral range of the input image if no region is specified. One m
 in direction space; that is accomplished by specifying the start and end points of the slice. One may
 specify an optional half width, which is the number of pixels on either side and perpendicular to the
 direction slice that are used for averaging along the slice (0, the default, represents no averaging).
-A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
-image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified (unless
-perhaps you are debugging).
         
 Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
 be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
@@ -141,7 +130,7 @@ Example
         
 # create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
 # in the input image
-ia.pv(imagename="my_spectral_cube.im", outfile="pv.im", start=[45,50], end=[100,120], wantreturn=false)
+ia.pv(imagename="my_spectral_cube.im", outfile="pv.im", start=[45,50], end=[100,120])
 # analyze the pv image, such as get statistics
 imstat(imagename="pv.im")
 

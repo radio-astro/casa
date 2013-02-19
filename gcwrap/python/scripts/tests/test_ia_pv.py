@@ -101,7 +101,7 @@ class ia_pv_test(unittest.TestCase):
         self.ia = iatool()
     
     def tearDown(self):
-        pass
+        self.assertTrue(len(tb.showcache()) == 0)
     
     def test_pv(self):
         """ ia.pv(): Test pv()"""
@@ -117,13 +117,19 @@ class ia_pv_test(unittest.TestCase):
         myia.putchunk(bb)
         expeccoord = myia.toworld([1,5,0])['numeric']
         myia.done()
-
+        self.assertTrue(len(tb.showcache())== 0)
+        pv = iatool()
         for code in [run_ia_pv, run_impv]:
             # no halfwidth
-            pv = code(
-                imagename=imagename, outfile="", start=[1, 5],
+            outfile = "test_pv_" + str(code)
+            xx = code(
+                imagename=imagename, outfile=outfile, start=[1, 5],
                 end=[9, 5], halfwidth=0
             )
+            if (type(xx) == type(ia)):
+                xx.done()
+            self.assertTrue(len(tb.showcache())== 0)
+            pv.open(outfile)
             expec = [9, 1, 10]
             got = pv.shape()
             self.assertTrue((got == expec).all())
@@ -136,10 +142,15 @@ class ia_pv_test(unittest.TestCase):
             self.assertTrue(abs(got - expeccoord).all() < 1e-6)
         
             # halfwidth
-            pv = code(
-                imagename=imagename, outfile="", start=[1, 5],
+            outfile = "test_pv_1_" + str(code)
+            xx = code(
+                imagename=imagename, outfile=outfile, start=[1, 5],
                 end=[9, 5], halfwidth=1
             )
+            if (type(xx) == type(ia)):
+                xx.done()
+            return
+            pv.open(outfile)
             expec = [9, 1, 10]
             got = pv.shape()
             self.assertTrue((got == expec).all())
@@ -148,6 +159,7 @@ class ia_pv_test(unittest.TestCase):
                 expec[:,0,i] = range(2,11)
             got = pv.getchunk()
             self.assertTrue((got == expec).all())
+            pv.done()
         
     def test_stretch(self):
         """ ia.pv(): Test stretch parameter"""
@@ -173,15 +185,15 @@ class ia_pv_test(unittest.TestCase):
         zz.done()
         self.assertFalse(
             impv(
-                 imagename="kk", start=[0,0], end=[20,0],
+                 imagename="kk", outfile="x1.im", start=[0,0], end=[20,0],
                  mask=mymask + ">0", stretch=False
             )
         )
-        zz = impv(
-            imagename="kk", start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
+        self.assertTrue(
+            impv(
+                 imagename="kk", outfile="xyz", start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
+            )
         )
-        self.assertTrue(zz and type(zz) == mytype)
-        zz.done()
     
 def suite():
     return [ia_pv_test]

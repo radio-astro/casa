@@ -74,13 +74,14 @@ def impbcor(
     try:
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
+        if (len(outfile) == 0):
+            raise Exception, "outfile must be specified"
         ia_tool = myia.pbcor(
             pbimage=pbimage, outfile=outfile, overwrite=overwrite,
             box=box, region=region, chans=chans, stokes=stokes,
             mask=mask, mode=mode, cutoff=cutoff, stretch=stretch
         )
         ia_tool.done()
-        myia.done()
         return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
@@ -88,3 +89,4 @@ def impbcor(
     finally:
         if (myia):
             myia.done()
+        

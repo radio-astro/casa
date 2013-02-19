@@ -1,11 +1,12 @@
 import shutil
 import unittest
 import os
-import filecmp
+import numpy
 from tasks import *
 from taskinit import *
 from __main__ import default
 import testhelper as th
+from recipes.listshapes import listshapes
 
     
     
@@ -15,6 +16,18 @@ datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/ms
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
+    
+    def setUp_ctb80(self):
+        self.vis = 'ctb80-vsm.ms'
+        fpath = datapath+ self.vis
+        
+        # Only link to this data set        
+        if not os.path.lexists(self.vis):
+#           self.cleanup()
+#            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+            os.symlink(fpath, self.vis)
+            
+        default(mstransform)
 
     def setUp_cveltest(self):
         # data set with spw=0, 64 channels in LSRK
@@ -77,15 +90,178 @@ class test_base(unittest.TestCase):
         os.system('rm -rf '+ self.vis)
 
 
-class test_Split(test_base):
-    '''Tests to compare with the split task'''
-    def setUp(self):
-        self.setUp_data4tfcrop()
-        
-        
+#class test_Split(test_base):
+#    '''Tests to compare with the split task'''
+#    def setUp(self):
+#        self.setUp_ctb80()
+#            
+#    # the MS is only linked. Do not remove it.
+##    def tearDown(self):
+##        os.system('rm -rf '+ self.vis)
+##        os.system('rm -rf combspw*.ms')
+#
+#    def check_subtables(self, msname, corrsel, expected):
+#        """Compares the shapes of self.records[corrsel]['ms']'s subtables
+#        to the ones listed in expected.
+#        
+#        msname       --> name of output MS to check
+#        corrsel      --> correlation value
+#        expected     --> has the number of expected correlations and
+#                        channels.
+#        """
+##        oms = self.records[corrsel]['ms']
+#        oms = msname
+#        # The call to listshadpes will return a set with the
+#        # number of correlations and channels in the ms given
+#        # to mspat
+#        self.assertEqual(listshapes(mspat=oms)[oms], set(expected))
+##        assert listshapes(mspat=oms)[oms] == set(expected)
+#
+#    def check_eq(self, val, expval, tol=None):
+#        """Checks that val matches expval within tol."""
+#        print val
+#        if type(val) == dict:
+#            for k in val:
+#                self.check_eq(val[k], expval[k], tol)
+#        else:
+#            try:
+#                if tol and hasattr(val, '__rsub__'):
+#                    are_eq = abs(val - expval) < tol
+#                else:
+#                    are_eq = val == expval
+#                if hasattr(are_eq, 'all'):
+#                    are_eq = are_eq.all()
+#                if not are_eq:
+#                    raise ValueError, '!='
+#            except ValueError:
+#                errmsg = "%r != %r" % (val, expval)
+#                if (len(errmsg) > 66): # 66 = 78 - len('ValueError: ')
+#                    errmsg = "\n%r\n!=\n%r" % (val, expval)
+#                raise ValueError, errmsg
+#            except Exception, e:
+#                print "Error comparing", val, "to", expval
+#                raise e
+#    
+#    def test_split1(self):
+#        ''' '''
+#        # split: split_test_cav: test_sts
+##        corrsels = ['', 'rr', 'll']
+#        outputms = 'spl1.ms'
+##            splitran = split(self.inpms, outms, datacolumn='data',
+##                             field='', spw='0:5~16', width=3,
+##                             antenna='',
+##                             timebin='', timerange='',
+##                             scan='', array='', uvrange='',
+##                             correlation=corrsel, async=False)
+#        mstransform(vis=self.vis, outputvis=outputms, datacolumn='data',spw='0:5~16', correlation='',
+#              freqaverage=True, freqbin=3)        
+#        self.check_subtables(outputms, '', [(2, 4)])                   
+#
+#        myrec = {'ms': outputms}
+#        tb.open(outputms)
+#        myrec['data']   = tb.getcell('DATA', 2)
+#        print 'output data'
+#        print myrec['data']
+#        myrec['weight'] = tb.getcell('WEIGHT', 5)
+#        myrec['sigma']  = tb.getcell('SIGMA', 7)
+#        tb.close()
+#
+#        self.check_eq(myrec['data'],
+#                 numpy.array([[16.795681-42.226387j, 20.5655-44.9874j,
+#                               26.801544-49.595020j, 21.4770-52.0462j],
+#                              [-2.919122-38.427235j, 13.3042-50.8492j,
+#                                4.483857-43.986446j, 10.1733-19.4007j]]),
+#                 0.0005)
+# 
+#    def test_split2(self):
+#        ''' '''
+#        # split: split_test_cav: test_sts_rr
+#        outputms = 'spl2.ms'
+#        mstransform(vis=self.vis, outputvis=outputms, datacolumn='data',spw='0:5~16', 
+#                    correlation='rr',freqaverage=True, freqbin=3)
+#        self.check_subtables(outputms, 'rr', [(1, 4)])
+#
+#    def test_split3(self):
+#        ''' '''
+#        # split: split_test_cav: test_sts_ll
+#        outputms = 'spl3.ms'
+#        mstransform(vis=self.vis, outputvis=outputms, datacolumn='data',spw='0:5~16', 
+#                    correlation='LL',freqaverage=True, freqbin=3)
+#        self.check_subtables(outputms, 'll', [(1, 4)])
+# 
+#      
+##        def test_sts:
+##            self.check_subtables('', [(2, 4)])
+##        def test_sts_rr:
+##            self.check_subtables('rr', [(1, 4)])
+##        def test_sts_ll:
+##            self.check_subtables('ll', [(1, 4)])
+##        
+##        def test_data(self):
+##            """DATA[2],   chan avg. without correlation selection"""
+##            check_eq(self.records['']['data'],
+##                     numpy.array([[16.795681-42.226387j, 20.5655-44.9874j,
+##                                   26.801544-49.595020j, 21.4770-52.0462j],
+##                                  [-2.919122-38.427235j, 13.3042-50.8492j,
+##                                    4.483857-43.986446j, 10.1733-19.4007j]]),
+##                     0.0005)
+##            
+##        def test_data_rr(self):
+##            """DATA[2],   chan avg. RR"""
+##            check_eq(self.records['rr']['data'],
+##                     numpy.array([[16.79568-42.226387j, 20.5655-44.9874j,
+##                                   26.80154-49.595020j, 21.4770-52.0462j]]),
+##                     0.0001)
+##
+##        def test_data_ll(self):
+##            """DATA[2],   chan avg. LL"""
+##            check_eq(self.records['ll']['data'],
+##                     numpy.array([[-2.919122-38.427235j, 13.3042-50.8492j,
+##                                    4.483857-43.986446j, 10.1733-19.4007j]]),
+##                     0.0001)
+##
+##
+##        def test_wt(self):
+##            """WEIGHT[5], chan avg. without correlation selection"""
+##            check_eq(self.records['']['weight'],
+##                     numpy.array([0.38709676, 0.38709676]), 0.001)
+##            #self.__class__.n_tests_passed += 1
+##    
+##        def test_wt_rr(self):
+##            """WEIGHT[5], chan avg. RR"""
+##            check_eq(self.records['rr']['weight'],
+##                     numpy.array([0.38709676]), 0.001)
+##    
+##        def test_wt_ll(self):
+##            """WEIGHT[5], chan avg. LL"""
+##            check_eq(self.records['ll']['weight'],
+##                     numpy.array([0.38709676]), 0.001)
+##            #self.__class__.n_tests_passed += 1
+##    
+##        def test_sigma(self):
+##            """SIGMA[7], chan avg. without correlation selection"""
+##            check_eq(self.records['']['sigma'],
+##                     numpy.array([0.57735026, 0.57735026]), 0.0001)
+##            
+##        def test_sigma_rr(self):
+##            """SIGMA[7], chan avg. RR"""
+##            check_eq(self.records['rr']['sigma'],
+##                     numpy.array([0.57735026]), 0.0001)
+##            
+##        def test_sigma_ll(self):
+##            """SIGMA[7], chan avg. LL"""
+##            check_eq(self.records['ll']['sigma'],
+##                     numpy.array([0.57735026]), 0.0001)
+#
+#
+#
+
+
+
+
+
     
-# TODO: Look at tests in test_cvel-B.py too
-                     
+# TODO: Look at tests in test_cvel-B.py too                  
 class test_Combspw1(test_base):
     ''' Tests for combinespws'''
     
@@ -687,6 +863,9 @@ class test_FreqAvg(test_base):
         self.assertTrue(os.path.exists(outputms))
         ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
+
+
+
        
 # Cleanup class 
 class Cleanup(test_base):
@@ -702,7 +881,7 @@ class Cleanup(test_base):
 
 
 def suite():
-    return [test_Split,
+    return [
             test_Combspw1,
             test_Combspw2,
             test_Regridms1,

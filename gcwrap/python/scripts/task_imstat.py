@@ -19,9 +19,9 @@ def imstat(
             verbose=verbose, robust=True, mask=mask,
             stretch=stretch, logfile=logfile, append=append
         )
-        _myia.done()
         return retValue
     except Exception, instance:
-        _myia.done()
         casalog.post( '*** Error ***'+str(instance), 'SEVERE' )
-        return {}
+        raise
+    finally:
+        _myia.done()

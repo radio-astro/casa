@@ -343,7 +343,7 @@ class impbcor_test(unittest.TestCase):
                 )
                 self.assertFalse(zz)
                 zz = impbcor(
-                    imagename=im2, pbimage=pb2, mask=mymask + ">0", stretch=True
+                    imagename=im2, pbimage=pb2, outfile="blahblah", mask=mymask + ">0", stretch=True
                 )
                 self.assertTrue(zz)
         

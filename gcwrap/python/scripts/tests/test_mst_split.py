@@ -45,6 +45,7 @@ print 'split tests will use data from '+datapath
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
+    print val
     if type(val) == dict:
         for k in val:
             check_eq(val[k], expval[k], tol)
@@ -208,6 +209,7 @@ class SplitChecker(unittest.TestCase):
         needs it, and this is the most reliable way to clean up.
         """
         oms = self.records[corrsel]['ms']
+        print oms
         assert listshapes(mspat=oms)[oms] == set(expected)
         shutil.rmtree(oms)
 
@@ -229,8 +231,14 @@ class split_test_tav(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nTime averaging", self.inpms, corrsel
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw='', width=1, antenna='',
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw='', width=1, antenna='',
+#                             timebin='20s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation=corrsel, async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw='', antenna='',timeaverage=True,
                              timebin='20s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel, async=False)
@@ -282,6 +290,7 @@ class split_test_tav(SplitChecker):
         
     def test_data(self):
         """DATA[2],   time avg. without correlation selection"""
+        
         check_eq(self.records['']['data'],
                  numpy.array([[ 0.14428490-0.03145669j],
                               [-0.00379944+0.00710297j],
@@ -407,12 +416,19 @@ class split_test_cav(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChannel averaging", corrsel
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw='0:5~16', width=3,
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw='0:5~16', width=3,
+#                             antenna='',
+#                             timebin='', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation=corrsel, async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw='0:5~16', freqaverage=True, freqbin=3,
                              antenna='',
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
-                             correlation=corrsel, async=False)
+                             correlation=corrsel)
             tb.open(outms)
             record['data']   = tb.getcell('DATA', 2)
             record['weight'] = tb.getcell('WEIGHT', 5)
@@ -441,6 +457,10 @@ class split_test_cav(SplitChecker):
 
     def test_data(self):
         """DATA[2],   chan avg. without correlation selection"""
+        print 'Now do test_data'
+        print type(self.records['']['data'])
+        print type(self.records)
+        print "end of record"
         check_eq(self.records['']['data'],
                  numpy.array([[16.795681-42.226387j, 20.5655-44.9874j,
                                26.801544-49.595020j, 21.4770-52.0462j],
@@ -515,8 +535,15 @@ class split_test_cav5(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChannel averaging", corrsel
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw='0:5~16', width=5,
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw='0:5~16', width=5,
+#                             antenna='',
+#                             timebin='', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation=corrsel, async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw='0:5~16', freqaverage=True, freqbin=5,
                              antenna='',
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
@@ -608,8 +635,15 @@ class split_test_cdsp(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nRemapping CALDEVICE and SYSPOWER of", corrsel
-            splitran = split(datapath + corrsel, outms, datacolumn='data',
-                             field='', spw='0,2', width=1,
+#            splitran = split(datapath + corrsel, outms, datacolumn='data',
+#                             field='', spw='0,2', width=1,
+#                             antenna='ea05,ea13&',
+#                             timebin='', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(datapath + corrsel, outms, datacolumn='data',
+                             field='', spw='0,2', 
                              antenna='ea05,ea13&',
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
@@ -702,10 +736,19 @@ class split_test_cst(SplitChecker):
         record = {}
         try:
             print "\nSplitting", inpms
-            splitran = split(inpms, self.outms, datacolumn='data',
-                             field='', spw='', width=1,
+#            splitran = split(inpms, self.outms, datacolumn='data',
+#                             field='', spw='', width=1,
+#                             antenna='',
+#                             timebin='', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='',
+#                             observation='1~3,5',
+#                             async=False)
+            default(mstransform)
+            splitran = mstransform(inpms, self.outms, datacolumn='data',
+                             field='', spw='', 
                              antenna='',
-                             timebin='', timerange='',
+                             timerange='',
                              scan='', array='', uvrange='',
                              correlation='',
                              observation='1~3,5',
@@ -769,7 +812,11 @@ class split_test_state(unittest.TestCase):
         try:
             shutil.rmtree(self.outms, ignore_errors=True)
             os.symlink(self.inpms, self.locms)  # Paranoia
-            splitran = split(self.locms, self.outms, datacolumn='data',
+#            splitran = split(self.locms, self.outms, datacolumn='data',
+#                             intent='OBSERVE_TARGET.UNSPECIFIED',
+#                             async=False)
+            default(mstransform)
+            splitran = mstransform(self.locms, self.outms, datacolumn='data',
                              intent='OBSERVE_TARGET.UNSPECIFIED',
                              async=False)
         except Exception, e:
@@ -833,10 +880,16 @@ class split_test_cavcd(unittest.TestCase):
                 shutil.copytree(datapath + self.inpms, self.inpms)
                 
             print "\n\tSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='corrected',
-                             field='', spw='', width=4,
-                             antenna='',
-                             timebin='0s', timerange='',
+#            splitran = split(self.inpms, self.outms, datacolumn='corrected',
+#                             field='', spw='', width=4,
+#                             antenna='',
+#                             timebin='0s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, self.outms, datacolumn='corrected',
+                             field='', spw='', freqaverage=True, freqbin=4,
+                             antenna='', timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
         except Exception, e:
@@ -868,10 +921,17 @@ class split_test_genericsubtables(unittest.TestCase):
             shutil.rmtree(self.outms, ignore_errors=True)
 
             #print "\n\tSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='data',
-                             field='', spw='0', width=1,
+#            splitran = split(self.inpms, self.outms, datacolumn='data',
+#                             field='', spw='0', width=1,
+#                             antenna='',
+#                             timebin='0s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='0', 
                              antenna='',
-                             timebin='0s', timerange='',
+                             timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
         except Exception, e:
@@ -916,10 +976,17 @@ class split_test_singchan(unittest.TestCase):
                 shutil.copytree(datapath + self.inpms, self.inpms)
 
             print "\n\tSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='data',
-                             field='', spw='0:25', width=1,
+#            splitran = split(self.inpms, self.outms, datacolumn='data',
+#                             field='', spw='0:25', width=1,
+#                             antenna='',
+#                             timebin='0s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='0:25', 
                              antenna='',
-                             timebin='0s', timerange='',
+                             timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
         except Exception, e:
@@ -987,12 +1054,19 @@ class split_test_blankov(unittest.TestCase):
             # quiets an expected error message.
             original_throw_pref = myf.get('__rethrow_casa_exceptions', False)
             myf['__rethrow_casa_exceptions'] = True
-            splitran = split(self.inpms, self.outms, datacolumn='data',
-                             field='', spw='0:25', width=1,
+#            splitran = split(self.inpms, self.outms, datacolumn='data',
+#                             field='', spw='0:25', width=1,
+#                             antenna='',
+#                             timebin='0s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, self.outms, datacolumn='data',
+                             field='', spw='0:25', 
                              antenna='',
-                             timebin='0s', timerange='',
+                             timerange='',
                              scan='', array='', uvrange='',
-                             correlation='', async=False)
+                             correlation='', async=False)        
         except ValueError:
             splitran = False
         except Exception, e:
@@ -1017,10 +1091,17 @@ class split_test_almapol(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         splitran = False
         try:
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw='1~3', width=1,
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw='1~3', width=1,
+#                             antenna='',
+#                             timebin='0s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation=corrsel, async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw='1~3',
                              antenna='',
-                             timebin='0s', timerange='',
+                             timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel, async=False)
             tb.open(outms + '/WEATHER')
@@ -1074,9 +1155,15 @@ class split_test_unorderedpolspw(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nSelecting spws 1, 3, and 5."
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw='1,3,5', width=1, antenna='',
-                             timebin='0s', timerange='18:32:40~18:33:20',
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw='1,3,5', width=1, antenna='',
+#                             timebin='0s', timerange='18:32:40~18:33:20',
+#                             scan='', array='', uvrange='',
+#                             correlation=corrsel, async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw='1,3,5', antenna='',
+                             timerange='18:32:40~18:33:20',
                              scan='', array='', uvrange='',
                              correlation=corrsel, async=False)
             tb.open(outms)
@@ -1119,10 +1206,18 @@ class split_test_sw_and_fc(SplitChecker):
         try:
             print "\nChecking SPECTRAL_WINDOW and FLAG_CMD with width " + spwwidth[1] + '.'
             # Antenna selection added just so it's tested somewhere.
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw=spwwidth[0], width=spwwidth[1],
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw=spwwidth[0], width=spwwidth[1],
+#                             antenna='VA03,VA05&',               # Case sensitive
+#                             timebin='0s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw=spwwidth[0], freqaverage=True,
+                             freqbin=spwwidth[1],
                              antenna='VA03,VA05&',               # Case sensitive
-                             timebin='0s', timerange='',
+                             timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
             tb.open(outms + '/SPECTRAL_WINDOW')
@@ -1321,9 +1416,16 @@ class split_test_optswc(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChecking SPECTRAL_WINDOW's opt cols with width " + spwwidth[1] + '.'
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw=spwwidth[0], width=spwwidth[1], antenna='',
-                             timebin='0s', timerange='',
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw=spwwidth[0], width=spwwidth[1], antenna='',
+#                             timebin='0s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw=spwwidth[0], freqaverage=True,
+                             freqbin=spwwidth[1], antenna='',
+                             timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
             tb.open(outms + '/SPECTRAL_WINDOW')
@@ -1382,8 +1484,14 @@ class split_test_tav_then_cvel(SplitChecker):
         shutil.rmtree(cvms, ignore_errors=True)
         try:
             print "\nTime averaging", corrsel
-            splitran = split(self.inpms, tavms, datacolumn='data',
-                             field='', spw='', width=1, antenna='',
+#            splitran = split(self.inpms, tavms, datacolumn='data',
+#                             field='', spw='', width=1, antenna='',
+#                             timebin='10s', timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation=corrsel, async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, tavms, datacolumn='data',
+                             field='', spw='', antenna='', timeaverage=True,
                              timebin='10s', timerange='',
                              scan='', array='', uvrange='',
                              correlation=corrsel, async=False)
@@ -1400,6 +1508,7 @@ class split_test_tav_then_cvel(SplitChecker):
             raise e
         try:
             print "Running cvel"
+            # TODO: replace cvel by mstransform
             cvelran = cvel(tavms, cvms, passall=False, field='', spw='0~8',
                            selectdata=True, timerange='', scan="", array="",
                            mode="velocity", nchan=-1, start="-4km/s",
@@ -1522,9 +1631,15 @@ class split_test_wttosig(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChecking WEIGHT and SIGMA after %s." % (dcwtb,)
-            splitran = split(self.inpms, outms, datacolumn=dcwtb[0],
-                             field='', spw='', width=dcwtb[1], antenna='',
-                             timebin=dcwtb[2], timerange='',
+#            splitran = split(self.inpms, outms, datacolumn=dcwtb[0],
+#                             field='', spw='', width=dcwtb[1], antenna='',
+#                             timebin=dcwtb[2], timerange='',
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn=dcwtb[0],
+                             field='', spw='', freqaverage=True, freqbin=dcwtb[1], antenna='',
+                             timeaverage=True, timebin=dcwtb[2], timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
             tb.open(outms)
@@ -1669,9 +1784,15 @@ class split_test_fc(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChecking FLAG_CATEGORY after %s." % (trwtb,)
-            splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw='', width=trwtb[1], antenna='',
-                             timebin=trwtb[2], timerange=trwtb[0],
+#            splitran = split(self.inpms, outms, datacolumn='data',
+#                             field='', spw='', width=trwtb[1], antenna='',
+#                             timebin=trwtb[2], timerange=trwtb[0],
+#                             scan='', array='', uvrange='',
+#                             correlation='', async=False)
+            default(mstransform)
+            splitran = mstransform(self.inpms, outms, datacolumn='data',
+                             field='', spw='', freqaverage=True, freqbin=trwtb[1], antenna='',
+                             timeaverage=True, timebin=trwtb[2], timerange=trwtb[0],
                              scan='', array='', uvrange='',
                              correlation='', async=False)
             tb.open(outms)
@@ -1809,10 +1930,23 @@ class split_test_fc(SplitChecker):
 
 
 def suite():
-    return [split_test_tav, split_test_cav, split_test_cav5, split_test_cst,
-            split_test_state, split_test_optswc, split_test_cdsp,
-            split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
-            split_test_tav_then_cvel, split_test_genericsubtables,
-            split_test_sw_and_fc, split_test_cavcd, split_test_almapol,
-            split_test_wttosig, split_test_fc]
+    return [
+#            split_test_tav, 
+            split_test_cav, 
+#            split_test_cav5, 
+            split_test_cst,
+            split_test_state, 
+#            split_test_optswc, 
+            split_test_cdsp,
+            split_test_singchan, 
+            split_test_unorderedpolspw, 
+            split_test_blankov,
+#            split_test_tav_then_cvel, 
+            split_test_genericsubtables,
+#            split_test_sw_and_fc, 
+#            split_test_cavcd, 
+            split_test_almapol,
+#            split_test_wttosig, 
+#            split_test_fc
+            ]
     

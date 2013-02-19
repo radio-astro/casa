@@ -44,6 +44,7 @@ class imstat_test(unittest.TestCase):
                 os.remove(dir)
             elif (os.path.exists(dir)):
                 shutil.rmtree(dir)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test001(self):
         """Test 1: verify moment maps can have flux densities computed in statistics"""
@@ -270,7 +271,7 @@ class imstat_test(unittest.TestCase):
         zz = imstat(
             imagename=imagename, mask=mymask + ">0", stretch=False
         )
-        self.assertTrue(type(zz) == type({}) and (zz == {}))
+        self.assertFalse(zz)
 
         zz = imstat(
             imagename=imagename, mask=mymask + ">0", stretch=True
