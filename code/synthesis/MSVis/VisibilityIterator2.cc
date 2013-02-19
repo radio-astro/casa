@@ -50,6 +50,10 @@ namespace casa {
 
 namespace vi {
 
+Float unity (Float) { return 1.0;}
+Float identity (Float x) { return x;}
+
+
 VisibilityIterator2::VisibilityIterator2()
 : impl_p (0)
 {
@@ -1008,18 +1012,18 @@ VisibilityIterator2::writeFlagRow (const Vector<Bool>& rowflags)
 }
 
 void
-VisibilityIterator2::writeSigma (const Vector<Float>& sig)
+VisibilityIterator2::writeSigma (const Matrix<Float>& sig)
 {
     CheckImplementationPointerW ();
     impl_p->writeSigma (sig);
 }
 
-void
-VisibilityIterator2::writeSigmaMat (const Matrix<Float>& sigmat)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeSigmaMat (sigmat);
-}
+//void
+//VisibilityIterator2::writeSigmaMat (const Matrix<Float>& sigmat)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeSigmaMat (sigmat);
+//}
 
 //void
 //VisibilityIterator2::writeVisCorrected (const Matrix<CStokesVector>& vis)
@@ -1064,18 +1068,18 @@ VisibilityIterator2::writeVisObserved (const Cube<Complex>& vis)
 }
 
 void
-VisibilityIterator2::writeWeight (const Vector<Float>& wt)
+VisibilityIterator2::writeWeight (const Matrix<Float>& wt)
 {
     CheckImplementationPointerW ();
     impl_p->writeWeight (wt);
 }
 
-void
-VisibilityIterator2::writeWeightMat (const Matrix<Float>& wtmat)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeWeightMat (wtmat);
-}
+//void
+//VisibilityIterator2::writeWeightMat (const Matrix<Float>& wtmat)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeWeightMat (wtmat);
+//}
 
 void
 VisibilityIterator2::writeWeightSpectrum (const Cube<Float>& wtsp)
@@ -1210,7 +1214,8 @@ VisibilityIterator2 *
 AveragingTvi2Factory::createVi (MeasurementSet * ms,
                                 Double interval,
                                 Double chunkInterval,
-                                Int averagingFactor)
+                                Int averagingFactor,
+                                WeightFunctionBase * weightFunction)
 {
     // Start off with an empty VI
 
@@ -1226,7 +1231,8 @@ AveragingTvi2Factory::createVi (MeasurementSet * ms,
     VisibilityIteratorImpl2 * vii2 = new VisibilityIteratorImpl2 (vi2, mss, sortColumns, True,
                                                                   chunkInterval, VbPlain, False);
 
-    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vii2, averagingInterval, nAveragesPerChunk, 0);
+    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vii2, averagingInterval, nAveragesPerChunk,
+                                                       weightFunction);
 
     vi2->impl_p = averagingTvi2;
 

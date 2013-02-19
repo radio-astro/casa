@@ -1689,7 +1689,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->flagRow().putColumnCells(rowRef,tmpVectorBool);
 
 		// Averaged matrix columns
-		mapAndAverageMatrix(vb->weightMat(),tmpMatrixFloat);
+		mapAndAverageMatrix(vb->weight(),tmpMatrixFloat);
 		outputMsCols_p->weight().putColumnCells(rowRef,tmpMatrixFloat);
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
@@ -1700,7 +1700,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			mapAndAverageMatrix(vb->sigmaMat(),tmpMatrixFloat);
+			mapAndAverageMatrix(vb->sigma(),tmpMatrixFloat);
 			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 		}
 	}
@@ -1756,7 +1756,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->uvw().putColumnCells(rowRef,vb->uvw());
 		outputMsCols_p->flagRow().putColumnCells(rowRef,vb->flagRow());
 
-		Matrix<Float> weights = vb->weightMat();
+		Matrix<Float> weights = vb->weight();
 		outputMsCols_p->weight().putColumnCells(rowRef, weights);
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
@@ -1767,7 +1767,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			outputMsCols_p->sigma().putColumnCells(rowRef, vb->sigmaMat());
+			outputMsCols_p->sigma().putColumnCells(rowRef, vb->sigma());
 		}
 	}
 

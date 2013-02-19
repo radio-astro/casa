@@ -1399,18 +1399,18 @@ FlagDataHandler::preFetchColumns()
 				}
 				break;
 			}
-			case vi::SigmaMat:
-			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::SigmaMat);
-				}
-				else
-				{
-					visibilityBuffer_p->sigmaMat();
-				}
-				break;
-			}
+//			case vi::SigmaMat:
+//			{
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::SigmaMat);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->sigmaMat();
+//				}
+//				break;
+//			}
 			case vi::SpectralWindow:
 			{
 				if (asyncio_enabled_p)
@@ -1483,18 +1483,18 @@ FlagDataHandler::preFetchColumns()
 				}
 				break;
 			}
-			case vi::WeightMat:
-			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::WeightMat);
-				}
-				else
-				{
-					visibilityBuffer_p->weightMat();
-				}
-				break;
-			}
+//			case vi::WeightMat:
+//			{
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::WeightMat);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->weightMat();
+//				}
+//				break;
+//			}
 			case vi::WeightSpectrum:
 			{
 				if (asyncio_enabled_p)
@@ -1572,7 +1572,7 @@ FlagDataHandler::setMapPolarizations(bool activated)
 
 
 void
-FlagDataHandler::setMapAntennaPointing(bool activated)
+FlagDataHandler::setMapAntennaPointing(bool /*activated*/)
 {
 	// Antenna Pointing mapping is now done by the first
 	// Elevation agent, and stored as static variable

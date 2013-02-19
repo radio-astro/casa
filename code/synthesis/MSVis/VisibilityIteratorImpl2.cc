@@ -42,6 +42,7 @@
 #include <synthesis/MSVis/MeasurementSet2.h>
 #include <synthesis/MSVis/MSUtil.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/SpectralWindow.h>
 #include <synthesis/MSVis/ViFrequencySelection.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/VisBufferComponents2.h>
@@ -1000,16 +1001,18 @@ VisibilityIteratorImpl2::spectralWindow () const
 void
 VisibilityIteratorImpl2::spectralWindows (Vector<Int> & spws) const
 {
-	Vector<Int> ddis;
-	dataDescriptionIds(ddis);
-	spws.resize(ddis.size());
+    // Get's the list of spectral windows for each row in the VB window
 
-	for (uInt idx=0;idx<ddis.size();idx++)
-	{
-		spws(idx) = subtableColumns_p->dataDescription().spectralWindowId()(ddis(idx));
-	}
+    Vector<Int> ddis;
+    dataDescriptionIds(ddis);
+    spws.resize(ddis.size());
 
-	return;
+    for (uInt idx=0;idx<ddis.size();idx++)
+    {
+        spws(idx) = subtableColumns_p->dataDescription().spectralWindowId()(ddis(idx));
+    }
+
+    return;
 }
 
 // Return current Polarization Id
@@ -1102,7 +1105,7 @@ VisibilityIteratorImpl2::subtableColumns () const
 }
 
 void
-VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & spectralWindows,
+VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindows,
                                                      Vector<Int> & nChannels) const
 {
     const FrequencySelectionUsingChannels * selection =
@@ -1111,37 +1114,41 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & spectralWindo
 
     if (selection->empty()){
 
-        this->spectralWindows (spectralWindows);
+        casa::ms::SpectralWindows spectralWindows (& measurementSets_p [msId()]);
 
-        nChannels.resize (spectralWindows.nelements());
+        selectedWindows.resize (spectralWindows.size());
+        nChannels.resize (spectralWindows.size());
 
-        for (Int i = 0; i < (int) spectralWindows.nelements(); i ++){
+        Int i = 0;
 
-            Int spectralWindowId = spectralWindows (i);
+        for (casa::ms::SpectralWindows::const_iterator s = spectralWindows.begin();
+             s != spectralWindows.end();
+             s ++){
 
-            nChannels (i) = getSpectralWindowChannels (msId (), spectralWindowId).size();
+            selectedWindows [i] = i;
+            nChannels [i] = s->nChannels();
+
+            i++;
         }
     }
     else {
 
         set<Int> windows = selection->getSelectedWindows();
 
-        spectralWindows.resize (windows.size());
+        selectedWindows.resize (windows.size());
         nChannels.resize (windows.size());
 
         Int i = 0;
 
         for (set<Int>::iterator j = windows.begin(); j != windows.end(); j++){
 
-            spectralWindows (i) = * j;
+            selectedWindows (i) = * j;
 
             nChannels (i) = selection->getNChannels (* j);
             i++;
-
         }
     }
 }
-
 
 void
 VisibilityIteratorImpl2::useImagingWeight (const VisImagingWeight & imWgt)
@@ -2963,33 +2970,9 @@ VisibilityIteratorImpl2::writeVisObserved (const Cube<Complex> & vis)
 }
 
 void
-VisibilityIteratorImpl2::writeWeight (const Vector<Float> & weight)
+VisibilityIteratorImpl2::writeWeight (const Matrix<Float> & weight)
 {
-    Int nPolarizations = this->nPolarizations();
-    Int nRows = this->nRows();
-
-    ThrowIf ((int) weight.nelements() != nRows,
-             String::format ("Dimension mismatch: got %d rows but expected %d rows",
-                             weight.nelements(), nRows));
-
-    Matrix<Float> weightMatrix;
-    weightMatrix.resize (nPolarizations, nRows);
-
-    // Weight is stored as a [nC] vector per row but the parameter provides
-    // one value per row.  Spread the provided value acroos all correlations.
-
-    for (Int i = 0; i < nPolarizations; i++) {
-        Vector<Float> r = weightMatrix.row (i);
-        r = weight;
-    }
-
-    writeWeightMat (weightMatrix);
-}
-
-void
-VisibilityIteratorImpl2::writeWeightMat (const Matrix<Float> & weightMat)
-{
-    putColumnRows (columns_p.weight_p, weightMat);
+    putColumnRows (columns_p.weight_p, weight);
 }
 
 void
@@ -3001,33 +2984,9 @@ VisibilityIteratorImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum
 }
 
 void
-VisibilityIteratorImpl2::writeSigma (const Vector<Float> & sigma)
+VisibilityIteratorImpl2::writeSigma (const Matrix<Float> & sigma)
 {
-    Int nPolarizations = this->nPolarizations();
-    Int nRows = this->nRows();
-
-    ThrowIf ((int) sigma.nelements() != nRows,
-             String::format ("Dimension mismatch: got %d rows but expected %d rows",
-                             sigma.nelements(), nRows));
-
-    Matrix<Float> sigmaMatrix;
-    sigmaMatrix.resize (nPolarizations, nRows);
-
-    // Sigma is stored as a [nC] vector per row but the parameter provides
-    // one value per row.  Spread the provided value acroos all correlations.
-
-    for (Int i = 0; i < nPolarizations; i++) {
-        Vector<Float> r = sigmaMatrix.row (i);
-        r = sigma;
-    }
-
-    writeSigmaMat (sigmaMatrix);
-}
-
-void
-VisibilityIteratorImpl2::writeSigmaMat (const Matrix<Float> & sigMat)
-{
-    putColumnRows (columns_p.sigma_p, sigMat);
+    putColumnRows (columns_p.sigma_p, sigma);
 }
 
 void
@@ -3096,13 +3055,13 @@ VisibilityIteratorImpl2::initializeBackWriters ()
         makeBackWriter (& VisibilityIteratorImpl2::writeFlagCategory, & VisBuffer2::flagCategory);
     backWriters_p [Sigma] =
         makeBackWriter (& VisibilityIteratorImpl2::writeSigma, & VisBuffer2::sigma);
-    backWriters_p [SigmaMat] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
+//    backWriters_p [SigmaMat] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
     backWriters_p [Weight] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeight, & VisBuffer2::weight);
     backWriters_p [WeightMat] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeWeightMat, & VisBuffer2::weightMat);
-    backWriters_p [WeightSpectrum] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeWeightMat, & VisBuffer2::weightMat);
+//    backWriters_p [WeightSpectrum] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 
     // Now do the visibilities.

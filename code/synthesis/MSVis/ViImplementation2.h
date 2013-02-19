@@ -554,19 +554,19 @@ public:
     virtual void writeVisObserved (const Cube<Complex> & vis) = 0;
 
     // Write/modify the weights
-    virtual void writeWeight (const Vector<Float> & wt) = 0;
+    virtual void writeWeight (const Matrix<Float> & wt) = 0;
 
     // Write/modify the weightMat
-    virtual void writeWeightMat (const Matrix<Float> & wtmat) = 0;
+    //virtual void writeWeightMat (const Matrix<Float> & wtmat) = 0;
 
     // Write/modify the weightSpectrum
     virtual void writeWeightSpectrum (const Cube<Float> & wtsp) = 0;
 
     // Write/modify the Sigma
-    virtual void writeSigma (const Vector<Float> & sig) = 0;
+    virtual void writeSigma (const Matrix<Float> & sig) = 0;
 
     // Write/modify the ncorr x nrow SigmaMat.
-    virtual void writeSigmaMat (const Matrix<Float> & sigmat) = 0;
+    //virtual void writeSigmaMat (const Matrix<Float> & sigmat) = 0;
 
     // Write the information needed to generate on-the-fly model visibilities.
 

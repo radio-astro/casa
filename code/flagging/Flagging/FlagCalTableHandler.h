@@ -114,8 +114,8 @@ public:
     virtual void setProcessorId (const Vector<Int> & value) {}
     virtual const Vector<Int> & scan () const {Vector<Int> dummy; return dummy;}
     virtual void setScan (const Vector<Int> & value) {}
-    virtual const Vector<Float> & sigma () const {Vector<Float> dummy; return dummy;}
-    virtual void setSigma (const Vector<Float> & value) {}
+    virtual const Matrix<Float> & sigma () const {Matrix<Float> dummy; return dummy;}
+    virtual void setSigma (const Matrix<Float> & value) {}
     virtual const Matrix<Float> & sigmaMat () const {Matrix<Float> dummy; return dummy;}
     virtual const Vector<Int> & stateId () const {Vector<Int> dummy; return dummy;}
     virtual void setStateId (const Vector<Int> & value) {}
@@ -127,8 +127,8 @@ public:
     virtual void setTimeInterval (const Vector<Double> & value) {}
     virtual const Matrix<Double> & uvw () const {Matrix<Double> dummy; return dummy;}
     virtual void setUvw (const Matrix<Double> & value) {}
-    virtual const Vector<Float> & weight () const {Vector<Float> dummy; return dummy;}
-    virtual void setWeight (const Vector<Float>& value) {}
+    virtual const Matrix<Float> & weight () const {Matrix<Float> dummy; return dummy;}
+    virtual void setWeight (const Matrix<Float>& value) {}
     virtual const Matrix<Float> & weightMat () const {Matrix<Float> dummy; return dummy;}
     virtual void setWeightMat (const Matrix<Float>& value) {}
     virtual const Cube<Float> & weightSpectrum () const {Cube<Float> dummy; return dummy;}
@@ -318,6 +318,8 @@ public:
         Cube<complex<float> >& visCubeRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<complex<float> >& visCubeCorrectedRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<complex<float> >& visCubeModelRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<float >& weightSpectrumRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+
 
 private:
 

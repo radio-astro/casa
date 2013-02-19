@@ -93,6 +93,7 @@ casa_add_library( synthesis
   MSVis/Reweighter.cc
   MSVis/SelectAverageSpw.cc
   MSVis/SimpleSubMS.cc
+  MSVis/SpectralWindow.cc
   MSVis/StokesVector.cc
   MSVis/StatWT.cc
   MSVis/SubMS.cc
@@ -454,6 +455,7 @@ install (FILES
 	MSVis/Reweighter.h
 	MSVis/SelectAverageSpw.h
 	MSVis/SimpleSubMS.h
+        MSVis/SpectralWindow.h
 	MSVis/StatWT.h
 	MSVis/StokesVector.h
 	MSVis/SubMS.h
