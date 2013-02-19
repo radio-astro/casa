@@ -20,6 +20,7 @@ void python_CalibrationManager() {
     .def( init <> () )
     .def("set_data", &CalibrationManager::setScantable)
     .def("set_data", &CalibrationManager::setScantableByName)
+    .def("add_applytable", &CalibrationManager::addApplyTable)
     .def("add_skytable", &CalibrationManager::addSkyTable)
     .def("add_tsystable", &CalibrationManager::addTsysTable)
     .def("set_calmode", &CalibrationManager::setMode)
@@ -29,11 +30,14 @@ void python_CalibrationManager() {
     .def("set_freq_interpolation", &CalibrationManager::setFrequencyInterpolation,
          (boost::python::arg("interp"),
           boost::python::arg("order")=-1))
+    .def("set_calibration_options", &CalibrationManager::setCalibrationOptions)
     .def("reset", &CalibrationManager::reset)
     .def("set_tsys_spw", &CalibrationManager::setTsysSpw)
     .def("set_tsys_transfer", &CalibrationManager::setTsysTransfer)
     .def("calibrate", &CalibrationManager::calibrate)
-    .def("apply", &CalibrationManager::apply)
+    .def("apply", &CalibrationManager::apply,
+         (boost::python::arg("insitu")=false,
+          boost::python::arg("filltsys")=true))
     .def("save_caltable", &CalibrationManager::saveCaltable)
     .def("split", &CalibrationManager::split)
     ;

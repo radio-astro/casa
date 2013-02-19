@@ -37,7 +37,8 @@
 #include <stdio.h>
 #include <vector>
 
-using namespace std ;
+#include <casa/Utilities/CountedPtr.h>
+
 
 // <summary>
 // <linkto class=NRODataRecord>NRODataRecord</linkto> is a class 
@@ -190,7 +191,7 @@ struct NRODataRecord
   // this int array is stored into the char array.
   //
   // 2009/02/26 Takeshi Nakazato  Moved to NROReader
-  char *LDATA ;
+  casa::CountedPtr<char> LDATA ;
   // Spectral data for FITS data
   //vector<int> JDATA ;
 } ;

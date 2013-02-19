@@ -27,19 +27,15 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Utilities/CountedPtr.h>
-
 #include <coordinates/Coordinates/SpectralCoordinate.h>
-
 #include <measures/TableMeasures/ScalarMeasColumn.h>
-
 #include <scimath/Mathematics/FFTServer.h>
-
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/Table.h>
 
-
 #include "MathUtils.h"
+#include "STBaselineEnum.h"
 #include "STFit.h"
 #include "STFitEntry.h"
 //#include "STFitter.h"
@@ -506,26 +502,33 @@ public:
   void regridChannel( int nchan, double dnu ) ;
   void regridChannel( int nchan, double dnu, int irow ) ;
   void regridChannel( int nchan, double dnu, double fmin, int irow ) ;
-
   void regridSpecChannel( double dnu, int nchan=-1 ) ;
 
   bool getFlagtraFast(casa::uInt whichrow);
 
-  void polyBaseline(const std::vector<bool>& mask, 
-		    int order, 
+  std::vector<std::string> applyBaselineTable(const std::string& bltable, const std::string& outbltable, const bool outbltableexists, const bool overwrite);
+  std::vector<std::string> subBaseline(const std::vector<std::string>& blInfoList, const std::string& outbltable, const bool outbltableexists, const bool overwrite);
+  void polyBaseline(const std::vector<bool>& mask,
+		    int order,
+		    float thresClip, 
+		    int nIterClip,
 		    bool getResidual=true,
 		    const std::string& progressInfo="true,1000", 
-		    const bool outLogger=false, 
-		    const std::string& blfile="");
+		    const bool outLogger=false,
+		    const std::string& blfile="",
+		    const std::string& bltable="");
   void autoPolyBaseline(const std::vector<bool>& mask,
-			int order, 
-			const std::vector<int>& edge, 
-			float threshold=3.0, 
-			int chanAvgLimit=1, 
-			bool getResidual=true,
-			const std::string& progressInfo="true,1000", 
-			const bool outLogger=false, 
-			const std::string& blfile="");
+		        int order,
+		        float thresClip, 
+		        int nIterClip,
+	                const std::vector<int>& edge, 
+	                float threshold=3.0, 
+	                int chanAvgLimit=1, 
+	                bool getResidual=true,
+	                const std::string& progressInfo="true,1000", 
+	                const bool outLogger=false, 
+	                const std::string& blfile="",
+			const std::string& bltable="");
   void chebyshevBaseline(const std::vector<bool>& mask,
 			 int order,
 			 float thresClip, 
@@ -533,7 +536,8 @@ public:
 		         bool getResidual=true,
 		         const std::string& progressInfo="true,1000", 
 		         const bool outLogger=false,
-		         const std::string& blfile="");
+		         const std::string& blfile="",
+			 const std::string& bltable="");
   void autoChebyshevBaseline(const std::vector<bool>& mask,
 		             int order,
 		             float thresClip, 
@@ -544,7 +548,8 @@ public:
 		             bool getResidual=true,
 		             const std::string& progressInfo="true,1000", 
 		             const bool outLogger=false, 
-		             const std::string& blfile="");
+		             const std::string& blfile="",
+			     const std::string& bltable="");
   void cubicSplineBaseline(const std::vector<bool>& mask,
 			   int nPiece,
 			   float thresClip, 
@@ -552,7 +557,8 @@ public:
 			   bool getResidual=true,
 			   const std::string& progressInfo="true,1000", 
 			   const bool outLogger=false,
-			   const std::string& blfile="");
+			   const std::string& blfile="",
+			   const std::string& bltable="");
   void autoCubicSplineBaseline(const std::vector<bool>& mask,
 			       int nPiece,
 			       float thresClip, 
@@ -563,11 +569,10 @@ public:
 			       bool getResidual=true,
 			       const std::string& progressInfo="true,1000", 
 			       const bool outLogger=false, 
-			       const std::string& blfile="");
+			       const std::string& blfile="",
+			       const std::string& bltable="");
   void sinusoidBaseline(const std::vector<bool>& mask,
-			const bool applyFFT, 
-			const std::string& fftMethod, 
-			const std::string& fftThresh, 
+			const std::string& fftInfo, 
 			const std::vector<int>& addNWaves, 
 			const std::vector<int>& rejectNWaves, 
 			float thresClip, 
@@ -575,11 +580,10 @@ public:
 			bool getResidual=true,
 			const std::string& progressInfo="true,1000", 
 		        const bool outLogger=false,
-		        const std::string& blfile="");
+		        const std::string& blfile="",
+			const std::string& bltable="");
   void autoSinusoidBaseline(const std::vector<bool>& mask,
-			    const bool applyFFT, 
-			    const std::string& fftMethod, 
-			    const std::string& fftThresh, 
+			    const std::string& fftInfo, 
 			    const std::vector<int>& addNWaves, 
 			    const std::vector<int>& rejectNWaves, 
 		            float thresClip, 
@@ -590,7 +594,8 @@ public:
 			    bool getResidual=true,
 			    const std::string& progressInfo="true,1000", 
 		            const bool outLogger=false, 
-		            const std::string& blfile="");
+		            const std::string& blfile="",
+			    const std::string& bltable="");
   std::vector<float> execFFT(const int whichrow, 
 			     const std::vector<bool>& inMask,
 			     bool getRealImag=false,
@@ -627,6 +632,11 @@ public:
 					 const std::vector<int>& edge,
 					 float threshold,
 					 int chanAvgLimit);
+  static std::vector<bool> getMaskFromMaskList(const int nchan,
+					       const std::vector<int>& masklist);
+  static std::vector<int> splitToIntList(const std::string& str, const char delim);
+  static std::vector<string> splitToStringList(const std::string& str, const char delim);
+
 
 
 private:
@@ -742,42 +752,115 @@ private:
 						      const casa::Array<T2>&);
 
   void fitBaseline(const std::vector<bool>& mask, int whichrow, Fitter& fitter);
+  double getNormalPolynomial(int n, double x);
   double getChebyshevPolynomial(int n, double x);
+  std::vector<float> doPolynomialFitting(const std::vector<float>& data, 
+					 const std::vector<bool>& mask,
+					 int order,
+					 std::vector<float>& params,
+					 float& rms, 
+					 std::vector<bool>& finalMask, 
+					 float clipth, 
+					 int clipn);
+  std::vector<float> doPolynomialFitting(const std::vector<float>& data, 
+					 const std::vector<bool>& mask,
+					 int order,
+					 std::vector<float>& params,
+					 float& rms, 
+					 std::vector<bool>& finalMask, 
+					 int& nClipped,
+					 float thresClip=3.0, 
+					 int nIterClip=0,
+					 bool getResidual=true);
   std::vector<float> doChebyshevFitting(const std::vector<float>& data, 
-					  const std::vector<bool>& mask,
-					  int order,
-					  std::vector<float>& params,
-					  std::vector<bool>& finalMask, 
+					const std::vector<bool>& mask,
+					int order,
+					std::vector<float>& params,
+					float& rms, 
+					std::vector<bool>& finalMask, 
+					float clipth, 
+					int clipn);
+  std::vector<float> doChebyshevFitting(const std::vector<float>& data, 
+					const std::vector<bool>& mask,
+				        int order,
+				        std::vector<float>& params,
+				        float& rms, 
+				        std::vector<bool>& finalMask, 
+				        int& nClipped,
+				        float thresClip=3.0, 
+				        int nIterClip=0,
+				        bool getResidual=true);
+  std::vector<float> doLeastSquareFitting(const std::vector<float>& data, 
+					  const std::vector<bool>& mask, 
+					  double (Scantable::*pfunc)(int, double), 
+					  int order, 
+					  std::vector<float>& params, 
 					  float& rms, 
-					  int& nClipped,
+					  std::vector<bool>& finalMask, 
+					  int& nClipped, 
 					  float thresClip=3.0, 
-					  int nIterClip=1,
+					  int nIterClip=0, 
 					  bool getResidual=true);
+  std::vector<float> doCubicSplineFitting(const std::vector<float>& data, 
+					  const std::vector<bool>& mask,
+					  std::vector<int>& idxEdge,
+					  std::vector<float>& params,
+					  float& rms, 
+					  std::vector<bool>& finalMask, 
+					  float clipth, 
+					  int clipn);
   std::vector<float> doCubicSplineFitting(const std::vector<float>& data, 
 					  const std::vector<bool>& mask,
 					  int nPiece,
 					  std::vector<int>& idxEdge,
 					  std::vector<float>& params,
+					  float& rms, 
+					  std::vector<bool>& finalMask, 
+					  float clipth, 
+					  int clipn);
+  std::vector<float> doCubicSplineFitting(const std::vector<float>& data, 
+					  const std::vector<bool>& mask,
+					  int nPiece,
+					  bool useGivenPieceBoundary, 
+					  std::vector<int>& idxEdge,
+					  std::vector<float>& params,
+					  float& rms, 
+					  std::vector<bool>& finalMask, 
 					  int& nClipped,
 					  float thresClip=3.0, 
-					  int nIterClip=1,
+					  int nIterClip=0,
 					  bool getResidual=true);
   std::vector<float> doSinusoidFitting(const std::vector<float>& data, 
 				       const std::vector<bool>& mask,
 				       const std::vector<int>& waveNumbers,
 				       std::vector<float>& params,
+				       float& rms, 
+				       std::vector<bool>& finalMask, 
+				       float clipth, 
+				       int clipn);
+  std::vector<float> doSinusoidFitting(const std::vector<float>& data, 
+				       const std::vector<bool>& mask,
+				       const std::vector<int>& waveNumbers,
+				       std::vector<float>& params,
+				       float& rms, 
+				       std::vector<bool>& finalMask, 
 				       int& nClipped,
 				       float thresClip=3.0, 
-				       int nIterClip=1,
+				       int nIterClip=0,
 				       bool getResidual=true);
   void selectWaveNumbers(const int whichrow, 
 			 const std::vector<bool>& chanMask, 
-			 const bool applyFFT, 
-			 const std::string& fftMethod, 
-			 const std::string& fftThresh, 
+			 const std::string& fftInfo, 
+			 //const bool applyFFT, 
+			 //const std::string& fftMethod, 
+			 //const std::string& fftThresh, 
 			 const std::vector<int>& addNWaves, 
 			 const std::vector<int>& rejectNWaves, 
 			 std::vector<int>& nWaves);
+  void parseFFTInfo(const std::string& fftInfo, 
+		    bool& applyFFT, 
+		    std::string& fftMethod, 
+		    std::string& fftThresh);
   void parseThresholdExpression(const std::string& fftThresh,
 				std::string& fftThAttr,
 				float& fftThSigma,
@@ -820,9 +903,12 @@ private:
 					   const std::string& blfunc, 
 					   int order);
   double doGetRms(const std::vector<bool>& mask, const casa::Vector<casa::Float>& spec);
+  std::string packFittingResults(const int irow, const std::vector<float>& params, const float rms);
+  void parseBlInfo(const std::string& blInfo, int& whichrow, STBaselineFunc::FuncName& ftype, std::vector<int>& fpar, std::vector<bool>& mask, float& thresClip, int& nIterClip, bool& useLineFinder, float& thresLF, std::vector<int>& edgeLF, int& avgLF);
+ std::vector<float> doApplyBaselineTable(std::vector<float>& spec, std::vector<bool>& mask, const STBaselineFunc::FuncName ftype, std::vector<int>& fpar, std::vector<float>& params, float&rms);
+ std::vector<float> doSubtractBaseline(std::vector<float>& spec, std::vector<bool>& mask, const STBaselineFunc::FuncName ftype, std::vector<int>& fpar, std::vector<float>& params, float&rms, std::vector<bool>& finalmask, float clipth, int clipn, bool uself, int irow, float lfth, std::vector<int>& lfedge, int lfavg);
 
 };
-
 } // namespace
 
 #endif

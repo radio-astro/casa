@@ -22,6 +22,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Quanta/MVTime.h>
 #include <atnf/PKSIO/SrcType.h>
+#include <casa/Logging/LogIO.h>
 
 using namespace casa;
 
@@ -37,9 +38,22 @@ NROFiller::~NROFiller()
   close() ;
 }
 
-  bool NROFiller::open(const std::string& filename, const Record& rec) 
+bool NROFiller::open(const std::string& filename, const Record& rec) 
 {
   bool status = true ;
+
+  // Parse options
+  String freqref = "DEFAULT (REST)" ;
+  if ( rec.isDefined( "nro" ) ) {
+    Record nrorec = rec.asRecord( "nro" ) ;
+    if ( nrorec.isDefined( "freqref" ) ) {
+      freqref = nrorec.asString( "freqref" ) ;
+      freqref.upcase() ;
+    }
+    LogIO os( LogOrigin( "NROFiller", "open", WHERE ) ) ;
+    os << "Parsing NRO options" << endl ;
+    os << "   freqref = " << freqref << LogIO::POST ;
+  }
 
   // get appropriate reader object
   String format ;
@@ -48,6 +62,14 @@ NROFiller::~NROFiller()
     status = false ;
     return status ;
   }  
+
+  // Apply options
+  if ( freqref == "REST" ) {
+    reader_->setFreqRefFromVREF( false ) ;
+  }
+  else if ( freqref == "VREF" ) {
+    reader_->setFreqRefFromVREF( true ) ;
+  }
 
   // get header information
   STHeader hdr ;
@@ -72,9 +94,22 @@ NROFiller::~NROFiller()
     return status ;
   }
 
-  // 2010/07/30 TBD: Do we need to set frame here?
+  // FREQUENCIES table setup
   table_->frequencies().setFrame( hdr.freqref, true ) ;
   table_->frequencies().setFrame( hdr.freqref, false ) ;
+  const string vref = reader_->dataset().getVREF() ;
+  if ( vref.compare( 0, 3, "RAD" ) ) {
+    table_->frequencies().setDoppler( "RADIO" ) ;
+  }
+  else if ( vref.compare( 0, 3, "OPT" ) ) {
+    table_->frequencies().setDoppler( "OPTICAL" ) ;
+  }
+  else {
+    LogIO os( LogOrigin( "NROFiller", "open", WHERE ) ) ;
+    os << LogIO::WARN 
+       << "VREF " << vref << " is not supported. Use default (RADIO)." 
+       << LogIO::POST ; 
+  }
 
   // set Header
   setHeader( hdr ) ;

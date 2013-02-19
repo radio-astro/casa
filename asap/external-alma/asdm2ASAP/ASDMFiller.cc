@@ -25,7 +25,8 @@ ASDMFiller::ASDMFiller( CountedPtr<Scantable> stable )
   : FillerBase( stable ),
     antennaId_( -1 ),
     antennaName_( "" ),
-    className_("ASDMFiller")
+    className_("ASDMFiller"),
+    freqToLsr_(False)
 {
   reader_ = new ASDMReader() ;
 }
@@ -52,6 +53,14 @@ bool ASDMFiller::open( const string &filename, const Record &rec )
   antennaId_ = reader_->getAntennaId() ;
   antennaName_ = reader_->getAntennaName() ;
 
+  if (rec.isDefined("asdm")) {
+    Record asdmrec = rec.asRecord("asdm") ;
+    if (asdmrec.isDefined("freq_tolsr")) {
+      freqToLsr_ = asdmrec.asBool("freq_tolsr");
+    }
+  }
+  logsink_->postLocally(LogMessage("freqToLsr_ = "+String(freqToLsr_?"True":"False"), LogOrigin(className_, funcName, WHERE)));
+
   //logsink_->postLocally( LogMessage("antennaId_ = "+String::toString(antennaId_),LogOrigin(className_,funcName,WHERE)) ) ;
   //logsink_->postLocally( LogMessage("antennaName_ = "+antennaName_,LogOrigin(className_,funcName,WHERE)) ) ;
 
@@ -71,7 +80,13 @@ void ASDMFiller::fill()
   //MFrequency::Types freqFrame = toFrameType( sFreqFrame ) ;
   MFrequency::Types freqFrame = MFrequency::LSRK ;
   table_->frequencies().setFrame( freqFrame, false ) ;
-  table_->frequencies().setFrame( freqFrame, true ) ;
+  if ( freqToLsr_ ) {
+    table_->frequencies().setFrame( freqFrame, true ) ;
+  }
+  else {
+    string baseFrame = reader_->getFrame() ;
+    table_->frequencies().setFrame( baseFrame, true ) ;
+  }
   //logsink_->postLocally( LogMessage("sFreqFrame = "+sFreqFrame,LogOrigin(className_,funcName,WHERE)) ) ;
   
   Vector<casa::Double> antpos = table_->getHeader().antennaposition ;
@@ -614,7 +629,7 @@ casa::Double ASDMFiller::toLSRK( casa::Double freq,
 
   //logsink_->postLocally( LogMessage("freqref = "+freqref,LogOrigin(className_,funcName,WHERE)) ) ;
   casa::Double newf = freq ;
-  if ( freqref != "LSRK" ) {
+  if ( freqToLsr_ && freqref != "LSRK" ) {
     MEpoch me( Quantum<casa::Double>( utc, Unit("d") ), MEpoch::UTC ) ;
     Vector< Quantum<casa::Double> > antposQ( 3 ) ;
     for ( int i = 0 ; i < 3 ; i++ ) 

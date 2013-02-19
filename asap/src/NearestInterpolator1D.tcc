@@ -11,6 +11,9 @@
 //
 #include <assert.h>
 
+#include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
+
 #include "NearestInterpolator1D.h"
 
 using namespace casa;
@@ -28,7 +31,8 @@ NearestInterpolator1D<T, U>::~NearestInterpolator1D()
 
 template <class T, class U> U NearestInterpolator1D<T, U>::interpolate(T x)
 {
-  assert(this->isready());
+  //assert(this->isready());
+  casa::assert_<casa::AipsError>(this->isready(),"object is not ready to process.");
   if (this->n_ == 1)
     return this->y_[0];
 

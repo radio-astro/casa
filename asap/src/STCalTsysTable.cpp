@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ArrColDesc.h>
@@ -106,7 +107,8 @@ uInt STCalTsysTable::nchan(uInt ifno)
 
 Vector<Double> STCalTsysTable::getBaseFrequency(uInt whichrow)
 {
-  assert(whichrow < nrow());
+  //assert(whichrow < nrow());
+  assert_<AipsError>(whichrow < nrow(), "row index out of range.");
   uInt freqid = freqidCol_(whichrow);
   uInt nc = tsysCol_(whichrow).nelements();
   Block<Double> f = getFrequenciesRow(freqid);

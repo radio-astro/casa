@@ -42,6 +42,7 @@ public:
 
   void setScantable(ScantableWrapper &s);
   void setScantableByName(const std::string &s);
+  void addApplyTable(const std::string &c);
   void addSkyTable(const std::string &c);
   void addTsysTable(const std::string &c);
   void setMode(const std::string &mode);
@@ -50,15 +51,18 @@ public:
   void setTsysSpw(const std::vector<int> &spwlist);
   void setTsysTransfer(unsigned int from, 
                        const std::vector<unsigned int> &to);
+  void setCalibrationOptions(const casa::Record &options) {options_ = options;}
   void resetCalSetup();
   void reset();
   
   void calibrate();
-  void apply();
+  void apply(bool insitu=false, bool filltsys=true);
   void saveCaltable(const std::string &name);
   void split(const std::string &name);
 private:
   STCalEnum::InterpolationType stringToInterpolationEnum(const std::string &s);
+
+  casa::Bool isAlmaAntenna();
 
   casa::CountedPtr<STApplyCal> applicator_;
 
@@ -71,6 +75,8 @@ private:
   std::vector<int> spwlist_;
 
   casa::LogIO os_;
+
+  casa::Record options_;
 };
 
 }

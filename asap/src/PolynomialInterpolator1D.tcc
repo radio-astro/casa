@@ -15,6 +15,7 @@
 using namespace std;
 
 #include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
 
 #include "PolynomialInterpolator1D.h"
 
@@ -32,7 +33,8 @@ PolynomialInterpolator1D<T, U>::~PolynomialInterpolator1D()
 template <class T, class U>
 U PolynomialInterpolator1D<T, U>::interpolate(T x)
 {
-  assert(this->isready());
+  //casa::AlwaysAssert((this->isready()),(casa::AipsError));
+  casa::assert_<casa::AipsError>(this->isready(), "object is not ready to process.");
   if (this->n_ == 1)
     return this->y_[0];
 

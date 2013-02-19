@@ -145,7 +145,7 @@ class NROFITSDataset : public NRODataset
   void findData() ;
 
   // get offset bytes for attributes
-  int getOffset( char *name ) ;
+  long getOffset( char *name ) ;
 
   // move pointer to target position
   int movePointer( char *name, int idx=0 ) ;
@@ -166,13 +166,16 @@ class NROFITSDataset : public NRODataset
   vector<int> arrayid_ ;
 
   // field names
-  vector<string> forms_ ;
-  
-  // field types
   vector<string> names_ ;
 
   // field units
   vector<string> units_ ;
+
+  // sizes of each field
+  vector<int> sizes_ ;  
+
+  // offsets from the beginning of the file
+  vector<long> offsets_ ;
 
   // spectral data
   vector<int> JDATA ;

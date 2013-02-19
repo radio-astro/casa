@@ -144,6 +144,8 @@ void python_Scantable() {
 	  boost::python::arg("nmax")=-1) )
     .def("_regrid_specchan", &ScantableWrapper::regridSpecChannel, 
 	 (boost::python::arg("nchan")=-1) )
+    .def("_apply_bltable", &ScantableWrapper::applyBaselineTable)
+    .def("_sub_baseline", &ScantableWrapper::subBaseline)
     .def("_poly_baseline", &ScantableWrapper::polyBaseline)
     .def("_auto_poly_baseline", &ScantableWrapper::autoPolyBaseline)
     .def("_chebyshev_baseline", &ScantableWrapper::chebyshevBaseline)

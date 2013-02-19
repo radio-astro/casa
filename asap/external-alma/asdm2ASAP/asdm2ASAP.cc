@@ -48,6 +48,7 @@ int main( int argc, char *argv[] )
   inp.create( "time-sampling", "all", "time sampling mode: all|integration|subintegration", "String" ) ;
   inp.create( "srt", "all", "spectral resolution mode: all|fr(full resolution)|ca(channel average)|bw(baseband wide)|fr+ca|fr+bw|ca+bw", "String" ) ;
   inp.create( "logfile", "", "logger output", "String" ) ;
+  inp.create( "freq-tolsr", "False", "Convert frequency frame to LSRK or not: True|False", "Bool" ) ; 
   inp.readArguments( argc, argv ) ;
 
   string asdmname = inp.getString( "asdm" ) ;
@@ -59,6 +60,7 @@ int main( int argc, char *argv[] )
   string timeSampling = inp.getString( "time-sampling" ) ;
   string resolutionType = inp.getString( "srt" ) ;
   string logfile = inp.getString( "logfile" ) ;
+  Bool freqToLsr = inp.getBool( "freq-tolsr" ) ;
     
   int numApc = 1 ;
   Vector<Bool> apcCorrected ;
@@ -111,6 +113,7 @@ int main( int argc, char *argv[] )
     asdmRec.define( "corr", corrMode ) ;
     asdmRec.define( "sampling", timeSampling ) ;
     asdmRec.define( "srt", resolutionType ) ;
+    asdmRec.define( "freq_tolsr", freqToLsr ) ;
     if ( reg.match( antenna.c_str(), antenna.size() ) != String::npos ) {
       // antenna is specifiec as id
       int aid = atoi( antenna.c_str() ) ;

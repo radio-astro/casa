@@ -2489,128 +2489,407 @@ bool Scantable::getFlagtraFast(uInt whichrow)
   return ((flag >> 7) == 1);
 }
 
-void Scantable::polyBaseline(const std::vector<bool>& mask, int order, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
+std::vector<std::string> Scantable::applyBaselineTable(const std::string& bltable, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
 {
-  try {
-    ofstream ofs;
-    String coordInfo = "";
-    bool hasSameNchan = true;
-    bool outTextFile = false;
-    bool csvFormat = false;
+  STBaselineTable* btin = new STBaselineTable(bltable);
 
-    if (blfile != "") {
-      csvFormat = (blfile.substr(0, 1) == "T");
-      ofs.open(blfile.substr(1).c_str(), ios::out | ios::app);
-      if (ofs) outTextFile = true;
-    }
-
-    if (outLogger || outTextFile) {
-      coordInfo = getCoordInfo()[0];
-      if (coordInfo == "") coordInfo = "channel";
-      hasSameNchan = hasSameNchanOverIFs();
-    }
-
-    Fitter fitter = Fitter();
-    fitter.setExpression("poly", order);
-    //fitter.setIterClipping(thresClip, nIterClip);
-
-    int nRow = nrow();
-    std::vector<bool> chanMask;
-    bool showProgress;
-    int minNRow;
-    parseProgressInfo(progressInfo, showProgress, minNRow);
-
-    for (int whichrow = 0; whichrow < nRow; ++whichrow) {
-      chanMask = getCompositeChanMask(whichrow, mask);
-      fitBaseline(chanMask, whichrow, fitter);
-      setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
-      outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "polyBaseline()", fitter);
-      showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
-    }
-
-    if (outTextFile) ofs.close();
-
-  } catch (...) {
-    throw;
+  Vector<Bool> applyCol = btin->getApply();
+  int nRowBl = applyCol.size();
+  if (nRowBl != nrow()) {
+    throw(AipsError("Scantable and bltable have different number of rows."));
   }
-}
 
-void Scantable::autoPolyBaseline(const std::vector<bool>& mask, int order, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
-{
-  try {
-    ofstream ofs;
-    String coordInfo = "";
-    bool hasSameNchan = true;
-    bool outTextFile = false;
-    bool csvFormat = false;
+  std::vector<std::string> res;
+  res.clear();
 
-    if (blfile != "") {
-      csvFormat = (blfile.substr(0, 1) == "T");
-      ofs.open(blfile.substr(1).c_str(), ios::out | ios::app);
-      if (ofs) outTextFile = true;
-    }
+  bool outBaselineTable = ((outbltable != "") && (!outbltableexists || overwrite));
+  bool bltableidentical = (bltable == outbltable);
+  STBaselineTable* btout = new STBaselineTable(*this);
+  ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+  Vector<Double> timeSecCol = tcol->getColumn();
 
-    if (outLogger || outTextFile) {
-      coordInfo = getCoordInfo()[0];
-      if (coordInfo == "") coordInfo = "channel";
-      hasSameNchan = hasSameNchanOverIFs();
-    }
+  for (int whichrow = 0; whichrow < nRowBl; ++whichrow) {
+    if (applyCol[whichrow]) {
+      std::vector<float> spec = getSpectrum(whichrow);
 
-    Fitter fitter = Fitter();
-    fitter.setExpression("poly", order);
-    //fitter.setIterClipping(thresClip, nIterClip);
+      //--channel mask--  maybe the following choices should be available
+      std::vector<bool> mask = btin->getMask(whichrow);  //use mask_bltable only (default)
+      //std::vector<bool> mask = getMask(whichrow);    // or mask_scantable only
+      //std::vector<bool> mask = getCompositeChanMask(whichrow, btin->getMask(whichrow)); // or mask_scantable && mask_bltable
 
-    int nRow = nrow();
-    std::vector<bool> chanMask;
-    int minEdgeSize = getIFNos().size()*2;
-    STLineFinder lineFinder = STLineFinder();
-    lineFinder.setOptions(threshold, 3, chanAvgLimit);
+      STBaselineFunc::FuncName ftype = btin->getFunctionName(whichrow);
+      std::vector<int> fpar = btin->getFuncParam(whichrow);
+      std::vector<float> params;
+      float rms;
+      std::vector<float> resfit = doApplyBaselineTable(spec, mask, ftype, fpar, params, rms);
 
-    bool showProgress;
-    int minNRow;
-    parseProgressInfo(progressInfo, showProgress, minNRow);
+      setSpectrum(resfit, whichrow);
 
-    for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+      res.push_back(packFittingResults(whichrow, params, rms));
 
-      //-------------------------------------------------------
-      //chanMask = getCompositeChanMask(whichrow, mask, edge, minEdgeSize, lineFinder);
-      //-------------------------------------------------------
-      int edgeSize = edge.size();
-      std::vector<int> currentEdge;
-      if (edgeSize >= 2) {
-	int idx = 0;
-	if (edgeSize > 2) {
-	  if (edgeSize < minEdgeSize) {
-	    throw(AipsError("Length of edge element info is less than that of IFs"));
-	  }
-	  idx = 2 * getIF(whichrow);
+      if (outBaselineTable) {
+	Vector<Int> fparam(fpar.size());
+	for (uInt j = 0; j < fparam.size(); ++j) {
+	  fparam[j] = (Int)fpar[j];
 	}
-	currentEdge.push_back(edge[idx]);
-	currentEdge.push_back(edge[idx+1]);
-      } else {
-	throw(AipsError("Wrong length of edge element"));
+	std::vector<int> maskList0;
+	maskList0.clear();
+	for (uInt j = 0; j < mask.size(); ++j) {
+	  if (mask[j]) {
+	    if ((j == 0)||(j == mask.size()-1)) {
+	      maskList0.push_back(j);
+	    } else {
+	      if ((mask[j])&&(!mask[j-1])) {
+		maskList0.push_back(j);
+	      }
+	      if ((mask[j])&&(!mask[j+1])) {
+		maskList0.push_back(j);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> maskList(maskList0.size());
+	for (uInt j = 0; j < maskList0.size(); ++j) {
+	  maskList[j] = (uInt)maskList0[j];
+	}
+
+	if (outbltableexists) {
+	  if (overwrite) {
+	    if (bltableidentical) {
+	      btin->setresult(uInt(whichrow), Vector<Float>(params), Float(rms));
+	    } else {
+	      btout->setresult(uInt(whichrow), Vector<Float>(params), Float(rms));
+	    }
+	  }
+	} else {
+	  btout->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), 
+			    uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+			    uInt(0), timeSecCol[whichrow], Bool(true), ftype, fparam, 
+			    Vector<Float>(), maskList, Vector<Float>(params), 
+			    Float(rms), uInt(spec.size()), Float(3.0), uInt(0), 
+			    Float(0.0), uInt(0), Vector<uInt>());
+	}
       }
-      lineFinder.setData(getSpectrum(whichrow));
-      lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
-      chanMask = lineFinder.getMask();
-      //-------------------------------------------------------
-
-      fitBaseline(chanMask, whichrow, fitter);
-      setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
-
-      outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "autoPolyBaseline()", fitter);
-      showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
     }
-
-    if (outTextFile) ofs.close();
-
-  } catch (...) {
-    throw;
   }
+
+  if (outBaselineTable) {
+    if (bltableidentical) {
+      btin->save(outbltable);
+    } else {
+      btout->save(outbltable);
+    }
+  }
+  delete btin;
+  delete btout;
+
+  return res;
 }
 
-void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, float thresClip, int nIterClip, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
+std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& blInfoList, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
 {
+  int nRowBl = blInfoList.size();
+  int nRowSt = nrow();
+
+  std::vector<std::string> res;
+  res.clear();
+
+  bool outBaselineTable = ((outbltable != "") && (!outbltableexists || overwrite));
+  if ((outbltable != "") && outbltableexists && !overwrite) {
+    throw(AipsError("Cannot overwrite bltable. Set overwrite=True."));
+  }
+
+  STBaselineTable* bt = new STBaselineTable(*this);
+  ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+  Vector<Double> timeSecCol = tcol->getColumn();
+
+  if (outBaselineTable && !outbltableexists) {
+    for (int i = 0; i < nRowSt; ++i) {
+      bt->appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
+			 0, timeSecCol[i]);
+      bt->setApply(i, false);
+    }
+  }
+
+  for (int i = 0; i < nRowBl; ++i) {
+    int irow;
+    STBaselineFunc::FuncName ftype;
+    std::vector<bool> mask;
+    std::vector<int> fpar;
+    float clipth;
+    int clipn;
+    bool uself;
+    float lfth;
+    std::vector<int> lfedge;
+    int lfavg;
+    parseBlInfo(blInfoList[i], irow, ftype, fpar, mask, clipth, clipn, uself, lfth, lfedge, lfavg);
+
+    if (irow < nRowSt) {
+      std::vector<float> spec = getSpectrum(irow);
+      std::vector<float> params;
+      float rms;
+      std::vector<bool> finalmask;
+
+      std::vector<float> resfit = doSubtractBaseline(spec, mask, ftype, fpar, params, rms, finalmask, clipth, clipn, uself, irow, lfth, lfedge, lfavg);
+      setSpectrum(resfit, irow);
+      res.push_back(packFittingResults(irow, params, rms));
+
+      if (outBaselineTable) {
+	Vector<Int> fparam(fpar.size());
+	for (uInt j = 0; j < fparam.size(); ++j) {
+	  fparam[j] = (Int)fpar[j];
+	}
+	std::vector<int> maskList0;
+	maskList0.clear();
+	for (uInt j = 0; j < finalmask.size(); ++j) {
+	  if (finalmask[j]) {
+	    if ((j == 0)||(j == finalmask.size()-1)) {
+	      maskList0.push_back(j);
+	    } else {
+	      if ((finalmask[j])&&(!finalmask[j-1])) {
+		maskList0.push_back(j);
+	      }
+	      if ((finalmask[j])&&(!finalmask[j+1])) {
+		maskList0.push_back(j);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> maskList(maskList0.size());
+	for (uInt j = 0; j < maskList0.size(); ++j) {
+	  maskList[j] = (uInt)maskList0[j];
+	}
+
+	bt->setdata(uInt(irow), 
+		    uInt(getScan(irow)), uInt(getCycle(irow)), 
+		    uInt(getBeam(irow)), uInt(getIF(irow)), uInt(getPol(irow)), 
+		    uInt(0), timeSecCol[irow], Bool(true), ftype, fparam, 
+	            Vector<Float>(), maskList, Vector<Float>(params), 
+	            Float(rms), uInt(spec.size()), Float(clipth), uInt(clipn), 
+	            Float(0.0), uInt(0), Vector<uInt>());
+      }
+
+    }
+  }
+
+  if (outBaselineTable) {
+    bt->save(outbltable);
+  }
+  delete bt;
+
+  return res;
+}
+
+std::vector<float> Scantable::doApplyBaselineTable(std::vector<float>& spec, std::vector<bool>& mask, const STBaselineFunc::FuncName ftype, std::vector<int>& fpar, std::vector<float>& params, float&rms)
+{
+  std::vector<bool> finalmask;
+  std::vector<int> lfedge;
+  return doSubtractBaseline(spec, mask, ftype, fpar, params, rms, finalmask, 0.0, 0, false, 0, 0.0, lfedge, 0);
+}
+
+  std::vector<float> Scantable::doSubtractBaseline(std::vector<float>& spec, std::vector<bool>& mask, const STBaselineFunc::FuncName ftype, std::vector<int>& fpar, std::vector<float>& params, float&rms, std::vector<bool>& finalmask, float clipth, int clipn, bool uself, int irow, float lfth, std::vector<int>& lfedge, int lfavg)
+{
+  //---replace mask with (mask AND mask_linefinder).
+  if (uself) {
+    STLineFinder lineFinder = STLineFinder();
+    lineFinder.setOptions(lfth, 3, lfavg);
+
+    int minEdgeSize = getIFNos().size()*2;
+    int edgeSize = lfedge.size();
+    std::vector<int> currentEdge;
+    currentEdge.clear();
+    if (edgeSize >= 2) {
+      int idx = 0;
+      if (edgeSize > 2) {
+	if (edgeSize < minEdgeSize) {
+	  throw(AipsError("Length of edge element info is less than that of IFs"));
+	}
+	idx = 2 * getIF(irow);
+      }
+      currentEdge.push_back(lfedge[idx]);
+      currentEdge.push_back(lfedge[idx+1]);
+    } else {
+      throw(AipsError("Wrong length of edge element"));
+    }
+    lineFinder.setData(spec);
+    lineFinder.findLines(getCompositeChanMask(irow, mask), currentEdge, irow);
+
+    std::vector<bool> lfcompmask = lineFinder.getMask();
+    mask.clear();
+    mask.resize(lfcompmask.size());
+    for (uInt i = 0; i < mask.size(); ++i) {
+      mask[i] = lfcompmask[i];
+    }
+  }
+  //---
+
+  std::vector<float> res;
+  if (ftype == STBaselineFunc::Polynomial) {
+    res = doPolynomialFitting(spec, mask, fpar[0], params, rms, finalmask, clipth, clipn);
+  } else if (ftype == STBaselineFunc::Chebyshev) {
+    res = doChebyshevFitting(spec, mask, fpar[0], params, rms, finalmask, clipth, clipn);
+  } else if (ftype == STBaselineFunc::CSpline) {
+    if (fpar.size() > 1) { // reading from baseline table in which pieceEdges are already calculated and stored.
+      res = doCubicSplineFitting(spec, mask, fpar, params, rms, finalmask, clipth, clipn);
+    } else {               // usual cspline fitting by giving nPiece only. fpar will be replaced with pieceEdges. 
+      res = doCubicSplineFitting(spec, mask, fpar[0], fpar, params, rms, finalmask, clipth, clipn);
+    }
+  } else if (ftype == STBaselineFunc::Sinusoid) {
+    res = doSinusoidFitting(spec, mask, fpar, params, rms, finalmask, clipth, clipn);
+  }
+
+  return res;
+}
+
+std::string Scantable::packFittingResults(const int irow, const std::vector<float>& params, const float rms)
+{
+  // returned value: "irow:params[0],params[1],..,params[n-1]:rms"
+  ostringstream os;
+  os << irow << ':';
+  for (uInt i = 0; i < params.size(); ++i) {
+    if (i > 0) {
+      os << ',';
+    }
+    os << params[i];
+  }
+  os << ':' << rms;
+
+  return os.str();
+}
+
+void Scantable::parseBlInfo(const std::string& blInfo, int& irow, STBaselineFunc::FuncName& ftype, std::vector<int>& fpar, std::vector<bool>& mask, float& thresClip, int& nIterClip, bool& useLineFinder, float& thresLF, std::vector<int>& edgeLF, int& avgLF)
+{
+  // The baseline info to be parsed must be column-delimited string like 
+  // "0:chebyshev:5:3,5,169,174,485,487" where the elements are 
+  // row number, funcType, funcOrder, maskList, clipThreshold, clipNIter, 
+  // useLineFinder, lfThreshold, lfEdge and lfChanAvgLimit.
+
+  std::vector<string> res = splitToStringList(blInfo, ':');
+  if (res.size() < 4) {
+    throw(AipsError("baseline info has bad format")) ;
+  }
+
+  string ftype0, fpar0, masklist0, uself0, edge0;
+  std::vector<int> masklist;
+
+  stringstream ss;
+  ss << res[0];
+  ss >> irow;
+  ss.clear(); ss.str("");
+
+  ss << res[1];
+  ss >> ftype0;
+  if (ftype0 == "poly") {
+    ftype = STBaselineFunc::Polynomial;
+  } else if (ftype0 == "cspline") {
+    ftype = STBaselineFunc::CSpline;
+  } else if (ftype0 == "sinusoid") {
+    ftype = STBaselineFunc::Sinusoid;
+  } else if (ftype0 == "chebyshev") {
+    ftype = STBaselineFunc::Chebyshev;
+  } else {
+    throw(AipsError("invalid function type."));
+  }
+  ss.clear(); ss.str("");
+
+  ss << res[2];
+  ss >> fpar0;
+  fpar = splitToIntList(fpar0, ',');
+  ss.clear(); ss.str("");
+
+  ss << res[3];
+  ss >> masklist0;
+  mask = getMaskFromMaskList(nchan(getIF(irow)), splitToIntList(masklist0, ','));
+
+  ss << res[4];
+  ss >> thresClip;
+  ss.clear(); ss.str("");
+
+  ss << res[5];
+  ss >> nIterClip;
+  ss.clear(); ss.str("");
+
+  ss << res[6];
+  ss >> uself0;
+  if (uself0 == "true") {
+    useLineFinder = true;
+  } else {
+    useLineFinder = false;
+  }
+  ss.clear(); ss.str("");
+
+  if (useLineFinder) {
+    ss << res[7];
+    ss >> thresLF;
+    ss.clear(); ss.str("");
+
+    ss << res[8];
+    ss >> edge0;
+    edgeLF = splitToIntList(edge0, ',');
+    ss.clear(); ss.str("");
+
+    ss << res[9];
+    ss >> avgLF;
+    ss.clear(); ss.str("");
+  }
+
+}
+
+std::vector<int> Scantable::splitToIntList(const std::string& s, const char delim)
+{
+  istringstream iss(s);
+  string tmp;
+  int tmpi;
+  std::vector<int> res;
+  stringstream ss;
+  while (getline(iss, tmp, delim)) {
+    ss << tmp;
+    ss >> tmpi;
+    res.push_back(tmpi);
+    ss.clear(); ss.str("");
+  }
+
+  return res;
+}
+
+std::vector<string> Scantable::splitToStringList(const std::string& s, const char delim)
+{
+  istringstream iss(s);
+  std::string tmp;
+  std::vector<string> res;
+  while (getline(iss, tmp, delim)) {
+    res.push_back(tmp);
+  }
+
+  return res;
+}
+
+std::vector<bool> Scantable::getMaskFromMaskList(const int nchan, const std::vector<int>& masklist)
+{
+  if (masklist.size() % 2 != 0) {
+    throw(AipsError("masklist must have even number of elements."));
+  }
+
+  std::vector<bool> res(nchan);
+
+  for (int i = 0; i < nchan; ++i) {
+    res[i] = false;
+  }
+  for (uInt j = 0; j < masklist.size(); j += 2) {
+    for (int i = masklist[j]; i <= masklist[j+1]; ++i) {
+      res[i] = true;
+    }
+  }
+
+  return res;
+}
+
+void Scantable::polyBaseline(const std::vector<bool>& mask, int order, float thresClip, int nIterClip, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
+{
+  /****
+  double TimeStart = mathutil::gettimeofday_sec();
+  ****/
+
   try {
     ofstream ofs;
     String coordInfo = "";
@@ -2640,8 +2919,10 @@ void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, floa
     float rms;
 
     //---
-    bool outBaselineParamTable = false;
+    bool outBaselintTable = (bltable != "");
     STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
     //---
 
     for (int whichrow = 0; whichrow < nRow; ++whichrow) {
@@ -2649,22 +2930,49 @@ void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, floa
       chanMask = getCompositeChanMask(whichrow, mask);
       std::vector<float> params(order+1);
       int nClipped = 0;
-      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, finalChanMask, rms, nClipped, thresClip, nIterClip, getResidual);
+      std::vector<float> res = doPolynomialFitting(sp, chanMask, order, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
 
       //---
-      if (outBaselineParamTable) {
+      if (outBaselintTable) {
+	Vector<Int> fparam(1);
+	fparam[0] = order;
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
+
 	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
 		       uInt(0), 
-		       Double(0.0), // <-- Double(getTime(whichrow, false)), 
-		       uInt(nchan(whichrow)), 
-		       STBaselineFunc::Chebyshev, 
-		       Vector<uInt>(1), // ==> MUST BE Vector<uInt> containing 'order'.
-		       Vector<Float>(), // ==> for ffpar. ** dummy **
-		       uInt(nIterClip), 
-		       Float(thresClip), 
-		       Vector<uInt>(5), // <-- Vector<uInt>(finalChanMask), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::Polynomial, 
+		       fparam, 
+		       Vector<Float>(),
+		       finalMaskList, 
 		       Vector<Float>(params), 
-		       Float(rms));
+		       Float(rms), 
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(0.0),
+		       uInt(0),
+		       Vector<uInt>());
       } else {
 	setSpectrum(res, whichrow);
       }
@@ -2675,8 +2983,402 @@ void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, floa
     }
     
     //---
-    if (outBaselineParamTable) {
-      bt->save("chebyparamtable");
+    if (outBaselintTable) {
+      bt->save(bltable);
+    }
+    //---
+    delete bt;
+
+    if (outTextFile) ofs.close();
+
+  } catch (...) {
+    throw;
+  }
+
+  /****
+  double TimeEnd = mathutil::gettimeofday_sec();
+  double elapse1 = TimeEnd - TimeStart;
+  std::cout << "poly-new   : " << elapse1 << " (sec.)" << endl;
+  ****/
+}
+
+void Scantable::autoPolyBaseline(const std::vector<bool>& mask, int order, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
+{
+  try {
+    ofstream ofs;
+    String coordInfo = "";
+    bool hasSameNchan = true;
+    bool outTextFile = false;
+    bool csvFormat = false;
+
+    if (blfile != "") {
+      csvFormat = (blfile.substr(0, 1) == "T");
+      ofs.open(blfile.substr(1).c_str(), ios::out | ios::app);
+      if (ofs) outTextFile = true;
+    }
+
+    if (outLogger || outTextFile) {
+      coordInfo = getCoordInfo()[0];
+      if (coordInfo == "") coordInfo = "channel";
+      hasSameNchan = hasSameNchanOverIFs();
+    }
+
+    bool showProgress;
+    int minNRow;
+    parseProgressInfo(progressInfo, showProgress, minNRow);
+
+    int minEdgeSize = getIFNos().size()*2;
+    STLineFinder lineFinder = STLineFinder();
+    lineFinder.setOptions(threshold, 3, chanAvgLimit);
+
+    int nRow = nrow();
+    std::vector<bool> chanMask;
+    std::vector<bool> finalChanMask;
+    float rms;
+
+    //---
+    bool outBaselintTable = (bltable != "");
+    STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
+    //---
+
+    for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+      std::vector<float> sp = getSpectrum(whichrow);
+      //-- composote given channel mask and flagtra --------
+      int edgeSize = edge.size();
+      std::vector<int> currentEdge;
+      currentEdge.clear();
+      if (edgeSize >= 2) {
+	int idx = 0;
+	if (edgeSize > 2) {
+	  if (edgeSize < minEdgeSize) {
+	    throw(AipsError("Length of edge element info is less than that of IFs"));
+	  }
+	  idx = 2 * getIF(whichrow);
+	}
+	currentEdge.push_back(edge[idx]);
+	currentEdge.push_back(edge[idx+1]);
+      } else {
+	throw(AipsError("Wrong length of edge element"));
+      }
+      lineFinder.setData(sp);
+      lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
+      chanMask = lineFinder.getMask();
+      //-- composote given channel mask and flagtra END --------
+
+      std::vector<float> params(order+1);
+      int nClipped = 0;
+      std::vector<float> res = doPolynomialFitting(sp, chanMask, order, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
+
+      if (outBaselintTable) {
+	Vector<Int> fparam(1);
+	fparam[0] = order;
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
+
+	Vector<uInt> cEdge(currentEdge.size());
+	for (uInt i = 0; i < currentEdge.size(); ++i) {
+	  cEdge[i] = currentEdge[i];
+	}
+
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::Polynomial, 
+		       fparam, 
+		       Vector<Float>(), 
+		       finalMaskList, 
+		       Vector<Float>(params), 
+		       Float(rms),
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(threshold),
+		       uInt(chanAvgLimit),
+		       cEdge);
+      } else {
+	setSpectrum(res, whichrow);
+      }
+
+      outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "autoChebyshevBaseline()", params, nClipped);
+      showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
+    }
+
+    //---
+    if (outBaselintTable) {
+      bt->save(bltable);
+    }
+    //---
+    delete bt;
+
+    if (outTextFile) ofs.close();
+
+  } catch (...) {
+    throw;
+  }
+}
+
+void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, float thresClip, int nIterClip, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
+{
+  //
+  double TimeStart = mathutil::gettimeofday_sec();
+  //
+
+  try {
+    ofstream ofs;
+    String coordInfo = "";
+    bool hasSameNchan = true;
+    bool outTextFile = false;
+    bool csvFormat = false;
+
+    if (blfile != "") {
+      csvFormat = (blfile.substr(0, 1) == "T");
+      ofs.open(blfile.substr(1).c_str(), ios::out | ios::app);
+      if (ofs) outTextFile = true;
+    }
+
+    if (outLogger || outTextFile) {
+      coordInfo = getCoordInfo()[0];
+      if (coordInfo == "") coordInfo = "channel";
+      hasSameNchan = hasSameNchanOverIFs();
+    }
+
+    bool showProgress;
+    int minNRow;
+    parseProgressInfo(progressInfo, showProgress, minNRow);
+
+    int nRow = nrow();
+    std::vector<bool> chanMask;
+    std::vector<bool> finalChanMask;
+    float rms;
+
+    //---
+    bool outBaselintTable = (bltable != "");
+    STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
+    //---
+
+    for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+      std::vector<float> sp = getSpectrum(whichrow);
+      chanMask = getCompositeChanMask(whichrow, mask);
+      std::vector<float> params(order+1);
+      int nClipped = 0;
+      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
+
+      //---
+      if (outBaselintTable) {
+	Vector<Int> fparam(1);
+	fparam[0] = order;
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
+
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::Chebyshev, 
+		       fparam, 
+		       Vector<Float>(),
+		       finalMaskList, 
+		       Vector<Float>(params), 
+		       Float(rms), 
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(0.0),
+		       uInt(0),
+		       Vector<uInt>());
+      } else {
+	setSpectrum(res, whichrow);
+      }
+      //---
+
+      outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "chebyshevBaseline()", params, nClipped);
+      showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
+    }
+    
+    //---
+    if (outBaselintTable) {
+      bt->save(bltable);
+    }
+    //---
+    delete bt;
+
+    if (outTextFile) ofs.close();
+
+  } catch (...) {
+    throw;
+  }
+
+  double TimeEnd = mathutil::gettimeofday_sec();
+  double elapse1 = TimeEnd - TimeStart;
+  std::cout << "cheby   : " << elapse1 << " (sec.)" << endl;
+}
+
+void Scantable::autoChebyshevBaseline(const std::vector<bool>& mask, int order, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
+{
+  try {
+    ofstream ofs;
+    String coordInfo = "";
+    bool hasSameNchan = true;
+    bool outTextFile = false;
+    bool csvFormat = false;
+
+    if (blfile != "") {
+      csvFormat = (blfile.substr(0, 1) == "T");
+      ofs.open(blfile.substr(1).c_str(), ios::out | ios::app);
+      if (ofs) outTextFile = true;
+    }
+
+    if (outLogger || outTextFile) {
+      coordInfo = getCoordInfo()[0];
+      if (coordInfo == "") coordInfo = "channel";
+      hasSameNchan = hasSameNchanOverIFs();
+    }
+
+    bool showProgress;
+    int minNRow;
+    parseProgressInfo(progressInfo, showProgress, minNRow);
+
+    int minEdgeSize = getIFNos().size()*2;
+    STLineFinder lineFinder = STLineFinder();
+    lineFinder.setOptions(threshold, 3, chanAvgLimit);
+
+    int nRow = nrow();
+    std::vector<bool> chanMask;
+    std::vector<bool> finalChanMask;
+    float rms;
+
+    //---
+    bool outBaselintTable = (bltable != "");
+    STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
+    //---
+
+    for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+      std::vector<float> sp = getSpectrum(whichrow);
+      //-- composote given channel mask and flagtra --------
+      int edgeSize = edge.size();
+      std::vector<int> currentEdge;
+      currentEdge.clear();
+      if (edgeSize >= 2) {
+	int idx = 0;
+	if (edgeSize > 2) {
+	  if (edgeSize < minEdgeSize) {
+	    throw(AipsError("Length of edge element info is less than that of IFs"));
+	  }
+	  idx = 2 * getIF(whichrow);
+	}
+	currentEdge.push_back(edge[idx]);
+	currentEdge.push_back(edge[idx+1]);
+      } else {
+	throw(AipsError("Wrong length of edge element"));
+      }
+      lineFinder.setData(sp);
+      lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
+      chanMask = lineFinder.getMask();
+      //-- composote given channel mask and flagtra END --------
+
+      std::vector<float> params(order+1);
+      int nClipped = 0;
+      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
+
+      if (outBaselintTable) {
+	Vector<Int> fparam(1);
+	fparam[0] = order;
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
+
+	Vector<uInt> cEdge(currentEdge.size());
+	for (uInt i = 0; i < currentEdge.size(); ++i) {
+	  cEdge[i] = currentEdge[i];
+	}
+
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::Chebyshev, 
+		       fparam, 
+		       Vector<Float>(), 
+		       finalMaskList, 
+		       Vector<Float>(params), 
+		       Float(rms),
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(threshold),
+		       uInt(chanAvgLimit),
+		       cEdge);
+      } else {
+	setSpectrum(res, whichrow);
+      }
+
+      outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "autoChebyshevBaseline()", params, nClipped);
+      showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
+    }
+
+    //---
+    if (outBaselintTable) {
+      bt->save(bltable);
     }
     //---
     delete bt;
@@ -2690,12 +3392,16 @@ void Scantable::chebyshevBaseline(const std::vector<bool>& mask, int order, floa
 
 double Scantable::calculateModelSelectionCriteria(const std::string& valname, const std::string& blfunc, int order, const std::vector<bool>& inMask, int whichrow, bool useLineFinder, const std::vector<int>& edge, float threshold, int chanAvgLimit)
 {
+  std::vector<float> sp = getSpectrum(whichrow);
+  std::vector<bool> chanMask;
+  chanMask.clear();
+
   if (useLineFinder) {
     int minEdgeSize = getIFNos().size()*2;
 
-
     int edgeSize = edge.size();
     std::vector<int> currentEdge;
+    currentEdge.clear();
     if (edgeSize >= 2) {
       int idx = 0;
       if (edgeSize > 2) {
@@ -2711,18 +3417,17 @@ double Scantable::calculateModelSelectionCriteria(const std::string& valname, co
     }
 
     STLineFinder lineFinder = STLineFinder();
-    std::vector<float> sp = getSpectrum(whichrow);
     lineFinder.setData(sp);
     lineFinder.setOptions(threshold, 3, chanAvgLimit);
     lineFinder.findLines(getCompositeChanMask(whichrow, inMask), currentEdge, whichrow);
-    std::vector<bool> chanMask = lineFinder.getMask();
-    
-    return doCalculateModelSelectionCriteria(valname, sp, chanMask, blfunc, order);
+    chanMask = lineFinder.getMask();
 
   } else {
-    return doCalculateModelSelectionCriteria(valname, getSpectrum(whichrow), getCompositeChanMask(whichrow, inMask), blfunc, order);
+
+    chanMask = getCompositeChanMask(whichrow, inMask);
   }
 
+  return doCalculateModelSelectionCriteria(valname, sp, chanMask, blfunc, order);
 }
 
 double Scantable::doCalculateModelSelectionCriteria(const std::string& valname, const std::vector<float>& spec, const std::vector<bool>& mask, const std::string& blfunc, int order)
@@ -2732,12 +3437,18 @@ double Scantable::doCalculateModelSelectionCriteria(const std::string& valname, 
   std::vector<bool> finalChanMask;
   float rms;
   int nClipped = 0;
-  float thresClip = 0.0;
-  int nIterClip = 0;
   std::vector<float> res;
-  if (blfunc == "chebyshev") {
+  if (blfunc == "poly") {
     nparam = order + 1;
-    res = doChebyshevFitting(spec, mask, order, params, finalChanMask, rms, nClipped, thresClip, nIterClip, true);
+    res = doPolynomialFitting(spec, mask, order, params, rms, finalChanMask, nClipped);
+  } else if (blfunc == "chebyshev") {
+    nparam = order + 1;
+    res = doChebyshevFitting(spec, mask, order, params, rms, finalChanMask, nClipped);
+  } else if (blfunc == "cspline") {
+    std::vector<int> pieceEdges;//(order+1);  //order = npiece
+    nparam = order + 3;
+    //params.resize(4*order);
+    res = doCubicSplineFitting(spec, mask, order, false, pieceEdges, params, rms, finalChanMask, nClipped);
   } else if (blfunc == "sinusoid") {
     std::vector<int> nWaves;
     nWaves.clear();
@@ -2745,14 +3456,9 @@ double Scantable::doCalculateModelSelectionCriteria(const std::string& valname, 
       nWaves.push_back(i);
     }
     nparam = 2*order + 1;  // order = nwave
-    res = doSinusoidFitting(spec, mask, nWaves, params, nClipped, thresClip, nIterClip, true);
-  } else if (blfunc == "cspline") {
-    std::vector<int> pieceEdges(order+1);  //order = npiece
-    nparam = order + 3;
-    params.resize(4*order);
-    res = doCubicSplineFitting(spec, mask, order, pieceEdges, params, nClipped, thresClip, nIterClip, true);
+    res = doSinusoidFitting(spec, mask, nWaves, params, rms, finalChanMask, nClipped);
   } else {
-    throw(AipsError("blfunc must be chebyshev, cspline or sinusoid."));
+    throw(AipsError("blfunc must be poly, chebyshev, cspline or sinusoid."));
   }
 
   double msq = 0.0;
@@ -2776,7 +3482,7 @@ double Scantable::doCalculateModelSelectionCriteria(const std::string& valname, 
     // Original Akaike Information Criterion (AIC)
     double aic = nusedchan * (log(2.0 * PI * msq) + 1.0) + 2.0 * nparam;
 
-    // Corrected AIC by Sugiura(1978)
+    // Corrected AIC by Sugiura(1978) (AICc)
     if (valname == "aicc") {
       if (nusedchan - nparam - 1 <= 0) {
 	throw(AipsError("channel size is too small to calculate AICc."));
@@ -2802,101 +3508,24 @@ double Scantable::doCalculateModelSelectionCriteria(const std::string& valname, 
   }
 }
 
-void Scantable::autoChebyshevBaseline(const std::vector<bool>& mask, int order, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
-{
-  try {
-    ofstream ofs;
-    String coordInfo = "";
-    bool hasSameNchan = true;
-    bool outTextFile = false;
-    bool csvFormat = false;
-
-    if (blfile != "") {
-      csvFormat = (blfile.substr(0, 1) == "T");
-      ofs.open(blfile.substr(1).c_str(), ios::out | ios::app);
-      if (ofs) outTextFile = true;
-    }
-
-    if (outLogger || outTextFile) {
-      coordInfo = getCoordInfo()[0];
-      if (coordInfo == "") coordInfo = "channel";
-      hasSameNchan = hasSameNchanOverIFs();
-    }
-
-    int nRow = nrow();
-    std::vector<bool> chanMask;
-    int minEdgeSize = getIFNos().size()*2;
-    STLineFinder lineFinder = STLineFinder();
-    lineFinder.setOptions(threshold, 3, chanAvgLimit);
-
-    bool showProgress;
-    int minNRow;
-    parseProgressInfo(progressInfo, showProgress, minNRow);
-
-    std::vector<bool> finalChanMask;
-    float rms;
-
-    for (int whichrow = 0; whichrow < nRow; ++whichrow) {
-      std::vector<float> sp = getSpectrum(whichrow);
-
-      //-------------------------------------------------------
-      //chanMask = getCompositeChanMask(whichrow, mask, edge, minEdgeSize, lineFinder);
-      //-------------------------------------------------------
-      int edgeSize = edge.size();
-      std::vector<int> currentEdge;
-      if (edgeSize >= 2) {
-	int idx = 0;
-	if (edgeSize > 2) {
-	  if (edgeSize < minEdgeSize) {
-	    throw(AipsError("Length of edge element info is less than that of IFs"));
-	  }
-	  idx = 2 * getIF(whichrow);
-	}
-	currentEdge.push_back(edge[idx]);
-	currentEdge.push_back(edge[idx+1]);
-      } else {
-	throw(AipsError("Wrong length of edge element"));
-      }
-      //lineFinder.setData(getSpectrum(whichrow));
-      lineFinder.setData(sp);
-      lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
-      chanMask = lineFinder.getMask();
-      //-------------------------------------------------------
-
-
-      //fitBaseline(chanMask, whichrow, fitter);
-      //setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
-      std::vector<float> params(order+1);
-      int nClipped = 0;
-      std::vector<float> res = doChebyshevFitting(sp, chanMask, order, params, finalChanMask, rms, nClipped, thresClip, nIterClip, getResidual);
-      setSpectrum(res, whichrow);
-
-      outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "autoChebyshevBaseline()", params, nClipped);
-      showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
-    }
-
-    if (outTextFile) ofs.close();
-
-  } catch (...) {
-    throw;
-  }
-}
-
-  /*
-double Scantable::getChebyshevPolynomial(int n, double x) {
-  if ((x < -1.0)||(x > 1.0)) {
-    throw(AipsError("out of definition range (-1 <= x <= 1)."));
-  } else if (n < 0) {
-    throw(AipsError("the order must be zero or positive."));
-  } else if (n == 0) {
+double Scantable::getNormalPolynomial(int n, double x) {
+  if (n == 0) {
     return 1.0;
-  } else if (n == 1) {
-    return x;
+  } else if (n > 0) {
+    double res = 1.0;
+    for (int i = 0; i < n; ++i) {
+      res *= x;
+    }
+    return res;
   } else {
-    return 2.0*x*getChebyshevPolynomial(n-1, x) - getChebyshevPolynomial(n-2, x);
+    if (x == 0.0) {
+      throw(AipsError("infinity result: x=0 given for negative power."));
+    } else {
+      return pow(x, (double)n);
+    }
   }
 }
-  */
+
 double Scantable::getChebyshevPolynomial(int n, double x) {
   if ((x < -1.0)||(x > 1.0)) {
     throw(AipsError("out of definition range (-1 <= x <= 1)."));
@@ -2938,13 +3567,35 @@ double Scantable::getChebyshevPolynomial(int n, double x) {
   }
 }
 
-std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data, const std::vector<bool>& mask, int order, std::vector<float>& params, std::vector<bool>& finalMask, float& rms, int& nClipped, float thresClip, int nIterClip, bool getResidual)
+std::vector<float> Scantable::doPolynomialFitting(const std::vector<float>& data, const std::vector<bool>& mask, int order, std::vector<float>& params, float& rms, std::vector<bool>& finalmask, float clipth, int clipn)
+{
+  int nClipped = 0;
+  return doPolynomialFitting(data, mask, order, params, rms, finalmask, nClipped, clipth, clipn);
+}
+
+std::vector<float> Scantable::doPolynomialFitting(const std::vector<float>& data, const std::vector<bool>& mask, int order, std::vector<float>& params, float& rms, std::vector<bool>& finalMask, int& nClipped, float thresClip, int nIterClip, bool getResidual)
+{
+  return doLeastSquareFitting(data, mask, &Scantable::getNormalPolynomial, order, params, rms, finalMask, nClipped, thresClip, nIterClip, getResidual);
+}
+
+std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data, const std::vector<bool>& mask, int order, std::vector<float>& params, float& rms, std::vector<bool>& finalmask, float clipth, int clipn)
+{
+  int nClipped = 0;
+  return doChebyshevFitting(data, mask, order, params, rms, finalmask, nClipped, clipth, clipn);
+}
+
+std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data, const std::vector<bool>& mask, int order, std::vector<float>& params, float& rms, std::vector<bool>& finalMask, int& nClipped, float thresClip, int nIterClip, bool getResidual)
+{
+  return doLeastSquareFitting(data, mask, &Scantable::getChebyshevPolynomial, order, params, rms, finalMask, nClipped, thresClip, nIterClip, getResidual);
+}
+
+std::vector<float> Scantable::doLeastSquareFitting(const std::vector<float>& data, const std::vector<bool>& mask, double (Scantable::*pfunc)(int, double), int order, std::vector<float>& params, float& rms, std::vector<bool>& finalMask, int& nClipped, float thresClip, int nIterClip, bool getResidual)
 {
   if (data.size() != mask.size()) {
     throw(AipsError("data and mask sizes are not identical"));
   }
   if (order < 0) {
-    throw(AipsError("maximum order of Chebyshev polynomial must not be negative."));
+    throw(AipsError("maximum order of polynomial must not be negative."));
   }
 
   int nChan = data.size();
@@ -2970,17 +3621,33 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
   // xArray : contains elemental values for computing the least-square matrix. 
   //          xArray.size() is nDOF and xArray[*].size() is nChan. 
   //          Each xArray element are as follows:
+  //
+  //          (for normal polynomials)
+  //          xArray[0]   = {1.0,   1.0,   1.0,   ..., 1.0},
+  //          xArray[1]   = {0.0,   1.0,   2.0,   ..., (nChan-1)}
+  //          xArray[n-1] = ...,
+  //          xArray[n]   = {0.0^n, 1.0^n, 2.0^n, ..., (nChan-1)^n}
+  //          where (0 <= n <= order)
+  //
+  //          (for Chebyshev polynomials)
   //          xArray[0]   = {T0(-1), T0(2/(nChan-1)-1), T0(4/(nChan-1)-1), ..., T0(1)}, 
   //          xArray[n-1] = ...,
   //          xArray[n]   = {Tn(-1), Tn(2/(nChan-1)-1), Tn(4/(nChan-1)-1), ..., Tn(1)}
   //          where (0 <= n <= order),
   std::vector<std::vector<double> > xArray;
+  double xFactor, xShift;
+  if (pfunc == &Scantable::getChebyshevPolynomial) {
+    xFactor = 2.0/(double)(nChan - 1);
+    xShift  = -1.0;
+  } else {
+    xFactor = 1.0;
+    xShift  = 0.0;
+  }
   for (int i = 0; i < nDOF; ++i) {
-    double xFactor = 2.0/(double)(nChan - 1);
     std::vector<double> xs;
     xs.clear();
     for (int j = 0; j < nChan; ++j) {
-      xs.push_back(getChebyshevPolynomial(i, xFactor*(double)j-1.0));
+      xs.push_back((this->*pfunc)(i, xFactor*(double)j + xShift)); 
     }
     xArray.push_back(xs);
   }
@@ -3062,9 +3729,7 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
 	xMatrix[i][nDOF+j] *= invDiag[j];
       }
     }
-    //compute a vector y which consists of the coefficients of the sinusoids forming the 
-    //best-fit curves (a0,s1,c1,s2,c2,...), where a0 is constant and s* and c* are of sine 
-    //and cosine functions, respectively. 
+    //compute a vector y which consists of the coefficients of Chebyshev polynomials. 
     std::vector<double> y;
     params.clear();
     for (int i = 0; i < nDOF; ++i) {
@@ -3117,6 +3782,7 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
   nClipped = initNData - nData;
 
   std::vector<float> result;
+  result.clear();
   if (getResidual) {
     for (int i = 0; i < nChan; ++i) {
       result.push_back((float)residual[i]);
@@ -3130,19 +3796,8 @@ std::vector<float> Scantable::doChebyshevFitting(const std::vector<float>& data,
   return result;
 }
 
-void Scantable::cubicSplineBaseline(const std::vector<bool>& mask, int nPiece, float thresClip, int nIterClip, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
+void Scantable::cubicSplineBaseline(const std::vector<bool>& mask, int nPiece, float thresClip, int nIterClip, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
 {
-  /*************
-  double totTimeStart, totTimeEnd, blTimeStart, blTimeEnd, ioTimeStart, ioTimeEnd, msTimeStart, msTimeEnd, seTimeStart, seTimeEnd, otTimeStart, otTimeEnd, prTimeStart, prTimeEnd;
-  double elapseMs = 0.0;
-  double elapseSe = 0.0;
-  double elapseOt = 0.0;
-  double elapsePr = 0.0;
-  double elapseBl = 0.0;
-  double elapseIo = 0.0;
-  totTimeStart = mathutil::gettimeofday_sec();
-  *************/
-
   try {
     ofstream ofs;
     String coordInfo = "";
@@ -3162,95 +3817,98 @@ void Scantable::cubicSplineBaseline(const std::vector<bool>& mask, int nPiece, f
       hasSameNchan = hasSameNchanOverIFs();
     }
 
-    //Fitter fitter = Fitter();
-    //fitter.setExpression("cspline", nPiece);
-    //fitter.setIterClipping(thresClip, nIterClip);
-
     bool showProgress;
     int minNRow;
     parseProgressInfo(progressInfo, showProgress, minNRow);
 
     int nRow = nrow();
     std::vector<bool> chanMask;
+    std::vector<bool> finalChanMask;
+    float rms;
 
-    //--------------------------------
+    //---
+    bool outBaselintTable = (bltable != "");
+    STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
+    //---
+
+
     for (int whichrow = 0; whichrow < nRow; ++whichrow) {
-      /******************
-      ioTimeStart = mathutil::gettimeofday_sec();
-      **/
       std::vector<float> sp = getSpectrum(whichrow);
-      /**
-      ioTimeEnd = mathutil::gettimeofday_sec();
-      elapseIo += (double)(ioTimeEnd - ioTimeStart);
-      msTimeStart = mathutil::gettimeofday_sec();
-      ******************/
-
       chanMask = getCompositeChanMask(whichrow, mask);
-
-      /**
-      msTimeEnd = mathutil::gettimeofday_sec();
-      elapseMs += (double)(msTimeEnd - msTimeStart);
-      blTimeStart = mathutil::gettimeofday_sec();
-      **/
-
-      //fitBaseline(chanMask, whichrow, fitter);
-      //setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
-      std::vector<int> pieceEdges(nPiece+1);
-      std::vector<float> params(nPiece*4);
+      std::vector<int> pieceEdges;//(nPiece+1);
+      std::vector<float> params;//(nPiece*4);
       int nClipped = 0;
-      std::vector<float> res = doCubicSplineFitting(sp, chanMask, nPiece, pieceEdges, params, nClipped, thresClip, nIterClip, getResidual);
+      std::vector<float> res = doCubicSplineFitting(sp, chanMask, nPiece, false, pieceEdges, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
 
-      /**
-      blTimeEnd = mathutil::gettimeofday_sec();
-      elapseBl += (double)(blTimeEnd - blTimeStart);
-      seTimeStart = mathutil::gettimeofday_sec();
-      **/
+      //---
+      if (outBaselintTable) {
+	Vector<Int> fparam(nPiece);
+	for (uInt i = 0; i < fparam.size(); ++i) {
+	  fparam[i] = pieceEdges[i];
+	}
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
 
-
-      setSpectrum(res, whichrow);
-      //
-
-      /**
-      seTimeEnd = mathutil::gettimeofday_sec();
-      elapseSe += (double)(seTimeEnd - seTimeStart);
-      otTimeStart = mathutil::gettimeofday_sec();
-      **/
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::CSpline, 
+		       fparam, 
+		       Vector<Float>(),
+		       finalMaskList, 
+		       Vector<Float>(params), 
+		       Float(rms), 
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(0.0),
+		       uInt(0),
+		       Vector<uInt>());
+      } else {
+	setSpectrum(res, whichrow);
+      }
+      //---
 
       outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "cubicSplineBaseline()", pieceEdges, params, nClipped);
-
-      /**
-      otTimeEnd = mathutil::gettimeofday_sec();
-      elapseOt += (double)(otTimeEnd - otTimeStart);
-      prTimeStart = mathutil::gettimeofday_sec();
-      **/
-
       showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
-
-      /******************
-      prTimeEnd = mathutil::gettimeofday_sec();
-      elapsePr += (double)(prTimeEnd - prTimeStart);
-      ******************/
     }
-    //--------------------------------
     
+    //---
+    if (outBaselintTable) {
+      bt->save(bltable);
+    }
+    //---
+    delete bt;
+
     if (outTextFile) ofs.close();
 
   } catch (...) {
     throw;
   }
-  /***************
-  totTimeEnd = mathutil::gettimeofday_sec();
-  std::cout << "io    : " << elapseIo << " (sec.)" << endl;
-  std::cout << "ms    : " << elapseMs << " (sec.)" << endl;
-  std::cout << "bl    : " << elapseBl << " (sec.)" << endl;
-  std::cout << "se    : " << elapseSe << " (sec.)" << endl;
-  std::cout << "ot    : " << elapseOt << " (sec.)" << endl;
-  std::cout << "pr    : " << elapsePr << " (sec.)" << endl;
-  std::cout << "total : " << (double)(totTimeEnd - totTimeStart) << " (sec.)" << endl;
-  ***************/
 }
 
-void Scantable::autoCubicSplineBaseline(const std::vector<bool>& mask, int nPiece, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
+void Scantable::autoCubicSplineBaseline(const std::vector<bool>& mask, int nPiece, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
 {
   try {
     ofstream ofs;
@@ -3271,28 +3929,32 @@ void Scantable::autoCubicSplineBaseline(const std::vector<bool>& mask, int nPiec
       hasSameNchan = hasSameNchanOverIFs();
     }
 
-    //Fitter fitter = Fitter();
-    //fitter.setExpression("cspline", nPiece);
-    //fitter.setIterClipping(thresClip, nIterClip);
-
-    int nRow = nrow();
-    std::vector<bool> chanMask;
-    int minEdgeSize = getIFNos().size()*2;
-    STLineFinder lineFinder = STLineFinder();
-    lineFinder.setOptions(threshold, 3, chanAvgLimit);
-
     bool showProgress;
     int minNRow;
     parseProgressInfo(progressInfo, showProgress, minNRow);
 
+    int minEdgeSize = getIFNos().size()*2;
+    STLineFinder lineFinder = STLineFinder();
+    lineFinder.setOptions(threshold, 3, chanAvgLimit);
+
+    int nRow = nrow();
+    std::vector<bool> chanMask;
+    std::vector<bool> finalChanMask;
+    float rms;
+
+    //---
+    bool outBaselintTable = (bltable != "");
+    STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
+    //---
+
     for (int whichrow = 0; whichrow < nRow; ++whichrow) {
       std::vector<float> sp = getSpectrum(whichrow);
-
-      //-------------------------------------------------------
-      //chanMask = getCompositeChanMask(whichrow, mask, edge, minEdgeSize, lineFinder);
-      //-------------------------------------------------------
+      //-- composote given channel mask and flagtra --------
       int edgeSize = edge.size();
       std::vector<int> currentEdge;
+      currentEdge.clear();
       if (edgeSize >= 2) {
 	int idx = 0;
 	if (edgeSize > 2) {
@@ -3306,25 +3968,77 @@ void Scantable::autoCubicSplineBaseline(const std::vector<bool>& mask, int nPiec
       } else {
 	throw(AipsError("Wrong length of edge element"));
       }
-      //lineFinder.setData(getSpectrum(whichrow));
       lineFinder.setData(sp);
       lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
       chanMask = lineFinder.getMask();
-      //-------------------------------------------------------
+      //-- composote given channel mask and flagtra END --------
 
-
-      //fitBaseline(chanMask, whichrow, fitter);
-      //setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
-      std::vector<int> pieceEdges(nPiece+1);
-      std::vector<float> params(nPiece*4);
+      std::vector<int> pieceEdges;//(nPiece+1);
+      std::vector<float> params;//(nPiece*4);
       int nClipped = 0;
-      std::vector<float> res = doCubicSplineFitting(sp, chanMask, nPiece, pieceEdges, params, nClipped, thresClip, nIterClip, getResidual);
-      setSpectrum(res, whichrow);
-      //
+      std::vector<float> res = doCubicSplineFitting(sp, chanMask, nPiece, false, pieceEdges, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
+
+      if (outBaselintTable) {
+	Vector<Int> fparam(nPiece);
+	for (uInt i = 0; i < fparam.size(); ++i) {
+	  fparam[i] = pieceEdges[i];
+	}
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
+
+	Vector<uInt> cEdge(currentEdge.size());
+	for (uInt i = 0; i < currentEdge.size(); ++i) {
+	  cEdge[i] = currentEdge[i];
+	}
+
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::CSpline, 
+		       fparam, 
+		       Vector<Float>(), 
+		       finalMaskList, 
+		       Vector<Float>(params), 
+		       Float(rms), 
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(threshold),
+		       uInt(chanAvgLimit),
+		       cEdge);
+      } else {
+	setSpectrum(res, whichrow);
+      }
 
       outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "autoCubicSplineBaseline()", pieceEdges, params, nClipped);
       showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
     }
+
+    //---
+    if (outBaselintTable) {
+      bt->save(bltable);
+    }
+    //---
+    delete bt;
 
     if (outTextFile) ofs.close();
 
@@ -3333,7 +4047,19 @@ void Scantable::autoCubicSplineBaseline(const std::vector<bool>& mask, int nPiec
   }
 }
 
-std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& data, const std::vector<bool>& mask, int nPiece, std::vector<int>& idxEdge, std::vector<float>& params, int& nClipped, float thresClip, int nIterClip, bool getResidual)
+std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& data, const std::vector<bool>& mask, std::vector<int>& idxEdge, std::vector<float>& params, float& rms, std::vector<bool>& finalmask, float clipth, int clipn)
+{
+  int nClipped = 0;
+  return doCubicSplineFitting(data, mask, idxEdge.size()-1, true, idxEdge, params, rms, finalmask, nClipped, clipth, clipn);
+}
+
+std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& data, const std::vector<bool>& mask, int nPiece, std::vector<int>& idxEdge, std::vector<float>& params, float& rms, std::vector<bool>& finalmask, float clipth, int clipn)
+{
+  int nClipped = 0;
+  return doCubicSplineFitting(data, mask, nPiece, false, idxEdge, params, rms, finalmask, nClipped, clipth, clipn);
+}
+
+std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& data, const std::vector<bool>& mask, int nPiece, bool useGivenPieceBoundary, std::vector<int>& idxEdge, std::vector<float>& params, float& rms, std::vector<bool>& finalMask, int& nClipped, float thresClip, int nIterClip, bool getResidual)
 {
   if (data.size() != mask.size()) {
     throw(AipsError("data and mask sizes are not identical"));
@@ -3343,6 +4069,10 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
   }
 
   int nChan = data.size();
+
+  finalMask.clear();
+  finalMask.resize(nChan);
+
   std::vector<int> maskArray(nChan);
   std::vector<int> x(nChan);
   int j = 0;
@@ -3352,6 +4082,7 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
       x[j] = i;
       j++;
     }
+    finalMask[i] = mask[i];
   }
   int initNData = j;
 
@@ -3361,13 +4092,29 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
 
   int nElement = (int)(floor(floor((double)(initNData/nPiece))+0.5));
   std::vector<double> invEdge(nPiece-1);
-  idxEdge[0] = x[0];
+
+  if (useGivenPieceBoundary) {
+    if ((int)idxEdge.size() != nPiece+1) {
+      throw(AipsError("pieceEdge.size() must be equal to nPiece+1."));
+    }
+  } else {
+    idxEdge.clear();
+    idxEdge.resize(nPiece+1);
+    idxEdge[0] = x[0];
+  }
   for (int i = 1; i < nPiece; ++i) {
     int valX = x[nElement*i];
-    idxEdge[i] = valX;
+    if (!useGivenPieceBoundary) {
+      idxEdge[i] = valX;
+    }
     invEdge[i-1] = 1.0/(double)valX;
   }
-  idxEdge[nPiece] = x[initNData-1]+1;
+  if (!useGivenPieceBoundary) {
+    idxEdge[nPiece] = x[initNData-1]+1;
+  }
+
+  params.clear();
+  params.resize(nPiece*4);
 
   int nData = initNData;
   int nDOF = nPiece + 3;  //number of parameters to solve, namely, 4+(nPiece-1).
@@ -3394,6 +4141,7 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
     //           the least-sq. matrix (left) and an 
     //           identity matrix (right).
     // the right part is used to calculate the inverse matrix of the left part. 
+
     double xMatrix[nDOF][2*nDOF];
     double zMatrix[nDOF];
     for (int i = 0; i < nDOF; ++i) {
@@ -3495,6 +4243,7 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
 	xMatrix[i][nDOF+j] *= invDiag[j];
       }
     }
+
     //compute a vector y which consists of the coefficients of the best-fit spline curves 
     //(a0,a1,a2,a3(,b3,c3,...)), namely, the ones for the leftmost piece and the ones of 
     //cubic terms for the other pieces (in case nPiece>1).
@@ -3544,6 +4293,7 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
 	r1[i] = r1[n];
       }
     }
+
     if (idxEdge[nPiece] < nChan) {
       int n = idxEdge[nPiece]-1;
       for (int i = idxEdge[nPiece]; i < nChan; ++i) {
@@ -3561,20 +4311,23 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
       residual[i] = z1[i] - r1[i];
     }
 
+    double stdDev = 0.0;
+    for (int i = 0; i < nChan; ++i) {
+      stdDev += residual[i]*residual[i]*(double)maskArray[i];
+    }
+    stdDev = sqrt(stdDev/(double)nData);
+    rms = (float)stdDev;
+
     if ((nClip == nIterClip) || (thresClip <= 0.0)) {
       break;
     } else {
-      double stdDev = 0.0;
-      for (int i = 0; i < nChan; ++i) {
-	stdDev += residual[i]*residual[i]*(double)maskArray[i];
-      }
-      stdDev = sqrt(stdDev/(double)nData);
       
       double thres = stdDev * thresClip;
       int newNData = 0;
       for (int i = 0; i < nChan; ++i) {
 	if (abs(residual[i]) >= thres) {
 	  maskArray[i] = 0;
+	  finalMask[i] = false;
 	}
 	if (maskArray[i] > 0) {
 	  newNData++;
@@ -3585,6 +4338,7 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
       } else {
 	nData = newNData;
       }
+
     }
   }
 
@@ -3604,10 +4358,16 @@ std::vector<float> Scantable::doCubicSplineFitting(const std::vector<float>& dat
   return result;
 }
 
-void Scantable::selectWaveNumbers(const int whichrow, const std::vector<bool>& chanMask, const bool applyFFT, const std::string& fftMethod, const std::string& fftThresh, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, std::vector<int>& nWaves)
+void Scantable::selectWaveNumbers(const int whichrow, const std::vector<bool>& chanMask, const std::string& fftInfo, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, std::vector<int>& nWaves)
+//void Scantable::selectWaveNumbers(const int whichrow, const std::vector<bool>& chanMask, const bool applyFFT, const std::string& fftMethod, const std::string& fftThresh, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, std::vector<int>& nWaves)
 {
+  bool applyFFT;
+  std::string fftMethod;
+  std::string fftThresh;
+
   nWaves.clear();
 
+  parseFFTInfo(fftInfo, applyFFT, fftMethod, fftThresh);
   if (applyFFT) {
     string fftThAttr;
     float fftThSigma;
@@ -3617,6 +4377,22 @@ void Scantable::selectWaveNumbers(const int whichrow, const std::vector<bool>& c
   }
 
   addAuxWaveNumbers(whichrow, addNWaves, rejectNWaves, nWaves);
+}
+
+void Scantable::parseFFTInfo(const std::string& fftInfo, bool& applyFFT, std::string& fftMethod, std::string& fftThresh)
+{
+  istringstream iss(fftInfo);
+  std::string tmp;
+  std::vector<string> res;
+  while (getline(iss, tmp, ',')) {
+    res.push_back(tmp);
+  }
+  if (res.size() < 3) {
+    throw(AipsError("wrong value in 'fftinfo' parameter")) ;
+  }
+  applyFFT = (res[0] == "true");
+  fftMethod = res[1];
+  fftThresh = res[2];
 }
 
 void Scantable::parseThresholdExpression(const std::string& fftThresh, std::string& fftThAttr, float& fftThSigma, int& fftThTop)
@@ -3701,6 +4477,9 @@ void Scantable::doSelectWaveNumbers(const int whichrow, const std::vector<bool>&
 void Scantable::addAuxWaveNumbers(const int whichrow, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, std::vector<int>& nWaves)
 {
   std::vector<int> tempAddNWaves, tempRejectNWaves;
+  tempAddNWaves.clear();
+  tempRejectNWaves.clear();
+
   for (uInt i = 0; i < addNWaves.size(); ++i) {
     tempAddNWaves.push_back(addNWaves[i]);
   }
@@ -3744,21 +4523,19 @@ void Scantable::addAuxWaveNumbers(const int whichrow, const std::vector<int>& ad
 
 void Scantable::setWaveNumberListUptoNyquistFreq(const int whichrow, std::vector<int>& nWaves)
 {
-  if ((nWaves.size() == 2)&&(nWaves[1] == -999)) {
-    int val = nWaves[0];
-    int nyquistFreq = nchan(getIF(whichrow))/2+1;
-    nWaves.clear();
-    if (val > nyquistFreq) {  // for safety, at least nWaves contains a constant; CAS-3759
-      nWaves.push_back(0);
-    }
-    while (val <= nyquistFreq) {
-      nWaves.push_back(val);
-      val++;
-    }
+  int val = nWaves[0];
+  int nyquistFreq = nchan(getIF(whichrow))/2+1;
+  nWaves.clear();
+  if (val > nyquistFreq) {  // for safety, at least nWaves contains a constant; CAS-3759
+    nWaves.push_back(0);
+  }
+  while (val <= nyquistFreq) {
+    nWaves.push_back(val);
+    val++;
   }
 }
 
-void Scantable::sinusoidBaseline(const std::vector<bool>& mask, const bool applyFFT, const std::string& fftMethod, const std::string& fftThresh, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, float thresClip, int nIterClip, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
+void Scantable::sinusoidBaseline(const std::vector<bool>& mask, const std::string& fftInfo, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, float thresClip, int nIterClip, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
 {
   try {
     ofstream ofs;
@@ -3779,49 +4556,91 @@ void Scantable::sinusoidBaseline(const std::vector<bool>& mask, const bool apply
       hasSameNchan = hasSameNchanOverIFs();
     }
 
-    //Fitter fitter = Fitter();
-    //fitter.setExpression("sinusoid", nWaves);
-    //fitter.setIterClipping(thresClip, nIterClip);
-
-    int nRow = nrow();
-    std::vector<bool> chanMask;
-    std::vector<int> nWaves;
-
     bool showProgress;
     int minNRow;
     parseProgressInfo(progressInfo, showProgress, minNRow);
 
+    int nRow = nrow();
+    std::vector<bool> chanMask;
+    std::vector<int> nWaves;
+    std::vector<bool> finalChanMask;
+    float rms;
+
+    //---
+    bool outBaselintTable = (bltable != "");
+    STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
+    //---
+
     for (int whichrow = 0; whichrow < nRow; ++whichrow) {
+      std::vector<float> sp = getSpectrum(whichrow);
       chanMask = getCompositeChanMask(whichrow, mask);
-      selectWaveNumbers(whichrow, chanMask, applyFFT, fftMethod, fftThresh, addNWaves, rejectNWaves, nWaves);
+      selectWaveNumbers(whichrow, chanMask, fftInfo, addNWaves, rejectNWaves, nWaves);
 
-      //FOR DEBUGGING------------
-      /*
-      if (whichrow < 0) {// == nRow -1) {
-	cout << "+++ i=" << setw(3) << whichrow << ", IF=" << setw(2) << getIF(whichrow);
-	if (applyFFT) {
-	  cout << "[ ";
-	  for (uInt j = 0; j < nWaves.size(); ++j) {
-	    cout << nWaves[j] << ", ";
-	  }
-	  cout << " ]    " << endl;
-	}
-	cout << flush;
-      }
-      */
-      //-------------------------
-
-      //fitBaseline(chanMask, whichrow, fitter);
-      //setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
       std::vector<float> params;
       int nClipped = 0;
-      std::vector<float> res = doSinusoidFitting(getSpectrum(whichrow), chanMask, nWaves, params, nClipped, thresClip, nIterClip, getResidual);
-      setSpectrum(res, whichrow);
-      //
+      std::vector<float> res = doSinusoidFitting(sp, chanMask, nWaves, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
+
+      //---
+      if (outBaselintTable) {
+	uInt nparam = nWaves.size();
+	Vector<Int> fparam(nparam);
+	for (uInt i = 0; i < nparam; ++i) {
+	  fparam[i] = nWaves[i];
+	}
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
+
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::Sinusoid, 
+		       fparam, 
+		       Vector<Float>(),
+		       finalMaskList, 
+		       Vector<Float>(params), 
+		       Float(rms), 
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(0.0),
+		       uInt(0),
+		       Vector<uInt>());
+      } else {
+	setSpectrum(res, whichrow);
+      }
+      //---
 
       outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "sinusoidBaseline()", params, nClipped);
       showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
     }
+
+    //---
+    if (outBaselintTable) {
+      bt->save(bltable);
+    }
+    //---
+    delete bt;
 
     if (outTextFile) ofs.close();
 
@@ -3830,7 +4649,8 @@ void Scantable::sinusoidBaseline(const std::vector<bool>& mask, const bool apply
   }
 }
 
-void Scantable::autoSinusoidBaseline(const std::vector<bool>& mask, const bool applyFFT, const std::string& fftMethod, const std::string& fftThresh, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile)
+void Scantable::autoSinusoidBaseline(const std::vector<bool>& mask, const std::string& fftInfo, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
+//void Scantable::autoSinusoidBaseline(const std::vector<bool>& mask, const bool applyFFT, const std::string& fftMethod, const std::string& fftThresh, const std::vector<int>& addNWaves, const std::vector<int>& rejectNWaves, float thresClip, int nIterClip, const std::vector<int>& edge, float threshold, int chanAvgLimit, bool getResidual, const std::string& progressInfo, const bool outLogger, const std::string& blfile, const std::string& bltable)
 {
   try {
     ofstream ofs;
@@ -3851,29 +4671,33 @@ void Scantable::autoSinusoidBaseline(const std::vector<bool>& mask, const bool a
       hasSameNchan = hasSameNchanOverIFs();
     }
 
-    //Fitter fitter = Fitter();
-    //fitter.setExpression("sinusoid", nWaves);
-    //fitter.setIterClipping(thresClip, nIterClip);
-
-    int nRow = nrow();
-    std::vector<bool> chanMask;
-    std::vector<int> nWaves;
+    bool showProgress;
+    int minNRow;
+    parseProgressInfo(progressInfo, showProgress, minNRow);
 
     int minEdgeSize = getIFNos().size()*2;
     STLineFinder lineFinder = STLineFinder();
     lineFinder.setOptions(threshold, 3, chanAvgLimit);
 
-    bool showProgress;
-    int minNRow;
-    parseProgressInfo(progressInfo, showProgress, minNRow);
+    int nRow = nrow();
+    std::vector<bool> chanMask;
+    std::vector<int> nWaves;
+    std::vector<bool> finalChanMask;
+    float rms;
+
+    //---
+    bool outBaselintTable = (bltable != "");
+    STBaselineTable* bt = new STBaselineTable(*this);
+    ROScalarColumn<Double> *tcol = new ROScalarColumn<Double>(table_, "TIME");
+    Vector<Double> timeSecCol = tcol->getColumn();
+    //---
 
     for (int whichrow = 0; whichrow < nRow; ++whichrow) {
-
-      //-------------------------------------------------------
-      //chanMask = getCompositeChanMask(whichrow, mask, edge, minEdgeSize, lineFinder);
-      //-------------------------------------------------------
+      std::vector<float> sp = getSpectrum(whichrow);
+      //-- composote given channel mask and flagtra --------
       int edgeSize = edge.size();
       std::vector<int> currentEdge;
+      currentEdge.clear();
       if (edgeSize >= 2) {
 	int idx = 0;
 	if (edgeSize > 2) {
@@ -3887,24 +4711,80 @@ void Scantable::autoSinusoidBaseline(const std::vector<bool>& mask, const bool a
       } else {
 	throw(AipsError("Wrong length of edge element"));
       }
-      lineFinder.setData(getSpectrum(whichrow));
+      lineFinder.setData(sp);
       lineFinder.findLines(getCompositeChanMask(whichrow, mask), currentEdge, whichrow);
       chanMask = lineFinder.getMask();
-      //-------------------------------------------------------
+      //-- composote given channel mask and flagtra END --------
+      selectWaveNumbers(whichrow, chanMask, fftInfo, addNWaves, rejectNWaves, nWaves);
 
-      selectWaveNumbers(whichrow, chanMask, applyFFT, fftMethod, fftThresh, addNWaves, rejectNWaves, nWaves);
-
-      //fitBaseline(chanMask, whichrow, fitter);
-      //setSpectrum((getResidual ? fitter.getResidual() : fitter.getFit()), whichrow);
       std::vector<float> params;
       int nClipped = 0;
-      std::vector<float> res = doSinusoidFitting(getSpectrum(whichrow), chanMask, nWaves, params, nClipped, thresClip, nIterClip, getResidual);
-      setSpectrum(res, whichrow);
-      //
+      std::vector<float> res = doSinusoidFitting(sp, chanMask, nWaves, params, rms, finalChanMask, nClipped, thresClip, nIterClip, getResidual);
+
+      //---
+      if (outBaselintTable) {
+	uInt nparam = nWaves.size();
+	Vector<Int> fparam(nparam);
+	for (uInt i = 0; i < nparam; ++i) {
+	  fparam[i] = nWaves[i];
+	}
+	std::vector<int> finalMaskList0;
+	finalMaskList0.clear();
+	for (uInt i = 0; i < finalChanMask.size(); ++i) {
+	  if (finalChanMask[i]) {
+	    if ((i == 0)||(i == finalChanMask.size()-1)) {
+	      finalMaskList0.push_back(i);
+	    } else {
+	      if ((finalChanMask[i])&&(!finalChanMask[i-1])) {
+		finalMaskList0.push_back(i);
+	      }
+	      if ((finalChanMask[i])&&(!finalChanMask[i+1])) {
+		finalMaskList0.push_back(i);
+	      }
+	    }
+	  }
+	}
+	Vector<uInt> finalMaskList(finalMaskList0.size());
+	for (uInt i = 0; i < finalMaskList0.size(); ++i) {
+	  finalMaskList[i] = (uInt)finalMaskList0[i];
+	}
+
+	Vector<uInt> cEdge(currentEdge.size());
+	for (uInt i = 0; i < currentEdge.size(); ++i) {
+	  cEdge[i] = currentEdge[i];
+	}
+
+	bt->appenddata(uInt(getScan(whichrow)), uInt(getCycle(whichrow)), uInt(getBeam(whichrow)), uInt(getIF(whichrow)), uInt(getPol(whichrow)), 
+		       uInt(0), 
+		       timeSecCol[whichrow],
+		       Bool(true), 
+		       STBaselineFunc::Sinusoid, 
+		       fparam, 
+		       Vector<Float>(),
+		       finalMaskList, 
+		       Vector<Float>(params), 
+		       Float(rms), 
+		       uInt(sp.size()), 
+		       Float(thresClip), 
+		       uInt(nIterClip), 
+		       Float(threshold),
+		       uInt(chanAvgLimit),
+		       cEdge);
+      } else {
+	setSpectrum(res, whichrow);
+      }
+      //---
 
       outputFittingResult(outLogger, outTextFile, csvFormat, chanMask, whichrow, coordInfo, hasSameNchan, ofs, "autoSinusoidBaseline()", params, nClipped);
       showProgressOnTerminal(whichrow, nRow, showProgress, minNRow);
     }
+
+    //---
+    if (outBaselintTable) {
+      bt->save(bltable);
+    }
+    //---
+    delete bt;
 
     if (outTextFile) ofs.close();
 
@@ -3913,7 +4793,13 @@ void Scantable::autoSinusoidBaseline(const std::vector<bool>& mask, const bool a
   }
 }
 
-std::vector<float> Scantable::doSinusoidFitting(const std::vector<float>& data, const std::vector<bool>& mask, const std::vector<int>& waveNumbers, std::vector<float>& params, int& nClipped, float thresClip, int nIterClip, bool getResidual)
+std::vector<float> Scantable::doSinusoidFitting(const std::vector<float>& data, const std::vector<bool>& mask, const std::vector<int>& waveNumbers, std::vector<float>& params, float& rms, std::vector<bool>& finalmask, float clipth, int clipn)
+{
+  int nClipped = 0;
+  return doSinusoidFitting(data, mask, waveNumbers, params, rms, finalmask, nClipped, clipth, clipn);
+}
+
+std::vector<float> Scantable::doSinusoidFitting(const std::vector<float>& data, const std::vector<bool>& mask, const std::vector<int>& waveNumbers, std::vector<float>& params, float& rms, std::vector<bool>& finalMask, int& nClipped, float thresClip, int nIterClip, bool getResidual)
 {
   if (data.size() != mask.size()) {
     throw(AipsError("data and mask sizes are not identical"));
@@ -3938,6 +4824,10 @@ std::vector<float> Scantable::doSinusoidFitting(const std::vector<float>& data, 
   bool hasConstantTerm = (minNWaves == 0);
 
   int nChan = data.size();
+
+  finalMask.clear();
+  finalMask.resize(nChan);
+
   std::vector<int> maskArray;
   std::vector<int> x;
   for (int i = 0; i < nChan; ++i) {
@@ -3945,6 +4835,7 @@ std::vector<float> Scantable::doSinusoidFitting(const std::vector<float>& data, 
     if (mask[i]) {
       x.push_back(i);
     }
+    finalMask[i] = mask[i];
   }
 
   int initNData = x.size();
@@ -4085,20 +4976,23 @@ std::vector<float> Scantable::doSinusoidFitting(const std::vector<float>& data, 
       residual[i] = z1[i] - r1[i];
     }
 
+    double stdDev = 0.0;
+    for (int i = 0; i < nChan; ++i) {
+      stdDev += residual[i]*residual[i]*(double)maskArray[i];
+    }
+    stdDev = sqrt(stdDev/(double)nData);
+    rms = (float)stdDev;
+
     if ((nClip == nIterClip) || (thresClip <= 0.0)) {
       break;
     } else {
-      double stdDev = 0.0;
-      for (int i = 0; i < nChan; ++i) {
-	stdDev += residual[i]*residual[i]*(double)maskArray[i];
-      }
-      stdDev = sqrt(stdDev/(double)nData);
-      
+
       double thres = stdDev * thresClip;
       int newNData = 0;
       for (int i = 0; i < nChan; ++i) {
 	if (abs(residual[i]) >= thres) {
 	  maskArray[i] = 0;
+	  finalMask[i] = false;
 	}
 	if (maskArray[i] > 0) {
 	  newNData++;
@@ -4109,6 +5003,7 @@ std::vector<float> Scantable::doSinusoidFitting(const std::vector<float>& data, 
       } else {
 	nData = newNData;
       }
+
     }
   }
 

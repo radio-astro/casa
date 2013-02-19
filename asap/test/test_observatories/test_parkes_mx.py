@@ -19,7 +19,7 @@ class TestParkes(object):
         avp = avb.average_pol()
         # Fit a polynomial, avoiding the galactic emission
         msk = avp.create_mask([430,580],invert=True)
-        avp.poly_baseline(msk, order=3)
+        avp.poly_baseline(mask=msk, order=3)
 
         avp.set_freqframe('TOPO')
         avp.set_unit('km/s')

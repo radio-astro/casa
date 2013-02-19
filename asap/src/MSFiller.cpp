@@ -256,7 +256,8 @@ class MSFillerVisitor: public BaseMSFillerVisitor, public MSFillerUtils {
 public:
   MSFillerVisitor(const Table &from, Scantable &to)
     : BaseMSFillerVisitor(from),
-      scantable( to )
+      scantable(to),
+      freqToLsr_(False)
   { 
     antennaId = 0 ;
     rowidx = 0 ;
@@ -711,6 +712,7 @@ public:
     }
     sysCalTsysCol.attach( sctab, tsysCol ) ;
   }
+  void setFreqToLsr(Bool b) { freqToLsr_ = b; }
   STHeader getHeader() { return header ; }
   uInt getNumBeam() { return nbeam ; }
   uInt getFilledRowNum() { return rowidx ; }
@@ -815,7 +817,8 @@ private:
     getScalar( "MEAS_FREQ_REF", spwId, spwtab, measFreqRef ) ;
     MFrequency::Types freqRef = MFrequency::castType( measFreqRef ) ;
     //freqref = MFrequency::showType( freqRef ) ;
-    freqref = "LSRK" ;
+    //freqref = "LSRK" ;
+    freqref = "TOPO";
     Quantum<Double> q ;
     getScalarQuant( "TOTAL_BANDWIDTH", spwId, spwtab, q ) ;
     bandwidth = q.getValue( "Hz" ) ;
@@ -841,7 +844,8 @@ private:
     Double refval = qa[refchan].getValue( "Hz" ) ;
     if ( even )
       refval = 0.5 * ( refval + qa[refchan+1].getValue( "Hz" ) ) ;
-    if ( freqRef != MFrequency::LSRK ) {
+    if ( freqToLsr_ && freqRef != MFrequency::LSRK ) {
+      //cout << "do conversion to LSRK" << endl;
       MeasFrame mframe( me, mp, md ) ;
       MFrequency::Convert tolsr( freqRef, MFrequency::Ref( MFrequency::LSRK, mframe ) ) ;
       refval = tolsr( Quantum<Double>( refval, "Hz" ) ).get( "Hz" ).getValue() ;
@@ -1313,6 +1317,7 @@ private:
   Vector<Double> syscalInterval;
   //String tsysCol;
   //String tcalCol;
+  Bool freqToLsr_;
 
   // MS subtables
   Table obstab;
@@ -1584,6 +1589,7 @@ MSFiller::MSFiller( casa::CountedPtr<Scantable> stable )
     antenna_( -1 ),
     antennaStr_(""),
     getPt_( True ),
+    freqToLsr_( False ),
     isFloatData_( False ),
     isData_( False ),
     isDoppler_( False ),
@@ -1630,6 +1636,9 @@ bool MSFiller::open( const std::string &filename, const casa::Record &rec )
     else {
       antenna_ = 0 ;
     }
+    if ( msrec.isDefined( "freq_tolsr" ) ) {
+      freqToLsr_ = msrec.asBool( "freq_tolsr" ) ;
+    }
   }
 
   MeasurementSet *tmpMS = new MeasurementSet( filename, Table::Old ) ;
@@ -1648,9 +1657,10 @@ bool MSFiller::open( const std::string &filename, const casa::Record &rec )
   }
 
   os_ << "Parsing MS options" << endl ;
-  os_ << "   getPt = " << getPt_ << endl ;
+  os_ << "   getPt = " << (getPt_ ? "True" : "False") << endl ;
   os_ << "   antenna = " << antenna_ << endl ;
-  os_ << "   antennaStr = " << antennaStr_ << LogIO::POST ;
+  os_ << "   antennaStr = " << antennaStr_ << endl ;
+  os_ << "   freqToLsr = " << (freqToLsr_  ? "True" : "False") << LogIO::POST;
 
   mstable_ = MeasurementSet( (*tmpMS)( tmpMS->col("ANTENNA1") == antenna_ 
                                        && tmpMS->col("ANTENNA1") == tmpMS->col("ANTENNA2") ) ) ;
@@ -1744,7 +1754,13 @@ void MSFiller::fill()
   //string freqFrame = getFrame() ;
   string freqFrame = "LSRK" ;
   table_->frequencies().setFrame( freqFrame ) ;
-  table_->frequencies().setFrame( freqFrame, True ) ;
+  if ( freqToLsr_ ) {
+    table_->frequencies().setFrame( freqFrame, True ) ;
+  }
+  else {
+    string baseFrame = frameFromSpwTable() ;
+    table_->frequencies().setFrame( baseFrame, True ) ;
+  }
 
   // SUBTABLES: WEATHER
   fillWeather() ;
@@ -1790,6 +1806,7 @@ void MSFiller::fill()
       myVisitor.setWeatherTime( mwTime_, mwInterval_ ) ;
     if ( isSysCal_ ) 
       myVisitor.setSysCalRecord( tcalrec_ ) ;
+    myVisitor.setFreqToLsr( freqToLsr_ ) ;
     
     //double t2 = mathutil::gettimeofday_sec() ;
     traverseTable(mstable_, cols, tms, &myVisitor);
@@ -2156,6 +2173,34 @@ void MSFiller::initHeader( STHeader &header )
   header.fluxunit = "" ;
   header.epoch = "" ;
   header.poltype = "" ;
+}
+
+string MSFiller::frameFromSpwTable()
+{
+  string frameString;
+  Table tab = mstable_.spectralWindow();
+  ROScalarColumn<Int> mfrCol(tab, "MEAS_FREQ_REF");
+  Vector<Int> mfr = mfrCol.getColumn();
+  if (allEQ(mfr,mfr[0])) {
+    frameString = MFrequency::showType(mfr[0]);
+    //cout << "all rows have same frame: " << frameString << endl;
+  }
+  else {
+    mfrCol.attach(tab, "NUM_CHAN");
+    for (uInt i = 0; i < tab.nrow(); i++) {
+      if (mfrCol(i) != 4) {
+        frameString = MFrequency::showType(mfr[i]);
+        break;
+      }
+    }
+    if (frameString.size() == 0) {
+      frameString = "TOPO";
+    }
+  }
+
+  //cout << "frameString = " << frameString << endl;
+
+  return frameString;
 }
 
 };

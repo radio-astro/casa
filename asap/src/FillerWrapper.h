@@ -94,8 +94,7 @@ private:
       // if we want to compare to 6 characters we should only read in 6
       FILE *f = fopen( filename.c_str(), "r") ;
       char buf[7] ;
-      size_t tmp = fread( buf, 6, 1, f ) ;
-      (void *)tmp;
+      fread( buf, 6, 1, f ) ;
       fclose( f ) ;
       buf[6]='\0' ;
       // NRO data has two types:

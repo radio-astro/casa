@@ -34,7 +34,7 @@ q.opacity(0.075)
 av = q.average_time()
 # Baseline
 msk=av.create_mask([-70,-50],[40,60])
-av.poly_baseline(msk,1)
+av.poly_baseline(mask=msk,order=1)
 plotter.set_mode('i','s')
 plotter.plot(av)
 plotter.save('output/tid.png', dpi=80)

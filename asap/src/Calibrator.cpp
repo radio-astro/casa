@@ -13,6 +13,7 @@
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
 
 #include "Calibrator.h"
 
@@ -70,13 +71,15 @@ void Calibrator::set(Float *p, Vector<Float> &v)
 
 void Calibrator::setReference(Vector<Float> &v)
 {
-  assert(v.nelements() == nchan_);
+  //assert(v.nelements() == nchan_);
+  assert_<AipsError>(v.nelements() == nchan_, "Reference spectrum shape mismatch.");
   set(ref_, v);
 }
 
 void Calibrator::setReference2(Vector<Float> &v)
 {
-  assert(v.nelements() == nchan_);
+  //assert(v.nelements() == nchan_);
+  assert_<AipsError>(v.nelements() == nchan_, "Second reference spectrum shape mismatch.");
   if (!ref2_)
     ref2_ = new Float[nchan_];
   set(ref2_, v);
@@ -84,7 +87,9 @@ void Calibrator::setReference2(Vector<Float> &v)
 
 void Calibrator::setScaler(Vector<Float> &v)
 {
-  assert(v.nelements() == nchan_ || v.nelements() == 1);
+  //assert(v.nelements() == nchan_ || v.nelements() == 1);
+  assert_<AipsError>(v.nelements() == nchan_ || v.nelements() == 1,
+         "Scaling factor shape mismatch.");
   if (nchanS_ == 0) {
     nchanS_ = v.nelements();
     if (!scaler_)

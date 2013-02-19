@@ -10,6 +10,11 @@
 #include <ASDMAll.h>
 #include <SDMBinData.h>
 
+class casa::MDirection;
+class casa::MeasFrame;
+class casa::MPosition;
+class casa::MEpoch;
+
 class ASDMReader
 {
 public:
@@ -488,9 +493,7 @@ private:
   void toJ2000( std::vector<double> &dir,
                 double &az, 
                 double &el,
-                double &mjd,
-                casa::Vector<casa::Quantity> &antpos ) ;
-
+                double &mjd ) ;
   /**
   * to J2000
   *
@@ -502,8 +505,8 @@ private:
   **/
   std::vector<double> toJ2000( std::vector<double> &dir,
                                casa::String &dirref,
-                               double &mjd,
-                               casa::Vector<casa::Quantity> &antpos ) ;
+                               double &mjd ) ;
+
   /**
    * get nIF
    *
@@ -536,6 +539,11 @@ private:
    * @return pointing direction vector (matrix)
    **/
   std::vector< std::vector<double> > pointingDir( asdm::PointingRow *row ) ;
+
+  /**
+   * initialize conversion engine
+   **/
+  void initConvert() ;
 
   asdm::ASDM *asdm_ ; // pointer to ASDM object
   sdmbin::SDMBinData *sdmBin_ ; // pointer to ASDM binary data
@@ -605,5 +613,10 @@ private:
 
   // time
   asdm::ArrayTimeInterval timeInterval_ ;
+
+  casa::MDirection::Convert toj2000_ ;
+  casa::MeasFrame mf_ ;
+  casa::MPosition mp_ ;
+  casa::MEpoch me_ ;
 } ;
 #endif // ASAP_ASDM_READER_H

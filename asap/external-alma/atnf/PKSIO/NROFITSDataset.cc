@@ -60,9 +60,10 @@ NROFITSDataset::NROFITSDataset( string name )
  
   // data initialization
   readHeader( numField_, "TFIELDS", same_ ) ;
-  forms_.resize( numField_ ) ;
   names_.resize( numField_ ) ;
   units_.resize( numField_ ) ;
+  sizes_.resize( numField_ ) ;
+  offsets_.resize( numField_ ) ;
   getField() ;
 
   // check endian
@@ -1224,7 +1225,7 @@ vector<double> NROFITSDataset::getSpectrum( int i )
 {
   vector<double> spec( chmax_, 0.0 ) ;
   vector<double> specout( chmax_, 0.0 ) ;
-  NRODataRecord *record = getRecord( i ) ;
+  const NRODataRecord *record = getRecord( i ) ;
   double scale = record->SFCTR ;
   double offset = record->ADOFF ;
   double dscale = MLTSCF[getIndex( i )] ;
@@ -1414,7 +1415,7 @@ vector<double> NROFITSDataset::getSpectrum( int i )
 
 int NROFITSDataset::getIndex( int irow ) 
 {
-  NRODataRecord *record = getRecord( irow ) ;
+  const NRODataRecord *record = getRecord( irow ) ;
   string str = record->ARRYT ;
   string::size_type pos = str.find( " " ) ;
   if ( pos != string::npos ) 
@@ -1477,6 +1478,7 @@ double NROFITSDataset::radDEC( string dec )
 
 void NROFITSDataset::getField() 
 {
+  long offset = 0;
   for ( int i = 0 ; i < numField_ ; i++ ) {
     char key1[9] ;
     char key2[9] ;
@@ -1506,11 +1508,10 @@ void NROFITSDataset::getField()
       cerr << "Error while reading field keyword for scan header." << endl ;
       return ;
     }
-    //forms_[i] = string( tmp ) ;
-    forms_[i] = tmp ;
-    string::size_type spos = forms_[i].find( " " ) ;
+    string form = tmp ;
+    string::size_type spos = form.find( " " ) ;
     if ( spos != string::npos )
-      forms_[i] = forms_[i].substr( 0, spos ) ;
+      form = form.substr( 0, spos ) ;
     //strcpy( tmp, "         " ) ;
     if ( readHeader( tmp, key2 ) != 0 ) {
       cerr << "Error while reading field type for scan header." << endl ;
@@ -1522,13 +1523,13 @@ void NROFITSDataset::getField()
     if ( spos != string::npos )
       names_[i] = names_[i].substr( 0, spos ) ;
     //strcpy( tmp, "         " ) ;
-    if ( forms_[i].find( "A" ) != string::npos ) {
-      //cout << "skip to get unit: name = " << forms_[i] << endl ;
+    if ( form.find( "A" ) != string::npos ) {
+      //cout << "skip to get unit: name = " << form << endl ;
       //strcpy( tmp, "none    " ) ;
       tmp = "none" ;
     }
     else {
-      //cout << "get unit: name = " << forms_[i] << endl ;
+      //cout << "get unit: name = " << form << endl ;
       if ( readHeader( tmp, key3 ) != 0 ) {
         //strcpy( tmp, "none    " ) ;
         tmp = "none" ;
@@ -1539,7 +1540,24 @@ void NROFITSDataset::getField()
     spos = units_[i].find( " " ) ;
     if ( spos != string::npos )
       units_[i] = units_[i].substr( 0, spos ) ;
-    //cout << "i = " << i << ": name=" << forms_[i] << " type=" << names_[i] << " unit=" << units_[i] << endl ;
+    //cout << "i = " << i << ": name=" << form << " type=" << names_[i] << " unit=" << units_[i] << endl ;
+
+    offsets_[i] = offset ;
+    string substr1 = form.substr( 0, form.size()-1 ) ;
+    string substr2 = form.substr( form.size()-1, 1 ) ;
+    //cout << "substr1 = " << substr1 << ", substr2 = " << substr2 << endl ;
+    int o1 = atoi( substr1.c_str() ) ;
+    int o2 = 0 ;
+    if ( substr2 == "A" )
+      o2 = sizeof(char) ;
+    else if ( substr2 == "J" ) 
+      o2 = sizeof(int) ;
+    else if ( substr2 == "F" )
+      o2 = sizeof(float) ;
+    else if ( substr2 == "D" )
+      o2 = sizeof(double) ;
+    sizes_[i] = o1 * o2 ;
+    offset += sizes_[i] ;
   }  
 }
 
@@ -1678,7 +1696,7 @@ void NROFITSDataset::findData()
   fseek( fp_, FITS_HEADER_SIZE, SEEK_SET ) ;
 
   // get offset
-  int offset = getOffset( "ARRYT" ) ;
+  long offset = getOffset( "ARRYT" ) ;
   if ( offset == -1 ) {
     //cerr << "Error, ARRYT is not found in the name list." << endl ; 
     return ;
@@ -1719,39 +1737,21 @@ void NROFITSDataset::findData()
 //     //cout << "arrayid_[" << i << "] = " << arrayid_[i] << endl ;
   }
 
-int NROFITSDataset::getOffset( char *name ) 
+long NROFITSDataset::getOffset( char *name ) 
 {
-  int offset = 0 ;
+  long offset = 0 ;
   string sname( name ) ;
-  bool found = false ;
-  for ( int i = 0 ; i < numField_ ; i++ ) {
+  long j = -1 ;
+  for ( long i = 0 ; i < numField_ ; i++ ) {
     // escape if name is found
     //cout << "names_[" << i << "] = " << names_[i] << "  sname = " << sname << endl ;
     if ( names_[i] == sname ) {
-      found = true ;
+      j = i ;
       break ;
     }
-
-    // form analysis
-    string substr1 = forms_[i].substr( 0, forms_[i].size()-1 ) ;
-    string substr2 = forms_[i].substr( forms_[i].size()-1, 1 ) ;
-    //cout << "substr1 = " << substr1 << ", substr2 = " << substr2 << endl ;
-    int o1 = atoi( substr1.c_str() ) ;
-    int o2 = 0 ;
-    if ( substr2 == "A" )
-      o2 = sizeof(char) ;
-    else if ( substr2 == "J" ) 
-      o2 = sizeof(int) ;
-    else if ( substr2 == "F" )
-      o2 = sizeof(float) ;
-    else if ( substr2 == "D" )
-      o2 = sizeof(double) ;
-    //cout << "o1 = " << o1 << ", o2 = " << o2 << endl ;
-    offset += o1 * o2 ;
   }
 
-  if ( !found )
-    offset = -1 ;
+  offset = (j >= 0) ? offsets_[j] : j ;
 
   return offset ;
 }
@@ -1825,7 +1825,7 @@ int NROFITSDataset::readHeader( string &v, char *name )
   return status ;
 }
 
-int NROFITSDataset::readHeader( int &v, char *name, int b ) 
+int NROFITSDataset::readHeader( int &v, char *name, int /*b*/ ) 
 {
   //
   // Read 'name' attribute defined as int from the FITS Header
@@ -1861,7 +1861,7 @@ int NROFITSDataset::readHeader( int &v, char *name, int b )
 }
 
 
-int NROFITSDataset::readHeader( float &v, char *name, int b ) 
+int NROFITSDataset::readHeader( float &v, char *name, int /*b*/ ) 
 {
   //
   // Read 'name' attribute defined as float from the FITS Header
@@ -1895,7 +1895,7 @@ int NROFITSDataset::readHeader( float &v, char *name, int b )
   return status ;
 }
 
-int NROFITSDataset::readHeader( double &v, char *name, int b ) 
+int NROFITSDataset::readHeader( double &v, char *name, int /*b*/ ) 
 {
   //
   // Read 'name' attribute defined as double from the FITS Header
@@ -1948,9 +1948,8 @@ int NROFITSDataset::readTable( char *v, char *name, int clen, int idx )
       break ;
     }
   }
-  string substr = forms_[index].substr( 0, forms_[index].size()-1 ) ;
-  int xsize = atoi( substr.c_str() ) ;
-  //cout << "xsize = " << xsize << endl ;
+
+  int xsize = sizes_[index] ;
 
   // read data
   if ( xsize < clen ) {
@@ -2036,9 +2035,8 @@ int NROFITSDataset::readTable( vector<char *> &v, char *name, int idx )
       break ;
     }
   }
-  string substr = forms_[index].substr( 0, forms_[index].size()-1 ) ;
-  int xsize = atoi( substr.c_str() ) ;
-  //cout << "xsize = " << xsize << endl ;
+
+  int xsize = sizes_[index] ;
 
   for ( unsigned int i = 0 ; i < v.size() ; i++ ) {
     int clen = strlen( v[i] ) ;
@@ -2131,9 +2129,8 @@ int NROFITSDataset::readColumn( vector<string> &v, char *name, int idx )
       break ;
     }
   }
-  string substr = forms_[index].substr( 0, forms_[index].size()-1 ) ;
-  int xsize = atoi( substr.c_str() ) ;
-  //cout << "xsize = " << xsize << endl ;
+
+  int xsize = sizes_[index] ;
 
   for ( unsigned int i = 0 ; i < v.size() ; i++ ) {
     int offset = scanLen_ * arrayid_[i] + xsize * idx ;
@@ -2273,13 +2270,13 @@ uInt NROFITSDataset::getPolNo( int irow )
 int NROFITSDataset::movePointer( char *name, int idx ) 
 {
   // find offset
-  int offset = getOffset( name ) ;
+  long offset = getOffset( name ) ;
   if ( offset == -1 ) {
     //cerr << "Error, " << name << " is not found in the name list." << endl ; 
     return -1 ;
   }
 
-  offset += idx * scanLen_ ;
+  offset += (long)(idx * scanLen_) ;
 
   //cout << "offset for " << name << " is " << offset << " bytes." << endl ;
   fseek( fp_, FITS_HEADER_SIZE+offset, SEEK_SET ) ;

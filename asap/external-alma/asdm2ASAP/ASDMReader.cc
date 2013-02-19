@@ -47,6 +47,7 @@ ASDMReader::ASDMReader()
   ifno_.clear() ;
   corrMode_.reset() ;
   timeSampling_.reset() ;
+  initConvert() ;
 }
 
 ASDMReader::~ASDMReader()
@@ -223,6 +224,9 @@ bool ASDMReader::open( const string &filename, const casa::Record &rec )
   vector<Length> antpos = stationRow->getPosition() ;
   for ( casa::uInt i = 0 ; i < 3 ; i++ ) 
     antennaPosition_[i] = Quantity( casa::Double( antpos[i].get() ), Unit( "m" ) ) ;
+  mp_ = casa::MPosition( casa::MVPosition( antennaPosition_ ),
+                         casa::MPosition::ITRF ) ;
+  mf_.set( mp_ ) ;
 
   // create SDMBinData object
   sdmBin_ = new SDMBinData( asdm_, filename ) ; 
@@ -886,7 +890,7 @@ void ASDMReader::getSourceProperty( string &srcname,
         // if not J2000, need direction conversion
         String ref( CDirectionReferenceCode::toString( dircode ) ) ;
         double mjd = vmsData_->v_time[dataIndex_] * s2d ;
-        srcdir = toJ2000( srcdir, ref, mjd, antennaPosition_ ) ;
+        srcdir = toJ2000( srcdir, ref, mjd ) ;
       }
     }
 
@@ -1669,7 +1673,7 @@ void ASDMReader::getPointingInfo( vector<double> &dir,
       //}
     }
     
-    toJ2000( dir, az, el, tcen, antennaPosition_ ) ;
+    toJ2000( dir, az, el, tcen ) ;
   }
 
   return ;
@@ -1693,9 +1697,7 @@ ArrayTime ASDMReader::getStartTime( const ArrayTimeInterval &t )
 void ASDMReader::toJ2000( vector<double> &dir,
                           double &az, 
                           double &el,
-                          double &mjd,
-                          casa::Vector<casa::Quantity> &antpos ) 
-//                          casa::Vector<casa::Double> antpos ) 
+                          double &mjd )
 {
   String funcName = "toJ2000" ;
 
@@ -1703,33 +1705,23 @@ void ASDMReader::toJ2000( vector<double> &dir,
   vector<double> azel( 2 ) ;
   azel[0] = az ;
   azel[1] = el ;
-  dir = toJ2000( azel, ref, mjd, antpos ) ;
+  dir = toJ2000( azel, ref, mjd ) ;
 }
 
 vector<double> ASDMReader::toJ2000( vector<double> &dir,
                                     casa::String &dirref,
-                                    double &mjd,
-                                    casa::Vector<casa::Quantity> &antpos ) 
-//                                    casa::Vector<casa::Double> antpos ) 
+                                    double &mjd )
 {
   casa::String funcName = "toJ2000" ;
 
   vector<double> newd( dir ) ;
   if ( dirref != "J2000" ) {
-    casa::MEpoch me( casa::Quantity( (casa::Double)mjd, "d" ), casa::MEpoch::UTC ) ;
-    casa::MPosition mp( casa::MVPosition( antpos ),
-                        casa::MPosition::ITRF ) ;
-    //ostringstream oss ;
-    //mp.print( oss ) ;
-    //logsink_->postLocally( LogMessage(oss.str(),LogOrigin(className_,funcName,WHERE)) ) ;
-    
-    casa::MeasFrame mf( me, mp ) ;
+    me_ = casa::MEpoch( casa::Quantity( (casa::Double)mjd, "d" ), casa::MEpoch::UTC ) ;
+    mf_.set( me_ ) ;
     casa::MDirection::Types dirtype ;
     casa::Bool b = casa::MDirection::getType( dirtype, dirref ) ;
     if ( b ) {
-      casa::MDirection::Convert toj2000( dirtype,
-                                         casa::MDirection::Ref( casa::MDirection::J2000, mf ) ) ;
-      casa::Vector<casa::Double> cdir = toj2000( dir ).getAngle( "rad" ).getValue() ; 
+      casa::Vector<casa::Double> cdir = toj2000_( dir ).getAngle( "rad" ).getValue() ; 
       //logsink_->postLocally( LogMessage("cdir = "+String::toString(cdir),LogOrigin(className_,funcName,WHERE)) ) ;
       newd[0] = (double)(cdir[0]) ;
       newd[1] = (double)(cdir[1]) ;
@@ -1894,4 +1886,10 @@ vector< vector<double> > ASDMReader::pointingDir( PointingRow *row )
     //logsink_->postLocally( LogMessage("tracking offset: ["+String::toString(aEnc[i][0].get()-aDir[i][0].get())+","+String::toString(aEnc[i][0]-aDir[i][0].get())+"]",LogOrigin(className_,funcName,WHERE)) ) ;
   }
   return dir ;
+}
+
+void ASDMReader::initConvert()
+{
+  toj2000_ = MDirection::Convert(MDirection::AZELGEO, 
+                                 MDirection::Ref(MDirection::J2000, mf_));
 }

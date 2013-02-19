@@ -10,6 +10,7 @@
 //
 //
 #include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ScaColDesc.h>
@@ -119,6 +120,7 @@ void STApplyTable::setbasedata(uInt irow, uInt scanno, uInt cycleno,
 
 void STApplyTable::save(const String &name)
 {
+  assert_<AipsError>(name.size() > 0, "Output name is empty.");  
   table_.deepCopy(name, Table::New);
 }
 

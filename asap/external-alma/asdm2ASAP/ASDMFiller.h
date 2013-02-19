@@ -101,6 +101,7 @@ private:
   casa::CountedPtr<casa::LogSinkInterface> logsink_ ;
 
   casa::String className_ ;
+  casa::Bool freqToLsr_ ;
 
 } ;
 #endif // ASAP_ASDM_FILLER_H

@@ -186,53 +186,48 @@ int NRODataset::readHeader( double &v, int b )
   return 0 ;
 }
 
-void NRODataset::convertEndian( NRODataRecord *r ) 
+void NRODataset::convertEndian( NRODataRecord &r ) 
 {
-  convertEndian( r->ISCAN ) ;
-  convertEndian( r->DSCX ) ;
-  convertEndian( r->DSCY ) ;
-  convertEndian( r->SCX ) ;
-  convertEndian( r->SCY ) ;
-  convertEndian( r->PAZ ) ;
-  convertEndian( r->PEL ) ;
-  convertEndian( r->RAZ ) ;
-  convertEndian( r->REL ) ;
-  convertEndian( r->XX ) ;
-  convertEndian( r->YY ) ;
-  convertEndian( r->TEMP ) ; 
-  convertEndian( r->PATM ) ;
-  convertEndian( r->PH2O ) ;
-  convertEndian( r->VWIND ) ;
-  convertEndian( r->DWIND ) ;
-  convertEndian( r->TAU ) ;  
-  convertEndian( r->TSYS ) ; 
-  convertEndian( r->BATM ) ; 
-  convertEndian( r->LINE ) ;
+  convertEndian( r.ISCAN ) ;
+  convertEndian( r.DSCX ) ;
+  convertEndian( r.DSCY ) ;
+  convertEndian( r.SCX ) ;
+  convertEndian( r.SCY ) ;
+  convertEndian( r.PAZ ) ;
+  convertEndian( r.PEL ) ;
+  convertEndian( r.RAZ ) ;
+  convertEndian( r.REL ) ;
+  convertEndian( r.XX ) ;
+  convertEndian( r.YY ) ;
+  convertEndian( r.TEMP ) ; 
+  convertEndian( r.PATM ) ;
+  convertEndian( r.PH2O ) ;
+  convertEndian( r.VWIND ) ;
+  convertEndian( r.DWIND ) ;
+  convertEndian( r.TAU ) ;  
+  convertEndian( r.TSYS ) ; 
+  convertEndian( r.BATM ) ; 
+  convertEndian( r.LINE ) ;
   for ( int i = 0 ; i < 4 ; i++ ) 
-    convertEndian( r->IDMY1[i] ) ;
-  convertEndian( r->VRAD ) ;
-  convertEndian( r->FREQ0 ) ;
-  convertEndian( r->FQTRK ) ;
-  convertEndian( r->FQIF1 ) ;
-  convertEndian( r->ALCV ) ; 
+    convertEndian( r.IDMY1[i] ) ;
+  convertEndian( r.VRAD ) ;
+  convertEndian( r.FREQ0 ) ;
+  convertEndian( r.FQTRK ) ;
+  convertEndian( r.FQIF1 ) ;
+  convertEndian( r.ALCV ) ; 
   for ( int i = 0 ; i < 2 ; i++ )
     for ( int j = 0 ; j < 2 ; j++ ) 
-      convertEndian( r->OFFCD[i][j] ) ;
-  convertEndian( r->IDMY0 ) ;
-  convertEndian( r->IDMY2 ) ;
-  convertEndian( r->DPFRQ ) ;
-  convertEndian( r->SFCTR ) ;
-  convertEndian( r->ADOFF ) ;
+      convertEndian( r.OFFCD[i][j] ) ;
+  convertEndian( r.IDMY0 ) ;
+  convertEndian( r.IDMY2 ) ;
+  convertEndian( r.DPFRQ ) ;
+  convertEndian( r.SFCTR ) ;
+  convertEndian( r.ADOFF ) ;
 }
 
 void NRODataset::releaseRecord()
 {
-  if ( record_ ) {
-    if ( record_->LDATA != NULL ) {
-      delete record_->LDATA ;
-      record_->LDATA = NULL ;
-    }
-    delete record_ ;
+  if ( !record_.null() ) {
     record_ = NULL ;
   }
   dataid_ = -1 ;
@@ -252,7 +247,7 @@ NRODataRecord *NRODataset::getRecord( int i )
   }
 
   if ( i == dataid_ ) {
-    return record_ ;
+    return &(*record_) ;
   }
 
   // DEBUG
@@ -271,7 +266,7 @@ NRODataRecord *NRODataset::getRecord( int i )
     return NULL ;
   }
 
-  return record_ ;
+  return &(*record_) ;
 }
 
 int NRODataset::fillRecord( int i ) 
@@ -289,13 +284,13 @@ int NRODataset::fillRecord( int i )
   //cout << "NRODataset::fillRecord()  offset (header) = " << offset << endl ;
   //cout << "NRODataset::fillRecord()  sizeof(NRODataRecord) = " << sizeof( NRODataRecord ) << " byte" << endl ;
   fseek( fp_, offset, SEEK_SET ) ;
-  if ( (int)fread( record_, 1, SCAN_HEADER_SIZE, fp_ ) != SCAN_HEADER_SIZE ) {
+  if ( (int)fread( &(*record_), 1, SCAN_HEADER_SIZE, fp_ ) != SCAN_HEADER_SIZE ) {
     //cerr << "Failed to read scan header: " << i << endl ;
     LogIO os( LogOrigin( "NRODataset", "fillRecord()", WHERE ) ) ;
     os << LogIO::SEVERE << "Failed to read scan header for " << i << "th row." << LogIO::POST ;
     return -1 ;
   }
-  if ( (int)fread( record_->LDATA, 1, dataLen_, fp_ ) != dataLen_ ) {
+  if ( (int)fread( &(*record_->LDATA), 1, dataLen_, fp_ ) != dataLen_ ) {
     //cerr << "Failed to read spectral data: " << i << endl ;
     LogIO os( LogOrigin( "NRODataset", "fillRecord()", WHERE ) ) ;
     os << LogIO::SEVERE << "Failed to read spectral data for " << i << "th row." << LogIO::POST ;
@@ -303,7 +298,7 @@ int NRODataset::fillRecord( int i )
   }
 
   if ( same_ == 0 ) {
-    convertEndian( record_ ) ;
+    convertEndian( *record_ ) ;
   } 
 
   // DWIND unit conversion (deg -> rad)
@@ -362,7 +357,7 @@ vector<double> NRODataset::getSpectrum( int i )
   //cout << "NRODataset::getSpectrum()  nchan = " << nchan << " chmax_ = " << chmax_ << endl ;
   //
 
-  NRODataRecord *record = getRecord( i ) ;
+  const NRODataRecord *record = getRecord( i ) ;
 
   const int bit = IBIT ;   // fixed to 12 bit
   double scale = record->SFCTR ;
@@ -384,7 +379,7 @@ vector<double> NRODataset::getSpectrum( int i )
       *i = 0.0 ;
     return spec ;
   }
-  unsigned char *cdata = (unsigned char *)record->LDATA ;
+  unsigned char *cdata = (unsigned char *)&(*record->LDATA) ;
   vector<double> mscale = MLTSCF ;
   double dscale = mscale[getIndex( i )] ;
   int cbind = CHBIND ;
@@ -471,8 +466,8 @@ int NRODataset::getIndex( int irow )
   // DEBUG 
   //cout << "NRODataset::getIndex()  start" << endl ;
   //
-  NRODataRecord *record = getRecord( irow ) ;
-  string str = record->ARRYT ;
+  const NRODataRecord *record = getRecord( irow ) ;
+  const string str = record->ARRYT ;
   // DEBUG
   //cout << "NRODataset::getIndex()  str = " << str << endl ;
   //
@@ -545,13 +540,13 @@ vector<double> NRODataset::getStartIntTime()
 
 double NRODataset::getStartIntTime( int i ) 
 {
-  NRODataRecord *record = getRecord( i ) ;
+  const NRODataRecord *record = getRecord( i ) ;
 
-  char *t = record->LAVST ;
+  const char *t = record->LAVST ;
   return getMJD( t ) ;
 }
 
-double NRODataset::getMJD( char *time ) 
+double NRODataset::getMJD( const char *time ) 
 {
   // TODO: should be checked which time zone the time depends on
   // 2008/11/14 Takeshi Nakazato
@@ -596,7 +591,7 @@ vector<bool> NRODataset::getIFs()
     if ( f[0] != 0. ) {
       f[1] = f[1] - f[0] * f[2] ;
     }
-    NRODataRecord *record = getRecord( i ) ;
+    const NRODataRecord *record = getRecord( i ) ;
     f[3] = record->FREQ0 ;
     if ( v.size() == 0 ) {
       v.push_back( True ) ;
@@ -633,7 +628,7 @@ vector<double> NRODataset::getFrequencies( int i )
   // v[2]  frequency increment
   vector<double> v( 3, 0.0 ) ;
 
-  NRODataRecord *record = getRecord( i ) ;
+  const NRODataRecord *record = getRecord( i ) ;
   string arryt = string( record->ARRYT ) ;
   uInt ib = getArrayId( arryt ) ;
   string rxname = getRX()[0] ;

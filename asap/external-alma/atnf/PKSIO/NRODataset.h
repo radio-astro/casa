@@ -41,6 +41,7 @@
 //#include <casa/aips.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Containers/Record.h>
+#include <casa/Utilities/CountedPtr.h>
 #include <atnf/PKSIO/NRODataRecord.h>
 #include <casa/namespace.h>
 #include <casa/iomanip.h>
@@ -102,87 +103,87 @@ class NRODataset
   virtual int fillRecord( int i ) ;
 
   // simple getter
-  std::string getLOFIL() { return LOFIL ; } ;
-  std::string getVER() { return VER ; } ;
-  std::string getGROUP() { return GROUP ; } ;
-  std::string getPROJ() { return PROJ ; } ;
-  std::string getSCHED() { return SCHED ; } ;
-  std::string getOBSVR() { return OBSVR ; } ;
-  std::string getLOSTM() { return LOSTM ; } ;
-  std::string getLOETM() { return LOETM ; } ;
-  int getARYNM() { return ARYNM ; } ;
-  int getNSCAN() { return NSCAN ; } ;
-  std::string getTITLE() { return TITLE ; } ;
-  std::string getOBJ() { return OBJ ; } ;
-  std::string getEPOCH() { return EPOCH ; } ;
-  double getRA0() { return RA0 ; } ;
-  double getDEC0() { return DEC0 ; } ;
-  double getGLNG0() { return GLNG0 ; } ;
-  double getGLAT0() { return GLAT0 ; } ;
-  int getNCALB() { return NCALB ; } ;
-  int getSCNCD() { return SCNCD ; } ;
-  std::string getSCMOD() { return SCMOD ; } ;
-  double getURVEL() { return URVEL ; } ;
-  std::string getVREF() { return VREF ; } ;
-  std::string getVDEF() { return VDEF ; } ;
-  std::string getSWMOD() { return SWMOD ; } ;
-  double getFRQSW() { return FRQSW ; } ;   
-  double getDBEAM() { return DBEAM ; } ;   
-  double getMLTOF() { return MLTOF ; } ;    
-  double getCMTQ() { return CMTQ ; } ;     
-  double getCMTE() { return CMTE ; } ;
-  double getCMTSOM() { return CMTSOM ; } ;
-  double getCMTNODE() { return CMTNODE ; } ;
-  double getCMTI() { return CMTI ; } ;
-  std::string getCMTTM() { return CMTTM ; } ;
-  double getSBDX() { return SBDX ; } ;
-  double getSBDY() { return SBDY ; } ;
-  double getSBDZ1() { return SBDZ1 ; } ;
-  double getSBDZ2() { return SBDZ2 ; } ;
-  double getDAZP() { return DAZP ; } ;
-  double getDELP() { return DELP ; } ;
-  int getCHBIND() { return CHBIND ; } ;
-  int getNUMCH() { return NUMCH ; } ;
-  int getCHMIN() { return CHMIN ; } ;
-  int getCHMAX() { return CHMAX ; } ;
-  double getALCTM() { return ALCTM ; } ;
-  double getIPTIM() { return IPTIM ; } ;
-  double getPA() { return PA ; } ;
-  int getSCNLEN() { return SCNLEN ; } ;
-  int getSBIND() { return SBIND ; } ;
-  int getIBIT() { return IBIT ; } ;
-  std::string getSITE() { return SITE ; } ;
-  std::vector<std::string> getRX() { return RX ; } ;
-  std::vector<double> getHPBW() { return HPBW ; } ;
-  std::vector<double> getEFFA() { return EFFA ; } ;
-  std::vector<double> getEFFB() { return EFFB ; } ;
-  std::vector<double> getEFFL() { return EFFL ; } ;
-  std::vector<double> getEFSS() { return EFSS ; } ;
-  std::vector<double> getGAIN() { return GAIN ; } ;
-  std::vector<std::string> getHORN() { return HORN ; } ;
-  std::vector<std::string> getPOLTP() { return POLTP ; } ;
-  std::vector<double> getPOLDR() { return POLDR ; } ;
-  std::vector<double> getPOLAN() { return POLAN ; } ;
-  std::vector<double> getDFRQ() { return DFRQ ; } ;
-  std::vector<std::string> getSIDBD() { return SIDBD ; } ;
-  std::vector<int> getREFN() { return REFN ; } ;
-  std::vector<int> getIPINT() { return IPINT ; } ;
-  std::vector<int> getMULTN() { return MULTN ; } ;
-  std::vector<double> getMLTSCF() { return MLTSCF ; } ;
-  std::vector<std::string> getLAGWIND() { return LAGWIND ; } ;
-  std::vector<double> getBEBW() { return BEBW ; } ;
-  std::vector<double> getBERES() { return BERES ; } ;
-  std::vector<double> getCHWID() { return CHWID ; } ;
-  std::vector<int> getARRY() { return ARRY ; } ;
-  std::vector<int> getNFCAL() { return NFCAL ; } ;
-  std::vector<double> getF0CAL() { return F0CAL ; } ;
-  std::vector< std::vector<double> > getFQCAL() { return FQCAL ; } ;
-  std::vector< std::vector<double> > getCHCAL() { return CHCAL ; } ;
-  std::vector< std::vector<double> > getCWCAL() { return CWCAL ; } ;
-  std::string getCDMY1() { return CDMY1 ; } ;
-  std::vector<double> getDSBFC() { return DSBFC ;} ;
-  int getDataSize() { return datasize_ ; } ;
-  int getRowNum() { return rowNum_ ; } ;
+  const std::string getLOFIL() const { return LOFIL ; } ;
+  const std::string getVER() const { return VER ; } ;
+  const std::string getGROUP() const { return GROUP ; } ;
+  const std::string getPROJ() const { return PROJ ; } ;
+  const std::string getSCHED() const { return SCHED ; } ;
+  const std::string getOBSVR() const { return OBSVR ; } ;
+  const std::string getLOSTM() const { return LOSTM ; } ;
+  const std::string getLOETM() const { return LOETM ; } ;
+  const int getARYNM() const { return ARYNM ; } ;
+  const int getNSCAN() const { return NSCAN ; } ;
+  const std::string getTITLE() const { return TITLE ; } ;
+  const std::string getOBJ() const { return OBJ ; } ;
+  const std::string getEPOCH() const { return EPOCH ; } ;
+  const double getRA0() const { return RA0 ; } ;
+  const double getDEC0() const { return DEC0 ; } ;
+  const double getGLNG0() const { return GLNG0 ; } ;
+  const double getGLAT0() const { return GLAT0 ; } ;
+  const int getNCALB() const { return NCALB ; } ;
+  const int getSCNCD() const { return SCNCD ; } ;
+  const std::string getSCMOD() const { return SCMOD ; } ;
+  const double getURVEL() const { return URVEL ; } ;
+  const std::string getVREF() const { return VREF ; } ;
+  const std::string getVDEF() const { return VDEF ; } ;
+  const std::string getSWMOD() const { return SWMOD ; } ;
+  const double getFRQSW() const { return FRQSW ; } ;   
+  const double getDBEAM() const { return DBEAM ; } ;   
+  const double getMLTOF() const { return MLTOF ; } ;    
+  const double getCMTQ() const { return CMTQ ; } ;     
+  const double getCMTE() const { return CMTE ; } ;
+  const double getCMTSOM() const { return CMTSOM ; } ;
+  const double getCMTNODE() const { return CMTNODE ; } ;
+  const double getCMTI() const { return CMTI ; } ;
+  const std::string getCMTTM() const { return CMTTM ; } ;
+  const double getSBDX() const { return SBDX ; } ;
+  const double getSBDY() const { return SBDY ; } ;
+  const double getSBDZ1() const { return SBDZ1 ; } ;
+  const double getSBDZ2() const { return SBDZ2 ; } ;
+  const double getDAZP() const { return DAZP ; } ;
+  const double getDELP() const { return DELP ; } ;
+  const int getCHBIND() const { return CHBIND ; } ;
+  const int getNUMCH() const { return NUMCH ; } ;
+  const int getCHMIN() const { return CHMIN ; } ;
+  const int getCHMAX() const { return CHMAX ; } ;
+  const double getALCTM() const { return ALCTM ; } ;
+  const double getIPTIM() const { return IPTIM ; } ;
+  const double getPA() const { return PA ; } ;
+  const int getSCNLEN() const { return SCNLEN ; } ;
+  const int getSBIND() const { return SBIND ; } ;
+  const int getIBIT() const { return IBIT ; } ;
+  const std::string getSITE() const { return SITE ; } ;
+  const std::vector<std::string> getRX() const { return RX ; } ;
+  const std::vector<double> getHPBW() const { return HPBW ; } ;
+  const std::vector<double> getEFFA() const { return EFFA ; } ;
+  const std::vector<double> getEFFB() const { return EFFB ; } ;
+  const std::vector<double> getEFFL() const { return EFFL ; } ;
+  const std::vector<double> getEFSS() const { return EFSS ; } ;
+  const std::vector<double> getGAIN() const { return GAIN ; } ;
+  const std::vector<std::string> getHORN() const { return HORN ; } ;
+  const std::vector<std::string> getPOLTP() const { return POLTP ; } ;
+  const std::vector<double> getPOLDR() const { return POLDR ; } ;
+  const std::vector<double> getPOLAN() const { return POLAN ; } ;
+  const std::vector<double> getDFRQ() const { return DFRQ ; } ;
+  const std::vector<std::string> getSIDBD() const { return SIDBD ; } ;
+  const std::vector<int> getREFN() const { return REFN ; } ;
+  const std::vector<int> getIPINT() const { return IPINT ; } ;
+  const std::vector<int> getMULTN() const { return MULTN ; } ;
+  const std::vector<double> getMLTSCF() const { return MLTSCF ; } ;
+  const std::vector<std::string> getLAGWIND() const { return LAGWIND ; } ;
+  const std::vector<double> getBEBW() const { return BEBW ; } ;
+  const std::vector<double> getBERES() const { return BERES ; } ;
+  const std::vector<double> getCHWID() const { return CHWID ; } ;
+  const std::vector<int> getARRY() const { return ARRY ; } ;
+  const std::vector<int> getNFCAL() const { return NFCAL ; } ;
+  const std::vector<double> getF0CAL() const { return F0CAL ; } ;
+  const std::vector< std::vector<double> > getFQCAL() const { return FQCAL ; } ;
+  const std::vector< std::vector<double> > getCHCAL() const { return CHCAL ; } ;
+  const std::vector< std::vector<double> > getCWCAL() const { return CWCAL ; } ;
+  const std::string getCDMY1() const { return CDMY1 ; } ;
+  const std::vector<double> getDSBFC() const { return DSBFC ;} ;
+  const int getDataSize() const { return datasize_ ; } ;
+  const int getRowNum() const { return rowNum_ ; } ;
 
   // get various parameters
   NRODataRecord *getRecord( int i ) ;
@@ -193,7 +194,7 @@ class NRODataset
   virtual std::vector<double> getStartIntTime() ;
   virtual double getStartIntTime( int i ) ;
   virtual double getScanTime( int i ) ;
-  virtual double getMJD( char *time ) ;
+  virtual double getMJD( const char *time ) ;
   virtual std::vector<bool> getIFs() ;
   virtual std::vector<double> getFrequencies( int i ) ;
   virtual uInt getArrayId( std::string type ) ;
@@ -213,7 +214,7 @@ class NRODataset
   void convertEndian( double &value ) ;
 
   // Endian conversion for NRODataRecord
-  void convertEndian( NRODataRecord *r ) ;
+  void convertEndian( NRODataRecord &r ) ;
 
   // Read char data
   int readHeader( char *v, int size ) ;
@@ -499,7 +500,7 @@ class NRODataset
   int dataid_ ;
 
   // Data record
-  NRODataRecord *record_ ;
+  CountedPtr<NRODataRecord> record_ ;
 
   // input filename
   std::string filename_ ;

@@ -11,6 +11,9 @@
 //
 #include <assert.h>
 
+#include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
+
 #include <iostream>
 using namespace std;
 
@@ -57,7 +60,8 @@ void CubicSplineInterpolator1D<T, U>::setY(U *y, unsigned int n)
 template <class T, class U>
 U CubicSplineInterpolator1D<T, U>::interpolate(T x)
 {
-  assert(this->isready());
+  //assert(this->isready());
+  assert_<casa::AipsError>(this->isready(), "object is not ready to process.");
   if (this->n_ == 1)
     return this->y_[0];
 

@@ -11,6 +11,9 @@
 //
 #include <assert.h>
 
+#include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
+
 #include "BufferedLinearInterpolator1D.h"
 
 namespace asap {
@@ -42,7 +45,8 @@ void BufferedLinearInterpolator1D<T, U>::setX(T *x, unsigned int n)
 template <class T, class U> 
 U BufferedLinearInterpolator1D<T, U>::interpolate(T x)
 {
-  assert(this->isready());
+  //assert(this->isready());
+  assert_<casa::AipsError>(this->isready(), "object is not ready to process.");
   if (this->n_ == 1)
     return this->y_[0];
 

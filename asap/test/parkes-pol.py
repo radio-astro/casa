@@ -34,9 +34,9 @@ d1_7.set_restfreqs([1667.3590],'MHz')
 
 # Baseline both
 msk = d1_5.create_mask([-30,-25],[-5,0])
-d1_5.poly_baseline(msk,1)
+d1_5.poly_baseline(mask=msk,order=1)
 msk = d1_7.create_mask([-30,-25],[-5,0])
-d1_7.poly_baseline(msk,1)
+d1_7.poly_baseline(mask=msk,order=1)
 
 # merge the two scans back together into a new scantable
 plotscans = merge(d1_5,d1_7)

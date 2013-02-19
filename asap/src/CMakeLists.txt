@@ -75,6 +75,7 @@ set( ASAP_SRCS
      ${SRCDIR}/STCalSkyTable.cpp
      ${SRCDIR}/STCalibration.cpp
      ${SRCDIR}/STCalSkyPSAlma.cpp
+     ${SRCDIR}/STCalSkyOtfAlma.cpp
      ${SRCDIR}/STCalTsys.cpp
      ${SRCDIR}/STApplyCal.cpp
      ${SRCDIR}/Calibrator.cpp

@@ -27,7 +27,7 @@ Apply any apply tables to target data
 */
 class STBaselineFunc  {
 public:
-  enum FuncName {Polynomial = 0,
+  enum FuncName {Polynomial = 1,
                  CSpline,
                  Sinusoid,
                  Chebyshev};

@@ -155,12 +155,16 @@ private:
   // initialize header
   void initHeader( STHeader &header ) ;
 
+  // get base frame from SPECTRAL_WINDOW table
+  std::string frameFromSpwTable();
+
   CountedPtr<Scantable> table_ ;
   MeasurementSet mstable_ ;
   String tablename_ ;
   Int antenna_ ;
   String antennaStr_ ;
   Bool getPt_ ;
+  Bool freqToLsr_ ;
 
   Bool isFloatData_ ;
   Bool isData_ ;

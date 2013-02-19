@@ -45,6 +45,7 @@
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/MeasConvert.h>
 
+#include <casa/Logging/LogIO.h>
 #include <casa/IO/RegularFileIO.h>
 #include <casa/OS/File.h>
 #include <casa/OS/Time.h>
@@ -184,7 +185,8 @@ NROReader* getNROReader( const String name,
 NROReader::NROReader( string name ) 
   : dataset_( NULL ),
     srcdir_( 0 ),
-    msrcdir_( 0 )
+    msrcdir_( 0 ),
+    freqRefFromVREF_( false ) // import frequency as REST
 {
   // initialization
   filename_ = name ;
@@ -194,10 +196,16 @@ NROReader::NROReader( string name )
 // destructor
 NROReader::~NROReader()
 {
-  if ( dataset_ != NULL ) {
-    delete dataset_ ;
-    dataset_ = NULL ;
-  }
+}
+
+// set frequency reference frame
+void NROReader::setFreqRefFromVREF( bool fromVREF )
+{
+  os_.origin( LogOrigin( "NROReader", "setFreqRefFromVREF", WHERE ) ) ;
+  os_ << ((fromVREF) ? "Take frequency reference frame from VREF" : 
+          "Use frequency reference frame REST") << LogIO::POST ;
+
+  freqRefFromVREF_ = fromVREF ; 
 }
 
 // get spectrum
@@ -336,7 +344,7 @@ Vector<Double> NROReader::getSourceDirection()
 Vector<Double> NROReader::getDirection( int i )
 {
   Vector<Double> v( 2 ) ;
-  NRODataRecord *record = dataset_->getRecord( i ) ;
+  const NRODataRecord *record = dataset_->getRecord( i ) ;
   char epoch[5] ;
   strncpy( epoch, (dataset_->getEPOCH()).c_str(), 5 ) ;
   int icoord = dataset_->getSCNCD() ;
@@ -386,8 +394,8 @@ void NROReader::initConvert( int icoord, double t, char *epoch )
         Vector<Quantity> qantpos( 3 ) ;
         for ( int ip = 0 ; ip < 3 ; ip++ )
           qantpos[ip] = Quantity( antpos[ip], "m" ) ;
-        MPosition mp( MVPosition( qantpos ), MPosition::ITRF ) ;
-        mf_->set( mp ) ;
+        mp_ = MPosition( MVPosition( qantpos ), MPosition::ITRF ) ;
+        mf_->set( mp_ ) ;
       }
       converter_ = new MDirection::Convert( MDirection::AZEL,
                                             MDirection::Ref(MDirection::J2000,
@@ -396,8 +404,8 @@ void NROReader::initConvert( int icoord, double t, char *epoch )
   }
 
   if ( coord_ == 2 ) {
-    MEpoch me( Quantity( t, "d" ), MEpoch::UTC ) ;
-    mf_->set( me ) ;
+    me_ = MEpoch( Quantity( t, "d" ), MEpoch::UTC ) ;
+    mf_->set( me_ ) ;
   }
 }
 
@@ -457,12 +465,22 @@ int NROReader::getHeaderInfo( Int &nchan,
       vref[3] = 'K' ;
     }
   }
+  else if ( vref.compare( 0, 3, "GAL" ) == 0 ) {
+    vref = "GALACTO" ;
+  }
+  else if (vref.compare( 0, 3, "HEL" ) == 0 ) {
+    os_.origin( LogOrigin( "NROReader", "getHeaderInfo", WHERE ) ) ;
+    os_ << LogIO::WARN << "Heliocentric frame is not supported. Use Barycentric frame instead." << LogIO::POST ;
+    vref = "BARY" ;
+  }
   //freqref = vref ;
   //freqref = "LSRK" ;
-  freqref = "REST" ;
+  //freqref = "REST" ;
+  freqref = freqRefFromVREF_ ? vref : "REST" ; 
   //cout << "freqref = " << freqref << endl ;
-  NRODataRecord *record = dataset_->getRecord( 0 ) ;
-  reffreq = record->FREQ0 ;
+  const NRODataRecord *record = dataset_->getRecord( 0 ) ;
+  reffreq = record->FREQ0 ; // rest frequency
+
   //cout << "reffreq = " << reffreq << endl ;
   bw = dataset_->getBEBW()[0] ;
   //cout << "bw = " << bw << endl ;
@@ -501,7 +519,7 @@ int NROReader::getHeaderInfo( Int &nchan,
 
 string NROReader::getScanType( int i )
 {
-  NRODataRecord *record = dataset_->getRecord( i ) ;
+  const NRODataRecord *record = dataset_->getRecord( i ) ;
   string s = record->SCANTP ;
 
   return s ;
@@ -537,9 +555,9 @@ int NROReader::getScanInfo( int irow,
                             Float &windvel,      
                             Float &winddir,      
                             Double &srcvel,
-                            Vector<Double> &propermotion,
+                            Vector<Double> &/*propermotion*/,
                             Vector<Double> &srcdir,
-                            Vector<Double> &scanrate )
+                            Vector<Double> &/*scanrate*/ )
 {
   static const IPosition oneByOne( 1, 1 );
 
@@ -579,6 +597,12 @@ int NROReader::getScanInfo( int irow,
   freqs = dataset_->getFrequencies( irow ) ;
   //cout << "freqs = [" << freqs[0] << ", " << freqs[1] << ", " << freqs[2] << "]" << endl ;
 
+  if ( freqRefFromVREF_ ) {
+    freqs = shiftFrequency( freqs, 
+                            dataset_->getURVEL(), 
+                            dataset_->getVDEF() ) ;
+  }
+
   // restfreq (for MOLECULE_ID)
   restfreq.resize( oneByOne ) ;
   restfreq[0] = record->FREQ0 ;
@@ -608,7 +632,7 @@ int NROReader::getScanInfo( int irow,
   // spectra
   vector<double> spec = dataset_->getSpectrum( irow ) ;
   spectra.resize( spec.size() ) ;
-  int index = 0 ;
+  //int index = 0 ;
   Bool b ;
   Float *fp = spectra.getStorage( b ) ;
   Float *wp = fp ;
@@ -706,4 +730,26 @@ int NROReader::getScanInfo( int irow,
 Int NROReader::getRowNum()
 {
   return dataset_->getRowNum() ;
+}
+
+vector<double> NROReader::shiftFrequency( const vector<double> &f, 
+                                          const double &v, 
+                                          const string &vdef )
+{
+  vector<double> r( f ) ;
+  double factor = v / 2.99792458e8 ;
+  if ( vdef.compare( 0, 3, "RAD" ) == 0 ) {
+    factor = 1.0 / ( 1.0 + factor ) ;
+    r[1] *= factor ;
+    r[2] *= factor ;
+  }
+  else if ( vdef.compare( 0, 3, "OPT" ) == 0 ) {
+    factor += 1.0 ;
+    r[1] *= factor ;
+    r[2] *= factor ;
+  }
+  else {
+    cout << "vdef=" << vdef << " is not supported." << endl;
+  }
+  return r ;
 }

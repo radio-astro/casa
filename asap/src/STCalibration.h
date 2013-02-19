@@ -12,13 +12,12 @@
 #ifndef ASAPSTCALIBRATION_H
 #define ASAPSTCALIBRATION_H
 
-#include <memory>
-
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Logging/LogIO.h>
+#include <casa/Containers/Record.h>
 
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
@@ -43,6 +42,9 @@ public:
   void save(casa::String name) {applytable_->save(name);}
   //const STApplyTable &applytable() {return *applytable_;}
   const casa::CountedPtr<STApplyTable> applytable() {return applytable_;}
+
+  void setOption(casa::Record &rec) {options_ = rec;}
+
 protected:
   virtual void setupSelector() = 0;
   virtual void fillCalTable() = 0;
@@ -51,6 +53,7 @@ protected:
   casa::CountedPtr<Scantable> scantable_;
   casa::CountedPtr<STApplyTable> applytable_; 
   casa::LogIO os_;
+  casa::Record options_;
 };
 
 }

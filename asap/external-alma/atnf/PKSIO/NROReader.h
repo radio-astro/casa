@@ -41,6 +41,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/String.h>
 #include <measures/Measures/MPosition.h>
+#include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MCDirection.h>
@@ -55,8 +56,6 @@
 
 #include <atnf/PKSIO/NRODataset.h>
 #include <atnf/PKSIO/NRODataRecord.h>
-
-using namespace std ;
 
 // <summary>
 // Base class to read NRO 45m and ASTE data.
@@ -103,6 +102,10 @@ class NROReader
   // Destructor.
   virtual ~NROReader() ;
 
+  // determine whether to import frequency as REST (frequency is same as 
+  // NEWSTAR/NOSTAR) or as is (velocity is same as NEWSTAR/NOSTAR)
+  void setFreqRefFromVREF( bool fromVREF ) ;
+
   // Read data header
   virtual Int read() = 0 ;
 
@@ -132,7 +135,7 @@ class NROReader
                            uInt &ifno,
                            uInt &beamno,
                            uInt &polno,
-                           vector<double> &freqs,   
+                           std::vector<double> &freqs,   
                            Vector<Double> &restfreq,  
                            uInt &refbeamno,
                            Double &scantime,
@@ -164,19 +167,19 @@ class NROReader
   virtual string getScanType( int i ) ;
 
   // Get dataset
-  virtual NRODataset *getDataset() { return dataset_ ; } ;
+  const NRODataset &dataset() { return *dataset_ ; }
 
   // Get number of rows
   virtual Int getRowNum() ;
 
   // Get IF settings
-  virtual vector<Bool> getIFs() ;
+  virtual std::vector<Bool> getIFs() ;
 
   // Get Number of IFs
   virtual Int getNumIF() = 0 ;
 
   // Get Beam settings
-  virtual vector<Bool> getBeams() ;
+  virtual std::vector<Bool> getBeams() ;
 
   // Get Number of Beams
   virtual Int getNumBeam() = 0 ;
@@ -187,7 +190,7 @@ class NROReader
   virtual double getMJD( string strStartTime ) ;
 
   // Get spectrum
-  virtual vector< vector<double> > getSpectrum() ;
+  virtual std::vector< std::vector<double> > getSpectrum() ;
 
   // Get number of polarization
   virtual Int getPolarizationNum() ;
@@ -195,11 +198,11 @@ class NROReader
   // Get MJD time
   virtual double getStartTime() ;
   virtual double getEndTime() ;
-  virtual vector<double> getStartIntTime() ;
+  virtual std::vector<double> getStartIntTime() ;
   //virtual double getStartIntTime( int i ) ;
 
   // Get Antenna Position in ITRF coordinate
-  virtual vector<double> getAntennaPosition() = 0 ;
+  virtual std::vector<double> getAntennaPosition() = 0 ;
 
   // Get SRCDIRECTION in RADEC(J2000)
   virtual Vector<Double> getSourceDirection() ;
@@ -208,11 +211,15 @@ class NROReader
   virtual Vector<Double> getDirection( int i ) ;
   virtual void initConvert( int icoord, double t, char *epoch ) ;
 
+  // Shift frequency by given velocity with respect to specified 
+  // velocity reference
+  std::vector<double> shiftFrequency( const std::vector<double> &f, const double &v, const string &vref ) ; 
+
   // filename 
   string filename_ ;
 
   // dataset
-  NRODataset *dataset_ ;
+  CountedPtr<NRODataset> dataset_ ;
 
   // source direction
   Vector<Double> srcdir_ ;
@@ -221,10 +228,14 @@ class NROReader
   // for direction conversion
   CountedPtr<MDirection::Convert> converter_ ;
   CountedPtr<MeasFrame> mf_ ;
+  MEpoch me_ ;
+  MPosition mp_ ;
   int coord_ ;
 
+  bool freqRefFromVREF_ ;
+
   // Logger
-  //LogIO os ;
+  LogIO os_ ;
 };
 
 #endif /* NRO_READER_H */

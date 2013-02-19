@@ -21,6 +21,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Utilities/Sort.h>
+#include <casa/Utilities/Assert.h>
 #include <tables/Tables/Table.h>
 
 #include "Scantable.h"
@@ -167,6 +168,10 @@ void STApplyCal::setTsysTransfer(uInt from, Vector<uInt> to)
 void STApplyCal::apply(Bool insitu, Bool filltsys)
 {
   os_.origin(LogOrigin("STApplyCal","apply",WHERE));
+  
+  //assert(!target_.null());
+  assert_<AipsError>(!target_.null(),"You have to set target scantable first.");
+
   // calibrator
   if (caltype_ == STCalEnum::CalPSAlma)
     calibrator_ = new PSAlmaCalibrator();
@@ -185,10 +190,16 @@ void STApplyCal::apply(Bool insitu, Bool filltsys)
   //os_ << "sel_.print()=" << sel_.print() << LogIO::POST;
 
   // working data
-  if (insitu)
+  if (insitu) {
+    os_.origin(LogOrigin("STApplyCal","apply",WHERE));
+    os_ << "Overwrite input scantable" << LogIO::POST;
     work_ = target_;
-  else
+  }
+  else {
+    os_.origin(LogOrigin("STApplyCal","apply",WHERE));
+    os_ << "Create output scantable from input" << LogIO::POST;
     work_ = new Scantable(*target_, false);
+  }
 
   //os_ << "work_->nrow()=" << work_->nrow() << LogIO::POST;
 
@@ -218,7 +229,7 @@ void STApplyCal::apply(Bool insitu, Bool filltsys)
     Vector<uInt> ids = iter->current();
     Vector<uInt> rows = iter->getRows(SHARE);
     if (rows.nelements() > 0)
-      doapply(ids[0], ids[2], ids[1], rows, skycalList);
+      doapply(ids[0], ids[2], ids[1], rows, skycalList, filltsys);
     iter->next();
   }
 
@@ -253,7 +264,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   uInt nchanTsys = 0;
   Vector<Double> ftsys;
   uInt tsysifno = getIFForTsys(ifno);
-  os_ << "tsysifno=" << tsysifno << LogIO::POST;
+  os_ << "tsysifno=" << (Int)tsysifno << LogIO::POST;
   if (tsystable_.size() == 0) {
     os_.origin(LogOrigin("STApplyTable", "doapply", WHERE));
     os_ << "No Tsys tables are given. Skip Tsys calibratoin." << LogIO::POST;
@@ -311,7 +322,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   Vector<Double> timeTsysSorted;
   Vector<Float> tmpTsys;
   if (doTsys) {
-    os_ << "doTsys" << LogIO::POST;
+    //os_ << "doTsys" << LogIO::POST;
     timeTsys.resize(nrowTsys);
     tsys.resize(nchanTsys, nrowTsys);
     nrowTsys = 0;
@@ -344,7 +355,7 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
   ScalarColumn<Double> timeCol(tab, "TIME");
   Vector<Float> on;
   for (uInt i = 0; i < rows.nelements(); i++) {
-    os_ << "start i = " << i << " (row = " << rows[i] << ")" << LogIO::POST;
+    //os_ << "start i = " << i << " (row = " << rows[i] << ")" << LogIO::POST;
     uInt irow = rows[i];
 
     // target spectral data
@@ -394,7 +405,14 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
       }
     }
     else {
-      iTsys = 1.0;
+      Vector<Float> tsysInRow = tsysCol(irow);
+      if (tsysInRow.nelements() == 1) {
+        iTsys = tsysInRow[0];
+      }
+      else {
+        for (uInt ichan = 0; ichan < nchanTsys; ++ichan)
+          iTsys[ichan] = tsysInRow[ichan];
+      }
     } 
     //os_ << "iTsys=" << iTsys << LogIO::POST;
     calibrator_->setScaler(iTsys);
@@ -448,7 +466,8 @@ uInt STApplyCal::getIFForTsys(uInt to)
 
 void STApplyCal::save(const String &name)
 {
-  assert(!work_.null());
+  //assert(!work_.null());
+  assert_<AipsError>(!work_.null(),"You have to execute apply method first.");
 
   work_->setSelection(sel_);
   work_->makePersistent(name);
@@ -457,7 +476,8 @@ void STApplyCal::save(const String &name)
 
 Vector<Double> STApplyCal::getBaseFrequency(uInt whichrow)
 {
-  assert(whichrow <= (uInt)work_->nrow());
+  //assert(whichrow <= (uInt)work_->nrow());
+  assert_<AipsError>(whichrow <= (uInt)work_->nrow(),"row index out of range.");
   ROTableColumn col(work_->table(), "IFNO");
   uInt ifno = col.asuInt(whichrow);
   col.attach(work_->table(), "FREQ_ID");

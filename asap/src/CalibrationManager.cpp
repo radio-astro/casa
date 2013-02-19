@@ -13,6 +13,7 @@
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/BasicSL/String.h>
 #include <tables/Tables/Table.h>
@@ -24,6 +25,7 @@
 #include "Scantable.h"
 #include "STCalTsys.h"
 #include "STCalSkyPSAlma.h"
+#include "STCalSkyOtfAlma.h"
 
 using namespace casa;
 using namespace std;
@@ -55,6 +57,22 @@ void CalibrationManager::setScantableByName(const string &s)
   os_ << LogIO::DEBUGGING << "set scantable " << s << "." << LogIO::POST;
   // always plain table
   target_ = new Scantable(s, Table::Plain);
+}
+
+void CalibrationManager::addApplyTable(const string &c)
+{
+  STCalEnum::CalType caltype = STApplyTable::getCalType(c);
+  if (caltype == STCalEnum::CalTsys) {
+    addTsysTable(c);
+  }
+  else if (caltype != STCalEnum::NoType) {
+    // should be sky table
+    addSkyTable(c);
+  }
+  else {
+    os_.origin(LogOrigin("CalibrationManager","addCalTable",WHERE));
+    os_ << LogIO::WARN << "Table " << c << " is not ApplyTable." << LogIO::POST ;
+  }
 }
 
 void CalibrationManager::addSkyTable(const string &c)
@@ -149,25 +167,44 @@ void CalibrationManager::calibrate()
 {
   os_.origin(LogOrigin("CalibrationManager","calibrate",WHERE));
   os_ << LogIO::DEBUGGING << "start calibration with mode " << calmode_ << "." << LogIO::POST;
-  assert(!target_.null());
+  //assert(!target_.null());
+  assert_<AipsError>(!target_.null(), "You have to set target scantable first.");
   if (calmode_ == "TSYS") {
-    assert(spwlist_.size() > 0);
+    //assert(spwlist_.size() > 0);
+    assert_<AipsError>(spwlist_.size() > 0, "You have to set list of IFNOs for ATM calibration.");
     STCalTsys cal(target_, spwlist_);
     cal.calibrate();
     tsystables_.push_back(cal.applytable());
   }
   else if (calmode_ == "PS") {
-    // will match DV01-25, DA41-65, PM01-04, CM01-12
-    Regex reant("^(DV(0[1-9]|1[0-9]|2[0-5])|DA(4[1-9]|5[0-9]|6[0-5])|PM0[1-4]|CM(0[1-9]|1[1,2]))$");
-    const String antname = target_->getAntennaName();
-    if (reant.match(antname.c_str(), antname.size()) != String::npos) {
+//     // will match DV01-25, DA41-65, PM01-04, CM01-12
+//     Regex reant("^(DV(0[1-9]|1[0-9]|2[0-5])|DA(4[1-9]|5[0-9]|6[0-5])|PM0[1-4]|CM(0[1-9]|1[1,2]))$");
+//     const String antname = target_->getAntennaName();
+//     if (reant.match(antname.c_str(), antname.size()) != String::npos) {
+    if (isAlmaAntenna()) {
       os_ << LogIO::DEBUGGING << "ALMA specific position-switch calibration." << LogIO::POST; 
       STCalSkyPSAlma cal(target_);
       cal.calibrate();
       skytables_.push_back(cal.applytable());
     }
     else {
-      String msg = "Calibration type " + calmode_ + " for antenna " + antname + " is not supported.";
+      String msg = "Calibration type " + calmode_ + " for non-ALMA antenna " + target_->getAntennaName() + " is not supported.";
+      os_.origin(LogOrigin("CalibrationManager","calibrate",WHERE));
+      os_ << LogIO::SEVERE << msg << LogIO::POST;
+      throw AipsError(msg);
+    }      
+  }
+  else if (calmode_ == "OTF" || calmode_ == "OTFRASTER") {
+    if (isAlmaAntenna()) {
+      os_ << LogIO::DEBUGGING << "ALMA specific position-switch calibration." << LogIO::POST; 
+      STCalSkyOtfAlma cal(target_, (calmode_ == "OTFRASTER"));
+      if (!options_.empty())
+        cal.setOption(options_);
+      cal.calibrate();
+      skytables_.push_back(cal.applytable());
+    }
+    else {
+      String msg = "Calibration type " + calmode_ + " for non-ALMA antenna " + target_->getAntennaName() + " is not supported.";
       os_.origin(LogOrigin("CalibrationManager","calibrate",WHERE));
       os_ << LogIO::SEVERE << msg << LogIO::POST;
       throw AipsError(msg);
@@ -181,7 +218,7 @@ void CalibrationManager::calibrate()
   }
 }
 
-void CalibrationManager::apply()
+void CalibrationManager::apply(bool insitu, bool filltsys)
 {
   os_.origin(LogOrigin("CalibrationManager","apply",WHERE));
   os_ << LogIO::DEBUGGING << "apply calibration to the data." << LogIO::POST;
@@ -190,17 +227,21 @@ void CalibrationManager::apply()
     applicator_->push(dynamic_cast<STCalTsysTable*>(&(*tsystables_[i])));
   for (size_t i = 0; i < skytables_.size(); i++) 
     applicator_->push(dynamic_cast<STCalSkyTable*>(&(*skytables_[i])));
-  applicator_->apply(false);
+  applicator_->apply(insitu, filltsys);
 }
 
 void CalibrationManager::saveCaltable(const string &name)
 {
   os_.origin(LogOrigin("CalibrationManager","saveCaltable",WHERE));
   if (calmode_ == "TSYS") {
+    //assert(tsystables_.size() > 0);
+    assert_<AipsError>(tsystables_.size() > 0, "Tsys table list is empty.");
     os_ << LogIO::DEBUGGING << "save latest STCalTsysTable as " << name << "." << LogIO::POST;
     tsystables_[tsystables_.size()-1]->save(name);
   }
   else {
+    //assert(skytables_.size() > 0);
+    assert_<AipsError>(skytables_.size() > 0, "Sky table list is empty.");
     os_ << LogIO::DEBUGGING << "save latest STCalSkyTable as " << name << "." << LogIO::POST;
     skytables_[skytables_.size()-1]->save(name);
   }
@@ -239,6 +280,15 @@ STCalEnum::InterpolationType CalibrationManager::stringToInterpolationEnum(const
   os_.origin(LogOrigin("CalibrationManager","stringToInterpolationEnum",WHERE));
   os_ << LogIO::WARN << "Interpolation type " << s << " is not available. Use default interpolation method." << LogIO::POST;
   return STCalEnum::DefaultInterpolation;
+}
+
+Bool CalibrationManager::isAlmaAntenna()
+{
+  assert_<AipsError>(!target_.null(), "You have to set target scantable first.");
+  // will match DV01-25, DA41-65, PM01-04, CM01-12
+  Regex reant("^(DV(0[1-9]|1[0-9]|2[0-5])|DA(4[1-9]|5[0-9]|6[0-5])|PM0[1-4]|CM(0[1-9]|1[1,2]))$");
+  const String antname = target_->getAntennaName();
+  return (reant.match(antname.c_str(), antname.size()) != String::npos);
 }
 
 }

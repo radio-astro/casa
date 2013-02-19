@@ -56,7 +56,7 @@ class sbseparator:
 
         self.set_data(infiles)
         
-        self._separator = SBSeparator()
+        self._separator = SBSeparator(infiles)
 
     @asaplog_post_dec
     def set_data(self, infiles):

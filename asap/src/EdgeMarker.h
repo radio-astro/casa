@@ -39,6 +39,7 @@ public:
   void setoption( const casa::Record &option ) ;
   void detect() ;
   void mark() ;
+  casa::Block<casa::uInt> getDetectedRows() ;
   casa::CountedPtr<Scantable> get() ;
 //   void reset() ;
 

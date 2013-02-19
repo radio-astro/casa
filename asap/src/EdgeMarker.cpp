@@ -159,6 +159,12 @@ void EdgeMarker::mark()
   srcTypeCol.putColumn( srcType ) ;
 }
 
+Block<uInt> EdgeMarker::getDetectedRows()
+{
+  uInt *p = off_.storage();
+  return Block<uInt>(noff_, p, False);
+}
+
 CountedPtr<Scantable> EdgeMarker::get()
 {
   return st_ ;

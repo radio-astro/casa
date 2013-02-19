@@ -38,11 +38,11 @@ class STCalSkyPSAlma : public STCalibration {
 public:
   STCalSkyPSAlma(casa::CountedPtr<Scantable> &s);
 
-  ~STCalSkyPSAlma() {;}
+  virtual ~STCalSkyPSAlma() {;}
   
-private:
-  void setupSelector();
-  void fillCalTable();
+protected:
+  virtual void setupSelector();
+  virtual void fillCalTable();
 };
 
 }

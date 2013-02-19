@@ -948,7 +948,7 @@ def almacal( scantab, scannos=[], calmode='none', verify=False ):
     return scal
 
 @asaplog_post_dec
-def splitant(filename, outprefix='',overwrite=False):
+def splitant(filename, outprefix='',overwrite=False, getpt=True, freq_tolsr=False):
     """
     Split Measurement set by antenna name, save data as a scantables,
     and return a list of filename.
@@ -962,6 +962,10 @@ def splitant(filename, outprefix='',overwrite=False):
        overwrite    If the file should be overwritten if it exists.
                     The default False is to return with warning
                     without writing the output. USE WITH CARE.
+       getpt        Whether to import direction from MS/POINTING
+                    table or not. Default is True (import direction).
+       freq_tolsr   Whether to convert frequency frame information
+                    to LSRK or not. Default is False (import as is).
 
     """
     # Import the table toolkit from CASA
@@ -1007,7 +1011,7 @@ def splitant(filename, outprefix='',overwrite=False):
     for antid in set(ant1):
         tb.open(tablename=filename,nomodify=True)
         tbsel=tb.query('ANTENNA1 == %s && ANTENNA2 == %s'%(antid,antid),tmpname)
-        scan=scantable(tmpname,average=False,getpt=True,antenna=int(antid))
+        scan=scantable(tmpname,average=False,antenna=int(antid),getpt=getpt,freq_tolsr=freq_tolsr,)
         outname=prefix+antnames[antid]+'.asap'
         scan.save(outname,format='ASAP',overwrite=overwrite)
         tbsel.close()

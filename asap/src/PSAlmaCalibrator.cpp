@@ -11,6 +11,9 @@
 //
 #include <assert.h>
 
+#include <casa/Exceptions/Error.h>
+#include <casa/Utilities/Assert.h>
+
 #include "PSAlmaCalibrator.h"
 
 using namespace casa;
@@ -27,10 +30,14 @@ PSAlmaCalibrator::PSAlmaCalibrator(unsigned int nchan)
 
 void PSAlmaCalibrator::calibrate()
 {
-  assert(source_);
-  assert(ref_);
-  assert(scaler_);
-  assert(calibrated_);
+  //assert(source_);
+  //assert(ref_);
+  //assert(scaler_);
+  //assert(calibrated_);
+  assert_<AipsError>(source_, "Source spectrum is null.");
+  assert_<AipsError>(ref_, "Reference spectrum is null.");
+  assert_<AipsError>(scaler_, "Scaling factor is null.");
+  assert_<AipsError>(calibrated_, "Calibrated spectrum is null.");
 
   Float *p_s = source_;
   Float *p_r = ref_;
