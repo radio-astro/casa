@@ -80,7 +80,7 @@
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
-#include <images/Images/ImageHistograms.h>
+#include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageOpener.h>

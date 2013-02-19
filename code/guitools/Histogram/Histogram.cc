@@ -28,7 +28,7 @@
 #include <QDebug>
 #include <QtCore/qmath.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageHistograms.h>
+#include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <images/Regions/ImageRegion.h>
 #include <guitools/Histogram/HeightSource.h>
 

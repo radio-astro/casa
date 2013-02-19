@@ -65,7 +65,7 @@
 #include <images/Images/ImageMomentsProgress.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageStatistics.h>
-#include <images/Images/ImageHistograms.h>
+#include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/MomentCalculator.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>

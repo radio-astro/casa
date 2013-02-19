@@ -93,6 +93,8 @@ install (FILES
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFitter.h
+    ImageAnalysis/ImageHistograms.h
+    ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
@@ -136,6 +138,7 @@ casa_add_assay( imageanalysis Annotations/test/tAnnText.cc )
 casa_add_assay( imageanalysis Annotations/test/tAnnVector.cc )
 casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
+casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tComponentImager.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
