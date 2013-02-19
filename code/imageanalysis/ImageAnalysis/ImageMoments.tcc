@@ -62,7 +62,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageMomentsProgress.h>
+#include <imageanalysis/ImageAnalysis/ImageMomentsProgress.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageStatistics.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
@@ -73,7 +73,7 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/SubImage.h>
 #include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
-#include <images/Images/ImageMomentsProgressMonitor.h>
+#include <imageanalysis/ImageAnalysis/ImageMomentsProgressMonitor.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeApply.h>
 #include <lattices/Lattices/LatticeIterator.h>

@@ -40,6 +40,8 @@ ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapser.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImageMomentsProgress.cc
+ImageAnalysis/ImageMomentsProgressMonitor.cc
 ImageAnalysis/ImagePadder.cc
 ImageAnalysis/ImagePolProxy.cc
 ImageAnalysis/ImagePrimaryBeamCorrector.cc
@@ -98,6 +100,8 @@ install (FILES
 	ImageAnalysis/ImageInputProcessor.h
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
+    ImageAnalysis/ImageMomentsProgress.h
+    ImageAnalysis/ImageMomentsProgressMonitor.h
 	ImageAnalysis/ImagePadder.h
 	ImageAnalysis/ImagePolProxy.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
