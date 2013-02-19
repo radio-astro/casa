@@ -80,6 +80,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisDeconvolver::setupDeconvolution(Record decpars)
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupDeconvolution",WHERE) );
+
+    String algorithm("test");
+
     try
       {
 
@@ -96,6 +99,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if( decpars.isDefined("id") )
 	{ decpars.get( RecordFieldId("id") , itsDeconvolverId ); }
 
+      if( decpars.isDefined("algo") )
+	{ decpars.get( RecordFieldId("algo") , algorithm ); algorithm.downcase(); }
+
+
       }
     catch(AipsError &x)
       {
@@ -108,7 +115,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
-	itsDeconvolver = new SDAlgorithmBase();
+	if(algorithm==String("test")) 
+	  {
+	    itsDeconvolver = new SDAlgorithmBase(); 
+	  }
+	else if(algorithm==String("hogbom"))
+	  {
+	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
+	  }
+	else
+	  {
+	    throw( AipsError("Un-known algorithm : "+algorithm) );
+	  }
       }
     catch(AipsError &x)
       {
@@ -424,7 +442,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /// Calculate only once, store and return for all subsequent calls.
 
-    Float psfsidelobe = max( itsImages->psf()->get() );
+    Float psfsidelobe = fabs(min( itsImages->psf()->get() ));
+
+    if(psfsidelobe == 1.0)
+      {
+	//os << LogIO::WARN << "For testing only. Set psf sidelobe level to 0.01" << LogIO::POST;
+	psfsidelobe = 0.01;
+      }
 
     return psfsidelobe;
   }

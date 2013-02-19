@@ -83,7 +83,7 @@ namespace casa{
     else 
       if (telescopeName=="EVLA")
 	{
-	  if      ((refFreq >= 1.0E9) && (refFreq <= 2.0E9))  return BeamCalc_EVLA_L;
+	  if      ((refFreq >= 0.9E9) && (refFreq <= 2.1E9))  return BeamCalc_EVLA_L;
 	  else if ((refFreq >=2.0E9)  && (refFreq <=4.0E9))   return BeamCalc_EVLA_S;
 	  else if ((refFreq >=4.0E9)  && (refFreq <=8.0E9))   return BeamCalc_EVLA_C;
 	  else if ((refFreq >=8.0E9)  && (refFreq <=12.0E9))  return BeamCalc_EVLA_X;

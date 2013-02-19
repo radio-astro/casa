@@ -63,8 +63,9 @@ void ImagePadder::setPaddingPixels(
 
 ImageInterface<Float>* ImagePadder::pad(const Bool wantReturn) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*_getImage()->cloneII(), *_getRegion(), _getMask(),
+		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch()
 	);
 	Vector<Int> dirAxes = subImage.coordinates().directionAxesNumbers();

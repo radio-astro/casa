@@ -93,16 +93,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Initial Peak Residuals - for single-pixel-image testing.
     // In the real world, this is the gridded/imaged data.
     itsOriginalResidual.resize( itsImageShape );
-    itsOriginalResidual = 0.0;
+    //itsOriginalResidual = 0.0;
+
+    //    if( itsImageShape[0]==3 && itsImageShape[1]==3 )
+    //  {
+	itsOriginalResidual = itsImages->psf()->get();
+	//  }
+
     // Different values for different mappers
     for (uInt ch=0; ch < itsImageShape[3]; ch++)
       {
-	if ( itsMapperId == 0 )  itsOriginalResidual( IPosition(4,0,0,0,ch) ) = 1.0;
-	if ( itsMapperId == 1 )  itsOriginalResidual( IPosition(4,0,0,0,ch) ) = 0.5;
-	if ( itsMapperId == 2 )  itsOriginalResidual( IPosition(4,0,0,0,ch) ) = 0.7;
+	if ( itsMapperId == 0 )  itsOriginalResidual = itsOriginalResidual * 1.0;
+	if ( itsMapperId == 1 )  itsOriginalResidual = itsOriginalResidual * 0.5;
+	if ( itsMapperId == 2 )  itsOriginalResidual = itsOriginalResidual * 0.7;
       }
     // Give the first mapper a spectral line, if nchan>2
-    if ( itsMapperId == 0 && itsImageShape[3] > 2 ) itsOriginalResidual( IPosition(4,0,0,0,1) ) = 2.0;
+    if ( itsMapperId == 0 && itsImageShape[3] > 2 ) itsOriginalResidual = itsImages->psf()->get()*2.0;
+
     //////////////////////////////////// ONLY FOR TESTING /////////////////////////////////
 
     /// If there is a starting model, set itsIsModelUpdated = True !!
@@ -141,6 +148,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // For TESTING
     itsImages->residual()->put( itsOriginalResidual - itsImages->model()->get() );
+
+    //    itsImages->residual()->put( itsOriginalResidual - max(itsImages->model()->get())*itsImages->psf()->get() );
 
   }
 

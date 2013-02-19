@@ -137,6 +137,8 @@ protected:
      * get that first "Shift" without having to do a click first.
      */
     virtual void enterEvent( QEvent* event );
+	virtual void mousePressEvent( QMouseEvent* event );
+
 
 private slots:
 	void lineMoved( const QPoint& pt );
@@ -164,9 +166,6 @@ private slots:
 	void imageModeSelected( bool enabled );
 	void regionModeSelected( bool enabled );
 	void regionAllModeSelected( bool enabled );
-
-protected:
-	virtual void mousePressEvent( QMouseEvent* event );
 
 private:
 	BinPlotWidget( const BinPlotWidget& );

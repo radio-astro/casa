@@ -1,4 +1,4 @@
-//# SDAlgorithmBase.h: Definition for SDAlgorithmBase
+//# SDAlgorithmHogbomClean.h: Definition for SDAlgorithmHogbomClean
 //# Copyright (C) 1996,1997,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SDALGORITHMBASE_H
-#define SYNTHESIS_SDALGORITHMBASE_H
+#ifndef SYNTHESIS_SDALGORITHMHOGBOMCLEAN_H
+#define SYNTHESIS_SDALGORITHMHOGBOMCLEAN_H
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <synthesis/MeasurementComponents/SkyModel.h>
@@ -39,8 +39,7 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/System/PGPlotter.h>
 
-#include<synthesis/MeasurementEquations/SDMaskHandler.h>
-#include<synthesis/MeasurementEquations/SIImageStore.h>
+#include<synthesis/MeasurementEquations/SDAlgorithmBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -48,47 +47,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SIMinorCycleController;
 
 
-class SDAlgorithmBase {
-public:
+  class SDAlgorithmHogbomClean : public SDAlgorithmBase 
+  {
+  public:
+    
+    // Empty constructor
+    SDAlgorithmHogbomClean();
+    virtual  ~SDAlgorithmHogbomClean();
+    
+    virtual void restore( CountedPtr<SIImageStore> imagestore );
+    
+  protected:
+    
+    // Local functions to be overloaded by various algorithm deconvolvers.
+    virtual void takeOneStep( Float loopgain, Float &peakresidual, Float &modelflux );
+    virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    virtual void finalizeDeconvolver();
+    virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+    
+    // ....
 
-  // Empty constructor
-  SDAlgorithmBase();
- virtual  ~SDAlgorithmBase();
+    Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
 
-  // In the base class. Non virtual.
-  void deconvolve( SIMinorCycleController& loopController,  
-		   CountedPtr<SIImageStore> &imagestore,
-		   Int deconvolverid);
+    void calculatePatchBoundaries();
+    void makeBoxesSameSize(IPosition& blc1, IPosition& trc1, IPosition &blc2, IPosition& trc2);
 
 
-  virtual void restore( CountedPtr<SIImageStore> imagestore );
+    /*
+    void findNextComponent( Float loopgain );
+    void updateModel();
+    void updateResidual();
+    */
 
-protected:
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf;
 
-  // Local functions to be overloaded by various algorithm deconvolvers.
-  virtual void takeOneStep( Float loopgain, Float &peakresidual, Float &modelflux );
-  virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
-  virtual void finalizeDeconvolver(){};
-  virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+    IPosition itsMaxPos;
+    Float itsPeakResidual;
+    Float itsModelFlux;
 
-  // Non virtual. Implemented only in the base class.
-  Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
-  void partitionImages();
-  void initializeSubImages(uInt subim);
-
-  // Algorithm name
-  String itsAlgorithmName;
-
-  // For debugging.
-  IPosition tmpPos_p;
-
-  // Image Store
-  CountedPtr<SIImageStore> itsImages;
-  Vector<Slicer> itsDecSlices;
-  SubImage<Float> itsResidual, itsPsf, itsModel;
-  Float itsComp;
-
-};
+    //    IPositions for patch boundaries.
+    IPosition itsBlc, itsTrc, itsBlcPsf, itsTrcPsf;
+    
+  };
 
 } //# NAMESPACE CASA - END
 

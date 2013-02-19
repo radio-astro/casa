@@ -38,6 +38,7 @@
 // VisibityIterator / VisibilityBuffer framework
 #include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/ViFrequencySelection.h>
 
 // To get observatory position from observatory name
 #include <measures/Measures/MeasTable.h>
@@ -267,8 +268,8 @@ protected:
 	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef);
 	template <class T> void writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef);
 
-	template <class T> void regridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
-	template <class T> void regridAndCombineCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
+	template <class T> void smoothAndRegridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
+	template <class T> void combineSmoothAndRegridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
 	template <class T> void transformAndWritePlaneOfData(Int inputSpw, uInt row, Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol=NULL);
 	template <class T> void transformStripeOfData(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
 
@@ -302,13 +303,9 @@ protected:
 	// Frequency transformation parameters
 	Bool combinespws_p;
 	Bool hanningSmooth_p;
-	String interpolationMethodPar_p;
-
-	// Channel average parameters
 	Bool channelAverage_p;
-
-	// Reference Frame Transformation parameters
 	Bool refFrameTransformation_p;
+	String interpolationMethodPar_p;
 	casac::variant *phaseCenterPar_p;
 	String restFrequency_p;
 	String outputReferenceFramePar_p;
@@ -335,6 +332,7 @@ protected:
 	// VI/VB related members
 	Block<Int> sortColumns_p;
 	vi::VisibilityIterator2 *visibilityIterator_p;
+	vi::FrequencySelectionUsingChannels *channelSelector_p;
 
 	// Output MS structure related members
 	Bool fillFlagCategory_p;
@@ -349,6 +347,8 @@ protected:
 	inputSpwChanMap spwChannelMap_p;
 	uInt interpolationMethod_p;
 	inputOutputSpwMap inputOutputSpwMap_p;
+	Bool frequencyTransformation_p;
+	Bool regridms_p;
 
 	// Reference Frame Transformation members
 	MFrequency::Types inputReferenceFrame_p;
@@ -358,7 +358,7 @@ protected:
 	MDirection phaseCenter_p;
 	MFrequency::Convert freqTransEngine_p;
 
-	// Loging
+	// Logging
 	LogIO logger_p;
 };
 

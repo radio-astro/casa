@@ -63,6 +63,8 @@ private:
 	RangeControlsWidget& operator=( const RangeControlsWidget& );
     QDoubleValidator* minMaxValidator;
     Ui::RangeControlsWidgetClass ui;
+    double rangeMin;
+    double rangeMax;
 };
 }
 #endif // RANGECONTROLSWIDGET_QO_H

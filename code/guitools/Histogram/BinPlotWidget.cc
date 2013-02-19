@@ -503,6 +503,7 @@ void BinPlotWidget::initializeRangeControls( bool enable ){
 	else {
 		rangeControlWidget = new RangeControlsWidget(NULL);
 	}
+	
 	connect( rangeControlWidget, SIGNAL(minMaxChanged()), this, SLOT(minMaxChanged()));
 	connect( rangeControlWidget, SIGNAL(rangeCleared()), this, SLOT(clearRange()));
 
@@ -1183,6 +1184,11 @@ void BinPlotWidget::resizeEvent( QResizeEvent* event ){
 	rectangleSizeChanged();
 	resetGaussianFitMarker();
 	resetPoissonFitMarker();
+	if ( rangeControlWidget != NULL ){
+		int plotWidth = ui.plotHolder->width();
+		rangeControlWidget->setMinimumWidth( plotWidth );
+		rangeControlWidget->setMaximumWidth( plotWidth );
+	}
 }
 
 void BinPlotWidget::mousePressEvent( QMouseEvent* event ){
@@ -1199,6 +1205,8 @@ void BinPlotWidget::mousePressEvent( QMouseEvent* event ){
 	}
 	QWidget::mousePressEvent( event );
 }
+
+
 
 void BinPlotWidget::keyPressEvent( QKeyEvent* event ){
 	Qt::KeyboardModifiers modifiers = event->modifiers();

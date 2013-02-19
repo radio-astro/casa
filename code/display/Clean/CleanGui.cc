@@ -24,6 +24,7 @@
 //#
 #include <casadbus/session/DBusSession.h>
 #include <casadbus/synthesis/ImagerControl.h>
+#include <display/Clean/ConfirmStop.ui.h>
 #include <casadbus/utilities/io.h>
 #include <display/Clean/CleanGui.qo.h>
 #include <iostream>
@@ -148,6 +149,12 @@ namespace casa {
 			if ( ic == NULL ) selection_change( );
 			if ( ic == NULL ) return;
 			if ( current_process_state == STOPPED ) return;
+			Ui::ConfirmStop setup;
+			QDialog *popup = new QDialog(this);
+			setup.setupUi(popup);
+			int result = popup->exec( );
+			delete popup;
+			if ( result == 0 ) return;
 			ic->changeStopFlag( true );
 			refresh( );
 		}

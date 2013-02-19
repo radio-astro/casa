@@ -120,11 +120,23 @@ int main(int argc, char **argv)
 			configuration.define ("spw", spw);
 			cout << "Spectral Window selection is: " << spw << endl;
 		}
+		else if (parameter == string("-intent"))
+		{
+			intent = value;
+			configuration.define ("intent", intent);
+			cout << "Intent is: " << intent << endl;
+		}
 		else if (parameter == string("-field"))
 		{
 			field = value;
 			configuration.define ("field", field);
 			cout << "Field selection is: " << field << endl;
+		}
+		else if (parameter == string("-correlation"))
+		{
+			correlation = value;
+			configuration.define ("correlation", correlation);
+			cout << "Correlation selection is: " << correlation << endl;
 		}
 	}
 

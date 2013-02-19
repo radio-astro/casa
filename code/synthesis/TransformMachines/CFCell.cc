@@ -42,6 +42,7 @@ namespace casa{
 
   void CFCell::setParams(const CFCell& other)
   {
+    shape_p=other.storage_p->shape();
     shape_p = other.shape_p;
     coordSys_p=other.coordSys_p;
     sampling_p=other.sampling_p;
@@ -52,6 +53,8 @@ namespace casa{
     freqIncr_p = other.freqIncr_p;
     muellerElement_p = other.muellerElement_p;
     pa_p = other.pa_p;
+    cfShape_p=other.storage_p->shape().asVector();
+    cfShape_p.assign(other.cfShape_p);
   }
 
   void CFCell::show(const char *Mesg,ostream &os)
@@ -64,7 +67,7 @@ namespace casa{
        << "wValues: "            << wValue_p    << endl
        << "FreqValues: "         << freqValue_p << endl
        << "MuellerElements: "    << muellerElement_p << endl
-       << "Data shape: "         << storage_p->shape() 
+       << "Data shape: "         << storage_p->shape() << " " << cfShape_p 
        << endl;
     IPosition dummy;
     Vector<String> csList;

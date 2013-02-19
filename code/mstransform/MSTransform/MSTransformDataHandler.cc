@@ -80,6 +80,7 @@ MSTransformDataHandler::MSTransformDataHandler(Record configuration)
 // -----------------------------------------------------------------------
 MSTransformDataHandler::~MSTransformDataHandler()
 {
+	if (channelSelector_p) delete channelSelector_p;
 	if (visibilityIterator_p) delete visibilityIterator_p;
 	if (splitter_p) delete splitter_p;
 	if (phaseCenterPar_p) delete phaseCenterPar_p;
@@ -111,7 +112,7 @@ void MSTransformDataHandler::initialize()
 	scanIntentSelection_p = String("");
 	observationSelection_p = String("");
 
-	// Initialize Re-index Maps
+	// Input-Output index maps
 	inputOutputObservationIndexMap_p.clear();
 	inputOutputArrayIndexMap_p.clear();
 	inputOutputScanIndexMap_p.clear();
@@ -120,24 +121,22 @@ void MSTransformDataHandler::initialize()
 	inputOutputSPWIndexMap_p.clear();
 	outputInputSPWIndexMap_p.clear();
 
-	// Frequency specification parameters
+	// Frequency transformation parameters
+	combinespws_p = False;
+	hanningSmooth_p = False;
 	channelAverage_p = False;
+	refFrameTransformation_p = False;
+	interpolationMethodPar_p = String("linear");	// Options are: nearest, linear, cubic, spline, fftshift
+	phaseCenterPar_p = new casac::variant("");
+	restFrequency_p = String("");
+	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
+
+	// Frequency specification parameters
 	mode_p = String("channel"); 					// Options are: channel, frequency, velocity
 	start_p = String("0");
 	width_p = String("1");
 	nChan_p = -1;									// -1 means use all the input channels
 	velocityType_p = String("radio");				// When mode is velocity options are: optical, radio
-
-	// Reference Frame Transformation parameters
-	refFrameTransformation_p = False;
-	phaseCenterPar_p = new casac::variant("");
-	restFrequency_p = String("");
-	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
-
-	// Frequency transformation parameters
-	combinespws_p = False;
-	hanningSmooth_p = False;
-	interpolationMethodPar_p = String("linear");	// Options are: nearest, linear, cubic, spline, fftshift
 
 	// Time transformation parameters
 	timeBin_p = 0.0;
@@ -161,6 +160,7 @@ void MSTransformDataHandler::initialize()
 	sortColumns_p[5] = MS::DATA_DESC_ID;
 	sortColumns_p[6] = MS::TIME;
 	visibilityIterator_p = NULL;
+	channelSelector_p = NULL;
 
 	// Output MS structure related members
 	fillFlagCategory_p = False;
@@ -174,6 +174,8 @@ void MSTransformDataHandler::initialize()
 	rowIndex_p.clear();
 	spwChannelMap_p.clear();
 	inputOutputSpwMap_p.clear();
+	frequencyTransformation_p = False;
+	regridms_p = False;
 
 	return;
 }
@@ -581,20 +583,35 @@ void MSTransformDataHandler::setup()
 		}
 	}
 
-	if (combinespws_p)
+	// Check if we need to transform the data cube
+	if (channelAverage_p or refFrameTransformation_p or hanningSmooth_p)
 	{
-		initRefFrameTransParams();
-		regridAndCombineSpwSubtable();
-		reindexSourceSubTable();
-		reindexDDISubTable();
-		reindexFeedSubTable();
-		reindexSysCalSubTable();
-		reindexFreqOffsetSubTable();
+		frequencyTransformation_p = True;
 	}
-	else if (channelAverage_p or refFrameTransformation_p)
+
+	// Check if we have to re-grid the data cube
+	if (combinespws_p or channelAverage_p or refFrameTransformation_p)
+	{
+		regridms_p = True;
+	}
+
+	if (regridms_p)
 	{
 		initRefFrameTransParams();
-		regridSpwSubTable();
+
+		if (combinespws_p)
+		{
+			regridAndCombineSpwSubtable();
+			reindexSourceSubTable();
+			reindexDDISubTable();
+			reindexFeedSubTable();
+			reindexSysCalSubTable();
+			reindexFreqOffsetSubTable();
+		}
+		else
+		{
+			regridSpwSubTable();
+		}
 	}
 
 	checkFillFlagCategory();
@@ -747,14 +764,39 @@ void MSTransformDataHandler::initDataSelectionParams()
 	if (!spwSelection_p.empty())
 	{
 		mssel.setSpwExpr(spwSelection_p);
-		Vector<Int> spwList = mssel.getSpwList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected SPWs Ids are " << spwList << LogIO::POST;
+		Matrix<Int> spwchan = mssel.getChanList(inputMs_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected SPWs Ids are " << spwchan << LogIO::POST;
 
-		for (uInt index=0; index < spwList.size(); index++)
+	    IPosition shape = spwchan.shape();
+	    uInt nSelections = shape[0];
+		Int spw,channelStart,channelStop,channelStep,channelWidth;
+		if (channelSelector_p == NULL) channelSelector_p = new vi::FrequencySelectionUsingChannels();
+		for(uInt selection_i=0;selection_i<nSelections;selection_i++)
 		{
-			inputOutputSPWIndexMap_p[spwList(index)] = index;
-			outputInputSPWIndexMap_p[index] = spwList(index);
+			// Get spw id and set the input-output spw map
+			spw = spwchan(selection_i,0);
+			inputOutputSPWIndexMap_p[spw] = selection_i;
+			outputInputSPWIndexMap_p[selection_i] = spw;
+
+			// Set the channel selection ()
+			channelStart = spwchan(selection_i,1);
+			channelStop = spwchan(selection_i,2);
+			channelStep = spwchan(selection_i,3);
+			channelWidth = channelStop-channelStart+1;
+			channelSelector_p->add (spw, channelStart, channelWidth,channelStep);
 		}
+	}
+
+	if (!polarizationSelection_p.empty())
+	{
+		mssel.setPolnExpr(polarizationSelection_p);
+		Vector <Vector <Slice> > correlationSlices;
+		mssel.getCorrSlices(correlationSlices,inputMs_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected correlations are " << correlationSlices << LogIO::POST;
+
+		if (channelSelector_p == NULL) channelSelector_p = new vi::FrequencySelectionUsingChannels();
+
+		channelSelector_p->addCorrelationSlices(correlationSlices);
 	}
 
 	return;
@@ -1485,6 +1527,7 @@ void MSTransformDataHandler::setIterationApproach()
 void MSTransformDataHandler::generateIterator()
 {
 	visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,sortColumns_p,false,NULL,false,timeBin_p);
+	if (channelSelector_p != NULL) visibilityIterator_p->setFrequencySelection(*channelSelector_p);
 	return;
 }
 
@@ -1946,11 +1989,11 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (combinespws_p)
 				{
-					regridAndCombineCubes(vb->visCube(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+					combineSmoothAndRegridCubes(vb->visCube(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 				}
-				else if (refFrameTransformation_p or channelAverage_p)
+				else if (frequencyTransformation_p)
 				{
-					regridCubes(vb->visCube(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+					smoothAndRegridCubes(vb->visCube(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 				}
 				else
 				{
@@ -1974,11 +2017,11 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				{
 					if (combinespws_p)
 					{
-						regridAndCombineCubes(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+						combineSmoothAndRegridCubes(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 					}
-					else if (refFrameTransformation_p or channelAverage_p)
+					else if (frequencyTransformation_p)
 					{
-						regridCubes(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+						smoothAndRegridCubes(vb->visCubeCorrected(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
@@ -1990,11 +2033,11 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				{
 					if (combinespws_p)
 					{
-						regridAndCombineCubes(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef,vb,outputFlagCol);
+						combineSmoothAndRegridCubes(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef,vb,outputFlagCol);
 					}
-					else if (refFrameTransformation_p or channelAverage_p)
+					else if (frequencyTransformation_p)
 					{
-						regridCubes(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef,vb,outputFlagCol);
+						smoothAndRegridCubes(vb->visCubeCorrected(),outputMsCols_p->correctedData(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
@@ -2019,11 +2062,11 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				{
 					if (combinespws_p)
 					{
-						regridAndCombineCubes(vb->visCubeModel(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+						combineSmoothAndRegridCubes(vb->visCubeModel(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 					}
-					else if (refFrameTransformation_p or channelAverage_p)
+					else if (frequencyTransformation_p)
 					{
-						regridCubes(vb->visCubeModel(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
+						smoothAndRegridCubes(vb->visCubeModel(),outputMsCols_p->data(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
@@ -2035,11 +2078,11 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				{
 					if (combinespws_p)
 					{
-						regridAndCombineCubes(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef,vb,outputFlagCol);
+						combineSmoothAndRegridCubes(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef,vb,outputFlagCol);
 					}
-					else if (refFrameTransformation_p or channelAverage_p)
+					else if (frequencyTransformation_p)
 					{
-						regridCubes(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef,vb,outputFlagCol);
+						smoothAndRegridCubes(vb->visCubeModel(),outputMsCols_p->modelData(),rowRef,vb,outputFlagCol);
 					}
 					else
 					{
@@ -2062,11 +2105,11 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (combinespws_p)
 				{
-					regridAndCombineCubes(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef,vb,outputFlagCol);
+					combineSmoothAndRegridCubes(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef,vb,outputFlagCol);
 				}
-				else if (refFrameTransformation_p or channelAverage_p)
+				else if (frequencyTransformation_p)
 				{
-					regridCubes(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef,vb,outputFlagCol);
+					smoothAndRegridCubes(vb->visCubeFloat(),outputMsCols_p->floatData(),rowRef,vb,outputFlagCol);
 				}
 				else
 				{
@@ -2093,11 +2136,11 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     {
     	if (combinespws_p)
     	{
-    		regridAndCombineCubes(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef,vb,False);
+    		combineSmoothAndRegridCubes(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef,vb,False);
     	}
-    	else if (refFrameTransformation_p or channelAverage_p)
+    	else if (frequencyTransformation_p)
     	{
-    		regridCubes(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef,vb,False);
+    		smoothAndRegridCubes(vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),rowRef,vb,False);
     	}
     	else
     	{
@@ -2167,10 +2210,15 @@ template <class T> void MSTransformDataHandler::writeCube(const Cube<T> &inputCu
 // Apply frequency transformations to each SPWs separately, writing the
 // result plane by plane (i.e. row by row) to reduce memory usage
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::regridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol)
+template <class T> void MSTransformDataHandler::smoothAndRegridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol)
 {
 	// Get input flag cube
 	const Cube<Bool> inputFlagCube = vb->flagCube();
+
+	/*
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Input data cube shape is " << inputDataCube.shape() << " and input flag cube shape is " << inputFlagCube.shape() << LogIO::POST;
+	*/
 
 	// Get spw and define output plane shape
 	Int spw = vb->spectralWindow();
@@ -2182,7 +2230,15 @@ template <class T> void MSTransformDataHandler::regridCubes(const Cube<T> &input
 	uInt nRows = inputCubeShape(2);
 
 	// Define output plane shape
-	IPosition outputPlaneShape(2,nInputCorrelations, inputOutputSpwMap_p[spw].second.NUM_CHAN);
+	IPosition outputPlaneShape;
+	if (regridms_p)
+	{
+		outputPlaneShape = IPosition(2,nInputCorrelations, inputOutputSpwMap_p[spw].second.NUM_CHAN);
+	}
+	else
+	{
+		outputPlaneShape = IPosition(2,nInputCorrelations, nInputChannels);
+	}
 
 	// Iterate row by row in order to extract a plane
 	for (uInt rowIndex=0; rowIndex < nRows; rowIndex++)
@@ -2207,10 +2263,15 @@ template <class T> void MSTransformDataHandler::regridCubes(const Cube<T> &input
 // Apply frequency transformations combining SPWs and writing the
 // result plane by plane (i.e. row by row) to reduce memory usage
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::regridAndCombineCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol)
+template <class T> void MSTransformDataHandler::combineSmoothAndRegridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol)
 {
 	// Get input flag cube
 	const Cube<Bool> inputFlagCube = vb->flagCube();
+
+	/*
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Input data cube shape is " << inputDataCube.shape() << " and input flag cube shape is " << inputFlagCube.shape() << LogIO::POST;
+	*/
 
 	// Get input SPWs
 	Vector<Int> spws = vb->spectralWindows();
@@ -2305,40 +2366,52 @@ template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int
 // -----------------------------------------------------------------------
 template <class T> void MSTransformDataHandler::transformStripeOfData(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
 {
-	if (hanningSmooth_p)
+	if (regridms_p)
 	{
-		Vector<T> intermediate_data(inputDataStripe.shape(),T());
-		Vector<Bool> intermediate_flags(inputDataStripe.shape(),MSTransformations::False);
+		if (hanningSmooth_p)
+		{
+			Vector<T> intermediate_data(inputDataStripe.shape(),T());
+			Vector<Bool> intermediate_flags(inputDataStripe.shape(),MSTransformations::False);
 
-	    Smooth<T>::hanning(	intermediate_data, 		// the output data
-	    					intermediate_flags, 	// the output flags
-	    					inputDataStripe, 		// the input data
-	    					inputFlagsStripe, 		// the input flags
-	    					False);
+		    Smooth<T>::hanning(	intermediate_data, 		// the output data
+		    					intermediate_flags, 	// the output flags
+		    					inputDataStripe, 		// the input data
+		    					inputFlagsStripe, 		// the input flags
+		    					False);					// A good data point has its flag set to False
 
-	    InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
-	    											outputFlagsStripe, // Output flags
-	    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Output channel frequencies
-	    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // Input channel frequencies
-	    											intermediate_data, // Input data
-	    											intermediate_flags, // Input Flags
-	    											interpolationMethod_p, // Interpolation method
-	    											MSTransformations::False, // A good data point has its flag set to False
-	    											MSTransformations::False // If False extrapolated data points are set flagged
-							    					);
+		    InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
+		    											outputFlagsStripe, // Output flags
+		    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Output channel frequencies
+		    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // Input channel frequencies
+		    											intermediate_data, // Input data
+		    											intermediate_flags, // Input Flags
+		    											interpolationMethod_p, // Interpolation method
+		    											False, // A good data point has its flag set to False
+		    											False // If False extrapolated data points are set flagged
+								    					);
+		}
+		else
+		{
+		    InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
+		    											outputFlagsStripe, // Output flags
+		    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Output channel frequencies
+		    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // Input channel frequencies
+		    											inputDataStripe, // Input data
+		    											inputFlagsStripe, // Input Flags
+		    											interpolationMethod_p, // Interpolation method
+		    											False, // A good data point has its flag set to False
+		    											False // If False extrapolated data points are set flagged
+								    					);
+		}
+
 	}
 	else
 	{
-	    InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
-	    											outputFlagsStripe, // Output flags
-	    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Output channel frequencies
-	    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // Input channel frequencies
-	    											inputDataStripe, // Input data
-	    											inputFlagsStripe, // Input Flags
-	    											interpolationMethod_p, // Interpolation method
-	    											MSTransformations::False, // A good data point has its flag set to False
-	    											MSTransformations::False // If False extrapolated data points are set flagged
-							    					);
+	    Smooth<T>::hanning(	outputDataStripe, 		// the output data
+	    					outputFlagsStripe, 		// the output flags
+	    					inputDataStripe, 		// the input data
+	    					inputFlagsStripe, 		// the input flags
+	    					False);					// A good data point has its flag set to False
 	}
 
 	return;

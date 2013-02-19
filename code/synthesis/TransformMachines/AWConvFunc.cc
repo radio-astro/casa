@@ -444,6 +444,17 @@ namespace casa{
 				  freqValues(inu), wValues(iw), muellerElements(imx)(imy));
 		    cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
 				     muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
+
+		    //
+		    // Now tha the CFs have been computed, cache its
+		    // paramters in CFCell for quick access in tight
+		    // loops (in the re-sampler, e.g.).
+		    //
+		    (cfWtb.getCFCellPtr(freqValues(inu), wValues(iw), 
+					muellerElements(imx)(imy)))->initCache();
+		    (cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
+				      muellerElements(imx)(imy)))->initCache();
+
 		    //tim.show("End*2:");
     		  }
 	      }
