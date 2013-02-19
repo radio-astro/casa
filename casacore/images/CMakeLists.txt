@@ -40,7 +40,6 @@ Images/ImageMetaData.cc
 Images/ImagePolarimetry.cc
 Images/ImageExprGram.cc
 Images/MaskSpecifier.cc
-Images/ImageMomentsProgress.cc
 Images/ImageBeamSet.cc
 Images/FITSImage.cc
 Images/FITSErrorImage.cc
@@ -58,7 +57,6 @@ Images/ImageFITS2Converter.cc
 Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
-Images/ImageMomentsProgressMonitor.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -113,7 +111,6 @@ Images/ImageInfo.h
 Images/ImageInterface.h
 Images/ImageInterface.tcc
 Images/ImageMetaData.h
-Images/ImageMomentsProgress.h
 Images/ImageOpener.h
 Images/ImagePolarimetry.h
 Images/ImageProxy.h
@@ -139,7 +136,6 @@ Images/SubImage.tcc
 Images/TempImage.h
 Images/TempImage.tcc
 Images/WCBox.h
-Images/ImageMomentsProgressMonitor.h
 DESTINATION include/casacore/images/Images
 )
 
