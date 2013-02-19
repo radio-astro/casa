@@ -82,10 +82,11 @@ def run_search(
     append
 ):
     mysl = sltool()
+    restool = None
     if (not mysl.open(table)):
         raise Exception
-    try: 
-        restool = mysl.search(
+    try:
+        return mysl.search(
             outfile=outfile, freqrange=freqrange,
             species=species, reconly=reconly,
             chemnames=chemnames, qns=qns,
@@ -94,11 +95,11 @@ def run_search(
             rrlonly=rrlonly, verbose=verbose, logfile=logfile,
             append=append
         )
-        mysl.close()
-        return restool
-    except Exception, instance:
-        mysl.close()
-        raise instance
+    except Exception:
+        raise
+    finally:
+        mysl.done()
+   
 
 def run_slsearch(
     table, outfile, freqrange, species, reconly,
@@ -117,6 +118,9 @@ def run_slsearch(
         append=append
     )
 
+
+_mycount = 0
+
 class slsearch_test(unittest.TestCase):
     
     def _testit(
@@ -125,6 +129,7 @@ class slsearch_test(unittest.TestCase):
         eu, rrlinclude, rrlonly, verbose, logfile,
         append, nrows
     ):
+        global _mycount
         mysl = sltool()
         mytb = tbtool()
         for i in [0, 1]:
@@ -136,20 +141,27 @@ class slsearch_test(unittest.TestCase):
                     append
                 )
             else:
-                mysl = run_slsearch(
-                    table, outfile, freqrange, species,
-                    reconly, chemnames, qns, intensity,
-                    smu2, loga, el, eu, rrlinclude, rrlonly,
-                    verbose, logfile, append
+                if (not outfile):
+                    outfile = "count" + str(_mycount) + ".tbl"
+                    _mycount = _mycount + 1
+                self.assertTrue(
+                    run_slsearch(
+                        table, outfile, freqrange, species,
+                        reconly, chemnames, qns, intensity,
+                        smu2, loga, el, eu, rrlinclude, rrlonly,
+                        verbose, logfile, append
+                    )
                 )
+                mysl.open(outfile)
             self.assertEqual(nrows, mysl.nrows())
-            mysl.close()
+            mysl.done()
 
             if (outfile):
                 mytb.open(outfile)
                 self.assertEqual(nrows, mytb.nrows())
-                mytb.close()
                 shutil.rmtree(outfile)
+            mytb.done()
+
     
     def setUp(self):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/slsearch/'
@@ -157,6 +169,7 @@ class slsearch_test(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(good_table)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_exceptions(self):
         """slsearch: Test various exception cases"""
@@ -175,6 +188,7 @@ class slsearch_test(unittest.TestCase):
                         rrlinclude, rrlonly, verbose, logfile, 
                         append
                     )
+                    self.assertTrue(len(tb.showcache()) == 0)
                 else:
                     self.assertEqual(
                         run_slsearch(
@@ -184,6 +198,8 @@ class slsearch_test(unittest.TestCase):
                             verbose, logfile, append
                         ), None
                     )
+                    self.assertTrue(len(tb.showcache()) == 0)
+
         # bogus input table name
         testit(
             table="fred.tbl", outfile="x", freqrange=[0, 100], species=[],
@@ -192,6 +208,8 @@ class slsearch_test(unittest.TestCase):
             verbose=True, logfile="", append=True
         )
         # bad output name
+        self.assertTrue(len(tb.showcache()) == 0)
+
         testit(
             table=good_table, outfile="/x", freqrange=[0, 100], species=[],
             reconly=True, chemnames=[], qns=[], intensity=[-1], smu2=[-1],

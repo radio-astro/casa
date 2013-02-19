@@ -120,8 +120,8 @@ spectralline* spectralline::search(
 	const bool includeRRLs, const bool onlyRRLs,
 	const bool verbose, const string& logfile, const bool append
 ) {
-	spectralline *tool = 0;
-	SplatalogueTable *t = 0;
+	std::auto_ptr<spectralline> tool;
+	std::auto_ptr<SplatalogueTable> table;
 
 	try {
 		if (_detached()) {
@@ -180,30 +180,30 @@ spectralline* spectralline::search(
 		}
 
 		SearchEngine engine(_table, verbose, logfile, append);
-		t = engine.search(
-			outfile, freqRange[0], freqRange[1], mySpecies,
-			recommendedOnly, myChemNames, myQNs, intensityLow,
-			intensityHigh, smu2Low, smu2High, logaLow, logaHigh,
-			elLow, elHigh, euLow, euHigh, includeRRLs, onlyRRLs
+		table.reset(
+			engine.search(
+				outfile, freqRange[0], freqRange[1], mySpecies,
+				recommendedOnly, myChemNames, myQNs, intensityLow,
+				intensityHigh, smu2Low, smu2High, logaLow, logaHigh,
+				elLow, elHigh, euLow, euHigh, includeRRLs, onlyRRLs
+			)
 		);
-		*_log << LogIO::NORMAL << "Search found " << t->nrow() << " spectral lines" << LogIO::POST;
-		tool = new spectralline(t);
+		*_log << LogIO::NORMAL << "Search found " << table->nrow() << " spectral lines" << LogIO::POST;
+		tool.reset(new spectralline(table.get()));
+		table.release();
 	}
-	catch (AipsError x) {
-		if (tool) {
+	catch (const AipsError& x) {
+		if (tool.get()) {
 			tool->close();
-			delete tool;
 		}
-		if (t) {
-			t->relinquishAutoLocks(True);
-			t->unlock();
-			delete t;
-			t = 0;
+		if (table.get()) {
+			table->relinquishAutoLocks(True);
+			table->unlock();
 		}
 		*_log << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
-	return tool;
+	return tool.release();
 }
 
 void spectralline::list() {

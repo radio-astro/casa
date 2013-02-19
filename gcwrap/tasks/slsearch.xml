@@ -82,10 +82,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=True and logfile not blank.</description>
             <value>False</value>
         </param>
-        <param type="bool" name="wantreturn">
-            <description>If true, return the spectralline tool associated with the result set.</description>
-            <value>True</value>
-        </param>
 
     <constraints>
         <when param="verbose">
@@ -122,7 +118,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 </input>
-<returns type="casaspectralline"/>
+<returns type="bool"/>
 
 <example>
 
@@ -145,28 +141,17 @@ rrlonly        Include only RRLs in the result set?
 verbose        List result set to logger (and optionally logfile)?
 logfile        List result set to this logfile (only used if verbose=True).
 append         If true, append to logfile if it already exists, if false overwrite logfile it it exists. Only used if verbose=True and logfile not blank.
-wantreturn     If true, return the spectralline tool associated with the result set.
 
-    Search the specfied spectral line table. The return value (if wantreturn=true) is a spectralline tool with a new table containing the search
-    results. This new table can be written to disk by specifying its name in the outfile parameter. If outfile is not specified
-    (ie outfile=""), the resulting table is held in memory and deleted upon a call to close() or done() for the newly created tool
-    or upon exiting casapy if wantreturn=True or immediately upon completion of task execution if wantreturn=False. Because Splatalogue does not have values for intensity, smu2, loga, eu, and el
-    for radio recombination lines (rrls), one must specify to include rrls in the specified frequency range in the output. In this case,
-    RRLs will be included ignoring any filters on intensity, smu2, loga, eu, and el. One can also specify to list only RRLs. One can specify 
-    to list the search results to the logger via the verbose parameter. If verbose is False, no logger output is listed, although the results 
-    can be listed later by running the sl.list() method on the newly created spectral line tool if wantreturn=True. If verbose=True, one can also specify that
-    the results be listed to a logfile and if this file already exists, one can specify that the results be appended to it or to overwrite
-    it with the results.
+    Search the specfied spectral line table. The results table can be written to disk by specifying its name in the outfile parameter.
+    If outfile is not specified (ie outfile=""), no table is created. Because Splatalogue does not have values for intensity, smu2,
+    loga, eu, and el for radio recombination lines (rrls), one must specify to include RRLs in the specified frequency range in the
+    output. In this case, RRLs will be included ignoring any filters on intensity, smu2, loga, eu, and el. One can also specify to
+    list only RRLs. One can specify to list the search results to the logger via the verbose parameter. If verbose is False, no
+    logger output is listed. If verbose=True, one can also specify that the results be listed to a logfile and if this file already
+    exists, one can specify that the results be appended to it or to overwrite it with the results.
     
-    slrestool = slsearch("myspectrallines.tbl", verbose=False)
-    # do a search postponing listing the results to the logger.
-    slrestool = sl.search(outfile="myresults.tbl", freqrange = [200,300], species=['HOCN', 'HOCO+'])
-    # now list the results
-    slrestool.list()
-    # or one could also do the following after exiting and restarting casapy
-    sl.open("myresults.tbl")
-    sl.list()
-    
+    # put search results in a table but do not list to the logger
+    slsearch("myspectrallines.tbl", verbose=False)
 
 </example>
 
