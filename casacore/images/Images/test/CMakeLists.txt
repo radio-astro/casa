@@ -43,7 +43,6 @@ tImageExpr2Gram
 tImageExpr3Gram
 tImageExprGram
 tImageExprParse_addDir
-tImageFFT
 tImageInfo
 tImageMetaData
 tImageRegrid

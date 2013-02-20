@@ -50,7 +50,6 @@ Images/PagedImage2.cc
 Images/ImageExprParse.cc
 Images/ImageOpener.cc
 Images/LELImageCoord.cc
-Images/ImageFFT.cc
 Images/ImageUtilities.cc
 Images/ImageFITS2Converter.cc
 Images/MIRIADImage.cc
@@ -99,7 +98,6 @@ Images/ImageExpr.h
 Images/ImageExpr.tcc
 Images/ImageExprGram.h
 Images/ImageExprParse.h
-Images/ImageFFT.h
 Images/ImageFITSConverter.h
 Images/ImageFITSConverter.tcc
 Images/ImageInfo.h
