@@ -35,6 +35,7 @@ Annotations/AnnText.cc
 Annotations/AnnVector.cc
 Annotations/RegionTextList.cc
 
+ImageAnalysis/AntennaResponses.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapser.cc
@@ -89,6 +90,7 @@ install (FILES
 	DESTINATION include/casacode/imageanalysis/IO
 	)
 install (FILES
+	ImageAnalysis/AntennaResponses.h
 	ImageAnalysis/ComponentImager.h
 	ImageAnalysis/Image2DConvolver.h
 	ImageAnalysis/Image2DConvolver.tcc
@@ -152,6 +154,7 @@ casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tAntennaResponses.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tComponentImager.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
