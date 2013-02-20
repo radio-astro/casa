@@ -45,7 +45,6 @@ tImageExpr3Gram
 tImageExprGram
 tImageExprParse_addDir
 tImageFFT
-tImageFit1D
 tImageInfo
 tImageMetaData
 tImagePolarimetry

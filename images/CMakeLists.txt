@@ -105,8 +105,6 @@ Images/ImageExprParse.h
 Images/ImageFFT.h
 Images/ImageFITSConverter.h
 Images/ImageFITSConverter.tcc
-Images/ImageFit1D.h
-Images/ImageFit1D.tcc
 Images/ImageInfo.h
 Images/ImageInterface.h
 Images/ImageInterface.tcc
