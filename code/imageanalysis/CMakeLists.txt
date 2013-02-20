@@ -38,6 +38,7 @@ Annotations/RegionTextList.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapser.cc
+ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
 ImageAnalysis/ImageMomentsProgress.cc
@@ -97,6 +98,7 @@ install (FILES
 	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
+	ImageAnalysis/ImageFFT.h
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageFit1D.h
 	ImageAnalysis/ImageFit1D.tcc
@@ -158,6 +160,7 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageFFT.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePolarimetry.cc )

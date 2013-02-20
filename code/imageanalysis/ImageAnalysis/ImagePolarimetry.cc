@@ -43,7 +43,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageExpr.h>
-#include <images/Images/ImageFFT.h>
+#include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageSummary.h>
 #include <images/Images/TempImage.h>

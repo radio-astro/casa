@@ -78,7 +78,7 @@
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
-#include <images/Images/ImageFFT.h>
+#include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
