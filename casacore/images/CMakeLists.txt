@@ -34,7 +34,6 @@ Regions/WCBox.cc
 Regions/AipsIOReaderWriter.cc
 Regions/WCComplement.cc
 Regions/RegionHandlerHDF5.cc
-Images/AntennaResponses.cc
 Images/ImageInfo.cc
 Images/ImageMetaData.cc
 Images/ImageExprGram.cc
@@ -78,7 +77,6 @@ LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUT
 )
 
 install (FILES
-Images/AntennaResponses.h
 Images/CurvedImage2D.h
 Images/CurvedImage2D.tcc
 Images/ExtendImage.h
