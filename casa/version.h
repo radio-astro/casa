@@ -30,7 +30,7 @@
 
 #include <string>
 
-#define CASACORE_VERSION "1.0.192"
+#define CASACORE_VERSION "1.0.193"
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

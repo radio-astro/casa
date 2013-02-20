@@ -96,8 +96,6 @@ Images/HDF5Image.tcc
 Images/ImageBeamSet.h
 Images/ImageConcat.h
 Images/ImageConcat.tcc
-Images/ImageConvolver.h
-Images/ImageConvolver.tcc
 Images/ImageExpr.h
 Images/ImageExpr.tcc
 Images/ImageExprGram.h

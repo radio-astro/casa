@@ -38,7 +38,6 @@ tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
 tImageConcat
-tImageConvolver
 tImageEmpty
 tImageExpr2Gram
 tImageExpr3Gram
