@@ -28,7 +28,6 @@ dImageInterface
 dImageStatistics
 dImageSummary
 dPagedImage
-tAntennaResponses
 tExtendImage
 tFITSImage
 tFITSImgParser
