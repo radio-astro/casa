@@ -75,7 +75,7 @@
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
-#include <images/Images/ImageConvolver.h>
+#include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>

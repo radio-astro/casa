@@ -92,6 +92,8 @@ install (FILES
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
 	ImageAnalysis/ImageCollapser.h
+	ImageAnalysis/ImageConvolver.h
+	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFitter.h
@@ -151,6 +153,7 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
