@@ -28,7 +28,7 @@
 #ifndef SYNTHESIS_VPMANAGER_H
 #define SYNTHESIS_VPMANAGER_H
 
-#include <images/Images/AntennaResponses.h>
+#include <imageanalysis/ImageAnalysis/AntennaResponses.h>
 
 namespace casa {
   //Forward declarations
