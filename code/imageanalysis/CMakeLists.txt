@@ -95,6 +95,8 @@ install (FILES
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
 	ImageAnalysis/ImageFitter.h
+	ImageAnalysis/ImageFit1D.h
+	ImageAnalysis/ImageFit1D.tcc
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
@@ -150,6 +152,7 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageSourceFinder.cc )
