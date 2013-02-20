@@ -24,7 +24,6 @@
 #include <components/ComponentModels/SkyCompRep.h>
 
 #include <images/Images/ImageConcat.h>
-#include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
