@@ -43,6 +43,7 @@ ImageAnalysis/ImageInputProcessor.cc
 ImageAnalysis/ImageMomentsProgress.cc
 ImageAnalysis/ImageMomentsProgressMonitor.cc
 ImageAnalysis/ImagePadder.cc
+ImageAnalysis/ImagePolarimetry.cc
 ImageAnalysis/ImagePolProxy.cc
 ImageAnalysis/ImagePrimaryBeamCorrector.cc
 ImageAnalysis/ImageProfileFitter.cc
@@ -107,6 +108,7 @@ install (FILES
     ImageAnalysis/ImageMomentsProgress.h
     ImageAnalysis/ImageMomentsProgressMonitor.h
 	ImageAnalysis/ImagePadder.h
+	ImageAnalysis/ImagePolarimetry.h
 	ImageAnalysis/ImagePolProxy.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
 	ImageAnalysis/ImageProfileFitter.h
@@ -158,13 +160,14 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImagePolarimetry.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageSourceFinder.cc )
-casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageInputProcessor.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageProfileFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageTransposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tSepImageConvolver.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
 
 casa_add_assay( imageanalysis IO/test/tFitterEstimatesFileParser.cc )
 casa_add_assay( imageanalysis IO/test/tProfileFitterEstimatesFileParser.cc )

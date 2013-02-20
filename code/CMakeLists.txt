@@ -690,7 +690,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.193
+           VERSION 1.0.194
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -927,7 +927,7 @@ casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics Boost)
 casa_add_module( imageanalysis CASACORE Boost)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE )
-casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE)
+casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE imageanalysis)
 casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
 casa_add_module( spectrallines CASACORE imageanalysis Boost SQLITE)
 casa_add_module( components stdcasa CASACORE)
