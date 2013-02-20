@@ -115,8 +115,6 @@ Images/ImageUtilities2.tcc
 Images/LELImageCoord.h
 Images/MIRIADImage.h
 Images/MaskSpecifier.h
-Images/MomentsBase.h
-Images/MomentsBase.tcc
 Images/PagedImage.h
 Images/PagedImage.tcc
 Images/RebinImage.h
