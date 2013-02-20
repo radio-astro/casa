@@ -46,7 +46,6 @@ tImageExprParse_addDir
 tImageFFT
 tImageInfo
 tImageMetaData
-tImagePolarimetry
 tImageRegrid
 tImageStatistics
 tImageUtilities

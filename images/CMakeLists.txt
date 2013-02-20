@@ -37,7 +37,6 @@ Regions/RegionHandlerHDF5.cc
 Images/AntennaResponses.cc
 Images/ImageInfo.cc
 Images/ImageMetaData.cc
-Images/ImagePolarimetry.cc
 Images/ImageExprGram.cc
 Images/MaskSpecifier.cc
 Images/ImageBeamSet.cc
@@ -108,7 +107,6 @@ Images/ImageInterface.h
 Images/ImageInterface.tcc
 Images/ImageMetaData.h
 Images/ImageOpener.h
-Images/ImagePolarimetry.h
 Images/ImageProxy.h
 Images/ImageRegrid.h
 Images/ImageRegrid.tcc
