@@ -26,7 +26,6 @@
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
-#include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageRegrid.h>
