@@ -149,7 +149,7 @@ FinalTvi2::writeKeyValues (MeasurementSet & /*ms*/, const RefRows & rows)
 
     columns_p.time_p.putColumnCells (rows, getVisBuffer()->time());
 
-    columns_p.field_p.putColumnCells (rows, Vector<Int> (getVisBuffer()->nRows(), getVisBuffer()->fieldId()));
+    columns_p.field_p.putColumnCells (rows, getVisBuffer()->fieldId());
 }
 
 void
@@ -163,8 +163,7 @@ FinalTvi2::writeMiscellaneousValues (MeasurementSet & /*ms*/, const RefRows & ro
 
     columns_p.scan_p.putColumnCells (rows, getVisBuffer()->scan());
 
-    Vector<Int> arrayIds (getVisBuffer()->nRows(), getVisBuffer()->arrayId ());
-    columns_p.array_p.putColumnCells (rows, arrayIds);
+    columns_p.array_p.putColumnCells (rows, getVisBuffer()->arrayId ());
 
     columns_p.observation_p.putColumnCells (rows, getVisBuffer()->observationId());
 

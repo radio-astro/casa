@@ -20,6 +20,8 @@ class MeasurementSet;
 
 namespace ms {
 
+#warning "Needs battery of low-level tests; also needs write functionality"
+
 class SpectralChannel {
 
 public:

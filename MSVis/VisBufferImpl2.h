@@ -242,8 +242,8 @@ public:
     virtual void setAntenna1 (const Vector<Int> & value);
     virtual const Vector<Int> & antenna2 () const;
     virtual void setAntenna2 (const Vector<Int> & value);
-    virtual Int arrayId () const;
-    virtual void setArrayId (Int value);
+    virtual const Vector<Int> & arrayId () const;
+    virtual void setArrayId (const Vector<Int> &);
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
     virtual const Vector<Int> & correlationTypes () const;
     virtual Int dataDescriptionId () const;
@@ -260,8 +260,8 @@ public:
     virtual const Vector<Int> & feed2 () const;
     virtual void setFeed2 (const Vector<Int> & value);
     virtual const Vector<Float> & feedPa2 () const;
-    virtual Int fieldId () const;
-    virtual void setFieldId (Int value);
+    virtual const Vector<Int> & fieldId () const;
+    virtual void setFieldId (const Vector<Int> &);
     virtual const Matrix<Bool> & flag () const;
     virtual void setFlag (const Matrix<Bool>&);
     virtual const Array<Bool> & flagCategory () const;
@@ -422,7 +422,7 @@ private:
 
     virtual void fillAntenna1 (Vector<Int>& value) const;
     virtual void fillAntenna2 (Vector<Int>& value) const;
-    virtual void fillArrayId (Int& value) const;
+    virtual void fillArrayId (Vector<Int>& value) const;
     virtual void fillCorrType (Vector<Int>& value) const;
     virtual void fillCubeCorrected (Cube <Complex> & value) const;
     virtual void fillCubeModel (Cube <Complex> & value) const;
@@ -443,7 +443,7 @@ private:
     virtual void fillFeedPaAux (Vector <Float> & feedPa,
                         const Vector <Int> & antenna,
                         const Vector <Int> & feed) const;
-    virtual void fillFieldId (Int& value) const;
+    virtual void fillFieldId (Vector<Int>& value) const;
     virtual void fillFlag (Matrix<Bool>& value) const;
     virtual void fillFlagCategory (Array<Bool>& value) const;
     virtual void fillFlagCube (Cube<Bool>& value) const;

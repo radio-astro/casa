@@ -323,11 +323,10 @@ public:
     virtual Double hourang (Double time) const;
 
     // Return the current FieldId
-    virtual Int fieldId () const;
-
+    virtual void fieldIds (Vector<Int>&) const;
 
     // Return the current ArrayId
-    virtual Int arrayId () const;
+    virtual void arrayIds (Vector<Int>&) const;
 
     // Return the current Field Name
     virtual String fieldName () const;

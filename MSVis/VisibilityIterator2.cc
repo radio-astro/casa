@@ -179,11 +179,11 @@ VisibilityIterator2::ms () const
     return impl_p->ms ();
 }
 
-Int
-VisibilityIterator2::arrayId () const
+void
+VisibilityIterator2::arrayIds (Vector<Int>& ids) const
 {
     CheckImplementationPointerR ();
-    return impl_p->arrayId ();
+    return impl_p->arrayIds (ids);
 }
 
 
@@ -316,11 +316,11 @@ VisibilityIterator2::feed_pa (Double time) const
     return impl_p->feed_pa (time);
 }
 
-Int
-VisibilityIterator2::fieldId () const
+void
+VisibilityIterator2::fieldIds (Vector<Int>& ids) const
 {
     CheckImplementationPointerR ();
-    return impl_p->fieldId ();
+    return impl_p->fieldIds (ids);
 }
 
 String

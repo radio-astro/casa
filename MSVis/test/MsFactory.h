@@ -288,6 +288,8 @@ public:
 
     void setDataGenerator (MSMainEnums::PredefinedColumns, GeneratorBase * generator);
 
+    void setIncludeAutocorrelations (Bool includeThem);
+
     void setTimeInfo (Double startingTime,
                       Double endingTime,
                       Double interval);
@@ -443,6 +445,7 @@ private:
     Columns columns_p;
     ColumnIds columnIds_p;
     Generators generators_p;
+    Bool includeAutocorrelations_p;
     MeasurementSet * ms_p;
     Int nAntennas_p;
     Int nRows_p;

@@ -3,6 +3,7 @@
 #include <ms/MeasurementSets.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/test/MsFactory.h>
 
 #include <boost/tuple/tuple.hpp>
 #include <map>
@@ -10,8 +11,6 @@
 #include <utility>
 
 using namespace std;
-
-#include "MsFactory.cc"
 
 namespace casa {
 

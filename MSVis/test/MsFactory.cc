@@ -17,7 +17,8 @@ namespace test {
 
 
 MsFactory::MsFactory (const String & msName)
- : simulator_p (new NewMSSimulator (msName)),
+ : includeAutocorrelations_p (False),
+   simulator_p (new NewMSSimulator (msName)),
    timeStart_p (-1)
 {
     ms_p = new MeasurementSet (* simulator_p->getMs ()); //
@@ -360,17 +361,20 @@ MsFactory::fillRows (FillState & fillState)
     // Extend the MS to have one row per every unique pairing
     // of antennas.
 
-    Int n = fillState.nAntennas_p;
+    Int n = fillState.nAntennas_p + (includeAutocorrelations_p ? 1 : 0);
     Int nNewRows = (n * (n - 1)) / 2;
     ms_p->addRow(nNewRows);
 
     // Fill in a row for every unique antenna pairing.
 
+
     for (Int a1 = 0; a1 < fillState.nAntennas_p; a1 ++){
 
         fillState.antenna1_p = a1;
 
-        for (Int a2 = 0; a2 < a1; a2 ++){
+        Int finalA2 = includeAutocorrelations_p ? a1 : a1 - 1;
+
+        for (Int a2 = 0; a2 <= finalA2; a2 ++){
 
             fillState.antenna2_p = a2;
 
@@ -591,6 +595,12 @@ void
 MsFactory::setDataGenerator (MSMainEnums::PredefinedColumns column, GeneratorBase * generator)
 {
     generators_p.set (column, generator);
+}
+
+void
+MsFactory::setIncludeAutocorrelations (Bool includeThem)
+{
+    includeAutocorrelations_p = includeThem;
 }
 
 void

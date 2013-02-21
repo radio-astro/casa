@@ -80,10 +80,10 @@ TransformingVi2::antennaMounts ()  const
     return getVii()->antennaMounts ();
 }
 
-Int
-TransformingVi2::arrayId ()  const
+void
+TransformingVi2::arrayIds (Vector<Int>& ids)  const
 {
-    return getVii()->arrayId ();
+    return getVii()->arrayIds (ids);
 }
 
 const Vector<MDirection> &
@@ -146,10 +146,10 @@ TransformingVi2::feed_pa (Double time)  const
     return getVii()->feed_pa (time);
 }
 
-Int
-TransformingVi2::fieldId ()  const
+void
+TransformingVi2::fieldIds (Vector<Int>& ids)  const
 {
-    return getVii()->fieldId ();
+    return getVii()->fieldIds (ids);
 }
 
 String
