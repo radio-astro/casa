@@ -119,7 +119,8 @@ public:
   // Locate datum nearest to specified x,y
   Record getPointMetaData(Int i);
   Record locateInfo(const Vector<PlotRegion>& regions,
-                    Bool showUnflagged, Bool showFlagged);
+                    Bool showUnflagged, Bool showFlagged,
+                    Bool selectAll = true);
   PlotLogMessage* locateRange(const Vector<PlotRegion>& regions,
 			      Bool showUnflagged, Bool showFlagged);
   PlotLogMessage* flagRange(const PlotMSFlagging& flagging,

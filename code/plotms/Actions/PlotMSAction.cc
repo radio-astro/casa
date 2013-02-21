@@ -202,12 +202,11 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	            PlotLogMessage* m = NULL;
 	            try {
 	                if(itsType_ == SEL_LOCATE) {
-			  m = plot->cache().indexer(plot->iter()).locateRange(Vector<PlotRegion>(regions),
-									      showUnflagged,showFlagged);
+              m = plot->cache().indexer(plot->iter()+j).locateRange(
+                  Vector<PlotRegion>(regions),showUnflagged,showFlagged);
 	                } else {
-			  m = plot->cache().indexer(plot->iter()).flagRange(flagging,
-									    Vector<PlotRegion>(regions),
-									    itsType_ == SEL_FLAG);
+              m = plot->cache().indexer(plot->iter()+j).flagRange(
+                  flagging, Vector<PlotRegion>(regions), itsType_ == SEL_FLAG);
 	                }
 	                
 	            // ...and catch any reported errors.
@@ -620,17 +619,15 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
 	    }
 
             if(t == PlotExportFormat::TEXT) {
-                Record r;
+                Record rec;
                 PlotMSAction action(PlotMSAction::SEL_INFO);
-                bool success = action.doActionWithResponse(plotms, r);
-                if(r.nfields() < 1) return success;
+                bool success = action.doActionWithResponse(plotms, rec);
+                if(rec.nfields() < 1) return success;
                 // Write record data to file
                 ofstream csv_file;
                 csv_file.open(file.c_str());
-                String xunit = r.asString("xaxis");
-                String yunit = r.asString("yaxis");
-                r.removeField("xaxis");
-                r.removeField("yaxis");
+                String xunit = rec.subRecord(0).asString("xaxis");
+                String yunit = rec.subRecord(0).asString("yaxis");
                 csv_file << "# x y chan scan field ant1 ant2 ant1name "
                          << "ant2name time freq spw corr offset currchunk irel"
                          << endl;
@@ -638,67 +635,73 @@ bool PlotMSAction::doAction(PlotMSApp* plotms) {
                          << " None None None None None None None "
                          << "MJD(seconds) GHz None None None None None"
                          << endl;
-                for(uInt _field = 0; _field < r.nfields(); ++_field) {
-                    ostringstream fs;
-                    fs << _field;
-                    String field_str = fs.str();
-                    Double x = r.subRecord(field_str).asDouble("x");
-                    Double y = r.subRecord(field_str).asDouble("y");
-                    Int chan = r.subRecord(field_str).asInt("chan");
-                    Int scan = r.subRecord(field_str).asInt("scan");
-                    Int field = r.subRecord(field_str).asInt("field");
-                    Int ant1 = r.subRecord(field_str).asInt("ant1");
-                    Int ant2 = r.subRecord(field_str).asInt("ant2");
-                    String ant1name =
-                        r.subRecord(field_str).asString("ant1name");
-                    String ant2name =
-                        r.subRecord(field_str).asString("ant2name");
-                    //String time = r.subRecord(field_str).asString("time");
-                    Double time = r.subRecord(field_str).asDouble("time");
-                    Int spw = r.subRecord(field_str).asInt("spw");
-                    Double freq = r.subRecord(field_str).asDouble("freq");
-                    String corr = r.subRecord(field_str).asString("corr");
-                    Int offset = r.subRecord(field_str).asInt("offset");
-                    Int currchunk = r.subRecord(field_str).asInt("currchunk");
-                    Int irel = r.subRecord(field_str).asInt("irel");
-                    int precision = csv_file.precision();
-                    if(xunit == "Time") {
+                for(uInt n = 0; n < rec.nfields(); ++n) {
+                    Record r = rec.subRecord(n);
+                    csv_file << "# From plot " << n << endl;
+                    r.removeField("xaxis");
+                    r.removeField("yaxis");
+                    for(uInt _field = 0; _field < r.nfields(); ++_field) {
+                        ostringstream fs;
+                        fs << _field;
+                        String field_str = fs.str();
+                        Double x = r.subRecord(field_str).asDouble("x");
+                        Double y = r.subRecord(field_str).asDouble("y");
+                        Int chan = r.subRecord(field_str).asInt("chan");
+                        Int scan = r.subRecord(field_str).asInt("scan");
+                        Int field = r.subRecord(field_str).asInt("field");
+                        Int ant1 = r.subRecord(field_str).asInt("ant1");
+                        Int ant2 = r.subRecord(field_str).asInt("ant2");
+                        String ant1name =
+                            r.subRecord(field_str).asString("ant1name");
+                        String ant2name =
+                            r.subRecord(field_str).asString("ant2name");
+                        //String time = r.subRecord(field_str).asString("time");
+                        Double time = r.subRecord(field_str).asDouble("time");
+                        Int spw = r.subRecord(field_str).asInt("spw");
+                        Double freq = r.subRecord(field_str).asDouble("freq");
+                        String corr = r.subRecord(field_str).asString("corr");
+                        Int offset = r.subRecord(field_str).asInt("offset");
+                        Int currchunk = r.subRecord(field_str).asInt("currchunk");
+                        Int irel = r.subRecord(field_str).asInt("irel");
+                        int precision = csv_file.precision();
+                        if(xunit == "Time") {
+                            csv_file << std::setprecision(3) << std::fixed
+                                     << x << " ";
+                            csv_file.unsetf(ios_base::fixed);
+                            csv_file.precision(precision);
+                        } else if(xunit == "Frequency") {
+                            csv_file << std::setprecision(9) << std::fixed
+                                     << x << " ";
+                            csv_file.unsetf(ios_base::fixed);
+                            csv_file.precision(precision);
+                        } else {
+                            csv_file << x << " ";
+                        }
+                        if(yunit == "Time") {
+                            csv_file << std::setprecision(3) << std::fixed
+                                     << y << " ";
+                            csv_file.unsetf(ios_base::fixed);
+                            csv_file.precision(precision);
+                        } else if(yunit == "Frequency") {
+                            csv_file << std::setprecision(9) << std::fixed
+                                     << y << " ";
+                            csv_file.unsetf(ios_base::fixed);
+                            csv_file.precision(precision);
+                        } else {
+                            csv_file << y << " ";
+                        }
+                        csv_file << chan << " " << scan << " " << field << " "
+                                 << ant1 << " " << ant2 << " " << ant1name << " "
+                                 << ant2name << " ";
                         csv_file << std::setprecision(3) << std::fixed
-                                 << x << " ";
-                        csv_file.unsetf(ios_base::fixed);
-                        csv_file.precision(precision);
-                    } else if(xunit == "Frequency") {
+                                 << time << " ";
                         csv_file << std::setprecision(9) << std::fixed
-                                 << x << " ";
+                                 << freq << " ";
                         csv_file.unsetf(ios_base::fixed);
                         csv_file.precision(precision);
-                    } else {
-                        csv_file << x << " ";
+                        csv_file << spw << " " << corr << " " << offset << " "
+                                 << currchunk << " " << irel << endl;
                     }
-                    if(yunit == "Time") {
-                        csv_file << std::setprecision(3) << std::fixed
-                                 << y << " ";
-                        csv_file.unsetf(ios_base::fixed);
-                        csv_file.precision(precision);
-                    } else if(yunit == "Frequency") {
-                        csv_file << std::setprecision(9) << std::fixed
-                                 << y << " ";
-                        csv_file.unsetf(ios_base::fixed);
-                        csv_file.precision(precision);
-                    } else {
-                        csv_file << y << " ";
-                    }
-                    csv_file << chan << " " << scan << " " << field << " "
-                             << ant1 << " " << ant2 << " " << ant1name << " "
-                             << ant2name << " ";
-                    csv_file << std::setprecision(3) << std::fixed
-                             << time << " ";
-                    csv_file << std::setprecision(9) << std::fixed
-                             << freq << " ";
-                    csv_file.unsetf(ios_base::fixed);
-                    csv_file.precision(precision);
-                    csv_file << spw << " " << corr << " " << offset << " "
-                             << currchunk << " " << irel << endl;
                 }
                 csv_file.close();
                 return success;
@@ -850,8 +853,15 @@ bool PlotMSAction::doActionWithResponse(PlotMSApp* plotms, Record &retval) {
             PMS_PP_Display* d = params.typedGroup<PMS_PP_Display>();
             Bool showUnflagged=(d->unflaggedSymbol()->symbol()!=PlotSymbol::NOSYMBOL);
             Bool showFlagged=(d->flaggedSymbol()->symbol()!=PlotSymbol::NOSYMBOL);
-
+            bool selectAll = true;
             vector<PlotCanvasPtr> canv = plot->canvases();
+            for(uInt j = 0; j < canv.size(); ++j) {
+                if(canv[j]->standardMouseTools()->selectTool()->
+                   getSelectedRects().size() > 0) {
+                    selectAll = false;
+                    break;
+                }
+            }
             for(unsigned int j = 0; j < canv.size(); j++) {
                 // Only apply to visible canvases.
                 bool visible = false;
@@ -862,18 +872,21 @@ bool PlotMSAction::doActionWithResponse(PlotMSApp* plotms, Record &retval) {
                 // Get selected regions on that canvas.
                 vector<PlotRegion> regions = canv[j]->standardMouseTools()
                     ->selectTool()->getSelectedRects();
-                //if(regions.size() == 0) continue;
-	            
+
                 // Actually do locate/flag/unflag...
                 try {
-		  retval = plot->cache().indexer(plot->iter()).locateInfo(Vector<PlotRegion>(regions), showUnflagged, showFlagged);
-									  
-                    // int n = retval.nfields();
-                    // for(uInt r = 0; r < d.nfields(); ++r) {
-                    //     retval.defineRecord(n+r, d.subRecord(r));
-                    // }
-                    // retval.defineRecord(i, d);
-	            // ...and catch any reported errors.
+                    if(plot->iter()+j >= plot->cache().nIter()) break;
+                    Record d;
+                    d = plot->cache().indexer(plot->iter()+j).locateInfo(
+                        Vector<PlotRegion>(regions), showUnflagged,
+                        showFlagged, selectAll);
+
+                    //int n = retval.nfields();
+                    //for(uInt r = 0; r < d.nfields(); ++r) {
+                    //    retval.defineRecord(n+r, d.subRecord(r));
+                    //}
+                    retval.defineRecord(i*j + j, d);
+                // ...and catch any reported errors.
                 } catch(AipsError& err) {
                     itsDoActionResult_ = "Error during info";
                     itsDoActionResult_ += ": " + err.getMesg();

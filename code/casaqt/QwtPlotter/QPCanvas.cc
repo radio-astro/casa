@@ -173,7 +173,6 @@ QImage QPCanvas::produceHighResImage(
     PlotAreaFillPtr paf = f->areaFill(String("#ff77ff"));
     delete f;
     paf->setColor("#FFFFFF");
-    canv->setBackground(*paf);
 
     // Print each canvas.
     QPainter painter(&image);
@@ -186,7 +185,9 @@ QImage QPCanvas::produceHighResImage(
 
     for (unsigned int i = 0; i < qcanvases.size(); i++) {
         canv = qcanvases[i];
-        
+        PlotAreaFillPtr originalBackground = canv->background();
+        canv->setBackground(*paf);
+
         geom = canv->geometry();
         printGeom = QRect((int)((geom.x() * widthRatio) + 0.5),
                           (int)((geom.y() * heightRatio) + 0.5),
@@ -206,7 +207,9 @@ QImage QPCanvas::produceHighResImage(
             title.setColor(titleColor);
             canv->asQwtPlot().setTitle(title);
         }
-        
+
+        canv->setBackground(originalBackground);
+
         if (!op.null()) wasCanceled |= op->cancelRequested();
         if (wasCanceled) break;
     }
@@ -233,7 +236,9 @@ bool QPCanvas::exportToImageFile(
     // Remember the current background color, used for on-screen GUI
     // We want to temporarily change this to white for making the image file.
     // Later we will restore this color.
-    PlotAreaFillPtr normal_background = grabCanvas->background();
+    PlotAreaFillPtr normal_background;
+    if(grabCanvas != NULL)
+        normal_background = grabCanvas->background();
     
     
     // Just grab the widget if: 1) screen resolution, or 2) high resolution
@@ -284,7 +289,8 @@ bool QPCanvas::exportToImageFile(
           quality);
     
     // Restore background color
-    grabCanvas->setBackground(normal_background);
+    if(grabCanvas != NULL)
+        grabCanvas->setBackground(normal_background);
     
     return !wasCanceled && !image.isNull() && save_ok;
 }
@@ -501,6 +507,7 @@ QPCanvas::QPCanvas(QPPlotter* parent) : m_parent(parent), m_canvas(this),
         m_scaleDraws[i] = new QPScaleDraw(&m_canvas, QwtPlot::Axis(i));
         m_scaleDraws[i]->setDateFormat(m_dateFormat);
         m_scaleDraws[i]->setRelativeDateFormat(m_relativeDateFormat);
+        m_canvas.setAxisScaleDraw(QwtPlot::Axis(i), m_scaleDraws[i]);
     }
     
     m_canvas.enableAxis(QwtPlot::xBottom, false);
@@ -518,6 +525,7 @@ QPCanvas::~QPCanvas() {
         unregisterMouseTool(tools[i]);
     
     logObject(CLASS_NAME, this, false);
+    operationDraw()->finish();
 }
 
 
@@ -680,9 +688,6 @@ void QPCanvas::setAxisLabel(PlotAxis axis, const String& title) {
 
     m_canvas.setAxisTitle(QPOptions::axis(axis), title.c_str());
     m_canvas.enableAxis(QPOptions::axis(axis));
-QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
-t.setColor(Qt::black);
-
 }
 
 PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
@@ -696,11 +701,13 @@ PlotFontPtr QPCanvas::axisFont(PlotAxis a) const {
 void QPCanvas::setAxisFont(PlotAxis axis, const PlotFont& font) {
     
     if(font != *axisFont(axis)) {
-        QPFont f(font);    
+        QPFont f(font);
         QwtText t = m_canvas.axisTitle(QPOptions::axis(axis));
         t.setFont(f.asQFont());
         t.setColor(f.asQColor());
         m_canvas.setAxisTitle(QPOptions::axis(axis), t);
+        f.setBold(false);
+        m_canvas.setAxisFont(QPOptions::axis(axis), f.asQFont());
         if(!t.isEmpty()) m_canvas.enableAxis(QPOptions::axis(axis));
     }
 }
@@ -1537,13 +1544,13 @@ void QPCanvas::reinstallTrackerFilter() {
 
 
 QSize QPCanvas::sizeHint() const { 
-    return QSize(); 
+    return m_canvas.sizeHint();
 }
 
 
 
 QSize QPCanvas::minimumSizeHint() const { 
-    return QSize(); 
+    return m_canvas.minimumSizeHint();
 }
 
 
