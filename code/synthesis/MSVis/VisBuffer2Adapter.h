@@ -129,13 +129,13 @@ public:
     // Hour angle for specified time
     virtual Double hourang(Double time) const{ return vb2_p-> hourang(time); }
 
-    virtual Int fieldId() const { return vb2_p-> fieldId(); }
+    virtual Int fieldId() const { return vb2_p-> fieldId()(0); }
 
     virtual Int& fieldIdRef() { IllegalOperation(); }
 
     virtual Int& arrayIdRef() { IllegalOperation(); }
 
-    virtual Int arrayId() const { return vb2_p-> arrayId(); }
+    virtual Int arrayId() const { return vb2_p-> arrayId()(0); }
 
     // Return flag for each channel & row
     virtual Matrix<Bool>& flag() { return const_cast<Matrix<Bool>&> (vb2_p-> flag());}

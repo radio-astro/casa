@@ -935,17 +935,18 @@ VisibilityIteratorImpl2::ms () const
     return msIter_p.ms ();
 }
 
-Int
-VisibilityIteratorImpl2::fieldId () const
+void
+VisibilityIteratorImpl2::fieldIds (Vector<Int> & fieldIds) const
 {
-    return msIter_p.fieldId ();
+    getColumnRows (columns_p.field_p, fieldIds);
 }
 
 // Return the current ArrayId
-Int
-VisibilityIteratorImpl2::arrayId () const
+
+void
+VisibilityIteratorImpl2::arrayIds (Vector<Int> & arrayIds) const
 {
-    return msIter_p.arrayId ();
+    getColumnRows (columns_p.array_p, arrayIds);
 }
 
 // Return the current Field Name
@@ -3059,9 +3060,9 @@ VisibilityIteratorImpl2::initializeBackWriters ()
 //        makeBackWriter (& VisibilityIteratorImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
     backWriters_p [Weight] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeight, & VisBuffer2::weight);
-    backWriters_p [WeightMat] =
+//    backWriters_p [WeightMat] =
 //        makeBackWriter (& VisibilityIteratorImpl2::writeWeightMat, & VisBuffer2::weightMat);
-//    backWriters_p [WeightSpectrum] =
+    backWriters_p [WeightSpectrum] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 
     // Now do the visibilities.

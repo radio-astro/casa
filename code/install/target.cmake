@@ -93,10 +93,13 @@ macro( casa_add_executable module name )
 endmacro()
 
 #
-# casa_add_test( module source )
+# casa_add_test( module source1 [source2 ...])
 #
 #      Add a unit test. The name of the test will be the basename of
 #      of the source file.
+#
+#      Secondary source files without a path will be provided with the
+#      path of the primary source file (i.e., source1).
 #
 macro( casa_add_test module source )
 
@@ -110,7 +113,7 @@ macro( casa_add_test module source )
 endmacro()
 
 #
-# casa_add_assay( module source )
+# casa_add_assay( module source ...)
 #
 #      Add an assay unit test. The name of the test will be the basename of
 #      of the source file.
@@ -119,7 +122,12 @@ macro( casa_add_assay module source )
 
   get_filename_component( _tname ${source} NAME_WE )
 
-  add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} )
+  get_filename_component(path ${source} PATH)
+
+  string( REGEX REPLACE " ([a-zA-Z_0-9]+[.]cc)" " ${path}/\\1" result " ${ARGN}")
+  string( REGEX REPLACE "^ " "" result ${result})
+
+  add_executable( ${_tname} EXCLUDE_FROM_ALL ${source} ${result} )
   target_link_libraries( ${_tname} lib${module} )
   add_test( ${_tname} ${CASA_assay} ${CMAKE_CURRENT_BINARY_DIR}/${_tname} )
   add_dependencies( check ${_tname} )

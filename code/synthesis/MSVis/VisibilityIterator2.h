@@ -823,11 +823,11 @@ protected:
 
   // Return the current FieldId
 
-  Int fieldId() const;
+  void fieldIds(Vector<Int>&) const;
 
   // Return the current ArrayId
 
-  Int arrayId() const;
+  void arrayIds (Vector<Int>&) const;
 
   // Return the current Field Name
 

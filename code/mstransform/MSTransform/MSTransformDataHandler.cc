@@ -1630,10 +1630,10 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	// Declare common auxiliary variables
 	Vector<Int> tmpVectorInt(rowRef.nrow(),0);
 
-	fillAndReindexScalar(vb->arrayId(),tmpVectorInt,inputOutputArrayIndexMap_p.size(),inputOutputArrayIndexMap_p);
+	fillAndReindexScalar(vb->arrayId()(0),tmpVectorInt,inputOutputArrayIndexMap_p.size(),inputOutputArrayIndexMap_p);
 	outputMsCols_p->arrayId().putColumnCells(rowRef,tmpVectorInt);
 
-	fillAndReindexScalar(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p.size(),inputOutputFieldIndexMap_p);
+	fillAndReindexScalar(vb->fieldId()(0),tmpVectorInt,inputOutputFieldIndexMap_p.size(),inputOutputFieldIndexMap_p);
 	outputMsCols_p->fieldId().putColumnCells(rowRef,tmpVectorInt);
 
 	if (combinespws_p)

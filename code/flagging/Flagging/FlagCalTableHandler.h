@@ -85,8 +85,8 @@ public:
     virtual void setAntenna1 (const Vector<Int> & value) {}
     virtual const Vector<Int> & antenna2 () const {Vector<Int> dummy; return dummy;}
     virtual void setAntenna2 (const Vector<Int> & value) {}
-    virtual Int arrayId () const {Int dummy; return dummy;}
-    virtual void setArrayId (Int value) {}
+    virtual const Vector<Int>& arrayId () const {Vector<Int> dummy; return dummy;}
+    virtual void setArrayId (const Vector<Int>&) {}
     virtual Int dataDescriptionId () const {Int dummy; return dummy;}
     virtual void setDataDescriptionId (Int value) {}
     virtual void setDataDescriptionIds(const casa::Vector<int>&){}
@@ -98,8 +98,8 @@ public:
     virtual void setFeed1 (const Vector<Int> & value) {}
     virtual const Vector<Int> & feed2 () const {Vector<Int> dummy; return dummy;}
     virtual void setFeed2 (const Vector<Int> & value) {}
-    virtual Int fieldId () const {Int dummy; return dummy;}
-    virtual void setFieldId (Int value) {}
+    virtual const Vector<Int>& fieldId () const {Vector<Int> dummy; return dummy;}
+    virtual void setFieldId (const Vector<Int>&) {}
     virtual const Matrix<Bool> & flag () const {Matrix<Bool> dummy; return dummy;}
     virtual void setFlag (const Matrix<Bool>& value) {}
     virtual const Array<Bool> & flagCategory () const {Array<Bool> dummy; return dummy;}
@@ -288,8 +288,8 @@ public:
 	CTBuffer(CTIter *ctIter) {ctCache_p = new CTCache(ctIter);invalidate();}
 	~CTBuffer() {}
 
-	Int arrayId() const {return ctCache_p->arrayId();}
-	Int fieldId() const {return ctCache_p->fieldId();}
+	const Vector<Int> & arrayId() const {return Vector<Int> (time().nelements(), ctCache_p->arrayId());}
+	const Vector<Int> & fieldId() const {return Vector<Int> (time().nelements(), ctCache_p->fieldId());}
 	Int spectralWindow() const {return ctCache_p->spectralWindow();}
 	const Vector<Int>& scan() const {return ctCache_p->scan();}
 	const Vector<Double>& time() const {return ctCache_p->time();}

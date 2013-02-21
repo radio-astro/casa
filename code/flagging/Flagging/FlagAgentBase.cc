@@ -1882,12 +1882,12 @@ FlagAgentBase::checkIfProcessBuffer()
 
 	if (arrayList_p.size())
 	{
-		if (!find(arrayList_p,visibilityBuffer_p->arrayId())) return false;
+		if (!find(arrayList_p,visibilityBuffer_p->arrayId()(0))) return false;
 	}
 
 	if (fieldList_p.size())
 	{
-		if (!find(fieldList_p,visibilityBuffer_p->fieldId())) return false;
+		if (!find(fieldList_p,visibilityBuffer_p->fieldId()(0))) return false;
 	}
 
 	if (spwList_p.size())

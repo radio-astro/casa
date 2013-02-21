@@ -214,12 +214,12 @@ public:
 
     // Return the current FieldId
 
-    virtual Int fieldId () const;
+    virtual void fieldIds (Vector<Int>&) const;
 
 
     // Return the current ArrayId
 
-    virtual Int arrayId () const;
+    virtual void arrayIds (Vector<Int>&) const;
 
     // Return the current Field Name
 

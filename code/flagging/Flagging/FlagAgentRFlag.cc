@@ -1013,7 +1013,7 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 	visibilities.shape(nPols, nChannels, nTimesteps);
 
 	// Make field-spw pair
-	Int field = visBuffer.fieldId();
+	Int field = visBuffer.fieldId()(0);
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
@@ -1116,7 +1116,7 @@ FlagAgentRFlag::passIntermediate(const vi::VisBuffer2 &visBuffer)
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	// Make field-spw pair
-	Int field = visBuffer.fieldId();
+	Int field = visBuffer.fieldId()(0);
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
@@ -1148,7 +1148,7 @@ FlagAgentRFlag::passFinal(const vi::VisBuffer2 &visBuffer)
 {
 
 	// Make field-spw pair
-	Int field = visBuffer.fieldId();
+	Int field = visBuffer.fieldId()(0);
 	Int spw = visBuffer.spectralWindow();
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 	if (user_field_spw_noise_map_p.find(field_spw) == user_field_spw_noise_map_p.end())

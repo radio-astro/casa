@@ -151,12 +151,12 @@ FlagAgentSummary::setAgentParameters(Record config)
 void
 FlagAgentSummary::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 {
-	arrayId = visBuffer.arrayId();
+	arrayId = visBuffer.arrayId()(0);
 	stringstream arrayId_stringStream;
 	arrayId_stringStream << arrayId;
 	arrayId_str = arrayId_stringStream.str();
 
-	fieldId = visBuffer.fieldId();
+	fieldId = visBuffer.fieldId()(0);
 	// Transform fieldId into field name using the corresponding subtable
 	fieldId_str = flagDataHandler_p->fieldNames_p->operator()(fieldId);
 

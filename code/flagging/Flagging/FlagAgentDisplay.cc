@@ -493,7 +493,7 @@ FlagAgentDisplay::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
   {
     logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     // Read current Field name, SPW id, and scan info.
-    fieldId_p = visBuffer.fieldId();
+    fieldId_p = visBuffer.fieldId()(0);
     fieldName_p = flagDataHandler_p->fieldNames_p->operator()(fieldId_p);
     spwId_p = visBuffer.spectralWindow();
     scanStart_p = visBuffer.scan()[0];

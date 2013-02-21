@@ -272,8 +272,8 @@ public:
     virtual void setAntenna1 (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & antenna2 () const = 0; // [nR]
     virtual void setAntenna2 (const Vector<Int> & value) = 0; // [nR]
-    virtual Int arrayId () const = 0;
-    virtual void setArrayId (Int value) = 0;
+    virtual const Vector<Int>& arrayId () const = 0;
+    virtual void setArrayId (const Vector<Int>&) = 0;
     virtual Int dataDescriptionId () const = 0;
     virtual void setDataDescriptionId (Int value) = 0;
     virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
@@ -284,8 +284,8 @@ public:
     virtual void setFeed1 (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & feed2 () const = 0; // [nR]
     virtual void setFeed2 (const Vector<Int> & value) = 0; // [nR]
-    virtual Int fieldId () const = 0;
-    virtual void setFieldId (Int value) = 0;
+    virtual const Vector<Int>& fieldId () const = 0;
+    virtual void setFieldId (const Vector<Int>&) = 0;
     virtual const Matrix<Bool> & flag () const = 0; // [nF,nR]
     virtual void setFlag (const Matrix<Bool>& value) = 0; // [nF,nR]
     virtual const Array<Bool> & flagCategory () const = 0; // [nC,nF,nCategories,nR]

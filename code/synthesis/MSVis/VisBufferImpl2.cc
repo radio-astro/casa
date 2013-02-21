@@ -580,7 +580,7 @@ public:
 
     VbCacheItemArray <Vector<Int> > antenna1_p;
     VbCacheItemArray <Vector<Int> > antenna2_p;
-    VbCacheItem <Int> arrayId_p;
+    VbCacheItemArray <Vector<Int> > arrayId_p;
     VbCacheItemArray <Vector<SquareMatrix<Complex, 2> >, True> cjones_p;
     VbCacheItemArray <Cube<Complex> > correctedVisCube_p;
 //    VbCacheItemArray <Matrix<CStokesVector> > correctedVisibility_p;
@@ -594,7 +594,7 @@ public:
     VbCacheItemArray <Vector<Float> > feed1Pa_p;
     VbCacheItemArray <Vector<Int> > feed2_p;
     VbCacheItemArray <Vector<Float> > feed2Pa_p;
-    VbCacheItem <Int> fieldId_p;
+    VbCacheItemArray <Vector<Int> > fieldId_p;
     VbCacheItemArray <Matrix<Bool> > flag_p;
     //VbCacheItemArray <Array<Bool> > flagCategory_p;
     VbCacheItemArray <Cube<Bool> > flagCube_p;
@@ -767,7 +767,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
 
     antenna1_p.initialize (this, vb, & VisBufferImpl2::fillAntenna1, Antenna1, Nr);
     antenna2_p.initialize (this, vb, &VisBufferImpl2::fillAntenna2, Antenna2, Nr);
-    arrayId_p.initialize (this, vb, &VisBufferImpl2::fillArrayId, ArrayId);
+    arrayId_p.initialize (this, vb, &VisBufferImpl2::fillArrayId, ArrayId, Nr);
     cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC, JonesC);
     correctedVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeCorrected,
                                    VisibilityCubeCorrected, NcNfNr, False);
@@ -783,7 +783,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     feed1Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa1, FeedPa1);
     feed2_p.initialize (this, vb, &VisBufferImpl2::fillFeed2, Feed2, Nr);
     feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2);
-    fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId);
+    fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId, Nr);
     flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
     //flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
         // required column but not used in casa, make it a nocheck for shape validation
@@ -1858,14 +1858,14 @@ VisBufferImpl2::setAntenna2 (const Vector<Int> & value)
     cache_p->antenna2_p.set (value);
 }
 
-Int
+const Vector<Int> &
 VisBufferImpl2::arrayId () const
 {
     return cache_p->arrayId_p.get ();
 }
 
 void
-VisBufferImpl2::setArrayId (Int value)
+VisBufferImpl2::setArrayId (const Vector<Int> &value)
 {
     cache_p->arrayId_p.set (value);
 }
@@ -1967,14 +1967,14 @@ VisBufferImpl2::feedPa2 () const
     return cache_p->feed2Pa_p.get ();
 }
 
-Int
+const Vector<Int> &
 VisBufferImpl2::fieldId () const
 {
     return cache_p->fieldId_p.get ();
 }
 
 void
-VisBufferImpl2::setFieldId (Int value)
+VisBufferImpl2::setFieldId (const Vector<Int> & value)
 {
     cache_p->fieldId_p.set (value);
 }
@@ -2473,11 +2473,11 @@ VisBufferImpl2::fillAntenna2 (Vector<Int>& value) const
 }
 
 void
-VisBufferImpl2::fillArrayId (Int& value) const
+VisBufferImpl2::fillArrayId (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  value = getViP()->arrayId ();
+  getViP()->arrayIds (value);
 }
 
 void
@@ -2509,7 +2509,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
         //cerr << "HASMOD " << state_p->visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
 
-        if (state_p->visModelData_p.hasModel (msId(), fieldId(), spectralWindow()) == -1){
+        if (state_p->visModelData_p.hasModel (msId(), fieldId()(0), spectralWindow()) == -1){
 
             if(hasmodkey){
 
@@ -2741,11 +2741,11 @@ VisBufferImpl2::fillFeedPaAux (Vector <Float> & feedPa,
 }
 
 void
-VisBufferImpl2::fillFieldId (Int& value) const
+VisBufferImpl2::fillFieldId (Vector<Int>& value) const
 {
   CheckVisIter ();
 
-  value = getViP()->fieldId ();
+  getViP()->fieldIds (value);
 }
 
 void
@@ -2802,7 +2802,7 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
 
     if (weightGenerator.getType () == "uniform") {
 
-        weightGenerator.weightUniform (value, flag (), uvw (), getFrequencies (0), weight (), msId (), fieldId ());
+        weightGenerator.weightUniform (value, flag (), uvw (), getFrequencies (0), weight (), msId (), fieldId ()(0));
 
     } else if (weightGenerator.getType () == "radial") {
 
