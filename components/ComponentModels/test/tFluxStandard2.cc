@@ -162,10 +162,13 @@ int main(int argc, char* argv[])
     expfds[6][1] = 57.3713;	// 345 GHz
     //expads[6] = 1.60581e-05;
     expads[6] = 1.60618e-05;
-    objnames[7] = "Neptune";
-    expfds[7][0] = 4.32942;	// 115 GHz
-    expfds[7][1] = 24.7807;	// 345 GHz
-    expads[7] = 1.06364e-05;
+    objnames[7] = "Neptune"; //radii changed in the updated table
+    //expfds[7][0] = 4.32942;	// 115 GHz
+    expfds[7][0] = 4.32918;	// 115 GHz
+    //expfds[7][1] = 24.7807;	// 345 GHz
+    expfds[7][1] = 24.7793;	// 345 GHz
+    //expads[7] = 1.06364e-05;
+    expads[7] = 1.06361e-05;
     objnames[8] = "Triton";
     expfds[8][0] = 0.00385483;	// 115 GHz
     expfds[8][1] = 0.0297936;	// 345 GHz
@@ -174,10 +177,13 @@ int main(int argc, char* argv[])
     expfds[9][0] = 0.00250031;	// 115 GHz
     expfds[9][1] = 0.0190617;	// 345 GHz
     expads[9] = 4.92412e-07;
-    objnames[10] = "Vesta";
-    expfds[10][0] = 0.0522284;	// 115 GHz
-    expfds[10][1] = 0.453937;	// 345 GHz
-    expads[10] = 1.02016e-06;
+    objnames[10] = "Vesta"; //radii changed in the updated table
+    //expfds[10][0] = 0.0522284;// 115 GHz
+    expfds[10][0] = 0.052266;	// 115 GHz
+    //expfds[10][1] = 0.453937;	// 345 GHz
+    expfds[10][1] = 0.454264;	// 345 GHz
+    //expads[10] = 1.02016e-06;
+    expads[10] = 1.02053e-06;
 
     // Not tested; essentially a dummy.
     const MDirection fieldDir;
