@@ -141,13 +141,12 @@ def mstransform(
              nchan, 
              start, 
              width, 
+             nspws,              # spw separation
              interpolation,
              phasecenter,
              restfreq, 
              outframe, 
              veltype,
-             separatespws,       # spw separation
-             nspws,
              timeaverage,        # time averaging --> split
              timebin,
              timespan,
@@ -216,14 +215,15 @@ def mstransform(
             config['nchan'] = nchan
             config['start'] = str(start)
             config['width'] = str(width)
+            if nspws > 1:
+                casalog.post('Separate MS into %s spws'%nspws)
+
+            config['nspws'] = nspws 
             config['interpolation'] = interpolation
             config['phasecenter'] = phasecenter
             config['restfreq'] = restfreq
             config['outframe'] = outframe
             config['veltype'] = veltype
-        if separatespws:
-            casalog.post('Separation of spws is not yet implemented', 'WARN')
-#            config['nspws'] = nspws # this will change
         if timeaverage:
             casalog.post('Time averaging is not yet implemented', 'WARN')
 #            config['timebin'] = timebin
@@ -248,6 +248,39 @@ def mstransform(
         raise Exception, instance
     
         
+# TODO:
+# 1) allow freqbin to be a list to apply to each spw selection
+# 2) Modify the separatespws transformation
+# 3) Check realmodelcol and tileshape parameters
+# 4) Parallelism
+# 5) Check if partition can run on MMS
+#   
+# HEURISTICS for the parallelization
+#
+# WE only process in parallel when:
+#    1) there are multiple input MSs and createmms = True
+#
+# If there are multiple input MSs and createmms=False,
+# loop through the input MS list and call the tool
+# multiple times. We need to have an internal parameter
+# to tell the DataHandler that there is more than one
+# MS to be concatenated as the output.
+
+# Parallel heuristics:
+# 1) Do the data selection based on the partition parameters
+#    separationaxis and numsubms!
+
+# 2) For this, use the methods from PartitionHelper to create the
+#    jobs. 
+# 3) inside generateJobs(): loop through each MS in vis list.
+# 4) call self.initialize to setup the outputvis name and handle
+#    POINTING, SYSCAL. The creation of the dataDir should be done outside
+#    perhaps in generateJobs().
+# 5) Call self._createPrimarySplitCommand() for each MS in the loop
+# 6) This should add one job per subMS to be handled by the tool.
+
+
+
     
     
     

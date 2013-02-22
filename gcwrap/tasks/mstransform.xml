@@ -207,6 +207,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="int">1</value>
         </param>
 
+        <param type="int" name="nspws" subparam="true">
+            <description>Number of output spws to create in output MS.</description>
+            <value type="int">0</value>
+        </param>
+
         <param type="string" name="interpolation" subparam="true" ignorecase="True">
             <description>Spectral interpolation method.</description>
             <value>linear</value>
@@ -253,17 +258,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                <value>optical</value>
                <value>radio</value>
             </allowed>
-        </param>
-
-    <!-- SPW SEPARATION parameters -->
-    <param type="bool" name="separatespws">
-        <description>Separate spws in the given number.</description>
-        <value>False</value>
-    </param>
-
-        <param type="int" name="nspws" subparam="true">
-            <description>Number of output spws to split each input spw out.</description>
-            <value type="int">2</value>
         </param>
 
     <!-- TIME AVERAGING parameters -->
@@ -321,6 +315,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="nchan"><value type="int">-1</value></default>
                 <default param="start"><value type="int">0</value></default>
                 <default param="width"><value type="int">1</value></default>
+                <default param="nspws"><value type="int">0</value></default>
                 <default param="interpolation"><value type="string">linear</value></default>
                 <default param="phasecenter"><value type="string"></value></default>
                 <default param="restfreq"><value type="string"></value></default>
@@ -328,12 +323,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="veltype"><value type="string">radio</value></default>
             </equals>
           </when>
-        <when param="separatespws">
-            <equals type="bool" value="False"/>
-            <equals type="bool" value="True">
-                <default param="nspws"><value type="int">2</value></default>
-            </equals>
-          </when>          
         <when param="timeaverage">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
@@ -544,6 +533,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         width -- Number of input channels that are used to create an output channel.
             default: 1
 
+        nspws -- Number of output spws to create in the output MS/MMS (int). (TBI)
+            default: 0
+            example: One can regrid the MS or not and further separate the
+                     output into a given number of spws. Internally, the framework
+                     will combine the selected spws before separating them so that
+                     channel gaps and overlaps are taken into account. This parameter
+                     will create a regular grid of spws in the output MS.
+
         interpolation -- Spectral interpolation method.
             default: 'linear'
             options: 'nearest', 'cubic', 'spline', 'fftshift'
@@ -562,17 +559,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         veltype -- Definition of velocity (as used in mode).
             default: 'radio'
-
-
---- SPW separation --- (TBI)
-    separatespws -- Separate spws based on the given number of new spws.
-        default: False
-
-        nspws -- Number of output spws to split each input spw out (int).
-            default: 2
-            example: spw = '0~3' nspws = 2, means that the output MS will
-                     have 8 spws.
-
 
 --- Time averaging parameters ---(TBI)
     timeaverage -- Average data in time.
@@ -598,6 +584,34 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             default: 2
 
 ------ EXAMPLES ------
+
+1) Split out a single channel.
+    mstransform(vis='ctb80-vsm.ms', outputvis='mychn.ms', datacolumn='data', spw='0:25')
+
+2) Only combine the selected spws into a single output spw.
+    mstransform(vis='Four_ants.ms', outputvis='myspw.ms', combinespws=True, spw='0~3')
+
+3) Combine two spws and regrid one field, using two input channels to make one output.
+
+    mstransform(vis='jupiter6cm.demo.ms',outputvis='test1.ms',datacolumn='DATA',field='11',
+                spw='0,1', combinespws=True, regridms=True, nchan=1, width=2)
+
+4) Combine 24 spws and regrid in frequency mode to create 21 output channels. Change the 
+   phase center.
+
+    mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test2.ms', datacolumn='DATA',
+                combinespws=True, regridms=True, mode='frequency', nchan=21, start='229587.0MHz',
+                width='1600kHz', phasecenter="J2000 18h25m56.09 -12d04m28.20")
+
+5) Only apply Hanning smoothing to MS.
+    mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test3.ms', datacolumn='DATA',
+                hanning=True)
+ 
+6) Change the reference frame and apply Hanning smoothing after combining all spws.
+    mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test4.ms', datacolumn='DATA',
+                combinespws=True, regridms=True, mode="channel", outframe="BARY",
+                phasecenter="J2000 18h25m56.09 -12d04m28.20", hanning = True)
+
 
 
 
