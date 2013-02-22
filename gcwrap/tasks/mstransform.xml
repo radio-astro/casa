@@ -157,9 +157,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
     </param>
 
-        <param type="int" name="freqbin" subparam="true">
+        <param type="any" name="freqbin" subparam="true">
             <description>Width (bin) of input channels to average to form an output channel.</description>
-            <value type="int">10</value>
+            <any type="variant" limittypes="int intArray"/>            
+            <value type="int">1</value>
         </param>
 
         <param type="string" name="useweights" subparam="true">
@@ -209,7 +210,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         <param type="int" name="nspws" subparam="true">
             <description>Number of output spws to create in output MS.</description>
-            <value type="int">0</value>
+            <value type="int">1</value>
         </param>
 
         <param type="string" name="interpolation" subparam="true" ignorecase="True">
@@ -304,7 +305,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <when param="freqaverage">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
-                  <default param="freqbin"><value type="int">10</value></default>
+                  <default param="freqbin"><value type="int">1</value></default>
                   <default param="useweights"><value type="string"></value></default>
             </equals>
           </when>
@@ -315,7 +316,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="nchan"><value type="int">-1</value></default>
                 <default param="start"><value type="int">0</value></default>
                 <default param="width"><value type="int">1</value></default>
-                <default param="nspws"><value type="int">0</value></default>
+                <default param="nspws"><value type="int">1</value></default>
                 <default param="interpolation"><value type="string">linear</value></default>
                 <default param="phasecenter"><value type="string"></value></default>
                 <default param="restfreq"><value type="string"></value></default>
@@ -499,11 +500,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     freqaverage -- Average data in frequency. 
         default: False
 
-        freqbin -- Bin (width) of input channels to average to create an output
-                   channel (int). 
-            default: 10
+        freqbin -- Number of input channels to average to create an output
+                   channel. If a list is given, each bin will apply to one spw in
+                   the selection. 
+            default: 1 =&gt; no channel averaging.
+            options: (int) or [int]
+            example: freqbin=[2,3] =&gt; average 2 channels of 1st selected
+		          spectral window and 3 in the second one.
 
-        useweights -- Type of weights to use in average.
+        useweights -- Type of weights to use in average. It will apply to all spws.
             default: ''
             options: 'flags', 'spectral'
 

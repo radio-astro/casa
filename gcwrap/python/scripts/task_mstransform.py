@@ -201,8 +201,8 @@ def mstransform(
         if freqaverage:
             casalog.post('Parse frequency averaging parameters')
             config['freqaverage'] = True
-            # TODO: the freqbin parameter may need to be a list too
-            config['freqbin'] = str(freqbin)
+            # freqbin can be an int or a list of int that will apply one to each spw
+            config['freqbin'] = freqbin
             config['useweights'] = useweights
         if hanning:
             casalog.post('Apply Hanning smoothing')
