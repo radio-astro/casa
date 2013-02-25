@@ -24,12 +24,10 @@ endforeach (file)
 
 
 set (tests
-dImageHistograms
 dImageInterface
 dImageStatistics
 dImageSummary
 dPagedImage
-tAntennaResponses
 tExtendImage
 tFITSImage
 tFITSImgParser
@@ -39,17 +37,13 @@ tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
 tImageConcat
-tImageConvolver
 tImageEmpty
 tImageExpr2Gram
 tImageExpr3Gram
 tImageExprGram
 tImageExprParse_addDir
-tImageFFT
-tImageFit1D
 tImageInfo
 tImageMetaData
-tImagePolarimetry
 tImageRegrid
 tImageStatistics
 tImageUtilities

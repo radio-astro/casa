@@ -34,13 +34,10 @@ Regions/WCBox.cc
 Regions/AipsIOReaderWriter.cc
 Regions/WCComplement.cc
 Regions/RegionHandlerHDF5.cc
-Images/AntennaResponses.cc
 Images/ImageInfo.cc
 Images/ImageMetaData.cc
-Images/ImagePolarimetry.cc
 Images/ImageExprGram.cc
 Images/MaskSpecifier.cc
-Images/ImageMomentsProgress.cc
 Images/ImageBeamSet.cc
 Images/FITSImage.cc
 Images/FITSErrorImage.cc
@@ -52,13 +49,11 @@ Images/PagedImage2.cc
 Images/ImageExprParse.cc
 Images/ImageOpener.cc
 Images/LELImageCoord.cc
-Images/ImageFFT.cc
 Images/ImageUtilities.cc
 Images/ImageFITS2Converter.cc
 Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
-Images/ImageMomentsProgressMonitor.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -82,7 +77,6 @@ LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUT
 )
 
 install (FILES
-Images/AntennaResponses.h
 Images/CurvedImage2D.h
 Images/CurvedImage2D.tcc
 Images/ExtendImage.h
@@ -98,26 +92,17 @@ Images/HDF5Image.tcc
 Images/ImageBeamSet.h
 Images/ImageConcat.h
 Images/ImageConcat.tcc
-Images/ImageConvolver.h
-Images/ImageConvolver.tcc
 Images/ImageExpr.h
 Images/ImageExpr.tcc
 Images/ImageExprGram.h
 Images/ImageExprParse.h
-Images/ImageFFT.h
 Images/ImageFITSConverter.h
 Images/ImageFITSConverter.tcc
-Images/ImageFit1D.h
-Images/ImageFit1D.tcc
-Images/ImageHistograms.h
-Images/ImageHistograms.tcc
 Images/ImageInfo.h
 Images/ImageInterface.h
 Images/ImageInterface.tcc
 Images/ImageMetaData.h
-Images/ImageMomentsProgress.h
 Images/ImageOpener.h
-Images/ImagePolarimetry.h
 Images/ImageProxy.h
 Images/ImageRegrid.h
 Images/ImageRegrid.tcc
@@ -130,8 +115,6 @@ Images/ImageUtilities2.tcc
 Images/LELImageCoord.h
 Images/MIRIADImage.h
 Images/MaskSpecifier.h
-Images/MomentsBase.h
-Images/MomentsBase.tcc
 Images/PagedImage.h
 Images/PagedImage.tcc
 Images/RebinImage.h
@@ -141,7 +124,6 @@ Images/SubImage.tcc
 Images/TempImage.h
 Images/TempImage.tcc
 Images/WCBox.h
-Images/ImageMomentsProgressMonitor.h
 DESTINATION include/casacore/images/Images
 )
 
