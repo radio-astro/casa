@@ -673,7 +673,7 @@ FlagAgentBase::setDataSelection(Record config)
 				filterChannels_p=true;
 
 				// Request to pre-load spw
-				flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
+				flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
 
 				*logger_p << LogIO::DEBUG1 << " spw selection is " << spwSelection_p << LogIO::POST;
 				*logger_p << LogIO::DEBUG1 << " channel selection are " << channelList_p << LogIO::POST;
@@ -1385,7 +1385,7 @@ FlagAgentBase::setAgentParameters(Record config)
 		*logger_p << logLevel_p << " Visibility expression is " << expression_p << LogIO::POST;
 
 		// Request to pre-load spw and corrType
-		flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
+		flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
 		flagDataHandler_p->preLoadColumn(vi::CorrType);
 
 
@@ -1473,7 +1473,7 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 				// CAS-4270: Convert uvdist in lambda units
 				if (uvwUnits_p == false)
 				{
-					Int spw = visibilityBuffer_p->spectralWindow();
+					Int spw = visibilityBuffer_p->spectralWindows()(0);
 					Double Lambda = (*flagDataHandler_p->getLambdaMap())[spw];
 					uvDistance /= Lambda;
 				}
@@ -1506,7 +1506,7 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 	if (filterChannels_p)
 	{
 		// First find channel start and stop for this spw
-		Int currentSpw = visibilityBuffer_p->spectralWindow();
+		Int currentSpw = visibilityBuffer_p->spectralWindows()(0);
 		Int nSpw,width;
 		bool spwFound = false;
 		uInt channelStart = 0,channelStop = UINT_MAX;
@@ -1892,7 +1892,7 @@ FlagAgentBase::checkIfProcessBuffer()
 
 	if (spwList_p.size())
 	{
-		if (!find(spwList_p,visibilityBuffer_p->spectralWindow())) return false;
+		if (!find(spwList_p,visibilityBuffer_p->spectralWindows()(0))) return false;
 	}
 
 	// If scan is constant check only 1st row
@@ -2442,7 +2442,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		if (polMap->find(Stokes::I) != polMap->end())
 		{
 			*logger_p << LogIO::DEBUG1 <<  " Detected Water Vapor data in spw (" <<
-					visibilityBuffer_p->spectralWindow() << "), will be flagged" << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << "), will be flagged" << LogIO::POST;
 			return True;
 		}
 		else
@@ -2453,7 +2453,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 	else if (polMap->find(Stokes::I) != polMap->end())
 	{
 		*logger_p << LogIO::DEBUG1 <<  " Detected Water Vapor data in spw (" <<
-					visibilityBuffer_p->spectralWindow() << "), won't be flagged" << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << "), won't be flagged" << LogIO::POST;
 		return False;
 	}
 
@@ -2467,7 +2467,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (XX) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2480,7 +2480,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (YY) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 
@@ -2494,7 +2494,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (XY) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2507,7 +2507,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (YX) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2520,7 +2520,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (RR) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2533,7 +2533,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (LL) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2546,7 +2546,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (LR) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2559,7 +2559,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested correlation (RL) not available in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2581,7 +2581,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (I) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2602,7 +2602,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (Q) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2623,7 +2623,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (U) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -2644,7 +2644,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN <<  " Requested Stokes parameter (V) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->spectralWindow() << ") " << LogIO::POST;
+					visibilityBuffer_p->spectralWindows()(0) << ") " << LogIO::POST;
 			return False;
 		}
 	}

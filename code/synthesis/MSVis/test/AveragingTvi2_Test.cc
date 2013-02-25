@@ -455,6 +455,9 @@ public:
 protected:
 
     pair<MeasurementSet *,Int> createMs (const String &);
+    template <typename T>
+    void doTest (const Environment & environment, const Arguments & arguments);
+
     Arguments parseArgs (int nArgs, char * args []) const;
     void sweepMs (const String & msName, Double interval,
                   Double chunkInterval, Int averagingFactor);
@@ -492,8 +495,11 @@ private:
     typedef vector<RowChecker *> RowCheckers;
 
     CubeCheckers cubeCheckers_p;
+    vector<String> failedTests_p;
     RowCheckers rowCheckers_p;
     MsFactory * msf_p;
+    Int nTestsAttempted_p;
+    Int nTestsPassed_p;
 };
 
 ////////////////////////////////////////////////////////////
@@ -657,6 +663,8 @@ public:
         printf ("--- ... completed SimpleTests\n");
     }
 
+    static String getName () { return "SimpleTests";}
+
 protected:
 
     pair<MeasurementSet *,Int>
@@ -719,14 +727,12 @@ protected:
         addCubeChecker (new ComplexCubeRampChecker (averagingFactor, "Model",
                                                     & VisBuffer2::visCubeModel, 3));
 
-#warning "Uncomment arrayId and fieldId checks after changing over to vector returns in VB"
-
         addRowChecker (new SimpleRowChecker ("scan", & VisBuffer2::scan, 10));
         addRowChecker (new SimpleRowChecker ("observationId", & VisBuffer2::observationId, 11));
-        //addRowChecker (new SimpleRowChecker ("arrayId", & VisBuffer2::arrayId, 12));
+        addRowChecker (new SimpleRowChecker ("arrayId", & VisBuffer2::arrayId, 12));
         addRowChecker (new SimpleRowChecker ("feed1", & VisBuffer2::feed1, 9));
         addRowChecker (new SimpleRowChecker ("feed2", & VisBuffer2::feed2, 8));
-        //addRowChecker (new SimpleRowChecker ("fieldId", & VisBuffer2::fieldId, 7));
+        addRowChecker (new SimpleRowChecker ("fieldId", & VisBuffer2::fieldId, 7));
         addRowChecker (new SimpleRowChecker ("stateId", & VisBuffer2::stateId, 17));
         addRowChecker (new SimpleRowChecker ("processorId", & VisBuffer2::processorId, 18));
 
@@ -776,6 +782,8 @@ public:
 
         printf ("--- ... completed RowFlaggingTests\n");
     }
+
+    static String getName () { return "RowFlaggingTests";}
 
 protected:
 
@@ -860,6 +868,9 @@ public:
         printf ("--- ... completed WeightingTests\n");
     }
 
+    static String getName () { return "WeightingTests";}
+
+
 protected:
 
     pair<MeasurementSet *,Int>
@@ -931,6 +942,8 @@ private:
 
 
 Tester::Tester ()
+: nTestsAttempted_p (0),
+  nTestsPassed_p (0)
 {
     clearCheckers(False);
 }
@@ -974,6 +987,50 @@ Tester::clearCheckers (Bool deleteIt)
     rowCheckers_p.clear();
 }
 
+template <typename Test>
+void
+Tester::doTest (const Environment & environment, const Arguments & arguments)
+{
+    nTestsAttempted_p ++;
+
+    printf ("+++ Starting execution of test %s\n", Test::getName().c_str());
+    fflush (stdout);
+    Bool failed = True;
+
+    try {
+
+        Test test (environment, arguments, * this);
+        test.execute();
+
+        printf ("--- Successfully completed execution of test %s\n", Test::getName().c_str());
+        fflush (stdout);
+
+        nTestsPassed_p ++;
+        failed = False;
+    }
+    catch (TestError & e){
+
+        fprintf (stderr, "*** TestError while executing test %s:\n-->%s\n",
+                 "", e.what());
+    }
+    catch (AipsError & e){
+
+        fprintf (stderr, "*** AipsError while executing test %s:\n-->%s\n",
+                 "", e.what());
+
+    }
+    catch (...){
+
+        fprintf (stderr, "*** Unknown exception while executing test %s\n***\n*** Exiting ***\n",
+                 "");
+    }
+
+    if (failed){
+        failedTests_p.push_back (Test::getName());
+    }
+}
+
+
 void
 Tester::doTests (Int nArgs, char * args [])
 {
@@ -984,15 +1041,40 @@ Tester::doTests (Int nArgs, char * args [])
         Environment environment;
         Arguments arguments = parseArgs (nArgs, args);
 
-        SimpleTests simpleTests (environment, arguments, * this);
-        simpleTests.execute();
+        doTest<SimpleTests> (environment, arguments);
 
-        WeightingTests weightingTests (environment, arguments, * this);
-        weightingTests.execute();
+        doTest<WeightingTests> (environment, arguments);
 
-        RowFlaggingTests rowFlaggingTests (environment, arguments, * this);
-        rowFlaggingTests.execute();
+        doTest<RowFlaggingTests> (environment, arguments);
 
+
+//        SimpleTests simpleTests (environment, arguments, * this);
+//        simpleTests.execute();
+//
+//        WeightingTests weightingTests (environment, arguments, * this);
+//        weightingTests.execute();
+//
+//        RowFlaggingTests rowFlaggingTests (environment, arguments, * this);
+//        rowFlaggingTests.execute();
+
+        if (nTestsAttempted_p == nTestsPassed_p){
+
+            printf ("\n***\n*** Passed all %d tests attempted ;-)\n***\n", nTestsAttempted_p);
+        }
+        else{
+            printf ("\n???\n??? Failed %d of %d tests attempted ;-(\n???\n??? Tests failing:\n\n",
+                    nTestsAttempted_p - nTestsPassed_p, nTestsAttempted_p);
+
+            for (vector<String>::const_iterator i = failedTests_p.begin();
+                 i != failedTests_p.end();
+                 i ++){
+
+                printf ("???    o %s\n", i->c_str());
+            }
+            printf ("???\n");
+
+        }
+        fflush (stdout);
     }
     catch (TestError & e){
 
@@ -1012,6 +1094,7 @@ Tester::doTests (Int nArgs, char * args [])
     }
 
 }
+
 
 Arguments
 Tester::parseArgs (int nArgs, char * args []) const
@@ -1036,7 +1119,6 @@ Tester::parseArgs (int nArgs, char * args []) const
             result [splits[0]] = splits.size() > 1 ? splits[1] : "";
         }
         else{
-
             printf ("*** Unknown option: '%s'\n", splits[0].c_str());
             ThrowTestError ("Unknown command line option");
         }
@@ -1082,7 +1164,7 @@ CubeChecker::throwError (const String & expected, const String & actual,
                        expected.c_str(),
                        actual.c_str(),
                        objectName.c_str(),
-                       vb->spectralWindow (),
+                       vb->spectralWindows()(0),
                        row,
                        rowId,
                        channel,

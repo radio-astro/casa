@@ -142,8 +142,7 @@ FinalTvi2::writeKeyValues (MeasurementSet & /*ms*/, const RefRows & rows)
 
     columns_p.feed2_p.putColumnCells (rows, getVisBuffer()->feed2());
 
-    Vector<Int> ddis (getVisBuffer()->nRows(), getVisBuffer()->dataDescriptionId ());
-    columns_p.dataDescription_p.putColumnCells (rows, ddis);
+    columns_p.dataDescription_p.putColumnCells (rows, getVisBuffer()->dataDescriptionIds());
 
     columns_p.processor_p.putColumnCells (rows, getVisBuffer()->processorId());
 

@@ -143,7 +143,6 @@ VisBufferComponents2::name (Int id)
     names [ArrayId] = "ArrayId";
     names [BeamOffsets] = "BeamOffsets";
     names [CorrType] = "CorrType";
-    names [DataDescriptionId] = "DataDescriptionId";
     names [DataDescriptionIds] = "DataDescriptionIds";
     names [Direction1] = "Direction1";
     names [Direction2] = "Direction2";
@@ -174,7 +173,6 @@ VisBufferComponents2::name (Int id)
     names [Scan] = "Scan";
     names [Sigma] = "Sigma";
     names [SigmaMat] = "SigmaMat";
-    names [SpectralWindow] = "SpectralWindow";
     names [SpectralWindows] = "SpectralWindows";
     names [StateId] = "StateId";
     names [Time] = "Time";

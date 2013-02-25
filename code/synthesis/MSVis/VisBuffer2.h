@@ -333,8 +333,8 @@ public:
     virtual void setAntenna2 (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & arrayId () const = 0;
     virtual void setArrayId (const Vector<Int> & ) = 0;
-    virtual Int dataDescriptionId () const = 0;
-    virtual void setDataDescriptionId (Int value) = 0;
+    //virtual Int dataDescriptionId () const = 0;
+    //virtual void setDataDescriptionId (Int value) = 0;
     virtual const Vector<Int> & dataDescriptionIds () const = 0; // [nR]
     virtual void setDataDescriptionIds (const Vector<Int> & ) = 0; // [nR]
     virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
@@ -490,16 +490,14 @@ public:
 
     // Returns the spectral window ID for the specified row.
 
-    virtual Int spectralWindow () const = 0;
+    //virtual Int spectralWindow () const = 0;
 
     virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
-    virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
-
+    //virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
 
     static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
 
 protected:
-
 
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,

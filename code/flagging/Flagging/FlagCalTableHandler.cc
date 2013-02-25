@@ -408,7 +408,7 @@ FlagCalTableHandler::nextBuffer()
 						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
 						", Scan = " << scan[0] << "~" << scan[scan.size()-1] <<
 						", Field = " << visibilityBuffer_p->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
-						", Spw = " << visibilityBuffer_p->spectralWindow() <<
+						", Spw = " << visibilityBuffer_p->spectralWindows()(0) <<
 						", Channels = " << visibilityBuffer_p->nChannels() <<
 						", CalSolutions = " << corrs <<
 						", Total Rows = " << visibilityBuffer_p->nRows() << LogIO::POST;

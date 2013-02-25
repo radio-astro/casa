@@ -88,7 +88,7 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	// Initialize Pre-Load columns
 	preLoadColumns_p.clear();
 	preLoadColumns_p.push_back(vi::FieldId);
-	preLoadColumns_p.push_back(vi::SpectralWindow);
+	preLoadColumns_p.push_back(vi::SpectralWindows);
 	preLoadColumns_p.push_back(vi::Scan);
 	preLoadColumns_p.push_back(vi::ArrayId);
 	preLoadColumns_p.push_back(vi::ObservationId);
@@ -1411,15 +1411,15 @@ FlagDataHandler::preFetchColumns()
 //				}
 //				break;
 //			}
-			case vi::SpectralWindow:
+			case vi::SpectralWindows:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p->operator +=(vi::SpectralWindow);
+					prefetchColumns_p->operator +=(vi::SpectralWindows);
 				}
 				else
 				{
-					visibilityBuffer_p->spectralWindow();
+					visibilityBuffer_p->spectralWindows();
 				}
 				break;
 			}

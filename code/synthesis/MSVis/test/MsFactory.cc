@@ -240,6 +240,7 @@ MsFactory::attachColumns ()
 
     columns_p.antenna1_p.attach (* ms_p, MS::columnName (MS::ANTENNA1));
     columns_p.antenna2_p.attach (* ms_p, MS::columnName (MS::ANTENNA2));
+    columns_p.array_p.attach (* ms_p, MS::columnName (MS::ARRAY_ID));
 
     if (cds.isDefined ("CORRECTED_DATA")) {
         columns_p.corrVis_p.attach (* ms_p, "CORRECTED_DATA");
@@ -545,6 +546,7 @@ MsFactory::fillScalars (FillState & fillState)
 {
     fillScalar (columns_p.antenna1_p, fillState, generators_p.get (MSMainEnums::ANTENNA1));
     fillScalar (columns_p.antenna2_p, fillState, generators_p.get (MSMainEnums::ANTENNA2));
+    fillScalar (columns_p.array_p, fillState, generators_p.get (MSMainEnums::ARRAY_ID));
     fillScalar (columns_p.dataDescriptionId_p, fillState, generators_p.get (MSMainEnums::DATA_DESC_ID));
     fillScalar (columns_p.exposure_p, fillState, generators_p.get (MSMainEnums::EXPOSURE));
     fillScalar (columns_p.feed1_p, fillState, generators_p.get (MSMainEnums::FEED1));

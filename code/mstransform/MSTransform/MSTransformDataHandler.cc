@@ -1610,7 +1610,7 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	Int spwIndex = 0;
 	if (not combinespws_p)
 	{
-		Int originalSPWid = vb->spectralWindow();
+		Int originalSPWid = vb->spectralWindows()(0);
 		spwIndex = inputOutputSPWIndexMap_p[originalSPWid];
 	}
 
@@ -1707,7 +1707,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	else
 	{
 		// Spectral Window
-		fillAndReindexScalar(vb->spectralWindow(),tmpVectorInt,!spwSelection_p.empty(),inputOutputSPWIndexMap_p);
+		fillAndReindexScalar(vb->spectralWindows()(0),tmpVectorInt,!spwSelection_p.empty(),inputOutputSPWIndexMap_p);
 		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Scan
@@ -2221,7 +2221,7 @@ template <class T> void MSTransformDataHandler::smoothAndRegridCubes(const Cube<
 	*/
 
 	// Get spw and define output plane shape
-	Int spw = vb->spectralWindow();
+	Int spw = vb->spectralWindows()(0);
 
 	// Get input cube shape
 	IPosition inputCubeShape = inputDataCube.shape();

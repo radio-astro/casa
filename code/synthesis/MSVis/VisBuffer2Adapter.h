@@ -213,11 +213,11 @@ public:
     virtual Matrix<Float>& sigmaMat() { IllegalOperation (); }
     virtual const Matrix<Float>& sigmaMat() const { return vb2_p-> sigma(); }
 
-    virtual Int & spectralWindow() { spectralWindow_p = vb2_p->spectralWindow(); return spectralWindow_p;}
-    virtual Int spectralWindow() const { return vb2_p-> spectralWindow(); }
+    virtual Int & spectralWindow() { spectralWindow_p = vb2_p->spectralWindows()(0); return spectralWindow_p;}
+    virtual Int spectralWindow() const { return vb2_p-> spectralWindows()(0); }
     virtual Int polarizationId() const { return vb2_p-> polarizationId(); }
     virtual Int& dataDescriptionIdRef() { IllegalOperation(); }
-    virtual Int dataDescriptionId() const { return vb2_p-> dataDescriptionId(); }
+    virtual Int dataDescriptionId() const { return vb2_p-> dataDescriptionIds()(0); }
     virtual Vector<Double>& time() { IllegalOperation (); }
     virtual const Vector<Double>& time() const { return vb2_p-> time(); }
 
