@@ -1005,8 +1005,9 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
            if (edge.first<0)
                throw AipsError("STLineFinder::findLines - the in_edge parameter has a negative"
                                 "number of channels to drop");
-           if (edge.first>=int(nchan))
+           if (edge.first>=int(nchan)) {
                throw AipsError("STLineFinder::findLines - all channels are rejected by the in_edge parameter");
+	   }
            if (in_edge.size()==2) {
                edge.second=in_edge[1];
                if (edge.second<0)
@@ -1014,8 +1015,9 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
                                    "number of channels to drop");
                edge.second=nchan-edge.second;
            } else edge.second=nchan-edge.first;
-           if (edge.second<0 || (edge.first>=edge.second))
+           if (edge.second<0 || (edge.first>=edge.second)) {
                throw AipsError("STLineFinder::findLines - all channels are rejected by the in_edge parameter");
+	   }
        }
 
   //

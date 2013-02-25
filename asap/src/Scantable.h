@@ -38,7 +38,6 @@
 #include "STBaselineEnum.h"
 #include "STFit.h"
 #include "STFitEntry.h"
-//#include "STFitter.h"
 #include "STFocus.h"
 #include "STFrequencies.h"
 #include "STHeader.h"
@@ -52,6 +51,8 @@
 namespace asap {
 
 class Fitter;
+class STLineFinder;
+class STBaselineTable;
 
 /**
   * This class contains and wraps a casa::Table, which is used to store
@@ -634,6 +635,7 @@ public:
 					 int chanAvgLimit);
   static std::vector<bool> getMaskFromMaskList(const int nchan,
 					       const std::vector<int>& masklist);
+  static casa::Vector<casa::uInt> getMaskListFromMask(const std::vector<bool>& mask);
   static std::vector<int> splitToIntList(const std::string& str, const char delim);
   static std::vector<string> splitToStringList(const std::string& str, const char delim);
 
@@ -751,9 +753,14 @@ private:
 						      const casa::String&,
 						      const casa::Array<T2>&);
 
-  void fitBaseline(const std::vector<bool>& mask, int whichrow, Fitter& fitter);
   double getNormalPolynomial(int n, double x);
   double getChebyshevPolynomial(int n, double x);
+  std::vector<std::vector<double> > getPolynomialModel(int order, 
+						       int nchan, 
+						       double (Scantable::*pfunc)(int, double));
+  std::vector<std::vector<std::vector<double> > > getPolynomialModelReservoir(int order,
+									      double (Scantable::*pfunc)(int, double),
+									      std::vector<int>& nChanNos);
   std::vector<float> doPolynomialFitting(const std::vector<float>& data, 
 					 const std::vector<bool>& mask,
 					 int order,
@@ -792,8 +799,7 @@ private:
 				        bool getResidual=true);
   std::vector<float> doLeastSquareFitting(const std::vector<float>& data, 
 					  const std::vector<bool>& mask, 
-					  double (Scantable::*pfunc)(int, double), 
-					  int order, 
+					  const std::vector<std::vector<double> >& model, 
 					  std::vector<float>& params, 
 					  float& rms, 
 					  std::vector<bool>& finalMask, 
@@ -830,6 +836,19 @@ private:
 					  float thresClip=3.0, 
 					  int nIterClip=0,
 					  bool getResidual=true);
+  std::vector<float> doCubicSplineLeastSquareFitting(const std::vector<float>& data, 
+						     const std::vector<bool>& mask, 
+						     const std::vector<std::vector<double> >& model, 
+						     int nPiece, 
+						     bool useGivenPieceBoundary, 
+						     std::vector<int>& idxEdge, 
+						     std::vector<float>& params, 
+						     float& rms, 
+						     std::vector<bool>& finalMask, 
+						     int& nClipped, 
+						     float thresClip=3.0, 
+						     int nIterClip=0, 
+						     bool getResidual=true);
   std::vector<float> doSinusoidFitting(const std::vector<float>& data, 
 				       const std::vector<bool>& mask,
 				       const std::vector<int>& waveNumbers,
@@ -848,23 +867,28 @@ private:
 				       float thresClip=3.0, 
 				       int nIterClip=0,
 				       bool getResidual=true);
-  void selectWaveNumbers(const int whichrow, 
-			 const std::vector<bool>& chanMask, 
-			 const std::string& fftInfo, 
-			 //const bool applyFFT, 
-			 //const std::string& fftMethod, 
-			 //const std::string& fftThresh, 
-			 const std::vector<int>& addNWaves, 
-			 const std::vector<int>& rejectNWaves, 
-			 std::vector<int>& nWaves);
+  std::vector<std::vector<double> > getSinusoidModel(const std::vector<int>& waveNumbers, int nchan);
+  std::vector<std::vector<std::vector<double> > > getSinusoidModelReservoir(const std::vector<int>& waveNumbers,
+									    std::vector<int>& nChanNos);
+  std::vector<int> selectWaveNumbers(const std::vector<int>& addNWaves, 
+				     const std::vector<int>& rejectNWaves);
+  std::vector<int> selectWaveNumbers(const int whichrow, 
+				     const std::vector<bool>& chanMask, 
+				     //const std::string& fftInfo, 
+				     const bool applyFFT, 
+				     const std::string& fftMethod, 
+				     const std::string& fftThresh, 
+				     const std::vector<int>& addNWaves, 
+				     const std::vector<int>& rejectNWaves);
+  int getIdxOfNchan(const int nChan, const std::vector<int>& nChanNos);
   void parseFFTInfo(const std::string& fftInfo, 
 		    bool& applyFFT, 
 		    std::string& fftMethod, 
 		    std::string& fftThresh);
-  void parseThresholdExpression(const std::string& fftThresh,
-				std::string& fftThAttr,
-				float& fftThSigma,
-				int& fftThTop);
+  void parseFFTThresholdInfo(const std::string& fftThresh,
+			     std::string& fftThAttr,
+			     float& fftThSigma,
+			     int& fftThTop);
   void doSelectWaveNumbers(const int whichrow,
 			   const std::vector<bool>& chanMask, 
 			   const std::string& fftMethod, 
@@ -878,6 +902,26 @@ private:
 			 std::vector<int>& nWaves);
   void setWaveNumberListUptoNyquistFreq(const int whichrow,
 					std::vector<int>& nWaves);
+  void initialiseBaselining(const std::string& blfile, 
+			    std::ofstream& ofs, 
+			    const bool outLogger, 
+			    bool& outTextFile, 
+			    bool& csvFormat, 
+			    casa::String& coordInfo, 
+			    bool& hasSameNchan, 
+			    const std::string& progressInfo, 
+			    bool& showProgress, 
+			    int& minNRow, 
+			    casa::Vector<casa::Double>& timeSecCol);
+  void finaliseBaselining(const bool outBaselineTable, 
+			  STBaselineTable* pbt, 
+			  const string& bltable, 
+			  const bool outTextFile, 
+			  std::ofstream& ofs);
+  void initLineFinder(const std::vector<int>& edge, 
+		      const float threshold, 
+		      const int chanAvgLimit,
+		      STLineFinder& lineFinder);
   bool hasSameNchanOverIFs();
   std::string getMaskRangeList(const std::vector<bool>& mask, 
 				int whichrow, 
@@ -888,8 +932,7 @@ private:
   std::string formatBaselineParamsHeader(int whichrow, const std::string& masklist, bool verbose, bool csvformat) const;
   std::string formatBaselineParamsFooter(float rms, int nClipped, bool verbose, bool csvformat) const;
   std::vector<bool> getCompositeChanMask(int whichrow, const std::vector<bool>& inMask);
-  //std::vector<bool> getCompositeChanMask(int whichrow, const std::vector<bool>& inMask, const std::vector<int>& edge, const int minEdgeSize, STLineFinder& lineFinder);
-  void outputFittingResult(bool outLogger, bool outTextFile, bool csvFormat, const std::vector<bool>& chanMask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, std::ofstream& ofs, const casa::String& funcName, Fitter& fitter);
+  std::vector<bool> getCompositeChanMask(int whichrow, const std::vector<bool>& inMask, const std::vector<int>& edge, std::vector<int>& currEdge, STLineFinder& lineFinder);
   void outputFittingResult(bool outLogger, bool outTextFile, bool csvFormat, const std::vector<bool>& chanMask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, std::ofstream& ofs, const casa::String& funcName, const std::vector<int>& edge, const std::vector<float>& params, const int nClipped);
   void outputFittingResult(bool outLogger, bool outTextFile, bool csvFormat, const std::vector<bool>& chanMask, int whichrow, const casa::String& coordInfo, bool hasSameNchan, std::ofstream& ofs, const casa::String& funcName, const std::vector<float>& params, const int nClipped);
   void parseProgressInfo(const std::string& progressInfo, bool& showProgress, int& minNRow);

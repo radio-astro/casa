@@ -220,7 +220,8 @@ class TestScantable(object):
         b = q.poly_baseline(order=0, mask=msk,insitu=False)
         res_rms = (q-b).stats('rms')
         assert_almost_equals(res_rms[0], 0.38346, 5)
-        assert_almost_equals(res_rms[1], 0.38780, 5)        
+        #assert_almost_equals(res_rms[1], 0.38780, 5)        
+        assert_almost_equals(res_rms[1], 0.48780, 5)        
 
 
     def test_reshape(self):

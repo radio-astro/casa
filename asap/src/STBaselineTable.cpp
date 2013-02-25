@@ -136,6 +136,64 @@ void STBaselineTable::setdata(uInt irow, uInt scanno, uInt cycleno,
   lfedgeCol_.put(irow, lfedge);
 }
 
+void STBaselineTable::appenddata(int scanno, int cycleno, 
+				 int beamno, int ifno, int polno, 
+				 int freqid, Double time, 
+				 bool apply, 
+				 STBaselineFunc::FuncName ftype, 
+				 int fpar, 
+				 vector<float> ffpar, 
+				 Vector<uInt> mask,
+				 vector<float> res,
+				 float rms,
+				 int nchan, 
+				 float cthres,
+				 int citer, 
+				 float lfthres, 
+				 int lfavg, 
+				 vector<int> lfedge)
+{
+  vector<int> fparam(1);
+  fparam[0] = fpar;
+
+  appenddata(scanno, cycleno, beamno, ifno, polno, freqid, time,
+	     apply, ftype, fparam, ffpar, mask, res, rms, nchan, 
+	     cthres, citer, lfthres, lfavg, lfedge);
+}
+
+void STBaselineTable::appenddata(int scanno, int cycleno, 
+				 int beamno, int ifno, int polno, 
+				 int freqid, Double time, 
+				 bool apply, 
+				 STBaselineFunc::FuncName ftype, 
+				 vector<int> fpar, 
+				 vector<float> ffpar, 
+				 Vector<uInt> mask,
+				 vector<float> res,
+				 float rms,
+				 int nchan, 
+				 float cthres,
+				 int citer, 
+				 float lfthres, 
+				 int lfavg, 
+				 vector<int> lfedge)
+{
+  Vector<Int> fparam(fpar.size());
+  for (uInt i = 0; i < fpar.size(); ++i) {
+    fparam[i] = fpar[i];
+  }
+  Vector<uInt> edge(lfedge.size());
+  for (uInt i = 0; i < lfedge.size(); ++i) {
+    edge[i] = lfedge[i];
+  }
+  appenddata(uInt(scanno), uInt(cycleno), uInt(beamno), 
+	     uInt(ifno), uInt(polno), uInt(freqid), time,
+	     Bool(apply), ftype, fparam, Vector<Float>(ffpar), 
+	     mask, Vector<Float>(res), Float(rms), uInt(nchan), 
+	     Float(cthres), uInt(citer), 
+	     Float(lfthres), uInt(lfavg), edge);
+}
+
 void STBaselineTable::appenddata(uInt scanno, uInt cycleno, 
 				 uInt beamno, uInt ifno, uInt polno, 
 				 uInt freqid, Double time, 
