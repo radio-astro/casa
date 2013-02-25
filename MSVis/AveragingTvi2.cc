@@ -436,7 +436,6 @@ VbAvg::copyRowIdValues (const VisBuffer2 * input, Int row, Int baselineIndex)
     copyRowIdValue (input, row, & VisBuffer2::processorId, & VisBuffer2::setProcessorId, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::scan, & VisBuffer2::setScan, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::observationId, & VisBuffer2::setObservationId, baselineIndex);
-    copyRowIdValue (input, row, & VisBuffer2::spectralWindows, & VisBuffer2::setSpectralWindows, baselineIndex);
     copyRowIdValue (input, row, & VisBuffer2::stateId, & VisBuffer2::setStateId, baselineIndex);
 }
 
@@ -642,14 +641,19 @@ VbAvg::prepareIds (const VisBuffer2 * vb)
     setProcessorId (minusOne);
     setScan (minusOne);
     setObservationId (minusOne);
-    setSpectralWindows (minusOne);
     setStateId (minusOne);
 
     // Copy the value from the input VB
 
-    setArrayId (vb->arrayId());
-    setDataDescriptionId (vb->dataDescriptionId());
-    setFieldId (vb->fieldId());
+    Vector<Int> tmp (nBaselines(), vb->arrayId()(0));
+
+    setArrayId (tmp);
+
+    tmp = vb->dataDescriptionIds()(0);
+    setDataDescriptionIds (tmp);
+
+    tmp = vb->fieldId()(0);
+    setFieldId (tmp);
 }
 
 void
@@ -763,7 +767,7 @@ VbSet::~VbSet ()
 void
 VbSet::accumulate (const VisBuffer2 * input)
 {
-    Int ddId = input->dataDescriptionId();
+    Int ddId = input->dataDescriptionIds()(0);
 
     VbAvg * vba = vbAveragers_p [ddId];
 
@@ -796,7 +800,7 @@ VbSet::anyAveragesReady(Int ddid) const
          a++){
 
         if (a->second->isComplete() &&
-            (ddid <= 0 || ddid == a->second->dataDescriptionId())){
+            (ddid <= 0 || ddid == a->second->dataDescriptionIds()(0))){
 
             any = True;
             break;
@@ -891,7 +895,7 @@ VbSet::transferAverage (Int ddId, VisBuffer2 * vb)
 Bool
 VbSet::vbPastAveragingInterval (const VisBuffer2 * vb) const
 {
-    Int ddId = vb->dataDescriptionId();
+    Int ddId = vb->dataDescriptionIds()(0);
 
     Bool isPast = False;
 
@@ -1075,7 +1079,7 @@ AveragingTvi2::produceSubchunk ()
 
         if (vbSet_p->vbPastAveragingInterval(vb)){
 
-            vbSet_p->finalizeAverage (vb->dataDescriptionId());
+            vbSet_p->finalizeAverage (vb->dataDescriptionIds()(0));
 
             break; // should have an output subchunk now
         }

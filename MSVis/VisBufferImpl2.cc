@@ -98,7 +98,7 @@ protected:
 
     Bool isKey () const { return isKey_p;}
 
-    virtual void setAsPresent () const = 0;
+    virtual void setAsPresent (Bool isPresent = True) const = 0;
     void setIsKey (Bool isKey)
     {
         isKey_p = isKey;
@@ -134,7 +134,7 @@ public:
         if (! clearStatusOnly) {
             clearValue (item_p);
         }
-        isPresent_p = False;
+        setAsPresent (False);
         clearDirty ();
     }
 
@@ -167,7 +167,7 @@ public:
     const T &
     get () const
     {
-        if (! isPresent_p){
+        if (! isPresent()){
             fill ();
             setAsPresent ();
             isDirty_p = False;
@@ -179,7 +179,7 @@ public:
     T &
     getRef ()
     {
-        if (! isPresent_p){
+        if (! isPresent()){
             fill ();
             setAsPresent();
         }
@@ -366,7 +366,7 @@ protected:
         }
         else {
 
-            isPresent_p = False;
+            setAsPresent (False);
             isDirty_p = False;
         }
     }
@@ -378,9 +378,9 @@ protected:
     }
 
     void
-    setAsPresent () const
+    setAsPresent (Bool isPresent = True) const
     {
-        isPresent_p = True;
+        isPresent_p = isPresent;
     }
 
 private:
@@ -410,8 +410,8 @@ public:
     initialize (VisBufferCache * cache,
                 VisBufferImpl2 * vb,
                 Filler filler,
-                VisBufferComponent2 component = Unknown,
-                ShapePattern shapePattern = NoCheck,
+                VisBufferComponent2 component,
+                ShapePattern shapePattern,
                 Bool isKey = True)
     {
         VbCacheItem<T, IsComputed>::initialize (cache, vb, filler, component, isKey);
@@ -616,8 +616,7 @@ public:
     VbCacheItemArray <Vector<Int> > scan_p;
     VbCacheItemArray <Matrix<Float> > sigma_p;
     //VbCacheItemArray <Matrix<Float> > sigmaMat_p;
-    VbCacheItem <Int> spectralWindow_p;
-    VbCacheItem <Vector<Int> > spectralWindows_p;
+    VbCacheItemArray <Vector<Int> > spectralWindows_p;
     VbCacheItemArray <Vector<Int> > stateId_p;
     VbCacheItemArray <Vector<Double> > time_p;
     VbCacheItemArray <Vector<Double> > timeCentroid_p;
@@ -768,21 +767,21 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     antenna1_p.initialize (this, vb, & VisBufferImpl2::fillAntenna1, Antenna1, Nr);
     antenna2_p.initialize (this, vb, &VisBufferImpl2::fillAntenna2, Antenna2, Nr);
     arrayId_p.initialize (this, vb, &VisBufferImpl2::fillArrayId, ArrayId, Nr);
-    cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC, JonesC);
+    cjones_p.initialize (this, vb, &VisBufferImpl2::fillJonesC, JonesC, NoCheck);
     correctedVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeCorrected,
                                    VisibilityCubeCorrected, NcNfNr, False);
 //    correctedVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityCorrected,
 //                                      VisibilityCorrected, NcNfNr, False);
-    corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType, CorrType);
-    dataDescriptionId_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionId, DataDescriptionId);
-    dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds, DataDescriptionIds);
-    direction1_p.initialize (this, vb, &VisBufferImpl2::fillDirection1, Direction1);
-    direction2_p.initialize (this, vb, &VisBufferImpl2::fillDirection2, Direction2);
+    corrType_p.initialize (this, vb, &VisBufferImpl2::fillCorrType, CorrType, NoCheck);
+    //dataDescriptionId_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionId, DataDescriptionId);
+    dataDescriptionIds_p.initialize (this, vb, &VisBufferImpl2::fillDataDescriptionIds, DataDescriptionIds, Nr);
+    direction1_p.initialize (this, vb, &VisBufferImpl2::fillDirection1, Direction1, NoCheck);
+    direction2_p.initialize (this, vb, &VisBufferImpl2::fillDirection2, Direction2, NoCheck);
     exposure_p.initialize (this, vb, &VisBufferImpl2::fillExposure, Exposure, Nr);
     feed1_p.initialize (this, vb, &VisBufferImpl2::fillFeed1, Feed1, Nr);
-    feed1Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa1, FeedPa1);
+    feed1Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa1, FeedPa1, NoCheck);
     feed2_p.initialize (this, vb, &VisBufferImpl2::fillFeed2, Feed2, Nr);
-    feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2);
+    feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2, NoCheck);
     fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId, Nr);
     flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
     //flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
@@ -790,24 +789,23 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr, False);
     flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow, FlagRow, Nr, False);
     floatDataCube_p.initialize (this, vb, &VisBufferImpl2::fillFloatData, FloatData, NcNfNr, False);
-    imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight);
+    imagingWeight_p.initialize (this, vb, &VisBufferImpl2::fillImagingWeight, ImagingWeight, NoCheck);
     modelVisCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeModel, VisibilityCubeModel, NcNfNr, False);
 //    modelVisibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityModel, VisibilityModel, NoCheck, False);
     nAntennas_p.initialize (this, vb, &VisBufferImpl2::fillNAntennas, NAntennas);
     nChannels_p.initialize (this, vb, &VisBufferImpl2::fillNChannel, NChannels);
     nCorrelations_p.initialize (this, vb, &VisBufferImpl2::fillNCorr, NCorrelations);
     nRows_p.initialize (this, vb, &VisBufferImpl2::fillNRow, NRows);
-    observationId_p.initialize (this, vb, &VisBufferImpl2::fillObservationId, ObservationId);
+    observationId_p.initialize (this, vb, &VisBufferImpl2::fillObservationId, ObservationId, Nr);
     phaseCenter_p.initialize (this, vb, &VisBufferImpl2::fillPhaseCenter, PhaseCenter);
     polFrame_p.initialize (this, vb, &VisBufferImpl2::fillPolFrame, PolFrame);
     polarizationId_p.initialize (this, vb, &VisBufferImpl2::fillPolarizationId, PolarizationId);
     processorId_p.initialize (this, vb, &VisBufferImpl2::fillProcessorId, ProcessorId, Nr);
-    rowIds_p.initialize (this, vb, &VisBufferImpl2::fillRowIds, RowIds);
+    rowIds_p.initialize (this, vb, &VisBufferImpl2::fillRowIds, RowIds, Nr);
     scan_p.initialize (this, vb, &VisBufferImpl2::fillScan, Scan, Nr);
     sigma_p.initialize (this, vb, &VisBufferImpl2::fillSigma, Sigma, NcNr, False);
     //sigmaMat_p.initialize (this, vb, &VisBufferImpl2::fillSigmaMat, SigmaMat);
-    spectralWindow_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindow, SpectralWindow);
-    spectralWindows_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindows, SpectralWindows);
+    spectralWindows_p.initialize (this, vb, &VisBufferImpl2::fillSpectralWindows, SpectralWindows, Nr);
     stateId_p.initialize (this, vb, &VisBufferImpl2::fillStateId, StateId, Nr);
     time_p.initialize (this, vb, &VisBufferImpl2::fillTime, casa::vi::Time, Nr);
     timeCentroid_p.initialize (this, vb, &VisBufferImpl2::fillTimeCentroid, TimeCentroid, Nr);
@@ -1024,8 +1022,8 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
 {
 
     VisBufferComponents2 components =
-        VisBufferComponents2::these (Antenna1, Antenna2, ArrayId, DataDescriptionId,
-                                     FieldId, SpectralWindow, casa::vi::Time,
+        VisBufferComponents2::these (Antenna1, Antenna2, ArrayId, DataDescriptionIds,
+                                     FieldId, SpectralWindows, casa::vi::Time,
                                      NRows, Feed1, Feed2, Unknown);
 
     copyComponents (* vb, components, fetchIfNeeded);
@@ -1529,7 +1527,7 @@ VisBufferImpl2::resetWeightsUsingSigma ()
 
     // Scale by (unselected!) # of channels (to stay aligned with original nominal weights)
 
-    Int nchan = getViP()->subtableColumns().spectralWindow().numChan()(spectralWindow());
+    Int nchan = getViP()->subtableColumns().spectralWindow().numChan()(spectralWindows()(0));
 
     weight *= Float(nchan);
 
@@ -1882,11 +1880,11 @@ VisBufferImpl2::correlationTypes () const
     return cache_p->corrType_p.get ();
 }
 
-Int
-VisBufferImpl2::dataDescriptionId () const
-{
-    return cache_p->dataDescriptionId_p.get ();
-}
+//Int
+//VisBufferImpl2::dataDescriptionId () const
+//{
+//    return cache_p->dataDescriptionId_p.get ();
+//}
 
 const Vector<Int> &
 VisBufferImpl2::dataDescriptionIds () const
@@ -1894,11 +1892,11 @@ VisBufferImpl2::dataDescriptionIds () const
 	return cache_p->dataDescriptionIds_p.get ();
 }
 
-void
-VisBufferImpl2::setDataDescriptionId (Int value)
-{
-    cache_p->dataDescriptionId_p.set (value);
-}
+//void
+//VisBufferImpl2::setDataDescriptionId (Int value)
+//{
+//    cache_p->dataDescriptionId_p.set (value);
+//}
 
 void
 VisBufferImpl2::setDataDescriptionIds (const Vector<Int> & value)
@@ -2154,11 +2152,11 @@ VisBufferImpl2::setSigma (const Matrix<Float> & sigma)
 //    return cache_p->sigmaMat_p.get ();
 //}
 
-Int
-VisBufferImpl2::spectralWindow () const
-{
-    return cache_p->spectralWindow_p.get ();
-}
+//Int
+//VisBufferImpl2::spectralWindow () const
+//{
+//    return cache_p->spectralWindow_p.get ();
+//}
 
 const Vector<Int> &
 VisBufferImpl2::spectralWindows () const
@@ -2166,11 +2164,11 @@ VisBufferImpl2::spectralWindows () const
 	return cache_p->spectralWindows_p.get ();
 }
 
-void
-VisBufferImpl2::setSpectralWindows (const Vector<Int> & spectralWindows)
-{
-    cache_p->spectralWindows_p.set (spectralWindows);
-}
+//void
+//VisBufferImpl2::setSpectralWindows (const Vector<Int> & spectralWindows)
+//{
+//    cache_p->spectralWindows_p.set (spectralWindows);
+//}
 
 
 const Vector<Int> &
@@ -2509,7 +2507,7 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
         //cerr << "HASMOD " << state_p->visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
 
-        if (state_p->visModelData_p.hasModel (msId(), fieldId()(0), spectralWindow()) == -1){
+        if (state_p->visModelData_p.hasModel (msId(), fieldId()(0), spectralWindows()(0)) == -1){
 
             if(hasmodkey){
 
@@ -2938,13 +2936,13 @@ VisBufferImpl2::fillSigma (Matrix<Float>& value) const
 //  getViP()->sigmaMat (value);
 //}
 
-void
-VisBufferImpl2::fillSpectralWindow (Int& value) const
-{
-  CheckVisIter ();
-
-  value = getViP()->spectralWindow ();
-}
+//void
+//VisBufferImpl2::fillSpectralWindow (Int& value) const
+//{
+//  CheckVisIter ();
+//
+//  value = getViP()->spectralWindow ();
+//}
 
 void
 VisBufferImpl2::fillSpectralWindows (Vector<Int>& value) const

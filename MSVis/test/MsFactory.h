@@ -339,6 +339,7 @@ private:
 
         ScalarColumn<Int>    antenna1_p;
         ScalarColumn<Int>    antenna2_p;
+        ScalarColumn<Int>    array_p;
         ArrayColumn<Complex> corrVis_p;
         ScalarColumn<Int>    dataDescriptionId_p;
         ScalarColumn<Double> exposure_p;
@@ -375,6 +376,7 @@ private:
         {
             generatorMap_p [MSMainEnums::ANTENNA1] = new GenerateAntenna1 ();
             generatorMap_p [MSMainEnums::ANTENNA2] = new GenerateAntenna2 ();
+            generatorMap_p [MSMainEnums::ARRAY_ID] = new GenerateConstant<Int> (17);
             generatorMap_p [MSMainEnums::DATA_DESC_ID] = new GenerateDdi ();
             generatorMap_p [MSMainEnums::EXPOSURE] = new GenerateUsingRow<Double> (8);
             generatorMap_p [MSMainEnums::FEED1] = new GenerateConstant<Int> (0);

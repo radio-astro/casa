@@ -246,8 +246,8 @@ public:
     virtual void setArrayId (const Vector<Int> &);
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
     virtual const Vector<Int> & correlationTypes () const;
-    virtual Int dataDescriptionId () const;
-    virtual void setDataDescriptionId (Int value);
+//    virtual Int dataDescriptionId () const;
+//    virtual void setDataDescriptionId (Int value);
     virtual const Vector<Int> & dataDescriptionIds () const;
     virtual void setDataDescriptionIds (const Vector<Int> & ); // [nR]
     virtual const Vector<MDirection> & direction1 () const;
@@ -288,9 +288,9 @@ public:
     virtual const Matrix<Float> & sigma () const;
     virtual void setSigma (const Matrix<Float> &);
     //virtual const Matrix<Float> & sigmaMat () const;
-    virtual Int spectralWindow () const;
+    //virtual Int spectralWindow () const;
     virtual const Vector<Int> & spectralWindows () const;
-    virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
+    //virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
     virtual const Vector<Int> & stateId () const;
     virtual void setStateId (const Vector<Int> & value);
     virtual const Vector<Double> & time () const;
@@ -464,7 +464,7 @@ private:
     virtual void fillScan (Vector<Int>& value) const;
     virtual void fillSigma (Matrix<Float>& value) const;
     //virtual void fillSigmaMat (Matrix<Float>& value) const;
-    virtual void fillSpectralWindow (Int& value) const;
+    //virtual void fillSpectralWindow (Int& value) const;
     virtual void fillSpectralWindows  (Vector<Int>& value) const;
     virtual void fillStateId (Vector<Int>& value) const;
     virtual void fillTime (Vector<Double>& value) const;

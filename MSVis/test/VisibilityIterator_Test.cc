@@ -552,7 +552,7 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 {
     // Check out that the subchunk has the appropriate data
 
-    Int spectralWindow = vb->spectralWindow();
+    Int spectralWindow = vb->spectralWindows()(0);
     Int nRows = vb->nRows();
 
     // The expected channels are 0..4 for spw 1, 6..10 for spw 2 and 3..8 for spw 3
@@ -931,7 +931,7 @@ FrequencyChannelSelection::startOfData (VisibilityIterator2 & vi, VisBuffer2 * /
 }
 
 Bool
-FrequencyChannelSelection::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int nRowsProcessed)
+FrequencyChannelSelection::noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRowsProcessed*/)
 {
 //    TestErrorIf (nRowsProcessed != nRowsToProcess_p,
 //                 String::format ("Expected to process %d rows, but did %d instead.",
