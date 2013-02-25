@@ -317,10 +317,11 @@ def simanalyze(
             # Do single dish imaging first if tpmstoimage exists.
             if tpmstoimage and os.path.exists(tpmstoimage):
                 msg('creating image from ms: '+tpmstoimage)
-                if len(mstoimage):
-                    tpimage = project + '.sd.image'
-                else:
-                    tpimage = project + '.image'
+                #if len(mstoimage):
+                #    tpimage = project + '.sd.image'
+                #else:
+                #    tpimage = project + '.image'
+                tpimage = project + '.sd.image'
                 tpimage = fileroot + "/" + tpimage
 
                 if len(mstoimage):
