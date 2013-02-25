@@ -447,12 +447,6 @@ void startsWith() {
 }
 */
 
-void createRandom() {
-	for (uInt i=0; i<10; i++) {
-		AlwaysAssert(String::createRandomAlphaNumeric(i).size() == i, AipsError);
-	}
-}
-
 int main() {
   decltest();
   cattest();
@@ -473,7 +467,6 @@ int main() {
   toInt();
   trim();
   startsWith();
-  createRandom();
   cout << "\nEnd of test\n";
   return(0);
 }
