@@ -36,8 +36,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-Bool String::_hasBeenSeeded = False;
-
 // Special constructors
 String::String(ostringstream &os) {
   *this = os.str();
@@ -123,21 +121,6 @@ String String::format (const char* picture, ...)
     }
     return result;
 }
-
-String String::createRandomAlphaNumeric(size_t len) {
-	const static string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-	String result;
-	result.resize(len);
-	if (! _hasBeenSeeded) {
-		srand(time(NULL));
-		_hasBeenSeeded = True;
-	}
-	for (uInt i = 0; i < len; i++) {
-		result[i] = charset[rand() % charset.length()];
-	}
-	return result;
-}
-
 
 void String::trim()
 {
