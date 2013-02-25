@@ -637,7 +637,7 @@ FlagMSHandler::nextBuffer()
 						", Array = " << visibilityBuffer_p->arrayId() <<
 						", Scan = " << visibilityBuffer_p->scan()[0] <<
 						", Field = " << visibilityBuffer_p->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
-						", Spw = " << visibilityBuffer_p->spectralWindow() <<
+						", Spw = " << visibilityBuffer_p->spectralWindows()(0) <<
 						", Channels = " << visibilityBuffer_p->nChannels() <<
 						", Corrs = " << corrs <<
 						", Total Rows = " << visibilityIterator_p->nRowsInChunk() << LogIO::POST;

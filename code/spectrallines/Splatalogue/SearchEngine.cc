@@ -76,6 +76,12 @@ SplatalogueTable* SearchEngine::search(
 ) const {
 	LogOrigin origin("SearchEngine", __FUNCTION__);
 	*_log << origin;
+	if (! resultsTableName.empty()) {
+		File tab(resultsTableName);
+		if (! tab.canCreate()) {
+			*_log << "Cannot create table " << resultsTableName << LogIO::EXCEPTION;
+		}
+	}
 	ostringstream query;
 	query << "SELECT FROM "  << _table->tableName();
 	query << " WHERE ";
@@ -160,7 +166,7 @@ SplatalogueTable* SearchEngine::search(
 	query << " ORDER BY " << SplatalogueTable::FREQUENCY;
 
 	Table resTable = _runQuery(query.str());
-	SplatalogueTable *resSplatTable = new SplatalogueTable(resTable);
+	std::auto_ptr<SplatalogueTable> resSplatTable(new SplatalogueTable(resTable));
 	if (!resultsTableName.empty()) {
 		resSplatTable->rename(resultsTableName, Table::NewNoReplace);
 		resSplatTable->flush(True, True);
@@ -168,7 +174,7 @@ SplatalogueTable* SearchEngine::search(
 	if (_list) {
 		_logIt(resSplatTable->list());
 	}
-	return resSplatTable;
+	return resSplatTable.release();
 }
 
 Vector<String> SearchEngine::uniqueSpecies() const {

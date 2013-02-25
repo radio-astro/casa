@@ -330,7 +330,7 @@ FlagAgentDisplay::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
     antenna2_p = antenna2Name;
     
     String scanRange = (scanStart_p!=scanEnd_p)?String::toString(scanStart_p)+"~"+String::toString(scanEnd_p) : String::toString(scanStart_p);
-    String spwName = String::toString(visBuffer.spectralWindow());
+    String spwName = String::toString(visBuffer.spectralWindows()(0));
     
     // Get Frequency List
     freqList_p.resize(nChannels);
@@ -493,9 +493,9 @@ FlagAgentDisplay::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
   {
     logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
     // Read current Field name, SPW id, and scan info.
-    fieldId_p = visBuffer.fieldId();
+    fieldId_p = visBuffer.fieldId()(0);
     fieldName_p = flagDataHandler_p->fieldNames_p->operator()(fieldId_p);
-    spwId_p = visBuffer.spectralWindow();
+    spwId_p = visBuffer.spectralWindows()(0);
     scanStart_p = visBuffer.scan()[0];
     scanEnd_p = visBuffer.scan()[ (visBuffer.scan().nelements())-1 ];
     

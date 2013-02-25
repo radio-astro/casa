@@ -127,7 +127,9 @@ const String PlotCanvas::OPERATION_EXPORT = "export";
 PlotCanvas::PlotCanvas() { }
 
 PlotCanvas::~PlotCanvas() {
-    operationDraw()->finish();
+    // Calling this here results in a pure virtual method exception.
+    // Virtual methods in constructors and destructors do not resolve!
+    //operationDraw()->finish();
 }
 
 
@@ -616,7 +618,7 @@ void PlotCanvas::setLegendFont(const PlotFontPtr font) {
 
 
 PlotOperationPtr PlotCanvas::operationExport()    {
-    return operationDraw(PlotMutexPtr()); 
+    return operationExport(PlotMutexPtr()); 
 }
 
 

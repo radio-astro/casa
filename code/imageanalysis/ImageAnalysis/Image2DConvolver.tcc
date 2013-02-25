@@ -40,7 +40,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <lattices/LatticeMath/Fit2D.h>
 #include <scimath/Functionals/Gaussian2D.h>
-#include <images/Images/ImageConvolver.h>
+#include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageInterface.h>

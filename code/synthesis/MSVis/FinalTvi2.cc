@@ -123,8 +123,8 @@ FinalTvi2::writeDataValues (MeasurementSet & /*ms*/, const RefRows & rows)
     columns_p.flag_p.putColumnCells (rows, getVisBuffer()->flagCube());
     columns_p.flagRow_p.putColumnCells (rows, getVisBuffer()->flagRow());
 
-    columns_p.sigma_p.putColumnCells (rows, getVisBuffer()->sigmaMat());
-    columns_p.weight_p.putColumnCells (rows, getVisBuffer()->weightMat());
+    columns_p.sigma_p.putColumnCells (rows, getVisBuffer()->sigma());
+    columns_p.weight_p.putColumnCells (rows, getVisBuffer()->weight());
 
     if (! columns_p.weightSpectrum_p.isNull()){
         columns_p.weightSpectrum_p.putColumnCells (rows, getVisBuffer()->weightSpectrum());
@@ -142,14 +142,13 @@ FinalTvi2::writeKeyValues (MeasurementSet & /*ms*/, const RefRows & rows)
 
     columns_p.feed2_p.putColumnCells (rows, getVisBuffer()->feed2());
 
-    Vector<Int> ddis (getVisBuffer()->nRows(), getVisBuffer()->dataDescriptionId ());
-    columns_p.dataDescription_p.putColumnCells (rows, ddis);
+    columns_p.dataDescription_p.putColumnCells (rows, getVisBuffer()->dataDescriptionIds());
 
     columns_p.processor_p.putColumnCells (rows, getVisBuffer()->processorId());
 
     columns_p.time_p.putColumnCells (rows, getVisBuffer()->time());
 
-    columns_p.field_p.putColumnCells (rows, Vector<Int> (getVisBuffer()->nRows(), getVisBuffer()->fieldId()));
+    columns_p.field_p.putColumnCells (rows, getVisBuffer()->fieldId());
 }
 
 void
@@ -163,8 +162,7 @@ FinalTvi2::writeMiscellaneousValues (MeasurementSet & /*ms*/, const RefRows & ro
 
     columns_p.scan_p.putColumnCells (rows, getVisBuffer()->scan());
 
-    Vector<Int> arrayIds (getVisBuffer()->nRows(), getVisBuffer()->arrayId ());
-    columns_p.array_p.putColumnCells (rows, arrayIds);
+    columns_p.array_p.putColumnCells (rows, getVisBuffer()->arrayId ());
 
     columns_p.observation_p.putColumnCells (rows, getVisBuffer()->observationId());
 

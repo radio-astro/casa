@@ -1610,7 +1610,7 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	Int spwIndex = 0;
 	if (not combinespws_p)
 	{
-		Int originalSPWid = vb->spectralWindow();
+		Int originalSPWid = vb->spectralWindows()(0);
 		spwIndex = inputOutputSPWIndexMap_p[originalSPWid];
 	}
 
@@ -1630,10 +1630,10 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	// Declare common auxiliary variables
 	Vector<Int> tmpVectorInt(rowRef.nrow(),0);
 
-	fillAndReindexScalar(vb->arrayId(),tmpVectorInt,inputOutputArrayIndexMap_p.size(),inputOutputArrayIndexMap_p);
+	fillAndReindexScalar(vb->arrayId()(0),tmpVectorInt,inputOutputArrayIndexMap_p.size(),inputOutputArrayIndexMap_p);
 	outputMsCols_p->arrayId().putColumnCells(rowRef,tmpVectorInt);
 
-	fillAndReindexScalar(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p.size(),inputOutputFieldIndexMap_p);
+	fillAndReindexScalar(vb->fieldId()(0),tmpVectorInt,inputOutputFieldIndexMap_p.size(),inputOutputFieldIndexMap_p);
 	outputMsCols_p->fieldId().putColumnCells(rowRef,tmpVectorInt);
 
 	if (combinespws_p)
@@ -1689,7 +1689,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->flagRow().putColumnCells(rowRef,tmpVectorBool);
 
 		// Averaged matrix columns
-		mapAndAverageMatrix(vb->weightMat(),tmpMatrixFloat);
+		mapAndAverageMatrix(vb->weight(),tmpMatrixFloat);
 		outputMsCols_p->weight().putColumnCells(rowRef,tmpMatrixFloat);
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
@@ -1700,14 +1700,14 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			mapAndAverageMatrix(vb->sigmaMat(),tmpMatrixFloat);
+			mapAndAverageMatrix(vb->sigma(),tmpMatrixFloat);
 			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 		}
 	}
 	else
 	{
 		// Spectral Window
-		fillAndReindexScalar(vb->spectralWindow(),tmpVectorInt,!spwSelection_p.empty(),inputOutputSPWIndexMap_p);
+		fillAndReindexScalar(vb->spectralWindows()(0),tmpVectorInt,!spwSelection_p.empty(),inputOutputSPWIndexMap_p);
 		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Scan
@@ -1756,7 +1756,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->uvw().putColumnCells(rowRef,vb->uvw());
 		outputMsCols_p->flagRow().putColumnCells(rowRef,vb->flagRow());
 
-		Matrix<Float> weights = vb->weightMat();
+		Matrix<Float> weights = vb->weight();
 		outputMsCols_p->weight().putColumnCells(rowRef, weights);
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
@@ -1767,7 +1767,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			outputMsCols_p->sigma().putColumnCells(rowRef, vb->sigmaMat());
+			outputMsCols_p->sigma().putColumnCells(rowRef, vb->sigma());
 		}
 	}
 
@@ -2221,7 +2221,7 @@ template <class T> void MSTransformDataHandler::smoothAndRegridCubes(const Cube<
 	*/
 
 	// Get spw and define output plane shape
-	Int spw = vb->spectralWindow();
+	Int spw = vb->spectralWindows()(0);
 
 	// Get input cube shape
 	IPosition inputCubeShape = inputDataCube.shape();

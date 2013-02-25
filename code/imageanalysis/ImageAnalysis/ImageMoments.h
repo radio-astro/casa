@@ -39,8 +39,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/iosfwd.h>
-#include <images/Images/MomentsBase.h>
-#include <memory>
+#include <imageanalysis/ImageAnalysis/MomentsBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

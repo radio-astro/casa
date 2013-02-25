@@ -30,6 +30,8 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/MSCache.h>
+#include <casaqt/QwtPlotter/QPCanvas.qo.h>
+#include <casaqt/QwtPlotter/QPPlotter.qo.h>
 
 namespace casa {
 
@@ -202,14 +204,14 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
         return canv[0]->exportToFile(format);
     else {
         bool success = true;
-        
-        PlotExportFormat form(format);
-        for(unsigned int i = 0; i < canv.size(); i++) {
-            form.location = String::toString(i) + "-" + format.location;
-            if(!canv[i]->exportToFile(form)) success = false;
-        }
-        
-        return success;        
+        success = QPCanvas::exportPlotter(
+            dynamic_cast<QPPlotter*>(&(*itsParent_->getPlotter()->getPlotter())), format);
+        //PlotExportFormat form(format);
+        //for(unsigned int i = 0; i < canv.size(); i++) {
+        //    form.location = format.location + "-" + String::toString(i);
+        //    if(!canv[i]->exportToFile(form)) success = false;
+        //}
+        return success;
     }
 }
 

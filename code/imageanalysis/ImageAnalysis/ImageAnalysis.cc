@@ -75,12 +75,12 @@
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageConcat.h>
-#include <images/Images/ImageConvolver.h>
+#include <imageanalysis/ImageAnalysis/ImageConvolver.h>
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
-#include <images/Images/ImageFFT.h>
+#include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
-#include <images/Images/ImageHistograms.h>
+#include <imageanalysis/ImageAnalysis/ImageHistograms.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageOpener.h>

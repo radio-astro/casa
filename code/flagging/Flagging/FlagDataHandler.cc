@@ -88,7 +88,7 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 	// Initialize Pre-Load columns
 	preLoadColumns_p.clear();
 	preLoadColumns_p.push_back(vi::FieldId);
-	preLoadColumns_p.push_back(vi::SpectralWindow);
+	preLoadColumns_p.push_back(vi::SpectralWindows);
 	preLoadColumns_p.push_back(vi::Scan);
 	preLoadColumns_p.push_back(vi::ArrayId);
 	preLoadColumns_p.push_back(vi::ObservationId);
@@ -1399,27 +1399,27 @@ FlagDataHandler::preFetchColumns()
 				}
 				break;
 			}
-			case vi::SigmaMat:
+//			case vi::SigmaMat:
+//			{
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::SigmaMat);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->sigmaMat();
+//				}
+//				break;
+//			}
+			case vi::SpectralWindows:
 			{
 				if (asyncio_enabled_p)
 				{
-					prefetchColumns_p->operator +=(vi::SigmaMat);
+					prefetchColumns_p->operator +=(vi::SpectralWindows);
 				}
 				else
 				{
-					visibilityBuffer_p->sigmaMat();
-				}
-				break;
-			}
-			case vi::SpectralWindow:
-			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::SpectralWindow);
-				}
-				else
-				{
-					visibilityBuffer_p->spectralWindow();
+					visibilityBuffer_p->spectralWindows();
 				}
 				break;
 			}
@@ -1483,18 +1483,18 @@ FlagDataHandler::preFetchColumns()
 				}
 				break;
 			}
-			case vi::WeightMat:
-			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::WeightMat);
-				}
-				else
-				{
-					visibilityBuffer_p->weightMat();
-				}
-				break;
-			}
+//			case vi::WeightMat:
+//			{
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::WeightMat);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->weightMat();
+//				}
+//				break;
+//			}
 			case vi::WeightSpectrum:
 			{
 				if (asyncio_enabled_p)
@@ -1572,7 +1572,7 @@ FlagDataHandler::setMapPolarizations(bool activated)
 
 
 void
-FlagDataHandler::setMapAntennaPointing(bool activated)
+FlagDataHandler::setMapAntennaPointing(bool /*activated*/)
 {
 	// Antenna Pointing mapping is now done by the first
 	// Elevation agent, and stored as static variable

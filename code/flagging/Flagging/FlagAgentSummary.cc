@@ -55,7 +55,7 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 	flagDataHandler_p->preLoadColumn(vi::FieldId);
 	flagDataHandler_p->preLoadColumn(vi::Scan);
 	flagDataHandler_p->preLoadColumn(vi::ObservationId);
-	flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
+	flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
 	flagDataHandler_p->preLoadColumn(vi::Antenna1);
 	flagDataHandler_p->preLoadColumn(vi::Antenna2);
 	//flagDataHandler_p->preLoadColumn(vi::Freq);
@@ -151,16 +151,16 @@ FlagAgentSummary::setAgentParameters(Record config)
 void
 FlagAgentSummary::preProcessBuffer(const vi::VisBuffer2 &visBuffer)
 {
-	arrayId = visBuffer.arrayId();
+	arrayId = visBuffer.arrayId()(0);
 	stringstream arrayId_stringStream;
 	arrayId_stringStream << arrayId;
 	arrayId_str = arrayId_stringStream.str();
 
-	fieldId = visBuffer.fieldId();
+	fieldId = visBuffer.fieldId()(0);
 	// Transform fieldId into field name using the corresponding subtable
 	fieldId_str = flagDataHandler_p->fieldNames_p->operator()(fieldId);
 
-	spw = visBuffer.spectralWindow();
+	spw = visBuffer.spectralWindows()(0);
 	stringstream spw_stringStream;
 	spw_stringStream << spw;
 	spw_str = spw_stringStream.str();

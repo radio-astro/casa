@@ -31,7 +31,7 @@ FlagAgentRFlag::FlagAgentRFlag(FlagDataHandler *dh, Record config, Bool writePri
 	setAgentParameters(config);
 
 	// Request pre-loading spw
-	flagDataHandler_p->preLoadColumn(vi::SpectralWindow);
+	flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
 	// flagDataHandler_p->preLoadColumn(vi::Freq);
 
 	// Initialize parameters for robust stats (spectral analysis)
@@ -1013,8 +1013,8 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 	visibilities.shape(nPols, nChannels, nTimesteps);
 
 	// Make field-spw pair
-	Int field = visBuffer.fieldId();
-	Int spw = visBuffer.spectralWindow();
+	Int field = visBuffer.fieldId()(0);
+	Int spw = visBuffer.spectralWindows()(0);
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
 	// Check if frequency array has to be initialized
@@ -1116,8 +1116,8 @@ FlagAgentRFlag::passIntermediate(const vi::VisBuffer2 &visBuffer)
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
 
 	// Make field-spw pair
-	Int field = visBuffer.fieldId();
-	Int spw = visBuffer.spectralWindow();
+	Int field = visBuffer.fieldId()(0);
+	Int spw = visBuffer.spectralWindows()(0);
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 
 	if (field_spw_noise_map_p.find(field_spw) == field_spw_noise_map_p.end() && !noise_p)
@@ -1148,8 +1148,8 @@ FlagAgentRFlag::passFinal(const vi::VisBuffer2 &visBuffer)
 {
 
 	// Make field-spw pair
-	Int field = visBuffer.fieldId();
-	Int spw = visBuffer.spectralWindow();
+	Int field = visBuffer.fieldId()(0);
+	Int spw = visBuffer.spectralWindows()(0);
 	pair<Int,Int> field_spw = std::make_pair(field,spw);
 	if (user_field_spw_noise_map_p.find(field_spw) == user_field_spw_noise_map_p.end())
 	{

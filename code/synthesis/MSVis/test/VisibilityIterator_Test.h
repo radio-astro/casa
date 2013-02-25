@@ -87,6 +87,9 @@ private:
                         Int channelOffset, Int channelIncrement, VisBuffer2 * vb);
     void checkRowScalar (Double value, Double offset, Int rowId, const char * name, Int factor = 1);
     void checkRowScalars (VisBuffer2 * vb);
+    void checkSigmaWeight (Int nCorrelations, const Matrix<Float> & values, Double offset, Int rowId,
+                           Int row, const char * name, Int factor);
+    void checkUvw (VisBuffer2 * vb, Int nRows, Int rowId, Int row);
     void checkVisCube (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
                        const Cube<Complex> & cube, const String & tag,
                        Int channelOffset, Int channelIncrement, Int cubeDelta);
@@ -98,6 +101,7 @@ private:
     MsFactory * msf_p;
     const Int nAntennas_p;
     const Int nFlagCategories_p;
+    Int nRowsToProcess_p;
     Int nSweeps_p;
 
 };

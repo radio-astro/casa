@@ -133,6 +133,7 @@ casa_add_library( plotms
   Plots/PlotMSPlotManager.cc
   Plots/PlotMSPlotParameterGroups.cc
   Plots/PlotMSPlotParameters.cc
+  Plots/PlotMSOverPlot.cc
   )
 
 INSTALL (FILES
@@ -193,6 +194,7 @@ INSTALL (FILES
 	DESTINATION include/casacode/plotms/PlotMS )
 
 INSTALL (FILES
+        Plots/PlotMSOverPlot.h
         Plots/PlotMSIterPlot.h
         Plots/PlotMSPage.h
         Plots/PlotMSPlot.h

@@ -62,15 +62,15 @@ PlotMSIterateTab::PlotMSIterateTab(PlotMSPlotTab* tab, PlotMSPlotter* parent)
     // Set up label defaults.
 ///    itsLabelDefaults_.insert(enableIterationChk,  enableIterationChk->text());
 	itsLabelDefaults_.insert(iterationAxisChooserLabel,  iterationAxisChooserLabel->text());
-//	itsLabelDefaults_.insert(rowsLabel,           rowsLabel->text());
-//	itsLabelDefaults_.insert(columnsLabel,        columnsLabel->text());
-///	itsLabelDefaults_.insert(VertAxesGroupBox,    VertAxesGroupBox->title());
-///	itsLabelDefaults_.insert(HorizAxesGroupBox,   HorizAxesGroupBox->title());
+	itsLabelDefaults_.insert(rowsLabel,           rowsLabel->text());
+	itsLabelDefaults_.insert(columnsLabel,        columnsLabel->text());
+//    itsLabelDefaults_.insert(VertAxesGroupBox,    VertAxesGroupBox->title());
+//    itsLabelDefaults_.insert(HorizAxesGroupBox,   HorizAxesGroupBox->title());
 
     // Connect widgets.
     connect(iterationAxisChooser, SIGNAL(currentIndexChanged(int)), SIGNAL(changed()) );
-    //    connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
-    //    connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
+    connect(nColsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
+    connect(nRowsSpinBox, SIGNAL(valueChanged(int)),  SIGNAL(changed()) );
     
     
 }

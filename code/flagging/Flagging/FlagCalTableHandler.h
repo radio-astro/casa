@@ -85,8 +85,8 @@ public:
     virtual void setAntenna1 (const Vector<Int> & value) {}
     virtual const Vector<Int> & antenna2 () const {Vector<Int> dummy; return dummy;}
     virtual void setAntenna2 (const Vector<Int> & value) {}
-    virtual Int arrayId () const {Int dummy; return dummy;}
-    virtual void setArrayId (Int value) {}
+    virtual const Vector<Int>& arrayId () const {Vector<Int> dummy; return dummy;}
+    virtual void setArrayId (const Vector<Int>&) {}
     virtual Int dataDescriptionId () const {Int dummy; return dummy;}
     virtual void setDataDescriptionId (Int value) {}
     virtual void setDataDescriptionIds(const casa::Vector<int>&){}
@@ -98,8 +98,8 @@ public:
     virtual void setFeed1 (const Vector<Int> & value) {}
     virtual const Vector<Int> & feed2 () const {Vector<Int> dummy; return dummy;}
     virtual void setFeed2 (const Vector<Int> & value) {}
-    virtual Int fieldId () const {Int dummy; return dummy;}
-    virtual void setFieldId (Int value) {}
+    virtual const Vector<Int>& fieldId () const {Vector<Int> dummy; return dummy;}
+    virtual void setFieldId (const Vector<Int>&) {}
     virtual const Matrix<Bool> & flag () const {Matrix<Bool> dummy; return dummy;}
     virtual void setFlag (const Matrix<Bool>& value) {}
     virtual const Array<Bool> & flagCategory () const {Array<Bool> dummy; return dummy;}
@@ -114,8 +114,8 @@ public:
     virtual void setProcessorId (const Vector<Int> & value) {}
     virtual const Vector<Int> & scan () const {Vector<Int> dummy; return dummy;}
     virtual void setScan (const Vector<Int> & value) {}
-    virtual const Vector<Float> & sigma () const {Vector<Float> dummy; return dummy;}
-    virtual void setSigma (const Vector<Float> & value) {}
+    virtual const Matrix<Float> & sigma () const {Matrix<Float> dummy; return dummy;}
+    virtual void setSigma (const Matrix<Float> & value) {}
     virtual const Matrix<Float> & sigmaMat () const {Matrix<Float> dummy; return dummy;}
     virtual const Vector<Int> & stateId () const {Vector<Int> dummy; return dummy;}
     virtual void setStateId (const Vector<Int> & value) {}
@@ -127,8 +127,8 @@ public:
     virtual void setTimeInterval (const Vector<Double> & value) {}
     virtual const Matrix<Double> & uvw () const {Matrix<Double> dummy; return dummy;}
     virtual void setUvw (const Matrix<Double> & value) {}
-    virtual const Vector<Float> & weight () const {Vector<Float> dummy; return dummy;}
-    virtual void setWeight (const Vector<Float>& value) {}
+    virtual const Matrix<Float> & weight () const {Matrix<Float> dummy; return dummy;}
+    virtual void setWeight (const Matrix<Float>& value) {}
     virtual const Matrix<Float> & weightMat () const {Matrix<Float> dummy; return dummy;}
     virtual void setWeightMat (const Matrix<Float>& value) {}
     virtual const Cube<Float> & weightSpectrum () const {Cube<Float> dummy; return dummy;}
@@ -288,8 +288,8 @@ public:
 	CTBuffer(CTIter *ctIter) {ctCache_p = new CTCache(ctIter);invalidate();}
 	~CTBuffer() {}
 
-	Int arrayId() const {return ctCache_p->arrayId();}
-	Int fieldId() const {return ctCache_p->fieldId();}
+	const Vector<Int> & arrayId() const {return Vector<Int> (time().nelements(), ctCache_p->arrayId());}
+	const Vector<Int> & fieldId() const {return Vector<Int> (time().nelements(), ctCache_p->fieldId());}
 	Int spectralWindow() const {return ctCache_p->spectralWindow();}
 	const Vector<Int>& scan() const {return ctCache_p->scan();}
 	const Vector<Double>& time() const {return ctCache_p->time();}
@@ -318,6 +318,8 @@ public:
         Cube<complex<float> >& visCubeRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<complex<float> >& visCubeCorrectedRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<complex<float> >& visCubeModelRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+        Cube<float >& weightSpectrumRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
+
 
 private:
 

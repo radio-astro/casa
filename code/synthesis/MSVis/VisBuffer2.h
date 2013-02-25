@@ -331,10 +331,10 @@ public:
     virtual void setAntenna1 (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & antenna2 () const = 0; // [nR]
     virtual void setAntenna2 (const Vector<Int> & value) = 0; // [nR]
-    virtual Int arrayId () const = 0;
-    virtual void setArrayId (Int value) = 0;
-    virtual Int dataDescriptionId () const = 0;
-    virtual void setDataDescriptionId (Int value) = 0;
+    virtual const Vector<Int> & arrayId () const = 0;
+    virtual void setArrayId (const Vector<Int> & ) = 0;
+    //virtual Int dataDescriptionId () const = 0;
+    //virtual void setDataDescriptionId (Int value) = 0;
     virtual const Vector<Int> & dataDescriptionIds () const = 0; // [nR]
     virtual void setDataDescriptionIds (const Vector<Int> & ) = 0; // [nR]
     virtual const Vector<MDirection> & direction1 () const = 0; // [nR]
@@ -345,8 +345,8 @@ public:
     virtual void setFeed1 (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & feed2 () const = 0; // [nR]
     virtual void setFeed2 (const Vector<Int> & value) = 0; // [nR]
-    virtual Int fieldId () const = 0;
-    virtual void setFieldId (Int value) = 0;
+    virtual const Vector<Int> & fieldId () const = 0;
+    virtual void setFieldId (const Vector<Int> &) = 0;
     virtual const Matrix<Bool> & flag () const = 0; // [nF,nR]
     virtual void setFlag (const Matrix<Bool>& value) = 0; // [nF,nR]
     virtual const Array<Bool> & flagCategory () const = 0; // [nC,nF,nCategories,nR]
@@ -361,9 +361,9 @@ public:
     virtual void setProcessorId (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & scan () const = 0; // [nR]
     virtual void setScan (const Vector<Int> & value) = 0; // [nR]
-    virtual const Vector<Float> & sigma () const = 0; // [nR]
-    virtual void setSigma (const Vector<Float> & value) = 0; // [nR]
-    virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
+    virtual const Matrix<Float> & sigma () const = 0; // [nC, nR]
+    virtual void setSigma (const Matrix <Float> & value) = 0; // [nC, nR]
+    //virtual const Matrix<Float> & sigmaMat () const = 0; // [nC,nR]
     virtual const Vector<Int> & stateId () const = 0; // [nR]
     virtual void setStateId (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Double> & time () const = 0; // [nR]
@@ -374,10 +374,10 @@ public:
     virtual void setTimeInterval (const Vector<Double> & value) = 0; // [nR]
     virtual const Matrix<Double> & uvw () const = 0; // [3,nR]
     virtual void setUvw (const Matrix<Double> & value) = 0; // [3,nR]
-    virtual const Vector<Float> & weight () const = 0; // [nR]
-    virtual void setWeight (const Vector<Float>& value) = 0; // [nR]
-    virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
-    virtual void setWeightMat (const Matrix<Float>& value) = 0; // [nC,nR]
+    virtual const Matrix<Float> & weight () const = 0; // [nC, nR]
+    virtual void setWeight (const Matrix <Float>& value) = 0; // [nC, nR]
+    //virtual const Matrix<Float> & weightMat () const = 0; // [nC,nR]
+    //virtual void setWeightMat (const Matrix<Float>& value) = 0; // [nC,nR]
     virtual const Cube<Float> & weightSpectrum () const = 0; // [nC,nF,nR]
     virtual void setWeightSpectrum (const Cube<Float>& value) = 0; // [nC,nF,nR]
 
@@ -490,16 +490,14 @@ public:
 
     // Returns the spectral window ID for the specified row.
 
-    virtual Int spectralWindow () const = 0;
+    //virtual Int spectralWindow () const = 0;
 
     virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
-    virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
-
+    //virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
 
     static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
 
 protected:
-
 
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
@@ -516,7 +514,7 @@ protected:
     virtual Cube<Complex> & visCubeRef () = 0; // [nC,nF,nR]
     virtual Cube<Complex> & visCubeCorrectedRef () = 0; // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef () = 0; // [nC,nF,nR]
-    //virtual Cube<Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
+    virtual Cube<Float> & weightSpectrumRef () = 0; // [nC,nF,nR]
 
     //virtual VisBuffer2 * vb_p = 0; // One of the implementation classes
 

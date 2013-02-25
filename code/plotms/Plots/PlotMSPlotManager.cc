@@ -29,6 +29,7 @@
 #include <plotms/Gui/PlotMSPlotter.qo.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSIterPlot.h>
+#include <plotms/Plots/PlotMSOverPlot.h>
 
 namespace casa {
 
@@ -98,12 +99,10 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
-PlotMSIterPlot* PlotMSPlotManager::addIterPlot(
-        const PlotMSPlotParameters* params) {
-    if(itsParent_ == NULL) return NULL;
-    PlotMSIterPlot* plot = new PlotMSIterPlot(itsParent_);
-    addPlot(plot, params);
-    return plot;
+PlotMSPlot* PlotMSPlotManager::addIterPlot(
+    const PlotMSPlotParameters* /*params*/) {
+    throw(AipsError("IterPlot deprecated"));
+    return NULL;
 }
 
 PlotMSPlot* PlotMSPlotManager::addSinglePlot(
@@ -114,8 +113,16 @@ PlotMSPlot* PlotMSPlotManager::addSinglePlot(
 
 PlotMSPlot* PlotMSPlotManager::addMultiPlot(
     const PlotMSPlotParameters* /*params*/) {
-    throw(AipsError("SinglePlot deprecated!"));
+    throw(AipsError("MultiPlot deprecated!"));
     return NULL;
+}
+
+PlotMSOverPlot* PlotMSPlotManager::addOverPlot(
+    const PlotMSPlotParameters* params) {
+    if(itsParent_ == NULL) return NULL;
+    PlotMSOverPlot *plot = new PlotMSOverPlot(itsParent_);
+    addPlot(plot, params);
+    return plot;
 }
 
 void PlotMSPlotManager::clearPlotsAndCanvases() {

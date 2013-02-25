@@ -32,9 +32,9 @@
 #include <images/Images/PagedImage.h>
 #include <synthesis/TransformMachines/AzElAperture.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <images/Images/AntennaResponses.h>
-#include <images/Images/ImageConvolver.h>
-#include <images/Images/ImageFFT.h>
+#include <imageanalysis/ImageAnalysis/AntennaResponses.h>
+#include <imageanalysis/ImageAnalysis/ImageConvolver.h>
+#include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageRegrid.h>
 
