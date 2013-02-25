@@ -138,6 +138,7 @@ scripts/task_msmoments.py
 scripts/task_mstransform.py
 scripts/task_peel.py
 scripts/task_plotants.py
+scripts/task_plotbandpass.py
 scripts/task_plotcal.py
 scripts/task_plotms.py
 scripts/task_plotuv.py

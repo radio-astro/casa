@@ -71,6 +71,7 @@ msmoments.xml
 mstransform.xml
 peel.xml
 plotants.xml
+plotbandpass.xml
 plotcal.xml
 plotms.xml
 plotuv.xml
