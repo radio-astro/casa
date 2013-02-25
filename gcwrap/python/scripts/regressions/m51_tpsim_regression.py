@@ -118,7 +118,7 @@ endProc = time.clock()
 test_name = """simdata observation of M51 (total power)"""
 
 #ia.open(project+"/"+project + '.aca.tp.image')
-ia.open(project+"/"+project + '.image')
+ia.open(project+"/"+project + '.sd.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -129,7 +129,7 @@ refstats = {'max':  1.8829,
             'sum': 23627}
 
 #ia.open(project+"/"+project + '.aca.tp.diff')
-ia.open(project+"/"+project + '.diff')
+ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 

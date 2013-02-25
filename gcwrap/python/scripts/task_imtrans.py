@@ -64,23 +64,22 @@
 ###########################################################################
 from taskinit import *
 
-def imtrans(imagename=None, outfile=None, order=None, wantreturn=None):
+def imtrans(imagename, outfile, order):
     casalog.origin('imtrans')
     myia = iatool()
-    newim = None
+    mynewim = None
     try:
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
-        newim = myia.transpose(outfile=outfile, order=order)
-        myia.done()
-        if wantreturn:
-            return newim
-        else:
-            newim.done()
+        if (len(outfile) == 0):
+            raise Exception, "outfile parameter must be specified."
+        mynewim = myia.transpose(outfile=outfile, order=order)
+        return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
+        raise
+    finally:
         if myia:
             myia.done()
-        if newim:
-            newim.done()
-        raise instance
+        if mynewim:
+            mynewim.done()

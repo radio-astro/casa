@@ -81,7 +81,7 @@ def run_transpose(imagename, outfile, order):
     myia.open(imagename)
     print "*** order " + str(order)
     res = myia.transpose(outfile=outfile, order=order)
-    myia.close()
+    myia.done()
     return res
 
 def run_imtrans(imagename, outfile, order):
@@ -96,6 +96,7 @@ class imtrans_test(unittest.TestCase):
     
     def tearDown(self):
         os.remove(good_image)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_exceptions(self):
         """imtrans: Test various exception cases"""
@@ -137,10 +138,15 @@ class imtrans_test(unittest.TestCase):
         count = 0
         for order in ["012", 12, ['r', 'd', 'f'], ["righ", "declin", "freq"]]:
             for code in [run_transpose, run_imtrans]:
-                newim = code(imagename, "straight_copy_" + str(count), order)
+                outfile = "straight_copy_" + str(count)
+                newim = code(imagename, outfile, order)
+                if (type(newim) == bool):
+                    self.assertTrue(newim)
+                    newim = iatool()
+                    newim.open(outfile)
                 gotdata = newim.getchunk()
                 gotnames = newim.coordsys().names()
-                newim.close()
+                newim.done()
                 self.assertTrue((expecteddata == gotdata).all())
                 self.assertTrue(expectednames == gotnames)
                 count += 1
@@ -158,17 +164,24 @@ class imtrans_test(unittest.TestCase):
             for code in [run_transpose, run_imtrans]:
                 for outname in ["transpose_" + str(count), ""]:
                     newim = code(imagename, outname, order)
-                    gotdata = newim.getchunk()
-                    inshape = expecteddata.shape
-                    for i in range(inshape[0]):
-                        for j in range(inshape[1]):
-                            for k in range(inshape[2]):
-                                self.assertTrue(expecteddata[i][j][k] == gotdata[j][k][i])
-                    gotnames = newim.coordsys().names()
-                    newim.close()
-                    self.assertTrue(expectednames[0] == gotnames[2])
-                    self.assertTrue(expectednames[1] == gotnames[0])
-                    self.assertTrue(expectednames[2] == gotnames[1])
+                    if code == run_imtrans and len(outname) == 0:
+                        self.assertFalse(newim)
+                    else:
+                        if (type(newim) == bool):
+                            self.assertTrue(newim)
+                            newim = iatool()
+                            newim.open(outname)
+                        gotdata = newim.getchunk()
+                        inshape = expecteddata.shape
+                        for i in range(inshape[0]):
+                            for j in range(inshape[1]):
+                                for k in range(inshape[2]):
+                                    self.assertTrue(expecteddata[i][j][k] == gotdata[j][k][i])
+                        gotnames = newim.coordsys().names()
+                        newim.done()
+                        self.assertTrue(expectednames[0] == gotnames[2])
+                        self.assertTrue(expectednames[1] == gotnames[0])
+                        self.assertTrue(expectednames[2] == gotnames[1])
                     count += 1
 
     def test_cas_2364(self):
@@ -176,20 +189,23 @@ class imtrans_test(unittest.TestCase):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imtrans/'
         shutil.copytree(datapath + cas_2364im, cas_2364im)
         order="0132"
-        out1 = "blah.im"
+        out1 = "blahxx.im"
         myia = iatool()
         myia.open(cas_2364im)
-        myia.transpose(out1, order)
-        myia.close()
+        trans = myia.transpose(out1, order)
+        myia.done()
+        trans.done()
+        self.assertTrue(len(tb.showcache()) == 0)
+
         # to verify fix, just open the image. bug was that exception was thrown when opening output from reorder
         myia.open(out1)
         self.assertTrue(myia)
-        myia.close()
+        myia.done()
         out1 = "blah2.im"
-        imtrans(outfile=out1, order=order)
+        self.assertTrue(imtrans(imagename=cas_2364im, outfile=out1, order=order))
         myia.open(out1)
         self.assertTrue(myia)
-        myia.close()
+        myia.done()
         shutil.rmtree(cas_2364im)
 
 

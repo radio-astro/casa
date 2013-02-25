@@ -21,23 +21,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <example>["mysplat1.txt", "mysplat2,txt"]</example>
         </param>
         <param type="string" direction="in" name="table">
-            <description>Output table name.</description>
+            <description>Output table name. Must be specified.</description>
             <value/>
             <example>"mysplat.tbl"</example>
         </param>
-        <param type="bool" direction="in" name="wantreturn">
-            <description>Do you want the task to return a spectralline tool attached to the results table?</description>
-            <value>True</value>
-            <example>False</example>
-        </param>
 </input>
-<returns type="casaspectralline"/>
+<returns type="bool"/>
 
 <example>
 PARAMETER SUMMARY
 filenames   Files containing Splatalogue lists.
-table       Output table name.
-wantreturn  Do you want the task to return a spectralline tool attached to the results table? If not false is returned.
+table       Output table name. Must be specfied
 
 This task reads a spectral line list(s) downloaded from Splatalogue (www.splatalogue.net) and loads it into a CASA table which
 can be queried via eg the slsearch task.
@@ -56,12 +50,7 @@ select exactly "Display Ordered Frequency ONLY" and "Display NRAO Recommended Fr
 the resulting page, one should select the Tab Field Separator and then export the list. The resulting list should be in the proper
 format for importing into CASA.
     
-RETURN VALUE
-This task returns an open spectralline tool which references the new table if wantarray=true. The new table can also be opened by 
-a spectralline tool using the open method (eg sl.open(tablename)). False is returned if wantarray=false.
-
-
-newsl = splattotable("mysplatlist.txt", "mynewsl.tbl", true)
+splattotable("mysplatlist.txt", "mynewsl.tbl", true)
 
 
 </example>
