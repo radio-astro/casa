@@ -56,7 +56,7 @@ void ImageInputProcessor::process(
 	const String& regionName, const String& box,
 	const String& chans,
 	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
-	const vector<Coordinate::Type> *const &requiredCoordinateTypes
+	const vector<Coordinate::Type> *const &requiredCoordinateTypes, Bool verbose
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
@@ -75,7 +75,7 @@ void ImageInputProcessor::process(
 	_process(
 		regionRecord, diagnostics, outputStruct, stokes,
 		image, regionPtr, regionName, box, chans, stokesControl,
-		allowMultipleBoxes, requiredCoordinateTypes
+		allowMultipleBoxes, requiredCoordinateTypes, verbose
 	);
 }
 
@@ -86,12 +86,12 @@ void ImageInputProcessor::process(
 	const Record* regionPtr, const String& regionName,
 	const String& box, const String& chans,
 	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
-	const vector<Coordinate::Type> *const &requiredCoordinateTypes
+	const vector<Coordinate::Type> *const &requiredCoordinateTypes, Bool verbose
 ) {
 	_process(
 		regionRecord, diagnostics, outputStruct, stokes,
 		image, regionPtr, regionName, box, chans, stokesControl,
-		allowMultipleBoxes, requiredCoordinateTypes
+		allowMultipleBoxes, requiredCoordinateTypes, verbose
 	);
 }
 
@@ -103,7 +103,8 @@ void ImageInputProcessor::_process(
     const String& regionName, const String& box,
     const String& chans, const CasacRegionManager::StokesControl& stokesControl,
     const Bool& allowMultipleBoxes,
-    const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
+    const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
+    Bool verbose
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
@@ -124,18 +125,13 @@ void ImageInputProcessor::_process(
     }
 	ImageMetaData metaData(*image);
 	_nSelectedChannels = metaData.nChannels();
-	// region specification order:
-	// 1: process box if given explicitly
-	// 2. else process region if pointer to region record specified
-	// 3. else process region if region name specified
-	// 4. else no box or region specified, process region as entire
-	//    positional plane anding with chans and stokes specs
 
 	CasacRegionManager regionMgr(image->coordinates());
 	regionRecord = regionMgr.fromBCS(
-			diagnostics, _nSelectedChannels, stokes,
-			regionPtr, regionName, chans,
-			stokesControl, box, image->shape(), image->name()
+		diagnostics, _nSelectedChannels, stokes,
+		regionPtr, regionName, chans,
+		stokesControl, box, image->shape(), image->name(),
+		verbose
 	);
     if (!allowMultipleBoxes && regionRecord.fieldNumber("regions") >= 0) {
     	*_log << "Only a single n-dimensional rectangular region is supported."

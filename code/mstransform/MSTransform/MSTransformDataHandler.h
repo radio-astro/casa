@@ -230,21 +230,30 @@ protected:
 	void parseRefFrameTransParams(Record &configuration);
 	void parseFreqSpecParams(Record &configuration);
 
-	void initRefFrameTransParams();
+	// From input MS
 	void initDataSelectionParams();
+	void getInputNumberOfChannels();
 
+	// To re-grid SPW subtable
+	void initRefFrameTransParams();
 	void regridSpwSubTable();
 	void regridAndCombineSpwSubtable();
+	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
 	void reindexSourceSubTable();
 	void reindexDDISubTable();
 	void reindexFeedSubTable();
 	void reindexSysCalSubTable();
 	void reindexFreqOffsetSubTable();
 
+	// From output MS
+	void getOutputNumberOfChannels();
+
+	// From selected MS
 	void checkFillFlagCategory();
 	void checkFillWeightSpectrum();
+
+	// Iterator set-up
 	void checkDataColumnsToFill();
-	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
 	void setIterationApproach();
 	void generateIterator();
 
@@ -253,8 +262,8 @@ protected:
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 
 	// To transform re-indexable columns
-	template <class T> void fillAndReindexScalar(T inputScalar, Vector<T> &outputVector, Bool reindex, map<Int,Int> &inputOutputIndexMap);
-	template <class T> void mapAndReindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, Bool reindex, map<Int,Int> &inputOutputIndexMap, Bool constant=False);
+	template <class T> void fillAndReindexScalar(T inputScalar, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap);
+	template <class T> void mapAndReindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap, Bool constant=False);
 	template <class T> void reindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap, Bool constant=False);
 
 	// To transform non re-indexable columns
@@ -268,10 +277,30 @@ protected:
 	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef);
 	template <class T> void writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef);
 
-	template <class T> void smoothAndRegridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
-	template <class T> void combineSmoothAndRegridCubes(const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, RefRows &rowRef,vi::VisBuffer2 *vb, ArrayColumn<Bool> *outputFlagCol=NULL);
-	template <class T> void transformAndWritePlaneOfData(Int inputSpw, uInt row, Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol=NULL);
-	template <class T> void transformStripeOfData(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	void transformCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<Complex> &inputDataCube,ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	void transformCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<Float> &inputDataCube,ArrayColumn<Float> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	void (casa::MSTransformDataHandler::*transformCubeOfDataComplex_p)(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<Complex> &inputDataCube,ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	void (casa::MSTransformDataHandler::*transformCubeOfDataFloat_p)(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<Float> &inputDataCube,ArrayColumn<Float> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	template <class T> void combineCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	template <class T> void averageCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	template <class T> void smoothCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	template <class T> void regridCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	template <class T> void copyCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+
+	template <class T> void transformAndWriteCubeOfData(Int inputSpw, RefRows &rowRef, const Cube<T> &inputDataCube, const Cube<Bool> &inputFlagsCube, IPosition &outputPlaneShape, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	template <class T> void transformAndWritePlaneOfData(Int inputSpw, uInt row, Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+
+	void transformStripeOfData(Int inputSpw, Vector<Complex> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Complex> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	void transformStripeOfData(Int inputSpw, Vector<Float> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	void (casa::MSTransformDataHandler::*transformStripeOfDataComplex_p)(Int inputSpw, Vector<Complex> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Complex> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	void (casa::MSTransformDataHandler::*transformStripeOfDataFloat_p)(Int inputSpw, Vector<Float> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	template <class T> void average(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	template <class T> void smooth(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	template <class T> void regrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	template <class T> void averageSmooth(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	template <class T> void averageRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	template <class T> void smoothRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
+	template <class T> void averageSmoothRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
 
 	// MS specification parameters
 	String inpMsName_p;
@@ -302,9 +331,11 @@ protected:
 
 	// Frequency transformation parameters
 	Bool combinespws_p;
-	Bool hanningSmooth_p;
 	Bool channelAverage_p;
+	Bool hanningSmooth_p;
 	Bool refFrameTransformation_p;
+	Vector<Int> freqbin_p;
+	String useweights_p;
 	String interpolationMethodPar_p;
 	casac::variant *phaseCenterPar_p;
 	String restFrequency_p;
@@ -347,8 +378,11 @@ protected:
 	inputSpwChanMap spwChannelMap_p;
 	uInt interpolationMethod_p;
 	inputOutputSpwMap inputOutputSpwMap_p;
-	Bool frequencyTransformation_p;
-	Bool regridms_p;
+	Bool multipleFreqBin_p;
+	map<Int,Int> freqbinMap_p;
+	map<Int,Int> numOfInpChanMap_p;
+	map<Int,Int> numOfSelChanMap_p;
+	map<Int,Int> numOfOutChanMap_p;
 
 	// Reference Frame Transformation members
 	MFrequency::Types inputReferenceFrame_p;

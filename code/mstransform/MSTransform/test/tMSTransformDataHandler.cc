@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 	Bool combinespws, hanning, regridms, freqaverage;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
 
-	Int nchan;
+	Int nchan,freqbin;
 	String start, width;
 
 	// Parse input parameters
@@ -110,9 +110,9 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-freqbin"))
 		{
-			width = value;
-			configuration.define ("freqbin", width);
-			cout << "Frequency bin is: " << width << endl;
+			freqbin = atoi(value.c_str());
+			configuration.define ("freqbin", freqbin);
+			cout << "Frequency bin is: " << freqbin << endl;
 		}
 		else if (parameter == string("-spw"))
 		{

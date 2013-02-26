@@ -407,7 +407,7 @@ FlagCalTableHandler::nextBuffer()
 				*logger_p << LogIO::NORMAL <<
 						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
 						", Scan = " << scan[0] << "~" << scan[scan.size()-1] <<
-						", Field = " << visibilityBuffer_p->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
+						", Field = " << visibilityBuffer_p->fieldId()(0) << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
 						", Spw = " << visibilityBuffer_p->spectralWindows()(0) <<
 						", Channels = " << visibilityBuffer_p->nChannels() <<
 						", CalSolutions = " << corrs <<

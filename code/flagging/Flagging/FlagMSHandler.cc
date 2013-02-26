@@ -636,7 +636,7 @@ FlagMSHandler::nextBuffer()
 						", Observation = " << visibilityBuffer_p->observationId()[0] <<
 						", Array = " << visibilityBuffer_p->arrayId() <<
 						", Scan = " << visibilityBuffer_p->scan()[0] <<
-						", Field = " << visibilityBuffer_p->fieldId() << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
+						", Field = " << visibilityBuffer_p->fieldId()(0) << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
 						", Spw = " << visibilityBuffer_p->spectralWindows()(0) <<
 						", Channels = " << visibilityBuffer_p->nChannels() <<
 						", Corrs = " << corrs <<
