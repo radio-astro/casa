@@ -586,9 +586,6 @@ class String : public string {
   // Create a formatted string using the given printf format string.
   static String format (const char* picture, ...);
 
-  // create a string of random alphanumeric characters of specified length
-  static String createRandomAlphaNumeric(size_t len);
-
   // Remove beginning and ending whitespace.
   void trim();
 
@@ -856,7 +853,6 @@ class String : public string {
   }
 
 private:
-  static Bool _hasBeenSeeded;
   // Helper functions for at, before etc
   // <group>
   SubString _substr(size_type first, size_type l) {
