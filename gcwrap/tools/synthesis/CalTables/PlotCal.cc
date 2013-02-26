@@ -135,6 +135,9 @@ extern "C" {
 
   PlotCal::~PlotCal(){
 
+    //cout << "Calling resetTP" << endl;
+    tp_p->resetTP(True);
+
     close();
 
     tp_p->clearResetCallBack("PlotCal");

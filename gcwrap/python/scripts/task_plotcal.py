@@ -151,6 +151,10 @@ def plotcal(caltable=None,xaxis=None,yaxis=None,
 		if ( len(figfile) > 0 ) :
 			cp.savefig( figfile ); 
 
+		if (showgui==False):
+			cp.close()
+			cp.done()
+
 	except Exception, instance:
 		print '*** Error ***',instance
 		cp.close()
