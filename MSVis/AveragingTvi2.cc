@@ -90,9 +90,7 @@ class VbAvg : public VisBufferImpl2 {
 
 public:
 
-    typedef Float (* WeightFunction) (Float);
-
-    VbAvg (Double averagingInterval, WeightFunctionBase * weightFunction,
+    VbAvg (Double averagingInterval, WeightFunction * weightFunction,
            Bool doingCorrectedData, Bool doingModelData, Bool doingWeightSpectrum);
 
     void accumulate (const VisBuffer2 * vb);
@@ -144,7 +142,7 @@ private:
     Bool doingWeightSpectrum_p;
     Bool empty_p; // true when buffer hasn't seen any data
     Double startTime_p; // time of the first sample in average
-    WeightFunctionBase * weightFunction_p;
+    WeightFunction * weightFunction_p;
     Cube<Float> weightSum_p; // accumulation of weights for weighted averaging
 };
 
@@ -157,7 +155,7 @@ class VbSet {
 
 public:
 
-    VbSet (Double averagingInterval, WeightFunctionBase * weightFunction);
+    VbSet (Double averagingInterval, WeightFunction * weightFunction);
     ~VbSet ();
 
     void accumulate (const VisBuffer2 *);
@@ -183,10 +181,10 @@ private:
     Bool doingModelData_p;
     Bool doingWeightSpectrum_p;
     Averagers vbAveragers_p;
-    WeightFunctionBase * weightFunction_p;
+    WeightFunction * weightFunction_p;
 };
 
-VbAvg::VbAvg (Double averagingInterval, WeightFunctionBase * weightFunction,
+VbAvg::VbAvg (Double averagingInterval, WeightFunction * weightFunction,
               Bool doingCorrectedData, Bool doingModelData, Bool doingWeightSpectrum)
 : averagingInterval_p (averagingInterval),
   complete_p (False),
@@ -748,13 +746,13 @@ VbAvg::vbPastAveragingInterval (const VisBuffer2 * vb) const
     return isPast;
 }
 
-VbSet::VbSet (Double averagingInterval, WeightFunctionBase * weightFunction)
+VbSet::VbSet (Double averagingInterval, WeightFunction * weightFunction)
 : averagingInterval_p (averagingInterval),
   weightFunction_p (weightFunction)
 {
     if (weightFunction_p == 0){
 
-        weightFunction_p = generateWeightFunction (unity);
+        weightFunction_p = WeightFunction::generateUnityWeightFunction ();
     }
 }
 
@@ -931,7 +929,7 @@ VbSet::zero ()
 using namespace avg;
 
 AveragingTvi2::AveragingTvi2 (ViImplementation2 * inputVi, Double averagingInterval,
-                              Int nAveragesPerChunk, WeightFunctionBase * weightFunction)
+                              Int nAveragesPerChunk, WeightFunction * weightFunction)
 : TransformingVi2 (inputVi),
   averagingInterval_p (averagingInterval),
   ddidLastUsed_p (-1),

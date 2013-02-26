@@ -192,22 +192,33 @@ private:
 //
 // Code to provide interface to weight function
 
-class WeightFunctionBase {
+class WeightFunction {
 public:
 
-    virtual ~WeightFunctionBase () {}
+    virtual ~WeightFunction () {}
     Float operator() (Float f) { return apply (f);}
     virtual Float apply (Float) = 0;
+
+    static WeightFunction * generateUnityWeightFunction ();
+    static WeightFunction * generateIdentityWeightFunction ();
+    static WeightFunction * generateSquareWeightFunction ();
+
+protected:
+
+    static Float unity (Float);
+    static Float identity (Float x);
+    static Float square (Float x);
+
 };
 
 template<typename F>
-class WeightFunction : public WeightFunctionBase {
+class WeightFunctionImpl : public WeightFunction {
 public:
 
     // Provide either a unary function, Float (*) (Float), or
     // a functor class having a Float operator() (Float) method.
 
-    WeightFunction (F f) : function_p (f) {}
+    WeightFunctionImpl (F f) : function_p (f) {}
 
     Float apply (Float f) { return function_p (f);}
 
@@ -217,10 +228,24 @@ private:
 };
 
 template<typename F>
-WeightFunction<F> * generateWeightFunction (F f) { return new WeightFunction<F> (f);}
+WeightFunction * generateWeightFunction (F f) { return new WeightFunctionImpl<F> (f);}
 
-Float unity (Float);
-Float identity (Float x);
+class SortColumns {
+public:
+
+    SortColumns (const Block<Int> & columns = Block<Int> (), Bool addDefaultColumns = True);
+
+    Bool addDefaultSortColumns () const;
+    const Block<Int> & getColumns () const;
+
+private:
+
+    Bool addDefaultColumns_p;
+    Block<Int> columns_p;
+
+
+};
+
 
 class VisibilityIterator2;
 
@@ -353,6 +378,7 @@ class VisibilityIterator2 : private boost::noncopyable
     friend class AveragingTvi2Factory;
 
 public:
+
 
   class Factory { // Interface for implementation creation factory
 
@@ -1040,16 +1066,6 @@ private:
 
   ViImplementation2 * impl_p;
 };
-
-class AveragingTvi2Factory {
-
-public:
-
-VisibilityIterator2 * createVi (MeasurementSet * ms, Double interval,
-                                Double chunkInterval, Int averagingFactor,
-                                WeightFunctionBase * weightFunction = 0);
-};
-
 
 } // end namespace vi
 
