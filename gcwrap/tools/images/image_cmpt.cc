@@ -2948,11 +2948,14 @@ record* image::statistics(
 				tmpexclude[i] = excludepix[i];
 			}
 		}
-		*_log << LogIO::NORMAL << "Determining stats for image "
+		if (verbose) {
+			*_log << LogIO::NORMAL << "Determining stats for image "
 				<< _image->name(True) << LogIO::POST;
+		}
 		Record ret;
 		ImageStatsCalculator calculator(
-			_image.get(), "", regionRec.get(), "", "", "", mtmp
+			_image.get(), "", regionRec.get(),
+			"", "", "", mtmp, verbose
 		);
 		calculator.setPlotStats(plotStats);
 		calculator.setAxes(tmpaxes);
