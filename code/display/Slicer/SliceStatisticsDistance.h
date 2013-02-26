@@ -23,54 +23,33 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef IMAGE_SLICE_H_
-#define IMAGE_SLICE_H_
 
-#include <casa/Arrays/Vector.h>
-#include <QColor>
-#include <QString>
-#include <QList>
-#include <QTextStream>
+#ifndef SLICESTATISTICSDISTANCE_H_
+#define SLICESTATISTICSDISTANCE_H_
 
-class QwtPlotCurve;
-class QwtPlot;
+#include <display/Slicer/SliceStatistics.h>
 
 namespace casa {
 
-class ImageAnalysis;
-class SliceWorker;
-
-class ImageSlice {
-
+class SliceStatisticsDistance : public SliceStatistics{
 public:
-	ImageSlice( int id );
-	void setSampleCount( int count );
-	void setAxes( const Vector<Int>& axes );
-	void setCoords( const Vector<Int>& coords );
-	void setCurveColor( QColor color );
-	void setInterpolationMethod( const String& method );
-	void setImageAnalysis( ImageAnalysis* analysis );
-	void setUseViewerColors( bool useViewerColors );
-	void setViewerCurveColor( const QString& colorName );
-	void updatePolyLine(  const QList<int> &pixelX, const QList<int> & pixelY );
-	void toAscii( QTextStream& );
-	void clearCurve();
-	void addPlotCurve( QwtPlot* plot);
-	virtual ~ImageSlice();
-	enum AxisXChoice {DISTANCE,X_POSITION, Y_POSITION};
-	void setAxisXChoice( AxisXChoice choice );
+	SliceStatisticsDistance(SliceStatisticsFactory::AxisXUnits units );
+	virtual double getLength(std::pair<double,double> worldStart,
+			std::pair<double,double> worldEnd,
+			std::pair<int,int> pixelStart,
+			std::pair<int,int> pixelEnd) const;
+	virtual double getLength( double side1World, double side2World,
+				double side1Pixel, double side2Pixel ) const;
+	virtual QString getLengthLabel() const;
+	virtual QVector<double> interpolate( double start, double end,
+				const QVector<double>& values ) const;
+	virtual QVector<double> adjustStart( double newStart, const QVector<double>& values ) const;
+	virtual ~SliceStatisticsDistance();
 
 private:
-	void resetPlotCurve();
-	QColor getCurveColor() const;
-	AxisXChoice xAxisChoice;
-	ImageSlice( const ImageSlice& other );
-	ImageSlice operator=( const ImageSlice& other );
-	bool useViewerColors;
-	QColor viewerColor;
-	SliceWorker* sliceWorker;
-	QwtPlotCurve* plotCurve;
+	double getHypotenuse( double side1, double side2 ) const ;
+	double getHypotenuse( double x1, double x2, double y2, double y2 ) const;
 };
 
 } /* namespace casa */
-#endif /* IMAGE_SLICE_H_ */
+#endif /* SLICESTATISTICSDISTANCE_H_ */

@@ -27,7 +27,6 @@
 #define SLICER_WORKER_H_
 
 #include <casa/Arrays/Vector.h>
-#include <QThread>
 #include <QVector>
 #include <QTextStream>
 
@@ -36,23 +35,35 @@ namespace casa {
 class ImageAnalysis;
 class Record;
 
-class SliceWorker : public QThread {
+/**
+ * Responsible for computing the (x,y)-values that represent a
+ * slice cut.
+ */
+
+class SliceWorker {
 
 public:
 	SliceWorker( int id );
-	void updatePolyline();
 	void setImageAnalysis( ImageAnalysis* analysis );
-	void setVertices( const QList<int>& xValues, const QList<int>& yValues );
+	void setVertices( const QList<int>& xValues, const QList<int>& yValues,
+			const QList<double>& xValuesWorld, const QList<double>& yValuesWorld);
 	void setAxes( const Vector<Int>& axes );
 	void setCoords( const Vector<Int>& coords );
 	void setSampleCount( int count );
+
 	void setMethod( const String& method );
+
 	void toAscii( QTextStream& stream ) const;
-	virtual void run();
-	QVector<double> getDistances() const;
-	QVector<double> getXPositions() const;
-	QVector<double> getYPositions() const;
-	QVector<double> getPixels() const;
+	void compute();
+
+
+	int getSegmentCount() const;
+	QVector<double> getDistances( int index ) const;
+	QVector<double> getXPositions(int index ) const;
+	QVector<double> getYPositions(int index ) const;
+	QVector<double> getPixels(int index) const;
+
+	//void setXUnits( AxisXUnits unitMode );
 	virtual ~SliceWorker();
 
 
@@ -60,11 +71,21 @@ public:
 private:
 	SliceWorker( const SliceWorker& other );
 	SliceWorker& operator=( const SliceWorker other );
+	double getDistance( double x, double y ) const;
+	QVector<double> interpolate( double start, double end,
+			const QVector<double>& values ) const;
+	void clearResults();
 	QVector<double> getFromArray( const Array<float>& source ) const;
+	QVector<double> getValues( int index, const QVector<double>& pixels ) const;
+	void computeSlice( const Vector<double>& xValues,
+			const Vector<double>& yValues );
 	ImageAnalysis* imageAnalysis;
-	Record* sliceResult;
+	QList<Record*> sliceResults;
 	Vector<Double> verticesX;
 	Vector<Double> verticesY;
+	Vector<Double> verticesXWorld;
+	Vector<Double> verticesYWorld;
+	//AxisXUnits xAxisUnits;
 	Vector<Int> axes;
 	Vector<Int> coords;
 	int sampleCount;

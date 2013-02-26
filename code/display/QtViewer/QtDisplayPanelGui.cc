@@ -766,7 +766,7 @@ void QtDisplayPanelGui::resetListenerImage(){
 
 void QtDisplayPanelGui::initHistogramHolder(){
 	if ( histogrammer == NULL ){
-		histogrammer = new HistogramMain(false,true,true,this);
+		histogrammer = new HistogramMain(false,true,true,true,false,this);
 		histogrammer->setDisplayPlotTitle( true );
 		histogrammer->setDisplayAxisTitles( true );
 		//So we can disconnect the signals and not chew up bandwidth
@@ -2787,6 +2787,7 @@ void QtDisplayPanelGui::addSlice( int id, const QString& shape, const QString&, 
 	if ( shape == "polyline"){
 		sliceTool->addPolyLine( id, viewer::region::RegionChangeCreate,
 				worldX, worldY, pixelX, pixelY, lineColor );
+
 	}
 }
 

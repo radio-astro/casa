@@ -6,5 +6,7 @@
     <file>images/zoomOut.png</file>
     <file>images/zoomNeutral.png</file>
     <file>images/zoomCursor.png</file>
+    <file>images/statsMaximize.png</file>
+    <file>images/statsMinimize.png</file>
 </qresource>
 </RCC>

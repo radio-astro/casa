@@ -32,6 +32,8 @@
 #include <display/DisplayEvents/MultiPolylineTool.h>
 #include <casadbus/types/nullptr.h>
 
+#include <iostream>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 MultiPolylineTool::MultiPolylineTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd,
@@ -54,6 +56,8 @@ void MultiPolylineTool::disable() {
 void MultiPolylineTool::keyPressed(const WCPositionEvent &ev) {
 	Int x = ev.pixX();
 	Int y = ev.pixY();
+	itsX1=itsX2=ev.pixX();
+	itsY1=itsY2=ev.pixY();
 	WorldCanvas *wc = ev.worldCanvas( );
 	if ( ! wc->inDrawArea(x, y) ) return;
 
@@ -93,6 +97,7 @@ void MultiPolylineTool::keyPressed(const WCPositionEvent &ev) {
 				refresh( );
 				return;
 			}
+			
 		}
 		doubleClicked(x, y);
 	}
@@ -145,7 +150,7 @@ void MultiPolylineTool::keyPressed(const WCPositionEvent &ev) {
 void MultiPolylineTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type &selected_regions) {
 
 	if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
-
+	itsX2 = ev.pixX(); itsY2 = ev.pixY();
 	Int x = ev.pixX();
 	Int y = ev.pixY();
 	if ( ! itsCurrentWC->inDrawArea(x, y) ) return;
@@ -348,9 +353,13 @@ void MultiPolylineTool::otherKeyPressed(const WCPositionEvent &ev) {
 	}
 }
 
+
+
 void MultiPolylineTool::draw(const WCRefreshEvent & /*ev*/, const viewer::region::region_list_type &selected_regions) {
-	for ( polylinelist::iterator iter = polylines.begin(); iter != polylines.end(); ++iter )
+	for ( polylinelist::iterator iter = polylines.begin();
+			iter != polylines.end(); ++iter ){
 		(*iter)->draw( selected_regions.size( ) > 0 );
+	}
 }
 
 

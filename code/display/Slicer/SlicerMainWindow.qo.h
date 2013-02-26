@@ -30,13 +30,13 @@
 #include <display/Slicer/SlicerMainWindow.ui.h>
 #include <display/Slicer/SlicePlot.qo.h>
 
-//class QwtPlotCurve;
 class QCursor;
 
 namespace casa {
 
 class SliceZoomer;
 class SliceColorPreferences;
+class StatisticsRegion;
 
 class SlicerMainWindow : public QMainWindow {
 
@@ -60,6 +60,7 @@ private slots:
 	void autoCountChanged( bool selected );
 	void sampleCountChanged();
 	void interpolationMethodChanged( const QString& method );
+	void accumulateSlicesChanged(bool accumulate);
 	void exportSlice();
 	void showColorDialog();
 	void resetColors();
@@ -79,7 +80,10 @@ private:
 	bool toImageFormat( const QString& fileName, const QString& format );
 	bool toASCII( const QString& fileName );
 
-    SliceColorPreferences* colorPreferences;
+	//Statistics
+	void updateStatisticsLayout();
+
+	SliceColorPreferences* colorPreferences;
     SliceZoomer* plotZoomer;
 
     SlicePlot slicePlot;

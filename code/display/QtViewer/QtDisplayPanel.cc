@@ -215,7 +215,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 
 	using namespace QtMouseToolNames;	// (See QtMouseToolState.qo.h)
 
-	mouseToolNames_.resize(11);
+	mouseToolNames_.resize(10);
 	mouseToolNames_[0] = ZOOM;
 	mouseToolNames_[1] = PAN;
 	mouseToolNames_[2] = SHIFTSLOPE;
@@ -226,7 +226,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 	mouseToolNames_[7] = POLYGON;
 	mouseToolNames_[8] = POLYLINE;
 	mouseToolNames_[9] = RULERLINE;
-	mouseToolNames_[10] = POSITIONVELOCITY;
+	//mouseToolNames_[10] = POSITIONVELOCITY;
 	// The canonical text-names of the mouse tools on this panel.
 	// These happen to be in QtMouseToolNames::toolIndex order,
 	// but that is not a requirement.  This order is returned by

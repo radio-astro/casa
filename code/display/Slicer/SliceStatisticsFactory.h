@@ -1,4 +1,4 @@
-//# Copyright (C) 2005,2009,2010
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,51 +22,42 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
-
-#include <ios>
-#include <iostream>
-#include <casa/aips.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include <unistd.h>
-#include <sys/stat.h>
-
-#include <guitools/Histogram/HistogramMain.qo.h>
-#include <QApplication>
-#include <casa/namespace.h>
 
 
-int main( int argc, char *argv[] ) {
-	int stat = 0;
-	QApplication app(argc, argv );
-	app.setOrganizationName( "CASA");
-	app.setApplicationName( "Histogram");
-	try {
-		HistogramMain histogramApplication(true,true,true,true,false,NULL);
-		histogramApplication.setPlotMode( 1 );
-		histogramApplication.show();
+#ifndef SLICESTATISTICSFACTORY_H_
+#define SLICESTATISTICSFACTORY_H_
 
-		stat = app.exec();
-		return stat;
-	}
-	catch (const casa::AipsError& err) {
-		cerr<<"**"<<err.getMesg()<<endl;
-	}
-	catch (...) {
-		cerr<<"**non-AipsError exception**"<<endl;
-	}
-	return stat;
-}
+namespace casa {
 
+class SliceStatistics;
 
+/**
+ * Returns SliceStatistics appropriate to what is displayed on the
+ * x-axis and the units being used.
+ */
 
+class SliceStatisticsFactory {
+public:
+	enum AxisXUnits {PIXEL_UNIT, RADIAN_UNIT, ARCSEC_UNIT };
+	enum AxisXChoice {DISTANCE,X_POSITION, Y_POSITION};
+	void setAxisXChoice( AxisXChoice choice );
+	void setXUnits( AxisXUnits unitMode );
+	/**
+	 * User is responsible for deleting the statistics when
+	 * they are done.
+	 */
+	SliceStatistics* getStatistics() const;
 
+	static SliceStatisticsFactory* getInstance();
 
+	virtual ~SliceStatisticsFactory();
+private:
+	SliceStatisticsFactory();
+	static SliceStatisticsFactory* factory;
+	AxisXUnits xUnits;
+	AxisXChoice xAxis;
 
+};
 
+} /* namespace casa */
+#endif /* SLICESTATISTICSFACTORY_H_ */

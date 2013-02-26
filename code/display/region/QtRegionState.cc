@@ -208,6 +208,7 @@ QtRegionState::QtRegionState( const QString &n, Region *r,
 
 	connect( marker, SIGNAL(currentIndexChanged(int)), SLOT(set_point_region_marker(int)) );
 
+
 }
 
 	QtRegionState::~QtRegionState( ) {

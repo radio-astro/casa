@@ -25,27 +25,34 @@
 #include "SliceColorPreferences.qo.h"
 #include <QColorDialog>
 #include <QMessageBox>
+#include <QDebug>
 
 namespace casa {
 
 const QString SliceColorPreferences::APPLICATION = "1D Slice Tool";
 const QString SliceColorPreferences::ORGANIZATION = "NRAO/CASA";
-const QString SliceColorPreferences::SLICE_COLOR = "Slice Color";
+const QString SliceColorPreferences::POLYLINE_UNIT = "Polyline Unit";
 const QString SliceColorPreferences::ACCUMULATED_COLOR = "Accumulated Color";
 const QString SliceColorPreferences::ACCUMULATED_COLOR_COUNT = "Accumulated Slice Color Count";
 const QString SliceColorPreferences::VIEWER_COLORS = "Viewer Colors";
 
 SliceColorPreferences::SliceColorPreferences(QWidget *parent)
-    : QDialog(parent)
-{
+    : QDialog(parent), POLYGONAL_CHAIN( "Polygonal Chain"),
+      LINE_SEGMENT( "Line Segment"){
 	ui.setupUi(this);
 	setWindowTitle( "1D Slice Color Preferences");
-	sliceColor=Qt::black;
+
 	viewerColors = true;
 	accumulateColorList << "#40E0D0" << "#FF69B4" << "#00FF00" << "#FF8C00" << "#BA55D3" <<
 			"#A52A2A" << "#808080" << "#FF6347" << "#FFFF00";
 	ui.accumulatedColorList->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui.accumulatedColorList->setSelectionMode( QAbstractItemView::SingleSelection );
+
+	polylineUnit = true;
+	colorUnits << POLYGONAL_CHAIN << LINE_SEGMENT;
+	for ( int i = 0; i < colorUnits.size(); i++ ){
+		ui.colorUnitComboBox->addItem( colorUnits[i] );
+	}
 
 	initializeUserColors();
 	resetColors();
@@ -53,7 +60,6 @@ SliceColorPreferences::SliceColorPreferences(QWidget *parent)
 	useViewerColorsChanged( viewerColors );
 
 	connect( ui.viewerColorsCheckBox, SIGNAL(toggled(bool)), this, SLOT(useViewerColorsChanged(bool)));
-	connect( ui.sliceColorButton, SIGNAL(clicked()), this, SLOT(selectSliceColor()));
 	connect( ui.addButton, SIGNAL(clicked()), this, SLOT(addColorAccumulated()));
 	connect( ui.deleteButton, SIGNAL(clicked()), this, SLOT(removeColorAccumulated()));
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(colorsAccepted()));
@@ -61,8 +67,10 @@ SliceColorPreferences::SliceColorPreferences(QWidget *parent)
 }
 
 void SliceColorPreferences::useViewerColorsChanged( bool viewerColors ){
-	ui.sliceColorButton->setEnabled( !viewerColors );
-	ui.accumulatedColorList->setEnabled( !viewerColors );
+	if ( viewerColors ){
+		ui.colorUnitComboBox->setCurrentIndex( colorUnits.indexOf( POLYGONAL_CHAIN) );
+	}
+	ui.colorUnitComboBox->setEnabled( !viewerColors );
 	ui.addButton->setEnabled( !viewerColors );
 	ui.deleteButton->setEnabled( !viewerColors );
 }
@@ -71,15 +79,8 @@ bool SliceColorPreferences::isViewerColors() const {
 	return viewerColors;
 }
 
-QColor SliceColorPreferences::getSliceColor() const {
-	return sliceColor;
-}
-
-QColor SliceColorPreferences::getButtonColor( QPushButton* button ) const {
-	QPalette p = button->palette();
-	QBrush brush = p.brush(QPalette::Button );
-	QColor backgroundColor = brush.color();
-	return backgroundColor;
+bool SliceColorPreferences::isPolylineUnit() const {
+	return polylineUnit;
 }
 
 QList<QColor> SliceColorPreferences::getAccumulatedSliceColors() const {
@@ -91,17 +92,7 @@ QList<QColor> SliceColorPreferences::getAccumulatedSliceColors() const {
 	return copy;
 }
 
-void SliceColorPreferences::showColorDialog( QPushButton* source ){
-	QColor initialColor = getButtonColor( source );
-	QColor selectedColor = QColorDialog::getColor( initialColor, this );
-	if ( selectedColor.isValid() ){
-		setButtonColor( source, selectedColor );
-	}
-}
 
-void SliceColorPreferences::selectSliceColor(){
-	showColorDialog( ui.sliceColorButton );
-}
 
 void SliceColorPreferences::initializeUserColors(){
 	//Only use the default values passed in if the user has not indicated
@@ -109,11 +100,7 @@ void SliceColorPreferences::initializeUserColors(){
 	QSettings settings( ORGANIZATION, APPLICATION );
 
 	viewerColors = settings.value( VIEWER_COLORS, viewerColors ).toBool();
-
-	QString sliceColorName = readCustomColor( settings, SLICE_COLOR, sliceColor.name() );
-	if ( sliceColorName.length() > 0 ){
-		sliceColor = QColor( sliceColorName );
-	}
+	polylineUnit = settings.value( POLYLINE_UNIT, polylineUnit).toBool();
 
 	//If the user has specified an accumulated color scheme, read it in.
 	if ( settings.contains( ACCUMULATED_COLOR_COUNT) ) {
@@ -133,22 +120,22 @@ void SliceColorPreferences::readCustomColor( QSettings& settings,
 	}
 }
 
-QString SliceColorPreferences::readCustomColor( QSettings& settings,
-		const QString& identifier, const QString& defaultColor){
-	QString colorName = settings.value( identifier, defaultColor ).toString();
-	return colorName;
-}
+
 
 void SliceColorPreferences::resetColors(){
-	setButtonColor( ui.sliceColorButton, sliceColor );
+	ui.viewerColorsCheckBox->setChecked( viewerColors );
+	if ( polylineUnit ){
+		int chainIndex = colorUnits.indexOf( POLYGONAL_CHAIN );
+		ui.colorUnitComboBox->setCurrentIndex( chainIndex );
+	}
+	else {
+		int unitIndex = colorUnits.indexOf( LINE_SEGMENT );
+		ui.colorUnitComboBox->setCurrentIndex( unitIndex );
+	}
 	populateAccumulateColors();
 }
 
-void SliceColorPreferences::setButtonColor( QPushButton* button, QColor color ){
-	QPalette p = button->palette();
-	p.setBrush(QPalette::Button, color);
-	button->setPalette( p );
-}
+
 
 void SliceColorPreferences::populateAccumulateColors( ){
 	ui.accumulatedColorList->clear();
@@ -169,7 +156,6 @@ void SliceColorPreferences::addColorAccumulated(){
 	QColor selectedColor = QColorDialog::getColor( Qt::white, this );
 	if ( selectedColor.isValid() ){
 		addColorListItem( ui.accumulatedColorList, selectedColor );
-			//registerColorChange();
 	}
 }
 
@@ -210,9 +196,16 @@ void SliceColorPreferences::persistColors(){
 	viewerColors = ui.viewerColorsCheckBox->isChecked();
 	settings.setValue( VIEWER_COLORS, viewerColors );
 
-	//Main slice color
-	sliceColor = getButtonColor( ui.sliceColorButton );
-	settings.setValue( SLICE_COLOR, sliceColor.name() );
+	//Polygonal color unit.
+	int selectedIndex = ui.colorUnitComboBox->currentIndex();
+	int polylineIndex = colorUnits.indexOf( POLYGONAL_CHAIN );
+	if ( polylineIndex == selectedIndex ){
+		polylineUnit = true;
+	}
+	else {
+		polylineUnit = false;
+	}
+	settings.setValue( POLYLINE_UNIT, polylineUnit );
 
 	//Accumulated slice colors
 	accumulateColorList.clear();

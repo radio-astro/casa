@@ -1,4 +1,4 @@
-//# Copyright (C) 2005,2009,2010
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,51 +22,31 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
 
-#include <ios>
-#include <iostream>
-#include <casa/aips.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#ifndef IMAGESLICECOLORBAR_QO_H_
+#define IMAGESLICECOLORBAR_QO_H_
+#include <QtGui/QWidget>
+#include <QList>
+namespace casa {
 
-#include <unistd.h>
-#include <sys/stat.h>
+/**
+ * Draws a colored rectangular bar across the top of the image slice statistics
+ * as an identifier when the image slice is closed.
+ */
 
-#include <guitools/Histogram/HistogramMain.qo.h>
-#include <QApplication>
-#include <casa/namespace.h>
+class ImageSliceColorBar : public QWidget {
 
+public:
+	ImageSliceColorBar(QWidget* parent = NULL);
+	void setColors( const QList<QColor>& segmentColors );
+	virtual ~ImageSliceColorBar();
 
-int main( int argc, char *argv[] ) {
-	int stat = 0;
-	QApplication app(argc, argv );
-	app.setOrganizationName( "CASA");
-	app.setApplicationName( "Histogram");
-	try {
-		HistogramMain histogramApplication(true,true,true,true,false,NULL);
-		histogramApplication.setPlotMode( 1 );
-		histogramApplication.show();
+protected:
+	virtual void paintEvent( QPaintEvent* event );
 
-		stat = app.exec();
-		return stat;
-	}
-	catch (const casa::AipsError& err) {
-		cerr<<"**"<<err.getMesg()<<endl;
-	}
-	catch (...) {
-		cerr<<"**non-AipsError exception**"<<endl;
-	}
-	return stat;
-}
+private:
+	QList<QColor> colorList;
+};
 
-
-
-
-
-
-
+} /* namespace casa */
+#endif /* IMAGESLICECOLORBAR_QO_H_ */

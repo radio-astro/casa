@@ -38,7 +38,7 @@ ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString /*yAxisUnits*/, QWi
 
 	//Add the plot widget to the dialog
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
-	plotWidget = new BinPlotWidget( false, true, false, this );
+	plotWidget = new BinPlotWidget( false, true, true, true, this );
 	plotWidget->setPlotMode( 1 );
 	layout->addWidget( plotWidget );
 	ui.plotWidgetHolder->setLayout( layout );
