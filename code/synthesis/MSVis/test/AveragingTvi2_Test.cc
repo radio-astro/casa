@@ -920,8 +920,8 @@ protected:
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::sigma, "Sigma"));
         addRowChecker (new SigmaWeightChecker (averagingFactor, & VisBuffer2::weight, "Weight"));
 
-        WeightFunctionBase * weightFunction = useDoubler ? vi::generateWeightFunction(doubler)
-                                                         : vi::generateWeightFunction(identity);
+        WeightFunction * weightFunction = useDoubler ? generateWeightFunction (doubler)
+                                                     : WeightFunction::generateIdentityWeightFunction();
 
         AveragingTvi2Factory factory;
         VisibilityIterator2 * vi = factory.createVi (ms, interval, chunkInterval, averagingFactor,

@@ -8,7 +8,7 @@ namespace casa {
 
 namespace vi {
 
-class WeightFunctionBase;
+class WeightFunction;
 
 namespace avg {
 
@@ -21,7 +21,7 @@ class AveragingTvi2 : public TransformingVi2 {
 public:
 
     AveragingTvi2 (ViImplementation2 * inputVii, Double averagingInterval,
-                   Int nAveragesPerChunk, WeightFunctionBase * weightFunction);
+                   Int nAveragesPerChunk, WeightFunction * weightFunction);
     ~AveragingTvi2 ();
 
     /////////////////////////////////////////////////////////////////////////

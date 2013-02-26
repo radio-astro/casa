@@ -36,6 +36,7 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
+#include <cstdarg>
 #include <map>
 #include <set>
 #include <utility>
@@ -50,8 +51,46 @@ namespace casa {
 
 namespace vi {
 
-Float unity (Float) { return 1.0;}
-Float identity (Float x) { return x;}
+SortColumns::SortColumns (const Block<Int> & columns, Bool addDefaultColumns)
+: addDefaultColumns_p (addDefaultColumns),
+  columns_p (columns)
+{}
+
+Bool
+SortColumns::addDefaultSortColumns () const
+{
+    return addDefaultColumns_p;
+}
+
+const Block<Int> &
+SortColumns::getColumns () const
+{
+    return columns_p;
+}
+
+
+WeightFunction *
+WeightFunction::generateUnityWeightFunction ()
+{
+    return generateWeightFunction (WeightFunction::unity);
+}
+
+WeightFunction *
+WeightFunction::generateIdentityWeightFunction ()
+{
+    return  generateWeightFunction (WeightFunction::identity);
+}
+
+WeightFunction *
+WeightFunction::generateSquareWeightFunction ()
+{
+    return  generateWeightFunction (WeightFunction::square);
+}
+
+
+Float WeightFunction::unity (Float) { return 1.0;}
+Float WeightFunction::identity (Float x) { return x;}
+Float WeightFunction::square (Float x) { return x * x;}
 
 
 VisibilityIterator2::VisibilityIterator2()
@@ -1210,35 +1249,7 @@ SubtableColumns::weather() const
     return msIter_p.msColumns().weather();
 }
 
-VisibilityIterator2 *
-AveragingTvi2Factory::createVi (MeasurementSet * ms,
-                                Double interval,
-                                Double chunkInterval,
-                                Int averagingFactor,
-                                WeightFunctionBase * weightFunction)
-{
-    // Start off with an empty VI
 
-    VisibilityIterator2 * vi2 = new VisibilityIterator2 ();
-
-    // Create a simple VI implementation to perform the reading.
-
-    Block<MeasurementSet> mss (1, * ms);
-    Block<Int> sortColumns;
-    Double averagingInterval = interval * averagingFactor;
-    Int nAveragesPerChunk = (Int) (chunkInterval / averagingInterval * 1.001);
-
-    VisibilityIteratorImpl2 * vii2 = new VisibilityIteratorImpl2 (vi2, mss, sortColumns, True,
-                                                                  chunkInterval, VbPlain, False);
-
-    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vii2, averagingInterval, nAveragesPerChunk,
-                                                       weightFunction);
-
-    vi2->impl_p = averagingTvi2;
-
-    return vi2;
-
-}
 
 } // end namespace vi
 
