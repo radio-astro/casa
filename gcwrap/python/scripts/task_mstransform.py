@@ -141,7 +141,7 @@ def mstransform(
              nchan, 
              start, 
              width, 
-             nspws,              # spw separation
+             nspw,              # spw separation
              interpolation,
              phasecenter,
              restfreq, 
@@ -215,14 +215,17 @@ def mstransform(
             config['nchan'] = nchan
             config['start'] = str(start)
             config['width'] = str(width)
-            if nspws > 1:
-                casalog.post('Separate MS into %s spws'%nspws)
+            if nspw > 1:
+                casalog.post('Separate MS into %s spws'%nspw)
 
-            config['nspws'] = nspws 
+            config['nspw'] = nspw 
             config['interpolation'] = interpolation
-            config['phasecenter'] = phasecenter
-            config['restfreq'] = restfreq
-            config['outframe'] = outframe
+            if phasecenter != '':
+                config['phasecenter'] = phasecenter
+            if restfreq != '':
+                config['restfreq'] = restfreq
+            if outframe != '':
+                config['outframe'] = outframe
             config['veltype'] = veltype
         if timeaverage:
             casalog.post('Time averaging is not yet implemented', 'WARN')
