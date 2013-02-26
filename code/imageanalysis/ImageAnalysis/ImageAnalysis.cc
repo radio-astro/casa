@@ -2780,16 +2780,13 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	try {
 		std::auto_ptr<ImageInterface<Float> > x;
 		if (_image->imageType() != PagedImage<Float>::className()) {
-            char *currentDir = get_current_dir_name();
-            String prefix = ".moments.scratch.image";
-            char *imageName = tempnam(currentDir, prefix.c_str());
-            tmpImageName = String(imageName);
-            free(currentDir);
-            free(imageName);
+            
+            Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
+            tmpImageName = tmpImage.baseName();
 			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
 					<< "so converting to a CASA temporary paged image named "
-					<< tmpImageName << " first which will be written to the current directory" << LogIO::POST;
-			x.reset(subimage(tmpImageName, r, ""));
+					<< tmpImageName  << " first which will be written to the current directory" << LogIO::POST;
+            x.reset(subimage(tmpImageName, r, ""));
 		}
 		else {
 			x.reset(
