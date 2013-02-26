@@ -48,7 +48,7 @@ public:
 
 private:
 	double getHypotenuse( double side1, double side2 ) const ;
-	double getHypotenuse( double x1, double x2, double y2, double y2 ) const;
+	double getHypotenuse( double x1, double x2, double y1, double y2 ) const;
 };
 
 } /* namespace casa */
