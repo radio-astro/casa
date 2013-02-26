@@ -557,19 +557,19 @@ class ImageAnalysis
     //if xn == yn == 2, rectangle
     //if (xn == yn) > 2, polygon (could originate from ellipse)
     Bool getFreqProfile(const Vector<Double>& x,
-   		 const Vector<Double>& y,
-   		 Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-   		 const String& xytype="world",
-   		 const String& specaxis="freq",
-   		 const Int& whichStokes=0,
-   		 const Int& whichTabular=0,
-   		 const Int& whichLinear=0,
-   		 const String& xunits="",
-   		 const String& specframe="",
-   		 const Int &combineType=0,
-   		 const Int& whichQuality=0,
-   		 const String& restValue="",
-   				 int centralChannel = -1);
+			const Vector<Double>& y,
+			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+			const String& xytype="world",
+			const String& specaxis="freq",
+			const Int& whichStokes=0,
+			const Int& whichTabular=0,
+			const Int& whichLinear=0,
+			const String& xunits="",
+			const String& specframe="",
+			const Int &combineType=0,
+			const Int& whichQuality=0,
+			const String& restValue="",
+			Int beamChannel = -1);
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);

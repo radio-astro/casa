@@ -6168,7 +6168,7 @@ Bool ImageAnalysis::getFreqProfile(
 		const Int& whichLinear, const String& xunits,
 		const String& specFrame, const Int &combineType,
 		const Int& whichQuality, const String& restValue,
-		int centralChannel )
+		Int beamChannel)
 {
 	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
 
@@ -6190,6 +6190,7 @@ Bool ImageAnalysis::getFreqProfile(
 
 	Double np=1.; // the number of pixels in the synth beam, needed for flux or eflux
 	if(combineType==7 || combineType==8){ // flux or eflux
+
 	    // determine number of pixels in synth beam
 	    const Unit& brightnessUnit = _image->units();
 	    String bUName = brightnessUnit.getName();
@@ -6199,25 +6200,26 @@ Bool ImageAnalysis::getFreqProfile(
 		const CoordinateSystem csys = _image->coordinates();
 		if(!csys.hasDirectionCoordinate()){
 		    *_log << LogIO::WARN << "No DirectionCoordinate - cannot convert flux density"
-			    << LogIO::POST;
+			  << LogIO::POST;
 		    return False;
 		}
 		Quantity pixArea = csys.directionCoordinate().getPixelArea();
-        // FIXME we need to deal with multi beam images
 		Double beamArea;
-        if (_image->imageInfo().hasBeam()) {
-        	GaussianBeam beam;
-        	if ( centralChannel == - 1 ){
-        		beam = _image->imageInfo().restoringBeam( );
-        	}
-        	else {
-        		beam = _image->imageInfo().restoringBeam( centralChannel );
-        	}
-            beamArea = beam.getArea(pixArea.getUnit());
-        }
-        else {
+		if (_image->imageInfo().hasBeam()) {
+
+		    GaussianBeam beam;
+		    if ( beamChannel == - 1 ){
+        		beam = _image->imageInfo().restoringBeam(0,0);
+		    }
+		    else {
+        		beam = _image->imageInfo().restoringBeam( beamChannel, 0 );
+		    }
+		    beamArea = beam.getArea(pixArea.getUnit());
+
+		}
+		else {
 		    *_log << LogIO::WARN << "Cannot determine solid angle of beam. Will assume beam==1 pixel"
-			    << LogIO::POST;
+			  << LogIO::POST;
 		    beamArea = pixArea.getValue();
 		}
 		

@@ -1873,36 +1873,24 @@ bool QtProfile::getFrequencyProfileWrapper( const Vector<double> &wxv, const Vec
 		const Int& whichLinear, const String& xunits,
 		const String& specFrame, const Int &combineType,
 		const Int& whichQuality, const String& restValue ){
-	bool ok = false;
-	try {
-		ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-						xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
-						combineType, whichQuality, restValue);
-	}
-	catch( AipsError& error ){
-		//Currently the flux profile throws an exception for images
-		//with channel-dependent beams.
-		ok = false;
-		if ( itsPlotType == QtProfile::PFLUX ){
-		//We will try again, this time using the restoring beam from the
-		//central channel.
-			int channelCount = z_xval.size();
-			int centralChannel = channelCount / 2;
-			try {
-				ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-										xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
-										combineType, whichQuality, restValue, centralChannel);
-				if ( ok ){
-					//Post a warning that flux was calculated using a central channel
-					//and the resulting calculation was only an approximation.
-					String warningMsg( "Calculation was performed using a central channel.\n  The result should be considered an approximation.");
-					postStatus( warningMsg );
-				}
-			}
-			catch( AipsError& error ){
-				//qDebug() << "Could not calculate flux using a central channel";
-			}
-		}
+
+	Bool ok = false;
+
+	Int beamChannel = 0;
+
+	// might want to introduce more fancy selection of the beamChannel here but using channel 0 is a good choice already
+
+	ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+				       xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
+				       combineType, whichQuality, restValue,
+				       beamChannel);
+
+	if ( itsPlotType == QtProfile::PFLUX ){
+	    //Post a warning that flux was calculated using a given channel
+	    //and the resulting calculation was only an approximation.
+	    ostringstream oss;
+	    oss << "Calculation was performed using the beam for channel " << beamChannel << endl << "The result should be considered an approximation.";
+	    postStatus( oss.str() );
 	}
 	return ok;
 }
