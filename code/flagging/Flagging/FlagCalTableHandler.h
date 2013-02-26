@@ -288,8 +288,8 @@ public:
 	CTBuffer(CTIter *ctIter) {ctCache_p = new CTCache(ctIter);invalidate();}
 	~CTBuffer() {}
 
-	const Vector<Int> & arrayId() const {arrayId_p = Vector<Int> (time().nelements(), ctCache_p->arrayId()); return arrayId_p;}
-	const Vector<Int> & fieldId() const {fieldId_p = Vector<Int> (time().nelements(), ctCache_p->fieldId()); return fieldId_p;}
+	const Vector<Int> & arrayId() const {arrayId_p.assign (Vector<Int> (time().nelements(), ctCache_p->arrayId())); return arrayId_p;}
+	const Vector<Int> & fieldId() const {fieldId_p.assign (Vector<Int> (time().nelements(), ctCache_p->fieldId())); return fieldId_p;}
 	Int spectralWindow() const {return ctCache_p->spectralWindow();}
 	const Vector<Int>& scan() const {return ctCache_p->scan();}
 	const Vector<Double>& time() const {return ctCache_p->time();}
@@ -302,7 +302,7 @@ public:
 	Int nChannels() const {return ctCache_p->nChannels();}
 	Int nCorrelations() const {return ctCache_p->nCorrelations();}
 	const Vector<Int> &  spectralWindows () const {
-	    spectralWindows_p = Vector<Int> (time().nelements(), ctCache_p->spectralWindow()); return spectralWindows_p;}
+	    spectralWindows_p.assign (Vector<Int> (time().nelements(), ctCache_p->spectralWindow())); return spectralWindows_p;}
 
 
 	const Cube<Complex>& visCube() const {return ctCache_p->visCube();}
