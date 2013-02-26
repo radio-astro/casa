@@ -4908,7 +4908,7 @@ ImageInterface<Float>* ImageAnalysis::subimage(
 			SubImageFactory<Float>::createSubImage(
 				*_image,
 				*(ImageRegion::tweakedRegionRecord(&Region)),
-				mask, _log.get(), True, axesSpecifier, extendMask
+				mask, list ? _log.get() : 0, True, axesSpecifier, extendMask
 			)
 		)
 	);
