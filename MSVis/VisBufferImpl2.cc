@@ -556,6 +556,26 @@ protected:
     }
 
     static void
+    copyRowElementAux (Array<typename T::value_type> & array, Int sourceRow, Int destinationRow)
+    {
+        IPosition shape = array.shape();
+        Assert (shape.nelements() == 4);
+
+        Int nH = shape(2);
+        Int nI = shape(1);
+        Int nJ = shape(0);
+
+        for (Int h = 0; h < nH; h++){
+            for (Int i = 0; i < nI; i++){
+                for (Int j = 0; j < nJ; j++){
+                    array (IPosition (4, j, i, h, destinationRow)) =
+                        array (IPosition (4, j, i, h, sourceRow));
+                }
+            }
+        }
+    }
+
+    static void
     copyRowElementAux (Vector<typename T::value_type> & vector, Int sourceRow, Int destinationRow)
     {
         vector (destinationRow) = vector (sourceRow);
@@ -596,7 +616,7 @@ public:
     VbCacheItemArray <Vector<Float> > feed2Pa_p;
     VbCacheItemArray <Vector<Int> > fieldId_p;
     VbCacheItemArray <Matrix<Bool> > flag_p;
-    //VbCacheItemArray <Array<Bool> > flagCategory_p;
+    VbCacheItemArray <Array<Bool> > flagCategory_p;
     VbCacheItemArray <Cube<Bool> > flagCube_p;
     VbCacheItemArray <Vector<Bool> > flagRow_p;
     VbCacheItemArray <Cube<Float> > floatDataCube_p;
@@ -784,7 +804,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2, NoCheck);
     fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId, Nr);
     flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
-    //flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
+    flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
         // required column but not used in casa, make it a nocheck for shape validation
     flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr, False);
     flagRow_p.initialize (this, vb, &VisBufferImpl2::fillFlagRow, FlagRow, Nr, False);
@@ -1992,14 +2012,13 @@ VisBufferImpl2::setFlag (const Matrix<Bool>& value)
 const Array<Bool> &
 VisBufferImpl2::flagCategory () const
 {
-    Throw ("Flag Categories not supported.");
+    return cache_p->flagCategory_p.get();
 }
 
 void
-VisBufferImpl2::setFlagCategory (const Array<Bool>& /*value*/)
+VisBufferImpl2::setFlagCategory (const Array<Bool>& value)
 {
-    ThrowIf (True, "Flag Categories not supported.");
-    //cache_p->flagCategory_p.set (value);
+    cache_p->flagCategory_p.set (value);
 }
 
 const Cube<Bool> &
@@ -2755,13 +2774,11 @@ VisBufferImpl2::fillFlag (Matrix<Bool>& value) const
 }
 
 void
-VisBufferImpl2::fillFlagCategory (Array<Bool>& /*value*/) const
+VisBufferImpl2::fillFlagCategory (Array<Bool>& value) const
 {
-  ThrowIf (True, "Flag Categories not supported.");
-
   CheckVisIter();
 
-  //getViP()->flagCategory (value);
+  getViP()->flagCategory (value);
 }
 
 void
