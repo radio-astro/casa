@@ -38,6 +38,7 @@
 #include <scimath/Mathematics/Combinatorics.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/IO/ProfileFitterEstimatesFileParser.h>
 
 #include <memory>
@@ -152,7 +153,7 @@ Record ImageProfileFitter::fit() {
     	std::auto_ptr<ImageInterface<Float> > clone(
     		_getImage()->cloneII()
     	);
-    	_subImage = SubImage<Float>::createSubImage(
+    	_subImage = SubImageFactory<Float>::createSubImage(
     		*clone, *_getRegion(),
     		_getMask(), 0, False, AxesSpecifier(), _getStretch()
     	);
@@ -160,7 +161,7 @@ Record ImageProfileFitter::fit() {
     		if (! _sigmaName.empty()) {
     			originalSigma.reset(_sigma->cloneII());
     		}
-    		SubImage<Float> sigmaSubImage = SubImage<Float>::createSubImage(
+    		SubImage<Float> sigmaSubImage = SubImageFactory<Float>::createSubImage(
     			*_sigma, *_getRegion(),
     			_getMask(), 0, False, AxesSpecifier(), _getStretch()
 			);
@@ -183,7 +184,7 @@ Record ImageProfileFitter::fit() {
 				collapser.collapse(True)
 			);
 			// _subImage needs to be a SubImage<Float> object
-			_subImage = SubImage<Float>::createSubImage(
+			_subImage = SubImageFactory<Float>::createSubImage(
 				*x, Record(), "", _getLog().get(),
 				False, AxesSpecifier(), False
 			);

@@ -30,7 +30,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/SubImage.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/TempImage.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 
@@ -90,7 +90,7 @@ ImageCollapser::~ImageCollapser() {}
 
 ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*clone, *_getRegion(), _getMask(), _getLog().get(),
 		False, AxesSpecifier(), _getStretch()
 	);

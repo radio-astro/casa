@@ -28,7 +28,7 @@
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <images/Images/SubImage.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageUtilities.h>
 
@@ -64,7 +64,7 @@ void ImagePadder::setPaddingPixels(
 ImageInterface<Float>* ImagePadder::pad(const Bool wantReturn) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch()
 	);

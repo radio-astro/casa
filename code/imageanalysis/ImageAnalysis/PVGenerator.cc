@@ -28,7 +28,7 @@
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <images/Images/SubImage.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <measures/Measures/MDirection.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -95,7 +95,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		*_getLog() << "Start and/or end points have not been set" << LogIO::EXCEPTION;
 	}
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
+	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch()
 	);
