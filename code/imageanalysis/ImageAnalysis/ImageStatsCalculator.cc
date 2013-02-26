@@ -44,7 +44,8 @@ ImageStatsCalculator::ImageStatsCalculator(
 	ImageAnalysis *const &ia,
 	const String& region, const Record *const &regionPtr,
 	const String& box, const String& chanInp,
-	const String& stokes, const String& maskInp
+	const String& stokes, const String& maskInp,
+	Bool beVerboseDuringConstruction
 ) : ImageTask(
 		ia->getImage(), region, regionPtr, box, chanInp,
 		stokes, maskInp, "", False
@@ -52,7 +53,7 @@ ImageStatsCalculator::ImageStatsCalculator(
 	_includepix(Vector<Float>(0)), _excludepix(Vector<Float>(0)),
 	_plotter(""), _nx(1), _ny(1), _list(True), _force(False),
 	_disk(False), _robust(False), _verbose(True) {
-	_construct();
+	_construct(beVerboseDuringConstruction);
 	_setSupportsLogfile(True);
 }
 

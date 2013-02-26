@@ -62,7 +62,7 @@ public:
    		ImageAnalysis *const &ia,
     	const String& region, const Record *const &regionPtr,
     	const String& box, const String& chanInp,
-    	const String& stokes, const String& maskInp
+    	const String& stokes, const String& maskInp, Bool beVerboseDuringConstruction
     );
 
     ~ImageStatsCalculator();

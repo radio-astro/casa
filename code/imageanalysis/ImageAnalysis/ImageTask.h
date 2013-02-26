@@ -90,7 +90,7 @@ protected:
     // does the lion's share of constructing the object, ie checks validity of
     // inputs, etc.
 
-    virtual void _construct();
+    virtual void _construct(Bool verbose=True);
 
     inline const ImageInterface<Float>* _getImage() const {return _image;}
 

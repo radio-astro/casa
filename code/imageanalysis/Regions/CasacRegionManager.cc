@@ -226,7 +226,8 @@ Record CasacRegionManager::fromBCS(
 	String& diagnostics, uInt& nSelectedChannels, String& stokes,
 	const Record  * const &regionPtr, const String& regionName,
 	const String& chans, const StokesControl stokesControl,
-	const String& box, const IPosition& imShape, const String& imageName
+	const String& box, const IPosition& imShape, const String& imageName,
+	Bool verbose
 ) {
 	LogOrigin origin("CasacRegionManager", __FUNCTION__);
 	Record regionRecord;
@@ -243,9 +244,11 @@ Record CasacRegionManager::fromBCS(
 				diagnostics, nSelectedChannels, stokes,
 				chans, stokesControl, box, imShape
 		).toRecord("");
-		*_getLog() << origin;
-		*_getLog() << LogIO::NORMAL << "Using specified box(es) "
-			<< box << LogIO::POST;
+		if (verbose) {
+			*_getLog() << origin;
+			*_getLog() << LogIO::NORMAL << "Using specified box(es) "
+				<< box << LogIO::POST;
+		}
 	}
 	else if (regionPtr != 0) {
 		if (! (regionName.empty() && chans.empty() && stokes.empty())) {
@@ -255,9 +258,11 @@ Record CasacRegionManager::fromBCS(
 				<< LogIO::EXCEPTION;
 		}
 		_setRegion(regionRecord, diagnostics, regionPtr);
-		*_getLog() << origin;
-		*_getLog() << LogIO::NORMAL << "Set region from supplied region record"
+		if (verbose) {
+			*_getLog() << origin;
+			*_getLog() << LogIO::NORMAL << "Set region from supplied region record"
 				<< LogIO::POST;
+		}
 		stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	}
 	else if (! regionName.empty()) {
@@ -268,8 +273,10 @@ Record CasacRegionManager::fromBCS(
 			<< LogIO::EXCEPTION;
 		}
 		_setRegion(regionRecord, diagnostics, regionName, imShape, imageName);
-		*_getLog() << origin;
-		*_getLog() << LogIO::NORMAL << diagnostics << LogIO::POST;
+		if (verbose) {
+			*_getLog() << origin;
+			*_getLog() << LogIO::NORMAL << diagnostics << LogIO::POST;
+		}
 		stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	}
 	else {
@@ -278,21 +285,25 @@ Record CasacRegionManager::fromBCS(
 			diagnostics, nSelectedChannels, stokes,
 			chans, stokesControl, box, imShape
 		).toRecord("");
-		*_getLog() << origin;
-		*_getLog() << LogIO::NORMAL << "No directional region specified. Using full positional plane."
-			<< LogIO::POST;
+		if (verbose) {
+			*_getLog() << origin;
+			*_getLog() << LogIO::NORMAL << "No directional region specified. Using full positional plane."
+				<< LogIO::POST;
+		}
 		const CoordinateSystem& csys = getcoordsys();
 		if (csys.hasSpectralAxis()) {
-			if (chans.empty()) {
-				*_getLog() << LogIO::NORMAL << "Using all spectral channels."
-					<< LogIO::POST;
-			}
-			else {
-				*_getLog() << LogIO::NORMAL << "Using channel range(s) "
-					<< _pairsToString(chanEndPts) << LogIO::POST;
+			if (verbose) {
+				if (chans.empty()) {
+					*_getLog() << LogIO::NORMAL << "Using all spectral channels."
+						<< LogIO::POST;
+				}
+				else {
+					*_getLog() << LogIO::NORMAL << "Using channel range(s) "
+						<< _pairsToString(chanEndPts) << LogIO::POST;
+				}
 			}
 		}
-		if (csys.hasPolarizationCoordinate()) {
+		if (csys.hasPolarizationCoordinate() && verbose) {
 			if (stokes.empty()) {
 				switch (stokesControl) {
 				case USE_ALL_STOKES:
@@ -300,7 +311,7 @@ Record CasacRegionManager::fromBCS(
 					break;
 				case USE_FIRST_STOKES:
 					*_getLog() << LogIO::NORMAL << "polarization "
-					<< csys.stokesAtPixel(0) << LogIO::POST;
+						<< csys.stokesAtPixel(0) << LogIO::POST;
 					break;
 				default:
 					break;

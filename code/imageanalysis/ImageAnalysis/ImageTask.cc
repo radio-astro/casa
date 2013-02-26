@@ -72,7 +72,7 @@ vector<ImageInputProcessor::OutputStruct> ImageTask::_getOutputStruct() {
     return outputs;
 }
 
-void ImageTask::_construct() {
+void ImageTask::_construct(Bool verbose) {
 	String diagnostics;
 	vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
 	vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
@@ -88,7 +88,7 @@ void ImageTask::_construct() {
     	_stokesString, _image, _regionPtr,
     	_region, _box, _chan,
     	_getStokesControl(), _supportsMultipleRegions(),
-    	coordsPtr
+    	coordsPtr, verbose
     );
 }
 
