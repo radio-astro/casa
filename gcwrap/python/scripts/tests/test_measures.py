@@ -18,7 +18,7 @@ class Ganymede(unittest.TestCase):
     """
     def setUp(self):
         cometdir = os.getenv("CASAPATH").split()[0] + "/data/ephemerides/JPL-Horizons/"
-        me.framecomet(cometdir + "Ganymede_55438-56292dUTC.tab")
+        me.framecomet(cometdir + "Ganymede_55437-56293dUTC.tab")
         me.doframe(me.epoch("utc", "2011/01/03/17:00:00"))
         me.doframe(me.observatory("ALMA"))
 

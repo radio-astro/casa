@@ -75,7 +75,7 @@ class pimager():
         trc[0:2]=ia.shape()[0]-1;
         maxplane=rg.box(blc=blc.tolist(),trc=trc.tolist())
         ia.open(psfim)
-        ib=ia.subimage(region=maxplane)
+        ib=ia.subimage(region=maxplane,list=False)
         csys2=ib.coordsys()
         boxpeak=rg.wbox(blc=["%dpix"%x for x in blcpeak], trc=["%dpix"%x for x in trcpeak], csys=csys2.torecord())
         outerreg=rg.complement(boxpeak)
@@ -506,7 +506,7 @@ class pimager():
             ####ib.open(inimage)
             ####arr=ib.getchunk()
             ####ib.done()
-            ia.insert(inimage, locate=[0,0,0,0])
+            (ia.insert(inimage, locate=[0,0,0,0],verbose=False)).close()
         ia.done()
         casalog.filter("INFO")
     @staticmethod
@@ -819,7 +819,7 @@ class pimager():
                         for tt in range(nterms):
                             if (dopbcorr==True):
                                 ia.open(imlist[k]+'.model.tt'+str(tt)) # Model images for the nodes
-                                ia.insert(infile=models[tt], locate=[0,0,0,0])
+                                (ia.insert(infile=models[tt], locate=[0,0,0,0],verbose=False)).close()
                                 ia.done()
                             else:
                                 scatteredModel = imlist[k]+'.model.tt'+str(tt);
@@ -1256,7 +1256,7 @@ class pimager():
                 for k in range(len(imlist)):
                     ia.open(imlist[k]+'.model')
                 #ia.putchunk(arr)
-                    ia.insert(infile=model, locate=[0,0,0,0])
+                    (ia.insert(infile=model, locate=[0,0,0,0],verbose=False)).close()
                     ia.done()
                 maj +=1
                 #if(majorcycles > 1):
@@ -2688,7 +2688,7 @@ class pimager():
                 imlist=imholder[imkeys[k]]['imname']
                 ia.open(imlist+'.model')
                 #ia.putchunk(arr)
-                ia.insert(infile=model, locate=[0,0,0,0])
+                (ia.insert(infile=model, locate=[0,0,0,0],verbose=False)).close()
                 ia.done()
         #######
     def makeconttempimages(self, imname, numim=0, contclean=False): 
@@ -3036,7 +3036,7 @@ class pimager():
             for k in range(len(imlist)):
                 ia.open(imlist[k]+'.model')
                 #ia.putchunk(arr)
-                ia.insert(infile=model, locate=[0,0,0,0])
+                (ia.insert(infile=model, locate=[0,0,0,0],verbose=False)).close()
                 ia.done()
         #######
         restored=imagename+'.image'

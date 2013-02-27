@@ -449,7 +449,7 @@ class imagecont():
                 trc[3]=(k+1)*chanchunk-1
                 if((trc[3]) >= modshape[3]):
                     trc[3]=modshape[3]-1
-                sbim=ia.subimage(outfile=inimage+str(k)+'.model', region=rg.box(blc,trc), overwrite=True)
+                sbim=ia.subimage(outfile=inimage+str(k)+'.model', region=rg.box(blc,trc), overwrite=True,list=False)
                 sbim.done()   
                 #print 'time taken for ', k, time.time()-timbeg
         ia.done()
@@ -471,7 +471,7 @@ class imagecont():
             endchan=modshape[3]-1
         blc=[0,0,modshape[2]-1,chan]
         trc=[modshape[0]-1,modshape[1]-1,modshape[2]-1,endchan]
-        sbim=ia.subimage(outfile=outimage, region=rg.box(blc,trc), overwrite=True)
+        sbim=ia.subimage(outfile=outimage, region=rg.box(blc,trc), overwrite=True,list=False)
         sbim.done()
         ia.done()
         tb.clearlocks()
@@ -621,7 +621,7 @@ class imagecont():
             ########
                 #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
             ###########
-                ia.insert(infile=inim[k], locate=blc)
+                (ia.insert(infile=inim[k], locate=blc,verbose=False)).close()
                 if(removeinfile):
                     ia.removefile(inim[k])
             k+=1
@@ -739,7 +739,7 @@ class imagecont():
             return True
         if(shp[3] > (startchan+chanchunk-1)):
             mybox=rg.box(blc=[0, 0, 0, startchan], trc=[shp[0]-1, shp[1]-1, shp[2]-1, startchan+chanchunk-1])
-            ia.subimage(outfile=outmask, region=mybox, overwrite=True)
+            ia.subimage(outfile=outmask, region=mybox, overwrite=True,list=False)
             ia.done()
             return True
         return False

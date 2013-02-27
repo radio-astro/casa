@@ -1054,7 +1054,7 @@ def imagetest(which=None, size=[32,32,8]):
         if not ok:
             stop('insert 1 fails')
         stats2 = man3.statistics()
-        if stats1['sigma'][0] >= stats2['sigma'][0]: fail()
+        if stats1['sigma'][0] != stats2['sigma'][0]: fail()
         ok = man3.done()
         if not ok:
             stop('Done 4 fails')
