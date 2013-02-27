@@ -36,5 +36,5 @@ def run(fetch=False):
     if not gl['regstate']:
         raise Exception, 'regstate = False'
 ###return the images that will be templated and compared in future runs
-    return ['m51sd_co32/m51sd_co32.aca.tp.sd.ms','m51sd_co32/m51sd_co32.aca.tp.noisy.sd.ms','m51sd_co32/m51sd_co32.image']
+    return ['m51sd_co32/m51sd_co32.aca.tp.sd.ms','m51sd_co32/m51sd_co32.aca.tp.noisy.sd.ms','m51sd_co32/m51sd_co32.sd.image']
 
