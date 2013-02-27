@@ -2429,11 +2429,12 @@ ImageInterface<Float> * ImageAnalysis::insert(
 	// Insert
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
-	ir.insert(*_image, outPix, inSub);
+	std::auto_ptr<ImageInterface<Float> > clone(_image->cloneII());
+	ir.insert(*clone, outPix, inSub);
 
 	// Make sure hist and stats are redone
-	deleteHistAndStats();
-	return _image.get();
+	// deleteHistAndStats();
+	return clone.release();
 }
 
 
