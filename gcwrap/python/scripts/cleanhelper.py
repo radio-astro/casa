@@ -706,7 +706,7 @@ class cleanhelper:
         for key in self.maskimages.keys():
             if(os.path.exists(self.maskimages[key])):
                 ia.open(self.maskimages[key])
-                fsum=ia.statistics(verbose=False)['sum']
+                fsum=ia.statistics(verbose=False,list=False)['sum']
                 if(len(fsum)!=0 and fsum[0]==0.0):
                     # make an empty mask
                     ia.set(pixels=0.0)
@@ -1224,7 +1224,7 @@ class cleanhelper:
                 self.im.makemodelfromsd(sdimage=modim,modelimage=modelos[k],maskimage=maskelos[k])
                 ia.open(maskelos[k])
                 ##sd mask cover whole image...delete it as it is not needed
-                if((ia.statistics(verbose=False)['min']) >0):
+                if((ia.statistics(verbose=False,list=False)['min']) >0):
                     ia.remove(done=True, verbose=False)
                     maskelos.remove(maskelos[k])
                 ia.done()
@@ -1258,7 +1258,7 @@ class cleanhelper:
             doAnd=False;
             if(os.path.exists(outputmask)):
                 ia.open(outputmask)
-                if((ia.statistics(verbose=False)['max'].max()) > 0.00001):
+                if((ia.statistics(verbose=False, list=False)['max'].max()) > 0.00001):
                     doAnd=True
                 ia.close()
             if(doAnd):

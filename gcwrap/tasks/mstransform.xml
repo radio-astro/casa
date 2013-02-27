@@ -208,7 +208,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="int">1</value>
         </param>
 
-        <param type="int" name="nspws" subparam="true">
+        <param type="int" name="nspw" subparam="true">
             <description>Number of output spws to create in output MS.</description>
             <value type="int">1</value>
         </param>
@@ -316,7 +316,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="nchan"><value type="int">-1</value></default>
                 <default param="start"><value type="int">0</value></default>
                 <default param="width"><value type="int">1</value></default>
-                <default param="nspws"><value type="int">1</value></default>
+                <default param="nspw"><value type="int">1</value></default>
                 <default param="interpolation"><value type="string">linear</value></default>
                 <default param="phasecenter"><value type="string"></value></default>
                 <default param="restfreq"><value type="string"></value></default>
@@ -538,8 +538,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         width -- Number of input channels that are used to create an output channel.
             default: 1
 
-        nspws -- Number of output spws to create in the output MS/MMS (int). (TBI)
-            default: 0
+        nspw -- Number of output spws to create in the output MS/MMS (int). (TBI)
+            default: 1
             example: One can regrid the MS or not and further separate the
                      output into a given number of spws. Internally, the framework
                      will combine the selected spws before separating them so that

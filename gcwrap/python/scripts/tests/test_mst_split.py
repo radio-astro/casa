@@ -543,11 +543,8 @@ class split_test_cav5(SplitChecker):
 #                             correlation=corrsel, async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             field='', spw='0:5~16', freqaverage=True, freqbin=5,
-                             antenna='',
-                             timebin='', timerange='',
-                             scan='', array='', uvrange='',
-                             correlation=corrsel, async=False)
+                             spw='0:5~16', freqaverage=True, freqbin=5,
+                             correlation=corrsel)
             tb.open(outms)
             record['data']   = tb.getcell('DATA', 2)
             record['weight'] = tb.getcell('WEIGHT', 5)
@@ -1933,7 +1930,7 @@ def suite():
     return [
 #            split_test_tav, 
             split_test_cav, 
-#            split_test_cav5, 
+            split_test_cav5, 
             split_test_cst,
             split_test_state, 
 #            split_test_optswc, 

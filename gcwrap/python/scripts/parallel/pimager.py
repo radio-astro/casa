@@ -57,7 +57,7 @@ class pimager():
     def maxouterpsf(psfim='', image=''):
         casalog.filter("ERROR")
         ia.open(psfim)
-        stat=ia.statistics()
+        stat=ia.statistics(verbose=False,list=False)
         csys=ia.coordsys()
         ia.open(image)
         beampix=np.fabs(ia.restoringbeam()['major']['value']/qa.convert(csys.increment(type='direction', format='q')['quantity']['*1'], ia.restoringbeam()['major']['unit'])['value'])
@@ -79,7 +79,7 @@ class pimager():
         csys2=ib.coordsys()
         boxpeak=rg.wbox(blc=["%dpix"%x for x in blcpeak], trc=["%dpix"%x for x in trcpeak], csys=csys2.torecord())
         outerreg=rg.complement(boxpeak)
-        statout=ib.statistics(region=outerreg)
+        statout=ib.statistics(region=outerreg,verbose=False,list=False)
         ia.done()
         ib.done()
         casalog.filter("INFO")
@@ -783,7 +783,7 @@ class pimager():
                 if(majorcycles <= 1):
                     casalog.filter("ERROR")
                     ia.open(residuals[0])
-                    residstat=ia.statistics()
+                    residstat=ia.statistics(verbose=False,list=False)
                     ia.done()
                     casalog.filter("INFO")
                     maxresid=np.max([residstat['max'], np.fabs(residstat['min'])])
@@ -810,10 +810,10 @@ class pimager():
                     maxresid=retval['maxresidual']
                     casalog.filter("ERROR")
                     ia.open(models[0])
-                    print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
+                    print 'min max of model', ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
                     ia.done()
                     ia.open(sumwts[0]);
-                    wtImageMax = ia.statistics()['max'][0];
+                    wtImageMax = ia.statistics(verbose=False,list=False)['max'][0];
                     ia.close();
                     for k in range(len(imlist)):
                         for tt in range(nterms):
@@ -844,7 +844,7 @@ class pimager():
 
     def normalizeresiduals_mt(self, nterms=2, combinedresiduals=[], combinedsumwts=[],dopbcorr=True,pblimit=0.1):
         ia.open(combinedsumwts[0]);
-        maxCombinedSumWts0 = ia.statistics()['max'][0];
+        maxCombinedSumWts0 = ia.statistics(verbose=False,list=False)['max'][0];
         ia.close();
         for tt in range(0,nterms):
             ia.open(combinedresiduals[tt]);
@@ -900,7 +900,7 @@ class pimager():
                     ia.close()
                 else:
                     ia.open(rootnames[chunk]+'.sumwt.tt0');
-                    chunkMaxSumWt = ia.statistics()['max'][0];
+                    chunkMaxSumWt = ia.statistics(verbose=False,list=False)['max'][0];
                     ia.close();
                     ia.open(combresiduals[tt]);
                     ia.calc('"'+combresiduals[tt] + '"' + '+' + '"' + chunkresidual + '"' + '*' + str(chunkMaxSumWt));
@@ -1207,7 +1207,7 @@ class pimager():
             newthresh=threshold
             if(majorcycles <= 1):
                 ia.open(residual)
-                residstat=ia.statistics()
+                residstat=ia.statistics(verbose=False, list=False)
                 maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
                 psfoutermax=self.maxouterpsf(psfim=psf, image=restoreds[0])
                 newthresh=psfoutermax*cyclefactor*maxresid
@@ -1242,16 +1242,16 @@ class pimager():
                 ia.done()
                 ia.open(tempmodel)
             #arr=ia.getchunk()
-                imminmax= abs(ia.statistics()['min'])
-                imminmax=max(imminmax, ia.statistics()['max'])
-                print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
+                imminmax= abs(ia.statistics(verbose=False,list=False)['min'])
+                imminmax=max(imminmax, ia.statistics(verbose=False,list=False)['max'])
+                print 'min max of incrmodel', ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
                 ia.done()
                 if(imminmax == 0.0):
                     print 'Threshold reached'
                     break
                 ia.open(model)
             #arr=ia.getchunk()
-                print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
+                print 'min max of model', ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
                 ia.done()
                 for k in range(len(imlist)):
                     ia.open(imlist[k]+'.model')
@@ -1578,7 +1578,7 @@ class pimager():
                 
      
                 ia.open(residual)
-                residstat=ia.statistics()
+                residstat=ia.statistics(verbose=False,list=False)
                 ia.done()
                 maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
                 newthresh=psfoutermax*cyclefactor*maxresid
@@ -2659,7 +2659,7 @@ class pimager():
     def incrementaldecon(self, alg, scales,residual, model, niter, psf,  mask, thr, cpuid, imholder):
         ##############
             ia.open(residual)
-            print 'Residual', ia.statistics() 
+            print 'Residual', ia.statistics(verbose=False,list=False) 
             ia.done()
             ########
             #incremental clean...get rid of tempmodel
@@ -2677,11 +2677,11 @@ class pimager():
             ia.done()
             ia.open('tempmodel')
             #arr=ia.getchunk()
-            print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
+            print 'min max of incrmodel', ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
             ia.done()
             ia.open(model)
             #arr=ia.getchunk()
-            print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
+            print 'min max of model', ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
             ia.done()
             imkeys=imholder.keys()
             for k in range(len(imkeys)):
@@ -3005,11 +3005,11 @@ class pimager():
             #ia.done()
             #############
             #   ia.open(imlist[k]+'.residual')
-            #   print 'residual of ', imlist[k], ia.statistics()['min'], ia.statistics()['max']
+            #   print 'residual of ', imlist[k], ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
             #   ia.done()
             ##############
             ia.open(residual)
-            print 'Residual', ia.statistics() 
+            print 'Residual', ia.statistics(verbose=False,list=False) 
             ia.done()
             ########
             #incremental clean...get rid of tempmodel
@@ -3027,11 +3027,11 @@ class pimager():
             ia.done()
             ia.open('tempmodel')
             #arr=ia.getchunk()
-            print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
+            print 'min max of incrmodel', ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
             ia.done()
             ia.open(model)
             #arr=ia.getchunk()
-            print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
+            print 'min max of model', ia.statistics(verbose=False,list=False)['min'], ia.statistics(verbose=False,list=False)['max']
             ia.done()
             for k in range(len(imlist)):
                 ia.open(imlist[k]+'.model')

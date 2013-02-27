@@ -673,7 +673,7 @@ class test_FreqAvg(test_base):
         mstransform(vis=self.vis, outputvis=outputms, spw='2', freqaverage=True, freqbin=20)
                             
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verifyMS(outputms, 1, 6, 0)
+        ret = th.verifyMS(outputms, 1, 7, 0)
         self.assertTrue(ret[0],ret[1])        
         
     def test_freqavg2(self):
@@ -682,7 +682,7 @@ class test_FreqAvg(test_base):
         mstransform(vis=self.vis, outputvis=outputms, spw='2:10~20', freqaverage=True, freqbin=2)
                             
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verifyMS(outputms, 1, 5, 0)
+        ret = th.verifyMS(outputms, 1, 6, 0)
         self.assertTrue(ret[0],ret[1])        
         
     def test_freqavg3(self):
