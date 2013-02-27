@@ -226,7 +226,7 @@ private:
   Double calcSample(const MDirection::MVType& compDirValue,
                     const MDirection::MVType& dirVal,
                     const Double majRad, const Double minRad,
-                    const Double pixValue, const Float attnFactor) const;
+                    const Double pixValue) const;
 
   Double calcVis(Double u, Double v, const Double factor) const;
   static void rotateVis(Double& u, Double& v,
