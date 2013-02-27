@@ -5481,6 +5481,11 @@ ia.history(list=T, browse=F)       # List history to logger
      <description>Location of input image in output image.  Default is centrally located.</description>
      <value>-1</value>
      </param>
+     
+     <param type="bool" name="verbose">
+        <description>Emit informational messages to logger?</description>
+        <value>true</value>
+     </param>
 </input>
 <returns type="image"/>
 
@@ -5490,7 +5495,7 @@ This function inserts the specified image (or part of it) into this image.
 The specified image may be given via argument {\stfaf infile}
 as a disk file name (it may be in native \casa, \fits, or Miriad
 format; Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images). <!-- or directly as an Image tool. -->
+information on foreign images).
 
 If the {\stfaf locate} vector is not given, then the images are
 aligned (to an integer pixel shift) by their reference pixels.
