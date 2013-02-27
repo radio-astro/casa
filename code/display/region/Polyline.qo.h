@@ -106,6 +106,7 @@ protected:
 	ImageRegion *get_image_region( DisplayData* ) const;
 
 	void drawRegion( bool );
+	void drawText( );
 
 	virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 			std::vector<std::pair<double,double> > &world_pts ) const;

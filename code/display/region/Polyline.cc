@@ -39,6 +39,8 @@
 #include <display/region/QtRegionState.qo.h>
 #include <display/ds9/ds9writer.h>
 
+#include <QtCore/qmath.h>
+
 namespace casa {
 namespace viewer {
 
@@ -131,6 +133,9 @@ void Polyline::polyLineRegionChanged( viewer::Region* /*region*/, std::string ch
 	if ( changeType == this->state()->LINE_COLOR_CHANGE ){
 		setPlotLineColor();
 	}
+	else {
+		qDebug() << "Change type="<<changeType.c_str();
+	}
 }
 
 void Polyline::updatePolyLine(int regionId, viewer::region::RegionChanges changes,
@@ -161,6 +166,15 @@ void Polyline::setCenter(double &x, double &y, double &deltx, double &delty) {
 
 void Polyline::polylineComplete( ) {
 	// for polylines signals remain blocked until polyline is complete...
+	//Check the number of points for some reason, we are getting duplicate
+	//last points.
+	int drawingPointCount = _drawing_points_.size();
+	if ( drawingPointCount >= 2 ){
+		if (_drawing_points_[drawingPointCount - 1] == _drawing_points_[drawingPointCount - 2 ] ){
+			_drawing_points_.pop_back();
+			_ref_points_.pop_back();
+		}
+	}
 	complete = true;
 	releaseSignals( );
 	updateStateInfo( true, region::RegionChangeModified );
@@ -737,6 +751,100 @@ void Polyline::drawRegion( bool selected ) {
 			}
 
 			popDrawingEnv( );
+		}
+	}
+}
+
+void Polyline::drawText() {
+	Region::drawText();
+
+	int drawCount = _drawing_points_.size();
+	if ( drawCount >= 2  && !this->complete ){
+
+		Vector<Double> world1(2), world2(2);
+		Vector<Double> pix1(2),   pix2(2);
+		Vector<Double> diff(2);
+		Double allDiff = 0;
+		String unit("");
+
+		// get the position of the start- and end-points
+		pix1(0) = (Double)_drawing_points_[drawCount-2].first;
+		pix1(1) = (Double)_drawing_points_[drawCount-2].second;
+		pix2(0) = (Double)_drawing_points_[drawCount-1].first;
+		pix2(1) = (Double)_drawing_points_[drawCount-1].second;
+
+		// determine the positions in world coordinates,
+		// we will skip drawing any text if we can't do this.
+
+		if ( wc_->linToWorld( world1, pix1 ) && wc_ ->linToWorld( world2, pix2) ){
+
+			// pixToWorld sometimes seems to add a dimension
+			Vector<Double> world3(world2.size(), 0.0);
+			Vector<Double>   pix3(world2.size(), 0.0);
+
+			// get the corner point in world-coordinates
+			world3(0) = world1(0);
+			world3(1) = world2(1);
+			for (Int index=2; index<(Int)world2.size(); index++){
+				world3(index) = world2(index);
+			}
+
+			// get the corner point in pixel-coordinates
+			if (wc_->worldToPix(pix3, world3)){
+
+				// extract the axis names and units
+				Vector<String> aXisNames=wc_->worldAxisNames();
+				Vector<String> unitNames=wc_->worldAxisUnits();
+
+				// identify RA and DEC axis
+				int itsRaIndex = -1;
+				int itsDecIndex = -1;
+				for (Int index=0; index < (Int)aXisNames.size(); index++){
+					if (aXisNames(index).contains("scension") && (index < 2))
+						itsRaIndex=index;
+					if (aXisNames(index).contains("eclination") && (index < 2))
+						itsDecIndex=index;
+				}
+
+				diff(0) = fabs(world1(0)-world2(0));
+				diff(1) = fabs(world1(1)-world2(1));
+				if (itsRaIndex > -1 && itsDecIndex > -1){
+					diff(0) = diff(0)*3600.0*180.0/C::pi;
+					diff(1) = diff(1)*3600.0*180.0/C::pi;
+					diff(itsRaIndex) = diff(itsRaIndex) * cos(world3(itsDecIndex));
+					unit = "\"";
+				}
+				allDiff = sqrt(diff(0)*diff(0) + diff(1)*diff(1));
+
+				ostringstream ss;
+				Vector<double> textPosition(2);
+				try {
+					double x1;
+					double y1;
+					viewer::linear_to_world( wc_, _drawing_points_[drawCount-1].first,
+							_drawing_points_[drawCount-1].second, x1, y1 );
+					textPosition[0] = x1;
+					textPosition[1] = y1;
+				}
+				catch(...) {
+					return;
+				}
+
+				double angle = 0.0;
+				if ( allDiff > 0 ) {
+					double xDistance = pix2(0) - pix1(0);
+					double yDistance = pix2(1) - pix1(1);
+					angle = qAsin( diff(0) / allDiff );
+					if ( yDistance * xDistance > 0 ){
+						angle = C::pi-angle;
+					}
+				}
+				ss <<  std::setiosflags(ios::scientific) <<
+						std::setiosflags(ios::fixed) << std::setprecision(4) << "(" <<
+									allDiff << unit <<", "<<angle<<")";
+				String dText(ss.str());
+				wc_->drawText(textPosition, dText, Display::AlignCenter,  False);
+			}
 		}
 	}
 }

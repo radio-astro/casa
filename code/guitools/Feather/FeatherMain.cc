@@ -361,6 +361,8 @@ void FeatherMain::featheringDone(){
 	//In case we are zoomed on the original data, this will reload it, unzoomed.
 	addOriginalDataToPlots();
 	plotHolder->updateScatterData();
+	plotHolder->refreshPlots();
+	plotHolder->layoutPlotWidgets();
 
 	//Post a message if we could not save the output image.
 	if ( fileLoader.isOutputSaved() ){

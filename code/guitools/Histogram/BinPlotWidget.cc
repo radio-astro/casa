@@ -52,7 +52,7 @@ namespace casa {
 
 
 BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
-		bool plotModeControls, QWidget* parent ):
+		bool plotModeControls, bool controlBinCountOnly, QWidget* parent ):
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
     image( NULL ), binPlot( this ),
@@ -90,7 +90,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 	initializeFitWidget( fitControls );
 	initializeRangeControls( rangeControls );
 	initializeZoomControls( rangeControls );
-	initializePlotModeControls( plotModeControls );
+	initializePlotModeControls( plotModeControls, controlBinCountOnly );
 
 	displayPlotTitle = false;
 	displayAxisTitles = false;
@@ -217,30 +217,35 @@ bool BinPlotWidget::isEmpty() const {
 //                            Display Settings
 //-------------------------------------------------------------------------------
 
-void BinPlotWidget::initializePlotModeControls( bool enable ){
+void BinPlotWidget::initializePlotModeControls( bool enable, bool binCountOnly ){
 
 	if ( enable ){
-		QActionGroup* plotControlsGroup = new QActionGroup( this );
-		plotControlsGroup->addAction( &regionModeAction );
-		plotControlsGroup->addAction( &imageModeAction );
-		plotControlsGroup->addAction( &regionAllModeAction );
-
-		regionModeAction.setCheckable( true );
-		imageModeAction.setCheckable( true );
-		regionAllModeAction.setCheckable( true );
-		regionModeAction.setChecked( true );
 		binCountWidgetContext = new BinCountWidget( &contextMenuConfigure );
 		binCountActionContext = new QWidgetAction( &contextMenuConfigure );
 		binCountActionContext->setDefaultWidget( binCountWidgetContext );
-		channelRangeWidgetContext = new ChannelRangeWidget( &contextMenuConfigure );
-		channelRangeActionContext = new QWidgetAction( &contextMenuConfigure );
-		channelRangeActionContext->setDefaultWidget( channelRangeWidgetContext );
-		addPlotModeActions( &contextMenuConfigure, binCountActionContext, channelRangeActionContext );
-		connect( channelRangeWidgetContext, SIGNAL(rangeChanged(int,int,bool,bool)), this, SLOT(channelRangeChanged(int,int,bool,bool)));
 		connect( binCountWidgetContext, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
-		connect( &imageModeAction, SIGNAL(triggered(bool)), this, SLOT(imageModeSelected(bool)));
-		connect( &regionModeAction, SIGNAL(triggered(bool)), this, SLOT(regionModeSelected(bool)));
-		connect( &regionAllModeAction, SIGNAL(triggered(bool)), this, SLOT(regionAllModeSelected(bool)));
+
+		if ( !binCountOnly ){
+			QActionGroup* plotControlsGroup = new QActionGroup( this );
+			plotControlsGroup->addAction( &regionModeAction );
+			plotControlsGroup->addAction( &imageModeAction );
+			plotControlsGroup->addAction( &regionAllModeAction );
+
+			regionModeAction.setCheckable( true );
+			imageModeAction.setCheckable( true );
+			regionAllModeAction.setCheckable( true );
+			regionModeAction.setChecked( true );
+			connect( &imageModeAction, SIGNAL(triggered(bool)), this, SLOT(imageModeSelected(bool)));
+					connect( &regionModeAction, SIGNAL(triggered(bool)), this, SLOT(regionModeSelected(bool)));
+					connect( &regionAllModeAction, SIGNAL(triggered(bool)), this, SLOT(regionAllModeSelected(bool)));
+
+			channelRangeWidgetContext = new ChannelRangeWidget( &contextMenuConfigure );
+			channelRangeActionContext = new QWidgetAction( &contextMenuConfigure );
+			channelRangeActionContext->setDefaultWidget( channelRangeWidgetContext );
+			connect( channelRangeWidgetContext, SIGNAL(rangeChanged(int,int,bool,bool)), this, SLOT(channelRangeChanged(int,int,bool,bool)));
+		}
+
+		addPlotModeActions( &contextMenuConfigure, binCountActionContext, channelRangeActionContext, binCountOnly );
 	}
 	plotMode = REGION_MODE;
 }
@@ -342,7 +347,7 @@ void BinPlotWidget::setChannelCount( int count ){
 	}
 }
 
-void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction, QWidgetAction* channelRangeAction ){
+void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction, QWidgetAction* channelRangeAction, bool binCountOnly ){
 
 	if ( binCountAction == NULL ){
 		binCountActionMenu = new QWidgetAction( menu );
@@ -351,7 +356,8 @@ void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* binCountActi
 		connect( binCountWidgetMenu, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
 		binCountAction = binCountActionMenu;
 	}
-	if ( channelRangeAction == NULL ){
+
+	if ( channelRangeAction == NULL && !binCountOnly ){
 		channelRangeActionMenu = new QWidgetAction( menu );
 		channelRangeWidgetMenu = new ChannelRangeWidget( menu );
 		connect( channelRangeWidgetMenu, SIGNAL(rangeChanged(int,int,bool,bool)), this, SLOT(channelRangeChanged(int,int,bool,bool)));
@@ -359,12 +365,14 @@ void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* binCountActi
 		channelRangeAction = channelRangeActionMenu;
 	}
 	menu->addAction( binCountAction );
-	menu->addSeparator();
-	menu->addAction( channelRangeAction );
-	menu->addSeparator();
-	menu->addAction( &imageModeAction );
-	menu->addAction( &regionModeAction );
-	menu->addAction( &regionAllModeAction );
+	if ( !binCountOnly ){
+		menu->addSeparator();
+		menu->addAction( channelRangeAction );
+		menu->addSeparator();
+		menu->addAction( &imageModeAction );
+		menu->addAction( &regionModeAction );
+		menu->addAction( &regionAllModeAction );
+	}
 }
 
 void BinPlotWidget::setPlotMode( int mode ){

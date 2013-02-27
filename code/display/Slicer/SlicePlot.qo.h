@@ -30,14 +30,16 @@
 #include <QMap>
 #include <casa/Arrays/Vector.h>
 #include <display/region/RegionEnums.h>
+#include <display/Slicer/ImageSlice.qo.h>
 
 class QwtPlotCurve;
+
 
 namespace casa {
 
 template <class T> class ImageInterface;
 class ImageAnalysis;
-class ImageSlice;
+
 
 class SlicePlot : public QwtPlot {
 
@@ -51,8 +53,7 @@ public:
 	void updateChannel( int channel );
 
 	//Look and feel
-	void initAxisFont( int axisId, const QString& axisTitle );
-	void resetCurveColors( bool viewerColors, QColor curveColor,
+	void resetCurveColors( bool viewerColors, bool polylineColorUnit,
 			QList<QColor> accumulateCurveColors);
 	void setViewerCurveColor( int regionId, const QString& colorName );
 	void setUseViewerColors( bool viewerColors );
@@ -60,56 +61,72 @@ public:
 	//Setting slice parameters.
 	void setSampleCount( int sampleCount );
 	void setInterpolationMethod( const String& method );
+	void setAccumulateSlices( bool accumulate );
 
-	void clearCurves();
+	void clearCurves(bool keepSelected = false);
 	bool toAscii( const QString& fileName );
+
+	//Statistics
+	void addStatistic( int regionId );
+	void removeStatistics( bool keepSelected);
+	void removeStatistic( int regionId);
+	void setStatisticsLayout( QLayout* layout );
+
 	virtual ~SlicePlot();
 
 	const static QString DISTANCE_AXIS;
 	const static QString POSITION_X_AXIS;
 	const static QString POSITION_Y_AXIS;
+	const static QString UNIT_X_PIXEL;
+	const static QString UNIT_X_ARCSEC;
+	const static QString UNIT_X_RADIAN;
 
 public slots:
-	void updatePolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
+	void updatePolyLine(  int regionId,viewer::region::RegionChanges regionChanges,
 				const QList<double> & worldX, const QList<double> & worldY,
-				const QList<int> &pixelX, const QList<int> & pixelY );
-	void setAccumulateSlices( bool accumulate );
+				const QList<int> &pixelX, const QList<int> & pixelY);
 	void setXAxis( const QString& newAxis );
+	void xAxisUnitsChanged( const QString& units );
+	void segmentMarkerVisibilityChanged( bool visible );
 
 private:
 	SlicePlot( const SlicePlot& other );
 	SlicePlot operator=(const SlicePlot& other );
 	ImageSlice* getSlicerFor( int regionId );
+	SliceStatisticsFactory::AxisXUnits getUnitMode() const;
 	void initPlot();
-	void sliceFinished( int regionId, bool selected = true );
+	void initAxisFont( int axisId, const QString& axisTitle );
+	void sliceFinished( int regionId);
+	QString getAxisLabel() const;
 	void updateSelectedRegionId( int selectedRegionId );
-	void updatePolyLine(  int regionId, const QList<int>& pixelX,
-			const QList<int>& pixelY, bool selected = true );
+	void updatePolyLine(  int regionId, const QList<double>& worldX,
+			const QList<double>& worldY, const QList<int>& pixelX,
+			const QList<int>& pixelY);
 	void deletePolyLine( int regionId );
 
-	void setCurveColor( int regionId );
 	int getColorIndex( int regionId ) const;
+	int assignCurveColors( int initialColorIndex, int regionId );
 	void resetExistingCurveColors();
 
-	QColor sliceCurveColor;
-	QList<QColor> accumulatedSliceCurveColors;
+	QList<QColor> curveColors;
 	ImageInterface<float>* image;
 	ImageAnalysis* imageAnalysis;
 	QMap<int, ImageSlice*> sliceMap;
-
 
 	Vector<Int> coords;
 	bool accumulateSlices;
 	bool fullVersion;
 	bool viewerColors;
+	bool polylineColorUnit;
+	bool segmentMarkers;
 	int sampleCount;
 	int currentRegionId;
 	const int AXIS_FONT_SIZE;
 	String interpolationMethod;
 	QString xAxis;
+	QString xAxisUnits;
 	Vector<Int> axes;
-
-
+	QLayout* statLayout;
 };
 
 } /* namespace casa */

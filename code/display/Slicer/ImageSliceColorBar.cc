@@ -1,4 +1,4 @@
-//# Copyright (C) 2005,2009,2010
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,51 +22,48 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
 
-#include <ios>
-#include <iostream>
-#include <casa/aips.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
+#include "ImageSliceColorBar.h"
+#include <QPainter>
+#include <QDebug>
 
-#include <unistd.h>
-#include <sys/stat.h>
+namespace casa {
 
-#include <guitools/Histogram/HistogramMain.qo.h>
-#include <QApplication>
-#include <casa/namespace.h>
+ImageSliceColorBar::ImageSliceColorBar(QWidget* parent)
+	:QWidget( parent ){
+	// TODO Auto-generated constructor stub
 
-
-int main( int argc, char *argv[] ) {
-	int stat = 0;
-	QApplication app(argc, argv );
-	app.setOrganizationName( "CASA");
-	app.setApplicationName( "Histogram");
-	try {
-		HistogramMain histogramApplication(true,true,true,true,false,NULL);
-		histogramApplication.setPlotMode( 1 );
-		histogramApplication.show();
-
-		stat = app.exec();
-		return stat;
-	}
-	catch (const casa::AipsError& err) {
-		cerr<<"**"<<err.getMesg()<<endl;
-	}
-	catch (...) {
-		cerr<<"**non-AipsError exception**"<<endl;
-	}
-	return stat;
 }
 
+void ImageSliceColorBar::setColors( const QList<QColor>& segmentColors ){
+	colorList.clear();
+	int colorCount = segmentColors.size();
+	for ( int i = 0; i < colorCount; i++ ){
+		colorList.append( segmentColors[i]);
+	}
+}
 
+void ImageSliceColorBar::paintEvent( QPaintEvent* event ){
+	int colorCount = colorList.size();
+	if ( colorCount > 0 ){
+		QSize barSize = size();
+		int rectWidth = barSize.width() / colorCount;
+		int rectHeight = barSize.height();
+		QPainter painter( this );
+		for ( int i = 0; i < colorCount; i++ ){
+			int xLocation = i * rectWidth;
+			QRect rect( xLocation, 0, rectWidth, rectHeight );
+			QBrush brush( colorList[i]);
+			painter.fillRect( rect, brush );
+		}
+	}
+	else {
+		QWidget::paintEvent( event );
+	}
+}
 
+ImageSliceColorBar::~ImageSliceColorBar() {
+	// TODO Auto-generated destructor stub
+}
 
-
-
-
+} /* namespace casa */

@@ -2118,8 +2118,13 @@ void QtProfile::setDisplayYUnits( const QString& unitStr ){
 	else {
 		postConversionWarning( displayUnit );
 	}
-	pixelCanvas->setDisplayYUnits( yUnitPrefix + displayUnit );
-	this->specFitSettingsWidget->setDisplayYUnits( yUnitPrefix + displayUnit );
+
+	QString canvasUnit = yUnitPrefix + displayUnit;
+	if ( displayUnit == ConverterIntensity::FRACTION_OF_PEAK ){
+		canvasUnit = displayUnit;
+	}
+	pixelCanvas->setDisplayYUnits( canvasUnit );
+	specFitSettingsWidget->setDisplayYUnits( canvasUnit );
 }
 
 void QtProfile::setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit ){

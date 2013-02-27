@@ -2380,12 +2380,11 @@ Vector<String> ImageAnalysis::history(const Bool list, const Bool browse) {
 	return t;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::insert(const String& infile, Record& Region,
-		const Vector<double>& locatePixel) {
-
+ImageInterface<Float> * ImageAnalysis::insert(
+	const String& infile, Record& Region,
+	const Vector<double>& locatePixel, Bool verbose
+) {
 	*_log << LogOrigin(className(), __FUNCTION__);
-
 	Bool doRef;
 	if (locatePixel.size() == 0) {
 		doRef = True;
@@ -2394,21 +2393,18 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 		doRef = False;
 	}
 	Int dbg = 0;
-
 	// Open input image
 	ImageInterface<Float>* pInImage = 0;
 	ImageUtilities::openImage(pInImage, infile, *_log);
 	std::auto_ptr<ImageInterface<Float> > inImage(pInImage);
-
 	// Create region and subImage for input image
 	std::auto_ptr<const ImageRegion> pRegion(
 		ImageRegion::fromRecord(
-			_log.get(), pInImage->coordinates(),
+			verbose ? _log.get() : 0, pInImage->coordinates(),
 			pInImage->shape(), Region
 		)
 	);
 	SubImage<Float> inSub(*pInImage, *pRegion);
-
 	// Generate output pixel location
 	const IPosition inShape = inSub.shape();
 	const IPosition outShape = _image->shape();
@@ -2430,17 +2426,15 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 			}
 		}
 	}
-
 	// Insert
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
-	ir.insert(*_image, outPix, inSub);
+	std::auto_ptr<ImageInterface<Float> > clone(_image->cloneII());
+	ir.insert(*clone, outPix, inSub);
 
 	// Make sure hist and stats are redone
-	deleteHistAndStats();
-
-	return _image.get();
-
+	// deleteHistAndStats();
+	return clone.release();
 }
 
 
@@ -4908,7 +4902,7 @@ ImageInterface<Float>* ImageAnalysis::subimage(
 			SubImageFactory<Float>::createSubImage(
 				*_image,
 				*(ImageRegion::tweakedRegionRecord(&Region)),
-				mask, _log.get(), True, axesSpecifier, extendMask
+				mask, list ? _log.get() : 0, True, axesSpecifier, extendMask
 			)
 		)
 	);

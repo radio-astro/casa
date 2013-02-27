@@ -1,4 +1,4 @@
-//# Copyright (C) 2005,2009,2010
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,51 +22,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
-
-#include <ios>
-#include <iostream>
-#include <casa/aips.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include <unistd.h>
-#include <sys/stat.h>
-
-#include <guitools/Histogram/HistogramMain.qo.h>
-#include <QApplication>
-#include <casa/namespace.h>
 
 
-int main( int argc, char *argv[] ) {
-	int stat = 0;
-	QApplication app(argc, argv );
-	app.setOrganizationName( "CASA");
-	app.setApplicationName( "Histogram");
-	try {
-		HistogramMain histogramApplication(true,true,true,true,false,NULL);
-		histogramApplication.setPlotMode( 1 );
-		histogramApplication.show();
+#ifndef SLICESTATISTICSPOSITION_H_
+#define SLICESTATISTICSPOSITION_H_
 
-		stat = app.exec();
-		return stat;
-	}
-	catch (const casa::AipsError& err) {
-		cerr<<"**"<<err.getMesg()<<endl;
-	}
-	catch (...) {
-		cerr<<"**non-AipsError exception**"<<endl;
-	}
-	return stat;
-}
+#include <display/Slicer/SliceStatistics.h>
 
+namespace casa {
 
+class SliceStatisticsPosition : public SliceStatistics {
+public:
+	SliceStatisticsPosition(SliceStatisticsFactory::AxisXUnits units);
+	virtual double getLength(std::pair<double,double> worldStart,
+				std::pair<double,double> worldEnd,
+				std::pair<int,int> pixelStart,
+				std::pair<int,int> pixelEnd ) const;
+	virtual double getLength( double value1World, double value2World,
+				double value1Pixel, double value2Pixel ) const ;
+	virtual QString getLengthLabel() const;
+	void setXPosition( bool xPosition );
+	virtual QVector<double> interpolate( double start, double end,
+				const QVector<double>& values ) const;
+	virtual ~SliceStatisticsPosition();
+private:
+	bool xPosition;
+};
 
-
-
-
-
+} /* namespace casa */
+#endif /* SLICESTATISTICSPOSITION_H_ */

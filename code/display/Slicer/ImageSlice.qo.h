@@ -23,53 +23,94 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef IMAGE_SLICE_H_
-#define IMAGE_SLICE_H_
+#ifndef IMAGE_SLICE_QO_H_
+#define IMAGE_SLICE_QO_H_
 
+#include <display/Slicer/ImageSlice.ui.h>
+#include <display/Slicer/SliceStatisticsFactory.h>
+#include <display/Slicer/SliceWorker.h>
 #include <casa/Arrays/Vector.h>
+#include <QtGui/QFrame>
 #include <QColor>
 #include <QString>
 #include <QList>
 #include <QTextStream>
 
 class QwtPlotCurve;
+class QwtPlotMarker;
 class QwtPlot;
 
 namespace casa {
 
 class ImageAnalysis;
-class SliceWorker;
+class SliceSegment;
+class ImageSliceColorBar;
 
-class ImageSlice {
+/**
+ * Represents a slice cut of an image.  The slice cut may be
+ * a polygonal chain or a single line segment.
+ */
+
+class ImageSlice : public QFrame {
+
+	Q_OBJECT
 
 public:
-	ImageSlice( int id );
+	ImageSlice( int id, QWidget* parent=NULL );
+	QColor getCurveColor( int index) const;
+	int getColorCount() const;
+	void setShowCorners( bool show );
 	void setSampleCount( int count );
 	void setAxes( const Vector<Int>& axes );
 	void setCoords( const Vector<Int>& coords );
-	void setCurveColor( QColor color );
+	void setCurveColor( QList<QColor> colors );
 	void setInterpolationMethod( const String& method );
 	void setImageAnalysis( ImageAnalysis* analysis );
 	void setUseViewerColors( bool useViewerColors );
+	void setPolylineColorUnit( bool polyline );
 	void setViewerCurveColor( const QString& colorName );
-	void updatePolyLine(  const QList<int> &pixelX, const QList<int> & pixelY );
+	void updatePolyLine(  const QList<int> &pixelX, const QList<int> & pixelY,
+			const QList<double>& worldX, const QList<double>& worldY );
 	void toAscii( QTextStream& );
 	void clearCurve();
 	void addPlotCurve( QwtPlot* plot);
+
 	virtual ~ImageSlice();
-	enum AxisXChoice {DISTANCE,X_POSITION, Y_POSITION};
-	void setAxisXChoice( AxisXChoice choice );
+
+	//X-Axis
+	void setAxisXChoice( SliceStatisticsFactory::AxisXChoice choice );
+	void setXUnits( SliceStatisticsFactory::AxisXUnits unitMode );
+
+
+private slots:
+	void minimizeDisplay();
+	void maximizeDisplay();
+
 
 private:
 	void resetPlotCurve();
-	QColor getCurveColor() const;
-	AxisXChoice xAxisChoice;
+	void updateSliceStatistics();
+	void clearCorners();
+	void addCorner( double xValue, double yValue, QwtPlot* plot );
+	void addSegment( SliceSegment* segment );
+	void removeSegment( SliceSegment* segment );
+	void resetSegmentColors();
+	void runSliceWorker();
+	SliceStatisticsFactory::AxisXChoice xAxisChoice;
+
 	ImageSlice( const ImageSlice& other );
 	ImageSlice operator=( const ImageSlice& other );
+
 	bool useViewerColors;
+	bool showCorners;
+	bool polylineUnit;
 	QColor viewerColor;
+	QList<QColor> segmentColors;
 	SliceWorker* sliceWorker;
-	QwtPlotCurve* plotCurve;
+	QList<SliceSegment*> segments;
+	QList<QwtPlotMarker*> segmentCorners;
+	ImageSliceColorBar* colorBar;
+	Ui::ImageSliceClass ui;
 };
 
 } /* namespace casa */

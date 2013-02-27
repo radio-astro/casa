@@ -59,7 +59,7 @@ public:
      * 		images, a selected region, or multiple regions.
      */
     HistogramMain(bool showFileLoader, bool fitControls, bool rangeControls,
-    		bool plotModeControls, QWidget *parent = 0);
+    		bool plotModeControls, bool controlBinCountOnly, QWidget *parent = 0);
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     std::pair<double,double> getRange() const;

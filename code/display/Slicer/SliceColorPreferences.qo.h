@@ -38,7 +38,7 @@ class SliceColorPreferences : public QDialog
 public:
     SliceColorPreferences(QWidget *parent = 0);
     bool isViewerColors() const;
-    QColor getSliceColor() const;
+    bool isPolylineUnit() const;
     QList<QColor> getAccumulatedSliceColors() const;
     ~SliceColorPreferences();
 
@@ -47,7 +47,6 @@ signals:
 
 private slots:
 	void resetColors();
-	void selectSliceColor();
 	void addColorAccumulated();
 	void removeColorAccumulated();
 	void colorsAccepted();
@@ -59,21 +58,20 @@ private:
 	void populateAccumulateColors( );
 	void showColorDialog( QPushButton* source );
     void initializeUserColors();
-    QColor getButtonColor( QPushButton* button ) const;
-    void setButtonColor( QPushButton* button, QColor color );
-    QString readCustomColor( QSettings& settings,
-    		const QString& identifier, const QString& defaultColor);
     void readCustomColor( QSettings& settings, const QString& countKey,
     		const QString& baseLookup, QList<QString>& colorList );
     void addColorListItem( QListWidget* list, const QColor& listColor );
     static const QString APPLICATION;
     static const QString ORGANIZATION;
-    static const QString SLICE_COLOR;
     static const QString ACCUMULATED_COLOR;
     static const QString ACCUMULATED_COLOR_COUNT;
     static const QString VIEWER_COLORS;
+    static const QString POLYLINE_UNIT;
     bool viewerColors;
-    QColor sliceColor;
+    bool polylineUnit;
+    const QString POLYGONAL_CHAIN;
+    const QString LINE_SEGMENT;
+    QStringList colorUnits;
     QList<QString> accumulateColorList;
     Ui::SliceColorPreferencesClass ui;
 };

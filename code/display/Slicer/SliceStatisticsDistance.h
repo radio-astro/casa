@@ -1,4 +1,4 @@
-//# Copyright (C) 2005,2009,2010
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,51 +22,34 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
-
-#include <ios>
-#include <iostream>
-#include <casa/aips.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include <unistd.h>
-#include <sys/stat.h>
-
-#include <guitools/Histogram/HistogramMain.qo.h>
-#include <QApplication>
-#include <casa/namespace.h>
 
 
-int main( int argc, char *argv[] ) {
-	int stat = 0;
-	QApplication app(argc, argv );
-	app.setOrganizationName( "CASA");
-	app.setApplicationName( "Histogram");
-	try {
-		HistogramMain histogramApplication(true,true,true,true,false,NULL);
-		histogramApplication.setPlotMode( 1 );
-		histogramApplication.show();
+#ifndef SLICESTATISTICSDISTANCE_H_
+#define SLICESTATISTICSDISTANCE_H_
 
-		stat = app.exec();
-		return stat;
-	}
-	catch (const casa::AipsError& err) {
-		cerr<<"**"<<err.getMesg()<<endl;
-	}
-	catch (...) {
-		cerr<<"**non-AipsError exception**"<<endl;
-	}
-	return stat;
-}
+#include <display/Slicer/SliceStatistics.h>
 
+namespace casa {
 
+class SliceStatisticsDistance : public SliceStatistics{
+public:
+	SliceStatisticsDistance(SliceStatisticsFactory::AxisXUnits units );
+	virtual double getLength(std::pair<double,double> worldStart,
+			std::pair<double,double> worldEnd,
+			std::pair<int,int> pixelStart,
+			std::pair<int,int> pixelEnd) const;
+	virtual double getLength( double side1World, double side2World,
+				double side1Pixel, double side2Pixel ) const;
+	virtual QString getLengthLabel() const;
+	virtual QVector<double> interpolate( double start, double end,
+				const QVector<double>& values ) const;
+	virtual QVector<double> adjustStart( double newStart, const QVector<double>& values ) const;
+	virtual ~SliceStatisticsDistance();
 
+private:
+	double getHypotenuse( double side1, double side2 ) const ;
+	double getHypotenuse( double x1, double x2, double y1, double y2 ) const;
+};
 
-
-
-
+} /* namespace casa */
+#endif /* SLICESTATISTICSDISTANCE_H_ */

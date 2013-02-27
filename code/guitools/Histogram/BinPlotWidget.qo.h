@@ -82,7 +82,8 @@ public:
      * plotModeControls: true allows the user to specify whether a histogram should be
      * 		created for an image, a region, or multiple regions.
      */
-    BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls, QWidget* parent = 0 );
+    BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
+    		bool controlBinCountOnly, QWidget* parent = 0 );
     enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( ImageRegion* imageRegion, int id );
@@ -106,7 +107,7 @@ public:
     void addZoomActions( bool rangeControl, QMenu* zoomMenu );
     void addDisplayActions( QMenu* menu );
     void addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction=NULL,
-    		QWidgetAction* channelRangeAction = NULL );
+    		QWidgetAction* channelRangeAction = NULL, bool binCountOnly = false );
     void setPlotMode( int mode );
     bool isEmpty() const;
     ~BinPlotWidget();
@@ -173,7 +174,7 @@ private:
 	void initializeFitWidget( bool fitControls );
 	void initializeDisplayActions();
 	void initializeZoomControls( bool rangeControls );
-	void initializePlotModeControls( bool enable );
+	void initializePlotModeControls( bool enable, bool binCountOnly = false );
 	void initializeGaussianFitMarker();
 	void initializePoissonFitMarker();
 	void initializeRangeControls( bool rangeControls);

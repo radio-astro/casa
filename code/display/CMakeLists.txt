@@ -117,6 +117,8 @@ qt4_wrap_cpp( outfiles_qoh
   region/QtRegionStats.qo.h
   Clean/CleanGui.qo.h
   Slicer/SlicePlot.qo.h
+  Slicer/ImageSlice.qo.h
+  Slicer/SliceSegment.qo.h
   Slicer/SlicerMainWindow.qo.h
   Slicer/SliceColorPreferences.qo.h
   )
@@ -184,6 +186,8 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtMsRegionStats.ui
   region/SlicerStats.ui
   Slicer/SlicerMainWindow.ui
+  Slicer/ImageSlice.ui
+  Slicer/SliceSegment.ui
   Slicer/SliceColorPreferences.ui
   Clean/CleanGui.ui
   Clean/ConfirmStop.ui
@@ -515,6 +519,13 @@ casa_add_library( display
   Slicer/ImageSlice.cc
   Slicer/SlicePlot.cc
   Slicer/SliceAxisDraw.cc
+  Slicer/ImageSlice.cc
+  Slicer/ImageSliceColorBar.cc
+  Slicer/SliceSegment.cc
+  Slicer/SliceStatistics.cc
+  Slicer/SliceStatisticsFactory.cc
+  Slicer/SliceStatisticsDistance.cc
+  Slicer/SliceStatisticsPosition.cc
   Utilities/DisplayOptions.cc
   Utilities/DlHandle.cc
   Utilities/DlTarget.cc

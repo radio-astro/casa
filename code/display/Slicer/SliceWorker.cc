@@ -25,22 +25,33 @@
 
 #include "SliceWorker.h"
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <display/Slicer/SliceStatistics.h>
 #include <casa/Containers/Record.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <QDebug>
+#include <QtCore/qmath.h>
 namespace casa {
 
-SliceWorker::SliceWorker( int identifier ):sliceResult( NULL ) {
+SliceWorker::SliceWorker( int identifier ){
 	id = identifier;
 	sampleCount = 0;
 	method="";
 }
 
+int SliceWorker::getSegmentCount() const {
+	return verticesX.size() - 1;
+}
+
+
+
 void SliceWorker::setImageAnalysis( ImageAnalysis* analysis ){
 	imageAnalysis = analysis;
 }
 
-void SliceWorker::setVertices( const QList<int>& xValues, const QList<int>& yValues ){
+void SliceWorker::setVertices( const QList<int>& xValues,
+		const QList<int>& yValues, const QList<double>& xValuesWorld,
+		const QList<double>& yValuesWorld ){
+
 	int xCount = xValues.size();
 	int yCount = yValues.size();
 	Assert( xCount == yCount );
@@ -50,11 +61,18 @@ void SliceWorker::setVertices( const QList<int>& xValues, const QList<int>& yVal
 		verticesX[i] = xValues[i];
 		verticesY[i] = yValues[i];
 	}
+
+	int xCountWorld = xValuesWorld.size();
+	int yCountWorld = yValuesWorld.size();
+	Assert( xCountWorld == yCountWorld );
+	verticesXWorld.resize( xCountWorld );
+	verticesYWorld.resize( yCountWorld );
+	for ( int i = 0; i < xCount; i++ ){
+		verticesXWorld[i] = xValuesWorld[i];
+		verticesYWorld[i] = yValuesWorld[i];
+	}
 }
 
-void SliceWorker::updatePolyline(){
-
-}
 
 void SliceWorker::setAxes( const Vector<Int>& imageAxes ){
 	int axesCount = imageAxes.size();
@@ -75,25 +93,45 @@ void SliceWorker::setCoords( const Vector<Int>& imageCoordinates ){
 void SliceWorker::setSampleCount( int count ){
 	sampleCount = count;
 }
+
+
 void SliceWorker::setMethod( const String& method ){
 	this->method = method;
 }
 
-void SliceWorker::run(){
+
+void SliceWorker::compute(){
 	Assert( imageAnalysis != NULL );
+	clearResults();
+
+	int resultCount = getSegmentCount();
+	for ( int i = 0; i < resultCount; i++ ){
+		Vector<double> xSegmentValues( 2 );
+		Vector<double> ySegmentValues( 2 );
+		xSegmentValues[0] = verticesX[i];
+		ySegmentValues[0] = verticesY[i];
+		xSegmentValues[1] = verticesX[i+1];
+		ySegmentValues[1] = verticesY[i+1];
+		computeSlice( xSegmentValues, ySegmentValues );
+	}
+}
+
+void SliceWorker::computeSlice( const Vector<double>& xValues, const Vector<double>& yValues ){
+	Record* sliceResult = NULL;
 	if ( method.length() > 0 ){
-		sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
-			axes, coords, sampleCount, method);
+		sliceResult = imageAnalysis-> getslice(xValues, yValues,
+				axes, coords, sampleCount, method);
 	}
 	else if ( sampleCount > 0 ){
-		sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
-					axes, coords, sampleCount );
+		sliceResult = imageAnalysis-> getslice(xValues, yValues,
+						axes, coords, sampleCount );
 	}
 	else {
 		//Use all default arguments
-		sliceResult = imageAnalysis-> getslice(verticesX, verticesY,
-							axes, coords );
+		sliceResult = imageAnalysis-> getslice(xValues, yValues,
+								axes, coords );
 	}
+	sliceResults.append( sliceResult );
 }
 
 QVector<double> SliceWorker::getFromArray( const Array<float>& source ) const {
@@ -106,62 +144,106 @@ QVector<double> SliceWorker::getFromArray( const Array<float>& source ) const {
 	return result;
 }
 
-QVector<double> SliceWorker::getDistances() const {
+
+
+
+QVector<double> SliceWorker::getValues( int index, const QVector<double>& pixels ) const {
+	SliceStatistics* statistics = SliceStatisticsFactory::getInstance()->getStatistics();
+	int nextIndex = index+1;
+	double start = statistics->getLength( verticesXWorld[index], verticesYWorld[index],
+					verticesX[index], verticesY[index]);
+	double end   = statistics->getLength( verticesXWorld[nextIndex], verticesYWorld[nextIndex],
+					verticesX[nextIndex], verticesY[nextIndex]);
+	QVector<double> values = statistics->interpolate( start, end, pixels );
+
+	//In the case of distance in pixels, we want the distance to increase along
+	//the individual line segments rather than starting over with each line segment.
+	if ( index > 0 ){
+		double prevStart = statistics->getLength( verticesXWorld[index-1],
+				verticesYWorld[index-1], verticesX[index-1], verticesY[index-1]);
+		double prevIncrement = qAbs(prevStart - start);
+		values = statistics->adjustStart( prevIncrement, values );
+	}
+	delete statistics;
+	return values;
+}
+
+QVector<double> SliceWorker::getDistances( int index ) const {
 	QVector<double> distances;
-	if ( sliceResult != NULL ){
-		Array<float> distanceArray = sliceResult->asArrayFloat("distance");
-		distances = getFromArray( distanceArray );
+	if ( sliceResults.size() > index && index >= 0 ){
+		Array<float> distanceArray = sliceResults[index]->asArrayFloat("distance");
+		QVector<double> distancePixels= getFromArray( distanceArray );
+		distances = getValues( index, distancePixels );
 	}
 	return distances;
 }
 
-QVector<double> SliceWorker::getXPositions() const {
+QVector<double> SliceWorker::getXPositions( int index ) const {
 	QVector<double> xPositions;
-	if ( sliceResult != NULL ){
-		Array<float> xPositionArray = sliceResult->asArrayFloat("xpos");
-		xPositions= getFromArray( xPositionArray );
+	if ( sliceResults.size() > index && index >= 0 ){
+		Array<float> xPositionArray = sliceResults[index]->asArrayFloat("xpos");
+		QVector<double> xPositionPixels= getFromArray( xPositionArray );
+		xPositions = getValues( index, xPositionPixels );
 	}
 	return xPositions;
 }
 
-QVector<double> SliceWorker::getYPositions() const {
+QVector<double> SliceWorker::getYPositions( int index ) const {
 	QVector<double> yPositions;
-	if ( sliceResult != NULL ){
-		Array<float> yPositionArray = sliceResult->asArrayFloat("ypos");
-		yPositions= getFromArray( yPositionArray );
+	if ( sliceResults.size() > index && index >= 0 ){
+		Array<float> yPositionArray = sliceResults[index]->asArrayFloat("ypos");
+		QVector<double> yPositionPixels= getFromArray( yPositionArray );
+		yPositions = getValues( index, yPositionPixels );
 	}
 	return yPositions;
 }
 
-QVector<double> SliceWorker::getPixels() const {
+QVector<double> SliceWorker::getPixels( int index ) const {
 	QVector<double> pixels;
-	if ( sliceResult != NULL ){
-		Array<float> pixelArray = sliceResult->asArrayFloat("pixel");
+	if ( sliceResults.size() > index && index >= 0 ){
+		Array<float> pixelArray = sliceResults[index]->asArrayFloat("pixel");
 		pixels = getFromArray( pixelArray );
 	}
 	return pixels;
 }
 
 void SliceWorker::toAscii( QTextStream& stream ) const {
-	QVector<double> distances = getDistances();
-	QVector<double> xPositions = getXPositions();
-	QVector<double> yPositions = getYPositions();
-	QVector<double> pixels = getPixels();
-	int count = distances.size();
-	if ( count > 0 ){
+	if ( !sliceResults.isEmpty()){
 		const QString END_OF_LINE( "\n");
 		stream << "Region: "<< QString::number(id)<< END_OF_LINE;
 		stream << "Distance"<<"X Position"<<"Y Position"<<"Pixel"<<END_OF_LINE;
-		for ( int i = 0; i < count; i++ ){
-			stream << QString::number( distances[i]) << QString::number( xPositions[i])<<
-					QString::number(yPositions[i]) << QString::number(pixels[i]) << END_OF_LINE;
+		int resultCount = sliceResults.size();
+		for ( int i = 0; i < resultCount; i++ ){
+
+			QVector<double> distances = getDistances( i );
+			QVector<double> xPositions = getXPositions( i );
+			QVector<double> yPositions = getYPositions( i );
+			QVector<double> pixels = getPixels( i );
+			int count = distances.size();
+			if ( count > 0 ){
+				stream << END_OF_LINE <<"# Segment: "<< (i+1)<<END_OF_LINE;
+				for ( int j = 0; j < count; j++ ){
+					stream << QString::number( distances[j]) <<
+							QString::number( xPositions[j])<<
+							QString::number(yPositions[j]) <<
+							QString::number(pixels[j]) <<
+							END_OF_LINE;
+				}
+			}
 		}
 		stream << END_OF_LINE;
 	}
 }
 
+void SliceWorker::clearResults(){
+	while( !sliceResults.isEmpty()){
+		Record* result = sliceResults.takeLast();
+		delete result;
+	}
+}
+
 SliceWorker::~SliceWorker() {
-	// TODO Auto-generated destructor stub
+	clearResults();
 }
 
 } /* namespace casa */
