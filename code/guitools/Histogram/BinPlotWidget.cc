@@ -57,7 +57,8 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
     image( NULL ), binPlot( this ),
     NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), IMAGE_ID(-1),
-	toolTipPicker(NULL), contextMenuZoom(this),
+	dragLine( NULL ), rectMarker( NULL ),
+    toolTipPicker(NULL), contextMenuZoom(this),
     zoomActionContext(NULL), zoomWidgetContext( NULL ),
     zoomActionMenu(NULL), zoomWidgetMenu( NULL ),
     lambdaAction("Lambda",this), centerPeakAction( "(Center,Peak)",this),
@@ -89,7 +90,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 	initializeDisplayActions();
 	initializeFitWidget( fitControls );
 	initializeRangeControls( rangeControls );
-	initializeZoomControls( rangeControls );
+	initializeZoomControls( true );
 	initializePlotModeControls( plotModeControls, controlBinCountOnly );
 
 	displayPlotTitle = false;
@@ -488,20 +489,20 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 //-------------------------------------------------------------------------------
 
 void BinPlotWidget::initializeRangeControls( bool enable ){
-	//This is what draws the final rectangle.
-	rectMarker = new RangePicker();
-	rectMarker->setHeightSource( this );
-	rectMarker->attach( &binPlot );
-
-	//This is what draws the rectangle while it is being dragged.
-	dragLine = new QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
-					QwtPlotPicker::PointSelection | QwtPlotPicker::DragSelection,
-					QwtPlotPicker::VLineRubberBand, QwtPlotPicker::ActiveOnly, binPlot.canvas() );
-	connect( dragLine, SIGNAL(selected(const QwtDoublePoint &)), this, SLOT(lineSelected()));
-	connect( dragLine, SIGNAL(moved(const QPoint&)), this, SLOT(lineMoved( const QPoint&)));
-
 	//Put the range controls in
 	if ( enable ){
+		//This is what draws the final rectangle.
+		rectMarker = new RangePicker();
+		rectMarker->setHeightSource( this );
+		rectMarker->attach( &binPlot );
+
+		//This is what draws the rectangle while it is being dragged.
+		dragLine = new QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
+					QwtPlotPicker::PointSelection | QwtPlotPicker::DragSelection,
+					QwtPlotPicker::VLineRubberBand, QwtPlotPicker::ActiveOnly, binPlot.canvas() );
+		connect( dragLine, SIGNAL(selected(const QwtDoublePoint &)), this, SLOT(lineSelected()));
+		connect( dragLine, SIGNAL(moved(const QPoint&)), this, SLOT(lineMoved( const QPoint&)));
+
 		QHBoxLayout* layout = new QHBoxLayout();
 		layout->setContentsMargins(1,1,1,1);
 		rangeControlWidget = new RangeControlsWidget( this );
@@ -1269,11 +1270,8 @@ void BinPlotWidget::minMaxChanged(){
 		resetRectangleMarker();
 		rectMarker->show();
 		binPlot.replot();
+		emit rangeChanged();
 	}
-	else {
-		qWarning() << "Range tools need to be enabled for minMaxChanged";
-	}
-	emit rangeChanged();
 }
 
 void BinPlotWidget::clearRange(){
