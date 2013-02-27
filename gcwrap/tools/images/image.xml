@@ -5505,8 +5505,7 @@ give the absolute pixel in the output (this) image of the bottom left
 corner of the input (sub)image.  For those values that are not given,
 the input image is symmetrically placed in the output image. 
 
-The current image referenced with the image tool is overwritten with
-the inserted image.
+A new image tool referencing the resulting image is returned.
 
 </description>
 <example>
@@ -5518,10 +5517,8 @@ ia.maketestimage('myfile.insert',overwrite=true)
 ia.close()
 ia.fromshape(shape=[200,200])
 im1 = ia.insert(infile='myfile.insert')       # Align by reference pixel
-ia.set(0.0)
 im2 = ia.newimagefromfile('myfile.insert')
 im3 = ia.insert(infile=im2.name(), locate=[]) # Align centrally
-ia.set(0.0)
 # This time align axis 0 as given and axis 1 centrally
 im4 =ia.insert(infile='myfile.insert', locate=[20])
 ia.close()                                    # close default tool and
