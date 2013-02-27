@@ -1,0 +1,33 @@
+<%!
+import pipeline.domain.measures as measures
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">Antenna Setup Details</%block>
+
+<script>
+$(document).ready(function(){
+	$("a.grouped_elements").fancybox();
+});
+</script>
+
+<h1>Antenna Setup Details</h1>
+
+<h2>Antenna Positions per Measurement Set</h2>	
+<div class="gallery">
+	<ul>
+		% for (ms, plot) in plot_ants:
+		<li>
+		<a class="grouped_elements" rel="plotant" href="session${ms.session}/${ms.basename}/plotants.png">
+			<img src="session${ms.session}/${ms.basename}/plotants.png"
+				 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
+				 alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}" />
+			<p>${ms.basename}</p>
+		</a>
+		</li>
+		% endfor
+	</ul>
+</div>
+
+<%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>

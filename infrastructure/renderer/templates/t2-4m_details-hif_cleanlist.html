@@ -1,0 +1,134 @@
+<%!
+import os.path
+import pydoc
+import sys
+
+import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+<%
+try:
+    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (
+      result[0].stage_number))
+    plots_dir = stage_dir
+    if (not os.path.exists(plots_dir)):
+        os.mkdir(plots_dir)
+
+    clean_results = result[0].results
+
+    plots = []
+    for r in clean_results:
+        if r.empty():
+            continue
+
+        # psf and flux maps
+        plots.append(displays.SkyDisplay().plot(pcontext, r.psf,
+          reportdir=plots_dir))
+        plots.append(displays.SkyDisplay().plot(pcontext, r.flux,
+          reportdir=plots_dir))
+
+        # image iterations
+        iterations = r.iterations.keys()
+        iterations.sort()
+        for iter in iterations:
+            # image for this iteration
+            plots.append(displays.SkyDisplay().plot(pcontext,
+              r.iterations[iter]['image'], reportdir=plots_dir))
+
+            plots.append(displays.SkyDisplay().plot(pcontext,
+              r.iterations[iter]['residual'], reportdir=plots_dir))
+
+            if iter > 0:
+                plots.append(displays.SkyDisplay().plot(pcontext,
+                  r.iterations[iter]['cleanmask'], reportdir=plots_dir))
+
+    # Group the Plots by axes and plot types; each logical grouping will
+    # be contained in a PlotGroup
+    plot_groups = logger.PlotGroup.create_plot_groups(plots)
+    # Write the thumbnail pages for each plot grouping to disk
+    for plot_group in plot_groups:
+        renderer = hr.PlotGroupRenderer(pcontext, result[0], plot_group)
+        plot_group.filename = renderer.filename
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+
+except Exception, e:
+    print 'hif_cleanlist html template exception:', e
+%>
+<ul>
+       <li>Plots:</li>
+            <ul>
+            % if plot_groups:
+                % for plot_group in plot_groups:
+                    <li><a href=${plot_group.filename}>${plot_group.title}</a></li>
+                % endfor
+            %endif
+            </ul>
+
+## Write help information to a file and link to it. Probably a better
+## way of writing the file but I can't find it.
+
+<%
+try:
+    r = result[0]
+    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
+    filename = os.path.join(stage_dir, 'taskhelp.txt')
+    f = open(filename, 'w')
+    sys.stdout = f
+    pydoc.help('hif_cleanlist')
+
+except Exception, e:
+    print 'html template exception in help information:', e
+    raise e
+
+finally:
+    sys.stdout = sys.__stdout__
+    f.close()
+%>
+
+       <li>A listing of the 'help' information for this task can be found
+           <a href='taskhelp.txt'>here</a>.
+</ul>
+
+<p><table class="one-column-emphasis" summary="Input parameters">
+	<caption>Input parameters</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		% for k, v in result.inputs.iteritems():
+		<tr>
+		  <td>${str(k)}</th>
+		  <td>${str(v)}</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+
+<p><table class="one-column-emphasis" summary="Timing details">
+	<caption>Timing details</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		<tr>
+		  <td>Start time</th>
+		  <td>${result.timestamps.start}</td>
+		</tr>
+		<tr>
+		  <td>End</th>
+		  <td>${result.timestamps.end}</td>
+		</tr>
+		<tr>
+		  <td>Duration</th>
+		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
+		</tr>
+	</tbody>
+</table>

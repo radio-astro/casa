@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_export_calstate" category="pipeline">
+<shortdescription>Save the pipeline calibration state to disk</shortdescription>
+
+<description>
+hif_export_calstate saves the current pipeline calibration state to disk
+in the form of a set of equivalent applycal calls.
+</description>		
+
+<input>
+    <param type="string" name="filename">
+        <description>Name for saved calibration state</description>
+        <value></value>
+    </param>
+</input>
+
+<example>
+
+hif_export_calstate saves the current pipeline calibration state to disk
+in the form of a set of equivalent applycal calls.
+
+Keyword arguments:
+
+filename -- Name for the saved calibration state.
+
+
+Description
+
+hif_export_calstate saves the current pipeline calibration state to disk
+in the form of a set of equivalent applycal calls.
+
+If filename is not given, hif_export_calstate saves the calibration state to
+disk with a filename based on the pipeline context creation time, using the
+extension '.calstate'
+
+Issues
+
+If run several times in one pipeline session does the automatic export
+file naming scheme, overwrite previous versions?
+
+Example
+
+1. Save the calibration state.
+
+   hif_export_calstate()
+
+2. Save the calibration state in a user supplied file.
+
+   hif_export_calstate(filename='afterbandpass.calstate')
+
+</example>
+</task>
+</casaxml>

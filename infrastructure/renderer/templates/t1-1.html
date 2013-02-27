@@ -1,0 +1,25 @@
+<%inherit file="base.html"/>
+
+<%block name="title">OUS Splash Page</%block>
+
+<h1>OUS Splash Page</h1>
+<ul>
+<li>Project ID, PI</li>
+<li>PPR ID, PL run date, PL version</li>
+<li>Pipeline run commenced ${exec_start} (duration=${exec_duration})</li>
+<li>CASA version ${casa_version} (${casa_revision})
+<li>QA2 Score (% red/yellow/green)</li>
+<li>Antenna arrays: ${array_names}</li>
+<li>Observing dates: ${obs_start} to ${obs_end}</li>
+% if pcontext.logtype == 'GOUS':
+<li>GOUS ID</li>
+<ul>
+	<li>MOUS1 ID</li>
+	<li>MOUS2 ID</li>
+	<li>MOUS3 ID</li>
+</ul>
+% else:
+<li>OUS ID</li>
+<li><a href="#">Download data</a></li>
+% endif
+</ul>

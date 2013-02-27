@@ -1,0 +1,16 @@
+<%!
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">QA2 Summary</%block>
+
+<h1>${self.title()}</h1>
+<ul>
+% for section in qa2adapter.sections.values():
+	<li>${section.description} (<a href="${section.url}">Details</a>)</li>
+	<ul>
+		<li>Score list worst to cutoff, problem description</li>
+	</ul>
+% endfor
+</ul>

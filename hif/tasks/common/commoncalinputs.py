@@ -1,0 +1,238 @@
+from __future__ import absolute_import
+import os
+import types
+
+import pipeline.domain as domain
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.taskreport as taskreport
+
+from pipeline.hif.heuristics import fieldnames as fieldnames
+
+# create the pipeline logger for this module
+LOG = logging.get_logger(__name__)
+
+
+class CommonCalibrationInputs(basetask.StandardInputs,
+                              basetask.OnTheFlyCalibrationMixin):
+    """
+    CommonCalibrationInputs collects together the parameters common to all
+    calibration tasks.
+    """
+
+    @property
+    def antenna(self):
+        if self._antenna is not None:
+            return self._antenna
+        
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('antenna')
+
+        antennas = self.ms.get_antenna(self._antenna)
+        return ','.join([str(a.id) for a in antennas])
+
+    @antenna.setter
+    def antenna(self, value):
+        if value is None:
+            value = ''
+        self._antenna = value
+
+    @property
+    def caltable(self):
+        """
+        Get the caltable argument for these inputs.
+        
+        If set to a table-naming heuristic, this should give a sensible name
+        considering the current CASA task arguments.
+        """ 
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('caltable')
+        
+        if callable(self._caltable):
+            casa_args = self._get_task_args(ignore=('caltable',))
+            return self._caltable(output_dir=self.output_dir,
+                                  stage=self.context.stage,
+                                  **casa_args)
+        return self._caltable
+
+    @property
+    def field(self):
+        if not callable(self._field):
+            return self._field
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('field')
+
+        # this will give something like '0542+3243,0343+242'
+        intent_fields = self._field(self.ms, self.intent)
+
+        # run the answer through a set, just in case there are duplicates
+        fields = set()
+        fields.update(intent_fields.split(','))
+        
+        return ','.join(fields)
+
+    @field.setter
+    def field(self, value):
+        if value is None:
+            value = fieldnames.IntentFieldnames()
+        self._field = value
+
+    @property
+    def minblperant(self):
+        """
+        Get the value of minblperant.
+        
+        Unless minblperant has been manually set, the pipeline default value
+        is returned.
+        """
+        return self._minblperant
+
+    @minblperant.setter
+    def minblperant(self, value):
+        """
+        Set the value of minblperant.
+        
+        Setting the value to None restores the default pipeline value.
+        """
+        if value is None:
+            value = 2
+        self._minblperant = value
+
+    @property
+    def refant(self):
+        """
+        Get the reference antenna.
+
+        refant is normally found by inspecting the context and returning the
+        best reference antenna as calculated by a prior 'select reference
+        antenna' task. However, if refant has been manually overridden, that
+        manually specified value is returned.
+    
+        If a refant task has not been executed and a manual override value is
+        not given, None is returned. 
+        """
+        # if refant was overridden, return the manually specified value
+        if self._refant is not None:
+            return self._refant
+
+        # refant is ms-dependent, so if this inputs is handling multiple
+        # measurement sets, return a list of refants instead.
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('refant')
+
+        # we cannot find the context value without the measurement set
+        if not self.ms:
+            return None
+
+        # get the reference antenna for this measurement set        
+        ant = self.ms.reference_antenna
+        if type(ant) is types.ListType:
+            ant = ant[0]
+
+        # return the antenna name/id if this is an Antenna domain object 
+        if isinstance(ant, domain.Antenna):
+            return getattr(ant, 'name', ant.id)
+
+        # otherwise return whatever we found. We assume the calling function
+        # knows how to handle an object of this type.
+        return ant
+
+    @refant.setter
+    def refant(self, value):
+        """
+        Set the value of refant.
+        
+        Setting the value to None lets the current context value take
+        precedence.
+        """
+        self._refant = value
+        
+    @property
+    def spw(self):
+        if self._spw is not None:
+            return self._spw
+        
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('spw')
+
+        science_spws = self.ms.get_spectral_windows(self._spw, with_channels=True)
+        return ','.join([str(spw.id) for spw in science_spws])
+
+    @spw.setter
+    def spw(self, value):
+        self._spw = value
+        
+    @property
+    def to_field(self):
+        if not callable(self._to_field):
+            return self._to_field
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('to_field')
+
+        # this will give something like '0542+3243,0343+242'
+        intent_fields = self._to_field(self.ms, self.to_intent)
+
+        # run the answer through a set, just in case there are duplicates
+        fields = set()
+        fields.update(intent_fields.split(','))
+        
+        return ','.join(fields)
+
+    @to_field.setter
+    def to_field(self, value):
+        if value is None:
+            value = fieldnames.IntentFieldnames()
+        self._to_field = value
+
+    @property
+    def to_intent(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('to_intent')
+        
+        if not isinstance(self.vis, list) and isinstance(self._to_intent, list):
+            idx = self._my_vislist.index(self.vis)
+            return self._to_intent[idx]
+
+        if type(self.vis) is types.StringType and type(self._to_intent) is types.StringType:
+            return self._to_intent
+        
+        # current default - return all intents
+        return ','.join(self.ms.intents)
+    
+    @to_intent.setter
+    def to_intent(self, value):
+        if isinstance(value, list):
+            value = [str(v).replace('*', '') for v in value]
+        if type(value) is types.StringType:    
+            value = str(value).replace('*', '')
+        self._to_intent = value
+
+
+class NullReportInputs(taskreport.TaskReportInputs):
+    def __init__(self, context, task, description='', stage_name=None, 
+                 plot=True):
+        if stage_name is None:
+            stage_name = task.__class__.__name__
+            if hasattr(task.inputs, 'vis'):
+                i = task.inputs.vis
+                if type(i) is types.StringType:
+                    stage_name += ' ({0})'.format(os.path.basename(task.inputs.vis))
+        
+        super(NullReportInputs, self).__init__(
+            context, task, description, stage_name, plot)
+
+        self.display = taskreport.NullDisplay(context)
+
+
+class NullReport(taskreport.TaskReport):
+    Inputs = NullReportInputs
+    
+    def createGeneralHTMLDescription(self, stageName):
+        return ''
+    
+    def createDetailedHTMLDescription(self, stageName, **kw):
+        description = 'TBD'
+
+        return description

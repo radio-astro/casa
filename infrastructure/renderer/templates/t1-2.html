@@ -1,0 +1,33 @@
+<%!
+import pipeline.domain.measures as measures
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">Observation Summary</%block>
+
+<h1>Spatial Setup</h1>
+<ul>
+<li>Science targets: ${science_sources}</li>
+<li>Calibrators: ${calibrators}</li>
+<li><a href='t2-2-1.html'>Details</a></li>
+</ul>
+
+<h1>Spectral setup</h1>
+<ul>
+<li>Science observation bands: ${science_bands}</li>
+<li><a href='t2-2-2.html'>Details</a></li>
+</ul>
+
+<h1>Antenna setup</h1>
+<ul>
+<li>min/max baseline</li>
+<li><a href='t2-2-3.html'>Details</a></li>
+</ul>
+
+<h1>Sky setup</h1>
+<ul>
+<li>min/max elevation</li>
+<li><a href='t2-2-4.html'>Details</a></li>
+</ul>
+
+<a href="t2-1.html">Details vs. ASDM</a>

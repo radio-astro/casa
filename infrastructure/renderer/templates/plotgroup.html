@@ -1,0 +1,48 @@
+<%!
+rsc_path = "../"
+css_file = "plotgroup.css"
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} ${plot_group.title} plots</%block>
+
+<script src="${self.attr.rsc_path}resources/plotgroup.js"></script>
+
+<h1>${plot_group.title} plots</h1>
+
+<input type="button" name="clear" id="clearbutton" value="Clear All Filters">
+<input type="button" name="back" value="Back" onClick="javascript:history.back();">
+
+<div id="filter_selector">
+	<ul>
+		% for selectors in plot_group.selectors:
+			<li class="selectorHeading">
+				${selectors[0].description}
+				<ul class="selector">
+					% for selector in selectors:
+					<li id="${selector.css_class}">
+							<a class="button small pill" href="#">${selector.value}</a>
+					</li>
+					% endfor
+				</ul>
+			</li>
+		% endfor
+	</ul>
+</div>
+
+<div class="thumbnails">
+	<ul class="thumb">
+		% for plot in plot_group.plots:
+			<li class="${plot.css_class}">
+				<a rel="fancybox-thumb" href="${plot.filename}" title="${plot.y_axis} vs ${plot.x_axis} for antenna #${plot.parameters['ant']} spw #${plot.parameters['spw']}">
+					<img src="${plot.filename}"
+						 title="${plot.y_axis} vs ${plot.x_axis} for antenna #${plot.parameters['ant']} spw #${plot.parameters['spw']}"
+						 alt="${plot.y_axis} vs ${plot.x_axis} for antenna #${plot.parameters['ant']} spw #${plot.parameters['spw']}" >
+					</img>
+				</a>
+			</li>
+		% endfor
+	</ul>
+</div>

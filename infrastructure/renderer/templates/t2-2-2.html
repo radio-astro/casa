@@ -1,0 +1,83 @@
+<%!
+import pipeline.domain.measures as measures
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">Spectral Setup Details</%block>
+
+<h1>Spectral Setup Details</h1>
+
+<div id="sciencewindows">
+<h2>Science Windows</h2>
+% for ms in mses:
+<table class="minimalist" summary="Science Spectral Windows in ${ms.basename}">
+	<caption>Science spectral windows defined in ${ms.basename}</caption>
+    <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Centre Frequency (GHz)</th>
+            <th scope="col">Bandwidth (MHz)</th>
+            <th scope="col"># Channels</th>
+            <th scope="col">Polarizations</th>
+            <th scope="col">Band</th>
+        </tr>
+    </thead>
+	<tbody>
+		% for spw in ms.get_spectral_windows(science_windows_only=True):
+		<tr>
+		  <td>${spw.id}</td>
+		  <td>${spw.centre_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ)}</td>
+		  <td>${spw.bandwidth.to_units(measures.FrequencyUnits.MEGAHERTZ)}</td>
+		  <td>${spw.num_channels}</td>
+		  <td>${', '.join(sorted(ms.get_data_description(spw=spw).polarizations))}</td>
+		  <td>${spw.band}</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+% endfor
+</div>
+
+<div id="allwindows">
+<h2>All Spectral Windows</h2>
+
+% for ms in mses:
+<table class="minimalist" summary="Spectral Windows in ${ms.basename}">
+	<caption>All spectral windows defined in ${ms.basename}</caption>
+    <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Centre Frequency (GHz)</th>
+            <th scope="col">Bandwidth (MHz)</th>
+            <th scope="col">Channels</th>
+            <th scope="col">Band</th>
+            <th scope="col">Polarizations</th>
+            <th scope="col">Intents</th>
+        </tr>
+    </thead>
+	<tbody>
+		% for spw in ms.get_spectral_windows(science_windows_only=False):
+		<tr>
+		  <td>${spw.id}</td>
+		  <td>${spw.centre_frequency.to_units(measures.FrequencyUnits.GIGAHERTZ)}</td>
+		  <td>${spw.bandwidth.to_units(measures.FrequencyUnits.MEGAHERTZ)}</td>
+		  <td>${spw.num_channels}</td>
+		  <td>${spw.band}</td>
+<%
+dd = ms.get_data_description(spw=spw)
+if dd is None:
+	polarizations = ""
+else:
+	polarizations = ', '.join(sorted(dd.polarizations))
+%>
+		  <td>${polarizations}</td>
+		  <td>${', '.join(sorted([i for i in spw.intents]))}</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+% endfor
+</div>
+
+<%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>

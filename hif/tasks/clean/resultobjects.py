@@ -1,0 +1,127 @@
+from __future__ import absolute_import
+
+import collections
+import copy
+import numpy as np 
+import os.path
+
+import pipeline.infrastructure.api as api
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.displays as displays
+
+
+LOG = logging.get_logger('pipeline.hif.tasks.clean.cleanresults')
+
+
+class BoxResult(api.Results):
+    def __init__(self):
+        self.threshold = None
+        self.cleanmask = None
+        self.island_peaks = None
+
+    def merge_with_context(self, context):
+        pass
+
+    def __repr__(self):
+        return 'BoxResult <threshold=%s cleanmask=%s>' % (
+         self.threshold, self.cleanmask)
+
+
+class CleanResult(api.Results):
+    def __init__(self, sourcename=None, intent=None, spw=None, plotdir=None):
+        self.sourcename = sourcename
+        self.intent = intent
+        self.spw = spw
+        self.plotdir = plotdir
+        self._psf = None
+        self._model = None
+        self._flux = None
+        self.iterations = collections.defaultdict(dict)
+
+    def empty(self):
+        return not(self._psf or self._model or self._flux or 
+          self.iterations!={})
+
+    @property
+    def flux(self):
+        return self._flux
+
+    def set_flux(self, image):
+        self._flux = image
+
+    @property
+    def cleanmask(self, iter, image):
+        iters = self.iterations.keys()
+        iters.sort()
+        return self.iterations[iters[-1]]['cleanmask']
+
+    def set_cleanmask(self, iter, image):
+        self.iterations[iter]['cleanmask'] = image
+
+    @property
+    def image(self):
+        iters = self.iterations.keys()
+        iters.sort()
+        return self.iterations[iters[-1]]['image']
+
+    def set_image(self, iter, image):
+        self.iterations[iter]['image'] = image
+
+    @property
+    def imageplot(self):
+        iters = self.iterations.keys()
+        iters.sort()
+        image = self.iterations[iters[-1]]['image']
+        imageplot = displays.sky.plotfilename(image=image,
+          reportdir=self.plotdir)
+        return imageplot
+
+    @property
+    def model(self):
+        iters = self.iterations.keys()
+        iters.sort()
+        return self.iterations[iters[-1]]['model']
+
+    def set_model(self, iter, image):
+        self.iterations[iter]['model'] = image
+
+    @property
+    def psf(self):
+        return self._psf
+
+    def set_psf(self, image):
+        self._psf = image
+
+    @property
+    def residual(self):
+        iters = self.iterations.keys()
+        iters.sort()
+        return self.iterations[iters[-1]]['residual']
+
+    def set_residual(self, iter, image):
+        self.iterations[iter]['residual'] = image
+
+    def __repr__(self):
+        repr = 'Clean:\n'
+        if self._psf is not None:
+            repr += ' psf: %s\n' % os.path.basename(self._psf)
+        else:
+            repr += ' psf: None'
+        if self._flux is not None:
+            repr += ' flux: %s\n' % os.path.basename(self._flux)
+        else:
+            repr += ' flux: None'
+    
+        for k,v in self.iterations.items():
+            repr += ' iteration %s:\n' % k
+            repr += '   image    : %s\n' % os.path.basename(v['image'])
+            repr += '   residual : %s\n' % os.path.basename(v['residual'])
+            repr += '   model    : %s\n' % os.path.basename(v['model'])
+            if k > 0:
+                repr += '   cleanmask: %s\n' % os.path.basename(v['cleanmask'])
+
+        return repr
+
+
+

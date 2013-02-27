@@ -1,0 +1,115 @@
+<%!
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+
+<script>
+$(document).ready(function() {
+    var largest = 0;
+    $('table.minimalist').each(function() {
+        var width = $(this)[0].offsetWidth;
+        if(width > largest) {
+            largest = width;
+        }
+    }).width(largest);
+});
+</script>
+
+<%block name="title">Spatial Setup Details</%block>
+
+<h1>Spatial Setup Details</h1>
+
+<h2>Sources</h2>
+
+% for ms in mses:
+<table class="minimalist" summary="Sources in ${ms.basename}">
+	<caption>Sources in ${ms.basename}</caption>
+    <thead>
+        <tr>
+            <th scope="col" rowspan="2">ID</th>
+            <th scope="col" rowspan="2">Source Name</th>
+            <th scope="col" colspan="2">Source Position (${ms.sources[0].frame})</th>
+            <th scope="col" colspan="2">Proper Motion</th>
+            <th scope="col" rowspan="2"># Pointings</th>
+            <th scope="col" rowspan="2">Intent</th>
+        </tr>
+        <tr>
+            <th scope="col">RA</th>
+            <th scope="col">Dec</th>
+            <th scope="col">X</th>
+            <th scope="col">Y</th>
+        </tr>
+    </thead>
+	<tbody>
+		% for source in ms.sources:
+			<% num_pointings = len([f for f in ms.fields if f.source_id == source.id]) %>
+			% if num_pointings:
+		<tr name="source${source.id}">
+		  <td>${source.id}</td>
+		  <td>${source.name}</td>
+		  <td>${source.ra}</td>
+		  <td>${source.dec}</td>
+		  <td>${source.pm_x}</td>
+		  <td>${source.pm_y}</td>
+		  <td>${num_pointings}</td>
+		  <td>${', '.join(sorted([i for i in source.intents]))}</td>
+		</tr>
+			% endif
+		% endfor
+	</tbody>
+</table>
+% endfor
+
+% if mosaics:
+<h2>Mosaic Pointings</h2>	
+<div class="gallery">
+	<ul>
+		% for (ms, source, plot) in mosaics:
+		<li>
+		<a class="grouped_elements" rel="mosaic" href="session${ms.session}/${ms.basename}/mosaic_source${source.id}.png">
+			<img src="session${ms.session}/${ms.basename}/mosaic_source${source.id}.png"
+				 title="Mosaic Pointings for ${source.name} in ${ms.basename}"
+				 alt="Mosaic Pointings for ${source.name} in ${ms.basename}" />
+			<p>${ms.basename}: ${source.name}</p>
+		</a>
+		</li>
+		% endfor
+	</ul>
+</div>
+% endif
+
+<h2>Fields</h2>
+
+% for ms in mses:
+<table class="minimalist" summary="Fields defined in ${ms.basename}">
+	<caption>Fields defined in ${ms.basename}</caption>
+    <thead>
+        <tr>
+            <th scope="col" rowspan="2">Field ID</th>
+            <th scope="col" rowspan="2">Field Name</th>
+            <th scope="col" colspan="2">Position (${ms.sources[0].frame})</th>
+            <th scope="col" rowspan="2">Intent</th>
+            <th scope="col" rowspan="2">Source Reference</th>
+        </tr>
+        <tr>
+            <th scope="col">RA</th>
+            <th scope="col">Dec</th>
+        </tr>
+    </thead>
+	<tbody>
+		% for field in ms.fields:
+		<% source = [s for s in ms.sources if s.id == field.source_id][0] %>
+		<tr>
+		  <td>${field.id}</td>		
+		  <td>${field.name}</td>
+		  <td>${field.ra}</td>
+		  <td>${field.dec}</td>
+		  <td>${', '.join(sorted([i for i in field.intents]))}</td>
+		  <td>${source.name} (#${field.source_id})</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+% endfor
+
+<%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>

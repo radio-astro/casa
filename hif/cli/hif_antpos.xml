@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_antpos" category="pipeline">
+<shortdescription>Derive an antenna position calibration table</shortdescription>
+<description>
+Derive the antenna position calibration for list of measurement sets
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets</description>
+        <value></value>
+    </param>
+
+    <param type="stringArray" name="caltable" subparam="true">
+        <description>List of output caltable(s)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="hm_antpos">
+        <description>The antenna position determination method</description>
+        <value>manual</value>
+        <allowed kind="enum">
+            <value>manual</value>
+            <value>file</value>
+            <value>online</value>
+        </allowed>
+    </param>
+
+    <param type="string" name="antenna" subparam="true">
+        <description>List of antennas to be corrected</description>
+        <value></value>
+    </param>
+
+    <param type="doubleArray" name="offsets" subparam="true">
+        <description>List of position corrections one set per antenna</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="antposfile" subparam="true">
+        <description>File containing antenna position corrections</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operation mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically accept results into context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="hm_antpos">
+            <equals type="string" value="manual">
+                <default param="antenna"><value type="string"></value></default>
+                <default param="offsets"><value type="string"></value></default>
+            </equals>
+            <equals type="string" value="file">
+                <default param="antposfile"><value type="string"></value></default>
+            </equals>
+            <equals type="string" value="online">
+            </equals>
+        </when>
+
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="caltable"><value type="stringArray"></value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="caltable"><value type="stringArray"></value></default>
+            </equals>
+        </when>
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Keyword arguments:
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context dependent pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+hm_antpos -- Heuristics method for retrieving the antenna position
+    corrections. The options are 'online' (not yet implemented), 'manual',
+    and 'file'.
+    default: 'manual'
+    example: hm_antpos='file'
+
+antenna -- The list of antennas for which the positions are to be corrected
+    if hm_antpos is 'manual'
+    default: none
+    example 'DV05,DV07'
+
+offsets -- The list of antenna offsets for each antenna in 'antennas'. Each
+    offset is a set of 3 floating point numbers separated by commas, specified
+    in the ITRF frame.
+    default: none
+    example: [0.01, 0.02, 0.03, 0.03, 0.02, 0.01] 
+
+antposfile -- The file(s) containing the antenna offsets. Used if hm_antpos
+    is 'file'.
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- List of input visibility files
+    default: []
+    example: ['ngc5921.ms']
+
+caltable -- Name of output gain calibration tables
+    default: []
+    example: caltable=['ngc5921.gcal']
+
+-- Pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Description
+
+The hif_antpos task corrects the antenna positions recorded in the ASDMs using
+updated antenna position calibration information determined after the
+observation was taken.
+
+Corrections can be input by hand, read from a file on disk, or in future
+by querying an ALMA database service.
+
+The corrections are used to generate a calibration table which is recorded
+in the pipeline context and applied to the raw visibility data, on the fly to
+generate other calibration tables, or permanently to generate calibrated
+visibilities for imaging.
+
+
+Issues
+
+The hm_antpos 'online' option will be  implemented when the observing system
+provides an antenna position determination service.
+
+
+Example
+
+1. Correct the position of antenna 5 for all the visibility files in a single
+pipeline run.  
+
+    hif_antpos (antenna='DV05', offsets=[0.01, 0.02, 0.03])
+
+2. Correct the position of antennas for all the visibility files in a single
+pipeline run using antenna positions files on disk. These files are assumed
+to conform to a default naming scheme if 'antposfile' is unspecified by the
+user.
+
+    hif_antpos (hm_antpos='file')
+
+</example> 
+
+</task>
+</casaxml>
+

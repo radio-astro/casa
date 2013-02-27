@@ -1,0 +1,15 @@
+<ProcessingProcedure>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_importdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_reduce</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+</ProcessingProcedure>
