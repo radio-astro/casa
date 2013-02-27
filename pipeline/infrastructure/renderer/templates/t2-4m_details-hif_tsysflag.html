@@ -1,0 +1,183 @@
+<%!
+import os.path
+import pydoc
+import numpy as np
+import sys
+
+import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+
+## generate the plots
+<%
+try:
+    r = result[0]
+    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
+    plots_dir = stage_dir
+    if not os.path.exists(plots_dir):
+        os.mkdir(plots_dir)
+
+    plots = []
+    for r in result:
+        if r.view:
+            # display the view first
+            # plot() returns the list of Plots it has generated
+            plots.append(displays.ImageDisplay().plot(pcontext, r,
+              reportdir=plots_dir))
+
+            # plot Tsys spectra of interest
+            for description in r.descriptions():
+                spw = r.last(description).spw
+                data = r.last(description).data
+                flaglast = r.last(description).flag
+                flagfirst = r.first(description).flag
+                xtitle = r.last(description).axes[0].name
+                xdata = r.last(description).axes[0].data
+                ytitle = r.last(description).axes[1].name
+                ydata = r.last(description).axes[1].data
+            
+                # get antenna/time of flagged Tsys
+                grid = np.indices(np.shape(data))
+                flaggrid0 = grid[0][(flagfirst==False) & (flaglast==True)]
+                flaggrid1 = grid[1][(flagfirst==False) & (flaglast==True)]
+
+                # get antenna/time of best Tsys
+                argmin = np.argmin(data[flaglast==False])
+                minpos = (grid[0][flaglast==False][argmin],
+                  grid[1][flaglast==False][argmin])
+
+                medians = r.last(description).children.get('tsysmedians')
+                tsysspectra = r.first(description).children.get('tsysspectra')
+                if medians is not None and tsysspectra is not None:
+                    # if the merit position was flagged then display the
+                    # tsys overlaid on median tsys
+
+                    for median_desc in medians.descriptions():
+                        for tsys_desc in tsysspectra.descriptions():
+                            tsysspectrum = tsysspectra.first(tsys_desc)
+
+                            # plot flagged Tsys spectra
+                            for i,fg0 in enumerate(flaggrid0):
+                                fg1 = flaggrid1[i]
+
+                                if (tsysspectrum.ant, tsysspectrum.time) == \
+                                  (fg0, ydata[fg1]):
+                                    plots.append(displays.SliceDisplay().plot(
+                                      context=pcontext, results=tsysspectra,
+                                      description_to_plot=tsys_desc,
+                                      overplot_spectrum=medians.first(median_desc),
+                                      reportdir=plots_dir))
+
+#                            # plot best Tsys spectra
+#                            if (tsysspectrum.ant, tsysspectrum.time) == \
+#                              (minpos[0], ydata[minpos[1]]):
+
+#                                plots.append(displays.SliceDisplay().plot(
+#                                  context=pcontext, results=tsysspectra,
+#                                  description_to_plot=tsys_desc,
+#                                  overplot_spectrum=medians.first(median_desc),
+#                                  reportdir=plots_dir))
+
+
+    # Group the Plots by axes and plot types; each logical grouping will
+    # be contained in a PlotGroup
+    plot_groups = logger.PlotGroup.create_plot_groups(plots)
+    # Write the thumbnail pages for each plot grouping to disk
+    for plot_group in plot_groups:
+        renderer = hr.PlotGroupRenderer(pcontext, r, plot_group)
+        plot_group.filename = renderer.filename
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+
+except Exception, e:
+    print 'hif_tsysflag html template exception:', e
+    raise e
+%>
+ 
+<ul>
+       <li>Plots:</li>
+            % if plot_groups:
+	        <ul>
+                % for plot_group in plot_groups:
+                    % if plot_group.title == 'Time vs Antenna1':
+                        <li><a href=${plot_group.filename}>${plot_group.title}</a>
+                            shows the images used for flagging.</li>
+                    % endif
+                % endfor
+
+                % for plot_group in plot_groups:
+                    % if 'Tsys vs Channel' in plot_group.title:
+                        <li><a href=${plot_group.filename}>${plot_group.title}</a>
+                            shows the Tsys spectra flagged in each image.</li>
+                    % endif
+                % endfor
+                </ul>
+            % endif
+
+## Write help information to a file and link to it. Probably a better
+## way of writing the file but I can't find it.
+
+<%
+try:
+    filename = os.path.join(stage_dir, 'taskhelp.txt')
+    f = open(filename, 'w')
+    sys.stdout = f
+    pydoc.help('hif_tsysflag')
+
+except Exception, e:
+    print 'html template exception in help information:', e
+    raise e
+
+finally:
+    sys.stdout = sys.__stdout__
+    f.close()
+%>
+
+       <li>A listing of the 'help' information for this task can be found
+           <a href='taskhelp.txt'>here</a>.
+</ul>
+
+
+<p><table class="one-column-emphasis" summary="Input parameters">
+	<caption>Input parameters</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		% for k, v in result.inputs.iteritems():
+		<tr>
+		  <td>${str(k)}</th>
+		  <td>${str(v)}</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+
+<p><table class="one-column-emphasis" summary="Input parameters">
+	<caption>Timing details</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		<tr>
+		  <td>Start time</th>
+		  <td>${result.timestamps.start}</td>
+		</tr>
+		<tr>
+		  <td>End</th>
+		  <td>${result.timestamps.end}</td>
+		</tr>
+		<tr>
+		  <td>Duration</th>
+		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
+		</tr>
+	</tbody>
+</table>

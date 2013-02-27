@@ -1,0 +1,177 @@
+<%!
+import os.path
+import pydoc
+import numpy as np
+import sys
+
+import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+
+## generate the plots
+<%
+flag_plot_groups = False
+qa2_plot_groups = False
+try:
+    r = result[0]
+    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
+    plots_dir = stage_dir
+    if not os.path.exists(plots_dir):
+        os.mkdir(plots_dir)
+
+    flag_plots = []
+    qa2_plots = []
+    for r in result:
+        if r.view:
+            # display the view first
+            flag_plots.append(displays.ImageDisplay().plot(pcontext, r,
+              reportdir=plots_dir, prefix='flag', change='Flagging'))
+
+        if r.qa2.view:
+            # display qa2
+            qa2_plots.append(displays.ImageDisplay().plot(pcontext, r.qa2,
+              reportdir=plots_dir, prefix='qa2', change='WVR'))
+
+    # Group the Plots by axes and plot types; each logical grouping will
+    # be contained in a PlotGroup
+    flag_plot_groups = logger.PlotGroup.create_plot_groups(flag_plots)
+    # Write the thumbnail pages for each plot grouping to disk
+    for plot_group in flag_plot_groups:
+        renderer = hr.PlotGroupRenderer(pcontext, r, plot_group, prefix='flag')
+        plot_group.filename = renderer.filename
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+
+    qa2_plot_groups = logger.PlotGroup.create_plot_groups(qa2_plots)
+    for plot_group in qa2_plot_groups:
+        renderer = hr.PlotGroupRenderer(pcontext, r, plot_group, prefix='qa2')
+        plot_group.filename = renderer.filename
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+
+except Exception, e:
+    print 'hif_wvrgcalflag html template exception:', e
+    raise e
+%>
+ 
+<ul>
+    <li>Flag Results:
+        <table border="1">
+            <tr>
+                <td>Vis</td>
+                <td>wvrflag</td>
+            </tr>
+
+        % for r in result:
+            <tr>
+                <td>${r.vis}</td>
+                <td>${r.wvrflag}</td>
+            </tr>
+        % endfor
+        </table>
+    </li>
+
+    <li>Flag Plots:</li>
+    <ul>
+    % if flag_plot_groups:
+        % for plot_group in flag_plot_groups: 
+            <li><a href=${plot_group.filename}>${plot_group.title}</a></li>
+        % endfor
+    % endif
+    </ul>
+
+    <li>QA2 Results:</li>
+    <ul>
+        <li>Overall QA2 score.
+            <table border="1">
+                <tr>
+                    <td>Vis</td>
+                    <td>Score</td>
+                </tr>
+
+            % for r in result:
+                <tr>
+                    <td>${r.qa2.vis}</td>
+                    <td>${r.qa2.overall_score}</td>
+                </tr>
+            % endfor
+            </table>
+        </li>
+    </ul>
+
+    <li>QA2 Plots:</li>
+    <ul>
+    % if qa2_plot_groups:
+        % for plot_group in qa2_plot_groups: 
+            <li><a href=${plot_group.filename}>${plot_group.title}</a></li>
+        % endfor
+    % endif
+    </ul>
+
+## Write help information to a file and link to it. Probably a better
+## way of writing the file but I can't find it.
+
+<%
+try:
+    filename = os.path.join(stage_dir, 'taskhelp.txt')
+    f = open(filename, 'w')
+    sys.stdout = f
+    pydoc.help('hif_wvrgcalflag')
+
+except Exception, e:
+    print 'html template exception in help information:', e
+    raise e
+
+finally:
+    sys.stdout = sys.__stdout__
+    f.close()
+%>
+
+    <li>A listing of the 'help' information for this task can be found
+        <a href='taskhelp.txt'>here</a>.
+</ul>
+
+
+<p><table class="one-column-emphasis" summary="Input parameters">
+	<caption>Input parameters</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		% for k, v in result.inputs.iteritems():
+		<tr>
+		  <td>${str(k)}</th>
+		  <td>${str(v)}</td>
+		</tr>
+		% endfor
+	</tbody>
+</table>
+
+<p><table class="one-column-emphasis" summary="Input parameters">
+	<caption>Timing details</caption>
+    <colgroup>
+    	<col class="oce-first" />
+    </colgroup>
+	<tbody>
+		<tr>
+		  <td>Start time</th>
+		  <td>${result.timestamps.start}</td>
+		</tr>
+		<tr>
+		  <td>End</th>
+		  <td>${result.timestamps.end}</td>
+		</tr>
+		<tr>
+		  <td>Duration</th>
+		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
+		</tr>
+	</tbody>
+</table>

@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>${title}</title> 
+<style type="text/css">
+html {padding:0;margin:0;}
+body {
+	background-color:#bbb;
+	background-repeat:repeat-x;
+	background-image: -moz-linear-gradient(top, rgba(255,255,255,.5), rgba(255,255,255,0));
+	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,.5)), to(rgba(255,255,255,0)));
+	min-height:200px;
+	padding:10px 60px;
+	text-align:center;
+	font-family:"Lucida Grande","Lucida Sans","Lucida Sans Unicode","Segoe UI",Verdana,sans-serif;
+	text-shadow:1px 1px 0 rgba(255,255,255,.67);
+}
+h1 {
+	font-size:24px;
+}
+h2 {
+	font-size:18px;
+	margin-bottom:3em;
+}
+#filter_selector ul {
+    display: table-cell; /* display selectors horizontally */
+	text-align:left;
+}
+#filter_selector li.selectorHeading ul.selector li {
+    display: inline; /* display all buttons in one horizontal table cell */
+}
+#filter_selector li.selectorHeading {
+    display: table-row;
+}
+ul.thumb {
+    float: left;
+    list-style: none;
+    margin: 0; 
+    padding: 10px 10px 0px 0px;
+}
+ul.thumb li {
+    margin: 0; 
+    padding: 5px;
+    float: left;
+    position: relative;
+    width: 112px;
+    height: 87px;
+}
+ul.thumb li img {
+    width: 100px; 
+    height: 75px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    background: #f0f0f0;
+    position: absolute;
+    left: 0; top: 0;
+    -ms-interpolation-mode: bicubic; 
+}
+ul.thumb li img.hover {
+#    background:url(thumb_bg.png) no-repeat center center;
+#    border: none;
+}
+
+/* Button */
+.button, input[type=button], input[type=submit], button {
+	text-decoration: none;
+	border-color:#888;
+	border-color:rgba(0, 0, 0, 0.56);
+	cursor: pointer;
+	outline: none;
+	color:#111;
+	font-family:"Lucida Grande","Lucida Sans","Lucida Sans Unicode","Segoe UI",Verdana,sans-serif;
+	display:inline-block;
+	vertical-align:top;
+	position:relative;
+	font-size:12px;
+	font-weight:bold;
+	text-align:center;
+	background-color:#aaa;
+	background-image:url(gradient.png);
+	background-image: -moz-linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
+	background-image: -o-linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
+	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,.75)), to(rgba(255,255,255,0)));
+	background-image: linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
+	background-repeat:repeat-x;
+	text-shadow:1px 1px 0 rgba(255,255,255,.67);
+	line-height:2;
+	margin:0 0 1em 0.2em;
+	padding:0 1em;
+	height:2em;
+	-moz-box-shadow:1px 1px 0 rgba(255,255,255,.5) inset, -1px -1px 0 rgba(255,255,255,.5) inset;
+	-webkit-box-shadow:1px 1px 0 rgba(255,255,255,.5) inset, -1px -1px 0 rgba(255,255,255,.5) inset;
+	box-shadow:1px 1px 0 rgba(255,255,255,.5) inset, -1px -1px 0 rgba(255,255,255,.5) inset;
+	-webkit-transition: background .185s linear;
+	-moz-transition: all .185s linear;
+	-o-transition: all .185s linear;
+	transition: all .185s linear;
+	/** Make the text unselectable **/
+	-moz-user-select: none;
+	-webkit-user-select: none;
+}
+.button, .button:after, button, button:after, input[type=submit], input[type=button] {
+	-moz-border-radius:4px;
+	-webkit-border-radius:4px;
+	border-radius:4px;
+	border-width:1px;
+	border-style:solid;
+
+}
+.button:after, button:after{
+	display:block;
+	position:absolute;
+	content:' ';
+	width:100%;
+	height:100%;
+	border-color: transparent transparent #ccc;
+	border-color: transparent transparent rgba(255, 255, 255, 0.67);
+	bottom:-2px;
+	left:-1px;
+}
+.button:hover, .button:focus, button:hover, button:focus, input[type=button]:hover, input[type=button]:focus, input[type=submit]:hover, input[type=submit]:focus {
+	background-color:#a8c0cb;
+}
+.button:active, button:active, input[type=submit]:active, input[type=button]:active {
+	line-height:2.2;
+	-moz-box-shadow
+		:0 .33em 1em rgba(0,0,0,.67) inset,
+		1px 1px 0 rgba(255,255,255,.25) inset, 
+		-1px -1px 0 rgba(255,255,255,.25) inset;
+	-webkit-box-shadow:
+		0 .33em 2em rgba(0,0,0,.67) inset,
+		1px 1px 0 rgba(255,255,255,.25) inset, 
+		-1px -1px 0 rgba(255,255,255,.25) inset;
+	box-shadow:
+		0 .33em 2em rgba(0,0,0,.67) inset,
+		1px 1px 0 rgba(255,255,255,.25) inset, 
+		-1px -1px 0 rgba(255,255,255,.25) inset;
+		-webkit-transition: line-height .1s linear;
+		-moz-transition: all .1s linear;
+		-o-transition: all .1s linear;
+		transition: all .1s linear;
+}
+.button.bg, .button.bg:hover, .button.bg:focus {
+	background-image: -moz-linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,0));
+	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,.75)), to(rgba(255,255,255,0)));
+}
+
+/* Colors/Styles */
+.button.blue {
+	background-color:#9eb4bf;
+}
+.button.blue:hover {
+	background-color:#b4cdda;
+}
+.button.darkblue {
+	background-color:#046;
+	color:#fff;
+	text-shadow:-1px -1px 0 rgba(0,0,0,.3);
+}
+.button.darkblue:hover {
+	background-color:#00547e;
+}
+.button.red {
+	background-color:#900;
+	color:#fff;
+	text-shadow:-1px -1px 0 rgba(0,0,0,.3);
+}
+.button.red:hover {
+	background-color:#b30000;
+}
+.button.pill, .button.pill:before, .button.pill:after {
+	-moz-border-radius:1em;
+	-webkit-border-radius:1em;
+	border-radius:1em;
+}
+.button.black {
+	background-color:#000;
+	color:#fff;
+	text-shadow:-1px -1px 0 rgba(0,0,0,.3);
+}
+.button.black:hover {
+	background-color:#222;
+}
+.button.sharp {
+	background-image:-moz-linear-gradient(top, rgba(255,255,255,.75), rgba(255,255,255,.33) 50%, transparent 50%, transparent 100%);
+	background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, 
+		from(rgba(255,255,255,.75)),
+		color-stop(0.5, rgba(255,255,255,.33) ),
+		color-stop(0.5, transparent ),
+		to(transparent)
+	);
+	background-repeat:repeat-x;
+}
+.button.small {
+	font-size:10px;
+}
+.button.large {
+	font-size:15px;
+}
+.button.webkit {
+	-webkit-transition: all .185s linear;
+}
+@-moz-document url-prefix(http://) {
+	button:after {
+		left:-1.25em;
+		bottom:.25em;
+	}
+}
+</style>
+<script type="text/javascript" src="jquery.js"></script> 
+<script type="text/javascript" src="jquery.fancybox-1.3.1.pack.js"></script>
+<script type="text/javascript" src="jquery.mousewheel-3.0.2.pack.js"></script>
+<link rel="stylesheet" type="text/css" href="jquery.fancybox-1.3.1.css" media="screen" />
+<script type="text/javascript"> 
+$(document).ready(function(){
+ 
+	//Larger thumbnail preview  
+	$("ul.thumb li").hover(function() {
+	    $(this).css({'z-index' : '10'});
+	    $(this).find('img').addClass("hover").stop()
+	        .animate({
+	            marginTop: '-104px', 
+	            marginLeft: '-135px', 
+	            top: '50%', 
+	            left: '50%', 
+	            width: '250px', /* max = 280 cover */ 
+	            height: '188px',
+	            padding: '5px' 
+	        }, 200);
+	    
+	    } , function() {
+	    $(this).css({'z-index' : '0'});
+	    $(this).find('img').removeClass("hover").stop()
+	        .animate({
+	            marginTop: '0', /* Set alignment back to default */
+	            marginLeft: '0',
+	            top: '0', 
+	            left: '0', 
+	            width: '100px', /* Set width back to default */
+	            height: '75px',  /* Set height back to default */
+	            padding: '5px'
+	        }, 400);
+	});
+ 
+    //Swap Image on Click
+    $("ul.thumb li a").click(function() {        
+        var mainImage = $(this).attr("href"); //Find Image Name
+        $("#main_view img").attr({ src: mainImage });
+        $("#main_view a").attr({ href: mainImage });
+        return false;        
+    });
+
+    // Show/hide images depending on selected spectral window
+    $("#filter_selector .selector li").click(function() {
+        // get the identifier of the button that the user clicked on
+        var selected = $(this).attr("id");
+
+        // toggle the state of that button
+        $("#filter_selector ul.selector li#" + selected + " a").toggleClass("black")
+
+        // show all thumbnails so that..
+        $("ul.thumb li").show()
+        $("ul.thumb li").children().attr({ "rel" : "selected" });
+
+        // .. for each filter..
+        $("#filter_selector ul.selector").each(function() {
+            // .. we can get the ids of all enabled selectors..
+            var selectedIds = $(this).find("li:has(a.black)").map(function() {
+                var x = this.id;
+                return "." + this.id;
+            });
+            var ids = selectedIds.toArray().join(",");
+
+           if (ids !== "") {
+                $("ul.thumb li:not(" + ids + ")").hide();
+                $("ul.thumb li:not(" + ids + ")").children().attr({ "rel" : "" });
+            };
+        });
+
+        return false;
+    });
+
+    $("#clearbutton").click(function() {
+        // clear the state of all toggle buttons
+		$("#filter_selector ul.selector li a").removeClass("black")
+
+		// show all thumbnails and link them together
+		$("ul.thumb li").show()
+		$("ul.thumb li").children().attr({ "rel" : "selected" });
+	});
+
+    $("ul.thumb li a[rel=selected]").fancybox({
+		'transitionIn'		: 'none',
+		'transitionOut'		: 'none',
+		'titleFormat'		: function(title, currentArray, currentIndex, currentOpts) {
+			return '<div id="fancybox-title" class="fancybox-title-outside" style="width: 640px; padding-left: 10px; padding-right: 10px; bottom: -40px; display: block; "><span id="fancybox-title-wrap"><span id="fancybox-title-left"></span><span id="fancybox-title-main">Image ' + (currentIndex + 1) + ' / ' + currentArray.length + (title.length ? ' &nbsp; ' + title : '') + '</span><span id="fancybox-title-right"></span></span></div>';
+		}
+	});
+});
+</script> 
+</head> 
+<body>
+<div id="masthead">
+    <h1>${title}</h1>
+	${buttons}
+
+    <div id="filter_selector">
+        <ul>
+${selectors}
+        </ul>
+    </div>
+</div>
+
+<div class="thumbnails">
+    <ul class="thumb">
+${thumbnails}    
+    </ul>
+</div>
+</body>
+</html>

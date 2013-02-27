@@ -1,0 +1,99 @@
+<ProcessingProcedure>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_importdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_flagdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_wvrgcal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_tsyscal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_tsysflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_tsysflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">metric</Keyword>
+                <Value xmlns="">shape</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_nmedian</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_hi</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_tmf1</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">niter</Keyword>
+               <Value xmlns="">1</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_setjy</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_refant</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_bandpass</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_gfluxscale</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_gaincal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_applycal</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">intent</Keyword>
+                <Value xmlns="">PHASE,TARGET</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+</ProcessingProcedure>
