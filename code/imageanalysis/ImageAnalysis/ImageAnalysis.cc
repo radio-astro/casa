@@ -2380,12 +2380,11 @@ Vector<String> ImageAnalysis::history(const Bool list, const Bool browse) {
 	return t;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::insert(const String& infile, Record& Region,
-		const Vector<double>& locatePixel) {
-
+ImageInterface<Float> * ImageAnalysis::insert(
+	const String& infile, Record& Region,
+	const Vector<double>& locatePixel, Bool verbose
+) {
 	*_log << LogOrigin(className(), __FUNCTION__);
-
 	Bool doRef;
 	if (locatePixel.size() == 0) {
 		doRef = True;
@@ -2394,21 +2393,18 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 		doRef = False;
 	}
 	Int dbg = 0;
-
 	// Open input image
 	ImageInterface<Float>* pInImage = 0;
 	ImageUtilities::openImage(pInImage, infile, *_log);
 	std::auto_ptr<ImageInterface<Float> > inImage(pInImage);
-
 	// Create region and subImage for input image
 	std::auto_ptr<const ImageRegion> pRegion(
 		ImageRegion::fromRecord(
-			_log.get(), pInImage->coordinates(),
+			verbose ? _log.get() : 0, pInImage->coordinates(),
 			pInImage->shape(), Region
 		)
 	);
 	SubImage<Float> inSub(*pInImage, *pRegion);
-
 	// Generate output pixel location
 	const IPosition inShape = inSub.shape();
 	const IPosition outShape = _image->shape();
@@ -2430,7 +2426,6 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 			}
 		}
 	}
-
 	// Insert
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
@@ -2438,9 +2433,7 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 
 	// Make sure hist and stats are redone
 	deleteHistAndStats();
-
 	return _image.get();
-
 }
 
 
