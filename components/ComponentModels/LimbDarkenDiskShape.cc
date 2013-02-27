@@ -44,7 +44,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
-//#include <gsl/gsl_sf_bessel.h>
+#include <gsl/gsl_sf_bessel.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -189,8 +189,7 @@ Double LimbDarkenDiskShape::sample(const MDirection& direction,
   Double retVal = calcSample(*compDirValue, direction.getValue(),
                              itsMajValue/2.0, itsMinValue/2.0,
                              itsHeight*pixelLatSize.radian()*
-                             pixelLongSize.radian(), 
-                             itsAttnFactor);
+                             pixelLongSize.radian());
   if (deleteValue) delete compDirValue;
   return retVal;
 }
@@ -224,7 +223,7 @@ void LimbDarkenDiskShape::sample(Vector<Double>& scale,
     pixelLatSize.radian() * pixelLongSize.radian();
   for (uInt i = 0; i < nSamples; i++) {
     scale(i) = calcSample(*compDirValue, directions(i),
-                          majRad, minRad, pixValue,itsAttnFactor);
+                          majRad, minRad, pixValue);
   }
   if (deleteValue) delete compDirValue;
 }
@@ -353,7 +352,7 @@ String LimbDarkenDiskShape::sizeToString() const {
 Double LimbDarkenDiskShape::calcSample(const MDirection::MVType& compDirValue,
                     const MDirection::MVType& dirVal,
                     const Double majRad, const Double minRad,
-                    const Double pixValue, const Float attnFactor) const {
+                    const Double pixValue) const {
   const Double separation = compDirValue.separation(dirVal);
   if (separation <= majRad) {
     const Double pa = compDirValue.positionAngle(dirVal) - itsPaValue;
@@ -369,17 +368,14 @@ Double LimbDarkenDiskShape::calcSample(const MDirection::MVType& compDirValue,
 }
 
 Double LimbDarkenDiskShape::calcVis(Double u, Double v, const Double factor) const {
-  //cerr<<"calling LimbDarkenDiskShape::calcVis()"<<endl;
-  //cerr<<"before u="<<u<<" v="<<v<<" itsMin="<<itsMinValue<<endl;
   u *= itsMinValue;
   v *= itsMajValue;
   const double r = hypot(u, v) * factor;
   const double eta = 1 + itsAttnFactor/2.0;
-  //cerr<<"itsAttnFactor="<<itsAttnFactor<<endl;
-  return 2.0 * j1(r)/r;
+  //return 2.0 * j1(r)/r;
   // Vi(u,v) for the limb-darkened disk from ALMA memo #594 
   // assume u, v are != 0.0 (in such case Vi(u,v)=Vo, handled in visibility())
-  //return pow(10.0,lgamma(eta + 1))*pow(2.0/r,eta)*gsl_sf_bessel_Jnu(eta,r); 
+  return pow(C::e,lgamma(eta + 1))*pow(2.0/r,eta)*gsl_sf_bessel_Jnu(eta,r); 
 }
 
 
