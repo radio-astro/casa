@@ -44,6 +44,7 @@
 
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>
@@ -1117,7 +1118,7 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 	Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
 	SubImage<Float> subImageTmp(*imageClone, slice, False);
-	SubImage<Float> x = SubImage<Float>::createSubImage(
+	SubImage<Float> x = SubImageFactory<Float>::createSubImage(
 		subImageTmp, *_getRegion(), _getMask(), 0,
 		False, AxesSpecifier(), _getStretch()
 	);
@@ -1231,7 +1232,7 @@ void ImageFitter::_fitsky(
 	SubImage<Float> subImageTmp;
 	{
 		std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
-		subImageTmp = SubImage<Float>::createSubImage(
+		subImageTmp = SubImageFactory<Float>::createSubImage(
 			*imageClone, *_getRegion(), _getMask(),
 			(list ? _getLog().get() : 0), False,
 			AxesSpecifier(True), _getStretch()

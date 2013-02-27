@@ -131,6 +131,8 @@ install (FILES
 	ImageAnalysis/SepImageConvolver.h
 	ImageAnalysis/SepImageConvolver.tcc
 	ImageAnalysis/SpectralCollapser.h
+	ImageAnalysis/SubImageFactory.h
+	ImageAnalysis/SubImageFactory.tcc
 	DESTINATION include/casacode/imageanalysis/ImageAnalysis
 	)
 install (FILES
@@ -176,6 +178,7 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImageProfileFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageTransposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tSepImageConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tSubImageFactory.cc )
 
 casa_add_assay( imageanalysis IO/test/tFitterEstimatesFileParser.cc )
 casa_add_assay( imageanalysis IO/test/tProfileFitterEstimatesFileParser.cc )
