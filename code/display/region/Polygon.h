@@ -49,18 +49,14 @@ namespace casa {
 		typedef std::pair<double,double> pt;
 		typedef std::vector<pt> point_list;
 
-		Polygon( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 ) : Region( "polygon", wc, d ),
-				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1)
-				{ _ref_points_.push_back(pt(x1,y1)); _drawing_points_.push_back(pt(x1,y1)); }
-
+		Polygon( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 );
 		Polygon( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts );
 		// carry over from QtRegion... hopefully, removed soon...
-		Polygon( QtRegionSourceKernel *, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals=false );
-		Polygon( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals=false ) : Region( "polygon", wc, rs->dock( ), hold_signals ),
-				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1)
-				{ _ref_points_.push_back(pt(x1,y1)); _drawing_points_.push_back(pt(x1,y1)); }
+		Polygon( QtRegionSourceKernel *, WorldCanvas *wc,
+				const std::vector<std::pair<double,double> > &pts,
+				bool hold_signals=false );
+		Polygon( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1,
+				double y1, bool hold_signals=false );
 
 
 		~Polygon( ) { }

@@ -49,12 +49,10 @@ namespace casa {
 	class Ellipse : public Rectangle {
 	    public:
 		~Ellipse( );
-		Ellipse( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2) :
-			Rectangle( wc, d, x1, y1, x2, y2 ) { }
+		Ellipse( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2);
 
 		// carry over from QtRegion... hopefully, removed soon...
-		Ellipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double x1, double y1, double x2, double y2, bool hold_signals=false ) :
-			Rectangle( "ellipse", wc, factory->dock( ), x1, y1, x2, y2, hold_signals ) { }
+		Ellipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double x1, double y1, double x2, double y2, bool hold_signals=false );
 
 		// returns mouse movement state
 		unsigned int mouseMovement( double x, double y, bool other_selected );

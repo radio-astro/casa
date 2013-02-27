@@ -57,17 +57,17 @@
       </font>
      </property>
      <property name="tabPosition">
-      <enum>QTabWidget::West</enum>
+      <enum>QTabWidget::North</enum>
      </property>
      <property name="tabShape">
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="state_tab">
       <attribute name="title">
-       <string>properties</string>
+       <string>Properties</string>
       </attribute>
       <widget class="QTabWidget" name="states">
        <property name="geometry">
@@ -1366,7 +1366,7 @@
      </widget>
      <widget class="QWidget" name="statistics_tab">
       <attribute name="title">
-       <string>stats</string>
+       <string>Statistics</string>
       </attribute>
       <widget class="QStackedWidget" name="statistics_group">
        <property name="geometry">
@@ -1393,7 +1393,7 @@
        <bool>true</bool>
       </property>
       <attribute name="title">
-       <string>fit</string>
+       <string>Fit</string>
       </attribute>
       <widget class="QStackedWidget" name="centers_group">
        <property name="geometry">
@@ -1515,7 +1515,7 @@
      </widget>
      <widget class="QWidget" name="tab">
       <attribute name="title">
-       <string>file</string>
+       <string>File</string>
       </attribute>
       <widget class="QTabWidget" name="file_tab">
        <property name="geometry">

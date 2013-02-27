@@ -44,19 +44,26 @@ static const char casa_ext[] = ".crtf";
 static const char ds9_ext[] = ".reg";
 static const char *default_ext = casa_ext;
 
+
 QtRegionState::freestat_list *QtRegionState::freestats = 0;
 QtRegionState::freestat_list *QtRegionState::freecenters = 0;
 
 void QtRegionState::init( ) {
 	QString cat = categories->tabText(categories->currentIndex( ));
-	if ( cat == "stats" )
+	if ( cat == STATISTICS_MODE )
 		emit statisticsVisible( true );
-	else if ( cat == "properties" ) {
+	else if ( cat == PROPERTIES_MODE ) {
 		QString state = states->tabText(categories->currentIndex( ));
 		if ( state == "coordinates" )
 			emit positionVisible( true );
 	}
 }
+
+const QString QtRegionState::HISTOGRAM_MODE = "Histogram";
+const QString QtRegionState::STATISTICS_MODE = "Statistics";;
+const QString QtRegionState::FILE_MODE = "File";
+const QString QtRegionState::FIT_MODE = "Fit";
+const QString QtRegionState::PROPERTIES_MODE = "Properties";
 
 QtRegionState::QtRegionState( const QString &n, Region *r,
 		QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
@@ -225,6 +232,10 @@ void QtRegionState::reset( const QString &n, Region *r ) {
 	frame_max->setValue(z_max);
 }
 
+void QtRegionState::addHistogram(QWidget* histogram ){
+	categories->addTab( histogram, HISTOGRAM_MODE);
+}
+
 void QtRegionState::updateCoord( ) { emit positionVisible(true); }
 
 void QtRegionState::updateStatistics(  ) {
@@ -304,7 +315,7 @@ void QtRegionState::statisticsUpdate( QtRegionStats *regionStats, RegionInfo& re
 
 void QtRegionState::reloadStatistics( ) {
 	QString cat = categories->tabText(categories->currentIndex( ));
-	if ( cat == "stats" ) {
+	if ( cat == STATISTICS_MODE ) {
 		pre_dd_change_statistics_count = statistics_group->count( );
 		emit collectStatistics( );
 	}
@@ -752,17 +763,20 @@ void QtRegionState::nowVisible( ) {
 
 	std::string QtRegionState::mode( ) const {
 		QString cat = categories->tabText(categories->currentIndex( ));
-		if ( cat == "properties" ) {
+		if ( cat == PROPERTIES_MODE ) {
 			QString state = states->tabText(categories->currentIndex( ));
 			if ( state == "coordinates" ) return "position";
 			if ( state == "line" ) return "line";
 			if ( state == "text" ) return "text";
-		} else if ( cat == "stats" ) {
-			return "statistics";
-		} else if ( cat == "fit" ) {
-			return "fitting";
-		} else if ( cat == "file" ) {
+		} else if ( cat == STATISTICS_MODE ) {
+			return STATISTICS_MODE.toStdString();
+		} else if ( cat == FIT_MODE ) {
+			return FIT_MODE.toStdString();
+		} else if ( cat == FILE_MODE ) {
 			return "output";
+		}
+		else if ( cat == HISTOGRAM_MODE){
+			return HISTOGRAM_MODE.toStdString();
 		}
 		return "";
 	}

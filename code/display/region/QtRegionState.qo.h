@@ -63,6 +63,7 @@ namespace casa {
 			void updateCenters( std::list<RegionInfo> *centers );
 			void setCenterBackground(QString background);
 			void clearStatistics( );
+			void addHistogram(QWidget* histogram);
 
 			std::string lineColor( ) const;
 			std::string centerColor( ) const;
@@ -132,6 +133,11 @@ namespace casa {
 			// return the current information mode of the region state, e.g. position, statistics, etc.
 			std::string mode( ) const;
 			const std::string LINE_COLOR_CHANGE;
+			const static QString HISTOGRAM_MODE;
+			const static QString STATISTICS_MODE;
+			const static QString FILE_MODE;
+			const static QString FIT_MODE;
+			const static QString PROPERTIES_MODE;
 
 		signals:
 			void regionChange( viewer::Region *, std::string );
@@ -203,6 +209,7 @@ namespace casa {
 			void statisticsUpdate( QtRegionStats *regionStats, RegionInfo& regionInfo);
 			unsigned int setting_combo_box;
 			int pre_dd_change_statistics_count;
+
 
 	};
     }

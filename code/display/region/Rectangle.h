@@ -53,15 +53,11 @@ namespace casa {
 			public:
 				~Rectangle( );
 				Rectangle( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2, 
-						   bool hold_signals=false ) :	Region( "rectangle", wc, d, hold_signals ),
-														blc_x(x1<x2?x1:x2), blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1),
-														trc_y(y1<y2?y2:y1) { complete = true; }
+						   bool hold_signals=false );
 
 				// carry over from QtRegion... hopefully, removed soon...
 				Rectangle( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-						   bool hold_signals=false) :	Region( "rectangle", wc, rs->dock( ), hold_signals ),
-														blc_x(x1<x2?x1:x2), blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1),
-														trc_y(y1<y2?y2:y1) { complete = true; }
+						   bool hold_signals=false);
 
 				bool clickWithin( double x, double y ) const
 					{ return x > blc_x && x < trc_x && y > blc_y && y < trc_y; }

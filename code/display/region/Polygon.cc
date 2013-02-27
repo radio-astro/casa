@@ -43,6 +43,25 @@
 namespace casa {
 namespace viewer {
 
+Polygon::Polygon( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 ) :
+		Region( "polygon", wc, d ),
+			_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+			_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1){
+	_ref_points_.push_back(pt(x1,y1));
+	_drawing_points_.push_back(pt(x1,y1));
+}
+
+
+Polygon::Polygon( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals ) :
+		Region( "polygon", wc, rs->dock( ), hold_signals ),
+			_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+			_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1){
+	_ref_points_.push_back(pt(x1,y1));
+	_drawing_points_.push_back(pt(x1,y1));
+	initHistogram();
+}
+
+
 Polygon::Polygon( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts) :
 				Region( "polygon", wc, d ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
@@ -50,6 +69,7 @@ Polygon::Polygon( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
 	}
+	initHistogram();
 	closeFigure(false);
 }
 
@@ -61,6 +81,7 @@ Polygon::Polygon( QtRegionSourceKernel *rs, WorldCanvas *wc, const std::vector<s
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
 	}
+	initHistogram();
 	closeFigure(false);
 }
 
