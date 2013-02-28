@@ -511,6 +511,12 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 	{
 		configuration.get (exists, mode_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Mode is " << mode_p<< LogIO::POST;
+
+		if ((mode_p == "frequency") or (mode_p == "channel"))
+		{
+			start_p = String("");
+			width_p = String("");
+		}
 	}
 
 	exists = configuration.fieldNumber ("nchan");
@@ -1129,6 +1135,23 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     Vector<Double> combinedCHAN_FREQ;
     Vector<Double> combinedCHAN_WIDTH;
 	combiner.combineSpws(Vector<Int>(1,-1),True,combinedCHAN_FREQ,combinedCHAN_WIDTH,True);
+
+	/*
+	// Debugging info
+    ostringstream debug_oss;
+    debug_oss <<  " phaseCenter_p=" << phaseCenter_p << endl;
+    debug_oss <<  " inputReferenceFrame_p=" << inputReferenceFrame_p << endl;
+    debug_oss <<  " observationTime_p=" << observationTime_p << endl;
+    debug_oss <<  " observatoryPosition_p=" << observatoryPosition_p << endl;
+    debug_oss <<  " mode_p=" << mode_p << endl;
+    debug_oss <<  " nChan_p=" << nChan_p << endl;
+    debug_oss <<  " start_p=" << start_p << endl;
+    debug_oss <<  " width_p=" << width_p << endl;
+    debug_oss <<  " restFrequency_p=" << restFrequency_p << endl;
+    debug_oss <<  " outputReferenceFramePar_p=" << outputReferenceFramePar_p << endl;
+    debug_oss <<  " velocityType_p=" << velocityType_p << endl;
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << debug_oss.str() << LogIO::POST;
+	*/
 
 	// Re-grid the output SPW to be uniform and change reference frame
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Calculate frequencies in output reference frame " << LogIO::POST;
@@ -2570,7 +2593,7 @@ template <class T> void MSTransformDataHandler::average(Int inputSpw, Vector<T> 
 		freqbin = freqbin_p(0);
 	}
 
-	uInt maxStartChan = inputDataStripe.size() - freqbin;
+	uInt maxStartChan = inputDataStripe.size() - 1;
 
 	T averagedValue;
 	uInt nSamples = 0;
@@ -2586,7 +2609,7 @@ template <class T> void MSTransformDataHandler::average(Int inputSpw, Vector<T> 
 		nSamples = !inputFlagsStripe(startChan);
 
 		// Accumulate
-		while (inpChanCount < freqbin)
+		while ((inpChanCount < freqbin) and (startChan < inputDataStripe.size()))
 		{
 			averagedValue += inputDataStripe(startChan)*(!inputFlagsStripe(startChan));
 
