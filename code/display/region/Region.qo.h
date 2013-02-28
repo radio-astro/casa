@@ -391,9 +391,11 @@ namespace casa {
 
 				void fetch_details( region::RegionTypes &type, QList<int> &pixelx,
 									QList<int> &pixely, QList<double> &worldx, QList<double> &worldy );
-				virtual void fetch_region_details( region::RegionTypes &/*type*/,
-												   std::vector<std::pair<int,int> > &/*pixel_pts*/,
-												   std::vector<std::pair<double,double> > &/*world_pts*/ ) const = 0;
+				virtual void fetch_region_details( region::RegionTypes &type,
+												   std::vector<std::pair<int,int> > &pixel_pts,
+												   std::vector<std::pair<double,double> > &world_pts ) const
+						{ type = region::NonRegion; pixel_pts.clear( ); world_pts.clear( );
+						  DISPLAY_PURE_VIRTUAL(Region::fetch_region_details,); }
 				
 				void signal_region_change( region::RegionChanges );
 
