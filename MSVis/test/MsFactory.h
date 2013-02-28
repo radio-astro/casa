@@ -142,18 +142,42 @@ public:
     }
 };
 
-class GenerateFlagCategory : public Generator <Vector <Bool> > {
+class GenerateFlagCategory : public GeneratorBase {
 
-    Vector<Bool>
-    operator () (const FillState & fillState, Int channel, Int correlation) const {
+public:
 
-        Vector <Bool> result (fillState.nFlagCategories_p);
+    virtual Bool
+    operator () (const FillState & fillState, Int channel, Int correlation, Int /*category*/) const {
 
-        result [0] = (fillState.rowNumber_p % 2) ^ (channel % 2) ^ (correlation % 2);
+        Bool result;
 
-        for (int i = 1; i < fillState.nFlagCategories_p; i ++){
+        switch (correlation){
 
-            result [i] = ! result [i - 1];
+        case 0:
+
+            result = fillState.rowNumber_p & 0x1;
+            break;
+
+        case 1:
+
+            result = fillState.rowNumber_p & 0x2;
+            break;
+
+        case 2:
+
+            result = channel & 0x1;
+            break;
+
+        case 3:
+
+            result = channel & 0x2;
+            break;
+
+        default:
+
+            Assert (False);
+            break;
+
         }
 
         return result;
