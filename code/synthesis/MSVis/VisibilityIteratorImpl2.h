@@ -57,7 +57,6 @@ class VisBuffer2;
 
 class ChannelSelector;
 class ChannelSelectorCache;
-typedef Vector<Vector <Slice> > ChannelSlicer;
 class SpectralWindowChannelsCache;
 class SpectralWindowChannels;
 class SubtableColumns;

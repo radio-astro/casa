@@ -563,8 +563,6 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
     const Cube<Complex> & visibilityCorrected = vb->visCubeCorrected();
     const Cube<Complex> & visibilityModel = vb->visCubeModel();
 
-    //const Array<Bool> & flagCategories = vb->flagCategory();
-
     const Vector<uInt> & rowIds = vb->rowIds ();
 
     Int channelOffset = info [spectralWindow][0];
@@ -609,14 +607,14 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 
     // Test flag cube shapes
 
-//    IPosition expectedShape2 (IPosition (4, 4, nChannels, nFlagCategories_p, nRows));
-//    TestErrorIf (! flagCategories.shape ().isEqual (expectedShape2),
-//                 String::format("Bad flag category shape; expected %s, got %s; "
-//                                "spw=%d, msRow=%d",
-//                                flagCategories.shape().toString().c_str(),
-//                                expectedShape2.toString().c_str(),
-//                                spectralWindow,
-//                                rowIds (0)))
+    IPosition expectedShape2 (IPosition (4, 4, nChannels, nFlagCategories_p, nRows));
+    TestErrorIf (! vb->flagCategory().shape ().isEqual (expectedShape2),
+                 String::format("Bad flag category shape; expected %s, got %s; "
+                                "spw=%d, msRow=%d",
+                                vb->flagCategory().shape().toString().c_str(),
+                                expectedShape2.toString().c_str(),
+                                spectralWindow,
+                                rowIds (0)))
 
     checkRowScalars (vb);
 
@@ -657,33 +655,79 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
                              String::format ("vb->getChannels()[%d] returned %d; expected %d",
                                              channel, channels [channel], expectedChannelNumber));
 
-                // Now check out the flag categories array [nC, nF, nCat, nR]
+                // Check the flag categories
 
-//                Bool expected = (rowIds (row) % 2) ^ (channels [channel] % 2) ^ (correlation % 2);
-//                if (factor_p != 1){
-//                    expected = ! expected;
-//                }
-//
-//                for (int category = 0; category < nFlagCategories_p; category ++){
-//
-//                    Bool value = flagCategories (IPosition (4, correlation, channel, category, row));
-//
-//                    TestErrorIf (value != expected,
-//                                 String::format("Expected %d, got %d for flagCategory at "
-//                                                "spw=%d, vbRow=%d, msRow=%d, ch=%d, corr=%d, cat=%d",
-//                                                expected,
-//                                                value,
-//                                                spectralWindow,
-//                                                row,
-//                                                rowIds (row),
-//                                                channel,
-//                                                correlation,
-//                                                category));
-//
-//                    expected = ! expected;
-//                }
+                checkFlagCategory (rowIds (row), spectralWindow, row, channel, correlation,
+                                   channelOffset, channelIncrement, vb);
             }
         }
+    }
+}
+
+void
+BasicChannelSelection::checkFlagCategory (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
+                                          Int channelOffset, Int channelIncrement, VisBuffer2 * vb)
+{
+    const Array<Bool> & flagCategories = vb->flagCategory();
+
+    // Now check out the flag categories array [nC, nF, nCat, nR]
+
+    Int expectedChannelNumber = channel * channelIncrement + channelOffset;
+
+    for (int category = 0; category < nFlagCategories_p; category ++){
+
+        Bool expected;// = (rowId % 2) ^ (channel % 2) ^ (correlation % 2) ^ (category % 2);
+
+        switch (correlation){
+
+        case 0:
+
+            expected = rowId & 0x1;
+            break;
+
+        case 1:
+
+            expected = rowId & 0x2;
+            break;
+
+        case 2:
+
+            expected = expectedChannelNumber & 0x1;
+            break;
+
+        case 3:
+
+            expected = expectedChannelNumber & 0x2;
+            break;
+
+        default:
+
+            Assert (False);
+            break;
+
+        }
+
+
+
+        if (factor_p != 1){
+            expected = ! expected;
+        }
+
+        Bool value = flagCategories (IPosition (4, correlation, channel, category, row));
+
+        TestErrorIf (value != expected,
+                     String::format("Expected %d, got %d for flagCategory at "
+                                    "spw=%d, vbRow=%d, msRow=%d, ch=%d, corr=%d, cat=%d",
+                                    expected,
+                                    value,
+                                    spectralWindow,
+                                    row,
+                                    rowId,
+                                    channel,
+                                    correlation,
+                                    category));
+
+        expected = ! expected;
     }
 }
 
@@ -882,9 +926,9 @@ BasicMutation::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
         cubeB = arrayTransformResult (cubeB, LogicalNot());
         vb->setFlagCube (cubeB);
 
-//        Array<Bool> flagCategory = vb->flagCategory();
-//        flagCategory = arrayTransformResult (flagCategory, LogicalNot());
-//        vb->setFlagCategory (flagCategory);
+        Array<Bool> flagCategory = vb->flagCategory();
+        flagCategory = arrayTransformResult (flagCategory, LogicalNot());
+        vb->setFlagCategory (flagCategory);
 
         Matrix<Float> v;
 

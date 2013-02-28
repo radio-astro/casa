@@ -450,8 +450,8 @@ void
 MsFactory::fillFlagCategories (const FillState & fillState)
 {
 
-    const Generator<Vector<Bool> > * generator =
-            dynamic_cast <const Generator<Vector <Bool> > *> (generators_p.get(MSMainEnums::FLAG_CATEGORY));
+    const GenerateFlagCategory * generator =
+            dynamic_cast <const GenerateFlagCategory *> (generators_p.get(MSMainEnums::FLAG_CATEGORY));
 
     ThrowIf (generator == 0, "Bad return type on generator");
 
@@ -464,13 +464,13 @@ MsFactory::fillFlagCategories (const FillState & fillState)
              correlation < fillState.nCorrelations_p;
              correlation ++){
 
-            Vector<Bool> categories = (* generator) (fillState, channel, correlation);
-
             for (Int category = 0;
                  category < fillState.nFlagCategories_p;
                  category ++){
 
-                cell (correlation, channel, category) = categories (category);
+                Bool value = (* generator) (fillState, channel, correlation, category);
+
+                cell (correlation, channel, category) = value;
             }
         }
     }
