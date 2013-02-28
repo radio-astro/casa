@@ -157,7 +157,7 @@ std::tr1::shared_ptr<Polyline> QtRegionSourceKernel::polyline( RegionCreator *rc
 
 std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon(
 		RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
-	Polygon *result = new Polygon( this, wc, pts, false );
+	Polygon *result = new Polygon( this, wc, pts, true );
 
 	// save Region to RegionSource mapping for later revocation...
 	creator_of_region[result] = rc;
