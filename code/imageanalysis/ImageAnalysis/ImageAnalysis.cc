@@ -2380,7 +2380,7 @@ Vector<String> ImageAnalysis::history(const Bool list, const Bool browse) {
 	return t;
 }
 
-ImageInterface<Float> * ImageAnalysis::insert(
+Bool ImageAnalysis::insert(
 	const String& infile, Record& Region,
 	const Vector<double>& locatePixel, Bool verbose
 ) {
@@ -2429,12 +2429,11 @@ ImageInterface<Float> * ImageAnalysis::insert(
 	// Insert
 	ImageRegrid<Float> ir;
 	ir.showDebugInfo(dbg);
-	std::auto_ptr<ImageInterface<Float> > clone(_image->cloneII());
-	ir.insert(*clone, outPix, inSub);
+	ir.insert(*_image, outPix, inSub);
 
 	// Make sure hist and stats are redone
-	// deleteHistAndStats();
-	return clone.release();
+	deleteHistAndStats();
+	return True;
 }
 
 
