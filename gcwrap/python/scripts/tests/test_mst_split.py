@@ -1941,7 +1941,7 @@ def suite():
 #            split_test_tav_then_cvel, 
             split_test_genericsubtables,
 #            split_test_sw_and_fc, 
-#            split_test_cavcd, 
+            split_test_cavcd, 
             split_test_almapol,
 #            split_test_wttosig, 
 #            split_test_fc
