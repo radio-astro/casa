@@ -139,7 +139,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <param type="bool" name="psterm" subparam="true">
       <description>Switch-on the PS-Term?</description>
-      <value>True</value>
+      <value>False</value>
     </param>
     <param type="bool" name="mterm" subparam="true">
       <description>Switch-on the M-Term?</description>
