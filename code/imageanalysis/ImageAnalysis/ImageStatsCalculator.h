@@ -30,7 +30,8 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <images/Images/ImageStatistics.h>
+
 #include <casa/namespace.h>
 
 #include <memory>
@@ -59,10 +60,9 @@ class ImageStatsCalculator: public ImageTask {
 public:
 
    	ImageStatsCalculator(
-   		ImageAnalysis *const &ia,
-    	const String& region, const Record *const &regionPtr,
-    	const String& box, const String& chanInp,
-    	const String& stokes, const String& maskInp, Bool beVerboseDuringConstruction
+   		const ImageInterface<Float> *const &image,
+    	const Record *const &regionPtr,
+    	const String& maskInp, Bool beVerboseDuringConstruction
     );
 
     ~ImageStatsCalculator();
@@ -71,11 +71,11 @@ public:
 
     inline String getClass() const {return _class;}
 
-    inline void setPlotStats(const Vector<String>& ps) {_plotStats = ps; }
+    inline void setPlotStats(const Vector<String>& ps) {_plotStats.assign(ps); }
 
-    inline void setIncludePix(const Vector<Float>& inc) {_includepix = inc;}
+    inline void setIncludePix(const Vector<Float>& inc) {_includepix.assign(inc);}
 
-    inline void setExcludePix(const Vector<Float>& exc) {_excludepix = exc;}
+    inline void setExcludePix(const Vector<Float>& exc) {_excludepix.assign(exc);}
 
     inline void setPlotter(const String& p) {_plotter = p;}
 
@@ -94,7 +94,14 @@ public:
 
     inline void setVerbose(const Bool v) {_verbose = v;}
 
-    inline void setAxes(Vector<Int>& axes) {_axes = axes;}
+    inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes);}
+
+    // moved from ImageAnalysis
+    // if messageStore != 0, log messages, stripped of time stampe and priority, will also be placed in this parameter and
+    // retur	ned to caller for eg logging to file.
+    Record statistics(
+    	 vector<String> *const &messageStore=0
+    );
 
 protected:
 
@@ -113,7 +120,9 @@ protected:
     inline Bool _supportsMultipleRegions() {return True;}
 
 private:
-    ImageAnalysis *const _ia;
+    std::auto_ptr<ImageStatistics<Float> > _statistics;
+    std::auto_ptr<ImageRegion> _oldStatsRegion, _oldStatsMask;
+    Bool _oldStatsStorageForce;
     Vector<Int> _axes;
     Vector<String> _plotStats;
     Vector<Float> _includepix, _excludepix;
@@ -123,6 +132,14 @@ private:
 
     static const String _class;
 
+    // moved from ImageAnalysis
+    // See if the combination of the 'region' and 'mask' ImageRegions have changed
+    static Bool _haveRegionsChanged (
+    	ImageRegion* pNewRegionRegion,
+    	ImageRegion* pNewMaskRegion,
+    	ImageRegion* pOldRegionRegion,
+    	ImageRegion* pOldMaskRegion
+    );
 };
 }
 

@@ -133,8 +133,7 @@ using namespace std;
 namespace casa { //# name space casa begins
 
 ImageAnalysis::ImageAnalysis() :
-	_image(0), _statistics(0), _histograms(0),
-			_oldStatsRegionRegion(0), pOldStatsMaskRegion_p(0),
+	_image(0), _histograms(0),
 			pOldHistRegionRegion_p(0), pOldHistMaskRegion_p(0),
 			imageMomentsProgressMonitor(0){
 
@@ -147,15 +146,13 @@ ImageAnalysis::ImageAnalysis() :
 }
 
 ImageAnalysis::ImageAnalysis(const ImageInterface<Float>* inImage) :
-	_image(inImage->cloneII()), _log(new LogIO()), _statistics(0),
-	_histograms(0), _oldStatsRegionRegion(0),
-	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+	_image(inImage->cloneII()), _log(new LogIO()),
+	_histograms(0), pOldHistRegionRegion_p(0),
 	pOldHistMaskRegion_p(0), imageMomentsProgressMonitor(0) {}
 
 ImageAnalysis::ImageAnalysis(ImageInterface<Float>* inImage, const Bool cloneInputPointer) :
-_log(new LogIO()), _statistics(0), _histograms(0),
-	_oldStatsRegionRegion(0),
-	pOldStatsMaskRegion_p(0), pOldHistRegionRegion_p(0),
+_log(new LogIO()), _histograms(0),
+	pOldHistRegionRegion_p(0),
 	pOldHistMaskRegion_p(0), imageMomentsProgressMonitor(0) {
 	_image.reset(cloneInputPointer ? inImage->cloneII() : inImage);
 }
@@ -170,7 +167,7 @@ ImageAnalysis::~ImageAnalysis() {
 			}
 		}
 	}
-	deleteHistAndStats();
+	deleteHist();
 }
 
 Bool ImageAnalysis::toRecord(RecordInterface& rec) {
@@ -256,7 +253,7 @@ Bool ImageAnalysis::open(const String& infile) {
 	_image.reset(image);
 
 	// Ensure that we reconstruct the statistics and histograms objects
-	deleteHistAndStats();
+	deleteHist();
 	return rstat;
 }
 
@@ -291,7 +288,7 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 	LatticeAddNoise lan(typeNoise, pars);
 	lan.add(subImage);
 	//
-	deleteHistAndStats();
+	deleteHist();
 	rstat = true;
 
 	return rstat;
@@ -1008,7 +1005,7 @@ Bool ImageAnalysis::calc(const String& expr) {
 	}
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
-	deleteHistAndStats();
+	deleteHist();
 	//
 	return True;
 }
@@ -1602,7 +1599,7 @@ Record ImageAnalysis::deconvolvecomponentlist(
 
 Bool ImageAnalysis::remove(Bool verbose)
 {
-  *_log << LogOrigin("ImageAnalysis", "remove");
+  *_log << LogOrigin(className(), __FUNCTION__);
   Bool rstat(False);
 
   // Let's see if it exists.  If it doesn't, then the user has
@@ -1635,7 +1632,7 @@ Bool ImageAnalysis::remove(Bool verbose)
             << "Detaching from image" << LogIO::POST;
   }
   _image.reset(0);
-  deleteHistAndStats();
+  deleteHist();
 
   // Now try and blow it away.  If it's open, tabledelete won't delete it.
   String message;
@@ -2215,6 +2212,20 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
+Bool ImageAnalysis::_haveRegionsChanged(ImageRegion* pNewRegionRegion,
+		ImageRegion* pNewMaskRegion, ImageRegion* pOldRegionRegion,
+		ImageRegion* pOldMaskRegion) {
+	Bool regionChanged = (pNewRegionRegion != 0 && pOldRegionRegion != 0
+			&& (*pNewRegionRegion) != (*pOldRegionRegion)) || (pNewRegionRegion
+			== 0 && pOldRegionRegion != 0) || (pNewRegionRegion != 0
+			&& pOldRegionRegion == 0);
+	Bool maskChanged = (pNewMaskRegion != 0 && pOldMaskRegion != 0
+			&& (*pNewMaskRegion) != (*pOldMaskRegion)) || (pNewMaskRegion == 0
+			&& pOldMaskRegion != 0) || (pNewMaskRegion != 0 && pOldMaskRegion
+			== 0);
+	return (regionChanged || maskChanged);
+}
+
 Record ImageAnalysis::histograms(
 	const Vector<Int>& axes,
 	Record& regionRec, const String& sMask, const Int nbins,
@@ -2266,7 +2277,7 @@ Record ImageAnalysis::histograms(
 			// changed, _histograms will already have been set to 0
 			_histograms->resetError();
 			if (
-				haveRegionsChanged(pRegionRegion, pMaskRegion,
+				_haveRegionsChanged(pRegionRegion, pMaskRegion,
 				pOldHistRegionRegion_p, pOldHistMaskRegion_p)
 			) {
 				_histograms->setNewImage(subImage);
@@ -2393,11 +2404,11 @@ Bool ImageAnalysis::insert(
 		doRef = False;
 	}
 	Int dbg = 0;
-	// Open input image
+
 	ImageInterface<Float>* pInImage = 0;
 	ImageUtilities::openImage(pInImage, infile, *_log);
 	std::auto_ptr<ImageInterface<Float> > inImage(pInImage);
-	// Create region and subImage for input image
+	// Create region and subImage for image to be inserted
 	std::auto_ptr<const ImageRegion> pRegion(
 		ImageRegion::fromRecord(
 			verbose ? _log.get() : 0, pInImage->coordinates(),
@@ -2432,7 +2443,7 @@ Bool ImageAnalysis::insert(
 	ir.insert(*_image, outPix, inSub);
 
 	// Make sure hist and stats are redone
-	deleteHistAndStats();
+	deleteHist();
 	return True;
 }
 
@@ -2508,7 +2519,7 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 
 Vector<String> ImageAnalysis::maskhandler(const String& op,
 		const Vector<String>& namesIn) {
-	*_log << LogOrigin("ImageAnalysis", "maskhandler");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	Vector<String> namesOut;
 	Bool hasOutput;
@@ -2605,8 +2616,8 @@ Vector<String> ImageAnalysis::maskhandler(const String& op,
 		*_log << "Unknown operation" << LogIO::EXCEPTION;
 	}
 
-	// Make sure hist and stats are redone
-	deleteHistAndStats();
+	// Make sure hist is redone
+	deleteHist();
 
 	if (hasOutput)
 		return namesOut;
@@ -2623,7 +2634,7 @@ Record ImageAnalysis::miscinfo() {
 Bool ImageAnalysis::modify(
 	Record& Model, Record& Region, const String& mask,
 	const Bool subtract, const Bool list, const Bool extendMask) {
-	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	String error;
 	ComponentList cL;
@@ -2663,9 +2674,9 @@ Bool ImageAnalysis::modify(
 	// Do it
 	ComponentImager::project(subImage, cl);
 
-	// Ensure that we reconstruct the statistics and histograms objects
+	// Ensure that we reconstruct the histograms objects
 	// now that the data have changed
-	deleteHistAndStats();
+	deleteHist();
 
 	return True;
 }
@@ -3011,7 +3022,7 @@ void ImageAnalysis::pixelValue(Bool& offImage, Quantum<Double>& value,
 Bool ImageAnalysis::putchunk(const Array<Float>& pixelsArray,
 		const Vector<Int>& blc, const Vector<Int>& inc, const Bool list,
 		const Bool locking, const Bool replicate) {
-	*_log << LogOrigin("ImageAnalysis", "putchunk");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	//
 	IPosition imageShape = _image->shape();
@@ -3070,9 +3081,9 @@ Bool ImageAnalysis::putchunk(const Array<Float>& pixelsArray,
 			_image->putSlice(pixelsref, iblc, iinc);
 		}
 	}
-	// Ensure that we reconstruct the statistics and histograms objects
+	// Ensure that we reconstruct the  histograms objects
 	// now that the data have changed
-	deleteHistAndStats();
+	deleteHist();
 
 	Bool rstat = True;
 
@@ -3085,7 +3096,7 @@ Bool ImageAnalysis::putchunk(const Array<Float>& pixelsArray,
 Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 		const Array<Bool>& mask, Record& region, const Bool list,
 		const Bool usemask, const Bool, const Bool replicateArray) {
-	*_log << LogOrigin("ImageAnalysis", "putregion");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	// used to verify array dimension
 	uInt img_ndim = _image->shape().asVector().nelements();
@@ -3323,7 +3334,7 @@ Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
-	deleteHistAndStats();
+	deleteHist();
 
 	return unlock();
 
@@ -3953,7 +3964,7 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 
 Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 
-	*_log << LogOrigin("ImageAnalysis", "rename");
+	*_log << LogOrigin(className(), __FUNCTION__);
 
 	if (!ispersistent()) {
 		*_log << LogIO::WARN
@@ -4010,7 +4021,7 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 		*_log << LogIO::NORMAL << "Detaching from image" << LogIO::POST;
 		_image.reset(0);
 	}
-	deleteHistAndStats();
+	deleteHist();
 
 	// Now try and move it
 	Bool follow(True);
@@ -4043,7 +4054,7 @@ Bool ImageAnalysis::replacemaskedpixels(
 	const String& maskRegion, const Bool updateMask,
 	const Bool list, const Bool extendMask
 ) {
-	*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
+	*_log << LogOrigin(className(), __FUNCTION__);
 	if (pixels.empty()) {
 		*_log << "You must specify an expression" << LogIO::EXCEPTION
 				<< LogIO::POST;
@@ -4093,9 +4104,9 @@ Bool ImageAnalysis::replacemaskedpixels(
 		LatticeExpr<Bool> expr(node);
 		mask.copyData(expr);
 	}
-	// Ensure that we reconstruct the statistics and histograms objects
+	// Ensure that we reconstruct the histograms objects
 	// now that the data/mask have changed
-	deleteHistAndStats();
+	deleteHist();
 
 	return True;
 }
@@ -4183,7 +4194,7 @@ ImageInterface<Float>* ImageAnalysis::sepconvolve(
 Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 		Record& p_Region, const Bool list) {
 
-	*_log << LogOrigin("ImageAnalysis", "set");
+	*_log << LogOrigin(className(), __FUNCTION__);
 	String pixels(lespixels);
 	Bool setPixels(True);
 	if (pixels.length() == 0) {
@@ -4261,10 +4272,10 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 		LatticeExprNode node4(iif(region, mask, pixelMask));
 		pixelMask.copyData(LatticeExpr<Bool> (node4));
 	}
-	// Ensure that we reconstruct the statistics and histograms objects
+	// Ensure that we reconstruct the histograms objects
 	// now that the data/mask have changed
 
-	deleteHistAndStats();
+	deleteHist();
 
 	return True;
 }
@@ -4272,8 +4283,6 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 Bool ImageAnalysis::setbrightnessunit(const String& unit) {
 
 	*_log << LogOrigin("ImageAnalysis", "setbrightnessunit");
-	_statistics.reset(0);
-
 	return _image->setUnits(Unit(unit));
 }
 
@@ -4346,7 +4355,7 @@ Bool ImageAnalysis::setrestoringbeam(
 			*_log << LogIO::POST << "Failed to remove restoring beam" << LogIO::POST;
 			return False;
 		}
-		deleteHistAndStats();
+		deleteHist();
 		return True;
 	}
 	Quantity bmajor, bminor, bpa;
@@ -4449,378 +4458,10 @@ Bool ImageAnalysis::setrestoringbeam(
 			<< "  Position Angle : " << bpa.getValue() << " " << bpa.getUnit() << endl
 			<< LogIO::POST;
 	}
-	deleteHistAndStats();
+	deleteHist();
 	return True;
 }
 
-Bool ImageAnalysis::statistics(
-	Record& statsout, const Vector<Int>& axes,
-	Record& regionRec, const String& mask, const Vector<String>& plotstats,
-	const Vector<Float>& includepix, const Vector<Float>& excludepix,
-	const String&, const Int nx, const Int ny, const Bool list,
-	const Bool force, const Bool disk, const Bool robust,
-	const Bool verbose, const Bool extendMask, vector<String> *const &messageStore
-) {
-	String pgdevice("/NULL");
-	*_log << LogOrigin(className(), __FUNCTION__);
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-	String mtmp = mask;
-	if (mtmp == "false" || mtmp == "[]") {
-		mtmp = "";
-	}
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-			pRegionRegion, pMaskRegion, *_image,
-			*(ImageRegion::tweakedRegionRecord(&regionRec)),
-			mtmp,  (verbose ? _log.get() : 0), False, AxesSpecifier(),
-			extendMask
-	);
-	{
-		/*
-		// block for debug only
-		//cout << "mask " << subImage.getMask() << endl;
-		Array<Bool> mymask = subImage.getMask();
-		IPosition shape = mymask.shape();
-		IPosition index = shape-1;
-		uInt j=0;
-		while(True) {
-			for (uInt i=0; i<shape(0); i++) {
-				index[0] = i;
-				cout << mymask(index) << " ";
-			}
-			cout << index << endl;
-			for (j=1; j<shape.size(); j++) {
-				if (index[j] == 0) {
-					index[j] = shape[j]-1;
-					cout << endl;
-				}
-			else {
-				index[j]--;
-				break;
-			}
-
-			}
-			if (j == shape.size()) {
-				break;
-			}
-		}
-		cout << "pixel mask " << endl;
-		mymask = subImage.pixelMask().get();
-		shape = mymask.shape();
-		index = shape-1;
-		j=0;
-		while(True) {
-			for (uInt i=0; i<shape(0); i++) {
-				index[0] = i;
-				cout << mymask(index) << " ";
-			}
-			cout << index << endl;
-			for (j=1; j<shape.size(); j++) {
-				if (index[j] == 0) {
-					index[j] = shape[j]-1;
-					cout << endl;
-				}
-			else {
-				index[j]--;
-				break;
-			}
-
-			}
-			if (j == shape.size()) {
-				break;
-			}
-		}
-		 */
-	}
-	// Reset who is logging stuff.
-	*_log << LogOrigin(className(), __FUNCTION__);
-
-	// Find BLC of subimage in pixels and world coords, and output the
-	// information to the logger.
-	// NOTE: ImageStatitics can't do this because it only gets the subimage
-	//       not a region and the full image.
-	IPosition blc(subImage.ndim(), 0);
-	IPosition trc(subImage.shape() - 1);
-	if (pRegionRegion != 0) {
-		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
-				_image->coordinates(), _image->shape());
-		Slicer sl = latRegion.slicer();
-		blc = sl.start();
-		trc = sl.end();
-	}
-	// for precision
-	CoordinateSystem cSys = _image->coordinates();
-	Bool hasDirectionCoordinate = (cSys.findCoordinate(Coordinate::DIRECTION) >= 0);
-	Int precis = -1;
-	if (hasDirectionCoordinate) {
-		DirectionCoordinate dirCoord = cSys.directionCoordinate(0);
-		Vector<String> dirUnits = dirCoord.worldAxisUnits();
-		Vector<Double> dirIncs = dirCoord.increment();
-		for (uInt i=0; i< dirUnits.size(); i++) {
-			Quantity inc(dirIncs[i], dirUnits[i]);
-			inc.convert("s");
-			Int newPrecis = abs(int(floor(log10(inc.getValue()))));
-			precis = (newPrecis > 2 && newPrecis > precis) ? newPrecis : precis;
-		}
-	}
-
-	String blcf, trcf;
-	blcf = CoordinateUtil::formatCoordinate(blc, cSys, precis);
-	trcf = CoordinateUtil::formatCoordinate(trc, cSys, precis);
-
-	if (list) {
-		// Only write to the logger if the user wants it displayed.
-		Vector<String> x(5);
-		*_log << LogOrigin("ImageAnalysis", "statistics") << LogIO::NORMAL;
-		ostringstream y;
-		x[0] = "Regions --- ";
-		y << "         -- bottom-left corner (pixel) [blc]:  " << blc;
-		x[1] = y.str();
-		y.str("");
-		y << "         -- top-right corner (pixel) [trc]:    " << trc;
-		x[2] = y.str();
-		y.str("");
-		y << "         -- bottom-left corner (world) [blcf]: " << blcf;
-		x[3] = y.str();
-		y.str("");
-		y << "         -- top-right corner (world) [trcf]:   " << trcf;
-		x[4] = y.str();
-		for (uInt i=0; i<x.size(); i++) {
-			*_log << x[i] << LogIO::POST;
-			if (messageStore != 0) {
-				messageStore->push_back(x[i] + "\n");
-			}
-		}
-	}
-
-	// Make new statistics object only if we need to.    This code is getting
-	// a bit silly. I should rework it somewhen.
-	Bool forceNewStorage = force;
-	if (_statistics.get() != 0) {
-		if (disk != oldStatsStorageForce_p) {
-			forceNewStorage = True;
-		}
-	}
-
-	if (forceNewStorage) {
-		_statistics.reset(
-			verbose
-			? new ImageStatistics<Float> (subImage, *_log, True, disk)
-			: new ImageStatistics<Float> (subImage, True, disk)
-		);
-	}
-	else {
-		if (_statistics.get() == 0) {
-			// We are here if this is the first time or the image has
-			// changed (_statistics is deleted then)
-
-			_statistics.reset(
-				verbose
-				? new ImageStatistics<Float> (subImage, *_log, False, disk)
-				: new ImageStatistics<Float> (subImage, False, disk)
-			);
-		}
-		else {
-			// We already have a statistics object.  We only have to set
-			// the new image (which will force the accumulation image
-			// to be recomputed) if the region has changed.  If the image itself
-			// changed, _statistics will already have been set to 0
-
-			Bool reMake = (verbose && !_statistics->hasLogger())
-								|| (!verbose && _statistics->hasLogger());
-			if (reMake) {
-				_statistics.reset(
-					verbose
-					? new ImageStatistics<Float> (subImage, *_log, True, disk)
-					: new ImageStatistics<Float> (subImage, True, disk)
-				);
-			}
-			else {
-				_statistics->resetError();
-				if (
-					haveRegionsChanged(
-						pRegionRegion, pMaskRegion,
-						_oldStatsRegionRegion.get(), pOldStatsMaskRegion_p
-					)
-				) {
-					_statistics->setNewImage(subImage);
-				}
-			}
-		}
-	}
-	if (messageStore != 0) {
-		_statistics->recordMessages(True);
-	}
-	_statistics->setPrecision(precis);
-	_statistics->setBlc(blc);
-
-	// Assign old regions to current regions
-	delete pOldStatsMaskRegion_p;
-	pOldStatsMaskRegion_p = 0;
-
-	_oldStatsRegionRegion.reset(pRegionRegion);
-	pOldStatsMaskRegion_p = pMaskRegion;
-	oldStatsStorageForce_p = disk;
-
-	// Set cursor axes
-	*_log << LogOrigin(className(), __FUNCTION__);
-	if (! _statistics->setAxes(axes)) {
-		*_log << _statistics->errorMessage() << LogIO::EXCEPTION;
-	}
-
-	// Set pixel include/exclude ranges
-	//std::cerr << "include/exclude" << includepix.size() << " " << excludepix.size() << std::endl;
-	if (!_statistics->setInExCludeRange(includepix, excludepix, False)) {
-		*_log << _statistics->errorMessage() << LogIO::EXCEPTION;
-	}
-
-	// Tell what to list
-	if (!_statistics->setList(list)) {
-		*_log << _statistics->errorMessage() << LogIO::EXCEPTION;
-	}
-
-	// What to plot
-	Vector<Int> statsToPlot = LatticeStatsBase::toStatisticTypes(plotstats);
-
-	// Recover statistics
-	Array<Double> npts, sum, sumsquared, min, max, mean, sigma;
-	Array<Double> rms, fluxDensity, med, medAbsDevMed, quartile;
-	Bool ok = True;
-
-	Bool trobust(robust);
-	if (!trobust) {
-		for (uInt i = 0; i < statsToPlot.nelements(); i++) {
-			if (
-					statsToPlot(i) == Int(LatticeStatsBase::MEDIAN)
-					|| statsToPlot(i) == Int(LatticeStatsBase::MEDABSDEVMED)
-					|| statsToPlot(i) == Int(LatticeStatsBase::QUARTILE)
-			) {
-				trobust = True;
-			}
-		}
-	}
-	Bool doFlux = True;
-	if (_image->imageInfo().hasMultipleBeams()) {
-		if (cSys.hasSpectralAxis() || cSys.hasPolarizationCoordinate()) {
-			Int spAxis = cSys.spectralAxisNumber();
-			Int poAxis = cSys.polarizationAxisNumber();
-			for (Int i=0; i<(Int)axes.size(); i++) {
-				if (axes[i] == spAxis || axes[i] == poAxis) {
-					*_log << LogIO::WARN << "At least one cursor axis contains multiple beams. "
-							<< "You should thus use care in interpreting these statistics. Flux densities "
-							<< "will not be computed." << LogIO::POST;
-					doFlux = False;
-					break;
-				}
-			}
-		}
-	}
-	if (trobust) {
-		ok = _statistics->getStatistic(med, LatticeStatsBase::MEDIAN)
-							&& _statistics->getStatistic(
-									medAbsDevMed, LatticeStatsBase::MEDABSDEVMED
-							)
-							&& _statistics->getStatistic(
-									quartile, LatticeStatsBase::QUARTILE
-							);
-	}
-	if (ok) {
-		ok = _statistics->getStatistic(npts, LatticeStatsBase::NPTS)
-								&& _statistics->getStatistic(sum, LatticeStatsBase::SUM)
-								&& _statistics->getStatistic(sumsquared,
-										LatticeStatsBase::SUMSQ)
-										&& _statistics->getStatistic(min, LatticeStatsBase::MIN)
-										&& _statistics->getStatistic(max, LatticeStatsBase::MAX)
-										&& _statistics->getStatistic(mean, LatticeStatsBase::MEAN)
-										&& _statistics->getStatistic(sigma, LatticeStatsBase::SIGMA)
-										&& _statistics->getStatistic(rms, LatticeStatsBase::RMS);
-	}
-	if (!ok) {
-		*_log << _statistics->errorMessage() << LogIO::EXCEPTION;
-	}
-	if (statsout.size() > 0) {
-		statsout = Record();
-	}
-	statsout.define(RecordFieldId("npts"), npts);
-	statsout.define(RecordFieldId("sum"), sum);
-	statsout.define(RecordFieldId("sumsq"), sumsquared);
-	statsout.define(RecordFieldId("min"), min);
-	statsout.define(RecordFieldId("max"), max);
-	statsout.define(RecordFieldId("mean"), mean);
-	if (trobust) {
-		statsout.define(RecordFieldId("median"), med);
-		statsout.define(RecordFieldId("medabsdevmed"), medAbsDevMed);
-		statsout.define(RecordFieldId("quartile"), quartile);
-	}
-	statsout.define(RecordFieldId("sigma"), sigma);
-	statsout.define(RecordFieldId("rms"), rms);
-	if (
-		doFlux
-		&& _statistics->getStatistic(
-			fluxDensity, LatticeStatsBase::FLUX
-		)
-	) {
-		statsout.define(RecordFieldId("flux"), fluxDensity);
-	}
-	statsout.define(RecordFieldId("blc"), blc.asVector());
-	statsout.define(RecordFieldId("blcf"), blcf);
-
-	statsout.define(RecordFieldId("trc"), trc.asVector());
-	statsout.define(RecordFieldId("trcf"), trcf);
-
-	String tmp;
-	IPosition minPos, maxPos;
-	if (_statistics->getMinMaxPos(minPos, maxPos)) {
-		if (minPos.nelements() > 0 && maxPos.nelements() > 0) {
-			statsout.define(RecordFieldId("minpos"), (blc + minPos).asVector());
-			tmp = CoordinateUtil::formatCoordinate(blc + minPos, cSys, precis);
-			statsout.define(RecordFieldId("minposf"), tmp);
-			statsout.define(RecordFieldId("maxpos"), (blc + maxPos).asVector());
-			tmp = CoordinateUtil::formatCoordinate(blc + maxPos, cSys, precis);
-			statsout.define(RecordFieldId("maxposf"), tmp);
-		}
-	}
-
-	// Make plots
-	PGPlotter plotter;
-	Vector<Int> nxy(2);
-	if (!pgdevice.empty()) {
-		//      try {
-		plotter = PGPlotter(pgdevice);
-		//      } catch (AipsError x) {
-		//          *_log << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-		//          return False;
-		//      }
-		nxy(0) = nx;
-		nxy(1) = ny;
-		if (nx < 0 || ny < 0) {
-			nxy.resize(0);
-		}
-
-		if (!_statistics->setPlotting(plotter, statsToPlot, nxy)) {
-			*_log << _statistics->errorMessage() << LogIO::EXCEPTION;
-		}
-	}
-
-	if (list || !pgdevice.empty()) {
-		_statistics->showRobust(trobust);
-		if (!_statistics->display()) {
-			*_log << _statistics->errorMessage() << LogIO::EXCEPTION;
-		}
-	}
-	_statistics->closePlotting();
-	if (messageStore != 0) {
-		vector<String> messages = _statistics->getMessages();
-		for (
-				vector<String>::const_iterator iter=messages.begin();
-				iter!=messages.end(); iter++
-		) {
-			messageStore->push_back(*iter + "\n");
-		}
-		_statistics->clearMessages();
-	}
-	return True;
-}
 
 Bool ImageAnalysis::twopointcorrelation(
 	const String& outFile,
@@ -5191,17 +4832,11 @@ Bool ImageAnalysis::unlock() {
 	return True;
 }
 
-Bool ImageAnalysis::deleteHistAndStats() {
+Bool ImageAnalysis::deleteHist() {
 	Bool rstat = False;
 	*_log << LogOrigin("ImageAnalysis", "deleteHistAndStats");
 	try {
-		_statistics.reset(0);
 		_histograms.reset(0);
-		_oldStatsRegionRegion.reset(0);
-		if (pOldStatsMaskRegion_p != 0) {
-			delete pOldStatsMaskRegion_p;
-			pOldStatsMaskRegion_p = 0;
-		}
 		if (pOldHistRegionRegion_p != 0) {
 			delete pOldHistRegionRegion_p;
 			pOldHistRegionRegion_p = 0;
@@ -5211,7 +4846,7 @@ Bool ImageAnalysis::deleteHistAndStats() {
 			pOldHistMaskRegion_p = 0;
 		}
 		rstat = True;
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 	}
@@ -5248,19 +4883,7 @@ Bool ImageAnalysis::makeMask(ImageInterface<Float>& out, String& maskName,
 	}
 }
 
-Bool ImageAnalysis::haveRegionsChanged(ImageRegion* pNewRegionRegion,
-		ImageRegion* pNewMaskRegion, ImageRegion* pOldRegionRegion,
-		ImageRegion* pOldMaskRegion) const {
-	Bool regionChanged = (pNewRegionRegion != 0 && pOldRegionRegion != 0
-			&& (*pNewRegionRegion) != (*pOldRegionRegion)) || (pNewRegionRegion
-			== 0 && pOldRegionRegion != 0) || (pNewRegionRegion != 0
-			&& pOldRegionRegion == 0);
-	Bool maskChanged = (pNewMaskRegion != 0 && pOldMaskRegion != 0
-			&& (*pNewMaskRegion) != (*pOldMaskRegion)) || (pNewMaskRegion == 0
-			&& pOldMaskRegion != 0) || (pNewMaskRegion != 0 && pOldMaskRegion
-			== 0);
-	return (regionChanged || maskChanged);
-}
+
 
 void ImageAnalysis::makeRegionBlock(PtrBlock<const ImageRegion*>& regions,
 		const Record& Regions, LogIO& ) {
@@ -5300,8 +4923,8 @@ Bool ImageAnalysis::make_image(String &error, const String& outfile,
 	}
 
 	// This function is generally only called for creating new images,
-	// but you never know, so add statistic/histograms protection
-	deleteHistAndStats();
+	// but you never know, so add histograms protection
+	deleteHist();
 
 	uInt ndim = shape.nelements();
 	if (ndim != cSys.nPixelAxes()) {

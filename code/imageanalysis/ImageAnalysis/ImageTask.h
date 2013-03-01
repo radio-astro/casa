@@ -69,6 +69,10 @@ public:
 
     void setLogfileAppend(const Bool a);
 
+    void setRegion(const Record& region) { _regionRecord = region; }
+
+    void setMask(const String& mask) { _mask = mask; }
+
 protected:
 
 	// if <src>outname</src> is empty, no image will be written
@@ -146,6 +150,7 @@ protected:
     	const ArrayLattice<Bool> *const mask=0,
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
     ) const;
+
 
 private:
     const ImageInterface<Float> *const _image;
