@@ -421,8 +421,8 @@ class TsysFiller( TsysFillerBase ):
         return left and right edge values.
         """
         incr = abc[1] - abc[0]
-        ledge = abc[0] - 0.5 * incr
-        redge = abc[-1] + 0.5 * incr
+        ledge = min(abc) - 0.5 * incr
+        redge = max(abc) + 0.5 * incr
         if ledge > redge:
             return (redge,ledge)
         else:
