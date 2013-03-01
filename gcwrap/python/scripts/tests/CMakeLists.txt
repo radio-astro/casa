@@ -60,6 +60,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_hanning.py
   test_ia_histograms.py
   test_ia_imageconcat.py
+  test_ia_insert.py
   test_ia_isconform.py
   test_ia_pad.py
   test_ia_pv.py

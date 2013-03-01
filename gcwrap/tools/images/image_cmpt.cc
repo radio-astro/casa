@@ -1942,7 +1942,7 @@ std::vector<std::string> image::history(const bool list, const bool browse) {
 	return rstat;
 }
 
-::casac::image * image::insert(
+bool image::insert(
 	const std::string& infile, const ::casac::record& region,
 	const std::vector<double>& locate, bool verbose
 ) {
@@ -1957,9 +1957,7 @@ std::vector<std::string> image::history(const bool list, const bool browse) {
 			locatePixel.resize(0);
 		}
 		std::auto_ptr<Record> Region(toRecord(region));
-		return new ::casac::image(
-			_image->insert(infile, *Region, locatePixel, verbose)
-		);
+		return _image->insert(infile, *Region, locatePixel, verbose);
 	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;

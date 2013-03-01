@@ -41,6 +41,7 @@ test_ia_getregion               dmehring@nrao.edu
 test_ia_hanning                 dmehring@nrao.edu
 test_ia_histograms              dmehring@nrao.edu
 test_ia_imageconcat             dmehring@nrao.edu
+test_ia_insert                  dmehring@nrao.edu
 test_ia_isconform               dmehring@nrao.edu
 test_ia_modify                  dmehring@nrao.edu
 test_ia_pad                     dmehring@nrao.edu

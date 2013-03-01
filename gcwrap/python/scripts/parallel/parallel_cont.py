@@ -621,7 +621,7 @@ class imagecont():
             ########
                 #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
             ###########
-                (ia.insert(infile=inim[k], locate=blc,verbose=False)).close()
+                ia.insert(infile=inim[k], locate=blc,verbose=False)
                 if(removeinfile):
                     ia.removefile(inim[k])
             k+=1
