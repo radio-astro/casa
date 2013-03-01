@@ -45,7 +45,7 @@ print 'split tests will use data from '+datapath
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
-    print val
+#    print val
     if type(val) == dict:
         for k in val:
             check_eq(val[k], expval[k], tol)
@@ -1211,12 +1211,10 @@ class split_test_sw_and_fc(SplitChecker):
 #                             correlation='', async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             field='', spw=spwwidth[0], freqaverage=True,
-                             freqbin=spwwidth[1],
+                             spw=spwwidth[0], freqaverage=True,
+                             freqbin=int(spwwidth[1]),
                              antenna='VA03,VA05&',               # Case sensitive
-                             timerange='',
-                             scan='', array='', uvrange='',
-                             correlation='', async=False)
+                             createmms=False)
             tb.open(outms + '/SPECTRAL_WINDOW')
             cf = tb.getcell('CHAN_FREQ', 0)
             record['nchan'] = cf.shape[0]
@@ -1940,7 +1938,7 @@ def suite():
             split_test_blankov,
 #            split_test_tav_then_cvel, 
             split_test_genericsubtables,
-#            split_test_sw_and_fc, 
+            split_test_sw_and_fc, 
             split_test_cavcd, 
             split_test_almapol,
 #            split_test_wttosig, 

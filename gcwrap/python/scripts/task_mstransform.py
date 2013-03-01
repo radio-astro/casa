@@ -1,5 +1,5 @@
 
-import os
+import os, re
 import shutil
 import string
 import copy
@@ -8,6 +8,7 @@ from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 import simple_cluster
 import partitionhelper as ph
+from update_spw import update_spwchan
 
 
 # Decorator function to print the arguments of a function
@@ -126,7 +127,7 @@ class MSTHelper(ParallelTaskHelper):
         
         return self.__selpars
 
-#    @dump_args
+    @dump_args
     def initialize(self):
         """Add the full path for the input and output MS.
            This method overrides the one from ParallelTaskHelper."""
@@ -230,7 +231,7 @@ class MSTHelper(ParallelTaskHelper):
                         
         return self.__selpars
      
-#    @dump_args
+    @dump_args
     def generateJobs(self):
         '''This is the method which generates all of the actual jobs to be done.'''
         '''This method overrides the one in ParallelTaskHelper baseclass'''
@@ -314,9 +315,7 @@ class MSTHelper(ParallelTaskHelper):
 #            if self.__selectionFilter != None:
             self.__ddistart = self.__ddistart + partitionedSPWs[output].__len__()
 
-        
-        
-#    @dump_args
+    @dump_args
     def _createDefaultSeparationCommands(self):
         # This method is similar to the SPW Separation mode above, except
         # that if there are not enough SPW to satisfy the numSubMS it uses
@@ -351,6 +350,7 @@ class MSTHelper(ParallelTaskHelper):
         for output in xrange(numSpwPartitions*numScanPartitions):
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False
+
             
             mmsCmd['scan'] = ParallelTaskHelper.listToCasaString \
                              (partitionedScans[output%numScanPartitions])
@@ -363,8 +363,7 @@ class MSTHelper(ParallelTaskHelper):
                 simple_cluster.JobData(self._taskName, mmsCmd))
             
             self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
-
-
+        
 #    @dump_args
     def _getDDIstart(self):
         '''Return the DDIstart internal parameter'''
@@ -480,7 +479,7 @@ class MSTHelper(ParallelTaskHelper):
                 filter[selSyntax] = self._arg[argSyntax]
         return filter
 
-#    @dump_args
+    @dump_args
     def __partition(self, lst, n):
         '''
         This method will split the list lst into "n" almost equal parts
@@ -494,7 +493,7 @@ class MSTHelper(ParallelTaskHelper):
         return [ lst[int(round(division * i)):
                      int(round(division * (i+1)))] for i in xrange(int(n))]
 
-#    @dump_args
+    @dump_args
     def postExecution(self):
         '''
         This overrides the post execution portion of the task helper
@@ -503,7 +502,8 @@ class MSTHelper(ParallelTaskHelper):
         '''
         if self._arg['createmms']:
             casalog.post("Finalizing MMS structure")
-            print self._msTool.name()
+            if self._msTool:
+                self._msTool.close()
 
             # TODO: revise this later                        
             # restore POINTING and SYSCAL
@@ -536,18 +536,12 @@ class MSTHelper(ParallelTaskHelper):
                         subMSList.append(job.getCommandArguments()['outputvis'])
                         
             subMSList.sort()
-            print subMSList
 
             if len(subMSList) == 0:
                 casalog.post("Error: no subMSs were created.", 'WARN')
                 return False
 
             mastersubms = subMSList[0]
-#            self._msTool.close()
-#            self._msTool.open(mastersubms)
-#            scansumm = self._msTool.getscansummary()
-#            print scansumm
-#            self._msTool.close()
             subtabs_to_omit = []
 
             # deal with POINTING table
@@ -732,13 +726,14 @@ def mstransform(
             mth.setupCluster()
             
             # Do the processing. 
-            retval = mth.go()
+            mth.go()
             
-            return retval
+            return 
 
         
     # Create a local copy of the MSTransform tool
     mtlocal = casac.mstransformer()
+    mslocal = mstool()
         
     try:
                     
@@ -752,6 +747,7 @@ def mstransform(
         
         # Write the DDI start for each sub-MS, when creating an MMS
 #        config['ddistart'] = mth._getDDIstart()
+        config['ddistart'] = ddistart
 #        print 'Will add ddistart to config'
 #        print config['ddistart']
         config['datacolumn'] = datacolumn
@@ -816,6 +812,89 @@ def mstransform(
     except Exception, instance:
         mtlocal.done()
         raise Exception, instance
+
+    # Update the FLAG_CMD sub-table to reflect any spw/channels selection
+    if ((spw != '') and (spw != '*')) or freqaverage == True:
+        isopen = False
+        mytb = tbtool()
+        try:
+            mytb.open(outputvis + '/FLAG_CMD', nomodify=False)
+            isopen = True
+            nflgcmds = mytb.nrows()
+            
+            if nflgcmds > 0:
+                mademod = False
+                cmds = mytb.getcol('COMMAND')
+                widths = {}
+                #print "width =", width
+                if hasattr(freqbin, 'has_key'):
+                    widths = freqbin
+                else:
+                    if hasattr(freqbin, '__iter__') and len(freqbin) > 1:
+                        for i in xrange(len(freqbin)):
+                            widths[i] = freqbin[i]
+                    elif freqbin != 1:
+#                        print 'using ms.msseltoindex + a scalar width'
+                        numspw = len(mslocal.msseltoindex(vis=vis,
+                                                     spw='*')['spw'])
+                        if hasattr(freqbin, '__iter__'):
+                            w = freqbin[0]
+                        else:
+                            w = freqbin
+                        for i in xrange(numspw):
+                            widths[i] = w
+#                print 'widths =', widths 
+                for rownum in xrange(nflgcmds):
+                    # Matches a bare number or a string quoted any way.
+                    spwmatch = re.search(r'spw\s*=\s*(\S+)', cmds[rownum])
+                    if spwmatch:
+                        sch1 = spwmatch.groups()[0]
+                        sch1 = re.sub(r"[\'\"]", '', sch1)  # Dequote
+                        # Provide a default in case the split selection excludes
+                        # cmds[rownum].  update_spwchan() will throw an exception
+                        # in that case.
+                        cmd = ''
+                        try:
+                            #print 'sch1 =', sch1
+                            sch2 = update_spwchan(vis, spw, sch1, truncate=True,
+                                                  widths=widths)
+                            #print 'sch2 =', sch2
+                            ##print 'spwmatch.group() =', spwmatch.group()
+                            if sch2:
+                                repl = ''
+                                if sch2 != '*':
+                                    repl = "spw='" + sch2 + "'"
+                                cmd = cmds[rownum].replace(spwmatch.group(), repl)
+                        #except: # cmd[rownum] no longer applies.
+                        except Exception, e:
+                            casalog.post(
+                                "Error %s updating row %d of FLAG_CMD" % (e,
+                                                                          rownum),
+                                         'WARN')
+                            casalog.post('sch1 = ' + sch1, 'DEBUG1')
+                            casalog.post('cmd = ' + cmd, 'DEBUG1')
+                        if cmd != cmds[rownum]:
+                            mademod = True
+                            cmds[rownum] = cmd
+                if mademod:
+                    casalog.post('Updating FLAG_CMD', 'INFO')
+                    mytb.putcol('COMMAND', cmds)
+
+            mytb.close()
+            
+        except Exception, instance:
+            if isopen:
+                mytb.close()
+            mslocal = None
+            mytb = None
+            casalog.post("*** Error \'%s\' updating FLAG_CMD" % (instance),
+                         'SEVERE')
+            return False
+
+    mslocal = None
+    mytb = None
+    
+    return True
     
     # Write history 
 #    try:
@@ -835,7 +914,6 @@ def mstransform(
 #        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
 #                        'WARN')
 
-    return True
 
 # TODO:
 # 1) allow freqbin to be a list to apply to each spw selection. DONE
