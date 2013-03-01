@@ -143,7 +143,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     <param type="bool" name="mterm" subparam="true">
       <description>Switch-on the M-Term?</description>
-      <value>False</value>
+      <value>True</value>
     </param>
     <param type="bool" name="wbawp" subparam="true">
       <description>Trigger the wide-band A-Projection algorithm?</description>
@@ -514,7 +514,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		<default param="conjbeams"><value>True</value></default>
 		<default param="aterm"><value>True</value></default>
 		<default param="psterm"><value>True</value></default>
-		<default param="mterm"><value>False</value></default>
+		<default param="mterm"><value>True</value></default>
 		<default param="epjtable"><value type="string"></value></default>
               </equals>
 	    </when>
