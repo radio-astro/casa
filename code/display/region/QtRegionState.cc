@@ -692,8 +692,7 @@ void QtRegionState::load_regions( bool ) {
 		return;
 	}
 
-	bool handled = false;
-	emit loadRegions( handled, path, load_file_type->currentText( ) );
+	emit loadRegions( path, load_file_type->currentText( ) );
 }
 
 void QtRegionState::update_default_file_extension(const QString &txt) {

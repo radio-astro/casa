@@ -202,7 +202,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   int numFrames( ) const { return qdp_->nFrames( ); }
 
   // load casa (or DS9?) region files...
-  void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+  void loadRegions( const std::string &path, const std::string &datatype );
   // zero length string indicates OK!
   std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format, std::string ds9_csys="pixel" );
 
@@ -558,6 +558,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QString status_bar_stylesheet;
 
  private slots:
+  void loadRegions( const QString &path, const QString &type );
   void incrementMovieChannel();
   void clear_status_bar( );
   void reset_status_bar( );

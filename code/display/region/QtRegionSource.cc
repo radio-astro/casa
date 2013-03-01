@@ -273,7 +273,8 @@ void QtRegionSourceKernel::updateRegionState(QtDisplayData*) {
 	generateExistingRegionUpdates( );
 }
 
-void QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ) {
+void QtRegionSourceKernel::loadRegions( const QString &path, const QString &type ) {
+	bool handled = true;
 	if ( ! handled ) {
 		handled = true;
 		ConstListIter<WorldCanvas*> wcl = panel_->displayPanel()->panelDisplay()->myWCLI;

@@ -348,7 +348,7 @@ public:
   void setPanelState( const panel_state & );
 
   // *new* Region code  --  load casa (or DS9?) region files...
-  void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+  void loadRegions( const std::string &path, const std::string &type );
   // *new* Region code  --  revoke region from region source...
   void revokeRegion( viewer::Region *r );
 

@@ -153,7 +153,7 @@ namespace casa {
 			void zRange( int z_min, int z_max );
 			/* void regionCategoryChange( QString ); */
 			void outputRegions( const QString &what, const QString &name, const QString &type, const QString &csys );
-			void loadRegions( bool &handled, const QString &path, const QString &type );
+			void loadRegions( const QString &path, const QString &type );
 
 		public slots:
 			void stackChange(QWidget*);

@@ -2562,12 +2562,12 @@ QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
 
 
 // load casa (or DS9?) region files...
-void QtDisplayPanel::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+void QtDisplayPanel::loadRegions( const std::string &path, const std::string &type ) {
 	// There are two approaches to parsing and loading regions. IMO the DS9
 	// approach is superior, but unifying them is no easy task...
-	if ( datatype == "casa region" ) {
-		toolmgr->loadRegions( path, datatype, displaytype );
-	} else if ( datatype == "ds9 region" ) {
+	if ( type == "CASA region file" ) {
+		toolmgr->loadRegions( path, type );
+	} else if ( type == "DS9 region file" ) {
 		ConstListIter<WorldCanvas*> wcl = panelDisplay()->myWCLI;
 		wcl.toStart( );
 		// really need to change this to find the world canvas for the display data that is currently visible...
