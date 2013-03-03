@@ -92,6 +92,14 @@ void ImageTask::_construct(Bool verbose) {
     );
 }
 
+void ImageTask::setRegion(const Record& region) {
+    _regionRecord = region;
+    _box = "";
+    _chan = "";
+    _stokesString = "";
+    _region = "";
+}
+
 void ImageTask::_removeExistingFileIfNecessary(
 	const String& filename, const Bool overwrite
 ) {

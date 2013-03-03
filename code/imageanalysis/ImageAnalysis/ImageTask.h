@@ -69,7 +69,7 @@ public:
 
     void setLogfileAppend(const Bool a);
 
-    void setRegion(const Record& region) { _regionRecord = region; }
+    void setRegion(const Record& region);
 
     void setMask(const String& mask) { _mask = mask; }
 
