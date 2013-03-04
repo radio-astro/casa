@@ -122,6 +122,7 @@ void MSTransformDataHandler::initialize()
 	outputInputSPWIndexMap_p.clear();
 
 	// Frequency transformation parameters
+	ddiStart_p = 0;
 	combinespws_p = False;
 	channelAverage_p = False;
 	hanningSmooth_p = False;
@@ -392,6 +393,13 @@ void MSTransformDataHandler::parseFreqTransParams(Record &configuration)
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Combine Spectral Windows is " << combinespws_p << LogIO::POST;
 	}
 
+	exists = configuration.fieldNumber ("ddistart");
+	if (exists >= 0)
+	{
+		configuration.get (exists, ddiStart_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "DDI start is " << ddiStart_p << LogIO::POST;
+	}
+
 	exists = configuration.fieldNumber ("hanning");
 	if (exists >= 0)
 	{
@@ -557,7 +565,7 @@ void MSTransformDataHandler::open()
 {
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Select data" << LogIO::POST;
 
-	splitter_p = new SubMS(inpMsName_p,Table::Update);
+	splitter_p = new SubMS(inpMsName_p,Table::Old);
 
 	// WARNING: Input MS is re-set at the end of a successful SubMS::makeSubMS call, therefore we have to use the selected MS always
 	inputMs_p = &(splitter_p->ms_p);
@@ -592,22 +600,23 @@ void MSTransformDataHandler::open()
 							(const String)scanIntentSelection_p,
 							(const String)observationSelection_p);
 
-
 	splitter_p->selectTime(timeBin_p,timeSelection_p);
 
 	// Create output MS structure
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Create output MS structure" << LogIO::POST;
 
+	Bool selectionOk = False;
 	splitter_p->fillMainTable_p = False;
-
-	splitter_p->makeSubMS(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
+	selectionOk = splitter_p->makeSubMS(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
+	if (!selectionOk)
+	{
+		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Combination of selection ranges produces a NullSelection" << LogIO::POST;
+		throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected table has zero rows."));
+	}
 
 	selectedInputMs_p = &(splitter_p->mssel_p);
-
 	outputMs_p = &(splitter_p->msOut_p);
-
 	selectedInputMsCols_p = splitter_p->mscIn_p;
-
 	outputMsCols_p = splitter_p->msc_p;
 
 	return;
@@ -843,7 +852,7 @@ void MSTransformDataHandler::initDataSelectionParams()
 		{
 			// Get spw id and set the input-output spw map
 			spw = spwchan(selection_i,0);
-			inputOutputSPWIndexMap_p[spw] = selection_i;
+			inputOutputSPWIndexMap_p[spw] = selection_i + ddiStart_p;
 			outputInputSPWIndexMap_p[selection_i] = spw;
 
 			// Set the channel selection ()
@@ -1932,19 +1941,21 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		mapAndReindexVector(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p,True);
 		outputMsCols_p->fieldId().putColumnCells(rowRef,tmpVectorInt);
 
-		// Scan
-		mapAndReindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
-		outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
+		// Scan -> SCAN is not re-indexed in old split
+		// mapAndReindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
+		// outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
 
 		// State
 		mapAndReindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
 		outputMsCols_p->stateId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Spectral Window
-		tmpVectorInt = 0;
+		tmpVectorInt = ddiStart_p;
 		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
 
 		// Non re-indexable vector columns
+		mapVector(vb->scan(),tmpVectorInt);
+		outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
 		mapVector(vb->antenna1(),tmpVectorInt);
 		outputMsCols_p->antenna1().putColumnCells(rowRef,tmpVectorInt);
 		mapVector(vb->antenna2(),tmpVectorInt);
@@ -2032,7 +2043,8 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			outputMsCols_p->fieldId().putColumnCells(rowRef,vb->fieldId());
 		}
 
-		// Scan
+		// Scan -> SCAN is not re-indexed in old split
+		/*
 		if (inputOutputScanIndexMap_p.size())
 		{
 			reindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
@@ -2042,6 +2054,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		{
 			outputMsCols_p->scanNumber().putColumnCells(rowRef,vb->scan());
 		}
+		*/
 
 		// State
 		if (inputOutputScanIntentIndexMap_p.size())
@@ -2066,6 +2079,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 
 		// Non re-indexable columns
+		outputMsCols_p->scanNumber().putColumnCells(rowRef,vb->scan());
 		outputMsCols_p->antenna1().putColumnCells(rowRef,vb->antenna1());
 		outputMsCols_p->antenna2().putColumnCells(rowRef,vb->antenna2());
 		outputMsCols_p->feed1().putColumnCells(rowRef,vb->feed1());

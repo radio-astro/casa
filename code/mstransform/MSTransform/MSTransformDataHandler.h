@@ -351,6 +351,7 @@ protected:
 	map<Int,Int> outputInputSPWIndexMap_p;
 
 	// Frequency transformation parameters
+	Int ddiStart_p;
 	Bool combinespws_p;
 	Bool channelAverage_p;
 	Bool hanningSmooth_p;
