@@ -181,6 +181,8 @@ void MSTransformDataHandler::initialize()
 	numOfInpChanMap_p.clear();
 	numOfSelChanMap_p.clear();
 	numOfOutChanMap_p.clear();
+	numOfCombInputChanMap_p.clear();
+	numOfCombInterChanMap_p.clear();
 	transformStripeOfDataComplex_p = NULL;
 	transformStripeOfDataFloat_p = NULL;
 	transformCubeOfDataComplex_p = NULL;
@@ -762,10 +764,10 @@ void MSTransformDataHandler::setup()
 		initRefFrameTransParams();
 		regridSpwSubTable();
 	}
-	else if (channelAverage_p)
-	{
-		getOutputNumberOfChannels();
-	}
+
+	// Determine weight and sigma factors
+	getOutputNumberOfChannels();
+	calculateWeightAndSigmaFactors();
 
 	// Check what columns have to filled
 	checkFillFlagCategory();
@@ -1060,7 +1062,7 @@ void MSTransformDataHandler::regridSpwSubTable()
     	}
     	else
     	{
-    		numOfInpChanMap_p[spwId] = inputChanFreq.size();
+    		numOfCombInputChanMap_p[spwId] = inputChanFreq.size();
     		inputSpw = spwInfo(inputChanFreq,inputChanWidth);
     	}
 
@@ -1202,7 +1204,7 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 	}
 	else
 	{
-		numOfInpChanMap_p[0] = inputFrequencies.size();
+		numOfCombInputChanMap_p[0] = inputFrequencies.size();
 		inputSpw = spwInfo(inputFrequencies,inputWidths);
 	}
 
@@ -1301,8 +1303,8 @@ void MSTransformDataHandler::calculateIntermediateFrequencies(Int spwId,Vector<D
 {
 	uInt mumOfInterChan = inputChanFreq.size() / freqbinMap_p[spwId];
 	if (mumOfInterChan % freqbinMap_p[spwId]) mumOfInterChan += 1;
-	numOfInpChanMap_p[spwId] = inputChanFreq.size();
-	numOfOutChanMap_p[spwId] = mumOfInterChan;
+	numOfCombInputChanMap_p[spwId] = inputChanFreq.size();
+	numOfCombInterChanMap_p[spwId] = mumOfInterChan;
 	intermediateChanFreq.resize(mumOfInterChan,False);
 	intermediateChanWidth.resize(mumOfInterChan,False);
 	simpleAverage(freqbinMap_p[spwId], inputChanFreq, intermediateChanFreq);
@@ -1487,6 +1489,19 @@ void MSTransformDataHandler::getOutputNumberOfChannels()
 
     	numOfOutChanMap_p[spwId] = numChanCol(spw_idx);
     }
+
+	return;
+}
+
+
+void MSTransformDataHandler::calculateWeightAndSigmaFactors()
+{
+	map<Int,Int>::iterator iter;
+	for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
+	{
+		weightFactorMap_p[iter->first] = (Float)numOfSelChanMap_p[iter->first] / (Float)numOfInpChanMap_p[iter->first];
+		sigmaFactorMap_p[iter->first] = 1./sqrt((Float)numOfSelChanMap_p[iter->first] / (Float)numOfOutChanMap_p[iter->first]);
+	}
 
 	return;
 }
@@ -1938,8 +1953,8 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	Vector<Int> tmpVectorInt(rowRef.nrow(),0);
 
 	// Determine factors to modify sigma and weights
-	Float weightFactor = (Float)numOfSelChanMap_p[vb->spectralWindows()(0)] / (Float)numOfInpChanMap_p[vb->spectralWindows()(0)];
-	Float sigmaFactor = 1./sqrt((Float)numOfSelChanMap_p[vb->spectralWindows()(0)] / (Float)numOfOutChanMap_p[vb->spectralWindows()(0)]);
+	Float weightFactor;
+	Float sigmaFactor;
 
 	if (combinespws_p)
 	{
@@ -2004,11 +2019,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->flagRow().putColumnCells(rowRef,tmpVectorBool);
 
 		// Averaged matrix columns
-		mapAndAverageMatrix(vb->weight(),tmpMatrixFloat);
-		if (weightFactor != 1)
-		{
-			tmpMatrixFloat *= weightFactor;
-		}
+		mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
 		outputMsCols_p->weight().putColumnCells(rowRef,tmpMatrixFloat);
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
@@ -2019,11 +2030,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			mapAndAverageMatrix(vb->sigma(),tmpMatrixFloat);
-			if (sigmaFactor != 1)
-			{
-				tmpMatrixFloat *= sigmaFactor;
-			}
+			mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
 			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 		}
 	}
@@ -2114,7 +2121,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		Matrix<Float> weights = vb->weight();
 		if (weightFactor != 1)
 		{
-			weights *= weightFactor;
+			weights *= weightFactorMap_p[vb->spectralWindows()(0)];
 		}
 		outputMsCols_p->weight().putColumnCells(rowRef, weights);
 
@@ -2129,7 +2136,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			Matrix<Float> sigma = vb->sigma();
 			if (sigmaFactor != 1)
 			{
-				sigma *= sigmaFactor;
+				sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];;
 			}
 			outputMsCols_p->sigma().putColumnCells(rowRef, sigma);
 		}
@@ -2330,6 +2337,55 @@ template <class T> void MSTransformDataHandler::mapAndAverageMatrix(const Matrix
 	return;
 }
 
+template <class T> void MSTransformDataHandler::mapScaleAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,map<Int,T> scaleMap, Vector<Int> spws)
+{
+	// Get number of columns
+	uInt nCols = outputMatrix.shape()(0);
+
+    // Fill output array with the combined data from each SPW
+	Int spw;
+	uInt row;
+	uInt baseline_index = 0;
+	vector<uInt> baselineRows;
+	T normalizingFactor, contributionFactor;
+	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
+	{
+		// Get baseline rows vector
+		baselineRows = iter->second;
+
+		// Reset normalizing factor
+		normalizingFactor = 0;
+
+		// Compute combined value from each SPW
+		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		{
+			row = *iter;
+			spw = spws(row);
+			contributionFactor = scaleMap[spw];
+
+			for (uInt col = 0; col < nCols; col++)
+			{
+				outputMatrix(col,baseline_index) += contributionFactor*inputMatrix(col,row);
+			}
+
+			normalizingFactor += contributionFactor;
+		}
+
+		// Normalize accumulated value
+		if (normalizingFactor>0)
+		{
+			for (uInt col = 0; col < nCols; col++)
+			{
+				outputMatrix(col,baseline_index) /= normalizingFactor;
+			}
+		}
+
+		baseline_index += 1;
+	}
+
+	return;
+}
+
 // ----------------------------------------------------------------------------------------
 // Fill main (data) columns which have to be combined together to produce bigger SPWs
 // ----------------------------------------------------------------------------------------
@@ -2429,7 +2485,16 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
     if (fillWeightSpectrum_p)
     {
+    	averageKernelFloat_p = &MSTransformDataHandler::simpleAverageKernel;
     	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
+    	if (useweights_p == "weights")
+    	{
+    		averageKernelFloat_p = &MSTransformDataHandler::weightAverageKernel;
+    	}
+    	else
+    	{
+    		averageKernelFloat_p = &MSTransformDataHandler::flagAverageKernel;
+    	}
     }
 
     // Special case for flag category
@@ -2528,7 +2593,7 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2
 	uInt nInputChannels = inputCubeShape(1);
 
 	// Initialize input planes
-	IPosition inputPlaneShape(2,nInputCorrelations, numOfInpChanMap_p[0]);
+	IPosition inputPlaneShape(2,nInputCorrelations, numOfCombInputChanMap_p[0]);
 	Matrix<T> inputPlaneData(inputPlaneShape);
 	Matrix<Bool> inputPlaneFlags(inputPlaneShape);
 	Matrix<Float> inputPlaneWeights(inputPlaneShape);
@@ -2937,8 +3002,8 @@ template <class T> void MSTransformDataHandler::averageSmooth(Int inputSpw, Vect
 
 template <class T> void MSTransformDataHandler::averageRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
 {
-	Vector<T> averagedDataStripe(numOfOutChanMap_p[inputSpw],T());
-	Vector<Bool> averagedFlagsStripe(numOfOutChanMap_p[inputSpw],MSTransformations::False);
+	Vector<T> averagedDataStripe(numOfCombInterChanMap_p[inputSpw],T());
+	Vector<Bool> averagedFlagsStripe(numOfCombInterChanMap_p[inputSpw],MSTransformations::False);
 
 	average(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe, averagedDataStripe,averagedFlagsStripe);
 
@@ -2961,8 +3026,8 @@ template <class T> void MSTransformDataHandler::smoothRegrid(Int inputSpw, Vecto
 
 template <class T> void MSTransformDataHandler::averageSmoothRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
 {
-	Vector<T> averageSmoothedDataStripe(numOfOutChanMap_p[inputSpw],T());
-	Vector<Bool> averageSmoothedFlagsStripe(numOfOutChanMap_p[inputSpw],MSTransformations::False);
+	Vector<T> averageSmoothedDataStripe(numOfCombInterChanMap_p[inputSpw],T());
+	Vector<Bool> averageSmoothedFlagsStripe(numOfCombInterChanMap_p[inputSpw],MSTransformations::False);
 
 	averageSmooth(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,averageSmoothedDataStripe,averageSmoothedFlagsStripe);
 

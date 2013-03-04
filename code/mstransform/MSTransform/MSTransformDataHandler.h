@@ -245,9 +245,12 @@ protected:
 	void reindexSysCalSubTable();
 	void reindexFreqOffsetSubTable();
 
-	// Averaging set-up
+	// From output MS
 	void getOutputNumberOfChannels();
+
+	// For channel averaging and selection
 	void calculateIntermediateFrequencies(Int spwId,Vector<Double> &inputChanFreq,Vector<Double> &inputChanWidth,Vector<Double> &intermediateChanFreq,Vector<Double> &intermediateChanWidth);
+	void calculateWeightAndSigmaFactors();
 
 	// From selected MS
 	void checkFillFlagCategory();
@@ -272,6 +275,7 @@ protected:
 	template <class T> void mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix);
 	template <class T> void mapAndAverageVector(const Vector<T> &inputVector, Vector<T> &outputVector,Bool convolveFlags=False,vi::VisBuffer2 *vb=NULL);
 	template <class T> void mapAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,Bool convolveFlags=False,vi::VisBuffer2 *vb=NULL);
+	template <class T> void mapScaleAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,map<Int,T> scaleMap, Vector<Int> spws);
 
 	// When no transformations are needed, and the only combination axis is SPW
 	template <class T> void writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef);
@@ -404,6 +408,10 @@ protected:
 	map<Int,Int> numOfInpChanMap_p;
 	map<Int,Int> numOfSelChanMap_p;
 	map<Int,Int> numOfOutChanMap_p;
+	map<Int,Int> numOfCombInputChanMap_p;
+	map<Int,Int> numOfCombInterChanMap_p;
+	map<Int,Float> weightFactorMap_p;
+	map<Int,Float> sigmaFactorMap_p;
 
 	// Reference Frame Transformation members
 	MFrequency::Types inputReferenceFrame_p;
