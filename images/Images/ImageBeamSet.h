@@ -228,6 +228,14 @@ public:
 	// can be convolved.
 	GaussianBeam getCommonBeam() const;
 
+    // convert to a record. If <src>exceptionIfNull</src>, an excption will be raised
+	// if any beam in the set is the null beam.
+    Record toRecord(Bool exceptionIfNull) const;
+
+    // if <src>exceptIfNull</src>, throw an exception if any beam in the record
+    // is null
+    static ImageBeamSet fromRecord(const Record& rec, Bool exceptIfNull);
+
 private:
 
 	typedef std::map<AxisType, uInt> AxesMap;

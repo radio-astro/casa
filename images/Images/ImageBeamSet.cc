@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include <casa/Arrays/ArrayMath.h>
-// #include <casa/Utilities/GenSort.h>
+#include <casa/Containers/Record.h>
 #include <images/Images/ImageBeamSet.h>
 
 #include <vector>
@@ -766,6 +766,105 @@ ostream &operator<<(ostream &os, const ImageBeamSet& beamSet) {
 	return os;
 }
 
+Record ImageBeamSet::toRecord(Bool exceptionIfNull) const {
+	if (_beams.size() == 0) {
+		return Record();
+	}
+	Record outRecord;
+    if (_beams.size() == 1) {
+       Record restoringBeamRecord = _beams.begin()->toRecord();
+       outRecord.defineRecord("restoringbeam", restoringBeamRecord);
+       return outRecord;
+    }
+
+    Record perPlaneBeams;
+    Int spAxis = getAxis(SPECTRAL);
+    uInt nChannels = spAxis >= 0 ? _beams.shape()[spAxis] : 0;
+    Int polAxis = getAxis(POLARIZATION);
+    uInt nStokes = polAxis >= 0 ? _beams.shape()[polAxis] : 0;
+    perPlaneBeams.define(
+    	"nChannels", nChannels
+    );
+    perPlaneBeams.define(
+    	"nStokes", nStokes
+    );
+    Record rec;
+    uInt count = 0;
+    Array<GaussianBeam>::const_iterator iEnd = _beams.end();
+    for (
+    	Array<GaussianBeam>::const_iterator iter=_beams.begin();
+    	iter!=iEnd; iter++, count++
+    ) {
+    	if (iter->isNull() && exceptionIfNull) {
+    		throw AipsError("Invalid per plane beam found");
+    	}
+    	Record rec = iter->toRecord();
+    	perPlaneBeams.defineRecord("*" + String::toString(count), rec);
+    }
+    outRecord.defineRecord("perplanebeams", perPlaneBeams);
+    return outRecord;
+}
+
+ImageBeamSet ImageBeamSet::fromRecord(const Record& rec, Bool exceptIfNull) {
+	if (rec.isDefined("restoringbeam")) {
+		GaussianBeam beam = GaussianBeam::fromRecord(rec.asRecord("restoringbeam"));
+		if (exceptIfNull && beam.isNull()) {
+			ostringstream oss;
+			oss << "ImageBeamSet::" << __FUNCTION__ << ": Beam is null";
+			throw AipsError(oss.str());
+		}
+		return ImageBeamSet(beam);
+	}
+	if (rec.isDefined("perplanebeams")) {
+		Record beams = rec.asRecord("perplanebeams");
+		uInt nChannels = beams.asuInt("nChannels");
+		uInt nStokes = beams.asuInt("nStokes");
+		Bool hasSpectral = nChannels > 0;
+		Bool hasPol = nStokes > 0;
+		Vector<AxisType> types((hasPol ? 1 : 0) + (hasSpectral ? 1 : 0));
+		IPosition shape;
+		if (types.size() == 1) {
+			types[0] = hasPol ? POLARIZATION : SPECTRAL;
+			shape = IPosition(1, nChannels + nStokes);
+		}
+		else {
+			types[0] = SPECTRAL;
+			types[1] = POLARIZATION;
+			shape = IPosition(2, nChannels, nStokes);
+		}
+		Array<GaussianBeam> beamArray(shape);
+		uInt count = 0;
+		Array<GaussianBeam>::iterator iEnd = beamArray.end();
+		for (
+			Array<GaussianBeam>::iterator iter=beamArray.begin();
+			iter!=beamArray.end(); iter++, count++
+		) {
+			String field = "*" + String::toString(count);
+			if (! beams.isDefined(field)) {
+				throw AipsError(
+					"ImageBeamSet::" + String(__FUNCTION__) + ": Field " + field
+					+ " is not defined in the per plane beams subrecord"
+				);
+			}
+			*iter = GaussianBeam::fromRecord(beams.asRecord(field));
+			if (exceptIfNull && iter->isNull()) {
+				throw AipsError("At least one beam is null");
+			}
+		}
+		return ImageBeamSet(beamArray, types);
+	}
+	throw AipsError(
+		"ImageBeamSet::" + String(__FUNCTION__)
+		+ ": Record does not represent a beam set"
+	);
+}
+
 
 
 }
+
+
+
+
+
+
