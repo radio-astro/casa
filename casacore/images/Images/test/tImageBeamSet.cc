@@ -29,6 +29,8 @@
 
 #include <images/Images/ImageBeamSet.h>
 
+#include <casa/Containers/Record.h>
+
 #include <casa/iostream.h>
 
 #include <casa/namespace.h>
@@ -60,15 +62,21 @@ int main() {
 			c = x;
 			x = b;
 			AlwaysAssert(x == b, AipsError);
+			AlwaysAssert(
+				ImageBeamSet::fromRecord(b.toRecord(False), False) == b,
+				AipsError
+			);
 			ImageBeamSet k(beam);
 			Vector<ImageBeamSet::AxisType> ytypes(1);
 			ytypes[0] = ImageBeamSet::POLARIZATION;
 			ImageBeamSet y(IPosition(1, 4), ytypes);
+			AlwaysAssert(
+				ImageBeamSet::fromRecord(y.toRecord(False), False) == y,
+				AipsError
+			);
 			// test different shapes
 			y = b;
 			AlwaysAssert(y == b, AipsError);
-
-
 		}
 		{
 			cout << "*** test setBeam()" << endl;
