@@ -104,7 +104,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_mst_cvel.py
   test_mst_cvelB.py
   test_mst_split.py
-#  test_mst_partition.py
+  test_mst_partition.py
   test_partition.py
   test_partitionHelper.py
   test_pcasa.py
