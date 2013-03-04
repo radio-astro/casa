@@ -397,7 +397,15 @@ void MSTransformDataHandler::parseFreqTransParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, ddiStart_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "DDI start is " << ddiStart_p << LogIO::POST;
+		if (ddiStart_p > 0)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "DDI start is " << ddiStart_p << LogIO::POST;
+		}
+		else
+		{
+			ddiStart_p = 0;
+		}
+
 	}
 
 	exists = configuration.fieldNumber ("hanning");
@@ -1042,9 +1050,17 @@ void MSTransformDataHandler::regridSpwSubTable()
     		Vector<Double> intermediateChanWidth;
     		calculateIntermediateFrequencies(spwId,inputChanFreq,inputChanWidth,intermediateChanFreq,intermediateChanWidth);
         	inputSpw = spwInfo(intermediateChanFreq,intermediateChanWidth);
+
+            oss.str("");
+            oss.clear();
+            oss 	<< "Averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
+            		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(0) << " Hz"
+            		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
+            logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
     	}
     	else
     	{
+    		numOfInpChanMap_p[spwId] = inputChanFreq.size();
     		inputSpw = spwInfo(inputChanFreq,inputChanWidth);
     	}
 
@@ -1176,9 +1192,17 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 		Vector<Double> intermediateChanWidth;
 		calculateIntermediateFrequencies(0,inputFrequencies,inputWidths,intermediateChanFreq,intermediateChanWidth);
     	inputSpw = spwInfo(intermediateChanFreq,intermediateChanWidth);
+
+        oss.str("");
+        oss.clear();
+        oss 	<< "Averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
+        		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(0) << " Hz"
+        		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
+        logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 	}
 	else
 	{
+		numOfInpChanMap_p[0] = inputFrequencies.size();
 		inputSpw = spwInfo(inputFrequencies,inputWidths);
 	}
 
@@ -1277,17 +1301,12 @@ void MSTransformDataHandler::calculateIntermediateFrequencies(Int spwId,Vector<D
 {
 	uInt mumOfInterChan = inputChanFreq.size() / freqbinMap_p[spwId];
 	if (mumOfInterChan % freqbinMap_p[spwId]) mumOfInterChan += 1;
+	numOfInpChanMap_p[spwId] = inputChanFreq.size();
 	numOfOutChanMap_p[spwId] = mumOfInterChan;
 	intermediateChanFreq.resize(mumOfInterChan,False);
 	intermediateChanWidth.resize(mumOfInterChan,False);
 	simpleAverage(freqbinMap_p[spwId], inputChanFreq, intermediateChanFreq);
 	simpleAverage(freqbinMap_p[spwId], inputChanWidth, intermediateChanWidth);
-
-	ostringstream oss;
-    oss 	<< "Channel-Averaged SPW: " << std::setw(5) << mumOfInterChan
-    		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(0) << " Hz"
-    		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(mumOfInterChan -1) << " Hz";
-    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
     return;
 }
@@ -2509,7 +2528,7 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2
 	uInt nInputChannels = inputCubeShape(1);
 
 	// Initialize input planes
-	IPosition inputPlaneShape(2,nInputCorrelations, inputOutputSpwMap_p[0].first.NUM_CHAN);
+	IPosition inputPlaneShape(2,nInputCorrelations, numOfInpChanMap_p[0]);
 	Matrix<T> inputPlaneData(inputPlaneShape);
 	Matrix<Bool> inputPlaneFlags(inputPlaneShape);
 	Matrix<Float> inputPlaneWeights(inputPlaneShape);
@@ -2803,11 +2822,16 @@ template <class T> void MSTransformDataHandler::simpleAverageKernel(Vector<T> &i
 	uInt pos = startInputPos + 1;
 	uInt counts = 1;
 	T avg = inputData(startInputPos);
-	while (pos < inputData.size())
+	while (pos < width)
 	{
 		avg += inputData(pos);
 		counts += 1;
 		pos += 1;
+	}
+
+	if (counts > 0)
+	{
+		avg /= counts;
 	}
 
 	outputData(outputPos) = avg;
