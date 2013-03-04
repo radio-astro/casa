@@ -100,7 +100,6 @@ class MSTHelper(ParallelTaskHelper):
                 retval = 0
                 
             elif self.__args['nspw'] > 1:
-                # It will separate spws. Do it in sequential
                 # CANNOT process in sequential either because internally the
                 # spws need to be combined first before the separation!!!!!!
 #                casalog.post('Can only process the MS in sequential', 'WARN')
@@ -240,9 +239,7 @@ class MSTHelper(ParallelTaskHelper):
         if self._arg['outputvis'] != '':
             casalog.post("Analyzing MS for partitioning")
             self._createPrimarySplitCommand()
-        
-        print self._msTool.name()
-                 
+                         
         return True
      
     @dump_args
@@ -256,6 +253,7 @@ class MSTHelper(ParallelTaskHelper):
             elif self._arg['separationaxis'].lower() == 'both':
                 self._createDefaultSeparationCommands()
         else:
+            # TODO: REVIEW this later. ScanList does not exist!
             # Single mms case
             singleCmd = copy.copy(self._arg)
             if scanList is not None:
@@ -312,7 +310,7 @@ class MSTHelper(ParallelTaskHelper):
                                   % (self.outputBase, output)
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
-#            if self.__selectionFilter != None:
+
             self.__ddistart = self.__ddistart + partitionedSPWs[output].__len__()
 
     @dump_args
@@ -700,7 +698,7 @@ def mstransform(
 
     # Process in parallel
     # LATER:
-    createmms = False
+#    createmms = False
     if createmms:
         
         # Validate the combination of some parameters
@@ -967,17 +965,13 @@ def mstransform(
 #  in the final MMS structure such that each subMS will have a different DDI (0,1,2,3)
 #  and the spw subtable should have only the spws selected, not all of the original ones.
 #  This should be done in the _createSPWSeparationCommand method. Add a new internal
-#  parameter called DDIstart with the start DDI for each subMS.
+#  parameter called DDIstart with the start DDI for each subMS. DONE, pending tests!
 #
-# 2) For this, use the methods from PartitionHelper to create the
-#    jobs. 
-# 3) inside generateJobs(): loop through each MS in vis list.
-# 4) call self.initialize to setup the outputvis name and handle
-#    POINTING, SYSCAL. The creation of the dataDir should be done outside,
-#    perhaps in generateJobs().
-# 5) Call self._createPrimarySplitCommand() for each MS in the loop
-# 6) This should add one job per subMS to be handled by the tool.
-
+#  3) Patition does not allow channels selections!!! Try:
+#  * save the original spw selection in a member of MTHelper
+#  * once the spws are wprked out to be partitioned, re-edit it to include the channels,
+#    before adding the to the job list
+#  * [ass tje edited parameter to each engine
 
 
     
