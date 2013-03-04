@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
 
 	Int nchan,freqbin;
-	String start, width;
+	String start, width, useweights;
 
 	// Parse input parameters
 	for (unsigned short i=0;i<argc-1;i++)
@@ -113,6 +113,12 @@ int main(int argc, char **argv)
 			freqbin = atoi(value.c_str());
 			configuration.define ("freqbin", freqbin);
 			cout << "Frequency bin is: " << freqbin << endl;
+		}
+		else if (parameter == string("-useweights"))
+		{
+			useweights = value;
+			configuration.define ("useweights", useweights);
+			cout << "Weights is: " << useweights << endl;
 		}
 		else if (parameter == string("-spw"))
 		{

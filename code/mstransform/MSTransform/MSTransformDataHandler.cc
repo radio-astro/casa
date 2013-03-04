@@ -188,6 +188,9 @@ void MSTransformDataHandler::initialize()
 	transformCubeOfDataComplex_p = NULL;
 	transformCubeOfDataFloat_p = NULL;
 	averageKernelComplex_p = NULL;
+	fillWeightsPlane_p = NULL;
+	setWeightsPlaneByReference_p = NULL;
+	setWeightStripeByReference_p = NULL;
 
 	return;
 }
@@ -374,7 +377,18 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 
 		useweights_p.downcase();
 
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Using " << useweights_p << " as weights for frequency average " << LogIO::POST;
+		if (useweights_p == "flags")
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Using FLAGS as weights for frequency average" << LogIO::POST;
+		}
+		else if (useweights_p == "weights")
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Using WEIGHT_SPECTRUM as weights for frequency average" << LogIO::POST;
+		}
+		else
+		{
+			useweights_p = String("flags");
+		}
 	}
 
 
@@ -734,15 +748,28 @@ void MSTransformDataHandler::setup()
 	}
 
 	// Averaging kernel
-	if (useweights_p == "weights")
+	if ((useweights_p == "weights") and (fillWeightSpectrum_p))
 	{
 		averageKernelComplex_p = &MSTransformDataHandler::weightAverageKernel;
 		averageKernelFloat_p = &MSTransformDataHandler::weightAverageKernel;
+
+		fillWeightsPlane_p = &MSTransformDataHandler::fillWeightsPlane;
+		setWeightsPlaneByReference_p = &MSTransformDataHandler::setWeightsPlaneByReference;
+		setWeightStripeByReference_p = &MSTransformDataHandler::setWeightStripeByReference;
 	}
 	else
 	{
 		averageKernelComplex_p = &MSTransformDataHandler::flagAverageKernel;
 		averageKernelFloat_p = &MSTransformDataHandler::flagAverageKernel;
+
+		fillWeightsPlane_p = &MSTransformDataHandler::dontfillWeightsPlane;
+		setWeightsPlaneByReference_p = &MSTransformDataHandler::dontsetWeightsPlaneByReference;
+		setWeightStripeByReference_p = &MSTransformDataHandler::dontSetWeightStripeByReference;
+
+		if (useweights_p == "weights")
+		{
+			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Requested column for weighted channel average WEIGHT_SPECTRUM not present in input MS" << LogIO::POST;
+		}
 	}
 
 	//// Determine the frequency transformation methods to use ////
@@ -1952,10 +1979,6 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	// Declare common auxiliary variables
 	Vector<Int> tmpVectorInt(rowRef.nrow(),0);
 
-	// Determine factors to modify sigma and weights
-	Float weightFactor;
-	Float sigmaFactor;
-
 	if (combinespws_p)
 	{
 		// Declare extra auxiliary variables
@@ -2119,7 +2142,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		outputMsCols_p->flagRow().putColumnCells(rowRef,vb->flagRow());
 
 		Matrix<Float> weights = vb->weight();
-		if (weightFactor != 1)
+		if (weightFactorMap_p[vb->spectralWindows()(0)] != 1)
 		{
 			weights *= weightFactorMap_p[vb->spectralWindows()(0)];
 		}
@@ -2134,9 +2157,9 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		else
 		{
 			Matrix<Float> sigma = vb->sigma();
-			if (sigmaFactor != 1)
+			if (sigmaFactorMap_p[vb->spectralWindows()(0)] != 1)
 			{
-				sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];;
+				sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];
 			}
 			outputMsCols_p->sigma().putColumnCells(rowRef, sigma);
 		}
@@ -2616,7 +2639,17 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2
 			spw = spws(row);
 
 			// Fill input planes
-			combineFillDataFlagsInputPlanes(spw,row,inputDataCube,inputFlagCube,inputWeightsCube,inputPlaneData,inputPlaneFlags,inputPlaneWeights);
+			uInt outputChannel;
+			for (uInt inputChannel = 0; inputChannel < inputDataCube.shape()(1); inputChannel++)
+			{
+				outputChannel = spwChannelMap_p[spw][inputChannel];
+				for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
+				{
+					inputPlaneData(pol,outputChannel) = inputDataCube(pol,inputChannel,row);
+					inputPlaneFlags(pol,outputChannel) = inputFlagCube(pol,inputChannel,row);
+					(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCube,inputPlaneWeights);
+				}
+			}
 		}
 
 		// Initialize output flags plane
@@ -2629,35 +2662,10 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2
 	}
 }
 
-template <class T> void MSTransformDataHandler::combineFillDataFlagsInputPlanes(Int inputSpw, uInt inputRow, const Cube<T> &inputDataCube,const Cube<Bool> &inputFlagsCube, const Cube<Float> &inputWeightsCube,Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<Float> &inputWeightsPlane)
-{
-	uInt outputChannel;
-	for (uInt inputChannel = 0; inputChannel < inputDataCube.shape()(1); inputChannel++)
-	{
-		outputChannel = spwChannelMap_p[inputSpw][inputChannel];
-		for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
-		{
-			inputDataPlane(pol,outputChannel) = inputDataCube(pol,inputChannel,inputRow);
-			inputFlagsPlane(pol,outputChannel) = inputFlagsCube(pol,inputChannel,inputRow);
-		}
-	}
 
-	return;
-}
-
-template <class T> void MSTransformDataHandler::combineFillDataFlagsWeightsInputPlanes(Int inputSpw, uInt inputRow, const Cube<T> &inputDataCube,const Cube<Bool> &inputFlagsCube, const Cube<Float> &inputWeightsCube,Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<Float> &inputWeightsPlane)
+void MSTransformDataHandler::fillWeightsPlane(uInt pol, uInt inputChannel, uInt outputChannel, uInt inputRow, const Cube<Float> &inputWeightsCube, Matrix<Float> &inputWeightsPlane)
 {
-	uInt outputChannel;
-	for (uInt inputChannel = 0; inputChannel < inputDataCube.shape()(1); inputChannel++)
-	{
-		outputChannel = spwChannelMap_p[inputSpw][inputChannel];
-		for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
-		{
-			inputDataPlane(pol,outputChannel) = inputDataCube(pol,inputChannel,inputRow);
-			inputFlagsPlane(pol,outputChannel) = inputFlagsCube(pol,inputChannel,inputRow);
-			inputWeightsPlane(pol,outputChannel) = inputWeightsCube(pol,inputChannel,inputRow);
-		}
-	}
+	inputWeightsPlane(pol,outputChannel) = inputWeightsCube(pol,inputChannel,inputRow);
 
 	return;
 }
@@ -2730,7 +2738,9 @@ template <class T> void MSTransformDataHandler::transformAndWriteCubeOfData(Int 
 		outputPlaneFlags = False;
 
 		// Fill input planes by reference
-		simpleFillDataFlagsInputPlanes(inputSpw,rowIndex,inputDataCube,inputFlagsCube,inputWeightsCube,inputPlaneData,inputPlaneFlags,inputPlaneWeights);
+		inputPlaneData = inputDataCube.xyPlane(rowIndex);
+		inputPlaneFlags = inputFlagsCube.xyPlane(rowIndex);
+		(*this.*setWeightsPlaneByReference_p)(rowIndex,inputWeightsCube,inputPlaneWeights);
 
 		// Transform input planes and write them
 		transformAndWritePlaneOfData(inputSpw,rowRef.firstRow()+rowIndex,inputPlaneData,inputPlaneFlags,inputPlaneWeights,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
@@ -2739,19 +2749,10 @@ template <class T> void MSTransformDataHandler::transformAndWriteCubeOfData(Int 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::simpleFillDataFlagsWeightsInputPlanes(Int inputSpw, uInt inputRow, const Cube<T> &inputDataCube,const Cube<Bool> &inputFlagsCube, const Cube<Float> &inputWeightsCube,Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<Float> &inputWeightsPlane)
+void MSTransformDataHandler::setWeightsPlaneByReference(uInt inputRow, const Cube<Float> &inputWeightsCube, Matrix<Float> &inputWeightsPlane)
 {
-	inputDataPlane = inputDataCube.xyPlane(inputRow);
-	inputFlagsPlane = inputFlagsCube.xyPlane(inputRow);
 	inputWeightsPlane = inputWeightsCube.xyPlane(inputRow);
 
-	return;
-}
-
-template <class T> void MSTransformDataHandler::simpleFillDataFlagsInputPlanes(Int inputSpw, uInt inputRow, const Cube<T> &inputDataCube,const Cube<Bool> &inputFlagsCube, const Cube<Float> &inputWeightsCube,Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<Float> &inputWeightsPlane)
-{
-	inputDataPlane = inputDataCube.xyPlane(inputRow);
-	inputFlagsPlane = inputFlagsCube.xyPlane(inputRow);
 	return;
 }
 
@@ -2774,7 +2775,9 @@ template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int
 	for (uInt corrIndex=0; corrIndex < nCorrs; corrIndex++)
 	{
 		// Fill input stripes by reference
-		fillDataFlagsInputStripes(corrIndex,inputDataPlane,inputFlagsPlane,inputWeightsPlane,inputDataStripe,inputFlagsStripe,inputWeightsStripe);
+		inputDataStripe.reference(inputDataPlane.row(corrIndex));
+		inputFlagsStripe.reference(inputFlagsPlane.row(corrIndex));
+		(*this.*setWeightStripeByReference_p)(corrIndex,inputWeightsPlane,inputWeightsStripe);
 
 		// Fill output stripes by reference
 		outputDataStripe.reference(outputDataPlane.row(corrIndex));
@@ -2796,17 +2799,8 @@ template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int
 	return;
 }
 
-template <class T> void MSTransformDataHandler::fillDataFlagsInputStripes(uInt corrIndex,Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<Float> &inputWeightsPlane, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe)
+void MSTransformDataHandler::setWeightStripeByReference(uInt corrIndex,Matrix<Float> &inputWeightsPlane, Vector<Float> &inputWeightsStripe)
 {
-	inputDataStripe.reference(inputDataPlane.row(corrIndex));
-	inputFlagsStripe.reference(inputFlagsPlane.row(corrIndex));
-	return;
-}
-
-template <class T> void MSTransformDataHandler::fillDataFlagsWeightsInputStripes(uInt corrIndex,Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<Float> &inputWeightsPlane, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe)
-{
-	inputDataStripe.reference(inputDataPlane.row(corrIndex));
-	inputFlagsStripe.reference(inputFlagsPlane.row(corrIndex));
 	inputWeightsStripe.reference(inputWeightsPlane.row(corrIndex));
 	return;
 }
