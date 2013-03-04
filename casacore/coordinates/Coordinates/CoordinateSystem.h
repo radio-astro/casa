@@ -427,6 +427,7 @@ public:
     // This one throws an exception rather than returning False. After all, that's
     // what exceptions are for.
     virtual Vector<Double> toWorld(const Vector<Double> &pixel) const;
+    virtual Vector<Double> toWorld(const IPosition& pixel) const;
     virtual Bool toPixel(Vector<Double> &pixel, 
 			 const Vector<Double> &world) const;
     // This one throws an exception rather than returning False.
