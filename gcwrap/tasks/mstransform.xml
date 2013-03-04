@@ -29,7 +29,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
         <param type="bool" name="createmms">
             <description>Create a multi-MS output.</description>
-            <value>True</value>
+            <value>False</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
             <description>Axis to do parallelization across(scan,spw,both).</description>
@@ -300,12 +300,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
     <constraints>
           <when param="createmms">
+            <equals type="bool" value="False"/>
             <equals type="bool" value="True">
                   <default param="separationaxis"><value type="string">both</value></default>
                   <default param="numsubms"><value type="int">64</value></default>
                   <default param="ddistart"><value type="int">-1</value></default>
            </equals>
-            <equals type="bool" value="False"/>
           </when>
           <when param="datacolumn">
             <equals type="string" value="corrected"></equals>
@@ -393,7 +393,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         default: ''; example: outputvis='ngc5921.mms'
 
     createmms -- Create a multi-MS as the output. (TBI)
-        default: True
+        default: False
 
         If False, it will work like the split task and create a
         normal MS, split according to the given data selection parameters.
