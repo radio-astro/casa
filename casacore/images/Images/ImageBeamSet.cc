@@ -75,7 +75,8 @@ ImageBeamSet::ImageBeamSet(
 	_areaUnit(_DEFAULT_AREA_UNIT),
 	_minBeam(GaussianBeam::NULL_BEAM),
 	_maxBeam(GaussianBeam::NULL_BEAM), _minBeamPos(shape.size(), 0),
-	_maxBeamPos(shape.size(), 0),
+	_maxBeamPos(shape.size(), 0),  _maxStokesMap(0), _minStokesMap(0),
+    _medianStokesMap(0),
 	_axesMap(_setAxesMap(axes)) {
 	_checkForDups(axes);
 	_checkAxisTypeSize(axes);
@@ -380,8 +381,7 @@ IPosition ImageBeamSet::getMinAreaBeamPosition() const {
 GaussianBeam ImageBeamSet::getMaxAreaBeamForPol(
 	IPosition& pos, const Int polarization
 ) const {
-	return _getBeamForPol(pos, _maxStokesMap, polarization);
-
+    return _getBeamForPol(pos, _maxStokesMap, polarization);
 }
 
 GaussianBeam ImageBeamSet::getMinAreaBeamForPol(
@@ -608,7 +608,7 @@ GaussianBeam ImageBeamSet::_getBeamForPol(
 		);
 	}
 	pos = map[mypol];
-	return _beams(pos);
+    return _beams(pos);
 }
 
 void ImageBeamSet::_checkAxisTypeSize(const Vector<AxisType>& axes) const {
@@ -647,15 +647,23 @@ void ImageBeamSet::_makeStokesMaps(
 		}
 	}
 	else if (beamsAreIdentical) {
-		IPosition pos(2, 0);
-		for (uInt i=0; i<nStokes; i++) {
-			if (affectedStokes < 0 || affectedStokes == (Int)i) {
-				pos[_axesMap[POLARIZATION]] = i;
-				_minStokesMap[i] = pos;
-				_maxStokesMap[i] = pos;
-				_medianStokesMap[i] = pos;
-			}
-		}
+        if (nStokes == 0) {
+            IPosition pos(1, 0);
+            _minStokesMap[0] = pos;
+            _maxStokesMap[0] = pos;
+            _medianStokesMap[0] = pos;
+        }
+        else {
+            IPosition pos(2, 0);
+		    for (uInt i=0; i<nStokes; i++) {
+                if (affectedStokes < 0 || affectedStokes == (Int)i) {
+				    pos[_axesMap[POLARIZATION]] = i;
+				    _minStokesMap[i] = pos;
+				    _maxStokesMap[i] = pos;
+				    _medianStokesMap[i] = pos;
+			    }
+		    }
+        }
 	}
 	else if (nStokes == 0) {
 		// we still need the maps even if there are no stokes
