@@ -1475,6 +1475,50 @@ void MSTransformDataHandler::reindexFreqOffsetSubTable()
     return;
 }
 
+Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
+{
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+	MSSpectralWindow spwTable_0 = ms_0.spectralWindow();
+	MSSpWindowColumns spwCols_0(spwTable_0);
+
+	uInt rowIndex = spwTable_0.nrow();
+
+	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+	{
+		String filename_i = filenames(subms_index);
+		MeasurementSet ms_i(filename_i);
+		MSSpectralWindow spwTable_i = ms_i.spectralWindow();
+		MSSpWindowColumns spwCols_i(spwTable_i);
+
+		spwTable_0.addRow(spwTable_i.nrow());
+
+		for (uInt subms_row_index=0;subms_row_index<spwTable_i.nrow();subms_row_index++)
+		{
+			spwCols_0.measFreqRef().put(rowIndex,spwCols_i.measFreqRef()(subms_row_index));
+			spwCols_0.chanFreq().put(rowIndex,spwCols_i.chanFreq()(subms_row_index));
+			spwCols_0.refFrequency().put(rowIndex,spwCols_i.refFrequency()(subms_row_index));
+			spwCols_0.chanWidth().put(rowIndex,spwCols_i.chanWidth()(subms_row_index));
+			spwCols_0.effectiveBW().put(rowIndex,spwCols_i.effectiveBW()(subms_row_index));
+			spwCols_0.resolution().put(rowIndex,spwCols_i.resolution()(subms_row_index));
+			spwCols_0.flagRow().put(rowIndex,spwCols_i.flagRow()(subms_row_index));
+			spwCols_0.freqGroup().put(rowIndex,spwCols_i.freqGroup()(subms_row_index));
+			spwCols_0.freqGroupName().put(rowIndex,spwCols_i.freqGroupName()(subms_row_index));
+			spwCols_0.ifConvChain().put(rowIndex,spwCols_i.ifConvChain()(subms_row_index));
+			spwCols_0.name().put(rowIndex,spwCols_i.name()(subms_row_index));
+			spwCols_0.netSideband().put(rowIndex,spwCols_i.netSideband()(subms_row_index));
+			spwCols_0.numChan().put(rowIndex,spwCols_i.numChan()(subms_row_index));
+			spwCols_0.totalBandwidth().put(rowIndex,spwCols_i.totalBandwidth()(subms_row_index));
+
+			rowIndex += 1;
+		}
+	}
+
+	ms_0.flush(True);
+
+	return True;
+}
+
 void MSTransformDataHandler::getInputNumberOfChannels()
 {
 	// Access spectral window sub-table

@@ -39,8 +39,11 @@ int main(int argc, char **argv)
 	Bool combinespws, hanning, regridms, freqaverage;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
 
-	Int nchan,freqbin;
+	Int nchan,freqbin,ddistart;
 	String start, width, useweights;
+
+	Bool mergeSpwSubTables = False;
+	vector<String> submslist;
 
 	// Parse input parameters
 	for (unsigned short i=0;i<argc-1;i++)
@@ -144,29 +147,48 @@ int main(int argc, char **argv)
 			configuration.define ("correlation", correlation);
 			cout << "Correlation selection is: " << correlation << endl;
 		}
-	}
-
-	// Set up data handler
-	MSTransformDataHandler *tvdh = new MSTransformDataHandler(configuration);
-	tvdh->open();
-	tvdh->setup();
-
-	vi::VisibilityIterator2 *visIter = tvdh->getVisIter();
-	vi::VisBuffer2 *vb = visIter->getVisBuffer();
-	visIter->originChunks();
-	while (visIter->moreChunks())
-	{
-		visIter->origin();
-		while (visIter->more())
+		else if (parameter == string("-ddistart"))
 		{
-			tvdh->fillOutputMs(vb);
-			visIter->next();
+			ddistart = atoi(value.c_str());
+			configuration.define ("ddistart", ddistart);
+			cout << "DDI start is: " << ddistart << endl;
 		}
-		visIter->nextChunk();
+		else if (parameter == string("-subms"))
+		{
+			mergeSpwSubTables = True;
+			submslist.push_back(value);
+			cout << "Adding MS to list of SubMS to merge SPW subtable : " << value << endl;
+		}
 	}
 
-	tvdh->close();
-	delete tvdh;
+	if (mergeSpwSubTables)
+	{
+		MSTransformDataHandler::mergeSpwSubTables(submslist);
+	}
+	else
+	{
+		// Set up data handler
+		MSTransformDataHandler *tvdh = new MSTransformDataHandler(configuration);
+		tvdh->open();
+		tvdh->setup();
+
+		vi::VisibilityIterator2 *visIter = tvdh->getVisIter();
+		vi::VisBuffer2 *vb = visIter->getVisBuffer();
+		visIter->originChunks();
+		while (visIter->moreChunks())
+		{
+			visIter->origin();
+			while (visIter->more())
+			{
+				tvdh->fillOutputMs(vb);
+				visIter->next();
+			}
+			visIter->nextChunk();
+		}
+
+		tvdh->close();
+		delete tvdh;
+	}
 
 	exit(0);
 }

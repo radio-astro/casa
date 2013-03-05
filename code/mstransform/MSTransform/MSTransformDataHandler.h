@@ -220,6 +220,9 @@ public:
 
 	void fillOutputMs(vi::VisBuffer2 *vb);
 
+	// To consilidate several SPW subtables
+	static Bool mergeSpwSubTables(Vector<String> filenames);
+
 
 protected:
 
