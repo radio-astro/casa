@@ -320,6 +320,10 @@ def getMMSScans(mmsdict):
        mmsdict  --> output dictionary from listpartition(MMS,createdict=true)
        Return a list of the scans in this MMS. '''
     
+    if not isinstance(mmsdict, dict):
+        print 'ERROR: Input is not a dictionary'
+        return []
+    
     tkeys = mmsdict.keys()
     scanlist = []
     slist = set(scanlist)
@@ -393,6 +397,10 @@ def getMMSScanNrows(thisdict, myscan):
        myscan    --> scan ID (int) 
        Return the number of rows in the given scan. '''
     
+    if not isinstance(thisdict, dict):
+        print 'ERROR: Input is not a dictionary'
+        return -1
+    
     tkeys = thisdict.keys()
     scanrows = 0
     for k in tkeys:
@@ -449,6 +457,10 @@ def getMMSSpwIds(thisdict):
        Return a list of the spw Ids in the dictionary. '''
 
     import numpy as np
+    
+    if not isinstance(thisdict, dict):
+        print 'ERROR: Input is not a dictionary'
+        return []
     
     tkeys = thisdict.keys()
 

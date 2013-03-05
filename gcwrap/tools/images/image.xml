@@ -5468,7 +5468,7 @@ ia.history(list=T, browse=F)       # List history to logger
 <input>
   
      <param type="string"  name="infile">
-     <description>Image file name.</description>
+     <description>Name of image to be inserted.</description>
      <value></value>
      </param>
   
@@ -5487,11 +5487,12 @@ ia.history(list=T, browse=F)       # List history to logger
         <value>true</value>
      </param>
 </input>
-<returns type="image"/>
+<returns type="bool"/>
 
 <description>
 
-This function inserts the specified image (or part of it) into this image.
+This function inserts the specified image (or part of it) into the image
+referenced by this tool.
 The specified image may be given via argument {\stfaf infile}
 as a disk file name (it may be in native \casa, \fits, or Miriad
 format; Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
@@ -5505,7 +5506,8 @@ give the absolute pixel in the output (this) image of the bottom left
 corner of the input (sub)image.  For those values that are not given,
 the input image is symmetrically placed in the output image. 
 
-A new image tool referencing the resulting image is returned.
+The image referenced by this tool is modified in place; no new image
+is created. The method returns True if successful.
 
 </description>
 <example>
@@ -5516,17 +5518,12 @@ print "\t----\t insert Ex 1 \t----"
 ia.maketestimage('myfile.insert',overwrite=true)
 ia.close()
 ia.fromshape(shape=[200,200])
-im1 = ia.insert(infile='myfile.insert')       # Align by reference pixel
-im2 = ia.newimagefromfile('myfile.insert')
-im3 = ia.insert(infile=im2.name(), locate=[]) # Align centrally
+ia.insert(infile='myfile.insert')       # Align by reference pixel
+ia.newimagefromfile('myfile.insert')
+ia.insert(infile=im2.name(), locate=[]) # Align centrally
 # This time align axis 0 as given and axis 1 centrally
-im4 =ia.insert(infile='myfile.insert', locate=[20])
+ia.insert(infile='myfile.insert', locate=[20])
 ia.close()                                    # close default tool and
-im1.done()                                    # destroy on-the-fly images
-im2.done()
-im3.done()
-im4.done()
-#
 """
 
 </example>
