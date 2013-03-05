@@ -33,6 +33,7 @@ class MSTHelper(ParallelTaskHelper):
         self.__isMMS = False
         self._calScanList = None
         self._selectionScanList = None
+        self.__spwSelection = self.__args['spw']
         self._msTool = None
         self._tbTool = None
         
@@ -126,7 +127,7 @@ class MSTHelper(ParallelTaskHelper):
         
         return self.__selpars
 
-    @dump_args
+#    @dump_args
     def initialize(self):
         """Add the full path for the input and output MS.
            This method overrides the one from ParallelTaskHelper."""
@@ -230,7 +231,7 @@ class MSTHelper(ParallelTaskHelper):
                         
         return self.__selpars
      
-    @dump_args
+#    @dump_args
     def generateJobs(self):
         '''This is the method which generates all of the actual jobs to be done.'''
         '''This method overrides the one in ParallelTaskHelper baseclass'''
@@ -242,7 +243,7 @@ class MSTHelper(ParallelTaskHelper):
                          
         return True
      
-    @dump_args
+#    @dump_args
     def _createPrimarySplitCommand(self):         
                 
         if self._arg['createmms']:
@@ -275,15 +276,18 @@ class MSTHelper(ParallelTaskHelper):
         numSubMS = min(len(scanList),numSubMS)
         
         partitionedScans = self.__partition(scanList, numSubMS)
+        
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False
             mmsCmd['scan']= ParallelTaskHelper.\
                             listToCasaString(partitionedScans[output])
+            mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
+
 
 #    @dump_args
     def _createSPWSeparationCommands(self):
@@ -294,8 +298,13 @@ class MSTHelper(ParallelTaskHelper):
         numSubMS = self._arg['numsubms']
         numSubMS = min(len(spwList),numSubMS)
 
-        partitionedSPWs = self.__partition(spwList,numSubMS)
-                
+        # Get a dictionary of the spws parted for each subMS
+        spwList = map(str,spwList)
+        partitionedSPWs1 = self.__partition1(spwList,numSubMS)
+
+        # Add the channel selections back to the spw expressions
+        newspwsel = self.createSPWExpression(partitionedSPWs1)
+        
         self.__ddistart = 0
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
@@ -303,25 +312,28 @@ class MSTHelper(ParallelTaskHelper):
             if self._selectionScanList is not None:
                 mmsCmd['scan'] = ParallelTaskHelper.\
                                  listToCasaString(self._selectionScanList)
-            mmsCmd['spw'] = ParallelTaskHelper.\
-                            listToCasaString(partitionedSPWs[output])
+#            mmsCmd['spw'] = ParallelTaskHelper.\
+#                            listToCasaString(partitionedSPWs[output])
+            
+            mmsCmd['spw'] = newspwsel[output]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
+
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
+            self.__ddistart = self.__ddistart + partitionedSPWs1[output].__len__()
 
-            self.__ddistart = self.__ddistart + partitionedSPWs[output].__len__()
-
-    @dump_args
+#    @dump_args
     def _createDefaultSeparationCommands(self):
         # This method is similar to the SPW Separation mode above, except
         # that if there are not enough SPW to satisfy the numSubMS it uses
         #
         self._selectMS()
             
-        # Get the list of spectral windows
+        # Get the list of spectral windows as strings
         spwList = self._getSPWList() 
+        spwList = map(str,spwList)
 
         # Check if we can just divide on SPW or if we need to do SPW and
         # scan
@@ -341,8 +353,12 @@ class MSTHelper(ParallelTaskHelper):
         else:
             scanList = None
 
-        partitionedSpws  = self.__partition(spwList,numSpwPartitions)
+        partitionedSpws  = self.__partition1(spwList,numSpwPartitions)
         partitionedScans = self.__partition(scanList,numScanPartitions)
+        
+
+        # Add the channel selections back to the spw expressions
+        newspwsel = self.createSPWExpression(partitionedSpws)
 
         self.__ddistart = 0
         for output in xrange(numSpwPartitions*numScanPartitions):
@@ -352,8 +368,9 @@ class MSTHelper(ParallelTaskHelper):
             
             mmsCmd['scan'] = ParallelTaskHelper.listToCasaString \
                              (partitionedScans[output%numScanPartitions])
-            mmsCmd['spw'] = ParallelTaskHelper.listToCasaString\
-                            (partitionedSpws[output/numScanPartitions])
+#            mmsCmd['spw'] = ParallelTaskHelper.listToCasaString\
+#                            (partitionedSpws[output/numScanPartitions])
+            mmsCmd['spw'] = newspwsel[output/numScanPartitions]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
@@ -477,7 +494,7 @@ class MSTHelper(ParallelTaskHelper):
                 filter[selSyntax] = self._arg[argSyntax]
         return filter
 
-    @dump_args
+#    @dump_args
     def __partition(self, lst, n):
         '''
         This method will split the list lst into "n" almost equal parts
@@ -490,8 +507,75 @@ class MSTHelper(ParallelTaskHelper):
         
         return [ lst[int(round(division * i)):
                      int(round(division * (i+1)))] for i in xrange(int(n))]
+    
+#    @dump_args
+    def __partition1(self, lst, n):
+        '''This method will split the list lst into "n" almost equal parts
+            if lst is none, then we assume an empty list.
+            lst --> spw list
+            n   --> numsubms
+            Returns a dictionary such as:
+            given the selection spw='0,1:10~20,3,4,5'
+            rdict = {0: ['0','1'], 1:['3','4','5']}
+        '''
+        if lst is None:
+            lst = []
+        
+        # Create a dictionary for the parted spws:
+        rdict = {}
+        division = len(lst)/float(n)
+        for i in xrange(int(n)):
+            part = lst[int(round(division * i)):int(round(division * (i+1)))]
+            rdict[i] = part
+    
+        return rdict
 
-    @dump_args
+
+#    @dump_args
+    def __chanSelection(self, spwsel):
+        ''' Create a dictionary of channel selections.
+            spwsel --> a string with spw selection
+            Return a dictionary such as:
+            spwsel = "'0,1:10~20"
+            seldict = {0: {'channels': '', 'spw': '0'}, 
+                       1: {'channels': '10~20', 'spw': '1'}}'''
+        
+        # Split to get each spw in a list
+        if spwsel.__contains__(','):
+            spwlist = spwsel.split(',')        
+        else:
+            spwlist = spwsel.split(';')
+                        
+        spwid=[]
+        chanlist=[]
+        # Split to create two lists, one with channels, the other with spwIDs
+        for isel in spwlist:
+            # Get tail, colon and head
+            (s, c, ch) = isel.rpartition(":")
+            # Remove any blanks
+            s = s.strip(' ')
+            c = c.strip(' ')
+            ch = ch.strip(' ')
+            # If no tail, there was no colon to split. In this case, add the spwID
+            if s == "":
+                spwid.append(ch)
+                chanlist.append('')
+            else:
+                spwid.append(s)
+                chanlist.append(ch)
+                
+        # Create a dictionary
+        seldict = {}
+        for ns in xrange(len(spwid)):
+            sel = {}
+            sel['spw'] = spwid[ns]
+            sel['channels'] = chanlist[ns]
+            seldict[ns] = sel
+
+
+        return seldict
+
+#    @dump_args
     def postExecution(self):
         '''
         This overrides the post execution portion of the task helper
@@ -580,6 +664,58 @@ class MSTHelper(ParallelTaskHelper):
             os.rmdir(thesubmscontainingdir)
 
         return True
+
+#    @dump_args 
+    def createSPWExpression(self, partdict):
+        ''' Creates the final spw expression that will be sent to the engines.
+            This adds back the channel selections to their spw counterparts.
+           partdict --> dictionary from __partition2, such as:
+                        Ex: partdict = {0: ['0','1'], 1:['3','4','5']}
+                            when selection is spw = '0,1:10~20,3,4,5'
+                            and effective number of subMSs is 2.'''            
+        
+        # Create a dictionary of the spw/channel selections
+        # Ex: seldict = {0: {'channels': '', 'spw': '0'}, 
+        #                1: {'channels': '10~20', 'spw': '1'}}
+        seldict = self.__chanSelection(self.__spwSelection)
+                
+        newdict = copy.copy(partdict)
+        
+        # Match the spwId of partdict with those from seldict
+        # For the matches that contain channel selection in seldict,
+        # Add them to the spwID string in partdict
+        for keys,vals in seldict.items():
+            for k,v in partdict.items():
+                for i in range(len(v)):
+#                    if v[i] == seldict[keys]['spw'] and seldict[keys]['channels'] != '':
+#                    if v[i] == vals['spw'] and vals['channels'] != '':
+                    # matches, now edit pardict
+                    if v[i] == vals['spw']:
+#                        print v[i], seldict[keys]['spw'], seldict[keys]['channels']
+                        if vals['channels'] != '':
+                            spwexpr = vals['spw'] + ':' + vals['channels']
+                        else:
+#                        spwexpr = seldict[keys]['spw'] + ':' + seldict[keys]['channels']
+                            spwexpr = vals['spw']
+                        newdict[k][i] = spwexpr
+        
+        # We now have a new dictionary of the form:
+        # newdict = {0: ['0', '1:10~20'], 1: ['3', '4','5']}
+        # We want it to be:
+        # newdict = {0: "0,1:10~20",1: "3, 4,5"}
+        
+        # Add a comma separator for each expression making
+        # a single string for each key
+        for k,v in newdict.items():
+            spwstr = ""
+            for s in range(len(v)):
+                spwstr = spwstr + v[s] + ','
+            newdict[k] = spwstr.rstrip(',')
+                
+        casalog.post('Dictionary of spw expressions is: ','DEBUG')
+        casalog.post ('%s'%newdict,'DEBUG')
+                
+        return newdict
         
 #    @dump_args 
     def freqAvg(self, **pars):

@@ -9,6 +9,9 @@ import testhelper as th
 from recipes.listshapes import listshapes
 
     
+# Add a cluster-less mode to by-pass parallel processing for MMSs
+if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
+    ParallelTaskHelper.bypassParallelProcessing(1)
     
 # Define the root for the data files
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
@@ -49,7 +52,7 @@ class test_base(unittest.TestCase):
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
 
-    def setUp_data4tfcrop(self):
+    def setUp_4ants(self):
         # data set with spw=0~15, 64 channels each in TOPO
         self.vis = "Four_ants_3C286.ms"
 
@@ -96,7 +99,7 @@ class test_Combspw1(test_base):
     ''' Tests for combinespws'''
     
     def setUp(self):
-        self.setUp_data4tfcrop()
+        self.setUp_4ants()
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
@@ -178,7 +181,7 @@ class test_Regridms1(test_base):
     '''Tests for regridms using Four_ants_3C286.ms'''
        
     def setUp(self):
-        self.setUp_data4tfcrop()
+        self.setUp_4ants()
         
     def tearDown(self):
         pass
@@ -695,7 +698,44 @@ class test_FreqAvg(test_base):
         ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
-
+class test_mms(test_base):
+    def setUp(self):
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf testmms*.*ms')
+    
+    # TODO: Will only work after spw table consolidation
+    def testmms1(self):
+        '''mstransform: create MMS with spw separation and channel selections'''
+        outputms = "testmms1.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='0~4,5:1~10',createmms=True,
+                    separationaxis='spw')
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # It should create 6 subMS, with spw=0~5
+        # spw=5 should have only 11 channels
+        ret = th.verifyMS(outputms, 6, 11, 5)
+        self.assertTrue(ret[0],ret[1])        
+               
+        
+    # TODO: Will only work after spw table consolidation
+    def testmms2(self):
+        '''mstransform: create MMS with spw/scan separation and channel selections'''
+        outputms = "testmms2.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='0:0~10,1:60~63',createmms=True,
+                    separationaxis='both')
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # It should create 4 subMS, with spw=0~1
+        # spw=0 has 11 channels, spw=1 has 4 channels
+        ret = th.verifyMS(outputms, 2, 11, 0)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 2, 4, 1)
+        self.assertTrue(ret[0],ret[1])        
 
 # TODO: cleanup output MSs after test phase
 # Cleanup class 
@@ -722,4 +762,5 @@ def suite():
             test_Regridms5,
             test_Hanning,
             test_FreqAvg,
+#            test_mms,
             Cleanup]

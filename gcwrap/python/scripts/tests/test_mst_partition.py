@@ -16,7 +16,7 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
     ParallelTaskHelper.bypassParallelProcessing(1)
 
-    
+# NOTE: by default partition use separationaxis='scan', mstransform uses 'both'. 
 class test_base(unittest.TestCase):
     
     def setUp_ngc4826(self):
@@ -88,7 +88,8 @@ class partition_test1(test_base):
 
     def test_default(self):
         '''Partition: create an MMS with default values'''
-        mstransform(vis=self.msfile, outputvis=self.mmsfile, datacolumn='data')
+        mstransform(vis=self.msfile, outputvis=self.mmsfile, datacolumn='data',
+                    separationaxis='scan', createmms=True)
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -120,11 +121,11 @@ class partition_test1(test_base):
         # Compare the DATA column
 #        self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
 
-
+    # TODO: this MS has 4 obs IDs which don't make sense. Re-write this test.
     def test_scan_selection(self):
         '''Partition: create an MMS using scan selection'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan', scan='1,2,3,11',
-                    datacolumn='data')
+                    datacolumn='data', createmms=True)
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -154,7 +155,7 @@ class partition_test1(test_base):
         # NOTE: ms.getscansummary() used in ph.getScanNrows does not honour several observation
         #       IDs, therefore I need to select by obs id in partition
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', observation='2',
-                    datacolumn='data')
+                    datacolumn='data', createmms=True)
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -184,7 +185,7 @@ class partition_test1(test_base):
     def test_spw_selection(self):
         '''Partition: create an MMS separated by spws with spw=2,4 selection'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', spw='2,4',
-                    datacolumn='data')
+                    datacolumn='data', createmms=True)
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -223,13 +224,13 @@ class partition_test2(test_base):
         shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
         shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
 
-    # The followin test fails in the OSX platforms if the full MS is used to
+    # The following test fails in the OSX platforms if the full MS is used to
     # create the MMS. It does not fail in partition, but in the ms.getscansummary()
     # methods. Check this soon
     def test_sepaxis(self):
         '''Partition: separationaxis=both'''        
         mstransform(vis=self.msfile, outputvis=self.mmsfile, spw='0~11',separationaxis='both',
-                    datacolumn='data')
+                    datacolumn='data', createmms=True)
 #        mstransform(vis=self.msfile, outputvis=self.mmsfile,separationaxis='both')
         time.sleep(10)
         
@@ -262,7 +263,8 @@ class partition_test2(test_base):
         
     def test_all_columns(self):
         '''Partition: datacolumn=all'''
-        mstransform(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all')
+        mstransform(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all',
+                    separationaxis='scan', createmms=True)
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -289,7 +291,7 @@ class partition_test2(test_base):
     def test_scan_spw(self):
         '''Partition: separationaxis=scan with spw selection'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan',
-                  spw='1~4,10,11', datacolumn='data')
+                  spw='1~4,10,11', datacolumn='data', createmms=True)
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -308,19 +310,22 @@ class partition_test2(test_base):
             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
                              %(s, mmsN, msN))
 
-        # Compare spw IDs
+        # Cannot compare spw IDs because they are re-indexed in mstransform.
+        # The comparison should be
+        # ms_spw = 1 --> mms_spw = 0
+        # ms_spw = 2 --> mms_spw = 1, etc.
+        # Check that MMS spw IDs have been re-indexed properly
+        indexed_ids = range(6)
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
-            ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
-            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
-                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
- 
+            self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+         
         
     def test_numsubms(self):
         '''Partition: small numsubms value'''
         # There are 16 spws; we want only 6 sub-MSs.
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw',
-                  numsubms=6, datacolumn='data')
+                  numsubms=6, datacolumn='data', createmms=True)
         time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
