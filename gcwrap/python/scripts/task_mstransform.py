@@ -653,9 +653,22 @@ class MSTHelper(ParallelTaskHelper):
                     os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
                     # (link in target will be created my makeMMS)
                 subtabs_to_omit.append('SYSCAL')
+
+            # Consolidate the spw sub-tables to take channel selection
+            # or averages into account.
+            mtTool = casac.mstransformer()
+            try:
+                mtTool.mergespwtables(subMSList)
+            except Exception, instance:
+                mtTool.done()
+                casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
+                raise
                 
+            mtTool.done()
+                
+            # Do not copy sub-tables because they were consolidated before
             ph.makeMMS(self._arg['outputvis'], subMSList,
-                       True, # copy subtables
+                       False, # copy subtables
                        subtabs_to_omit # omitting these
                        )
 

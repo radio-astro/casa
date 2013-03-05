@@ -169,6 +169,28 @@ mt.run()
 
 <!-- ********************************************************************** -->
 
+<method type="function" name="mergespwtables">
+   <shortdescription>Merge the spw sub-tables of a list of subMSs.</shortdescription>
+   
+   <description>
+              Merge the spw sub-tables of a list of subMSs.
+   </description>
+
+        <input>
+                <param name="filenames" type="stringArray">
+                  <description>List of tables/MS names.</description>
+		          <value></value>
+                </param>
+        </input>
+
+<example>
+mt.mergespwtables([])
+</example>
+<returns type="bool"/>
+</method>
+
+
+
 <!--
    <method type="function" name="parseagentparameters">
    <shortdescription>Parse the parameters for the agent (flagging mode).</shortdescription>
