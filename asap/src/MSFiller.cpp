@@ -271,7 +271,7 @@ public:
     else if ( desc.isColumn( "FLOAT_DATA" ) )
       dataColumnName = "FLOAT_DATA" ;
     getpt = False ;
-    isWeather = False ;
+    isWeather_ = False ;
     isSysCal = False ;
     isTcal = False ;
     cycleNo = 0 ;
@@ -531,7 +531,7 @@ public:
 
     // WEATHER_ID
     uInt wid = 0 ;
-    if ( isWeather ) 
+    if ( isWeather_ ) 
       wid = getWeatherId() ;
 
     // put value
@@ -684,11 +684,13 @@ public:
     // initialize toj2000 and toazel
     initConvert() ;
   }
-  void setWeatherTime( const Vector<Double> &t, const Vector<Double> &it )
+  void setWeatherTime( const Vector<Double> &t, const Vector<Double> &it, 
+                       const Vector<uInt> &idx )
   {
-    isWeather = True ;
-    weatherTime = t ;
-    weatherInterval = it ;
+    isWeather_ = True ;
+    weatherTime_ = t ;
+    weatherInterval_ = it ;
+    weatherIndex_ = idx;
   }
   void setSysCalRecord( const Record &r )
   //void setSysCalRecord( const map< String,Vector<uInt> > &r )
@@ -1152,26 +1154,26 @@ private:
   uInt getWeatherId()
   {
     // if only one row, return 0
-    if ( weatherTime.nelements() == 1 )
+    if ( weatherTime_.nelements() == 1 )
       return 0 ;
 
     // @todo At the moment, do binary search every time
     //       if this is bottleneck, frequency of binary search must be reduced
     Double t = currentTime.get( "s" ).getValue() ;
-    uInt idx = min( binarySearch( weatherTime, t ), weatherTime.nelements()-1 ) ;
-    if ( weatherTime[idx] < t ) {
-      if ( idx != weatherTime.nelements()-1 ) {
-        if ( weatherTime[idx+1] - t < 0.5 * weatherInterval[idx+1] )
+    uInt idx = min( binarySearch( weatherTime_, t ), weatherTime_.nelements()-1 ) ;
+    if ( weatherTime_[idx] < t ) {
+      if ( idx != weatherTime_.nelements()-1 ) {
+        if ( weatherTime_[idx+1] - t < 0.5 * weatherInterval_[idx+1] )
           idx++ ;
       }
     }
-    else if ( weatherTime[idx] > t ) {
+    else if ( weatherTime_[idx] > t ) {
       if ( idx != 0 ) {
-        if ( weatherTime[idx] - t > 0.5 * weatherInterval[idx] )
+        if ( weatherTime_[idx] - t > 0.5 * weatherInterval_[idx] )
           idx-- ;
       }
     }
-    return idx ;
+    return weatherIndex_[idx] ;
   }
   void processSysCal( Int &spwId )
   {
@@ -1304,9 +1306,10 @@ private:
   Vector<Double> pointingTime;
   Cube<Double> pointingDirection;
   MDirection::Types dirType;
-  Bool isWeather;
-  Vector<Double> weatherTime;
-  Vector<Double> weatherInterval;
+  Bool isWeather_;
+  Vector<Double> weatherTime_;
+  Vector<Double> weatherInterval_;
+  Vector<uInt> weatherIndex_;
   Bool isSysCal;
   Bool isTcal;
   Record syscalRecord;
@@ -1803,7 +1806,7 @@ void MSFiller::fill()
       myVisitor.setPointingTable( ptsel ) ;
     }
     if ( isWeather_ )
-      myVisitor.setWeatherTime( mwTime_, mwInterval_ ) ;
+      myVisitor.setWeatherTime( mwTime_, mwInterval_, mwIndex_ ) ;
     if ( isSysCal_ ) 
       myVisitor.setSysCalRecord( tcalrec_ ) ;
     myVisitor.setFreqToLsr( freqToLsr_ ) ;
@@ -2007,6 +2010,7 @@ void MSFiller::fillWeather()
     indgen( mwIndex_ ) ;
   }
   //os_ << "mwTime[0] = " << mwTime_[0] << " mwInterval[0] = " << mwInterval_[0] << LogIO::POST ; 
+  //os_ << "mwIndex_=" << mwIndex_ << LogIO::POST;
   //double endSec = mathutil::gettimeofday_sec() ;
   //os_ << "end MSFiller::fillWeather() endSec=" << endSec << " (" << endSec-startSec << "sec)" << LogIO::POST ;
 }
