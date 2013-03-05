@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 	Bool combinespws, hanning, regridms, freqaverage;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
 
-	Int nchan,freqbin,ddistart;
+	Int nchan,freqbin,ddistart,nspw;
 	String start, width, useweights;
 
 	Bool mergeSpwSubTables = False;
@@ -152,6 +152,12 @@ int main(int argc, char **argv)
 			ddistart = atoi(value.c_str());
 			configuration.define ("ddistart", ddistart);
 			cout << "DDI start is: " << ddistart << endl;
+		}
+		else if (parameter == string("-nspw"))
+		{
+			nspw = atoi(value.c_str());
+			configuration.define ("nspw", nspw);
+			cout << "nspw start is: " << nspw << endl;
 		}
 		else if (parameter == string("-subms"))
 		{

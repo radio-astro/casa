@@ -222,6 +222,7 @@ public:
 
 	// To consilidate several SPW subtables
 	static Bool mergeSpwSubTables(Vector<String> filenames);
+	static Bool mergeDDISubTables(Vector<String> filenames);
 
 
 protected:
@@ -281,8 +282,8 @@ protected:
 	template <class T> void mapScaleAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,map<Int,T> scaleMap, Vector<Int> spws);
 
 	// When no transformations are needed, and the only combination axis is SPW
-	template <class T> void writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef);
-	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef);
+	template <class T> void writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks);
+	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks);
 	template <class T> void writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef);
 
 	void transformCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<Complex> &inputDataCube,ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
@@ -362,6 +363,7 @@ protected:
 	map<Int,Int> outputInputSPWIndexMap_p;
 
 	// Frequency transformation parameters
+	Int nspws_p;
 	Int ddiStart_p;
 	Bool combinespws_p;
 	Bool channelAverage_p;

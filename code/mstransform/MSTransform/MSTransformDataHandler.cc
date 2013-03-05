@@ -122,6 +122,7 @@ void MSTransformDataHandler::initialize()
 	outputInputSPWIndexMap_p.clear();
 
 	// Frequency transformation parameters
+	nspws_p = 1;
 	ddiStart_p = 0;
 	combinespws_p = False;
 	channelAverage_p = False;
@@ -525,6 +526,22 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 		interpolationMethod_p = MSTransformations::linear;
 	}
 
+	exists = configuration.fieldNumber ("nspw");
+	if (exists >= 0)
+	{
+		configuration.get (exists, nspws_p);
+
+		if (nspws_p > 1)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Number of output SPWs is" << nspws_p << LogIO::POST;
+			combinespws_p = True;
+		}
+		else
+		{
+			nspws_p = 1;
+		}
+	}
+
 	parseFreqSpecParams(configuration);
 
 	return;
@@ -795,6 +812,12 @@ void MSTransformDataHandler::setup()
 	// Determine weight and sigma factors
 	getOutputNumberOfChannels();
 	calculateWeightAndSigmaFactors();
+
+	if (nspws_p > 1)
+	{
+		uInt chansPerOutputSpw = numOfOutChanMap_p[0] / nspws_p;
+		uInt chanTailLastSpw = numOfOutChanMap_p[0] % nspws_p;
+	}
 
 	// Check what columns have to filled
 	checkFillFlagCategory();
@@ -1516,6 +1539,41 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 
 	ms_0.flush(True);
 
+	mergeDDISubTables(filenames);
+
+	return True;
+}
+
+Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
+{
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+	MSDataDescription ddiTable_0 = ms_0.dataDescription();
+	MSDataDescColumns ddiCols_0(ddiTable_0);
+
+	Int SPWId = 1;
+	uInt rowIndex = ddiTable_0.nrow();
+	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+	{
+		String filename_i = filenames(subms_index);
+		MeasurementSet ms_i(filename_i);
+		MSDataDescription dditable_i = ms_i.dataDescription();
+		MSDataDescColumns ddicols_i(dditable_i);
+
+		ddiTable_0.addRow(dditable_i.nrow());
+
+		for (uInt subms_row_index=0;subms_row_index<dditable_i.nrow();subms_row_index++)
+		{
+			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
+			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
+			ddiCols_0.spectralWindowId().put(rowIndex,SPWId);
+			SPWId += 1;
+			rowIndex += 1;
+		}
+	}
+
+	ms_0.flush(True);
+
 	return True;
 }
 
@@ -1956,12 +2014,6 @@ void MSTransformDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 			rowIndex_p.push_back((iter->second)[0]);
 			rowIndex ++;
 		}
-
-		// Initialize reference frame transformation parameters
-		if (refFrameTransformation_p)
-		{
-			initFrequencyTransGrid(vb);
-		}
 	}
 	else
 	{
@@ -1969,14 +2021,21 @@ void MSTransformDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 	}
 
 	uInt currentRows = outputMs_p->nrow();
-	RefRows rowRef( currentRows, currentRows + rowsToAdd - 1);
+	RefRows rowRef( currentRows, currentRows + nspws_p*rowsToAdd - 1);
 
 	/*
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 			<< "Filling output MS with " << rowsToAdd << " rows from input " << vb->nRows() << " rows"  << LogIO::POST;
 	*/
 
-	outputMs_p->addRow(rowsToAdd,True);
+	// Initialize reference frame transformation parameters
+	if (refFrameTransformation_p)
+	{
+		initFrequencyTransGrid(vb);
+	}
+
+	// NOTE: Don't spend time initializing because we are going to re-write everything
+	outputMs_p->addRow(rowsToAdd,False);
 
 	fillIdCols(vb,rowRef);
     fillDataCols(vb,rowRef);
@@ -2032,15 +2091,15 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 		// Observation
 		mapAndReindexVector(vb->observationId(),tmpVectorInt,inputOutputObservationIndexMap_p,True);
-		outputMsCols_p->observationId().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->observationId(),rowRef,nspws_p);
 
 		// Array Id
 		mapAndReindexVector(vb->arrayId(),tmpVectorInt,inputOutputArrayIndexMap_p,True);
-		outputMsCols_p->arrayId().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->arrayId(),rowRef,nspws_p);
 
 		// Field Id
 		mapAndReindexVector(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p,True);
-		outputMsCols_p->fieldId().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->fieldId(),rowRef,nspws_p);
 
 		// Scan -> SCAN is not re-indexed in old split
 		// mapAndReindexVector(vb->scan(),tmpVectorInt,inputOutputScanIndexMap_p,!timespan_p.contains("scan"));
@@ -2048,57 +2107,60 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 		// State
 		mapAndReindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
-		outputMsCols_p->stateId().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->stateId(),rowRef,nspws_p);
 
 		// Spectral Window
 		tmpVectorInt = ddiStart_p;
-		outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 
 		// Non re-indexable vector columns
 		mapVector(vb->scan(),tmpVectorInt);
-		outputMsCols_p->scanNumber().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->scanNumber(),rowRef,nspws_p);
 		mapVector(vb->antenna1(),tmpVectorInt);
-		outputMsCols_p->antenna1().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->antenna1(),rowRef,nspws_p);
 		mapVector(vb->antenna2(),tmpVectorInt);
-		outputMsCols_p->antenna2().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->antenna2(),rowRef,nspws_p);
 		mapVector(vb->feed1(),tmpVectorInt);
-		outputMsCols_p->feed1().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->feed1(),rowRef,nspws_p);
 		mapVector(vb->feed2(),tmpVectorInt);
-		outputMsCols_p->feed2().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->feed2(),rowRef,nspws_p);
 		mapVector(vb->processorId(),tmpVectorInt);
-		outputMsCols_p->processorId().putColumnCells(rowRef,tmpVectorInt);
+		writeVector(tmpVectorInt,outputMsCols_p->processorId(),rowRef,nspws_p);
 		mapVector(vb->time(),tmpVectorDouble);
-		outputMsCols_p->time().putColumnCells(rowRef,tmpVectorDouble);
+		writeVector(tmpVectorDouble,outputMsCols_p->time(),rowRef,nspws_p);
 		mapVector(vb->timeCentroid(),tmpVectorDouble);
-		outputMsCols_p->timeCentroid().putColumnCells(rowRef,tmpVectorDouble);
+		writeVector(tmpVectorDouble,outputMsCols_p->timeCentroid(),rowRef,nspws_p);
 		mapVector(vb->timeInterval(),tmpVectorDouble);
-		outputMsCols_p->interval().putColumnCells(rowRef,tmpVectorDouble);
+		writeVector(tmpVectorDouble,outputMsCols_p->interval(),rowRef,nspws_p);
 		mapVector(vb->exposure(),tmpVectorDouble);
-		outputMsCols_p->exposure().putColumnCells(rowRef,tmpVectorDouble);
+		writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
 
 		// Non re-indexable matrix columns
 		Matrix<Double> tmpUvw(IPosition(2,3,rowRef.nrow()),0.0);
 		mapMatrix(vb->uvw(),tmpUvw);
-		outputMsCols_p->uvw().putColumnCells(rowRef,tmpUvw);
+		writeMatrix(tmpUvw,outputMsCols_p->uvw(),rowRef,nspws_p);
 
 		// Averaged vector columns
 		mapAndAverageVector(vb->flagRow(),tmpVectorBool);
 		outputMsCols_p->flagRow().putColumnCells(rowRef,tmpVectorBool);
+		writeVector(tmpVectorBool,outputMsCols_p->flagRow(),rowRef,nspws_p);
 
 		// Averaged matrix columns
 		mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
-		outputMsCols_p->weight().putColumnCells(rowRef,tmpMatrixFloat);
+		writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
 		if (correctedToData_p)
 		{
 			arrayTransformInPlace(tmpMatrixFloat, MSTransformations::wtToSigma);
 			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
+			writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 		}
 		else
 		{
 			mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
 			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
+			writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 		}
 	}
 	else
@@ -2107,33 +2169,33 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		if (inputOutputObservationIndexMap_p.size())
 		{
 			reindexVector(vb->observationId(),tmpVectorInt,inputOutputObservationIndexMap_p,True);
-			outputMsCols_p->observationId().putColumnCells(rowRef,tmpVectorInt);
+			writeVector(tmpVectorInt,outputMsCols_p->observationId(),rowRef,nspws_p);
 		}
 		else
 		{
-			outputMsCols_p->observationId().putColumnCells(rowRef,vb->observationId());
+			writeVector(vb->observationId(),outputMsCols_p->observationId(),rowRef,nspws_p);
 		}
 
 		// Array
 		if (inputOutputArrayIndexMap_p.size())
 		{
 			reindexVector(vb->arrayId(),tmpVectorInt,inputOutputArrayIndexMap_p,True);
-			outputMsCols_p->arrayId().putColumnCells(rowRef,tmpVectorInt);
+			writeVector(tmpVectorInt,outputMsCols_p->arrayId(),rowRef,nspws_p);
 		}
 		else
 		{
-			outputMsCols_p->arrayId().putColumnCells(rowRef,vb->arrayId());
+			writeVector(vb->arrayId(),outputMsCols_p->arrayId(),rowRef,nspws_p);
 		}
 
 		// Field
 		if (inputOutputFieldIndexMap_p.size())
 		{
 			reindexVector(vb->fieldId(),tmpVectorInt,inputOutputFieldIndexMap_p,True);
-			outputMsCols_p->fieldId().putColumnCells(rowRef,tmpVectorInt);
+			writeVector(tmpVectorInt,outputMsCols_p->fieldId(),rowRef,nspws_p);
 		}
 		else
 		{
-			outputMsCols_p->fieldId().putColumnCells(rowRef,vb->fieldId());
+			writeVector(vb->fieldId(),outputMsCols_p->fieldId(),rowRef,nspws_p);
 		}
 
 		// Scan -> SCAN is not re-indexed in old split
@@ -2153,50 +2215,50 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		if (inputOutputScanIntentIndexMap_p.size())
 		{
 			reindexVector(vb->stateId(),tmpVectorInt,inputOutputScanIntentIndexMap_p,!timespan_p.contains("state"));
-			outputMsCols_p->stateId().putColumnCells(rowRef,tmpVectorInt);
+			writeVector(tmpVectorInt,outputMsCols_p->stateId(),rowRef,nspws_p);
 		}
 		else
 		{
-			outputMsCols_p->stateId().putColumnCells(rowRef,vb->stateId());
+			writeVector(vb->stateId(),outputMsCols_p->stateId(),rowRef,nspws_p);
 		}
 
 		// Spectral Window
 		if (inputOutputSPWIndexMap_p.size())
 		{
 			reindexVector(vb->spectralWindows(),tmpVectorInt,inputOutputSPWIndexMap_p,True);
-			outputMsCols_p->dataDescId().putColumnCells(rowRef,tmpVectorInt);
+			writeVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 		else
 		{
-			outputMsCols_p->dataDescId().putColumnCells(rowRef,vb->spectralWindows());
+			writeVector(vb->spectralWindows(),outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 
 		// Non re-indexable columns
-		outputMsCols_p->scanNumber().putColumnCells(rowRef,vb->scan());
-		outputMsCols_p->antenna1().putColumnCells(rowRef,vb->antenna1());
-		outputMsCols_p->antenna2().putColumnCells(rowRef,vb->antenna2());
-		outputMsCols_p->feed1().putColumnCells(rowRef,vb->feed1());
-		outputMsCols_p->feed2().putColumnCells(rowRef,vb->feed2());
-		outputMsCols_p->processorId().putColumnCells(rowRef,vb->processorId());
-		outputMsCols_p->time().putColumnCells(rowRef,vb->time());
-		outputMsCols_p->timeCentroid().putColumnCells(rowRef,vb->timeCentroid());
-		outputMsCols_p->interval().putColumnCells(rowRef,vb->timeInterval());
-		outputMsCols_p->exposure().putColumnCells(rowRef,vb->exposure());
-		outputMsCols_p->uvw().putColumnCells(rowRef,vb->uvw());
-		outputMsCols_p->flagRow().putColumnCells(rowRef,vb->flagRow());
+		writeVector(vb->scan(),outputMsCols_p->scanNumber(),rowRef,nspws_p);
+		writeVector(vb->antenna1(),outputMsCols_p->antenna1(),rowRef,nspws_p);
+		writeVector(vb->antenna2(),outputMsCols_p->antenna2(),rowRef,nspws_p);
+		writeVector(vb->feed1(),outputMsCols_p->feed1(),rowRef,nspws_p);
+		writeVector(vb->feed2(),outputMsCols_p->feed2(),rowRef,nspws_p);
+		writeVector(vb->processorId(),outputMsCols_p->processorId(),rowRef,nspws_p);
+		writeVector(vb->time(),outputMsCols_p->time(),rowRef,nspws_p);
+		writeVector(vb->timeCentroid(),outputMsCols_p->timeCentroid(),rowRef,nspws_p);
+		writeVector(vb->timeInterval(),outputMsCols_p->interval(),rowRef,nspws_p);
+		writeVector(vb->exposure(),outputMsCols_p->exposure(),rowRef,nspws_p);
+		writeMatrix(vb->uvw(),outputMsCols_p->uvw(),rowRef,nspws_p);
+		writeVector(vb->flagRow(),outputMsCols_p->flagRow(),rowRef,nspws_p);
 
 		Matrix<Float> weights = vb->weight();
 		if (weightFactorMap_p[vb->spectralWindows()(0)] != 1)
 		{
 			weights *= weightFactorMap_p[vb->spectralWindows()(0)];
 		}
-		outputMsCols_p->weight().putColumnCells(rowRef, weights);
+		writeMatrix(weights,outputMsCols_p->weight(),rowRef,nspws_p);
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
 		if (correctedToData_p)
 		{
 			arrayTransformInPlace(weights, MSTransformations::wtToSigma);
-			outputMsCols_p->sigma().putColumnCells(rowRef, weights);
+			writeMatrix(weights,outputMsCols_p->sigma(),rowRef,nspws_p);
 		}
 		else
 		{
@@ -2205,7 +2267,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			{
 				sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];
 			}
-			outputMsCols_p->sigma().putColumnCells(rowRef, sigma);
+			writeMatrix(sigma,outputMsCols_p->sigma(),rowRef,nspws_p);
 		}
 	}
 
@@ -2586,12 +2648,23 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 // -----------------------------------------------------------------------
 // Generic method to write a Vector from a VisBuffer into a ScalarColumn
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef)
+template <class T> void MSTransformDataHandler::writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks)
 {
-	IPosition shape = inputVector.shape();
-	shape(0) = rowRef.nrows();
-    Array<T> outputArray(shape,const_cast<T*>(inputVector.getStorage(MSTransformations::False)),SHARE);
-    outputCol.putColumnCells(rowRef, outputArray);
+	if (nBlocks == 1)
+	{
+		 outputCol.putColumnCells(rowRef, inputVector);
+	}
+	else
+	{
+		uInt offset = 0;
+		for (uInt block_i=0;block_i<nBlocks;block_i++)
+		{
+			uInt startRow_i = rowRef.firstRow()+offset;
+			RefRows rowRef_i(startRow_i, startRow_i+inputVector.size()-1);
+		    outputCol.putColumnCells(rowRef_i, inputVector);
+		    offset += inputVector.size();
+		}
+	}
 
 	return;
 }
@@ -2599,13 +2672,23 @@ template <class T> void MSTransformDataHandler::writeVector(const Vector<T> &inp
 // -----------------------------------------------------------------------
 // Generic method to write a Matrix from a VisBuffer into a ArrayColumn
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef)
+template <class T> void MSTransformDataHandler::writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks)
 {
-	IPosition shape = inputMatrix.shape();
-	shape(1) = rowRef.nrows();
-    Array<T> outputArray(shape,const_cast<T*>(inputMatrix.getStorage(MSTransformations::False)),SHARE);
-    outputCol.putColumnCells(rowRef, outputArray);
-
+	if (nBlocks == 1)
+	{
+		 outputCol.putColumnCells(rowRef, inputMatrix);
+	}
+	else
+	{
+		uInt offset = 0;
+		for (uInt block_i=0;block_i<nBlocks;block_i++)
+		{
+			uInt startRow_i = rowRef.firstRow()+offset;
+			RefRows rowRef_i(startRow_i, startRow_i+inputMatrix.shape()(1)-1);
+		    outputCol.putColumnCells(rowRef_i, inputMatrix);
+		    offset += inputMatrix.shape()(1);
+		}
+	}
 	return;
 }
 
