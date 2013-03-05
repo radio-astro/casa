@@ -80,6 +80,7 @@ casa_add_library( tools
  flagging/agentflagger_cmpt.cc
  images/coordsys_cmpt.cc
  images/image_cmpt.cc
+ images/imagemetadata_cmpt.cc
  images/imagepol_cmpt.cc
  images/regionmanager_cmpt.cc
  measures/measures_cmpt.cc
@@ -142,8 +143,9 @@ casa_add_tools( tools_swig tools_sources tools_py
  flagging/lightflagger.xml
  flagging/agentflagger.xml
  images/coordsys.xml
- images/imagepol.xml
  images/image.xml
+ images/imagemetadata.xml
+ images/imagepol.xml
  images/regionmanager.xml
  measures/measures.xml
  ms/msplot.xml

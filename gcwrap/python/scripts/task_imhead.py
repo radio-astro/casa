@@ -512,88 +512,17 @@ def imhead(
     # Just #print out all the information we just gathered.
     # ############################################################
     if mode == 'list':
+        myimd = imdtool()
         try:
-            casalog.post('Available header items to modify:')
-            casalog.post('General --')
-            # casalog.post( '' )
-
-            user_key_count = 0
-            for field in hd_keys + user_keys:
-                if field.startswith('ctype'):
-                    if field == 'ctype1':
-                        casalog.post('axes --')
-                    casalog.post(str('        -- ') + field + str(': ')
-                                 + str(hd_values[field]))
-                elif field.startswith('crpix'):
-
-                    if field == 'crpix1':
-                        casalog.post('crpix --')
-                    casalog.post(str('        -- ') + field + str(': ')
-                                 + str(hd_values[field]))
-                elif field.startswith('crval'):
-
-                    if field == 'crval1':
-                        casalog.post('crval --')
-                    index = int(field[5:])
-                    printVal = str(hd_values[field]) \
-                        + str(hd_values['cunit' + str(index)])
-                    if hd_values['cunit' + str(index)] == 'rad':
-                        printVal = qa.formxxx(printVal, 'dms') \
-                            + str('deg.min.sec')
-                    casalog.post(str('        -- ') + field + str(': ')
-                                 + printVal)
-                elif field.startswith('cdelt'):
-
-                    if field == 'cdelt1':
-                        casalog.post('cdelt --')
-                    index = int(field[5:])
-                    printVal = str(hd_values[field]) \
-                        + str(hd_values['cunit' + str(index)])
-                    if hd_values['cunit' + str(index)] == 'rad':
-                        printVal = qa.formxxx(printVal, 'dms') \
-                            + str('deg.min.sec')
-                    casalog.post(str('        -- ') + field + str(': ')
-                                 + printVal)
-                elif field.startswith('cunit'):
-
-                    if field == 'cunit1':
-                        casalog.post('units --')
-                    outUnit = hd_values[field]
-                    if outUnit == 'rad':
-                        outUnit = 'deg.min.sec'
-                    casalog.post(str('        -- ') + field + str(': ')
-                                 + outUnit)
-                elif hd_keys.count(field) < 1:
-
-                    # This is a user defined keyword
-                    if user_key_count < 1:
-                        casalog.post('User Defined --')
-                    user_key_count = user_key_count + 1
-                    casalog.post(str('        -- ') + field + str(': ')
-                                 + str(hd_values[field]))
-                else:
-                    value = str(hd_values[field])
-                    if (
-                        field.startswith("beam")
-                        and str(hd_values[field]) == not_known
-                    ):
-                        myia.open(imagename)
-                        res = myia.restoringbeam()
-                        myia.done()
-                        if (len(res.keys()) > 0):
-                            value = "This image has multiple beams. Use mode='summary' to get a listing'"
-                    casalog.post(str('        -- ') + field + str(': ')
-                                 + value)
-            if csys != None:
-                csys.done()
-                del csys
-            return hd_values
+            myimd.open(imagename)
+            return myimd.list(verbose)
         except Exception, instance:
-
             casalog.post(str('*** Error ***') + str(instance), 'SEVERE')
             casalog.post(str('              Python error: ')
                          + str(instance), 'SEVERE')
-            return False
+            raise
+        finally:
+            myimd.done()
 
     # ############################################################
     #                     add MODE
