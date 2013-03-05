@@ -120,6 +120,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
 		regionDock_  = new viewer::QtRegionDock(this, qdp_);
 		connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));	
+		connect( regionDock_, SIGNAL(loadRegions(const QString&, const QString &)), SLOT(loadRegions(const QString&, const QString &)) );
 		connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
 		std::string shown = getrc("visible.regiondock");
 		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
@@ -1264,7 +1265,10 @@ Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
 		if(qdd == qdds.getRight()) return True;  }
 	return False;  }
 
-void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+void QtDisplayPanelGui::loadRegions( const QString &path, const QString &type ) {
+	loadRegions( path.toStdString( ), type.toStdString( ) );
+}
+void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &type ) {
 	if ( logger_did_region_warning == false ) {
 		logger << LogIO::WARN
 				<< "currently only supports rectangle, ellipse, symbol (somewhat), and polygon region shapes"
@@ -1272,7 +1276,7 @@ void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string 
 		logger_did_region_warning = true;
 	}
 
-	qdp_->loadRegions( path, datatype, displaytype );
+	qdp_->loadRegions( path, type );
 }
 
 std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> regions,

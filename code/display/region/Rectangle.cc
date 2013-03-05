@@ -39,14 +39,36 @@
 
 #include <imageanalysis/Annotations/AnnRectBox.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-
+#include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <display/DisplayErrors.h>
 
 namespace casa {
     namespace viewer {
 
-		Rectangle::~Rectangle( ) { }
+	Rectangle::Rectangle( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
+		bool hold_signals ) :	Region( "rectangle", wc, d, hold_signals ),
+														blc_x(x1<x2?x1:x2),
+														blc_y(y1<y2?y1:y2),
+														trc_x(x1<x2?x2:x1),
+														trc_y(y1<y2?y2:y1) {
+		initHistogram();
+		complete = true;
+	}
+
+	// carry over from QtRegion... hopefully, removed soon...
+	Rectangle::Rectangle( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
+		bool hold_signals) :	Region( "rectangle", wc, rs->dock( ), hold_signals ),
+														blc_x(x1<x2?x1:x2),
+														blc_y(y1<y2?y1:y2),
+														trc_x(x1<x2?x2:x1),
+														trc_y(y1<y2?y2:y1) {
+		initHistogram();
+		complete = true;
+	}
+
+
+	Rectangle::~Rectangle( ) { }
 
 
 		unsigned int Rectangle::check_handle( double x, double y ) const {
@@ -446,6 +468,7 @@ namespace casa {
 		}
 
 		std::list<RegionInfo> * Rectangle::generate_dds_centers( ){
+
 			std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
 			if( wc_==0 ) return region_centers;
 
@@ -600,6 +623,7 @@ namespace casa {
 			try {
 				WCBox box( qblc, qtrc, IPosition(dispAxes), cs, Vector<Int>() );
 				result = new ImageRegion(box);
+
 			} catch(...) { }
 			return result;
 		}

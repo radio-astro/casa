@@ -44,6 +44,7 @@
 
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
@@ -136,13 +137,11 @@ ComponentList ImageFitter::fit() {
 	Bool deconvolve = False;
 	Bool list = True;
 	String errmsg;
-	ImageAnalysis myImage(_getImage());
-	Record region = *_getRegion();
-	myImage.statistics(
-		inputStats, _getImage()->coordinates().directionAxesNumbers(),
-		region, "", Vector<String>(0),
-		Vector<Float>(0), Vector<Float>(0)
+	ImageStatsCalculator myStats(
+		_getImage(), _getRegion(), "", False
 	);
+	myStats.setAxes(_getImage()->coordinates().directionAxesNumbers());
+	inputStats = myStats.statistics();
 	Vector<String> allowFluxUnits(1, "Jy.km/s");
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);

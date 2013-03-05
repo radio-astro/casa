@@ -106,7 +106,7 @@ QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const;
 
 
 protected slots:
-void loadRegions( bool &handled, const QString &path, const QString &type );
+void loadRegions( const QString &path, const QString &type );
 void updateRegionState(QtDisplayData*);
 
 

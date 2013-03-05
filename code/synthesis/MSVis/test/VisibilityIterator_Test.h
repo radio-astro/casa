@@ -85,6 +85,8 @@ private:
                                    Int spectralWindow, const VisBuffer2 * vb);
     void checkFlagCube (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
                         Int channelOffset, Int channelIncrement, VisBuffer2 * vb);
+    void checkFlagCategory (Int rowId, Int spectralWindow, Int row, Int channel, Int correlation,
+                            Int channelOffset, Int channelIncrement, VisBuffer2 * vb);
     void checkRowScalar (Double value, Double offset, Int rowId, const char * name, Int factor = 1);
     void checkRowScalars (VisBuffer2 * vb);
     void checkSigmaWeight (Int nCorrelations, const Matrix<Float> & values, Double offset, Int rowId,

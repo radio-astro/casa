@@ -455,7 +455,7 @@ void RegionToolManager::operator()(const WCRefreshEvent& ev) {
 	}
 }
 
-void RegionToolManager::loadRegions( const std::string &path, const std::string &/*datatype*/, const std::string &/*displaytype*/ ) {
+void RegionToolManager::loadRegions( const std::string &path, const std::string &/*type*/ ) {
 
 	bool first_trip = true;
 	ListIter<WorldCanvas* >* wcs = pd->wcs();

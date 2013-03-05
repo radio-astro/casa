@@ -40,6 +40,17 @@
 namespace casa {
     namespace viewer {
 
+    Ellipse::Ellipse( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2) :
+    			Rectangle( wc, d, x1, y1, x2, y2 ) {
+    	initHistogram();
+    }
+
+    // carry over from QtRegion... hopefully, removed soon...
+    Ellipse::Ellipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double x1, double y1, double x2, double y2, bool hold_signals) :
+    			Rectangle( "ellipse", wc, factory->dock( ), x1, y1, x2, y2, hold_signals ) {
+    	initHistogram();
+    }
+
 	Ellipse::~Ellipse( ) { }
 
 

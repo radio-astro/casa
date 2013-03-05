@@ -138,7 +138,7 @@ namespace casa {
 
 	    connect( r, SIGNAL(regionChange(viewer::Region*,std::string)), this, SIGNAL(regionChange(viewer::Region*,std::string)));
 	    connect( state, SIGNAL(outputRegions(const QString &,const QString &,const QString&,const QString&)), SLOT(output_region_event(const QString &,const QString &,const QString&,const QString&)) );
-	    connect( state, SIGNAL(loadRegions(bool&,const QString &,const QString &)), SIGNAL(loadRegions(bool&,const QString &,const QString&)) );
+	    connect( state, SIGNAL(loadRegions(const QString &,const QString &)), SIGNAL(loadRegions(const QString &,const QString&)) );
 	    connect( this, SIGNAL(region_stack_change(QWidget*)), state, SLOT(stackChange(QWidget*)) );
 
 	    // not needed if the dock starts out as visible (or in user control)

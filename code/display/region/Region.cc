@@ -38,7 +38,7 @@
 
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
-
+#include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <images/Images/ImageStatistics.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -85,7 +85,7 @@ static inline AnnotationBase::LineStyle viewer_to_annotation( region::LineStyle 
 std::tr1::shared_ptr<Region> Region::creating_region;
 
 Region::Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *d, bool hold_signals_,
-		QtMouseToolNames::PointRegionSymbols sym ) :  dock_(d),
+		QtMouseToolNames::PointRegionSymbols sym ) :  dock_(d), histogram( NULL ),
 		position_visible(true), /*** it is assumed that the initial ***
 		 *** state for region dock is with  ***
 		 *** position coordinates visible   ***/
@@ -129,6 +129,7 @@ Region::~Region( ){
 	dock_->removeRegion(mystate);
 	signal_region_change( region::RegionChangeDelete );
 	disconnect(mystate, 0, 0, 0);
+	delete histogram;
 }
 
 bool Region::degenerate( ) const {
@@ -497,7 +498,6 @@ void Region::emitUpdate( ) {
 }
 
 void Region::refresh_state_gui( ) {
-
 	std::string mode = mystate->mode( );
 	if ( mode == "position" ) {
 		region::Coord c;
@@ -522,9 +522,13 @@ void Region::refresh_state_gui( ) {
 				QString::fromStdString(y),
 				QString::fromStdString(angle),
 				qwidth, qheight );
-	} else if ( mode == "statistics" ) {
+	} else if ( mode == QtRegionState::STATISTICS_MODE.toStdString() ) {
 		mystate->updateStatistics( );
 	}
+	else if ( mode == QtRegionState::HISTOGRAM_MODE.toStdString() ){
+		this->updateHistogramRegion();
+	}
+
 
 #if 0
 	// update statistics, when needed...
@@ -2252,6 +2256,7 @@ const std::set<Region*> &Region::get_selected_regions( ) {
 
 ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
 	if ( dd == 0 ) return ImageRegion_state( );
+
 	const std::set<Region*> &selected_regions = get_selected_regions( );
 	ImageRegion *result = 0;
 	size_t count = 0;
@@ -2302,9 +2307,28 @@ ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
 		try {
 			WCUnion compound( rgns );
 			result = new ImageRegion(compound);
+
 		} catch(...) { }
 	}
 	return ImageRegion_state(result,count);
+}
+
+void Region::updateHistogramRegion(){
+	if( wc_==0 ){
+		return;
+	}
+
+	Int zindex = 0;
+	if (wc_->restrictionBuffer()->exists("zIndex")) {
+		wc_->restrictionBuffer()->getValue("zIndex", zindex);
+	}
+	DisplayData* dd = wc_->csMaster();
+	if ( dd != NULL ){
+		ImageInterface<float>* image = dd->imageinterface();
+		histogram->setImage( image );
+		ImageRegion* region = get_image_region( dd );
+		histogram->setImageRegion( region, id_);
+	}
 }
 
 
@@ -2819,6 +2843,11 @@ void Region::clear_signal_cache( ) {
 	held_signals[region::RegionChangeLabel] = false;
 }
 
+void Region::initHistogram(){
+	if ( histogram == NULL ){
+		histogram = new BinPlotWidget( false, false, true, true, NULL );
+		state()->addHistogram( histogram );
+	}
 }
-
+}
 }
