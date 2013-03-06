@@ -154,6 +154,7 @@ class partition_test1(test_base):
         '''Partition: create an MMS separated by spws with observation selection'''
         # NOTE: ms.getscansummary() used in ph.getScanNrows does not honour several observation
         #       IDs, therefore I need to select by obs id in partition
+        # observation=2 contains spws=2,3,4,5
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', observation='2',
                     datacolumn='data', createmms=True)
         time.sleep(10)
@@ -173,14 +174,16 @@ class partition_test1(test_base):
             msN = ph.getScanNrows(self.msfile, s, selection=mysel)
             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
                              %(s, mmsN, msN))
- 
-        # Compare spw IDs
+
+        # spwids are re-indexed. The expected IDs are:
+        # ms_spw = 2 --> mms_spw = 0
+        # ms_spw = 3 --> mms_spw = 1, etc.
+        # Check that MMS spw IDs have been re-indexed properly
+        indexed_ids = range(4)
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
-            ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
-            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
-                             'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
-
+            self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+ 
 
     def test_spw_selection(self):
         '''Partition: create an MMS separated by spws with spw=2,4 selection'''
@@ -203,15 +206,16 @@ class partition_test1(test_base):
             msN = ph.getScanNrows(self.msfile, s, selection=mysel)
             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
                              %(s, mmsN, msN))
- 
-        # Compare spw IDs
+
+        # spwids are re-indexed. The expected IDs are:
+        # ms_spw = 2 --> mms_spw = 0
+        # ms_spw = 4 --> mms_spw = 1
+        # Check that MMS spw IDs have been re-indexed properly
+        indexed_ids = range(2)
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
-            ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
-            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
-                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
-
-#    def addCleanup(self, function, *args, **kwargs):
+            self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+ 
     
 class partition_test2(test_base):
     

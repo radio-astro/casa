@@ -698,16 +698,15 @@ class test_FreqAvg(test_base):
         ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
-class test_mms(test_base):
+class test_MMS(test_base):
     def setUp(self):
         self.setUp_4ants()
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf testmms*.*ms')
+#        os.system('rm -rf testmms*.*ms')
     
-    # TODO: Will only work after spw table consolidation
-    def testmms1(self):
+    def test_mms1(self):
         '''mstransform: create MMS with spw separation and channel selections'''
         outputms = "testmms1.mms"
         mstransform(vis=self.vis, outputvis=outputms, spw='0~4,5:1~10',createmms=True,
@@ -716,13 +715,13 @@ class test_mms(test_base):
         self.assertTrue(os.path.exists(outputms))
         
         # It should create 6 subMS, with spw=0~5
-        # spw=5 should have only 11 channels
-        ret = th.verifyMS(outputms, 6, 11, 5)
+        # spw=5 should have only 10 channels
+        ret = th.verifyMS(outputms, 6, 10, 5)
         self.assertTrue(ret[0],ret[1])        
                
         
     # TODO: Will only work after spw table consolidation
-    def testmms2(self):
+    def test_mms2(self):
         '''mstransform: create MMS with spw/scan separation and channel selections'''
         outputms = "testmms2.mms"
         mstransform(vis=self.vis, outputvis=outputms, spw='0:0~10,1:60~63',createmms=True,
@@ -736,6 +735,32 @@ class test_mms(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 2, 4, 1)
         self.assertTrue(ret[0],ret[1])        
+
+    def test_mms3(self):
+        '''mstransform: create MMS with scan separation and channel selections'''
+        outputms = "testmms3.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='0:0~10,1:60~63',createmms=True,
+                    separationaxis='scan')                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # It should create 2 subMS, with spw=0~1
+        # spw=0 has 11 channels, spw=1 has 4 channels
+        ret = th.verifyMS(outputms, 2, 11, 0)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 2, 4, 1)
+        self.assertTrue(ret[0],ret[1])    
+        
+        
+    def test_mms4(self):
+        '''mstransform: verify spw sub-table consolidation'''
+        outputms = "testmms4.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='3,5:10~20,7,9,11,13,15',createmms=True,
+                    separationaxis='spw')                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # spw=5 should be spw=1 after consolidation, with 10 channels
+        ret = th.verifyMS(outputms, 7, 10, 1)
+            
 
 # TODO: cleanup output MSs after test phase
 # Cleanup class 
@@ -762,5 +787,5 @@ def suite():
             test_Regridms5,
             test_Hanning,
             test_FreqAvg,
-#            test_mms,
+#            test_MMS,
             Cleanup]

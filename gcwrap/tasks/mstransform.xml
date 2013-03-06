@@ -45,16 +45,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>64</value>
         </param>
         
-        <param type="int" name="ddistart" subparam="true">
+        <param type="int" name="ddistart" subparam="true" visibility="hidden">
             <description>TO be hidden later!!!</description>
             <value>-1</value>
         </param>
-
-<!--
-    <param type="string" name="optimizefor">
-        <description>Optimize output for specific case (continuum/spectralimaging).</description>
-        <value></value>
-    </param> -->
 
     <param type="string" name="tileshape">
         <description>Tile shape of the disk data columns.</description>
@@ -304,7 +298,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="True">
                   <default param="separationaxis"><value type="string">both</value></default>
                   <default param="numsubms"><value type="int">64</value></default>
-                  <default param="ddistart"><value type="int">-1</value></default>
            </equals>
           </when>
           <when param="datacolumn">
@@ -392,7 +385,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     outputvis -- Name of output visibility file
         default: ''; example: outputvis='ngc5921.mms'
 
-    createmms -- Create a multi-MS as the output. (TBI)
+    createmms -- Create a multi-MS as the output.
         default: False
 
         If False, it will work like the split task and create a
@@ -432,11 +425,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
            spw = '*:3~64'  channels 3 through 64 for all sp id's
                    spw = ' :3~64' will NOT work.
-           spw = '*:0;60~63'  channel 0 and channels 60 to 63 for all IFs 
-                  ';' needed to separate different channel ranges in one spw
-           spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-           spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
-                    spw 1, channels 20-30, and spw 2, channels, 1, 2 and 4
+
+               NOTE: mstransform does not support multiple channel ranges per
+                     spectral window (';').
 
     scan -- Scan number range
         default: ''=all

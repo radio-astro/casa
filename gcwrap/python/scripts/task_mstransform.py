@@ -34,6 +34,7 @@ class MSTHelper(ParallelTaskHelper):
         self._calScanList = None
         self._selectionScanList = None
         self.__spwSelection = self.__args['spw']
+        self.__ddidict = {}
         self._msTool = None
         self._tbTool = None
         
@@ -304,6 +305,7 @@ class MSTHelper(ParallelTaskHelper):
 
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSPWs1)
+        print newspwsel
         
         self.__ddistart = 0
         for output in xrange(numSubMS):
@@ -311,17 +313,20 @@ class MSTHelper(ParallelTaskHelper):
             mmsCmd['createmms'] = False
             if self._selectionScanList is not None:
                 mmsCmd['scan'] = ParallelTaskHelper.\
-                                 listToCasaString(self._selectionScanList)
-#            mmsCmd['spw'] = ParallelTaskHelper.\
-#                            listToCasaString(partitionedSPWs[output])
-            
+                                 listToCasaString(self._selectionScanList)            
             mmsCmd['spw'] = newspwsel[output]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
 
+            # Dictionary for the spw/ddi consolidation later
+            self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms' \
+                                  % (self.outputBase, output)
+
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
+            
+            # Increment ddistart
             self.__ddistart = self.__ddistart + partitionedSPWs1[output].__len__()
 
 #    @dump_args
@@ -355,21 +360,31 @@ class MSTHelper(ParallelTaskHelper):
 
         partitionedSpws  = self.__partition1(spwList,numSpwPartitions)
         partitionedScans = self.__partition(scanList,numScanPartitions)
-        
 
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSpws)
 
+        # Dictionary for the spw/ddi consolidation later
+        self.__ddidict[0] = self.dataDir+'/%s.%04d.ms' \
+                                  % (self.outputBase, 0)
+                                  
+        # Save the first spw ID in the dictionary
         self.__ddistart = 0
+        spwid0 = newspwsel[0/numScanPartitions]
         for output in xrange(numSpwPartitions*numScanPartitions):
+            spwid = newspwsel[output/numScanPartitions]
+            if spwid == spwid0:
+                self.__ddistart = self.__ddistart
+            else:
+                self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
+                spwid0 = newspwsel[output/numScanPartitions]
+                self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms' \
+                                  % (self.outputBase, output)
+                
             mmsCmd = copy.copy(self._arg)
-            mmsCmd['createmms'] = False
-
-            
+            mmsCmd['createmms'] = False           
             mmsCmd['scan'] = ParallelTaskHelper.listToCasaString \
                              (partitionedScans[output%numScanPartitions])
-#            mmsCmd['spw'] = ParallelTaskHelper.listToCasaString\
-#                            (partitionedSpws[output/numScanPartitions])
             mmsCmd['spw'] = newspwsel[output/numScanPartitions]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
@@ -377,7 +392,6 @@ class MSTHelper(ParallelTaskHelper):
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
             
-            self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
         
 #    @dump_args
     def _getDDIstart(self):
@@ -654,10 +668,17 @@ class MSTHelper(ParallelTaskHelper):
                     # (link in target will be created my makeMMS)
                 subtabs_to_omit.append('SYSCAL')
 
+            # The keys are the non-duplicated values of ddistart
+            # The values are the subMSs. Create a list of subMSs
+            toUpdateList = self.__ddidict.values()
+            casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
+            
             # Consolidate the spw sub-tables to take channel selection
             # or averages into account.
             mtTool = casac.mstransformer()
             try:
+                if toUpdateList.__len__() == 0:
+                    toUpdateList = subMSList
                 mtTool.mergespwtables(subMSList)
             except Exception, instance:
                 mtTool.done()
@@ -666,9 +687,9 @@ class MSTHelper(ParallelTaskHelper):
                 
             mtTool.done()
                 
-            # Do not copy sub-tables because they were consolidated before
+            # Copy sub-tables from first subMS to the others.
             ph.makeMMS(self._arg['outputvis'], subMSList,
-                       False, # copy subtables
+                       True, # copy subtables
                        subtabs_to_omit # omitting these
                        )
 
