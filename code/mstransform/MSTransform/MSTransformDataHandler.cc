@@ -533,7 +533,7 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 
 		if (nspws_p > 1)
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Number of output SPWs is" << nspws_p << LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Number of output SPWs is " << nspws_p << LogIO::POST;
 			combinespws_p = True;
 		}
 		else
@@ -1551,7 +1551,6 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 	MSDataDescription ddiTable_0 = ms_0.dataDescription();
 	MSDataDescColumns ddiCols_0(ddiTable_0);
 
-	Int SPWId = 1;
 	uInt rowIndex = ddiTable_0.nrow();
 	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
 	{
@@ -1566,8 +1565,7 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 		{
 			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
 			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
-			ddiCols_0.spectralWindowId().put(rowIndex,SPWId);
-			SPWId += 1;
+			ddiCols_0.spectralWindowId().put(rowIndex,rowIndex);
 			rowIndex += 1;
 		}
 	}
@@ -2021,12 +2019,7 @@ void MSTransformDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 	}
 
 	uInt currentRows = outputMs_p->nrow();
-	RefRows rowRef( currentRows, currentRows + nspws_p*rowsToAdd - 1);
-
-	/*
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-			<< "Filling output MS with " << rowsToAdd << " rows from input " << vb->nRows() << " rows"  << LogIO::POST;
-	*/
+	RefRows rowRef( currentRows, currentRows + rowsToAdd - 1);
 
 	// Initialize reference frame transformation parameters
 	if (refFrameTransformation_p)
@@ -2035,7 +2028,7 @@ void MSTransformDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 	}
 
 	// NOTE: Don't spend time initializing because we are going to re-write everything
-	outputMs_p->addRow(rowsToAdd,False);
+	outputMs_p->addRow(rowRef.nrows()*nspws_p,False);
 
 	fillIdCols(vb,rowRef);
     fillDataCols(vb,rowRef);
@@ -2661,7 +2654,7 @@ template <class T> void MSTransformDataHandler::writeVector(const Vector<T> &inp
 		{
 			uInt startRow_i = rowRef.firstRow()+offset;
 			RefRows rowRef_i(startRow_i, startRow_i+inputVector.size()-1);
-		    outputCol.putColumnCells(rowRef_i, inputVector);
+			outputCol.putColumnCells(rowRef_i, inputVector);
 		    offset += inputVector.size();
 		}
 	}
