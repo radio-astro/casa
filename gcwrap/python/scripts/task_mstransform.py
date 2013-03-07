@@ -276,18 +276,18 @@ class MSTHelper(ParallelTaskHelper):
         numSubMS = self._arg['numsubms']
         numSubMS = min(len(scanList),numSubMS)
         
-        partitionedScans = self.__partition(scanList, numSubMS)
-        
+        partitionedScans = self.__partition(scanList, numSubMS)        
+
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False
             mmsCmd['scan']= ParallelTaskHelper.\
-                            listToCasaString(partitionedScans[output])
-            mmsCmd['ddistart'] = self.__ddistart
+                            listToCasaString(partitionedScans[output])                                                
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
+
 
 
 #    @dump_args
@@ -305,7 +305,6 @@ class MSTHelper(ParallelTaskHelper):
 
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSPWs1)
-        print newspwsel
         
         self.__ddistart = 0
         for output in xrange(numSubMS):
@@ -392,13 +391,7 @@ class MSTHelper(ParallelTaskHelper):
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
             
-        
-#    @dump_args
-    def _getDDIstart(self):
-        '''Return the DDIstart internal parameter'''
-        
-        return self.__ddistart
-
+ 
 #    @dump_args
     def _selectMS(self, doCalibrationSelection = False):
         '''
@@ -406,7 +399,6 @@ class MSTHelper(ParallelTaskHelper):
         have been requested are honored.
         If scanList is not None then it used as the scan selection criteria.
         '''
-        print "Start of Select MS"
         if self._msTool is None:
             # Open up the msTool
             self._msTool = mstool()
@@ -434,7 +426,6 @@ class MSTHelper(ParallelTaskHelper):
 #                                      (self._selectionScanList)
 
         if self.__selectionFilter is not None:
-            print self.__selectionFilter
             self._msTool.msselect(self.__selectionFilter)
 
         # This is not necessary
@@ -473,10 +464,6 @@ class MSTHelper(ParallelTaskHelper):
         spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
 
         # Return a unique sorted list:
-#        return list(set(spwList))
-
-        # Return a unique sorted list:
-        # Note: the above did not return a sorted list
         sorted = list(set(spwList))
         sorted.sort()
         return sorted
@@ -668,24 +655,32 @@ class MSTHelper(ParallelTaskHelper):
                     # (link in target will be created my makeMMS)
                 subtabs_to_omit.append('SYSCAL')
 
-            # The keys are the non-duplicated values of ddistart
-            # The values are the subMSs. Create a list of subMSs
-            toUpdateList = self.__ddidict.values()
-            casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
+
+            # When separationaxis='scan' there is no need to give ddistart. 
+            # The tool looks at the whole spw selection and
+            # creates the indices from it. After the indices are worked out, 
+            # it applys MS selection. We do not need to consolidate either.
+                               
             
-            # Consolidate the spw sub-tables to take channel selection
-            # or averages into account.
-            mtTool = casac.mstransformer()
-            try:
-                if toUpdateList.__len__() == 0:
-                    toUpdateList = subMSList
-                mtTool.mergespwtables(subMSList)
-            except Exception, instance:
-                mtTool.done()
-                casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
-                raise
+            # If axis is spw or both, give a list of the subMSs
+            # that need to be consolidated. This list is pre-organized
+            # inside the separation functions above.
+            if (self.__origpars['separationaxis'] == 'spw' or
+                self.__origpars['separationaxis'] == 'both'):
+                toUpdateList = self.__ddidict.values()
+                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
                 
-            mtTool.done()
+                # Consolidate the spw sub-tables to take channel selection
+                # or averages into account.
+                mtTool = casac.mstransformer()
+                try:                        
+                    mtTool.mergespwtables(toUpdateList)
+                    mtTool.done()
+                except Exception, instance:
+                    mtTool.done()
+                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
+                    raise
+                    
                 
             # Copy sub-tables from first subMS to the others.
             ph.makeMMS(self._arg['outputvis'], subMSList,
@@ -817,7 +812,7 @@ def mstransform(
              createmms,           # MMS --> partition
              separationaxis, 
              numsubms,
-             ddistart,           # THIS PARAMETER WILL BE HIDDEN LATER
+             ddistart,           # internal parameter (hidden in XML)
              tileshape,          # tiling
              field,
              spw, 
@@ -913,13 +908,13 @@ def mstransform(
                     uvrange=uvrange,time=timerange, intent=intent, observation=str(observation),
                     feed=feed)
         
-        # Write the DDI start for each sub-MS, when creating an MMS
-#        config['ddistart'] = mth._getDDIstart()
+        # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart
-#        print 'Will add ddistart to config'
-#        print config['ddistart']
+        
+        # Add MODEL to list of columns
+#        if realmodelcol:
+#            datacolumn = datacolumn + ',MODEL'
         config['datacolumn'] = datacolumn
-        config['realmodelcol'] = realmodelcol
 
         if combinespws:
             casalog.post('Combine spws %s into new output spw'%spw)

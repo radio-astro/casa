@@ -223,13 +223,14 @@ class DictDiffer(object):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
 
 
-def verifyMS(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
+def verifyMS(msname, expnumspws, expnumchan, inspw, expchanfreqs=[], ignoreflags=False):
     '''Function to verify spw and channels information in an MS
        msname        --> name of MS to verify
        expnumspws    --> expected number of SPWs in the MS
        expnumchan    --> expected number of channels in spw
        inspw         --> SPW ID
        expchanfreqs  --> numpy array with expected channel frequencies
+       ignoreflags   --> do not check the FLAG column
            Returns a list with True or False and a state message'''
     
     msg = ''
@@ -238,16 +239,20 @@ def verifyMS(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
     nr = tb.nrows()
     cf = tb.getcell("CHAN_FREQ", inspw)
     tb.close()
-    tb.open(msname)
-    dimdata = tb.getcell("FLAG", 0)[0].size
-    tb.close()
+    # After channel selection/average, need to know the exact row number to check,
+    # ignore this check in these cases.
+    if not ignoreflags:
+        tb.open(msname)
+        dimdata = tb.getcell("FLAG", 0)[0].size
+        tb.close()
+        
     if not (nr==expnumspws):
         msg =  "Found "+str(nr)+", expected "+str(expnumspws)+" spectral windows in "+msname
         return [False,msg]
     if not (nc == expnumchan):
         msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in spw "+str(inspw)+" in "+msname
         return [False,msg]
-    if not (dimdata == expnumchan):
+    if not ignoreflags and (dimdata != expnumchan):
         msg = "Found "+ str(dimdata) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
         return [False,msg]
 

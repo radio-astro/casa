@@ -72,7 +72,7 @@ class partition_test1(test_base):
         shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
 
     def test_nomms(self):
-        '''Partition: Create a normal MS with createmms=False'''
+        '''mstransform: Create a normal MS with createmms=False'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, createmms=False,
                     datacolumn='data', separationaxis='scan')
         time.sleep(10)
@@ -87,7 +87,7 @@ class partition_test1(test_base):
         self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
 
     def test_default(self):
-        '''Partition: create an MMS with default values'''
+        '''mstransform: create an MMS with default values'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, datacolumn='data',
                     separationaxis='scan', createmms=True)
         time.sleep(10)
@@ -123,7 +123,7 @@ class partition_test1(test_base):
 
     # TODO: this MS has 4 obs IDs which don't make sense. Re-write this test.
     def test_scan_selection(self):
-        '''Partition: create an MMS using scan selection'''
+        '''mstransform: create an MMS using scan selection'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan', scan='1,2,3,11',
                     datacolumn='data', createmms=True)
         time.sleep(10)
@@ -151,9 +151,9 @@ class partition_test1(test_base):
                              'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
 
     def test_spw_separation(self):
-        '''Partition: create an MMS separated by spws with observation selection'''
+        '''mstransform: create an MMS separated by spws with observation selection'''
         # NOTE: ms.getscansummary() used in ph.getScanNrows does not honour several observation
-        #       IDs, therefore I need to select by obs id in partition
+        #       IDs, therefore I need to select by obs id in mstransform
         # observation=2 contains spws=2,3,4,5
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', observation='2',
                     datacolumn='data', createmms=True)
@@ -186,7 +186,7 @@ class partition_test1(test_base):
  
 
     def test_spw_selection(self):
-        '''Partition: create an MMS separated by spws with spw=2,4 selection'''
+        '''mstransform: create an MMS separated by spws with spw=2,4 selection'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', spw='2,4',
                     datacolumn='data', createmms=True)
         time.sleep(10)
@@ -229,10 +229,10 @@ class partition_test2(test_base):
         shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
 
     # The following test fails in the OSX platforms if the full MS is used to
-    # create the MMS. It does not fail in partition, but in the ms.getscansummary()
+    # create the MMS. It does not fail in mstransform, but in the ms.getscansummary()
     # methods. Check this soon
     def test_sepaxis(self):
-        '''Partition: separationaxis=both'''        
+        '''mstransform: separationaxis=both'''        
         mstransform(vis=self.msfile, outputvis=self.mmsfile, spw='0~11',separationaxis='both',
                     datacolumn='data', createmms=True)
 #        mstransform(vis=self.msfile, outputvis=self.mmsfile,separationaxis='both')
@@ -266,7 +266,7 @@ class partition_test2(test_base):
 
         
     def test_all_columns(self):
-        '''Partition: datacolumn=all'''
+        '''mstransform: datacolumn=all'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all',
                     separationaxis='scan', createmms=True)
         time.sleep(10)
@@ -293,7 +293,7 @@ class partition_test2(test_base):
                              'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
 
     def test_scan_spw(self):
-        '''Partition: separationaxis=scan with spw selection'''
+        '''mstransform: separationaxis=scan with spw selection'''
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan',
                   spw='1~4,10,11', datacolumn='data', createmms=True)
         time.sleep(10)
@@ -326,7 +326,7 @@ class partition_test2(test_base):
          
         
     def test_numsubms(self):
-        '''Partition: small numsubms value'''
+        '''mstransform: small numsubms value'''
         # There are 16 spws; we want only 6 sub-MSs.
         mstransform(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw',
                   numsubms=6, datacolumn='data', createmms=True)
@@ -361,9 +361,9 @@ class partition_test2(test_base):
         
     # No flagbackups in mstransform
 #    def test_flagversions(self):
-#        '''Partition: check that the .flagversions is created'''
+#        '''mstransform: check that the .flagversions is created'''
 #                
-#        # Run partition and create the .flagversions
+#        # Run mstransform and create the .flagversions
 #        mstransform(vis=self.msfile, outputvis=self.mmsfile, createmms=True)
 #        self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
 # 
@@ -386,7 +386,7 @@ class partition_test2(test_base):
         
     # No flagbackups in mstransform
 #    def test_flagsrestore(self):
-#        '''Partition: check that we can restore the flags'''
+#        '''mstransform: check that we can restore the flags'''
 #        # Delete any flagversions
 #        if os.path.exists(self.msfile+'.flagversions'):
 #            shutil.rmtree(self.msfile+'.flagversions')
@@ -394,7 +394,7 @@ class partition_test2(test_base):
 #        # Unflag the MS
 #        flagdata(vis=self.msfile, mode='unflag', flagbackup=False)
 #        
-#        # Run partition and create the .flagversions
+#        # Run mstransform and create the .flagversions
 #        mstransform(vis=self.msfile, outputvis=self.mmsfile, createmms=True)
 #        self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
 #        
