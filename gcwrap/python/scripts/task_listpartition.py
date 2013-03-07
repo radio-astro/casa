@@ -65,91 +65,11 @@ def listpartition(vis=None, createdict=None, listfile=None):
             
         # Close top MS
         mslocal.close()
-        
-        # Create lists for scan and spw dictionaries of each sub-MS
-        msscanlist = []
-        msspwlist = []
 
-        # List with sizes in bytes per sub-MS
-        sizelist = []
-        
-        # Loop through all sub-Mss
-        for subms in mslist:
-            mslocal1.open(subms)
-            scans = mslocal1.getscansummary()
-            msscanlist.append(scans)
-            spws = mslocal1.getspectralwindowinfo()
-            msspwlist.append(spws)
-            mslocal1.close()
-
-            # Get the data volume in bytes per sub-MS
-            sizelist.append(ph.getDiskUsage(subms))
-
-        # Get the information to list in output
-        # Dictionary to return
+        # Get a consolidated dictionary with scan, spw, channel information
+        # of the list of subMSs. It adds the nrows of all sub-scans of a scan.
         outdict = {}
-
-        for ims in range(mslist.__len__()):   
-            # Create temp dictionary for each sub-MS
-            tempdict = {}
-            msname = os.path.basename(mslist[ims])
-            tempdict['MS'] = msname
-            tempdict['size'] = sizelist[ims]
-            
-            # Get scan dictionary for this sub-MS
-            scandict = msscanlist[ims]
-            
-            # Get spw dictionary for this sub-MS
-            # NOTE: the keys of spwdict.keys() are NOT the spw Ids
-            spwdict = msspwlist[ims]
-            
-            # The keys are the scan numbers
-            scanlist = scandict.keys()
-            
-            # Get information per scan
-            tempdict['scanId'] = {}
-            for scan in scanlist:
-                newscandict = {}
-                subscanlist = scandict[scan].keys()
-                
-                # Get spws and nrows per sub-scan
-                nrows = 0
-                aspws = np.array([],dtype='int32')
-                for subscan in subscanlist:
-                    nrows += scandict[scan][subscan]['nRow']
-
-                    # Get the spws for each sub-scan
-                    spwids = scandict[scan][subscan]['SpwIds']
-                    aspws = np.append(aspws,spwids)
-
-                newscandict['nrows'] = nrows
-
-                # Sort spws  and remove duplicates
-                aspws.sort()
-                uniquespws = np.unique(aspws)
-                newscandict['spwIds'] = uniquespws
-                                
-                # Array to hold channels
-                charray = np.empty_like(uniquespws)
-                spwsize = np.size(uniquespws)
-                
-
-                # Now get the number of channels per spw
-                for ind in range(spwsize):
-                    spwid = uniquespws[ind]
-                    for sid in spwdict.keys():
-                        if spwdict[sid]['SpectralWindowId'] == spwid:
-                            nchans = spwdict[sid]['NumChan']
-                            charray[ind] = nchans
-                            continue
-                    
-                newscandict['nchans'] = charray
-                tempdict['scanId'][int(scan)] = newscandict
-                    
-                
-            outdict[ims] = tempdict
-#            pprint.pprint(outdict)
-
+        outdict = ph.getScanSpwSummary(mslist)        
 
         # Now loop through the dictionary to print the information
         if outdict.keys() == []:
@@ -247,13 +167,4 @@ def getWidth(adict, par):
         width = 5
         
     return width
-
-
-
-
-
-
-
-
-
 

@@ -5,6 +5,7 @@ import pprint as pp
 import traceback
 import time
 import commands
+import numpy as np
 from __main__ import *
 from taskinit import *
 from tasks import *
@@ -451,6 +452,118 @@ def getSpwIds(msfile, myscan, selection={}):
     return spwlist
 
 
+def getScanSpwSummary(mslist=[]):
+    '''Get a consolidated dictionary with scan, spw, channel information
+       of a list of MSs. It adds the nrows of all sub-scans of a scan.
+       mslist    --> list with names of MSs
+       Returns a dictionary such as:
+       mylist=['subms1.ms','subms2.ms']
+       outdict = getScanSpwSummary(mylist)
+       outdict = {0: {'MS': 'subms1.ms',
+                      'scanId': {30: {'nchans': array([64, 64]),
+                                      'nrows': 544,
+                                      'spwIds': array([ 0,  1])}},
+                      'size': '214M'},
+                  1: {'MS': 'ngc5921.ms',
+                      'scanId': {1: {'nchans': array([63]),
+                                     'nrows': 4509,
+                                     'spwIds': array([0])},
+                                 2: {'nchans': array([63]),
+                                     'nrows': 1890,
+                                     'spwIds': array([0])}},
+                      'size': '72M'}}'''
+                     
+    if mslist == []:
+        return {}
+
+    mslocal1 = casac.ms()
+
+    # Create lists for scan and spw dictionaries of each MS
+    msscanlist = []
+    msspwlist = []
+
+    # List with sizes in bytes per sub-MS
+    sizelist = []
+    
+    # Loop through all MSs
+    for subms in mslist:
+        mslocal1.open(subms)
+        scans = mslocal1.getscansummary()
+        msscanlist.append(scans)
+        spws = mslocal1.getspectralwindowinfo()
+        msspwlist.append(spws)
+        mslocal1.close()
+
+        # Get the data volume in bytes per sub-MS
+        sizelist.append(getDiskUsage(subms))
+
+    # Get the information to list in output
+    # Dictionary to return
+    outdict = {}
+
+    for ims in range(mslist.__len__()):   
+        # Create temp dictionary for each sub-MS
+        tempdict = {}
+        msname = os.path.basename(mslist[ims])
+        tempdict['MS'] = msname
+        tempdict['size'] = sizelist[ims]
+        
+        # Get scan dictionary for this sub-MS
+        scandict = msscanlist[ims]
+        
+        # Get spw dictionary for this sub-MS
+        # NOTE: the keys of spwdict.keys() are NOT the spw Ids
+        spwdict = msspwlist[ims]
+        
+        # The keys are the scan numbers
+        scanlist = scandict.keys()
+        
+        # Get information per scan
+        tempdict['scanId'] = {}
+        for scan in scanlist:
+            newscandict = {}
+            subscanlist = scandict[scan].keys()
+            
+            # Get spws and nrows per sub-scan
+            nrows = 0
+            aspws = np.array([],dtype='int32')
+            for subscan in subscanlist:
+                nrows += scandict[scan][subscan]['nRow']
+
+                # Get the spws for each sub-scan
+                spwids = scandict[scan][subscan]['SpwIds']
+                aspws = np.append(aspws,spwids)
+
+            newscandict['nrows'] = nrows
+
+            # Sort spws  and remove duplicates
+            aspws.sort()
+            uniquespws = np.unique(aspws)
+            newscandict['spwIds'] = uniquespws
+                            
+            # Array to hold channels
+            charray = np.empty_like(uniquespws)
+            spwsize = np.size(uniquespws)
+            
+            # Now get the number of channels per spw
+            for ind in range(spwsize):
+                spwid = uniquespws[ind]
+                for sid in spwdict.keys():
+                    if spwdict[sid]['SpectralWindowId'] == spwid:
+                        nchans = spwdict[sid]['NumChan']
+                        charray[ind] = nchans
+                        continue
+                
+            newscandict['nchans'] = charray
+            tempdict['scanId'][int(scan)] = newscandict
+                
+            
+        outdict[ims] = tempdict
+#            pprint.pprint(outdict)
+
+    return outdict
+
+
 def getMMSSpwIds(thisdict):
     '''Get the list of spws from an MMS dictionary.
        thisdict  --> output dictionary from listpartition(MMS,createdict=true)
@@ -479,7 +592,6 @@ def getMMSSpwIds(thisdict):
     spwlist = uniquespws.ravel().tolist()
         
     return spwlist
-
 
 def getDiskUsage(msfile):
     '''Return the size in bytes of an MS or MMS in disk.
