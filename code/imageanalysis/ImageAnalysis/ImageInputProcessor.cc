@@ -31,10 +31,10 @@
 #include <casa/iostream.h>
 
 #include <images/Images/FITSImage.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 
 #include <measures/Measures/Stokes.h>
 
@@ -106,6 +106,7 @@ void ImageInputProcessor::_process(
     const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
     Bool verbose
 ) {
+	cout << "*** stokes " << stokes << endl;
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
     if (outputStruct != 0) {

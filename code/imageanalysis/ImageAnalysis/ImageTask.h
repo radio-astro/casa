@@ -102,6 +102,8 @@ protected:
 
     inline const Record* _getRegion() const {return &_regionRecord;}
 
+    inline void _setStokes(const String& stokes) { _stokesString = stokes; }
+
     inline const String& _getStokes() const {return _stokesString;}
 
     inline const String& _getChans() const {return _chan;}
@@ -115,7 +117,6 @@ protected:
     static void _removeExistingFileIfNecessary(
     	const String& filename, const Bool overwrite
     );
-
 
     String _summaryHeader() const;
 

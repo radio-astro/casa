@@ -42,6 +42,7 @@ ImageAnalysis/ImageCollapser.cc
 ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImageMetaData.cc
 ImageAnalysis/ImageMomentsProgress.cc
 ImageAnalysis/ImageMomentsProgressMonitor.cc
 ImageAnalysis/ImagePadder.cc
@@ -109,6 +110,7 @@ install (FILES
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImageMetaData.h
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
     ImageAnalysis/ImageMomentsProgress.h
@@ -172,6 +174,7 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFFT.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageHeader.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageMetaData.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePolarimetry.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageSourceFinder.cc )

@@ -149,7 +149,6 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>

@@ -103,7 +103,7 @@ public:
 		const ImageInterface<Float>* const &image, const String& region,
 		const Record *const regionRec,
 		const String& box="",
-		const String& chanInp="0", const String& stokes="I",
+		const String& chanInp="", const String& stokes="",
 		const String& maskInp="",
 		const Vector<Float>& includepix = Vector<Float>(0),
 		const Vector<Float>& excludepix = Vector<Float>(0),

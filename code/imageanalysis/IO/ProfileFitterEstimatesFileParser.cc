@@ -31,7 +31,6 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/Containers/Record.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 
 

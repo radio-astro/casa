@@ -25,18 +25,19 @@
 //#
 //# $Id: $
 
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
 #include <casa/BasicMath/Math.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/Flux.h>
-#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/GaussianShape.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <images/Images/FITSImage.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Regions/RegionManager.h>
 #include <casa/BasicSL/Constants.h>
@@ -65,13 +66,14 @@ void checkImage(
     cout << "** info " << Table::tableInfo(differenceImage).type();
     ia.open(differenceImage);
     cout << "after open" << endl;
-    Record stats;
     Vector<Int> axes(2);
     axes[0] = 0;
     axes[1] = 1;
     Record region;
     Vector<String> plotstats(0);
-    ia.statistics(stats, axes, region, "", plotstats, Vector<Float>(0), Vector<Float>(0));
+    ImageStatsCalculator statscalc(ia.getImage(), 0, "", False);
+    Record stats = statscalc.statistics();
+    statscalc.statistics();
 
     Array<Double> minArray = stats.asArrayDouble("min");
     Array<Double> maxArray = stats.asArrayDouble("max");
@@ -220,16 +222,21 @@ int main() {
         	Vector<Double> blc(imShape.nelements(), 0);
         	Vector<Double> trc(imShape.nelements(), 0);
         	Vector<Double> inc(imShape.nelements(), 1);
-
+        	cout << __FILE__ << " " << __LINE__ << endl;
         	Vector<Int> dirNums = ImageMetaData(*noisyImage).directionAxesNumbers();
         	blc[dirNums[0]] = 130;
         	blc[dirNums[1]] = 89;
         	trc[dirNums[0]] = 170;
         	trc[dirNums[1]] = 129;
+        	cout << __FILE__ << " " << __LINE__ << endl;
 
         	RegionManager rm;
         	Record *box = rm.box(blc, trc, inc, "abs", False);
+        	cout << __FILE__ << " " << __LINE__ << endl;
+
         	ImageFitter fitter(noisyImage, "", box);
+        	cout << __FILE__ << " " << __LINE__ << endl;
+
         	ComponentList compList = fitter.fit();
             AlwaysAssert(fitter.converged(0), AipsError);
 
@@ -242,6 +249,7 @@ int main() {
         	MDirection direction = compList.getRefDirection(0);
         	AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(), 0.000213372, 1e-5), AipsError);
         	AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), 1.9359058e-5, 1e-5), AipsError);
+        	cout << __FILE__ << " " << __LINE__ << endl;
 
         	Vector<Double> parameters = compList.getShape(0)->parameters();
 
@@ -253,9 +261,11 @@ int main() {
 
         	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
         	AlwaysAssert(near(positionAngle, 119.81297, 1e-5), AipsError);
+        	cout << __FILE__ << " " << __LINE__ << endl;
+
         }
         {
-            // test fitter using an includepix (i=0) and excludepix (i=1) range with model with noise
+            cout << "*** test fitter using an includepix (i=0) and excludepix (i=1) range with model with noise" << endl;
         	ImageAnalysis ia;
         	String outname = dirName + "/myout.im";
         	ImageInterface<Float>* outIm = ia.newimagefromfits(outname, noisyImage->name(), 0, 0, False, True);
