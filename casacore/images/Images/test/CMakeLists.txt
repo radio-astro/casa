@@ -4,8 +4,6 @@ imagetestimage.fits
 jyperpixelimage.fits
 mexinputtest.fits
 qualityimage.fits
-ngc5921.clean.fits
-ngc5921.clean.no_freq.no_stokes.fits
 test_image.fits
 test_image.im/table.dat
 test_image.im/table.f0
@@ -43,7 +41,6 @@ tImageExpr3Gram
 tImageExprGram
 tImageExprParse_addDir
 tImageInfo
-tImageMetaData
 tImageRegrid
 tImageStatistics
 tImageUtilities
