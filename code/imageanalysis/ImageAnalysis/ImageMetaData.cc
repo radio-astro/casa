@@ -25,12 +25,10 @@
 //#
 //# $Id: ImageMetaData.cc 20886 2010-04-29 14:06:56Z gervandiepen $
 
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <casa/aips.h>
-
-
-#include <images/Images/ImageMetaData.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
