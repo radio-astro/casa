@@ -1251,7 +1251,6 @@ class imfit_test(unittest.TestCase):
             mask=mymask + ">-100",
             stretch=True
         )
-        print "*** zz " + str(zz)
         self.assertTrue(zz['results']['nelements'] == 4)
 
         yy.done()
