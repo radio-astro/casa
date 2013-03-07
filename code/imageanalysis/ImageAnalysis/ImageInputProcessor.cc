@@ -106,7 +106,6 @@ void ImageInputProcessor::_process(
     const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
     Bool verbose
 ) {
-	cout << "*** stokes " << stokes << endl;
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
     if (outputStruct != 0) {
