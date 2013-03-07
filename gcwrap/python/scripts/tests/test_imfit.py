@@ -152,6 +152,7 @@ class imfit_test(unittest.TestCase):
                 #shutil.rmtree(f)
             if (os.path.isfile(f)):
                 os.remove(f)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_fit_using_full_image(self):
         '''Imfit: Fit using full image'''
@@ -1109,7 +1110,8 @@ class imfit_test(unittest.TestCase):
                 )
                 myia.calc(noisy_image + "+" + str(off))
                 imagename = "xx" + str(i) + "_" + str(j) + ".im"
-                myia.subimage(imagename)
+                subim = myia.subimage(imagename)
+                subim.done()
                 myia.done()
                             
                 res = code(imagename)
@@ -1249,6 +1251,7 @@ class imfit_test(unittest.TestCase):
             mask=mymask + ">-100",
             stretch=True
         )
+        print "*** zz " + str(zz)
         self.assertTrue(zz['results']['nelements'] == 4)
 
         yy.done()
