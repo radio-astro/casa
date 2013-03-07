@@ -25,7 +25,7 @@
 //#
 //# $Id: tImageMetaData.cc 20749 2009-09-30 14:24:05Z gervandiepen $
 
-#include <images/Images/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <images/Images/FITSImage.h>
 #include <casa/OS/Path.h>
 #include <casa/OS/EnvVar.h>
@@ -51,12 +51,6 @@ int main() {
         ImageMetaData fourAxesImageMetaData(fourAxesImage);
         ImageMetaData twoAxesImageMetaData(twoAxesImage);
         {
-            // 3 in the casa format image, but 2 in the FITS image
-            AlwaysAssert(fourAxesImageMetaData.spectralAxisNumber() == 2, AipsError);
-            AlwaysAssert(twoAxesImageMetaData.spectralAxisNumber() == -1, AipsError);
-        }
-
-        {
             AlwaysAssert(fourAxesImageMetaData.nChannels() == 8, AipsError);
             AlwaysAssert(twoAxesImageMetaData.nChannels() == 0, AipsError);
         }
@@ -65,28 +59,6 @@ int main() {
             AlwaysAssert(fourAxesImageMetaData.isChannelNumberValid(1), AipsError);
             AlwaysAssert(! fourAxesImageMetaData.isChannelNumberValid(10), AipsError);
             AlwaysAssert(! twoAxesImageMetaData.isChannelNumberValid(0), AipsError);
-        }
-
-        {
-            AlwaysAssert(fourAxesImageMetaData.spectralCoordinateNumber() == 2, AipsError);
-            AlwaysAssert(twoAxesImageMetaData.spectralCoordinateNumber() == -1, AipsError);
-        }
-
-        {
-            AlwaysAssert(fourAxesImageMetaData.hasSpectralAxis(), AipsError);
-            AlwaysAssert(! twoAxesImageMetaData.hasSpectralAxis(), AipsError);
-        }
-
-        {
-            AlwaysAssert(fourAxesImageMetaData.polarizationCoordinateNumber() == 1, AipsError);
-            AlwaysAssert(twoAxesImageMetaData.polarizationCoordinateNumber() == -1, AipsError);
-        }
-
-        {
-        	/*
-            AlwaysAssert(fourAxesImageMetaData.hasPolarizationAxis(), AipsError);
-            AlwaysAssert(! twoAxesImageMetaData.hasPolarizationAxis(), AipsError);
-            */
         }
 
         {
@@ -113,28 +85,6 @@ int main() {
         	AlwaysAssert(fourAxesImageMetaData.stokesAtPixel(1).empty(), AipsError);
 
         }
-        {
-            // TODO test image without a direction coordinate
-            AlwaysAssert(fourAxesImageMetaData.directionCoordinateNumber() == 0, AipsError);
-            AlwaysAssert(twoAxesImageMetaData.directionCoordinateNumber() == 0, AipsError);
-        }         
-
-        {
-            // TODO test image without a direction coordinate
-            AlwaysAssert(fourAxesImageMetaData.hasDirectionCoordinate(), AipsError);
-            AlwaysAssert(twoAxesImageMetaData.hasDirectionCoordinate(), AipsError);
-        }         
-
-        {
-            // TODO test image without a direction coordinate
-            Vector<Int> directionAxesNums = fourAxesImageMetaData.directionAxesNumbers();
-            AlwaysAssert(directionAxesNums[0] == 0, AipsError);
-            AlwaysAssert(directionAxesNums[1] == 1, AipsError);
-
-            directionAxesNums = twoAxesImageMetaData.directionAxesNumbers();
-            AlwaysAssert(directionAxesNums[0] == 0, AipsError);
-            AlwaysAssert(directionAxesNums[1] == 1, AipsError);
-        }         
 
         {
             // TODO test image without a direction coordinate

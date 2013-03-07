@@ -32,52 +32,25 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    Int ImageMetaData::spectralCoordinateNumber() const {
-        // don't do a hasSpectralAxis() check or you will go down an infinite recursion path
-        return _coordinates.findCoordinate(Coordinate::SPECTRAL);
-    }
-
-    Bool ImageMetaData::hasSpectralAxis() const {
-    	return _coordinates.hasSpectralAxis();
-    } 
-
-    Int ImageMetaData::spectralAxisNumber() const {
-    	return _coordinates.spectralAxisNumber();
-    }    
-
     uInt ImageMetaData::nChannels() const {
-        if (! hasSpectralAxis()) {
+        if (! _coordinates.hasSpectralAxis()) {
             return 0;
         }
-        return _shape[spectralAxisNumber()];
+        return _shape[_coordinates.spectralAxisNumber()];
     }
 
     Bool ImageMetaData::isChannelNumberValid(const uInt chan) const {
-        if (! hasSpectralAxis()) {
+        if (! _coordinates.hasSpectralAxis()) {
             return False;
         }
         return (chan < nChannels());
     }
 
-    Int ImageMetaData::polarizationCoordinateNumber() const {
-        return _coordinates.polarizationCoordinateNumber();
-    }
-
-    /*
-    Bool ImageMetaData::hasPolarizationAxis() const {
-    	return itsCoordinates.hasPolarizationAxis();
-    } 
-    */
-
-    Int ImageMetaData::polarizationAxisNumber() const {
-    	return _coordinates.polarizationAxisNumber();
-    }       
-
     uInt ImageMetaData::nStokes() const {
         if (! _coordinates.hasPolarizationCoordinate()) {
             return 0;
         }
-        return _shape[polarizationAxisNumber()];
+        return _shape[_coordinates.polarizationAxisNumber()];
     }
 
     Int ImageMetaData::stokesPixelNumber(const String& stokesString) const {
@@ -103,28 +76,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return stokesPixNum >= 0 && stokesPixNum < (Int)nStokes(); 
     }
 
-    Int ImageMetaData::directionCoordinateNumber() const {
-        return _coordinates.directionCoordinateNumber();
-    }
-
-    Bool ImageMetaData::hasDirectionCoordinate() const {
-    	return _coordinates.hasDirectionCoordinate();
-    } 
-
-    Vector<Int> ImageMetaData::directionAxesNumbers() const {
-    	return _coordinates.directionAxesNumbers();
-    }    
-
     Vector<Int> ImageMetaData::directionShape() const {
-        Vector<Int> dirAxesNums = directionAxesNumbers();
-        if (dirAxesNums.nelements() == 0) {
-            return Vector<Int>();
-        }
-        Vector<Int> dirShape(2);
-        dirShape[0] = _shape[dirAxesNums[0]];
-        dirShape[1] = _shape[dirAxesNums[1]];
-        return dirShape;
+    	Vector<Int> dirAxesNums = _coordinates.directionAxesNumbers();
+    	if (dirAxesNums.nelements() == 0) {
+    		return Vector<Int>();
+    	}
+    	Vector<Int> dirShape(2);
+    	dirShape[0] = _shape[dirAxesNums[0]];
+    	dirShape[1] = _shape[dirAxesNums[1]];
+    	return dirShape;
     }
+
 
     Bool ImageMetaData::areChannelAndStokesValid(
         String& message, const uInt chan, const String& stokesString

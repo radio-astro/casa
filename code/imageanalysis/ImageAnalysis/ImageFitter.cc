@@ -44,7 +44,6 @@
 
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/ImageStatistics.h>
@@ -724,9 +723,7 @@ void ImageFitter::_setSizes() {
 		paBeam = beam.getPA();
 	}
 	else {
-		ImageMetaData md(*_getImage());
-		Int dirCoordNumber = md.directionCoordinateNumber();
-		Vector<Double> pixInc = _getImage()->coordinates().directionCoordinate(dirCoordNumber).increment();
+		Vector<Double> pixInc = _getImage()->coordinates().directionCoordinate().increment();
 		xBeam = Quantity(pixInc[0], "rad");
 		yBeam = Quantity(pixInc[1], "rad");
 		paBeam = Quantity(0, "rad");
