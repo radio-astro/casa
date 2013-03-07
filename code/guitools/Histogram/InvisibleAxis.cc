@@ -23,49 +23,33 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef RANGECONTROLSWIDGET_QO_H
-#define RANGECONTROLSWIDGET_QO_H
-
-#include <QtGui/QWidget>
-#include <guitools/Histogram/RangeControlsWidget.ui.h>
-
-using namespace std;
-
-class QDoubleValidator;
+#include "InvisibleAxis.h"
 
 namespace casa {
 
-/**
- * Pluggable functionality that allows users to specify a range
- * on the histogram.
- */
+InvisibleAxis::InvisibleAxis() {
+	// TODO Auto-generated constructor stub
 
-class RangeControlsWidget : public QWidget {
-    Q_OBJECT
-
-public:
-    RangeControlsWidget(QWidget *parent = 0);
-    void setRange( double min, double max, bool signal=true );
-    void setRangeLimits( double min, double max );
-    void setDataLimits( double min, double max );
-    pair<double,double> getMinMaxValues() const;
-
-    ~RangeControlsWidget();
-
-signals:
-	void minMaxChanged();
-	void rangeCleared();
-
-private slots:
-	void clearRange();
-
-private:
-	RangeControlsWidget(const RangeControlsWidget& );
-	RangeControlsWidget& operator=( const RangeControlsWidget& );
-    QDoubleValidator* minMaxValidator;
-    Ui::RangeControlsWidgetClass ui;
-    double rangeMin;
-    double rangeMax;
-};
 }
-#endif // RANGECONTROLSWIDGET_QO_H
+
+void InvisibleAxis::draw( QPainter*, const QPalette& ) const{
+
+}
+
+void InvisibleAxis::drawBackbone( QPainter* ) const {
+
+}
+
+void InvisibleAxis::drawLabel( QPainter*, double /*val*/ ) const {
+
+}
+
+void InvisibleAxis::drawTick( QPainter*, double /*val*/, double /*len*/) const {
+
+}
+
+InvisibleAxis::~InvisibleAxis() {
+	// TODO Auto-generated destructor stub
+}
+
+} /* namespace casa */

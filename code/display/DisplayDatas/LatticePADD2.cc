@@ -45,6 +45,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+
+
 // Format a string containing the data value and its units at the
 // given position (Float and Complex versions).
 template <>
@@ -226,14 +228,14 @@ Bool LatticePADisplayData<Float>::updateHistogram(Record &rec,
     imageHistogram = newHist;
       
     Record histSubRecord;
-    if (rec.isDefined("minmaxhist")) {
-      histSubRecord = rec.subRecord("minmaxhist");  }
-    else histSubRecord = getOptions().subRecord("minmaxhist");
+    if (rec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
+      histSubRecord = rec.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);  }
+    else histSubRecord = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
 
     histSubRecord.define("newdata", True);	// alerts autogui
     histSubRecord.defineRecord("histarray", newHist);
 						// Append new hist array
-    rec.defineRecord("minmaxhist", histSubRecord);  }
+    rec.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, histSubRecord);  }
       
   delete histogram;
   if (stridingNeeded) delete histImage;   
@@ -275,10 +277,10 @@ Bool LatticePADisplayData<Complex>::updateHistogram(Record &rec,
     }
     if (!error) {      
       Record histSubRecord;
-      if(rec.isDefined("minmaxhist")) {
-	histSubRecord = rec.subRecord("minmaxhist");     // Record to append to
+      if(rec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
+	histSubRecord = rec.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);     // Record to append to
       } else {
-	histSubRecord = getOptions().subRecord("minmaxhist");
+	histSubRecord = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
       }
 
       histP->setNBins(1000);
@@ -293,7 +295,7 @@ Bool LatticePADisplayData<Complex>::updateHistogram(Record &rec,
 
 	histSubRecord.define("newdata", True);       // Flag for autogui
 	histSubRecord.defineRecord("histarray", newHist); // Append new hist array
-	rec.defineRecord("minmaxhist", histSubRecord); 
+	rec.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, histSubRecord);
 	// clean up pointer !!!
 	delete histP;histP=0;
 	return True;
@@ -319,10 +321,10 @@ Bool LatticePADisplayData<Float>::updateHistogram(Record &rec, const Array<Float
     SubLattice<Float> tempSL(tempAL);
     Record histSubRecord;
     
-    if (rec.isDefined("minmaxhist")) {
-      histSubRecord = rec.subRecord("minmaxhist");     // Record to append to
+    if (rec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
+      histSubRecord = rec.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);     // Record to append to
     } else {
-      histSubRecord = getOptions().subRecord("minmaxhist");
+      histSubRecord = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
     }
     
     
@@ -340,7 +342,7 @@ Bool LatticePADisplayData<Float>::updateHistogram(Record &rec, const Array<Float
       
       histSubRecord.define("newdata", True);  // Flag for autogui
       histSubRecord.defineRecord("histarray", newHist);  // Append new hist array
-      rec.defineRecord("minmaxhist", histSubRecord);    
+      rec.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, histSubRecord);
       return True;
     } else {
       return False;   // Oh-ow.
@@ -406,15 +408,15 @@ Bool LatticePADisplayData<Complex>::updateHistogram(Record &rec,
     imageHistogram = newHist;
     
     Record histSubRecord;
-    if(rec.isDefined("minmaxhist")) {
-         histSubRecord = rec.subRecord("minmaxhist");  }
-    else histSubRecord = getOptions().subRecord("minmaxhist");
+    if(rec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
+         histSubRecord = rec.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);  }
+    else histSubRecord = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
     
     histSubRecord.define("newdata", True);	// alerts autogui
     histSubRecord.defineRecord("histarray", newHist);
 						// Append new hist array
     
-    rec.defineRecord("minmaxhist", histSubRecord);  }
+    rec.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, histSubRecord);  }
 
   delete hist;
   if(stridingNeeded) delete histLattice;   

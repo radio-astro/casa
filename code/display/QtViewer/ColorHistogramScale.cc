@@ -23,49 +23,43 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef RANGECONTROLSWIDGET_QO_H
-#define RANGECONTROLSWIDGET_QO_H
-
-#include <QtGui/QWidget>
-#include <guitools/Histogram/RangeControlsWidget.ui.h>
-
-using namespace std;
-
-class QDoubleValidator;
+#include "ColorHistogramScale.h"
+#include <display/Display/ColormapDefinition.h>
+#include <QDebug>
+#include <QtCore/qmath.h>
 
 namespace casa {
 
-/**
- * Pluggable functionality that allows users to specify a range
- * on the histogram.
- */
-
-class RangeControlsWidget : public QWidget {
-    Q_OBJECT
-
-public:
-    RangeControlsWidget(QWidget *parent = 0);
-    void setRange( double min, double max, bool signal=true );
-    void setRangeLimits( double min, double max );
-    void setDataLimits( double min, double max );
-    pair<double,double> getMinMaxValues() const;
-
-    ~RangeControlsWidget();
-
-signals:
-	void minMaxChanged();
-	void rangeCleared();
-
-private slots:
-	void clearRange();
-
-private:
-	RangeControlsWidget(const RangeControlsWidget& );
-	RangeControlsWidget& operator=( const RangeControlsWidget& );
-    QDoubleValidator* minMaxValidator;
-    Ui::RangeControlsWidgetClass ui;
-    double rangeMin;
-    double rangeMax;
-};
+ColorHistogramScale::ColorHistogramScale():QwtLinearColorMap(),
+		colorDefinition(NULL) {
 }
-#endif // RANGECONTROLSWIDGET_QO_H
+
+String ColorHistogramScale::getColorMapName() const {
+	return mapName;
+}
+
+
+void ColorHistogramScale::setColorMapName( const String& colorMapName ){
+	mapName = colorMapName;
+	colorDefinition = new ColormapDefinition( colorMapName );
+	for ( int i = 0; i < 100; i++ ){
+		float percent = i / 100.0f;
+		Float red = 0;
+		Float green = 0;
+		Float blue = 0;
+		colorDefinition->getValue( percent, red, green, blue );
+		const int COLOR_MAX = 255;
+		int greenValue = static_cast<int>( green * COLOR_MAX );
+		int redValue = static_cast<int>( red * COLOR_MAX );
+		int blueValue = static_cast<int>( blue * COLOR_MAX );
+		QColor colorStop( redValue, greenValue, blueValue );
+		addColorStop( percent, colorStop );
+	}
+}
+
+
+ColorHistogramScale::~ColorHistogramScale() {
+	delete colorDefinition;
+}
+
+} /* namespace casa */

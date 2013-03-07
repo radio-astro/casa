@@ -155,7 +155,7 @@ void LatticeAsVector<T>::setDefaultOptions()
   itsRotation = 0.0;
   itsConstAmp = False;
 //
-  T* dummy;
+  T* dummy = NULL;
   DataType type = whatType(dummy);
   AlwaysAssert(type==TpFloat || type==TpComplex, AipsError);
   if (type == TpFloat) {
@@ -222,7 +222,7 @@ Record LatticeAsVector<T>::getOptions()
 //
 // phasetype and debiasing are only meaningful for COmplex data
 //
-  T* dummy;
+  T* dummy = NULL;
   DataType type = whatType(dummy);
   AlwaysAssert(type==TpFloat || type==TpComplex, AipsError);
   if (type == TpComplex) {

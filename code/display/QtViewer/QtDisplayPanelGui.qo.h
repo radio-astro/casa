@@ -77,6 +77,7 @@ class BinPlotWidget;
 class HistogramMain;
 class Fit2DTool;
 class SlicerMainWindow;
+class ColorHistogram;
 
 template <class T> class ImageInterface;
 
@@ -537,6 +538,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   HistogramMain* histogrammer;
+  ColorHistogram* colorHistogram;
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
 
@@ -582,6 +584,10 @@ class QtDisplayPanelGui : public QtPanelBase {
   void addSlice( int id, const QString& shape, const QString&, const QList<double>& worldX,
   		const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
   		const QString&, const QString&, const QString&, int, int);
+  void showColorHistogram(QtDisplayData* displayData);
+  void globalColorSettingsChanged( bool global );
+  void globalOptionsChanged( QtDisplayData* originator, Record opts );
+  void updateColorHistogram( const QString& ddName );
 
  public:
  

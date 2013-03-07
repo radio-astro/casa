@@ -28,12 +28,15 @@
 #include <guitools/Histogram/FitWidget.qo.h>
 #include <guitools/Histogram/HistogramMarkerGaussian.h>
 #include <guitools/Histogram/HistogramMarkerPoisson.h>
+#include <guitools/Histogram/InvisibleAxis.h>
 #include <guitools/Histogram/RangeControlsWidget.qo.h>
 #include <guitools/Histogram/RangePicker.h>
 #include <guitools/Histogram/ToolTipPicker.h>
 #include <guitools/Histogram/BinCountWidget.qo.h>
 #include <guitools/Histogram/ChannelRangeWidget.qo.h>
 #include <guitools/Histogram/ZoomWidget.qo.h>
+#include <casa/Arrays/Vector.h>
+#include <synthesis/MSVis/UtilJ.h>
 
 #include <QDebug>
 #include <QMessageBox>
@@ -46,7 +49,9 @@
 #include <qwt_plot_marker.h>
 #include <qwt_text_label.h>
 #include <qwt_scale_div.h>
+#include <qwt_color_map.h>
 #include <qwt_double_interval.h>
+#include <qwt_scale_widget.h>
 
 namespace casa {
 
@@ -55,7 +60,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 		bool plotModeControls, bool controlBinCountOnly, QWidget* parent ):
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
-    image( NULL ), binPlot( this ),
+    colorMap( NULL ), colorCurve(NULL),image( NULL ), binPlot( this ),
     NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), IMAGE_ID(-1),
 	dragLine( NULL ), rectMarker( NULL ),
     toolTipPicker(NULL), contextMenuZoom(this),
@@ -95,6 +100,7 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 
 	displayPlotTitle = false;
 	displayAxisTitles = false;
+	colorBarVisible = false;
 	selectedId = IMAGE_ID;
 }
 
@@ -115,6 +121,86 @@ void BinPlotWidget::setDisplayPlotTitle( bool display ){
 void BinPlotWidget::setDisplayAxisTitles( bool display ){
 	displayAxisTitles = display;
 	resetAxisTitles();
+}
+
+void BinPlotWidget::setColorBarVisible( bool visible ){
+	if ( visible != colorBarVisible ){
+		colorBarVisible = visible;
+		if ( colorBarVisible ){
+			addColorBar();
+		}
+		else {
+			removeColorBar();
+		}
+		binPlot.replot();
+	}
+}
+
+void BinPlotWidget::setColorScaleMax( int scaleCount ){
+	colorScaleMax = scaleCount;
+}
+
+void BinPlotWidget::setColorLookups( const Vector<uInt>& lookups ){
+	int count = lookups.size();
+	colorLookups.resize( count );
+	for ( int i = 0; i < count; i++ ){
+		colorLookups[i] = lookups[i];
+	}
+	clearCurves();
+	resetImage();
+}
+
+void BinPlotWidget::resetColorCurve(){
+	//Add the color curve in.
+	int count = colorLookups.size();
+	if ( count > 0 ){
+		QVector<double> xVals( count );
+		QVector<double> yVals( count );
+		for( int i = 0; i < count; i++ ){
+			xVals[i] = colorLookups[i];
+			bool logScaleY = logActionY.isChecked();
+			yVals[i]= Histogram::computeYValue( i, logScaleY );
+		}
+		if ( colorCurve != NULL ){
+			colorCurve->detach();
+			delete colorCurve;
+			colorCurve = NULL;
+		}
+		colorCurve  = new QwtPlotCurve();
+		colorCurve->setAxis( QwtPlot::xTop, QwtPlot::yRight );
+		colorCurve->setData( xVals, yVals );
+		QPen curvePen( Qt::black );
+		curvePen.setWidth( 2 );
+		colorCurve->setPen(curvePen);
+		colorCurve->attach(&binPlot);
+		binPlot.replot();
+	}
+}
+
+void BinPlotWidget::setColorMap(QwtLinearColorMap* linearMap ){
+	colorMap = linearMap;
+	resetColorBar();
+}
+
+void BinPlotWidget::resetColorBar(){
+	if ( colorMap != NULL ){
+		QwtDoubleInterval range( 0, colorScaleMax);
+		QwtScaleWidget* scale = binPlot.axisWidget( QwtPlot::xTop );
+		scale->setColorBarEnabled( true );
+		scale->setColorMap( range, *colorMap );
+		QwtScaleDraw* axisPaint = new InvisibleAxis();
+		scale->setScaleDraw( axisPaint );
+		binPlot.setAxisScale( QwtPlot::xTop, range.minValue(), range.maxValue() );
+	}
+}
+
+void BinPlotWidget::removeColorBar(){
+	binPlot.enableAxis( QwtPlot::xTop, false );
+}
+
+void BinPlotWidget::addColorBar(){
+	resetColorBar();
+	binPlot.enableAxis(QwtPlot::xTop );
 }
 
 void BinPlotWidget::resetAxisTitles(){
@@ -645,10 +731,8 @@ void BinPlotWidget::addZoomActions( bool rangeControls, QMenu* zoomMenu ){
 void BinPlotWidget::setMinMaxValues( double minValue, double maxValue,
 		bool updateGraph ){
 	if ( rangeControlWidget != NULL ){
-		rangeControlWidget->setRange( minValue, maxValue );
-	}
-	if ( updateGraph ){
-		minMaxChanged();
+		rangeControlWidget->setRange( minValue, maxValue, updateGraph );
+
 	}
 }
 
@@ -942,24 +1026,41 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 	return curve;
 }
 
+QColor BinPlotWidget::getPieceColor( int index, const QColor& defaultColor ) const {
+	QColor pieceColor = defaultColor;
+	int colorLookUpCount = colorLookups.size();
+	if ( colorBarVisible && colorLookUpCount > 0 ){
+		QwtDoubleInterval range(0,colorScaleMax);
+		pieceColor = colorMap->rgb( range, colorLookups[index]);
+		//So the first segment color is assigned.
+		if ( pieceColor == defaultColor && colorLookUpCount > 1 ){
+			pieceColor =colorMap->rgb( range,colorLookups[1] );
+		}
+	}
+	return pieceColor;
+}
+
 void BinPlotWidget::defineCurveHistogram( int id, const QColor& histogramColor ){
 	if ( histogramMap.contains(id)){
 		int pointCount = histogramMap[id]->getDataCount();
 		QVector<double> xValues(2);
 		QVector<double> yValues(2);
+		QColor pieceColor;
 		for ( int i = 0; i < pointCount; i++ ){
+			pieceColor = getPieceColor( i, histogramColor );
+
 			//Draw vertical line
 			histogramMap[id]->defineStepVertical( i, xValues, yValues, displayLogX, displayLogY );
-			addCurve( xValues, yValues, histogramColor );
+			addCurve( xValues, yValues, pieceColor );
 
 			//Draw horizontal line connecting to previous point.
 			histogramMap[id]->defineStepHorizontal(i, xValues, yValues, displayLogX, displayLogY);
-			addCurve( xValues, yValues, histogramColor );
+			addCurve( xValues, yValues, pieceColor );
 		}
 		//Add the last vertical line
 		xValues[0] = xValues[1];
 		yValues[0] = 0;
-		addCurve( xValues, yValues, histogramColor);
+		addCurve( xValues, yValues, pieceColor);
 	}
 }
 
@@ -970,7 +1071,8 @@ void BinPlotWidget::defineCurveLine( int id, const QColor& lineColor ){
 			QVector<double> xValues(2);
 			QVector<double> yValues(2);
 			histogramMap[id]->defineLine( i, xValues, yValues, displayLogX, displayLogY );
-			addCurve( xValues, yValues, lineColor );
+			QColor pieceColor = getPieceColor( i, lineColor );
+			addCurve( xValues, yValues, pieceColor );
 		}
 	}
 }
@@ -1048,6 +1150,14 @@ bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 	return success;
 }
 
+std::vector<float> BinPlotWidget::getXValues() const {
+	std::vector<float> values;
+	if ( histogramMap.contains(IMAGE_ID)){
+		values = histogramMap[IMAGE_ID]->getXValues();
+	}
+	return values;
+}
+
 bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 	bool success = true;
 	if ( image != img && img != NULL ){
@@ -1108,7 +1218,7 @@ bool BinPlotWidget::resetImage(){
 			success = histogram->reset( );
 			if ( success ){
 				makeHistogram( IMAGE_ID, curveColor );
-
+				resetColorCurve();
 			}
 			else {
 				QString msg( "Could not make a histogram from the image.");
@@ -1176,6 +1286,9 @@ void BinPlotWidget::clearCurves(){
 			curve->detach();
 			delete curve;
 		}
+	}
+	if ( colorCurve != NULL ){
+		colorCurve->detach();
 	}
 }
 
@@ -1256,9 +1369,9 @@ void BinPlotWidget::resetRectangleMarker(){
 	if ( rectMarker != NULL ){
 		int pixelXStart = static_cast<int>( binPlot.transform( QwtPlot::xBottom, rectX ) );
 		int pixelXEnd = static_cast<int>(binPlot.transform( QwtPlot::xBottom, rectX+rectWidth ));
+
 		rectMarker->setBoundaryValues( pixelXStart, pixelXEnd );
 	}
-
 }
 
 
@@ -1269,7 +1382,7 @@ void BinPlotWidget::minMaxChanged(){
 		rectWidth = qAbs( minMaxValues.second - minMaxValues.first );
 		resetRectangleMarker();
 		rectMarker->show();
-		binPlot.replot();
+
 		emit rangeChanged();
 	}
 }
@@ -1397,8 +1510,10 @@ void BinPlotWidget::clearAll(){
 }
 
 BinPlotWidget::~BinPlotWidget(){
+	//delete colorMap;
 	clearAll();
 	clearHistograms();
+	delete colorCurve;
 }
 
 }

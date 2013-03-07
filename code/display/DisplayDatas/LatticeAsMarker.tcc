@@ -184,7 +184,7 @@ Record LatticeAsMarker<T>::getOptions()
 //
 // phasetype and debiasing are only meaningful for COmplex data
 //
-  T* dummy;
+  T* dummy = NULL;
   DataType type = whatType(dummy);
   AlwaysAssert(type==TpFloat || type==TpComplex, AipsError);
 //

@@ -873,12 +873,12 @@ void MSAsRaster::constructParameters_() {
 
   // These really belong with the Scale Handler; they would have
   // to be moved from LatticeAsRaster as well...
-  itsDataMin = new DParameterRange<Float>("datamin", "data minimum", 
+  itsDataMin = new DParameterRange<Float>(DisplayData::DATA_MIN, "data minimum",
                "Colors will be mapped between this value and Data max.",
                dataRngMin_, dataRngMax_, 0.001f, dataRngMin_, dataRngMin_,
 	       "", True, True);
 
-  itsDataMax = new DParameterRange<Float>("datamax", "data maximum",
+  itsDataMax = new DParameterRange<Float>(DisplayData::DATA_MAX, "data maximum",
                "Colors will be mapped between this value and Data min.",
                dataRngMin_, dataRngMax_, 0.001f, dataRngMax_, dataRngMax_,
 	       "", True, True);

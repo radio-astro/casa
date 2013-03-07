@@ -247,7 +247,7 @@ class PrincipalAxesDD : public DisplayData {
    Vector<String> worldToPixelAxisNames (const CoordinateSystem& cSys) const;
 
    const String &spectralunitStr( ) const;
-
+   const static String HISTOGRAM_RANGE;
  protected:
 
   // Set internal index (activeZIndex_) into the list of DMs (which cache

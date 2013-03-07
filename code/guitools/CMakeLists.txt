@@ -103,6 +103,7 @@ casa_add_library( guitools
   Histogram/Fitter.cc
   Histogram/FitterGaussian.cc
   Histogram/FitterPoisson.cc
+  Histogram/InvisibleAxis.cc
   Histogram/RangeControlsWidget.cc
   Histogram/RangePicker.cc
   Histogram/SaveHistogramWidget.cc

@@ -42,12 +42,19 @@ RangeControlsWidget::RangeControlsWidget(QWidget *parent)
 	connect( ui.clearRangeButton, SIGNAL(clicked()), this, SLOT(clearRange()));
 }
 
-void RangeControlsWidget::setRange( double min, double max ){
+void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
+	if ( !signalChange ){
+		blockSignals(true);
+	}
 	ui.minLineEdit->setText( QString::number( min ));
 	ui.maxLineEdit->setText( QString::number( max ));
+	if ( !signalChange ){
+		blockSignals(false);
+	}
 }
 
 void RangeControlsWidget::setRangeLimits( double min, double max ){
+
 	minMaxValidator->setBottom( min );
 	minMaxValidator->setTop( max );
 }
@@ -71,6 +78,8 @@ pair<double,double> RangeControlsWidget::getMinMaxValues() const {
 	pair<double,double> maxMinValues(minValue,maxValue);
 	return maxMinValues;
 }
+
+
 
 void RangeControlsWidget::setDataLimits( double min, double max ){
 

@@ -65,6 +65,7 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const String PrincipalAxesDD::HISTOGRAM_RANGE = "minmaxhist";
 // constructor
 PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis, 
 				 Int mAxis, Bool axisLabels) 
@@ -363,7 +364,7 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
    	  String frequency = MFrequency::showType(freq_type);
 	  frequency.downcase();
    	  //std::transform(frequency.begin(), frequency.end(), frequency.begin(), tolower);
-   	  MDoppler::Types velocity_type = spec_coord.velocityDoppler( );
+   	  //MDoppler::Types velocity_type = spec_coord.velocityDoppler( );
    	  //String velocity = MDoppler::showType(velocity_type);
    	  String velocity = itsSpectralQuantity;
 	  velocity.downcase();
@@ -610,14 +611,16 @@ bool PrincipalAxesDD::has_nonsingleton_nondegenerate_nondisplayed_axis( const Di
     std::vector<int> display_axes = other.displayAxes( );
     bool nondisplayed_nonsingleton_axis = false;
     
-    if ( display_axes.size() > 2 && shape.size() > display_axes[2] && shape(display_axes[2]) == 1 ) {
+    if ( static_cast<int>(display_axes.size()) > 2 &&
+    		static_cast<int>(shape.size()) > display_axes[2] &&
+    		static_cast<int>(shape(display_axes[2])) == 1 ) {
 	// If the "movie" axis is degenerate, check
 	// the remaining non-displayed axes...
-	for ( int x=0; x < shape.size(); ++x ) {
+	for ( int x=0; x < static_cast<int>(shape.size()); ++x ) {
 	    bool found = false;
 	    // check to see if dimension 'x' of the data is
 	    // one of the displayed dimensions...
-	    for ( int y=0; y < display_axes.size(); ++y ) {
+	    for ( int y=0; y < static_cast<int>(display_axes.size()); ++y ) {
 		if ( display_axes[y] == x ) {
 		    found = true;
 		    break;
@@ -2411,7 +2414,7 @@ PrincipalAxesDD::PrincipalAxesDD()
 : DisplayData() 
 {}
 
-PrincipalAxesDD::PrincipalAxesDD(const PrincipalAxesDD &) 
+PrincipalAxesDD::PrincipalAxesDD(const PrincipalAxesDD &):DisplayData()
 {}
 
 ImageAnalysis *PrincipalAxesDD::create_image_analysis( ImageInterface<float> *img ) const {

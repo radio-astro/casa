@@ -23,49 +23,35 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef RANGECONTROLSWIDGET_QO_H
-#define RANGECONTROLSWIDGET_QO_H
+#ifndef COLORHISTOGRAMSCALE_H_
+#define COLORHISTOGRAMSCALE_H_
 
-#include <QtGui/QWidget>
-#include <guitools/Histogram/RangeControlsWidget.ui.h>
-
-using namespace std;
-
-class QDoubleValidator;
+#include <QVector>
+#include <qwt_color_map.h>
+#include <qwt_double_interval.h>
+#include <casa/BasicSL/String.h>
 
 namespace casa {
 
+class ColormapDefinition;
+
 /**
- * Pluggable functionality that allows users to specify a range
- * on the histogram.
+ * Overrides QwtLinearColorMap in order to provide QwtPlot color
+ * lookups based on a casa ColormapDefinition.
  */
 
-class RangeControlsWidget : public QWidget {
-    Q_OBJECT
-
+class ColorHistogramScale : public QwtLinearColorMap {
 public:
-    RangeControlsWidget(QWidget *parent = 0);
-    void setRange( double min, double max, bool signal=true );
-    void setRangeLimits( double min, double max );
-    void setDataLimits( double min, double max );
-    pair<double,double> getMinMaxValues() const;
-
-    ~RangeControlsWidget();
-
-signals:
-	void minMaxChanged();
-	void rangeCleared();
-
-private slots:
-	void clearRange();
-
+	ColorHistogramScale();
+	String getColorMapName() const;
+	void setColorMapName( const String& colorMapName );
+	virtual ~ColorHistogramScale();
 private:
-	RangeControlsWidget(const RangeControlsWidget& );
-	RangeControlsWidget& operator=( const RangeControlsWidget& );
-    QDoubleValidator* minMaxValidator;
-    Ui::RangeControlsWidgetClass ui;
-    double rangeMin;
-    double rangeMax;
+	ColorHistogramScale( ColorHistogramScale& other );
+	ColorHistogramScale operator=(ColorHistogramScale& other);
+	String mapName;
+	ColormapDefinition* colorDefinition;
 };
-}
-#endif // RANGECONTROLSWIDGET_QO_H
+
+} /* namespace casa */
+#endif /* COLORHISTOGRAMSCALE_H_ */

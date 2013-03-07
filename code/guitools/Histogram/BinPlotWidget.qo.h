@@ -31,6 +31,7 @@
 #include <guitools/Histogram/HeightSource.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/aips.h>
+#include <casa/aipstype.h>
 #include <qwt_plot.h>
 #include <qwt_plot_picker.h>
 #include <vector>
@@ -41,12 +42,13 @@ using namespace std;
 
 class QwtPlotMarker;
 class QwtPlotCurve;
+class QwtLinearColorMap;
 class QWidgetAction;
 
 namespace casa {
 
 template <class T> class ImageInterface;
-
+template <class T> class Vector;
 class FitWidget;
 class RangePicker;
 class ToolTipPicker;
@@ -57,6 +59,7 @@ class RangeControlsWidget;
 class BinCountWidget;
 class ChannelRangeWidget;
 class ZoomWidget;
+
 
 /**
  * Display a histogram of intensity vs count.  Functionality is pluggable
@@ -91,10 +94,15 @@ public:
     void imageRegionSelected( int id );
     virtual void postMessage( const QString& msg );
 
+    std::vector<float> getXValues() const;
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
 
     //Customizing the display
+    void setColorLookups( const Vector<uInt> & lookups );
+    void setColorMap( QwtLinearColorMap* colorMap );
+    void setColorBarVisible( bool visible );
+    void setColorScaleMax( int max );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
     void setHistogramColor( QColor color );
@@ -190,6 +198,7 @@ private:
 	void reset();
 	bool resetImage();
 	void resetRegion();
+	void resetColorCurve();
 	void resetRectangleMarker();
 	void defineCurveLine( int id, const QColor& lineColor );
 	void defineCurveHistogram( int id, const QColor& histogramColor );
@@ -201,6 +210,11 @@ private:
 	virtual int getCanvasHeight();
 	Histogram* findHistogramFor( int id );
 	int getSelectedId() const;
+	void removeColorBar();
+	void addColorBar();
+	void resetColorBar();
+	QColor getPieceColor( int index, const QColor& defaultColor ) const;
+
 	void zoom( float percent );
 	void zoomRangeMarker( double startValue, double endValue );
     Ui::BinPlotWidgetClass ui;
@@ -210,14 +224,19 @@ private:
 
     bool displayPlotTitle;
     bool displayAxisTitles;
+    bool colorBarVisible;
 
     QColor curveColor;
     QColor selectionColor;
     QColor fitEstimateColor;
     QColor fitCurveColor;
     QList<QColor> multipleHistogramColors;
+    QwtLinearColorMap* colorMap;
+    Vector<uInt> colorLookups;
+    int colorScaleMax;
 
     //Histogram & data
+    QwtPlotCurve* colorCurve;
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
     ImageInterface<Float>* image;

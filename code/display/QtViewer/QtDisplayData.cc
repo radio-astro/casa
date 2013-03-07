@@ -29,7 +29,6 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
-#include <display/QtAutoGui/QtXmlRecord.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <images/Images/ImageInterface.h>
@@ -37,6 +36,7 @@
 #include <display/DisplayDatas/LatticeAsContour.h>
 #include <display/DisplayDatas/LatticeAsVector.h>
 #include <display/DisplayDatas/LatticeAsMarker.h>
+#include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <display/DisplayDatas/WedgeDD.h>
 #include <display/DisplayDatas/SkyCatOverlayDD.h>
 #include <casa/OS/Path.h>
@@ -103,6 +103,13 @@ private:
 QtDisplayData::data_to_qtdata_map_type QtDisplayData::dd_source_map;
 const String QtDisplayData::WEDGE_LABEL_CHAR_SIZE = "wedgelabelcharsize";
 const String QtDisplayData::WEDGE_YES = "Yes";
+const String QtDisplayData::COLOR_MAP = "colormap";
+bool QtDisplayData::globalColorSettings = false;
+
+void QtDisplayData::setGlobalColorOptions( bool global ){
+	QtDisplayData::globalColorSettings = global;
+}
+
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
 		String displayType, const viewer::DisplayDataOptions &ddo,
@@ -420,7 +427,7 @@ void QtDisplayData::init(){
 		setColormap_(initialCMName);
 
 
-		clrMapOpt_ = new DParameterChoice("colormap", "colormap",
+		clrMapOpt_ = new DParameterChoice(COLOR_MAP, "Color Map",
 				"Name of the mapping from data values to color",
 				clrMapNames_, initialCMName, initialCMName, "");  }
 	// (For parsing user colormap selection via
@@ -434,7 +441,8 @@ void QtDisplayData::init(){
 		colorBar_ = new WedgeDD(dd_);
 		colorBar_->setColormap(clrMap_, 1.);
 
-		Vector<String> yesNo(2);     yesNo[0]=WEDGE_YES;
+		Vector<String> yesNo(2);
+		yesNo[0]=WEDGE_YES;
 		yesNo[1]="No";
 
 		Vector<String> vertHor(2);   vertHor[0]="vertical";
@@ -499,23 +507,25 @@ void QtDisplayData::init(){
 		Vector<Float> minMax;
 		Bool notFound;
 
-		dd_->readOptionRecord(minMax, notFound, mainDDopts, "minmaxhist");
+		dd_->readOptionRecord(minMax, notFound, mainDDopts, PrincipalAxesDD::HISTOGRAM_RANGE);
 		// (DisplayOptions methods like readOptionRecord() should be
 		// static -- they're stateless.  Any DisplayOptions object (or
 		// a newly-created one) would do here instead of dd_, which
 		// just happened to be on hand...).
 
 		if(minMax.nelements()==2) {
-			cbropts.define("datamin", minMax[0]);
-			cbropts.define("datamax", minMax[1]);  }
+			cbropts.define(DisplayData::DATA_MIN, minMax[0]);
+			cbropts.define(DisplayData::DATA_MAX, minMax[1]);  }
 		else {
-			dd_->readOptionRecord(datamin, notFound, mainDDopts, "datamin");
-			if(!notFound) cbropts.define("datamin", datamin);
-			dd_->readOptionRecord(datamax, notFound, mainDDopts, "datamax");
-			if(!notFound) cbropts.define("datamax", datamax);  }
+			dd_->readOptionRecord(datamin, notFound, mainDDopts, DisplayData::DATA_MIN);
+			if(!notFound) cbropts.define(DisplayData::DATA_MIN, datamin);
+			dd_->readOptionRecord(datamax, notFound, mainDDopts, DisplayData::DATA_MAX);
+			if(!notFound) cbropts.define(DisplayData::DATA_MAX, datamax);  }
 
-		dd_->readOptionRecord(powercycles, notFound, mainDDopts, "powercycles");
-		if(!notFound) cbropts.define("powercycles", powercycles);
+		dd_->readOptionRecord(powercycles, notFound, mainDDopts, WCPowerScaleHandler::POWER_CYCLES);
+		if(!notFound){
+			cbropts.define(WCPowerScaleHandler::POWER_CYCLES, powercycles);
+		}
 
 		String dataunit = "";
 		try { dataunit = dd_->dataUnit().getName();  }  catch(...) {  }
@@ -524,9 +534,7 @@ void QtDisplayData::init(){
 		if(dataunit=="_") dataunit="";
 		cbropts.define("dataunit", dataunit);
 
-
 		colorBar_->setOptions(cbropts, chgdopts);
-
 
 		connect( panel_, SIGNAL(colorBarOrientationChange()),
 				SLOT(setColorBarOrientation_()) );
@@ -534,7 +542,8 @@ void QtDisplayData::init(){
 		connect(this, SIGNAL(statsReady(const String&)),
 				panel_,  SLOT(showStats(const String&)));
 
-		setColorBarOrientation_();  }
+		setColorBarOrientation_();
+	}
 }
 
 std::string QtDisplayData::path( const DisplayData *d ) {
@@ -621,11 +630,10 @@ Record QtDisplayData::getOptions() {
 	// (Not to be confused with the glish viewer's histogram mix-max setting
 	// display, which everyone wants to see re-implemented under Qt...).
 	if(opts.isDefined("histoequalisation")) {
-		opts.removeField("histoequalisation");  }
-
+		opts.removeField("histoequalisation");
+	}
 
 	// Colorbar options
-
 	if(hasColorBar()) {
 
 		// In addition to the five color bar labelling options forwarded from
@@ -724,148 +732,57 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 	// itself (e.g. via scripting or save-restore); that will ensure that
 	// the options gui does receive all option updates (via the optionsChanged
 	// signal) and updates its user interface accordingly.
-
 	if(dd_==0) return;  // (safety, in case construction failed.).
 
 	// dump out information about the set-options message flow...
 	//cout << "\t>>== " << (emitAll ? "true" : "false") << "==>> " << opts << endl;
 
 	Record chgdOpts;
-
 	Bool held=False;
-
 	try {
+
+		//Decide if the refresh is local to this dd or if we are going to have
+		//refresh all of them.
 		Bool needsRefresh = dd_->setOptions(opts, chgdOpts);
-		Bool cbNeedsRefresh = False;
+		Bool cbNeedsRefresh = setColorBarOptions( opts, chgdOpts );
+		if ( cbNeedsRefresh ){
+			needsRefresh = true;
+		}
+		// options were set ok.  (QtDDGui will
+		// use it to clear status line, e.g.).
 
-		if(usesClrMap_() && clrMapOpt_->fromRecord(opts)) {
-			needsRefresh = cbNeedsRefresh = True;
-			setColormap_(clrMapOpt_->value());
+		// Beware: WedgeDD::setOptions() (unexpectedly, stupidly) alters
+		// cbopts, instead of keeping all its hacks internal.
+		// Don't expect the original cbopts after this call....
+		// (Note: chgdcbopts is ignored (unused) for colorbar).
+
+		// Test for changes in these, recording any new values.
+		// Of these, WedgeDD processes only "wedgelabelcharsize"
+		// (colorBarCharSizeOpt_ -- it was merged into cbopts, above).
+		Bool reorient = colorBarOrientationOpt_->fromRecord(opts);
+		Bool cbChg    = colorBarDisplayOpt_->fromRecord(opts);	// "wedge"
+		Bool cbSzChg  = colorBarThicknessOpt_->fromRecord(opts);
+		cbSzChg  = colorBarCharSizeOpt_->fromRecord(opts)   || cbSzChg;
+				cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
+		held=True;
+		panel_->viewer()->hold();
+		// (avoids redrawing more often than necessary)
+
+		// Trigger color bar and main panel rearrangement, if necessary.
+		if(reorient) {
+			colorBarOrientationOpt_->toRecord(chgdOpts, True, True);
+			// Make sure user interface sees this change via chgdOpts.
+			Bool orientation = (colorBarOrientationOpt_->value()=="vertical");
+			panel_->setColorBarOrientation(orientation);
+		}
+		else if(cbChg || (wouldDisplayColorBar() && cbSzChg) ) {
+			emit colorBarChange();
 		}
 
-		// Also process change in colormap choice, if any.  This
-		// was left out of the setOptions interface on the DD level.
-		if(hasColorBar()) {
-			// Note: In addition to the five labelling options ("wedgeaxistext",
-			// "wedgeaxistextcolor" "wedgelabelcharsize", "wedgelabellinewidth"
-			// and "wedgelabelcharfont"), WedgeDD::setOptions() is sensitive
-			// to "orientation", "datamin", "datamax" "dataunit" and "powercycles"
-			// fields.  Of the latter five, only "orientation" appears directly in
-			// the "Color Wedge" dropdown, and even it is massaged externally (it
-			// is ultimately controlled by QtViewerBase::setColorBarOrientation()).
-			// "powercycles" shares the "Basic Settings" user interface (and the
-			// setOptions field) with QDD's main DD, as do "datamin" and "datamax"
-			// (these latter two are sometimes gleaned from the "minmaxhist" field
-			// of LatticeAsRaster instead).
-			// The "dataunit" setting is controlled internally according to what
-			// is appropriate for QDD's main DD; it has no direct user interface.
-
-
-			// It is not desirable to forward all of the main DD opts, esp.
-			// labelling options meant for main panel only.  The following
-			// code picks out and forwards the needed ones to the color bar.
-
-			Record cbopts;	  // options to pass on to colorBar_->setOptions()
-			Record chgdcbopts;  // required (but ignored) setOptions() parameter
-
-			for(uInt i=0; i<opts.nfields(); i++) {
-				String fldname = opts.name(i);
-				if( (fldname.before(5)==WedgeDD::WEDGE_PREFIX && fldname!=WedgeDD::WEDGE_PREFIX) ||
-						fldname=="orientation" || fldname=="dataunit"   ||
-						fldname=="powercycles" ) {		// (Forward these verbatum).
-
-					cbopts.mergeField(opts, i, Record::OverwriteDuplicates);
-				}
-			}
-
-
-			// Priority for datamin and datamax definition:
-			//   1) "minmaxhist"          in chgdOpts  (internal request)
-			//   2) "datamin", "datamax"  in chgdOpts  (internal request)
-			//   3) "minmaxhist"          in opts      (user request)
-			//   4) "datamin", "datamax"  in opts      (user request)
-
-			Float datamin=0., datamax=1.;
-			Vector<Float> minMax;
-			Bool notFound=True, minNotFound=True, maxNotFound=True;
-
-			dd_->readOptionRecord(minMax, notFound, chgdOpts, "minmaxhist");
-			if(minMax.nelements()==2) {
-				datamin = minMax[0];   minNotFound=False;
-				datamax = minMax[1];   maxNotFound=False;  }
-
-			else {
-				dd_->readOptionRecord(datamin, minNotFound, chgdOpts, "datamin");
-				dd_->readOptionRecord(datamax, maxNotFound, chgdOpts, "datamax");
-
-				minMax.resize(0);
-				dd_->readOptionRecord(minMax, notFound, opts, "minmaxhist");
-				if(minMax.nelements()==2) {
-					if(minNotFound) { datamin = minMax[0];  minNotFound=False;  }
-					if(maxNotFound) { datamax = minMax[1];  maxNotFound=False;  }
-				}
-
-				else {
-					if(minNotFound) {
-						dd_->readOptionRecord(datamin, minNotFound, opts,
-								"datamin");  }
-					if(maxNotFound) {
-						dd_->readOptionRecord(datamax, maxNotFound, opts,
-								"datamax");  }  }  }
-
-
-			if(!minNotFound) cbopts.define("datamin", datamin);
-			if(!maxNotFound) cbopts.define("datamax", datamax);
-
-
-			// "dataunit" won't normally be defined as a main DD options field,
-			// but the dd_ should send it out via chgdOpts if it has changed,
-			// so that the color bar can be labelled correctly.
-
-			String dataunit;
-			dd_->readOptionRecord(dataunit, notFound, chgdOpts, "dataunit");
-			if(!notFound) {
-				if(dataunit=="_") dataunit="";
-				cbopts.define("dataunit", dataunit);
-			}
-
-			if(colorBar_->setOptions(cbopts, chgdcbopts)){
-				cbNeedsRefresh = True;
-			}
-
-			// Beware: WedgeDD::setOptions() (unexpectedly, stupidly) alters
-			// cbopts, instead of keeping all its hacks internal.
-			// Don't expect the original cbopts after this call....
-			// (Note: chgdcbopts is ignored (unused) for colorbar).
-
-			// Test for changes in these, recording any new values.
-			// Of these, WedgeDD processes only "wedgelabelcharsize"
-			// (colorBarCharSizeOpt_ -- it was merged into cbopts, above).
-			Bool reorient = colorBarOrientationOpt_->fromRecord(opts);
-			Bool cbChg    = colorBarDisplayOpt_->fromRecord(opts);	// "wedge"
-			Bool cbSzChg  = colorBarThicknessOpt_->fromRecord(opts);
-			cbSzChg  = colorBarCharSizeOpt_->fromRecord(opts)   || cbSzChg;
-			cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
-
-			held=True;   panel_->viewer()->hold();
-			// (avoids redrawing more often than necessary)
-
-			// Trigger color bar and main panel rearrangement, if necessary.
-			if(reorient) {
-				colorBarOrientationOpt_->toRecord(chgdOpts, True, True);
-				// Make sure user interface sees this change via chgdOpts.
-				Bool orientation = (colorBarOrientationOpt_->value()=="vertical");
-				panel_->setColorBarOrientation(orientation);
-			}
-			else if(cbChg || (wouldDisplayColorBar() && cbSzChg) ) {
-				emit colorBarChange();
-			}
-
+		if(!held) {
+			held=True;
+			panel_->viewer()->hold();
 		}
-
-
-		if(!held) { held=True;  panel_->viewer()->hold();  }
-
 
 		// Refresh all main canvases where dd_ is registered, if required
 		// because of option changes (it usually is).
@@ -874,33 +791,41 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 		// In practice what it means now is that DDs on the PrincipalAxesDD
 		// branch get their drawlist cache cleared.  It has no effect
 		// (on caching or otherwise) for DDs on the CachingDD branch.
-
-		if(needsRefresh)   dd_->refresh(True);
-
+		if(needsRefresh){
+			dd_->refresh(True);
+		}
 
 		held=False;  panel_->viewer()->release();
-
-		if(cbNeedsRefresh) { emit colorBarChange(); }
+		if(cbNeedsRefresh) {
+			emit colorBarChange();
+		}
 
 		errMsg_ = "";		// Just lets anyone interested know that
 		emit optionsSet();
-	}	// options were set ok.  (QtDDGui will
-	// use it to clear status line, e.g.).
+		if ( needsRefresh && opts.nfields() > 0 ){
+			checkGlobalChange( opts );
+		}
 
+	}
 	catch (const casa::AipsError& err) {
 		errMsg_ = err.getMesg();
 		cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
-		if(held) { held=False;  panel_->viewer()->release();  }
-		emit qddError(errMsg_);  }
-
+		if(held) {
+			held=False;
+			panel_->viewer()->release();
+		}
+		emit qddError(errMsg_);
+	}
 	catch (...) {
 		errMsg_ = "Unknown error setting data options";
 		cerr<<"qdd setOpts Err:"<<errMsg_<<endl;	//#dg
-		if(held) { held=False;  panel_->viewer()->release();  }
-		emit qddError(errMsg_);  }
-
+		if(held) {
+			held=False;
+			panel_->viewer()->release();
+		}
+		emit qddError(errMsg_);
+	}
 	checkAxis();
-
 
 	// [Other, dependent] options the dd itself changed in
 	// response.  Option guis will want to monitor this and
@@ -914,7 +839,9 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 	// 'zlength' or 'zindex' fields to be specified within the
 	// 'setanimator' sub-record unless the dd is CS master).
 
-	if(emitAll) chgdOpts.merge(opts, Record::SkipDuplicates);
+	if(emitAll){
+		chgdOpts.merge(opts, Record::SkipDuplicates);
+	}
 	// When emitAll==True this ensures that the options gui
 	// receives all option updates via the optionsChanged
 	// signal, not just internally-generated ones.  For use
@@ -928,15 +855,169 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 	// by the display datas, e.g. update changed axis dimensionality
 	// triggered in PrincipalAxesDD::setOptions( ) to keep all
 	// axis dimensions unique...
-	if(chgdOpts.nfields()!=0) emit optionsChanged(chgdOpts);
-
-	if(chgdOpts.isDefined("trackingchange")) emit trackingChange(this);  }
-// Tells QDP to gather and emit tracking data again.   Field
-// value is irrelevant. (There are other useful places where
-// DDs could define this field....)
+	if(chgdOpts.nfields()!=0){
+		emit optionsChanged(chgdOpts);
+	}
 
 
+	if( opts.isDefined("Show histogram plot")){
+		emit showColorHistogram( this );
+	}
 
+
+	if(chgdOpts.isDefined("trackingchange")) emit trackingChange(this);
+	// Tells QDP to gather and emit tracking data again.   Field
+	// value is irrelevant. (There are other useful places where
+	// DDs could define this field....)
+
+}
+
+void QtDisplayData::checkGlobalChange( Record& opts ){
+	if ( globalColorSettings ){
+		Record globalChangeRecord;
+		Record oldRecord = dd_->getOptions();
+		//Remove all but the global options from the chgdOpts.
+		int histFieldId = opts.fieldNumber( PrincipalAxesDD::HISTOGRAM_RANGE );
+		if ( histFieldId != -1 ){
+			Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
+			globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+		}
+
+		int colorMapId = opts.fieldNumber( COLOR_MAP );
+		if ( colorMapId != -1 ){
+			String colorMapName = opts.asString( COLOR_MAP );
+			globalChangeRecord.define( COLOR_MAP, colorMapName);
+		}
+
+		int powerId = opts.fieldNumber( WCPowerScaleHandler::POWER_CYCLES);
+		if ( powerId != -1 ){
+			float powerValue = 0;
+			if ( opts.dataType(WCPowerScaleHandler::POWER_CYCLES ) == TpRecord ){
+				Record subPowerRecord = opts.subRecord(WCPowerScaleHandler::POWER_CYCLES);
+				powerValue = subPowerRecord.asFloat( "value");
+			}
+			else {
+				powerValue = opts.asFloat( WCPowerScaleHandler::POWER_CYCLES );
+			}
+			Record powerRecord = oldRecord.subRecord( WCPowerScaleHandler::POWER_CYCLES );
+			powerRecord.define( "value", powerValue );
+			globalChangeRecord.defineRecord( WCPowerScaleHandler::POWER_CYCLES, powerRecord);
+		}
+		if ( globalChangeRecord.nfields() > 0 ){
+			emit globalOptionsChanged( this, globalChangeRecord );
+		}
+	}
+}
+
+
+bool QtDisplayData::setColorBarOptions( Record& opts, Record& chgdOpts ){
+	Bool cbNeedsRefresh = False;
+	if(usesClrMap_() && clrMapOpt_->fromRecord(opts)) {
+		cbNeedsRefresh = True;
+		setColormap_(clrMapOpt_->value());
+	}
+
+	// Also process change in colormap choice, if any.  This
+	// was left out of the setOptions interface on the DD level.
+	if(hasColorBar()) {
+		// Note: In addition to the five labelling options ("wedgeaxistext",
+		// "wedgeaxistextcolor" "wedgelabelcharsize", "wedgelabellinewidth"
+		// and "wedgelabelcharfont"), WedgeDD::setOptions() is sensitive
+		// to "orientation", "datamin", "datamax" "dataunit" and "powercycles"
+		// fields.  Of the latter five, only "orientation" appears directly in
+		// the "Color Wedge" dropdown, and even it is massaged externally (it
+		// is ultimately controlled by QtViewerBase::setColorBarOrientation()).
+		// "powercycles" shares the "Basic Settings" user interface (and the
+		// setOptions field) with QDD's main DD, as do "datamin" and "datamax"
+		// (these latter two are sometimes gleaned from the "minmaxhist" field
+		// of LatticeAsRaster instead).
+		// The "dataunit" setting is controlled internally according to what
+		// is appropriate for QDD's main DD; it has no direct user interface.
+
+		// It is not desirable to forward all of the main DD opts, esp.
+		// labelling options meant for main panel only.  The following
+		// code picks out and forwards the needed ones to the color bar.
+
+		Record cbopts;	  // options to pass on to colorBar_->setOptions()
+		Record chgdcbopts;  // required (but ignored) setOptions() parameter
+
+		for(uInt i=0; i<opts.nfields(); i++) {
+			String fldname = opts.name(i);
+			if( (fldname.before(5)==WedgeDD::WEDGE_PREFIX && fldname!=WedgeDD::WEDGE_PREFIX) ||
+						fldname=="orientation" || fldname=="dataunit"   ||
+						fldname==WCPowerScaleHandler::POWER_CYCLES ) {		// (Forward these verbatum).
+
+					cbopts.mergeField(opts, i, Record::OverwriteDuplicates);
+			}
+		}
+
+
+		// Priority for datamin and datamax definition:
+		//   1) "minmaxhist"          in chgdOpts  (internal request)
+		//   2) "datamin", "datamax"  in chgdOpts  (internal request)
+		//   3) "minmaxhist"          in opts      (user request)
+		//   4) "datamin", "datamax"  in opts      (user request)
+
+		Float datamin=0., datamax=1.;
+		Vector<Float> minMax;
+		Bool notFound=True, minNotFound=True, maxNotFound=True;
+
+		dd_->readOptionRecord(minMax, notFound, chgdOpts, PrincipalAxesDD::HISTOGRAM_RANGE);
+		if(minMax.nelements()==2) {
+			datamin = minMax[0];   minNotFound=False;
+			datamax = minMax[1];   maxNotFound=False;
+		}
+		else {
+			dd_->readOptionRecord(datamin, minNotFound, chgdOpts, DisplayData::DATA_MIN);
+			dd_->readOptionRecord(datamax, maxNotFound, chgdOpts, DisplayData::DATA_MAX);
+
+			minMax.resize(0);
+			dd_->readOptionRecord(minMax, notFound, opts, PrincipalAxesDD::HISTOGRAM_RANGE);
+			if(minMax.nelements()==2) {
+				if(minNotFound) { datamin = minMax[0];  minNotFound=False;  }
+				if(maxNotFound) { datamax = minMax[1];  maxNotFound=False;  }
+			}
+			else {
+				if(minNotFound) {
+					dd_->readOptionRecord(datamin, minNotFound, opts,DisplayData::DATA_MIN);
+				}
+				if(maxNotFound) {
+					dd_->readOptionRecord(datamax, maxNotFound, opts, DisplayData::DATA_MAX);
+				}
+			}
+		}
+
+		if(!minNotFound) cbopts.define(DisplayData::DATA_MIN, datamin);
+		if(!maxNotFound) cbopts.define(DisplayData::DATA_MAX, datamax);
+
+		// "dataunit" won't normally be defined as a main DD options field,
+		// but the dd_ should send it out via chgdOpts if it has changed,
+		// so that the color bar can be labelled correctly.
+
+		String dataunit;
+		dd_->readOptionRecord(dataunit, notFound, chgdOpts, "dataunit");
+		if(!notFound) {
+			if(dataunit=="_") dataunit="";
+			cbopts.define("dataunit", dataunit);
+		}
+
+		if(colorBar_->setOptions(cbopts, chgdcbopts)){
+			cbNeedsRefresh = True;
+		}
+	}
+	return cbNeedsRefresh;
+}
+
+void QtDisplayData::setHistogramColorRange( float minValue, float maxValue ){
+	Record histRecord;
+	Record valueRecord;
+	Vector<float> values( 2 );
+	values[0] = minValue;
+	values[1] = maxValue;
+	valueRecord.define( "value", values );
+	histRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, valueRecord );
+	setOptions( histRecord, true );
+}
 
 void QtDisplayData::setColorBarOrientation_() {
 	// Set the color bar orientation option according to the master
@@ -1024,13 +1105,13 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 	Record cm;
 	cm.define( "value", clrMapName );
 	Record rec;
-	rec.defineRecord("colormap",cm);
+	rec.defineRecord(COLOR_MAP,cm);
 	emit optionsChanged(rec);
+
+
 	// sets value for any to-be-opened data option panel
 	if ( clrMapOpt_ ) clrMapOpt_->setValue( clrMapName );
-
 	panel_->viewer()->release();
-
 
 	clrMap_ = clrMap;
 	clrMapName_ = clrMapName;

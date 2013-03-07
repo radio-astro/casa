@@ -63,6 +63,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+
+
 // >2d array-based ctor
 template <class T>
 LatticePADisplayData<T>::LatticePADisplayData(Array<T> *array,
@@ -597,15 +599,15 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
     // only if they do not pre-exist (if they do the user has specified
     // these values) If not, we stick in the updated min and max.
 
-    if (!rec.isDefined("minmaxhist") &&
-	trec.isDefined("minmaxhist")) {
+    if (!rec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE) &&
+	trec.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
 
       Vector<Float> tempinsert(2);
       tempinsert(0) = datamin;
       tempinsert(1) = datamax;
 
-      insertArray(rec, tempinsert, "minmaxhist");
-      insertArray(recOut, tempinsert, "minmaxhist");
+      insertArray(rec, tempinsert, PrincipalAxesDD::HISTOGRAM_RANGE);
+      insertArray(recOut, tempinsert, PrincipalAxesDD::HISTOGRAM_RANGE);
 
     }
   }
@@ -647,7 +649,7 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
   }
 
   // New histogram needed?
-  if(getOptions().isDefined("minmaxhist") && newHistNeeded && calcHist) {
+  if(getOptions().isDefined(PrincipalAxesDD::HISTOGRAM_RANGE) && newHistNeeded && calcHist) {
     if (pImage) {
       if (updateHistogram(recOut, *pImage)) {
 	newHistNeeded = False;
@@ -677,26 +679,26 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
     }
 
   } else {
-    if (recOut.isDefined("minmaxhist") &&
-	recOut.subRecord("minmaxhist").isDefined("newdata")) {
-      Record tmphist = recOut.subRecord("minmaxhist");
+    if (recOut.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE) &&
+	recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE).isDefined("newdata")) {
+      Record tmphist = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
       tmphist.define("newdata", False);
       tmphist.define("histarray", "unset");
-      recOut.defineRecord("minmaxhist", tmphist);
+      recOut.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, tmphist);
     }
 
   }
 
   //After all that, check whether histogramgui window needs new statistices
-  if (rec.isDefined("imagestats") && getOptions().isDefined("minmaxhist")) {
+  if (rec.isDefined("imagestats") && getOptions().isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
     Vector<String> whatToGet;
     rec.get("imagestats", whatToGet);
 
     Record addStats;
-    if (recOut.isDefined("minmaxhist")) {
-      addStats = recOut.subRecord("minmaxhist");
+    if (recOut.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
+      addStats = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
     } else {
-      addStats = getOptions().subRecord("minmaxhist");
+      addStats = getOptions().subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
     }
 //
     Record theStats;
@@ -715,15 +717,15 @@ Bool LatticePADisplayData<T>::setOptions(Record &rec, Record &recOut)
     }
     theStats.define("new", True);
     addStats.defineRecord("stats", theStats);
-    recOut.defineRecord("minmaxhist", addStats);
+    recOut.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, addStats);
   } else {
-    if (recOut.isDefined("minmaxhist")) {
-      Record temp = recOut.subRecord("minmaxhist");
+    if (recOut.isDefined(PrincipalAxesDD::HISTOGRAM_RANGE)) {
+      Record temp = recOut.subRecord(PrincipalAxesDD::HISTOGRAM_RANGE);
       if (temp.isDefined("stats")) {
 	Record clear = temp.subRecord("stats");
 	clear.define("new", False);
 	temp.defineRecord("stats", clear);
-	recOut.defineRecord("minmaxhist", temp);
+	recOut.defineRecord(PrincipalAxesDD::HISTOGRAM_RANGE, temp);
       }
     }
   }

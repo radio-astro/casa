@@ -23,49 +23,53 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef RANGECONTROLSWIDGET_QO_H
-#define RANGECONTROLSWIDGET_QO_H
+#ifndef COLORHISTOGRAM_QO_H
+#define COLORHISTOGRAM_QO_H
 
-#include <QtGui/QWidget>
-#include <guitools/Histogram/RangeControlsWidget.ui.h>
-
-using namespace std;
-
-class QDoubleValidator;
+#include <QtGui/QDialog>
+#include <casa/aipstype.h>
+#include <casa/Arrays/Vector.h>
+#include <display/QtViewer/ColorHistogram.ui.h>
 
 namespace casa {
 
+class BinPlotWidget;
+class QtDisplayData;
+class ColorHistogramScale;
+class WCPowerScaleHandler;
+
 /**
- * Pluggable functionality that allows users to specify a range
- * on the histogram.
+ * Displays a histogram that allows the user to set the
+ * color scale for an image.
  */
 
-class RangeControlsWidget : public QWidget {
+class ColorHistogram : public QDialog
+{
     Q_OBJECT
 
 public:
-    RangeControlsWidget(QWidget *parent = 0);
-    void setRange( double min, double max, bool signal=true );
-    void setRangeLimits( double min, double max );
-    void setDataLimits( double min, double max );
-    pair<double,double> getMinMaxValues() const;
-
-    ~RangeControlsWidget();
-
-signals:
-	void minMaxChanged();
-	void rangeCleared();
+    ColorHistogram(QWidget *parent = 0);
+    void setDisplayData( QtDisplayData* img );
+    ~ColorHistogram();
 
 private slots:
-	void clearRange();
+	void acceptRange();
+	void cancelRange();
+	void colorsChanged();
 
 private:
-	RangeControlsWidget(const RangeControlsWidget& );
-	RangeControlsWidget& operator=( const RangeControlsWidget& );
-    QDoubleValidator* minMaxValidator;
-    Ui::RangeControlsWidgetClass ui;
-    double rangeMin;
-    double rangeMax;
+	void resetColorLookups();
+	Vector<uInt> computeScaledIntensities(const std::vector<float>& intensities );
+	ColorHistogram( const ColorHistogram& other );
+	ColorHistogram operator=( const ColorHistogram& other );
+
+	QtDisplayData* displayData;
+    Ui::ColorHistogramClass ui;
+    BinPlotWidget* histogram;
+    WCPowerScaleHandler* powerScaler;
+    ColorHistogramScale* colorScale;
+    const int COLOR_MAX;
 };
+
 }
-#endif // RANGECONTROLSWIDGET_QO_H
+#endif // COLORHISTOGRAM_QO_H

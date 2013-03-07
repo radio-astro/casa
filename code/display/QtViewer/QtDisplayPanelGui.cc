@@ -50,6 +50,7 @@
 #include <display/QtViewer/AnimatorHolder.qo.h>
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
+#include <display/QtViewer/ColorHistogram.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
 #include <display/region/QtRegionSource.qo.h>
@@ -83,7 +84,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
-								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ), sliceTool( NULL ),
+								   animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
+								   fitTool( NULL ), sliceTool( NULL ),
 								   clean_tool(0), regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
@@ -111,7 +113,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	}
 
 	qdp_ = new QtDisplayPanel(this,0,args);
-	//  qdo_ = new QtDataOptionsPanel(this);
+
 
 	if ( use_new_regions ) {
 		// -----
@@ -669,9 +671,45 @@ void QtDisplayPanelGui::initAnimationHolder(){
 	}
 }
 
+void QtDisplayPanelGui::globalColorSettingsChanged( bool global ){
+	QtDisplayData::setGlobalColorOptions( global );
+}
+
+void QtDisplayPanelGui::globalOptionsChanged( QtDisplayData* originator, Record opts ){
+	for(ListIter<QtDisplayData*> iter(qdds_); !iter.atEnd(); iter++) {
+		QtDisplayData* dd = iter.getRight();
+		if ( dd != originator ){
+			dd->setOptions( opts, true );
+		}
+	}
+}
+
 //---------------------------------------------------------------------------------
 //                                      Histogram
 //---------------------------------------------------------------------------------
+
+void QtDisplayPanelGui::showColorHistogram(QtDisplayData* displayData ){
+	if ( colorHistogram == NULL ){
+		colorHistogram = new ColorHistogram( this );
+		connect( qdo_, SIGNAL(dataOptionsTabChanged(const QString&)),
+				this, SLOT( updateColorHistogram(const QString&)));
+	}
+	colorHistogram->show();
+	colorHistogram->setDisplayData( displayData );
+}
+
+void QtDisplayPanelGui::updateColorHistogram( const QString& ddName ){
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	QtDisplayData* targetDD = NULL;
+	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+		QtDisplayData* pdd = qdds.getRight();
+		if ( pdd->name() == ddName.toStdString() ){
+			targetDD = pdd;
+			break;
+		}
+	}
+	colorHistogram->setDisplayData( targetDD );
+}
 
 void QtDisplayPanelGui::showHistogram(){
 	if ( histogrammer == NULL ){
@@ -1043,6 +1081,9 @@ QVariant QtDisplayPanelGui::start_interact( const QVariant &, int ) {
 	return QVariant(QString("*error* unimplemented (by design)"));
 }
 QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
+
+
+
 	return QVariant(QString("*error* nothing implemented yet"));
 }
 
@@ -1081,8 +1122,15 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 
 	emit ddCreated(qdd, autoRegister);
 	updateFrameInformation();
-	if ( regionDock_ )
+	if ( regionDock_ ){
 	    regionDock_->updateRegionStats( );
+	}
+
+	connect( qdd, SIGNAL(showColorHistogram(QtDisplayData*)), this, SLOT(showColorHistogram(QtDisplayData*)));
+
+	//Allows dds to synchronize options that are global.
+	connect( qdd, SIGNAL(globalOptionsChanged(QtDisplayData*, Record)),
+			this,	SLOT(globalOptionsChanged(QtDisplayData*, Record)));
 	return qdd;
 }
 
@@ -1140,6 +1188,7 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 	if (tmpData && dd != NULL ){
 		dd->setDelTmpData(True);
 	}
+
 }
 
 void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
@@ -1510,7 +1559,10 @@ void QtDisplayPanelGui::showDataOptionsPanel() {
 	//  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
 	if ( showdataoptionspanel_enter_count == 0 ) {
 		++showdataoptionspanel_enter_count;
-		if(qdo_==0) qdo_ = new QtDataOptionsPanel(this);
+		if(qdo_==0){
+			qdo_ = new QtDataOptionsPanel(this);
+			connect( qdo_, SIGNAL( globalColorSettingsChanged(bool)), this, SLOT(globalColorSettingsChanged( bool )));
+		}
 		if(qdo_!=0) {  // (should be True, barring exceptions above).
 			qdo_->showNormal();
 			qdo_->raise();
