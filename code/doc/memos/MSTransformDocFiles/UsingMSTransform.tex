@@ -93,7 +93,43 @@ quantize_c
 How to run the mstransform task for several common use-cases.
 
 \begin{enumerate}
-\item 
+\item Split three spectral windows of a field from an MS.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='data', spw='1~3', field='JUPITER')
+\end{verbatim}
+\item Combine four spectral windows into one.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', combinespws=True, spw='0~3')
+\end{verbatim}
+\item Apply Hanning smoothing in MS with 24 spws. Do not combine spws.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', hanning=True, datacolumn='data')
+\end{verbatim}
+\item Create a multi-MS in paralell with spw separation and channel selection.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.mms', spw='0~4,5:1~10', createmms=True,
+            separationaxis='spw', parallel=True)
+\end{verbatim}
+\item Average channels in CORRECTED column using a bin of 3 channels in XX.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', spw='0:5~16', correlation='XX', 
+            freqaverage=True, freqbin=3)
+\end{verbatim}
+\item Combine spws and regrid MS to new channel structure. Average width is 2 channels.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', field='11',
+            combinespws=True, regridms=True, nchan=1, width=2)
+\end{verbatim}
+\item Regrid MS to new channel structure, change reference frame to BARY and set
+new phasecenter to that of field 1. Use mode frequency for the parameters.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', spw='0', field='1', 
+            regridms=True, nchan=2, mode='frequency', width='3MHz', start='115GHz', 
+            outframe='BARY', phasecenter=1)
+\end{verbatim}
+
+
+
 \end{enumerate}
 
 \section{Frequently Asked Questions}\label{Sec:FAQ}
