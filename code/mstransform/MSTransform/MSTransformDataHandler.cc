@@ -174,6 +174,8 @@ void MSTransformDataHandler::initialize()
 	mainColumn_p = MS::CORRECTED_DATA;
 
 	// Frequency transformation members
+	chansPerOutputSpw_p = 0;
+	tailOfChansforLastSpw_p = 0;
 	baselineMap_p.clear();
 	rowIndex_p.clear();
 	spwChannelMap_p.clear();
@@ -184,14 +186,22 @@ void MSTransformDataHandler::initialize()
 	numOfOutChanMap_p.clear();
 	numOfCombInputChanMap_p.clear();
 	numOfCombInterChanMap_p.clear();
-	transformStripeOfDataComplex_p = NULL;
-	transformStripeOfDataFloat_p = NULL;
 	transformCubeOfDataComplex_p = NULL;
 	transformCubeOfDataFloat_p = NULL;
-	averageKernelComplex_p = NULL;
 	fillWeightsPlane_p = NULL;
 	setWeightsPlaneByReference_p = NULL;
 	setWeightStripeByReference_p = NULL;
+	transformStripeOfDataComplex_p = NULL;
+	transformStripeOfDataFloat_p = NULL;
+	averageKernelComplex_p = NULL;
+	averageKernelFloat_p = NULL;
+
+	// I/O related members
+	writeOutputPlanesComplex_p = NULL;
+	writeOutputPlanesFloat_p = NULL;
+	writeOutputFlagsPlane_p = NULL;
+	writeOutputFlagsPlaneSlices_p = NULL;
+	writeOutputFlagsPlaneReshapedSlices_p = NULL;
 
 	return;
 }
@@ -719,6 +729,11 @@ void MSTransformDataHandler::setup()
 		transformCubeOfDataComplex_p = &MSTransformDataHandler::smoothCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformDataHandler::smoothCubeOfData;
 	}
+	else if (nspws_p > 1)
+	{
+		transformCubeOfDataComplex_p = &MSTransformDataHandler::separateCubeOfData;
+		transformCubeOfDataFloat_p = &MSTransformDataHandler::separateCubeOfData;
+	}
 	else
 	{
 		transformCubeOfDataComplex_p = &MSTransformDataHandler::copyCubeOfData;
@@ -815,8 +830,44 @@ void MSTransformDataHandler::setup()
 
 	if (nspws_p > 1)
 	{
-		uInt chansPerOutputSpw = numOfOutChanMap_p[0] / nspws_p;
-		uInt chanTailLastSpw = numOfOutChanMap_p[0] % nspws_p;
+		uInt totalNumberOfOutputChannels = 0;
+		if (combinespws_p)
+		{
+			totalNumberOfOutputChannels = inputOutputSpwMap_p[0].second.NUM_CHAN;
+		}
+		else
+		{
+			uInt spwId = 0;
+	    	if (outputInputSPWIndexMap_p.size()>0)
+	    	{
+	    		spwId = outputInputSPWIndexMap_p[0];
+	    	}
+	    	else
+	    	{
+	    		spwId = 0;
+	    	}
+
+	    	totalNumberOfOutputChannels = numOfOutChanMap_p[spwId];
+		}
+
+		chansPerOutputSpw_p = totalNumberOfOutputChannels / nspws_p;
+		if (totalNumberOfOutputChannels % nspws_p)
+		{
+			chansPerOutputSpw_p += 1;
+			tailOfChansforLastSpw_p = totalNumberOfOutputChannels - chansPerOutputSpw_p*(nspws_p-1);
+		}
+		else
+		{
+			tailOfChansforLastSpw_p = chansPerOutputSpw_p;
+		}
+
+		writeOutputPlanesComplex_p = &MSTransformDataHandler::writeOutputPlanesInSlices;
+		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInSlices;
+	}
+	else
+	{
+		writeOutputPlanesComplex_p = &MSTransformDataHandler::writeOutputPlanesInBlock;
+		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInBlock;
 	}
 
 	// Check what columns have to filled
@@ -1203,7 +1254,15 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     	for (uInt chan_idx=0;chan_idx<nChannels;chan_idx++)
     	{
     		channelInfo channelInfo_idx;
-    		channelInfo_idx.SPW_id = spw_idx;
+    		if (outputInputSPWIndexMap_p.size())
+    		{
+    			channelInfo_idx.SPW_id = outputInputSPWIndexMap_p[spw_idx];
+    		}
+    		else
+    		{
+    			channelInfo_idx.SPW_id = spw_idx;
+    		}
+
     		channelInfo_idx.inpChannel = chan_idx;
     		channelInfo_idx.CHAN_FREQ = inputChanFreq(chan_idx);
     		channelInfo_idx.CHAN_WIDTH = inputChanWidth(chan_idx);
@@ -1594,32 +1653,52 @@ void MSTransformDataHandler::getInputNumberOfChannels()
 
 void MSTransformDataHandler::getOutputNumberOfChannels()
 {
-	// Access spectral window sub-table
-	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
-    uInt nInputSpws = spwTable.nrow();
-    MSSpWindowColumns spwCols(spwTable);
-    ScalarColumn<Int> numChanCol = spwCols.numChan();
-    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
+	if (combinespws_p)
+	{
+		uInt width = 1;
+		if(!width_p.empty() && !(width_p=="[]"))
+		{
+			if ((mode_p == "channel") or (mode_p == "channel_b"))
+			{
+				width = atoi(width_p.c_str());
+			}
+		}
 
-    // Get number of output channels per input spw
-    Int spwId;
-    for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
-    {
-    	if (outputInputSPWIndexMap_p.size()>0)
-    	{
-    		spwId = outputInputSPWIndexMap_p[spw_idx];
-    	}
-    	else
-    	{
-    		spwId = spw_idx;
-    	}
+		map<Int,Int>::iterator iter;
+		for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
+		{
+			numOfOutChanMap_p[iter->first] = numOfSelChanMap_p[iter->first] / width;
+		}
+	}
+	else
+	{
+		// Access spectral window sub-table
+		MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+	    uInt nInputSpws = spwTable.nrow();
+	    MSSpWindowColumns spwCols(spwTable);
+	    ScalarColumn<Int> numChanCol = spwCols.numChan();
+	    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
 
-    	numOfOutChanMap_p[spwId] = numChanCol(spw_idx);
-    }
+	    // Get number of output channels per input spw
+	    Int spwId;
+	    for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
+	    {
+	    	if (outputInputSPWIndexMap_p.size()>0)
+	    	{
+	    		spwId = outputInputSPWIndexMap_p[spw_idx];
+	    	}
+	    	else
+	    	{
+	    		spwId = spw_idx;
+	    	}
+
+	    	numOfOutChanMap_p[spwId] = numChanCol(spw_idx);
+	    }
+	}
+
 
 	return;
 }
-
 
 void MSTransformDataHandler::calculateWeightAndSigmaFactors()
 {
@@ -2055,8 +2134,15 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	Int spwIndex = 0;
 	if (not combinespws_p)
 	{
-		Int originalSPWid = vb->spectralWindows()(0);
-		spwIndex = inputOutputSPWIndexMap_p[originalSPWid];
+		if (inputOutputSPWIndexMap_p.size())
+		{
+			Int originalSPWid = vb->spectralWindows()(0);
+			spwIndex = inputOutputSPWIndexMap_p[originalSPWid];
+		}
+		else
+		{
+			spwIndex = vb->spectralWindows()(0);
+		}
 	}
 
     for(uInt chan_idx=0; chan_idx<inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size(); chan_idx++)
@@ -2104,7 +2190,7 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 		// Spectral Window
 		tmpVectorInt = ddiStart_p;
-		writeVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
+		writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 
 		// Non re-indexable vector columns
 		mapVector(vb->scan(),tmpVectorInt);
@@ -2219,11 +2305,12 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		if (inputOutputSPWIndexMap_p.size())
 		{
 			reindexVector(vb->spectralWindows(),tmpVectorInt,inputOutputSPWIndexMap_p,True);
-			writeVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
+			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 		else
 		{
-			writeVector(vb->spectralWindows(),outputMsCols_p->dataDescId(),rowRef,nspws_p);
+			tmpVectorInt = vb->spectralWindows()(0);
+			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 
 		// Non re-indexable columns
@@ -2650,17 +2737,54 @@ template <class T> void MSTransformDataHandler::writeVector(const Vector<T> &inp
 	else
 	{
 		uInt offset = 0;
-		for (uInt block_i=0;block_i<nBlocks;block_i++)
+		Vector<T> block(nBlocks);
+		for (uInt index=0;index<inputVector.size();index++)
 		{
-			uInt startRow_i = rowRef.firstRow()+offset;
-			RefRows rowRef_i(startRow_i, startRow_i+inputVector.size()-1);
-			outputCol.putColumnCells(rowRef_i, inputVector);
-		    offset += inputVector.size();
+			block = inputVector(index);
+			writeVectorBlock(block,outputCol,rowRef,offset);
+			offset += nBlocks;
 		}
 	}
 
 	return;
 }
+
+template <class T> void MSTransformDataHandler::writeRollingVector(Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks)
+{
+	if (nBlocks == 1)
+	{
+		 outputCol.putColumnCells(rowRef, inputVector);
+	}
+	else
+	{
+		T value = inputVector(0);
+		Vector<T> block(nBlocks);
+		for (uInt block_index=0;block_index<nBlocks;block_index++)
+		{
+			block(block_index) = value;
+			value += 1;
+		}
+
+		uInt offset = 0;
+		for (uInt index=0;index<inputVector.size();index++)
+		{
+			writeVectorBlock(block,outputCol,rowRef,offset);
+			offset += nBlocks;
+		}
+	}
+
+	return;
+}
+
+template <class T> void MSTransformDataHandler::writeVectorBlock(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt offset)
+{
+	uInt startRow_i = rowRef.firstRow()+offset;
+	RefRows rowRef_i(startRow_i, startRow_i+inputVector.size()-1);
+	outputCol.putColumnCells(rowRef_i, inputVector);
+
+	return;
+}
+
 
 // -----------------------------------------------------------------------
 // Generic method to write a Matrix from a VisBuffer into a ArrayColumn
@@ -2723,6 +2847,20 @@ template <class T> void MSTransformDataHandler::copyCubeOfData(vi::VisBuffer2 *v
 
 template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
 {
+	// Write flag column too?
+	if (outputFlagCol != NULL)
+	{
+		writeOutputFlagsPlaneSlices_p = &MSTransformDataHandler::writeOutputFlagsPlaneSlices;
+		writeOutputFlagsPlaneReshapedSlices_p = &MSTransformDataHandler::writeOutputFlagsPlaneReshapedSlices;
+		writeOutputFlagsPlane_p = &MSTransformDataHandler::writeOutputFlagsPlane;
+	}
+	else
+	{
+		writeOutputFlagsPlaneSlices_p = &MSTransformDataHandler::dontWriteOutputFlagsPlaneSlices;
+		writeOutputFlagsPlaneReshapedSlices_p = &MSTransformDataHandler::dontWriteOutputPlaneReshapedSlices;
+		writeOutputFlagsPlane_p = &MSTransformDataHandler::dontWriteOutputFlagsPlane;
+	}
+
 	// Get input flag and weight cubes
 	const Cube<Bool> inputFlagCube = vb->flagCube();
 	const Cube<Float> inputWeightsCube = vb->weightSpectrum();
@@ -2776,7 +2914,7 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2
 		outputPlaneFlags = False;
 
 		// Transform input planes and write them
-		transformAndWritePlaneOfData(0,rowRef.firstRow()+baseline_index,inputPlaneData,inputPlaneFlags,inputPlaneWeights,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+		transformAndWritePlaneOfData(0,rowRef.firstRow()+baseline_index*nspws_p,inputPlaneData,inputPlaneFlags,inputPlaneWeights,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
 
 		baseline_index += 1;
 	}
@@ -2839,6 +2977,20 @@ template <class T> void MSTransformDataHandler::regridCubeOfData(vi::VisBuffer2 
 
 template <class T> void MSTransformDataHandler::transformAndWriteCubeOfData(Int inputSpw, RefRows &rowRef, const Cube<T> &inputDataCube, const Cube<Bool> &inputFlagsCube, const Cube<Float> &inputWeightsCube, IPosition &outputPlaneShape, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
 {
+	// Write flag column too?
+	if (outputFlagCol != NULL)
+	{
+		writeOutputFlagsPlaneSlices_p = &MSTransformDataHandler::writeOutputFlagsPlaneSlices;
+		writeOutputFlagsPlaneReshapedSlices_p = &MSTransformDataHandler::writeOutputFlagsPlaneReshapedSlices;
+		writeOutputFlagsPlane_p = &MSTransformDataHandler::writeOutputFlagsPlane;
+	}
+	else
+	{
+		writeOutputFlagsPlaneSlices_p = &MSTransformDataHandler::dontWriteOutputFlagsPlaneSlices;
+		writeOutputFlagsPlaneReshapedSlices_p = &MSTransformDataHandler::dontWriteOutputPlaneReshapedSlices;
+		writeOutputFlagsPlane_p = &MSTransformDataHandler::dontWriteOutputFlagsPlane;
+	}
+
 	// Get input number of rows
 	uInt nInputRows = inputDataCube.shape()(2);
 
@@ -2863,7 +3015,46 @@ template <class T> void MSTransformDataHandler::transformAndWriteCubeOfData(Int 
 		(*this.*setWeightsPlaneByReference_p)(rowIndex,inputWeightsCube,inputPlaneWeights);
 
 		// Transform input planes and write them
-		transformAndWritePlaneOfData(inputSpw,rowRef.firstRow()+rowIndex,inputPlaneData,inputPlaneFlags,inputPlaneWeights,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+		transformAndWritePlaneOfData(inputSpw,rowRef.firstRow()+rowIndex*nspws_p,inputPlaneData,inputPlaneFlags,inputPlaneWeights,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+	}
+
+	return;
+}
+
+template <class T> void MSTransformDataHandler::separateCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+{
+	// Write flag column too?
+	if (outputFlagCol != NULL)
+	{
+		writeOutputFlagsPlaneSlices_p = &MSTransformDataHandler::writeOutputFlagsPlaneSlices;
+		writeOutputFlagsPlaneReshapedSlices_p = &MSTransformDataHandler::writeOutputFlagsPlaneReshapedSlices;
+		writeOutputFlagsPlane_p = &MSTransformDataHandler::writeOutputFlagsPlane;
+	}
+	else
+	{
+		writeOutputFlagsPlaneSlices_p = &MSTransformDataHandler::dontWriteOutputFlagsPlaneSlices;
+		writeOutputFlagsPlaneReshapedSlices_p = &MSTransformDataHandler::dontWriteOutputPlaneReshapedSlices;
+		writeOutputFlagsPlane_p = &MSTransformDataHandler::dontWriteOutputFlagsPlane;
+	}
+
+	// Get input flags, spw and number of rows
+	Int inputSpw = vb->spectralWindows()(0);
+	uInt nInputRows = inputDataCube.shape()(2);
+	const Cube<Bool> inputFlagsCube = vb->flagCube();
+
+	// Initialize input planes
+	Matrix<T> inputPlaneData;
+	Matrix<Bool> inputPlaneFlags;
+
+	// Iterate row by row in order to extract a plane
+	for (uInt rowIndex=0; rowIndex < nInputRows; rowIndex++)
+	{
+		// Fill input planes by reference
+		inputPlaneData = inputDataCube.xyPlane(rowIndex);
+		inputPlaneFlags = inputFlagsCube.xyPlane(rowIndex);
+
+		// Directly write output plane
+		writeOutputPlanes(rowRef.firstRow()+rowIndex*nspws_p,inputPlaneData,inputPlaneFlags,outputDataCol,*outputFlagCol);
 	}
 
 	return;
@@ -2907,15 +3098,91 @@ template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int
 	}
 
 	// Write output planes
+	writeOutputPlanes(row,outputDataPlane,outputFlagsPlane,outputDataCol,*outputFlagCol);
+
+	return;
+}
+
+void MSTransformDataHandler::writeOutputPlanes(uInt row, Matrix<Complex> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+{
+	(*this.*writeOutputPlanesComplex_p)(row,outputDataPlane,outputFlagsPlane,outputDataCol,outputFlagCol);
+	return;
+}
+
+void MSTransformDataHandler::writeOutputPlanes(uInt row, Matrix<Float> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Float> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+{
+	(*this.*writeOutputPlanesFloat_p)(row,outputDataPlane,outputFlagsPlane,outputDataCol,outputFlagCol);
+	return;
+}
+
+template <class T> void MSTransformDataHandler::writeOutputPlanesInBlock(uInt row, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+{
+	IPosition outputPlaneShape = outputDataPlane.shape();
 	outputDataCol.setShape(row,outputPlaneShape);
 	outputDataCol.put(row, outputDataPlane);
+	(*this.*writeOutputFlagsPlane_p)(outputFlagsPlane,outputFlagCol, outputPlaneShape, row);
 
-	if (outputFlagCol != NULL)
+	return;
+}
+
+void MSTransformDataHandler::writeOutputFlagsPlane(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, IPosition &outputPlaneShape, uInt &outputRow)
+{
+	outputCol.setShape(outputRow,outputPlaneShape);
+	outputCol.put(outputRow, outputPlane);
+	return;
+}
+
+template <class T> void MSTransformDataHandler::writeOutputPlanesInSlices(uInt row, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+{
+	IPosition outputPlaneShape = outputDataPlane.shape();
+	uInt nCorrs = outputPlaneShape(0);
+	IPosition outputPlaneShape_i(2,nCorrs,chansPerOutputSpw_p);
+	Slice sliceX(0,nCorrs);
+
+	uInt spw_i;
+	uInt nspws = nspws_p-1;
+	for (spw_i=0;spw_i<nspws;spw_i++)
 	{
-		outputFlagCol->setShape(row,outputPlaneShape);
-		outputFlagCol->put(row, outputFlagsPlane);
+		uInt outRow = row+spw_i;
+		Slice sliceY(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
+		writeOutputPlaneSlices(outputDataPlane,outputDataCol,sliceX,sliceY,outputPlaneShape_i,outRow);
+		(*this.*writeOutputFlagsPlaneSlices_p)(outputFlagsPlane,outputFlagCol,sliceX,sliceY,outputPlaneShape_i,outRow);
 	}
 
+	uInt outRow = row+spw_i;
+	Slice sliceY(chansPerOutputSpw_p*spw_i,tailOfChansforLastSpw_p);
+	writeOutputPlaneReshapedSlices(outputDataPlane,outputDataCol,sliceX,sliceY,outputPlaneShape_i,outRow);
+	(*this.*writeOutputFlagsPlaneReshapedSlices_p)(outputFlagsPlane,outputFlagCol,sliceX,sliceY,outputPlaneShape_i,outRow);
+
+	return;
+}
+
+void MSTransformDataHandler::writeOutputFlagsPlaneSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+{
+	writeOutputPlaneSlices(outputPlane,outputCol,sliceX,sliceY,outputPlaneShape,outputRow);
+	return;
+}
+
+void MSTransformDataHandler::writeOutputFlagsPlaneReshapedSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+{
+	writeOutputPlaneReshapedSlices(outputPlane,outputCol,sliceX,sliceY,outputPlaneShape,outputRow);
+	return;
+}
+
+template <class T> void MSTransformDataHandler::writeOutputPlaneSlices(Matrix<T> &outputPlane, ArrayColumn<T> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+{
+	Matrix<T> outputPlane_i = outputPlane(sliceX,sliceY);
+	outputCol.setShape(outputRow,outputPlaneShape);
+	outputCol.put(outputRow, outputPlane_i);
+	return;
+}
+
+template <class T> void MSTransformDataHandler::writeOutputPlaneReshapedSlices(Matrix<T> &outputPlane, ArrayColumn<T> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+{
+	Matrix<T> outputPlane_i = outputPlane(sliceX,sliceY);
+	outputPlane_i.resize(outputPlaneShape,True);
+	outputCol.setShape(outputRow,outputPlaneShape);
+	outputCol.put(outputRow, outputPlane_i);
 	return;
 }
 

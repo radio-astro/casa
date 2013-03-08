@@ -49,7 +49,6 @@
 // To apply hanning smooth
 #include <scimath/Mathematics/Smooth.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // MS Transform Framework utilities
@@ -283,6 +282,8 @@ protected:
 
 	// When no transformations are needed, and the only combination axis is SPW
 	template <class T> void writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks);
+	template <class T> void writeRollingVector(Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks);
+	template <class T> void writeVectorBlock(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt offset);
 	template <class T> void writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks);
 	template <class T> void writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef);
 
@@ -301,6 +302,7 @@ protected:
 	template <class T> void averageCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
 	template <class T> void smoothCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
 	template <class T> void regridCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
+	template <class T> void separateCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
 
 	template <class T> void transformAndWriteCubeOfData(Int inputSpw, RefRows &rowRef, const Cube<T> &inputDataCube, const Cube<Bool> &inputFlagsCube, const Cube<Float> &inputWeightsCube, IPosition &outputPlaneShape, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol);
 	void setWeightsPlaneByReference(uInt inputRow, const Cube<Float> &inputWeightsCube, Matrix<Float> &inputWeightsPlane);
@@ -311,6 +313,26 @@ protected:
 	void setWeightStripeByReference(uInt corrIndex,Matrix<Float> &inputWeightsPlane, Vector<Float> &inputWeightsStripe);
 	void dontSetWeightStripeByReference(uInt corrIndex,Matrix<Float> &inputWeightsPlane, Vector<Float> &inputWeightsStripe) {return;}
 	void (casa::MSTransformDataHandler::*setWeightStripeByReference_p)(uInt corrIndex,Matrix<Float> &inputWeightsPlane, Vector<Float> &inputWeightsStripe);
+
+	void writeOutputPlanes(uInt row, Matrix<Complex> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> &outputFlagCol);
+	void writeOutputPlanes(uInt row, Matrix<Float> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Float> &outputDataCol, ArrayColumn<Bool> &outputFlagCol);
+	void (casa::MSTransformDataHandler::*writeOutputPlanesComplex_p)(uInt row, Matrix<Complex> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> &outputFlagCol);
+	void (casa::MSTransformDataHandler::*writeOutputPlanesFloat_p)(uInt row, Matrix<Float> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Float> &outputDataCol, ArrayColumn<Bool> &outputFlagCol);
+
+	template <class T> void writeOutputPlanesInBlock(uInt row, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> &outputFlagCol);
+	void (casa::MSTransformDataHandler::*writeOutputFlagsPlane_p)(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, IPosition &outputPlaneShape, uInt &outputRow);
+	void writeOutputFlagsPlane(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, IPosition &outputPlaneShape, uInt &outputRow);
+	void dontWriteOutputFlagsPlane(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, IPosition &outputPlaneShape, uInt &outputRow) {return;}
+
+	template <class T> void writeOutputPlanesInSlices(uInt row, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> &outputFlagCol);
+	template <class T> void writeOutputPlaneSlices(Matrix<T> &outputPlane, ArrayColumn<T> &outputDataCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow);
+	template <class T> void writeOutputPlaneReshapedSlices(Matrix<T> &outputPlane, ArrayColumn<T> &outputDataCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow);
+	void (casa::MSTransformDataHandler::*writeOutputFlagsPlaneSlices_p)(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow);
+	void writeOutputFlagsPlaneSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow);
+	void dontWriteOutputFlagsPlaneSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputDataCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow) {return;}
+	void (casa::MSTransformDataHandler::*writeOutputFlagsPlaneReshapedSlices_p)(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow);
+	void writeOutputFlagsPlaneReshapedSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow);
+	void dontWriteOutputPlaneReshapedSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputDataCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow) {return;}
 
 	void transformStripeOfData(Int inputSpw, Vector<Complex> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe, Vector<Complex> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
 	void transformStripeOfData(Int inputSpw, Vector<Float> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe, Vector<Float> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
@@ -333,7 +355,6 @@ protected:
 	template <class T> void averageRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
 	template <class T> void smoothRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
 	template <class T> void averageSmoothRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe);
-
 
 	// MS specification parameters
 	String inpMsName_p;
@@ -408,6 +429,8 @@ protected:
 	MSMainEnums::PredefinedColumns mainColumn_p;
 
 	// Frequency transformation members
+	uInt chansPerOutputSpw_p;
+	uInt tailOfChansforLastSpw_p;
 	baselineMap baselineMap_p;
 	vector<uInt> rowIndex_p;
 	inputSpwChanMap spwChannelMap_p;
