@@ -360,6 +360,7 @@ protected:
 	String inpMsName_p;
 	String outMsName_p;
 	String datacolumn_p;
+	Bool realmodelcol_p;
 	Vector<Int> tileShape_p;
 
 	// Data selection parameters

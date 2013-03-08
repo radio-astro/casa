@@ -97,7 +97,12 @@ void MSTransformDataHandler::initialize()
 	inpMsName_p = String("");
 	outMsName_p = String("");
 	datacolumn_p = String("CORRECTED");
+	realmodelcol_p = False;
 	tileShape_p.resize(1,False);
+	//TileShape of size 1 can have 2 values [0], and [1] ...these are used in to
+	//determine the tileshape by using MSTileLayout. Otherwise it has to be a
+	//vector size 3 e.g [4, 15, 351] => a tile shape of 4 stokes, 15 channels 351
+	//rows.
 	tileShape_p(0) = 0;
 
 	// Data selection parameters
@@ -248,6 +253,33 @@ void MSTransformDataHandler::parseMsSpecParams(Record &configuration)
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Data column is " << datacolumn_p << LogIO::POST;
 	}
 
+	exists = configuration.fieldNumber ("realmodelcol");
+	if (exists >= 0)
+	{
+		configuration.get (exists, realmodelcol_p);
+		if (realmodelcol_p)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "MODEL column will be made real in the output MS " << LogIO::POST;
+		}
+	}
+
+	exists = configuration.fieldNumber ("tileshape");
+	if (exists >= 0)
+	{
+		if ( configuration.type(exists) == casa::TpInt )
+		{
+			Int mode;
+			configuration.get (exists, mode);
+			tileShape_p = Vector<Int>(1,mode);
+		}
+		else if ( configuration.type(exists) == casa::TpArrayInt)
+		{
+			configuration.get (exists, tileShape_p);
+		}
+
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Tile shape is " << tileShape_p << LogIO::POST;
+	}
+
 	return;
 }
 
@@ -379,6 +411,8 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 	else
 	{
 		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Frequency average is activated but no freqbin parameter is provided " << LogIO::POST;
+		channelAverage_p = False;
+		return;
 	}
 
 	exists = configuration.fieldNumber ("useweights");
@@ -622,6 +656,7 @@ void MSTransformDataHandler::open()
 	inputMs_p = &(splitter_p->ms_p);
 
 	// Once the input MS is opened we can get the selection indexes, in this way we also validate the selection parameters
+	checkDataColumnsToFill();
 	initDataSelectionParams();
 	getInputNumberOfChannels();
 
@@ -872,7 +907,6 @@ void MSTransformDataHandler::setup()
 
 	// Check what columns have to filled
 	checkFillFlagCategory();
-	checkDataColumnsToFill();
 	checkFillWeightSpectrum();
 
 	// Generate Iterator
@@ -1749,9 +1783,11 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 {
 	dataColMap_p.clear();
 	Bool mainColSet=False;
+	Bool modelDataChecked = False;
 	if (datacolumn_p.contains("ALL"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		modelDataChecked = True;
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1763,7 +1799,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 								"Adding DATA column to output MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1775,7 +1811,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 								"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1787,7 +1823,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 								"Adding MODEL_DATA column to output MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1799,7 +1835,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 								"Adding FLOAT_DATA column to output MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1815,7 +1851,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	{
 		Bool mainColSet=False;
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1832,7 +1868,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 					"DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1851,7 +1887,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("FLOAT_DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1870,7 +1906,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("LAG_DATA,DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1887,7 +1923,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 					"DATA column requested but not available in input MS "<< LogIO::POST;
 		}
 
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1906,7 +1942,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("LAG_DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::LAG_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1925,7 +1961,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("DATA"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1944,7 +1980,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	}
 	else if (datacolumn_p.contains("CORRECTED"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1961,10 +1997,28 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
 					"CORRECTED_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
+
+		if (realmodelcol_p)
+		{
+			modelDataChecked = True;
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+			{
+				dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+									"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+				datacolumn_p = String("DATA,MODEL");
+			}
+			else
+			{
+				logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+						"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
+			}
+		}
 	}
 	else if (datacolumn_p.contains("MODEL"))
 	{
-		if (selectedInputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+		modelDataChecked = True;
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
 		{
 			if (!mainColSet)
 			{
@@ -1986,6 +2040,22 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 		logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
 				"Requested data column " << datacolumn_p <<
 				" is not supported, possible choices are ALL,DATA,CORRECTED,MODEL,FLOAT_DATA,LAG_DATA" << LogIO::POST;
+	}
+
+	if ((realmodelcol_p) and (!modelDataChecked))
+	{
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+		{
+			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+								"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+			datacolumn_p += String(",MODEL");
+		}
+		else
+		{
+			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+					"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
+		}
 	}
 
 	return;

@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 
 	// Data selection parameters
 	String inputMS,outputMS, datacolumn;
-	Bool combinespws, hanning, regridms, freqaverage;
+	Bool combinespws, hanning, regridms, freqaverage, realmodelcol;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
 
 	Int nchan,freqbin,ddistart,nspw;
@@ -44,6 +44,9 @@ int main(int argc, char **argv)
 
 	Bool mergeSpwSubTables = False;
 	vector<String> submslist;
+
+	vector<Int> tileshape;
+	Bool tileshapeON = False;
 
 	// Parse input parameters
 	for (unsigned short i=0;i<argc-1;i++)
@@ -68,6 +71,18 @@ int main(int argc, char **argv)
 			datacolumn = value;
 			configuration.define ("datacolumn", datacolumn);
 			cout << "Data column is: " << datacolumn << endl;
+		}
+		else if (parameter == string("-realmodelcol"))
+		{
+			realmodelcol = Bool(atoi(value.c_str()));
+			configuration.define ("realmodelcol", Bool(realmodelcol));
+			cout << "Real MODEL column is: " << realmodelcol << endl;
+		}
+		else if (parameter == string("-tileshape"))
+		{
+			tileshapeON = True;
+			tileshape.push_back(atoi(value.c_str()));
+			cout << "Tile shape is: " << tileshape.at(tileshape.size()-1) << endl;
 		}
 		else if (parameter == string("-combinespws"))
 		{
@@ -173,6 +188,11 @@ int main(int argc, char **argv)
 	}
 	else
 	{
+		if (tileshapeON)
+		{
+			Vector<Int> tileShapeCASA = tileshape;
+			configuration.define ("tileshape", tileShapeCASA);
+		}
 		// Set up data handler
 		MSTransformDataHandler *tvdh = new MSTransformDataHandler(configuration);
 		tvdh->open();
