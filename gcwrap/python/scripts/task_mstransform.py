@@ -98,8 +98,10 @@ class MSTHelper(ParallelTaskHelper):
                 retval = 0
 
             elif self.__args['timespan'] == 'scan':
-                casalog.post('Cannot partition MS in spw,scan axes when timebin span across scans.', 'WARN')
-                retval = 0
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset timespan to None', 'WARN')
+                self.__args['timespan'] == ''
+                retval = 2
                 
             elif self.__args['nspw'] > 1:
                 # CANNOT process in sequential either because internally the
@@ -915,10 +917,10 @@ def mstransform(
         # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart
         
-        # Add MODEL to list of columns
-#        if realmodelcol:
-#            datacolumn = datacolumn + ',MODEL'
         config['datacolumn'] = datacolumn
+        
+        # Add a virtual MODEL column to the output MS
+        config['realmodelcol'] = realmodelcol
 
         if combinespws:
             casalog.post('Combine spws %s into new output spw'%spw)
