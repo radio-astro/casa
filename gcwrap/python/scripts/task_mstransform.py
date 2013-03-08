@@ -812,6 +812,7 @@ def mstransform(
              createmms,           # MMS --> partition
              separationaxis, 
              numsubms,
+             parallel,           # create MMS in parallel
              ddistart,           # internal parameter (hidden in XML)
              tileshape,          # tiling
              field,
@@ -868,30 +869,33 @@ def mstransform(
         
         # Validate the combination of some parameters
         # pval = 0 -> abort
-        # pval = 1 -> run in sequential
         # pval = 2 -> run in parallel
         pval = mth.validateParams()
         if pval == 0:
             raise Exception, 'Cannot partition using separationaxis=%s with some of the requested transformations.'\
                             %separationaxis
                             
-        # Process in parallel
-        if pval == 2:
-            casalog.post('Will process the input list in parallel')
-            # Setup a dictionary of the selection parameters
-            mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
-                                antenna=antenna, uvrange=uvrange, timerange=timerange, 
-                                intent=intent, observation=str(observation),feed=feed)
-            
-
-            # Get a cluster
+        # pval == 2, can process in parallel
+        # Setup a dictionary of the selection parameters
+        mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
+                            antenna=antenna, uvrange=uvrange, timerange=timerange, 
+                            intent=intent, observation=str(observation),feed=feed)
+        
+        # The user decides to run in parallel or sequential
+        if not parallel:
+            casalog.post('Will process the MS in sequential')
             mth.bypassParallelProcessing(1)
-            mth.setupCluster()
-            
-            # Do the processing. 
-            mth.go()
-            
-            return 
+        else:
+            mth.bypassParallelProcessing(0)
+            casalog.post('Will process the MS in parallel')
+
+        # Get a cluster
+        mth.setupCluster()
+        
+        # Do the processing. 
+        mth.go()
+        
+        return 
 
         
     # Create a local copy of the MSTransform tool

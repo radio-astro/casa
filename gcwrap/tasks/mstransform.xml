@@ -44,7 +44,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>The number of Sub-MSs to create.</description>
             <value>64</value>
         </param>
-        
+        <param type="bool" name="parallel" subparam="true">
+            <description>Create a multi-MS in parallel using simple_cluster.</description>
+            <value>False</value>
+        </param>        
         <param type="int" name="ddistart" subparam="true" visibility="hidden">
             <description>TO be hidden later!!!</description>
             <value>-1</value>
@@ -298,6 +301,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="True">
                   <default param="separationaxis"><value type="string">both</value></default>
                   <default param="numsubms"><value type="int">64</value></default>
+                  <default param="parallel"><value type="bool">False</value></default>
            </equals>
           </when>
           <when param="datacolumn">
@@ -400,6 +404,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         numsubms -- The number of sub-MSs to create (int).
             default: 64
+
+        parallel -- Create a multi-MS in parallel, using the simple_cluster
+                    infrastructure. It will run the tool several times in parallel,
+                    one instance for each subMS. Note that for small MSs, we
+                    recommend to not change this parameter as the overhead of creating
+                    a cluster may be larger than the gain to run in parallel. (bool)
+            default: False
                 
     tileshape -- Tile shape of the disk data columns. (TBI)
         default: ''

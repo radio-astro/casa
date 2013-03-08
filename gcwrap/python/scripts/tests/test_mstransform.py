@@ -11,8 +11,8 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 
     
 # Add a cluster-less mode to by-pass parallel processing for MMSs
-if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
-    ParallelTaskHelper.bypassParallelProcessing(1)
+#if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
+#    ParallelTaskHelper.bypassParallelProcessing(1)
     
 # Define the root for the data files
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
@@ -21,28 +21,6 @@ datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/ms
 # for importing different data sets
 class test_base(unittest.TestCase):
     
-    def setUp_ctb80(self):
-        self.vis = 'ctb80-vsm.ms'
-        fpath = datapath+ self.vis
-        
-        # Only link to this data set        
-        if not os.path.lexists(self.vis):
-#           self.cleanup()
-#            os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-            os.symlink(fpath, self.vis)
-            
-        default(mstransform)
-
-    def setUp_cveltest(self):
-        # data set with spw=0, 64 channels in LSRK
-        self.vis = "test.ms"
-
-        if os.path.exists(self.vis):
-           self.cleanup()
-            
-        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)
-
     def setUp_ngc5921(self):
         # data set with spw=0, 63 channels in LSRK
         self.vis = "ngc5921.ms"
@@ -63,15 +41,6 @@ class test_base(unittest.TestCase):
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
         
-    def setUp_ngc4826(self):
-        # data set with spw=0, 64 channels in LSRK
-        self.vis = 'ngc4826a.ms'
-        if os.path.exists(self.vis):
-           self.cleanup()
-            
-        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)
-
     def setUp_jupiter(self):
         # data col, spw=0,1 1 channel each, TOPO, field=0~12, 93 scans 
         self.vis = 'jupiter6cm.demo-thinned.ms'
@@ -393,7 +362,6 @@ class test_MMS(test_base):
         self.assertTrue(ret[0],ret[1])        
                
         
-    # TODO: Will only work after spw table consolidation
     def test_mms2(self):
         '''mstransform: create MMS with spw/scan separation and channel selections'''
         outputms = "testmms2.mms"
@@ -433,25 +401,94 @@ class test_MMS(test_base):
         # spw=5 should be spw=1 after consolidation, with 10 channels
         ret = th.verifyMS(outputms, 7, 10, 1, ignoreflags=True)
             
-#    def test_mms5(self):
-#        '''mstransform: scans with different spws'''
-#        self.set
-#        outputms = "testmms5.mms"
-#        mstransform(vis=self.vis, outputvis=outputms,createmms=True,
-#                    separationaxis='scan')                            
-#        self.assertTrue(os.path.exists(outputms))
-#        
-#        # spw=5 should be spw=1 after consolidation, with 10 channels
-#        ret = th.verifyMS(outputms, 7, 10, 1, ignoreflags=True)
+class test_Parallel(test_base):
+    '''Run some of the same tests in parallel'''
+    def setUp(self):
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf parallel*.*ms')
+    
+    def test_parallel1(self):
+        '''mstransform: create MMS with spw separation and channel selections in parallel'''
+        outputms = "parallel1.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='0~4,5:1~10',createmms=True,
+                    separationaxis='spw', parallel=True)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # It should create 6 subMS, with spw=0~5
+        # spw=5 should have only 10 channels
+        ret = th.verifyMS(outputms, 6, 10, 5,ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+                       
+    def test_parallel2(self):
+        '''mstransform: create MMS with spw/scan separation and channel selections in parallel'''
+        outputms = "parallel2.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='0:0~10,1:60~63',createmms=True,
+                    separationaxis='both', parallel=True)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # It should create 4 subMS, with spw=0~1
+        # spw=0 has 11 channels, spw=1 has 4 channels
+        ret = th.verifyMS(outputms, 2, 11, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 2, 4, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_parallel3(self):
+        '''mstransform: create MMS with scan separation and channel selections in parallel'''
+        outputms = "parallel3.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='0:0~10,1:60~63',createmms=True,
+                    separationaxis='scan', parallel=True)                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # It should create 2 subMS, with spw=0~1
+        # spw=0 has 11 channels, spw=1 has 4 channels
+        ret = th.verifyMS(outputms, 2, 11, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 2, 4, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])            
+        
+    def test_parallel4(self):
+        '''mstransform: verify spw sub-table consolidation in parallel'''
+        outputms = "parallel4.mms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='3,5:10~20,7,9,11,13,15',createmms=True,
+                    separationaxis='spw', parallel=True)                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # spw=5 should be spw=1 after consolidation, with 10 channels
+        ret = th.verifyMS(outputms, 7, 10, 1, ignoreflags=True)
+
+    def test_parallel5(self):
+        '''mstransform: Do not combine spws and create MMS with axis scan in parallel.'''
+        self.setUp_jupiter()
+        outputms = 'parallel5.mms'
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, spw='0,1',field = '12',
+             datacolumn='DATA', createmms=True, separationaxis='scan', parallel=True)
+        
+        self.assertTrue(os.path.exists(outputms))
+
+        # Should create 6 subMSs
+        mslocal = mstool()
+        mslocal.open(thems=outputms)
+        sublist = mslocal.getreferencedtables()
+        mslocal.close()
+        self.assertEqual(sublist.__len__(), 6, 'Should have created 6 subMSs')
+        
+        ret = th.verifyMS(outputms, 2, 1, 0)
+        self.assertTrue(ret[0],ret[1])
  
-# TODO: cleanup output MSs after test phase
 # Cleanup class 
 class Cleanup(test_base):
     
     def tearDown(self):
         os.system('rm -rf ngc5921.*ms*')
         os.system('rm -rf Four_ants_3C286.*ms*')
-        os.system('rm -rf comb*.*ms*')
+        os.system('rm -rf comb*.*ms* reg*.*ms hann*.*ms favg*.*ms')
+        os.system('rm -rf testmms*.*ms parallel*.*ms')
 
     def test_runTest(self):
         '''mstransform: Cleanup'''
@@ -466,4 +503,5 @@ def suite():
             test_Hanning,
             test_FreqAvg,
             test_MMS,
+            test_Parallel,
             Cleanup]
