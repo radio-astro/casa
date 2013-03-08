@@ -123,8 +123,8 @@ void ImageInputProcessor::_process(
     		}
     	}
     }
-	ImageMetaData metaData(*image);
-	_nSelectedChannels = metaData.nChannels();
+	ImageMetaData<Float> md(image);
+	_nSelectedChannels = md.nChannels();
 
 	CasacRegionManager regionMgr(image->coordinates());
 	regionRecord = regionMgr.fromBCS(

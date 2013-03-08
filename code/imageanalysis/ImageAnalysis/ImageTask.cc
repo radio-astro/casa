@@ -51,7 +51,8 @@ ImageTask::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileSupport(False), _logfileAppend(False), _logFD(0) {
+	_logfileSupport(False), _logfileAppend(False), _logFD(0),
+	_verbosity(NORMAL) {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }

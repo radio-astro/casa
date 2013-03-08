@@ -263,7 +263,7 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	}
 	else {
 		_removeExistingOutfileIfNecessary();
-		ImageAnalysis ia(&subImage);
+		ImageAnalysis ia(&subImage, False);
 		String mask = "";
 	    Record empty;
 		outImage.reset(

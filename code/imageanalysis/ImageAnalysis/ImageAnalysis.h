@@ -154,7 +154,7 @@ class ImageAnalysis
                                          const String& pol = "", 
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
-
+/*
     // the output <src>fakeBeam</src> indicates if there was no beam in the header and a fake one
     // was assumed to do the conversion. <src>channel</src> and <src>polarization</src> are
     // used only in the case the image has per plane beams.
@@ -167,7 +167,7 @@ class ImageAnalysis
         const Int channel=-1,
         const Int polarization=-1
     ) const;
-
+*/
     ImageInterface<Float>* convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,

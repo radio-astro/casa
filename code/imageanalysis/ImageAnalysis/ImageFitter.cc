@@ -45,6 +45,7 @@
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+#include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>
@@ -630,7 +631,9 @@ void ImageFitter::_setFluxes() {
 				<< LogIO::POST;
 		}
 	}
-	ImageAnalysis ia(_getImage());
+    PeakIntensityFluxDensityConverter converter(_getImage());
+    converter.setVerbosity(ImageTask::NORMAL);
+    converter.setShape(ComponentType::GAUSSIAN);
 	uInt polNum = 0;
 	for(uInt i=0; i<ncomps; i++) {
 		_curResults.getFlux(fluxQuant, i);
@@ -659,10 +662,12 @@ void ImageFitter::_setFluxes() {
 		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
 		_majorAxes[i] = (static_cast<const GaussianShape *>(compShape))->majorAxis();
 		_minorAxes[i] = (static_cast<const GaussianShape *>(compShape))->minorAxis();
-		_peakIntensities[i] = ia.convertflux(
-			_noBeam, _fluxDensities[i], _majorAxes[i],
-			_minorAxes[i], "Gaussian", True, True,
-			_chanPixNumber, _stokesPixNumber
+		converter.setBeam(_chanPixNumber, _stokesPixNumber);
+		converter.setSize(
+			Angular2DGaussian(_majorAxes[i], _minorAxes[i], Quantity(0, "deg"))
+		);
+		_peakIntensities[i] = converter.fluxDensityToPeakIntensity(
+			_noBeam, _fluxDensities[i]
 		);
 		rmsPeakError.convert(_peakIntensities[i].getUnit());
 		Double rmsPeakErrorValue = rmsPeakError.getValue();

@@ -1219,6 +1219,7 @@ ImageInterface<Float>* ImageAnalysis::continuumsub(
 	return rstat;
 }
 
+/*
 Quantity ImageAnalysis::convertflux(
 	Bool& fakeBeam, const Quantity& value,
 	const Quantity& majorAxis, const Quantity& minorAxis,
@@ -1268,6 +1269,7 @@ Quantity ImageAnalysis::convertflux(
 		);
 	return valueOut;
 }
+*/
 
 ImageInterface<Float>* ImageAnalysis::convolve2d(
 	const String& outFile, const Vector<Int>& axes,
@@ -4405,7 +4407,7 @@ Bool ImageAnalysis::setrestoringbeam(
 					<< "but no plane (channel/polarization) was specified. All beams will be set "
 					<< "equal to the specified beam." << LogIO::POST;
 			}
-			ImageMetaData md(*_image);
+			ImageMetaData<Float> md(_image.get());
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
 				GaussianBeam(major, minor, pa)
@@ -4423,7 +4425,7 @@ Bool ImageAnalysis::setrestoringbeam(
 					<< "a set of per plane beams, each equal to the specified beam, "
 					<< "will be created." << LogIO::POST;
 			}
-			ImageMetaData md(*_image);
+			ImageMetaData<Float> md(_image.get());
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
 				GaussianBeam(major, minor, pa)

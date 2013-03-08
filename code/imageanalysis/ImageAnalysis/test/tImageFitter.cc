@@ -222,21 +222,14 @@ int main() {
         	Vector<Double> blc(imShape.nelements(), 0);
         	Vector<Double> trc(imShape.nelements(), 0);
         	Vector<Double> inc(imShape.nelements(), 1);
-        	cout << __FILE__ << " " << __LINE__ << endl;
-        	Vector<Int> dirNums = ImageMetaData(*noisyImage).directionAxesNumbers();
+        	Vector<Int> dirNums = noisyImage->coordinates().directionAxesNumbers();
         	blc[dirNums[0]] = 130;
         	blc[dirNums[1]] = 89;
         	trc[dirNums[0]] = 170;
         	trc[dirNums[1]] = 129;
-        	cout << __FILE__ << " " << __LINE__ << endl;
-
         	RegionManager rm;
         	Record *box = rm.box(blc, trc, inc, "abs", False);
-        	cout << __FILE__ << " " << __LINE__ << endl;
-
         	ImageFitter fitter(noisyImage, "", box);
-        	cout << __FILE__ << " " << __LINE__ << endl;
-
         	ComponentList compList = fitter.fit();
             AlwaysAssert(fitter.converged(0), AipsError);
 
@@ -404,6 +397,7 @@ int main() {
         	AlwaysAssert(near(positionAngle, 126.3211060, 1e-7), AipsError);
 
         	Quantity xPosError = compList.getShape(0)->refDirectionErrorLong();
+        	cout << "*** xposerr " << xPosError.getValue() << endl;
         	AlwaysAssert(near(xPosError.getValue(), 8.8704e-08, 1e-4), AipsError);
 
         	Quantity yPosError = compList.getShape(0)->refDirectionErrorLat();

@@ -30,8 +30,9 @@
 
 #include <images/Images/ImageInterface.h>
 #include <casa/aips.h>
+#include <tr1/memory>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
 // <summary>
 // A class in which to store and allow read-only access to image metadata.
@@ -72,58 +73,76 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Merge ImageInfo class into this class.
 // </todo>
 
+template <class T> class ImageMetaData {
 
-class ImageMetaData {
+public:
 
-    public:
-        template <class T> ImageMetaData(const ImageInterface<T>& image) :
-            _coordinates(image.coordinates()), _shape(image.shape()) {
-        }
+	ImageMetaData(const ImageInterface<Float> *const &image);
 
-	    uInt nChannels() const;
+	uInt nChannels() const;
 
-        // Is the specified channel number valid for this image?
-        Bool isChannelNumberValid(const uInt chan) const;
+	// Is the specified channel number valid for this image?
+	Bool isChannelNumberValid(const uInt chan) const;
 
-        // Get the pixel number on the polarization axis of the specified stokes parameter.
-        // If the specified stokes parameter does not exist in the image, the value returned
-        // is not gauranteed to be anything other than outside the range of 0 to nStokes-1
-        // inclusive. Return -1 if the specified stokes parameter is not present or
-        // if this image does not have a polarization axis.
+	// Get the pixel number on the polarization axis of the specified stokes parameter.
+	// If the specified stokes parameter does not exist in the image, the value returned
+	// is not gauranteed to be anything other than outside the range of 0 to nStokes-1
+	// inclusive. Return -1 if the specified stokes parameter is not present or
+	// if this image does not have a polarization axis.
  
-        Int stokesPixelNumber(const String& stokesString) const;
+	Int stokesPixelNumber(const String& stokesString) const;
 
-        // get the stokes parameter at the specified pixel value on the polarization axis.
-        // returns "" if the specified pixel is out of range or if no polarization axis.
+	// get the stokes parameter at the specified pixel value on the polarization axis.
+	// returns "" if the specified pixel is out of range or if no polarization axis.
 
-        String stokesAtPixel(const uInt pixel) const;
+	String stokesAtPixel(const uInt pixel) const;
 
-        // Get the number of stokes parameters in this image.
-	    uInt nStokes() const;
+	// Get the number of stokes parameters in this image.
+	uInt nStokes() const;
 
-        // is the specified stokes parameter present in the image?
-        Bool isStokesValid(const String& stokesString) const;
+	// is the specified stokes parameter present in the image?
+	Bool isStokesValid(const String& stokesString) const;
 
-        // Get the shape of the direction axes. Returns a two element
-        // Vector if there is a direction coordinate, if not returns a zero element
-        // vector.
+	// Get the shape of the direction axes. Returns a two element
+	// Vector if there is a direction coordinate, if not returns a zero element
+	// vector.
 
-        Vector<Int> directionShape() const;
+	Vector<Int> directionShape() const;
 
-        // if the specified stokes parameter is valid. A message suitable for
-        // error notification is returned in the form of an in-out parameter
-        //if one or both of these is invalid.
-        Bool areChannelAndStokesValid(
-            String& message, const uInt chan, const String& stokesString
-        ) const;
+	// if the specified stokes parameter is valid. A message suitable for
+	// error notification is returned in the form of an in-out parameter
+	//if one or both of these is invalid.
+	Bool areChannelAndStokesValid(
+		String& message, const uInt chan, const String& stokesString
+    ) const;
 
-    private:
-        const CoordinateSystem& _coordinates;
-        const IPosition _shape;
+	// convert the header info to a Record and list to logger if verbose=True
+	Record toRecord(Bool verbose);
 
+private:
+	const static String _BEAMMAJOR, _BEAMMINOR, _BEAMPA,
+		_CTYPE, _DATAMAX, _DATAMIN, _EQUINOX, _IMTYPE,
+		_MASKS, _MAXPIXPOS, _MAXPOS, _MINPIXPOS, _MINPOS,
+		_OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
+		_RESTFREQ, _REFFREQTYPE, _SHAPE, _TELESCOPE;
 
+	const ImageInterface<Float> *const _image;
+	std::auto_ptr<LogIO> _log;
+	Record _header;
+
+	ImageMetaData() : _image(0), _log(0) {}
+
+	void _toLog() const;
+
+	void _fieldToLog(const String& field) const;
 };
 
-} //# NAMESPACE CASA - END
-#endif
 
+
+} //# NAMESPACE CASA - END
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <imageanalysis/ImageAnalysis/ImageMetaData.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
+
+#endif

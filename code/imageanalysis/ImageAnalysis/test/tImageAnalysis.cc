@@ -54,27 +54,6 @@ int main() {
 		writeTestString("Verify fix for CAS-2195: error if image has no direction coordinate but does have linear coordiante");
 		FITSImage fits(datadir + "/linearCoords.fits");
 		ImageAnalysis ia(&fits);
-		Record statsOut, region;
-		Vector<Int> axes(2);
-		axes[0] = 0;
-		axes[1] = 1;
-		ia.statistics(statsOut, axes, region, "", Vector<String>(0), Vector<Float>(0), Vector<Float>(0));
-		Vector<Int> got;
-		Vector<Int> expected(2);
-		expected[0] = 4;
-		expected[1] = 0;
-		statsOut.get(RecordFieldId("minpos"), got);
-		AlwaysAssert(got.size() == expected.size(), AipsError);
-		for (uInt i = 0; i<expected.size(); i++) {
-			AlwaysAssert(got[i] == expected[i], AipsError);
-		}
-		expected[0] = 3;
-		expected[1] = 10;
-		statsOut.get(RecordFieldId("maxpos"), got);
-		AlwaysAssert(got.size() == expected.size(), AipsError);
-		for (uInt i = 0; i<expected.size(); i++) {
-			AlwaysAssert(got[i] == expected[i], AipsError);
-		}
         {
             // CAS-2533
             PagedImage<Float> img(datadir + "/CAS-2533.im");
