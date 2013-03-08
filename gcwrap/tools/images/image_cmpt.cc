@@ -37,7 +37,6 @@
 #include <images/Images/RebinImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCLELMask.h>
 #include <lattices/LatticeMath/Fit2D.h>
@@ -62,6 +61,7 @@
 #include <tables/LogTables/NewFile.h>
 
 #include <components/SpectralComponents/SpectralListFactory.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
@@ -69,6 +69,7 @@
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
+#include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 
 #include <stdcasa/version.h>
@@ -740,14 +741,18 @@ image* image::continuumsub(
 		casa::Quantity majorAxis = casaQuantity(major);
 		casa::Quantity minorAxis = casaQuantity(minor);
 		Bool noBeam = False;
+		PeakIntensityFluxDensityConverter converter(_image->getImage());
+		converter.setSize(
+			Angular2DGaussian(majorAxis, minorAxis, casa::Quantity(0, "deg"))
+		);
+		converter.setBeam(channel, polarization);
 		return recordFromQuantity(
-			_image->convertflux(
-				noBeam, value, majorAxis, minorAxis, type,
-				toPeak, False, channel, polarization
-			)
+			toPeak
+			? converter.peakIntensityToFluxDensity(noBeam, value)
+			: converter.fluxDensityToPeakIntensity(noBeam, value)
 		);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
