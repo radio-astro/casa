@@ -865,8 +865,6 @@ def mstransform(
     
 
     # Process in parallel
-    # LATER:
-#    createmms = False
     if createmms:
         
         # Validate the combination of some parameters
@@ -921,6 +919,17 @@ def mstransform(
         
         # Add a virtual MODEL column to the output MS
         config['realmodelcol'] = realmodelcol
+        
+        # Add the tile shape parameter
+        if tileshape.__len__() == 1:
+            # The only allowed values are 0 or 1
+            if tileshape[0] != 0 and tileshape[0] != 1:
+                raise ValueError, 'When tileshape has one element, it should be either 0 or 1.'
+                
+        elif tileshape.__len__() != 3:
+            raise ValueError, 'Parameter tileshape must have 1 or 3 elements.'
+            
+        config['tileshape'] = tileshape                
 
         if combinespws:
             casalog.post('Combine spws %s into new output spw'%spw)
