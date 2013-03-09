@@ -10,12 +10,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <shortdescription>Makes detailed plots of Tsys and bandpass solutions.</shortdescription>
       
-  <description>Developed at the NAASC, this is a generic task to display CASA Tsys and 
-  bandpass solution tables with options to overlay them in various
+  <description>Developed at the NAASC, this is a generic task to display CASA 
+  Tsys and bandpass solution tables with options to overlay them in various
   combinations, and/or with an atmospheric transmission or sky temperature
   model.  It works with both the 'new' (casa 3.4) and 'old' calibration
   table formats, and allows for mixed mode spws (e.g. TDM and FDM for ALMA).
-  It uses the new msmd tool to access the information about an ms.
+  It uses the new msmd tool to access the information about an ms.  This
+  task is still being developed as new ALMA observing modes are commissioned.
+  So if you encounter problems, please report them.
   </description>
 
   <input>
@@ -97,7 +99,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="timeranges">
-      <description>Show only these timeranges, the first timerange being 1</description>
+      <description>Show only these timeranges, the first timerange being 0</description>
       <value type="string"></value>
     </param>
 
@@ -117,7 +119,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="int" name="density">
-      <description>dpi to use in creating PNGs and PDFs (default=108)"</description>
+      <description>dpi to use in creating PNGs and PDFs (default=108)</description>
       <value>108</value>
     </param>
 
@@ -165,7 +167,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="poln">
       <description>Polarizations to plot: "" = all, or "RR","RL","LR","LL","XX","XY","YX","YY","RR,LL","XX,YY"</description>
-      <any type="variant" limittypes="list string"/>
+      <any type="variant" limittypes="stringvec string list"/>
       <value type="string"></value>
     </param>
 
@@ -192,12 +194,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="chanrange" subparam="true">
       <description>Set xrange ("5~100") over which to autoscale y-axis for xaxis="freq"</description>
-      <any type="variant" limittypes="string list"/>
+      <any type="variant" limittypes="string intvec"/>
       <value type="string"></value>
     </param>
 
     <param type="double" name="solutionTimeThresholdSeconds">
-      <description>Consider 2 solutions simultaneous if within this interval in seconds"</description>
+      <description>Consider 2 solutions simultaneous if within this interval in seconds</description>
       <value type="double">60.0</value>
     </param>
 
@@ -208,7 +210,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="phase" subparam="true">
       <description>The y-axis limits to use for phase plots when yaxis="both"</description>
-      <any type="variant" limittypes="string list"/>
+      <any type="variant" limittypes="intvec string"/>
       <value type="string"></value>
     </param>
 
@@ -259,6 +261,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>pdftk</value>
     </param>
 
+    <param type="any" name="channeldiff">
+      <any type="variant" limittypes="bool double"/>
+      <description>Set to a value > 0 (sigma) to plot derivatives of amplitude</description>
+      <value type="bool">False</value>
+    </param>
+
+    <param type="int" name="edge">
+      <description>The number of edge channels to ignore in finding outliers (for channeldiff>0)</description>
+      <value>8</value>
+    </param>
+
     <constraints>
       <when param="xaxis">
         <equals value="freq">
@@ -267,7 +280,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </equals>
       </when>
       <when param="yaxis">
-        <equals value="both">
+        <equals value="both">  
           <default param="phase"><value type="string"></value></default>
         </equals>
       </when>
@@ -284,7 +297,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </constraints>
   </input>
 
-  <returns type="void"/>
+  <returns type="variant" limittypes="void record"/>
 
   <example>
 
@@ -298,9 +311,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  caltable: a bandpass table, of type B or BPOLY
  caltable2: a second cal table, of type BPOLY or B, to overlay on a B table
  caltable3: a third cal table, of type BPOLY, to overlay on the first two
+ channeldiff: set to value > 0 (sigma) to plot derivatives of amplitude
  chanrange: set xrange (e.g. "5~100") over which to autoscale y-axis for xaxis='freq'
  convert: full path for convert command (in case it's not found)
  density: dpi to use in creating PNGs and PDFs (default=108)
+ edge: the number of edge channels to ignore in finding outliers (for channeldiff>0)
  field: must be an ID, source name, or list thereof; can use trailing *: 'J*'
  figfile: the base_name of the png files to save: base_name.antX.spwY.png
  gs: full path for ghostscript command (in case it's not found)
@@ -327,7 +342,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  solutionTimeThresholdSeconds: consider 2 solutions simultaneous if within this interval (default=60)
  spw: must be single ID or list or range (e.g. 0~4, not the original ID)
  subplot: 11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored
- timeranges: show only these timeranges, the first timerange being 1
+ timeranges: show only these timeranges, the first timerange being 0
  xaxis: 'chan' or 'freq'
  yaxis: 'amp', 'tsys', 'phase', or 'both' amp+phase == 'ap'. Append 'db' for dB
  zoom: 'intersect' will zoom to overlap region of caltable with caltable2
