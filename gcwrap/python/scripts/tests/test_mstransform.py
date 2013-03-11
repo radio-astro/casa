@@ -3,13 +3,13 @@ import unittest
 import os
 import numpy
 from tasks import *
-from taskinit import mstool
+from taskinit import mstool, tbtool
 from __main__ import default
 import testhelper as th
 from recipes.listshapes import listshapes
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-    
+
 # Add a cluster-less mode to by-pass parallel processing for MMSs
 #if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
 #    ParallelTaskHelper.bypassParallelProcessing(1)
@@ -340,6 +340,53 @@ class test_FreqAvg(test_base):
         ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
+class test_Shape(test_base):
+    '''Test the tileshape parameter'''
+    def setUp(self):
+        self.setUp_4ants()
+        
+    def test_shape1(self):
+        '''mstransform: default tileshape'''
+        outputms = "shape1.ms"
+        mstransform(vis=self.vis, outputvis=outputms, createmms=False, tileshape=[0])
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Get the tile shape in input
+        tblocal = tbtool()
+        tblocal.open(self.vis)
+        inpdm = tblocal.getdminfo()
+        tblocal.close()
+        inptsh = th.getTileShape(inpdm)
+        
+        # Get the tile shape for the output
+        tblocal.open(outputms)
+        outdm = tblocal.getdminfo()
+        tblocal.close()
+        outtsh = th.getTileShape(outdm)
+        
+        # Compare both
+        self.assertTrue((inptsh==outtsh).all(), 'Tile shapes are different')
+                
+
+    def test_shape2(self):
+        '''mstransform: custom tileshape'''
+        outputms = "shape2.ms"
+        inptsh = [4,20,1024]
+        mstransform(vis=self.vis, outputvis=outputms, createmms=False, tileshape=inptsh)
+                            
+        self.assertTrue(os.path.exists(outputms))
+                
+        # Check the tile shape for the output
+        tblocal = tbtool()
+        tblocal.open(outputms)
+        outdm = tblocal.getdminfo()
+        tblocal.close()
+        outtsh = th.getTileShape(outdm)
+        
+        self.assertTrue((inptsh==outtsh).all(), 'Tile shapes are different')
+        
+
 class test_MMS(test_base):
     def setUp(self):
         self.setUp_4ants()
@@ -502,6 +549,7 @@ def suite():
 #            test_Regridms3,
             test_Hanning,
             test_FreqAvg,
+            test_Shape,
             test_MMS,
             test_Parallel,
             Cleanup]

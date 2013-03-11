@@ -364,3 +364,25 @@ def calculateHanning(dataB,data,dataA):
     S = const0*dataB + const1*data + const2*dataA
     return S
 
+
+def getTileShape(mydict, column='DATA'):
+    '''Return the value of TileShape for a given column
+       in the dictionary from data managers (tb.getdminfo).
+       mydict --> dictionary from tb.getdminfo()
+       column --> column where to look for TileShape'''
+    
+    tsh = {}
+    for key, value in mydict.items():
+        if mydict[key]['COLUMNS'][0] == column:
+             # Dictionary for requested column
+            hyp = mydict[key]['SPEC']['HYPERCUBES']
+                    
+             # This is the HYPERCUBES dictionary
+            for hk in hyp.keys():
+                tsh = hyp[hk]['TileShape']
+                break
+                    
+            break
+    
+    return tsh
+                    
