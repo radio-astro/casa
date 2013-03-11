@@ -759,14 +759,28 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 		// Test for changes in these, recording any new values.
 		// Of these, WedgeDD processes only "wedgelabelcharsize"
 		// (colorBarCharSizeOpt_ -- it was merged into cbopts, above).
-		Bool reorient = colorBarOrientationOpt_->fromRecord(opts);
-		Bool cbChg    = colorBarDisplayOpt_->fromRecord(opts);	// "wedge"
-		Bool cbSzChg  = colorBarThicknessOpt_->fromRecord(opts);
-		cbSzChg  = colorBarCharSizeOpt_->fromRecord(opts)   || cbSzChg;
-				cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
+
+		Bool reorient = false;
+		if ( colorBarOrientationOpt_ != NULL ){
+			reorient = colorBarOrientationOpt_->fromRecord(opts);
+		}
+		Bool cbChg = false;
+		if ( colorBarDisplayOpt_ != NULL ){
+			cbChg    = colorBarDisplayOpt_->fromRecord(opts);	// "wedge"
+		}
+		Bool cbSzChg = false;
+		if ( colorBarThicknessOpt_ != NULL ){
+			cbSzChg  = colorBarThicknessOpt_->fromRecord(opts);
+		}
+		if ( colorBarCharSizeOpt_ != NULL ){
+			cbSzChg  = colorBarCharSizeOpt_->fromRecord(opts)   || cbSzChg;
+		}
+		if (colorBarLabelSpaceOpt_ != NULL ){
+			cbSzChg  = colorBarLabelSpaceOpt_->fromRecord(opts) || cbSzChg;
+		}
 		held=True;
 		panel_->viewer()->hold();
-		// (avoids redrawing more often than necessary)
+			// (avoids redrawing more often than necessary)
 
 		// Trigger color bar and main panel rearrangement, if necessary.
 		if(reorient) {
@@ -778,7 +792,6 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 		else if(cbChg || (wouldDisplayColorBar() && cbSzChg) ) {
 			emit colorBarChange();
 		}
-
 		if(!held) {
 			held=True;
 			panel_->viewer()->hold();
@@ -795,7 +808,8 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 			dd_->refresh(True);
 		}
 
-		held=False;  panel_->viewer()->release();
+		held=False;
+		panel_->viewer()->release();
 		if(cbNeedsRefresh) {
 			emit colorBarChange();
 		}
@@ -838,7 +852,6 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
 	// (To do: This code should probably not allow explicit
 	// 'zlength' or 'zindex' fields to be specified within the
 	// 'setanimator' sub-record unless the dd is CS master).
-
 	if(emitAll){
 		chgdOpts.merge(opts, Record::SkipDuplicates);
 	}

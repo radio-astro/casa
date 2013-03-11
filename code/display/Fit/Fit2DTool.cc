@@ -24,7 +24,6 @@
 //#
 #include "Fit2DTool.qo.h"
 #include <display/Fit/Gaussian2DFitter.h>
-#include <display/Fit/RegionBox.h>
 #include <display/Fit/ColorComboDelegate.h>
 #include <display/RegionShapes/RegionShape.h>
 #include <display/Display/Options.h>
@@ -35,17 +34,27 @@
 namespace casa {
 
 Fit2DTool::Fit2DTool(QWidget *parent)
-    : QDialog(parent), DEFAULT_KEY(-1), REGION_LABEL("Region:  "),
+    : QDialog(parent),  REGION_LABEL("Region:  "),
       image( NULL), fitter(NULL), progressBar( this ),
-      findSourcesDialog( this ), pixelRangeDialog( this ),
+      findSourcesDialog( this, false ), pixelRangeDialog( this ),
       logDialog( this ){
 	ui.setupUi(this);
-	currentRegionId = DEFAULT_KEY;
+
 	const QString WINDOW_TITLE( "2D Fit Tool");
 	this->setWindowTitle( WINDOW_TITLE );
+	QPalette warningPalette = ui.warningLabel->palette();
+	warningPalette.setColor(ui.warningLabel->foregroundRole(), Qt::red);
+	ui.warningLabel->setPalette(warningPalette);
+
+	QButtonGroup* modeGroup = new QButtonGroup( this );
+	modeGroup->addButton( ui.imageRadioButton );
+	modeGroup->addButton( ui.regionRadioButton );
+	ui.imageRadioButton->setChecked( true );
+	connect( ui.imageRadioButton, SIGNAL(toggled(bool)), &findSourcesDialog, SLOT(setImageMode(bool)));
+
 
 	setImageFunctionalityEnabled( false );
-	connect( &findSourcesDialog, SIGNAL(showOverlay(String)), this, SIGNAL(showOverlay(String)));
+	connect( &findSourcesDialog, SIGNAL(showOverlay(String, const QString& )), this, SIGNAL(showOverlay(String, const QString&)));
 	connect( &findSourcesDialog, SIGNAL(removeOverlay(String)), this, SIGNAL(removeOverlay(String)));
 	connect( &findSourcesDialog, SIGNAL(estimateFileSpecified(const QString&)), this, SLOT(estimateFileChanged( const QString&)));
 
@@ -57,12 +66,13 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 	ui.viewButton->setEnabled( false );
 	fitColorDelegate = new ColorComboDelegate( this );
 	ui.fitColorCombo->setItemDelegate(  fitColorDelegate );
-	const QStringList colorNames = QStringList()<<"yellow"<<"white"<<"red"<<
-			"green"<<"blue"<<"cyan"<<"magenta"<<"black";
-	fitColorDelegate->setSupportedColors( colorNames );
-	for ( int i = 0; i < colorNames.size(); i++ ){
-		ui.fitColorCombo->addItem(colorNames[i]);
+	fitColorDelegate->setSupportedColors( FindSourcesDialog::colorNames );
+	for ( int i = 0; i < FindSourcesDialog::colorNames.size(); i++ ){
+		ui.fitColorCombo->addItem(FindSourcesDialog::colorNames[i]);
 	}
+	connect( ui.fitColorCombo, SIGNAL(currentIndexChanged(const QString&)),
+			this, SLOT(fitColorChanged(const QString&)));
+	findSourcesDialog.setOverlayColor( FindSourcesDialog::colorNames[0] );
 
 	QDoubleValidator* validator = new QDoubleValidator( std::numeric_limits<double>::min(), std::numeric_limits<double>::max(), 7, this );
 	ui.startLineEdit->setValidator( validator );
@@ -77,7 +87,6 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 
 	connect( ui.fitButton, SIGNAL(clicked()), this, SLOT(doFit()));
 	connect( ui.findEstimatesButton, SIGNAL(clicked()), this, SLOT(showFindSourcesDialog()));
-	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(finishedWork()));
 	connect( ui.graphicalPixelRangeButton, SIGNAL(clicked()), this, SLOT(showPixelRangeDialog()));
 	connect( ui.browseButton, SIGNAL(clicked()), this, SLOT(showFileDialog()));
 	connect( ui.saveBrowseButton, SIGNAL(clicked()), this, SLOT(showSaveDialog()));
@@ -93,6 +102,16 @@ Fit2DTool::Fit2DTool(QWidget *parent)
 	progressBar.setCancelButton( 0 );
 }
 
+void Fit2DTool::fitColorChanged( const QString& colorName ){
+	if ( !fitMarkers.isEmpty()){
+		removeViewerFitMarkers();
+		clearFitMarkers();
+		fitMarkers = fitter->toDrawingDisplay( image, colorName );
+		addViewerFitMarkers();
+	}
+	findSourcesDialog.setOverlayColor( colorName );
+}
+
 void Fit2DTool::residualSupportChanged( bool enable ){
 	if ( enable ){
 		if ( this->fitMarkers.isEmpty() ){
@@ -104,7 +123,7 @@ void Fit2DTool::residualSupportChanged( bool enable ){
 void Fit2DTool::showFileChooserDialog(const QString& title,
 		QFileDialog::FileMode mode, QLineEdit* destinationLineEdit ){
 	QFileDialog dialog( this );
-	QDir homeDir = QDir::home();
+	QDir homeDir = QDir::current();
 	QString homePath = homeDir.absolutePath();
 	dialog.setFileMode(mode);
 	dialog.setWindowTitle( title );
@@ -272,29 +291,7 @@ bool Fit2DTool::validateFile( QLineEdit* directoryLineEdit, QLineEdit* fileLineE
 }
 
 String Fit2DTool::getScreenedEstimatesFile( const String& estimatesFileName, bool* errorWritingFile ){
-	QString screenedEstimatesFileName(estimatesFileName.c_str());
-	if ( screenedEstimatesFileName.length() > 0 ){
-		if ( !regions.isEmpty() ){
-			RegionBox* screenBox = regions[currentRegionId ];
-			if ( screenBox != NULL ){
-				int separatorIndex = screenedEstimatesFileName.lastIndexOf( QDir::separator());
-				if ( separatorIndex > 0 ){
-					screenedEstimatesFileName = screenedEstimatesFileName.right(screenedEstimatesFileName.length() - separatorIndex-1);
-				}
-				String outName= viewer::options.temporaryPath( screenedEstimatesFileName.toStdString() );
-				QString outNameStr( outName.c_str() );
-				bool success = findSourcesDialog.writeEstimateFile( outNameStr, true, screenBox );
-				if ( success ){
-					screenedEstimatesFileName = outNameStr;
-				}
-				else {
-					*errorWritingFile = true;
-					qDebug() << "Could not write estimates to temp file: "<<outNameStr;
-				}
-			}
-		}
-	}
-	return screenedEstimatesFileName.toStdString();
+	return findSourcesDialog.getScreenedEstimatesFile( estimatesFileName, errorWritingFile);
 }
 
 
@@ -317,7 +314,7 @@ void Fit2DTool::doFit(){
 		return;
 	}
 
-	String pixelBox = populatePixelBox();
+	String pixelBox = findSourcesDialog.getPixelBox();
 	Vector<Float> includeVector = populateInclude();
 	Vector<Float> excludeVector = populateExclude();
 	QString channelStr = ui.channelLineEdit->text();
@@ -342,8 +339,9 @@ void Fit2DTool::doFit(){
 			residualFile, includeVector, excludeVector );
 	connect( fitter, SIGNAL( finished() ), this, SLOT(fitDone()));
 	if ( saveFile.length() > 0 ){
-		fitter->setLogFilePath( saveFile );
+		fitter->setFilePath( saveFile );
 	}
+	fitter->setWriteLogFile( ui.logOutputCheckBox->isChecked());
 	fitter->start();
 	progressBar.show();
 }
@@ -402,6 +400,16 @@ void Fit2DTool::fitDone(){
 			residualImagePath=(fitter->getResidualImagePath().toStdString());
 			emit addResidualFitImage( residualImagePath );
 		}
+
+		if ( ui.saveGroupBox->isChecked() ){
+			if ( ui.regionOutputCheckBox->isChecked() ){
+				bool success = fitter->writeRegionFile();
+				if ( !success ){
+					QMessageBox::warning( this, "Error Writing Fit in Region Format",
+							"Please check the output file path." );
+				}
+			}
+		}
 	}
 }
 
@@ -409,9 +417,7 @@ void Fit2DTool::showResults(){
 	logDialog.show();
 }
 
-void Fit2DTool::finishedWork(){
-	this->close();
-}
+
 
 void Fit2DTool::estimateFileChanged( const QString& fullPath ){
 	ui.estimateFileLineEdit->setText( fullPath );
@@ -429,24 +435,6 @@ void Fit2DTool::showFindSourcesDialog(){
 }
 
 
-String Fit2DTool::populatePixelBox() const {
-	QString pixelStr( "");
-	const QString COMMA_STR( ",");
-	if ( currentRegionId != DEFAULT_KEY ){
-		pixelStr = regions[currentRegionId]->toString();
-	}
-	else {
-		//No regions so just use the image as bounds.
-		const QString ZERO_STR( "0");
-		pixelStr.append( ZERO_STR + COMMA_STR );
-		pixelStr.append( ZERO_STR + COMMA_STR );
-		IPosition imageShape = image->shape();
-		pixelStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
-		pixelStr.append( QString::number( imageShape(1) - 1));
-	}
-	String pixStr( pixelStr.toStdString());
-	return pixStr;
-}
 
 void Fit2DTool::setImageFunctionalityEnabled( bool enable ){
 	ui.fitButton->setEnabled( enable );
@@ -475,69 +463,35 @@ void Fit2DTool::setImage( ImageInterface<Float>* image ){
 	setImageFunctionalityEnabled( enableFunctionality );
 }
 
-void Fit2DTool::newRegion( int id, const QString &/*shape*/, const QString &/*name*/,
-		const QList<double> &/*world_x*/, const QList<double> &/*world_y*/,
+void Fit2DTool::newRegion( int id, const QString & shape, const QString &name,
+		const QList<double> & world_x, const QList<double> & world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
-		const QString &/*linecolor*/, const QString &/*text*/, const QString &/*font*/,
-		int /*fontsize*/, int /*fontstyle*/ ) {
-	if ( pixel_x.size() == 2 && pixel_y.size() == 2 ){
-		RegionBox* regionBox = regions[id];
-		if ( regionBox == NULL ){
-			regionBox = new RegionBox( pixel_x, pixel_y );
-			regions[id] = regionBox;
-		}
-		else {
-			regionBox->update( pixel_x, pixel_y );
-		}
+		const QString & linecolor, const QString & text, const QString & font,
+		int fontsize, int fontstyle ) {
+	bool regionSet = findSourcesDialog.newRegion( id, shape, name, world_x, world_y, pixel_x,
+			pixel_y, linecolor, text, font, fontsize, fontstyle );
+	if ( regionSet ){
 		ui.fitRegionLabel->setVisible( true );
-		QString boxSpec( regionBox->toStringLabelled());
+		QString regionStr = findSourcesDialog.getRegionString();
+		QString boxSpec( regionStr);
 		ui.fitRegionLabel->setText( REGION_LABEL+boxSpec);
-		currentRegionId = id;
-
-		String pixelBox = populatePixelBox();
-		findSourcesDialog.setPixelBox( pixelBox );
 	}
 }
 
-void Fit2DTool::clearRegions(){
-	QList<int> keys = regions.keys();
-	for ( int i = 0; i < keys.size(); i++ ){
-		RegionBox* box = regions.take( keys[i] );
-		delete box;
-	}
-}
+
 
 void Fit2DTool::updateRegion( int id, viewer::region::RegionChanges changes,
-		const QList<double> &/*world_x*/, const QList<double> &/*world_y*/,
+		const QList<double> & world_x, const QList<double> & world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ){
-	if ( pixel_x.size() == 2 && pixel_y.size() == 2 ){
-		if ( changes != viewer::region::RegionChangeDelete ){
-			RegionBox* box = regions[id];
-			if ( box != NULL ){
-				box->update( pixel_x, pixel_y );
-				currentRegionId = id;
-				ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
-				String pixelBox = populatePixelBox();
-				findSourcesDialog.setPixelBox( pixelBox );
-			}
-			else {
-				qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
-			}
+	bool regionUpdate = findSourcesDialog.updateRegion( id, changes, world_x, world_y,
+			pixel_x, pixel_y);
+	if ( regionUpdate ){
+		QString regionStr = findSourcesDialog.getRegionString();
+		if ( regionStr.length() == 0 ){
+			ui.fitRegionLabel->setVisible( false );
 		}
 		else {
-			RegionBox* regionToRemove = regions.take(id);
-			delete regionToRemove;
-			if ( regions.isEmpty() ){
-				currentRegionId = DEFAULT_KEY;
-				ui.fitRegionLabel->setVisible( false );
-			}
-			else {
-				QList<int> keys = regions.keys();
-				currentRegionId = keys[0];
-				ui.fitRegionLabel->setText( REGION_LABEL + regions[currentRegionId]->toStringLabelled());
-			}
-			String pixelBox = populatePixelBox();
-			findSourcesDialog.setPixelBox( pixelBox );
+			ui.fitRegionLabel->setText( REGION_LABEL + regionStr);
 		}
 	}
 }
@@ -546,6 +500,6 @@ void Fit2DTool::updateRegion( int id, viewer::region::RegionChanges changes,
 Fit2DTool::~Fit2DTool(){
 	delete fitter;
 	clearFitMarkers();
-	clearRegions();
+
 }
 }

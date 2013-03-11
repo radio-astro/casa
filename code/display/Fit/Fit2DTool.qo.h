@@ -34,7 +34,6 @@
 #include <display/Fit/PixelRangeDialog.qo.h>
 #include <display/Fit/ResidualHistogramDialog.qo.h>
 #include <display/Fit/Fit2DLogDialog.qo.h>
-//#include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
 namespace casa {
@@ -43,7 +42,7 @@ template <class T> class ImageInterface;
 class Gaussian2DFitter;
 class ColorComboDelegate;
 class RegionShape;
-class RegionBox;
+//class RegionBox;
 class Fit2DTool : public QDialog {
     Q_OBJECT
 
@@ -53,7 +52,7 @@ public:
     ~Fit2DTool();
 
 signals:
-	void showOverlay(String);
+	void showOverlay(String, const QString&);
 	void removeOverlay(String);
 	void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
 	void add2DFitOverlay( QList<RegionShape*> fitMarkers );
@@ -77,8 +76,8 @@ private slots:
 	void pixelRangeChanged();
 	void pixelRangeEnabledChanged( bool enabled );
 	void pixelRangeNoneSelected( bool selected );
-	void finishedWork();
 	void doFit();
+	void fitColorChanged( const QString& colorName);
 	void fitDone();
 	void clearFitMarkers();
 	void showResults();
@@ -94,7 +93,7 @@ private:
 	Vector<Float> populateInclude() const;
 	Vector<Float> populateExclude() const;
 	void populateIncludeExclude(Vector<Float>& range ) const;
-	String populatePixelBox() const;
+
 	void setImageFunctionalityEnabled( bool enable );
 	void resetRegion( const QList<int>& pixelX, const QList<int>& pixelY );
 	bool populateSaveFile( String& saveFile );
@@ -107,9 +106,6 @@ private:
 	void clearRegions();
 	String getScreenedEstimatesFile( const String& estimatesFileName, bool* error );
 
-	QMap< int, RegionBox*> regions;
-	int currentRegionId;
-	const int DEFAULT_KEY;
 	const QString REGION_LABEL;
 	ImageInterface<Float>* image;
 	QList<RegionShape*> fitMarkers;

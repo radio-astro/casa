@@ -29,11 +29,15 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/SkyCompRep.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/RegionShapes/RegionShapes.h>
+#include <imageanalysis/Annotations/AnnEllipse.h>
 #include <display/Fit/RegionBox.h>
 #include <QVector>
 #include <QDebug>
 #include <assert.h>
+#include <iostream>
+#include <fstream>
 
 namespace casa {
 
@@ -53,14 +57,6 @@ int ComponentListWrapper::getSize() const {
 	return skyList.nelements();
 }
 
-/*QString ComponentListWrapper::getEstimateFixed( int index ) const {
-	QString str;
-	if ( 0 <= index && index < fixedEstimates.size() ){
-		str = fixedEstimates[index];
-	}
-	return str;
-}*/
-
 bool ComponentListWrapper::fromRecord( String& errorMsg, Record& record ){
 	return skyList.fromRecord( errorMsg, record );
 }
@@ -78,12 +74,6 @@ void ComponentListWrapper::remove( QVector<int> indices ){
 		removeIndices[i] = indices[i];
 	}
 	skyList.remove( removeIndices );
-
-	//Remove the indices from the estimate list
-	/*qSort( indices.begin(), indices.end() );
-	for ( int i = totalRemoveCount - 1; i>=0; i-- ){
-		fixedEstimates.removeAt( indices[i] );
-	}*/
 }
 
 double ComponentListWrapper::getRAValue( int i, const String& unit ) const {
@@ -193,12 +183,7 @@ double ComponentListWrapper::rotateAngle( double value ) const {
 	 return rotatedValue;
 }
 
-/*void ComponentListWrapper::setFixedEstimates( const QList<QString>& fixedList ){
-	fixedEstimates.clear();
-	for( int i = 0; i < fixedList.size(); i++ ){
-		fixedEstimates.append( fixedList[i]);
-	}
-}*/
+
 
 bool ComponentListWrapper::toEstimateFile( QTextStream& stream,
 		ImageInterface<Float>* image, QString& errorMsg,
@@ -333,38 +318,72 @@ QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>
 	int sourceCount = getSize();
 	QList<RegionShape*> fitList;
 	CoordinateSystem coordSystem = image->coordinates();
-	//bool directionCoordinate = coordSystem.hasDirectionCoordinate();
-	//if ( directionCoordinate ){
-		//DirectionCoordinate directionCoordinate = coordSystem.directionCoordinate(0);
+
+	for (int index=0; index < sourceCount; index++){
+		SkyComponent skyComponent = skyList.component( index );
+
+		//Pixel centers
+		int worldAxisCount = coordSystem.nWorldAxes();
+		if ( worldAxisCount >= 2 ){
+			Vector<double> worldCoordinates( worldAxisCount );
+			worldCoordinates[0] = getRAValue( index, RAD );
+			worldCoordinates[1] = getDECValue( index, RAD );
+			Vector<double> pixelCoordinates( worldAxisCount );
+			coordSystem.toPixel( pixelCoordinates, worldCoordinates );
+
+			Quantity majorAxisValue = getMajorAxis( index );
+			Quantity minorAxisValue = getMinorAxis( index );
+			Quantity posValue = getAngle( index );
+			double angleValue = rotateAngle( posValue.getValue());
+			if ( majorAxisValue.getValue() > 0 && minorAxisValue.getValue() > 0 ){
+				RSEllipse* ellipse = new RSEllipse( pixelCoordinates[0], pixelCoordinates[1],
+							majorAxisValue.getValue(), minorAxisValue.getValue(), angleValue );
+				ellipse->setLineColor( colorName.toStdString() );
+				fitList.append( ellipse );
+			}
+		}
+	}
+	return fitList;
+}
+
+bool ComponentListWrapper::toRegionFile( ImageInterface<float>* image,
+		const QString& filePath ) const {
+	bool success = false;
+	int sourceCount = getSize();
+	CoordinateSystem coordSystem = image->coordinates();
+	IPosition imageShape = image->shape();
+	Vector<Stokes::StokesTypes> stokes;
+	CoordinateUtil::findStokesAxis(stokes, coordSystem);
+	ofstream fileStream;
+	fileStream.open(filePath.toStdString().c_str());
+
+	if ( fileStream.is_open()){
+		fileStream << "#CRTF"<<"\n";
 		for (int index=0; index < sourceCount; index++){
-
 			SkyComponent skyComponent = skyList.component( index );
-			//String summaryStr = skyComponent.summarize( &coordSystem );
-
-
 			//Pixel centers
 			int worldAxisCount = coordSystem.nWorldAxes();
 			if ( worldAxisCount >= 2 ){
-				Vector<double> worldCoordinates( worldAxisCount );
-				worldCoordinates[0] = getRAValue( index, RAD );
-				worldCoordinates[1] = getDECValue( index, RAD );
-				Vector<double> pixelCoordinates( worldAxisCount );
-				coordSystem.toPixel( pixelCoordinates, worldCoordinates );
+				double xValue = getRAValue( index, RAD );
+				Quantity xCenter( xValue, RAD );
+				double yValue = getDECValue( index, RAD );
+				Quantity yCenter( yValue, RAD );
 
 				Quantity majorAxisValue = getMajorAxis( index );
 				Quantity minorAxisValue = getMinorAxis( index );
 				Quantity posValue = getAngle( index );
-				double angleValue = rotateAngle( posValue.getValue());
-				if ( majorAxisValue.getValue() > 0 && minorAxisValue.getValue() > 0 ){
-					RSEllipse* ellipse = new RSEllipse( pixelCoordinates[0], pixelCoordinates[1],
-							majorAxisValue.getValue(), minorAxisValue.getValue(), angleValue );
-					ellipse->setLineColor( colorName.toStdString() );
-					fitList.append( ellipse );
-				}
+
+				AnnEllipse ellipse(xCenter, yCenter, majorAxisValue,
+					minorAxisValue, posValue,
+					coordSystem, imageShape, stokes);
+				ellipse.print(fileStream);
+				fileStream << "\n";
 			}
 		}
-	//}
-	return fitList;
+		success = true;
+		fileStream.close( );
+	}
+	return success;
 }
 
 ComponentListWrapper::~ComponentListWrapper() {

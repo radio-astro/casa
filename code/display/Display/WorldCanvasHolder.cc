@@ -486,23 +486,28 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 			iter != itsDisplayList.end(); ++iter, ++dd ) {
 		if ( conforms[dd] && (*iter)->isDisplayable( )){
-			displayCount++;
+			String className = (*iter)->className();
+			if ( className.find("Raster")!=String::npos ){
+				if ( (*iter)->labelAxes(ev)){
+					displayCount = 1;
+					break;
+				}
+			}
 		}
 	}
 
-	dd = 0;
-	for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+	if ( displayCount == 0 ){
+		dd = 0;
+		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 			iter != itsDisplayList.end(); ++iter, ++dd ) {
-		if ( conforms[dd] && (*iter)->isDisplayable( )){
-			String className = (*iter)->className();
-			//In blink mode, we don't show contours, vectors, or markers
-			//separately unless they are the only ones.
-			if ( displayCount == 1 ||
-					(className.find("Contour")==String::npos &&
-							className.find( "Vector") == String::npos &&
-							className.find( "Marker") == String::npos )){
-				if ( (*iter)->labelAxes(ev)){
-					break;
+			if ( conforms[dd] && (*iter)->isDisplayable( )){
+				String className = (*iter)->className();
+				//In blink mode, we don't show contours, vectors, or markers
+				//separately unless they are the only ones.
+				if ( className.find("Raster")==String::npos ){
+					if ( (*iter)->labelAxes(ev)){
+						break;
+					}
 				}
 			}
 		}

@@ -78,6 +78,7 @@ class HistogramMain;
 class Fit2DTool;
 class SlicerMainWindow;
 class ColorHistogram;
+class FindSourcesDialog;
 
 template <class T> class ImageInterface;
 
@@ -493,7 +494,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *findSourcesAct_,*fitAct_,
       *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
@@ -541,6 +542,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   ColorHistogram* colorHistogram;
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
+  FindSourcesDialog* findSourcesDialog;
 
   // interactive clean...
   void initCleanTool( );
@@ -567,13 +569,14 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
   void showHistogram();
+  void showFindSources();
   void showSlicer();
   void resetListenerImage();
   void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
   void showFitInteractive();
   void showCleanTool( );
   void refreshFit();
-  void addSkyComponentOverlay(String path);
+  void addSkyComponentOverlay(String path, const QString& colorName);
   void removeSkyComponentOverlay( String path );
   void add2DFitOverlay( QList<RegionShape*> fitMarkers );
   void remove2DFitOverlay( QList<RegionShape*> fitMarkers );

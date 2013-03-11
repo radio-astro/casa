@@ -27,17 +27,20 @@
 #define FIND_SOURCES_DIALOG_QO_H
 
 #include <QtGui/QDialog>
+#include <QMap>
 #include <casa/Containers/Record.h>
-
 #include <display/Fit/FindSourcesDialog.ui.h>
 #include <display/Fit/ComponentListWrapper.h>
 #include <display/region/QtRegionSource.qo.h>
+
 
 class QFileSystemModel;
 
 namespace casa {
 
 class SkyCatOverlayDD;
+class RegionBox;
+class ColorComboDelegate;
 
 /**
  * Displays a dialog that allows the user to find and edit a source list
@@ -49,18 +52,32 @@ class FindSourcesDialog : public QDialog
     Q_OBJECT
 
 public:
-    FindSourcesDialog(QWidget *parent = 0);
+    FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
     void setImage( ImageInterface<Float>* image );
-    ~FindSourcesDialog();
     void setChannel( int channel );
-    void setPixelBox( const String& box );
-    bool writeEstimateFile( QString& filePath,
-    		bool screenEstimates = false, RegionBox* screeningBox = NULL );
+    void setOverlayColor(const QString& colorName);
+    QString getRegionString() const;
+    String getPixelBox() const;
+    String getScreenedEstimatesFile( const String& estimatesFileName,
+    		bool* errorWritingFile );
+    const static QStringList colorNames;
+    ~FindSourcesDialog();
 
 signals:
-	void showOverlay(String);
+	void showOverlay(String, const QString& );
 	void removeOverlay(String path );
 	void estimateFileSpecified( const QString& fullPath );
+
+public slots:
+	void setImageMode( bool imageMode );
+	bool newRegion( int id, const QString & shape, const QString &name,
+	    		const QList<double> & world_x, const QList<double> & world_y,
+	    		const QList<int> &pixel_x, const QList<int> &pixel_y,
+	    		const QString & linecolor, const QString & text, const QString & font,
+	    		int fontsize, int fontstyle );
+	bool updateRegion( int id, viewer::region::RegionChanges changes,
+	    		const QList<double> & world_x, const QList<double> & world_y,
+	    		const QList<int> &pixel_x, const QList<int> &pixel_y );
 
 private slots:
 	void findSources();
@@ -71,9 +88,11 @@ private slots:
 	void validateDirectory( const QString& str );
 
 private:
+
 	FindSourcesDialog( const FindSourcesDialog& other );
 	FindSourcesDialog& operator=( const FindSourcesDialog& other );
-	//QList<QString> populateFixedEstimates() const;
+	void populatePixelBox();
+	void resetCurrentId( int suggestedId );
 	void resetSourceView();
 	void setSourceResultsVisible( bool visible );
 	void createTable();
@@ -82,6 +101,10 @@ private:
 	Record makeRegion() const;
 	void resetSkyOverlay();
 	void clearSkyOverlay();
+	void clearRegions();
+	bool writeEstimateFile( QString& filePath,
+	    	bool screenEstimates = false, RegionBox* screeningBox = NULL );
+	QString getRemoveOverlayPath() const;
 
 	ComponentListWrapper skyList;
 	enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
@@ -89,10 +112,16 @@ private:
 	ImageInterface<Float>* image;
 	String pixelBox;
 	QString skyPath;
+	QString overlayColorName;
+	bool imageMode;
 	int channel;
 	int resultIndex;
+	int currentRegionId;
 	QFileSystemModel* fileModel;
+	QMap< int, RegionBox*> regions;
+	const int DEFAULT_KEY;
 	const QString SKY_CATALOG;
+	ColorComboDelegate* colorDelegate;
     Ui::FindSourcesDialogClass ui;
 };
 }

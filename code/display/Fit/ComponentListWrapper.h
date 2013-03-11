@@ -60,7 +60,7 @@ public:
 			ImageInterface<Float>* image, QString& errorMsg,
 			bool screenEstimates = false, RegionBox* screenBox = NULL) const;
 	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName ) const;
-	//void setFixedEstimates( const QList<QString>& fixedList );
+	bool toRegionFile( ImageInterface<float>* image, const QString& filePath ) const;
 	virtual ~ComponentListWrapper();
 
 private:
