@@ -748,8 +748,8 @@ image* image::continuumsub(
 		converter.setBeam(channel, polarization);
 		return recordFromQuantity(
 			toPeak
-			? converter.peakIntensityToFluxDensity(noBeam, value)
-			: converter.fluxDensityToPeakIntensity(noBeam, value)
+			? converter.fluxDensityToPeakIntensity(noBeam, value)
+			: converter.peakIntensityToFluxDensity(noBeam, value)
 		);
 	}
 	catch (const AipsError& x) {
