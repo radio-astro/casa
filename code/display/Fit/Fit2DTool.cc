@@ -290,10 +290,6 @@ bool Fit2DTool::validateFile( QLineEdit* directoryLineEdit, QLineEdit* fileLineE
 	return fileOk;
 }
 
-String Fit2DTool::getScreenedEstimatesFile( const String& estimatesFileName, bool* errorWritingFile ){
-	return findSourcesDialog.getScreenedEstimatesFile( estimatesFileName, errorWritingFile);
-}
-
 
 void Fit2DTool::doFit(){
 
@@ -306,12 +302,14 @@ void Fit2DTool::doFit(){
 		}
 		else {
 			estimatesFileName = fileName.toStdString();
+			bool errorWritingFile = false;
+			estimatesFileName = findSourcesDialog.getScreenedEstimatesFile( estimatesFileName, &errorWritingFile );
+			if ( errorWritingFile ){
+				QMessageBox::warning( this, "Error Writing Estimates File",
+							"There was an error writing the source estimates file.");
+				return;
+			}
 		}
-	}
-	bool errorWritingFile = false;
-	estimatesFileName = getScreenedEstimatesFile( estimatesFileName, &errorWritingFile );
-	if ( errorWritingFile ){
-		return;
 	}
 
 	String pixelBox = findSourcesDialog.getPixelBox();

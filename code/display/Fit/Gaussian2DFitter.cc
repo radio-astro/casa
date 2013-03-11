@@ -48,6 +48,9 @@ QString Gaussian2DFitter::getLogFilePath() const {
 	if ( logFile ){
 		logPath = filePath.c_str()+ LOG_SUFFIX;
 	}
+	else {
+		logPath = viewer::options.temporaryPath( "tmpFitLogFile" ).c_str();
+	}
 	return logPath;
 }
 
@@ -83,19 +86,16 @@ void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const Str
 }
 
 QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
-	return fitResultList.toDrawingDisplay( image, colorName );
+	return fitResultList.toDrawingDisplay( image, channelNumber, colorName );
 }
 
 void Gaussian2DFitter::run(){
 	successfulFit = true;
 	String channelStr = String::toString(channelNumber);
-	if ( filePath.length() == 0 ){
-		String fileName( "Fit2DLogFile");
-		filePath = viewer::options.temporaryPath( fileName );
-	}
+
 	ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
 			excludePixs, residualImageFile, "", estimateFile);
-	String logFile = filePath + String( LOG_SUFFIX.toStdString().c_str());
+	String logFile = getLogFilePath().toStdString();
 	fitter.setLogfile( logFile );
 
 	// do the fit

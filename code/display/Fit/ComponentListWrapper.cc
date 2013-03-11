@@ -25,10 +25,12 @@
 
 #include "ComponentListWrapper.h"
 #include <images/Images/ImageInterface.h>
+#include <images/Images/ImageInfo.h>
 #include <casa/Quanta/MVAngle.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/SkyCompRep.h>
+#include <components/ComponentModels/GaussianBeam.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/RegionShapes/RegionShapes.h>
 #include <imageanalysis/Annotations/AnnEllipse.h>
@@ -132,6 +134,23 @@ Quantity ComponentListWrapper::getFlux( int i ) const {
 		quantity = fluxVector[0];
 	}
 	return quantity;
+}
+
+void ComponentListWrapper::deconvolve(const ImageInterface<float>* image, int channel,
+		Quantity& majorAxis, Quantity& minorAxis, Quantity& positionAngle) const {
+	ImageInfo imageInformation = image->imageInfo();
+	bool hasBeam = imageInformation.hasBeam();
+	if ( hasBeam ){
+		CoordinateSystem coordSystem = image->coordinates();
+		IPosition imageShape = image->shape();
+		GaussianBeam beam = imageInformation.restoringBeam( channel );
+		Angular2DGaussian originalBeam( majorAxis, minorAxis, positionAngle );
+		Angular2DGaussian resultBeam;
+		beam.deconvolve( resultBeam, originalBeam );
+		majorAxis.setValue( resultBeam.getMajor().getValue());
+		minorAxis.setValue( resultBeam.getMinor().getValue());
+		positionAngle.setValue( resultBeam.getPA().getValue());
+	}
 }
 
 Quantity ComponentListWrapper::getAxis( int listIndex, int shapeIndex, bool toArcSecs ) const {
@@ -276,10 +295,7 @@ bool ComponentListWrapper::toEstimateFile( QTextStream& stream,
 						stream << majorAxis << COMMA_STR;
 						stream << minorAxis << COMMA_STR;
 						stream << posAngle;
-						/*if ( fixedEstimates[index].length() > 0 ){
-							stream << COMMA_STR;
-							stream << fixedEstimates[index];
-						}*/
+
 						stream << "\n";
 						writeCount++;
 					}
@@ -314,7 +330,8 @@ void ComponentListWrapper::toRecord( Record& record, const Quantity& quantity ) 
 	}
 }
 
-QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
+QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>* image,
+		int channelIndex, const QString& colorName) const {
 	int sourceCount = getSize();
 	QList<RegionShape*> fitList;
 	CoordinateSystem coordSystem = image->coordinates();
@@ -334,6 +351,10 @@ QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>
 			Quantity majorAxisValue = getMajorAxis( index );
 			Quantity minorAxisValue = getMinorAxis( index );
 			Quantity posValue = getAngle( index );
+
+			//The deconvolved fit must be graphed because it is scaled
+			//to match the image.
+			deconvolve( image, channelIndex, majorAxisValue, minorAxisValue, posValue );
 			double angleValue = rotateAngle( posValue.getValue());
 			if ( majorAxisValue.getValue() > 0 && minorAxisValue.getValue() > 0 ){
 				RSEllipse* ellipse = new RSEllipse( pixelCoordinates[0], pixelCoordinates[1],

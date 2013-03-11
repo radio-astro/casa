@@ -728,6 +728,12 @@ void BinPlotWidget::addZoomActions( bool rangeControls, QMenu* zoomMenu ){
 	connect( zoomWidgetMenu, SIGNAL(finished()), this, SLOT(zoomMenuFinished()));
 }
 
+void BinPlotWidget::setRangeMaxEnabled( bool enabled ){
+	if ( rangeControlWidget != NULL ){
+		rangeControlWidget->setRangeMaxEnabled( enabled );
+	}
+}
+
 void BinPlotWidget::setMinMaxValues( double minValue, double maxValue,
 		bool updateGraph ){
 	if ( rangeControlWidget != NULL ){

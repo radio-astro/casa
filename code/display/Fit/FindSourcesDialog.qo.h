@@ -31,6 +31,7 @@
 #include <casa/Containers/Record.h>
 #include <display/Fit/FindSourcesDialog.ui.h>
 #include <display/Fit/ComponentListWrapper.h>
+#include <display/Fit/PixelRangeDialog.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 
 
@@ -86,9 +87,11 @@ private slots:
 	void saveEstimateFile();
 	void directoryChanged(const QModelIndex& modelIndex );
 	void validateDirectory( const QString& str );
+	void cutoffModeChanged( bool noise );
+	void showPixelRange();
+	void pixelRangeChanged();
 
 private:
-
 	FindSourcesDialog( const FindSourcesDialog& other );
 	FindSourcesDialog& operator=( const FindSourcesDialog& other );
 	void populatePixelBox();
@@ -98,6 +101,7 @@ private:
 	void createTable();
 	void initializeFileManagement();
 	void setTableValue(int row, int col, const String& val );
+	double populateCutOff(bool* valid) const;
 	Record makeRegion() const;
 	void resetSkyOverlay();
 	void clearSkyOverlay();
@@ -122,6 +126,7 @@ private:
 	const int DEFAULT_KEY;
 	const QString SKY_CATALOG;
 	ColorComboDelegate* colorDelegate;
+	PixelRangeDialog pixelRangeDialog;
     Ui::FindSourcesDialogClass ui;
 };
 }

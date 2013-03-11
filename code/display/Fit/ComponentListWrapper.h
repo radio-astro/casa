@@ -59,7 +59,7 @@ public:
 	bool toEstimateFile( QTextStream& stream,
 			ImageInterface<Float>* image, QString& errorMsg,
 			bool screenEstimates = false, RegionBox* screenBox = NULL) const;
-	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName ) const;
+	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, int channelIndex, const QString& colorName ) const;
 	bool toRegionFile( ImageInterface<float>* image, const QString& filePath ) const;
 	virtual ~ComponentListWrapper();
 
@@ -71,9 +71,10 @@ private:
 	double degreesToArcSecs( double Value ) const;
 	Quantity getAxis( int listIndex, int shapeIndex, bool toArcSecs ) const;
 	double rotateAngle( double value ) const;
+	void deconvolve(const ImageInterface<float>* image, int channel,
+			Quantity& majorAxis, Quantity& minorAxis, Quantity& positionAngle) const;
 
 	ComponentList skyList;
-	//QList<QString> fixedEstimates;
 	const String RAD;
 	const String DEG;
 	const String ARC_SEC;

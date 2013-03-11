@@ -45,7 +45,8 @@ const QStringList FindSourcesDialog::colorNames = QStringList()<<"yellow"<<"whit
 
 FindSourcesDialog::FindSourcesDialog(QWidget *parent,
 		bool displayModeFunctionality)
-    : QDialog(parent),  DEFAULT_KEY(-1), SKY_CATALOG("skycatalog"){
+    : QDialog(parent),  DEFAULT_KEY(-1),
+      SKY_CATALOG("skycatalog"), pixelRangeDialog(this){
 
 	ui.setupUi(this);
 	currentRegionId = DEFAULT_KEY;
@@ -79,9 +80,20 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent,
 	QTime time = QTime::currentTime();
 	qsrand((uInt)time.msec());
 
-	QDoubleValidator* validator = new QDoubleValidator( 0, std::numeric_limits<double>::max(), 7, this );
+	QDoubleValidator* validator = new QDoubleValidator( std::numeric_limits<double>::min(),
+			std::numeric_limits<double>::max(), 7, this );
 	ui.cutoffLineEdit->setValidator( validator );
 	ui.cutoffLineEdit->setText( QString::number(0.01f));
+	QButtonGroup* cutOffGroup = new QButtonGroup( this );
+	cutOffGroup->addButton( ui.fractionOfPeakRadio );
+	cutOffGroup->addButton( ui.noiseRadio );
+	bool fractionOfPeakMode = true;
+	ui.fractionOfPeakRadio->setChecked( fractionOfPeakMode );
+	cutoffModeChanged(!fractionOfPeakMode );
+	pixelRangeDialog.setWindowTitle( "Find Sources Intensity Cut-Off" );
+	pixelRangeDialog.setRangeMaxEnabled( false );
+	connect( &pixelRangeDialog, SIGNAL(accepted()), this, SLOT(pixelRangeChanged()));
+	connect( ui.noiseRadio, SIGNAL(toggled(bool)), this, SLOT(cutoffModeChanged(bool)));
 
 	QStringList tableHeaders =(QStringList()<< "ID"<<"RA" << "DEC" << "Flux" <<
 			"Major Axis"<<"Minor Axis"<<"Angle"/*<<"Fixed"*/);
@@ -95,11 +107,63 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent,
 
 	initializeFileManagement();
 
+	connect( ui.graphicalNoiseButton, SIGNAL(clicked()), this, SLOT(showPixelRange()));
 	connect( ui.findSourcesButton, SIGNAL(clicked()), this, SLOT(findSources()));
 	connect( ui.deleteSourceButton, SIGNAL(clicked()), this, SLOT( deleteSelectedSource()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(canceledFindSources()));
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(saveEstimateFile()));
 }
+
+
+//------------------------------------------------------------------
+//              Cut-Off
+//------------------------------------------------------------------
+
+void FindSourcesDialog::cutoffModeChanged( bool noise ){
+	ui.graphicalNoiseButton->setEnabled( noise );
+}
+
+void FindSourcesDialog::pixelRangeChanged(){
+	pair<double,double> range = pixelRangeDialog.getInterval();
+	QString startRange = QString::number( range.first );
+
+	ui.cutoffLineEdit->setText( startRange );
+}
+
+void FindSourcesDialog::showPixelRange(){
+	pixelRangeDialog.setImage( image );
+	pixelRangeDialog.show();
+}
+
+double FindSourcesDialog::populateCutOff(bool* valid) const {
+	QString cutoffStr = ui.cutoffLineEdit->text();
+	double value = cutoffStr.toDouble( valid);
+	if ( *valid ){
+		if ( ui.fractionOfPeakRadio->isChecked() ){
+			if ( value < 0 || value > 1){
+				*valid = false;
+			}
+		}
+		else {
+			std::vector<float> pixelValues = pixelRangeDialog.getXValues();
+			std::vector<float>::iterator maxValuePos = std::max_element( pixelValues.begin(), pixelValues.end());
+			std::vector<float>::iterator minValuePos = std::min_element( pixelValues.begin(), pixelValues.end());
+			if ( value < *minValuePos || value > *maxValuePos ){
+				*valid = false;
+			}
+			else {
+				double span = *maxValuePos - *minValuePos;
+				double dataSpan = value - *minValuePos;
+				value = dataSpan / span;
+			}
+		}
+	}
+	return value;
+}
+
+//----------------------------------------------------------------------
+//                      Properties
+//----------------------------------------------------------------------
 
 void FindSourcesDialog::canceledFindSources(){
 	close();
@@ -244,8 +308,8 @@ void FindSourcesDialog::setSourceResultsVisible( bool visible ){
 			resultIndex = holderIndex;
 			dialogLayout->removeWidget( ui.sourceResultHolder );
 			ui.sourceResultHolder->setParent( NULL );
-			setMinimumSize(300,150);
-			setMaximumSize(400,200);
+			setMinimumSize(600,150);
+			setMaximumSize(700,200);
 		}
 	}
 	else {
@@ -307,7 +371,12 @@ void FindSourcesDialog::findSources(){
 	ImageAnalysis* analysis = new ImageAnalysis( image );
 	Record region = makeRegion();
 	QString cutoffStr = ui.cutoffLineEdit->text();
-	double cutoff = cutoffStr.toDouble();
+	bool cutOffValid = false;
+	double cutoff = populateCutOff( &cutOffValid );
+	if ( !cutOffValid ){
+		QMessageBox::warning( this, "Invalid Cut-Off", "Please specify a valid cut-off value.");
+		return;
+	}
 	int maxEstimates = ui.sourceEstimateCountSpinBox->value();
 	try {
 		Record sources = analysis->findsources(maxEstimates,cutoff,region,"",False );
@@ -456,7 +525,6 @@ String FindSourcesDialog::getScreenedEstimatesFile( const String& estimatesFileN
 				}
 				else {
 					*errorWritingFile = true;
-					qDebug() << "Could not write estimates to temp file: "<<outNameStr;
 				}
 			}
 		}

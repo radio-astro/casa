@@ -42,7 +42,7 @@ template <class T> class ImageInterface;
 class Gaussian2DFitter;
 class ColorComboDelegate;
 class RegionShape;
-//class RegionBox;
+
 class Fit2DTool : public QDialog {
     Q_OBJECT
 
@@ -104,7 +104,6 @@ private:
 	void addViewerFitMarkers();
 	void removeViewerFitMarkers();
 	void clearRegions();
-	String getScreenedEstimatesFile( const String& estimatesFileName, bool* error );
 
 	const QString REGION_LABEL;
 	ImageInterface<Float>* image;

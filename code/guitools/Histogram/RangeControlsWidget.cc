@@ -42,6 +42,10 @@ RangeControlsWidget::RangeControlsWidget(QWidget *parent)
 	connect( ui.clearRangeButton, SIGNAL(clicked()), this, SLOT(clearRange()));
 }
 
+void RangeControlsWidget::setRangeMaxEnabled( bool enabled ){
+	ui.maxLineEdit->setEnabled( enabled );
+}
+
 void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
 	if ( !signalChange ){
 		blockSignals(true);

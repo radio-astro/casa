@@ -26,6 +26,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QStringBuilder>
+#include <QDebug>
 
 namespace casa {
 
