@@ -1,4 +1,4 @@
-//# LimbDarkenDiskShape.h: defines LimbDarkened Disk shape
+//# LimbDarkenedDiskShape.h: defines LimbDarkened Disk shape
 //
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //# Copyright (C) 2012
@@ -22,8 +22,8 @@
 //#
 //# $Id$
 
-#ifndef COMPONENT_LIMBDARKEN_DISKSHAPE_H
-#define COMPONENT_LIMBDARKEN_DISKSHAPE_H
+#ifndef COMPONENT_LIMBDARKENED_DISKSHAPE_H
+#define COMPONENT_LIMBDARKENED_DISKSHAPE_H
 
 //#! Includes go here
 #include <casa/aips.h>
@@ -34,7 +34,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 
-// <summary>A limb-darken disk model for the spatial distribution of emission</summary>
+// <summary>A limb-darkened disk model for the spatial distribution of emission</summary>
 
 //<use visibility=export>
 
@@ -53,8 +53,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// A LimbDarkenDiskShape models the spatial distribution of radiation from 
-// the sky as a using a limb-darken elliptical disk with user specified major axis
+// A LimbDarkenedDiskShape models the spatial distribution of radiation from 
+// the sky as a using a limb-darkened elliptical disk with user specified major axis
 // width, minor axis width and position angle.
 //
 // This class like the other component shapes becomes more useful when used
@@ -112,7 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> start discussion of this possible extension
 // </todo>
 
-class LimbDarkenDiskShape: public TwoSidedShape
+class LimbDarkenedDiskShape: public TwoSidedShape
 {
 public:
 
@@ -127,31 +127,31 @@ public:
 
 //#! Constructors
   //Default constsructor
-  LimbDarkenDiskShape();
+  LimbDarkenedDiskShape();
 
-  LimbDarkenDiskShape(const MDirection& direction,
+  LimbDarkenedDiskShape(const MDirection& direction,
             const Quantum<Double>& majorAxis,
             const Quantum<Double>& minorAxis,
             const Quantum<Double>& positionAngle,
             const Float& n);
-  LimbDarkenDiskShape(const MDirection& direction, const Quantum<Double>& width,
+  LimbDarkenedDiskShape(const MDirection& direction, const Quantum<Double>& width,
             const Double axialRatio,
             const Quantum<Double>& positionAngle,
             const Float& n);
   // </group>
 
   // The copy constructor 
-  LimbDarkenDiskShape(const LimbDarkenDiskShape& other);
+  LimbDarkenedDiskShape(const LimbDarkenedDiskShape& other);
 
   // The destructor
-  virtual ~LimbDarkenDiskShape();
+  virtual ~LimbDarkenedDiskShape();
 
   //#! Operators
   //The assignment operator
-  LimbDarkenDiskShape& operator=(const LimbDarkenDiskShape& other);
+  LimbDarkenedDiskShape& operator=(const LimbDarkenedDiskShape& other);
 
   //#! General Member Functions
-  // get the type of the shape (always returns ComponentType::LimbDakenDisk)
+  // get the type of the shape (always returns ComponentType::LimbDakenedDisk)
   virtual ComponentType::Shape type() const;
 
   // use diskshape ones?
@@ -232,7 +232,7 @@ private:
   static void rotateVis(Double& u, Double& v,
                         const Double cpa, const Double spa);
 
-  //# The parameters of the limb-darken disk
+  //# The parameters of the limb-darkened disk
   // <group>
   Double itsMajValue;
   Double itsMinValue;

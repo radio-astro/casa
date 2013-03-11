@@ -1,4 +1,4 @@
-//# tLimbDarkenDiskShape.cc: Test programs for the LimbDarkenDiskShape class
+//# tLimbDarkenedDiskShape.cc: Test programs for the LimbDarkenedDiskShape class
 //# Copyright (C) 1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -27,7 +27,7 @@
 
 #include <casa/aips.h>
 #include <components/ComponentModels/ComponentType.h>
-#include <components/ComponentModels/LimbDarkenDiskShape.h>
+#include <components/ComponentModels/LimbDarkenedDiskShape.h>
 #include <components/ComponentModels/TwoSidedShape.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
@@ -55,7 +55,7 @@ int main() {
     TwoSidedShape* shapePtr = 0;
     {
       // Create a LDisk component at the default direction
-      const LimbDarkenDiskShape defDisk;
+      const LimbDarkenedDiskShape defDisk;
       AlwaysAssert(defDisk.ok(), AipsError);
       AlwaysAssert(defDisk.type() == ComponentType::LDISK, AipsError);
       AlwaysAssert(defDisk.isSymmetric() == True, AipsError);
@@ -106,7 +106,7 @@ int main() {
       const MVAngle pixelSize(Quantity(1.0,"''"));
       const Double peak = square(pixelSize.radian())/
 	(C::pi*majorAxis.getValue("rad")*minorAxis.getValue("rad"));
-      LimbDarkenDiskShape ds(dir, majorAxis, minorAxis, pa, nfactor);
+      LimbDarkenedDiskShape ds(dir, majorAxis, minorAxis, pa, nfactor);
       Vector<MDirection::MVType> dirs(8);
       dirs(0) = MVDirection(Quantity(0,"deg"), Quantity(-2.001, "deg"));
       dirs(1) = MVDirection(Quantity(0,"deg"), Quantity(-1.999, "deg"));
@@ -146,8 +146,8 @@ int main() {
       cout << "Passed the arbitrary disk shape test" << endl;
 
       // test the copy semantics
-      LimbDarkenDiskShape otherds(ds);
-      LimbDarkenDiskShape assignedds;
+      LimbDarkenedDiskShape otherds(ds);
+      LimbDarkenedDiskShape assignedds;
       assignedds = otherds;
       shapePtr = (TwoSidedShape*) ds.clone();
       ds.setWidthInRad(1., 0.5, .1);
@@ -214,7 +214,7 @@ int main() {
     {
       MDirection dir(MVDirection(0.0, 0.0), MDirection::J2000);
       // n=0.0 -> uniform disk case
-      LimbDarkenDiskShape ds(dir, Quantity(1, "deg"), 0.5, Quantity(90, "deg"),Float(0.0));
+      LimbDarkenedDiskShape ds(dir, Quantity(1, "deg"), 0.5, Quantity(90, "deg"),Float(0.0));
       //cerr<<"ds.majorAxisInRad()="<<ds.majorAxisInRad()<<endl;
       //cerr<<"ds.minorAxisInRad()="<<ds.minorAxisInRad()<<endl;
  

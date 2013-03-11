@@ -24,7 +24,7 @@ ComponentModels/ComponentType.cc
 ComponentModels/PointShape.cc
 ComponentModels/SkyCompRep.cc
 ComponentModels/DiskShape.cc
-ComponentModels/LimbDarkenDiskShape.cc
+ComponentModels/LimbDarkenedDiskShape.cc
 ComponentModels/SkyComponent.cc
 ComponentModels/ComponentShape.cc
 ComponentModels/FluxStandard.cc
@@ -59,7 +59,7 @@ ComponentModels/GaussianShape.h
 ComponentModels/GaussianBeam.h
 ComponentModels/PointShape.h
 ComponentModels/DiskShape.h
-ComponentModels/LimbDarkenDiskShape.h
+ComponentModels/LimbDarkenedDiskShape.h
 ComponentModels/ComponentType.h
 ComponentModels/SpectralIndex.h
 ComponentModels/SkyCompRep.h

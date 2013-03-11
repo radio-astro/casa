@@ -1,4 +1,4 @@
-//# LimbDarkenDiskShape.cc: implementation of LimbDarkenDiskShape.h which defines LimbDarkened Disk shape
+//# LimbDarkenedDiskShape.cc: implementation of LimbDarkenedDiskShape.h which defines LimbDarkened Disk shape
 //
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //# Copyright (C) 2012
@@ -22,7 +22,7 @@
 //#
 //# $Id$
 
-#include <components/ComponentModels/LimbDarkenDiskShape.h>
+#include <components/ComponentModels/LimbDarkenedDiskShape.h>
 //#include <components/ComponentModels/Flux.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
@@ -48,7 +48,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-LimbDarkenDiskShape::LimbDarkenDiskShape()
+LimbDarkenedDiskShape::LimbDarkenedDiskShape()
   :TwoSidedShape(),
    itsMajValue(Quantity(1,"'").getValue("rad")),
    itsMinValue(Quantity(1,"'").getValue("rad")),
@@ -59,7 +59,7 @@ LimbDarkenDiskShape::LimbDarkenDiskShape()
   DebugAssert(ok(), AipsError);
 }
 
-LimbDarkenDiskShape::LimbDarkenDiskShape(const MDirection& direction,
+LimbDarkenedDiskShape::LimbDarkenedDiskShape(const MDirection& direction,
                                          const Quantum<Double>& majorAxis,
                                          const Quantum<Double>& minorAxis,
                                          const Quantum<Double>& positionAngle,
@@ -75,7 +75,7 @@ LimbDarkenDiskShape::LimbDarkenDiskShape(const MDirection& direction,
 }
 
 
-LimbDarkenDiskShape::LimbDarkenDiskShape(const MDirection& direction, 
+LimbDarkenedDiskShape::LimbDarkenedDiskShape(const MDirection& direction, 
                     const Quantum<Double>& width,
                     const Double axialRatio,
                     const Quantum<Double>& positionAngle, 
@@ -88,13 +88,10 @@ LimbDarkenDiskShape::LimbDarkenDiskShape(const MDirection& direction,
    itsHeight(1.0/(C::pi*itsMajValue*itsMinValue)),
    itsAttnFactor(n)
 {
-  //TT debug
-  //cerr<<"LDisk const. itsMajValue="<<itsMajValue<<endl;
-  //cerr<<"LDisk const. itsMinValue="<<itsMinValue<<endl;
   DebugAssert(ok(), AipsError);
 }
 
-LimbDarkenDiskShape::LimbDarkenDiskShape(const LimbDarkenDiskShape& other)
+LimbDarkenedDiskShape::LimbDarkenedDiskShape(const LimbDarkenedDiskShape& other)
   :TwoSidedShape(other),
    itsMajValue(other.itsMajValue),
    itsMinValue(other.itsMinValue),
@@ -106,12 +103,12 @@ LimbDarkenDiskShape::LimbDarkenDiskShape(const LimbDarkenDiskShape& other)
 }
 
   // The destructor
-LimbDarkenDiskShape::~LimbDarkenDiskShape() {
+LimbDarkenedDiskShape::~LimbDarkenedDiskShape() {
   DebugAssert(ok(), AipsError);
 }
   //#! Operators
   //The assignment operator
-LimbDarkenDiskShape& LimbDarkenDiskShape::operator=(const LimbDarkenDiskShape& other) {
+LimbDarkenedDiskShape& LimbDarkenedDiskShape::operator=(const LimbDarkenedDiskShape& other) {
   if (this != &other) {
     TwoSidedShape::operator=(other);
     itsMajValue = other.itsMajValue;
@@ -126,14 +123,14 @@ LimbDarkenDiskShape& LimbDarkenDiskShape::operator=(const LimbDarkenDiskShape& o
 
   //#! General Member Functions
   // get the type of the shape (always returns ComponentType::LimbDakenDisk)
-ComponentType::Shape LimbDarkenDiskShape::type() const {
+ComponentType::Shape LimbDarkenedDiskShape::type() const {
     DebugAssert(ok(), AipsError);
     return ComponentType::LDISK;
 }
 
 
   // use diskshape ones?
-  void LimbDarkenDiskShape::setWidthInRad(const Double majorAxis,
+  void LimbDarkenedDiskShape::setWidthInRad(const Double majorAxis,
                              const Double minorAxis,
                              const Double positionAngle) {
     itsMajValue = majorAxis;
@@ -145,34 +142,34 @@ ComponentType::Shape LimbDarkenDiskShape::type() const {
     DebugAssert(ok(), AipsError);
   }
   //
-  Double LimbDarkenDiskShape::majorAxisInRad() const {
+  Double LimbDarkenedDiskShape::majorAxisInRad() const {
   DebugAssert(ok(), AipsError);
   return itsMajValue;
   }
 
-  Double LimbDarkenDiskShape::minorAxisInRad() const {
+  Double LimbDarkenedDiskShape::minorAxisInRad() const {
   DebugAssert(ok(), AipsError);
   return itsMinValue;
   }
 
-  Double LimbDarkenDiskShape::positionAngleInRad() const {
+  Double LimbDarkenedDiskShape::positionAngleInRad() const {
   DebugAssert(ok(), AipsError);
   return itsPaValue;
   }
 
-  Float LimbDarkenDiskShape::getAttnFactor() const {
+  Float LimbDarkenedDiskShape::getAttnFactor() const {
   DebugAssert(ok(), AipsError);
   return itsAttnFactor;
   }
   //set n factor in darkening equation, I=I0(1-rho^2)^n/2
-void LimbDarkenDiskShape::setAttnFactor(const Float attnFactor) {
+void LimbDarkenedDiskShape::setAttnFactor(const Float attnFactor) {
   itsAttnFactor=attnFactor;  
 }
 
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be
   // between zero and one (inclusive).
-Double LimbDarkenDiskShape::sample(const MDirection& direction,
+Double LimbDarkenedDiskShape::sample(const MDirection& direction,
                         const MVAngle& pixelLatSize,
                         const MVAngle& pixelLongSize) const {
   DebugAssert(ok(), AipsError);
@@ -198,7 +195,7 @@ Double LimbDarkenDiskShape::sample(const MDirection& direction,
   // Same as the previous function except that many directions can be sampled
   // at once. The reference frame and pixel size must be the same for all the
   // specified directions.
-void LimbDarkenDiskShape::sample(Vector<Double>& scale,
+void LimbDarkenedDiskShape::sample(Vector<Double>& scale,
                       const Vector<MDirection::MVType>& directions,
                       const MDirection::Ref& refFrame,
                       const MVAngle& pixelLatSize,
@@ -228,7 +225,7 @@ void LimbDarkenDiskShape::sample(Vector<Double>& scale,
   if (deleteValue) delete compDirValue;
 }
 
-DComplex LimbDarkenDiskShape::visibility(const Vector<Double>& uvw,
+DComplex LimbDarkenedDiskShape::visibility(const Vector<Double>& uvw,
                               const Double& frequency) const {
  DebugAssert(uvw.nelements() == 3, AipsError);
   DebugAssert(frequency > 0, AipsError);
@@ -242,7 +239,7 @@ DComplex LimbDarkenDiskShape::visibility(const Vector<Double>& uvw,
   return DComplex(calcVis(u, v, C::pi * frequency/C::c), 0.0);
 }
 
-void LimbDarkenDiskShape::visibility(Matrix<DComplex>& scale,
+void LimbDarkenedDiskShape::visibility(Matrix<DComplex>& scale,
                            const Matrix<Double>& uvw,
                            const Vector<Double>& frequency) const {
 
@@ -255,7 +252,7 @@ void LimbDarkenDiskShape::visibility(Matrix<DComplex>& scale,
   }
 }
 
-void LimbDarkenDiskShape::visibility(Vector<DComplex>& scale,
+void LimbDarkenedDiskShape::visibility(Vector<DComplex>& scale,
                            const Matrix<Double>& uvw,
                            const Double& frequency) const {
   DebugAssert(ok(), AipsError);
@@ -292,14 +289,14 @@ void LimbDarkenDiskShape::visibility(Vector<DComplex>& scale,
 }
 
 
-ComponentShape* LimbDarkenDiskShape::clone() const {
+ComponentShape* LimbDarkenedDiskShape::clone() const {
   DebugAssert(ok(), AipsError);
-  ComponentShape* tmpPtr = new LimbDarkenDiskShape(*this);
+  ComponentShape* tmpPtr = new LimbDarkenedDiskShape(*this);
   AlwaysAssert(tmpPtr != 0, AipsError);
   return tmpPtr;
 }
 
-Bool LimbDarkenDiskShape::ok() const {
+Bool LimbDarkenedDiskShape::ok() const {
   // The LogIO class is only constructed if an error is detected for
   // performance reasons. Both function static and file static variables
   // where considered and rejected for this purpose.
@@ -335,11 +332,11 @@ Bool LimbDarkenDiskShape::ok() const {
 
 
   // return a pointer to this object.
-const ComponentShape* LimbDarkenDiskShape::getPtr() const {
+const ComponentShape* LimbDarkenedDiskShape::getPtr() const {
     return this;
 }
 
-String LimbDarkenDiskShape::sizeToString() const {
+String LimbDarkenedDiskShape::sizeToString() const {
         return TwoSidedShape::sizeToString(
                 Quantity(itsMajValue, "rad"),
                 Quantity(itsMinValue, "rad"),
@@ -349,7 +346,7 @@ String LimbDarkenDiskShape::sizeToString() const {
 }
 
 //need to modify here
-Double LimbDarkenDiskShape::calcSample(const MDirection::MVType& compDirValue,
+Double LimbDarkenedDiskShape::calcSample(const MDirection::MVType& compDirValue,
                     const MDirection::MVType& dirVal,
                     const Double majRad, const Double minRad,
                     const Double pixValue) const {
@@ -367,7 +364,7 @@ Double LimbDarkenDiskShape::calcSample(const MDirection::MVType& compDirValue,
   return 0.0;
 }
 
-Double LimbDarkenDiskShape::calcVis(Double u, Double v, const Double factor) const {
+Double LimbDarkenedDiskShape::calcVis(Double u, Double v, const Double factor) const {
   u *= itsMinValue;
   v *= itsMajValue;
   const double r = hypot(u, v) * factor;
@@ -379,7 +376,7 @@ Double LimbDarkenDiskShape::calcVis(Double u, Double v, const Double factor) con
 }
 
 
-void LimbDarkenDiskShape::rotateVis(Double& u, Double& v,
+void LimbDarkenedDiskShape::rotateVis(Double& u, Double& v,
                         const Double cpa, const Double spa) {
   const Double utemp = u;
   u = u * cpa - v * spa;
