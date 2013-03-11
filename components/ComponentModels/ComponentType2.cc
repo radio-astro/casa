@@ -29,7 +29,7 @@
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
 #include <components/ComponentModels/DiskShape.h>
-#include <components/ComponentModels/LimbDarkenDiskShape.h>
+#include <components/ComponentModels/LimbDarkenedDiskShape.h>
 #include <components/ComponentModels/GaussianShape.h>
 #include <components/ComponentModels/PointShape.h>
 #include <components/ComponentModels/SpectralIndex.h>
@@ -52,7 +52,7 @@ construct(ComponentType::Shape shapeEnum) {
   case ComponentType::DISK:
     return new DiskShape;
   case ComponentType::LDISK:
-    return new LimbDarkenDiskShape;
+    return new LimbDarkenedDiskShape;
   default:
     return reinterpret_cast<ComponentShape*>(0);
   };

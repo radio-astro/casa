@@ -39,7 +39,7 @@ String ComponentType::name(ComponentType::Shape shapeEnum) {
   case ComponentType::DISK:
     return "Disk";
   case ComponentType::LDISK:
-    return "Limbdarkendisk";
+    return "Limbdarkeneddisk";
   default:
     return "Unknown";
   };
