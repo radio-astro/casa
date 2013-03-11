@@ -647,7 +647,6 @@ void MSMetaData::_getUnflaggedRowStats(
 			}
 		}
 	}
-
 	Vector<Int>::const_iterator aEnd = ant1.end();
 	Vector<Int>::const_iterator a1Iter = ant1.begin();
 	Vector<Int>::const_iterator a2Iter = ant2.begin();
@@ -674,7 +673,8 @@ void MSMetaData::_getUnflaggedRowStats(
             }
             else if (! anyTrue(flagsMatrix)) {
                 // do nothing. All channels are flagged for this row
-                continue;
+            	// do not put a continue though, because counters still must
+            	// incremented below
             }
             else {
                 // some channels are flagged, some aren't
@@ -691,7 +691,7 @@ void MSMetaData::_getUnflaggedRowStats(
                     else if (! anyTrue(corrRow)) {
                         // do nothing, all channels for this correlation
                         // have been flagged
-                        continue;
+                        // but allow fall through to iterator increments
                     }
                     else {
                         // some channels are flagged for this correlation, some aren't
@@ -724,7 +724,6 @@ void MSMetaData::_getUnflaggedRowStats(
 	}
 	nACRows = sum(Vector<Double>(fieldNACRows));
 	nXCRows = sum(Vector<Double>(fieldNXCRows));
-
 }
 
 void MSMetaData::_getUnflaggedRowStats(
@@ -738,6 +737,7 @@ void MSMetaData::_getUnflaggedRowStats(
 ) {
 	String taql = "select FLAG, ARRAY_ID, OBSERVATION_ID, DATA_DESC_ID, ANTENNA1, ANTENNA2, SCAN_NUMBER, FIELD_ID, FLAG_ROW from "
 		+ ms.tableName() + " where FLAG_ROW==True";
+
 	Table result(tableCommand(taql));
 	std::auto_ptr<ArrayColumn<Bool> > flags(
 		new ArrayColumn<Bool>(result, "FLAG")

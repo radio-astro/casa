@@ -264,7 +264,6 @@ Double MSMetaDataOnDemand::nUnflaggedRows() {
 	return nACRows + nXCRows;
 }
 Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType) {
-
 	if (cType == BOTH) {
 		return nUnflaggedRows();
 	}
@@ -1558,7 +1557,6 @@ void MSMetaDataOnDemand::_getUnflaggedRowStats(
 	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
 	std::set<uInt> a, b, c, d;
-
 	MSMetaData::_getUnflaggedRowStats(
 		nACRows, nXCRows, fieldNACRows,
 		fieldNXCRows, scanNACRows, scanNXCRows, *ant1,

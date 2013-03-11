@@ -304,8 +304,8 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	Int widthetime = 10;
 	Int widthFieldId = 5;
 	Int widthField = 20;
-	Int widthnrow = 7;
-	Int widthNUnflaggedRow = 10;
+	Int widthnrow = 10;
+	Int widthNUnflaggedRow = 13;
 	//Int widthInttim = 7;
 
 	// Set up iteration over OBSID and ARRID:
@@ -337,7 +337,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			datetime.replace(25+timeref.length(),1,")");
 			os << datetime;
 			os << "Scan  FldId FieldName "
-					<<"          nRows   nUnflRows   SpwIds   Average Interval(s)    ScanIntent" << endl;
+					<<"            nRows     nUnflRows   SpwIds   Average Interval(s)    ScanIntent" << endl;
 		}
 
 		/* CAS-2751. Sort the table by scan then field (not timestamp)
@@ -1270,8 +1270,8 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		Int widthDec   = 16;
 		Int widthType  =  8;
 		Int widthSrc   =  6;
-		Int widthnVis  =  8;
-		Int widthNUnflaggedRows = 11;
+		Int widthnVis  =  10;
+		Int widthNUnflaggedRows = 13;
 
 		outrec.define("nfields", Int(fieldId.nelements()));
 		if (verbose) {}  // null, always same output
