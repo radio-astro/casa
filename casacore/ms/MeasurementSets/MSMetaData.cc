@@ -658,8 +658,9 @@ void MSMetaData::_getUnflaggedRowStats(
 	Vector<Bool>::const_iterator flagIter = flagRow.begin();
 	uInt i = 0;
     uInt64 count = 0;
+    // a flag value of True means the datum is bad (flagged), so False => unflagged
 	while (a1Iter!=aEnd) {
-		if (*flagIter) {
+		if (! *flagIter) {
 			SpwProperties spwProp = spwInfo[dataDescIDToSpwMap[*dIter]];
 			Vector<Double> channelWidths(
 				Vector<Double>(spwProp.chanwidths)
@@ -667,11 +668,11 @@ void MSMetaData::_getUnflaggedRowStats(
 			const Matrix<Bool>& flagsMatrix(flags.get(i));
             count += flagsMatrix.size();
             Double x = 0;
-            if (allTrue(flagsMatrix)) {
+            if (! anyTrue(flagsMatrix)) {
                 // all channels are unflagged
                 x = 1;
             }
-            else if (! anyTrue(flagsMatrix)) {
+            else if (allTrue(flagsMatrix)) {
                 // do nothing. All channels are flagged for this row
             	// do not put a continue though, because counters still must
             	// incremented below
@@ -683,7 +684,10 @@ void MSMetaData::_getUnflaggedRowStats(
 			    Double bwSum = 0;
 
 			    for (uInt corr=0; corr<nCorrelations; corr++) {
-                    Vector<Bool> corrRow = flagsMatrix.row(corr);
+			    	// invert the meaning here, so that a True value
+			    	// in corrRow means the datum is good (unflagged)
+			    	// it will make the masked sum below more obvious
+                    Vector<Bool> corrRow = ! flagsMatrix.row(corr);
                     if (allTrue(corrRow)) {
                         // all channels for this correlation are unflagged
                         bwSum += spwProp.bandwidth;
