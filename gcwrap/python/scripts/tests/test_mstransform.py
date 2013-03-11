@@ -344,7 +344,11 @@ class test_Shape(test_base):
     '''Test the tileshape parameter'''
     def setUp(self):
         self.setUp_4ants()
-        
+
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf shape*.*ms')
+         
     def test_shape1(self):
         '''mstransform: default tileshape'''
         outputms = "shape1.ms"
@@ -385,6 +389,57 @@ class test_Shape(test_base):
         outtsh = th.getTileShape(outdm)
         
         self.assertTrue((inptsh==outtsh).all(), 'Tile shapes are different')
+        
+    def test_shape3(self):
+        '''mstransform: DATA and FLAG tileshapes should be the same'''
+        outputms = "shape3.ms"
+        inptsh = [4,10,1024]
+        mstransform(vis=self.vis, outputvis=outputms, createmms=False, tileshape=inptsh)
+                            
+        self.assertTrue(os.path.exists(outputms))
+                
+        # Get the tile shape for the DATA output
+        tblocal = tbtool()
+        tblocal.open(outputms)
+        outdm = tblocal.getdminfo()
+        tblocal.close()
+        outtsh = th.getTileShape(outdm)        
+        # And for the FLAG column
+        flagtsh = th.getTileShape(outdm, 'FLAG')        
+
+        self.assertTrue((outtsh==flagtsh).all(), 'Tile shapes are different')
+
+
+class test_Columns(test_base):
+    '''Test datacolumns'''
+    def setUp(self):
+        self.setUp_4ants()
+
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf col*.*ms')
+        
+    def test_col1(self):
+        '''mstransform: add a non-existing MODEL column'''
+        self.setUp_ngc5921()
+        outputms = "col1.ms"
+        mstransform(vis=self.vis, outputvis=outputms, datacolumn='DATA', realmodelcol=True)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        mcol = th.getColDesc(outputms, 'MODEL_DATA')
+        mkeys = mcol.keys()
+        self.assertTrue(mkeys.__len__()==0, 'Should not add MODEL_DATA column')
+
+    # This should change. It should not add a real model column, only a virtual one.        
+    def test_col2(self):
+        '''mstransform: add a real MODEL column '''
+        outputms = "col2.ms"
+        mstransform(vis=self.vis, outputvis=outputms, realmodelcol=True)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        mcol = th.getColDesc(outputms, 'MODEL_DATA')
+        mkeys = mcol.keys()
+        self.assertTrue(mkeys.__len__() > 0, 'Should add MODEL_DATA column')
         
 
 class test_MMS(test_base):
@@ -550,6 +605,7 @@ def suite():
             test_Hanning,
             test_FreqAvg,
             test_Shape,
+            test_Columns,
             test_MMS,
             test_Parallel,
             Cleanup]

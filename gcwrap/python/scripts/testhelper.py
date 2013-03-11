@@ -306,7 +306,9 @@ def getColDesc(table, colname):
     try:
         try:
             tb.open(table)            
-            coldesc = tb.getcoldesc(colname)
+            tcols = tb.colnames()
+            if tcols.__contains__(colname):
+                coldesc = tb.getcoldesc(colname)
         except:
             pass                        
     finally:
