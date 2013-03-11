@@ -330,7 +330,12 @@ class Imager
   Bool uvrange(const Double& uvmin, const Double& uvmax);
   
   // Sensitivity
-  Bool sensitivity(Quantity& pointsourcesens, Double& relativesens, Double& sumwt);
+  Bool sensitivity(Quantity& pointsourcesens, Double& relativesens, Double& sumwt,
+		   Matrix<Int>& mssChanSel,
+		   Vector<Vector<Int> >& nData,
+		   Vector<Vector<Double> >& sumwtChan,
+		   Vector<Vector<Double> >& sumwtsqChan,
+		   Vector<Vector<Double> >& sumInverseVarianceChan);
   
   // Make plain image + keep the complex image as well if complexImageName != "".
   Bool makeimage(const String& type, const String& imageName,
@@ -710,6 +715,7 @@ protected:
   Cube<Int> spwchansels_p;
   Matrix<Double> freqrange_p;
   Matrix<Double> mssFreqSel_p;
+  Matrix<Int> mssChanSel_p;
 
   Int numMS_p;
 

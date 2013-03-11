@@ -198,7 +198,7 @@ Imager::Imager()
   :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-     mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), 
+     mssFreqSel_p(), mssChanSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), 
       prev_image_id_p(0), prev_mask_id_p(0)
 {
   ms_p=0;
@@ -304,6 +304,7 @@ traceEvent(1,"Entering imager::defaults",25);
   freqrange_p.resize();
   numthreads_p=-1;
   mssFreqSel_p.resize();
+  mssChanSel_p.resize();
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif
@@ -316,7 +317,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
   : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-    mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
+    mssFreqSel_p(), mssChanSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
 
 {
 
@@ -338,7 +339,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 Imager::Imager(MeasurementSet& theMS, Bool compress)
   :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
-     mssFreqSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0),
+     mssFreqSel_p(), mssChanSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0),
      prev_image_id_p(0), prev_mask_id_p(0)
 {
   mssel_p=0;
@@ -425,6 +426,7 @@ Imager &Imager::operator=(const Imager & other)
     imageTileVol_p=other.imageTileVol_p;
     flatnoise_p=other.flatnoise_p;
     mssFreqSel_p.assign(other.mssFreqSel_p);
+    mssChanSel_p.assign(other.mssChanSel_p);
   }
   return *this;
 }
@@ -1482,8 +1484,10 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     // TT: Added sorting option in getChanList call 
     //     to accomodate changes related CAS-2521
     Matrix<Int> chansels=thisSelection.getChanList(NULL, 1, True);
+    mssChanSel_p.assign(chansels);
     mssFreqSel_p.resize();
     mssFreqSel_p=thisSelection.getChanFreqList(NULL, True);
+
     //cout<<"chansels="<<chansels<<endl;
     //convert the selection into flag
     uInt nms = 1;
@@ -2787,7 +2791,12 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 
 // Find the sensitivity
 Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
-		      Double& sumwt)
+			 Double& sumwt,
+			 Matrix<Int>& mssChanSel,
+			 Vector<Vector<Int> >& nData,
+			 Vector<Vector<Double> >& sumwtChan,
+			 Vector<Vector<Double> >& sumwtsqChan,
+			 Vector<Vector<Double> >& sumInverseVarianceChan)
 {
   if(!valid()) return False;
   LogIO os(LogOrigin("imager", "sensitivity()", WHERE));
@@ -2802,7 +2811,11 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
        << LogIO::POST;
     
     this->lock();
-    VisSetUtil::Sensitivity(*rvi_p, pointsourcesens, relativesens, sumwt);
+    cerr << "Freq selection = " << mssFreqSel_p << endl << mssChanSel_p << endl;
+    mssChanSel.assign(mssChanSel_p);
+
+    VisSetUtil::Sensitivity(*rvi_p, mssFreqSel_p, mssChanSel, pointsourcesens, relativesens, sumwt,
+			    nData, sumwtChan, sumwtsqChan, sumInverseVarianceChan);
     os << LogIO::NORMAL << "RMS Point source sensitivity  : " // Loglevel INFO
        << pointsourcesens.get("Jy").getValue() << " Jy/beam"
        << LogIO::POST;
