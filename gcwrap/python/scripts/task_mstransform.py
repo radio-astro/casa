@@ -34,6 +34,7 @@ class MSTHelper(ParallelTaskHelper):
         self._calScanList = None
         self._selectionScanList = None
         self.__spwSelection = self.__args['spw']
+        self.__spwList = None
         self.__ddidict = {}
         self._msTool = None
         self._tbTool = None
@@ -55,10 +56,8 @@ class MSTHelper(ParallelTaskHelper):
             elif k == 'outputvis' and isinstance(v, str):
                 # only one output MS
                 if v.isspace() or v.__len__() == 0:
-                    casalog.post('Please specify outputvis.','SEVERE')
                     raise ValueError, 'Please specify outputvis.'
                 elif os.path.exists(v):
-                    casalog.post("Output MS %s already exists - will not overwrite it."%v,'SEVERE')
                     raise ValueError, "Output MS %s already exists - will not overwrite it."%v                    
         
         return True 
@@ -110,7 +109,7 @@ class MSTHelper(ParallelTaskHelper):
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
 
-                
+
         return retval
         
 #    @dump_args
@@ -296,6 +295,8 @@ class MSTHelper(ParallelTaskHelper):
     def _createSPWSeparationCommands(self):
         # This method is to generate a list of commands to partition
         # the data based on SPW.
+
+        # Get a unique list of selected spws        
         self._selectMS()
         spwList = self._getSPWList()
         numSubMS = self._arg['numsubms']
@@ -308,6 +309,13 @@ class MSTHelper(ParallelTaskHelper):
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSPWs1)
         
+        # Validate the freqbin parameter
+        validbin = False
+        if self.__origpars['freqaverage'] and self.validateFreqBin():
+            # Partition freqbin in the same way
+            freqbinlist = self.__partition1(self.__origpars['freqbin'],numSubMS)
+            validbin = True
+        
         self.__ddistart = 0
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
@@ -316,6 +324,9 @@ class MSTHelper(ParallelTaskHelper):
                 mmsCmd['scan'] = ParallelTaskHelper.\
                                  listToCasaString(self._selectionScanList)            
             mmsCmd['spw'] = newspwsel[output]
+            if validbin:
+                mmsCmd['freqbin'] = freqbinlist[output]
+                
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
@@ -362,6 +373,13 @@ class MSTHelper(ParallelTaskHelper):
         partitionedSpws  = self.__partition1(spwList,numSpwPartitions)
         partitionedScans = self.__partition(scanList,numScanPartitions)
 
+        # Validate the freqbin parameter when it is a list
+        validbin = False
+        if self.__origpars['freqaverage'] and self.validateFreqBin():
+            # Partition freqbin in the same way
+            freqbinlist = self.__partition1(self.__origpars['freqbin'],numSpwPartitions)
+            validbin = True
+
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSpws)
 
@@ -369,7 +387,7 @@ class MSTHelper(ParallelTaskHelper):
         self.__ddidict[0] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, 0)
                                   
-        # Save the first spw ID in the dictionary
+        # Get the first spw ID from the dictionary
         self.__ddistart = 0
         spwid0 = newspwsel[0/numScanPartitions]
         for output in xrange(numSpwPartitions*numScanPartitions):
@@ -387,6 +405,8 @@ class MSTHelper(ParallelTaskHelper):
             mmsCmd['scan'] = ParallelTaskHelper.listToCasaString \
                              (partitionedScans[output%numScanPartitions])
             mmsCmd['spw'] = newspwsel[output/numScanPartitions]
+            if validbin:
+                mmsCmd['freqbin'] = freqbinlist[output/numScanPartitions]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
@@ -410,30 +430,10 @@ class MSTHelper(ParallelTaskHelper):
             
         # It returns a dictionary if there was any selection otherwise None
         self.__selectionFilter = self._getSelectionFilter()
-#        if not doCalibrationSelection and self._calScanList is not None:
-#            # We need to augment the selection to remove cal scans
-#            if self._selectionScanList is None:
-#                # Generate the selection scan list if needed
-#                if selectionFilter is not None:
-#                    self._msTool.msselect(selectionFilter)
-#                self._selectionScanList = self._getScanList()
-#                
-#                for scan in self._calScanList:
-#                    self._selectionScanList.remove(scan)
-#
-#            # Augment the selection
-#            if selectionFilter is None:
-#                selectionFilter = {}
-#            selectionFilter['scan'] = ParallelTaskHelper.listToCasaString\
-#                                      (self._selectionScanList)
 
         if self.__selectionFilter is not None:
             self._msTool.msselect(self.__selectionFilter)
 
-        # This is not necessary
-#        if doCalibrationSelection:
-#            calFilter = self._getCalibrationFilter()
-#            self._msTool.msselect(calFilter)
 
 #    @dump_args
     def _getScanList(self):
@@ -463,11 +463,12 @@ class MSTHelper(ParallelTaskHelper):
         
         # Now get the list of SPWs in the selected MS
         ddInfo = self._msTool.getspectralwindowinfo()
-        spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
+#        spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
+        self.__spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
 
         # Return a unique sorted list:
-        sorted = list(set(spwList))
-        sorted.sort()
+        sorted = list(set(self.__spwList))
+#        sorted.sort()
         return sorted
 
 #    @dump_args
@@ -631,7 +632,7 @@ class MSTHelper(ParallelTaskHelper):
 
             # deal with POINTING table
             if not self.pointingisempty:
-                print '******Dealing with POINTING table'
+#                print '******Dealing with POINTING table'
                 shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
                 # master subms gets a full copy of the original
                 shutil.copytree(self.ptab, mastersubms+'/POINTING') 
@@ -645,7 +646,7 @@ class MSTHelper(ParallelTaskHelper):
 
 #            # deal with SYSCAL table
             if not self.syscalisempty:
-                print '******Dealing with SYSCAL table'
+#                print '******Dealing with SYSCAL table'
                 shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
                 # master subms gets a full copy of the original
                 shutil.copytree(self.stab, mastersubms+'/SYSCAL') 
@@ -749,20 +750,32 @@ class MSTHelper(ParallelTaskHelper):
         return newdict
         
 #    @dump_args 
-    def freqAvg(self, **pars):
-        ''' Get the sub-parameters for freqaverage=True
-            which are freqbin and useweights'''
+    def validateFreqBin(self):
+        '''When freqbin is a list, it should have the
+           same size as the number of spws in selection.'''
         
-        for k,v in pars.items():
-            if k == "freqbin":
-#                if isinstance(v, list):
-#                    self.
-                fb = v 
-            elif k == "useweights":
-                wght = v
-        
-        # Validate the parameters
+        retval = True
+        fblist = self.__origpars['freqbin']
+        if isinstance(fblist,list) and fblist.__len__() > 1: 
+            if self.__spwList == None:           
+                msTool = mstool()
+                msTool.open(self.__origpars['vis'])
+                spwsel = self.__origpars['spw'] 
+                msTool.msselect({'spw':spwsel})
+                ddInfo = msTool.getspectralwindowinfo()
+                self.__spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
+                msTool.close()
+                    
+            if self.__spwList.__len__() != fblist.__len__():
+                retval = False
+#                casalog.post('Number of freqbin is different of number of spw','ERROR')
+                raise ValueError, 'Number of freqbin is different of number of spw'                
+                
+        else:
+            retval = False
 
+        return retval
+    
 #    @dump_args
     def defaultRegridParams(self):
         '''Reset the default values of the regridms transformation parameters based on the mode'''
@@ -861,7 +874,11 @@ def mstransform(
     mth = MSTHelper(locals())
     
     # Validate input and output parameters
-    mth.setupIO()
+    try:
+        mth.setupIO()
+    except Exception, instance:
+        casalog.post('%s'%instance,'ERROR')
+        return False
     
 
     # Process in parallel
@@ -892,10 +909,14 @@ def mstransform(
         # Get a cluster
         mth.setupCluster()
         
-        # Do the processing. 
-        mth.go()
+        # Do the processing.
+        try: 
+            mth.go()
+        except Exception, instance:
+            casalog.post('%s'%instance,'ERROR')
+            return False
         
-        return 
+        return True 
 
         
     # Create a local copy of the MSTransform tool
@@ -927,6 +948,7 @@ def mstransform(
                 raise ValueError, 'When tileshape has one element, it should be either 0 or 1.'
                 
         elif tileshape.__len__() != 3:
+            # The 3 elements are: correlations, channels, rows
             raise ValueError, 'Parameter tileshape must have 1 or 3 elements.'
             
         config['tileshape'] = tileshape                
@@ -938,6 +960,9 @@ def mstransform(
             casalog.post('Parse frequency averaging parameters')
             config['freqaverage'] = True
             # freqbin can be an int or a list of int that will apply one to each spw
+#            if not mth.validateFreqBin():
+#                raise ValueError, 'Number of freqbin is different of number of spw'
+            mth.validateFreqBin()
             config['freqbin'] = freqbin
             config['useweights'] = useweights
         if hanning:
@@ -989,7 +1014,8 @@ def mstransform(
                     
     except Exception, instance:
         mtlocal.done()
-        raise Exception, instance
+        casalog.post('%s'%instance,'ERROR')
+        return False
 
     # Update the FLAG_CMD sub-table to reflect any spw/channels selection
     if ((spw != '') and (spw != '*')) or freqaverage == True:

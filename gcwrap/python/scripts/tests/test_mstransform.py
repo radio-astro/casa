@@ -9,10 +9,6 @@ import testhelper as th
 from recipes.listshapes import listshapes
 from parallel.parallel_task_helper import ParallelTaskHelper
 
-
-# Add a cluster-less mode to by-pass parallel processing for MMSs
-#if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
-#    ParallelTaskHelper.bypassParallelProcessing(1)
     
 # Define the root for the data files
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
@@ -71,7 +67,7 @@ class test_Combspw1(test_base):
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf combspw*.*ms')
+        os.system('rm -rf combspw*.*ms inpmms*.*ms combcvel*ms')
                 
     def test_combspw1_1(self):
         '''mstransform: Combine four spws into one'''
@@ -96,8 +92,8 @@ class test_Combspw1(test_base):
         
         # Compare with cvel results
         default(cvel)
-        cvel(vis=self.vis, outputvis='combcvel1.ms', spw='0:60~63,1:60~63')
-        ret = th.verifyMS('combcvel1.ms', 1, 68, 0)
+        cvel(vis=self.vis, outputvis='combcvel12.ms', spw='0:60~63,1:60~63')
+        ret = th.verifyMS('combcvel12.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
 
     def test_combspw1_3(self):
@@ -118,6 +114,29 @@ class test_Combspw1(test_base):
         
         ret = th.verifyMS(outputms, 2, 1, 0)
         self.assertTrue(ret[0],ret[1])
+
+    def test_combspw1_4(self):
+        '''mstransform: Combine some channels of two spws using MMS input'''
+        # same test as test_combspw1_2
+        mmsfile = "inpmms14.mms"
+        # First create an MMS
+        mstransform(vis=self.vis, outputvis=mmsfile, createmms=True)
+        
+        # Now do the same as in test_combspw1_2. Datacolumn moved to DATA
+        outputms = "combspw14.ms"
+        mstransform(vis=mmsfile, outputvis=outputms, combinespws=True, spw='0:60~63,1:60~63',
+                    datacolumn='data')
+        self.assertTrue(os.path.exists(outputms))
+        
+        # The spws contain gaps, therefore the number of channels is bigger
+        ret = th.verifyMS(outputms, 1, 68, 0)
+        self.assertTrue(ret[0],ret[1])
+        
+        # Compare with cvel results
+        default(cvel)
+        cvel(vis=self.vis, outputvis='combcvel14.ms', spw='0:60~63,1:60~63')
+        ret = th.verifyMS('combcvel14.ms', 1, 68, 0)
+        self.assertTrue(ret[0],ret[1])
         
 
 class test_Regridms1(test_base):
@@ -129,7 +148,7 @@ class test_Regridms1(test_base):
     def tearDown(self):
         pass
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf reg*.*ms')
+        os.system('rm -rf reg*.*ms testmms*ms')
         
     def test_regrid1_1(self):
         '''mstransform: Default of regridms parameters'''
@@ -138,7 +157,7 @@ class test_Regridms1(test_base):
         mstransform(vis=self.vis, outputvis=outputms, regridms=True)
         self.assertTrue(os.path.exists(outputms))
         
-        # The output should be the same as the input
+        # The regriding should be the same as the input
         for i in range(16):
             ret = th.verifyMS(outputms, 16, 64, i)
             self.assertTrue(ret[0],ret[1])
@@ -155,6 +174,24 @@ class test_Regridms1(test_base):
             ret = th.verifyMS(outputms, 4, 64, i)
             self.assertTrue(ret[0],ret[1])
 
+    def test_regrid1_3(self):
+        '''mstransform: Default regridms with spw selection using input MMS'''
+        # same as test_regrid1_1
+        mmsfile = 'testmms13.mms'
+        # Create input MMS
+        mstransform(vis=self.vis, outputvis=mmsfile, createmms=True, parallel=True,
+                    separationaxis='scan')
+        
+        outputms = "reg13.ms"
+        mstransform(vis=mmsfile, outputvis=outputms, regridms=True, spw='1,3,5,7',
+                    datacolumn='DATA')
+        self.assertTrue(os.path.exists(outputms))
+        
+        # The regriding should be the same as the input
+        for i in range(4):
+            ret = th.verifyMS(outputms, 4, 64, i)
+            self.assertTrue(ret[0],ret[1])
+
 
 class test_Regridms3(test_base):
     '''Tests for regridms using Jupiter MS'''
@@ -165,7 +202,7 @@ class test_Regridms3(test_base):
     def tearDown(self):
         pass
         os.system('rm -rf '+ self.vis)
-#        os.system('rm -rf reg*.ms')
+        os.system('rm -rf reg*.ms')
 
 # Uncomment after seg fault is fixed
 #    def test_regrid3_1(self):
@@ -192,7 +229,7 @@ class test_Regridms3(test_base):
 
 
 class test_Hanning(test_base):
-    
+    '''Test for hanning transformation'''
     def setUp(self):
         self.setUp_ngc5921()
         
@@ -303,8 +340,9 @@ class test_Hanning(test_base):
         self.assertTrue(flag_col['r1'][0][61] == [True])
         self.assertTrue(flag_col['r1'][0][62] == [True])
 
+
 class test_FreqAvg(test_base):
-    
+    '''Tests for frequency averaging'''
     def setUp(self):
         self.setUp_g19()
         
@@ -340,6 +378,130 @@ class test_FreqAvg(test_base):
         ret = th.verifyMS(outputms, 1, 1, 0)
         self.assertTrue(ret[0],ret[1])        
 
+    def test_freqavg4(self):
+        '''mstranform: Average using different bins for several spws'''
+        outputms = "favg4.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', freqaverage=True,
+                    freqbin=[128,4,10])
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Output should be:
+        # spw=0 1 channel
+        # spw=1 32 channels
+        # spw=3 13 channels
+        ret = th.verifyMS(outputms, 3, 1, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 32, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 13, 2, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_freqavg5(self):
+        '''mstranform: Different number of spws and freqbin. Expected error'''
+        outputms = "favg5.ms"
+        ret = mstransform(vis=self.vis, outputvis=outputms, spw='2,10', freqaverage=True,
+                    freqbin=[10,20,4])
+                            
+        self.assertFalse(ret)
+
+    def test_freqavg6(self):
+        '''mstranform: Average all channels of one spw, save as an MMS'''
+        # same as test_freqavg3
+        outputms = "favg6.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='23', freqaverage=True, freqbin=128,
+                    createmms=True)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        ret = th.verifyMS(outputms, 1, 1, 0)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_freqavg7(self):
+        '''mstranform: Average using different bins for several spws, output MMS'''
+        # same as test_freqavg4
+        outputms = "favg7.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', freqaverage=True,
+                    freqbin=[128,4,10], createmms=True, separationaxis='scan')
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Output should be:
+        # spw=0 1 channel
+        # spw=1 32 channels
+        # spw=3 13 channels
+        ret = th.verifyMS(outputms, 3, 1, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 32, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 13, 2, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_freqavg8(self):
+        '''mstranform: Average using different bins for several spws, output MMS'''
+        # same as test_freqavg4
+        outputms = "favg8.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', freqaverage=True,
+                    freqbin=[128,4,10], createmms=True, separationaxis='spw',numsubms=2)
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Output should be:
+        # spw=0 1 channel
+        # spw=1 32 channels
+        # spw=3 13 channels
+        ret = th.verifyMS(outputms, 3, 1, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 32, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 13, 2, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_freqavg9(self):
+        '''mstranform: Average using different bins and a channel selection, output MMS'''
+        outputms = "favg9.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='2,12,10:1~10', freqaverage=True,
+                    freqbin=[32,128,5], createmms=True, separationaxis='spw')
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Output should be:
+        # spw=0 4 channels
+        # spw=1 1 channel
+        # spw=2 2 channels
+        ret = th.verifyMS(outputms, 3, 4, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 1, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 2, 2, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+
+    def test_freqavg10(self):
+        '''mstranform: Average using different bins, channel selection, both axes, output MMS'''
+        outputms = "favg10.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='2,12,10:1~10', freqaverage=True,
+                    freqbin=[32,128,5], createmms=True, separationaxis='both')
+                            
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Should create 6 subMSs
+        mslocal = mstool()
+        mslocal.open(thems=outputms)
+        sublist = mslocal.getreferencedtables()
+        mslocal.close()
+        self.assertEqual(sublist.__len__(), 6, 'Should have created 6 subMSs')
+        
+        # Output should be:
+        # spw=0 4 channels
+        # spw=1 1 channel
+        # spw=2 2 channels
+        ret = th.verifyMS(outputms, 3, 4, 0, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 1, 1, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 3, 2, 2, ignoreflags=True)
+        self.assertTrue(ret[0],ret[1])        
+
+
 class test_Shape(test_base):
     '''Test the tileshape parameter'''
     def setUp(self):
@@ -370,8 +532,7 @@ class test_Shape(test_base):
         outtsh = th.getTileShape(outdm)
         
         # Compare both
-        self.assertTrue((inptsh==outtsh).all(), 'Tile shapes are different')
-                
+        self.assertTrue((inptsh==outtsh).all(), 'Tile shapes are different')                
 
     def test_shape2(self):
         '''mstransform: custom tileshape'''
@@ -411,7 +572,7 @@ class test_Shape(test_base):
 
 
 class test_Columns(test_base):
-    '''Test datacolumns'''
+    '''Test different datacolumns'''
     def setUp(self):
         self.setUp_4ants()
 
@@ -441,8 +602,59 @@ class test_Columns(test_base):
         mkeys = mcol.keys()
         self.assertTrue(mkeys.__len__() > 0, 'Should add MODEL_DATA column')
         
+        
+class test_SeparateSPWs(test_base):
+    '''Test the nspw parameter to separate spws'''
+    def setUp(self):
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf separate*.*ms')
+        
+    def test_sep1(self):
+        '''mstransform: separate one spw into 4, using default regrid parameters'''
+        outputms = "separate1.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='2', regridms=True, nspw=4)
+        self.assertTrue(os.path.exists(outputms))
 
+        # Should create 4 spws with 16 channels each
+        ret = th.verifyMS(outputms, 4, 16, 0)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 4, 16, 1)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 4, 16, 2)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 4, 16, 3)
+        self.assertTrue(ret[0],ret[1])        
+        
+    def test_sep2(self):
+        '''mstransform: separate three spws into 2, using default regrid parameters'''
+        outputms = "separate2.ms"
+        mstransform(vis=self.vis, outputvis=outputms, spw='2,4,6', regridms=True, nspw=2)
+        self.assertTrue(os.path.exists(outputms))
+
+        # Should create 2 spws with ?96 channels each
+        ret = th.verifyMS(outputms, 2, 96, 0)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 2, 96, 1)
+        self.assertTrue(ret[0],ret[1])        
+       
+    def test_sep3(self):
+        '''mstransform: separate 16 spws into 4 with 10 channels each'''
+        outputms = "separate3.ms"
+        mstransform(vis=self.vis, outputvis=outputms, regridms=True, nspw=4, nchan=10)
+        self.assertTrue(os.path.exists(outputms))
+
+        # Should create 4 spws with 10 channels each
+        ret = th.verifyMS(outputms, 4, 10, 0)
+        self.assertTrue(ret[0],ret[1])        
+        ret = th.verifyMS(outputms, 4, 10, 3)
+        self.assertTrue(ret[0],ret[1])        
+   
+         
 class test_MMS(test_base):
+    '''Several tests that create an MMS'''
     def setUp(self):
         self.setUp_4ants()
         
@@ -462,8 +674,7 @@ class test_MMS(test_base):
         # spw=5 should have only 10 channels
         ret = th.verifyMS(outputms, 6, 10, 5,ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
-               
-        
+                       
     def test_mms2(self):
         '''mstransform: create MMS with spw/scan separation and channel selections'''
         outputms = "testmms2.mms"
@@ -502,6 +713,7 @@ class test_MMS(test_base):
         
         # spw=5 should be spw=1 after consolidation, with 10 channels
         ret = th.verifyMS(outputms, 7, 10, 1, ignoreflags=True)
+
             
 class test_Parallel(test_base):
     '''Run some of the same tests in parallel'''
@@ -587,8 +799,8 @@ class test_Parallel(test_base):
 class Cleanup(test_base):
     
     def tearDown(self):
-        os.system('rm -rf ngc5921.*ms*')
-        os.system('rm -rf Four_ants_3C286.*ms*')
+        os.system('rm -rf ngc5921.*ms* jupiter6cm.demo*')
+        os.system('rm -rf Four_ants_3C286.*ms* g19_d2usb_targets*')
         os.system('rm -rf comb*.*ms* reg*.*ms hann*.*ms favg*.*ms')
         os.system('rm -rf testmms*.*ms parallel*.*ms')
 
@@ -606,6 +818,7 @@ def suite():
             test_FreqAvg,
             test_Shape,
             test_Columns,
+            test_SeparateSPWs,
             test_MMS,
             test_Parallel,
             Cleanup]
