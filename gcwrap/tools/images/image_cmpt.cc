@@ -67,6 +67,7 @@
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 #include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
@@ -3116,10 +3117,11 @@ bool image::twopointcorrelation(
 			*_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
+		std::auto_ptr<ImageInterface<Float> > clone(_image->getImage()->cloneII());
 		std::auto_ptr<ImageInterface<Float> > tmpIm(
-			_image->subimage(
-				outfile, *regionRec, mask, dropDegenerateAxes,
-				overwrite, list, stretch
+			SubImageFactory<Float>::createImage(
+				*clone, outfile, *regionRec,
+				mask, dropDegenerateAxes, overwrite, list, stretch
 			)
 		);
 		image *res = wantreturn ? new image(tmpIm.get()) : 0;
