@@ -2,7 +2,7 @@
 #define _ATM_REFRACTIVEINDEX_H
 /*******************************************************************************
  * ALMA - Atacama Large Millimiter Array
- * (c) Institut de Radioastronomie Millimetrique, 2009
+ * (c) Instituto de Estructura de la Materia, 2009
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMRefractiveIndex.h,v 1.5.24.1 2011/03/03 11:15:11 dbroguie Exp $"
+ * "@(#) $Id: ATMRefractiveIndex.h,v 1.7 2011/11/22 18:08:04 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------

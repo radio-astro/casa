@@ -2,7 +2,7 @@
 #define _ATM_WATERVAPORRADIOMETER_H
 /*******************************************************************************
  * ALMA - Atacama Large Millimiter Array
- * (c) Institut de Radioastronomie Millimetrique, 2009
+ * (c) Instituto de Estructura de la Materia, 2009
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMWaterVaporRadiometer.h,v 1.6 2010/02/19 01:37:49 dbroguie Exp $"
+ * "@(#) $Id: ATMWaterVaporRadiometer.h,v 1.7 2011/11/22 18:08:05 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------

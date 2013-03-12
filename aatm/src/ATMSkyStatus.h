@@ -2,7 +2,7 @@
 #define _ATM_SKYSTATUS_H
 /*******************************************************************************
  * ALMA - Atacama Large Millimiter Array
- * (c) Institut de Radioastronomie Millimetrique, 2009
+ * (c) Instituto de Estructura de la Materia, 2009
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMSkyStatus.h,v 1.9 2010/09/02 22:44:27 dbroguie Exp $"
+ * "@(#) $Id: ATMSkyStatus.h,v 1.10 2011/11/22 18:08:04 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------

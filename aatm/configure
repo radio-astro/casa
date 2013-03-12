@@ -2225,7 +2225,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-AATM_LT_VERSION="3:2:0"
+AATM_LT_VERSION="3:3:0"
 
 
 

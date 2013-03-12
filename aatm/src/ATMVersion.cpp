@@ -14,6 +14,6 @@ std::string getVersion() {return "0.5.0";}
 
 std::string getTag() {return "ATM-0_5_0";}
 
-std::string getALMARelease() {return "ALMA-9_0_R2";}
+std::string getALMARelease() {return "ALMA-9_1R4";}
 
 ATM_NAMESPACE_END

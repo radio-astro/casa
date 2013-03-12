@@ -2,7 +2,7 @@
 #define _ATM_COMMON_H_
 /*******************************************************************************
  * ALMA - Atacama Large Millimiter Array
- * (c) Institut de Radioastronomie Millimetrique, 2010
+ * (c) Instituto de Estructura de la Materia, 2010
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMCommon.h,v 1.1 2010/02/08 17:37:52 jroche Exp $"
+ * "@(#) $Id: ATMCommon.h,v 1.2 2011/11/22 18:08:03 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------

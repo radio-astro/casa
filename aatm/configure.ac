@@ -14,8 +14,9 @@ dnl aatm-0.4.3 libatm 2:3:0
 dnl aatm-0.5 libatm 3:0:0
 dnl aatm-0.5(+fix) libaatm 3:1:0
 dnl aatm-0.5(+ fix + update ALMA release version) libaatm 3:2:0
+dnl aatm-0.5(+ update ALMA release version) libaatm 3:3:0
 
-AATM_LT_VERSION="3:2:0"
+AATM_LT_VERSION="3:3:0"
 AC_SUBST(AATM_LT_VERSION)
 
 

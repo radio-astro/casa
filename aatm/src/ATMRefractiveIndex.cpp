@@ -1,6 +1,6 @@
 /*******************************************************************************
  * ALMA - Atacama Large Millimiter Array
- * (c) Institut de Radioastronomie Millimetrique, 2009
+ * (c) Instituto de Estructura de la Materia, 2009
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMRefractiveIndex.cpp,v 1.10.4.1 2011/03/03 15:17:09 dbroguie Exp $"
+ * "@(#) $Id: ATMRefractiveIndex.cpp,v 1.12 2011/11/22 18:08:07 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------

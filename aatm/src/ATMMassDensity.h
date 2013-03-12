@@ -2,7 +2,7 @@
 #define _ATM_MASSDENSITY_H
 /*******************************************************************************
  * ALMA - Atacama Large Millimiter Array
- * (c) Institut de Radioastronomie Millimetrique, 2009
+ * (c) Instituto de Estructura de la Materia, 2009
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  *
- * "@(#) $Id: ATMMassDensity.h,v 1.5 2010/02/19 01:10:07 dbroguie Exp $"
+ * "@(#) $Id: ATMMassDensity.h,v 1.6 2011/11/22 18:08:03 jroche Exp $"
  *
  * who       when      what
  * --------  --------  ----------------------------------------------
