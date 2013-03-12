@@ -127,6 +127,11 @@ mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', spw='0', field=
             regridms=True, nchan=2, mode='frequency', width='3MHz', start='115GHz', 
             outframe='BARY', phasecenter=1)
 \end{verbatim}
+\item Set a custom tile shape for the output MS using the parameter tileshape. This will
+set the tileshape to 4 correlations, 64 channels and 1024 rows.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', tileshape=[4,64,1024])
+\end{verbatim}
 
 
 
@@ -147,9 +152,6 @@ These notes should become part of the real documentation later. For the moment t
 only notes to remind me of details of the implementation.
 
 \begin{enumerate}
-\item phasecenter: (int) or (str). As int, it gives the FIELD ID for the mosaic center. If a string,
-it gives the center coordinate, e.g. 'J2000 12h56m43.88s +21d41m00.1s'. Default is '', which means, the 
-first selected field.
        
 \item 
 \end{enumerate}
