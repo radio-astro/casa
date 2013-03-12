@@ -2334,7 +2334,6 @@ void Region::updateHistogramRegion(){
 
 std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 	std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
-
 	if( wc_==0 ) return region_statistics;
 
 
@@ -2362,23 +2361,20 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 		}
 
 		try {
-			//We should display the region statistics for any
-			//image that is registered.
-			/*if ( ! padd->conformsTo(*wc_) ){
-					continue;
-				}*/
+
 
 			ImageInterface<Float> *image = padd->imageinterface( );
 
 			if ( image == 0 ) continue;
 
-			String full_image_name = image->name(false);
-			std::map<String,bool>::iterator repeat = processed.find(full_image_name);
-			if (repeat != processed.end()) continue;
-			processed.insert(std::map<String,bool>::value_type(full_image_name,true));
-
-			if ( imageregion.get( ) == NULL  ) continue;
 			if ( name_ != "polyline" ){
+				String full_image_name = image->name(false);
+				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				if (repeat != processed.end()) continue;
+				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+
+				if ( imageregion.get( ) == NULL  ) continue;
+
 				RegionInfo::stats_t *dd_stats = getLayerStats(padd,image,*imageregion);
 				if ( dd_stats ) {
 					dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
@@ -2386,6 +2382,7 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 				}
 			}
 			else {
+				get_image_region( dd );
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
 				region_statistics->push_back( SliceRegionInfo( image->name(true), dd_stats));
 			}

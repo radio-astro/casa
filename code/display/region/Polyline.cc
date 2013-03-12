@@ -106,17 +106,26 @@ void Polyline::initPlot(){
 	}
 }
 
+
 void Polyline::addPlot(QWidget* parent){
 	slicePlot -> setParent( parent );
 	QLayout* layout = new QHBoxLayout();
 	layout->addWidget( slicePlot );
 	parent->setLayout( layout );
 	connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
-		const QList<double>&,const QList<int> &, const QList<int> &)), this,
-		SLOT(polyLineRegionUpdate(  int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-						const QList<int> &, const QList<int> & )));
+				const QList<double>&,const QList<int> &, const QList<int> &)), this,
+				SLOT(polyLineRegionUpdate(  int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+								const QList<int> &, const QList<int> & )));
 	connect( this, SIGNAL(regionChange( viewer::Region *, std::string )), this,
-			SLOT(polyLineRegionChanged( viewer::Region*, std::string )));
+					SLOT(polyLineRegionChanged( viewer::Region*, std::string )));
+	QList<int> pixelX;
+	QList<int> pixelY;
+	QList<double> worldX;
+	QList<double> worldY;
+	viewer::region::RegionTypes type;
+	fetch_details( type, pixelX, pixelY, worldX, worldY );
+	polyLineRegionUpdate( type, viewer::region::RegionChangeCreate,
+			worldX, worldY, pixelX, pixelY);
 }
 
 void Polyline::polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
@@ -1090,6 +1099,7 @@ ImageRegion *Polyline::get_image_region( DisplayData *dd ) const {
 			ImageInterface<float>* sliceImage = padd->imageinterface( );
 			if ( sliceImage != NULL ){
 				slicePlot->setImage( sliceImage );
+
 			}
 		}
 	}

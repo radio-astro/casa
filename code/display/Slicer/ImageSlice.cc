@@ -253,13 +253,13 @@ void ImageSlice::addPlotCurve( QwtPlot* plot){
 		cornerCountPerSegment = cornerCount / segmentCount;
 	}
 
-	double lastX = 0;
+	double xIncr = 0;
 	for ( int i = 0; i < segmentCount; i++ ){
 
 		SliceSegment* sliceSegment = segments[i];
 		QVector<double> xValues;
 		if ( xAxisChoice == SliceStatisticsFactory::DISTANCE ){
-			xValues = sliceWorker->getDistances( i );
+			xValues = sliceWorker->getDistances( i, xIncr );
 
 		}
 		else if ( xAxisChoice == SliceStatisticsFactory::X_POSITION ){
@@ -279,7 +279,10 @@ void ImageSlice::addPlotCurve( QwtPlot* plot){
 			addCorner( xValues[cornerIndex], pixels[cornerIndex], plot );
 		}
 
-		lastX = xValues[xValues.size() - 1];
+		int xCount = xValues.size();
+		if ( xCount > 0 ){
+			xIncr = xValues[xCount - 1] - xValues[0];
+		}
 	}
 
 }
