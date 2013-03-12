@@ -1,4 +1,3 @@
-#
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
 #
@@ -110,6 +109,8 @@ install (FILES
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImageMaskAttacher.h
+    ImageAnalysis/ImageMaskAttacher.tcc
 	ImageAnalysis/ImageMetaData.h
     ImageAnalysis/ImageMetaData.tcc
 	ImageAnalysis/ImageMoments.h
@@ -175,7 +176,7 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFFT.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
-casa_add_assay( imageanalysis ImageAnalysis/test/tImageHeader.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageMetaData.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePolarimetry.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageSourceFinder.cc )

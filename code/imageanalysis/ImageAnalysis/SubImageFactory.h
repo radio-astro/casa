@@ -94,6 +94,14 @@ public:
       const Bool extendMask=False
   );
 
+  // create a PagedImage is outfile is not blank or a SubImage if it is.
+  static ImageInterface<Float>* createImage(
+	  ImageInterface<T>& image,
+	  const String& outfile, Record& Region,
+	  const String& mask, const Bool dropDegenerateAxes,
+	  const Bool overwrite, const Bool list, const Bool extendMask
+  );
+
   private:
     SubImageFactory<T> (); 
 };

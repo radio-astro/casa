@@ -432,12 +432,13 @@ class ImageAnalysis
         const Bool overwrite=False, const Bool stretch=False
     );
 
+    /*
     ImageInterface<Float> * subimage(const String& outfile, Record& region, 
                                      const String& mask, 
                                      const Bool dropdeg = False, 
                                      const Bool overwrite = False, 
                                      const Bool list = True, const Bool extendMask=False);
-
+*/
     Record summary(
     	const String& doppler = "RADIO",
     	const Bool list = True,
@@ -633,6 +634,7 @@ class ImageAnalysis
                           casa::LogIO& os, casa::Bool log=casa::True,
                           casa::Bool overwrite=casa::False);
     
+    /*
 
     // Make a mask and define it in the image.
     static Bool makeMask(casa::ImageInterface<Float>& out,
@@ -640,7 +642,7 @@ class ImageAnalysis
                         Bool init, Bool makeDefault,
                         LogIO& os, Bool list);
 
-
+*/
 
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*
