@@ -609,7 +609,7 @@ int main(int argc,  char* argv[])
 {
   using namespace boost::program_options;
 
-  int rval = 0;
+  int rval = -2;
 
   options_description desc("Allowed options");
   positional_options_description p;
@@ -655,73 +655,82 @@ int main(int argc,  char* argv[])
 
   std::set<size_t> useID=LibAIR::skyStateIDs(ms);
 
-  std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
-
-  boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI));
-
-  d->offsetTime(vm["toffset"].as<double>());
-
-  if (vm.count("smooth"))
-  {
-    smoothWVR(*d, vm["smooth"].as<int>());
-  }
-
-  d.reset(LibAIR::filterState(*d, useID));
-
   std::set<int> wvrflag;
-  // Flag and interpolate
+  // Prepare flagging and interpolation
   if (vm.count("wvrflag"))
   {
-    wvrflag=getAntPars("wvrflag", vm, ms);    
+     wvrflag=getAntPars("wvrflag", vm, ms);    
   }
   LibAIR::aname_t anames=LibAIR::getAName(ms);
   std::set<int> nowvr=NoWVRAnts(anames);
-
+  
   std::set<int> interpwvrs(wvrflag);
   interpwvrs.insert(nowvr.begin(), nowvr.end());
-  flagInterp(ms,
-             interpwvrs,
-             *d);
 
-  LibAIR::ArrayGains g(d->g_time(), 
-		       d->g_el(),
-		       d->g_state(),
-		       d->g_field(),
-		       d->g_source(),
-		       d->nWVRs);
+  int iterations = 0;
 
-  boost::scoped_ptr<LibAIR::dTdLCoeffsBase>  coeffs;
+  while(rval<0 && iterations<2){
 
-  // These are the segments on which coefficients are re-calculated
-  std::vector<std::pair<double, double> >  fb;
+     iterations++;
 
-  if ( vm.count("cont") )
-  {
-    std::cout<<"[Output from \"cont\" option has not yet been updated]"
-	     <<std::endl;
-    coeffs.reset(LibAIR::SimpleSingleCont(*d));
-  }
-  else
-  {
-    LibAIR::ALMAAbsInpL inp;
-    if (vm.count("segsource"))
-    {
-      std::vector<int> flds;
-      std::vector<double> time;
-      std::vector<int> src;
-      LibAIR::fieldIDs(ms, 
-		       time,
-		       flds,
-		       src,
-		       sortedI);
-      std::vector<std::set<size_t> >  tiedi=tiedIDs(tied, ms);
-      printTied(tied, tiedi);
-      LibAIR::fieldSegmentsTied(time,
-				src,
-				tiedi,
-				fb);
-      //printFieldSegments(fb, time[0]);
+     std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
 
+     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, sortedI));
+     
+     d->offsetTime(vm["toffset"].as<double>());
+     
+     if (vm.count("smooth"))
+     {
+	smoothWVR(*d, vm["smooth"].as<int>());
+     }
+     
+     d.reset(LibAIR::filterState(*d, useID));
+
+     // Flag and interpolate
+     flagInterp(ms,
+		interpwvrs,
+		*d);
+     
+     LibAIR::ArrayGains g(d->g_time(), 
+			  d->g_el(),
+			  d->g_state(),
+			  d->g_field(),
+			  d->g_source(),
+			  d->nWVRs);
+     
+     boost::scoped_ptr<LibAIR::dTdLCoeffsBase>  coeffs;
+     
+     // These are the segments on which coefficients are re-calculated
+     std::vector<std::pair<double, double> >  fb;
+     
+     if ( vm.count("cont") )
+     {
+	std::cout<<"[Output from \"cont\" option has not yet been updated]"
+		 <<std::endl;
+	coeffs.reset(LibAIR::SimpleSingleCont(*d));
+     }
+     else
+     {
+	
+	LibAIR::ALMAAbsInpL inp;
+	if (vm.count("segsource"))
+	{
+	   std::vector<int> flds;
+	   std::vector<double> time;
+	   std::vector<int> src;
+	   LibAIR::fieldIDs(ms, 
+			    time,
+			    flds,
+			    src,
+			    sortedI);
+	   std::vector<std::set<size_t> >  tiedi=tiedIDs(tied, ms);
+	   printTied(tied, tiedi);
+	   LibAIR::fieldSegmentsTied(time,
+				     src,
+				     tiedi,
+				     fb);
+	   //printFieldSegments(fb, time[0]);
+	   
 //       { // debugging output
 // 	std::vector<double> tt(d->g_time());
 // 	std::vector<double> te(d->g_el());
@@ -747,155 +756,191 @@ int main(int argc,  char* argv[])
 // 	}
 //       }
 
-      inp=FieldMidPointI(*d,
-			 time,
-			 fb,
-			 useID);
-
+	   inp=FieldMidPointI(*d,
+			      time,
+			      fb,
+			      useID);
+	    
 //      std::cerr << inp << std::endl;
+	    
+	}
+	else
+	{
+	   const size_t n=vm["nsol"].as<int>();
+	   inp=LibAIR::MultipleUniformI(*d, 
+					n,
+					useID);
+	}
+	
+	if (vm.count("sourceflag"))
+	{
+	   boost::tie(inp,fb)=filterInp(inp,
+					fb,
+					vm["sourceflag"].as<std::vector<std::string> >(),
+					ms);
+	}
+	
+//	std::cout<<inp<<std::endl;
+	
+	std::cerr<<"Calculating the coefficients now...";
+	boost::ptr_list<LibAIR::ALMAResBase> rlist;
+	std::vector<int> problemAnts;
 
-    }
-    else
-    {
-      const size_t n=vm["nsol"].as<int>();
-      inp=LibAIR::MultipleUniformI(*d, 
-				   n,
-				   useID);
-    }
+	rval = 0;
 
-    if (vm.count("sourceflag"))
-    {
-      boost::tie(inp,fb)=filterInp(inp,
-				   fb,
-				   vm["sourceflag"].as<std::vector<std::string> >(),
-				   ms);
-    }
+	try {
+	   rlist=LibAIR::doALMAAbsRet(inp,
+				      problemAnts);
+	}
+	catch(const std::runtime_error rE){
+	   std::cerr << std::endl << "WARNING: problem while calculating coefficients:"
+		     << std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
+	   std::cout << std::endl << "WARNING: problem while calculating coefficients:"
+		     << std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
+	   rval = -2;
+	}
+	
+	if(problemAnts.size()>0){
+	   
+	   rval = -2;
 
-    std::cout<<inp<<std::endl;
-
-    std::cerr<<"Calculating the coefficients now...";
-    boost::ptr_list<LibAIR::ALMAResBase> rlist;
-    try {
-      rlist=LibAIR::doALMAAbsRet(inp);
-    }
-    catch(const std::runtime_error rE){
-      std::cerr << std::endl << "WARNING: problem while calculating coefficients:"
-		<< std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
-      std::cout << std::endl << "WARNING: problem while calculating coefficients:"
-		<< std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
-      rval = -2;
-    }
-    std::cerr<<"done!"
-	     <<std::endl;
-
-    std::cout<<"       Retrieved parameters      "<<std::endl
-	     <<"----------------------------------------------------------------"<<std::endl
-	     <<rlist<<std::endl;
-
-    if (vm.count("segsource"))
-    {
-      std::vector<int> flds;
-      std::vector<double> time;
-      std::vector<int> src;
-      LibAIR::fieldIDs(ms, 
-		       time,
-		       flds,
-		       src,
-		       sortedI);
-
-      coeffs.reset(LibAIR::SimpleMultiple(*d, 
-					  time,
-					  fb,
-					  rlist));   
-    }
-    else
-    {
-      coeffs.reset(LibAIR::ALMAAbsProcessor(inp, rlist));
-    }
-  }
-
-  if (coeffs->isnan())
-  {
-    LibAIR::printNoSolution(std::cerr);
-    return -1;
-  }
-  g.calc(*d,
-	 *coeffs);    
-
-  if (vm.count("sourceflag"))
-  {
-    std::set<size_t> flagset=sourceSet(vm["sourceflag"].as<std::vector<std::string> >(),
-				       ms);
-    g.blankSources(flagset);
-  }
-
-  
-
-  std::vector<std::pair<double, double> > tmask;
-  statTimeMask(ms, vm, tmask, sortedI);
-
-  std::vector<double> pathRMS;
-  g.pathRMSAnt(tmask, pathRMS);
-
-  
-  
-  std::vector<double> pathDisc;
-  computePathDisc(*d, 
-		  tmask,
-		  *coeffs,
-		  pathDisc);
-  
-  std::cout<<LibAIR::AntITable(anames,
-			       wvrflag,
-                               nowvr,
-			       pathRMS,
-			       pathDisc);
-
-  printExpectedPerf(g, 
-		    *coeffs,
-		    tmask);
-
-  if (vm.count("scale"))
-  {
-    g.scale(vm["scale"].as<double>());
-  }
+	   if(iterations<2){
+	      for(size_t i=0; i<problemAnts.size(); i++){
+		 if(interpwvrs.count(problemAnts[i])==0){
+		    std::cerr	<< "Flagging antenna " << problemAnts[i] << " == " << anames.left.at(problemAnts[i]) << std::endl;
+		    std::cout	<< "Flagging antenna " << problemAnts[i] << " == " << anames.left.at(problemAnts[i]) << std::endl;
+		    interpwvrs.insert(problemAnts[i]); // for flagInterp()
+		    wvrflag.insert(problemAnts[i]); // for later log output
+		 }
+	      }
+	      std::cerr	<< "Reiterating ..." << std::endl;
+	      std::cout	<< "Reiterating ..." << std::endl;
+	      continue;
+	   }
+	   else{
+	      std::cerr << "Number of remaining problematic WVR measurements: " << problemAnts.size() << std::endl;
+	      std::cout << "Number of remaining problematic WVR measurements: " << problemAnts.size() << std::endl;
+	      std::cerr << "Will continue without further iterations ..." << std::endl;
+	      std::cout << "Will continue without further iterations ..." << std::endl;
+	   }	      
+	}	   
+	
+	std::cerr<<"done!"
+		 <<std::endl;
+	
+	
+	std::cout<<"       Retrieved parameters      "<<std::endl
+		 <<"----------------------------------------------------------------"<<std::endl
+		 <<rlist<<std::endl;
+	
+	if (vm.count("segsource"))
+	{
+	   std::vector<int> flds;
+	   std::vector<double> time;
+	   std::vector<int> src;
+	   LibAIR::fieldIDs(ms, 
+			    time,
+			    flds,
+			    src,
+			    sortedI);
+	   
+	   coeffs.reset(LibAIR::SimpleMultiple(*d, 
+					       time,
+					       fb,
+					       rlist));   
+	}
+	else
+	{
+	   coeffs.reset(LibAIR::ALMAAbsProcessor(inp, rlist));
+	}  
+	
+     }
     
-  LibAIR::MSSpec sp;
-  loadSpec(ms, sp);
-  std::set<size_t> reverse=reversedSPWs(sp, vm);  
+    
+     if (coeffs->isnan())
+     {
+	LibAIR::printNoSolution(std::cerr);
+	return -1;
+     }
+     g.calc(*d,
+	    *coeffs);    
 
-  if (NEWCALTABLE)
-    {
-      // Write new table, including history
-      LibAIR::writeNewGainTbl(g,
-			      fnameout.c_str(),
-			      sp,
-			      reverse,
-			      vm.count("disperse")>0,
-			      msname,
+     if (vm.count("sourceflag"))
+     {
+	std::set<size_t> flagset=sourceSet(vm["sourceflag"].as<std::vector<std::string> >(),
+					   ms);
+	g.blankSources(flagset);
+     }
+     
+     
+     
+     std::vector<std::pair<double, double> > tmask;
+     statTimeMask(ms, vm, tmask, sortedI);
+     
+     std::vector<double> pathRMS;
+     g.pathRMSAnt(tmask, pathRMS);
+     
+     
+     
+     std::vector<double> pathDisc;
+     computePathDisc(*d, 
+		     tmask,
+		     *coeffs,
+		     pathDisc);
+     
+     std::cout<<LibAIR::AntITable(anames,
+				  wvrflag,
+				  nowvr,
+				  pathRMS,
+				  pathDisc);
+     
+     printExpectedPerf(g, 
+		       *coeffs,
+		       tmask);
+     
+     if (vm.count("scale"))
+     {
+	g.scale(vm["scale"].as<double>());
+     }
+     
+     LibAIR::MSSpec sp;
+     loadSpec(ms, sp);
+     std::set<size_t> reverse=reversedSPWs(sp, vm);  
+     
+     if (NEWCALTABLE)
+     {
+	// Write new table, including history
+	LibAIR::writeNewGainTbl(g,
+				fnameout.c_str(),
+				sp,
+				reverse,
+				vm.count("disperse")>0,
+				msname,
+				buildCmdLine(argc,
+					     argv));
+     }
+     else
+     {
+	// Write old table...
+	LibAIR::writeGainTbl(g,
+			     fnameout.c_str(),
+			     sp,
+			     reverse,
+			     vm.count("disperse")>0,
+			     msname
+	   );
+	// ...and history
+	LibAIR::addCalHistory(fnameout.c_str(),
 			      buildCmdLine(argc,
 					   argv));
-    }
-  else
-    {
-      // Write old table...
-      LibAIR::writeGainTbl(g,
-			   fnameout.c_str(),
-			   sp,
-			   reverse,
-			   vm.count("disperse")>0,
-			   msname
-			   );
-      // ...and history
-      LibAIR::addCalHistory(fnameout.c_str(),
-			    buildCmdLine(argc,
-					 argv));
-    }
+     }
 
 #ifdef BUILD_HD5
-  LibAIR::writeAntPath(g,
-		       fnameout+".hd5");
+     LibAIR::writeAntPath(g,
+			  fnameout+".hd5");
 #endif
+
+  } // end while
 
 
   return rval;
