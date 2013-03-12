@@ -48,8 +48,8 @@ int main() {
         FITSImage fourAxesImage(datadir + "ngc5921.clean.fits");
         FITSImage twoAxesImage(datadir + "ngc5921.clean.no_freq.no_stokes.fits");
    
-        ImageMetaData fourAxesImageMetaData(fourAxesImage);
-        ImageMetaData twoAxesImageMetaData(twoAxesImage);
+        ImageMetaData<Float> fourAxesImageMetaData(&fourAxesImage);
+        ImageMetaData<Float> twoAxesImageMetaData(&twoAxesImage);
         {
             AlwaysAssert(fourAxesImageMetaData.nChannels() == 8, AipsError);
             AlwaysAssert(twoAxesImageMetaData.nChannels() == 0, AipsError);
@@ -117,7 +117,26 @@ int main() {
         	AlwaysAssert(! noBeamMD.getBeamArea(beamArea, "arcsec.arcsec"), AipsError);
             */
         }
-
+        {
+        	cout << "*** Test constructor" << endl;
+        	TempImage<Float> x(
+        		TiledShape(IPosition(4, 30, 30, 4, 30)),
+        		CoordinateUtil::defaultCoords4D()
+        	);
+        	ImageInfo info = x.imageInfo();
+        	GaussianBeam beam(
+        		Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+        		Quantity(10, "deg")
+        	);
+        	info.setRestoringBeam(beam);
+        	x.setImageInfo(info);
+        	x.putAt(-20.5, IPosition(4, 1, 3, 2, 20));
+        	x.putAt(92.6, IPosition(4, 1, 4, 2, 6));
+        	ImageMetaData<Float> header(&x);
+        	Record headRec = header.toRecord(True);
+        	cout << "header looks like:" << endl;
+        	headRec.print(cout);
+        }
 
         cout<< "ok"<< endl;
     }
