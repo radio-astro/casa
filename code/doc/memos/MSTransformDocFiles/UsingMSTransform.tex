@@ -27,7 +27,7 @@ some cases, depending on the choice of {\it separationaxis}. The following table
 
 \begin{verbatim}
 
-separationaxis  combinespws  nspw > 1  regridms  freqaverage  timespan='scan' hanning
+separationaxis  combinespws  nspw > 1  regridms  chanaverage  timespan='scan' hanning
 --------------------------------------------------------------------------------------
 spw                NO         NO         YES        YES           YES           YES
 scan               YES        YES        YES        YES           YES*          YES
@@ -47,9 +47,9 @@ combine all the selected spectral windows into one. The index of the output spw
 will be 0. When there are overlapping channels, they will be averaged to form one
 output channel.
 
-\subsection{Frequency averaging}
+\subsection{Channel averaging}
 Similar to task split, mstransform can average the selected channels based on a
-width parameter. The parameter {\it freqbin} can be either an integer or a list of
+width parameter. The parameter {\it chanbin} can be either an integer or a list of
 integers that will apply to each spw in the selection.
 
 A parameter called {\it useweights} controls the type of weights to use in the
@@ -63,6 +63,12 @@ The parameter {\it regridms} in mstransform can do many things. One can change t
 reference frame based on the available sub-parameters and hence separate the spectral
 windows into a regular grid of a given number of spws. This is a new feature in CASA
 4.1 and can be applied in many use-cases. %(Expand and list some use-cases)
+
+If {\it nspw} is greater than 1, the input spws will be separated into the given
+number. If nchan is set, it will refer to the number of channels to have in each
+separated spw. Note that internally, the framework will first combine the input
+spws to take gaps and overlap into account, before separating them in the desired
+number.
 
 The regridms transformation differs from task cvel in a few cases. Task cvel has a
 parameter {\it passall} to copy or not the non-selected spws into the output MS. In 
@@ -80,13 +86,13 @@ Another difference with respect to the hanningsmooth task is that the transforma
 applied to all the data columns requested by the user in the parameter {\it datacolumn}. If the 
 requested column does not exist, it will exit with an error. 
 
-\subsection{Time averaging}
+\subsection{Time averaging - To be implemented}
 % Add stuff in here
-Similar to split, this task can average the MS in time, based on a set of parameters.
+%Similar to split, this task can average the MS in time, based on a set of parameters.
 
-timespan
-minbaselines
-quantize_c
+%timespan
+%minbaselines
+%quantize_c
 
 
 \section{Examples}\label{Sec:Examples}
@@ -131,6 +137,10 @@ mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', spw='0', field=
 set the tileshape to 4 correlations, 64 channels and 1024 rows.
 \begin{verbatim}
 mstransform(vis='inp.ms', outputvis='out.ms', tileshape=[4,64,1024])
+\end{verbatim}
+\item Separate a large input spw into a regular grid of 5 output spws, each with 10 channels.
+\begin{verbatim}
+mstransform(vis='inp.ms', outputvis='out.ms', spw='0', regridms=True, nchan=10, nspw=5)
 \end{verbatim}
 
 

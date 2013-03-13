@@ -385,14 +385,14 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 {
 	int exists = 0;
 
-	exists = configuration.fieldNumber ("freqaverage");
+	exists = configuration.fieldNumber ("chanaverage");
 	if (exists >= 0)
 	{
 		configuration.get (exists, channelAverage_p);
 		if (channelAverage_p)
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-					<< "Frequency average is activated" << LogIO::POST;
+					<< "Channel average is activated" << LogIO::POST;
 		}
 		else
 		{
@@ -404,7 +404,7 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 		return;
 	}
 
-	exists = configuration.fieldNumber ("freqbin");
+	exists = configuration.fieldNumber ("chanbin");
 	if (exists >= 0)
 	{
 		if ( configuration.type(exists) == casa::TpInt )
@@ -420,16 +420,16 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 		else
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-					<< "Wrong format for freqbin parameter (only Int and arrayInt are supported) " << LogIO::POST;
+					<< "Wrong format for chanbin parameter (only Int and arrayInt are supported) " << LogIO::POST;
 		}
 
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-				<< "Frequency bin is " << freqbin_p << LogIO::POST;
+				<< "Channel bin is " << freqbin_p << LogIO::POST;
 	}
 	else
 	{
 		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-				<< "Frequency average is activated but no freqbin parameter is provided " << LogIO::POST;
+				<< "Channel average is activated but no chanbin parameter is provided " << LogIO::POST;
 		channelAverage_p = False;
 		return;
 	}
@@ -444,12 +444,12 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 		if (useweights_p == "flags")
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-					<< "Using FLAGS as weights for frequency average" << LogIO::POST;
+					<< "Using FLAGS as weights for channel average" << LogIO::POST;
 		}
 		else if (useweights_p == "weights")
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-					<< "Using WEIGHT_SPECTRUM as weights for frequency average" << LogIO::POST;
+					<< "Using WEIGHT_SPECTRUM as weights for channel average" << LogIO::POST;
 		}
 		else
 		{

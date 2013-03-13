@@ -152,13 +152,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
     </param>
     
-    <!-- FREQUENCY AVERAGING parameters -->
-    <param type="bool" name="freqaverage">
-        <description>Average data in frequency.</description>
+    <!-- CHANNEL AVERAGING parameters -->
+    <param type="bool" name="chanaverage">
+        <description>Average data in channels.</description>
         <value>False</value>
     </param>
 
-        <param type="any" name="freqbin" subparam="true">
+        <param type="any" name="chanbin" subparam="true">
             <description>Width (bin) of input channels to average to form an output channel.</description>
             <any type="variant" limittypes="int intArray"/>            
             <value type="int">1</value>
@@ -310,10 +310,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
              	  <default param="realmodelcol"><value type="bool">False</value></default>           
             </equals>         
           </when>
-          <when param="freqaverage">
+          <when param="chanaverage">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
-                  <default param="freqbin"><value type="int">1</value></default>
+                  <default param="chanbin"><value type="int">1</value></default>
                   <default param="useweights"><value type="string"></value></default>
             </equals>
           </when>
@@ -358,14 +358,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     * take an input MS or Multi-MS
     * ability to create an output MS or MMS
     * spw combination and separation
-    * frequency averaging taking weights into account
+    * channel averaging taking weights into account
     * time averaging taking a minimum number of baselines
     * reference frame transformation
     * Hanning smoothing
     
     All these transformations will be applied on the fly without any writing to
-    disk to optimize I/O. It will try to create a Multi-MS in parallel using CASA's 
-    cluster infrastructure. See simple_cluster for more information on this.
+    disk to optimize I/O. The user can ask to create a Multi-MS in parallel using CASA's 
+    cluster infrastructure using the parameters createmms and parallel. See simple_cluster 
+    for more information on this.
 
     This task is implemented in a modular way to preserve the functionalities
     available in the replaced tasks. One can choose which functionality to apply
@@ -503,7 +504,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  'float_data,data', 'lag_data,data'.
 
             N.B.: 'all' = whichever of the above that are present.
-            Otherwise the selected column will go to CORRECTED in the output.
+            Otherwise the selected column will go to DATA in the output.
 
     realmodelcol -- Make real a virtual MODEL column. If set to True, virtual MODEL_DATA 
                     column will be added to the output MS if it exists.
@@ -513,16 +514,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     combinespws -- Combine the input spws into a new output spw.
         default: False
 
---- Frequency averaging parameters ---
-    freqaverage -- Average data in frequency. 
+--- Channel averaging parameters ---
+    chanaverage -- Average data in channels. 
         default: False
 
-        freqbin -- Number of input channels to average to create an output
+        chanbin -- Number of input channels to average to create an output
                    channel. If a list is given, each bin will apply to one spw in
                    the selection.
             default: 1 =&gt; no channel averaging.
             options: (int) or [int]
-            example: freqbin=[2,3] =&gt; average 2 channels of 1st selected
+            example: chanbin=[2,3] =&gt; average 2 channels of 1st selected
 		          spectral window and 3 in the second one.
 
         useweights -- Type of weights to use in average. It will apply to all spws.
@@ -561,7 +562,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                      output into a given number of spws. Internally, the framework
                      will combine the selected spws before separating them so that
                      channel gaps and overlaps are taken into account. This parameter
-                     will create a regular grid of spws in the output MS.
+                     will create a regular grid of spws in the output MS. If nchan
+                     is set, it will refer to the number of output channels in each
+                     of the separated spws.
 
         interpolation -- Spectral interpolation method.
             default: 'linear'
@@ -617,13 +620,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     mstransform(vis='Four_ants.ms', outputvis='myspw.ms', combinespws=True, spw='0~3')
 
 3) Combine two spws and regrid one field, using two input channels to make one output.
-
     mstransform(vis='jupiter6cm.demo.ms',outputvis='test1.ms',datacolumn='DATA',field='11',
                 spw='0,1', combinespws=True, regridms=True, nchan=1, width=2)
 
 4) Combine 24 spws and regrid in frequency mode to create 21 output channels. Change the 
    phase center.
-
     mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test2.ms', datacolumn='DATA',
                 combinespws=True, regridms=True, mode='frequency', nchan=21, start='229587.0MHz',
                 width='1600kHz', phasecenter="J2000 18h25m56.09 -12d04m28.20")

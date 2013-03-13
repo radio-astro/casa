@@ -354,7 +354,7 @@ class test_FreqAvg(test_base):
     def test_freqavg1(self):
         '''mstranform: Average 20 channels of one spw'''
         outputms = "favg1.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='2', freqaverage=True, freqbin=20)
+        mstransform(vis=self.vis, outputvis=outputms, spw='2', chanaverage=True, chanbin=20)
                             
         self.assertTrue(os.path.exists(outputms))
         ret = th.verifyMS(outputms, 1, 7, 0)
@@ -363,7 +363,7 @@ class test_FreqAvg(test_base):
     def test_freqavg2(self):
         '''mstranform: Select a few channels to average from one spw'''
         outputms = "favg2.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='2:10~20', freqaverage=True, freqbin=2)
+        mstransform(vis=self.vis, outputvis=outputms, spw='2:10~20', chanaverage=True, chanbin=2)
                             
         self.assertTrue(os.path.exists(outputms))
         ret = th.verifyMS(outputms, 1, 6, 0)
@@ -372,7 +372,7 @@ class test_FreqAvg(test_base):
     def test_freqavg3(self):
         '''mstranform: Average all channels of one spw'''
         outputms = "favg3.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='23', freqaverage=True, freqbin=128)
+        mstransform(vis=self.vis, outputvis=outputms, spw='23', chanaverage=True, chanbin=128)
                             
         self.assertTrue(os.path.exists(outputms))
         ret = th.verifyMS(outputms, 1, 1, 0)
@@ -381,8 +381,8 @@ class test_FreqAvg(test_base):
     def test_freqavg4(self):
         '''mstranform: Average using different bins for several spws'''
         outputms = "favg4.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', freqaverage=True,
-                    freqbin=[128,4,10])
+        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', chanaverage=True,
+                    chanbin=[128,4,10])
                             
         self.assertTrue(os.path.exists(outputms))
         
@@ -398,10 +398,10 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])        
 
     def test_freqavg5(self):
-        '''mstranform: Different number of spws and freqbin. Expected error'''
+        '''mstranform: Different number of spws and chanbin. Expected error'''
         outputms = "favg5.ms"
-        ret = mstransform(vis=self.vis, outputvis=outputms, spw='2,10', freqaverage=True,
-                    freqbin=[10,20,4])
+        ret = mstransform(vis=self.vis, outputvis=outputms, spw='2,10', chanaverage=True,
+                    chanbin=[10,20,4])
                             
         self.assertFalse(ret)
 
@@ -409,7 +409,7 @@ class test_FreqAvg(test_base):
         '''mstranform: Average all channels of one spw, save as an MMS'''
         # same as test_freqavg3
         outputms = "favg6.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='23', freqaverage=True, freqbin=128,
+        mstransform(vis=self.vis, outputvis=outputms, spw='23', chanaverage=True, chanbin=128,
                     createmms=True)
                             
         self.assertTrue(os.path.exists(outputms))
@@ -420,8 +420,8 @@ class test_FreqAvg(test_base):
         '''mstranform: Average using different bins for several spws, output MMS'''
         # same as test_freqavg4
         outputms = "favg7.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', freqaverage=True,
-                    freqbin=[128,4,10], createmms=True, separationaxis='scan')
+        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', chanaverage=True,
+                    chanbin=[128,4,10], createmms=True, separationaxis='scan')
                             
         self.assertTrue(os.path.exists(outputms))
         
@@ -440,8 +440,8 @@ class test_FreqAvg(test_base):
         '''mstranform: Average using different bins for several spws, output MMS'''
         # same as test_freqavg4
         outputms = "favg8.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', freqaverage=True,
-                    freqbin=[128,4,10], createmms=True, separationaxis='spw',numsubms=2)
+        mstransform(vis=self.vis, outputvis=outputms, spw='10,12,20', chanaverage=True,
+                    chanbin=[128,4,10], createmms=True, separationaxis='spw',numsubms=2)
                             
         self.assertTrue(os.path.exists(outputms))
         
@@ -459,8 +459,8 @@ class test_FreqAvg(test_base):
     def test_freqavg9(self):
         '''mstranform: Average using different bins and a channel selection, output MMS'''
         outputms = "favg9.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='2,12,10:1~10', freqaverage=True,
-                    freqbin=[32,128,5], createmms=True, separationaxis='spw')
+        mstransform(vis=self.vis, outputvis=outputms, spw='2,12,10:1~10', chanaverage=True,
+                    chanbin=[32,128,5], createmms=True, separationaxis='spw')
                             
         self.assertTrue(os.path.exists(outputms))
         
@@ -478,8 +478,8 @@ class test_FreqAvg(test_base):
     def test_freqavg10(self):
         '''mstranform: Average using different bins, channel selection, both axes, output MMS'''
         outputms = "favg10.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='2,12,10:1~10', freqaverage=True,
-                    freqbin=[32,128,5], createmms=True, separationaxis='both')
+        mstransform(vis=self.vis, outputvis=outputms, spw='2,12,10:1~10', chanaverage=True,
+                    chanbin=[32,128,5], createmms=True, separationaxis='both')
                             
         self.assertTrue(os.path.exists(outputms))
         
@@ -631,7 +631,7 @@ class test_SeparateSPWs(test_base):
     def test_sep2(self):
         '''mstransform: separate three spws into 2, using default regrid parameters'''
         outputms = "separate2.ms"
-        mstransform(vis=self.vis, outputvis=outputms, spw='2,4,6', regridms=True, nspw=2)
+        mstransform(vis=self.vis, outputvis=outputms, spw='2,3,4', regridms=True, nspw=2)
         self.assertTrue(os.path.exists(outputms))
 
         # Should create 2 spws with ?96 channels each

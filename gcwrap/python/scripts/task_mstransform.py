@@ -309,11 +309,11 @@ class MSTHelper(ParallelTaskHelper):
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSPWs1)
         
-        # Validate the freqbin parameter
+        # Validate the chanbin parameter
         validbin = False
-        if self.__origpars['freqaverage'] and self.validateFreqBin():
-            # Partition freqbin in the same way
-            freqbinlist = self.__partition1(self.__origpars['freqbin'],numSubMS)
+        if self.__origpars['chanaverage'] and self.validateChanBin():
+            # Partition chanbin in the same way
+            freqbinlist = self.__partition1(self.__origpars['chanbin'],numSubMS)
             validbin = True
         
         self.__ddistart = 0
@@ -325,7 +325,7 @@ class MSTHelper(ParallelTaskHelper):
                                  listToCasaString(self._selectionScanList)            
             mmsCmd['spw'] = newspwsel[output]
             if validbin:
-                mmsCmd['freqbin'] = freqbinlist[output]
+                mmsCmd['chanbin'] = freqbinlist[output]
                 
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
@@ -373,11 +373,11 @@ class MSTHelper(ParallelTaskHelper):
         partitionedSpws  = self.__partition1(spwList,numSpwPartitions)
         partitionedScans = self.__partition(scanList,numScanPartitions)
 
-        # Validate the freqbin parameter when it is a list
+        # Validate the chanbin parameter when it is a list
         validbin = False
-        if self.__origpars['freqaverage'] and self.validateFreqBin():
-            # Partition freqbin in the same way
-            freqbinlist = self.__partition1(self.__origpars['freqbin'],numSpwPartitions)
+        if self.__origpars['chanaverage'] and self.validateChanBin():
+            # Partition chanbin in the same way
+            freqbinlist = self.__partition1(self.__origpars['chanbin'],numSpwPartitions)
             validbin = True
 
         # Add the channel selections back to the spw expressions
@@ -406,7 +406,7 @@ class MSTHelper(ParallelTaskHelper):
                              (partitionedScans[output%numScanPartitions])
             mmsCmd['spw'] = newspwsel[output/numScanPartitions]
             if validbin:
-                mmsCmd['freqbin'] = freqbinlist[output/numScanPartitions]
+                mmsCmd['chanbin'] = freqbinlist[output/numScanPartitions]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
@@ -750,12 +750,12 @@ class MSTHelper(ParallelTaskHelper):
         return newdict
         
 #    @dump_args 
-    def validateFreqBin(self):
-        '''When freqbin is a list, it should have the
+    def validateChanBin(self):
+        '''When chanbin is a list, it should have the
            same size as the number of spws in selection.'''
         
         retval = True
-        fblist = self.__origpars['freqbin']
+        fblist = self.__origpars['chanbin']
         if isinstance(fblist,list) and fblist.__len__() > 1: 
             if self.__spwList == None:           
                 msTool = mstool()
@@ -768,8 +768,8 @@ class MSTHelper(ParallelTaskHelper):
                     
             if self.__spwList.__len__() != fblist.__len__():
                 retval = False
-#                casalog.post('Number of freqbin is different of number of spw','ERROR')
-                raise ValueError, 'Number of freqbin is different of number of spw'                
+#                casalog.post('Number of chanbin is different of number of spw','ERROR')
+                raise ValueError, 'Number of chanbin is different of number of spw'                
                 
         else:
             retval = False
@@ -844,8 +844,8 @@ def mstransform(
              datacolumn,
              realmodelcol,
              combinespws,        # spw combination --> cvel
-             freqaverage,        # frequency averaging --> split
-             freqbin,
+             chanaverage,        # channel averaging --> split
+             chanbin,
              useweights,
              hanning,            # Hanning --> cvel
              regridms,           # regridding to new frame --> cvel
@@ -956,14 +956,14 @@ def mstransform(
         if combinespws:
             casalog.post('Combine spws %s into new output spw'%spw)
             config['combinespws'] = True
-        if freqaverage:
-            casalog.post('Parse frequency averaging parameters')
-            config['freqaverage'] = True
-            # freqbin can be an int or a list of int that will apply one to each spw
-#            if not mth.validateFreqBin():
-#                raise ValueError, 'Number of freqbin is different of number of spw'
-            mth.validateFreqBin()
-            config['freqbin'] = freqbin
+        if chanaverage:
+            casalog.post('Parse channel averaging parameters')
+            config['chanaverage'] = True
+            # chanbin can be an int or a list of int that will apply one to each spw
+#            if not mth.validateChanBin():
+#                raise ValueError, 'Number of chanbin is different of number of spw'
+            mth.validateChanBin()
+            config['chanbin'] = chanbin
             config['useweights'] = useweights
         if hanning:
             casalog.post('Apply Hanning smoothing')
@@ -1018,7 +1018,7 @@ def mstransform(
         return False
 
     # Update the FLAG_CMD sub-table to reflect any spw/channels selection
-    if ((spw != '') and (spw != '*')) or freqaverage == True:
+    if ((spw != '') and (spw != '*')) or chanaverage == True:
         isopen = False
         mytb = tbtool()
         try:
@@ -1031,20 +1031,20 @@ def mstransform(
                 cmds = mytb.getcol('COMMAND')
                 widths = {}
                 #print "width =", width
-                if hasattr(freqbin, 'has_key'):
-                    widths = freqbin
+                if hasattr(chanbin, 'has_key'):
+                    widths = chanbin
                 else:
-                    if hasattr(freqbin, '__iter__') and len(freqbin) > 1:
-                        for i in xrange(len(freqbin)):
-                            widths[i] = freqbin[i]
-                    elif freqbin != 1:
+                    if hasattr(chanbin, '__iter__') and len(chanbin) > 1:
+                        for i in xrange(len(chanbin)):
+                            widths[i] = chanbin[i]
+                    elif chanbin != 1:
 #                        print 'using ms.msseltoindex + a scalar width'
                         numspw = len(mslocal.msseltoindex(vis=vis,
                                                      spw='*')['spw'])
-                        if hasattr(freqbin, '__iter__'):
-                            w = freqbin[0]
+                        if hasattr(chanbin, '__iter__'):
+                            w = chanbin[0]
                         else:
-                            w = freqbin
+                            w = chanbin
                         for i in xrange(numspw):
                             widths[i] = w
 #                print 'widths =', widths 
@@ -1120,7 +1120,7 @@ def mstransform(
 
 
 # TODO:
-# 1) allow freqbin to be a list to apply to each spw selection. DONE
+# 1) allow chanbin to be a list to apply to each spw selection. DONE
 # 2) Modify the separatespws transformation. DONE
 # 3) Check realmodelcol and tileshape parameters
 # 4) Parallelism
@@ -1152,7 +1152,7 @@ def mstransform(
 # which shows with which transformation the separation axis can run.
 # Catch these cases inside MSTHelper.
 
-#separation   combinespws  separatespws  regridms  freqaverage  timespan  hanning
+#separation   combinespws  separatespws  regridms  chanaverage  timespan  hanning
 #axis
 #---------------------------------------------------------------------------------------
 #spw            NO           YES*         YES        YES          YES       YES
