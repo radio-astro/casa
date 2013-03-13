@@ -649,8 +649,17 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, nChan_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-				<< "Number of channels is " << nChan_p<< LogIO::POST;
+		if (nspws_p > 1)
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Number of channels per output spw is " << nChan_p << LogIO::POST;
+			nChan_p *=  nspws_p;
+		}
+		else
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Number of channels is " << nChan_p<< LogIO::POST;
+		}
 	}
 
 	exists = configuration.fieldNumber ("start");
