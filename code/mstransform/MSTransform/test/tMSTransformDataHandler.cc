@@ -172,7 +172,7 @@ int main(int argc, char **argv)
 		{
 			nspw = atoi(value.c_str());
 			configuration.define ("nspw", nspw);
-			cout << "nspw start is: " << nspw << endl;
+			cout << "nspw is: " << nspw << endl;
 		}
 		else if (parameter == string("-subms"))
 		{

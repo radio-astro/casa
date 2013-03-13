@@ -1,4 +1,4 @@
-//# MSTransformDataHandler.h: This file contains the implementation of the MSTransformDataHandler class.
+//# MSTransformDataHandler.cc: This file contains the implementation of the MSTransformDataHandler class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -236,21 +236,24 @@ void MSTransformDataHandler::parseMsSpecParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, inpMsName_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Input file name is " << inpMsName_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Input file name is " << inpMsName_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("outputms");
 	if (exists >= 0)
 	{
 		configuration.get (exists, outMsName_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Output file name is " << outMsName_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Output file name is " << outMsName_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("datacolumn");
 	if (exists >= 0)
 	{
 		configuration.get (exists, datacolumn_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Data column is " << datacolumn_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Data column is " << datacolumn_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("realmodelcol");
@@ -259,7 +262,8 @@ void MSTransformDataHandler::parseMsSpecParams(Record &configuration)
 		configuration.get (exists, realmodelcol_p);
 		if (realmodelcol_p)
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "MODEL column will be made real in the output MS " << LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "MODEL column will be made real in the output MS " << LogIO::POST;
 		}
 	}
 
@@ -277,7 +281,8 @@ void MSTransformDataHandler::parseMsSpecParams(Record &configuration)
 			configuration.get (exists, tileShape_p);
 		}
 
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Tile shape is " << tileShape_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Tile shape is " << tileShape_p << LogIO::POST;
 	}
 
 	return;
@@ -294,70 +299,80 @@ void MSTransformDataHandler::parseDataSelParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, arraySelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "array selection is " << arraySelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "array selection is " << arraySelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("field");
 	if (exists >= 0)
 	{
 		configuration.get (exists, fieldSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "field selection is " << fieldSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "field selection is " << fieldSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("scan");
 	if (exists >= 0)
 	{
 		configuration.get (exists, scanSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "scan selection is " << scanSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "scan selection is " << scanSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("timerange");
 	if (exists >= 0)
 	{
 		configuration.get (exists, timeSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "timerange selection is " << timeSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "timerange selection is " << timeSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("spw");
 	if (exists >= 0)
 	{
 		configuration.get (exists, spwSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "spw selection is " << spwSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "spw selection is " << spwSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("antenna");
 	if (exists >= 0)
 	{
 		configuration.get (exists, baselineSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "antenna selection is " << baselineSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "antenna selection is " << baselineSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("uvrange");
 	if (exists >= 0)
 	{
 		configuration.get (exists, uvwSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "uvrange selection is " << uvwSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "uvrange selection is " << uvwSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("correlation");
 	if (exists >= 0)
 	{
 		configuration.get (exists, polarizationSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "correlation selection is " << polarizationSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "correlation selection is " << polarizationSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("observation");
 	if (exists >= 0)
 	{
 		configuration.get (exists, observationSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<"observation selection is " << observationSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<<"observation selection is " << observationSelection_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("intent");
 	if (exists >= 0)
 	{
 		configuration.get (exists, scanIntentSelection_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "scan intent selection is " << scanIntentSelection_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "scan intent selection is " << scanIntentSelection_p << LogIO::POST;
 	}
 
 	return;
@@ -376,7 +391,8 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 		configuration.get (exists, channelAverage_p);
 		if (channelAverage_p)
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Frequency average is activated" << LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Frequency average is activated" << LogIO::POST;
 		}
 		else
 		{
@@ -403,14 +419,17 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 		}
 		else
 		{
-			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Wrong format for freqbin parameter (only Int and arrayInt are supported) " << LogIO::POST;
+			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Wrong format for freqbin parameter (only Int and arrayInt are supported) " << LogIO::POST;
 		}
 
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Frequency bin is " << freqbin_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Frequency bin is " << freqbin_p << LogIO::POST;
 	}
 	else
 	{
-		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Frequency average is activated but no freqbin parameter is provided " << LogIO::POST;
+		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Frequency average is activated but no freqbin parameter is provided " << LogIO::POST;
 		channelAverage_p = False;
 		return;
 	}
@@ -424,11 +443,13 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 
 		if (useweights_p == "flags")
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Using FLAGS as weights for frequency average" << LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Using FLAGS as weights for frequency average" << LogIO::POST;
 		}
 		else if (useweights_p == "weights")
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Using WEIGHT_SPECTRUM as weights for frequency average" << LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Using WEIGHT_SPECTRUM as weights for frequency average" << LogIO::POST;
 		}
 		else
 		{
@@ -451,7 +472,8 @@ void MSTransformDataHandler::parseFreqTransParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, combinespws_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Combine Spectral Windows is " << combinespws_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Combine Spectral Windows is " << combinespws_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("ddistart");
@@ -460,7 +482,8 @@ void MSTransformDataHandler::parseFreqTransParams(Record &configuration)
 		configuration.get (exists, ddiStart_p);
 		if (ddiStart_p > 0)
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "DDI start is " << ddiStart_p << LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "DDI start is " << ddiStart_p << LogIO::POST;
 		}
 		else
 		{
@@ -473,7 +496,8 @@ void MSTransformDataHandler::parseFreqTransParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, hanningSmooth_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Hanning Smooth is " << hanningSmooth_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Hanning Smooth is " << hanningSmooth_p << LogIO::POST;
 	}
 
 	return;
@@ -493,7 +517,8 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 
 		if (refFrameTransformation_p)
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Regrid MS is activated"<< LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Regrid MS is activated"<< LogIO::POST;
 		}
 		else
 		{
@@ -504,12 +529,14 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 	exists = configuration.fieldNumber ("phasecenter");
 	if (exists >= 0)
 	{
-		//If phase center is a simple numeric value then it is taken as a FIELD_ID otherwise it is converted to a MDirection
+		//If phase center is a simple numeric value then it is taken
+		// as a FIELD_ID otherwise it is converted to a MDirection
         if( configuration.type(exists) == TpInt )
         {
         	int fieldIdForPhaseCenter = -1;
     		configuration.get (exists, fieldIdForPhaseCenter);
-    		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Field Id for phase center is " << fieldIdForPhaseCenter << LogIO::POST;
+    		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    				<< "Field Id for phase center is " << fieldIdForPhaseCenter << LogIO::POST;
     		if (phaseCenterPar_p) delete phaseCenterPar_p;
     		phaseCenterPar_p = new casac::variant(fieldIdForPhaseCenter);
         }
@@ -517,7 +544,8 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
         {
         	String phaseCenter("");
     		configuration.get (exists, phaseCenter);
-    		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Phase center is " << phaseCenter << LogIO::POST;
+    		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    				<< "Phase center is " << phaseCenter << LogIO::POST;
     		if (phaseCenterPar_p) delete phaseCenterPar_p;
     		phaseCenterPar_p = new casac::variant(phaseCenter);
         }
@@ -527,14 +555,16 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, restFrequency_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Rest frequency is " << restFrequency_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Rest frequency is " << restFrequency_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("outframe");
 	if (exists >= 0)
 	{
 		configuration.get (exists, outputReferenceFramePar_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Output reference frame is " << outputReferenceFramePar_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Output reference frame is " << outputReferenceFramePar_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("interpolation");
@@ -560,10 +590,12 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 		}
 		else
 		{
-			logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Interpolation method " << interpolationMethodPar_p  << " not available " << LogIO::POST;
+			logger_p << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Interpolation method " << interpolationMethodPar_p  << " not available " << LogIO::POST;
 		}
 
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Interpolation method is " << interpolationMethodPar_p  << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Interpolation method is " << interpolationMethodPar_p  << LogIO::POST;
 	}
 	else
 	{
@@ -577,7 +609,8 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 
 		if (nspws_p > 1)
 		{
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Number of output SPWs is " << nspws_p << LogIO::POST;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Number of output SPWs is " << nspws_p << LogIO::POST;
 			combinespws_p = True;
 		}
 		else
@@ -602,7 +635,8 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, mode_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Mode is " << mode_p<< LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Mode is " << mode_p<< LogIO::POST;
 
 		if ((mode_p == "frequency") or (mode_p == "channel"))
 		{
@@ -615,28 +649,32 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, nChan_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Number of channels is " << nChan_p<< LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Number of channels is " << nChan_p<< LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("start");
 	if (exists >= 0)
 	{
 		configuration.get (exists, start_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Start is " << start_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Start is " << start_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("width");
 	if (exists >= 0)
 	{
 		configuration.get (exists, width_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Width is " << width_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Width is " << width_p << LogIO::POST;
 	}
 
 	exists = configuration.fieldNumber ("veltype");
 	if (exists >= 0)
 	{
 		configuration.get (exists, velocityType_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Velocity type is " << velocityType_p << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Velocity type is " << velocityType_p << LogIO::POST;
 	}
 
 	return;
@@ -648,14 +686,17 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::open()
 {
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Select data" << LogIO::POST;
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Select data" << LogIO::POST;
 
 	splitter_p = new SubMS(inpMsName_p,Table::Old);
 
-	// WARNING: Input MS is re-set at the end of a successful SubMS::makeSubMS call, therefore we have to use the selected MS always
+	// WARNING: Input MS is re-set at the end of a successful SubMS::makeSubMS,
+	// call therefore we have to use the selected MS always
 	inputMs_p = &(splitter_p->ms_p);
 
-	// Once the input MS is opened we can get the selection indexes, in this way we also validate the selection parameters
+	// Once the input MS is opened we can get the selection indexes,
+	// in this way we also validate the selection parameters
 	checkDataColumnsToFill();
 	initDataSelectionParams();
 	getInputNumberOfChannels();
@@ -689,14 +730,16 @@ void MSTransformDataHandler::open()
 	splitter_p->selectTime(timeBin_p,timeSelection_p);
 
 	// Create output MS structure
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Create output MS structure" << LogIO::POST;
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Create output MS structure" << LogIO::POST;
 
 	Bool selectionOk = False;
 	splitter_p->fillMainTable_p = False;
 	selectionOk = splitter_p->makeSubMS(outMsName_p,datacolumn_p,tileShape_p,timespan_p);
 	if (!selectionOk)
 	{
-		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Combination of selection ranges produces a NullSelection" << LogIO::POST;
+		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Combination of selection ranges produces a NullSelection" << LogIO::POST;
 		throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected table has zero rows."));
 	}
 
@@ -735,7 +778,8 @@ void MSTransformDataHandler::setup()
 		uInt nInputSpws = outputMs_p->spectralWindow().nrow();
 		if (nInputSpws < 2)
 		{
-			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "There is only one selected SPW, no need to combine " << LogIO::POST;
+			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "There is only one selected SPW, no need to combine " << LogIO::POST;
 			combinespws_p = False;
 		}
 	}
@@ -835,7 +879,8 @@ void MSTransformDataHandler::setup()
 
 		if (useweights_p == "weights")
 		{
-			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Requested column for weighted channel average WEIGHT_SPECTRUM not present in input MS" << LogIO::POST;
+			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Requested column for weighted channel average WEIGHT_SPECTRUM not present in input MS" << LogIO::POST;
 		}
 	}
 
@@ -898,6 +943,8 @@ void MSTransformDataHandler::setup()
 
 		writeOutputPlanesComplex_p = &MSTransformDataHandler::writeOutputPlanesInSlices;
 		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInSlices;
+
+		separateSpwSubtable();
 	}
 	else
 	{
@@ -927,7 +974,8 @@ void MSTransformDataHandler::initDataSelectionParams()
 	{
 		mssel.setObservationExpr(observationSelection_p);
 		Vector<Int> observationList = mssel.getObservationList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Observations Ids are " << observationList << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Selected Observations Ids are " << observationList << LogIO::POST;
 
 		for (uInt index=0; index < observationList.size(); index++)
 		{
@@ -939,7 +987,8 @@ void MSTransformDataHandler::initDataSelectionParams()
 	{
 		mssel.setArrayExpr(arraySelection_p);
 		Vector<Int> arrayList = mssel.getSubArrayList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Arrays Ids are " << arrayList << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Selected Arrays Ids are " << arrayList << LogIO::POST;
 
 		for (uInt index=0; index < arrayList.size(); index++)
 		{
@@ -951,7 +1000,8 @@ void MSTransformDataHandler::initDataSelectionParams()
 	{
 		mssel.setScanExpr(scanSelection_p);
 		Vector<Int> scanList = mssel.getScanList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Scans Ids are " << scanList << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Selected Scans Ids are " << scanList << LogIO::POST;
 
 		for (uInt index=0; index < scanList.size(); index++)
 		{
@@ -963,7 +1013,8 @@ void MSTransformDataHandler::initDataSelectionParams()
 	{
 		mssel.setStateExpr(scanIntentSelection_p);
 		Vector<Int> scanIntentList = mssel.getStateObsModeList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Scans Intents Ids are " << scanIntentList << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Selected Scans Intents Ids are " << scanIntentList << LogIO::POST;
 
 		for (uInt index=0; index < scanIntentList.size(); index++)
 		{
@@ -975,7 +1026,8 @@ void MSTransformDataHandler::initDataSelectionParams()
 	{
 		mssel.setFieldExpr(fieldSelection_p);
 		Vector<Int> fieldList = mssel.getFieldList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected Fields Ids are " << fieldList << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Selected Fields Ids are " << fieldList << LogIO::POST;
 
 		for (uInt index=0; index < fieldList.size(); index++)
 		{
@@ -987,7 +1039,8 @@ void MSTransformDataHandler::initDataSelectionParams()
 	{
 		mssel.setSpwExpr(spwSelection_p);
 		Matrix<Int> spwchan = mssel.getChanList(inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected SPWs Ids are " << spwchan << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Selected SPWs Ids are " << spwchan << LogIO::POST;
 
 	    IPosition shape = spwchan.shape();
 	    uInt nSelections = shape[0];
@@ -1035,8 +1088,10 @@ void MSTransformDataHandler::initDataSelectionParams()
 		{
 			if (spwList.size() != freqbin_p.size())
 			{
-				logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Number of frequency bins ( "
-						<< freqbin_p.size() << " ) different from number of selected spws ( " << spwList.size() << " )" << LogIO::POST;
+				logger_p << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+						<< "Number of frequency bins ( "
+						<< freqbin_p.size() << " ) different from number of selected spws ( "
+						<< spwList.size() << " )" << LogIO::POST;
 			}
 			else
 			{
@@ -1053,7 +1108,8 @@ void MSTransformDataHandler::initDataSelectionParams()
 		mssel.setPolnExpr(polarizationSelection_p);
 		Vector <Vector <Slice> > correlationSlices;
 		mssel.getCorrSlices(correlationSlices,inputMs_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected correlations are " << correlationSlices << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Selected correlations are " << correlationSlices << LogIO::POST;
 
 		if (channelSelector_p == NULL) channelSelector_p = new vi::FrequencySelectionUsingChannels();
 
@@ -1080,7 +1136,8 @@ void MSTransformDataHandler::initRefFrameTransParams()
     }
     else if(!MFrequency::getType(outputReferenceFrame_p, outputReferenceFramePar_p))
     {
-    	logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Problem parsing output reference frame:" << outputReferenceFramePar_p  << LogIO::POST;
+    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "Problem parsing output reference frame:" << outputReferenceFramePar_p  << LogIO::POST;
     }
 
     // Determine observatory position from the first row in the observation sub-table of the output (selected) MS
@@ -1098,7 +1155,8 @@ void MSTransformDataHandler::initRefFrameTransParams()
     	MSField fieldTable = selectedInputMs_p->field();
     	if (fieldIdForPhaseCenter >= (Int)fieldTable.nrow() || fieldIdForPhaseCenter < 0)
     	{
-    		logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Selected FIELD_ID to determine phase center does not exists " << LogIO::POST;
+    		logger_p << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    				<< "Selected FIELD_ID to determine phase center does not exists " << LogIO::POST;
     	}
     	else
     	{
@@ -1122,7 +1180,8 @@ void MSTransformDataHandler::initRefFrameTransParams()
     	{
         	if(!casaMDirection(phaseCenter, phaseCenter_p))
         	{
-        		logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Cannot interpret phase center " << phaseCenter << LogIO::POST;
+        		logger_p << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+        				<< "Cannot interpret phase center " << phaseCenter << LogIO::POST;
         		return;
         	}
     	}
@@ -1166,7 +1225,8 @@ void MSTransformDataHandler::regridSpwSubTable()
     		spwId = spw_idx;
     	}
 
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Regridding SPW with Id " <<  spwId << LogIO::POST;
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "Regridding SPW with Id " <<  spwId << LogIO::POST;
 
     	// Get input frequencies and widths
     	Vector<Double> inputChanFreq(chanFreqCol(spw_idx));
@@ -1175,8 +1235,12 @@ void MSTransformDataHandler::regridSpwSubTable()
         // Print characteristics of input SPW
         ostringstream oss;
         oss 	<< "Input SPW: " << std::setw(5) << inputChanFreq.size()
-        		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << inputChanFreq(0) << " Hz"
-        		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << inputChanFreq(inputChanFreq.size() -1) << " Hz";
+        		<< " channels, first channel = "
+        		<< std::setprecision(9) << std::setw(14) << std::scientific
+        		<< inputChanFreq(0) << " Hz"
+        		<< ", last channel = "
+        		<< std::setprecision(9) << std::setw(14) << std::scientific
+        		<< inputChanFreq(inputChanFreq.size() -1) << " Hz";
         logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
         // Create input SPW structure
@@ -1185,14 +1249,19 @@ void MSTransformDataHandler::regridSpwSubTable()
     	{
     		Vector<Double> intermediateChanFreq;
     		Vector<Double> intermediateChanWidth;
-    		calculateIntermediateFrequencies(spwId,inputChanFreq,inputChanWidth,intermediateChanFreq,intermediateChanWidth);
+    		calculateIntermediateFrequencies(	spwId,inputChanFreq,inputChanWidth,
+    											intermediateChanFreq,intermediateChanWidth);
         	inputSpw = spwInfo(intermediateChanFreq,intermediateChanWidth);
 
             oss.str("");
             oss.clear();
             oss 	<< "Averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
-            		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(0) << " Hz"
-            		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
+            		<< " channels, first channel = "
+            		<< std::setprecision(9) << std::setw(14) << std::scientific
+            		<< intermediateChanFreq(0) << " Hz"
+            		<< ", last channel = "
+            		<< std::setprecision(9) << std::setw(14) << std::scientific
+            		<< intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
             logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
     	}
     	else
@@ -1239,8 +1308,12 @@ void MSTransformDataHandler::regridSpwSubTable()
         oss.str("");
         oss.clear();
         oss 	<< "Output SPW: " << std::setw(5) << outputSpw.NUM_CHAN
-        		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << outputSpw.CHAN_FREQ(0) << " Hz"
-        		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << outputSpw.CHAN_FREQ(outputSpw.NUM_CHAN -1) << " Hz";
+        		<< " channels, first channel = "
+        		<< std::setprecision(9) << std::setw(14) << std::scientific
+        		<< outputSpw.CHAN_FREQ(0) << " Hz"
+        		<< ", last channel = "
+        		<< std::setprecision(9) << std::setw(14) << std::scientific
+        		<< outputSpw.CHAN_FREQ(outputSpw.NUM_CHAN -1) << " Hz";
         logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
         // Add input-output SPW pair to map
@@ -1317,7 +1390,8 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     for (uInt inputChannels_idx=0; inputChannels_idx<inputChannels.size(); inputChannels_idx++)
     {
     	inputChannels.at(inputChannels_idx).outChannel = inputChannels_idx;
-    	spwChannelMap_p[inputChannels.at(inputChannels_idx).SPW_id][inputChannels.at(inputChannels_idx).inpChannel] = inputChannels_idx;
+    	spwChannelMap_p[inputChannels.at(inputChannels_idx).SPW_id]
+    	                [inputChannels.at(inputChannels_idx).inpChannel] = inputChannels_idx;
     	inputFrequencies(inputChannels_idx) = inputChannels.at(inputChannels_idx).CHAN_FREQ;
     	inputWidths(inputChannels_idx) = inputChannels.at(inputChannels_idx).CHAN_WIDTH;
     }
@@ -1325,8 +1399,12 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     // Print characteristics of input SPW
     ostringstream oss;
     oss 	<< "Input SPW: " << std::setw(5) << inputFrequencies.size()
-    		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << inputFrequencies(0) << " Hz"
-    		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << inputFrequencies(inputFrequencies.size()-1) << " Hz";
+    		<< " channels, first channel = "
+    		<< std::setprecision(9) << std::setw(14) << std::scientific
+    		<< inputFrequencies(0) << " Hz"
+    		<< ", last channel = "
+    		<< std::setprecision(9) << std::setw(14) << std::scientific
+    		<< inputFrequencies(inputFrequencies.size()-1) << " Hz";
     logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
     // Create input SPW structure
@@ -1341,9 +1419,14 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
         oss.str("");
         oss.clear();
         oss 	<< "Averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
-        		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(0) << " Hz"
-        		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
-        logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
+        		<< " channels, first channel = "
+        		<< std::setprecision(9) << std::setw(14) << std::scientific
+        		<< intermediateChanFreq(0) << " Hz"
+        		<< ", last channel = "
+        		<< std::setprecision(9) << std::setw(14) << std::scientific
+        		<< intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
+        logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+        		<< oss.str() << LogIO::POST;
 	}
 	else
 	{
@@ -1354,7 +1437,8 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     /// Determine output SPW structure ///////////////////
 
 	// Determine combined SPWs
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Calculate combined SPW frequencies" << LogIO::POST;
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Calculate combined SPW frequencies" << LogIO::POST;
 	SubMS combiner(*outputMs_p);
     Vector<Double> combinedCHAN_FREQ;
     Vector<Double> combinedCHAN_WIDTH;
@@ -1374,11 +1458,13 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     debug_oss <<  " restFrequency_p=" << restFrequency_p << endl;
     debug_oss <<  " outputReferenceFramePar_p=" << outputReferenceFramePar_p << endl;
     debug_oss <<  " velocityType_p=" << velocityType_p << endl;
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << debug_oss.str() << LogIO::POST;
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	<< debug_oss.str() << LogIO::POST;
 	*/
 
 	// Re-grid the output SPW to be uniform and change reference frame
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Calculate frequencies in output reference frame " << LogIO::POST;
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Calculate frequencies in output reference frame " << LogIO::POST;
     Vector<Double> regriddedCHAN_FREQ;
     Vector<Double> regriddedCHAN_WIDTH;
     SubMS::calcChanFreqs(	logger_p,
@@ -1407,9 +1493,14 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     oss.str("");
     oss.clear();
     oss 	<< "Output SPW: " << std::setw(5) << outputSpw.NUM_CHAN
-    		<< " channels, first channel = " << std::setprecision(9) << std::setw(14) << std::scientific << outputSpw.CHAN_FREQ(0) << " Hz"
-    		<< ", last channel = " << std::setprecision(9) << std::setw(14) << std::scientific << outputSpw.CHAN_FREQ(outputSpw.NUM_CHAN -1) << " Hz";
-    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
+    		<< " channels, first channel = "
+    		<< std::setprecision(9) << std::setw(14) << std::scientific
+    		<< outputSpw.CHAN_FREQ(0) << " Hz"
+    		<< ", last channel = "
+    		<< std::setprecision(9) << std::setw(14) << std::scientific
+    		<< outputSpw.CHAN_FREQ(outputSpw.NUM_CHAN -1) << " Hz";
+    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    		<< oss.str() << LogIO::POST;
 
     /// Determine output SPW structure ///////////////////
 
@@ -1418,7 +1509,8 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 
     /// Modify SPW subtable ///////////////////
 
-    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Write output SPW subtable " << LogIO::POST;
+    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    		<< "Write output SPW subtable " << LogIO::POST;
 
     // Delete combined SPWs (reverse to preserve row number)
     uInt rowsToDelete = nInputSpws-1;
@@ -1442,7 +1534,105 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 	return;
 }
 
-void MSTransformDataHandler::calculateIntermediateFrequencies(Int spwId,Vector<Double> &inputChanFreq,Vector<Double> &inputChanWidth,Vector<Double> &intermediateChanFreq,Vector<Double> &intermediateChanWidth)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::separateSpwSubtable()
+{
+	// Access Spectral Window sub-table
+	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+    MSSpWindowColumns spwCols(spwTable);
+
+    // Access columns which have to be separated
+    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
+    Vector<Double> chanFreq = chanFreqCol(0);
+    ArrayColumn<Double> chanWidthCol = spwCols.chanWidth();
+    Vector<Double> chanWidth = chanWidthCol(0);
+    ArrayColumn<Double> effectiveBWCol = spwCols.chanWidth();
+    Vector<Double> effectiveBW = effectiveBWCol(0);
+    ArrayColumn<Double> resolutionCol = spwCols.resolution();
+    Vector<Double> resolution = resolutionCol(0);
+
+    // Resize columns to be separated
+    if (tailOfChansforLastSpw_p)
+    {
+    	uInt nInChannels = chanFreq.size();
+    	uInt nOutChannels = nspws_p*chansPerOutputSpw_p;
+    	uInt newChannels = nOutChannels-nInChannels;
+    	Double lastFreq = chanFreq(chanFreq.size()-1);
+    	Double lastWidth = chanWidth(chanFreq.size()-1);
+    	Double lastEffectiveBW = effectiveBW(chanFreq.size()-1);
+    	Double lastResolution = resolution(chanFreq.size()-1);
+
+    	chanFreq.resize(nOutChannels,True);
+    	chanWidth.resize(nOutChannels,True);
+    	effectiveBW.resize(nOutChannels,True);
+    	resolution.resize(nOutChannels,True);
+
+    	uInt outIndex;
+    	for (uInt newChanIdx = 0; newChanIdx<newChannels; newChanIdx++)
+    	{
+    		outIndex = nInChannels+newChanIdx;
+    		chanFreq(outIndex) = lastFreq + (newChanIdx+1)*lastWidth;
+    		chanWidth(outIndex) = lastWidth;
+    		effectiveBW(outIndex) = lastEffectiveBW;
+    		resolution(outIndex) = lastResolution;
+    	}
+    }
+
+    // Calculate bandwidth per output spw
+    Double totalBandwidth = chanWidth(0)*chansPerOutputSpw_p;
+
+    uInt rowIndex = 1;
+    for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
+    {
+    	// Add row
+    	spwTable.addRow(1,True);
+
+    	// Prepare slice
+    	Slice slice(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
+
+    	// Columns that can be just copied
+    	spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
+    	spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
+    	spwCols.freqGroup().put(rowIndex,spwCols.freqGroup()(0));
+    	spwCols.freqGroupName().put(rowIndex,spwCols.freqGroupName()(0));
+		spwCols.ifConvChain().put(rowIndex,spwCols.ifConvChain()(0));
+		spwCols.name().put(rowIndex,spwCols.name()(0));
+		spwCols.netSideband().put(rowIndex,spwCols.netSideband()(0));
+
+		// Array columns that have to be modified
+		Slice range(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
+    	spwCols.chanFreq().put(rowIndex,chanFreq(range));
+    	spwCols.chanWidth().put(rowIndex,chanWidth(range));
+    	spwCols.effectiveBW().put(rowIndex,effectiveBW(range));
+    	spwCols.resolution().put(rowIndex,resolution(range));
+
+    	// Scalar columns that have to be modified
+		spwCols.numChan().put(rowIndex,chansPerOutputSpw_p);
+		spwCols.totalBandwidth().put(rowIndex,totalBandwidth);
+    	spwCols.refFrequency().put(rowIndex,chanFreq(range)(0));
+
+    	rowIndex += 1;
+    }
+
+    // Remove first row
+    spwTable.removeRow(0);
+
+    // Flush changes
+    outputMs_p->flush(True);
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::calculateIntermediateFrequencies(	Int spwId,
+																Vector<Double> &inputChanFreq,
+																Vector<Double> &inputChanWidth,
+																Vector<Double> &intermediateChanFreq,
+																Vector<Double> &intermediateChanWidth)
 {
 	uInt mumOfInterChan = inputChanFreq.size() / freqbinMap_p[spwId];
 	if (mumOfInterChan % freqbinMap_p[spwId]) mumOfInterChan += 1;
@@ -1486,7 +1676,8 @@ void MSTransformDataHandler::reindexSourceSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "No SOURCE sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "No SOURCE sub-table found " << LogIO::POST;
     }
 
     return;
@@ -1518,7 +1709,8 @@ void MSTransformDataHandler::reindexDDISubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "No DATA_DESCRIPTION sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "No DATA_DESCRIPTION sub-table found " << LogIO::POST;
     }
 }
 
@@ -1539,7 +1731,8 @@ void MSTransformDataHandler::reindexFeedSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "No FEED sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+    			 "No FEED sub-table found " << LogIO::POST;
     }
 
 	return;
@@ -1562,7 +1755,8 @@ void MSTransformDataHandler::reindexSysCalSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "No SYSCAL sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "No SYSCAL sub-table found " << LogIO::POST;
     }
 
 	return;
@@ -1585,12 +1779,16 @@ void MSTransformDataHandler::reindexFreqOffsetSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "No FREQ_OFF sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "No FREQ_OFF sub-table found " << LogIO::POST;
     }
 
     return;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 {
 	String filename_0 = filenames(0);
@@ -1637,6 +1835,9 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 	return True;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 {
 	String filename_0 = filenames(0);
@@ -1668,6 +1869,9 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 	return True;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 void MSTransformDataHandler::getInputNumberOfChannels()
 {
 	// Access spectral window sub-table
@@ -1685,6 +1889,9 @@ void MSTransformDataHandler::getInputNumberOfChannels()
 	return;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 void MSTransformDataHandler::getOutputNumberOfChannels()
 {
 	if (combinespws_p)
@@ -1734,13 +1941,18 @@ void MSTransformDataHandler::getOutputNumberOfChannels()
 	return;
 }
 
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 void MSTransformDataHandler::calculateWeightAndSigmaFactors()
 {
 	map<Int,Int>::iterator iter;
 	for(iter = numOfSelChanMap_p.begin(); iter != numOfSelChanMap_p.end(); iter++)
 	{
-		weightFactorMap_p[iter->first] = (Float)numOfSelChanMap_p[iter->first] / (Float)numOfInpChanMap_p[iter->first];
-		sigmaFactorMap_p[iter->first] = 1./sqrt((Float)numOfSelChanMap_p[iter->first] / (Float)numOfOutChanMap_p[iter->first]);
+		weightFactorMap_p[iter->first] = (Float)numOfSelChanMap_p[iter->first] /
+										(Float)numOfInpChanMap_p[iter->first];
+		sigmaFactorMap_p[iter->first] = 1./sqrt((Float)numOfSelChanMap_p[iter->first] /
+										(Float)numOfOutChanMap_p[iter->first]);
 	}
 
 	return;
@@ -1755,7 +1967,8 @@ void MSTransformDataHandler::checkFillFlagCategory()
 	if (!selectedInputMsCols_p->flagCategory().isNull() && selectedInputMsCols_p->flagCategory().isDefined(0))
 	{
 		fillFlagCategory_p = True;
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Optional column FLAG_CATEGORY found in input MS will be written to output MS" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Optional column FLAG_CATEGORY found in input MS will be written to output MS" << LogIO::POST;
 	}
 
 	return;
@@ -1770,7 +1983,8 @@ void MSTransformDataHandler::checkFillWeightSpectrum()
 	if (!selectedInputMsCols_p->weightSpectrum().isNull() && selectedInputMsCols_p->weightSpectrum().isDefined(0))
 	{
 		fillWeightSpectrum_p = True;
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
 	}
 
 	return;
@@ -2005,7 +2219,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 			{
 				dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
 				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-									"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+							"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
 				datacolumn_p = String("DATA,MODEL");
 			}
 			else
@@ -2037,7 +2251,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	}
 	else
 	{
-		logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+		logger_p << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
 				"Requested data column " << datacolumn_p <<
 				" is not supported, possible choices are ALL,DATA,CORRECTED,MODEL,FLOAT_DATA,LAG_DATA" << LogIO::POST;
 	}
@@ -2048,7 +2262,7 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 		{
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-								"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+						"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
 			datacolumn_p += String(",MODEL");
 		}
 		else
@@ -2088,7 +2302,8 @@ void MSTransformDataHandler::setIterationApproach()
 	}
 	else
 	{
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Combining data through scans for time average " << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Combining data through scans for time average " << LogIO::POST;
 	}
 
 	if (!timespan_p.contains("state"))
@@ -2098,7 +2313,8 @@ void MSTransformDataHandler::setIterationApproach()
 	}
 	else
 	{
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Combining data through state for time average" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Combining data through state for time average" << LogIO::POST;
 	}
 
 	sortColumns_p[sortColumnIndex] = MS::FIELD_ID;
@@ -2111,7 +2327,8 @@ void MSTransformDataHandler::setIterationApproach()
 	}
 	else
 	{
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << "Combining data from selected spectral windows" << LogIO::POST;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Combining data from selected spectral windows" << LogIO::POST;
 	}
 
 	sortColumns_p[sortColumnIndex] =  MS::TIME;
@@ -2198,7 +2415,8 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	Double snapshotTime = vb->time()(0);
 	observationTime_p = MEpoch(Quantity(snapshotTime,"s"), MEpoch::UTC);
 
-	MFrequency::Ref inputFrameRef = MFrequency::Ref(inputReferenceFrame_p, MeasFrame(phaseCenter_p, observatoryPosition_p, observationTime_p));
+	MFrequency::Ref inputFrameRef = MFrequency::Ref(inputReferenceFrame_p,
+													MeasFrame(phaseCenter_p, observatoryPosition_p, observationTime_p));
 	freqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputReferenceFrame_p);
 
 	Int spwIndex = 0;
@@ -2217,7 +2435,8 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 
     for(uInt chan_idx=0; chan_idx<inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size(); chan_idx++)
     {
-    	inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[chan_idx] = freqTransEngine_p(inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[chan_idx]).get(MSTransformations::Hz).getValue();
+    	inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[chan_idx] =
+    	freqTransEngine_p(inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[chan_idx]).get(MSTransformations::Hz).getValue();
     }
 
 	return;
@@ -2428,7 +2647,9 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 // Fill the output vector with an input scalar
 // re-indexed according to the data selection
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::fillAndReindexScalar(T inputScalar, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap)
+template <class T> void MSTransformDataHandler::fillAndReindexScalar(	T inputScalar,
+																		Vector<T> &outputVector,
+																		map<Int,Int> &inputOutputIndexMap)
 {
 	if (inputOutputIndexMap.size())
 	{
@@ -2446,7 +2667,10 @@ template <class T> void MSTransformDataHandler::fillAndReindexScalar(T inputScal
 // Fill the output vector with the data from an input vector mapped in
 // (SPW,Scan,State) tuples, and re-indexed according to the data selection
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::mapAndReindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap, Bool constant)
+template <class T> void MSTransformDataHandler::mapAndReindexVector(const Vector<T> &inputVector,
+																	Vector<T> &outputVector,
+																	map<Int,Int> &inputOutputIndexMap,
+																	Bool constant)
 {
 	if (constant)
 	{
@@ -2474,7 +2698,10 @@ template <class T> void MSTransformDataHandler::mapAndReindexVector(const Vector
 // Fill the output vector with the data from an input
 // vector re-indexed according to the data selection
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::reindexVector(const Vector<T> &inputVector, Vector<T> &outputVector, map<Int,Int> &inputOutputIndexMap, Bool constant)
+template <class T> void MSTransformDataHandler::reindexVector(	const Vector<T> &inputVector,
+																Vector<T> &outputVector,
+																map<Int,Int> &inputOutputIndexMap,
+																Bool constant)
 {
 	if (constant)
 	{
@@ -2496,7 +2723,8 @@ template <class T> void MSTransformDataHandler::reindexVector(const Vector<T> &i
 // Fill the data from an input vector with shape [nBaselinesxnSPWsxnScans/nStates]
 // into an output vector with shape [nBaselinesxnScans/nStates]
 // ------------------------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::mapVector(const Vector<T> &inputVector, Vector<T> &outputVector)
+template <class T> void MSTransformDataHandler::mapVector(	const Vector<T> &inputVector,
+															Vector<T> &outputVector)
 {
 	for (uInt index=0; index<rowIndex_p.size();index++)
 	{
@@ -2510,7 +2738,8 @@ template <class T> void MSTransformDataHandler::mapVector(const Vector<T> &input
 // Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWsxnScans/nStates]
 // into an output matrix with shape [nCol,nBaselinesxnScans/nStates]
 // ------------------------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix)
+template <class T> void MSTransformDataHandler::mapMatrix(	const Matrix<T> &inputMatrix,
+															Matrix<T> &outputMatrix)
 {
 	// Get number of columns
 	uInt nCols = outputMatrix.shape()(0);
@@ -2530,7 +2759,10 @@ template <class T> void MSTransformDataHandler::mapMatrix(const Matrix<T> &input
 // Fill the data from an input vector with shape [nBaselinesxnSPWs] into an
 // output vector with shape [nBaselines] averaging the values from all SPWS
 // -----------------------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::mapAndAverageVector(const Vector<T> &inputVector, Vector<T> &outputVector,Bool convolveFlags,vi::VisBuffer2 *vb)
+template <class T> void MSTransformDataHandler::mapAndAverageVector(const Vector<T> &inputVector,
+																	Vector<T> &outputVector,
+																	Bool convolveFlags,
+																	vi::VisBuffer2 *vb)
 {
 	uInt row;
 	uInt baseline_index = 0;
@@ -2557,7 +2789,10 @@ template <class T> void MSTransformDataHandler::mapAndAverageVector(const Vector
 // Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWs] into an
 // output matrix with shape [nCol,nBaselines] accumulating the averaging from all SPWS
 // -----------------------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::mapAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,Bool convolveFlags,vi::VisBuffer2 *vb)
+template <class T> void MSTransformDataHandler::mapAndAverageMatrix(	const Matrix<T> &inputMatrix,
+																		Matrix<T> &outputMatrix,
+																		Bool convolveFlags,
+																		vi::VisBuffer2 *vb)
 {
 	// Get number of columns
 	uInt nCols = outputMatrix.shape()(0);
@@ -2616,7 +2851,13 @@ template <class T> void MSTransformDataHandler::mapAndAverageMatrix(const Matrix
 	return;
 }
 
-template <class T> void MSTransformDataHandler::mapScaleAndAverageMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix,map<Int,T> scaleMap, Vector<Int> spws)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
+																			Matrix<T> &outputMatrix,
+																			map<Int,T> scaleMap,
+																			Vector<Int> spws)
 {
 	// Get number of columns
 	uInt nCols = outputMatrix.shape()(0);
@@ -2707,7 +2948,8 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				}
 				else
 				{
-					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->correctedData(), outputFlagCol);
+					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),
+							outputMsCols_p->correctedData(), outputFlagCol);
 				}
 
 				break;
@@ -2783,7 +3025,8 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     	{
             IPosition shapeFlagCategory = vb->flagCategory().shape();
             shapeFlagCategory(3) = rowRef.nrow();
-            Array<Bool> flagCategory(shapeFlagCategory,const_cast<Bool*>(vb->flagCategory().getStorage(MSTransformations::False)),SHARE);
+            Array<Bool> flagCategory(shapeFlagCategory,
+            		const_cast<Bool*>(vb->flagCategory().getStorage(MSTransformations::False)),SHARE);
         	outputMsCols_p->flagCategory().putColumnCells(rowRef, flagCategory);
     	}
     	else
@@ -2798,7 +3041,10 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 // -----------------------------------------------------------------------
 // Generic method to write a Vector from a VisBuffer into a ScalarColumn
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeVector(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks)
+template <class T> void MSTransformDataHandler::writeVector(	const Vector<T> &inputVector,
+																ScalarColumn<T> &outputCol,
+																RefRows &rowRef,
+																uInt nBlocks)
 {
 	if (nBlocks == 1)
 	{
@@ -2819,7 +3065,13 @@ template <class T> void MSTransformDataHandler::writeVector(const Vector<T> &inp
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeRollingVector(Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::writeRollingVector(	Vector<T> &inputVector,
+																	ScalarColumn<T> &outputCol,
+																	RefRows &rowRef,
+																	uInt nBlocks)
 {
 	if (nBlocks == 1)
 	{
@@ -2846,7 +3098,13 @@ template <class T> void MSTransformDataHandler::writeRollingVector(Vector<T> &in
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeVectorBlock(const Vector<T> &inputVector,ScalarColumn<T> &outputCol, RefRows &rowRef, uInt offset)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::writeVectorBlock(	const Vector<T> &inputVector,
+																	ScalarColumn<T> &outputCol,
+																	RefRows &rowRef,
+																	uInt offset)
 {
 	uInt startRow_i = rowRef.firstRow()+offset;
 	RefRows rowRef_i(startRow_i, startRow_i+inputVector.size()-1);
@@ -2859,7 +3117,10 @@ template <class T> void MSTransformDataHandler::writeVectorBlock(const Vector<T>
 // -----------------------------------------------------------------------
 // Generic method to write a Matrix from a VisBuffer into a ArrayColumn
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeMatrix(const Matrix<T> &inputMatrix,ArrayColumn<T> &outputCol, RefRows &rowRef, uInt nBlocks)
+template <class T> void MSTransformDataHandler::writeMatrix(	const Matrix<T> &inputMatrix,
+																ArrayColumn<T> &outputCol,
+																RefRows &rowRef,
+																uInt nBlocks)
 {
 	if (nBlocks == 1)
 	{
@@ -2882,7 +3143,9 @@ template <class T> void MSTransformDataHandler::writeMatrix(const Matrix<T> &inp
 // -----------------------------------------------------------------------
 // Generic method to write a Cube from a VisBuffer into a ArrayColumn
 // -----------------------------------------------------------------------
-template <class T> void MSTransformDataHandler::writeCube(const Cube<T> &inputCube,ArrayColumn<T> &outputCol, RefRows &rowRef)
+template <class T> void MSTransformDataHandler::writeCube(	const Cube<T> &inputCube,
+															ArrayColumn<T> &outputCol,
+															RefRows &rowRef)
 {
 	IPosition shape = inputCube.shape();
 	shape(2) = rowRef.nrows();
@@ -2892,19 +3155,40 @@ template <class T> void MSTransformDataHandler::writeCube(const Cube<T> &inputCu
 	return;
 }
 
-void MSTransformDataHandler::transformCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<Complex> &inputDataCube,ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::transformCubeOfData(	vi::VisBuffer2 *vb,
+													RefRows &rowRef,
+													const Cube<Complex> &inputDataCube,
+													ArrayColumn<Complex> &outputDataCol,
+													ArrayColumn<Bool> *outputFlagCol)
 {
 	(*this.*transformCubeOfDataComplex_p)(vb,rowRef,inputDataCube,outputDataCol,outputFlagCol);
 	return;
 }
 
-void MSTransformDataHandler::transformCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<Float> &inputDataCube,ArrayColumn<Float> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::transformCubeOfData(	vi::VisBuffer2 *vb,
+													RefRows &rowRef,
+													const Cube<Float> &inputDataCube,
+													ArrayColumn<Float> &outputDataCol,
+													ArrayColumn<Bool> *outputFlagCol)
 {
 	(*this.*transformCubeOfDataFloat_p)(vb,rowRef,inputDataCube,outputDataCol,outputFlagCol);
 	return;
 }
 
-template <class T> void MSTransformDataHandler::copyCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::copyCubeOfData(	vi::VisBuffer2 *vb,
+																RefRows &rowRef,
+																const Cube<T> &inputDataCube,
+																ArrayColumn<T> &outputDataCol,
+																ArrayColumn<Bool> *outputFlagCol)
 {
 	writeCube(inputDataCube,outputDataCol,rowRef);
 	if (outputFlagCol != NULL)
@@ -2915,7 +3199,14 @@ template <class T> void MSTransformDataHandler::copyCubeOfData(vi::VisBuffer2 *v
 	return;
 }
 
-template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer2 *vb,
+																	RefRows &rowRef,
+																	const Cube<T> &inputDataCube,
+																	ArrayColumn<T> &outputDataCol,
+																	ArrayColumn<Bool> *outputFlagCol)
 {
 	// Write flag column too?
 	if (outputFlagCol != NULL)
@@ -2984,21 +3275,37 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(vi::VisBuffer2
 		outputPlaneFlags = False;
 
 		// Transform input planes and write them
-		transformAndWritePlaneOfData(0,rowRef.firstRow()+baseline_index*nspws_p,inputPlaneData,inputPlaneFlags,inputPlaneWeights,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+		transformAndWritePlaneOfData(	0,rowRef.firstRow()+baseline_index*nspws_p,
+										inputPlaneData,inputPlaneFlags,inputPlaneWeights,
+										outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
 
 		baseline_index += 1;
 	}
 }
 
-
-void MSTransformDataHandler::fillWeightsPlane(uInt pol, uInt inputChannel, uInt outputChannel, uInt inputRow, const Cube<Float> &inputWeightsCube, Matrix<Float> &inputWeightsPlane)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::fillWeightsPlane(	uInt pol,
+												uInt inputChannel,
+												uInt outputChannel,
+												uInt inputRow,
+												const Cube<Float> &inputWeightsCube,
+												Matrix<Float> &inputWeightsPlane)
 {
 	inputWeightsPlane(pol,outputChannel) = inputWeightsCube(pol,inputChannel,inputRow);
 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::averageCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::averageCubeOfData(	vi::VisBuffer2 *vb,
+																	RefRows &rowRef,
+																	const Cube<T> &inputDataCube,
+																	ArrayColumn<T> &outputDataCol,
+																	ArrayColumn<Bool> *outputFlagCol)
 {
 	// Get input spw and flag and weight cubes
 	Int inputSpw = vb->spectralWindows()(0);
@@ -3008,12 +3315,21 @@ template <class T> void MSTransformDataHandler::averageCubeOfData(vi::VisBuffer2
 	// Define output plane shape
 	IPosition outputPlaneShape = IPosition(2,inputDataCube.shape()(0), numOfOutChanMap_p[inputSpw]);
 
-	transformAndWriteCubeOfData(inputSpw, rowRef, inputDataCube, inputFlagsCube, inputWeightsCube, outputPlaneShape, outputDataCol, outputFlagCol);
+	transformAndWriteCubeOfData(	inputSpw, rowRef,
+									inputDataCube, inputFlagsCube, inputWeightsCube,
+									outputPlaneShape, outputDataCol, outputFlagCol);
 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::smoothCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::smoothCubeOfData(	vi::VisBuffer2 *vb,
+																	RefRows &rowRef,
+																	const Cube<T> &inputDataCube,
+																	ArrayColumn<T> &outputDataCol,
+																	ArrayColumn<Bool> *outputFlagCol)
 {
 	// Get input spw and flag cube
 	Int inputSpw = vb->spectralWindows()(0);
@@ -3024,12 +3340,21 @@ template <class T> void MSTransformDataHandler::smoothCubeOfData(vi::VisBuffer2 
 	IPosition outputPlaneShape = IPosition(2,inputDataCube.shape()(0), inputDataCube.shape()(1));
 
 	// Transform cube
-	transformAndWriteCubeOfData(inputSpw, rowRef, inputDataCube, inputFlagsCube, inputWeightsCube, outputPlaneShape, outputDataCol, outputFlagCol);
+	transformAndWriteCubeOfData(	inputSpw, rowRef,
+									inputDataCube, inputFlagsCube, inputWeightsCube,
+									outputPlaneShape, outputDataCol, outputFlagCol);
 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::regridCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::regridCubeOfData(	vi::VisBuffer2 *vb,
+																	RefRows &rowRef,
+																	const Cube<T> &inputDataCube,
+																	ArrayColumn<T> &outputDataCol,
+																	ArrayColumn<Bool> *outputFlagCol)
 {
 	// Get input spw and flag cube
 	Int inputSpw = vb->spectralWindows()(0);
@@ -3040,12 +3365,24 @@ template <class T> void MSTransformDataHandler::regridCubeOfData(vi::VisBuffer2 
 	IPosition outputPlaneShape = IPosition(2,inputDataCube.shape()(0), inputOutputSpwMap_p[inputSpw].second.NUM_CHAN);
 
 	// Transform cube
-	transformAndWriteCubeOfData(inputSpw, rowRef, inputDataCube, inputFlagsCube, inputWeightsCube, outputPlaneShape, outputDataCol, outputFlagCol);
+	transformAndWriteCubeOfData(	inputSpw, rowRef,
+									inputDataCube, inputFlagsCube, inputWeightsCube,
+									outputPlaneShape, outputDataCol, outputFlagCol);
 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::transformAndWriteCubeOfData(Int inputSpw, RefRows &rowRef, const Cube<T> &inputDataCube, const Cube<Bool> &inputFlagsCube, const Cube<Float> &inputWeightsCube, IPosition &outputPlaneShape, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::transformAndWriteCubeOfData(	Int inputSpw,
+																				RefRows &rowRef,
+																				const Cube<T> &inputDataCube,
+																				const Cube<Bool> &inputFlagsCube,
+																				const Cube<Float> &inputWeightsCube,
+																				IPosition &outputPlaneShape,
+																				ArrayColumn<T> &outputDataCol,
+																				ArrayColumn<Bool> *outputFlagCol)
 {
 	// Write flag column too?
 	if (outputFlagCol != NULL)
@@ -3085,13 +3422,22 @@ template <class T> void MSTransformDataHandler::transformAndWriteCubeOfData(Int 
 		(*this.*setWeightsPlaneByReference_p)(rowIndex,inputWeightsCube,inputPlaneWeights);
 
 		// Transform input planes and write them
-		transformAndWritePlaneOfData(inputSpw,rowRef.firstRow()+rowIndex*nspws_p,inputPlaneData,inputPlaneFlags,inputPlaneWeights,outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+		transformAndWritePlaneOfData(	inputSpw,rowRef.firstRow()+rowIndex*nspws_p,
+										inputPlaneData,inputPlaneFlags,inputPlaneWeights,
+										outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
 	}
 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::separateCubeOfData(vi::VisBuffer2 *vb, RefRows &rowRef, const Cube<T> &inputDataCube,ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::separateCubeOfData(	vi::VisBuffer2 *vb,
+																	RefRows &rowRef,
+																	const Cube<T> &inputDataCube,
+																	ArrayColumn<T> &outputDataCol,
+																	ArrayColumn<Bool> *outputFlagCol)
 {
 	// Write flag column too?
 	if (outputFlagCol != NULL)
@@ -3124,20 +3470,38 @@ template <class T> void MSTransformDataHandler::separateCubeOfData(vi::VisBuffer
 		inputPlaneFlags = inputFlagsCube.xyPlane(rowIndex);
 
 		// Directly write output plane
-		writeOutputPlanes(rowRef.firstRow()+rowIndex*nspws_p,inputPlaneData,inputPlaneFlags,outputDataCol,*outputFlagCol);
+		writeOutputPlanes(	rowRef.firstRow()+rowIndex*nspws_p,
+							inputPlaneData,inputPlaneFlags,
+							outputDataCol,*outputFlagCol);
 	}
 
 	return;
 }
 
-void MSTransformDataHandler::setWeightsPlaneByReference(uInt inputRow, const Cube<Float> &inputWeightsCube, Matrix<Float> &inputWeightsPlane)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::setWeightsPlaneByReference(	uInt inputRow,
+															const Cube<Float> &inputWeightsCube,
+															Matrix<Float> &inputWeightsPlane)
 {
 	inputWeightsPlane = inputWeightsCube.xyPlane(inputRow);
 
 	return;
 }
 
-template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int inputSpw, uInt row, Matrix<T> &inputDataPlane,Matrix<Bool> &inputFlagsPlane, Matrix<Float> &inputWeightsPlane, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> *outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(	Int inputSpw,
+																				uInt row,
+																				Matrix<T> &inputDataPlane,
+																				Matrix<Bool> &inputFlagsPlane,
+																				Matrix<Float> &inputWeightsPlane,
+																				Matrix<T> &outputDataPlane,
+																				Matrix<Bool> &outputFlagsPlane,
+																				ArrayColumn<T> &outputDataCol,
+																				ArrayColumn<Bool> *outputFlagCol)
 {
 	// Get input number of correlations
 	uInt nCorrs = inputDataPlane.shape()(0);
@@ -3164,7 +3528,8 @@ template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int
 		outputDataStripe.reference(outputDataPlane.row(corrIndex));
 		outputFlagsStripe.reference(outputFlagsPlane.row(corrIndex));
 
-		transformStripeOfData(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe);
+		transformStripeOfData(inputSpw,inputDataStripe,inputFlagsStripe,
+				inputWeightsStripe,outputDataStripe,outputFlagsStripe);
 	}
 
 	// Write output planes
@@ -3173,19 +3538,40 @@ template <class T> void MSTransformDataHandler::transformAndWritePlaneOfData(Int
 	return;
 }
 
-void MSTransformDataHandler::writeOutputPlanes(uInt row, Matrix<Complex> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Complex> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::writeOutputPlanes(	uInt row,
+												Matrix<Complex> &outputDataPlane,
+												Matrix<Bool> &outputFlagsPlane,
+												ArrayColumn<Complex> &outputDataCol,
+												ArrayColumn<Bool> &outputFlagCol)
 {
 	(*this.*writeOutputPlanesComplex_p)(row,outputDataPlane,outputFlagsPlane,outputDataCol,outputFlagCol);
 	return;
 }
 
-void MSTransformDataHandler::writeOutputPlanes(uInt row, Matrix<Float> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<Float> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::writeOutputPlanes(	uInt row,
+												Matrix<Float> &outputDataPlane,
+												Matrix<Bool> &outputFlagsPlane,
+												ArrayColumn<Float> &outputDataCol,
+												ArrayColumn<Bool> &outputFlagCol)
 {
 	(*this.*writeOutputPlanesFloat_p)(row,outputDataPlane,outputFlagsPlane,outputDataCol,outputFlagCol);
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeOutputPlanesInBlock(uInt row, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::writeOutputPlanesInBlock(	uInt row,
+																			Matrix<T> &outputDataPlane,
+																			Matrix<Bool> &outputFlagsPlane,
+																			ArrayColumn<T> &outputDataCol,
+																			ArrayColumn<Bool> &outputFlagCol)
 {
 	IPosition outputPlaneShape = outputDataPlane.shape();
 	outputDataCol.setShape(row,outputPlaneShape);
@@ -3195,14 +3581,27 @@ template <class T> void MSTransformDataHandler::writeOutputPlanesInBlock(uInt ro
 	return;
 }
 
-void MSTransformDataHandler::writeOutputFlagsPlane(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, IPosition &outputPlaneShape, uInt &outputRow)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::writeOutputFlagsPlane(	Matrix<Bool> &outputPlane,
+													ArrayColumn<Bool> &outputCol,
+													IPosition &outputPlaneShape,
+													uInt &outputRow)
 {
 	outputCol.setShape(outputRow,outputPlaneShape);
 	outputCol.put(outputRow, outputPlane);
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeOutputPlanesInSlices(uInt row, Matrix<T> &outputDataPlane,Matrix<Bool> &outputFlagsPlane, ArrayColumn<T> &outputDataCol, ArrayColumn<Bool> &outputFlagCol)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::writeOutputPlanesInSlices(	uInt row,
+																			Matrix<T> &outputDataPlane,
+																			Matrix<Bool> &outputFlagsPlane,
+																			ArrayColumn<T> &outputDataCol,
+																			ArrayColumn<Bool> &outputFlagCol)
 {
 	IPosition outputPlaneShape = outputDataPlane.shape();
 	uInt nCorrs = outputPlaneShape(0);
@@ -3216,30 +3615,56 @@ template <class T> void MSTransformDataHandler::writeOutputPlanesInSlices(uInt r
 		uInt outRow = row+spw_i;
 		Slice sliceY(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
 		writeOutputPlaneSlices(outputDataPlane,outputDataCol,sliceX,sliceY,outputPlaneShape_i,outRow);
-		(*this.*writeOutputFlagsPlaneSlices_p)(outputFlagsPlane,outputFlagCol,sliceX,sliceY,outputPlaneShape_i,outRow);
+		(*this.*writeOutputFlagsPlaneSlices_p)(	outputFlagsPlane,outputFlagCol,
+												sliceX,sliceY,outputPlaneShape_i,outRow);
 	}
 
 	uInt outRow = row+spw_i;
 	Slice sliceY(chansPerOutputSpw_p*spw_i,tailOfChansforLastSpw_p);
 	writeOutputPlaneReshapedSlices(outputDataPlane,outputDataCol,sliceX,sliceY,outputPlaneShape_i,outRow);
-	(*this.*writeOutputFlagsPlaneReshapedSlices_p)(outputFlagsPlane,outputFlagCol,sliceX,sliceY,outputPlaneShape_i,outRow);
+	(*this.*writeOutputFlagsPlaneReshapedSlices_p)(	outputFlagsPlane,outputFlagCol,
+													sliceX,sliceY,outputPlaneShape_i,outRow);
 
 	return;
 }
 
-void MSTransformDataHandler::writeOutputFlagsPlaneSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::writeOutputFlagsPlaneSlices(	Matrix<Bool> &outputPlane,
+															ArrayColumn<Bool> &outputCol,
+															Slice &sliceX,
+															Slice &sliceY,
+															IPosition &outputPlaneShape,
+															uInt &outputRow)
 {
 	writeOutputPlaneSlices(outputPlane,outputCol,sliceX,sliceY,outputPlaneShape,outputRow);
 	return;
 }
 
-void MSTransformDataHandler::writeOutputFlagsPlaneReshapedSlices(Matrix<Bool> &outputPlane, ArrayColumn<Bool> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::writeOutputFlagsPlaneReshapedSlices(	Matrix<Bool> &outputPlane,
+																	ArrayColumn<Bool> &outputCol,
+																	Slice &sliceX,
+																	Slice &sliceY,
+																	IPosition &outputPlaneShape,
+																	uInt &outputRow)
 {
 	writeOutputPlaneReshapedSlices(outputPlane,outputCol,sliceX,sliceY,outputPlaneShape,outputRow);
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeOutputPlaneSlices(Matrix<T> &outputPlane, ArrayColumn<T> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::writeOutputPlaneSlices(	Matrix<T> &outputPlane,
+																		ArrayColumn<T> &outputCol,
+																		Slice &sliceX,
+																		Slice &sliceY,
+																		IPosition &outputPlaneShape,
+																		uInt &outputRow)
 {
 	Matrix<T> outputPlane_i = outputPlane(sliceX,sliceY);
 	outputCol.setShape(outputRow,outputPlaneShape);
@@ -3247,7 +3672,15 @@ template <class T> void MSTransformDataHandler::writeOutputPlaneSlices(Matrix<T>
 	return;
 }
 
-template <class T> void MSTransformDataHandler::writeOutputPlaneReshapedSlices(Matrix<T> &outputPlane, ArrayColumn<T> &outputCol, Slice &sliceX, Slice &sliceY, IPosition &outputPlaneShape, uInt &outputRow)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::writeOutputPlaneReshapedSlices(	Matrix<T> &outputPlane,
+																				ArrayColumn<T> &outputCol,
+																				Slice &sliceX,
+																				Slice &sliceY,
+																				IPosition &outputPlaneShape,
+																				uInt &outputRow)
 {
 	Matrix<T> outputPlane_i = outputPlane(sliceX,sliceY);
 	outputPlane_i.resize(outputPlaneShape,True);
@@ -3256,25 +3689,56 @@ template <class T> void MSTransformDataHandler::writeOutputPlaneReshapedSlices(M
 	return;
 }
 
-void MSTransformDataHandler::setWeightStripeByReference(uInt corrIndex,Matrix<Float> &inputWeightsPlane, Vector<Float> &inputWeightsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::setWeightStripeByReference(	uInt corrIndex,
+															Matrix<Float> &inputWeightsPlane,
+															Vector<Float> &inputWeightsStripe)
 {
 	inputWeightsStripe.reference(inputWeightsPlane.row(corrIndex));
 	return;
 }
 
-void MSTransformDataHandler::transformStripeOfData(Int inputSpw, Vector<Complex> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe, Vector<Complex> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::transformStripeOfData(	Int inputSpw,
+													Vector<Complex> &inputDataStripe,
+													Vector<Bool> &inputFlagsStripe,
+													Vector<Float> &inputWeightsStripe,
+													Vector<Complex> &outputDataStripe,
+													Vector<Bool> &outputFlagsStripe)
 {
-	(*this.*transformStripeOfDataComplex_p)(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe);
+	(*this.*transformStripeOfDataComplex_p)(	inputSpw,inputDataStripe,inputFlagsStripe,
+												inputWeightsStripe,outputDataStripe,outputFlagsStripe);
 	return;
 }
 
-void MSTransformDataHandler::transformStripeOfData(Int inputSpw, Vector<Float> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe, Vector<Float> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::transformStripeOfData(	Int inputSpw,
+													Vector<Float> &inputDataStripe,
+													Vector<Bool> &inputFlagsStripe,
+													Vector<Float> &inputWeightsStripe,
+													Vector<Float> &outputDataStripe,
+													Vector<Bool> &outputFlagsStripe)
 {
-	(*this.*transformStripeOfDataFloat_p)(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe);
+	(*this.*transformStripeOfDataFloat_p)(	inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,
+											outputDataStripe,outputFlagsStripe);
 	return;
 }
 
-template <class T> void MSTransformDataHandler::average(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::average(	Int inputSpw,
+															Vector<T> &inputDataStripe,
+															Vector<Bool> &inputFlagsStripe,
+															Vector<Float> &inputWeightsStripe,
+															Vector<T> &outputDataStripe,
+															Vector<Bool> &outputFlagsStripe)
 {
 	uInt width = freqbinMap_p[inputSpw];
 	uInt startChan = 0;
@@ -3283,20 +3747,27 @@ template <class T> void MSTransformDataHandler::average(Int inputSpw, Vector<T> 
 	uInt limit = inputDataStripe.size() - tail;
 	while (startChan < limit)
 	{
-		averageKernel(inputDataStripe,inputFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe,startChan,outChanIndex,width);
+		averageKernel(	inputDataStripe,inputFlagsStripe,inputWeightsStripe,
+						outputDataStripe,outputFlagsStripe,startChan,outChanIndex,width);
 		startChan += width;
 		outChanIndex += 1;
 	}
 
 	if (tail)
 	{
-		averageKernel(inputDataStripe,inputFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe,startChan,outChanIndex,tail);
+		averageKernel(	inputDataStripe,inputFlagsStripe,inputWeightsStripe,
+						outputDataStripe,outputFlagsStripe,startChan,outChanIndex,tail);
 	}
 
 	return;
 }
 
-template <class T> void  MSTransformDataHandler::simpleAverage(uInt width, Vector<T> &inputData, Vector<T> &outputData)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void  MSTransformDataHandler::simpleAverage(	uInt width,
+																Vector<T> &inputData,
+																Vector<T> &outputData)
 {
 	// Dummy variables
 	Vector<Bool> inputFlags,outputFlags;
@@ -3321,19 +3792,51 @@ template <class T> void  MSTransformDataHandler::simpleAverage(uInt width, Vecto
 	return;
 }
 
-void MSTransformDataHandler::averageKernel(Vector<Complex> &inputData, Vector<Bool> &inputFlags, Vector<Float> &inputWeights, Vector<Complex> &outputData, Vector<Bool> &outputFlags, uInt startInputPos, uInt outputPos, uInt width)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::averageKernel(	Vector<Complex> &inputData,
+											Vector<Bool> &inputFlags,
+											Vector<Float> &inputWeights,
+											Vector<Complex> &outputData,
+											Vector<Bool> &outputFlags,
+											uInt startInputPos,
+											uInt outputPos,
+											uInt width)
 {
-	(*this.*averageKernelComplex_p)(inputData,inputFlags,inputWeights,outputData,outputFlags,startInputPos,outputPos,width);
+	(*this.*averageKernelComplex_p)(	inputData,inputFlags,inputWeights,
+										outputData,outputFlags,startInputPos,outputPos,width);
 	return;
 }
 
-void MSTransformDataHandler::averageKernel(Vector<Float> &inputData, Vector<Bool> &inputFlags, Vector<Float> &inputWeights, Vector<Float> &outputData, Vector<Bool> &outputFlags, uInt startInputPos, uInt outputPos, uInt width)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::averageKernel(	Vector<Float> &inputData,
+											Vector<Bool> &inputFlags,
+											Vector<Float> &inputWeights,
+											Vector<Float> &outputData,
+											Vector<Bool> &outputFlags,
+											uInt startInputPos,
+											uInt outputPos,
+											uInt width)
 {
-	(*this.*averageKernelFloat_p)(inputData,inputFlags,inputWeights,outputData,outputFlags,startInputPos,outputPos,width);
+	(*this.*averageKernelFloat_p)(	inputData,inputFlags,inputWeights,
+									outputData,outputFlags,startInputPos,outputPos,width);
 	return;
 }
 
-template <class T> void MSTransformDataHandler::simpleAverageKernel(Vector<T> &inputData, Vector<Bool> &inputFlags, Vector<Float> &inputWeights, Vector<T> &outputData, Vector<Bool> &outputFlags, uInt startInputPos, uInt outputPos, uInt width)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::simpleAverageKernel(Vector<T> &inputData,
+																	Vector<Bool> &inputFlags,
+																	Vector<Float> &inputWeights,
+																	Vector<T> &outputData,
+																	Vector<Bool> &outputFlags,
+																	uInt startInputPos,
+																	uInt outputPos,
+																	uInt width)
 {
 	uInt pos = startInputPos + 1;
 	uInt counts = 1;
@@ -3355,7 +3858,17 @@ template <class T> void MSTransformDataHandler::simpleAverageKernel(Vector<T> &i
 	return;
 }
 
-template <class T> void MSTransformDataHandler::flagAverageKernel(Vector<T> &inputData, Vector<Bool> &inputFlags, Vector<Float> &inputWeights, Vector<T> &outputData, Vector<Bool> &outputFlags, uInt startInputPos, uInt outputPos, uInt width)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::flagAverageKernel(	Vector<T> &inputData,
+																	Vector<Bool> &inputFlags,
+																	Vector<Float> &inputWeights,
+																	Vector<T> &outputData,
+																	Vector<Bool> &outputFlags,
+																	uInt startInputPos,
+																	uInt outputPos,
+																	uInt width)
 {
 	uInt samples = 1;
 	uInt pos = startInputPos + 1;
@@ -3383,8 +3896,17 @@ template <class T> void MSTransformDataHandler::flagAverageKernel(Vector<T> &inp
 	return;
 }
 
-
-template <class T> void MSTransformDataHandler::weightAverageKernel(Vector<T> &inputData, Vector<Bool> &inputFlags, Vector<Float> &inputWeights, Vector<T> &outputData, Vector<Bool> &outputFlags, uInt startInputPos, uInt outputPos, uInt width)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::weightAverageKernel(	Vector<T> &inputData,
+																		Vector<Bool> &inputFlags,
+																		Vector<Float> &inputWeights,
+																		Vector<T> &outputData,
+																		Vector<Bool> &outputFlags,
+																		uInt startInputPos,
+																		uInt outputPos,
+																		uInt width)
 {
 	uInt samples = 1;
 	uInt pos = startInputPos + 1;
@@ -3412,7 +3934,15 @@ template <class T> void MSTransformDataHandler::weightAverageKernel(Vector<T> &i
 	return;
 }
 
-template <class T> void MSTransformDataHandler::smooth(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::smooth(	Int inputSpw,
+														Vector<T> &inputDataStripe,
+														Vector<Bool> &inputFlagsStripe,
+														Vector<Float> &inputWeightsStripe,
+														Vector<T> &outputDataStripe,
+														Vector<Bool> &outputFlagsStripe)
 {
     Smooth<T>::hanning(	outputDataStripe, 		// the output data
     					outputFlagsStripe, 		// the output flags
@@ -3423,12 +3953,20 @@ template <class T> void MSTransformDataHandler::smooth(Int inputSpw, Vector<T> &
 	return;
 }
 
-template <class T> void MSTransformDataHandler::regrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::regrid(	Int inputSpw,
+														Vector<T> &inputDataStripe,
+														Vector<Bool> &inputFlagsStripe,
+														Vector<Float> &inputWeightsStripe,
+														Vector<T> &outputDataStripe,
+														Vector<Bool> &outputFlagsStripe)
 {
     InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
     											outputFlagsStripe, // Output flags
-    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Output channel frequencies
-    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // Input channel frequencies
+    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
+    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // In chan freq
     											inputDataStripe, // Input data
     											inputFlagsStripe, // Input Flags
     											interpolationMethod_p, // Interpolation method
@@ -3439,7 +3977,15 @@ template <class T> void MSTransformDataHandler::regrid(Int inputSpw, Vector<T> &
 	return;
 }
 
-template <class T> void MSTransformDataHandler::averageSmooth(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::averageSmooth(	Int inputSpw,
+																Vector<T> &inputDataStripe,
+																Vector<Bool> &inputFlagsStripe,
+																Vector<Float> &inputWeightsStripe,
+																Vector<T> &outputDataStripe,
+																Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> averagedDataStripe(outputDataStripe.shape(),T());
 	Vector<Bool> averagedFlagsStripe(outputFlagsStripe.shape(),MSTransformations::False);
@@ -3451,7 +3997,15 @@ template <class T> void MSTransformDataHandler::averageSmooth(Int inputSpw, Vect
 	return;
 }
 
-template <class T> void MSTransformDataHandler::averageRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::averageRegrid(	Int inputSpw,
+																Vector<T> &inputDataStripe,
+																Vector<Bool> &inputFlagsStripe,
+																Vector<Float> &inputWeightsStripe,
+																Vector<T> &outputDataStripe,
+																Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> averagedDataStripe(numOfCombInterChanMap_p[inputSpw],T());
 	Vector<Bool> averagedFlagsStripe(numOfCombInterChanMap_p[inputSpw],MSTransformations::False);
@@ -3463,7 +4017,15 @@ template <class T> void MSTransformDataHandler::averageRegrid(Int inputSpw, Vect
 	return;
 }
 
-template <class T> void MSTransformDataHandler::smoothRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::smoothRegrid(	Int inputSpw,
+																Vector<T> &inputDataStripe,
+																Vector<Bool> &inputFlagsStripe,
+																Vector<Float> &inputWeightsStripe,
+																Vector<T> &outputDataStripe,
+																Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> smoothedDataStripe(inputDataStripe.shape(),T());
 	Vector<Bool> smoothedFlagsStripe(inputFlagsStripe.shape(),MSTransformations::False);
@@ -3475,14 +4037,24 @@ template <class T> void MSTransformDataHandler::smoothRegrid(Int inputSpw, Vecto
 	return;
 }
 
-template <class T> void MSTransformDataHandler::averageSmoothRegrid(Int inputSpw, Vector<T> &inputDataStripe,Vector<Bool> &inputFlagsStripe, Vector<Float> &inputWeightsStripe,Vector<T> &outputDataStripe,Vector<Bool> &outputFlagsStripe)
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::averageSmoothRegrid(Int inputSpw,
+																	Vector<T> &inputDataStripe,
+																	Vector<Bool> &inputFlagsStripe,
+																	Vector<Float> &inputWeightsStripe,
+																	Vector<T> &outputDataStripe,
+																	Vector<Bool> &outputFlagsStripe)
 {
 	Vector<T> averageSmoothedDataStripe(numOfCombInterChanMap_p[inputSpw],T());
 	Vector<Bool> averageSmoothedFlagsStripe(numOfCombInterChanMap_p[inputSpw],MSTransformations::False);
 
-	averageSmooth(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,averageSmoothedDataStripe,averageSmoothedFlagsStripe);
+	averageSmooth(	inputSpw,inputDataStripe,inputFlagsStripe,
+					inputWeightsStripe,averageSmoothedDataStripe,averageSmoothedFlagsStripe);
 
-	regrid(inputSpw,averageSmoothedDataStripe,averageSmoothedFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe);
+	regrid(	inputSpw,averageSmoothedDataStripe,averageSmoothedFlagsStripe,
+			inputWeightsStripe,outputDataStripe,outputFlagsStripe);
 
 	return;
 }
