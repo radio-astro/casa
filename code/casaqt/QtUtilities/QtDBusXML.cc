@@ -349,7 +349,7 @@ void QtDBusXML::setMethodParam(const QString& paramName, uInt value) {
     setMethodParam(paramName, TYPE_UINT, QString::number(value)); }
 
 void QtDBusXML::setMethodParam(const QString& paramName, double value){
-    setMethodParam(paramName, TYPE_DOUBLE, QString::number(value)); }
+    setMethodParam(paramName, TYPE_DOUBLE, QString::number(value, 'g', 16)); }
 
 void QtDBusXML::setMethodParam(const QString& paramName, const QString& value){
     setMethodParam(paramName, TYPE_STRING, value); }
