@@ -10180,20 +10180,28 @@ used to create a 2D temporary image.
         Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
         be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
         ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
-        written and/or returned. The coordinate system of the resulting image is valid in the sense that the coordinates
-        of the pixels in the output correspond to those along slice in the input image (ie, the direction coordinate
-        will be rotated with respect to the position axis in the output axis in the output image, in general).
+        written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the
+        input image, and the corresponding axis represents angular offset with the center pixel having a value of 0.
+        
+        The equivalent coordinate system, with a (usually) rotated direction coordinate (eg, RA and Dec) is written
+        to the output image as a table record. It can be retrieved using the table tool as shown in the example below.
     </description>
     <example>
         ia.open("my_spectral_cube.im")
         # create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
         # in the input image
-        mypv = ia.pv(outfile="", start=[45,50], end=[100,120], wantreturn=true)
+        mypv = ia.pv(outfile="pv.im", start=[45,50], end=[100,120], wantreturn=true)
         ia.done()
         # analyze the pv image, such as get statistics
         pvstats = mypv.statistics()
         # when done, close the tool to release system resources
         mypv.done()
+        
+        # get the alternate coordinate system information
+        tb.open("pv.im")
+        alternate_csys_record = tb.getkeyword("misc")["secondary_coordinates"]
+        tb.done()
+        
     </example>
 </method>
   
