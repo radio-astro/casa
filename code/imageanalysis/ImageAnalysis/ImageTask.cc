@@ -248,7 +248,6 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 	const IPosition *const outShape,
 	const CoordinateSystem *const coordsys
 ) const {
-
 	IPosition oShape = outShape == 0 ? subImage->shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? subImage->coordinates() : *coordsys;
 	std::auto_ptr<ImageInterface<Float> > outImage(
@@ -256,7 +255,7 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 			TiledShape(oShape), csys
 		)
 	);
-	std::auto_ptr<ArrayLattice<Bool> >mymask;
+	std::auto_ptr<ArrayLattice<Bool> > mymask;
 	if (mask != 0) {
 		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
 	}

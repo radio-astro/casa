@@ -32,7 +32,6 @@
 #include <casa/OS/SymLink.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/ExtendImage.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
@@ -43,7 +42,6 @@
 
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 
-#include <memory>
 #include <unistd.h>
 
 
