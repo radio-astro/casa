@@ -346,6 +346,28 @@ vector<string> msmetadata::intents() {
 	return vector<string>();
 }
 
+vector<string> msmetadata::intentsforfield(const variant& field) {
+	_FUNC(
+		Int id = -1;
+		switch (field.type()) {
+		case variant::STRING:
+			id = *(_msmd->getFieldIDsForField(field.toString()).begin());
+			break;
+		case variant::INT:
+			id = field.toInt();
+			break;
+		default:
+			*_log << "Unsupported type for field which must be "
+				<< "a nonnegative int or string." << LogIO::EXCEPTION;
+		}
+		if (id < 0) {
+			throw AipsError("field must be nonnegative if an int.");
+		}
+		return _setStringToVectorString(_msmd->getIntentsForField(id));
+	)
+	return vector<string>();
+}
+
 vector<string> msmetadata::intentsforscan(int scan) {
 	_FUNC(
 		if (scan < 0) {

@@ -488,6 +488,29 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="intentsforfield">
+            <shortdescription>Get an array of the unique intents for the specified field.</shortdescription>
+             <input>
+                <param type="any" direction="in" name="field">
+                    <any type="variant" limittypes="int string"/>
+                    <description>Field ID or name for which to return the intents.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="stringArray"/>
+            <description>
+                Get an array of the unique intents for the specified field.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the intents associated with field 4
+    intents = msmd.intentsforfield(4)
+    # get intents for field "MOS"
+    intents2 = msmd.intentsforfield("MOS")
+    msmd.done()
+            </example>
+        </method>
+        
         <method type="function" name="intentsforscan">
             <shortdescription>Get an array of the unique intents for the specified scan.</shortdescription>
              <input>

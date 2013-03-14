@@ -249,6 +249,53 @@ class msmd_test(unittest.TestCase):
         )
         self.assertTrue((got == expec).all())
     
+    def test_intentsforfield(self):
+        """Test intentsforfield()"""
+        for field in range(self.md.nfields()):
+            for i in [0, 1]:
+                if i == 0:
+                    f = field
+                else:
+                    f = self.md.namesforfields(field)[0]
+                got = self.md.intentsforfield(f)
+                if field == 0:
+                    expec = numpy.array([
+                        "CALIBRATE_ATMOSPHERE#OFF_SOURCE", "CALIBRATE_ATMOSPHERE#ON_SOURCE",
+                        "CALIBRATE_BANDPASS#ON_SOURCE", "CALIBRATE_PHASE#ON_SOURCE",
+                        "CALIBRATE_POINTING#ON_SOURCE", "CALIBRATE_SIDEBAND_RATIO#OFF_SOURCE",
+                        "CALIBRATE_SIDEBAND_RATIO#ON_SOURCE", "CALIBRATE_WVR#OFF_SOURCE",
+                        "CALIBRATE_WVR#ON_SOURCE"
+                    ])
+                if field == 1:
+                    expec = numpy.array([
+                        "CALIBRATE_POINTING#ON_SOURCE", "CALIBRATE_WVR#ON_SOURCE"
+                    ])
+                if field == 2:
+                    expec = numpy.array([
+                        "CALIBRATE_AMPLI#ON_SOURCE", "CALIBRATE_ATMOSPHERE#OFF_SOURCE",
+                        "CALIBRATE_ATMOSPHERE#ON_SOURCE", "CALIBRATE_PHASE#ON_SOURCE",
+                        "CALIBRATE_WVR#OFF_SOURCE", "CALIBRATE_WVR#ON_SOURCE"
+                    ])
+                if field == 3:
+                    expec = numpy.array([
+                        "CALIBRATE_ATMOSPHERE#OFF_SOURCE", "CALIBRATE_ATMOSPHERE#ON_SOURCE",
+                        "CALIBRATE_PHASE#ON_SOURCE", "CALIBRATE_POINTING#ON_SOURCE",
+                        "CALIBRATE_WVR#OFF_SOURCE", "CALIBRATE_WVR#ON_SOURCE"
+                    ])
+                if field == 4:
+                    expec = numpy.array([
+                        "CALIBRATE_ATMOSPHERE#OFF_SOURCE", "CALIBRATE_ATMOSPHERE#ON_SOURCE",
+                        "CALIBRATE_WVR#OFF_SOURCE", "CALIBRATE_WVR#ON_SOURCE",
+                        "OBSERVE_TARGET#ON_SOURCE"
+                    ])
+                if field == 5:
+                    expec = numpy.array([
+                        "CALIBRATE_ATMOSPHERE#OFF_SOURCE", "CALIBRATE_ATMOSPHERE#ON_SOURCE",
+                        "CALIBRATE_WVR#OFF_SOURCE", "CALIBRATE_WVR#ON_SOURCE",
+                        "OBSERVE_TARGET#ON_SOURCE"
+                    ])
+                self.assertTrue((got == expec).all())
+    
     def test_intentsforscan(self):
         """Test intentsforscan()"""
         for scan in self.md.scannumbers():
@@ -694,7 +741,6 @@ class msmd_test(unittest.TestCase):
             32, 33, 34, 35, 36, 37, 38, 39
         ])
         self.assertTrue((got == expec).all())
-
 
 def suite():
     return [msmd_test]
