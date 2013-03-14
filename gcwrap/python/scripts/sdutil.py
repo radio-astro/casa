@@ -10,6 +10,7 @@ import string
 from taskinit import gentools
 import functools
 import re
+import abc
 
 qatl = casac.quanta()
 
@@ -96,6 +97,8 @@ class sdtask_interface(object):
     Derived classes must implement the above three methods: initialize(),
     execute(), and finalize().
     """
+    __metaclass__ = abc.ABCMeta
+    
     def __init__(self, **kwargs):
         for (k,v) in kwargs.items():
             setattr(self, k, v)
@@ -103,12 +106,15 @@ class sdtask_interface(object):
     def __del__(self):
         pass
 
+    @abc.abstractmethod
     def initialize(self):
         raise NotImplementedError('initialize is abstract method')
 
+    @abc.abstractmethod
     def execute(self):
         raise NotImplementedError('execute is abstract method')
 
+    @abc.abstractmethod
     def finalize(self):
         raise NotImplementedError('finalize is abstract method')
 
@@ -123,6 +129,8 @@ class sdtask_template(sdtask_interface):
     to do any task specific parameter check in initialize().
     For finalize(), derived classes can implement save() and cleanup().
     """
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, **kwargs):
         super(sdtask_template,self).__init__(**kwargs)
         if not hasattr(self, 'outform'):
@@ -166,6 +174,7 @@ class sdtask_template(sdtask_interface):
         # Save result on disk if necessary
         self.save()
 
+    @abc.abstractmethod
     def initialize_scan(self):
         # initialize scantable object to work with
         raise NotImplementedError('initialize_scan is abstract method')
