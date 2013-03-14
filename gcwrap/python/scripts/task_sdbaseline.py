@@ -185,10 +185,9 @@ class sdbaseline_engine(sdutil.sdtask_engine):
             self.__register(k)
 
         # parameters for clipping
-        if self.blfunc.lower() != 'poly':
-            keys = getattr(self, 'clip_keys')
-            for k in keys:
-                self.__register(k)
+        keys = getattr(self, 'clip_keys')
+        for k in keys:
+            self.__register(k)
 
         # common parameters
         self.__register('mask', 'masklist')
