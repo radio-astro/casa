@@ -22,6 +22,26 @@ using casac::variant;
 using namespace casac;
 
 %}
+
+%typemap(in) long long {
+  if(!(PyString_Check($input) || PyFloat_Check($input) || PyDict_Check($input) || PyList_Check($input))){
+     $1 = PyInt_AsLong($input);
+  } else {
+     cerr << "Failed here " << $input->ob_type->tp_name << endl;
+     PyErr_SetString(PyExc_TypeError,"argument $1_name must be an integer");
+     return NULL;
+  }
+}
+%typemap(in) long {
+  if(!(PyString_Check($input) || PyFloat_Check($input) || PyDict_Check($input) || PyList_Check($input))){
+     $1 = PyInt_AsLong($input);
+  } else {
+     cerr << "Failed here " << $input->ob_type->tp_name << endl;
+     PyErr_SetString(PyExc_TypeError,"argument $1_name must be an integer");
+     return NULL;
+  }
+}
+
 %typemap(in) int {
   if(!(PyString_Check($input) || PyFloat_Check($input) || PyDict_Check($input) || PyList_Check($input))){
      $1 = PyInt_AsLong($input);
@@ -472,6 +492,69 @@ if($1){
          casac::pylist2vector($input,  *$1, shape);
       }
    }
+}
+
+%typemap(in) std::vector<long long> & {
+   if(!$1)
+      $1 = new std::vector<long long>(0);
+   else
+      $1->resize(0);
+   std::vector<int> shape;
+
+   if(casac::pyarray_check($input)){
+      casac::numpy2vector($input, *$1, shape);
+   } else {
+      if (PyString_Check($input)){
+         $1->push_back(-1);
+         PyErr_SetString(PyExc_TypeError,"argument $1_name must not be a string");
+         return NULL;
+      } else if (PyInt_Check($input)){
+         $1->push_back(int(PyInt_AsLong($input)));
+      } else if (PyLong_Check($input)){
+         $1->push_back(PyLong_AsLong($input));
+      } else if (PyFloat_Check($input)){
+         $1->push_back(PyInt_AsLong(PyNumber_Int($input)));
+      } else {
+         shape.push_back(PyList_Size($input));
+         casac::pylist2vector($input,  *$1, shape);
+      }
+   }
+}
+
+
+%typemap(in) std::vector<long> & {
+   if(!$1)
+      $1 = new std::vector<long>(0);
+   else
+      $1->resize(0);
+   std::vector<int> shape;
+
+   if(casac::pyarray_check($input)){
+      casac::numpy2vector($input, *$1, shape);
+   } else {
+      if (PyString_Check($input)){
+         $1->push_back(-1);
+         PyErr_SetString(PyExc_TypeError,"argument $1_name must not be a string");
+         return NULL;
+      } else if (PyInt_Check($input)){
+         $1->push_back(int(PyInt_AsLong($input)));
+      } else if (PyLong_Check($input)){
+         $1->push_back(PyLong_AsLong($input));
+      } else if (PyFloat_Check($input)){
+         $1->push_back(PyInt_AsLong(PyNumber_Int($input)));
+      } else {
+         shape.push_back(PyList_Size($input));
+         casac::pylist2vector($input,  *$1, shape);
+      }
+   }
+}
+
+%typemap(freearg) const std::vector<long long>& rownr {
+   delete $1;
+}
+
+%typemap(freearg) const std::vector<long>& rownr {
+   delete $1;
 }
 
 %typemap(freearg) const std::vector<int>& rownr {
