@@ -4048,7 +4048,7 @@ const Vector<Double> &MeasTable::Planetary(MeasTable::Types which,
     }
   }
   {
-    ScopedMutexLock locker(theirMutex)
+    ScopedMutexLock locker(theirMutex);
     if (!MeasJPL::get(res, fil, (MeasJPL::Types)which,
 		      MVEpoch(T))) {
       LogIO os(LogOrigin("MeasTable",
