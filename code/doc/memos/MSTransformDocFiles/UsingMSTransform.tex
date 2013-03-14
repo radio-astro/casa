@@ -6,6 +6,9 @@
 % order of running the transformations
 % independence of each transformation.
 % new VI???
+Documentation for the task and tool can be found in:
+\htmladdnormallink{Task Documentation}{http://casa.nrao.edu/docs/TaskRef/TaskRef.html}
+\htmladdnormallink{Tool Documentation} {http://casa.nrao.edu/docs/CasaRef/CasaRef.html}
 
 \subsection{Splitting capabilities}
 Task mstransform behaves like split in all cases that concern sub-table re-indexing
@@ -148,29 +151,15 @@ mstransform(vis='inp.ms', outputvis='out.ms', spw='0', regridms=True, nchan=10, 
 \end{enumerate}
 
 \section{Frequently Asked Questions}\label{Sec:FAQ}
+\begin{description}
+  \item[Q1: How to run mstransform to mimic cvel?] \hfill 
+  Set the parameter {\it regridms}I to True. If there is more than one spw in the
+selection, set also {\it combinespws} to True because cvel always combines the selected
+spws.
 
+  \item[Q2: How to run mstransform to mimic split and the width parameter?] \hfill 
+  To do channel average, set {\it chanaverage} to True and set {\it chanbin} to the
+  appropriate value.
 
-\section{Notes during development}
-
-%\htmladdnormallink{These slides}{http://www.aoc.nrao.edu/~rurvashi/DataFiles/Talk_FlaggingCASA3.4.pdf}
-Summarize the CASA MSTransform infrastructure and user-options.
-
-\htmladdnormallink{Task Documentation}{http://casa.nrao.edu/docs/TaskRef/TaskRef.html}
-\htmladdnormallink{Tool Documentation} {http://casa.nrao.edu/docs/CasaRef/CasaRef.html}
-
-These notes should become part of the real documentation later. For the moment they are
-only notes to remind me of details of the implementation.
-
-\begin{enumerate}
-       
-\item 
-\end{enumerate}
-
-\subsection{Issues that were fixed in other places during the development of MSTransform}
-\begin{enumerate}
-\item Partition task: Fixed the spw selection list order that was supposed to be sorted but it was not.
-Committed to r23001.
-\item Listpartition task: optimized the code. Moved the creation of the dictionary to partitionhelper. It
-now can be used by other scripts/tasks/tests.
-\end{enumerate}
+\end{description}
 
