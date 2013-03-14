@@ -9512,7 +9512,7 @@ a script to make sure this variable is an Image
      <param type="any"  name="value">
 	     <any type="variant"/>
      <description>Absolute world coordinate,
-      Numeric vector, vector of quantities or record.
+      Numeric vector, vector of strings representing quantities, or record of format analogous to that produced by ia.toworld().
       Default is reference value.</description>
      </param>
 </input>
