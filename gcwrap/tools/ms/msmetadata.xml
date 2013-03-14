@@ -269,6 +269,20 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
+        <method type="function" name="close">
+            <shortdescription>Close this tool and reclaim system resources associated with it.</shortdescription>
+            <returns type="bool"/>
+            <description>
+                This method will close the tool and reclaim system resources it has been using. Returns true if successful.
+            </description>
+            <example>
+                msmd.open("my.ms")
+                # do things with tool
+                # finish, close tool and free up resources.
+                msmd.close()
+            </example>
+        </method>
+        
         <method type="function" name="done">
             <shortdescription>Close this tool and reclaim system resources associated with it.</shortdescription>
             <returns type="bool"/>
@@ -282,8 +296,6 @@ windows in the dataset and close the tool.
                 msmd.done()
             </example>
         </method>
-        
-        
         
         <method type="function" name="effexposuretime">
             <shortdescription>Get the effective exposure (on-source integration time)</shortdescription>

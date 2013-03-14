@@ -227,6 +227,15 @@ vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 	return vector<double>();
 }
 
+
+bool msmetadata::close() {
+	_FUNC2(
+		_msmd.reset(0);
+		return true;
+	)
+	return false;
+}
+
 bool msmetadata::done() {
 	_FUNC2(
 		_msmd.reset(0);
