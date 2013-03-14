@@ -270,7 +270,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- TIME AVERAGING parameters -->
     <param type="bool" name="timeaverage">
-        <description>Average data in time.</description>
+        <description>Average data in time. (to be implemented)</description>
         <value>False</value>
     </param>
     
@@ -359,7 +359,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     * ability to create an output MS or MMS
     * spw combination and separation
     * channel averaging taking weights into account
-    * time averaging taking a minimum number of baselines
+    * time averaging taking a minimum number of baselines (TBI)
     * reference frame transformation
     * Hanning smoothing
     
