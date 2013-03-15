@@ -112,6 +112,7 @@ qt4_wrap_cpp( outfiles_qoh
   RegionShapes/RSUtils.qo.h
   region/Region.qo.h
   region/Polyline.qo.h
+  region/PVLine.qo.h
   region/QtRegionSource.qo.h
   region/QtRegionDock.qo.h
   region/QtRegionState.qo.h
@@ -187,6 +188,7 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtImageRegionStats.ui
   region/QtMsRegionStats.ui
   region/SlicerStats.ui
+  region/PVLineStats.ui
   Slicer/SlicerMainWindow.ui
   Slicer/ImageSlice.ui
   Slicer/SliceSegment.ui
@@ -301,6 +303,8 @@ casa_add_library( display
   DisplayEvents/MWCRectTool.cc
   DisplayEvents/MultiRectTool.cc
   DisplayEvents/MultiRectToolImpl.cc
+  DisplayEvents/MultiPVTool.cc
+  DisplayEvents/MultiPVToolImpl.cc
   DisplayEvents/MultiEllipseTool.cc
   DisplayEvents/MultiEllipseToolImpl.cc
   DisplayEvents/MultiPointTool.cc
@@ -544,6 +548,7 @@ casa_add_library( display
   region/QtRegionState.cc
   region/QtRegionStats.cc
   region/Rectangle.cc
+  region/PVLine.cc
   region/Ellipse.cc
   region/Point.cc
   region/Polygon.cc

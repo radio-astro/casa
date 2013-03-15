@@ -61,6 +61,8 @@ namespace casa {
 
 		void status( const std::string &msg, const std::string &type="info" );
 
+		QtDisplayPanelGui *panel( ) { return dpg; }
+
 		/* QStackedWidget *regionStack( ) { return regions; } */
 
 		/* void showStats( const QString &stats ); */

@@ -25,6 +25,7 @@
 //#
 //# $Id: $
 
+#include <QDebug>
 #include <display/region/QtRegionStats.qo.h>
 #include <QtGui/QStackedWidget>
 #include <display/region/Region.qo.h>
@@ -35,6 +36,13 @@
 namespace casa {
 namespace viewer {
 namespace qt {
+
+void stats_t::stats_t::setLabels( const std::string &label, const std::string &desc ) {
+	label_ = label;
+	description_ = desc;
+	setTitle(QString::fromStdString(label_));
+}
+
 image_stats_t::image_stats_t( statfield_list_t &fields, QWidget *parent )  : stats_t(parent) {
 	setupUi(this);
 	fields.push_back(statfield_list_t::value_type(box11,text11));
@@ -71,6 +79,24 @@ SliceStats::SliceStats( QWidget *parent ) : stats_t(parent) {
 	setupUi(this);
 	connect( sliceToolButton, SIGNAL(clicked()), this, SIGNAL(show1DSliceTool()));
 }
+
+pvline_stats_t::pvline_stats_t( QWidget *parent ) : stats_t(parent) {
+	setupUi(this);
+	coord_box->hide( );
+	averaging_frame->hide( );
+	connect( create_button, SIGNAL(clicked( )), this, SLOT(create_pv_image( )) );
+	connect( update_button, SIGNAL(clicked( )), this, SLOT(update_pv_image( )) );
+}
+
+void pvline_stats_t::create_pv_image( ) {
+	emit createPVImage(label_,description_);
+	update_button->setEnabled(true);
+}
+
+void pvline_stats_t::update_pv_image( ) {
+	emit updatePVImage( );
+}
+
 }
 
 QtRegionStats::QtRegionStats( QWidget *parent ) : QWidget(parent), container_(0), next_(0), stats_box_(0) {
@@ -82,7 +108,7 @@ QtRegionStats::~QtRegionStats( ) { }
 
 void QtRegionStats::updateStatistics( RegionInfo &stats, Region* region ) {
 
-	new_stats_box(stats.type(), region )->setTitle(QString::fromStdString(stats.label()));
+	new_stats_box(stats.type(), region )->setLabels( stats.label( ), stats.description( ) );
 
 	qt::statfield_list_t::iterator fiter = fields.begin( );
 	std::list<std::pair<String,String> >::iterator siter = (*stats.list()).begin( );
@@ -211,8 +237,15 @@ qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* r
 		}
 		layout_->addWidget(stats_box_,0,Qt::AlignLeft);
 		return stats_box_;
-	}
-	else {
+	} if ( type == RegionInfo::PVLineInfoType ) {
+		stats_box_ = new qt::pvline_stats_t( );
+		layout_->addWidget(stats_box_,0,Qt::AlignLeft);
+		if ( region != NULL ) {
+			connect( stats_box_, SIGNAL(createPVImage(const std::string&,const std::string&)), region, SLOT(createPVImage(const std::string&,const std::string&)) );
+			connect( stats_box_, SIGNAL(updatePVImage( )), region, SLOT(updatePVImage( )) );
+		}
+		return stats_box_;
+	} else {
 		throw internal_error("QtRegionStats inconsistency");
 	}
 }

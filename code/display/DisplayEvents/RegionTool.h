@@ -40,7 +40,7 @@ namespace casa {
 	public:
 	    typedef std::map<viewer::Region*,viewer::region::PointInfo> region_map_type;
 
-	    enum RegionToolTypes { POLYTOOL, RECTTOOL, POINTTOOL, ELLIPSETOOL, POLYLINETOOL };
+	    enum RegionToolTypes { POLYTOOL, RECTTOOL, POINTTOOL, ELLIPSETOOL, POLYLINETOOL, PVLINETOOL };
 
 	    class State {
 		public:

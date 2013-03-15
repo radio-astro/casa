@@ -883,10 +883,11 @@ std::list<RegionInfo> *Polygon::generate_dds_centers(){
 
 			if ( image == 0 ) continue;
 
-			String full_image_name = image->name(false);
-			std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+			String description = image->name(false);
+			String name = image->name(true);
+			std::map<String,bool>::iterator repeat = processed.find(description);
 			if (repeat != processed.end()) continue;
-			processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+			processed.insert(std::map<String,bool>::value_type(description,true));
 
 			Int nAxes = image->ndim( );
 			IPosition shp = image->shape( );
@@ -935,7 +936,7 @@ std::list<RegionInfo> *Polygon::generate_dds_centers(){
 
 			ImageRegion *imageregion = new ImageRegion(poly);
 
-			region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd,boxImg,*imageregion)));
+			region_centers->push_back(ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion)));
 
 			delete imgbox;
 			delete imageregion;

@@ -94,6 +94,7 @@ std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, doubl
 std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
 std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 );
 std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
+std::tr1::shared_ptr<PVLine> pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
 
 // ellipse is derived from rectangle... so while this should be "std::tr1::shared_ptr<Ellipse>" this would preclude
 // the direct reuse of the Rectangle code (which only differs by region creation)... perhaps a case where

@@ -1,4 +1,4 @@
-//# Rectangle.cc: non-GUI rectangular region
+//# PVLine.cc: non-GUI rectangular region
 //# Copyright (C) 2012
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -25,7 +25,8 @@
 //#
 //# $Id: $
 
-#include <display/region/Rectangle.h>
+#include <display/Display/Options.h>
+#include <display/region/PVLine.qo.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
 #include <vector>
@@ -43,48 +44,51 @@
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <display/DisplayErrors.h>
 
+#include <imageanalysis/ImageAnalysis/PVGenerator.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
+#include <display/region/QtRegionDock.qo.h>
+
 namespace casa {
     namespace viewer {
 
-	Rectangle::Rectangle( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
-		bool hold_signals ) :	Region( "rectangle", wc, d, hold_signals ),
-														blc_x(x1<x2?x1:x2),
-														blc_y(y1<y2?y1:y2),
-														trc_x(x1<x2?x2:x1),
-														trc_y(y1<y2?y2:y1) {
+	PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
+		bool hold_signals ) :	Region( "p/v line", wc, d, hold_signals ),
+														pt1_x(x1), pt1_y(y1),
+														pt2_x(x2), pt2_y(y2) {
+		center_x = linear_average(pt1_x,pt2_x);
+		center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
 		complete = true;
 	}
 
 	// carry over from QtRegion... hopefully, removed soon...
-	Rectangle::Rectangle( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-		bool hold_signals) :	Region( "rectangle", wc, rs->dock( ), hold_signals ),
-														blc_x(x1<x2?x1:x2),
-														blc_y(y1<y2?y1:y2),
-														trc_x(x1<x2?x2:x1),
-														trc_y(y1<y2?y2:y1) {
+	PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
+		bool hold_signals) :	Region( "p/v line", wc, rs->dock( ), hold_signals ),
+														pt1_x(x1), pt1_y(y1),
+														pt2_x(x2), pt2_y(y2) {
+		center_x = linear_average(pt1_x,pt2_x);
+		center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
 		complete = true;
 	}
 
 
-	Rectangle::~Rectangle( ) { }
+	PVLine::~PVLine( ) { }
 
 
-		unsigned int Rectangle::check_handle( double x, double y ) const {
-			bool blc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= blc_y && y <= (blc_y + handle_delta_y);
-			bool tlc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= (trc_y - handle_delta_y) && y <= trc_y;
-			bool brc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= blc_y && y <= (blc_y + handle_delta_y);
-			bool trc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= (trc_y - handle_delta_y) && y <= trc_y;
-			return trc ? 1 : brc ? 2 : blc ? 3 : tlc ? 4 : 0;
+		unsigned int PVLine::check_handle( double x, double y ) const {
+			bool pt1 = x >= (pt1_x - handle_delta_x) && x <= (pt1_x + handle_delta_x) && y >= (pt1_y - handle_delta_y) && y <= (pt1_y + handle_delta_y);
+			bool pt2 = x >= (pt2_x - handle_delta_x) && x <= (pt2_x + handle_delta_x) && y >= (pt2_y - handle_delta_y) && y <= (pt2_y + handle_delta_y);
+			// bool center = x >= (center_x - handle_delta_x) && x <= (center_x + handle_delta_x) && y >= (center_y - handle_delta_y) && y <= (center_y + handle_delta_y);
+			return pt1 ? 1 : pt2 ? 2 : 0;
 		}
 
-		int Rectangle::clickHandle( double x, double y ) const {
+		int PVLine::clickHandle( double x, double y ) const {
 			if ( visible_ == false ) return 0;
 			return check_handle( x, y );
 		}
 
-		bool Rectangle::doubleClick( double x, double y ) {
+		bool PVLine::doubleClick( double x, double y ) {
 			bool flagged_ms = false;
 			const std::list<DisplayData*> &dds = wc_->displaylist( );
 			for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
@@ -106,7 +110,7 @@ namespace casa {
 			return Region::doubleClick( x, y );
 		}
 
-		bool Rectangle::valid_translation( double dx, double dy, double width_delta, double height_delta ) {
+		bool PVLine::valid_translation( double dx, double dy, double width_delta, double height_delta ) {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return false;
 
@@ -117,6 +121,9 @@ namespace casa {
 
 			const double x_delta = width_delta  / 2.0;
 			const double y_delta = height_delta  / 2.0;
+
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 			double pt = blc_x + dx - x_delta;
 			if ( pt < lxmin || pt > lxmax ) return false;
@@ -129,9 +136,14 @@ namespace casa {
 			return true;
 		}
 
-		void Rectangle::resize( double width_delta, double height_delta ) {
+		void PVLine::resize( double width_delta, double height_delta ) {
 			double dx = width_delta / 2.0;
 			double dy = height_delta / 2.0;
+			double &blc_x = pt1_x < pt2_x ? pt1_x : pt2_x;
+			double &blc_y = pt1_y < pt2_y ? pt1_y : pt2_y;
+			double &trc_x = pt1_x < pt2_x ? pt2_x : pt1_x;
+			double &trc_y = pt1_y < pt2_y ? pt2_y : pt1_y;
+
 			blc_x -= dx;
 			blc_y -= dy;
 			trc_x += dx;
@@ -139,151 +151,79 @@ namespace casa {
 			updateStateInfo( true, region::RegionChangeModified );
 		}
 
-
-		int Rectangle::moveHandle( int handle, double x, double y ) {
+		int PVLine::moveHandle( int handle, double x, double y ) {
 			switch ( handle ) {
-				case 1:		// trc handle
-					if ( x < blc_x ) {
-						if ( y < blc_y ) {
-							trc_x = blc_x;
-							trc_y = blc_y;
-							blc_x = x;
-							blc_y = y;
-							handle = 3;
-						} else {
-							trc_x = blc_x;
-							trc_y = y;
-							blc_x = x;
-							handle = 4;
-						}
-					} else if ( y < blc_y ) {
-						trc_y = blc_y;
-						blc_y = y;
-						handle = 2;
-					} else {
-						trc_x = x;
-						trc_y = y;
-					}
+				case 1:		// end #1
+					pt1_x = x;
+					pt1_y = y;
 					break;
-				case 2:		// brc handle
-					if ( x < blc_x ) {
-						if ( y > trc_y ) {
-							blc_y = trc_y;
-							trc_x = blc_x;
-							trc_y = y;
-							blc_x = x;
-							handle = 4;
-						} else {
-							trc_x = blc_x;
-							blc_x = x;
-							blc_y = y;
-							handle = 3;
-						}
-					} else if ( y > trc_y ) {
-						blc_y = trc_y;
-						trc_x = x;
-						trc_y = y;
-						handle = 1;
-					} else {
-						trc_x = x;
-						blc_y = y;
-					}
+				case 2:		// end #2
+					pt2_x = x;
+					pt2_y = y;
 					break;
-				case 3:		// blc handle
-					if ( x > trc_x ) {
-						if ( y > trc_y ) {
-							blc_x = trc_x;
-							blc_y = trc_y;
-							trc_x = x;
-							trc_y = y;
-							handle = 1;
-						} else {
-							blc_x = trc_x;
-							trc_x = x;
-							blc_y = y;
-							handle = 2;
-						}
-					} else if ( y > trc_y ) {
-						blc_y = trc_y;
-						blc_x = x;
-						trc_y = y;
-						handle = 4;
-					} else {
-						blc_x = x;
-						blc_y = y;
-					}
-					break;
-				case 4:		// tlc handle
-					if ( x > trc_x ) {
-						if ( y < blc_y ) {
-							blc_x = trc_x;
-							trc_y = blc_y;
-							blc_y = y;
-							trc_x = x;
-							handle = 2;
-						} else {
-							blc_x = trc_x;
-							trc_x = x;
-							trc_y = y;
-							handle = 1;
-						}
-					} else if ( y < blc_y ) {
-						trc_y = blc_y;
-						blc_x = x;
-						blc_y = y;
-						handle = 3;
-					} else {
-						blc_x = x;
-						trc_y = y;
-					}
+				// case 3:		// center handle
+				// 	{
+				// 		double delta_x = x - center_x;
+				// 		double delta_y = y - center_y;
+				// 		pt1_x += delta_x;
+				// 		pt1_y += delta_y;
+				// 		pt2_x += delta_x;
+				// 		pt2_y += delta_y;
+				// 	}
 					break;
 			}
 
-			if ( blc_x > trc_x || blc_y > trc_y ) throw internal_error("rectangle inconsistency");
+			center_x = (pt1_x+pt2_x)/2.0;
+			center_y = (pt1_y+pt2_y)/2.0;
+
 			updateStateInfo( true, region::RegionChangeModified );
 			setDrawCenter(false);
 			invalidateCenterInfo();
 			return handle;
 		}
 
-		void Rectangle::move( double dx, double dy ) {
-			blc_x += dx;
-			trc_x += dx;
-			blc_y += dy;
-			trc_y += dy;
+		void PVLine::move( double dx, double dy ) {
+			pt1_x += dx;
+			pt2_x += dx;
+			pt1_y += dy;
+			pt2_y += dy;
+
+			center_x = linear_average(pt1_x,pt2_x);
+			center_y = linear_average(pt1_y,pt2_y);
+
 			updateStateInfo( true, region::RegionChangeModified );
 			setDrawCenter(false);
 			invalidateCenterInfo();
 		}
 
-		void Rectangle::linearCenter( double &x, double &y ) const {
-			x = linear_average(blc_x,trc_x);
-			y = linear_average(blc_y,trc_y);
+		void PVLine::linearCenter( double &x, double &y ) const {
+			x = center_x;
+			y = center_y;
 		}
 
-		void Rectangle::pixelCenter( double &x, double &y ) const {
+		void PVLine::pixelCenter( double &x, double &y ) const {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-			double lx = linear_average(blc_x,trc_x);
-			double ly = linear_average(blc_y,trc_y);
+			double lx = center_x;
+			double ly = center_y;
 
 			try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
 		}
 
-		AnnotationBase *Rectangle::annotation( ) const {
+		AnnotationBase *PVLine::annotation( ) const {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
 			const CoordinateSystem &cs = wc_->coordinateSystem( );
 
-			double wblc_x, wblc_y, wtrc_x, wtrc_y;
-			try { linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y ); } catch(...) { return 0; }
+			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
+			try { linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y ); } catch(...) { return 0; }
 			const Vector<String> &units = wc_->worldAxisUnits( );
 
-			Quantity qblc_x( wblc_x, units[0] );
-			Quantity qblc_y( wblc_y, units[1] );
-			Quantity qtrc_x( wtrc_x, units[0] );
-			Quantity qtrc_y( wtrc_y, units[1] );
+			Quantity qpt1_x( wpt1_x, units[0] );
+			Quantity qpt1_y( wpt1_y, units[1] );
+			Quantity qpt2_x( wpt2_x, units[0] );
+			Quantity qpt2_y( wpt2_y, units[1] );
 
 			const DisplayData *dd = wc_->displaylist().front();
 
@@ -296,7 +236,7 @@ namespace casa {
 				IPosition shape(cs.nPixelAxes( ));
 				for ( size_t i=0; i < shape.size( ); ++i )
 					shape(i) = dd->dataShape( )[axes[i]];
-				box = new AnnRectBox( qblc_x, qblc_y, qtrc_x, qtrc_y, cs, shape, stokes );
+				box = new AnnRectBox( qpt1_x, qpt1_y, qpt2_x, qpt2_y, cs, shape, stokes );
 			} catch ( AipsError &e ) {
 				cerr << "Error encountered creating an AnnRectBox:" << endl;
 				cerr << "\t\"" << e.getMesg( ) << "\"" << endl;
@@ -307,116 +247,100 @@ namespace casa {
 			return box;
 		}
 
-		bool Rectangle::flag( MSAsRaster *msar ) {
+		bool PVLine::flag( MSAsRaster *msar ) {
 			if ( wc_ == 0 ) return false;
-			return msar->flag( wc_, blc_x, blc_y, trc_x, trc_y );
+			return msar->flag( wc_, pt1_x, pt1_y, pt2_x, pt2_y );
 		}
 
-		void Rectangle::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
+		void PVLine::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 											  std::vector<std::pair<double,double> > &world_pts ) const {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-			type = region::RectRegion;
+			type = region::PVLineRegion;
 
-			double wblc_x, wblc_y, wtrc_x, wtrc_y;
-			try { linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y ); } catch(...) { return; }
+			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
+			try { linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y ); } catch(...) { return; }
 
-			double pblc_x, pblc_y, ptrc_x, ptrc_y;
-			try { linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y ); } catch(...) { return; }
+			double ppt1_x, ppt1_y, ppt2_x, ppt2_y;
+			try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y ); } catch(...) { return; }
 
 			pixel_pts.resize(2);
-			pixel_pts[0].first = static_cast<int>(pblc_x);
-			pixel_pts[0].second = static_cast<int>(pblc_y);
-			pixel_pts[1].first = static_cast<int>(ptrc_x);
-			pixel_pts[1].second = static_cast<int>(ptrc_y);
+			pixel_pts[0].first = static_cast<int>(ppt1_x);
+			pixel_pts[0].second = static_cast<int>(ppt1_y);
+			pixel_pts[1].first = static_cast<int>(ppt2_x);
+			pixel_pts[1].second = static_cast<int>(ppt2_y);
 
 			world_pts.resize(2);
-			world_pts[0].first = wblc_x;
-			world_pts[0].second = wblc_y;
-			world_pts[1].first = wtrc_x;
-			world_pts[1].second = wtrc_y;
+			world_pts[0].first = wpt1_x;
+			world_pts[0].second = wpt1_y;
+			world_pts[1].first = wpt2_x;
+			world_pts[1].second = wpt2_y;
 		}
 
 
-		void Rectangle::drawRegion( bool selected ) {
+		void PVLine::drawRegion( bool selected ) {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 			PixelCanvas *pc = wc_->pixelCanvas();
 			if(pc==0) return;
 
 			int x1, y1, x2, y2;
-			try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
-			pc->drawRectangle( x1, y1, x2, y2 );
+			int cx, cy;
 
-			// draw the center
-			if (getDrawCenter())// && markCenter())
-				drawCenter( center_x_, center_y_, center_delta_x_, center_delta_y_);
+			try {
+				linear_to_screen( wc_, pt1_x, pt1_y, pt2_x, pt2_y, x1, y1, x2, y2 );
+				linear_to_screen( wc_, center_x, center_y, cx, cy );
+			} catch(...) { return; }
+
+			pushDrawingEnv( region::SolidLine, 2 );
+			pc->drawLine( x1, y1, x2, y2 );
+			popDrawingEnv( );
 
 			if ( selected && memory::nullptr.check( creating_region ) ) {
-				Int w = x2 - x1;
-				Int h = y2 - y1;
 
-				Int s = 0;		// handle size
-				if (w>=18 && h>=18) s = 6;
-				else if (w>=15 && h>=15) s = 5;
-				else if (w>=12 && h>=12) s = 4;
-				else if (w>=9 && h>=9) s = 3;
+				int s = 3;
 
 				double xdx, ydy;
 				screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
-				handle_delta_x = xdx - blc_x;
-				handle_delta_y = ydy - blc_y;
+				handle_delta_x = xdx - pt1_x;
+				handle_delta_y = ydy - pt2_y;
 
-				int hx0 = x1;
-				int hx1 = x1 + s;
-				int hx2 = x2 - s;
-				int hx3 = x2;
-				int hy0 = y1;
-				int hy1 = y1 + s;
-				int hy2 = y2 - s;
-				int hy3 = y2;	// set handle coordinates
 				if (s) {
 					pushDrawingEnv( region::SolidLine);
 					if ( weaklySelected( ) ) {
 						if ( marked_region_count( ) > 0 && mouse_in_region ) {
-							pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-							pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-							pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-							pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+							pc->drawRectangle( x1-s, y1-s, x1+s, y1+s );
+							pc->drawRectangle( x2-s, y2-s, x2+s, y2+s );
 						} else {
-							pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-							pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-							pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-							pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+							pc->drawFilledRectangle( x1-s, y1-s, x1+s, y1+s );
+							pc->drawFilledRectangle( x2-s, y2-s, x2+s, y2+s );
 						}
 					} else if ( marked( ) ) {
-						pc->drawRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-						pc->drawRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-						pc->drawRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-						pc->drawRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+						pc->drawRectangle( x1-s, y1-s, x1+s, y1+s );
+						pc->drawRectangle( x2-s, y2-s, x2+s, y2+s );
 					} else {
-						pc->drawFilledRectangle(hx0, hy0 - 0, hx1 + 0, hy1 + 0);
-						pc->drawFilledRectangle(hx2, hy0 - 0, hx3 + 0, hy1 + 0);
-						pc->drawFilledRectangle(hx0, hy2 - 0, hx1 + 0, hy3 + 0);
-						pc->drawFilledRectangle(hx2, hy2 - 0, hx3 + 0, hy3 + 0);
+						pc->drawFilledRectangle( x1-s, y1-s, x1+s, y1+s );
+						pc->drawFilledRectangle( x2-s, y2-s, x2+s, y2+s );
 					}
 					popDrawingEnv( );
 				}
 			}
 		}
 
-		bool Rectangle::within_vertex_handle( double x, double y ) const {
-			bool blc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= blc_y && y <= (blc_y + handle_delta_y);
-			bool tlc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= (trc_y - handle_delta_y) && y <= trc_y;
-			bool brc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= blc_y && y <= (blc_y + handle_delta_y);
-			bool trc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= (trc_y - handle_delta_y) && y <= trc_y;
-			return trc || brc || blc || tlc;
+		bool PVLine::within_vertex_handle( double x, double y ) const {
+			bool pt1 = x >= (pt1_x - handle_delta_x) && x <= (pt1_x + handle_delta_x) && y >= (pt1_y - handle_delta_y) && y <= (pt1_y + handle_delta_y);
+			bool pt2 = x >= (pt2_x - handle_delta_x) && x <= (pt2_x + handle_delta_x) && y >= (pt2_y - handle_delta_y) && y <= (pt2_y + handle_delta_y);
+			bool center = x >= (center_x - handle_delta_x) && x <= (center_x + handle_delta_x) && y >= (center_y - handle_delta_y) && y <= (center_y + handle_delta_y);
+			return pt1 || pt2 || center;
 		}
 
 		// returns point state (region::PointLocation)
-		region::PointInfo Rectangle::checkPoint( double x, double y )  const {
+		region::PointInfo PVLine::checkPoint( double x, double y )  const {
 			unsigned int result = 0;
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
 			if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y )
 				result |= region::PointInside;
 			unsigned int handle = check_handle( x, y );
@@ -425,10 +349,13 @@ namespace casa {
 			return region::PointInfo( x, y, result == 0 ? (unsigned int) region::PointOutside : result, handle );
 		}
 
-		unsigned int Rectangle::mouseMovement( double x, double y, bool other_selected ) {
+		unsigned int PVLine::mouseMovement( double x, double y, bool other_selected ) {
 			unsigned int result = 0;
 
 			if ( visible_ == false ) return result;
+
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 			//if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
 			if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
@@ -456,7 +383,7 @@ namespace casa {
 		}
 
 
-		RegionInfo::stats_t *Rectangle::get_ms_stats( MSAsRaster *msar, double x, double y ) {
+		RegionInfo::stats_t *PVLine::get_ms_stats( MSAsRaster *msar, double x, double y ) {
 
 			RegionInfo::stats_t *result = new RegionInfo::stats_t( );
 
@@ -467,7 +394,7 @@ namespace casa {
 			return result;
 		}
 
-		std::list<RegionInfo> * Rectangle::generate_dds_centers( ){
+		std::list<RegionInfo> * PVLine::generate_dds_centers( ){
 
 			std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
 			if( wc_==0 ) return region_centers;
@@ -480,6 +407,9 @@ namespace casa {
 			DisplayData *dd = 0;
 			const std::list<DisplayData*> &dds = wc_->displaylist( );
 			Vector<Double> lin(2), blc(2), trc(2);
+
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 			lin(0) = blc_x;
 			lin(1) = blc_y;
@@ -570,7 +500,7 @@ namespace casa {
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion *imageregion = new ImageRegion(box);
 
-					region_centers->push_back(ImageRegionInfo(name,description,getLayerCenter(padd, image, *imageregion)));
+					region_centers->push_back(PVLineRegionInfo(name,description,getLayerCenter(padd, image, *imageregion)));
 
 					delete imageregion;
 				} catch (const casa::AipsError& err) {
@@ -584,7 +514,7 @@ namespace casa {
 			return region_centers;
 		}
 
-		ImageRegion *Rectangle::get_image_region( DisplayData *dd ) const {
+		ImageRegion *PVLine::get_image_region( DisplayData *dd ) const {
 
 			if( wc_==0 ) return 0;
 
@@ -594,6 +524,9 @@ namespace casa {
 			Vector<Double> lin(2);
 			Vector<Double> blc(2);
 			Vector<Double> trc(2);
+
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 			lin(0) = blc_x;
 			lin(1) = blc_y;
@@ -629,7 +562,10 @@ namespace casa {
 			return result;
 		}
 
-		void Rectangle::generate_nonimage_statistics( DisplayData *dd, std::list<RegionInfo> *region_statistics ) {
+		void PVLine::generate_nonimage_statistics( DisplayData *dd, std::list<RegionInfo> *region_statistics ) {
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+
 			MSAsRaster *msar =  dynamic_cast<MSAsRaster*>(dd);
 			if ( msar != 0 ) {
 				RegionInfo::stats_t *blc_stats = get_ms_stats( msar, blc_x, blc_y );
@@ -640,14 +576,50 @@ namespace casa {
 			}
 		}
 
-		void Rectangle::boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const {
-			blcx = blc_x;
-			blcy = blc_y;
-			trcx = trc_x;
-			trcy = trc_y;
+		void PVLine::boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const {
+			// the bounding rectangle is extended here by half the size of the
+			// handles in both directions...
+			blcx = (pt1_x < pt2_x ? pt1_x : pt2_x) - 3;
+			blcy = (pt1_y < pt2_y ? pt1_y : pt2_y) - 3;
+			trcx = (pt1_x < pt2_x ? pt2_x : pt1_x) + 3;
+			trcy = (pt1_y < pt2_y ? pt2_y : pt1_y) + 3;
 		}
 
-		void Rectangle::output( ds9writer &out ) const {
+		void PVLine::createPVImage( const std::string &name, const std::string &desc ) {
+			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
+
+			const std::list<DisplayData*> &dds = wc_->displaylist( );
+			String casa_desc(desc);
+			for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+				PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(*ddi);
+				if ( padd == 0 ) continue;
+				ImageInterface<Float> *image = padd->imageinterface( );
+				if ( image->name( ) == casa_desc ) {
+					output_file = viewer::options.temporaryPath( name + ".pvline." );
+					Record dummy;
+					/* PVGenerator(const casa::ImageInterface<float>*, const casa::Record* const&, const casa::String&, const casa::String&, const casa::String&, const casa::String&, casa::Bool) */
+					PVGenerator pvgen( image, &dummy, "" /*chanInp*/, "" /*stokes*/, "" /*maskInp*/, output_file, true );
+					double startx, starty, endx, endy;
+					try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy ); } catch(...) { return; }
+					pvgen.setEndpoints( startx, starty, endx, endy );
+					pvgen.setHalfWidth(0.0);
+					dock_->panel( )->status( "generating temporary image: " + output_file );
+					dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
+					dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
+						startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
+					pvgen.generate( false );
+					break;
+				}
+			}
+		}
+
+		void PVLine::updatePVImage( ) {
+			fprintf( stderr, "UPDATE P/V OUTPUT HERE\n" );
+		}
+		void PVLine::output( ds9writer &out ) const {
+
+			double blc_x, blc_y, trc_x, trc_y;
+			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 			std::string path = QtDisplayData::path(wc_->csMaster());

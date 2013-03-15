@@ -55,6 +55,7 @@
 
 #include <display/region/QtRegionDock.qo.h>
 
+
 #define SEXAGPREC 9
 
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func ) {
@@ -2367,7 +2368,13 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 
 			if ( image == 0 ) continue;
 
-			if ( name_ != "polyline" ){
+			if ( name_ == "polyline" ){
+				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
+				region_statistics->push_back( SliceRegionInfo( image->name(true), image->name(false), dd_stats));
+			} else if ( name_ == "p/v line" ) {
+				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
+				region_statistics->push_back( PVLineRegionInfo( image->name(true), image->name(false), dd_stats));
+			} else {
 				String full_image_name = image->name(false);
 				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
 				if (repeat != processed.end()) continue;
@@ -2378,7 +2385,7 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 				RegionInfo::stats_t *dd_stats = getLayerStats(padd,image,*imageregion);
 				if ( dd_stats ) {
 					dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
-					region_statistics->push_back(ImageRegionInfo(image->name(true),dd_stats));
+					region_statistics->push_back(ImageRegionInfo( image->name(true), image->name(false), dd_stats));
 				}
 			}
 			else {

@@ -47,7 +47,8 @@ enum ProfileType
 	RECTPROF,
 	ELLPROF,
 	POLYPROF,
-	POLYLINEPROF
+	POLYLINEPROF,
+	PVPROF
 };
 
 class QtMWCTool
@@ -180,6 +181,27 @@ protected:
   virtual void updateRegion();
 };
 
+class QtPVTool: public QtPVToolRegion,  public QtMWCTool
+{
+  Q_OBJECT
+
+public: 
+  QtPVTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
+  virtual ~QtPVTool() {}
+ 
+public slots:
+  void setCoordType(const String& t);
+
+signals:
+  void wcNotify( const String c, 
+		 const Vector<Double> px, const Vector<Double> py,
+		 const Vector<Double> wx, const Vector<Double> wy,
+		 const ProfileType ptype);
+
+protected:
+  virtual void updateRegion();
+
+};
 
 }
 

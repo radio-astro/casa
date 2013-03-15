@@ -9,6 +9,7 @@
 #include <display/region/QtImageRegionStats.ui.h>
 #include <display/region/QtMsRegionStats.ui.h>
 #include <display/region/SlicerStats.ui.h>
+#include <display/region/PVLineStats.ui.h>
 #include <display/region/RegionInfo.h>
 
 
@@ -27,8 +28,12 @@ namespace casa {
 		Q_OBJECT
 		public:
 		    stats_t( QWidget *parent ) : QGroupBox("",parent) { }
+			void setLabels( const std::string &label, const std::string &desc );
 		    virtual RegionInfo::InfoTypes type( ) const = 0;
 		    virtual QPushButton *next( ) = 0;
+		protected:
+			std::string description_;
+			std::string label_;
 	    };
 
 	    class image_stats_t : public stats_t, public Ui::QtImageRegionStats {
@@ -57,6 +62,21 @@ namespace casa {
 	   		signals:
 	   			void show1DSliceTool();
 	   	};
+
+		class pvline_stats_t : public stats_t, public Ui::PVLineStats {
+	   		Q_OBJECT
+	   		public:
+	   		    pvline_stats_t( QWidget *parent=0 );
+	   		    RegionInfo::InfoTypes type( ) const { return RegionInfo::PVLineInfoType; }
+	   		    virtual QPushButton *next( ) { return next_button; }
+	   		    QWidget* getPlotHolder() { return plotHolderWidget; }
+			signals:
+				void createPVImage( const std::string &, const std::string & );
+				void updatePVImage( );
+			private slots:
+				void create_pv_image( );
+				void update_pv_image( );
+		};
 	}
 
 
@@ -91,6 +111,8 @@ namespace casa {
 		QVBoxLayout *layout_;
 		qt::stats_t *new_stats_box( RegionInfo::InfoTypes type, Region* region );
 		qt::stats_t *stats_box_;
+		std::string description_;
+		std::string label_;
 	};
     }
 }

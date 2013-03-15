@@ -75,6 +75,10 @@ RegionToolManager::RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanel
 	std::tr1::shared_ptr<RegionTool> ellipse(new QtEllipseTool(rsf,pd));
 	tools.insert(tool_map::value_type(EllipseTool,ellipse));
 	pd->addTool(QtMouseToolNames::ELLIPSE, ellipse);
+
+	std::tr1::shared_ptr<RegionTool> pv(new QtPVTool(rsf,pd));
+	tools.insert(tool_map::value_type(PVTool,pv));
+	pd->addTool(QtMouseToolNames::POSITIONVELOCITY, pv);
 }
 
 RegionToolManager::~RegionToolManager( ) {
@@ -85,6 +89,7 @@ RegionToolManager::~RegionToolManager( ) {
 		case RectTool:    pd->removeTool(QtMouseToolNames::RECTANGLE); break;
 		case EllipseTool: pd->removeTool(QtMouseToolNames::ELLIPSE); break;
 		case PolylineTool: pd->removeTool(QtMouseToolNames::POLYLINE); break;
+		case PVTool: pd->removeTool(QtMouseToolNames::POSITIONVELOCITY); break;
 		}
 	}
 }
@@ -110,6 +115,7 @@ void RegionToolManager::clear_mark_select( RegionTool::State &, region::RegionSe
 	// marking these as not selected can changes the selection list...
 	std::set<Region*> processed;
 	for ( std::set<Region*>::const_iterator it = selected_regions.begin( ); it != selected_regions.end( ); ++it ) {
+		// INFINITE LOOP INFINITELOOP INFINITE LOOP INIFINITELOOP
 		if ( processed.find(*it) != processed.end( ) ) continue;
 		processed.insert(*it);
 		if ( select == region::SelectAny || region_type == (*it)->type( ) )
@@ -804,6 +810,8 @@ std::tr1::shared_ptr<RegionTool> RegionToolManager::tool( region::RegionTypes ty
 		return tools[PolyTool];
 	case region::PolylineRegion:
 		return tools[PolylineTool];
+	case region::PVLineRegion:
+		return tools[PVTool];
 	default:
 		return std::tr1::shared_ptr<RegionTool>( );
 	}

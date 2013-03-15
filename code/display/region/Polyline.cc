@@ -1066,13 +1066,14 @@ std::list<RegionInfo> *Polyline::generate_dds_centers(){
 
 			if ( image == 0 ) continue;
 
-			String full_image_name = image->name(false);
-			std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+			String description = image->name(false);
+			String name = image->name(true);
+			std::map<String,bool>::iterator repeat = processed.find(description);
 			if (repeat != processed.end()) continue;
-			processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+			processed.insert(std::map<String,bool>::value_type(description,true));
 
 			RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
-			region_centers->push_back(SliceRegionInfo(full_image_name,layercenter));
+			region_centers->push_back(SliceRegionInfo(name,description,layercenter));
 		}
 		catch (const casa::AipsError& err) {
 			errMsg_ = err.getMesg();
