@@ -195,7 +195,7 @@ void Histogram::defineLine( int index, QVector<double>& xVals,
 	assert( index >= 0 && index < dataCount);
 	xVals[0] = xValues[index];
 	xVals[1] = xValues[index];
-	yVals[0] = 0;
+	yVals[0] = computeYValue( 0, useLogY );
 	yVals[1] = computeYValue( yValues[index], useLogY );
 }
 
@@ -239,7 +239,7 @@ void Histogram::defineStepVertical( int index, QVector<double>& xVals,
 		yVals[0] = computeYValue(yValues[index-1], useLogY );
 	}
 	else {
-		yVals[0] = 0;
+		yVals[0] = computeYValue( 0, useLogY);
 	}
 	yVals[1] = computeYValue(yValues[index], useLogY );
 }
@@ -247,14 +247,28 @@ void Histogram::defineStepVertical( int index, QVector<double>& xVals,
 
 double Histogram::computeYValue( double value, bool useLog ){
 	double resultValue = value;
+	//Log of 0 becomes infinity, and some of the counts are 0.
 	if ( useLog ){
-		if ( value != 0 ){
-			resultValue = qLn( value ) / qLn( 10 );
+		if (value < 1 ){
+			resultValue = 1;
 		}
 	}
 	return resultValue;
 }
 
+std::pair<float,float> Histogram::getMinMaxBinCount() const {
+	std::pair<float,float> minMaxBinCount;
+	int valueCount = yValues.size();
+	for ( int i = 0; i < valueCount; i++ ){
+		if ( yValues[i]>minMaxBinCount.second){
+			minMaxBinCount.second = yValues[i];
+		}
+		if ( yValues[i] < minMaxBinCount.first){
+			minMaxBinCount.first = yValues[i];
+		}
+	}
+	return minMaxBinCount;
+}
 
 int Histogram::getDataCount() const {
 	return xValues.size();

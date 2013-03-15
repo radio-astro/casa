@@ -61,6 +61,7 @@ public:
 			bool useLogY ) const;
 	void defineStepVertical( int index, QVector<double>& xVals, QVector<double>& yVals,
 			bool useLogY ) const;
+	std::pair<float,float> getMinMaxBinCount() const;
 	vector<float> getXValues() const;
 	vector<float> getYValues() const;
 	std::pair<float,float> getDataRange() const;

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>176</width>
-    <height>111</height>
+    <height>114</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -24,6 +24,9 @@
   </property>
   <property name="windowTitle">
    <string>Segment</string>
+  </property>
+  <property name="toolTip">
+   <string>Measurement of line segment.</string>
   </property>
   <property name="frameShape">
    <enum>QFrame::StyledPanel</enum>
@@ -123,6 +126,9 @@
          <width>130</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Line segment angle.</string>
        </property>
        <property name="readOnly">
         <bool>true</bool>

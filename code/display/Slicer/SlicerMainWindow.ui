@@ -180,7 +180,11 @@
           </widget>
          </item>
          <item>
-          <widget class="QComboBox" name="unitComboBox"/>
+          <widget class="QComboBox" name="unitComboBox">
+           <property name="toolTip">
+            <string>X-Axis Units</string>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_8">
@@ -254,6 +258,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="segmentCornerCheckBox">
+           <property name="toolTip">
+            <string>Indicate points where line segments meet in the slice.</string>
+           </property>
            <property name="text">
             <string>Segment Markers</string>
            </property>

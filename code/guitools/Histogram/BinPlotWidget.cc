@@ -52,6 +52,7 @@
 #include <qwt_color_map.h>
 #include <qwt_double_interval.h>
 #include <qwt_scale_widget.h>
+#include <qwt_scale_engine.h>
 
 namespace casa {
 
@@ -549,10 +550,25 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 	if ( displayLogY != display ){
 		displayLogY = display;
 		logActionY.setChecked( displayLogY );
-		if ( fitWidget != NULL ){
-			fitWidget->clearFit();
+		clearGaussianFitMarker();
+		clearPoissonFitMarker();
+
+		if ( displayLogY ){
+			float maxBinCount = 1000;
+			float minBinCount = 1;
+			if ( histogramMap.contains(selectedId)){
+				std::pair<float,float> minMaxBinCount = histogramMap[selectedId]->getMinMaxBinCount();
+				if ( minMaxBinCount.first > minBinCount ){
+					minBinCount = minMaxBinCount.first;
+				}
+				maxBinCount = minMaxBinCount.second;
+			}
+			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLog10ScaleEngine );
+			binPlot.setAxisScale( QwtPlot::yLeft, minBinCount, maxBinCount );
 		}
-		clearFit();
+		else {
+			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLinearScaleEngine );
+		}
 		reset();
 		resetAxisTitles();
 		if ( toolTipPicker != NULL ){
@@ -821,11 +837,7 @@ void BinPlotWidget::centerPeakSpecified(){
 	int pixelY = fitPosition.y();
 	double xValue = binPlot.invTransform( QwtPlot::xBottom, pixelX );
 	double yValue = binPlot.invTransform( QwtPlot::yLeft, pixelY );
-	if ( displayLogY ){
-		yValue = pow( 10.0, yValue );
-	}
 	fitWidget->setCenterPeak( xValue, yValue );
-
 	fitEstimateMarkerGaussian->setCenterPeak( pixelX, pixelY);
 	fitEstimateMarkerGaussian->show();
 	binPlot.replot();
@@ -978,17 +990,10 @@ void BinPlotWidget::fitDone( const QString& msg ){
 		QVector<double> curveYValues( xVector.size() );
 		for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
 			curveXValues[i] = xVector[i];
-			if ( !displayLogY ){
-				curveYValues[i] = yValues[i];
-			}
-			else {
-				//Round to the nearest integer.
-				int yValueInt = qRound( yValues[i] );
-				if ( yValueInt > 0  ){
-					curveYValues[i] = qLn( yValueInt) / qLn(10);
-				}
-				else {
-					curveYValues[i] = 0;
+			curveYValues[i] = yValues[i];
+			if ( displayLogY ){
+				if ( yValues[i] < 1 ){
+					curveYValues[i] = 1;
 				}
 			}
 		}
@@ -1061,7 +1066,7 @@ void BinPlotWidget::defineCurveHistogram( int id, const QColor& histogramColor )
 		}
 		//Add the last vertical line
 		xValues[0] = xValues[1];
-		yValues[0] = 0;
+		yValues[0] = histogramMap[id]->computeYValue( 0, displayLogY );
 		addCurve( xValues, yValues, pieceColor);
 	}
 }
