@@ -62,16 +62,20 @@ class PVGenerator : public ImageTask {
 	// </example>
 
 public:
-	// <group>
 
+	// The region selection in the constructor only applies to the non-direction coordinate.
+	// The direction coordinate limits are effectively set by calling setEndPoints()
+	// after construction. The region selection in the constructor is only for things like
+	// spectral selection and polarization selection. In addition at most one of <src>regionRec</src>
+	// and <src>chanInp/stokes</src> should be supplied. If you specify <src>regionRec</src>=0
+	// and <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
+	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
 		const ImageInterface<Float> *const image,
 		const Record *const &regionRec, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite
 	);
-
-	// </group>
 
 	// destructor
 	~PVGenerator();
