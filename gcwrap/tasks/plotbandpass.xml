@@ -45,7 +45,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="yaxis">
-      <description>The quantity to plot on the y-axis.</description>
+      <description>The quantity to plot on the y-axis ("amp", "phase", "both", "tsys", append "db" for dB).</description>
       <value>amp</value>
       <allowed kind="enum">
       <value>amp</value>
@@ -60,7 +60,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="xaxis">
-      <description>The quantity to plot on the x-axis.</description>
+      <description>The quantity to plot on the x-axis ("chan" or "freq").</description>
       <value>chan</value>
       <allowed kind="enum">
       <value>chan</value>
@@ -84,12 +84,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="overlay">
-      <description></description>
+      <description>Show multiple solutions in same frame in different colors (time, antenna, or time,antenna)</description>
       <value type="string"></value>
       <allowed kind="enum">
-         <value></value>
+         <value type="string"></value>
          <value>antenna</value>
          <value>time</value>
+         <value>antenna,time</value>
+         <value>time,antenna</value>
       </allowed>
     </param>
 
@@ -103,12 +105,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
-    <param type="bool" name="buildpdf">
-      <description>If True and figfile is set, assemble pngs into a pdf</description>
+    <param type="bool" name="buildpdf" subparam="true">
+      <description>If True, assemble all the pngs into a pdf</description>
       <value>False</value>
     </param>
 
-    <param type="string" name="caltable3">
+    <param type="string" name="caltable3" subparam="true">
       <description>A third cal table, of type BPOLY, to overlay on the first two tables</description>
       <value></value>
     </param>
@@ -118,7 +120,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>3</value>
     </param>
 
-    <param type="int" name="density">
+    <param type="int" name="density" subparam="true">
       <description>dpi to use in creating PNGs and PDFs (default=108)</description>
       <value>108</value>
     </param>
@@ -145,18 +147,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <any type="variant" limittypes="string int"/>
       <value type="string">22</value>
       <allowed kind="enum">
-         <value type="int">11</value>
-         <value type="int">22</value>
-         <value type="int">32</value>
-         <value type="int">42</value>
-         <value type="string">11</value>
-         <value type="string">22</value>
-         <value type="string">32</value>
-         <value type="string">42</value>
+         <value>11</value>
+         <value>22</value>
+         <value>32</value>
+         <value>42</value>
       </allowed>
     </param>
 
-    <param type="string" name="zoom">
+    <param type="string" name="zoom" subparam="true">
       <description>"intersect" will zoom to overlap region of caltable with caltable2</description>
       <allowed kind="enum">
       <value>intersect</value>
@@ -176,19 +174,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
-    <param type="any" name="pwv">
+    <param type="any" name="pwv" subparam="true">
       <any type="variant" limittypes="double string"/>
       <description>Define the pwv to use for the showatm option: "auto" or value in mm</description>
       <value type="string">auto</value>
     </param>
 
-    <param type="string" name="gs">
-      <description>Full path for ghostscript command (in case it is not found)</description>
+    <param type="string" name="gs" subparam="true">
+      <description>For buildpdf=T, full path for ghostscript command (in case it is not found)</description>
       <value>gs</value>
     </param>
 
-    <param type="string" name="convert">
-      <description>Full path for the ImageMagick convert command (in case it is not found)</description>
+    <param type="string" name="convert" subparam="true">
+      <description>For buildpdf=T, full path for the ImageMagick convert command (in case it is not found)</description>
       <value>convert</value>
     </param>
 
@@ -225,84 +223,131 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="showfdm" subparam="true"> 
-      <description>when showing TDM spws with xaxis="freq", draw the locations of the FDM spws</description>
+      <description>when showing TDM spws, draw the locations of the corresponding FDM spws</description>
       <value>False</value>
     </param>
 
     <param type="any" name="showatmfield" subparam="true"> 
-      <any type="variant" limittypes="int string"/>
-      <description>for overlay="time", use first observation of this fieldID or name</description>
       <value type="string"></value>
+      <description>for overlay="time", use first observation of this fieldID or name</description>
+      <any type="variant" limittypes="int string"/>
     </param>
 
     <param type="any" name="lo1" subparam="true">
       <any type="variant" limittypes="string double"/>
-      <description>specify the LO1 setting (in GHz) for the observation (used if showimage=T)</description>
+      <description>specify the LO1 setting (in GHz) for the observation ('' = automatic)</description>
       <value type="string"></value>
     </param>
 
-    <param type="bool" name="showimage">
+    <param type="bool" name="showimage" subparam="true">
       <description>also show the atmospheric curve for the image sideband (in black)</description>
       <value>False</value>
     </param>
 
-    <param type="bool" name="showatmpoints">
+    <param type="bool" name="showatmpoints" subparam="true">
       <description>Draw atmospheric curve with points instead of a line</description>
       <value>False</value>
     </param>
 
-    <param type="string" name="parentms">
-      <description>name of the parent ms, in case the ms has been previously split</description>
+    <param type="string" name="parentms" subparam="true">
+      <description>if showimage=T, name of the parent ms (only needed if the ms has been previously split)</description>
       <value type="string"></value>
     </param>
 
-    <param type="string" name="pdftk">
-      <description>Full path for pdftk command (in case it is not found)</description>
+    <param type="string" name="pdftk" subparam="true">
+      <description>For buildpdf=T, full path for pdftk command (in case it is not found)</description>
       <value>pdftk</value>
     </param>
 
     <param type="any" name="channeldiff">
       <any type="variant" limittypes="bool double"/>
-      <description>Set to a value > 0 (sigma) to plot derivatives of amplitude</description>
+      <description>Set to a value > 0 (sigma) to plot derivatives of the solutions</description>
       <value type="bool">False</value>
     </param>
 
-    <param type="int" name="edge">
+    <param type="int" name="edge" subparam="true">
       <description>The number of edge channels to ignore in finding outliers (for channeldiff>0)</description>
       <value>8</value>
     </param>
 
     <constraints>
+      <when param="figfile">
+        <notequals type="string" value="">
+          <default param="density"><value type="int">108</value></default>
+          <default param="buildpdf"><value type="bool">False</value></default>
+          <default param="convert"><value type="string">convert</value></default>
+          <default param="gs"><value type="string">gs</value></default>
+          <default param="pdftk"><value type="string">pdftk</value></default>
+        </notequals>
+      </when>
+      <when param="showatm">
+        <notequals type="bool" value="False">
+          <default param="pwv"><value type="string">auto</value></default>
+          <default param="showimage"><value type="bool">False</value></default>
+          <default param="parentms"><value type="string"></value></default>
+          <default param="lo1"><value type="string"></value></default>
+          <default param="showatmpoints"><value type="bool">False</value></default>
+        </notequals>
+      </when>
+      <when param="showtsky">
+        <notequals type="bool" value="False">
+          <default param="pwv"><value type="string">auto</value></default>
+          <default param="showimage"><value type="bool">False</value></default>
+          <default param="parentms"><value type="string"></value></default>
+          <default param="lo1"><value type="string"></value></default>
+          <default param="showatmpoints"><value type="bool">False</value></default>
+        </notequals>
+      </when>
       <when param="xaxis">
+        <equals value="chan"/>
         <equals value="freq">
           <default param="chanrange"><value type="string"></value></default>
           <default param="showfdm"><value type="bool">False</value></default>
         </equals>
       </when>
       <when param="yaxis">
+        <equals value="amp"/>  
         <equals value="both">  
           <default param="phase"><value type="string"></value></default>
         </equals>
       </when>
       <when param="overlay">
+        <equals value=""></equals>
         <equals value="time">
           <default param="showatmfield"><value type="string"></value></default>
         </equals>
       </when>
-      <when param="showimage">
-        <equals type="bool" value="True">
-          <default param="lo1"><value type="string"></value></default>
-        </equals>
+      <when param="channeldiff">
+        <notequals type="bool" value="False">
+          <default param="edge"><value type="int">8</value></default>
+        </notequals>
+      </when>
+      <when param="caltable2">
+        <notequals type="string" value="">
+          <default param="zoom"><value type="string"></value></default>
+          <default param="caltable3"><value type="string"></value></default>
+        </notequals>
       </when>
     </constraints>
   </input>
 
-  <returns type="variant" limittypes="void record"/>
+  <returns type="variant" limittypes="void record">
+  </returns>
 
   <example>
 
-   This is a tool to plot bandpass and Tsys solutions faster and more flexibly than plotcal. 
-   It will work on both the old style and new style cal tables.  
+plotbandpass('X3c1.tsys',overlay='antenna',yaxis='amp',field='0~1,4',xaxis='chan',figfile='tsys.png')
+
+plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq')  
+
+plotbandpass('bandpass.bcal',caltable2='bandpass.bcal_smooth',xaxis='freq',poln='X',showatm=T)
+
+plotbandpass('bandpass.bcal',channeldiff='5')
+
+This task returns void unless the channeldiff option is selected, in which case it returns a
+dictionary containing the statistics of the solutions, keyed by the antenna name, followed
+by the spw, timerange, polarization, and finally 'amp' and/or 'phase' depending
+on the yaxis selection.  
 
    Keyword arguments:
 
@@ -311,7 +356,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  caltable: a bandpass table, of type B or BPOLY
  caltable2: a second cal table, of type BPOLY or B, to overlay on a B table
  caltable3: a third cal table, of type BPOLY, to overlay on the first two
- channeldiff: set to value > 0 (sigma) to plot derivatives of amplitude
+ channeldiff: set to value > 0 to plot derivatives of amplitude, the value is also used as sigma, and any outliers beyond this sigma will be printed to the logger
  chanrange: set xrange (e.g. "5~100") over which to autoscale y-axis for xaxis='freq'
  convert: full path for convert command (in case it's not found)
  density: dpi to use in creating PNGs and PDFs (default=108)

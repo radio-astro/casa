@@ -20,6 +20,7 @@
 #    casa 3.3 tables
 # cd /net/yildun/export/data_1/thunter/alma/data/SciVer/TWHya
 # au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='')
+# au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna,time',spw='',field='')
 # au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='both',phase=[-180,180],plotrange=[0,0,0,2])
 # au.plotbandpass('bandpass.bcal',showtsky=F,xaxis='freq',yaxis='amp',overlay='antenna',spw='',field='',chanrange='1200~2000')
 # au.plotbandpass('bandpass.bcal',showatm=T,xaxis='chan',yaxis='amp',overlay='antenna',spw='',field='',plotrange=[1200,2000,0,0])
@@ -84,7 +85,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.7 2013/03/09 15:22:58 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.9 2013/03/14 16:43:58 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -193,7 +194,7 @@ def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
         print "makeplot(%d): pagectr=%d, len(pages)=%d, len(spwsToPlot)=%d, pages=" % (locationCalledFrom,
                                                               pagectr, len(pages),len(spwsToPlot)), pages
     ispw = spwsToPlot[pages[pagectr][PAGE_SPW]]
-    t = pages[pagectr][PAGE_TIME] + 1
+    t = pages[pagectr][PAGE_TIME] # + 1
     antstring, Antstring = buildAntString(antennasToPlot[pages[pagectr][PAGE_ANT]], msFound, msAnt)
     figfile = figfile.split('.png')[0]
     if (msFound):
@@ -506,28 +507,29 @@ def getnspw(mymsmd):
         
 
 def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
-                           fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
-                           solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                           fieldsToPlot,myUniqueColor,timeHorizontalSpacing, fieldIndex,overlayColors,
-                           antennaVerticalSpacing):
+                           fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                           timerangeListTimes, solutionTimeThresholdSeconds,debugSloppyMatch,
+                           ystartOverlayLegend,debug,mysize, fieldsToPlot,myUniqueColor,
+                           timeHorizontalSpacing, fieldIndex,overlayColors,
+                           antennaVerticalSpacing, overlayAntennas, timerangeList):
     """
     Draws the legend at the top of the page, if it is the correct time to do so,
     including the overlayTimes, the 'UT' label, and the caltable name.
     """
     if (xframe == firstFrame):
+#      if (overlayAntennas == False):
         # draw title including caltable name
         pb.text(xstartTitle, ystartTitle, caltable, size=titlesize,
                 color='k', transform=pb.gcf().transFigure)
-        if (True):
-          # support multi-fields with overlay='time'
-          uTPFPS = []
-          for f in fieldIndicesToPlot:
-              for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][f]:
-                  if (sloppyMatch(t, timerangeListTimes, solutionTimeThresholdSeconds,
-                                  myprint=debugSloppyMatch)):
-                      uTPFPS.append(t)
-          uTPFPS = np.sort(uTPFPS)
-          for a in range(len(uTPFPS)):
+        # support multi-fields with overlay='time'
+        uTPFPS = []
+        for f in fieldIndicesToPlot:
+            for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][f]:
+                if (sloppyMatch(t, timerangeListTimes, solutionTimeThresholdSeconds,
+                                myprint=debugSloppyMatch)):
+                    uTPFPS.append(t)
+        uTPFPS = np.sort(uTPFPS)
+        for a in range(len(uTPFPS)):
             legendString = utstring(uTPFPS[a],220)
             if (debug): print "----> Defined legendString: %s" % (legendString)
             if (a==0):
@@ -549,24 +551,17 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
                         print "3)setting myUniqueTime to %d" % (myUniqueTime)
             if (debug): print "----> Drawing legendString: %s" % (legendString)
             if (len(fieldsToPlot) > 1 or len(timerangeList) > 1):
-                if (debug): print "len(uTPFPS)=%d, a=%d, len(myUniqueColor)=%d" % (len(uTPFPS),a,len(myUniqueColor))
-                # stopgap until I understand why it gets off by one in I16293 Band9 data
-                if (a >= len(myUniqueColor)):
-                    myUniqueColor.append(overlayColors[a])
-                pb.text(x0, y0, legendString,color=myUniqueColor[a],fontsize=mysize,
+                if (debug):
+                    print "len(uTPFPS)=%d, a=%d, len(myUniqueColor)=%d" % (len(uTPFPS),a,len(myUniqueColor))
+# stopgap until I understand why it gets off by one in I16293 Band9 data
+#                if (a >= len(myUniqueColor)):
+#                    myUniqueColor.append(overlayColors[a])
+#                pb.text(x0, y0, legendString,color=myUniqueColor[a],fontsize=mysize,
+#                        transform=pb.gcf().transFigure)
+                pb.text(x0, y0, legendString,color=overlayColors[timerangeList[a]],fontsize=mysize,
                         transform=pb.gcf().transFigure)
             else:
                 pb.text(x0, y0, legendString,fontsize=mysize, transform=pb.gcf().transFigure)
-        else:
-            for a in range(len(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex])):
-              legendString = utstring(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][a],220)
-              if (debug): print "---->> legendString: %s" % (legendString)
-              x0 = xstartTitle + (a*timeHorizontalSpacing)
-              y0 = ystartOverlayLegend
-              if (a==0):
-                  pb.text(xstartTitle-0.02, y0, 'UT.',color='k',fontsize=mysize, transform=pb.gcf().transFigure)
-              pb.text(x0,y0, legendString,color=overlayColors[a],fontsize=mysize,
-                      transform=pb.gcf().transFigure)
 
 def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, TebbSky,
                          TebbSkyImage,plotrange, xaxis, atmchan, atmfreq, transmission,
@@ -1758,10 +1753,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     if (overlayTimes and len(fieldsToPlot)>1 and 1==0):
           print "Times cannot be overlaid if more than one field is specified"
           return()
-    if (overlayTimes and len(fieldsToPlot)>1):
-        multiFieldsWithOverlayTime = True
-    else:
-        multiFieldsWithOverlayTime = False
+#    if (overlayTimes and len(fieldsToPlot)>1):
+#        multiFieldsWithOverlayTime = True
+#    else:
+#        multiFieldsWithOverlayTime = False
   
 # #  print "Antennas to plot = ", antennasToPlot
     casalogPost(debug,"spws to plot = %s" % (str(spwsToPlot)))
@@ -2298,6 +2293,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               if (debug):
                   print "Skipping time %d because it is not in the list: %s" % (mytime, str(timerangeList))
               mytime += 1
+              if (mytime == nUniqueTimes and overlayTimes and overlayAntennas):  
+                  # added March 14, 2013 to support the case when final timerange is flagged
+                  doneOverlayTime = False
+                  if (debug):
+                      print "$$$$$$$$$$$$$$$$$$$$$$  Setting doneOverlayTime=False" % (xframe)
               continue
           if (overlayAntennas):
               xctr += 1
@@ -2525,7 +2525,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               continue
           #  The following variable allows color legend of UT times to match line plot
           myUniqueTime = []
-          if (multiFieldsWithOverlayTime):
+          if (True):  # multiFieldsWithOverlayTime):
               # support multi-fields with overlay='time'
               uTPFPS = []
               for f in fieldIndicesToPlot:
@@ -2561,8 +2561,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 pb.clf()
           xflag = [item for sublist in xflag for item in sublist]
           yflag = [item for sublist in yflag for item in sublist]
-          pflag = [xflag, yflag]
-          flagfrequencies = [frequencies, frequencies2]
+#          pflag = [xflag, yflag]
+#          flagfrequencies = [frequencies, frequencies2]
           antstring, Antstring = buildAntString(xant,msFound,msAnt)
           if (msFound):
               fieldString = msFields[uniqueFields[fieldIndex]]
@@ -2592,7 +2592,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                              fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
                              solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
                              fieldsToPlot,myUniqueColor,timeHorizontalSpacing,fieldIndex,overlayColors,
-                             antennaVerticalSpacing)
+                             antennaVerticalSpacing, overlayAntennas, timerangeList)
                           drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,TebbSky,TebbSkyImage,
                                                plotrange, xaxis,atmchan,atmfreq,transmission,subplotCols,
                                                showatmPoints,xframe, channels,LO1,atmchanImage,atmfreqImage,
@@ -2976,12 +2976,14 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
   
                           pb.hold(True)
                           for p in range(nPolarizations):
-                                if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                              if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                  pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
+                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
                           if (corrTypeToString(corr_type[0]) in polsToPlot):
-                                pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
-                                pb.plot(frequenciesGHz2[index], amplitudeSolution2X, '%s%s'%(p3color[0],bpolymarkstyle))
+                              pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
+                              newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionX, sideband,plotrange,xchannels)
+                              pb.plot(frequenciesGHz2[index], amplitudeSolution2X, '%s%s'%(p3color[0],bpolymarkstyle))
+                              newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolution2X, sideband,plotrange,xchannels2)
                           if (nPolarizations == 2):
                              if (corrTypeToString(corr_type[1]) in polsToPlot):
                                 pb.plot(frequenciesGHz[index], amplitudeSolutionY,'%s%s'%(p2color[1],bpolymarkstyle))
@@ -2989,14 +2991,16 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       else:
                           pb.hold(True)
                           for p in range(nPolarizations):
-                                if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
-                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
+                              if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                  pb.plot(pfrequencies[p], gamp[p],'%s%s'%(pcolor[p],ampmarkstyle), markersize=markersize)
+                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
                           if (corrTypeToString(corr_type[0]) in polsToPlot):
-                                pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
+                              pb.plot(frequenciesGHz[index], amplitudeSolutionX,'%s%s'%(p2color[0],bpolymarkstyle))
+                              newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionX, sideband,plotrange,xchannels)
                           if (nPolarizations == 2):
                              if (corrTypeToString(corr_type[1]) in polsToPlot):
                                 pb.plot(frequenciesGHz[index], amplitudeSolutionY,'%s%s'%(p2color[1],bpolymarkstyle))
+                                newylimits = recalcYlimitsFreq(chanrange, newylimits, amplitudeSolutionY, sideband,plotrange,ychannels)
                       # endif (bpolyOverlay2)
                   else:
                       # we are not overlaying any B or polynomial solutions      'amp vs. freq'
@@ -3008,28 +3012,20 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               if (overlayAntennas or overlayTimes):
                                 pdesc1 = pb.plot(pfrequencies[p], gamp[p], '%s'%ampmarkstyles[p], markersize=markersize)
                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                                pdesc2 = pb.plot(flagfrequencies[p], pflag[p], '%s'%ampmarkstyles[p],markersize=markersize)
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, pflag[p], sideband,plotrange,xchannels)
                                 if (overlayAntennas and overlayTimes==False):
                                     pb.setp(pdesc1, color=overlayColors[xctr])
-                                    pb.setp(pdesc2, color=overlayColors[xctr])
                                 elif (overlayTimes and overlayAntennas==False):
                                     pb.setp(pdesc1, color=overlayColors[mytime])
-                                    pb.setp(pdesc2, color=overlayColors[mytime])
                                 elif (overlayTimes and overlayAntennas): # try to support antenna,time
                                     if (myUniqueTime != []):
                                         pb.setp(pdesc1, color=overlayColors[myUniqueTime])
-                                        pb.setp(pdesc2, color=overlayColors[myUniqueTime])
                                         # The third 'or' below is needed if pol='0' is flagged on antenna 0. -- 2012/10/12 (original spot)
                                         if (p==0 or len(polsToPlot)==1 or myUniqueColor==[]):
                                             myUniqueColor.append(overlayColors[len(myUniqueColor)])
                                         pb.setp(pdesc1, color=myUniqueColor[-1])
-                                        pb.setp(pdesc2, color=myUniqueColor[-1])
                               else:
                                 pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyles[p]), markersize=markersize)
                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
-                                pb.plot(flagfrequencies[p], pflag[p], '%s%s'%(p2color[p],ampmarkstyles[p]), markersize=markersize)
-                                newylimits = recalcYlimitsFreq(chanrange, newylimits, pflag[p], sideband,plotrange,xchannels)
                       else:   # showing only unflagged data    'amp vs. freq'
                           pb.hold(True)
                           for p in range(nPolarizations):
@@ -3040,7 +3036,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
 # #                                print "=============== Skipping flagged data on antenna %d = %s" % (xant,antstring)
                                   continue
                               if (overlayAntennas or overlayTimes):
-# #                              print "freq: drawing overlay ----------------"
                                 pdesc = pb.plot(pfrequencies[p], gamp[p], '%s'%ampmarkstyles[p], markersize=markersize)
                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
                                 if (overlayAntennas and overlayTimes==False):
@@ -3221,13 +3216,14 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           # draw title including caltable name
                           pb.text(xstartTitle, ystartTitle, caltable, size=titlesize,
                                   color='k', transform=pb.gcf().transFigure)
-                          if (multiFieldsWithOverlayTime):
-                              drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
-                                                     fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,
-                                                     timerangeListTimes, solutionTimeThresholdSeconds,
-                                                     debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                                                     fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
-                                                     fieldIndex,overlayColors, antennaVerticalSpacing)
+                          drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
+                                                 caltable,titlesize,fieldIndicesToPlot,
+                                                 ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                                                 timerangeListTimes, solutionTimeThresholdSeconds,
+                                                 debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                                 fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
+                                                 fieldIndex,overlayColors, antennaVerticalSpacing,
+                                                 overlayAntennas, timerangeList)
               elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
                   # This will only happen for overlay='antenna,time'
                   if (xframe == firstFrame and mytime == 0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
@@ -3705,26 +3701,39 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               phaseSolution2Y = np.mean(gphsy) + cc - mymean
                               pb.hold(True)
                               for p in range(nPolarizations):
-                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies[p], gphs[p],'%s%s'%(pcolor[p],phasemarkstyle), markersize=markersize)
+                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                      pb.plot(pfrequencies[p], gphs[p],'%s%s' % (pcolor[p],phasemarkstyle), markersize=markersize)
+                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
                               if (corrTypeToString(corr_type[0]) in polsToPlot):
-                                   pb.plot(frequenciesGHz[index],phaseSolutionX,'%s%s'%(x2color,bpolymarkstyle))
-                                   pb.plot(frequenciesGHz2[index],phaseSolution2X,'%s%s'%(x3color,bpolymarkstyle))
+                                  pb.plot(frequenciesGHz[index],phaseSolutionX,'%s%s'%(x2color,bpolymarkstyle))
+                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionX, sideband,plotrange,xchannels)
+                                  pb.plot(frequenciesGHz2[index],phaseSolution2X,'%s%s'%(x3color,bpolymarkstyle))
+                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolution2X, sideband,plotrange,xchannels2)
                               if (nPolarizations == 2):
                                  if (corrTypeToString(corr_type[1]) in polsToPlot):
                                     pb.plot(frequenciesGHz[index],phaseSolutionY,'%s%s'%(y2color,bpolymarkstyle))
+                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionY, sideband,plotrange,xchannels)
                                     pb.plot(frequenciesGHz2[index],phaseSolution2Y,'%s%s'%(y3color,bpolymarkstyle))
+                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolution2Y, sideband,plotrange,xchannels2)
                           else:
                               pb.hold(True)
                               for p in range(nPolarizations):
-                                    if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies[p], gphs[p],'%s%s'%(pcolor[p],phasemarkstyle), markersize=markersize)
+                                  if (corrTypeToString(corr_type[p]) in polsToPlot):
+                                      pb.plot(pfrequencies[p], gphs[p],'%s%s'%(pcolor[p],phasemarkstyle), markersize=markersize)
+                                      newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
                               if (corrTypeToString(corr_type[0]) in polsToPlot):
                                  pb.plot(frequenciesGHz[index],phaseSolutionX,'%s%s'%(x2color,bpolymarkstyle))
+                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionX, sideband,plotrange,xchannels)
                               if (nPolarizations == 2):
                                  if (corrTypeToString(corr_type[1]) in polsToPlot):
                                     pb.plot(frequenciesGHz[index],phaseSolutionY,'%s%s'%(y2color,bpolymarkstyle))
+                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, phaseSolutionY, sideband,plotrange,xchannels)
                           # endif (bpolyOverlay2)
+                          # Adding the following 4 lines on March 14, 2013
+                          (y0,y1) = pb.ylim()
+                          if (y1-y0 < minPhaseRange):
+                              # this must come before defining ticks 
+                              SetNewYLimits([-minPhaseRange,minPhaseRange])
                   else:
                       # we are not overlaying any B or polynomial solutions   'phase vs. freq'
                       pb.hold(True)
@@ -3733,7 +3742,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               if (overlayAntennas or overlayTimes):
                                 pdesc = pb.plot(pfrequencies[p], gphs[p],'%s'%(phasemarkstyles[p]), markersize=markersize)
                                 newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels) # Apr 2, 2012
-# #                              print "Got newylimits = ", newylimits
                                 if (overlayAntennas and overlayTimes==False):
                                     pb.setp(pdesc, color=overlayColors[xctr])
                                 elif (overlayTimes and overlayAntennas==False):
@@ -3914,13 +3922,17 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               pdesc = pb.plot([x0], [y0+0.015*subplotRows-0.03*subplotRows], '%sk'%phasemarkstyle2,
                                               markersize=markersize, scalex=False,scaley=False, transform=pb.gca().transAxes)
                       if (xframe == firstFrame):
-                          for a in range(len(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex])):
-                              legendString = utstring(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][a],220)
-                              if (a==0):
-                                  pb.text(xstartTitle-0.02, ystartOverlayLegend, 'UT',color='k',fontsize=mysize,
-                                          transform=pb.gcf().transFigure)
-                              pb.text(xstartTitle+a*timeHorizontalSpacing, ystartOverlayLegend, legendString,
-                                      color=overlayColors[a], fontsize=mysize, transform=pb.gcf().transFigure)
+                          # draw title including caltable name
+                          pb.text(xstartTitle, ystartTitle, caltable, size=titlesize, color='k',
+                                  transform=pb.gcf().transFigure)
+                          drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
+                                                 caltable,titlesize,fieldIndicesToPlot,
+                                                 ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                                                 timerangeListTimes, solutionTimeThresholdSeconds,
+                                                 debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                                 fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
+                                                 fieldIndex,overlayColors, antennaVerticalSpacing,
+                                                 overlayAntennas, timerangeList)
               elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
 # #            else:
                   # This will only happen for: try to support overlay='antenna,time'
@@ -4023,7 +4035,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 or (doneOverlayTime and overlayTimes==True
                     and overlayAntennas==False 
                     )):
-              DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], '8')
+              DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
   
               if (len(figfile) > 0):
                     plotfiles.append(makeplot(figfile,msFound,msAnt,
@@ -4138,6 +4150,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     if (channeldiff>0):
         # Compute median over all antennas, or at least those completed before 'q' was hit
         madstats['median'] = dict.fromkeys(spwsToPlot)
+        spwvalue = {}
+        spwvalue['amp'] = []
+        spwvalue['phase'] = []
         for j in spwsToPlot:
             madstats['median'][j] = dict.fromkeys(timerangeList) # dict.fromkeys(range(len(uniqueTimes)))
             for k in timerangeList: # range(len(uniqueTimes)):
@@ -4157,7 +4172,16 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                 if (madstats[i][j][k][l][m] != None):
 # #                                  print "madstats[%s][%d][%d][%d][%s] = " % (i,j,k,l,m), madstats[i][j][k][l][m]
                                     value.append(madstats[i][j][k][l][m])
+                                    spwvalue[m].append(madstats[i][j][k][l][m])
                         madstats['median'][j][k][l][m] = np.median(value)
+        # now add another spw which is the median over spw,time,polarization
+        if (yaxis == 'both'):
+            madstats['median']['median']={'amp': np.median(spwvalue['amp']),
+                                          'phase': np.median(spwvalue['phase'])}
+        elif (yaxis == 'phase'):
+            madstats['median'][j][k][l] = {'phase': np.median(spwvalue['phase'])}
+        else:
+            madstats['median']['median'] = {'amp': np.median(spwvalue['amp'])}
         
         return(madstats)
     else:
