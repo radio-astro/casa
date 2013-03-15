@@ -164,6 +164,8 @@ public:
   virtual Float getAttnFactor() const;
   //set n factor in darkening equation, I=I0(1-rho^2)^n/2
   virtual void setAttnFactor(const Float attnFactor);  
+  virtual Vector<Double> optParameters() const;
+  virtual void setOptParameters(const Vector<Double>& newOptParms);
 
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be

@@ -121,16 +121,16 @@ LimbDarkenedDiskShape& LimbDarkenedDiskShape::operator=(const LimbDarkenedDiskSh
   return *this;
 }
 
-  //#! General Member Functions
-  // get the type of the shape (always returns ComponentType::LimbDakenDisk)
+//#! General Member Functions
+// get the type of the shape (always returns ComponentType::LimbDakenDisk)
 ComponentType::Shape LimbDarkenedDiskShape::type() const {
     DebugAssert(ok(), AipsError);
     return ComponentType::LDISK;
 }
 
 
-  // use diskshape ones?
-  void LimbDarkenedDiskShape::setWidthInRad(const Double majorAxis,
+// use diskshape ones?
+void LimbDarkenedDiskShape::setWidthInRad(const Double majorAxis,
                              const Double minorAxis,
                              const Double positionAngle) {
     itsMajValue = majorAxis;
@@ -140,30 +140,42 @@ ComponentType::Shape LimbDarkenedDiskShape::type() const {
                  AipsError);
     itsHeight = 1.0/(C::pi*itsMajValue*itsMinValue);
     DebugAssert(ok(), AipsError);
-  }
-  //
-  Double LimbDarkenedDiskShape::majorAxisInRad() const {
+}
+//
+Double LimbDarkenedDiskShape::majorAxisInRad() const {
   DebugAssert(ok(), AipsError);
   return itsMajValue;
-  }
+}
 
-  Double LimbDarkenedDiskShape::minorAxisInRad() const {
+Double LimbDarkenedDiskShape::minorAxisInRad() const {
   DebugAssert(ok(), AipsError);
   return itsMinValue;
-  }
+}
 
-  Double LimbDarkenedDiskShape::positionAngleInRad() const {
+Double LimbDarkenedDiskShape::positionAngleInRad() const {
   DebugAssert(ok(), AipsError);
   return itsPaValue;
-  }
+}
 
-  Float LimbDarkenedDiskShape::getAttnFactor() const {
+Float LimbDarkenedDiskShape::getAttnFactor() const {
   DebugAssert(ok(), AipsError);
   return itsAttnFactor;
-  }
+}
   //set n factor in darkening equation, I=I0(1-rho^2)^n/2
 void LimbDarkenedDiskShape::setAttnFactor(const Float attnFactor) {
   itsAttnFactor=attnFactor;  
+}
+
+Vector<Double> LimbDarkenedDiskShape::optParameters() const {
+  DebugAssert(ok(), AipsError);
+  Vector<Double> optparm(1);
+  optparm(0) = (Double)getAttnFactor();
+  return optparm;
+}
+
+void LimbDarkenedDiskShape::setOptParameters(const Vector<Double>& newOptParms) {
+  DebugAssert(ok(), AipsError);
+  setAttnFactor((Float)newOptParms(0));
 }
 
   // Calculate the proportion of the flux that is in a pixel of specified size
