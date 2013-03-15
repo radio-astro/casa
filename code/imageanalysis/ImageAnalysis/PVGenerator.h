@@ -67,7 +67,11 @@ public:
 	// The direction coordinate limits are effectively set by calling setEndPoints()
 	// after construction. The region selection in the constructor is only for things like
 	// spectral selection and polarization selection. In addition at most one of <src>regionRec</src>
-	// and <src>chanInp/stokes</src> should be supplied. If you specify <src>regionRec</src>=0
+	// and <src>chanInp/stokes</src> should be supplied. If specifying <src>regionRec</src> that should
+	// be a non-null pointer and chanInp and stokes should both be empty strings. If specifying either or
+	// both of chanInp and/or stokes, the one(s) being specified should be non-empty strings corresponding
+	// to correct syntax for that particular parameter, and regionRec should be null.
+	// If you specify <src>regionRec</src>=0
 	// and <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
