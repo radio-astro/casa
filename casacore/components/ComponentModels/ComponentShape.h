@@ -236,6 +236,8 @@ public:
   virtual Vector<Double> parameters() const = 0;
   virtual void setErrors(const Vector<Double>& newErrs) = 0;
   virtual Vector<Double> errors() const = 0;
+  virtual Vector<Double> optParameters() const = 0;
+  virtual void setOptParameters(const Vector<Double>& newOptParms) = 0;
   // </group>
 
   // These functions convert between a record and a ComponentShape. This way
