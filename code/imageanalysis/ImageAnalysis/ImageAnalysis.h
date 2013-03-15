@@ -454,7 +454,8 @@ class ImageAnalysis
         const Bool dropdeg=False, const Bool deglast=False,
         const Bool dropstokes=False, const Bool stokeslast=False,
         const Bool wavelength=False, const Bool airWavelength=False,
-        const String& origin="", Bool stretch=False
+        const String& origin="", Bool stretch=False,
+	const Bool history=True
     );
 
     Bool toASCII(

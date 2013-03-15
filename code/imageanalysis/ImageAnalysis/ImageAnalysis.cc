@@ -4650,7 +4650,8 @@ Bool ImageAnalysis::tofits(
 	const Double maxpix, Record& pRegion, const String& mask,
 	const Bool overwrite, const Bool dropDeg, const Bool,
 	const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
-	const Bool airWavelength, const String& origin, const Bool stretch
+	const Bool airWavelength, const String& origin, const Bool stretch,
+	const Bool history
 ) {
 
 	*_log << LogOrigin(className(), __FUNCTION__);
@@ -4711,7 +4712,8 @@ Bool ImageAnalysis::tofits(
 			False, //  verbose default
 			stokesLast,	wavelength,
 			airWavelength, // for airWavelength=True
-			origin
+			origin,
+			history
 		)
 	) {
 		*_log << error << LogIO::EXCEPTION;
