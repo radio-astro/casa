@@ -2369,9 +2369,11 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 			if ( image == 0 ) continue;
 
 			if ( name_ == "polyline" ){
+				get_image_region( dd );
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
 				region_statistics->push_back( SliceRegionInfo( image->name(true), image->name(false), dd_stats));
 			} else if ( name_ == "p/v line" ) {
+				get_image_region( dd );
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
 				region_statistics->push_back( PVLineRegionInfo( image->name(true), image->name(false), dd_stats));
 			} else {
@@ -2387,11 +2389,6 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 					dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
 					region_statistics->push_back(ImageRegionInfo( image->name(true), image->name(false), dd_stats));
 				}
-			}
-			else {
-				get_image_region( dd );
-				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
-				region_statistics->push_back( SliceRegionInfo( image->name(true), dd_stats));
 			}
 		} catch (const casa::AipsError& err) {
 			errMsg_ = err.getMesg();
