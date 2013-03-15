@@ -311,32 +311,12 @@ class sdtask_engine(sdtask_interface):
 
         # copy worker attributes except scan
         # use worker.scan to access scantable
-        super(sdtask_engine,self).__init__(**self.worker.__dict__)
-        if hasattr(self,'scan'): del self.scan
+        for (k,v) in self.worker.__dict__.items():
+            if k != 'scan':
+                setattr(self, k, v)
+        #super(sdtask_engine,self).__init__(**self.worker.__dict__)
+        #if hasattr(self,'scan'): del self.scan
     
-class parameter_registration(dict):
-    def __init__(self, worker, arg_is_value=False):
-        self.worker = worker
-        self.arg_is_value = arg_is_value
-
-    def register(self, key, *args, **kwargs):
-        arg_is_none = (len(args) == 0 or args[0] == None)
-        arg_is_value = self.arg_is_value
-        if kwargs.has_key('arg_is_value'):
-            arg_is_value = bool(kwargs['arg_is_value'])
-        if not arg_is_none:
-            attr = args[0]
-            if arg_is_value:
-                self[key] = attr
-            elif isinstance(attr, str) and hasattr(self.worker, attr):
-                self[key] = getattr(self.worker, attr)
-            else:
-                self[key] = attr
-        elif hasattr(self.worker, key):
-            self[key] = getattr(self.worker, key)
-        else:
-            self[key] = None
-
 def get_abspath(filename):
     return os.path.abspath(expand_path(filename))
 
