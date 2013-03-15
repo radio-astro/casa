@@ -223,6 +223,7 @@ void flagInterp(const casa::MeasurementSet &ms,
   LibAIR::getAntPos(ms, apos);
   LibAIR::AntSet wvrflag_s(wvrflag.begin(), 
 			   wvrflag.end());
+
   for(std::set<int>::const_iterator i=wvrflag.begin();
       i!=wvrflag.end(); 
       ++i)
@@ -667,6 +668,12 @@ int main(int argc,  char* argv[])
   std::set<int> interpwvrs(wvrflag);
   interpwvrs.insert(nowvr.begin(), nowvr.end());
 
+  if(interpwvrs.size()==ms.antenna().nrow()){
+    std::cout << "No good antennas with WVR data found." << std::endl;
+    std::cerr << "No good antennas with WVR data found." << std::endl;
+    return -1;
+  }
+
   int iterations = 0;
 
   while(rval<0 && iterations<2){
@@ -761,8 +768,6 @@ int main(int argc,  char* argv[])
 			      fb,
 			      useID);
 	    
-//      std::cerr << inp << std::endl;
-	    
 	}
 	else
 	{
@@ -779,8 +784,6 @@ int main(int argc,  char* argv[])
 					vm["sourceflag"].as<std::vector<std::string> >(),
 					ms);
 	}
-	
-//	std::cout<<inp<<std::endl;
 	
 	std::cerr<<"Calculating the coefficients now...";
 	boost::ptr_list<LibAIR::ALMAResBase> rlist;
