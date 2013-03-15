@@ -237,6 +237,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="vector"></value>
     </param>
 
+    <param type="bool" name="scanpattern" subparam='true'>
+            <description>plot scan patterns.</description>
+            <value>False</value>
+    </param>
+
     <param type="bool" name="header">
 	    <description>print header information on the plot</description>
 	    <value>True</value>
@@ -336,7 +341,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <!-- <default param="histogram"><value>False</value></default> -->
                 </equals>
                 <equals value="totalpower"/>
-                <equals value="pointing"/>
+                <equals value="pointing">
+                        <default param="stack"><value type="string">t</value></default>
+                        <default param="colormap"><value type="string">none</value></default>
+                        <default param="scanpattern"><value>False</value></default>
+
+                </equals>
                 <equals value="azel"/>
             </when>
 
