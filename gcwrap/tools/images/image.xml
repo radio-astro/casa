@@ -9298,6 +9298,11 @@ listed in square brackets.
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
+
+     <param type="bool"  name="history">
+        <description>Write the image history to the FITS file? Default True</description>
+        <value>true</value>
+     </param>
      
 </input>
 <returns type="bool"/>

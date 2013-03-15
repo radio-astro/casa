@@ -3160,7 +3160,8 @@ bool image::tofits(
 	const ::casac::variant& vmask, const bool overwrite,
 	const bool dropdeg, const bool deglast, const bool dropstokes,
 	const bool stokeslast, const bool wavelength, const bool airwavelength,
-	const bool /* async */, const bool stretch
+	const bool /* async */, const bool stretch,
+	const bool history
 ) {
 	*_log << _ORIGIN;
 	if (detached()) {
@@ -3190,7 +3191,7 @@ bool image::tofits(
 			fitsfile, velocity, optical, bitpix, minpix,
 			maxpix, *pRegion, mask, overwrite, dropdeg,
 			deglast, dropstokes, stokeslast, wavelength,
-			airwavelength, origin, stretch
+			airwavelength, origin, stretch, history
 		);
 	}
 	catch (AipsError x) {
