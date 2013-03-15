@@ -197,6 +197,11 @@ Functionals/WrapperBase.h
 Functionals/WrapperData.h
 Functionals/WrapperParam.h
 Functionals/WrapperParam.tcc
+Functionals/PoissonFunction.h
+Functionals/PoissonParam.h
+Functionals/PoissonParam.tcc
+Functionals/PoissonFunction.tcc
+Functionals/PoissonFunction2.tcc
 DESTINATION include/casacore/scimath/Functionals
 )
 
