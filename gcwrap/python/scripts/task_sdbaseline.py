@@ -92,14 +92,11 @@ class sdbaseline_engine(sdutil.sdtask_engine):
     def __init__(self, worker):
         super(sdbaseline_engine,self).__init__(worker)
 
-        self.baseline_param = sdutil.parameter_registration(self)
-        self.baseline_func = None
+        self.params = {}
+        self.funcname = None
 
     def __del__(self):
-        del self.baseline_param
-
-    def __register(self, key, attr=None):
-        self.baseline_param.register(key, attr)
+        del self.params
 
     def initialize(self):
         if ( abs(self.plotlevel) > 1 ):
@@ -152,10 +149,11 @@ class sdbaseline_engine(sdutil.sdtask_engine):
                 if (len(lmask) > 0): msk = scan.create_mask(lmask)
 
             # register IF dependent mask
-            self.__register('mask', msk)
+            self.params['mask'] = msk
 
-            # call target baseline function with appropriate parameter set 
-            self.baseline_func(**self.baseline_param)
+            # call target baseline function with appropriate parameter set
+            baseline_func = getattr(scan, self.funcname)
+            baseline_func(**self.params)
 
             # reset selection
             if len(sif) > 0: scan.set_selection(basesel)
@@ -167,39 +165,38 @@ class sdbaseline_engine(sdutil.sdtask_engine):
 
     def __configure_baseline(self):
         # determine what baseline function should be called
-        funcname = '%s_baseline'%(getattr(self,'blfunc').lower())
+        self.funcname = '%s_baseline'%(getattr(self,'blfunc').lower())
         if self.maskmode.lower() == 'auto':
-            funcname = 'auto_' + funcname
-        self.baseline_func = getattr(self.worker.scan,funcname)
+            self.funcname = 'auto_' + self.funcname
 
         # register parameters for baseline function
         # parameters for auto mode
         if self.maskmode.lower() == 'auto':
-            self.__register('threshold', 'thresh')
-            self.__register('chan_avg_limit', 'avg_limit')
-            self.__register('edge')
+            self.params['threshold'] = self.thresh
+            self.params['chan_avg_limit'] = self.avg_limit
+            self.params['edge'] = self.edge
 
         # parameters that depends on baseline function
         keys = getattr(self, '%s_keys'%(self.blfunc.lower()))
         for k in keys:
-            self.__register(k)
-
+            self.params[k] = getattr(self,k)
+            
         # parameters for clipping
         keys = getattr(self, 'clip_keys')
         for k in keys:
-            self.__register(k)
+            self.params[k] = getattr(self,k)
 
         # common parameters
-        self.__register('mask', 'masklist')
-        self.__register('plot', 'verify')
-        self.__register('showprogress')
-        self.__register('minnrow')
-        self.__register('outlog', 'verbose')
-        self.__register('blfile')
-        self.__register('csvformat', (self.blformat.lower() == "csv"))
-        self.__register('insitu', True)
+        self.params['mask'] = self.masklist
+        self.params['plot'] = self.verify
+        self.params['showprogress'] = self.showprogress
+        self.params['minnrow'] = self.minnrow
+        self.params['outlog'] = self.verbose
+        self.params['blfile'] = self.blfile
+        self.params['csvformat'] = (self.blformat.lower() == 'csv')
+        self.params['insitu'] = True
 
-##         for (k,v) in self.__get_param().items():
+##         for (k,v) in self.params.items():
 ##             casalog.post('%s=%s'%(k,v),'WARN')
 
     def __init_blfile(self):
