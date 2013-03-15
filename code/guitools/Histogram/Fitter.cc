@@ -24,10 +24,18 @@
 //#
 
 #include "Fitter.h"
+#include <QDebug>
 
 namespace casa {
 
 Fitter::Fitter() {
+	clearDomainLimits();
+}
+
+void Fitter::clearDomainLimits(){
+	domainMin = -1*std::numeric_limits<float>::max();
+	domainMax = std::numeric_limits<float>::max();
+	resetDataWithLimits();
 }
 
 void Fitter::setData( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
@@ -43,6 +51,57 @@ void Fitter::setData( Vector<Float> dataValuesX, Vector<Float> dataValuesY ){
 	for ( int i = 0; i < yValueSize; i++ ){
 		yValues[i] = dataValuesY[i];
 	}
+	resetDataWithLimits();
+
+	//For testing a poisson distribution
+	//Lambda = 0.61
+	/*const int HEIGHT = 10000;
+	xValues.resize(7);
+	xValues[0] = 0;
+	xValues[1] = 1;
+	xValues[2] = 2;
+	xValues[3] = 3;
+	xValues[4] = 4;
+	xValues[5] = 5;
+	xValues[6] = 6;
+	yValues.resize(7);
+	yValues[0] = .54335* HEIGHT;
+	yValues[1] = 0.33145*HEIGHT;
+	yValues[2] = 0.10110*HEIGHT;
+	yValues[3] = 0.02055*HEIGHT;
+	yValues[4] = 0.00315*HEIGHT;
+	yValues[5] = 0.00040*HEIGHT;
+	yValues[6] = 0.00005*HEIGHT;
+	resetDataWithLimits();*/
+}
+
+void Fitter::restrictDomain( double xMin, double xMax ){
+	domainMin = xMin;
+	domainMax = xMax;
+	resetDataWithLimits();
+}
+
+void Fitter::resetDataWithLimits(){
+	int count = 0;
+	Vector<Float>::iterator domainIterator = xValues.begin();
+	while ( domainIterator != xValues.end()){
+		if ( (*domainIterator)>= domainMin && (*domainIterator)<= domainMax ){
+			count++;
+		}
+		domainIterator++;
+	}
+
+	actualXValues.resize( count );
+	actualYValues.resize( count );
+	int j = 0;
+	int xValueCount = xValues.size();
+	for( int i = 0; i < xValueCount; i++ ){
+		if ( xValues[i]>= domainMin && xValues[i]<= domainMax ){
+			actualXValues[j] = xValues[i];
+			actualYValues[j] = yValues[i];
+			j++;
+		}
+	}
 }
 
 QString Fitter::formatResultLine( QString label, float value ) const {
@@ -53,9 +112,6 @@ QString Fitter::formatResultLine( QString label, float value ) const {
 	return resultLine;
 }
 
-void Fitter::setRMS( double value ){
-	rmsError = value;
-}
 
 bool Fitter::isFit() const {
 	return dataFitted;
@@ -66,7 +122,7 @@ void Fitter::clearFit(){
 	errorMsg = "";
 	statusMsg = "";
 	dataFitted = false;
-	rmsError = 0;
+	solutionConverged = false;
 }
 
 Vector<Float> Fitter::getFitValues() const {
@@ -74,7 +130,7 @@ Vector<Float> Fitter::getFitValues() const {
 }
 
 Vector<Float> Fitter::getFitValuesX() const {
-	return xValues;
+	return actualXValues;
 }
 
 QString Fitter::getErrorMessage() const {
@@ -86,9 +142,12 @@ QString Fitter::getStatusMessage() const {
 }
 
 void Fitter::toAscii( QTextStream& out ) const {
-	int count = fitValues.size();
 	const QString LINE_END = "\n";
-	out << "Value"<<"Count"<<"Fit Count"<< LINE_END;
+	out << "#Chi-square:"<<solutionChiSquared<<LINE_END;
+	out << "#RMS:"<<solutionRMS<<LINE_END;
+
+	int count = fitValues.size();
+	out << "#Value"<<"Count"<<"Fit Count"<< LINE_END;
 	for ( int i = 0; i < count; i++ ){
 		out << QString::number( xValues[i])
 		<< QString::number( yValues[i])

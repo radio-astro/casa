@@ -864,7 +864,7 @@ void QtDisplayPanelGui::resetListenerImage(){
 
 void QtDisplayPanelGui::initHistogramHolder(){
 	if ( histogrammer == NULL ){
-		histogrammer = new HistogramMain(false,true,true,true,false,this);
+		histogrammer = new HistogramMain(false,true,true,true,this);
 		histogrammer->setDisplayPlotTitle( true );
 		histogrammer->setDisplayAxisTitles( true );
 		//So we can disconnect the signals and not chew up bandwidth

@@ -40,8 +40,8 @@ ColorHistogram::ColorHistogram(QWidget *parent)
 	ui.setupUi(this);
 	setWindowTitle( "Image Color Mapping");
 
-	histogram = new BinPlotWidget( false, true, true, true, this );
-	histogram->setPlotMode( BinPlotWidget::IMAGE_MODE );
+	histogram = new BinPlotWidget( false, true, true, this );
+	histogram->setPlotMode( FootPrintWidget::IMAGE_MODE );
 	histogram->setDisplayAxisTitles( true );
 	histogram->setDisplayPlotTitle( true );
 	histogram->setColorScaleMax( COLOR_MAX );

@@ -29,6 +29,7 @@
 
 #include <guitools/Histogram/BinPlotWidget.ui.h>
 #include <guitools/Histogram/HeightSource.h>
+#include <guitools/Histogram/FootPrintWidget.qo.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/aips.h>
 #include <casa/aipstype.h>
@@ -86,8 +87,8 @@ public:
      * 		created for an image, a region, or multiple regions.
      */
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
-    		bool controlBinCountOnly, QWidget* parent = 0 );
-    enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
+    	QWidget* parent);
+
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
@@ -114,9 +115,9 @@ public:
     void setChannelCount( int count );
     void setChannelValue( int value );
     void addZoomActions( bool rangeControl, QMenu* zoomMenu );
-    void addDisplayActions( QMenu* menu );
-    void addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction=NULL,
-    		QWidgetAction* channelRangeAction = NULL, bool binCountOnly = false );
+    void addDisplayActions( QMenu* menu, QWidgetAction* binCountAction );
+    void addPlotModeActions( QMenu* menu, QWidgetAction* channelRangeAction=NULL,
+    		QWidgetAction* footPrintAction = NULL );
     void setPlotMode( int mode );
     bool isEmpty() const;
     ~BinPlotWidget();
@@ -128,9 +129,9 @@ signals:
 
 public slots:
 	void fitModeChanged();
+	void plotModeChanged( int mode );
 	void setDisplayStep( bool display );
 	void setDisplayLogY( bool display );
-	void setDisplayLogX( bool display );
 	void clearFit();
 	void clearAll();
 
@@ -183,7 +184,7 @@ private:
 	void initializeFitWidget( bool fitControls );
 	void initializeDisplayActions();
 	void initializeZoomControls( bool rangeControls );
-	void initializePlotModeControls( bool enable, bool binCountOnly = false );
+	void initializePlotModeControls( bool enable );
 	void initializeGaussianFitMarker();
 	void initializePoissonFitMarker();
 	void initializeRangeControls( bool rangeControls);
@@ -274,37 +275,36 @@ private:
 
     //Plot Display
     const QString LOG_COUNT;
-    const QString LOG_INTENSITY;
     QAction stepFunctionNoneAction;
     QAction stepFunctionAction;
     QAction stepFunctionFilledAction;
     QAction logActionY;
-    QAction logActionX;
     QAction clearAction;
     enum HistogramOptions{HISTOGRAM_FILLED,HISTOGRAM_OUTLINE,HISTOGRAM_LINE};
     bool displayLogY;
-    bool displayLogX;
     QMenu contextMenuDisplay;
 
     //Plot Control
-    QAction regionModeAction;
-    QAction imageModeAction;
-    QAction regionAllModeAction;
     //We should be able to use just one binCountAction and binCountWidget
     //However, to appear, the constructor has to take the appropriate
     //menu as a parent.
     QWidgetAction* binCountActionContext;
     QWidgetAction* channelRangeActionContext;
+    QWidgetAction* footPrintActionContext;
+
     QWidgetAction* binCountActionMenu;
     QWidgetAction* channelRangeActionMenu;
+    QWidgetAction* footPrintActionMenu;
+
     BinCountWidget* binCountWidgetContext;
     ChannelRangeWidget* channelRangeWidgetContext;
+    FootPrintWidget* footPrintWidgetContext;
+
     BinCountWidget* binCountWidgetMenu;
     ChannelRangeWidget* channelRangeWidgetMenu;
+    FootPrintWidget* footPrintWidgetMenu;
     QMenu contextMenuConfigure;
-    PlotMode plotMode;
-
-
+    FootPrintWidget::PlotMode plotMode;
 };
 
 }

@@ -53,6 +53,7 @@ qt4_wrap_cpp( outfiles_qoh
   Histogram/BinCountWidget.qo.h
   Histogram/ChannelRangeWidget.qo.h
   Histogram/ZoomWidget.qo.h
+  Histogram/FootPrintWidget.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -72,6 +73,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Histogram/BinCountWidget.ui
   Histogram/ChannelRangeWidget.ui
   Histogram/ZoomWidget.ui
+  Histogram/FootPrintWidget.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc Feather/Feather.qrc OPTIONS -name Feather )
@@ -113,6 +115,7 @@ casa_add_library( guitools
   Histogram/BinCountWidget.cc
   Histogram/ChannelRangeWidget.cc
   Histogram/ZoomWidget.cc
+  Histogram/FootPrintWidget.cc
   )
 	
 casa_add_executable( guitools casafeather apps/casafeather/casafeather.cc )

@@ -32,29 +32,32 @@
 namespace casa {
 
 ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString /*yAxisUnits*/, QWidget *parent)
-    : QDialog(parent){
+    : QMainWindow(parent){
 	ui.setupUi(this);
 	setWindowTitle( "Graphical Collapse/Moments Threshold Specification");
 
 	//Add the plot widget to the dialog
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
-	plotWidget = new BinPlotWidget( false, true, true, true, this );
+	plotWidget = new BinPlotWidget( false, true, true, this );
 	plotWidget->setPlotMode( 1 );
 	layout->addWidget( plotWidget );
 	ui.plotWidgetHolder->setLayout( layout );
+	plotWidget->addZoomActions( true, ui.menuZoom );
+	plotWidget->addDisplayActions( ui.menuDisplay, NULL );
+	plotWidget->addPlotModeActions( ui.menuConfigure, NULL, NULL);
 
+	connect( plotWidget, SIGNAL(postStatusMessage(const QString&)), this, SLOT(postStatusMessage(const QString&)));
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
 }
 
-void ThresholdingBinPlotDialog::keyPressEvent( QKeyEvent* event ){
-	int keyCode = event->key();
-	//This was written here because pressing a return on a line edit inside
-	//the dialog was closing the dialog.
-	if ( keyCode != Qt::Key_Return ){
-		QDialog::keyPressEvent( event );
+void ThresholdingBinPlotDialog::postStatusMessage( const QString& warning ){
+	QStatusBar* statBar = statusBar();
+	if ( statBar != NULL ){
+		statBar->showMessage( warning, 5000 );
 	}
 }
+
 
 
 void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
@@ -67,6 +70,11 @@ pair<double,double> ThresholdingBinPlotDialog::getInterval() const {
 
 void ThresholdingBinPlotDialog::setInterval( double minValue, double maxValue ){
 	plotWidget->setMinMaxValues( minValue, maxValue );
+}
+
+void ThresholdingBinPlotDialog::accept(){
+	emit accepted();
+	close();
 }
 
 ThresholdingBinPlotDialog::~ThresholdingBinPlotDialog(){

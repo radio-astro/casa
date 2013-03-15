@@ -36,7 +36,6 @@ public:
 			DisplayMode trackorMode, QwtPlotCanvas* canvas );
 	void setData( const std::vector<float>& xVal, const std::vector<float>& yVal );
 	void setLogScaleY( bool logScale );
-	void setLogScaleX( bool logScale );
 	virtual QwtText trackerText( const QwtDoublePoint & pos ) const;
 	virtual ~ToolTipPicker();
 
@@ -46,7 +45,6 @@ private:
 	std::vector<float> xVector;
 	std::vector<float> yVector;
 	bool logScaleY;
-	bool logScaleX;
 };
 
 } /* namespace casa */

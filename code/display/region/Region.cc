@@ -2842,7 +2842,7 @@ void Region::clear_signal_cache( ) {
 
 void Region::initHistogram(){
 	if ( histogram == NULL ){
-		histogram = new BinPlotWidget( false, false, true, true, NULL );
+		histogram = new BinPlotWidget( false, false, false, NULL );
 		state()->addHistogram( histogram );
 	}
 }

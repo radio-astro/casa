@@ -33,7 +33,7 @@
 namespace casa {
 
 HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
-		bool rangeControls, bool plotModeControls, bool controlBinCountOnly, QWidget *parent)
+		bool rangeControls, bool plotModeControls, QWidget *parent)
     : QMainWindow(parent), fileLoader(this),
       plotWidget( NULL ),
       logger(LogOrigin("CASA", "Histogram")){
@@ -47,7 +47,7 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 	}
 	mainLayout->setContentsMargins(5,1,1,1);
 	plotWidget = new BinPlotWidget( fitControls, rangeControls,
-			plotModeControls, controlBinCountOnly, this );
+			plotModeControls, this );
 	mainLayout->addWidget( plotWidget );
 	ui.centralwidget->setLayout( mainLayout );
 
@@ -73,9 +73,9 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 
 
 	plotWidget->addZoomActions( rangeControls, ui.menuZoom );
-	plotWidget->addDisplayActions( ui.menuDisplay );
+	plotWidget->addDisplayActions( ui.menuDisplay, NULL );
 	if ( plotModeControls ){
-		plotWidget->addPlotModeActions( ui.menuConfigure, NULL, NULL, controlBinCountOnly );
+		plotWidget->addPlotModeActions( ui.menuConfigure, NULL, NULL);
 	}
 	else {
 		preferencesColor->setMultipleHistogramColorsVisible( false );

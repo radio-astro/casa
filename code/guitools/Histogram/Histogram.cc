@@ -188,19 +188,19 @@ bool Histogram::reset(){
 }
 
 void Histogram::defineLine( int index, QVector<double>& xVals,
-		QVector<double>& yVals, bool useLogX, bool useLogY ) const{
+		QVector<double>& yVals, bool useLogY ) const{
 	assert( xVals.size() == 2 );
 	assert( yVals.size() == 2 );
 	int dataCount = xValues.size();
 	assert( index >= 0 && index < dataCount);
-	xVals[0] = computeXValue( xValues[index], useLogX);
-	xVals[1] = computeXValue( xValues[index], useLogX);
+	xVals[0] = xValues[index];
+	xVals[1] = xValues[index];
 	yVals[0] = 0;
 	yVals[1] = computeYValue( yValues[index], useLogY );
 }
 
 void Histogram::defineStepHorizontal( int index, QVector<double>& xVals,
-		QVector<double>& yVals, bool useLogX, bool useLogY ) const{
+		QVector<double>& yVals, bool useLogY ) const{
 	assert( xVals.size() == 2 );
 	assert( yVals.size() == 2 );
 	int pointCount = xValues.size();
@@ -217,14 +217,12 @@ void Histogram::defineStepHorizontal( int index, QVector<double>& xVals,
 	else {
 		xVals[1] = xValues[index];
 	}
-	xVals[0] = computeXValue(xVals[0], useLogX );
-	xVals[1] = computeXValue(xVals[1], useLogX );
 	yVals[0] = computeYValue(yValues[index], useLogY);
 	yVals[1] = yVals[0];
 }
 
 void Histogram::defineStepVertical( int index, QVector<double>& xVals,
-		QVector<double>& yVals, bool useLogX, bool useLogY ) const {
+		QVector<double>& yVals, bool useLogY ) const {
 	assert( xVals.size() == 2 );
 	assert( yVals.size() == 2 );
 	int count = xValues.size();
@@ -235,7 +233,6 @@ void Histogram::defineStepVertical( int index, QVector<double>& xVals,
 	else {
 		xVals[0] = xValues[0];
 	}
-	xVals[0] = computeXValue( xVals[0], useLogX );
 	xVals[1] = xVals[0];
 
 	if ( index > 0 ){
@@ -257,17 +254,6 @@ double Histogram::computeYValue( double value, bool useLog ){
 	}
 	return resultValue;
 }
-
-double Histogram::computeXValue( double value, bool useLog ){
-	double resultValue = value;
-	if ( useLog ){
-		if ( value != 0 ){
-			resultValue = qLn( qAbs(value) ) / qLn( 10 );
-		}
-	}
-	return resultValue;
-}
-
 
 
 int Histogram::getDataCount() const {
@@ -304,7 +290,11 @@ pair<float,float> Histogram::getDataRange() const {
 
 void Histogram::toAscii( QTextStream& out ) const {
 	const QString LINE_END( "\n");
-	out << "Intensity" << "Count";
+	QString centerStr( "#Bin Center(");
+	Unit unit = Histogram::image->units();
+	QString unitStr( unit.getName().c_str());
+	centerStr.append( unitStr + ")");
+	out << centerStr << "Count";
 	out << LINE_END;
 	out.flush();
 	int count = xValues.size();

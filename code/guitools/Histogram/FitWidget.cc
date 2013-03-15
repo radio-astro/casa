@@ -43,8 +43,7 @@ FitWidget::FitWidget(QWidget *parent)
 	ui.gaussPeakLineEdit->setValidator( validator );
 	ui.gaussFWHMLineEdit->setValidator( validator );
 	ui.poissonLambdaLineEdit->setValidator( posValidator );
-	ui.rmsLineEdit->setValidator( posValidator );
-	ui.rmsLineEdit->setText( QString::number(1.2f));
+
 	connect( ui.gaussCenterLineEdit, SIGNAL(textEdited( const QString&)), this, SLOT( centerEdited( const QString& )));
 	connect( ui.gaussPeakLineEdit, SIGNAL(textEdited( const QString&)), this, SLOT( peakEdited( const QString& )));
 	connect( ui.gaussFWHMLineEdit, SIGNAL(textEdited(const QString&)), this, SLOT( fwhmEdited( const QString& )));
@@ -186,6 +185,16 @@ void FitWidget::fitSelected( int index ){
 	}
 }
 
+void FitWidget::restrictDomain( double xMin, double xMax ){
+	fitterGaussian->restrictDomain( xMin, xMax );
+	fitterPoisson->restrictDomain( xMin, xMax );
+}
+
+void FitWidget::clearDomainLimits(){
+	fitterGaussian->clearDomainLimits();
+	fitterPoisson->clearDomainLimits();
+}
+
 //-----------------------------------------------------------
 //                    Fitting
 //-----------------------------------------------------------
@@ -212,13 +221,14 @@ void FitWidget::setSolutionVisible( bool visible ){
 }
 
 void FitWidget::doFit() {
-	QString rmsStr = ui.rmsLineEdit->text();
+	/*QString rmsStr = ui.rmsLineEdit->text();
 	double rmsVal = rmsStr.toDouble();
 	if ( rmsVal <= 0 ){
 		QMessageBox::warning( this, "RMS Invalid", "Please specify a positive value for fit rms.");
 		return;
 	}
-	fitter->setRMS( rmsVal );
+	fitter->setRMS( rmsVal );*/
+	//fitter->setRMS( std::numeric_limits<double>::max());
 	bool successfulFit = fitter->doFit();
 	setSolutionVisible( successfulFit );
 	if ( successfulFit ){
@@ -258,7 +268,7 @@ FitWidget::~FitWidget(){
 
 void FitWidget::toAscii( QTextStream& out) const {
 	if ( fitter->isFit() ){
-		QString fitTitle("Fit Information");
+		QString fitTitle("#Fit Information");
 		if ( fitId != -1 ){
 			fitTitle.append( " for region "+QString::number( fitId) );
 		}

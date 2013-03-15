@@ -260,7 +260,6 @@ void ImageSlice::addPlotCurve( QwtPlot* plot){
 		QVector<double> xValues;
 		if ( xAxisChoice == SliceStatisticsFactory::DISTANCE ){
 			xValues = sliceWorker->getDistances( i, xIncr );
-
 		}
 		else if ( xAxisChoice == SliceStatisticsFactory::X_POSITION ){
 			xValues = sliceWorker->getXPositions( i );
