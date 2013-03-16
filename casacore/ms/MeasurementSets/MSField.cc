@@ -196,5 +196,17 @@ MSField MSField::referenceCopy(const String& newTableName,
 		     referenceCopy(newTableName,writableColumns));
 }
 
+Bool MSField::addEphemeris(const uInt id, const String& inputEphemTableName,
+			   const String& comment){
+  // not yet implemented
+  return False;
+}
+
+Bool MSField::removeEphemeris(const uInt id){
+  // not yet implemented
+  return False;
+}
+
+
 } //# NAMESPACE CASA - END
 
