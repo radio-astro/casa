@@ -85,7 +85,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.9 2013/03/14 16:43:58 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.10 2013/03/16 12:13:53 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -1818,7 +1818,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               pages.append([xctr,spwctr,mytime,0])
 #              print "appending [%d,%d,%d,%d]" % (xctr,spwctr,mytime,0)
               newpage = 0
-           antennaString = 'Ant%d: %s,  ' % (xant,antstring)
+           antennaString = 'Ant%2d: %s,  ' % (xant,antstring)
            for index in range(nRows):
               # Find this antenna, spw, and timerange combination in the table
               if (xant==ant[index] and sloppyMatch(uniqueTimes[mytime],times[index],solutionTimeThresholdSeconds,myprint=debugSloppyMatch) and
@@ -2308,7 +2308,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   print "mytime=%d, Set xant to %d" % (mytime,xant)
               antennaString = ''
           else:
-              antennaString = 'Ant%d: %s,  ' % (xant,antstring)
+              antennaString = 'Ant%2d: %s,  ' % (xant,antstring)
           # This used to be above the previous if/else block
           if (newpage==1):
               # add the current page (being created here) to the list
@@ -2354,31 +2354,34 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       fieldIndex = np.where(fields[i] == uniqueFields)[0]
                       if (debug):
                           print "%d Found match at field,ant,spw,mytime,time = %d(index=%d),%d,%d,%d,%f=%s" % (matchctr,fields[i],fieldIndex,xant,ispw,mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],4))
-                      matchFound = True
-                      if (msFound):
-                          nChannels = len(chanFreqGHz[ispw])
+                      if (matchFound):
+                          print "WARNING: This cal table has multiple rows for field=%d,ant=%d,spw=%d,time=%d=%.0f=%s. Only showing the first one." % (fields[i],xant,ispw,mytime,uniqueTimes[mytime],utstring(uniqueTimes[mytime],3))
                       else:
-                          nChannels = len(ggx[0])
-                      xflag.append(flags[i][0][:])
-                      yflag.append(flags[i][1][:])
-                      BRowNumber = i
-                      for j in range(nChannels):   # len(chanFreqGHz[ispw])):
-                          channels.append(j)  # both flagged and unflagged
+                          matchFound = True
                           if (msFound):
-                              frequencies.append(chanFreqGHz[ispw][j])
-                              if (j==0 and debug):
-                                  print "found match: ispw=%d, j=%d, len(chanFreqGHz)=%d, chanFreqGHz[0]=%f" % (ispw,j, len(chanFreqGHz),chanFreqGHz[ispw][0])
-                          if (showflagged or (showflagged == False and flags[i][0][j]==0)):
-                              gplotx.append(ggx[i][j])
-                              xchannels.append(j)
+                              nChannels = len(chanFreqGHz[ispw])
+                          else:
+                              nChannels = len(ggx[0])
+                          xflag.append(flags[i][0][:])
+                          yflag.append(flags[i][1][:])
+                          BRowNumber = i
+                          for j in range(nChannels):   # len(chanFreqGHz[ispw])):
+                              channels.append(j)  # both flagged and unflagged
                               if (msFound):
-                                  xfrequencies.append(chanFreqGHz[ispw][j])
-                          if (nPolarizations == 2):
-                              if (showflagged or (showflagged == False and flags[i][1][j]==0)):
-                                  gploty.append(ggy[i][j])
-                                  ychannels.append(j)
+                                  frequencies.append(chanFreqGHz[ispw][j])
+                                  if (j==0 and debug):
+                                      print "found match: ispw=%d, j=%d, len(chanFreqGHz)=%d, chanFreqGHz[0]=%f" % (ispw,j, len(chanFreqGHz),chanFreqGHz[ispw][0])
+                              if (showflagged or (showflagged == False and flags[i][0][j]==0)):
+                                  gplotx.append(ggx[i][j])
+                                  xchannels.append(j)
                                   if (msFound):
-                                    yfrequencies.append(chanFreqGHz[ispw][j])
+                                      xfrequencies.append(chanFreqGHz[ispw][j])
+                              if (nPolarizations == 2):
+                                  if (showflagged or (showflagged == False and flags[i][1][j]==0)):
+                                      gploty.append(ggy[i][j])
+                                      ychannels.append(j)
+                                      if (msFound):
+                                          yfrequencies.append(chanFreqGHz[ispw][j])
           # end 'for i'
           myspw = originalSpw[ispw]
           if (msFound):
@@ -2542,7 +2545,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           print "1)setting myUniqueTime to %d" % (mytime)
                       myUniqueTime = mytime
                       ctr += 1
-              if (ctr > 1):
+              if (ctr > 1 and bOverlay==False):
                   print "multi-field time overlay ***************  why are there 2 matches?"
 # #            if (ctr == 0):
 # #                print "No match for %.1f in "%(t), uTPFPS
@@ -2573,9 +2576,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           else:
               timeString = ',  t%d/%d  %s' % (mytime,nUniqueTimes-1,utstring(uniqueTimes[mytime],3))
           if (ispw==originalSpw[ispw]):
-                titleString = "%sspw%d,  field %d: %s%s" % (antennaString,ispw,uniqueFields[fieldIndex],fieldString,timeString)
+                titleString = "%sspw%2d,  field %d: %s%s" % (antennaString,ispw,uniqueFields[fieldIndex],fieldString,timeString)
           else:
-                titleString = "%sspw%d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],uniqueFields[fieldIndex],fieldString,timeString)
+                titleString = "%sspw%2d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],uniqueFields[fieldIndex],fieldString,timeString)
           if (sum(xflag)==nChannels and sum(yflag)==nChannels and showflagged==False):
                   if (overlayTimes):
                       print "Skip %s (%s) for time%d=%s all data flagged" % (antstring, titleString,mytime,utstring(uniqueTimes[mytime],3))
@@ -2702,7 +2705,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   print "madstats[%s][%d] = %s" % (Antstring,ispw, str(madstats[Antstring][ispw]))
                               madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
                               if (gamp_mad[p]['nchan'] > 0):
-                                  casalogPost(debug, "%s, Pol %d, spw %d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']))
+                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']))
                           if (debug): print "madstats done"
                       else:
                           gamp = [gampx,gampy]
@@ -2726,7 +2729,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           gamp_mad = [madInfo(gamp[p], madsigma,edge)]
                           madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
                           if (gamp_mad[p]['nchan'] > 0):
-                              print "%s, Pol %d, spw %d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel'])
+                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']))
                       else:
                           gamp = [gampx]
               if (bOverlay):
@@ -3083,10 +3086,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                 fstring += msFields[uniqueFields[f]]
                         if (len(fstring) > fstringLimit):
                               fstring = fstring[0:fstringLimit] + '...'
-                        titleString = "%sspw%d,  fields %s: %s%s" % (antennaString,ispw,
+                        titleString = "%sspw%2d,  fields %s: %s%s" % (antennaString,ispw,
                                   indices, fstring, timeString)
                   else:
-                        titleString = "%sspw%d,  field %d: %s%s" % (antennaString,ispw,uniqueFields[fieldIndex],fieldString,timeString)
+                        titleString = "%sspw%2d,  field %d: %s%s" % (antennaString,ispw,uniqueFields[fieldIndex],fieldString,timeString)
               else:
                   if (overlayTimes and len(fieldsToPlot) > 1):
                       indices = fstring = ''
@@ -3099,10 +3102,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               fstring += msFields[uniqueFields[f]]
                       if (len(fstring) > fstringLimit):
                               fstring = fstring[0:fstringLimit] + '...'
-                      titleString = "%sspw%d (%d),  fields %s: %s%s" % (antennaString,ispw,originalSpw[ispw],
+                      titleString = "%sspw%2d (%d),  fields %s: %s%s" % (antennaString,ispw,originalSpw[ispw],
                                   indices, fstring, timeString)
                   else:
-                      titleString = "%sspw%d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],uniqueFields[fieldIndex],fieldString,timeString)
+                      titleString = "%sspw%2d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],uniqueFields[fieldIndex],fieldString,timeString)
               pb.title(titleString, size=titlesize)
               if (abs(plotrange[0]) > 0 or abs(plotrange[1]) > 0):
                   SetNewXLimits([plotrange[0],plotrange[1]])
@@ -3413,7 +3416,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
                                   if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because abs sum of all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
                               else:
-                                  print "%s, Pol %d, spw %d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel'])
+                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']))
                   else:
                       gphs = [gphsx,gphsy]
               else:  # 1-pol
@@ -3433,7 +3436,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
                               if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
                           else:
-                              print "%s, Pol %d, spw %d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel'])
+                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']))
                   else:
                       gphs = [gphsx]
               if (bOverlay):
@@ -3773,10 +3776,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               else:
                   timeString = ',  t%d/%d  %s' % (mytime+1,nUniqueTimes,utstring(uniqueTimes[mytime],3))
               if (ispw==originalSpw[ispw]):
-                    titleString = "%sspw%d,  field %d: %s%s" % (antennaString,ispw,
+                    titleString = "%sspw%2d,  field %d: %s%s" % (antennaString,ispw,
                                                                 uniqueFields[fieldIndex],fieldString,timeString)
               else:
-                    titleString = "%sspw%d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],
+                    titleString = "%sspw%2d (%d),  field %d: %s%s" % (antennaString,ispw,originalSpw[ispw],
                                                                 uniqueFields[fieldIndex],fieldString,timeString)
               pb.title(titleString,size=titlesize)
               if (abs(plotrange[0]) > 0 or abs(plotrange[1]) > 0):
@@ -4143,6 +4146,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               casalogPost(debug,"Running command = %s" % (cmd))
               mystatus = os.system(cmd)
           if (mystatus == 0):
+              casalogPost(debug,"PDF left in %s" % (pdfname))
               print "PDF left in %s" % (pdfname)
               os.system("rm -f %s" % filelist)
           else:
