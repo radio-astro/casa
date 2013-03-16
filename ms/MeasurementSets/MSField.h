@@ -122,6 +122,20 @@ public:
     MSField referenceCopy(const String& newTableName,
 			  const Block<String>& writableColumns) const;
 
+    // Add an ephemeris subtable (there can be many) to the Field table.
+    // The table is copied from inputEphemTableName and named
+    // EPHEM<id>_<comment>.tab
+    // If a table of the same id exists already, it is overwritten.
+    // Add the optional EPHEMERIS_ID column if it doesn't exist, yet.
+    // Return False in case of errors.
+    Bool addEphemeris(const uInt id, const String& inputEphemTableName,
+		      const String& comment);
+
+    // Remove (delete) an ephemeris subtable (without changes to
+    // the EPHEMERIS_ID column).
+    // Return False in case of errors (but True if the id didn't exist).
+    Bool removeEphemeris(const uInt id);
+
     // Initialize the statics appropriately. This does not need to be
     // called by users, it is called by the implementation class
     // MSTableImpl.
