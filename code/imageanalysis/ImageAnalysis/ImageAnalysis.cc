@@ -3889,7 +3889,8 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	}
 
 	// Get Linear Transform
-	const Coordinate& coord = cSysTo.coordinate(coordInd);
+	//const Coordinate& coord = cSysTo.coordinate(coordInd);
+	/*
 	Matrix<Double> xf = coord.linearTransform();
 
 	// Generate rotation matrix components
@@ -3908,17 +3909,23 @@ ImageInterface<Float>* ImageAnalysis::rotate(
 	xform(0, 1) = rotm(0, 0) * xf(0, 1) + rotm(0, 1) * xf(1, 1);
 	xform(1, 0) = rotm(1, 0) * xf(0, 0) + rotm(1, 1) * xf(1, 0);
 	xform(1, 1) = rotm(1, 0) * xf(0, 1) + rotm(1, 1) * xf(1, 1);
-
+*/
 	// Apply new linear transform matrix to coordinate
 	if (cSysTo.type(coordInd) == Coordinate::DIRECTION) {
-		DirectionCoordinate c = cSysTo.directionCoordinate(coordInd);
-		c.setLinearTransform(xform);
-		cSysTo.replaceCoordinate(c, coordInd);
+		std::auto_ptr<DirectionCoordinate> c(
+			dynamic_cast<DirectionCoordinate *>(
+				cSysTo.directionCoordinate(coordInd).rotate(pa)
+			)
+		);
+		cSysTo.replaceCoordinate(*c, coordInd);
 	}
 	else {
-		LinearCoordinate c = cSysTo.linearCoordinate(coordInd);
-		c.setLinearTransform(xform);
-		cSysTo.replaceCoordinate(c, coordInd);
+		std::auto_ptr<LinearCoordinate> c(
+			dynamic_cast<LinearCoordinate *>(
+				cSysTo.linearCoordinate(coordInd).rotate(pa)
+			)
+		);
+		cSysTo.replaceCoordinate(*c, coordInd);
 	}
 
 	// Determine axes to regrid to new coordinate system

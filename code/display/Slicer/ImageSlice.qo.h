@@ -45,6 +45,7 @@ namespace casa {
 class ImageAnalysis;
 class SliceSegment;
 class ImageSliceColorBar;
+class SliceStatistics;
 
 /**
  * Represents a slice cut of an image.  The slice cut may be
@@ -78,9 +79,7 @@ public:
 	virtual ~ImageSlice();
 
 	//X-Axis
-	void setAxisXChoice( SliceStatisticsFactory::AxisXChoice choice );
-	void setXUnits( SliceStatisticsFactory::AxisXUnits unitMode );
-
+	void setStatistics( SliceStatistics* statistics );
 
 private slots:
 	void minimizeDisplay();
@@ -96,8 +95,8 @@ private:
 	void removeSegment( SliceSegment* segment );
 	void resetSegmentColors();
 	void runSliceWorker();
-	SliceStatisticsFactory::AxisXChoice xAxisChoice;
 
+	SliceStatistics* statistics;
 	ImageSlice( const ImageSlice& other );
 	ImageSlice operator=( const ImageSlice& other );
 

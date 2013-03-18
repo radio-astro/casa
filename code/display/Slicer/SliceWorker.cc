@@ -100,6 +100,7 @@ void SliceWorker::setMethod( const String& method ){
 }
 
 
+
 void SliceWorker::compute(){
 	Assert( imageAnalysis != NULL );
 	clearResults();
@@ -134,108 +135,63 @@ void SliceWorker::computeSlice( const Vector<double>& xValues, const Vector<doub
 	sliceResults.append( sliceResult );
 }
 
-QVector<double> SliceWorker::getFromArray( const Array<float>& source ) const {
-	int count = source.size();
-	QVector<double> result( count );
-	std::vector<float> distanceVector = source.tovector();
-	for ( int i = 0; i < count; i++ ){
-		result[i] = distanceVector[i];
-	}
-	return result;
-}
 
 
 
 
-QVector<double> SliceWorker::getValues( int index, const QVector<double>& pixels ) const {
-	SliceStatistics* statistics = SliceStatisticsFactory::getInstance()->getStatistics();
+QVector<double> SliceWorker::getValues( int index, const QVector<double>& pixels,
+		SliceStatistics* statistics ) const {
 	int nextIndex = index+1;
-	double start = statistics->getLength( verticesXWorld[index], verticesYWorld[index],
-					verticesX[index], verticesY[index]);
-	double end   = statistics->getLength( verticesXWorld[nextIndex], verticesYWorld[nextIndex],
-					verticesX[nextIndex], verticesY[nextIndex]);
+	double end   = statistics->getEnd( verticesXWorld[index], verticesYWorld[index],
+					verticesXWorld[nextIndex], verticesYWorld[nextIndex]);
+	double start = statistics->getStart( verticesXWorld[index], verticesYWorld[index],
+			verticesXWorld[nextIndex], verticesYWorld[nextIndex]);
 	QVector<double> values = statistics->interpolate( start, end, pixels );
-
-
-	delete statistics;
+	return values;
+}
+QVector<double> SliceWorker::getData( int index, double lastX, SliceStatistics* statistics ) const{
+	QVector<double> values;
+	if ( sliceResults.size() > index && index >= 0 ){
+		QVector<double> valuesPixels = statistics->fromResults( sliceResults[index]);
+		values = getValues( index, valuesPixels, statistics );
+		if ( index > 0 ){
+			statistics->adjustStart( values, lastX );
+		}
+	}
 	return values;
 }
 
-QVector<double> SliceWorker::getDistances( int index, double lastX ) const {
-	QVector<double> distances;
-	if ( sliceResults.size() > index && index >= 0 ){
-		Array<float> distanceArray = sliceResults[index]->asArrayFloat("distance");
-		QVector<double> distancePixels= getFromArray( distanceArray );
-		distances = getValues( index, distancePixels );
 
-		//In the case of distance in pixels, we want the distance to increase along
-		//the individual line segments rather than starting over with each line segment.
-		if ( index > 0 ){
-			int distanceCount = distances.size();
-			for ( int i = 0; i < distanceCount; i++ ){
-				distances[i] = distances[i] + lastX;
-			}
-		}
-	}
-	return distances;
-}
-
-QVector<double> SliceWorker::getXPositions( int index ) const {
-	QVector<double> xPositions;
-	if ( sliceResults.size() > index && index >= 0 ){
-		Array<float> xPositionArray = sliceResults[index]->asArrayFloat("xpos");
-		QVector<double> xPositionPixels= getFromArray( xPositionArray );
-		xPositions = getValues( index, xPositionPixels );
-	}
-	return xPositions;
-}
-
-QVector<double> SliceWorker::getYPositions( int index ) const {
-	QVector<double> yPositions;
-	if ( sliceResults.size() > index && index >= 0 ){
-		Array<float> yPositionArray = sliceResults[index]->asArrayFloat("ypos");
-		QVector<double> yPositionPixels= getFromArray( yPositionArray );
-		yPositions = getValues( index, yPositionPixels );
-	}
-	return yPositions;
-}
 
 QVector<double> SliceWorker::getPixels( int index ) const {
 	QVector<double> pixels;
 	if ( sliceResults.size() > index && index >= 0 ){
 		Array<float> pixelArray = sliceResults[index]->asArrayFloat("pixel");
-		pixels = getFromArray( pixelArray );
+		pixels = SliceStatistics::getFromArray( pixelArray );
 	}
 	return pixels;
 }
 
-void SliceWorker::toAscii( QTextStream& stream ) const {
+void SliceWorker::toAscii( QTextStream& stream, SliceStatistics* statistics ) const {
 	if ( !sliceResults.isEmpty()){
 		const QString END_OF_LINE( "\n");
 		stream << "Region: "<< QString::number(id)<< END_OF_LINE;
-		stream << "Distance"<<"X Position"<<"Y Position"<<"Pixel"<<END_OF_LINE;
+		QString lengthLabel = statistics->getLengthLabel();
+		stream << lengthLabel <<"Pixel"<<END_OF_LINE;
 		int resultCount = sliceResults.size();
 		double xIncr = 0;
 		for ( int i = 0; i < resultCount; i++ ){
+			QVector<double> values = getData( i, xIncr, statistics );
+			int count = values.size();
+			if ( count > 0 ){
+				xIncr = values[count - 1] - values[0];
+			}
 
-			QVector<double> distances = getDistances( i, xIncr );
-			int distanceCount = distances.size();
-			if ( distanceCount > 0 ){
-				xIncr = distances[distances.size() - 1] - distances[0];
-			}
-			else {
-				xIncr = 0;
-			}
-			QVector<double> xPositions = getXPositions( i );
-			QVector<double> yPositions = getYPositions( i );
 			QVector<double> pixels = getPixels( i );
-			int count = distances.size();
 			if ( count > 0 ){
 				stream << END_OF_LINE <<"# Segment: "<< (i+1)<<END_OF_LINE;
 				for ( int j = 0; j < count; j++ ){
-					stream << QString::number( distances[j]) <<
-							QString::number( xPositions[j])<<
-							QString::number(yPositions[j]) <<
+					stream << QString::number( values[j]) <<
 							QString::number(pixels[j]) <<
 							END_OF_LINE;
 				}

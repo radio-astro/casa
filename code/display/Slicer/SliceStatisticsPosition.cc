@@ -25,6 +25,7 @@
 
 
 #include "SliceStatisticsPosition.h"
+#include <casa/Containers/Record.h>
 #include <QVector>
 #include <QDebug>
 
@@ -41,15 +42,7 @@ double SliceStatisticsPosition::getLength(std::pair<double,double> worldStart,
 	std::pair<int,int> pixelStart,
 	std::pair<int,int> pixelEnd ) const {
 	double distance = 0;
-	if ( xUnits == SliceStatisticsFactory::RADIAN_UNIT ){
-		if ( xPosition ){
-			distance = qAbs( worldEnd.first - worldStart.first );
-		}
-		else {
-			distance = qAbs( worldEnd.second - worldStart.second );
-		}
-	}
-	else if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
+	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
 		if ( xPosition ){
 			distance = qAbs( pixelEnd.first - pixelStart.first );
 		}
@@ -59,39 +52,42 @@ double SliceStatisticsPosition::getLength(std::pair<double,double> worldStart,
 	}
 	else {
 		if ( xPosition ){
-			double startX = radiansToArcseconds( pixelStart.first );
-			double endX = radiansToArcseconds( pixelEnd.first );
-			distance = qAbs( endX - startX );
+			distance = qAbs( worldEnd.first - worldStart.first );
 		}
 		else {
-			double startY = radiansToArcseconds( pixelStart.second );
-			double endY = radiansToArcseconds( pixelEnd.second );
-			distance = qAbs( endY - startY );
+			distance = qAbs( worldEnd.second - worldStart.second );
 		}
+		distance = convertArcUnits( distance );
 	}
+
 	return distance;
 }
 
+QVector<double> SliceStatisticsPosition::fromResults( Record* record  )const {
+	Array<float> positionArray;
+	if ( xPosition ){
+		positionArray = record->asArrayFloat("xpos");
+	}
+	else {
+		positionArray = record->asArrayFloat("ypos");
+	}
+	QVector<double> positionPixels= getFromArray( positionArray );
+	return positionPixels;
+}
 
+void SliceStatisticsPosition::adjustStart( QVector<double>& /*values*/, double /*newStart*/ ) const {
+
+}
 
 QVector<double> SliceStatisticsPosition::interpolate( double start, double end,
 			const QVector<double>& values ) const{
 	QVector<double> results( values.size());
-	if ( xUnits == SliceStatisticsFactory::RADIAN_UNIT ){
-		results = SliceStatistics::interpolate( start, end, values );
-	}
-	else if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
+	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
 		results = values;
 	}
 	else {
-		double startArc = radiansToArcseconds( start );
-		double endArc = radiansToArcseconds( end );
-		int valueCount = values.size();
-		QVector<double> arcValues( valueCount );
-		for ( int i = 0; i < valueCount; i++ ){
-			arcValues[i] = radiansToArcseconds( values[i] );
-		}
-		results = SliceStatistics::interpolate( startArc, endArc, arcValues );
+		results = SliceStatistics::interpolate( start, end, values );
+		results = convertArcUnits( results );
 	}
 	return results;
 }
@@ -99,15 +95,7 @@ QVector<double> SliceStatisticsPosition::interpolate( double start, double end,
 double SliceStatisticsPosition::getLength( double value1World, double value2World,
 			double value1Pixel, double value2Pixel ) const {
 	double distance = 0;
-	if ( xUnits == SliceStatisticsFactory::RADIAN_UNIT ){
-		if ( xPosition ){
-			distance = value1World;
-		}
-		else {
-			distance = value2World;
-		}
-	}
-	else if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
+	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
 		if ( xPosition ){
 			distance = value1Pixel;
 		}
@@ -117,22 +105,47 @@ double SliceStatisticsPosition::getLength( double value1World, double value2Worl
 	}
 	else {
 		if ( xPosition ){
-			distance = radiansToArcseconds( value1World );
+			distance = value1World;
 		}
 		else {
-			distance = radiansToArcseconds( value2World );
+			distance = value2World;
 		}
+		distance = convertArcUnits( distance );
 	}
+
 	return distance;
+}
+
+double SliceStatisticsPosition::getStart( double value1WorldX, double value1WorldY,
+					double /*value2WorldX*/, double /*value2WorldY*/ ) const {
+	double start = 0;
+	if ( xPosition ){
+		start = value1WorldX;
+	}
+	else {
+		start = value1WorldY;
+	}
+	return start;
+}
+double SliceStatisticsPosition::getEnd( double /*value1WorldX*/, double /*value1WorldY*/,
+	double value2WorldX, double value2WorldY ) const {
+	double end = 0;
+	if ( xPosition ){
+		end = value2WorldX;
+	}
+	else {
+		end = value2WorldY;
+	}
+	return end;
 }
 
 QString SliceStatisticsPosition::getLengthLabel() const {
 	QString labelStr;
 	if ( xPosition ){
-		labelStr.append( "Right Ascension (");
+		labelStr.append( "X Position (");
 	}
 	else {
-		labelStr.append( "Declination (");
+		labelStr.append( "Y Position (");
 	}
 	labelStr.append( getUnitText() );
 	labelStr.append( "):");

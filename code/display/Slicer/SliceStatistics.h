@@ -26,13 +26,15 @@
 
 #ifndef SLICESTATISTICS_H_
 #define SLICESTATISTICS_H_
-
+#include <casa/Arrays/Vector.h>
 #include <display/Slicer/SliceStatistics.h>
 #include <display/Slicer/SliceStatisticsFactory.h>
 
 #include <QString>
 
 namespace casa {
+
+class Record;
 
 /**
  * Computes the angle and distance for a single line segment in the
@@ -43,6 +45,7 @@ namespace casa {
 class SliceStatistics {
 public:
 	SliceStatistics(SliceStatisticsFactory::AxisXUnits units );
+	void setXUnits( SliceStatisticsFactory::AxisXUnits units );
 	double getAngle( std::pair<int,int> pixelStart,
 			std::pair<int,int> pixelEnd ) const;
 	virtual double getLength(std::pair<double,double> worldStart,
@@ -51,13 +54,22 @@ public:
 			std::pair<int,int> pixelEnd ) const = 0;
 	virtual double getLength( double value1World, double value2World,
 			double value1Pixel, double value2Pixel ) const = 0;
+	virtual double getStart( double value1World, double value2World,
+				double value1Pixel, double value2Pixel ) const = 0;
+	virtual double getEnd( double value1World, double value2World,
+				double value1Pixel, double value2Pixel ) const = 0;
 	virtual QString getLengthLabel() const = 0;
 	virtual QVector<double> interpolate( double start, double end,
 			const QVector<double>& values ) const;
-	virtual QVector<double> adjustStart( double newStart, const QVector<double>& values ) const;
+	virtual void adjustStart( QVector<double>& values, double start ) const=0;
+	QVector<double> convertArcUnits( QVector<double> arcseconds ) const;
+	double convertArcUnits( double value ) const;
+	virtual QVector<double> fromResults( Record* record  )const = 0;
+	static QVector<double> getFromArray( const Array<float>& source );
 	virtual ~SliceStatistics();
 protected:
 	QString getUnitText() const;
+
 	double radiansToArcseconds( double rad ) const;
 	SliceStatisticsFactory::AxisXUnits xUnits;
 };

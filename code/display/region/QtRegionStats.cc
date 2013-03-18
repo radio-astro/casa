@@ -27,6 +27,7 @@
 
 #include <QDebug>
 #include <display/region/QtRegionStats.qo.h>
+#include <display/region/RegionInfo.h>
 #include <QtGui/QStackedWidget>
 #include <display/region/Region.qo.h>
 #include <display/region/RegionInfo.h>
@@ -88,6 +89,15 @@ pvline_stats_t::pvline_stats_t( QWidget *parent ) : stats_t(parent) {
 	connect( update_button, SIGNAL(clicked( )), this, SLOT(update_pv_image( )) );
 }
 
+bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
+	try {
+		std::tr1::shared_ptr<PVLineRegionInfo> pvinfo = std::tr1::dynamic_pointer_cast<PVLineRegionInfo>(info);
+		pixel_coord->setText(QString::fromStdString(pvinfo->pixelString( )));
+		world_coord->setText(QString::fromStdString(pvinfo->worldString( )));
+	} catch (...) { /* expect only std::bad_cast */ }
+	return true;
+}
+
 void pvline_stats_t::create_pv_image( ) {
 	emit createPVImage(label_,description_);
 	update_button->setEnabled(true);
@@ -106,12 +116,12 @@ QtRegionStats::QtRegionStats( QWidget *parent ) : QWidget(parent), container_(0)
 
 QtRegionStats::~QtRegionStats( ) { }
 
-void QtRegionStats::updateStatistics( RegionInfo &stats, Region* region ) {
+void QtRegionStats::updateStatistics( std::tr1::shared_ptr<casa::viewer::RegionInfo> stats, Region* region ) {
 
-	new_stats_box(stats.type(), region )->setLabels( stats.label( ), stats.description( ) );
+	new_stats_box(stats->type(), region )->setLabels( stats->label( ), stats->description( ) );
 
 	qt::statfield_list_t::iterator fiter = fields.begin( );
-	std::list<std::pair<String,String> >::iterator siter = (*stats.list()).begin( );
+	std::list<std::pair<String,String> >::iterator siter = (*stats->list()).begin( );
 
 #if defined(__APPLE__)
 	QFont stat_box_font( "Lucida Grande", 11 );
@@ -120,7 +130,7 @@ void QtRegionStats::updateStatistics( RegionInfo &stats, Region* region ) {
 	QFont stat_box_font( "Sans Serif", 9 );
 	QFont stat_field_font( "Sans Serif", 8 );
 #endif
-	while ( fiter != fields.end( ) && siter != (*stats.list()).end( ) ) {
+	while ( fiter != fields.end( ) && siter != (*stats->list()).end( ) ) {
 		(*fiter).first->show( );
 		(*fiter).first->setFont( stat_box_font );
 		(*fiter).first->setTitle( QString::fromStdString((*siter).first) );
@@ -198,6 +208,10 @@ void QtRegionStats::setNext( QStackedWidget *c, QtRegionStats *n ) {
 		stats_box_->next( )->setDisabled(false);
 		connect(stats_box_->next(), SIGNAL(pressed( )), SLOT(go_next( )));
 	}
+}
+
+bool QtRegionStats::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
+	return stats_box_ ? stats_box_->updateStatisticsInfo( info ) : false;
 }
 
 void QtRegionStats::go_next( ) {

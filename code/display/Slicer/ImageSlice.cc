@@ -43,7 +43,7 @@ ImageSlice::ImageSlice( int id, QWidget* parent ): QFrame(parent){
 	ui.setupUi(this);
 
 	sliceWorker = new SliceWorker( id );
-	xAxisChoice = SliceStatisticsFactory::DISTANCE;
+	//xAxisChoice = SliceStatisticsFactory::DISTANCE;
 	useViewerColors = true;
 	showCorners = false;
 	polylineUnit = true;
@@ -127,17 +127,8 @@ void ImageSlice::setCoords( const Vector<Int>& coords ){
 	sliceWorker->setCoords( coords );
 }
 
-void ImageSlice::setAxisXChoice( SliceStatisticsFactory::AxisXChoice choice ){
-	xAxisChoice = choice;
-	SliceStatisticsFactory::getInstance()->setAxisXChoice( choice );
-	if ( segments.size() > 0 ){
-		resetPlotCurve();
-		updateSliceStatistics();
-	}
-}
-
-void ImageSlice::setXUnits( SliceStatisticsFactory::AxisXUnits unitMode ){
-	SliceStatisticsFactory::getInstance()->setXUnits( unitMode );
+void ImageSlice::setStatistics( SliceStatistics* statistics ){
+	this->statistics = statistics;
 	if ( segments.size() > 0 ){
 		resetPlotCurve();
 		updateSliceStatistics();
@@ -147,7 +138,7 @@ void ImageSlice::setXUnits( SliceStatisticsFactory::AxisXUnits unitMode ){
 void ImageSlice::updateSliceStatistics(){
 	QList<SliceSegment*>::iterator statIter = segments.begin();
 	while ( statIter != segments.end()){
-		(*statIter)->updateStatistics();
+		(*statIter)->updateStatistics( statistics );
 		statIter++;
 	}
 }
@@ -225,7 +216,7 @@ int ImageSlice::getColorCount() const {
 
 void ImageSlice::toAscii( QTextStream& out ){
 	if ( segments.size() > 0 && sliceWorker != NULL ){
-		sliceWorker->toAscii( out );
+		sliceWorker->toAscii( out, statistics );
 	}
 }
 
@@ -257,16 +248,7 @@ void ImageSlice::addPlotCurve( QwtPlot* plot){
 	for ( int i = 0; i < segmentCount; i++ ){
 
 		SliceSegment* sliceSegment = segments[i];
-		QVector<double> xValues;
-		if ( xAxisChoice == SliceStatisticsFactory::DISTANCE ){
-			xValues = sliceWorker->getDistances( i, xIncr );
-		}
-		else if ( xAxisChoice == SliceStatisticsFactory::X_POSITION ){
-			xValues = sliceWorker->getXPositions( i );
-		}
-		else {
-			xValues = sliceWorker->getYPositions( i );
-		}
+		QVector<double> xValues = sliceWorker->getData( i, xIncr, statistics );
 
 		QVector<double> pixels = sliceWorker->getPixels( i );
 		sliceSegment->addCurve( plot, xValues, pixels );
@@ -278,9 +260,10 @@ void ImageSlice::addPlotCurve( QwtPlot* plot){
 			addCorner( xValues[cornerIndex], pixels[cornerIndex], plot );
 		}
 
+		//statistics->storeIncrement( &xIncr, xValues  );
 		int xCount = xValues.size();
 		if ( xCount > 0 ){
-			xIncr = xValues[xCount - 1] - xValues[0];
+			xIncr = xIncr + (xValues[xCount - 1] - xValues[0]);
 		}
 	}
 
@@ -300,7 +283,7 @@ void ImageSlice::updatePolyLine(  const QList<int>& pixelX,
 						worldX[i+1], worldY[i+1]);
 		segments[i]->setEndPointsPixel( pixelX[i], pixelY[i],
 						pixelX[i+1], pixelY[i+1]);
-		segments[i]->updateStatistics();
+		segments[i]->updateStatistics( statistics );
 	}
 }
 

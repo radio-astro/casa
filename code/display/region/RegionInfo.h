@@ -90,6 +90,8 @@ namespace casa {
 		public:
 			PVLineRegionInfo( const std::string &label, const std::string &desc, stats_t *si ) : RegionInfo(label,desc,si,PVLineInfoType) { }
 			~PVLineRegionInfo( ) { }
+			std::string pixelString( ) const { return "this is our dummy pixel string"; }
+			std::string worldString( ) const { return "this is our dummy world string"; }
 	};
 
 

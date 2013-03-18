@@ -630,7 +630,7 @@ void Region::resize_y( const QString &y, const QString &y_units, const QString &
 
 
 void Region::updateCenterInfo() {
-	std::list<RegionInfo> *rc = generate_dds_centers( );
+	std::list<std::tr1::shared_ptr<RegionInfo> > *rc = generate_dds_centers( );
 	mystate->updateCenters(rc);
 
 	// set the background to standard color which is some kind of grey
@@ -657,7 +657,7 @@ void Region::revoke_region( QtRegionState *redacted_state ) {
 
 void Region::reload_statistics_event( ) {
 	statistics_update_needed = false;
-	std::list<RegionInfo> *rl = generate_dds_statistics( );
+	std::list<std::tr1::shared_ptr<RegionInfo> > *rl = generate_dds_statistics( );
 	// send statistics to region state object...
 	mystate->updateStatistics(rl);
 	delete rl;
@@ -721,16 +721,16 @@ void Region::output( std::list<QtRegionState*> ol, ds9writer &out ) {
 bool Region::doubleClick( double /*x*/, double /*y*/ ) {
 	int output_count = 0;
 	const char buf[ ] = "---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----\n";
-	std::list<RegionInfo> *info = generate_dds_statistics( );
-	for ( std::list<RegionInfo>::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
-		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter).list( );
+	std::list<std::tr1::shared_ptr<RegionInfo> > *info = generate_dds_statistics( );
+	for ( std::list<std::tr1::shared_ptr<RegionInfo> >::iterator iter = info->begin( ); iter != info->end( ); ++iter ) {
+		std::tr1::shared_ptr<RegionInfo::stats_t> stats = (*iter)->list( );
 
 		if (memory::nullptr.check(stats))
 			continue;
 
 		// output label....
 		fputs( buf, stdout );
-		fprintf( stdout, "(%s)\n", (*iter).label().c_str( ) );
+		fprintf( stdout, "(%s)\n", (*iter)->label().c_str( ) );
 		output_count++;
 
 		size_t width = 0;
@@ -2333,10 +2333,9 @@ void Region::updateHistogramRegion(){
 }
 
 
-std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
-	std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
+std::list<std::tr1::shared_ptr<RegionInfo> > *Region::generate_dds_statistics(  ) {
+	std::list<std::tr1::shared_ptr<RegionInfo> > *region_statistics = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 	if( wc_==0 ) return region_statistics;
-
 
 	Int zindex = 0;
 	if (wc_->restrictionBuffer()->exists("zIndex")) {
@@ -2363,7 +2362,6 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 
 		try {
 
-
 			ImageInterface<Float> *image = padd->imageinterface( );
 
 			if ( image == 0 ) continue;
@@ -2371,11 +2369,11 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 			if ( name_ == "polyline" ){
 				get_image_region( dd );
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
-				region_statistics->push_back( SliceRegionInfo( image->name(true), image->name(false), dd_stats));
+				region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo( image->name(true), image->name(false), dd_stats)));
 			} else if ( name_ == "p/v line" ) {
 				get_image_region( dd );
 				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
-				region_statistics->push_back( PVLineRegionInfo( image->name(true), image->name(false), dd_stats));
+				region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(new PVLineRegionInfo( image->name(true), image->name(false), dd_stats)) );
 			} else {
 				String full_image_name = image->name(false);
 				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
@@ -2387,7 +2385,7 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 				RegionInfo::stats_t *dd_stats = getLayerStats(padd,image,*imageregion);
 				if ( dd_stats ) {
 					dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
-					region_statistics->push_back(ImageRegionInfo( image->name(true), image->name(false), dd_stats));
+					region_statistics->push_back(std::tr1::shared_ptr<RegionInfo>(new ImageRegionInfo( image->name(true), image->name(false), dd_stats)));
 				}
 			}
 		} catch (const casa::AipsError& err) {

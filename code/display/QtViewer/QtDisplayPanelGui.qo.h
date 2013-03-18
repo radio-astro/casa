@@ -79,6 +79,7 @@ class Fit2DTool;
 class SlicerMainWindow;
 class ColorHistogram;
 class FindSourcesDialog;
+//class ImageManagerDialog;
 
 template <class T> class ImageInterface;
 
@@ -495,7 +496,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
       *profileAct_, *momentsCollapseAct_, *histogramAct_, *findSourcesAct_,*fitAct_,
-      *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+      *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_, *manageImagesAct_;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -509,6 +510,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 
  private:
   bool use_new_regions;
+  bool manageImages;
 
   //Animating the channel
   int movieChannel;
@@ -543,6 +545,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
   FindSourcesDialog* findSourcesDialog;
+  //ImageManagerDialog* imageManagerDialog;
 
   // interactive clean...
   void initCleanTool( );
@@ -591,6 +594,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void globalColorSettingsChanged( bool global );
   void globalOptionsChanged( QtDisplayData* originator, Record opts );
   void updateColorHistogram( const QString& ddName );
+  void showImageManager();
 
  public:
  

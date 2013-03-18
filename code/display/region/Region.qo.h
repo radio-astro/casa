@@ -272,7 +272,7 @@ namespace casa {
 					if ( hold_signals < 0 ) hold_signals = 0;
 				}
 
-				virtual std::list<RegionInfo> *statistics( ) { return generate_dds_statistics( ); }
+				virtual std::list<std::tr1::shared_ptr<RegionInfo> > *statistics( ) { return generate_dds_statistics( ); }
 
 				// called when creating regions to allow suppression of corner-handle drawing...
 				static std::tr1::shared_ptr<viewer::Region> creatingRegion( )
@@ -403,11 +403,11 @@ namespace casa {
 
 			protected:
 				void initHistogram();
-				virtual std::list<RegionInfo> *generate_dds_statistics( );
+				virtual std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_statistics( );
 
 				// hook to allow generate_dds_statistics( ) to generate statistics
 				// for rectangular measurement set regions...
-				virtual void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
+				virtual void generate_nonimage_statistics( DisplayData*, std::list<std::tr1::shared_ptr<RegionInfo> > * ) { }
 
 				virtual ImageRegion *get_image_region( DisplayData* ) const
 					DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);
@@ -415,7 +415,7 @@ namespace casa {
 				virtual const std::set<Region*> &get_selected_regions( );
 				virtual ImageRegion_state get_image_selected_region( DisplayData* );
 
-				virtual std::list<RegionInfo> *generate_dds_centers( ) = 0;
+				virtual std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( ) = 0;
 
 				static Int getAxisIndex( ImageInterface<Float> *image, std::string axtype );
 

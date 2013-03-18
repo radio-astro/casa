@@ -38,10 +38,16 @@ public:
 				std::pair<double,double> worldEnd,
 				std::pair<int,int> pixelStart,
 				std::pair<int,int> pixelEnd ) const;
+	virtual void adjustStart( QVector<double>& values, double newStart ) const;
 	virtual double getLength( double value1World, double value2World,
 				double value1Pixel, double value2Pixel ) const ;
+	virtual double getStart( double value1WorldX, double value1WorldY,
+						double value2WorldX, double value2WorldY ) const;
+	virtual double getEnd( double value1WorldX, double value1WorldY,
+						double value2WorldX, double value2WorldY ) const;
 	virtual QString getLengthLabel() const;
 	void setXPosition( bool xPosition );
+	virtual QVector<double> fromResults( Record* record  )const;
 	virtual QVector<double> interpolate( double start, double end,
 				const QVector<double>& values ) const;
 	virtual ~SliceStatisticsPosition();

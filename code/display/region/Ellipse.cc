@@ -223,8 +223,8 @@ namespace casa {
 		return result;
 	}
 
-	std::list<RegionInfo> *Ellipse::generate_dds_centers( ){
-		std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+	std::list<std::tr1::shared_ptr<RegionInfo> > *Ellipse::generate_dds_centers( ){
+		std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 
 		if( wc_==0 ) return region_centers;
 
@@ -335,7 +335,7 @@ namespace casa {
 				WCEllipsoid ellipse( centerq, radiiq, IPosition(dispAxes), cs);
 				ImageRegion *imageregion = new ImageRegion(ellipse);
 
-				region_centers->push_back(ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion)));
+				region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion))));
 				delete imgbox;
 				delete imageregion;
 				delete boxImg;

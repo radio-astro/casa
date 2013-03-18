@@ -51,6 +51,7 @@
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
 #include <display/QtViewer/ColorHistogram.qo.h>
+//#include <display/QtViewer/ImageManagerDialog.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
 #include <display/Fit/FindSourcesDialog.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
@@ -86,7 +87,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
 								   animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
-								   fitTool( NULL ), sliceTool( NULL ), findSourcesDialog( NULL ),
+								   fitTool( NULL ), sliceTool( NULL ), findSourcesDialog( NULL ), /*imageManagerDialog(NULL),*/
 								   clean_tool(0), regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
@@ -146,17 +147,20 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	qsm_->setVisible(false);
 
 	qdp_->setShapeManager(qsm_);
-
+	manageImages = false;
 
 
 	// SURROUNDING GUI LAYOUT
 
 	// Create the widgets (plus a little parenting and properties)
-
 	ddMenu_       = menuBar()->addMenu("&Data");
 	ddOpenAct_    = ddMenu_->addAction("&Open...");
 	ddRegAct_     = ddMenu_->addAction("&Register");
-	ddRegMenu_    = new QMenu; ddRegAct_->setMenu(ddRegMenu_);
+	if ( manageImages ){
+		manageImagesAct_ = ddMenu_->addAction( "&Manage Images");
+	}
+	ddRegMenu_    = new QMenu;
+	ddRegAct_->setMenu(ddRegMenu_);
 	ddCloseAct_   = ddMenu_->addAction("&Close");
 	ddCloseMenu_  = new QMenu; ddCloseAct_->setMenu(ddCloseMenu_);
 	ddAdjAct_     = ddMenu_->addAction("&Adjust...");
@@ -512,7 +516,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 	connect(findSourcesAct_, SIGNAL(triggered()), SLOT(showFindSources()));
 	connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
-
+	//connect(manageImagesAct_, SIGNAL(triggered()), SLOT(showImageManager()));
 	if ( cleanAct_ ) connect(cleanAct_, SIGNAL(triggered()), SLOT(showCleanTool( )));
 
 	// connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
@@ -2987,6 +2991,15 @@ void QtDisplayPanelGui::showSlicer(){
 
 	}
 	sliceTool->show();
+}
+
+void QtDisplayPanelGui::showImageManager(){
+	/*if ( manageImages ){
+		if ( imageManagerDialog == NULL ){
+			imageManagerDialog = new ImageManagerDialog( this );
+		}
+		imageManagerDialog->show();
+	}*/
 }
 
 }
