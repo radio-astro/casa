@@ -26,6 +26,7 @@ def applycal(vis=None,
 	     applymode=None,
 	     flagbackup=None):
 
+
 	#Python script
         casalog.origin('applycal')
 
@@ -82,7 +83,11 @@ def applycal(vis=None,
 		ngaintab = 0;
 		if (gaintable!=['']):
 			ngaintab=len(gaintable)
-			
+
+		ncalwt=len(calwt)
+		if ncalwt==1:
+			calwt = [calwt[0] for i in range(ngaintab)]
+
 		ngainfld = len(gainfield)
 		nspwmap = len(spwmap)
 		ninterp = len(interp)
@@ -116,7 +121,7 @@ def applycal(vis=None,
 					thisinterp=interp[igt];
 					
 				mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
-					    calwt=calwt,spwmap=thisspwmap,interp=thisinterp)
+					      calwt=calwt[igt],spwmap=thisspwmap,interp=thisinterp)
 
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
@@ -125,9 +130,9 @@ def applycal(vis=None,
 		opacarr=np.array(opacity)   # as numpy array for uniformity
 		if (np.sum(opacarr)>0.0):
 			# opacity transmitted as a list in all cases
-			mycb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=calwt)
+			mycb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=calwt[0])
 
-		if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=calwt)
+		if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=calwt[0])
 
 		# Apply parallactic angle, if requested
 		if parang: mycb.setapply(type='P')

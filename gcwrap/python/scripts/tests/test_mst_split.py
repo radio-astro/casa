@@ -424,7 +424,7 @@ class split_test_cav(SplitChecker):
 #                             correlation=corrsel, async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             field='', spw='0:5~16', freqaverage=True, freqbin=3,
+                             field='', spw='0:5~16', chanaverage=True, chanbin=3,
                              antenna='',
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
@@ -543,7 +543,7 @@ class split_test_cav5(SplitChecker):
 #                             correlation=corrsel, async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             spw='0:5~16', freqaverage=True, freqbin=5,
+                             spw='0:5~16', chanaverage=True, chanbin=5,
                              correlation=corrsel)
             tb.open(outms)
             record['data']   = tb.getcell('DATA', 2)
@@ -885,7 +885,7 @@ class split_test_cavcd(unittest.TestCase):
 #                             correlation='', async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, self.outms, datacolumn='corrected',
-                             field='', spw='', freqaverage=True, freqbin=4,
+                             field='', spw='', chanaverage=True, chanbin=4,
                              antenna='', timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
@@ -1211,8 +1211,8 @@ class split_test_sw_and_fc(SplitChecker):
 #                             correlation='', async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             spw=spwwidth[0], freqaverage=True,
-                             freqbin=int(spwwidth[1]),
+                             spw=spwwidth[0], chanaverage=True,
+                             chanbin=int(spwwidth[1]),
                              antenna='VA03,VA05&',               # Case sensitive
                              createmms=False)
             tb.open(outms + '/SPECTRAL_WINDOW')
@@ -1418,8 +1418,8 @@ class split_test_optswc(SplitChecker):
 #                             correlation='', async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             field='', spw=spwwidth[0], freqaverage=True,
-                             freqbin=spwwidth[1], antenna='',
+                             field='', spw=spwwidth[0], chanaverage=True,
+                             chanbin=spwwidth[1], antenna='',
                              timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
@@ -1633,7 +1633,7 @@ class split_test_wttosig(SplitChecker):
 #                             correlation='', async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn=dcwtb[0],
-                             field='', spw='', freqaverage=True, freqbin=dcwtb[1], antenna='',
+                             field='', spw='', chanaverage=True, chanbin=dcwtb[1], antenna='',
                              timeaverage=True, timebin=dcwtb[2], timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)
@@ -1786,7 +1786,7 @@ class split_test_fc(SplitChecker):
 #                             correlation='', async=False)
             default(mstransform)
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             field='', spw='', freqaverage=True, freqbin=trwtb[1], antenna='',
+                             field='', spw='', chanaverage=True, chanbin=trwtb[1], antenna='',
                              timeaverage=True, timebin=trwtb[2], timerange=trwtb[0],
                              scan='', array='', uvrange='',
                              correlation='', async=False)

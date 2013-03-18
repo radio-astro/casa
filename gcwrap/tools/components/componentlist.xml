@@ -1093,6 +1093,11 @@ and available in Glish as mycl.
      <value>1.0</value>
      </param>
     
+     <param type="doubleArray" name="optionalparms">
+     <description>optional parameters in vector</description>
+     <value>0.0</value>
+     </param>
+
      <param type="string" name="label">
      <description>The label for the component</description>
      <value></value>
@@ -2131,6 +2136,7 @@ specified component</shortdescription>
      <description>The new shape type.
      A string that is either 'point', 'Gaussian' or 'disk'</description>
      <value>disk</value>
+     <value>limbdarkeneddisk</value>
      <value>Gaussian</value>
      <value>Point</value>
      </param>
@@ -2173,6 +2179,12 @@ specified component</shortdescription>
      <value>0.0deg</value>
      </param>
     
+     <param type="doubleArray" name="optionalparms">
+     <description>optional parameters in a vector 
+     </description>
+     <value>0.0</value>
+     </param>
+
      <param type="bool" name="log">
      <description>Send a message to the logger</description>
      <value>true</value>
@@ -2703,7 +2715,6 @@ specified component</shortdescription>
   </comments>
 </method>
 
- 
    <method type="function" name="convertfrequnit">
    <shortdescription>Convert the reference frequency to a new unit</shortdescription>
    
@@ -2754,7 +2765,6 @@ specified component</shortdescription>
   </comments>
 </method>
 
- 
    <method type="function" name="getcomponent">
    <shortdescription>Extract a component from the list.</shortdescription>
    

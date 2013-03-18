@@ -127,7 +127,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
 
     return rval
 
-
+    
 def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
     '''Compare a variable column of two tables.
        referencetab  --> a reference table
@@ -162,25 +162,26 @@ def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
                             for j in range(0,len(rdata)):
                                 if (type(rdata[j])==float or type(rdata[j])==int):
                                     if (abs(rdata[j]-tdata[j]) > tolerance*abs(rdata[j]+tdata[j])):
-                                        print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
-                                        print therow, j
-                                        print rdata[j]
-                                        print tdata[j]
+#                                        print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
+#                                        print therow, j
+#                                        print rdata[j]
+#                                        print tdata[j]
                                         differs = True
                                 elif (type(rdata[j])==list or type(rdata[j])==np.ndarray):
                                     for k in range(0,len(rdata[j])):
                                         if (abs(rdata[j][k]-tdata[j][k]) > tolerance*abs(rdata[j][k]+tdata[j][k])):
-                                            print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
-                                            print therow, j, k
-                                            print rdata[j][k]
-                                            print tdata[j][k]
+#                                            print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
+#                                            print therow, j, k
+#                                            print rdata[j][k]
+#                                            print tdata[j][k]
                                             differs = True
                                 if differs:
                                     print 'ERROR: Column %s of %s and %s do not agree within tolerance %s'%(col,referencetab, testtab, tolerance)
                                     retval = False
                                     break
                         else:
-                            print 'ERROR: Column %s of %s and %s do not agree'%(col,referencetab, testtab)
+                            print 'ERROR: Column %s of %s and %s do not agree.'%(col,referencetab, testtab)
+                            print 'ERROR: First row to differ is row=%s'%therow
                             retval = False
                             break
         finally:
@@ -223,13 +224,14 @@ class DictDiffer(object):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
 
 
-def verifyMS(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
+def verifyMS(msname, expnumspws, expnumchan, inspw, expchanfreqs=[], ignoreflags=False):
     '''Function to verify spw and channels information in an MS
        msname        --> name of MS to verify
        expnumspws    --> expected number of SPWs in the MS
        expnumchan    --> expected number of channels in spw
        inspw         --> SPW ID
        expchanfreqs  --> numpy array with expected channel frequencies
+       ignoreflags   --> do not check the FLAG column
            Returns a list with True or False and a state message'''
     
     msg = ''
@@ -238,16 +240,20 @@ def verifyMS(msname, expnumspws, expnumchan, inspw, expchanfreqs=[]):
     nr = tb.nrows()
     cf = tb.getcell("CHAN_FREQ", inspw)
     tb.close()
-    tb.open(msname)
-    dimdata = tb.getcell("FLAG", 0)[0].size
-    tb.close()
+    # After channel selection/average, need to know the exact row number to check,
+    # ignore this check in these cases.
+    if not ignoreflags:
+        tb.open(msname)
+        dimdata = tb.getcell("FLAG", 0)[0].size
+        tb.close()
+        
     if not (nr==expnumspws):
         msg =  "Found "+str(nr)+", expected "+str(expnumspws)+" spectral windows in "+msname
         return [False,msg]
     if not (nc == expnumchan):
         msg = "Found "+ str(nc) +", expected "+str(expnumchan)+" channels in spw "+str(inspw)+" in "+msname
         return [False,msg]
-    if not (dimdata == expnumchan):
+    if not ignoreflags and (dimdata != expnumchan):
         msg = "Found "+ str(dimdata) +", expected "+str(expnumchan)+" channels in FLAG column in "+msname
         return [False,msg]
 
@@ -301,7 +307,9 @@ def getColDesc(table, colname):
     try:
         try:
             tb.open(table)            
-            coldesc = tb.getcoldesc(colname)
+            tcols = tb.colnames()
+            if tcols.__contains__(colname):
+                coldesc = tb.getcoldesc(colname)
         except:
             pass                        
     finally:
@@ -359,3 +367,25 @@ def calculateHanning(dataB,data,dataA):
     S = const0*dataB + const1*data + const2*dataA
     return S
 
+
+def getTileShape(mydict, column='DATA'):
+    '''Return the value of TileShape for a given column
+       in the dictionary from data managers (tb.getdminfo).
+       mydict --> dictionary from tb.getdminfo()
+       column --> column where to look for TileShape'''
+    
+    tsh = {}
+    for key, value in mydict.items():
+        if mydict[key]['COLUMNS'][0] == column:
+             # Dictionary for requested column
+            hyp = mydict[key]['SPEC']['HYPERCUBES']
+                    
+             # This is the HYPERCUBES dictionary
+            for hk in hyp.keys():
+                tsh = hyp[hk]['TileShape']
+                break
+                    
+            break
+    
+    return tsh
+                    

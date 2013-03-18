@@ -95,6 +95,7 @@ class ia_subimage_test(unittest.TestCase):
         myia.fromshape("mask1.im", [20, 30, 4, 10])
         myia.fromshape("mask2.im", [20, 30, 4, 1])
         myia.fromshape("mask3.im", [20, 30, 4, 2])
+        myia.done()
 
         imname = "xx.im"
         myia.fromshape(imname, [20,30,4,10])

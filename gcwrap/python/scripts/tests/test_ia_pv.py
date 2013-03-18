@@ -115,7 +115,10 @@ class ia_pv_test(unittest.TestCase):
             bb[i,0:5,:] = i+1
             bb[i,6:10,:] = i+2
         myia.putchunk(bb)
-        expeccoord = myia.toworld([1,5,0])['numeric']
+        expeccoord = myia.toworld([1,5,0])['numeric'][2]
+        mycsys = myia.coordsys()
+        expinc = mycsys.increment()["numeric"]
+        expinc = [abs(expinc[0]), expinc[2]]
         myia.done()
         self.assertTrue(len(tb.showcache())== 0)
         pv = iatool()
@@ -130,17 +133,22 @@ class ia_pv_test(unittest.TestCase):
                 xx.done()
             self.assertTrue(len(tb.showcache())== 0)
             pv.open(outfile)
-            expec = [9, 1, 10]
+            expec = [9, 10]
             got = pv.shape()
+            print "*** got " + str(got)
             self.assertTrue((got == expec).all())
             expec = numpy.zeros(got)
             for i in range(10):
-                expec[:,0,i] = range(1,10)
+                expec[:,i] = range(1,10)
             got = pv.getchunk()
             self.assertTrue((got == expec).all())
-            got = pv.toworld([0,0,0])['numeric']
-            self.assertTrue(abs(got - expeccoord).all() < 1e-6)
-        
+            got = pv.toworld([0,0,0])['numeric'][1]
+            self.assertTrue(abs(got - expeccoord) < 1e-6)
+            gotinc = pv.coordsys().increment()["numeric"]
+            print "*** got " + str(gotinc)
+            print "*** exp " + str(expinc)
+            print "*** dif " + str(abs(gotinc - expinc))
+            self.assertTrue((abs(gotinc - expinc) < 1e-6).all())
             # halfwidth
             outfile = "test_pv_1_" + str(code)
             xx = code(
@@ -149,14 +157,13 @@ class ia_pv_test(unittest.TestCase):
             )
             if (type(xx) == type(ia)):
                 xx.done()
-            return
             pv.open(outfile)
-            expec = [9, 1, 10]
+            expec = [9, 10]
             got = pv.shape()
             self.assertTrue((got == expec).all())
             expec = numpy.zeros(got)
             for i in range(10):
-                expec[:,0,i] = range(2,11)
+                expec[:,i] = range(2,11)
             got = pv.getchunk()
             self.assertTrue((got == expec).all())
             pv.done()

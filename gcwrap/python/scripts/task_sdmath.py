@@ -21,6 +21,9 @@ class sdmath_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdmath_worker,self).__init__(**kwargs)
 
+    def initialize_scan(self):
+        pass
+    
     def initialize(self):
         # completely override initialize
 

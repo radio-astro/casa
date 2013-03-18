@@ -33,6 +33,9 @@ class MSTHelper(ParallelTaskHelper):
         self.__isMMS = False
         self._calScanList = None
         self._selectionScanList = None
+        self.__spwSelection = self.__args['spw']
+        self.__spwList = None
+        self.__ddidict = {}
         self._msTool = None
         self._tbTool = None
         
@@ -53,10 +56,8 @@ class MSTHelper(ParallelTaskHelper):
             elif k == 'outputvis' and isinstance(v, str):
                 # only one output MS
                 if v.isspace() or v.__len__() == 0:
-                    casalog.post('Please specify outputvis.','SEVERE')
                     raise ValueError, 'Please specify outputvis.'
                 elif os.path.exists(v):
-                    casalog.post("Output MS %s already exists - will not overwrite it."%v,'SEVERE')
                     raise ValueError, "Output MS %s already exists - will not overwrite it."%v                    
         
         return True 
@@ -96,8 +97,10 @@ class MSTHelper(ParallelTaskHelper):
                 retval = 0
 
             elif self.__args['timespan'] == 'scan':
-                casalog.post('Cannot partition MS in spw,scan axes when timebin span across scans.', 'WARN')
-                retval = 0
+                casalog.post('Cannot partition MS in scan when timebin span across scans.\n'\
+                              'Will reset timespan to None', 'WARN')
+                self.__args['timespan'] == ''
+                retval = 2
                 
             elif self.__args['nspw'] > 1:
                 # CANNOT process in sequential either because internally the
@@ -106,7 +109,7 @@ class MSTHelper(ParallelTaskHelper):
                 casalog.post('Cannot partition MS in spw axis and separate spws (nspw > 1)', 'WARN')
                 retval = 0
 
-                
+
         return retval
         
 #    @dump_args
@@ -126,7 +129,7 @@ class MSTHelper(ParallelTaskHelper):
         
         return self.__selpars
 
-    @dump_args
+#    @dump_args
     def initialize(self):
         """Add the full path for the input and output MS.
            This method overrides the one from ParallelTaskHelper."""
@@ -230,7 +233,7 @@ class MSTHelper(ParallelTaskHelper):
                         
         return self.__selpars
      
-    @dump_args
+#    @dump_args
     def generateJobs(self):
         '''This is the method which generates all of the actual jobs to be done.'''
         '''This method overrides the one in ParallelTaskHelper baseclass'''
@@ -242,7 +245,7 @@ class MSTHelper(ParallelTaskHelper):
                          
         return True
      
-    @dump_args
+#    @dump_args
     def _createPrimarySplitCommand(self):         
                 
         if self._arg['createmms']:
@@ -274,54 +277,80 @@ class MSTHelper(ParallelTaskHelper):
         numSubMS = self._arg['numsubms']
         numSubMS = min(len(scanList),numSubMS)
         
-        partitionedScans = self.__partition(scanList, numSubMS)
+        partitionedScans = self.__partition(scanList, numSubMS)        
+
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False
             mmsCmd['scan']= ParallelTaskHelper.\
-                            listToCasaString(partitionedScans[output])
+                            listToCasaString(partitionedScans[output])                                                
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
 
+
+
 #    @dump_args
     def _createSPWSeparationCommands(self):
         # This method is to generate a list of commands to partition
         # the data based on SPW.
+
+        # Get a unique list of selected spws        
         self._selectMS()
         spwList = self._getSPWList()
         numSubMS = self._arg['numsubms']
         numSubMS = min(len(spwList),numSubMS)
 
-        partitionedSPWs = self.__partition(spwList,numSubMS)
-                
+        # Get a dictionary of the spws parted for each subMS
+        spwList = map(str,spwList)
+        partitionedSPWs1 = self.__partition1(spwList,numSubMS)
+
+        # Add the channel selections back to the spw expressions
+        newspwsel = self.createSPWExpression(partitionedSPWs1)
+        
+        # Validate the chanbin parameter
+        validbin = False
+        if self.__origpars['chanaverage'] and self.validateChanBin():
+            # Partition chanbin in the same way
+            freqbinlist = self.__partition1(self.__origpars['chanbin'],numSubMS)
+            validbin = True
+        
         self.__ddistart = 0
         for output in xrange(numSubMS):
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False
             if self._selectionScanList is not None:
                 mmsCmd['scan'] = ParallelTaskHelper.\
-                                 listToCasaString(self._selectionScanList)
-            mmsCmd['spw'] = ParallelTaskHelper.\
-                            listToCasaString(partitionedSPWs[output])
+                                 listToCasaString(self._selectionScanList)            
+            mmsCmd['spw'] = newspwsel[output]
+            if validbin:
+                mmsCmd['chanbin'] = freqbinlist[output]
+                
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
+
+            # Dictionary for the spw/ddi consolidation later
+            self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms' \
+                                  % (self.outputBase, output)
+
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
+            
+            # Increment ddistart
+            self.__ddistart = self.__ddistart + partitionedSPWs1[output].__len__()
 
-            self.__ddistart = self.__ddistart + partitionedSPWs[output].__len__()
-
-    @dump_args
+#    @dump_args
     def _createDefaultSeparationCommands(self):
         # This method is similar to the SPW Separation mode above, except
         # that if there are not enough SPW to satisfy the numSubMS it uses
         #
         self._selectMS()
             
-        # Get the list of spectral windows
+        # Get the list of spectral windows as strings
         spwList = self._getSPWList() 
+        spwList = map(str,spwList)
 
         # Check if we can just divide on SPW or if we need to do SPW and
         # scan
@@ -341,33 +370,50 @@ class MSTHelper(ParallelTaskHelper):
         else:
             scanList = None
 
-        partitionedSpws  = self.__partition(spwList,numSpwPartitions)
+        partitionedSpws  = self.__partition1(spwList,numSpwPartitions)
         partitionedScans = self.__partition(scanList,numScanPartitions)
 
-        self.__ddistart = 0
-        for output in xrange(numSpwPartitions*numScanPartitions):
-            mmsCmd = copy.copy(self._arg)
-            mmsCmd['createmms'] = False
+        # Validate the chanbin parameter when it is a list
+        validbin = False
+        if self.__origpars['chanaverage'] and self.validateChanBin():
+            # Partition chanbin in the same way
+            freqbinlist = self.__partition1(self.__origpars['chanbin'],numSpwPartitions)
+            validbin = True
 
-            
+        # Add the channel selections back to the spw expressions
+        newspwsel = self.createSPWExpression(partitionedSpws)
+
+        # Dictionary for the spw/ddi consolidation later
+        self.__ddidict[0] = self.dataDir+'/%s.%04d.ms' \
+                                  % (self.outputBase, 0)
+                                  
+        # Get the first spw ID from the dictionary
+        self.__ddistart = 0
+        spwid0 = newspwsel[0/numScanPartitions]
+        for output in xrange(numSpwPartitions*numScanPartitions):
+            spwid = newspwsel[output/numScanPartitions]
+            if spwid == spwid0:
+                self.__ddistart = self.__ddistart
+            else:
+                self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
+                spwid0 = newspwsel[output/numScanPartitions]
+                self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms' \
+                                  % (self.outputBase, output)
+                
+            mmsCmd = copy.copy(self._arg)
+            mmsCmd['createmms'] = False           
             mmsCmd['scan'] = ParallelTaskHelper.listToCasaString \
                              (partitionedScans[output%numScanPartitions])
-            mmsCmd['spw'] = ParallelTaskHelper.listToCasaString\
-                            (partitionedSpws[output/numScanPartitions])
+            mmsCmd['spw'] = newspwsel[output/numScanPartitions]
+            if validbin:
+                mmsCmd['chanbin'] = freqbinlist[output/numScanPartitions]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
             
-            self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
-        
-#    @dump_args
-    def _getDDIstart(self):
-        '''Return the DDIstart internal parameter'''
-        
-        return self.__ddistart
-
+ 
 #    @dump_args
     def _selectMS(self, doCalibrationSelection = False):
         '''
@@ -375,7 +421,6 @@ class MSTHelper(ParallelTaskHelper):
         have been requested are honored.
         If scanList is not None then it used as the scan selection criteria.
         '''
-        print "Start of Select MS"
         if self._msTool is None:
             # Open up the msTool
             self._msTool = mstool()
@@ -385,31 +430,10 @@ class MSTHelper(ParallelTaskHelper):
             
         # It returns a dictionary if there was any selection otherwise None
         self.__selectionFilter = self._getSelectionFilter()
-#        if not doCalibrationSelection and self._calScanList is not None:
-#            # We need to augment the selection to remove cal scans
-#            if self._selectionScanList is None:
-#                # Generate the selection scan list if needed
-#                if selectionFilter is not None:
-#                    self._msTool.msselect(selectionFilter)
-#                self._selectionScanList = self._getScanList()
-#                
-#                for scan in self._calScanList:
-#                    self._selectionScanList.remove(scan)
-#
-#            # Augment the selection
-#            if selectionFilter is None:
-#                selectionFilter = {}
-#            selectionFilter['scan'] = ParallelTaskHelper.listToCasaString\
-#                                      (self._selectionScanList)
 
         if self.__selectionFilter is not None:
-            print self.__selectionFilter
             self._msTool.msselect(self.__selectionFilter)
 
-        # This is not necessary
-#        if doCalibrationSelection:
-#            calFilter = self._getCalibrationFilter()
-#            self._msTool.msselect(calFilter)
 
 #    @dump_args
     def _getScanList(self):
@@ -439,15 +463,12 @@ class MSTHelper(ParallelTaskHelper):
         
         # Now get the list of SPWs in the selected MS
         ddInfo = self._msTool.getspectralwindowinfo()
-        spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
+#        spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
+        self.__spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
 
         # Return a unique sorted list:
-#        return list(set(spwList))
-
-        # Return a unique sorted list:
-        # Note: the above did not return a sorted list
-        sorted = list(set(spwList))
-        sorted.sort()
+        sorted = list(set(self.__spwList))
+#        sorted.sort()
         return sorted
 
 #    @dump_args
@@ -477,7 +498,7 @@ class MSTHelper(ParallelTaskHelper):
                 filter[selSyntax] = self._arg[argSyntax]
         return filter
 
-    @dump_args
+#    @dump_args
     def __partition(self, lst, n):
         '''
         This method will split the list lst into "n" almost equal parts
@@ -490,8 +511,75 @@ class MSTHelper(ParallelTaskHelper):
         
         return [ lst[int(round(division * i)):
                      int(round(division * (i+1)))] for i in xrange(int(n))]
+    
+#    @dump_args
+    def __partition1(self, lst, n):
+        '''This method will split the list lst into "n" almost equal parts
+            if lst is none, then we assume an empty list.
+            lst --> spw list
+            n   --> numsubms
+            Returns a dictionary such as:
+            given the selection spw='0,1:10~20,3,4,5'
+            rdict = {0: ['0','1'], 1:['3','4','5']}
+        '''
+        if lst is None:
+            lst = []
+        
+        # Create a dictionary for the parted spws:
+        rdict = {}
+        division = len(lst)/float(n)
+        for i in xrange(int(n)):
+            part = lst[int(round(division * i)):int(round(division * (i+1)))]
+            rdict[i] = part
+    
+        return rdict
 
-    @dump_args
+
+#    @dump_args
+    def __chanSelection(self, spwsel):
+        ''' Create a dictionary of channel selections.
+            spwsel --> a string with spw selection
+            Return a dictionary such as:
+            spwsel = "'0,1:10~20"
+            seldict = {0: {'channels': '', 'spw': '0'}, 
+                       1: {'channels': '10~20', 'spw': '1'}}'''
+        
+        # Split to get each spw in a list
+        if spwsel.__contains__(','):
+            spwlist = spwsel.split(',')        
+        else:
+            spwlist = spwsel.split(';')
+                        
+        spwid=[]
+        chanlist=[]
+        # Split to create two lists, one with channels, the other with spwIDs
+        for isel in spwlist:
+            # Get tail, colon and head
+            (s, c, ch) = isel.rpartition(":")
+            # Remove any blanks
+            s = s.strip(' ')
+            c = c.strip(' ')
+            ch = ch.strip(' ')
+            # If no tail, there was no colon to split. In this case, add the spwID
+            if s == "":
+                spwid.append(ch)
+                chanlist.append('')
+            else:
+                spwid.append(s)
+                chanlist.append(ch)
+                
+        # Create a dictionary
+        seldict = {}
+        for ns in xrange(len(spwid)):
+            sel = {}
+            sel['spw'] = spwid[ns]
+            sel['channels'] = chanlist[ns]
+            seldict[ns] = sel
+
+
+        return seldict
+
+#    @dump_args
     def postExecution(self):
         '''
         This overrides the post execution portion of the task helper
@@ -544,7 +632,7 @@ class MSTHelper(ParallelTaskHelper):
 
             # deal with POINTING table
             if not self.pointingisempty:
-                print '******Dealing with POINTING table'
+#                print '******Dealing with POINTING table'
                 shutil.rmtree(mastersubms+'/POINTING', ignore_errors=True)
                 # master subms gets a full copy of the original
                 shutil.copytree(self.ptab, mastersubms+'/POINTING') 
@@ -558,7 +646,7 @@ class MSTHelper(ParallelTaskHelper):
 
 #            # deal with SYSCAL table
             if not self.syscalisempty:
-                print '******Dealing with SYSCAL table'
+#                print '******Dealing with SYSCAL table'
                 shutil.rmtree(mastersubms+'/SYSCAL', ignore_errors=True)
                 # master subms gets a full copy of the original
                 shutil.copytree(self.stab, mastersubms+'/SYSCAL') 
@@ -569,7 +657,35 @@ class MSTHelper(ParallelTaskHelper):
                     os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
                     # (link in target will be created my makeMMS)
                 subtabs_to_omit.append('SYSCAL')
+
+
+            # When separationaxis='scan' there is no need to give ddistart. 
+            # The tool looks at the whole spw selection and
+            # creates the indices from it. After the indices are worked out, 
+            # it applys MS selection. We do not need to consolidate either.
+                               
+            
+            # If axis is spw or both, give a list of the subMSs
+            # that need to be consolidated. This list is pre-organized
+            # inside the separation functions above.
+            if (self.__origpars['separationaxis'] == 'spw' or
+                self.__origpars['separationaxis'] == 'both'):
+                toUpdateList = self.__ddidict.values()
+                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
                 
+                # Consolidate the spw sub-tables to take channel selection
+                # or averages into account.
+                mtTool = casac.mstransformer()
+                try:                        
+                    mtTool.mergespwtables(toUpdateList)
+                    mtTool.done()
+                except Exception, instance:
+                    mtTool.done()
+                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
+                    raise
+                    
+                
+            # Copy sub-tables from first subMS to the others.
             ph.makeMMS(self._arg['outputvis'], subMSList,
                        True, # copy subtables
                        subtabs_to_omit # omitting these
@@ -580,22 +696,86 @@ class MSTHelper(ParallelTaskHelper):
             os.rmdir(thesubmscontainingdir)
 
         return True
+
+#    @dump_args 
+    def createSPWExpression(self, partdict):
+        ''' Creates the final spw expression that will be sent to the engines.
+            This adds back the channel selections to their spw counterparts.
+           partdict --> dictionary from __partition2, such as:
+                        Ex: partdict = {0: ['0','1'], 1:['3','4','5']}
+                            when selection is spw = '0,1:10~20,3,4,5'
+                            and effective number of subMSs is 2.'''            
+        
+        # Create a dictionary of the spw/channel selections
+        # Ex: seldict = {0: {'channels': '', 'spw': '0'}, 
+        #                1: {'channels': '10~20', 'spw': '1'}}
+        seldict = self.__chanSelection(self.__spwSelection)
+                
+        newdict = copy.copy(partdict)
+        
+        # Match the spwId of partdict with those from seldict
+        # For the matches that contain channel selection in seldict,
+        # Add them to the spwID string in partdict
+        for keys,vals in seldict.items():
+            for k,v in partdict.items():
+                for i in range(len(v)):
+#                    if v[i] == seldict[keys]['spw'] and seldict[keys]['channels'] != '':
+#                    if v[i] == vals['spw'] and vals['channels'] != '':
+                    # matches, now edit pardict
+                    if v[i] == vals['spw']:
+#                        print v[i], seldict[keys]['spw'], seldict[keys]['channels']
+                        if vals['channels'] != '':
+                            spwexpr = vals['spw'] + ':' + vals['channels']
+                        else:
+#                        spwexpr = seldict[keys]['spw'] + ':' + seldict[keys]['channels']
+                            spwexpr = vals['spw']
+                        newdict[k][i] = spwexpr
+        
+        # We now have a new dictionary of the form:
+        # newdict = {0: ['0', '1:10~20'], 1: ['3', '4','5']}
+        # We want it to be:
+        # newdict = {0: "0,1:10~20",1: "3, 4,5"}
+        
+        # Add a comma separator for each expression making
+        # a single string for each key
+        for k,v in newdict.items():
+            spwstr = ""
+            for s in range(len(v)):
+                spwstr = spwstr + v[s] + ','
+            newdict[k] = spwstr.rstrip(',')
+                
+        casalog.post('Dictionary of spw expressions is: ','DEBUG')
+        casalog.post ('%s'%newdict,'DEBUG')
+                
+        return newdict
         
 #    @dump_args 
-    def freqAvg(self, **pars):
-        ''' Get the sub-parameters for freqaverage=True
-            which are freqbin and useweights'''
+    def validateChanBin(self):
+        '''When chanbin is a list, it should have the
+           same size as the number of spws in selection.'''
         
-        for k,v in pars.items():
-            if k == "freqbin":
-#                if isinstance(v, list):
-#                    self.
-                fb = v 
-            elif k == "useweights":
-                wght = v
-        
-        # Validate the parameters
+        retval = True
+        fblist = self.__origpars['chanbin']
+        if isinstance(fblist,list) and fblist.__len__() > 1: 
+            if self.__spwList == None:           
+                msTool = mstool()
+                msTool.open(self.__origpars['vis'])
+                spwsel = self.__origpars['spw'] 
+                msTool.msselect({'spw':spwsel})
+                ddInfo = msTool.getspectralwindowinfo()
+                self.__spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
+                msTool.close()
+                    
+            if self.__spwList.__len__() != fblist.__len__():
+                retval = False
+#                casalog.post('Number of chanbin is different of number of spw','ERROR')
+                raise ValueError, 'Number of chanbin is different of number of spw'                
+                
+        else:
+            retval = False
 
+        return retval
+    
 #    @dump_args
     def defaultRegridParams(self):
         '''Reset the default values of the regridms transformation parameters based on the mode'''
@@ -647,7 +827,8 @@ def mstransform(
              createmms,           # MMS --> partition
              separationaxis, 
              numsubms,
-             ddistart,           # THIS PARAMETER WILL BE HIDDEN LATER
+             parallel,           # create MMS in parallel
+             ddistart,           # internal parameter (hidden in XML)
              tileshape,          # tiling
              field,
              spw, 
@@ -663,8 +844,8 @@ def mstransform(
              datacolumn,
              realmodelcol,
              combinespws,        # spw combination --> cvel
-             freqaverage,        # frequency averaging --> split
-             freqbin,
+             chanaverage,        # channel averaging --> split
+             chanbin,
              useweights,
              hanning,            # Hanning --> cvel
              regridms,           # regridding to new frame --> cvel
@@ -693,40 +874,49 @@ def mstransform(
     mth = MSTHelper(locals())
     
     # Validate input and output parameters
-    mth.setupIO()
+    try:
+        mth.setupIO()
+    except Exception, instance:
+        casalog.post('%s'%instance,'ERROR')
+        return False
     
 
     # Process in parallel
-    # LATER:
-#    createmms = False
     if createmms:
         
         # Validate the combination of some parameters
         # pval = 0 -> abort
-        # pval = 1 -> run in sequential
         # pval = 2 -> run in parallel
         pval = mth.validateParams()
         if pval == 0:
             raise Exception, 'Cannot partition using separationaxis=%s with some of the requested transformations.'\
                             %separationaxis
                             
-        # Process in parallel
-        if pval == 2:
-            casalog.post('Will process the input list in parallel')
-            # Setup a dictionary of the selection parameters
-            mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
-                                antenna=antenna, uvrange=uvrange, timerange=timerange, 
-                                intent=intent, observation=str(observation),feed=feed)
-            
-
-            # Get a cluster
+        # pval == 2, can process in parallel
+        # Setup a dictionary of the selection parameters
+        mth.setupParameters(field=field, spw=spw, array=array, scan=scan, correlation=correlation,
+                            antenna=antenna, uvrange=uvrange, timerange=timerange, 
+                            intent=intent, observation=str(observation),feed=feed)
+        
+        # The user decides to run in parallel or sequential
+        if not parallel:
+            casalog.post('Will process the MS in sequential')
             mth.bypassParallelProcessing(1)
-            mth.setupCluster()
-            
-            # Do the processing. 
+        else:
+            mth.bypassParallelProcessing(0)
+            casalog.post('Will process the MS in parallel')
+
+        # Get a cluster
+        mth.setupCluster()
+        
+        # Do the processing.
+        try: 
             mth.go()
-            
-            return 
+        except Exception, instance:
+            casalog.post('%s'%instance,'ERROR')
+            return False
+        
+        return True 
 
         
     # Create a local copy of the MSTransform tool
@@ -743,22 +933,37 @@ def mstransform(
                     uvrange=uvrange,time=timerange, intent=intent, observation=str(observation),
                     feed=feed)
         
-        # Write the DDI start for each sub-MS, when creating an MMS
-#        config['ddistart'] = mth._getDDIstart()
+        # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart
-#        print 'Will add ddistart to config'
-#        print config['ddistart']
+        
         config['datacolumn'] = datacolumn
+        
+        # Add a virtual MODEL column to the output MS
         config['realmodelcol'] = realmodelcol
+        
+        # Add the tile shape parameter
+        if tileshape.__len__() == 1:
+            # The only allowed values are 0 or 1
+            if tileshape[0] != 0 and tileshape[0] != 1:
+                raise ValueError, 'When tileshape has one element, it should be either 0 or 1.'
+                
+        elif tileshape.__len__() != 3:
+            # The 3 elements are: correlations, channels, rows
+            raise ValueError, 'Parameter tileshape must have 1 or 3 elements.'
+            
+        config['tileshape'] = tileshape                
 
         if combinespws:
             casalog.post('Combine spws %s into new output spw'%spw)
             config['combinespws'] = True
-        if freqaverage:
-            casalog.post('Parse frequency averaging parameters')
-            config['freqaverage'] = True
-            # freqbin can be an int or a list of int that will apply one to each spw
-            config['freqbin'] = freqbin
+        if chanaverage:
+            casalog.post('Parse channel averaging parameters')
+            config['chanaverage'] = True
+            # chanbin can be an int or a list of int that will apply one to each spw
+#            if not mth.validateChanBin():
+#                raise ValueError, 'Number of chanbin is different of number of spw'
+            mth.validateChanBin()
+            config['chanbin'] = chanbin
             config['useweights'] = useweights
         if hanning:
             casalog.post('Apply Hanning smoothing')
@@ -809,10 +1014,11 @@ def mstransform(
                     
     except Exception, instance:
         mtlocal.done()
-        raise Exception, instance
+        casalog.post('%s'%instance,'ERROR')
+        return False
 
     # Update the FLAG_CMD sub-table to reflect any spw/channels selection
-    if ((spw != '') and (spw != '*')) or freqaverage == True:
+    if ((spw != '') and (spw != '*')) or chanaverage == True:
         isopen = False
         mytb = tbtool()
         try:
@@ -825,20 +1031,20 @@ def mstransform(
                 cmds = mytb.getcol('COMMAND')
                 widths = {}
                 #print "width =", width
-                if hasattr(freqbin, 'has_key'):
-                    widths = freqbin
+                if hasattr(chanbin, 'has_key'):
+                    widths = chanbin
                 else:
-                    if hasattr(freqbin, '__iter__') and len(freqbin) > 1:
-                        for i in xrange(len(freqbin)):
-                            widths[i] = freqbin[i]
-                    elif freqbin != 1:
+                    if hasattr(chanbin, '__iter__') and len(chanbin) > 1:
+                        for i in xrange(len(chanbin)):
+                            widths[i] = chanbin[i]
+                    elif chanbin != 1:
 #                        print 'using ms.msseltoindex + a scalar width'
                         numspw = len(mslocal.msseltoindex(vis=vis,
                                                      spw='*')['spw'])
-                        if hasattr(freqbin, '__iter__'):
-                            w = freqbin[0]
+                        if hasattr(chanbin, '__iter__'):
+                            w = chanbin[0]
                         else:
-                            w = freqbin
+                            w = chanbin
                         for i in xrange(numspw):
                             widths[i] = w
 #                print 'widths =', widths 
@@ -914,7 +1120,7 @@ def mstransform(
 
 
 # TODO:
-# 1) allow freqbin to be a list to apply to each spw selection. DONE
+# 1) allow chanbin to be a list to apply to each spw selection. DONE
 # 2) Modify the separatespws transformation. DONE
 # 3) Check realmodelcol and tileshape parameters
 # 4) Parallelism
@@ -946,7 +1152,7 @@ def mstransform(
 # which shows with which transformation the separation axis can run.
 # Catch these cases inside MSTHelper.
 
-#separation   combinespws  separatespws  regridms  freqaverage  timespan  hanning
+#separation   combinespws  separatespws  regridms  chanaverage  timespan  hanning
 #axis
 #---------------------------------------------------------------------------------------
 #spw            NO           YES*         YES        YES          YES       YES

@@ -3,7 +3,8 @@ from taskinit import *
 
 def exportfits(
 	imagename, fitsimage, velocity, optical, bitpix,
-	minpix, maxpix, overwrite, dropstokes, stokeslast
+	minpix, maxpix, overwrite, dropstokes, stokeslast,
+	history
 ):
 	"""Convert a CASA image to a FITS file:
 	CASA-produced images can be written to disk for transporting
@@ -32,6 +33,8 @@ def exportfits(
 		default: False; example: dropstokes=True
 	stokeslast -- Put the stokes axis last in header?
 		default: True; example: stokeslast=False
+	history -- write the image history into the FITS file?
+	        default: True
 
 	"""
 
@@ -42,6 +45,7 @@ def exportfits(
 	_myia.tofits(
 		outfile=fitsimage, velocity=velocity, optical=optical,
 		bitpix=bitpix, minpix=minpix, maxpix=maxpix,
-		overwrite=overwrite, dropstokes=dropstokes, stokeslast=stokeslast
+		overwrite=overwrite, dropstokes=dropstokes, stokeslast=stokeslast,
+		history=history
 	)
 	_myia.close()

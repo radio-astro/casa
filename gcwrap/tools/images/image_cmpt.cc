@@ -37,7 +37,6 @@
 #include <images/Images/RebinImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCLELMask.h>
 #include <lattices/LatticeMath/Fit2D.h>
@@ -62,13 +61,16 @@
 #include <tables/LogTables/NewFile.h>
 
 #include <components/SpectralComponents/SpectralListFactory.h>
+#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
+#include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 
 #include <stdcasa/version.h>
@@ -740,14 +742,18 @@ image* image::continuumsub(
 		casa::Quantity majorAxis = casaQuantity(major);
 		casa::Quantity minorAxis = casaQuantity(minor);
 		Bool noBeam = False;
+		PeakIntensityFluxDensityConverter converter(_image->getImage());
+		converter.setSize(
+			Angular2DGaussian(majorAxis, minorAxis, casa::Quantity(0, "deg"))
+		);
+		converter.setBeam(channel, polarization);
 		return recordFromQuantity(
-			_image->convertflux(
-				noBeam, value, majorAxis, minorAxis, type,
-				toPeak, False, channel, polarization
-			)
+			toPeak
+			? converter.fluxDensityToPeakIntensity(noBeam, value)
+			: converter.peakIntensityToFluxDensity(noBeam, value)
 		);
 	}
-	catch (AipsError x) {
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: "
 			<< x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -3111,10 +3117,11 @@ bool image::twopointcorrelation(
 			*_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
+		std::auto_ptr<ImageInterface<Float> > clone(_image->getImage()->cloneII());
 		std::auto_ptr<ImageInterface<Float> > tmpIm(
-			_image->subimage(
-				outfile, *regionRec, mask, dropDegenerateAxes,
-				overwrite, list, stretch
+			SubImageFactory<Float>::createImage(
+				*clone, outfile, *regionRec,
+				mask, dropDegenerateAxes, overwrite, list, stretch
 			)
 		);
 		image *res = wantreturn ? new image(tmpIm.get()) : 0;
@@ -3153,7 +3160,8 @@ bool image::tofits(
 	const ::casac::variant& vmask, const bool overwrite,
 	const bool dropdeg, const bool deglast, const bool dropstokes,
 	const bool stokeslast, const bool wavelength, const bool airwavelength,
-	const bool /* async */, const bool stretch
+	const bool /* async */, const bool stretch,
+	const bool history
 ) {
 	*_log << _ORIGIN;
 	if (detached()) {
@@ -3183,7 +3191,7 @@ bool image::tofits(
 			fitsfile, velocity, optical, bitpix, minpix,
 			maxpix, *pRegion, mask, overwrite, dropdeg,
 			deglast, dropstokes, stokeslast, wavelength,
-			airwavelength, origin, stretch
+			airwavelength, origin, stretch, history
 		);
 	}
 	catch (AipsError x) {

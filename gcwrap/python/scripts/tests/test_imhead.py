@@ -109,6 +109,44 @@ import unittest
 input_file = 'ngc5921.clean.image'
 input_file_copy = 'ngc5921.clean.image.copy'
 
+def deep_equality(a, b): 
+    if (type(a) != type(b)):
+        print "types don't match, a is a " + str(type(a)) + " b is a " + str(type(b))
+        return False
+    if (type(a) == dict):
+        if (a.keys() != b.keys()):
+            print "keys don't match, a is " + str(a.keys()) + " b is " + str(b.keys())
+            return False
+        for k in a.keys():
+            if (
+                k == "telescope" or k == "observer"
+                or k == "telescopeposition"
+            ):
+                continue
+            elif (not deep_equality(a[k], b[k])):
+                print "dictionary member inequality a[" + str(k) \
+                    + "] is " + str(a[k]) + " b[" + str(k) + "] is " + str(b[k])
+                return False
+        return True
+    if (type(a) == float):
+        if not (a == b or abs((a-b)/a) <= 1e-6):
+            print "float mismatch, a is " + str(a) + ", b is " + str(b)
+        return a == b or abs((a-b)/a) <= 1e-6
+    if (type(a) == numpy.ndarray):
+        if (a.shape != b.shape):
+            print "shape mismatch a is " + str(a.shape) + " b is " + str(b.shape)
+            return False
+        x = a.tolist()
+        y = b.tolist()
+        for i in range(len(x)):
+            if (not deep_equality(x[i], y[i])):
+                print "array element mismatch, x is " + str(x[i]) + " y is " + str(y[i])
+                return False
+        return True
+    return a == b
+
+
+
 class imhead_test(unittest.TestCase):
     
     def setUp(self):
@@ -120,6 +158,7 @@ class imhead_test(unittest.TestCase):
 
     def tearDown(self):
         os.system('rm -rf ' +input_file)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_mode(self):
         '''Imhead: Test list,summary,history,get,put,del,add,empty,bad modes'''
@@ -975,11 +1014,10 @@ class imhead_test(unittest.TestCase):
 
     def test_list(self):
         '''Imhead: CAS-3300 Test the printing of some keywords in list mode'''
-        ima = input_file
         logfile = 'imhead.log'
         open(logfile,'w').close
         casalog.setlogfile(logfile)
-        imhead(imagename=ima, mode='list')
+        res = imhead(imagename=input_file, mode='list', verbose=True)
         # restore logfile
         casalog.setlogfile('casapy.log')
         
@@ -998,6 +1036,14 @@ class imhead_test(unittest.TestCase):
         cmd = 'grep shape imhead.log'
         out = commands.getoutput(cmd)
         self.assertNotEqual(out,'','The keyword shape is not listed')
+        
+        myimd = imdtool()
+        myimd.open(input_file)
+        res2 = myimd.list()
+        myimd.done()
+        self.assertTrue(type(res2) == dict)
+        self.assertTrue(deep_equality(res, res2))
+        
         
     def test_shape(self):
         '''Imhead: CAS-3301: Keyword shape should be included in the output'''
@@ -1029,6 +1075,7 @@ class imhead_test(unittest.TestCase):
         exp = qa.canon(qa.toangle(dec))
         self.assertTrue(qa.getunit(got) == qa.getunit(exp))
         self.assertTrue(abs(qa.getvalue(got)/qa.getvalue(exp) - 1) < 1e-8)
+        
         
 def suite():
     return [imhead_test]    

@@ -452,6 +452,7 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
                                  const ::casac::variant& freq, 
                                  const std::string& spectrumtype,
                                  const double index,
+                                 const std::vector<double>& optionalparms,
                                  const std::string& label)
 {
   itsLog->origin(LogOrigin("componentlist", "addcomponent"));
@@ -509,7 +510,11 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
                      "Direction not changed on any components");
       itsList->setRefDirection(intVec, newDir);
       setrefdirframe(which, theDir.getRefString(), True);
-      setshape(which, shape, majoraxis, minoraxis, positionangle);
+      ::casac::variant majoraxiserror; 
+      ::casac::variant minoraxiserror; 
+      ::casac::variant positionangleerror;
+      setshape(which, shape, majoraxis, minoraxis, positionangle,
+               majoraxiserror,minoraxiserror, positionangleerror, optionalparms);
       setspectrum(which, spectrumtype, index);
       MFrequency theFreq;
       ::casac::variant *tmpfreq=0;
@@ -1243,6 +1248,7 @@ bool componentlist::setshape(const int which, const std::string& type,
                              const ::casac::variant& majoraxiserror,
                              const ::casac::variant& minoraxiserror,
                              const ::casac::variant& positionangleerror,
+                             const std::vector<double>& optionalparms,
                              const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "setshape"));
@@ -1306,7 +1312,12 @@ bool componentlist::setshape(const int which, const std::string& type,
         return false;
       }
       Vector<Int> intVec(1,which);
+      if (type=="limbdarkeneddisk") {
+        shapePtr->setOptParameters(optionalparms);
+        itsList->setOptParms(intVec, *shapePtr);
+      }
       itsList->setShapeParms(intVec, *shapePtr);
+
       delete shapePtr;
       rstat = true;
     } else {
@@ -1639,6 +1650,7 @@ bool componentlist::convertfrequnit(const int which, const std::string& unit)
   }
   return rstat;
 }
+
 
 ::casac::record* componentlist::getcomponent(const int which, const bool iknow)
 {

@@ -227,6 +227,15 @@ vector<double> msmetadata::chanfreqs(int spw, const string& unit) {
 	return vector<double>();
 }
 
+
+bool msmetadata::close() {
+	_FUNC2(
+		_msmd.reset(0);
+		return true;
+	)
+	return false;
+}
+
 bool msmetadata::done() {
 	_FUNC2(
 		_msmd.reset(0);
@@ -342,6 +351,28 @@ vector<int> msmetadata::fieldsfortimes(const double center, const double tol) {
 vector<string> msmetadata::intents() {
 	_FUNC(
 		return _setStringToVectorString(_msmd->getIntents());
+	)
+	return vector<string>();
+}
+
+vector<string> msmetadata::intentsforfield(const variant& field) {
+	_FUNC(
+		Int id = -1;
+		switch (field.type()) {
+		case variant::STRING:
+			id = *(_msmd->getFieldIDsForField(field.toString()).begin());
+			break;
+		case variant::INT:
+			id = field.toInt();
+			break;
+		default:
+			*_log << "Unsupported type for field which must be "
+				<< "a nonnegative int or string." << LogIO::EXCEPTION;
+		}
+		if (id < 0) {
+			throw AipsError("field must be nonnegative if an int.");
+		}
+		return _setStringToVectorString(_msmd->getIntentsForField(id));
 	)
 	return vector<string>();
 }

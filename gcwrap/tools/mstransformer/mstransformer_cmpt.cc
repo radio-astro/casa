@@ -2,10 +2,13 @@
 #include <iostream>
 #include <mstransformer_cmpt.h>
 
+#include <casa/Arrays/Vector.h>
+#include <casa/BasicSL/String.h>
 #include <casacore/casa/Logging/LogIO.h>
 #include <casacore/casa/Logging/LogOrigin.h>
 #include <casacore/casa/Exceptions/Error.h>
 #include <mstransform/MSTransform/MSTransform.h>
+#include <mstransform/MSTransform/MSTransformDataHandler.h>
 #include <casacore/casa/Containers/RecordInterface.h>
 #include <casacore/casa/Containers/Record.h>
 #include <casacore/casa/sstream.h>
@@ -134,6 +137,26 @@ mstransformer::open()
 	}
 }
 
+bool
+mstransformer::mergespwtables(const std::vector<std::string> &filenames)
+{
+	try
+	{
+		if (!mstransformer_p) {
+			mstransformer_p = new MSTransform();
+		}
+
+		// Call the static method directly
+		MSTransformDataHandler::mergeSpwSubTables(toVectorString(filenames));
+
+	} catch(AipsError x){
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+
+	return true;
+
+}
 
 
 

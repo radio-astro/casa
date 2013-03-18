@@ -78,6 +78,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:if>
 <xsl:for-each select="aps:input">
 	<xsl:for-each select="aps:param">
+		<xsl:if test="not(@visibility) or @visibility!='hidden'">
 		<xsl:text>		</xsl:text><xsl:value-of select="@name"/><xsl:text>:	</xsl:text><xsl:value-of select="aps:description"/><xsl:text>
 </xsl:text>
 <xsl:text>		   Default Value: </xsl:text><xsl:value-of select="aps:value"/>
@@ -92,6 +93,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>
 
 </xsl:text>
+</xsl:if>
 	</xsl:for-each>
 </xsl:for-each>
 <xsl:if test="aps:returns">

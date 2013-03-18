@@ -78,7 +78,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             self.doapply = True
             self.skymode = self.calmode.split(sep)[0]
 
-        casalog.post('INFO', 'sky calibration mode: \'%s\''%(self.skymode))
+        casalog.post('sky calibration mode: \'%s\''%(self.skymode), 'INFO')
 
     def check_infile(self):
         if not is_scantable(self.infile):
@@ -91,7 +91,7 @@ class sdcal2_worker(sdutil.sdtask_template):
                 if not self.overwrite:
                     raise Exception('Output file \'%s\' exists.'%(self.outfile))
                 else:
-                    casalog.post('INFO','Overwrite %s ...'%(self.outfile))
+                    casalog.post('Overwrite %s ...'%(self.outfile), 'INFO')
                     os.system('rm -rf %s'%(self.outfile))
     def check_applytable(self):
         # length should be > 0 either applytable is string or string list
@@ -144,7 +144,7 @@ class sdcal2_worker(sdutil.sdtask_template):
             if not self.overwrite:
                 raise Exception('You should set overwrite to True if you want to update infile.')
             else:
-                casalog.post('INFO','%s will be overwritten by the calibrated spectra.'%(self.infile))
+                casalog.post('%s will be overwritten by the calibrated spectra.'%(self.infile), 'INFO')
                 self.insitu = True
 
     def initialize_scan(self):

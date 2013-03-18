@@ -8,7 +8,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
+def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
     with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -82,14 +82,23 @@ class sdplot_worker(sdutil.sdtask_template):
 
     def save(self):
         # Hardcopy
-        if (self.outfile != '' ) and not ( self.plottype in ['azel','pointing']):
+        #if (self.outfile != '' ) and not ( self.plottype in ['azel','pointing']):
+        if (self.outfile != '' ) and not ( self.plottype in ['azel']):
             # currently no way w/o screen display first
             sd.plotter.save(self.outfile)
 
     def plot_pointing(self):
         kw = {'scan': self.scan}
-        if self.outfile != '': kw['outfile'] = self.outfile
-        sd.plotter.plotpointing(**kw)
+        #if self.outfile != '': kw['outfile'] = self.outfile
+        #sd.plotter.plotpointing(**kw)
+        # New pointing plot
+        # Set colormap, linestyles, and linewidth of plots
+        self.__setup_plotter()
+        colbydict = {"t": "type", "s": "scan", "i": "if",
+                     "p": "pol", "b": "beam"}
+        kw['colorby'] = colbydict[self.stack[0].lower()]
+        kw['showline'] = self.scanpattern
+        sd.plotter.plotpointing2(**kw)
         
         self.__print_header(asaplot=False)
 

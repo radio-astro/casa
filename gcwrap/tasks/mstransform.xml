@@ -44,21 +44,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>The number of Sub-MSs to create.</description>
             <value>64</value>
         </param>
-        
-        <param type="int" name="ddistart" subparam="true">
+        <param type="bool" name="parallel" subparam="true">
+            <description>Create a multi-MS in parallel using simple_cluster.</description>
+            <value>False</value>
+        </param>        
+        <param type="int" name="ddistart" subparam="true" visibility="hidden">
             <description>TO be hidden later!!!</description>
             <value>-1</value>
         </param>
 
-<!--
-    <param type="string" name="optimizefor">
-        <description>Optimize output for specific case (continuum/spectralimaging).</description>
-        <value></value>
-    </param> -->
-
-    <param type="string" name="tileshape">
-        <description>Tile shape of the disk data columns.</description>
-        <value></value>
+    <param type="intArray" name="tileshape">
+        <description>List with 1 or 3 elements giving the tile shape of the disk data columns.</description>
+        <value type="intArray">0</value>
     </param>
 
     <!-- SELECTION parameters -->    
@@ -144,7 +141,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </allowed>
     </param>
 
-        <param type="bool" name="realmodelcol" subparam="true">
+        <param type="bool" name="realmodelcol">
             <description>Make real a virtual MODEL column.</description>
             <value>False</value>
         </param>
@@ -155,25 +152,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
     </param>
     
-    <!-- FREQUENCY AVERAGING parameters -->
-    <param type="bool" name="freqaverage">
-        <description>Average data in frequency.</description>
+    <!-- CHANNEL AVERAGING parameters -->
+    <param type="bool" name="chanaverage">
+        <description>Average data in channels.</description>
         <value>False</value>
     </param>
 
-        <param type="any" name="freqbin" subparam="true">
+        <param type="any" name="chanbin" subparam="true">
             <description>Width (bin) of input channels to average to form an output channel.</description>
             <any type="variant" limittypes="int intArray"/>            
             <value type="int">1</value>
         </param>
 
         <param type="string" name="useweights" subparam="true">
-            <description>Type of weights to use in average (flags/spectral).</description>
-            <value type="string"></value>
+            <description>Type of weights to use in average (flags/spectrum).</description>
+            <value type="string">flags</value>
               <allowed kind="enum" ignorecase="True">
-                <value></value>
                 <value>flags</value>
-                <value>spectral</value>
+                <value>spectrum</value>
               </allowed>
         </param>
 
@@ -273,7 +269,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <!-- TIME AVERAGING parameters -->
     <param type="bool" name="timeaverage">
-        <description>Average data in time.</description>
+        <description>Average data in time. (to be implemented)</description>
         <value>False</value>
     </param>
     
@@ -304,7 +300,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="True">
                   <default param="separationaxis"><value type="string">both</value></default>
                   <default param="numsubms"><value type="int">64</value></default>
-                  <default param="ddistart"><value type="int">-1</value></default>
+                  <default param="parallel"><value type="bool">False</value></default>
            </equals>
           </when>
           <when param="datacolumn">
@@ -313,11 +309,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
              	  <default param="realmodelcol"><value type="bool">False</value></default>           
             </equals>         
           </when>
-          <when param="freqaverage">
+          <when param="chanaverage">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
-                  <default param="freqbin"><value type="int">1</value></default>
-                  <default param="useweights"><value type="string"></value></default>
+                  <default param="chanbin"><value type="int">1</value></default>
+                  <default param="useweights"><value type="string">flags</value></default>
             </equals>
           </when>
         <when param="regridms">
@@ -361,14 +357,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     * take an input MS or Multi-MS
     * ability to create an output MS or MMS
     * spw combination and separation
-    * frequency averaging taking weights into account
-    * time averaging taking a minimum number of baselines
+    * channel averaging taking weights into account
+    * time averaging taking a minimum number of baselines (TBI)
     * reference frame transformation
     * Hanning smoothing
     
     All these transformations will be applied on the fly without any writing to
-    disk to optimize I/O. It will try to create a Multi-MS in parallel using CASA's 
-    cluster infrastructure. See simple_cluster for more information on this.
+    disk to optimize I/O. The user can ask to create a Multi-MS in parallel using CASA's 
+    cluster infrastructure using the parameters createmms and parallel. See simple_cluster 
+    for more information on this.
 
     This task is implemented in a modular way to preserve the functionalities
     available in the replaced tasks. One can choose which functionality to apply
@@ -392,7 +389,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     outputvis -- Name of output visibility file
         default: ''; example: outputvis='ngc5921.mms'
 
-    createmms -- Create a multi-MS as the output. (TBI)
+    createmms -- Create a multi-MS as the output.
         default: False
 
         If False, it will work like the split task and create a
@@ -407,9 +404,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         numsubms -- The number of sub-MSs to create (int).
             default: 64
+
+        parallel -- Create a multi-MS in parallel, using the simple_cluster
+                    infrastructure. It will run the tool several times in parallel,
+                    one instance for each subMS. Note that for small MSs, we
+                    recommend to not change this parameter as the overhead of creating
+                    a cluster may be larger than the gain to run in parallel. (bool)
+            default: False
                 
-    tileshape -- Tile shape of the disk data columns. (TBI)
-        default: ''
+    tileshape -- List with 1 or 3 elements describing the tile shape that will be used
+                 to save the columns to disk. (list)
+        default: [0]
+        options: [0] or [1] or [int,int,int]. When list has only one element, it should
+                 be either 0 or 1. When the list has three elements, they should be the
+                 number of correlations, channels, rows.
 
 
 --- Data selection parameters ---
@@ -432,11 +440,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
            spw = '*:3~64'  channels 3 through 64 for all sp id's
                    spw = ' :3~64' will NOT work.
-           spw = '*:0;60~63'  channel 0 and channels 60 to 63 for all IFs 
-                  ';' needed to separate different channel ranges in one spw
-           spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-           spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
-                    spw 1, channels 20-30, and spw 2, channels, 1, 2 and 4
+
+               NOTE: mstransform does not support multiple channel ranges per
+                     spectral window (';').
 
     scan -- Scan number range
         default: ''=all
@@ -497,30 +503,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  'float_data,data', 'lag_data,data'.
 
             N.B.: 'all' = whichever of the above that are present.
-            Otherwise the selected column will go to CORRECTED in the output.
+            Otherwise the selected column will go to DATA in the output.
 
-        realmodelcol -- Make real a virtual MODEL column.
-            default: False
+    realmodelcol -- Make real a virtual MODEL column. If set to True, virtual MODEL_DATA 
+                    column will be added to the output MS if it exists.
+        default: False
 
 --- SPW combination parameters ---
     combinespws -- Combine the input spws into a new output spw.
         default: False
 
---- Frequency averaging parameters ---
-    freqaverage -- Average data in frequency. 
+--- Channel averaging parameters ---
+    chanaverage -- Average data in channels. 
         default: False
 
-        freqbin -- Number of input channels to average to create an output
+        chanbin -- Number of input channels to average to create an output
                    channel. If a list is given, each bin will apply to one spw in
-                   the selection. 
+                   the selection.
             default: 1 =&gt; no channel averaging.
             options: (int) or [int]
-            example: freqbin=[2,3] =&gt; average 2 channels of 1st selected
+            example: chanbin=[2,3] =&gt; average 2 channels of 1st selected
 		          spectral window and 3 in the second one.
 
         useweights -- Type of weights to use in average. It will apply to all spws.
-            default: ''
-            options: 'flags', 'spectral'
+            default: 'flags'
+            options: 'flags', 'spectrum'. When set to 'spectrum', it will use the
+                               WEIGHT_SPECTRUM column for the weights.
 
 
 --- Hanning smoothing parameters --- 
@@ -548,20 +556,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         width -- Number of input channels that are used to create an output channel.
             default: 1
 
-        nspw -- Number of output spws to create in the output MS/MMS (int). (TBI)
+        nspw -- Number of output spws to create in the output MS/MMS (int). 
             default: 0
             example: One can regrid the MS or not and further separate the
                      output into a given number of spws. Internally, the framework
                      will combine the selected spws before separating them so that
                      channel gaps and overlaps are taken into account. This parameter
-                     will create a regular grid of spws in the output MS.
+                     will create a regular grid of spws in the output MS. If nchan
+                     is set, it will refer to the number of output channels in each
+                     of the separated spws.
 
         interpolation -- Spectral interpolation method.
             default: 'linear'
             options: 'nearest', 'cubic', 'spline', 'fftshift'
 
         phasecenter -- Direction measure or FIELD_ID for the mosaic center.
-            default: ''
+            default: '' (first selected field)
+            options: FIELD_ID (int) or center coordinate (str).
+            NOTE: As int, it gives the FIELD ID for the mosaic center. If a string,
+                  it gives the center coordinate, e.g. 'J2000 12h56m43.88s +21d41m00.1s'.                   
 
         restfreq -- Specify rest frequency to use for output.
             default: ''; occasionally it is necessary to set this.
@@ -607,13 +620,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     mstransform(vis='Four_ants.ms', outputvis='myspw.ms', combinespws=True, spw='0~3')
 
 3) Combine two spws and regrid one field, using two input channels to make one output.
-
     mstransform(vis='jupiter6cm.demo.ms',outputvis='test1.ms',datacolumn='DATA',field='11',
                 spw='0,1', combinespws=True, regridms=True, nchan=1, width=2)
 
 4) Combine 24 spws and regrid in frequency mode to create 21 output channels. Change the 
    phase center.
-
     mstransform(vis='g19_d2usb_targets_line.ms', outputvis='test2.ms', datacolumn='DATA',
                 combinespws=True, regridms=True, mode='frequency', nchan=21, start='229587.0MHz',
                 width='1600kHz', phasecenter="J2000 18h25m56.09 -12d04m28.20")
