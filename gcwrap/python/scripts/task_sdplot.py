@@ -82,13 +82,14 @@ class sdplot_worker(sdutil.sdtask_template):
 
     def save(self):
         # Hardcopy
-        if (self.outfile != '' ) and not ( self.plottype in ['azel','pointing']):
+        #if (self.outfile != '' ) and not ( self.plottype in ['azel','pointing']):
+        if (self.outfile != '' ) and not ( self.plottype in ['azel']):
             # currently no way w/o screen display first
             sd.plotter.save(self.outfile)
 
     def plot_pointing(self):
         kw = {'scan': self.scan}
-        if self.outfile != '': kw['outfile'] = self.outfile
+        #if self.outfile != '': kw['outfile'] = self.outfile
         #sd.plotter.plotpointing(**kw)
         # New pointing plot
         # Set colormap, linestyles, and linewidth of plots
