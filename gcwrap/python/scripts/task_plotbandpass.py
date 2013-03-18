@@ -2705,7 +2705,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                   print "madstats[%s][%d] = %s" % (Antstring,ispw, str(madstats[Antstring][ispw]))
                               madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
                               if (gamp_mad[p]['nchan'] > 0):
-                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']))
+                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']+pchannels[p][0]))
                           if (debug): print "madstats done"
                       else:
                           gamp = [gampx,gampy]
@@ -2729,7 +2729,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           gamp_mad = [madInfo(gamp[p], madsigma,edge)]
                           madstats[Antstring][ispw][mytime][p]['amp'] = gamp_mad[p]['mad']
                           if (gamp_mad[p]['nchan'] > 0):
-                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']))
+                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, amp: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gamp_mad[p]['nchan'], madsigma, gamp_mad[p]['outlierValue'], gamp_mad[p]['outlierChannel']+pchannels[p][0]))
                       else:
                           gamp = [gampx]
               if (bOverlay):
@@ -2828,20 +2828,20 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                            if (xrange < xrange2):
                               for p in range(nPolarizations):
                                     if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2)
+                                          pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
                                           newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
                               for p in range(nPolarizations):
                                     if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1)
+                                          pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
                                           newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
                            else:
                               for p in range(nPolarizations):
                                     if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width2)
+                                          pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width2, markersize=markersize)
                                           newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
                               for p in range(nPolarizations):
                                     if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                          pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width1)
+                                          pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width1, markersize=markersize)
                                           newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
                         else:
                            width1 = 1
@@ -2850,20 +2850,20 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                            if (np.std(gamp[0]) < np.std(gamp2[0])):
                               for p in range(nPolarizations):
                                   if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1)
+                                      pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
                                       newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
                               for p in range(nPolarizations):
                                   if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2)
+                                      pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
                                       newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
                            else:
                               for p in range(nPolarizations):
                                   if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2)
+                                      pb.plot(pfrequencies[p], gamp[p], '%s%s'%(pcolor[p],ampmarkstyle), linewidth=width2, markersize=markersize)
                                       newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp[p], sideband,plotrange,xchannels)
                               for p in range(nPolarizations):
                                   if (corrTypeToString(corr_type[p]) in polsToPlot):
-                                      pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1)
+                                      pb.plot(pfrequencies2[p], gamp2[p], '%s%s'%(p2color[p],ampmarkstyle), linewidth=width1, markersize=markersize)
                                       newylimits = recalcYlimitsFreq(chanrange, newylimits, gamp2[p], sideband,plotrange,xchannels2)
                         # must set new limits after plotting  'amp'
                         if (zoom=='intersect'):
@@ -3416,7 +3416,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
                                   if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because abs sum of all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
                               else:
-                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']))
+                                  casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']+pchannels[p][0]))
                   else:
                       gphs = [gphsx,gphsy]
               else:  # 1-pol
@@ -3430,13 +3430,13 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                       gphs = [gphs0]
                       p = 0
                       gphs_mad = [madInfo(gphs[p], madsigma, edge)]
-                      madstats[Antstring][ispw][mytime][p]['phase'] = gamp_mad[p]['mad']
+                      madstats[Antstring][ispw][mytime][p]['phase'] = gphs_mad[p]['mad']
                       if (gphs_mad[p]['nchan'] > 0):
                           checkAbsSum = np.sum(np.abs(gphs[p]))
                           if (checkAbsSum < PHASE_ABS_SUM_THRESHOLD):
                               if (debug): print "%s, Pol %d, spw %d, %s, phs: not printing because all values near zero (%f)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), checkAbsSum)
                           else:
-                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']))
+                              casalogPost(debug, "%s, Pol %d, spw %2d, %s, phs: %4d points exceed %.1f sigma (worst=%.2f at chan %d)" % (Antstring, p, ispw, utstring(uniqueTimes[mytime],0), gphs_mad[p]['nchan'], madsigma, gphs_mad[p]['outlierValue'], gphs_mad[p]['outlierChannel']+pchannels[p][0]))
                   else:
                       gphs = [gphsx]
               if (bOverlay):
@@ -3533,23 +3533,23 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                   if (debug): print "pb.plot 1"
-                                  pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2)
+                                  pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
                                   newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                   if (debug): print "pb.plot 2"
-                                  pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1)
+                                  pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
                                   newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
                            else:
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                    if (debug): print "pb.plot 3"
-                                   pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width2)
+                                   pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width2, markersize=markersize)
                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                    if (debug): print "pb.plot 4"
-                                   pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width1)
+                                   pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width1, markersize=markersize)
                                    newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
                         else:
                            width1 = 1
@@ -3560,23 +3560,23 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                  if (debug): print "pb.plot 5"
-                                 pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1)
+                                 pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                  if (debug): print "pb.plot 6"
-                                 pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2)
+                                 pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
                            else:
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                  if (debug): print "pb.plot 7"
-                                 pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2)
+                                 pb.plot(pfrequencies[p], gphs[p], '%s%s'%(pcolor[p],phasemarkstyle), linewidth=width2, markersize=markersize)
                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs[p], sideband,plotrange,xchannels)
                              for p in range(nPolarizations):
                                if (corrTypeToString(corr_type[p]) in polsToPlot):
                                  if (debug): print "pb.plot 9"
-                                 pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1)
+                                 pb.plot(pfrequencies2[p], gphs2[p], '%s%s'%(p2color[p],phasemarkstyle), linewidth=width1, markersize=markersize)
                                  newylimits = recalcYlimitsFreq(chanrange, newylimits, gphs2[p], sideband,plotrange,xchannels2)
                         # must set new limits after plotting  'phase'
                         (y0,y1) = pb.ylim()
@@ -4931,15 +4931,22 @@ def madInfo(a, madsigma=3, edge=0):
     of channels that exceed madsigma*MAD, and the worst outlier.
     """
     info = {}
-    info['mad'] = mad(a)
+    if (edge >= len(a)/2):  # protect against too large of an edge value
+        originalEdge = edge
+        if (len(a) == 2*(len(a)/2)):
+            edge = len(a)/2 - 1 # use middle 2 points
+        else:
+            edge = len(a)/2  # use central point
+        print "WARNING edge value is too large, reducing it from %d to %d." % (originalEdge, edge)
+    info['mad'] = mad(a[edge:len(a)-edge])
     chan = []
     outlierValue = 0
     outlierChannel = None
     for i in range(edge,len(a)-edge):
         if (np.abs(a[i]) > madsigma*info['mad']):
             chan.append(i)
-        if (np.abs(a[i]) > outlierValue):
-            outlierValue = np.abs(a[i])
+        if (np.abs(a[i]) > np.abs(outlierValue)):
+            outlierValue = a[i]
             outlierChannel = i
     info['nchan'] = len(chan)
     info['chan'] = chan
