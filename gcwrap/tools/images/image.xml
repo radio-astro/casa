@@ -10182,7 +10182,10 @@ used to create a 2D temporary image.
         image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified (unless
         perhaps you are debugging).
         
-        Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
+        The start and end values represent direction pixel coordinates. They both must fail within the input
+        image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
+        
+        Internally, the image is first rotated, padding first if necessary to include relevant pixels that would otherwise
         be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
         ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
         written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the

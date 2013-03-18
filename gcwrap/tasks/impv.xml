@@ -119,7 +119,10 @@ in direction space; that is accomplished by specifying the start and end points 
 specify an optional half width, which is the number of pixels on either side and perpendicular to the
 direction slice that are used for averaging along the slice (0, the default, represents no averaging).
 
-Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
+The start and end values represent direction pixel coordinates. They both must fail within the input
+image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
+
+Internally, the image is first rotated, first padding if necessary to include relevant pixels that would otherwise
 be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
 ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
 written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the

@@ -126,50 +126,48 @@ class ia_pv_test(unittest.TestCase):
             # no halfwidth
             outfile = "test_pv_" + str(code)
             xx = code(
-                imagename=imagename, outfile=outfile, start=[1, 5],
-                end=[9, 5], halfwidth=0
+                imagename=imagename, outfile=outfile, start=[2, 5],
+                end=[7, 5], halfwidth=0
             )
             if (type(xx) == type(ia)):
                 xx.done()
             self.assertTrue(len(tb.showcache())== 0)
             pv.open(outfile)
-            expec = [9, 10]
+            expec = [6, 10]
             got = pv.shape()
-            print "*** got " + str(got)
             self.assertTrue((got == expec).all())
             expec = numpy.zeros(got)
             for i in range(10):
-                expec[:,i] = range(1,10)
+                expec[:,i] = range(2,8)
             got = pv.getchunk()
             self.assertTrue((got == expec).all())
+            self.assertTrue(pv.getchunk(getmask=T).all())
             got = pv.toworld([0,0,0])['numeric'][1]
             self.assertTrue(abs(got - expeccoord) < 1e-6)
             gotinc = pv.coordsys().increment()["numeric"]
-            print "*** got " + str(gotinc)
-            print "*** exp " + str(expinc)
-            print "*** dif " + str(abs(gotinc - expinc))
             self.assertTrue((abs(gotinc - expinc) < 1e-6).all())
             # halfwidth
             outfile = "test_pv_1_" + str(code)
             xx = code(
-                imagename=imagename, outfile=outfile, start=[1, 5],
-                end=[9, 5], halfwidth=1
+                imagename=imagename, outfile=outfile, start=[2, 5],
+                end=[7, 5], halfwidth=1
             )
             if (type(xx) == type(ia)):
                 xx.done()
             pv.open(outfile)
-            expec = [9, 10]
+            expec = [6, 10]
             got = pv.shape()
             self.assertTrue((got == expec).all())
             expec = numpy.zeros(got)
             for i in range(10):
-                expec[:,i] = range(2,11)
+                expec[:,i] = range(3,9)
             got = pv.getchunk()
             self.assertTrue((got == expec).all())
+            self.assertTrue(pv.getchunk(getmask=T).all())
             pv.done()
         
     def test_stretch(self):
-        """ ia.pv(): Test stretch parameter"""
+        """ia.pv(): Test stretch parameter"""
         yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
@@ -180,11 +178,11 @@ class ia_pv_test(unittest.TestCase):
         yy.addnoise()
         self.assertRaises(
             Exception,
-            yy.pv, start=[0,0], end=[20,0],
+            yy.pv, start=[2,2], end=[20,2],
             mask=mymask + ">0", stretch=False
         )
         zz = yy.pv(
-            start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
+            start=[2,2], end=[20,2], mask=mymask + ">0", stretch=True
         )
         mytype = type(yy)
         self.assertTrue(zz and type(zz) == mytype)
@@ -192,13 +190,14 @@ class ia_pv_test(unittest.TestCase):
         zz.done()
         self.assertFalse(
             impv(
-                 imagename="kk", outfile="x1.im", start=[0,0], end=[20,0],
+                 imagename="kk", outfile="x1.im", start=[2,2], end=[20,2],
                  mask=mymask + ">0", stretch=False
             )
         )
         self.assertTrue(
             impv(
-                 imagename="kk", outfile="xyz", start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
+                 imagename="kk", outfile="xyz", start=[2,2], end=[20,2],
+                 mask=mymask + ">0", stretch=True
             )
         )
     
