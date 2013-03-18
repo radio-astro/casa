@@ -165,12 +165,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
 
         <param type="string" name="useweights" subparam="true">
-            <description>Type of weights to use in average (flags/spectral).</description>
-            <value type="string"></value>
+            <description>Type of weights to use in average (flags/spectrum).</description>
+            <value type="string">flags</value>
               <allowed kind="enum" ignorecase="True">
-                <value></value>
                 <value>flags</value>
-                <value>spectral</value>
+                <value>spectrum</value>
               </allowed>
         </param>
 
@@ -314,7 +313,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
                   <default param="chanbin"><value type="int">1</value></default>
-                  <default param="useweights"><value type="string"></value></default>
+                  <default param="useweights"><value type="string">flags</value></default>
             </equals>
           </when>
         <when param="regridms">
@@ -527,8 +526,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		          spectral window and 3 in the second one.
 
         useweights -- Type of weights to use in average. It will apply to all spws.
-            default: ''
-            options: 'flags', 'spectral'
+            default: 'flags'
+            options: 'flags', 'spectrum'. When set to 'spectrum', it will use the
+                               WEIGHT_SPECTRUM column for the weights.
 
 
 --- Hanning smoothing parameters --- 

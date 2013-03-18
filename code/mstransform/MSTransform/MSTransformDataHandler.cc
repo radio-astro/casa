@@ -446,7 +446,7 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 					<< "Using FLAGS as weights for channel average" << LogIO::POST;
 		}
-		else if (useweights_p == "weights")
+		else if (useweights_p == "spectrum")
 		{
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 					<< "Using WEIGHT_SPECTRUM as weights for channel average" << LogIO::POST;
@@ -868,7 +868,7 @@ void MSTransformDataHandler::setup()
 	}
 
 	// Averaging kernel
-	if ((useweights_p == "weights") and (fillWeightSpectrum_p))
+	if ((useweights_p == "spectrum") and (fillWeightSpectrum_p))
 	{
 		averageKernelComplex_p = &MSTransformDataHandler::weightAverageKernel;
 		averageKernelFloat_p = &MSTransformDataHandler::weightAverageKernel;
@@ -886,7 +886,7 @@ void MSTransformDataHandler::setup()
 		setWeightsPlaneByReference_p = &MSTransformDataHandler::dontsetWeightsPlaneByReference;
 		setWeightStripeByReference_p = &MSTransformDataHandler::dontSetWeightStripeByReference;
 
-		if (useweights_p == "weights")
+		if (useweights_p == "spectrum")
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 			<< "Requested column for weighted channel average WEIGHT_SPECTRUM not present in input MS" << LogIO::POST;
@@ -3017,7 +3017,7 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     {
     	averageKernelFloat_p = &MSTransformDataHandler::simpleAverageKernel;
     	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
-    	if (useweights_p == "weights")
+    	if (useweights_p == "spectrum")
     	{
     		averageKernelFloat_p = &MSTransformDataHandler::weightAverageKernel;
     	}
