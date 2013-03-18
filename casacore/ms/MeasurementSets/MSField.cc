@@ -36,6 +36,8 @@
 #include <tables/Tables/ForwardCol.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Exceptions/Error.h>
+#include <casa/OS/Directory.h>
+#include <casa/Utilities/Regex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -198,13 +200,57 @@ MSField MSField::referenceCopy(const String& newTableName,
 
 Bool MSField::addEphemeris(const uInt id, const String& inputEphemTableName,
 			   const String& comment){
-  // not yet implemented
-  return False;
+  Bool rval=False;
+  if(Table::isReadable(inputEphemTableName)){
+    // add the eph id column if it doesn't exist alreay
+    const String& ephemerisId = MSField::columnName(MSField::EPHEMERIS_ID);
+    if(!this->actualTableDesc().isColumn(ephemerisId)){
+      if(this->isWritable()){
+	try{
+	  this->addColumn(ScalarColumnDesc<Int>(ephemerisId, "Ephemeris id, pointer to EPHEMERIS table"), False);
+	}
+        catch(...){
+	  return False;
+	}
+	// initialize to -1
+	ScalarColumn<Int> fld(*this, ephemerisId);
+	for(uInt i=0; i<this->nrow(); i++){
+	  fld.put(i,-1);
+	}
+      }
+      else{
+	return False;
+      }
+    }
+    Directory inputDir(inputEphemTableName);
+    stringstream ss;
+    ss << "/EPHEM" << id << "_" << comment << ".tab";
+    String destTableName = Path(this->tableName()).absoluteName() + String(ss.str());
+    removeEphemeris(id); // remove preexisting ephemerides with the same id
+    inputDir.copy(destTableName);
+    rval = True;
+  }
+  return rval;
 }
 
 Bool MSField::removeEphemeris(const uInt id){
-  // not yet implemented
-  return False;
+
+  Bool rval=True;
+  Directory fieldDir(Path(this->tableName()).absoluteName());
+  stringstream ss;
+  ss << "EPHEM" << id << "_*.tab";
+  Regex ephemTableRegex = Regex::fromPattern(ss.str());
+  Vector<String> candidates = fieldDir.find(ephemTableRegex, True, False); // followSymLinks=True, recursive=False
+  for(uInt i=0; i<candidates.size(); i++){
+    Table tTab(fieldDir.path().absoluteName()+"/"+candidates(i));
+    tTab.markForDelete();
+  }
+  for(uInt i=0; i<candidates.size(); i++){
+    if(Table::isReadable(candidates(i))){
+      rval = False;
+    }
+  }
+  return rval;
 }
 
 
