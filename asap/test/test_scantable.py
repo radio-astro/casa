@@ -3,6 +3,7 @@ import os
 import shutil
 import datetime
 from nose.tools import *
+import asap
 from asap import scantable, selector, mask_not
 from asap.logging import asaplog
 # no need for log messages
@@ -16,7 +17,8 @@ def tempdir_teardown():
 
 class TestScantable(object):
     def setup(self):
-        s = scantable("data/MOPS.rpf", average=True)
+        pth = os.path.dirname(__file__)
+        s = scantable(os.path.join(pth, "data", "MOPS.rpf"), average=True)
         sel = selector()
         # make sure this order is always correct - in can be random
         sel.set_order(["SCANNO", "POLNO"])
@@ -26,16 +28,17 @@ class TestScantable(object):
         self.st.set_restfreqs(restfreqs,"GHz")
 
     def test_init(self):
-        st = scantable("data/MOPS.rpf", average=False)
+        fname = os.path.join(os.path.dirname(__file__), "data", "MOPS.rpf")
+        st = scantable(fname, average=False)
         assert_equal(st.ncycle(), 32)
-        st = scantable("data/MOPS.rpf", average=True)
+        st = scantable(fname, average=True)
         assert_equal(st.ncycle(), 2)
-        st = scantable("data/MOPS.rpf", unit="Jy")
+        st = scantable(fname, unit="Jy")
         assert_equal(st.get_fluxunit(), "Jy")
-        st = scantable("data/MOPS.rpf", unit="K")
+        st = scantable(fname, unit="K")
         assert_equal(st.get_fluxunit(), "K")
-        assert_raises(RuntimeError, scantable, "data/MOPS.rpf", unit="junk")
-        st = scantable(["data/MOPS.rpf","data/MOPS.rpf"], average=False)
+        assert_raises(RuntimeError, scantable, fname, unit="junk")
+        st = scantable([fname,fname], average=False)
         assert_equal(st.nscan(), 4)
 
     def test_copy(self):
@@ -119,6 +122,17 @@ class TestScantable(object):
 
     def test_get_tsys(self):
         assert_almost_equal(self.st.get_tsys()[0], 175.830429077)
+
+    def test_set_tsys(self):
+        s = self.st.copy()
+        newval = 100.0
+        s.set_tsys(newval, 0)
+        assert_almost_equal(s.get_tsys()[0], newval)
+        s2 = self.st.copy()
+        s2.set_tsys(newval)
+        out = s2.get_tsys()
+        for i in xrange(len(out)):
+            assert_almost_equal(out[i], newval)
 
     def test_get_time(self):
         assert_equal(self.st.get_time(0), '2008/03/12/09:32:50')
@@ -220,8 +234,7 @@ class TestScantable(object):
         b = q.poly_baseline(order=0, mask=msk,insitu=False)
         res_rms = (q-b).stats('rms')
         assert_almost_equals(res_rms[0], 0.38346, 5)
-        #assert_almost_equals(res_rms[1], 0.38780, 5)        
-        assert_almost_equals(res_rms[1], 0.48780, 5)        
+        assert_almost_equals(res_rms[1], 0.38780, 5)        
 
 
     def test_reshape(self):

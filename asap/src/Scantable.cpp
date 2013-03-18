@@ -4,7 +4,7 @@
 // Description:
 //
 //
-// Author: Malte Marquarding <asap@atnf.csiro.au>, (C) 2005
+// Author: Malte Marquarding <asap@atnf.csiro.au>, (C) 2005-2013
 //
 // Copyright: See COPYING file that comes with this distribution
 //
@@ -5167,6 +5167,17 @@ std::vector<int> Scantable::getMaskEdgeIndices(const std::vector<bool>& mask)
   return out;
 }
 
+void Scantable::setTsys(const std::vector<float>& newvals, int whichrow) {
+  Vector<Float> tsys(newvals);
+  if (whichrow > -1) {
+    if (tsysCol_.shape(whichrow) != tsys.shape())
+      throw(AipsError("Given Tsys values are not of the same shape"));
+    tsysCol_.put(whichrow, tsys);
+  } else {
+    tsysCol_.fillColumn(tsys);
+  }
+}
+
 vector<float> Scantable::getTsysSpectrum( int whichrow ) const
 {
   Vector<Float> tsys( tsysCol_(whichrow) ) ;
@@ -5192,6 +5203,22 @@ void Scantable::setMoleculeIdColumnData(const std::vector<uint>& molids)
   mmolidCol_.putColumn(molIds);
 }
 
+
+void Scantable::dropXPol()
+{
+  if (npol() <= 2) {
+    return;
+  }
+  if (!selector_.empty()) {
+    throw AipsError("Can only operate with empty selection");
+  }
+  std::string taql = "SELECT FROM $1 WHERE POLNO IN [0,1]";
+  Table tab = tableCommand(taql, table_);
+  table_ = tab;
+  table_.rwKeywordSet().define("nPol", Int(2));
+  originalTable_ = table_;
+  attach();
+}
 
 }
 //namespace asap

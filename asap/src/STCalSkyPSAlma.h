@@ -41,7 +41,7 @@ public:
   virtual ~STCalSkyPSAlma() {;}
   
 protected:
-  virtual void setupSelector();
+  virtual void setupSelector(const STSelector &sel);
   virtual void fillCalTable();
 };
 

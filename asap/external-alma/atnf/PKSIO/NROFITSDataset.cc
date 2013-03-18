@@ -46,20 +46,26 @@ using namespace std ;
 // constructor 
 NROFITSDataset::NROFITSDataset( string name )
   : NRODataset( name ) 
-{
-  LogIO os( LogOrigin( "NROFITSDataset", "NROFITSDataset()", WHERE ) ) ;
+{}
 
-  fp_ = NULL ;
-  dataid_ = -1 ;
-  record_ = new NRODataRecord() ;
-  record_->LDATA = NULL ; // never use LDATA 
+// destructor 
+NROFITSDataset::~NROFITSDataset() 
+{
+  // close file
+  close() ;
+}
+
+// data initialization
+void NROFITSDataset::initialize()
+{
+  LogIO os( LogOrigin( "NROFITSDataset", "initialize()", WHERE ) ) ;
 
   // open file
   if ( open() ) 
     os << LogIO::SEVERE << "error while opening file " << filename_ << LogIO::EXCEPTION ;
- 
-  // data initialization
-  readHeader( numField_, "TFIELDS", same_ ) ;
+
+  // field names, units, and sizes
+  readHeader( numField_, "TFIELDS" ) ;
   names_.resize( numField_ ) ;
   units_.resize( numField_ ) ;
   sizes_.resize( numField_ ) ;
@@ -87,28 +93,13 @@ NROFITSDataset::NROFITSDataset( string name )
     os << LogIO::NORMAL << "different endian " << LogIO::POST ;
   }
 
-  // memory allocation
-  initialize() ;
-}
-
-// destructor 
-NROFITSDataset::~NROFITSDataset() 
-{
-  // close file
-  close() ;
-}
-
-// data initialization
-void NROFITSDataset::initialize()
-{
-  LogIO os( LogOrigin( "NROFITSDataset", "initialize()", WHERE ) ) ;
-
+  // initialization
   int status = 0 ;
-  status = readHeader( ARYNM, "ARYNM", same_ ) ;
+  status = readHeader( ARYNM, "ARYNM" ) ;
   if ( status != 0 ) 
     ARYNM = 1 ;
-  readHeader( rowNum_, "NAXIS2", same_ ) ;
-  readHeader( scanLen_, "NAXIS1", same_ ) ;
+  readHeader( rowNum_, "NAXIS2" ) ;
+  readHeader( scanLen_, "NAXIS1" ) ;
   status = 0 ;
   scanNum_ = rowNum_ / ARYNM ;
   int nchan = 0 ;
@@ -181,23 +172,10 @@ void NROFITSDataset::initialize()
     + sizeof( char ) * 180 ;               // CDMY1
 
   refFreq_.resize( ARYNM, 0.0 ) ;
-}
 
-// fill data header
-int NROFITSDataset::fillHeader() 
-{
-  LogIO os( LogOrigin( "NROFITSDataset", "fillHeader()", WHERE ) ) ;
-
-  // open file
-  if ( open() ) {
-    os << LogIO::SEVERE << "Error opening file " << filename_ << "." << LogIO::EXCEPTION ;
-    return -1 ;
-  }
-
-  // fill
-  int status = fillHeader( same_ ) ;
-
-  return status ;
+  // NRODataRecord
+  record_ = new NRODataRecord() ;
+  record_->LDATA = NULL ;
 }
 
 int NROFITSDataset::fillHeader( int sameEndian )
@@ -285,7 +263,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "LOETM = \'" << LOETM << "\'" << endl ;
   //
-  if ( readHeader( NSCAN, "NAXIS2", sameEndian ) != 0 ) {
+  if ( readHeader( NSCAN, "NAXIS2" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data NSCAN." << LogIO::POST ;
     return -1 ;
   }
@@ -316,7 +294,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "OBJ = \'" << OBJ << "\'" << endl ;
   //
-  if ( readHeader( ftmp, "EPOCH", sameEndian ) != 0 ) {
+  if ( readHeader( ftmp, "EPOCH" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data EPOCH." << LogIO::POST ;
     return -1 ;
   }
@@ -348,28 +326,28 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "DEC0 = " << DEC0 << endl ;
   //
-  if ( readHeader( GLNG0, "GL0", sameEndian ) != 0 ) {
+  if ( readHeader( GLNG0, "GL0" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data GLNG0." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "GLNG0 = " << GLNG0 << endl ;
   //
-  if ( readHeader( GLAT0, "GB0", sameEndian ) != 0 ) {
+  if ( readHeader( GLAT0, "GB0" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data GLAT0." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "GLAT0 = " << GLAT0 << endl ;
   //
-  if ( readHeader( NCALB, "NCALB", sameEndian ) != 0 ) {
+  if ( readHeader( NCALB, "NCALB" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data NCALB." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "NCALB = " << NCALB << endl ;
   //
-  if ( readHeader( SCNCD, "SCNCD", sameEndian ) != 0 ) {
+  if ( readHeader( SCNCD, "SCNCD" ) != 0 ) {
     os << LogIO::NORMAL << "SCNCD set to 0 (RADEC)." << LogIO::POST ;
     SCNCD = 0 ;
   }
@@ -419,7 +397,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "SCMOD = \'" << SCMOD << "\'" << endl ;
   //
-  if ( readHeader( URVEL, "VEL", sameEndian ) != 0 ) {
+  if ( readHeader( URVEL, "VEL" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data URVEL." << LogIO::POST ;
     return -1 ;
   }
@@ -447,56 +425,56 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "SWMOD = \'" << SWMOD << "\'" << endl ;
   //
-  if ( readHeader( FRQSW, "FRQSW", sameEndian ) != 0 ) {
+  if ( readHeader( FRQSW, "FRQSW" ) != 0 ) {
     os << LogIO::NORMAL << "FRQSW set to 0." << LogIO::POST ;
     FRQSW = 0.0 ;
   }
   // DEBUG
   //cout << "FRQSW = " << FRQSW << endl ;
   //
-  if ( readHeader( DBEAM, "DBEAM", sameEndian ) != 0 ) {
+  if ( readHeader( DBEAM, "DBEAM" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data DBEAM." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "DBEAM = " << DBEAM << endl ;
   //
-  if ( readHeader( MLTOF, "MLTOF", sameEndian ) != 0 ) {
+  if ( readHeader( MLTOF, "MLTOF" ) != 0 ) {
     os << LogIO::NORMAL << "MLTOF set to 0." << LogIO::POST ;
     MLTOF = 0.0 ;
   }
   // DEBUG
   //cout << "MLTOF = " << MLTOF << endl ;
   //
-  if ( readHeader( CMTQ, "CMTQ", sameEndian ) != 0 ) {
+  if ( readHeader( CMTQ, "CMTQ" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data CMTQ." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "CMTQ = " << CMTQ << endl ;
   //
-  if ( readHeader( CMTE, "CMTE", sameEndian ) != 0 ) {
+  if ( readHeader( CMTE, "CMTE" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data CMTE." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "CMTE = " << CMTE << endl ;
   //
-  if ( readHeader( CMTSOM, "CMTSOM", sameEndian ) != 0 ) {
+  if ( readHeader( CMTSOM, "CMTSOM" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data CMTSOM." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "CMTSOM = " << CMTSOM << endl ;
   //
-  if ( readHeader( CMTNODE, "CMTNODE", sameEndian ) != 0 ) {
+  if ( readHeader( CMTNODE, "CMTNODE" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data CMTNODE." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "CMTNODE = " << CMTNODE << endl ;
   //
-  if ( readHeader( CMTI, "CMTI", sameEndian ) != 0 ) {
+  if ( readHeader( CMTI, "CMTI" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data CMTI." << LogIO::POST ;
     return -1 ;
   }
@@ -510,56 +488,56 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "CMTTM = \'" << CMTTM << "\'" << endl ;
   //
-  if ( readHeader( SBDX, "SDBX", sameEndian ) != 0 ) {
+  if ( readHeader( SBDX, "SDBX" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SBDX." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "SBDX = " << SBDX << endl ;
   //
-  if ( readHeader( SBDY, "SDBY", sameEndian ) != 0 ) {
+  if ( readHeader( SBDY, "SDBY" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SBDY." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "SBDY = " << SBDY << endl ;
   //
-  if ( readHeader( SBDZ1, "SDBZ1", sameEndian ) != 0 ) {
+  if ( readHeader( SBDZ1, "SDBZ1" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SBDZ1." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "SBDZ1 = " << SBDZ1 << endl ;
   //
-  if ( readHeader( SBDZ2, "SDBZ2", sameEndian ) != 0 ) {
+  if ( readHeader( SBDZ2, "SDBZ2" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SBDZ2." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "SBDZ2 = " << SBDZ2 << endl ;
   //
-  if ( readHeader( DAZP, "DAZP", sameEndian ) != 0 ) {
+  if ( readHeader( DAZP, "DAZP" ) != 0 ) {
     os << LogIO::NORMAL << "DAZP set to 0." << LogIO::POST ;
     DAZP = 0.0 ;
   }
   // DEBUG
   //cout << "DAZP = " << DAZP << endl ;
   //
-  if ( readHeader( DELP, "DELP", sameEndian ) != 0 ) {
+  if ( readHeader( DELP, "DELP" ) != 0 ) {
     os << LogIO::NORMAL << "DELP set to 0." << LogIO::POST ;
     DELP = 0.0 ;
   }
   // DEBUG
   //cout << "DELP = " << DELP << endl ;
   //
-  if ( readHeader( CHBIND, "CHBIND", sameEndian ) != 0 ) {
+  if ( readHeader( CHBIND, "CHBIND" ) != 0 ) {
     os << LogIO::NORMAL << "CHBIND set to 1." << LogIO::POST ;
     CHBIND = 1 ;
   }
   // DEBUG
   //cout << "CHBIND = " << CHBIND << endl ;
   //
-  if ( readHeader( NUMCH, "NCH", sameEndian ) != 0 ) {
+  if ( readHeader( NUMCH, "NCH" ) != 0 ) {
     if ( readTable( NUMCH, "NCH", sameEndian ) != 0 ) {
       os << LogIO::NORMAL << "NUMCH set to " << chmax_ << "." << LogIO::POST ;
       NUMCH = chmax_ ;
@@ -568,21 +546,21 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "NUMCH = " << NUMCH << endl ;
   //
-  if ( readHeader( CHMIN, "CHMIN", sameEndian ) != 0 ) {
+  if ( readHeader( CHMIN, "CHMIN" ) != 0 ) {
     os << LogIO::NORMAL << "CHMIN set to 1." << LogIO::POST ;
     CHMIN = 1 ;
   }
   // DEBUG
   //cout << "CHMIN = " << CHMIN << endl ;
   //
-  if ( readHeader( CHMAX, "CHMAX", sameEndian ) != 0 ) {
+  if ( readHeader( CHMAX, "CHMAX" ) != 0 ) {
     os << LogIO::NORMAL << "CHMAX set to " << chmax_ << "." << LogIO::POST ;
     CHMAX = chmax_ ;
   }
   // DEBUG
   //cout << "CHMAX = " << CHMAX << endl ;
   //
-  if ( readHeader( ALCTM, "ALCTM", sameEndian ) != 0 ) {
+  if ( readHeader( ALCTM, "ALCTM" ) != 0 ) {
     if ( readTable( ALCTM, "ALCTM", sameEndian ) != 0 ) {
       os << LogIO::WARN << "Error while reading data ALCTM." << LogIO::POST ;
       return -1 ;
@@ -592,7 +570,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
   //cout << "ALCTM = " << ALCTM << endl ;
   //
   int itmp ;
-  if ( readHeader( itmp, "INTEG", sameEndian ) != 0 ) {
+  if ( readHeader( itmp, "INTEG" ) != 0 ) {
     if ( readTable( itmp, "INTEG", sameEndian ) != 0 ) {
       os << LogIO::WARN << "Error while reading data IPTIM." << LogIO::POST ;
       return -1 ;
@@ -602,7 +580,7 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
   //cout << "IPTIM = " << IPTIM << endl ;
   //
-  if ( readHeader( PA, "PA", sameEndian ) != 0 ) {
+  if ( readHeader( PA, "PA" ) != 0 ) {
     if ( readTable( PA, "PA", sameEndian ) != 0 ) {
       os << LogIO::WARN << "Error while reading data PA." << LogIO::POST ;
       return -1 ;
@@ -825,21 +803,21 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   nro_debug_output( "CWCAL", ARYNM, 10, CWCAL ) ;
   //
-  if ( readHeader( SCNLEN, "NAXIS1", sameEndian ) != 0 ) {
+  if ( readHeader( SCNLEN, "NAXIS1" ) != 0 ) {
     os << LogIO::WARN << "Error while reading data SCNLEN." << LogIO::POST ;
     return -1 ;
   }
   // DEBUG
   //cout << "SCNLEN = " << SCNLEN << endl ;
   //
-  if ( readHeader( SBIND, "SBIND", sameEndian ) != 0 ) {
+  if ( readHeader( SBIND, "SBIND" ) != 0 ) {
     os << LogIO::NORMAL << "SBIND set to 0." << LogIO::POST ;
     SBIND = 0 ;
   }
   // DEBUG
   //cout << "SBIND = " << SBIND << endl ;
   //
-  if ( readHeader( IBIT, "IBIT", sameEndian ) != 0 ) {
+  if ( readHeader( IBIT, "IBIT" ) != 0 ) {
     os << LogIO::NORMAL << "IBIT set to 8." << LogIO::POST ;
     IBIT = 8 ;  // 8 bit? 12 bit?
   }
@@ -861,8 +839,6 @@ int NROFITSDataset::fillHeader( int sameEndian )
   // DEBUG
 //   nro_debug_output( "DSBFC", ARYNM, DSBFC ) ;
   //
-
-  show() ;
 
   return 0 ;
 }
@@ -1825,7 +1801,7 @@ int NROFITSDataset::readHeader( string &v, char *name )
   return status ;
 }
 
-int NROFITSDataset::readHeader( int &v, char *name, int /*b*/ ) 
+int NROFITSDataset::readHeader( int &v, char *name ) 
 {
   //
   // Read 'name' attribute defined as int from the FITS Header
@@ -1861,7 +1837,7 @@ int NROFITSDataset::readHeader( int &v, char *name, int /*b*/ )
 }
 
 
-int NROFITSDataset::readHeader( float &v, char *name, int /*b*/ ) 
+int NROFITSDataset::readHeader( float &v, char *name ) 
 {
   //
   // Read 'name' attribute defined as float from the FITS Header
@@ -1895,7 +1871,7 @@ int NROFITSDataset::readHeader( float &v, char *name, int /*b*/ )
   return status ;
 }
 
-int NROFITSDataset::readHeader( double &v, char *name, int /*b*/ ) 
+int NROFITSDataset::readHeader( double &v, char *name ) 
 {
   //
   // Read 'name' attribute defined as double from the FITS Header

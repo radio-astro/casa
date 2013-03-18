@@ -102,6 +102,7 @@ NROReader *getNROReader( const String filename,
     } else {
       // otherwise, read SITE0
       NRODataset *d = new NROOTFDataset( filename ) ;
+      d->initialize() ;
       int size = d->getDataSize() - 188 ;
       delete d ;
       fseek( file, size, SEEK_SET ) ;
@@ -117,6 +118,7 @@ NROReader *getNROReader( const String filename,
       }
       else {
         d = new ASTEDataset( filename ) ;
+        d->initialize() ;
         size = d->getDataSize() - 188 ;
         delete d ;
         fseek( file, size, SEEK_SET ) ;
@@ -196,6 +198,26 @@ NROReader::NROReader( string name )
 // destructor
 NROReader::~NROReader()
 {
+}
+
+// Read data header
+Int NROReader::read() 
+{
+  LogIO os( LogOrigin( "NROReader", "read()", WHERE ) ) ;
+
+  int status = 0 ;
+
+  // initialize Dataset object
+  initDataset();
+  
+  // fill Dataset
+  status = dataset_->fillHeader() ;
+
+  if ( status != 0 ) {
+    os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
+  }
+
+  return status ;
 }
 
 // set frequency reference frame
@@ -578,13 +600,13 @@ int NROReader::getScanInfo( int irow,
   string rxname = dataset_->getRX()[0] ;
   if ( rxname.find("MULT2") != string::npos ) {
     string arryt = string( record->ARRYT ) ;
-    beamno = dataset_->getArrayId( arryt ) ;
+    beamno = dataset_->getSortedArrayId( arryt ) ;
     ifno = 0 ;
   }
   else {
     beamno = 0 ;
     string arryt = string( record->ARRYT ) ;
-    ifno = dataset_->getArrayId( arryt ) ;
+    ifno = dataset_->getSortedArrayId( arryt ) ;
   }
   //cout << "beamno = " << beamno << endl ;
 
@@ -606,7 +628,7 @@ int NROReader::getScanInfo( int irow,
   // restfreq (for MOLECULE_ID)
   restfreq.resize( oneByOne ) ;
   restfreq[0] = record->FREQ0 ;
-  //cout << "restfreq = " << rf << endl ;
+  //cout << "restfreq = " << restfreq[0] << endl ;
 
   // refbeamno
   refbeamno = 0 ;
@@ -651,7 +673,7 @@ int NROReader::getScanInfo( int irow,
     flagtra.resize( spectra.nelements() ) ;
     flagtra.set( 0 ) ;
   }
-  //cout << "flag.size() = " << flag.size() << endl ;
+  //cout << "flag.size() = " << flagtra.size() << endl ;
 
   // tsys
   tsys.resize( oneByOne ) ;

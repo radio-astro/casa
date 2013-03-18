@@ -865,6 +865,9 @@ public:
 
     // fill empty SPECTRAL_WINDOW rows
     infillSpectralWindow() ;
+
+    // fill empty FIELD rows
+    infillField() ;
   }
 
   void dataColumnName( String name ) 
@@ -1057,6 +1060,23 @@ private:
     for ( uInt i = 0 ; i < spwtab.nrow() ; i++ ) {
       if ( nchan[i] == 0 )
         tr.put( i ) ;
+    }
+  }
+  void infillField()
+  {
+    ScalarColumn<Int> sourceIdCol(fieldtab, "SOURCE_ID");
+    ArrayColumn<Double> delayDirCol(fieldtab, "DELAY_DIR");
+    ArrayColumn<Double> phaseDirCol(fieldtab, "PHASE_DIR");
+    ArrayColumn<Double> referenceDirCol(fieldtab, "REFERENCE_DIR");
+    uInt nrow = fieldtab.nrow();
+    Matrix<Double> dummy(IPosition(2, 2, 1), 0.0);
+    for (uInt irow = 0; irow < nrow; ++irow) {
+      if (!phaseDirCol.isDefined(irow)) {
+        delayDirCol.put(irow, dummy);
+        phaseDirCol.put(irow, dummy);
+        referenceDirCol.put(irow, dummy);
+        sourceIdCol.put(irow, -1);
+      }
     }
   }
   void addSpectralWindow( Int sid, uInt fid )

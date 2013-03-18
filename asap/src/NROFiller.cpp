@@ -64,13 +64,13 @@ bool NROFiller::open(const std::string& filename, const Record& rec)
   }  
 
   // Apply options
-  if ( freqref == "REST" ) {
+  if ( freqref == "REST" || freqref == "DEFAULT (REST)" ) {
     reader_->setFreqRefFromVREF( false ) ;
   }
   else if ( freqref == "VREF" ) {
     reader_->setFreqRefFromVREF( true ) ;
   }
-
+  
   // get header information
   STHeader hdr ;
   if ( reader_->getHeaderInfo( hdr.nchan,

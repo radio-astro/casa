@@ -24,7 +24,7 @@ STCalibration::STCalibration(CountedPtr<Scantable> &s)
 void STCalibration::calibrate()
 {
   STSelector selOrg = scantable_->getSelection();
-  setupSelector();
+  setupSelector(selOrg);
   scantable_->setSelection(sel_);
   
   fillCalTable();

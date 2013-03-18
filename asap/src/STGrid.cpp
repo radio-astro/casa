@@ -1205,6 +1205,8 @@ void STGrid::mapExtent( Double &xmin, Double &xmax,
   directionCol_.attach( tableList_[0], "DIRECTION" ) ;
   Matrix<Double> direction = directionCol_.getColumn() ;
   //os << "dirCol.nrow() = " << dirCol.nrow() << LogIO::POST ;
+  Vector<Double> ra( direction.row(0) ) ;
+  mathutil::rotateRA( ra ) ;
   minMax( xmin, xmax, direction.row( 0 ) ) ;
   minMax( ymin, ymax, direction.row( 1 ) ) ;
   Double amin, amax, bmin, bmax ;

@@ -92,6 +92,9 @@ public:
   std::vector<float> getTsysSpectrum(int whichrow=0) const
     { return table_->getTsysSpectrum(whichrow); }
 
+  void setTsys(const std::vector<float>& newvals, int whichrow=-1)
+  { return table_->setTsys(newvals, whichrow); }
+
   //std::string getTime(int whichrow=0) const
   //  { return table_->getTime(whichrow); }
   std::string getTime(int whichrow=0, int prec = 0) const
@@ -326,6 +329,8 @@ public:
   { table_->setMoleculeIdColumnData(molids); }
   double calculateModelSelectionCriteria(const std::string& valname, const std::string& blfunc, int order, const std::vector<bool>& inMask, int whichrow, bool useLineFinder, const std::vector<int>& edge, float threshold, int chanAvgLimit)
   { return table_->calculateModelSelectionCriteria(valname, blfunc, order, inMask, whichrow, useLineFinder, edge, threshold, chanAvgLimit); }
+
+  void dropXPol() { table_->dropXPol(); }
 
 private:
   casa::CountedPtr<Scantable> table_;

@@ -93,6 +93,7 @@ void python_Scantable() {
 	 (boost::python::arg("whichrow")=0) )
     .def("_gettsys", &ScantableWrapper::getTsys)
     .def("_gettsysspectrum", &ScantableWrapper::getTsysSpectrum )
+    .def("_settsys", &ScantableWrapper::setTsys)
     .def("_getsourcename", &ScantableWrapper::getSourceName,
          (boost::python::arg("whichrow")=0) )
     .def("_getelevation", &ScantableWrapper::getElevation,
@@ -165,6 +166,7 @@ void python_Scantable() {
     .def("_getmolidcol_list", &ScantableWrapper::getMoleculeIdColumnData)
     .def("_setmolidcol_list", &ScantableWrapper::setMoleculeIdColumnData)
     .def("_calc_aic", &ScantableWrapper::calculateModelSelectionCriteria)
+    .def("drop_xpol", &ScantableWrapper::dropXPol)
   ;
 };
 

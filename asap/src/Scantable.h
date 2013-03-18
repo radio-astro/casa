@@ -341,6 +341,9 @@ public:
   float getTsys(int whichrow) const
     { return casa::Vector<casa::Float>(tsysCol_(whichrow))(0); }
   std::vector<float> getTsysSpectrum(int whichrow) const ;
+  
+  void setTsys(const std::vector<float>& newvals, int whichrow);
+
   float getElevation(int whichrow) const
     { return elCol_(whichrow); }
   float getAzimuth(int whichrow) const
@@ -634,12 +637,15 @@ public:
 					 float threshold,
 					 int chanAvgLimit);
   static std::vector<bool> getMaskFromMaskList(const int nchan,
-					       const std::vector<int>& masklist);
-  static casa::Vector<casa::uInt> getMaskListFromMask(const std::vector<bool>& mask);
-  static std::vector<int> splitToIntList(const std::string& str, const char delim);
-  static std::vector<string> splitToStringList(const std::string& str, const char delim);
+					  const std::vector<int>& masklist);
+  static casa::Vector<casa::uInt> getMaskListFromMask(
+					   const std::vector<bool>& mask);
+  static std::vector<int> splitToIntList(const std::string& str, 
+					 const char delim);
+  static std::vector<string> splitToStringList(const std::string& str, 
+					       const char delim);
 
-
+  void dropXPol();
 
 private:
 

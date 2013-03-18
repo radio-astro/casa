@@ -37,7 +37,7 @@ class TestMopra(object):
         rms = q.stats("rms", msk)
         med = q.stats("median", msk)
         regrms = [35.801266, 38.808666]
-        regmed = [1.197934, 2.593803]
+        regmed = [1.197934, 2.593804]
         for i in range(len(rms)):
             assert_almost_equals(rms[i], regrms[i], 6)
             assert_almost_equals(med[i], regmed[i], 6)

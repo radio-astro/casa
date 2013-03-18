@@ -35,7 +35,7 @@
 
 #define ASTE_ARYMAX_FX 12
 
-#include <atnf/PKSIO/NRODataset.h>
+#include <atnf/PKSIO/ASTEDataset.h>
 
 #include <string>
 
@@ -47,6 +47,7 @@ using namespace std ;
 //
 // <prerequisite>
 //   <li> <linkto class=ASTEFXReader>ASTEFXReader</linkto>
+//   <li> <linkto class=ASTEDataset>ASTEDataset</linkto>
 //   <li> <linkto class=NRODataset>NRODataset</linkto>
 // </prerequisite>
 //
@@ -64,7 +65,7 @@ using namespace std ;
 // </synopsis>
 //
 
-class ASTEFXDataset : public NRODataset
+class ASTEFXDataset : public ASTEDataset 
 {
  public:
   // constructor
@@ -73,15 +74,9 @@ class ASTEFXDataset : public NRODataset
   // destructor
   virtual ~ASTEFXDataset() ;
 
-  // data initialization 
-  virtual void initialize() ;
-
-  // fill header from file 
-  virtual int fillHeader() ;
-
  protected:
-  // fill header information
-  virtual int fillHeader( int sameEndian ) ;
+  // return ARRAYMAX
+  virtual int arrayMax() { return ASTE_ARYMAX_FX; } ;
 } ;
 
 

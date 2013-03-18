@@ -45,6 +45,8 @@ if md5new != md5old:
     for member in tf.getmembers():
         tf.extract(member)
     shutil.copy(tmpmd5, asapbase)
+    os.remove(tmpdata)
+    os.remove(tmpmd5)
 else:
     print """Data already at latest available version.
 If you still get errors running asap, please report this."""

@@ -55,26 +55,32 @@ NRO45FITSReader::~NRO45FITSReader()
   //
 }
   
-// Read data header
-Int NRO45FITSReader::read() 
+// // Read data header
+// Int NRO45FITSReader::read() 
+// {
+//   LogIO os( LogOrigin( "NRO45FITSReader", "read()", WHERE ) ) ;
+
+//   // DEBUG
+//   //cout << "NRO45FITSReader::read()" << endl ;
+//   //
+//   int status = 0 ;
+
+//   // create NRO45Dataset
+//   dataset_ = new NROFITSDataset( filename_ ) ;
+
+//   // fill NROFITSDataset
+//   status = dataset_->fillHeader() ;
+
+//   if ( status != 0 ) {
+//     //cerr << "Failed to fill data header." << endl ;
+//     os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
+//   }
+
+//   return status ;
+// }
+
+void NRO45FITSReader::initDataset()
 {
-  LogIO os( LogOrigin( "NRO45FITSReader", "read()", WHERE ) ) ;
-
-  // DEBUG
-  //cout << "NRO45FITSReader::read()" << endl ;
-  //
-  int status = 0 ;
-
-  // create NRO45Dataset
   dataset_ = new NROFITSDataset( filename_ ) ;
-
-  // fill NROFITSDataset
-  status = dataset_->fillHeader() ;
-
-  if ( status != 0 ) {
-    //cerr << "Failed to fill data header." << endl ;
-    os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
-  }
-
-  return status ;
+  dataset_->initialize() ;
 }
